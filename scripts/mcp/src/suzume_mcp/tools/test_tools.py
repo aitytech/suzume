@@ -8,9 +8,13 @@ from ..core.constants import TARI_ADVERB_STEMS
 from ..core.pos_mapping import normalize_pos
 from ..core.suzume_cli import (
     format_expected_from_tokens as format_expected,
+)
+from ..core.suzume_cli import (
     get_expected_tokens_batch_subprocess,
-    get_expected_tokens_subprocess as get_expected_tokens,
     get_suzume_debug_info,
+)
+from ..core.suzume_cli import (
+    get_expected_tokens_subprocess as get_expected_tokens,
 )
 from ..core.suzume_utils import (
     get_suzume_rule,
@@ -40,19 +44,24 @@ def _json_error(message: str) -> str:
 
 
 def _get_suzume_tokens(text: str) -> list[dict]:
-    """Get Suzume CLI tokens with POS and lemma."""
+    """Get Suzume CLI tokens with POS and lemma.
+
+    Uses --no-user-dict to match the C++ tokenization test runner oracle.
+    """
     cli = PROJECT_ROOT / "build" / "bin" / "suzume-cli"
     if not cli.exists():
-        return []
+        raise RuntimeError(f"Suzume CLI not found: {cli}")
 
     import subprocess
 
     result = subprocess.run(
-        [str(cli), text],
+        [str(cli), "--no-user-dict", text],
         capture_output=True,
         text=True,
         timeout=30,
     )
+    if result.returncode != 0:
+        raise RuntimeError(f"Suzume CLI failed: {result.stderr.strip() or 'non-zero exit'}")
 
     tokens = []
     for line in result.stdout.split("\n"):
@@ -69,6 +78,13 @@ def _get_suzume_tokens(text: str) -> list[dict]:
                 break
         tokens.append({"surface": surface, "pos": pos, "lemma": lemma})
     return tokens
+
+
+def _format_expected_checked(tokens: list[dict], source: str) -> list[dict]:
+    """Format expected tokens, rejecting empty oracle output before any write."""
+    if not tokens:
+        raise RuntimeError(f"{source} produced no tokens; refusing to write empty expected output")
+    return format_expected(tokens)
 
 
 def _get_test_files_filtered(file_filter: str = "") -> list[Path]:
@@ -276,8 +292,8 @@ async def test_search(pattern: str, limit: int = 0) -> str:
     for path in get_test_files(PROJECT_ROOT):
         try:
             data = load_json(path)
-        except Exception:
-            continue
+        except Exception as exc:
+            return _json_error(f"Failed to parse JSON file {path}: {exc}")
         basename = path.stem
         cases = data.get("cases") or data.get("test_cases") or []
         for idx, case in enumerate(cases):
@@ -382,7 +398,7 @@ async def test_compare(before_file: str, after_file: str) -> str:
     improved = sorted([{"id": key, "input": before[key]} for key in before if key not in after], key=lambda x: x["id"])
     regressed = sorted([{"id": key, "input": after[key]} for key in after if key not in before], key=lambda x: x["id"])
 
-    delta = len(before) - len(after)
+    net_change = len(after) - len(before)
 
     return _json_result(
         {
@@ -390,7 +406,7 @@ async def test_compare(before_file: str, after_file: str) -> str:
             "after_failures": len(after),
             "improved": improved,
             "regressed": regressed,
-            "net_change": -delta if delta > 0 else abs(delta),
+            "net_change": net_change,
         }
     )
 
@@ -522,8 +538,6 @@ async def test_diff_mecab(file: str = "") -> str:
     Args:
         file: Optional test file to check (without .json), or empty for all.
     """
-    from ..core.suzume_utils import get_mecab_tokens as get_mecab_toks
-
     files = _get_test_files_filtered(file)
     if not files:
         return _json_error("No test files found")
@@ -540,8 +554,8 @@ async def test_diff_mecab(file: str = "") -> str:
     for path in files:
         try:
             data = load_json(path)
-        except Exception:
-            continue
+        except Exception as exc:
+            return _json_error(f"Failed to parse JSON file {path}: {exc}")
         basename = path.stem
         cases = data.get("cases") or data.get("test_cases") or []
         for idx, case in enumerate(cases):
@@ -550,7 +564,7 @@ async def test_diff_mecab(file: str = "") -> str:
                 continue
             total_cases += 1
             expected = case.get("expected") or []
-            mecab = get_mecab_toks(inp)
+            mecab, _source, _rule = get_expected_tokens(inp)
 
             if tokens_match(expected, mecab):
                 mecab_compatible += 1
@@ -631,8 +645,8 @@ async def test_needs_suzume_update(file: str = "", apply: bool = False) -> str:
     for path in files:
         try:
             data = load_json(path)
-        except Exception:
-            continue
+        except Exception as exc:
+            return _json_error(f"Failed to parse JSON file {path}: {exc}")
         basename = path.stem
         cases_key = "cases" if "cases" in data else "test_cases"
         cases = data.get(cases_key) or []
@@ -658,7 +672,7 @@ async def test_needs_suzume_update(file: str = "", apply: bool = False) -> str:
     else:
         batch_results = []
 
-    for meta, (correct, source, rule) in zip(all_cases_meta, batch_results, strict=True):
+    for meta, (correct, _source, rule) in zip(all_cases_meta, batch_results, strict=True):
         expected = meta["case"].get("expected") or []
         rule = rule or ""
 
@@ -730,7 +744,10 @@ async def test_needs_suzume_update(file: str = "", apply: bool = False) -> str:
     # Apply updates
     files_to_save: dict[Path, dict] = {}
     for entry in needs_update:
-        formatted = format_expected(entry["correct_tokens"])
+        try:
+            formatted = _format_expected_checked(entry["correct_tokens"], entry["rule"])
+        except RuntimeError as exc:
+            return _json_error(str(exc))
         entry["data"][entry["cases_key"]][entry["index"]]["expected"] = formatted
         files_to_save[entry["file"]] = entry["data"]
 
@@ -776,14 +793,21 @@ async def test_add(
         )
 
     if use_suzume:
-        suzume_tokens = _get_suzume_tokens(input_text)
-        if not suzume_tokens:
-            return _json_error("Suzume CLI not available")
-        tokens, source, rule = suzume_tokens, "Suzume", "forced"
+        try:
+            suzume_tokens = _get_suzume_tokens(input_text)
+            tokens, source, rule = suzume_tokens, "Suzume", "forced"
+        except RuntimeError as exc:
+            return _json_error(str(exc))
     else:
-        tokens, source, rule = get_expected_tokens(input_text)
+        try:
+            tokens, source, rule = get_expected_tokens(input_text)
+        except RuntimeError as exc:
+            return _json_error(str(exc))
 
-    expected = format_expected(tokens)
+    try:
+        expected = _format_expected_checked(tokens, source)
+    except RuntimeError as exc:
+        return _json_error(str(exc))
     test_id = case_id or generate_id(input_text)
 
     path = get_test_data_dir(PROJECT_ROOT) / f"{file}.json"
@@ -852,14 +876,21 @@ async def test_update(
         return _json_error("Either input_text or test_id is required.")
 
     if use_suzume:
-        suzume_tokens = _get_suzume_tokens(input_text)
-        if not suzume_tokens:
-            return _json_error("Suzume CLI not available")
-        tokens, source, rule = suzume_tokens, "Suzume", "forced"
+        try:
+            suzume_tokens = _get_suzume_tokens(input_text)
+            tokens, source, rule = suzume_tokens, "Suzume", "forced"
+        except RuntimeError as exc:
+            return _json_error(str(exc))
     else:
-        tokens, source, rule = get_expected_tokens(input_text)
+        try:
+            tokens, source, rule = get_expected_tokens(input_text)
+        except RuntimeError as exc:
+            return _json_error(str(exc))
 
-    expected = format_expected(tokens)
+    try:
+        expected = _format_expected_checked(tokens, source)
+    except RuntimeError as exc:
+        return _json_error(str(exc))
     cases_key = "cases" if "cases" in found["data"] else "test_cases"
     old_expected = found["case"].get("expected", [])
 
@@ -957,16 +988,21 @@ async def test_batch_add(
     else:
         batch_results = None
 
-    for batch_idx, (orig_idx, inp) in enumerate(new_inputs):
+    for batch_idx, (_orig_idx, inp) in enumerate(new_inputs):
         if use_suzume:
-            suzume_tokens = _get_suzume_tokens(inp)
-            if suzume_tokens:
+            try:
+                suzume_tokens = _get_suzume_tokens(inp)
                 tokens, source, rule = suzume_tokens, "Suzume", "forced"
-            else:
-                tokens, source, rule = get_expected_tokens(inp)
+            except RuntimeError as exc:
+                skipped.append({"input": inp, "reason": str(exc)})
+                continue
         else:
             tokens, source, rule = batch_results[batch_idx]  # type: ignore[index]
-        expected = format_expected(tokens)
+        try:
+            expected = _format_expected_checked(tokens, source)
+        except RuntimeError as exc:
+            skipped.append({"input": inp, "reason": str(exc)})
+            continue
         to_add.append(
             {
                 "input": inp,
@@ -1063,8 +1099,8 @@ async def test_replace_pos(
     for path in files:
         try:
             data = load_json(path)
-        except Exception:
-            continue
+        except Exception as exc:
+            return _json_error(f"Failed to parse JSON file {path}: {exc}")
         cases_key = "cases" if "cases" in data else "test_cases"
         cases = data.get(cases_key) or []
         file_changes = 0
@@ -1127,8 +1163,8 @@ async def test_map_pos(
     for path in files:
         try:
             data = load_json(path)
-        except Exception:
-            continue
+        except Exception as exc:
+            return _json_error(f"Failed to parse JSON file {path}: {exc}")
         cases_key = "cases" if "cases" in data else "test_cases"
         cases = data.get(cases_key) or []
         file_changes = 0
@@ -1185,8 +1221,8 @@ async def test_list_pos(file: str = "") -> str:
     for path in files:
         try:
             data = load_json(path)
-        except Exception:
-            continue
+        except Exception as exc:
+            return _json_error(f"Failed to parse JSON file {path}: {exc}")
         cases = data.get("cases") or data.get("test_cases") or []
         for case in cases:
             for token in case.get("expected") or []:
@@ -1282,8 +1318,11 @@ async def test_accept_diff(
     for item in to_update:
         inp = item["input"]
         found = item["found"]
-        suzume_tokens = _get_suzume_tokens(inp)
-        suzume_expected = format_expected(suzume_tokens)
+        try:
+            suzume_tokens = _get_suzume_tokens(inp)
+            suzume_expected = _format_expected_checked(suzume_tokens, "Suzume")
+        except RuntimeError as exc:
+            return _json_error(str(exc))
 
         exp_surfaces = "|".join(t.get("surface", "") for t in (found["case"].get("expected") or []))
         suz_surfaces = "|".join(t["surface"] for t in suzume_expected)
@@ -1342,8 +1381,8 @@ async def test_reset_suzume(
         for path in files:
             try:
                 data = load_json(path)
-            except Exception:
-                continue
+            except Exception as exc:
+                return _json_error(f"Failed to parse JSON file {path}: {exc}")
             basename = path.stem
             cases_key = "cases" if "cases" in data else "test_cases"
             cases = data.get(cases_key) or []
@@ -1437,8 +1476,8 @@ async def test_validate_ids(
     for path in files:
         try:
             data = load_json(path)
-        except Exception:
-            continue
+        except Exception as exc:
+            return _json_error(f"Failed to parse JSON file {path}: {exc}")
         basename = path.stem
         cases_key = "cases" if "cases" in data else "test_cases"
         cases = data.get(cases_key) or []

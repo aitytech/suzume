@@ -123,11 +123,13 @@ struct Suzume::Impl {
         analyzer(analysis::AnalyzerOptions{opts.mode, loadScorerConfig(opts), {}, opts.normalize_options}),
         postprocessor(&analyzer.dictionaryManager(), postprocessOptionsFor(opts)) {
     // Auto-load core.dic if found (binary format)
-    std::string core_path = findDictionary("core.dic");
-    if (!core_path.empty()) {
-      auto result = analyzer.dictionaryManager().loadCoreDictionaryResult(core_path);
-      if (!result.hasValue()) {
-        warnDictionaryLoad(core_path, result.error());
+    if (!opts.skip_core_dictionary) {
+      std::string core_path = findDictionary("core.dic");
+      if (!core_path.empty()) {
+        auto result = analyzer.dictionaryManager().loadCoreDictionaryResult(core_path);
+        if (!result.hasValue()) {
+          warnDictionaryLoad(core_path, result.error());
+        }
       }
     }
 

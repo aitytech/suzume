@@ -213,6 +213,15 @@ SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text)
       // Extended POS
       auto epos_str = suzume::core::extendedPosToString(morph.extended_pos);
       result->morphemes[idx].extended_pos = copyString(epos_str);
+
+      result->morphemes[idx].start = morph.start;
+      result->morphemes[idx].end = morph.end;
+      result->morphemes[idx].is_user_dict = morph.features.is_user_dict ? 1 : 0;
+      result->morphemes[idx].is_formal_noun = morph.features.is_formal_noun ? 1 : 0;
+      result->morphemes[idx].is_low_info = morph.features.is_low_info ? 1 : 0;
+      result->morphemes[idx].is_unknown = morph.is_unknown ? 1 : 0;
+      result->morphemes[idx].is_from_dictionary = morph.is_from_dictionary ? 1 : 0;
+      result->morphemes[idx].score = morph.features.score;
     }
 
     return result.release();
@@ -301,6 +310,11 @@ SUZUME_EXPORT suzume_tags_t* suzume_generate_tags_with_options(suzume_t handle, 
     tag_opts.use_lemma = (options->use_lemma != 0);
     tag_opts.min_tag_length = options->min_length;
     tag_opts.max_tags = options->max_tags;
+    tag_opts.exclude_particles = (options->exclude_particles != 0);
+    tag_opts.exclude_auxiliaries = (options->exclude_auxiliaries != 0);
+    tag_opts.exclude_formal_nouns = (options->exclude_formal_nouns != 0);
+    tag_opts.exclude_low_info = (options->exclude_low_info != 0);
+    tag_opts.remove_duplicates = (options->remove_duplicates != 0);
 
     auto tags = handle->instance.generateTags(text, tag_opts);
 
@@ -402,6 +416,29 @@ SUZUME_EXPORT const char* suzume_last_error(void) {
   return last_error.c_str();
 }
 
+SUZUME_EXPORT size_t suzume_dictionary_warning_count(suzume_t handle) {
+  if (handle == nullptr) {
+    return 0;
+  }
+  return handle->instance.dictionaryWarnings().size();
+}
+
+SUZUME_EXPORT const char* suzume_dictionary_warning(suzume_t handle, size_t index) {
+  if (handle == nullptr) {
+    setLastError("suzume_dictionary_warning: null handle");
+    return nullptr;
+  }
+  const auto warnings = handle->instance.dictionaryWarnings();
+  if (index >= warnings.size()) {
+    setLastError("suzume_dictionary_warning: index out of range");
+    return nullptr;
+  }
+  clearLastError();
+  thread_local std::string warning;
+  warning = warnings[index];
+  return warning.c_str();
+}
+
 SUZUME_EXPORT size_t suzume_sizeof_result(void) {
   return sizeof(suzume_result_t);
 }
@@ -449,6 +486,22 @@ SUZUME_EXPORT size_t suzume_offsetof_morpheme(uint32_t field) {
       return offsetof(suzume_morpheme_t, conj_form);
     case 6:
       return offsetof(suzume_morpheme_t, extended_pos);
+    case 7:
+      return offsetof(suzume_morpheme_t, start);
+    case 8:
+      return offsetof(suzume_morpheme_t, end);
+    case 9:
+      return offsetof(suzume_morpheme_t, is_user_dict);
+    case 10:
+      return offsetof(suzume_morpheme_t, is_formal_noun);
+    case 11:
+      return offsetof(suzume_morpheme_t, is_low_info);
+    case 12:
+      return offsetof(suzume_morpheme_t, is_unknown);
+    case 13:
+      return offsetof(suzume_morpheme_t, is_from_dictionary);
+    case 14:
+      return offsetof(suzume_morpheme_t, score);
     default:
       return static_cast<size_t>(-1);
   }
@@ -479,6 +532,16 @@ SUZUME_EXPORT size_t suzume_offsetof_tag_options(uint32_t field) {
       return offsetof(suzume_tag_options_t, min_length);
     case 4:
       return offsetof(suzume_tag_options_t, max_tags);
+    case 5:
+      return offsetof(suzume_tag_options_t, exclude_particles);
+    case 6:
+      return offsetof(suzume_tag_options_t, exclude_auxiliaries);
+    case 7:
+      return offsetof(suzume_tag_options_t, exclude_formal_nouns);
+    case 8:
+      return offsetof(suzume_tag_options_t, exclude_low_info);
+    case 9:
+      return offsetof(suzume_tag_options_t, remove_duplicates);
     default:
       return static_cast<size_t>(-1);
   }

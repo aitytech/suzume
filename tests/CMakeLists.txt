@@ -40,6 +40,7 @@ set(TEST_SOURCES
   core/types_test.cpp
   core/types_extended_test.cpp
   core/error_test.cpp
+  core/viterbi_test.cpp
   core/string_pool_test.cpp
   normalize/utf8_test.cpp
   normalize/char_type_test.cpp

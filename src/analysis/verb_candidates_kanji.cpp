@@ -622,6 +622,10 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
                                                  : (proceed_is_i_row_ichidan ? verb_opts.confidence_ichidan_dict
                                                                              : verb_opts.confidence_standard);
       if (best.confidence > proceed_threshold) {
+        if (surface == "付け" && end_pos < codepoints.size() && codepoints[end_pos] == U'で') {
+          continue;  // 付けで is formal noun + particle, not 付ける renyokei.
+        }
+
         // Reject Godan verbs with stems ending in e-row hiragana
         // E-row endings (え,け,せ,て,ね,へ,め,れ) are typically ichidan stems
         // E.g., "伝えいた" falsely matches as GodanKa "伝えく" but 伝える is ichidan
@@ -927,12 +931,11 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         //   (a) godan-ka with stem ending in な (心なく → 心+なく): なく is AUX_過去 of ない.
         //   (b) hiragana-only portion of base form is a 2+ char dict AUX/VERB
         //       (e.g., 我ある — ある is dict VERB).
-        if (!in_dict && kanji_count == 1 && dict_manager != nullptr &&
-            best.verb_type != grammar::VerbType::Ichidan && best.verb_type != grammar::VerbType::Suru) {
+        if (!in_dict && kanji_count == 1 && dict_manager != nullptr && best.verb_type != grammar::VerbType::Ichidan &&
+            best.verb_type != grammar::VerbType::Suru) {
           bool penalized = false;
           // Pattern (a): godan-ka with stem ending in な
-          if (best.verb_type == grammar::VerbType::GodanKa && !best.stem.empty() &&
-              utf8::endsWith(best.stem, "な")) {
+          if (best.verb_type == grammar::VerbType::GodanKa && !best.stem.empty() && utf8::endsWith(best.stem, "な")) {
             base_cost += bigram_cost::kRare;
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface
                                                      << "\" +1.0 (godan_ka_kanji_na_suffix_non_dict_penalty)\n");
@@ -1271,10 +1274,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       // - e-row/i-row: handled by single-char path above
       // - u-row: kanji+u-row = complete godan verb (行く, 書く)
       // - a-row: godan mizenkei + passive/causative (壊され, 揉まれ)
-      bool first_is_o_row = (first_hira == U'お' || first_hira == U'こ' || first_hira == U'そ' || first_hira == U'と' ||
-                             first_hira == U'の' || first_hira == U'ほ' || first_hira == U'も' || first_hira == U'よ' ||
-                             first_hira == U'ろ' || first_hira == U'ご' || first_hira == U'ぞ' || first_hira == U'ど' ||
-                             first_hira == U'ぼ' || first_hira == U'ぽ');
+      bool first_is_o_row = grammar::isORowCodepoint(first_hira);
       if (first_is_o_row && (grammar::isERowCodepoint(second_hira) || grammar::isIRowCodepoint(second_hira))) {
         size_t renyokei_end = kanji_end + 2;
         std::string surface = extractSubstring(codepoints, start_pos, renyokei_end);
@@ -2238,14 +2238,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       // Basic te/ta form patterns (て, た, たら, たり), ちゃう (ち), and とく (と) contractions
       bool is_te_ta_pattern = (next_char == U'て' || next_char == U'た' || next_char == U'ち' || next_char == U'と');
       if (is_te_ta_pattern) {
-        // Determine candidate verb types based on sokuonbin
-        // っ-onbin: GodanRa, GodanTa, GodanWa, GodanKa (行く is irregular)
-        static const std::vector<std::pair<grammar::VerbType, std::string_view>> sokuonbin_types = {
-            {grammar::VerbType::GodanKa, "く"},  // 行く (irregular)
-            {grammar::VerbType::GodanRa, "る"},
-            {grammar::VerbType::GodanTa, "つ"},
-            {grammar::VerbType::GodanWa, "う"},
-        };
+        auto sokuonbin_types = vh::getGodanTypesByOnbin("っ");
         // Get the kanji stem
         std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
 
@@ -2593,13 +2586,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       // Basic te/ta form patterns (で, だ)
       bool is_de_da_pattern = (next_char == U'で' || next_char == U'だ');
       if (is_de_da_pattern) {
-        // Determine candidate verb types based on hatsuonbin
-        // ん-onbin: GodanMa, GodanBa, GodanNa
-        static const std::vector<std::pair<grammar::VerbType, std::string_view>> hatsuonbin_types = {
-            {grammar::VerbType::GodanMa, "む"},
-            {grammar::VerbType::GodanBa, "ぶ"},
-            {grammar::VerbType::GodanNa, "ぬ"},
-        };
+        auto hatsuonbin_types = vh::getGodanTypesByOnbin("ん");
         // Get the kanji stem
         std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
 
@@ -2674,11 +2661,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
       std::string hira_stem = (n_pos > kanji_end) ? extractSubstring(codepoints, kanji_end, n_pos) : "";
 
-      static const std::vector<std::pair<grammar::VerbType, std::string_view>> n_onbin_types = {
-          {grammar::VerbType::GodanMa, "む"},
-          {grammar::VerbType::GodanBa, "ぶ"},
-          {grammar::VerbType::GodanNa, "ぬ"},
-      };
+      auto n_onbin_types = vh::getGodanTypesByOnbin("ん");
 
       for (const auto& [verb_type, base_suffix] : n_onbin_types) {
         std::string base_form = kanji_stem + hira_stem + std::string(base_suffix);

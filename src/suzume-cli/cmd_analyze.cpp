@@ -13,7 +13,8 @@ namespace {
 
 void outputMorpheme(const std::vector<core::Morpheme>& morphemes) {
   for (const auto& morpheme : morphemes) {
-    std::cout << morpheme.surface << "\t" << core::posToString(morpheme.pos) << "\t" << morpheme.lemma << "\n";
+    std::cout << morpheme.surface << "\t" << core::posToString(morpheme.pos) << "\t" << morpheme.lemma << "\t"
+              << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
   }
 }
 
@@ -33,7 +34,16 @@ void outputJson(const std::string& input, const std::vector<core::Morpheme>& mor
     std::cout << "    {";
     std::cout << R"("surface": ")" << jsonEscape(mor.surface) << "\", ";
     std::cout << R"("pos": ")" << core::posToString(mor.pos) << "\", ";
-    std::cout << R"("lemma": ")" << jsonEscape(mor.lemma) << "\"";
+    std::cout << R"("lemma": ")" << jsonEscape(mor.lemma) << "\", ";
+    std::cout << R"("start": )" << mor.start_pos << ", ";
+    std::cout << R"("end": )" << mor.end_pos << ", ";
+    std::cout << R"("extended_pos": ")" << core::extendedPosToString(mor.extended_pos) << "\", ";
+    std::cout << R"("is_user_dict": )" << (mor.features.is_user_dict ? "true" : "false") << ", ";
+    std::cout << R"("is_formal_noun": )" << (mor.features.is_formal_noun ? "true" : "false") << ", ";
+    std::cout << R"("is_low_info": )" << (mor.features.is_low_info ? "true" : "false") << ", ";
+    std::cout << R"("is_unknown": )" << (mor.is_unknown ? "true" : "false") << ", ";
+    std::cout << R"("is_from_dictionary": )" << (mor.is_from_dictionary ? "true" : "false") << ", ";
+    std::cout << R"("score": )" << mor.features.score;
     std::cout << "}";
     if (idx + 1 < morphemes.size()) {
       std::cout << ",";
@@ -121,11 +131,21 @@ int cmdAnalyze(const CommandArgs& args) {
     }
     text = oss.str();
   }
+  stripUtf8Bom(&text);
 
   if (text.empty()) {
     printError("No input text provided");
     printAnalyzeHelp();
     return 1;
+  }
+
+  if (args.debug) {
+    // Debug level is cached on first use, which can happen during dictionary loading.
+#ifdef _WIN32
+    _putenv_s("SUZUME_DEBUG", "1");
+#else
+    setenv("SUZUME_DEBUG", "1", 1);
+#endif
   }
 
   // Create analyzer
@@ -137,9 +157,15 @@ int cmdAnalyze(const CommandArgs& args) {
   // Default is remove symbols (true), flag inverts to preserve
   options.remove_symbols = !args.preserve_symbols;
   options.skip_user_dictionary = args.no_user_dict;
+  options.skip_core_dictionary = args.no_core_dict;
+  options.lemmatize = !args.no_lemmatize;
+  options.merge_compounds = args.merge_compounds;
   options.report_scorer_config = args.verbose;
 
   Suzume analyzer(options);
+  for (const auto& warning : analyzer.dictionaryWarnings()) {
+    printWarning(warning);
+  }
 
   // Load dictionaries
   for (const auto& dict_path : args.dict_paths) {
@@ -153,9 +179,14 @@ int cmdAnalyze(const CommandArgs& args) {
   }
 
   // Compare mode
-  if (args.compare && !args.dict_paths.empty()) {
+  if (args.compare) {
     // Analyze without user dictionary
-    Suzume base_analyzer(options);
+    SuzumeOptions base_options = options;
+    base_options.skip_user_dictionary = true;
+    Suzume base_analyzer(base_options);
+    for (const auto& warning : base_analyzer.dictionaryWarnings()) {
+      printWarning(warning);
+    }
     auto base_morphemes = base_analyzer.analyze(text);
 
     std::cout << "[Without user dictionary]\n";
@@ -182,14 +213,6 @@ int cmdAnalyze(const CommandArgs& args) {
 
   // Debug mode - show lattice candidates
   if (args.debug) {
-    // Enable all debug output when --debug is used
-    // Note: setenv is POSIX, may need alternative on Windows
-#ifdef _WIN32
-    _putenv_s("SUZUME_DEBUG", "1");
-#else
-    setenv("SUZUME_DEBUG", "1", 1);
-#endif
-
     std::cout << "=== Debug Mode ===\n";
     std::cout << "Input: \"" << text << "\"\n\n";
 
@@ -237,7 +260,16 @@ int cmdAnalyze(const CommandArgs& args) {
       break;
     }
     case OutputFormat::Tags: {
-      auto tags = analyzer.generateTags(text);
+      postprocess::TagGeneratorOptions tag_options;
+      tag_options.exclude_particles = !args.tag_include_particles;
+      tag_options.exclude_auxiliaries = !args.tag_include_auxiliaries;
+      tag_options.exclude_formal_nouns = !args.tag_include_formal_nouns;
+      tag_options.exclude_low_info = !args.tag_include_low_info;
+      tag_options.remove_duplicates = !args.tag_keep_duplicates;
+      tag_options.use_lemma = !args.tag_use_surface;
+      tag_options.min_tag_length = args.tag_min_length;
+      tag_options.max_tags = args.tag_max_tags;
+      auto tags = analyzer.generateTags(text, tag_options);
       outputTags(tags);
       break;
     }

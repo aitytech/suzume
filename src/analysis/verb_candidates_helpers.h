@@ -179,7 +179,7 @@ bool isSokuonbinGodanType(grammar::VerbType verb_type);
  *
  * Onbin patterns:
  * - "い" (ikuon) → GodanKa, GodanGa
- * - "っ" (sokuon) → GodanTa, GodanRa, GodanWa
+ * - "っ" (sokuon) → GodanKa (行く irregular), GodanRa, GodanTa, GodanWa
  * - "ん" (hatsuonbin) → GodanNa, GodanBa, GodanMa
  * - "" (none) → GodanSa
  *

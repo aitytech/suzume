@@ -3,10 +3,12 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <set>
 #include <string_view>
 
 // Include the header directly since we add the CLI source dir to includes
 #include "dict_compiler.h"
+#include "dictionary/binary_dict.h"
 
 namespace suzume::cli {
 namespace {
@@ -110,6 +112,43 @@ TEST_F(DictCompilerTest, CompileMultipleRejectsDuplicateSurfaceAndPosAcrossFiles
   EXPECT_FALSE(result.hasValue());
   EXPECT_NE(result.error().message.find("Validation failed"), std::string::npos);
   EXPECT_FALSE(std::filesystem::exists(output));
+}
+
+TEST_F(DictCompilerTest, KuruExpansionGeneratesRealKanjiSurfaces) {
+  auto input = writeFile("kuru.tsv", "来る\tVERB\tKURU\n");
+  auto output = temp_dir_ / "kuru.dic";
+
+  DictCompiler compiler;
+  auto compile_result = compiler.compile(input.string(), output.string());
+  ASSERT_TRUE(compile_result.hasValue()) << compile_result.error().message;
+
+  dictionary::BinaryDictionary dict;
+  auto load_result = dict.loadFromFile(output.string());
+  ASSERT_TRUE(load_result.hasValue()) << load_result.error().message;
+
+  std::set<std::string> surfaces;
+  for (std::string_view text : {"来る", "来", "来れ", "来よ", "来い", "来られる", "来れる"}) {
+    for (const auto& result : dict.lookup(text, 0)) {
+      ASSERT_NE(result.entry, nullptr);
+      surfaces.insert(result.entry->surface);
+      EXPECT_EQ(result.entry->lemma, "来る");
+    }
+  }
+
+  const auto has_surface = [&surfaces](std::string_view surface) {
+    return surfaces.find(std::string(surface)) != surfaces.end();
+  };
+
+  EXPECT_TRUE(has_surface("来る"));
+  EXPECT_TRUE(has_surface("来"));
+  EXPECT_TRUE(has_surface("来れ"));
+  EXPECT_TRUE(has_surface("来よ"));
+  EXPECT_TRUE(has_surface("来い"));
+  EXPECT_TRUE(has_surface("来られる"));
+  EXPECT_TRUE(has_surface("来れる"));
+  EXPECT_FALSE(has_surface("来くる"));
+  EXPECT_FALSE(has_surface("来き"));
+  EXPECT_FALSE(has_surface("来こ"));
 }
 
 }  // namespace

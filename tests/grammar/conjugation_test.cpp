@@ -338,9 +338,9 @@ TEST_F(ConjugationTest, GenerateKuru) {
   for (const auto& form : forms) {
     if (form.surface == "来る")
       found_base = true;
-    if (form.surface == "来こない")
+    if (form.surface == "来ない")
       found_konai = true;
-    if (form.surface == "来きた")
+    if (form.surface == "来た")
       found_kita = true;
   }
 

@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include "normalize/utf8.h"
 #include "suzume.h"
 
 namespace suzume {
@@ -115,10 +116,49 @@ TEST_F(SuzumeApiTest, AnalyzeReturnsNonEmptyForJapanese) {
   EXPECT_FALSE(results.empty());
 }
 
+TEST_F(SuzumeApiTest, ProlongedSoundMergeKeepsSurfaceAndOffsetsConsistent) {
+  Suzume instance(makeTestOptions());
+  auto results = instance.analyze("すごーーい");
+
+  ASSERT_FALSE(results.empty());
+  bool found = false;
+  for (const auto& morpheme : results) {
+    if (morpheme.surface.find("ーー") != std::string::npos) {
+      found = true;
+      EXPECT_EQ(morpheme.end_pos - morpheme.start_pos, normalize::utf8Length(morpheme.surface));
+    }
+  }
+  EXPECT_TRUE(found);
+}
+
 TEST_F(SuzumeApiTest, AnalyzeEmptyTextReturnsEmpty) {
   Suzume instance(makeTestOptions());
   auto results = instance.analyze("");
   EXPECT_TRUE(results.empty());
+}
+
+TEST_F(SuzumeApiTest, AnalyzeInvalidUtf8ReturnsEmpty) {
+  Suzume instance(makeTestOptions());
+  auto results = instance.analyze(std::string_view("\xE3\x81", 2));
+  EXPECT_TRUE(results.empty());
+}
+
+TEST_F(SuzumeApiTest, NumericKatakanaUnitsUseKnownUnitList) {
+  Suzume instance(makeTestOptions());
+
+  auto meter = instance.analyze("5メートル");
+  ASSERT_FALSE(meter.empty());
+  EXPECT_EQ(meter.front().surface, "5メートル");
+
+  auto cut = instance.analyze("3カット");
+  ASSERT_GE(cut.size(), 2u);
+  EXPECT_EQ(cut[0].surface, "3");
+  EXPECT_EQ(cut[1].surface, "カット");
+
+  auto pattern = instance.analyze("10パターン");
+  ASSERT_GE(pattern.size(), 2u);
+  EXPECT_EQ(pattern[0].surface, "10");
+  EXPECT_EQ(pattern[1].surface, "パターン");
 }
 
 TEST_F(SuzumeApiTest, AnalyzeSingleCharacter) {

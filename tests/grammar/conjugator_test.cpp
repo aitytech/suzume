@@ -327,6 +327,15 @@ TEST_F(ConjugatorTest, KuruStems) {
   EXPECT_EQ(mizenkei->surface, "くこ");
 }
 
+TEST_F(ConjugatorTest, KuruKanjiBaseSuffixUsesDisplayBase) {
+  auto forms = conjugator_.generateStems("来る", VerbType::Kuru);
+  ASSERT_EQ(forms.size(), 4u);
+
+  for (const auto& form : forms) {
+    EXPECT_EQ(form.base_suffix, "来る");
+  }
+}
+
 // ============================================================================
 // Edge cases
 // ============================================================================

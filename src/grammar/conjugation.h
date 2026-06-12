@@ -104,6 +104,20 @@ class Conjugation {
   static const std::unordered_map<VerbType, GodanRow>& getGodanRows();
 
   /**
+   * @brief Get Godan verb types that use a specific onbin pattern.
+   *
+   * Onbin patterns:
+   * - "い" (ikuon) -> GodanKa, GodanGa
+   * - "っ" (sokuon) -> GodanKa (行く irregular), GodanRa, GodanTa, GodanWa
+   * - "ん" (hatsuonbin) -> GodanMa, GodanBa, GodanNa
+   * - "" (none) -> GodanSa
+   *
+   * @param onbin Onbin pattern to match ("い", "っ", "ん", or "")
+   * @return Vector of (VerbType, base suffix) pairs in deterministic preference order.
+   */
+  static std::vector<std::pair<VerbType, std::string_view>> getGodanTypesByOnbin(std::string_view onbin);
+
+  /**
    * @brief Generate all conjugated forms for a verb
    * @param base_form Base form (終止形): 書く
    * @param type Verb type: GodanKa

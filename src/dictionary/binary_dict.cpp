@@ -320,8 +320,8 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const std::vecto
               // Other short forms likely renyoukei (すぎ from すぎる)
               entry.extended_pos = core::ExtendedPOS::VerbRenyokei;
             }
-          } else if (utf8::endsWithAny(entry.surface,
-                                       {"き"sv, "ぎ"sv, "し"sv, "ち"sv, "に"sv, "び"sv, "み"sv, "り"sv})) {
+          } else if (utf8::endsWithAny(entry.surface, {"き"sv, "ぎ"sv, "し"sv, "じ"sv, "ち"sv, "ぢ"sv, "に"sv, "ひ"sv,
+                                                       "び"sv, "ぴ"sv, "み"sv, "り"sv})) {
             // Godan verb renyokei endings (I-row hiragana except い)
             // e.g., いただき from いただく → いただき + ます should work
             // Note: い excluded because godan-wa renyokei (思い) would need

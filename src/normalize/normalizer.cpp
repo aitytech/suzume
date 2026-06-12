@@ -266,20 +266,9 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
 }
 
 bool Normalizer::needsNormalization(std::string_view text) const {
-  size_t pos = 0;
-  while (pos < text.size()) {
-    char32_t codepoint = decodeUtf8(text, pos);
-    if (normalizeChar(codepoint) != codepoint) {
-      return true;
-    }
-    // Check for vu-series characters
-    if (codepoint == kKatakanaVu || codepoint == kHiraganaVu) {
-      return true;
-    }
-    // Check for half-width dakuten/handakuten
-    if (codepoint == kHalfwidthDakuten || codepoint == kHalfwidthHandakuten) {
-      return true;
-    }
+  auto normalized = normalize(text);
+  if (auto* value = core::getValuePtr(normalized)) {
+    return *value != text;
   }
   return false;
 }

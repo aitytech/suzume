@@ -160,6 +160,9 @@ int cmdTestFile(const std::vector<std::string>& args, bool verbose, const std::v
 
   while (std::getline(file, line)) {
     ++line_num;
+    if (line_num == 1) {
+      stripUtf8Bom(&line);
+    }
 
     // Skip empty lines and comments
     if (line.empty() || line[0] == '#') {
@@ -327,6 +330,10 @@ int cmdTest(const CommandArgs& args) {
 
   if (subcommand == "benchmark") {
     return cmdTestBenchmark(subargs, args.verbose, args.dict_paths);
+  }
+  if (subcommand == "regression" || subcommand == "coverage") {
+    printError("test " + subcommand + " is not implemented in this build");
+    return 1;
   }
 
   // Check for -f flag (file test)

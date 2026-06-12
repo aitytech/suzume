@@ -107,6 +107,10 @@ std::vector<core::Morpheme> Analyzer::analyze(std::string_view text) const {
   if (text.empty()) {
     return {};
   }
+  if (!normalize::isValidUtf8(text)) {
+    SUZUME_DEBUG_LOG("[ANALYZER] Invalid UTF-8 input\n");
+    return {};
+  }
 
   // Short text: process directly
   if (text.size() <= kMaxChunkBytes) {

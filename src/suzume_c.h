@@ -38,6 +38,14 @@ typedef struct {
   const char* conj_type;    /**< Conjugation type (Japanese) */
   const char* conj_form;    /**< Conjugation form (Japanese) */
   const char* extended_pos; /**< Extended POS (English, e.g. "VerbRenyokei") */
+  size_t start;             /**< Start character offset in normalized text */
+  size_t end;               /**< End character offset in normalized text */
+  int is_user_dict;         /**< Non-zero if from user dictionary */
+  int is_formal_noun;       /**< Non-zero if formal noun */
+  int is_low_info;          /**< Non-zero if low information word */
+  int is_unknown;           /**< Non-zero if unknown word */
+  int is_from_dictionary;   /**< Non-zero if from dictionary */
+  float score;              /**< Candidate score/cost */
 } suzume_morpheme_t;
 
 /**
@@ -58,7 +66,11 @@ typedef struct {
 } suzume_tags_t;
 
 /**
- * @brief Analysis options structure
+ * @brief Analysis options structure.
+ *
+ * This basic form exposes normalization toggles and symbol handling only.
+ * Use suzume_create_v2() with suzume_extended_options_t for analysis mode,
+ * lemmatization, compound merging, and scorer options.
  */
 typedef struct {
   int preserve_vu;      /**< Preserve ヴ (don't normalize to ビ etc.) */
@@ -151,11 +163,16 @@ SUZUME_EXPORT suzume_tags_t* suzume_generate_tags(suzume_t handle, const char* t
  * @brief Tag generation options
  */
 typedef struct {
-  uint8_t pos_filter; /**< POS bitmask: 1=noun, 2=verb, 4=adjective, 8=adverb (0=all) */
-  int exclude_basic;  /**< Exclude basic words (hiragana-only lemma) */
-  int use_lemma;      /**< Use lemma instead of surface (default: 1) */
-  size_t min_length;  /**< Minimum tag length in characters (default: 2) */
-  size_t max_tags;    /**< Maximum number of tags (0=unlimited) */
+  uint8_t pos_filter;       /**< POS bitmask: 1=noun, 2=verb, 4=adjective, 8=adverb (0=all) */
+  int exclude_basic;        /**< Exclude basic words (hiragana-only lemma) */
+  int use_lemma;            /**< Use lemma instead of surface (default: 1) */
+  size_t min_length;        /**< Minimum tag length in characters (default: 2) */
+  size_t max_tags;          /**< Maximum number of tags (0=unlimited) */
+  int exclude_particles;    /**< Exclude particles (default: 1) */
+  int exclude_auxiliaries;  /**< Exclude auxiliaries (default: 1) */
+  int exclude_formal_nouns; /**< Exclude formal nouns (default: 1) */
+  int exclude_low_info;     /**< Exclude low information words (default: 1) */
+  int remove_duplicates;    /**< Remove duplicate tags (default: 1) */
 } suzume_tag_options_t;
 
 /**
@@ -211,6 +228,21 @@ SUZUME_EXPORT const char* suzume_version(void);
 SUZUME_EXPORT const char* suzume_last_error(void);
 
 /**
+ * @brief Get number of dictionary warnings from auto-loading dictionaries
+ * @param handle Suzume handle
+ * @return Warning count, or 0 for null handle
+ */
+SUZUME_EXPORT size_t suzume_dictionary_warning_count(suzume_t handle);
+
+/**
+ * @brief Get dictionary warning message by index
+ * @param handle Suzume handle
+ * @param index Warning index
+ * @return Warning string owned by Suzume, or NULL if out of range
+ */
+SUZUME_EXPORT const char* suzume_dictionary_warning(suzume_t handle, size_t index);
+
+/**
  * @brief Get sizeof(suzume_result_t)
  */
 SUZUME_EXPORT size_t suzume_sizeof_result(void);
@@ -244,7 +276,9 @@ SUZUME_EXPORT size_t suzume_offsetof_result(uint32_t field);
 /**
  * @brief Get byte offset of field in suzume_morpheme_t
  * @param field 0=surface, 1=pos, 2=base_form, 3=pos_ja,
- *              4=conj_type, 5=conj_form, 6=extended_pos
+ *              4=conj_type, 5=conj_form, 6=extended_pos,
+ *              7=start, 8=end, 9=is_user_dict, 10=is_formal_noun,
+ *              11=is_low_info, 12=is_unknown, 13=is_from_dictionary, 14=score
  */
 SUZUME_EXPORT size_t suzume_offsetof_morpheme(uint32_t field);
 
@@ -257,7 +291,9 @@ SUZUME_EXPORT size_t suzume_offsetof_tags(uint32_t field);
 /**
  * @brief Get byte offset of field in suzume_tag_options_t
  * @param field 0=pos_filter, 1=exclude_basic, 2=use_lemma,
- *              3=min_length, 4=max_tags
+ *              3=min_length, 4=max_tags, 5=exclude_particles,
+ *              6=exclude_auxiliaries, 7=exclude_formal_nouns,
+ *              8=exclude_low_info, 9=remove_duplicates
  */
 SUZUME_EXPORT size_t suzume_offsetof_tag_options(uint32_t field);
 

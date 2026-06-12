@@ -13,6 +13,10 @@ def mecab_analyze(text: str) -> list[dict]:
         capture_output=True,
         text=True,
     )
+    if result.returncode != 0:
+        raise RuntimeError(f"MeCab failed: {result.stderr.strip() or 'non-zero exit'}")
+    if "EOS" not in result.stdout.splitlines():
+        raise RuntimeError("MeCab failed: missing EOS marker")
     return _parse_mecab_output(result.stdout)
 
 
@@ -24,8 +28,13 @@ async def mecab_analyze_async(text: str) -> list[dict]:
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-    stdout, _ = await proc.communicate(input=(text + "\n").encode("utf-8"))
-    return _parse_mecab_output(stdout.decode("utf-8"))
+    stdout, stderr = await proc.communicate(input=(text + "\n").encode("utf-8"))
+    if proc.returncode != 0:
+        raise RuntimeError(f"MeCab failed: {stderr.decode('utf-8').strip() or 'non-zero exit'}")
+    output = stdout.decode("utf-8")
+    if "EOS" not in output.splitlines():
+        raise RuntimeError("MeCab failed: missing EOS marker")
+    return _parse_mecab_output(output)
 
 
 def _parse_mecab_output(output: str) -> list[dict]:

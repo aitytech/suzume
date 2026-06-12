@@ -1148,6 +1148,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     if (!is_valid_verb) {
       is_valid_verb = is_in_dict;
     }
+    if (verb_type == grammar::VerbType::GodanSa && !is_in_dict && grammar::isPureHiragana(stem)) {
+      continue;
+    }
 
     // Minimum stem length check: need at least 2 chars in mizenkei to be meaningful
     // This prevents false positives like "かない" → "か" + "ない"
@@ -1319,22 +1322,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Try different verb types based on onbin type
-    std::vector<std::pair<grammar::VerbType, std::string_view>> candidates_to_try;
-    if (is_sokuonbin) {
-      // っ-onbin: GodanRa, GodanTa, GodanWa
-      candidates_to_try = {
-          {grammar::VerbType::GodanRa, "る"},
-          {grammar::VerbType::GodanWa, "う"},
-          {grammar::VerbType::GodanTa, "つ"},
-      };
-    } else {
-      // ん-onbin: GodanMa, GodanBa, GodanNa
-      candidates_to_try = {
-          {grammar::VerbType::GodanMa, "む"},
-          {grammar::VerbType::GodanBa, "ぶ"},
-          {grammar::VerbType::GodanNa, "ぬ"},
-      };
-    }
+    auto candidates_to_try = vh::getGodanTypesByOnbin(is_sokuonbin ? "っ" : "ん");
 
     // Try each verb type and check dictionary or inflection analysis
     for (const auto& [verb_type, base_suffix] : candidates_to_try) {
@@ -1622,15 +1610,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
         std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
 
-        // Try different base form patterns for っ-onbin
-        // GodanWa: しま + う → しまう, GodanRa: なくな + る → なくなる
-        // GodanKa: い + く → いく (irregular: いく uses 促音便 instead of イ音便)
-        static const std::vector<std::pair<grammar::VerbType, std::string_view>> sokuonbin_types = {
-            {grammar::VerbType::GodanKa, "く"},  // いく (irregular sokuonbin)
-            {grammar::VerbType::GodanRa, "る"},
-            {grammar::VerbType::GodanTa, "つ"},
-            {grammar::VerbType::GodanWa, "う"},
-        };
+        auto sokuonbin_types = vh::getGodanTypesByOnbin("っ");
 
         bool found_dict_match = false;
         for (const auto& [verb_type, base_suffix] : sokuonbin_types) {
@@ -1710,15 +1690,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
         std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
 
-        // Try different base form patterns for ん-onbin
-        // Godan-ma: こ + む → こむ, よ + む → よむ
-        // Godan-ba: と + ぶ → とぶ
-        // Godan-na: し + ぬ → しぬ
-        static const std::vector<std::pair<grammar::VerbType, std::string_view>> hatsuonbin_types = {
-            {grammar::VerbType::GodanMa, "む"},
-            {grammar::VerbType::GodanBa, "ぶ"},
-            {grammar::VerbType::GodanNa, "ぬ"},
-        };
+        auto hatsuonbin_types = vh::getGodanTypesByOnbin("ん");
 
         for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
           std::string potential_base = stem + std::string(base_suffix);

@@ -40,6 +40,10 @@ core::Expected<std::vector<TsvEntry>, core::Error> TsvParser::parseString(std::s
     }
 
     std::string_view line = content.substr(pos, eol - pos);
+    if (line_number == 1 && line.size() >= 3 && static_cast<unsigned char>(line[0]) == 0xEF &&
+        static_cast<unsigned char>(line[1]) == 0xBB && static_cast<unsigned char>(line[2]) == 0xBF) {
+      line.remove_prefix(3);
+    }
 
     // Remove carriage return if present
     if (!line.empty() && line.back() == '\r') {

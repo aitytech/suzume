@@ -8,6 +8,8 @@
 
 #include <gtest/gtest.h>
 
+#include "grammar/char_patterns.h"
+
 namespace suzume::grammar {
 namespace {
 
@@ -162,6 +164,19 @@ TEST_F(GodanNegativeRenyokeiTest, NotMatch) {
   EXPECT_FALSE(endsWithGodanNegativeRenyokei("なく"));
   EXPECT_FALSE(endsWithGodanNegativeRenyokei("美しく"));
   EXPECT_FALSE(endsWithGodanNegativeRenyokei(""));
+}
+
+TEST(CharPatternsTest, IRowEndingsUseCanonicalFullIRow) {
+  EXPECT_TRUE(endsWithIRow("ひ"));
+  EXPECT_TRUE(endsWithIRow("ぴ"));
+  EXPECT_TRUE(isIRowCodepoint(U'ひ'));
+  EXPECT_TRUE(isIRowCodepoint(U'ぴ'));
+}
+
+TEST(CharPatternsTest, VowelAndORowUseCanonicalRows) {
+  EXPECT_TRUE(isORowCodepoint(U'を'));
+  EXPECT_EQ(getVowelForChar(U'を'), U'お');
+  EXPECT_EQ(getVowelForChar(U'ぴ'), U'い');
 }
 
 }  // namespace

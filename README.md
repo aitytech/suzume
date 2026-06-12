@@ -12,11 +12,11 @@ A lightweight Japanese tokenizer that runs in the browser via WebAssembly. Uses 
 
 ## Overview
 
-Suzume tokenizes Japanese text using character patterns, connection rules, and a small dictionary (~400KB), rather than the large dictionaries (20-50MB+) used by traditional morphological analyzers like MeCab or Kuromoji. The WASM build is around 360KB gzipped.
+Suzume tokenizes Japanese text using character patterns, connection rules, and a small dictionary, rather than the large dictionaries (20-50MB+) used by traditional morphological analyzers like MeCab or Kuromoji. The WASM build is around 424KB gzipped.
 
 | | Traditional Analyzers | Suzume |
 |---|---|---|
-| **Bundle Size** | 20-50MB+ (dictionary) | <400KB gzipped |
+| **Bundle Size** | 20-50MB+ (dictionary) | <450KB gzipped |
 | **Browser Support** | Limited or none | Supported (WASM) |
 | **Server Required** | Usually yes | No |
 | **POS Tagging** | Yes | Yes |

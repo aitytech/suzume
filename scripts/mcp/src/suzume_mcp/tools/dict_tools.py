@@ -1,7 +1,9 @@
 """Dictionary tools ported from dict_tool.pl - MCP tool registration."""
 
 import json
+import os
 import re
+import tempfile
 from pathlib import Path
 
 from ..core.mecab import mecab_analyze
@@ -88,6 +90,34 @@ VALID_CONJ = [
     "KURU",
     "IRREGULAR",
 ]
+
+
+def _atomic_write_text(path: Path, content: str) -> None:
+    """Write text atomically in the destination directory."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = Path(tmp.name)
+    os.replace(tmp_path, path)
+
+
+def _append_lines_atomic(path: Path, lines: list[str]) -> None:
+    """Append complete lines atomically."""
+    existing = path.read_text(encoding="utf-8") if path.exists() else ""
+    if existing and not existing.endswith("\n"):
+        existing += "\n"
+    _atomic_write_text(path, existing + "".join(f"{line}\n" for line in lines))
+
+
+def _validate_surface(word: str) -> str | None:
+    """Return an error message if a dictionary surface is unsafe."""
+    if not word:
+        return "Word must not be empty."
+    if any(ch in word for ch in ("\t", "\n", "\r")):
+        return "Word must not contain tab or newline characters."
+    if word.startswith("#"):
+        return "Word must not start with '#'."
+    return None
 
 # POS mapping: SuzumeUtils POS → dictionary format
 _DICT_POS_MAP = {
@@ -426,6 +456,9 @@ async def dict_add(
     """
     if pos not in VALID_POS:
         return _json_result({"status": "error", "message": f"Invalid POS: {pos}. Valid values: {', '.join(VALID_POS)}"})
+    surface_error = _validate_surface(word)
+    if surface_error:
+        return _json_result({"status": "error", "message": surface_error, "word": word})
     if conj_type and conj_type not in VALID_CONJ:
         return _json_result(
             {"status": "error", "message": f"Invalid conj_type: {conj_type}. Valid values: {', '.join(VALID_CONJ)}"}
@@ -490,8 +523,7 @@ async def dict_add(
                 {"status": "ok", "word": word, "entry": entry_line, "file": target_rel, "dry_run": True}
             )
 
-        with open(target_file, "a", encoding="utf-8") as f:
-            f.write(f"{entry_line}\n")
+        _append_lines_atomic(target_file, [entry_line])
 
         recompile_status = await _recompile_user_dic()
         return _json_result(
@@ -507,8 +539,7 @@ async def dict_add(
             {"status": "ok", "word": word, "entry": entry_line, "file": target_file_rel, "dry_run": True}
         )
 
-    with open(target_file, "a", encoding="utf-8") as f:
-        f.write(f"{entry_line}\n")
+    _append_lines_atomic(target_file, [entry_line])
 
     recompile_status = await _recompile_core_dic()
     return _json_result(
@@ -552,7 +583,7 @@ async def dict_remove(word: str, user: str = "", dry_run: bool = False) -> str:
     if dry_run:
         return _json_result({"status": "ok", "word": word, "removed_entry": removed, "file": file_rel, "dry_run": True})
 
-    filepath.write_text("\n".join(new_lines) + ("\n" if new_lines else ""), encoding="utf-8")
+    _atomic_write_text(filepath, "\n".join(new_lines) + ("\n" if new_lines else ""))
     recompile_status = await (_recompile_user_dic() if user else _recompile_core_dic())
     return _json_result(
         {"status": "ok", "word": word, "removed_entry": removed, "file": file_rel, "recompile": recompile_status}
@@ -589,7 +620,7 @@ async def dict_disable(word: str, dry_run: bool = False) -> str:
     if not found:
         return _json_result({"status": "error", "message": f"Word not found: {word}"})
 
-    filepath.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _atomic_write_text(filepath, "\n".join(lines) + "\n")
     recompile_status = await _recompile_core_dic()
     return _json_result({"status": "ok", "word": word, "file": file_rel, "recompile": recompile_status})
 
@@ -624,7 +655,7 @@ async def dict_enable(word: str, dry_run: bool = False) -> str:
     if not found:
         return _json_result({"status": "error", "message": f"Disabled word not found: {word}"})
 
-    filepath.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _atomic_write_text(filepath, "\n".join(lines) + "\n")
     recompile_status = await _recompile_core_dic()
     return _json_result({"status": "ok", "word": word, "file": file_rel, "recompile": recompile_status})
 
@@ -707,7 +738,7 @@ async def dict_validate(fix: bool = False) -> str:
             file_lines = filepath.read_text(encoding="utf-8").splitlines()
             remove_nums = {ln for f, ln in lines_to_remove if f == file_rel}
             new_lines = [line for idx, line in enumerate(file_lines, 1) if idx not in remove_nums]
-            filepath.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+            _atomic_write_text(filepath, "\n".join(new_lines) + "\n")
 
         recompile_status = await _recompile_core_dic()
         result["fixed"] = True
@@ -1006,7 +1037,7 @@ async def dict_sort(
         result["preview"] = preview
         return _json_result(result)
 
-    filepath.write_text(sorted_content, encoding="utf-8")
+    _atomic_write_text(filepath, sorted_content)
     is_user = target_rel.startswith("data/user/")
     recompile_status = await (_recompile_user_dic() if is_user else _recompile_core_dic())
     result["applied"] = True
@@ -1104,7 +1135,7 @@ async def dict_remove_matching(
                 if surface in surfaces_to_remove:
                     continue
             new_lines.append(line)
-        filepath.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+        _atomic_write_text(filepath, "\n".join(new_lines) + "\n")
 
     recompile_status = await (_recompile_user_dic() if user else _recompile_core_dic())
     result["applied"] = True
@@ -1143,8 +1174,10 @@ async def dict_cleanup(
 
     def is_split_by_suzume(surface: str) -> bool:
         try:
+            # --no-user-dict: judge whether suzume splits the word on its OWN merits,
+            # not because of the very user-dict entry we are evaluating for removal.
             result = subprocess.run(
-                [str(cli), surface],
+                [str(cli), "--no-user-dict", surface],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -1218,8 +1251,8 @@ async def dict_cleanup(
     keep_path = Path(f"{base}_keep.tsv")
     noise_path = Path(f"{base}_noise.tsv")
 
-    keep_path.write_text("\n".join(keep_lines) + "\n", encoding="utf-8")
-    noise_path.write_text("\n".join(noise_lines) + "\n", encoding="utf-8")
+    _atomic_write_text(keep_path, "\n".join(keep_lines) + "\n")
+    _atomic_write_text(noise_path, "\n".join(noise_lines) + "\n")
 
     result["applied"] = True
     result["keep_file"] = str(keep_path.relative_to(PROJECT_ROOT))
@@ -1269,6 +1302,11 @@ async def dict_bulk_add(
     skip_conj_check = pos == "PROPER_NOUN"
 
     for word in word_list:
+        surface_error = _validate_surface(word)
+        if surface_error:
+            skipped.append({"word": word, "reason": surface_error})
+            continue
+
         # Duplicate check
         if word in by_surface:
             existing = by_surface[word]
@@ -1332,9 +1370,7 @@ async def dict_bulk_add(
         target_file = PROJECT_ROOT / target_rel
 
     # Append all entries at once
-    with open(target_file, "a", encoding="utf-8") as fhandle:
-        for entry_line in lines_to_append:
-            fhandle.write(f"{entry_line}\n")
+    _append_lines_atomic(target_file, lines_to_append)
 
     # Recompile once
     recompile_status = await (_recompile_user_dic() if user else _recompile_core_dic())
@@ -1448,14 +1484,10 @@ async def dict_bulk_move(
         )
 
     # Write updated source file
-    source_file.write_text(
-        "\n".join(remaining_lines) + ("\n" if remaining_lines else ""), encoding="utf-8"
-    )
+    _atomic_write_text(source_file, "\n".join(remaining_lines) + ("\n" if remaining_lines else ""))
 
     # Append to destination file
-    with open(dest_file, "a", encoding="utf-8") as fhandle:
-        for entry_line in matched_entries:
-            fhandle.write(f"{entry_line}\n")
+    _append_lines_atomic(dest_file, matched_entries)
 
     # Recompile once
     recompile_status = await _recompile_user_dic()

@@ -23,6 +23,7 @@ interface EmscriptenModule {
   lengthBytesUTF8: (str: string) => number;
   _malloc: (size: number) => number;
   _free: (ptr: number) => void;
+  HEAPU32: Uint32Array;
 }
 
 /**
@@ -61,6 +62,22 @@ export interface Morpheme {
   conjForm: string | null;
   /** Extended POS subcategory (English, e.g., "VerbRenyokei", "AuxTenseTa") */
   extendedPos: string;
+  /** Start character offset in normalized text */
+  start: number;
+  /** End character offset in normalized text */
+  end: number;
+  /** True if matched from a user dictionary */
+  isUserDict: boolean;
+  /** True if the morpheme is a formal noun */
+  isFormalNoun: boolean;
+  /** True if the morpheme is low information for tag generation */
+  isLowInfo: boolean;
+  /** True if generated as an unknown word */
+  isUnknown: boolean;
+  /** True if matched from any dictionary */
+  isFromDictionary: boolean;
+  /** Candidate score/cost */
+  score: number;
 }
 
 /**
@@ -87,6 +104,16 @@ export interface TagOptions {
   minLength?: number;
   /** Maximum number of tags, 0 for unlimited (default: 0) */
   maxTags?: number;
+  /** Exclude particles (default: true) */
+  excludeParticles?: boolean;
+  /** Exclude auxiliaries (default: true) */
+  excludeAuxiliaries?: boolean;
+  /** Exclude formal nouns (default: true) */
+  excludeFormalNouns?: boolean;
+  /** Exclude low information words (default: true) */
+  excludeLowInfo?: boolean;
+  /** Remove duplicate tags (default: true) */
+  removeDuplicates?: boolean;
 }
 
 // Release handle ref for destructor so the destroy fn is not bound to the Suzume instance
@@ -110,6 +137,14 @@ interface CLayouts {
     conjType: number;
     conjForm: number;
     extendedPos: number;
+    start: number;
+    end: number;
+    isUserDict: number;
+    isFormalNoun: number;
+    isLowInfo: number;
+    isUnknown: number;
+    isFromDictionary: number;
+    score: number;
   };
   tags: {
     size: number;
@@ -124,6 +159,11 @@ interface CLayouts {
     useLemma: number;
     minLength: number;
     maxTags: number;
+    excludeParticles: number;
+    excludeAuxiliaries: number;
+    excludeFormalNouns: number;
+    excludeLowInfo: number;
+    removeDuplicates: number;
   };
   extendedOptions: {
     size: number;
@@ -163,6 +203,8 @@ export class Suzume {
   private _loadBinaryDict: (handle: number, dataPtr: number, size: number) => number;
   private _version: () => number;
   private _lastError: () => number;
+  private _dictionaryWarningCount: (handle: number) => number;
+  private _dictionaryWarning: (handle: number, index: number) => number;
   private layouts: CLayouts;
   private unregisterToken = {};
 
@@ -211,6 +253,13 @@ export class Suzume {
 
     this._version = module.cwrap('suzume_version', 'number', []) as () => number;
     this._lastError = module.cwrap('suzume_last_error', 'number', []) as () => number;
+    this._dictionaryWarningCount = module.cwrap('suzume_dictionary_warning_count', 'number', [
+      'number',
+    ]) as (handle: number) => number;
+    this._dictionaryWarning = module.cwrap('suzume_dictionary_warning', 'number', [
+      'number',
+      'number',
+    ]) as (handle: number, index: number) => number;
     this.layouts = layouts ?? Suzume.loadCLayouts(module);
   }
 
@@ -259,6 +308,14 @@ export class Suzume {
         conjType: offsetofMorpheme(4),
         conjForm: offsetofMorpheme(5),
         extendedPos: offsetofMorpheme(6),
+        start: offsetofMorpheme(7),
+        end: offsetofMorpheme(8),
+        isUserDict: offsetofMorpheme(9),
+        isFormalNoun: offsetofMorpheme(10),
+        isLowInfo: offsetofMorpheme(11),
+        isUnknown: offsetofMorpheme(12),
+        isFromDictionary: offsetofMorpheme(13),
+        score: offsetofMorpheme(14),
       },
       tags: {
         size: sizeofTags(),
@@ -273,6 +330,11 @@ export class Suzume {
         useLemma: offsetofTagOptions(2),
         minLength: offsetofTagOptions(3),
         maxTags: offsetofTagOptions(4),
+        excludeParticles: offsetofTagOptions(5),
+        excludeAuxiliaries: offsetofTagOptions(6),
+        excludeFormalNouns: offsetofTagOptions(7),
+        excludeLowInfo: offsetofTagOptions(8),
+        removeDuplicates: offsetofTagOptions(9),
       },
       extendedOptions: {
         size: sizeofExtendedOptions(),
@@ -322,7 +384,7 @@ export class Suzume {
       const optionsPtr = module._malloc(OPTIONS_SIZE);
 
       try {
-        const heap = (module as unknown as { HEAPU32: Uint32Array }).HEAPU32;
+        const heap = module.HEAPU32;
         const modeMap: Record<NonNullable<SuzumeOptions['mode']>, number> = {
           normal: 0,
           search: 1,
@@ -429,14 +491,25 @@ export class Suzume {
         const optionsPtr = this.module._malloc(this.layouts.tagOptions.size);
 
         try {
-          const heapU32 = (this.module as unknown as { HEAPU32: Uint32Array }).HEAPU32;
+          const heapU32 = this.module.HEAPU32;
+          const heapU8 = new Uint8Array(heapU32.buffer);
           const layout = this.layouts.tagOptions;
 
-          heapU32[(optionsPtr + layout.posFilter) >> 2] = posFilter;
+          heapU8[optionsPtr + layout.posFilter] = posFilter & 0xff;
           heapU32[(optionsPtr + layout.excludeBasic) >> 2] = options.excludeBasic ? 1 : 0;
           heapU32[(optionsPtr + layout.useLemma) >> 2] = options.useLemma !== false ? 1 : 0;
           heapU32[(optionsPtr + layout.minLength) >> 2] = options.minLength ?? 2;
           heapU32[(optionsPtr + layout.maxTags) >> 2] = options.maxTags ?? 0;
+          heapU32[(optionsPtr + layout.excludeParticles) >> 2] =
+            options.excludeParticles !== false ? 1 : 0;
+          heapU32[(optionsPtr + layout.excludeAuxiliaries) >> 2] =
+            options.excludeAuxiliaries !== false ? 1 : 0;
+          heapU32[(optionsPtr + layout.excludeFormalNouns) >> 2] =
+            options.excludeFormalNouns !== false ? 1 : 0;
+          heapU32[(optionsPtr + layout.excludeLowInfo) >> 2] =
+            options.excludeLowInfo !== false ? 1 : 0;
+          heapU32[(optionsPtr + layout.removeDuplicates) >> 2] =
+            options.removeDuplicates !== false ? 1 : 0;
 
           const tagsPtr = this._generateTagsWithOptions(this.handle, textPtr, optionsPtr);
           if (tagsPtr === 0) {
@@ -512,7 +585,7 @@ export class Suzume {
     const dataPtr = this.module._malloc(data.byteLength);
     try {
       // Derive Uint8Array view from HEAPU32's underlying buffer (HEAPU8 may not be exported)
-      const heapU32 = (this.module as unknown as { HEAPU32: Uint32Array }).HEAPU32;
+      const heapU32 = this.module.HEAPU32;
       const heapU8 = new Uint8Array(heapU32.buffer);
       heapU8.set(data, dataPtr);
       return this._loadBinaryDict(this.handle, dataPtr, data.byteLength) === 1;
@@ -550,6 +623,22 @@ export class Suzume {
   }
 
   /**
+   * Dictionary warnings produced while auto-loading dictionaries at construction.
+   */
+  get dictionaryWarnings(): string[] {
+    this.ensureAlive();
+    const count = this._dictionaryWarningCount(this.handle);
+    const warnings: string[] = [];
+    for (let idx = 0; idx < count; idx++) {
+      const warningPtr = this._dictionaryWarning(this.handle, idx);
+      if (warningPtr !== 0) {
+        warnings.push(this.module.UTF8ToString(warningPtr));
+      }
+    }
+    return warnings;
+  }
+
+  /**
    * Destroy the Suzume instance and free resources.
    * Called automatically via FinalizationRegistry when garbage collected,
    * but can be called explicitly for immediate cleanup.
@@ -574,7 +663,8 @@ export class Suzume {
 
   // Parse suzume_result_t structure from WASM memory
   private parseResult(resultPtr: number): Morpheme[] {
-    const HEAPU32 = (this.module as unknown as { HEAPU32: Uint32Array }).HEAPU32;
+    const HEAPU32 = this.module.HEAPU32;
+    const HEAPF32 = new Float32Array(HEAPU32.buffer);
     const resultLayout = this.layouts.result;
     const morphemeLayout = this.layouts.morpheme;
 
@@ -592,6 +682,8 @@ export class Suzume {
       const conjTypePtr = HEAPU32[(morphPtr + morphemeLayout.conjType) >> 2];
       const conjFormPtr = HEAPU32[(morphPtr + morphemeLayout.conjForm) >> 2];
       const extendedPosPtr = HEAPU32[(morphPtr + morphemeLayout.extendedPos) >> 2];
+      const start = HEAPU32[(morphPtr + morphemeLayout.start) >> 2];
+      const end = HEAPU32[(morphPtr + morphemeLayout.end) >> 2];
 
       morphemes.push({
         surface: this.module.UTF8ToString(surfacePtr),
@@ -601,6 +693,14 @@ export class Suzume {
         conjType: conjTypePtr !== 0 ? this.module.UTF8ToString(conjTypePtr) : null,
         conjForm: conjFormPtr !== 0 ? this.module.UTF8ToString(conjFormPtr) : null,
         extendedPos: this.module.UTF8ToString(extendedPosPtr),
+        start,
+        end,
+        isUserDict: HEAPU32[(morphPtr + morphemeLayout.isUserDict) >> 2] !== 0,
+        isFormalNoun: HEAPU32[(morphPtr + morphemeLayout.isFormalNoun) >> 2] !== 0,
+        isLowInfo: HEAPU32[(morphPtr + morphemeLayout.isLowInfo) >> 2] !== 0,
+        isUnknown: HEAPU32[(morphPtr + morphemeLayout.isUnknown) >> 2] !== 0,
+        isFromDictionary: HEAPU32[(morphPtr + morphemeLayout.isFromDictionary) >> 2] !== 0,
+        score: HEAPF32[(morphPtr + morphemeLayout.score) >> 2],
       });
     }
 
@@ -609,7 +709,7 @@ export class Suzume {
 
   // Parse suzume_tags_t structure from WASM memory
   private parseTags(tagsPtr: number): Tag[] {
-    const HEAPU32 = (this.module as unknown as { HEAPU32: Uint32Array }).HEAPU32;
+    const HEAPU32 = this.module.HEAPU32;
     const layout = this.layouts.tags;
 
     const tagsArrayPtr = HEAPU32[(tagsPtr + layout.tags) >> 2];

@@ -499,8 +499,8 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
       // splits like 皆様(NOUN) + 方(SUFFIX) for 皆様方. Restricting to "prev is
       // kanji" avoids false splits like その方(NOUN), 北の方(NOUN) where 方 is
       // a standalone noun, not a plural-honorific suffix.
-      if (start_type == normalize::CharType::Kanji && len == 1 && codepoints[start_pos] == U'方' &&
-          start_pos > 0 && char_types[start_pos - 1] == normalize::CharType::Kanji) {
+      if (start_type == normalize::CharType::Kanji && len == 1 && codepoints[start_pos] == U'方' && start_pos > 0 &&
+          char_types[start_pos - 1] == normalize::CharType::Kanji) {
         auto suffix_cand = makeCandidate(surface, start_pos, candidate_end, core::PartOfSpeech::Suffix, 0.5F,
                                          /*has_suffix=*/true, CandidateOrigin::SameType);
 #ifdef SUZUME_DEBUG_INFO

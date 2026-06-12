@@ -57,22 +57,31 @@ size_t parseInteger(std::string_view text, size_t pos, std::string& digits) {
 size_t parseDigits(std::string_view text, size_t pos, std::string& digits) {
   digits.clear();
   size_t idx = pos;
+  bool seen_comma = false;
+  size_t digits_since_comma = 0;
   while (idx < text.size()) {
     char chr = text[idx];
     if (isAsciiDigit(chr)) {
       digits += chr;
       ++idx;
+      ++digits_since_comma;
     } else if (chr == '.') {
       // Check if followed by digit (decimal point)
       if (idx + 1 < text.size() && isAsciiDigit(text[idx + 1])) {
         digits += chr;
         ++idx;
+        digits_since_comma = 0;
       } else {
         break;
       }
     } else if (chr == ',') {
-      // Thousand separator - skip but continue
-      if (idx + 1 < text.size() && isAsciiDigit(text[idx + 1])) {
+      // Thousand separator: require one to three digits before the first comma,
+      // and exactly three digits between subsequent commas.
+      if ((!seen_comma || digits_since_comma == 3) && digits_since_comma > 0 && digits_since_comma <= 3 &&
+          idx + 3 < text.size() && isAsciiDigit(text[idx + 1]) && isAsciiDigit(text[idx + 2]) &&
+          isAsciiDigit(text[idx + 3]) && (idx + 4 >= text.size() || !isAsciiDigit(text[idx + 4]))) {
+        seen_comma = true;
+        digits_since_comma = 0;
         ++idx;
       } else {
         break;
@@ -84,6 +93,7 @@ size_t parseDigits(std::string_view text, size_t pos, std::string& digits) {
       if (isFullwidthDigit(codepoint)) {
         digits += static_cast<char>('0' + (codepoint - 0xFF10));
         idx = byte_pos;
+        ++digits_since_comma;
       } else {
         break;
       }

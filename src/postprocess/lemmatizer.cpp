@@ -329,6 +329,40 @@ const VerbEnding kAdjectiveEndings[] = {
     {"くなかった", "い"}, {"くない", "い"},   {"かった", "い"}, {"くて", "い"},   {"く", "い"},     {"さ", "い"},
 };
 
+struct ContractedVerbEnding {
+  std::string_view suffix;
+  std::string_view onbin;
+};
+
+const ContractedVerbEnding kContractedVerbEndings[] = {
+    {"ってしまった", "っ"}, {"いてしまった", "い"}, {"んでしまった", "ん"}, {"してしまった", ""}, {"っておいた", "っ"},
+    {"いておいた", "い"},   {"んでおいた", "ん"},   {"しておいた", ""},     {"ってみた", "っ"},   {"いてみた", "い"},
+    {"んでみた", "ん"},     {"してみた", ""},       {"ってきた", "っ"},     {"いてきた", "い"},   {"んできた", "ん"},
+    {"してきた", ""},       {"っていった", "っ"},   {"いていった", "い"},   {"んでいった", "ん"}, {"していった", ""},
+    {"っとく", "っ"},       {"っといた", "っ"},     {"っといて", "っ"},     {"いとく", "い"},     {"いといた", "い"},
+    {"いといて", "い"},     {"んどく", "ん"},       {"んどいた", "ん"},     {"んどいて", "ん"},   {"ってる", "っ"},
+    {"ってた", "っ"},       {"いてる", "い"},       {"いてた", "い"},       {"んでる", "ん"},     {"んでた", "ん"},
+    {"った", "っ"},         {"って", "っ"},         {"いた", "い"},         {"いて", "い"},       {"いだ", "い"},
+    {"いで", "い"},         {"んだ", "ん"},         {"んで", "ん"},         {"した", ""},         {"して", ""},
+};
+
+const std::string_view kSuruPassiveEndings[] = {
+    "されている", "されました", "されます", "されない", "される", "された", "されて",
+};
+
+bool hasExactVerbEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  auto results = dict_manager->lookup(surface, 0);
+  for (const auto& result : results) {
+    if (result.entry != nullptr && result.entry->surface == surface && result.entry->pos == core::PartOfSpeech::Verb) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 bool Lemmatizer::endsWith(std::string_view str, std::string_view suffix) {
@@ -498,6 +532,55 @@ std::string Lemmatizer::lemmatizeByGrammar(std::string_view surface, core::PartO
   return std::string(surface);
 }
 
+std::string lemmatizeContractedVerbWithDictionary(std::string_view surface,
+                                                  const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr) {
+    return "";
+  }
+
+  for (const auto& ending : kContractedVerbEndings) {
+    if (surface.size() < ending.suffix.size() ||
+        surface.compare(surface.size() - ending.suffix.size(), ending.suffix.size(), ending.suffix) != 0) {
+      continue;
+    }
+
+    std::string stem(surface.substr(0, surface.size() - ending.suffix.size()));
+    for (const auto& [verb_type, base_suffix] : grammar::Conjugation::getGodanTypesByOnbin(ending.onbin)) {
+      (void)verb_type;
+      std::string base_form = stem + std::string(base_suffix);
+      if (hasExactVerbEntry(dict_manager, base_form)) {
+        return base_form;
+      }
+    }
+  }
+
+  return "";
+}
+
+std::string lemmatizeSuruPassiveWithDictionary(std::string_view surface,
+                                               const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr) {
+    return "";
+  }
+
+  for (std::string_view ending : kSuruPassiveEndings) {
+    if (surface.size() < ending.size() || surface.compare(surface.size() - ending.size(), ending.size(), ending) != 0) {
+      continue;
+    }
+
+    std::string stem(surface.substr(0, surface.size() - ending.size()));
+    if (stem.empty()) {
+      continue;
+    }
+    std::string base_form = stem + "する";
+    if (hasExactVerbEntry(dict_manager, base_form)) {
+      return base_form;
+    }
+  }
+
+  return "";
+}
+
 std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
   // If morpheme is from dictionary and has distinct lemma set, trust it
   // (lemma != surface means it was explicitly set, not defaulted)
@@ -635,6 +718,13 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
     return morpheme.lemma;
   }
 
+  if (morpheme.pos == core::PartOfSpeech::Verb) {
+    std::string suru_passive = lemmatizeSuruPassiveWithDictionary(morpheme.surface, dict_manager_);
+    if (!suru_passive.empty()) {
+      return suru_passive;
+    }
+  }
+
   // Skip grammar-based lemmatization for non-conjugating POS
   // Only verbs and adjectives conjugate
   switch (morpheme.pos) {
@@ -665,6 +755,13 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
       return morpheme.surface;
     default:
       break;
+  }
+
+  if (morpheme.pos == core::PartOfSpeech::Verb) {
+    std::string contracted = lemmatizeContractedVerbWithDictionary(morpheme.surface, dict_manager_);
+    if (!contracted.empty()) {
+      return contracted;
+    }
   }
 
   // Try grammar-based lemmatization for verbs and adjectives

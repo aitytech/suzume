@@ -25,6 +25,7 @@ struct SuzumeOptions {
   bool merge_compounds = false;
   bool remove_symbols = true;         // Remove symbol-only morphemes (default: true)
   bool skip_user_dictionary = false;  // Skip auto-loading user.dic (for testing)
+  bool skip_core_dictionary = false;  // Skip auto-loading core.dic (for testing)
   bool report_scorer_config = false;  // Print scorer config status/warnings
   postprocess::TagGeneratorOptions tag_options;
   normalize::NormalizeOptions normalize_options;
@@ -115,7 +116,7 @@ class Suzume {
   /**
    * @brief Analyze text into morphemes
    * @param text UTF-8 encoded Japanese text
-   * @return Vector of morphemes
+   * @return Vector of morphemes, or empty vector if text is empty or invalid UTF-8
    */
   std::vector<core::Morpheme> analyze(std::string_view text) const;
 

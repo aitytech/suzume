@@ -1,6 +1,8 @@
 """Test file utilities ported from TestFileUtils.pm."""
 
 import json
+import os
+import tempfile
 from pathlib import Path
 
 
@@ -23,7 +25,11 @@ def load_json(path: Path) -> dict:
 def save_json(path: Path, data: dict) -> None:
     """Save data as JSON with consistent formatting."""
     content = json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True)
-    path.write_text(content + "\n", encoding="utf-8")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as tmp:
+        tmp.write(content + "\n")
+        tmp_path = Path(tmp.name)
+    os.replace(tmp_path, path)
 
 
 def find_test_by_input(project_root: Path, input_text: str) -> dict | None:
@@ -35,8 +41,8 @@ def find_test_by_input(project_root: Path, input_text: str) -> dict | None:
     for path in get_test_files(project_root):
         try:
             data = load_json(path)
-        except Exception:
-            continue
+        except Exception as exc:
+            raise RuntimeError(f"Failed to parse JSON file: {path}") from exc
 
         cases = data.get("cases") or data.get("test_cases") or []
         for i, case in enumerate(cases):
@@ -69,8 +75,8 @@ def find_test_by_id(project_root: Path, test_id: str) -> dict | None:
 
     try:
         data = load_json(path)
-    except Exception:
-        return None
+    except Exception as exc:
+        raise RuntimeError(f"Failed to parse JSON file: {path}") from exc
 
     cases = data.get("cases") or data.get("test_cases") or []
 

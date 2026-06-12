@@ -21,7 +21,7 @@ export const RESULT_LAYOUT = {
 } as const;
 
 export const MORPHEME_LAYOUT = {
-  size: 28,
+  size: 60,
   surface: 0,
   pos: 4,
   baseForm: 8,
@@ -29,6 +29,14 @@ export const MORPHEME_LAYOUT = {
   conjType: 16,
   conjForm: 20,
   extendedPos: 24,
+  start: 28,
+  end: 32,
+  isUserDict: 36,
+  isFormalNoun: 40,
+  isLowInfo: 44,
+  isUnknown: 48,
+  isFromDictionary: 52,
+  score: 56,
 } as const;
 
 export const TAGS_LAYOUT = {
@@ -39,12 +47,17 @@ export const TAGS_LAYOUT = {
 } as const;
 
 export const TAG_OPTIONS_LAYOUT = {
-  size: 20,
+  size: 40,
   posFilter: 0,
   excludeBasic: 4,
   useLemma: 8,
   minLength: 12,
   maxTags: 16,
+  excludeParticles: 20,
+  excludeAuxiliaries: 24,
+  excludeFormalNouns: 28,
+  excludeLowInfo: 32,
+  removeDuplicates: 36,
 } as const;
 
 export const EXTENDED_OPTIONS_LAYOUT = {
@@ -83,9 +96,18 @@ export interface ParsedMorpheme {
   conjType: string | null;
   conjForm: string | null;
   extendedPos: string;
+  start: number;
+  end: number;
+  isUserDict: boolean;
+  isFormalNoun: boolean;
+  isLowInfo: boolean;
+  isUnknown: boolean;
+  isFromDictionary: boolean;
+  score: number;
 }
 
 export function parseMorphemes(module: WasmModule, resultPtr: number): ParsedMorpheme[] {
+  const heapF32 = new Float32Array(module.HEAPU32.buffer);
   const morphemesPtr = module.HEAPU32[(resultPtr + RESULT_LAYOUT.morphemes) >> 2];
   const count = module.HEAPU32[(resultPtr + RESULT_LAYOUT.count) >> 2];
   const morphemes: ParsedMorpheme[] = [];
@@ -108,6 +130,14 @@ export function parseMorphemes(module: WasmModule, resultPtr: number): ParsedMor
       conjType: conjTypePtr !== 0 ? module.UTF8ToString(conjTypePtr) : null,
       conjForm: conjFormPtr !== 0 ? module.UTF8ToString(conjFormPtr) : null,
       extendedPos: module.UTF8ToString(extendedPosPtr),
+      start: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.start) >> 2],
+      end: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.end) >> 2],
+      isUserDict: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.isUserDict) >> 2] !== 0,
+      isFormalNoun: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.isFormalNoun) >> 2] !== 0,
+      isLowInfo: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.isLowInfo) >> 2] !== 0,
+      isUnknown: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.isUnknown) >> 2] !== 0,
+      isFromDictionary: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.isFromDictionary) >> 2] !== 0,
+      score: heapF32[(morphPtr + MORPHEME_LAYOUT.score) >> 2],
     });
   }
   return morphemes;

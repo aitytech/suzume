@@ -21,19 +21,29 @@ def _get_cli_path() -> Path:
     return PROJECT_ROOT / "build" / "bin" / "suzume-cli"
 
 
-def get_suzume_surfaces(text: str, cli_path: Path | None = None) -> list[str]:
-    """Get surface tokens from Suzume CLI output (synchronous)."""
+def get_suzume_surfaces(text: str, cli_path: Path | None = None, skip_user_dict: bool = False) -> list[str]:
+    """Get surface tokens from Suzume CLI output (synchronous).
+
+    Args:
+        skip_user_dict: When True, pass --no-user-dict to match the C++ tokenization
+            test runner oracle (skip_user_dictionary=true). When False (default), the
+            CLI auto-loads user.dic, matching real-world CLI behavior — this is what
+            thread checking wants so that dict_add fixes are reflected.
+    """
     import subprocess
 
     cli = cli_path or _get_cli_path()
     if not cli.exists():
-        return []
+        raise RuntimeError(f"Suzume CLI not found: {cli}")
 
+    cmd = [str(cli)] + (["--no-user-dict"] if skip_user_dict else []) + [text]
     result = subprocess.run(
-        [str(cli), text],
+        cmd,
         capture_output=True,
         text=True,
     )
+    if result.returncode != 0:
+        raise RuntimeError(f"Suzume CLI failed: {result.stderr.strip() or 'non-zero exit'}")
     surfaces = []
     for line in result.stdout.split("\n"):
         if not line or line == "EOS":
@@ -44,19 +54,27 @@ def get_suzume_surfaces(text: str, cli_path: Path | None = None) -> list[str]:
     return surfaces
 
 
-async def get_suzume_surfaces_async(text: str, cli_path: Path | None = None) -> list[str]:
-    """Get surface tokens from Suzume CLI output (async)."""
+async def get_suzume_surfaces_async(text: str, cli_path: Path | None = None, skip_user_dict: bool = False) -> list[str]:
+    """Get surface tokens from Suzume CLI output (async).
+
+    Args:
+        skip_user_dict: When True, pass --no-user-dict to match the C++ tokenization
+            test runner oracle. When False (default), the CLI auto-loads user.dic.
+    """
     cli = cli_path or _get_cli_path()
     if not cli.exists():
-        return []
+        raise RuntimeError(f"Suzume CLI not found: {cli}")
 
+    args = (["--no-user-dict"] if skip_user_dict else []) + [text]
     proc = await asyncio.create_subprocess_exec(
         str(cli),
-        text,
+        *args,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-    stdout, _ = await proc.communicate()
+    stdout, stderr = await proc.communicate()
+    if proc.returncode != 0:
+        raise RuntimeError(f"Suzume CLI failed: {stderr.decode('utf-8').strip() or 'non-zero exit'}")
     surfaces = []
     for line in stdout.decode("utf-8").split("\n"):
         if not line or line == "EOS":
@@ -67,25 +85,34 @@ async def get_suzume_surfaces_async(text: str, cli_path: Path | None = None) -> 
     return surfaces
 
 
-async def get_suzume_debug_info(text: str, cli_path: Path | None = None) -> dict:
-    """Get debug info from Suzume CLI (SUZUME_DEBUG=2)."""
+async def get_suzume_debug_info(text: str, cli_path: Path | None = None, skip_user_dict: bool = True) -> dict:
+    """Get debug info from Suzume CLI (SUZUME_DEBUG=2).
+
+    Args:
+        skip_user_dict: Defaults to True so test_show debug output matches the test
+            oracle (the C++ runner uses skip_user_dictionary=true). Pass False to
+            inspect real-world CLI behavior with user.dic loaded.
+    """
     import re
 
     cli = cli_path or _get_cli_path()
     if not cli.exists():
-        return {}
+        raise RuntimeError(f"Suzume CLI not found: {cli}")
 
     env = os.environ.copy()
     env["SUZUME_DEBUG"] = "2"
 
+    args = (["--no-user-dict"] if skip_user_dict else []) + [text]
     proc = await asyncio.create_subprocess_exec(
         str(cli),
-        text,
+        *args,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         env=env,
     )
     stdout, stderr = await proc.communicate()
+    if proc.returncode != 0:
+        raise RuntimeError(f"Suzume CLI failed: {stderr.decode('utf-8').strip() or 'non-zero exit'}")
     output = stdout.decode("utf-8") + stderr.decode("utf-8")
 
     info: dict = {"best_path": "", "total_cost": 0, "margin": 0, "tokens": [], "connections": [], "word_costs": []}

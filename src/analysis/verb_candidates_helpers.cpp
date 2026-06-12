@@ -6,7 +6,6 @@
 #include "verb_candidates_helpers.h"
 
 #include <algorithm>
-#include <unordered_map>
 
 #include "analysis/scorer_constants.h"
 #include "core/debug.h"
@@ -322,28 +321,7 @@ bool isSokuonbinGodanType(grammar::VerbType verb_type) {
 }
 
 std::vector<std::pair<grammar::VerbType, std::string_view>> getGodanTypesByOnbin(std::string_view onbin) {
-  // Build lookup table on first access (thread-safe in C++11+)
-  // Maps onbin pattern → vector of (VerbType, base_suffix) pairs
-  static const auto kOnbinLookup = []() {
-    std::unordered_map<std::string, std::vector<std::pair<grammar::VerbType, std::string>>> lookup;
-    for (const auto& [type, row] : grammar::Conjugation::getGodanRows()) {
-      std::string base_suffix = normalize::encodeUtf8(row.base_vowel);
-      lookup[row.onbin].push_back({type, std::move(base_suffix)});
-    }
-    return lookup;
-  }();
-
-  // Return cached results (converted to string_view for efficiency)
-  auto it = kOnbinLookup.find(std::string(onbin));
-  if (it == kOnbinLookup.end()) {
-    return {};
-  }
-
-  std::vector<std::pair<grammar::VerbType, std::string_view>> result;
-  for (const auto& [type, suffix] : it->second) {
-    result.emplace_back(type, suffix);
-  }
-  return result;
+  return grammar::Conjugation::getGodanTypesByOnbin(onbin);
 }
 
 bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType verb_type) {

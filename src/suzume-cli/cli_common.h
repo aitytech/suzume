@@ -57,6 +57,11 @@ bool parseSizeOption(std::string_view value, size_t* out);
 std::string jsonEscape(std::string_view value);
 
 /**
+ * @brief Remove a UTF-8 byte order mark at the start of a string, if present.
+ */
+void stripUtf8Bom(std::string* value);
+
+/**
  * @brief Read all lines from stdin
  * @return Vector of lines
  */
@@ -108,6 +113,18 @@ struct CommandArgs {
 
   // Postprocess options
   bool preserve_symbols = false;  // --preserve-symbols: keep symbols in output
+  bool no_lemmatize = false;
+  bool merge_compounds = false;
+
+  // Tag generation options
+  bool tag_include_particles = false;
+  bool tag_include_auxiliaries = false;
+  bool tag_include_formal_nouns = false;
+  bool tag_include_low_info = false;
+  bool tag_keep_duplicates = false;
+  bool tag_use_surface = false;
+  size_t tag_min_length = 2;
+  size_t tag_max_tags = 0;
 };
 
 /**

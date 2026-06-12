@@ -131,6 +131,29 @@ describe('C API: analyze', () => {
     resultFree(resultPtr);
   });
 
+  it('should return offsets and diagnostic fields for all morphemes', () => {
+    const textPtr = allocString(module, '猫が走る');
+    const resultPtr = analyze(handle, textPtr);
+    module._free(textPtr);
+
+    const morphemes = parseMorphemes(module, resultPtr);
+    expect(morphemes.length).toBeGreaterThan(0);
+
+    for (const m of morphemes) {
+      expect(typeof m.start).toBe('number');
+      expect(typeof m.end).toBe('number');
+      expect(m.end).toBeGreaterThanOrEqual(m.start);
+      expect(typeof m.isUserDict).toBe('boolean');
+      expect(typeof m.isFormalNoun).toBe('boolean');
+      expect(typeof m.isLowInfo).toBe('boolean');
+      expect(typeof m.isUnknown).toBe('boolean');
+      expect(typeof m.isFromDictionary).toBe('boolean');
+      expect(typeof m.score).toBe('number');
+    }
+
+    resultFree(resultPtr);
+  });
+
   it('should return correct extendedPos for verb conjugation forms', () => {
     // 食べた → 食べ(VerbRenyokei) + た(AuxPast)
     const textPtr = allocString(module, '食べた');

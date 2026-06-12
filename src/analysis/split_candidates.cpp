@@ -147,7 +147,7 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
         auto lookup = dict_manager.lookup(kanji_part, 0);
         bool found_exact = false;
         for (const auto& r : lookup) {
-          if (r.entry->surface == kanji_part) {
+          if (r.entry != nullptr && r.entry->surface == kanji_part) {
             found_exact = true;
             break;
           }
@@ -329,10 +329,8 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
         }
         // Surface exists in dict but as non-noun (Adverb, Conjunction, Determiner etc.).
         // Don't fabricate a fake NOUN split candidate that would shadow the dict POS.
-        if (result.entry->pos == core::PartOfSpeech::Adverb ||
-            result.entry->pos == core::PartOfSpeech::Conjunction ||
-            result.entry->pos == core::PartOfSpeech::Determiner ||
-            result.entry->pos == core::PartOfSpeech::Adjective) {
+        if (result.entry->pos == core::PartOfSpeech::Adverb || result.entry->pos == core::PartOfSpeech::Conjunction ||
+            result.entry->pos == core::PartOfSpeech::Determiner || result.entry->pos == core::PartOfSpeech::Adjective) {
           noun_surface_is_non_noun_dict = true;
         }
       }

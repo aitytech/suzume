@@ -674,11 +674,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
         // When the second kanji is followed by ん, check if kanji2+ぶ/む/ぬ is in dict
         if (kanji2_end < codepoints.size() && codepoints[kanji2_end] == U'ん' && dict_manager != nullptr) {
           std::string kanji2_stem = extractSubstring(codepoints, sokuon_pos + 1, kanji2_end);
-          static const std::vector<std::pair<grammar::VerbType, std::string_view>> hatsuonbin_types = {
-              {grammar::VerbType::GodanBa, "ぶ"},
-              {grammar::VerbType::GodanMa, "む"},
-              {grammar::VerbType::GodanNa, "ぬ"},
-          };
+          auto hatsuonbin_types = verb_helpers::getGodanTypesByOnbin("ん");
 
           for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
             std::string base_form = kanji2_stem + std::string(base_suffix);
@@ -1053,6 +1049,14 @@ bool isNumeralChar(char32_t c) {
   }
   return false;
 }
+
+bool isKnownKatakanaNumericUnit(std::string_view surface) {
+  return utf8::equalsAny(surface, {
+                                      "キロ",     "キログラム",   "メートル",   "センチ", "ミリ", "グラム", "トン",
+                                      "リットル", "ミリリットル", "パーセント", "パー",   "ドル", "ユーロ", "カロリー",
+                                      "ページ",   "ポイント",     "ゴールド",   "アデナ", "ケロ",
+                                  });
+}
 }  // namespace
 
 std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -1114,6 +1118,10 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
       unit_len = unit_end - numeral_end;
     }
     if (unit_len >= 1) {  // unit_len <= 8 guaranteed by findCharRegionEnd
+      std::string unit_surface = extractSubstring(codepoints, numeral_end, unit_end);
+      if (!isKnownKatakanaNumericUnit(unit_surface)) {
+        return candidates;
+      }
       std::string surface = extractSubstring(codepoints, start_pos, unit_end);
       if (!surface.empty()) {
         // Penalize numbers starting with 0 (e.g., "00ポイント" is unnatural)

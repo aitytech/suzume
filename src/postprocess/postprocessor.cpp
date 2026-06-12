@@ -45,6 +45,27 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
     SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] lemmatize: applied\n");
   }
 
+  for (size_t i = 0; i + 1 < result.size(); ++i) {
+    if (result[i].surface == "付け" && result[i].pos == core::PartOfSpeech::Verb && result[i + 1].surface == "で" &&
+        result[i + 1].pos == core::PartOfSpeech::Particle) {
+      result[i].pos = core::PartOfSpeech::Noun;
+      result[i].extended_pos = core::ExtendedPOS::Noun;
+      result[i].lemma = result[i].surface;
+      result[i].conj_type = dictionary::ConjugationType::None;
+      result[i].conj_form = grammar::ConjForm::Base;
+    }
+  }
+  for (size_t i = 2; i + 1 < result.size(); ++i) {
+    if (result[i - 2].surface == "に" && result[i - 1].surface == "あり" && result[i].surface == "ん" &&
+        result[i + 1].surface == "す" && result[i].pos == core::PartOfSpeech::Auxiliary) {
+      result[i].pos = core::PartOfSpeech::Particle;
+      result[i].extended_pos = core::ExtendedPOS::ParticleBinding;
+      result[i].lemma = "の";
+      result[i].conj_type = dictionary::ConjugationType::None;
+      result[i].conj_form = grammar::ConjForm::Base;
+    }
+  }
+
   // Merge verb renyokei + もの → compound noun (食べもの, 飲みもの, etc.)
   // Must run after lemmatize so conj_form is set
   before_count = result.size();
@@ -145,7 +166,7 @@ std::vector<core::Morpheme> Postprocessor::filterMorphemes(const std::vector<cor
     }
 
     // Skip short morphemes
-    if (morpheme.surface.size() < options_.min_surface_length) {
+    if (normalize::utf8Length(morpheme.surface) < options_.min_surface_length) {
       continue;
     }
 
@@ -318,9 +339,17 @@ bool endsWithDigit(const std::string& surface) {
 
 using normalize::isCounterKanji;
 
+bool isKnownKatakanaUnit(const std::string& surface) {
+  return utf8::equalsAny(surface, {
+                                      "キロ",     "キログラム",   "メートル",   "センチ", "ミリ", "グラム", "トン",
+                                      "リットル", "ミリリットル", "パーセント", "パー",   "ドル", "ユーロ", "カロリー",
+                                      "ページ",   "ポイント",     "ゴールド",   "アデナ", "ケロ",
+                                  });
+}
+
 // Check if surface looks like a unit (noun that can follow numbers)
 // For kanji: must start with a counter kanji (円, 分, 時間, etc.)
-// For katakana: length-based heuristic (キロ, メートル, etc.)
+// For katakana: explicit known-unit list to avoid merging general nouns.
 bool looksLikeUnit(const std::string& surface) {
   if (surface.empty())
     return false;
@@ -337,11 +366,10 @@ bool looksLikeUnit(const std::string& surface) {
     return isCounterKanji(first);
   }
 
-  // Katakana units (キロ, メートル, パーセント, etc.): length heuristic
+  // Katakana units (キロ, メートル, パーセント, etc.)
   // Katakana: U+30A0-U+30FF
   if (first >= 0x30A0 && first <= 0x30FF) {
-    size_t len = codepoints.size();
-    return len >= 1 && len <= 5;
+    return isKnownKatakanaUnit(surface);
   }
 
   return false;
@@ -564,13 +592,12 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(const std::ve
         // Only merge if preceding token is not a symbol
         if (current.pos != core::PartOfSpeech::Symbol) {
           core::Morpheme merged = current;
-          // Merge consecutive ーs into one ー
-          merged.surface += "ー";
+          merged.surface += next.surface;
           merged.end = next.end;
           merged.end_pos = next.end_pos;
           // Update lemma
           if (!merged.lemma.empty()) {
-            merged.lemma += "ー";
+            merged.lemma += next.surface;
           }
 
           // Skip any additional ー tokens
@@ -585,6 +612,10 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(const std::ve
             }
             if (!is_prolonged)
               break;
+            merged.surface += morphemes[skip].surface;
+            if (!merged.lemma.empty()) {
+              merged.lemma += morphemes[skip].surface;
+            }
             merged.end = morphemes[skip].end;
             merged.end_pos = morphemes[skip].end_pos;
             ++skip;

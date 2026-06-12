@@ -6,8 +6,7 @@ import re
 import unicodedata
 from pathlib import Path
 
-from ..core.suzume_cli import get_suzume_surfaces
-from ..core.suzume_utils import get_expected_tokens
+from ..core.suzume_cli import get_expected_tokens_subprocess, get_suzume_surfaces
 from ..server import PROJECT_ROOT, mcp
 
 SKILL_DIR = PROJECT_ROOT / ".claude" / "skills" / "thread-quality-check"
@@ -128,8 +127,10 @@ def _save_progress(progress: dict) -> None:
 
 def _compare_surfaces(text: str) -> dict:
     """Compare suzume CLI output vs expected surfaces."""
-    suzume_surfaces = get_suzume_surfaces(text)
-    tokens, _, _ = get_expected_tokens(text)
+    # Thread checking runs WITH user.dic (skip_user_dict=False) so that entries
+    # added via dict_add are reflected and thread_bugs_sweep can auto-resolve them.
+    suzume_surfaces = get_suzume_surfaces(text, skip_user_dict=False)
+    tokens, _, _ = get_expected_tokens_subprocess(text)
     expected_surfaces = [t["surface"] for t in tokens]
 
     suzume_joined = " ".join(suzume_surfaces)
@@ -685,5 +686,4 @@ async def thread_bugs_sweep(source: str = "thread") -> str:
         result_data["errors"] = errors
 
     return _json_result(result_data)
-
 

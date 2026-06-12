@@ -146,6 +146,11 @@ bool isIRowCodepoint(char32_t cp);
 bool isARowCodepoint(char32_t cp);
 
 /**
+ * @brief Check if a codepoint is o-row hiragana
+ */
+bool isORowCodepoint(char32_t cp);
+
+/**
  * @brief Check if stem ends with onbin marker (音便)
  * @param stem The stem to check
  * @return True if the stem ends with い, っ, or ん

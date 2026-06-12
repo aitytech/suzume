@@ -109,6 +109,19 @@ TEST_F(NormalizerTest, NeedsNormalization_Mixed) {
   EXPECT_TRUE(normalizer_.needsNormalization("hello world ０"));
 }
 
+TEST(NormalizerOptionsTest, NeedsNormalizationRespectsPreserveOptions) {
+  NormalizeOptions opts;
+  opts.preserve_vu = true;
+  opts.preserve_case = true;
+  Normalizer preserving(opts);
+  EXPECT_FALSE(preserving.needsNormalization("ABCヴァ"));
+
+  opts.preserve_vu = false;
+  opts.preserve_case = false;
+  Normalizer normalizing(opts);
+  EXPECT_TRUE(normalizing.needsNormalization("ABCヴァ"));
+}
+
 // Empty and special cases
 TEST_F(NormalizerTest, EmptyString) {
   auto result = normalizer_.normalize("");

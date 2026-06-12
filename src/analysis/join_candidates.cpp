@@ -37,6 +37,11 @@ struct SubsidiaryVerb {
 
 // List of V2 verbs that can form compound verbs
 // Renyokei forms are generated automatically from base forms
+// This is intentionally a closed lexical allowlist, not a generic "any verb can
+// be V2" rule. Japanese compound-verb productivity is high, but unrestricted
+// generation over-splits ordinary kanji+verb sequences and creates many false
+// positives. Keep this table synchronized with tokenization tests when adding
+// new V2 verbs.
 // NOTE: 始める, 過ぎる, 終わる/終える are NOT included because they are
 // grammatical/aspectual auxiliaries that should be tokenized separately
 // for MeCab compatibility (e.g., 読み + 始める, not 読み始める)
@@ -610,7 +615,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
           size_t kanji_prefix_len = 0;
           for (size_t idx = 0; idx < v2_surface_decoded.size(); ++idx) {
             char32_t c = v2_surface_decoded[idx];
-            if (c >= 0x4E00 && c <= 0x9FFF) {
+            if (kana::isKanjiCodepoint(c)) {
               ++kanji_prefix_len;
             } else {
               break;
@@ -1754,8 +1759,8 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     constexpr float kCompoundNounBonus = -1.0F;
     float final_cost = base_cost + kCompoundNounBonus;
     uint8_t flags = core::LatticeEdge::kFromDictionary;
-    lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
-                    core::PartOfSpeech::Noun, final_cost, flags, surface);
+    lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos), core::PartOfSpeech::Noun,
+                    final_cost, flags, surface);
     return;
   }
 

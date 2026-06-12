@@ -35,5 +35,64 @@ TEST(CliCommonTest, ParseSizeOptionAcceptsSize) {
   EXPECT_EQ(value, 42u);
 }
 
+TEST(CliCommonTest, ParseArgsAcceptsTagOptions) {
+  const char* argv[] = {"suzume-cli",
+                        "-f",
+                        "tags",
+                        "--include-particles",
+                        "--include-auxiliaries",
+                        "--include-formal-nouns",
+                        "--include-low-info",
+                        "--tag-keep-duplicates",
+                        "--tag-use-surface",
+                        "--tag-min-length",
+                        "1",
+                        "--tag-max-tags",
+                        "3",
+                        "猫が走る"};
+  auto args = parseArgs(static_cast<int>(sizeof(argv) / sizeof(argv[0])), const_cast<char**>(argv));
+
+  EXPECT_EQ(args.format, OutputFormat::Tags);
+  EXPECT_TRUE(args.tag_include_particles);
+  EXPECT_TRUE(args.tag_include_auxiliaries);
+  EXPECT_TRUE(args.tag_include_formal_nouns);
+  EXPECT_TRUE(args.tag_include_low_info);
+  EXPECT_TRUE(args.tag_keep_duplicates);
+  EXPECT_TRUE(args.tag_use_surface);
+  EXPECT_EQ(args.tag_min_length, 1u);
+  EXPECT_EQ(args.tag_max_tags, 3u);
+}
+
+TEST(CliCommonTest, ParseArgsTreatsLeadingDashTextAsImplicitAnalyzeInput) {
+  const char* argv[] = {"suzume-cli", "-テスト"};
+  auto args = parseArgs(static_cast<int>(sizeof(argv) / sizeof(argv[0])), const_cast<char**>(argv));
+
+  EXPECT_EQ(args.command, "analyze");
+  ASSERT_EQ(args.args.size(), 1u);
+  EXPECT_EQ(args.args[0], "-テスト");
+}
+
+TEST(CliCommonTest, ParseArgsConnectsAdvancedAnalyzeOptions) {
+  const char* argv[] = {"suzume-cli", "-VV", "--no-core-dict", "--no-lemmatize", "--merge-compounds", "テスト"};
+  auto args = parseArgs(static_cast<int>(sizeof(argv) / sizeof(argv[0])), const_cast<char**>(argv));
+
+  EXPECT_TRUE(args.verbose);
+  EXPECT_TRUE(args.very_verbose);
+  EXPECT_TRUE(args.debug);
+  EXPECT_TRUE(args.no_core_dict);
+  EXPECT_TRUE(args.no_lemmatize);
+  EXPECT_TRUE(args.merge_compounds);
+}
+
+TEST(CliCommonTest, StripUtf8BomRemovesOnlyLeadingBom) {
+  std::string value = "\xEF\xBB\xBFtext";
+  stripUtf8Bom(&value);
+  EXPECT_EQ(value, "text");
+
+  value = "text\xEF\xBB\xBF";
+  stripUtf8Bom(&value);
+  EXPECT_EQ(value, "text\xEF\xBB\xBF");
+}
+
 }  // namespace
 }  // namespace suzume::cli

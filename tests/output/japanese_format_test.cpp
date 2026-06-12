@@ -8,7 +8,10 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "core/types.h"
+#include "dictionary/user_dict.h"
 #include "grammar/conjugation.h"
 #include "postprocess/lemmatizer.h"
 #include "suzume.h"
@@ -130,6 +133,49 @@ TEST_F(JapaneseVerbTypeTest, IAdjective) {
 
 TEST_F(JapaneseVerbTypeTest, Unknown) {
   EXPECT_EQ(grammar::verbTypeToJapanese(grammar::VerbType::Unknown), "");
+}
+
+TEST(LemmatizerTest, ContractedGodanSokuonFormsUseDictionaryVerifiedRows) {
+  dictionary::DictionaryManager dict_manager;
+  auto user_dict = std::make_shared<dictionary::UserDictionary>();
+  user_dict->addEntry({"待つ", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "待つ"});
+  user_dict->addEntry({"帰る", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "帰る"});
+  user_dict->addEntry({"買う", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "買う"});
+  dict_manager.addUserDictionary(user_dict);
+
+  postprocess::Lemmatizer lemmatizer(&dict_manager);
+  core::Morpheme morpheme;
+  morpheme.pos = core::PartOfSpeech::Verb;
+
+  morpheme.surface = "待ってしまった";
+  EXPECT_EQ(lemmatizer.lemmatize(morpheme), "待つ");
+
+  morpheme.surface = "帰ってしまった";
+  EXPECT_EQ(lemmatizer.lemmatize(morpheme), "帰る");
+
+  morpheme.surface = "買ってしまった";
+  EXPECT_EQ(lemmatizer.lemmatize(morpheme), "買う");
+}
+
+TEST(LemmatizerTest, DictionarySuruPassiveReturnsSuruLemma) {
+  dictionary::DictionaryManager dict_manager;
+  auto user_dict = std::make_shared<dictionary::UserDictionary>();
+  user_dict->addEntry({"処理する", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "処理する"});
+  user_dict->addEntry({"確認する", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "確認する"});
+  dict_manager.addUserDictionary(user_dict);
+
+  postprocess::Lemmatizer lemmatizer(&dict_manager);
+  core::Morpheme morpheme;
+  morpheme.pos = core::PartOfSpeech::Verb;
+  morpheme.is_from_dictionary = true;
+
+  morpheme.surface = "処理される";
+  morpheme.lemma = "処理される";
+  EXPECT_EQ(lemmatizer.lemmatize(morpheme), "処理する");
+
+  morpheme.surface = "確認されて";
+  morpheme.lemma = "確認されて";
+  EXPECT_EQ(lemmatizer.lemmatize(morpheme), "確認する");
 }
 
 // =============================================================================

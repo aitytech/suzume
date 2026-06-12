@@ -10,19 +10,19 @@ from .postprocessors import (
     postprocess_copula_neg,
     postprocess_de_aru,
     postprocess_de_particle,
-    postprocess_gozai_verb,
-    postprocess_n_kuruwa,
-    postprocess_nai_context,
-    postprocess_taihen,
     postprocess_demo,
+    postprocess_gozai_verb,
     postprocess_ii,
     postprocess_ikaga,
     postprocess_iru_aux,
     postprocess_mecab_tokens,
+    postprocess_n_kuruwa,
     postprocess_na_adj_noun,
+    postprocess_nai_context,
     postprocess_nara_verb,
     postprocess_sou,
     postprocess_sou_aux,
+    postprocess_taihen,
     postprocess_tsuke_noun,
     postprocess_you_noun,
     preprocess_for_mecab,
@@ -133,8 +133,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     return tokens, "MeCab", ""
 
 
-def tokens_match(a: list[dict], b: list[dict]) -> bool:
-    """Compare two token arrays for equality (surface, pos). Lemma skipped."""
+def tokens_match(a: list[dict], b: list[dict], *, compare_lemma: bool = True) -> bool:
+    """Compare two token arrays for equality (surface, pos, and lemma by default)."""
     if len(a) != len(b):
         return False
     for ta, tb in zip(a, b, strict=True):
@@ -144,6 +144,11 @@ def tokens_match(a: list[dict], b: list[dict]) -> bool:
         pos_b = normalize_pos(tb.get("pos", ""))
         if pos_a != pos_b:
             return False
+        if compare_lemma:
+            lemma_a = ta.get("lemma") or ta.get("surface", "")
+            lemma_b = tb.get("lemma") or tb.get("surface", "")
+            if lemma_a != lemma_b:
+                return False
     return True
 
 

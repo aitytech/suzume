@@ -1003,23 +1003,21 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
         )
         if (
             merged
-            and regex.match(r"^[\p{Han}]+$", surface)
-            and regex.match(r"^[\p{Han}]+$", merged[-1].get("surface", ""))
-            and "々" not in merged[-1].get("surface", "")
-            and merged[-1].get("pos_sub1", "") not in ("副詞可能", "固有名詞", "数")
-            and merged[-1].get("pos", "") != "副詞"
-            and (curr.get("pos_sub1", "") != "接尾" or is_merge_allowed_suffix)
-            and not prev_is_go_prefix
-        ):
-            merged[-1]["surface"] += surface
-            merged[-1]["lemma"] = merged[-1]["surface"]
-            merged[-1]["pos"] = "名詞"
-            if applied_rule is None:
-                applied_rule = "kanji-merge"
-        elif (
-            merged
-            and merged[-1].get("surface", "") in _KANJI_HIRA_MERGES
-            and surface in _KANJI_HIRA_MERGES[merged[-1]["surface"]]
+            and (
+                (
+                    regex.match(r"^[\p{Han}]+$", surface)
+                    and regex.match(r"^[\p{Han}]+$", merged[-1].get("surface", ""))
+                    and "々" not in merged[-1].get("surface", "")
+                    and merged[-1].get("pos_sub1", "") not in ("副詞可能", "固有名詞", "数")
+                    and merged[-1].get("pos", "") != "副詞"
+                    and (curr.get("pos_sub1", "") != "接尾" or is_merge_allowed_suffix)
+                    and not prev_is_go_prefix
+                )
+                or (
+                    merged[-1].get("surface", "") in _KANJI_HIRA_MERGES
+                    and surface in _KANJI_HIRA_MERGES[merged[-1]["surface"]]
+                )
+            )
         ):
             merged[-1]["surface"] += surface
             merged[-1]["lemma"] = merged[-1]["surface"]

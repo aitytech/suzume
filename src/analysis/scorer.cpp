@@ -1101,41 +1101,10 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // a 3+1 stem+suffix split (新規手 + 法). Penalize to let the whole-word
   // (or 2+2 split) compete fairly. Dict-verified 3-char NOUNs (e.g., 政治学+者 if
   // 政治学 were in dict) keep the bonus, since they represent intended compounds.
-  if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix &&
-      !prev.fromDictionary() && prev.surface.size() >= 3 * core::kJapaneseCharBytes &&
-      next.surface.size() == core::kJapaneseCharBytes && grammar::isAllKanji(prev.surface) &&
-      grammar::isAllKanji(next.surface)) {
+  if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix && !prev.fromDictionary() &&
+      prev.surface.size() >= 3 * core::kJapaneseCharBytes && next.surface.size() == core::kJapaneseCharBytes &&
+      grammar::isAllKanji(prev.surface) && grammar::isAllKanji(next.surface)) {
     surface_bonus += cost::kRare;  // +1.0 to neutralize -0.8 bigram bonus
-  }
-
-  // Penalty for pronoun-like NOUN + でも pattern (limited)
-  // NOTE: This is a known limitation. MeCab's behavior is context-dependent:
-  //   - 何でもあり → でも keeps together
-  //   - 何でもありだな → で|も splits
-  //   - 彼女でもない → で|も splits
-  //   - 彼女でもいい → でも keeps together
-  // Viterbi prunes the で|も path before we can evaluate context.
-  // The でも→ない/な penalty (below) helps some cases but not all.
-  // For now, we only penalize NOUN path; PRON path bypasses this.
-  // See session 66/68 notes for detailed analysis.
-  if (prev.pos == core::PartOfSpeech::Noun && next.surface == "でも" &&
-      (next.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
-       next.extended_pos == core::ExtendedPOS::Conjunction) &&
-      (prev.surface == "何" || prev.surface == "彼女")) {
-    surface_bonus += cost::kAlmostNever;
-  }
-
-  // Penalty for でも (PART_副 or CONJ) → ない/な pattern
-  // MeCab splits "彼女でもない" as 彼女+で+も+ない, not 彼女+でも+ない
-  // MeCab splits "雨でもない" as 雨+で+も+ない, not 雨+でも+ない
-  // The pattern: NOUN+でも+ない should split でも to で+も
-  // Note: Sentence-initial "でも、ない" (CONJ with punctuation) is different
-  // Penalize both でも+ない and でも+な (to prevent な+い split)
-  if (prev.surface == "でも" &&
-      (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
-       prev.extended_pos == core::ExtendedPOS::Conjunction) &&
-      (next.surface == "ない" || next.surface == "な")) {
-    surface_bonus += cost::kAlmostNever;
   }
 
   // Penalty for ADV → でも (CONJ or PART_副) pattern
@@ -1193,6 +1162,50 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       grammar::isPureHiragana(next.surface) && prev.surface != "たり" && prev.surface != "だり" &&
       next.surface != "み") {
     surface_bonus += cost::kAlmostNever;  // Strongly discourage
+  }
+
+  // Progressive で+い+ます should use the auxiliary い, not the standalone verb いる.
+  // The preceding で can be tagged as either a conjunction particle or a te-form
+  // particle depending on the onbin path, so match by surface here.
+  if (prev.surface == "で" && next.surface == "い" && next.extended_pos == core::ExtendedPOS::VerbRenyokei) {
+    surface_bonus += cost::kAlmostNever;
+  }
+
+  // Excessive-degree すぎ + て is ordinary connective て. Do not reinterpret it
+  // as contracted progressive てる.
+  if (prev.extended_pos == core::ExtendedPOS::AuxExcessive && next.surface == "て" &&
+      next.extended_pos == core::ExtendedPOS::AuxAspectIru) {
+    surface_bonus += cost::kAlmostNever;
+  }
+
+  // If contracted-progressive て is followed by ordinary particles or content
+  // words, prefer the connective particle て instead.
+  if (prev.surface == "て" && prev.extended_pos == core::ExtendedPOS::AuxAspectIru &&
+      (next.pos == core::PartOfSpeech::Particle || next.pos == core::PartOfSpeech::Noun ||
+       next.pos == core::PartOfSpeech::Pronoun || next.pos == core::PartOfSpeech::Determiner ||
+       next.pos == core::PartOfSpeech::Adverb || next.pos == core::PartOfSpeech::Conjunction)) {
+    surface_bonus += cost::kAlmostNever;
+  }
+
+  // Dialectal/character-speech やで is particle + particle in the regression
+  // corpus, not copula で.
+  if (prev.surface == "や" && next.surface == "で" && next.extended_pos == core::ExtendedPOS::AuxCopulaDa) {
+    surface_bonus += cost::kAlmostNever;
+  }
+
+  // Date + 付け + で is a formal-noun construction ("as of ..."), not the
+  // verb 付ける in renyokei.
+  if (prev.pos == core::PartOfSpeech::Noun && next.surface == "付け" &&
+      next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      (utf8::endsWith(prev.surface, "日") || utf8::endsWith(prev.surface, "月") ||
+       utf8::endsWith(prev.surface, "年"))) {
+    surface_bonus += cost::kAlmostNever;
+  }
+
+  // Keep the common na-adjective 複雑 together; the split 複 + 雑い is a false
+  // i-adjective path.
+  if (prev.surface == "複" && next.surface == "雑" && next.pos == core::PartOfSpeech::Adjective) {
+    surface_bonus += cost::kAlmostNever;
   }
 
   // Penalty for VerbOnbinkei/VerbRenyokei ending in いい → AuxTenseTa pattern

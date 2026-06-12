@@ -118,6 +118,13 @@ std::string jsonEscape(std::string_view value) {
   return out.str();
 }
 
+void stripUtf8Bom(std::string* value) {
+  if (value != nullptr && value->size() >= 3 && static_cast<unsigned char>((*value)[0]) == 0xEF &&
+      static_cast<unsigned char>((*value)[1]) == 0xBB && static_cast<unsigned char>((*value)[2]) == 0xBF) {
+    value->erase(0, 3);
+  }
+}
+
 std::vector<std::string> readStdin() {
   std::vector<std::string> lines;
   std::string line;
@@ -178,6 +185,7 @@ CommandArgs parseArgs(int argc, char* argv[]) {
     if (arg == "-VV" || arg == "--very-verbose") {
       args.verbose = true;
       args.very_verbose = true;
+      args.debug = true;
       ++idx;
       continue;
     }
@@ -252,6 +260,72 @@ CommandArgs parseArgs(int argc, char* argv[]) {
       continue;
     }
 
+    if (arg == "--no-lemmatize") {
+      args.no_lemmatize = true;
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--merge-compounds") {
+      args.merge_compounds = true;
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--include-particles") {
+      args.tag_include_particles = true;
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--include-auxiliaries") {
+      args.tag_include_auxiliaries = true;
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--include-formal-nouns") {
+      args.tag_include_formal_nouns = true;
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--include-low-info") {
+      args.tag_include_low_info = true;
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--tag-keep-duplicates") {
+      args.tag_keep_duplicates = true;
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--tag-use-surface") {
+      args.tag_use_surface = true;
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--tag-min-length" && idx + 1 < argc) {
+      if (!parseSizeOption(argv[++idx], &args.tag_min_length)) {
+        printError("Invalid --tag-min-length value");
+        exit(1);
+      }
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--tag-max-tags" && idx + 1 < argc) {
+      if (!parseSizeOption(argv[++idx], &args.tag_max_tags)) {
+        printError("Invalid --tag-max-tags value");
+        exit(1);
+      }
+      ++idx;
+      continue;
+    }
+
     // Command or positional argument
     if (arg[0] != '-') {
       if (args.command.empty()) {
@@ -266,7 +340,10 @@ CommandArgs parseArgs(int argc, char* argv[]) {
       } else {
         args.args.push_back(arg);
       }
-    } else if (!args.command.empty()) {
+    } else if (args.command.empty()) {
+      args.command = "analyze";
+      args.args.push_back(arg);
+    } else {
       // Pass through unknown options to subcommands (e.g., dict -i)
       args.args.push_back(arg);
     }
@@ -302,11 +379,21 @@ Global Options:
   -V, --verbose          Verbose output
   -VV, --very-verbose    Very verbose output (includes lattice dump)
   --no-user-dict         Disable user dictionary
-  --no-core-dict         Disable core dictionary
+  --no-core-dict         Disable auto-loaded core.dic
   --compare              Compare with/without user dictionary
   --normalize-vu         Normalize ヴ to ビ etc. (default: preserve)
   --lowercase            Convert ASCII to lowercase (default: preserve)
   --preserve-symbols     Keep symbols/emoji in output (default: remove)
+  --no-lemmatize         Keep surface forms as lemmas
+  --merge-compounds      Merge consecutive noun compounds
+  --include-particles    Include particles in tag output
+  --include-auxiliaries  Include auxiliaries in tag output
+  --include-formal-nouns Include formal nouns in tag output
+  --include-low-info     Include low-information words in tag output
+  --tag-keep-duplicates  Keep duplicate tags
+  --tag-use-surface      Use surface instead of lemma for tags
+  --tag-min-length N     Minimum tag length (default: 2)
+  --tag-max-tags N       Maximum tags (default: 0, unlimited)
   -h, --help             Show help
   -v, --version          Show version
 
@@ -333,10 +420,21 @@ Options:
   -f, --format FMT       Output format: morpheme, tags, json, tsv, chasen
   -V, --verbose          Verbose output
   --no-user-dict         Disable user dictionary
+  --no-core-dict         Disable auto-loaded core.dic
   --compare              Compare with/without user dictionary
   --normalize-vu         Normalize ヴ to ビ etc. (default: preserve)
   --lowercase            Convert ASCII to lowercase (default: preserve)
   --preserve-symbols     Keep symbols/emoji in output (default: remove)
+  --no-lemmatize         Keep surface forms as lemmas
+  --merge-compounds      Merge consecutive noun compounds
+  --include-particles    Include particles in tag output
+  --include-auxiliaries  Include auxiliaries in tag output
+  --include-formal-nouns Include formal nouns in tag output
+  --include-low-info     Include low-information words in tag output
+  --tag-keep-duplicates  Keep duplicate tags
+  --tag-use-surface      Use surface instead of lemma for tags
+  --tag-min-length N     Minimum tag length (default: 2)
+  --tag-max-tags N       Maximum tags (default: 0, unlimited)
   -h, --help             Show this help
 
 Output Formats:
@@ -365,15 +463,11 @@ Usage:
   suzume-cli dict [subcommand] [options] [arguments]
 
 Subcommands:
-  select <file.tsv>      Select dictionary file for editing
-  add <surface> <pos> [reading] [cost] [conj_type]
-                         Add entry to selected dictionary
-  remove <surface> [pos] Remove entry from selected dictionary
-  list [--pos=POS] [--pattern=PATTERN] [--limit=N]
-                         List entries in selected dictionary
+  list <file> [--pos=POS] [--pattern=PATTERN] [--limit=N]
+                         List entries in TSV or binary dictionary
   search <file> <pattern>
                          Search entries by pattern in file
-  lookup <word>          Look up word in all dictionaries (L1 + L2)
+  lookup <word>          Look up word in built-in L1 and source L2 TSV files
   new <file.tsv>         Create new dictionary file
   info [file]            Show dictionary information
   validate [file]        Validate dictionary
@@ -396,9 +490,7 @@ Conjugation Types (for VERB/ADJECTIVE):
 Examples:
   suzume-cli dict lookup すぎる
   suzume-cli dict new user.tsv
-  suzume-cli dict select user.tsv
-  suzume-cli dict add "Tokyo" PROPN "Tokyo" 0.3
-  suzume-cli dict list --pos=NOUN --limit=10
+  suzume-cli dict list user.tsv --pos=NOUN --limit=10
   suzume-cli dict compile user.tsv
   suzume-cli dict -i user.tsv
 )";
@@ -417,11 +509,6 @@ Subcommands:
                          Run tests from file
   benchmark [--iterations=N] [-f <corpus.txt>]
                          Run performance benchmark
-  regression -f <baseline.tsv>
-                         Run regression tests
-  coverage -d <dict.dic> -f <corpus.txt>
-                         Analyze dictionary coverage
-
 Options:
   -d, --dict PATH        Load user dictionary
   -h, --help             Show this help

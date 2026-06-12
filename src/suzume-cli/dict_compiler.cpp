@@ -102,9 +102,38 @@ std::vector<dictionary::DictionaryEntry> expandVerb(const dictionary::Dictionary
   }
 
   static grammar::Conjugation conj;
+  std::string lemma = entry.lemma.empty() ? entry.surface : entry.lemma;
+
+  if (verb_type == grammar::VerbType::Kuru) {
+    struct KuruForm {
+      const char* kanji_surface;
+      const char* kana_surface;
+      core::ExtendedPOS extended_pos;
+    };
+    const std::vector<KuruForm> forms = {
+        {"来る", "くる", core::ExtendedPOS::VerbShuushikei},
+        {"来", "き", core::ExtendedPOS::VerbRenyokei},
+        {"来", "こ", core::ExtendedPOS::VerbMizenkei},
+        {"来れ", "くれ", core::ExtendedPOS::VerbKateikei},
+        {"来よ", "こよ", core::ExtendedPOS::VerbMizenkei},
+        {"来い", "こい", core::ExtendedPOS::VerbMeireikei},
+        {"来られる", "こられる", core::ExtendedPOS::VerbShuushikei},
+        {"来れる", "これる", core::ExtendedPOS::VerbShuushikei},
+    };
+    const bool kanji = entry.surface == "来る";
+    for (const auto& form : forms) {
+      dictionary::DictionaryEntry new_entry;
+      new_entry.surface = kanji ? form.kanji_surface : form.kana_surface;
+      new_entry.pos = core::PartOfSpeech::Verb;
+      new_entry.extended_pos = form.extended_pos;
+      new_entry.lemma = lemma;
+      result.push_back(new_entry);
+    }
+    return result;
+  }
+
   auto suffixes = conj.getDictionarySuffixes(verb_type);
   std::string stem = grammar::Conjugation::getStem(entry.surface, verb_type);
-  std::string lemma = entry.lemma.empty() ? entry.surface : entry.lemma;
 
   for (const auto& suf : suffixes) {
     dictionary::DictionaryEntry new_entry;

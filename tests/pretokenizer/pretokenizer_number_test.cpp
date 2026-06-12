@@ -92,6 +92,18 @@ TEST_F(PreTokenizerNumberTest, MatchCurrency_Basic) {
   EXPECT_EQ(result.tokens[0].type, PreTokenType::Currency);
 }
 
+TEST_F(PreTokenizerNumberTest, MatchCurrency_ValidatesThousandsSeparator) {
+  auto valid = pretokenizer_.process("1,234円");
+  ASSERT_EQ(valid.tokens.size(), 1);
+  EXPECT_EQ(valid.tokens[0].surface, "1,234円");
+  EXPECT_EQ(valid.tokens[0].type, PreTokenType::Currency);
+
+  auto invalid = pretokenizer_.process("1,23円");
+  for (const auto& token : invalid.tokens) {
+    EXPECT_NE(token.surface, "1,23円");
+  }
+}
+
 TEST_F(PreTokenizerNumberTest, MatchCurrency_WithMan) {
   auto result = pretokenizer_.process("100万円");
   ASSERT_EQ(result.tokens.size(), 1);

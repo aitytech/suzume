@@ -56,6 +56,23 @@ const Conjugation::GodanRow* Conjugation::getGodanRow(VerbType type) {
   return it != rows.end() ? &it->second : nullptr;
 }
 
+std::vector<std::pair<VerbType, std::string_view>> Conjugation::getGodanTypesByOnbin(std::string_view onbin) {
+  if (onbin == "い") {
+    return {{VerbType::GodanKa, "く"}, {VerbType::GodanGa, "ぐ"}};
+  }
+  if (onbin == "っ") {
+    // 行く has irregular 促音便 (行っ), while normal GodanKa uses イ音便.
+    return {{VerbType::GodanKa, "く"}, {VerbType::GodanRa, "る"}, {VerbType::GodanTa, "つ"}, {VerbType::GodanWa, "う"}};
+  }
+  if (onbin == "ん") {
+    return {{VerbType::GodanMa, "む"}, {VerbType::GodanBa, "ぶ"}, {VerbType::GodanNa, "ぬ"}};
+  }
+  if (onbin.empty()) {
+    return {{VerbType::GodanSa, "す"}};
+  }
+  return {};
+}
+
 std::string Conjugation::getStem(const std::string& base_form, VerbType type) {
   if (base_form.empty()) {
     return "";
@@ -335,22 +352,26 @@ std::vector<ConjugatedForm> Conjugation::generateKuru(const std::string& stem, c
   VerbType type = VerbType::Kuru;
 
   // 来る is special: 語幹が変化する (来→こ/き)
+  const bool kanji = base_form == "来る";
+  const auto kuru_surface = [kanji](std::string_view kanji_suffix, std::string_view kana_form) {
+    return kanji ? std::string("来") + std::string(kanji_suffix) : std::string(kana_form);
+  };
+
   forms.push_back(makeForm(base_form, base_form, stem, type, ""));
-  forms.push_back(makeForm(stem + "こない", base_form, stem, type, "こない"));
-  forms.push_back(makeForm(stem + "こなかった", base_form, stem, type, "こなかった"));
-  forms.push_back(makeForm(stem + "きます", base_form, stem, type, "きます"));
-  forms.push_back(makeForm(stem + "きました", base_form, stem, type, "きました"));
-  forms.push_back(makeForm(stem + "きません", base_form, stem, type, "きません"));
-  forms.push_back(makeForm(stem + "きた", base_form, stem, type, "きた"));
-  forms.push_back(makeForm(stem + "きて", base_form, stem, type, "きて"));
-  forms.push_back(makeForm(stem + "きている", base_form, stem, type, "きている"));
-  forms.push_back(makeForm(stem + "きています", base_form, stem, type, "きています"));
-  forms.push_back(makeForm(stem + "くれば", base_form, stem, type, "くれば"));
-  forms.push_back(
-      makeForm(stem + "こよ", base_form, stem, type, "こよ"));  // Volitional mizenkei: 来よ (splits as 来よ + う)
-  forms.push_back(makeForm(stem + "こい", base_form, stem, type, "こい"));
-  forms.push_back(makeForm(stem + "こられる", base_form, stem, type, "こられる"));
-  forms.push_back(makeForm(stem + "こさせる", base_form, stem, type, "こさせる"));
+  forms.push_back(makeForm(kuru_surface("ない", "こない"), base_form, stem, type, "こない"));
+  forms.push_back(makeForm(kuru_surface("なかった", "こなかった"), base_form, stem, type, "こなかった"));
+  forms.push_back(makeForm(kuru_surface("ます", "きます"), base_form, stem, type, "きます"));
+  forms.push_back(makeForm(kuru_surface("ました", "きました"), base_form, stem, type, "きました"));
+  forms.push_back(makeForm(kuru_surface("ません", "きません"), base_form, stem, type, "きません"));
+  forms.push_back(makeForm(kuru_surface("た", "きた"), base_form, stem, type, "きた"));
+  forms.push_back(makeForm(kuru_surface("て", "きて"), base_form, stem, type, "きて"));
+  forms.push_back(makeForm(kuru_surface("ている", "きている"), base_form, stem, type, "きている"));
+  forms.push_back(makeForm(kuru_surface("ています", "きています"), base_form, stem, type, "きています"));
+  forms.push_back(makeForm(kuru_surface("れば", "くれば"), base_form, stem, type, "くれば"));
+  forms.push_back(makeForm(kuru_surface("よ", "こよ"), base_form, stem, type, "こよ"));  // Volitional mizenkei
+  forms.push_back(makeForm(kuru_surface("い", "こい"), base_form, stem, type, "こい"));
+  forms.push_back(makeForm(kuru_surface("られる", "こられる"), base_form, stem, type, "こられる"));
+  forms.push_back(makeForm(kuru_surface("させる", "こさせる"), base_form, stem, type, "こさせる"));
 
   return forms;
 }
@@ -475,24 +496,11 @@ std::vector<Conjugation::DictionarySuffix> Conjugation::getDictionarySuffixes(Ve
       break;
 
     case VerbType::Kuru:
-      // カ変: 来る (irregular - stem changes: く/き/こ)
-      // For hiragana くる, prefix with appropriate stem change
-      // Note: た/て/たら excluded for MeCab-compatible splits (来+た, 来+て, 来+たら)
-      suffixes = {
-          {"くる", false, core::ExtendedPOS::VerbShuushikei},  // Base form
-          {"き", false, core::ExtendedPOS::VerbRenyokei},      // Renyokei: 来ます, 来ている
-          {"こ", false, core::ExtendedPOS::VerbMizenkei},      // Mizenkei: こ + ない
-          // {"きた", false},     // Past: Excluded - split as 来 + た
-          // {"きて", false},     // Te-form: Excluded - split as 来 + て
-          // {"こない", false},   // Negative: Excluded - split as こ + ない (MeCab compat)
-          // こなかった excluded for MeCab compat: split as こ+なかっ+た
-          {"くれば", false, core::ExtendedPOS::VerbKateikei},  // Conditional
-          // {"きたら", false},   // Conditional: Excluded - split as 来 + たら
-          {"こよ", false, core::ExtendedPOS::VerbMizenkei},   // Volitional mizenkei: 来よ (splits as 来よ + う)
-          {"こい", false, core::ExtendedPOS::VerbMeireikei},  // Imperative
-          {"こられる", false, core::ExtendedPOS::VerbShuushikei},  // Potential (formal)
-          {"これる", false, core::ExtendedPOS::VerbShuushikei},    // Potential (colloquial)
-      };
+      // カ変: 来る is irregular (stem changes く/き/こ), so it cannot be expanded
+      // via stem+suffix concatenation here — getStem("来る") yields "来", and
+      // "来"+"くる"/"き"/"こ" would produce broken surfaces like 来くる/来き.
+      // Kuru is expanded separately in dict_compiler.cpp::expandVerb, which emits
+      // explicit {kanji_surface, kana_surface} pairs. Return no suffixes.
       break;
 
     default:

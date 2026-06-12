@@ -376,24 +376,47 @@ int cmdDictDecompile(const std::vector<std::string>& args, bool verbose) {
 
 int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
   if (args.empty()) {
-    printError("Usage: suzume-cli dict list <file> [--pos=POS] [--limit=N]");
+    printError("Usage: suzume-cli dict list <file> [--pos=POS] [--pattern=PATTERN] [--limit=N]");
     return 1;
   }
 
   const std::string& path = args[0];
   std::string pos_filter;
+  std::string pattern;
   size_t limit = 0;
 
   // Parse options
   for (size_t idx = 1; idx < args.size(); ++idx) {
     if (args[idx].substr(0, 6) == "--pos=") {
       pos_filter = args[idx].substr(6);
+    } else if (args[idx].substr(0, 10) == "--pattern=") {
+      pattern = args[idx].substr(10);
     } else if (args[idx].substr(0, 8) == "--limit=") {
       if (!parseSizeOption(args[idx].substr(8), &limit)) {
         printError("Invalid limit: " + args[idx].substr(8));
         return 1;
       }
     }
+  }
+
+  std::regex pattern_regex;
+  bool has_pattern = !pattern.empty();
+  if (has_pattern) {
+    std::string regex_str;
+    for (char chr : pattern) {
+      if (chr == '*') {
+        regex_str += ".*";
+      } else if (chr == '?') {
+        regex_str += ".";
+      } else if (chr == '.' || chr == '^' || chr == '$' || chr == '+' || chr == '(' || chr == ')' || chr == '[' ||
+                 chr == ']' || chr == '|' || chr == '\\') {
+        regex_str += '\\';
+        regex_str += chr;
+      } else {
+        regex_str += chr;
+      }
+    }
+    pattern_regex = std::regex(regex_str);
   }
 
   // Load dictionary
@@ -414,6 +437,9 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
       }
 
       if (!pos_filter.empty() && core::posToString(entry->pos) != pos_filter) {
+        continue;
+      }
+      if (has_pattern && !std::regex_match(entry->surface, pattern_regex)) {
         continue;
       }
 
@@ -439,6 +465,9 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
     size_t count = 0;
     for (const auto& entry : result.value()) {
       if (!pos_filter.empty() && core::posToString(entry.pos) != pos_filter) {
+        continue;
+      }
+      if (has_pattern && !std::regex_match(entry.surface, pattern_regex)) {
         continue;
       }
 
@@ -627,6 +656,10 @@ int cmdDict(const CommandArgs& args) {
   }
   if (subcommand == "new") {
     return cmdDictNew(subargs, args.verbose);
+  }
+  if (subcommand == "select" || subcommand == "add" || subcommand == "remove") {
+    printError("dict " + subcommand + " is available only in interactive mode (use 'suzume-cli dict -i [file.tsv]')");
+    return 1;
   }
   if (subcommand == "info") {
     return cmdDictInfo(subargs, args.verbose);

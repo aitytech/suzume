@@ -2,9 +2,12 @@
 
 import regex
 
-from .constants import TTARA_STEMS, TTEBA_STEMS, USER_DICT_COMPOUNDS, VERB_NAI_COMPOUND_ADJECTIVES
-
-
+from .constants import (
+    TTARA_STEMS,
+    TTEBA_STEMS,
+    USER_DICT_COMPOUNDS,
+    VERB_NAI_COMPOUND_ADJECTIVES,
+)
 
 # Mapping from MeCab causative lemma ending to base verb dictionary form ending
 _CAUSATIVE_LEMMA_ENDINGS: dict[str, str] = {

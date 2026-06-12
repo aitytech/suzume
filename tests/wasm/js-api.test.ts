@@ -64,6 +64,14 @@ describe('JS API: struct layout compatibility', () => {
     // conjType/conjForm can be string or null
     expect(m.conjType === null || typeof m.conjType === 'string').toBe(true);
     expect(m.conjForm === null || typeof m.conjForm === 'string').toBe(true);
+    expect(typeof m.start).toBe('number');
+    expect(typeof m.end).toBe('number');
+    expect(typeof m.isUserDict).toBe('boolean');
+    expect(typeof m.isFormalNoun).toBe('boolean');
+    expect(typeof m.isLowInfo).toBe('boolean');
+    expect(typeof m.isUnknown).toBe('boolean');
+    expect(typeof m.isFromDictionary).toBe('boolean');
+    expect(typeof m.score).toBe('number');
 
     resultFree(resultPtr);
   });
@@ -230,6 +238,8 @@ describe('JS API: struct layout compatibility', () => {
     expect(sizeofMorpheme()).toBe(MORPHEME_LAYOUT.size);
     expect(offsetofMorpheme(0)).toBe(MORPHEME_LAYOUT.surface);
     expect(offsetofMorpheme(6)).toBe(MORPHEME_LAYOUT.extendedPos);
+    expect(offsetofMorpheme(7)).toBe(MORPHEME_LAYOUT.start);
+    expect(offsetofMorpheme(14)).toBe(MORPHEME_LAYOUT.score);
 
     expect(sizeofTags()).toBe(TAGS_LAYOUT.size);
     expect(offsetofTags(0)).toBe(TAGS_LAYOUT.tags);
@@ -238,6 +248,8 @@ describe('JS API: struct layout compatibility', () => {
     expect(sizeofTagOptions()).toBe(TAG_OPTIONS_LAYOUT.size);
     expect(offsetofTagOptions(0)).toBe(TAG_OPTIONS_LAYOUT.posFilter);
     expect(offsetofTagOptions(4)).toBe(TAG_OPTIONS_LAYOUT.maxTags);
+    expect(offsetofTagOptions(5)).toBe(TAG_OPTIONS_LAYOUT.excludeParticles);
+    expect(offsetofTagOptions(9)).toBe(TAG_OPTIONS_LAYOUT.removeDuplicates);
 
     expect(sizeofExtendedOptions()).toBe(EXTENDED_OPTIONS_LAYOUT.size);
     expect(offsetofExtendedOptions(0)).toBe(EXTENDED_OPTIONS_LAYOUT.structSize);

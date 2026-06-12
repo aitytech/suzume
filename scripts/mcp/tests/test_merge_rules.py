@@ -51,10 +51,18 @@ class TestKanjiCompound:
         assert len(result) == 1
         assert result[0]["surface"] == "経済成長"
 
-    def test_skip_suffix(self):
-        """接尾 tokens should not merge."""
+    def test_merge_productive_suffix(self):
+        """Productive suffix tokens merge into one search unit."""
         tokens = [_tok("経済", pos="名詞"), _tok("的", pos="名詞", pos_sub1="接尾")]
         text = "経済的"
+        result, _ = apply_suzume_merge(tokens, text)
+        assert len(result) == 1
+        assert result[0]["surface"] == "経済的"
+
+    def test_skip_honorific_suffix(self):
+        """Honorific suffix tokens should not merge."""
+        tokens = [_tok("田中", pos="名詞"), _tok("様", pos="名詞", pos_sub1="接尾")]
+        text = "田中様"
         result, _ = apply_suzume_merge(tokens, text)
         assert len(result) == 2
 
