@@ -116,6 +116,28 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
     return candidates;
   }
 
+  // Penalize verb candidates that start in the middle of a kanji run when
+  // the preceding kanji and the candidate's first kanji form an exact
+  // dictionary word. E.g., in 作画崩壊した a verb candidate 壊し starting at
+  // 壊 would split the dictionary word 崩壊 (prefer 作画崩壊+し+た).
+  // This mirrors the SPLIT_NV boundary guard in split_candidates.cpp, which
+  // cannot cover paths assembled from independent noun and verb candidates.
+  float mid_compound_penalty = 0.0F;
+  if (start_pos > 0 && dict_manager != nullptr && char_types[start_pos - 1] == normalize::CharType::Kanji) {
+    std::string boundary_pair =
+        normalize::encodeUtf8(codepoints[start_pos - 1]) + normalize::encodeUtf8(codepoints[start_pos]);
+    auto pair_results = dict_manager->lookup(boundary_pair, 0);
+    for (const auto& result : pair_results) {
+      if (result.entry != nullptr && result.entry->surface == boundary_pair) {
+        mid_compound_penalty = bigram_cost::kMinor;
+        SUZUME_DEBUG_LOG("[COST_ADJ] verb candidates at pos " << start_pos << " +" << mid_compound_penalty
+                                                              << " (boundary pair \"" << boundary_pair
+                                                              << "\" is dict word)\n");
+        break;
+      }
+    }
+  }
+
   // Check for kanji verb + verb renyokei + すぎ pattern for MeCab compatibility
   // MeCab splits: 書きすぎる → 書き + すぎる, not 書きすぎる as single verb
   // Pattern: kanji + (き/ぎ/し/ち/に/び/み/り/い) + すぎ...
@@ -209,6 +231,11 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
 
     // Early return to skip generating full verb forms containing すぎ
     // The split path (renyokei + すぎ + aux) is preferred for MeCab compatibility
+    if (mid_compound_penalty != 0.0F) {
+      for (auto& cand : candidates) {
+        cand.cost += mid_compound_penalty;
+      }
+    }
     return candidates;
   }
 
@@ -2685,6 +2712,13 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
 
   // Add emphatic variants (来た → 来たっ, etc.)
   vh::addEmphaticVariants(candidates, codepoints);
+
+  // Apply mid-kanji-run dictionary compound penalty (see comment above)
+  if (mid_compound_penalty != 0.0F) {
+    for (auto& cand : candidates) {
+      cand.cost += mid_compound_penalty;
+    }
+  }
 
   // Sort by cost and return best candidates
   vh::sortCandidatesByCost(candidates);

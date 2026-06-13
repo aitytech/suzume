@@ -450,7 +450,13 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
           const auto& opts = scorer.splitOpts();
           float final_noun_cost = noun_cost + opts.noun_verb_split_bonus;
 
-          if (base_in_dict) {
+          // Credit the verified-verb bonus only when the noun part is a real
+          // dictionary noun or a single kanji. A fabricated multi-kanji noun
+          // (noun_in_dict=0) would otherwise become cheaper than genuine
+          // dictionary words and absorb characters across word boundaries
+          // (やる気丸出し → やる + 気丸 + 出し). Single-kanji nouns are safe
+          // because they already carry the single-kanji split penalty below.
+          if (base_in_dict && (noun_in_dict || noun_len == 1)) {
             final_noun_cost += opts.verified_verb_bonus;
           }
 

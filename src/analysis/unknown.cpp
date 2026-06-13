@@ -11,6 +11,7 @@
 #include "analysis/unknown.h"
 
 #include <algorithm>
+#include <cstdint>
 
 #include "adjective_candidates.h"
 #include "analysis/scorer_constants.h"
@@ -297,6 +298,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
 
   size_t max_len = getMaxLength(start_type);
 
+  // Position of a single particle character the hiragana scan was allowed to
+  // cross (SIZE_MAX = none). Candidates extending past it get a penalty below.
+  size_t crossed_particle_pos = SIZE_MAX;
+
   // Find end of same-type sequence
   size_t end_pos = start_pos + 1;
   while (end_pos < char_types.size() && end_pos - start_pos < max_len) {
@@ -358,14 +363,39 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
       if (curr_char == U'を' || curr_char == U'が') {
         break;
       }
-      // For non-particle starts, also break at other particles
-      // This allows generating nouns like はし, はな, にく, etc.
+      // For non-particle starts, particle characters usually mark word
+      // boundaries. However, genuine hiragana nouns can contain one such
+      // character word-internally (こども, おとな, ひとつ), so allow the scan
+      // to cross a single particle character; candidates extending past it
+      // receive a penalty in the generation loop below.
+      //
+      // Crossing is restricted to keep particle chains intact:
+      // - の always breaks: genitive の marks a compound boundary in
+      //   hiragana noun+noun patterns (みせ+の+まえ, こころ+の+こえ)
+      // - A second particle character breaks (likely a real particle chain)
+      // - Sequences starting with を/が never cross: those characters never
+      //   start words (see hard break above), so such a sequence is already
+      //   a particle chain and must not absorb a following particle
+      // - At most one character may follow the crossed particle: native
+      //   words with a word-internal particle character are short (こども,
+      //   おとな, ひとつ); longer tails just absorb a genuine particle
       if (!started_with_particle) {
-        // Common particles (は, に, へ, の) + で, と, も, か (word boundaries)
+        if (crossed_particle_pos != SIZE_MAX && end_pos > crossed_particle_pos + 1) {
+          break;  // Already extended one char past the crossed particle
+        }
+        // Genitive の: always a word boundary
+        if (curr_char == U'の') {
+          break;
+        }
+        // Common particles は, に, へ + で, と, も, か (word boundaries)
         // Note: Don't include「や」as it's also the stem of「やる」verb
-        if (curr_char == U'は' || curr_char == U'に' || curr_char == U'へ' || curr_char == U'の' ||
-            curr_char == U'で' || curr_char == U'と' || curr_char == U'も' || curr_char == U'か') {
-          break;  // Stop before the particle
+        if (curr_char == U'は' || curr_char == U'に' || curr_char == U'へ' || curr_char == U'で' ||
+            curr_char == U'と' || curr_char == U'も' || curr_char == U'か') {
+          char32_t seq_first_char = codepoints[start_pos];
+          if (crossed_particle_pos != SIZE_MAX || seq_first_char == U'を' || seq_first_char == U'が') {
+            break;  // Stop before the particle character
+          }
+          crossed_particle_pos = end_pos;  // Cross one, penalized per length
         }
       }
     }
@@ -437,6 +467,25 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
             break;
           }
         }
+      }
+
+      // Penalize hiragana candidates that include an internal particle
+      // character (see scan loop above). The penalty keeps particle splits
+      // preferred when the prefix is a plausible word (ここ+で beats ここで),
+      // while letting genuine nouns spanning a particle char (こども, ひとつ)
+      // win when the split leaves an implausible fragment (こど+も, ひ+と+つ).
+      // - 2-char candidates (single char + particle char) are skipped
+      //   entirely: they would just absorb a genuine particle (み+と)
+      // - Particle-final candidates (こども) get a minor penalty
+      // - Medial crossing (one char after the particle, e.g. ひとつ) is less
+      //   plausible and gets a strong penalty; genuine words still win
+      //   because their split path needs multiple unknown 1-char fragments
+      if (start_type == normalize::CharType::Hiragana && !started_with_particle &&
+          candidate_end > crossed_particle_pos) {
+        if (len < 3) {
+          continue;
+        }
+        cost += (candidate_end > crossed_particle_pos + 1) ? scorer::scale::kStrong : scorer::scale::kMinor;
       }
 
       // Penalize hiragana sequences starting with particle characters
@@ -649,7 +698,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateNominalizedNounCandi
     std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
     const std::vector<normalize::CharType>& char_types) const {
   // Delegate to the standalone function
-  return analysis::generateNominalizedNounCandidates(codepoints, start_pos, char_types);
+  return analysis::generateNominalizedNounCandidates(codepoints, start_pos, char_types, dict_manager_);
 }
 
 std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandidates(

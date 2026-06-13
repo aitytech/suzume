@@ -490,6 +490,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     V2VerbType v2_verb_type = V2VerbType::Godan;  // V2 verb type
     std::string_view v2_base_ending;              // V2 base form ending (む, す, etc.)
     bool v1_dict_verified = false;                // true if V1 was verified via dictionary (not inflection fallback)
+    bool v1_embedded_verified = false;            // true if V1 was verified via an embedded dictionary verb
   };
   V2Match best_match;
 
@@ -728,7 +729,8 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
 
     // Check if V1 base form is in dictionary
     bool v1_verified = false;
-    bool v1_dict_verified = false;  // tracks dict verification for cost calculation
+    bool v1_dict_verified = false;      // tracks dict verification for cost calculation
+    bool v1_embedded_verified = false;  // tracks embedded dict verb verification for cost calculation
     if (is_sokuonbin) {
       // Try all sokuonbin-compatible godan endings
       for (char32_t ending : kSokuonbinEndings) {
@@ -787,6 +789,27 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
           }
           if (v1_base == candidate)
             break;
+        }
+      }
+
+      // For multi-kanji ichidan V1 stems, accept when stripping the leading
+      // kanji yields a dictionary verb (e.g., 仕立てる = 仕 + 立てる).
+      // Lexicalized prefix+verb compounds are often absent from the dictionary
+      // as a whole, but an embedded dictionary verb combined with a verified
+      // V2 is strong evidence that the V1 is a real verb rather than a noun.
+      if (!v1_verified && is_ichidan && kanji_count >= 2) {
+        size_t v1_second_char_byte = charPosToBytePos(codepoints, start_pos + 1);
+        std::string embedded_base(text.substr(v1_second_char_byte, v1_end_byte - v1_second_char_byte));
+        embedded_base += "る";
+        auto embedded_results = dict_manager.lookup(embedded_base, 0);
+        for (const auto& result : embedded_results) {
+          if (result.entry != nullptr && result.entry->surface == embedded_base &&
+              result.entry->pos == core::PartOfSpeech::Verb) {
+            v1_verified = true;
+            v1_embedded_verified = true;
+            SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND] V1 verified via embedded dict verb \"" << embedded_base << "\"\n");
+            break;
+          }
         }
       }
 
@@ -926,6 +949,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       best_match.v2_verb_type = v2_verb.verb_type;
       best_match.v2_base_ending = v2_verb.base_ending;
       best_match.v1_dict_verified = v1_dict_verified;
+      best_match.v1_embedded_verified = v1_embedded_verified;
     }
   }
 
@@ -1019,8 +1043,17 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // Inflection analysis can verify verb forms that aren't real words (e.g., 進す),
     // so unverified compounds should be more expensive to prevent false positives
     // like 進し続ける winning over 前進+し+続ける.
-    float v1_bonus = best_match.v1_dict_verified ? opts.verified_v1_bonus  // -0.3: reward for dictionary-confirmed V1
-                                                 : bigram_cost::kRare;     // +1.0: penalty for inflection-only V1
+    // Embedded-verified V1 (a dictionary verb embedded after a leading kanji,
+    // e.g., 仕立てる = 仕 + 立てる) is partial evidence: cheaper than
+    // inflection-only, but still penalized relative to a dict-confirmed V1.
+    float v1_bonus = 0.0F;
+    if (best_match.v1_dict_verified) {
+      v1_bonus = opts.verified_v1_bonus;  // -0.3: reward for dictionary-confirmed V1
+    } else if (best_match.v1_embedded_verified) {
+      v1_bonus = bigram_cost::kMinor;  // +0.5: reduced penalty for embedded dict verb V1
+    } else {
+      v1_bonus = bigram_cost::kRare;  // +1.0: penalty for inflection-only V1
+    }
     float final_cost = base_cost + opts.compound_verb_bonus + v1_bonus;
 
     // Penalty for compound verbs that absorb auxiliary suffixes (た/て/れる/etc.)

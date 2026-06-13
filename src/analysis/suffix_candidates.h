@@ -76,11 +76,12 @@ std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& co
  * @param codepoints Text as codepoints
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
+ * @param dict_manager Dictionary manager for deverbal compound verification (may be null)
  * @return Vector of candidates
  */
-std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints,
-                                                                size_t start_pos,
-                                                                const std::vector<normalize::CharType>& char_types);
+std::vector<UnknownCandidate> generateNominalizedNounCandidates(
+    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types,
+    const dictionary::DictionaryManager* dict_manager = nullptr);
 
 /**
  * @brief Generate kanji + hiragana compound noun candidates

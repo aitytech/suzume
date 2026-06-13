@@ -673,6 +673,30 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         }
       }
 
+      // Penalty for unverified bare godan renyokei candidates
+      // A godan renyokei with no auxiliary chain (suffix is a single i-row
+      // char, e.g., もたち → もたつ, もだち → もだつ) whose base form is not
+      // in the dictionary is rarely a genuine verb usage unless followed by
+      // a renyokei-connecting auxiliary. Without this penalty, noun+suffix
+      // splits like こども+たち lose to spurious verb readings (こど+もたち).
+      // Exemptions:
+      // - Dictionary-verified verbs keep their cost (e.g., わたし from わたす)
+      // - Next char starting a renyokei continuation keeps the candidate
+      //   viable for verb+aux splits: ま(ます), そ(そう), な(ながら/なさい),
+      //   た(たい/たがる), や(やすい), に(にくい/purpose に), つ(つつ)
+      if (!is_dictionary_verb && best.morphemes.empty() && best.suffix.size() == core::kJapaneseCharBytes &&
+          grammar::isIRowCodepoint(codepoints[end_pos - 1])) {
+        char32_t next_after = (end_pos < codepoints.size()) ? codepoints[end_pos] : 0;
+        bool licenses_renyokei =
+            (next_after == U'ま' || next_after == U'そ' || next_after == U'な' || next_after == U'た' ||
+             next_after == U'や' || next_after == U'に' || next_after == U'つ');
+        if (!licenses_renyokei) {
+          base_cost += bigram_cost::kRare;
+          SUZUME_DEBUG_LOG_VERBOSE("[VERB_PENALTY] \"" << surface << "\" unverified_bare_renyokei +"
+                                                       << bigram_cost::kRare << "\n");
+        }
+      }
+
       // Penalty for hiragana verb candidates containing auxiliary chains
       // Same as kanji verb penalties - て+auxiliary, causative, etc.
       // E.g., きなくなる should not win over でき+なく+なる

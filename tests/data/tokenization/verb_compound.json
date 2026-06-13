@@ -1392,6 +1392,125 @@
       ],
       "id": "shi_ita",
       "input": "押し開いた"
+    },
+    {
+      "description": "仕立て上げる - regression test",
+      "expected": [
+        {
+          "lemma": "仕立て上げる",
+          "pos": "Verb",
+          "surface": "仕立て上げる"
+        }
+      ],
+      "id": "te_geru",
+      "input": "仕立て上げる"
+    },
+    {
+      "description": "仕立て上げた - regression test",
+      "expected": [
+        {
+          "lemma": "仕立て上げる",
+          "pos": "Verb",
+          "surface": "仕立て上げ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "te_geta",
+      "input": "仕立て上げた"
+    },
+    {
+      "description": "彼を犯人に仕立て上げた - regression test",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "犯人",
+          "pos": "Noun",
+          "surface": "犯人"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "仕立て上げる",
+          "pos": "Verb",
+          "surface": "仕立て上げ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_ni_te_geta",
+      "input": "彼を犯人に仕立て上げた"
+    },
+    {
+      "description": "仕立て直す - regression test",
+      "expected": [
+        {
+          "lemma": "仕立て直す",
+          "pos": "Verb",
+          "surface": "仕立て直す"
+        }
+      ],
+      "id": "te_su",
+      "input": "仕立て直す"
+    },
+    {
+      "description": "心掛け続ける - regression test",
+      "expected": [
+        {
+          "lemma": "心掛け続ける",
+          "pos": "Verb",
+          "surface": "心掛け続ける"
+        }
+      ],
+      "id": "ke_keru",
+      "input": "心掛け続ける"
+    },
+    {
+      "description": "着付け直す - regression test",
+      "expected": [
+        {
+          "lemma": "着付け直す",
+          "pos": "Verb",
+          "surface": "着付け直す"
+        }
+      ],
+      "id": "ke_su",
+      "input": "着付け直す"
+    },
+    {
+      "description": "味付け直した - regression test",
+      "expected": [
+        {
+          "lemma": "味付け直す",
+          "pos": "Verb",
+          "surface": "味付け直し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ke_shita",
+      "input": "味付け直した"
     }
   ],
   "description": "Compound verbs",

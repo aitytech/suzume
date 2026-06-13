@@ -1902,6 +1902,72 @@
         "noun",
         "kanji"
       ]
+    },
+    {
+      "description": "丸出しになる - regression test",
+      "expected": [
+        {
+          "lemma": "丸出し",
+          "pos": "Noun",
+          "surface": "丸出し"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "shininaru",
+      "input": "丸出しになる"
+    },
+    {
+      "description": "やる気丸出しだった - regression test",
+      "expected": [
+        {
+          "lemma": "やる気",
+          "pos": "Noun",
+          "surface": "やる気"
+        },
+        {
+          "lemma": "丸出し",
+          "pos": "Noun",
+          "surface": "丸出し"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "yaru_shidattta",
+      "input": "やる気丸出しだった"
+    },
+    {
+      "description": "丸出しだ - regression test",
+      "expected": [
+        {
+          "lemma": "丸出し",
+          "pos": "Noun",
+          "surface": "丸出し"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shida",
+      "input": "丸出しだ"
     }
   ],
   "description": "General nouns",
