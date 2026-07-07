@@ -829,7 +829,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       // Fallback: check base form with verb type matching for onbin types
       if (verb_type == grammar::VerbType::GodanWa || verb_type == grammar::VerbType::GodanKa ||
           verb_type == grammar::VerbType::GodanTa || verb_type == grammar::VerbType::GodanRa) {
-        is_valid_verb = vh::isVerbInDictionaryWithType(dict_manager, base_form, verb_type);
+        is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
       } else {
         is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
       }
@@ -883,17 +883,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
 
     // Get lemma from dictionary entry if mizenkei is registered
     // Otherwise use constructed base form
-    std::string lemma = base_form;
-    if (dict_manager != nullptr) {
-      auto results = dict_manager->lookup(mizenkei_surface, 0);
-      for (const auto& result : results) {
-        if (result.entry != nullptr && result.entry->surface == mizenkei_surface &&
-            result.entry->pos == core::PartOfSpeech::Verb && !result.entry->lemma.empty()) {
-          lemma = result.entry->lemma;
-          break;
-        }
-      }
-    }
+    std::string lemma = vh::lookupVerbLemma(dict_manager, mizenkei_surface, base_form);
 
     // Always split at mizenkei (いわ + れる/れ) for MeCab compatibility
     // MeCab splits: いわれません → いわ + れ + ませ + ん (4 tokens)
@@ -965,7 +955,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
 
     // Validate: check if base form is a known ichidan verb
     // For pure hiragana like いる, check the dictionary
-    bool is_valid_ichidan = vh::isVerbInDictionaryWithType(dict_manager, base_form, grammar::VerbType::Ichidan);
+    bool is_valid_ichidan = vh::isVerbInDictionary(dict_manager, base_form);
 
     // Special case: common hiragana ichidan verbs (いる, おきる, みる, etc.)
     // These may not always be in the L2 dictionary but are valid
@@ -982,17 +972,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Get lemma from dictionary if available
-    std::string lemma = base_form;
-    if (dict_manager != nullptr) {
-      auto results = dict_manager->lookup(stem, 0);
-      for (const auto& result : results) {
-        if (result.entry != nullptr && result.entry->surface == stem && result.entry->pos == core::PartOfSpeech::Verb &&
-            !result.entry->lemma.empty()) {
-          lemma = result.entry->lemma;
-          break;
-        }
-      }
-    }
+    std::string lemma = vh::lookupVerbLemma(dict_manager, stem, base_form);
 
     // Generate the ichidan renyokei candidate
     // Negative cost to beat the single-word verb candidate
@@ -1036,45 +1016,11 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       continue;
     }
 
-    // Determine verb type from A-row character
-    grammar::VerbType verb_type = grammar::VerbType::Unknown;
-    std::string_view base_suffix;
-    switch (a_row_char) {
-      case U'わ':
-        verb_type = grammar::VerbType::GodanWa;
-        base_suffix = "う";
-        break;
-      case U'か':
-        verb_type = grammar::VerbType::GodanKa;
-        base_suffix = "く";
-        break;
-      case U'が':
-        verb_type = grammar::VerbType::GodanGa;
-        base_suffix = "ぐ";
-        break;
-      // case U'さ': skipped above - さん is honorific suffix
-      case U'た':
-        verb_type = grammar::VerbType::GodanTa;
-        base_suffix = "つ";
-        break;
-      case U'な':
-        verb_type = grammar::VerbType::GodanNa;
-        base_suffix = "ぬ";
-        break;
-      case U'ば':
-        verb_type = grammar::VerbType::GodanBa;
-        base_suffix = "ぶ";
-        break;
-      case U'ま':
-        verb_type = grammar::VerbType::GodanMa;
-        base_suffix = "む";
-        break;
-      case U'ら':
-        verb_type = grammar::VerbType::GodanRa;
-        base_suffix = "る";
-        break;
-      default:
-        continue;  // Not a recognized mizenkei ending
+    // Determine verb type and base suffix from the A-row character (さ handled above)
+    grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(a_row_char);
+    std::string_view base_suffix = grammar::godanBaseSuffixFromARow(a_row_char);
+    if (verb_type == grammar::VerbType::Unknown || base_suffix.empty()) {
+      continue;  // Not a recognized mizenkei ending
     }
 
     // Construct mizenkei surface and base form
@@ -1095,17 +1041,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Get lemma from dictionary entry if available
-    std::string lemma = base_form;
-    if (dict_manager != nullptr) {
-      auto results = dict_manager->lookup(mizenkei_surface, 0);
-      for (const auto& result : results) {
-        if (result.entry != nullptr && result.entry->surface == mizenkei_surface &&
-            result.entry->pos == core::PartOfSpeech::Verb && !result.entry->lemma.empty()) {
-          lemma = result.entry->lemma;
-          break;
-        }
-      }
-    }
+    std::string lemma = vh::lookupVerbLemma(dict_manager, mizenkei_surface, base_form);
 
     // Generate mizenkei candidate with explicit VerbMizenkei EPOS for bigram connection
     // Use negative cost for valid verbs (to beat unsplit form)
@@ -1152,47 +1088,10 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Determine verb type from A-row character
-    grammar::VerbType verb_type = grammar::VerbType::Unknown;
-    std::string_view base_suffix;
-    switch (a_row_char) {
-      case U'わ':
-        verb_type = grammar::VerbType::GodanWa;
-        base_suffix = "う";
-        break;
-      case U'か':
-        verb_type = grammar::VerbType::GodanKa;
-        base_suffix = "く";
-        break;
-      case U'が':
-        verb_type = grammar::VerbType::GodanGa;
-        base_suffix = "ぐ";
-        break;
-      case U'さ':
-        verb_type = grammar::VerbType::GodanSa;
-        base_suffix = "す";
-        break;
-      case U'た':
-        verb_type = grammar::VerbType::GodanTa;
-        base_suffix = "つ";
-        break;
-      case U'な':
-        verb_type = grammar::VerbType::GodanNa;
-        base_suffix = "ぬ";
-        break;
-      case U'ば':
-        verb_type = grammar::VerbType::GodanBa;
-        base_suffix = "ぶ";
-        break;
-      case U'ま':
-        verb_type = grammar::VerbType::GodanMa;
-        base_suffix = "む";
-        break;
-      case U'ら':
-        verb_type = grammar::VerbType::GodanRa;
-        base_suffix = "る";
-        break;
-      default:
-        continue;  // Not a recognized mizenkei ending
+    grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(a_row_char);
+    std::string_view base_suffix = grammar::godanBaseSuffixFromARow(a_row_char);
+    if (verb_type == grammar::VerbType::Unknown || base_suffix.empty()) {
+      continue;  // Not a recognized mizenkei ending
     }
 
     // Construct mizenkei surface and base form
@@ -1227,17 +1126,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Get lemma from dictionary entry if available
-    std::string lemma = base_form;
-    if (dict_manager != nullptr) {
-      auto results = dict_manager->lookup(mizenkei_surface, 0);
-      for (const auto& result : results) {
-        if (result.entry != nullptr && result.entry->surface == mizenkei_surface &&
-            result.entry->pos == core::PartOfSpeech::Verb && !result.entry->lemma.empty()) {
-          lemma = result.entry->lemma;
-          break;
-        }
-      }
-    }
+    std::string lemma = vh::lookupVerbLemma(dict_manager, mizenkei_surface, base_form);
 
     // Dict-verified verbs get standard bonus; unverified get weaker cost
     // to prevent false hiragana verb candidates (e.g., はいか from はいく)
@@ -1292,47 +1181,10 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Determine verb type and base suffix from the A-row character
-    grammar::VerbType verb_type = grammar::VerbType::Unknown;
-    std::string_view base_suffix;
-    switch (a_row_char) {
-      case U'わ':
-        verb_type = grammar::VerbType::GodanWa;
-        base_suffix = "う";
-        break;
-      case U'か':
-        verb_type = grammar::VerbType::GodanKa;
-        base_suffix = "く";
-        break;
-      case U'が':
-        verb_type = grammar::VerbType::GodanGa;
-        base_suffix = "ぐ";
-        break;
-      case U'さ':
-        verb_type = grammar::VerbType::GodanSa;
-        base_suffix = "す";
-        break;
-      case U'た':
-        verb_type = grammar::VerbType::GodanTa;
-        base_suffix = "つ";
-        break;
-      case U'な':
-        verb_type = grammar::VerbType::GodanNa;
-        base_suffix = "ぬ";
-        break;
-      case U'ば':
-        verb_type = grammar::VerbType::GodanBa;
-        base_suffix = "ぶ";
-        break;
-      case U'ま':
-        verb_type = grammar::VerbType::GodanMa;
-        base_suffix = "む";
-        break;
-      case U'ら':
-        verb_type = grammar::VerbType::GodanRa;
-        base_suffix = "る";
-        break;
-      default:
-        continue;  // Not a recognized mizenkei ending
+    grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(a_row_char);
+    std::string_view base_suffix = grammar::godanBaseSuffixFromARow(a_row_char);
+    if (verb_type == grammar::VerbType::Unknown || base_suffix.empty()) {
+      continue;  // Not a recognized mizenkei ending
     }
 
     // Construct mizenkei surface and base form
@@ -1365,17 +1217,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Get lemma from dictionary entry if the mizenkei surface is registered
-    std::string lemma = base_form;
-    if (dict_manager != nullptr) {
-      auto results = dict_manager->lookup(mizenkei_surface, 0);
-      for (const auto& result : results) {
-        if (result.entry != nullptr && result.entry->surface == mizenkei_surface &&
-            result.entry->pos == core::PartOfSpeech::Verb && !result.entry->lemma.empty()) {
-          lemma = result.entry->lemma;
-          break;
-        }
-      }
-    }
+    std::string lemma = vh::lookupVerbLemma(dict_manager, mizenkei_surface, base_form);
 
     // The なきゃ/なければ contraction is an unambiguous mizenkei signal, so give a
     // bonus (verified verbs stronger) to beat the particle split や + らなきゃ.
@@ -1443,18 +1285,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     size_t onbin_end = n_pos + 1;
 
     // Get lemma from dictionary if available
-    std::string lemma = base_form;
-    if (dict_manager != nullptr) {
-      std::string standard_mizenkei = stem + "ら";
-      auto results = dict_manager->lookup(standard_mizenkei, 0);
-      for (const auto& result : results) {
-        if (result.entry != nullptr && result.entry->surface == standard_mizenkei &&
-            result.entry->pos == core::PartOfSpeech::Verb && !result.entry->lemma.empty()) {
-          lemma = result.entry->lemma;
-          break;
-        }
-      }
-    }
+    std::string standard_mizenkei = stem + "ら";
+    std::string lemma = vh::lookupVerbLemma(dict_manager, standard_mizenkei, base_form);
 
     float cost_n_onbin = candidate::verb_cost::kStandardBonus;
     // Unverified stems starting with a formal noun are noun + verb sequences
@@ -1542,7 +1374,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       std::string base_form = stem + std::string(base_suffix);
 
       // Check if base form exists in dictionary as this verb type
-      bool is_valid_verb = vh::isVerbInDictionaryWithType(dict_manager, base_form, verb_type);
+      bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
 
       // For tense patterns (っ+た/て, ん+だ/で), also use inflection analysis
       // This handles common verbs like かう, やる that may not be in dictionary
@@ -1836,8 +1668,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         bool found_dict_match = false;
         for (const auto& [verb_type, base_suffix] : sokuonbin_types) {
           std::string potential_base = stem + std::string(base_suffix);
-          bool in_dict = vh::isVerbInDictionaryWithType(dict_manager, potential_base, verb_type) ||
-                         vh::isVerbInDictionary(dict_manager, potential_base);
+          bool in_dict = vh::isVerbInDictionary(dict_manager, potential_base);
           if (in_dict) {
             constexpr float kHiraganaSokuonbinCost = candidate::verb_cost::kStandardBonus;
             SUZUME_DEBUG_VERBOSE_BLOCK {
@@ -1915,8 +1746,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
 
         for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
           std::string potential_base = stem + std::string(base_suffix);
-          bool in_dict = vh::isVerbInDictionaryWithType(dict_manager, potential_base, verb_type) ||
-                         vh::isVerbInDictionary(dict_manager, potential_base);
+          bool in_dict = vh::isVerbInDictionary(dict_manager, potential_base);
           if (in_dict) {
             constexpr float kHiraganaHatsuonbinCost = candidate::verb_cost::kStandardBonus;
             SUZUME_DEBUG_VERBOSE_BLOCK {

@@ -1,0 +1,15 @@
+# file	surface_cmp	score_literals	lines
+src/analysis/adjective_candidates.cpp	1	28	2417
+src/analysis/analyzer.cpp	0	0	502
+src/analysis/bigram_table.cpp	0	2	1092
+src/analysis/join_candidates.cpp	8	33	1886
+src/analysis/scorer.cpp	163	177	1915
+src/analysis/split_candidates.cpp	5	7	491
+src/analysis/suffix_candidates.cpp	1	40	1232
+src/analysis/tokenizer_utils.cpp	0	0	28
+src/analysis/tokenizer.cpp	0	12	746
+src/analysis/unknown.cpp	0	47	1080
+src/analysis/verb_candidates_helpers.cpp	4	3	455
+src/analysis/verb_candidates_hiragana.cpp	1	42	1777
+src/analysis/verb_candidates_kanji.cpp	7	85	2694
+src/analysis/verb_candidates.cpp	2	8	386

@@ -143,22 +143,23 @@ TEST_F(SuzumeApiTest, AnalyzeInvalidUtf8ReturnsEmpty) {
   EXPECT_TRUE(results.empty());
 }
 
-TEST_F(SuzumeApiTest, NumericKatakanaUnitsUseKnownUnitList) {
+TEST_F(SuzumeApiTest, NumericKatakanaMergesAsQuantity) {
   Suzume instance(makeTestOptions());
 
+  // MeCab treats a numeral + any katakana noun as a single quantity token, so
+  // this is a general rule rather than a curated unit list — both measurement
+  // units and arbitrary katakana nouns merge.
   auto meter = instance.analyze("5メートル");
   ASSERT_FALSE(meter.empty());
   EXPECT_EQ(meter.front().surface, "5メートル");
 
   auto cut = instance.analyze("3カット");
-  ASSERT_GE(cut.size(), 2u);
-  EXPECT_EQ(cut[0].surface, "3");
-  EXPECT_EQ(cut[1].surface, "カット");
+  ASSERT_FALSE(cut.empty());
+  EXPECT_EQ(cut.front().surface, "3カット");
 
   auto pattern = instance.analyze("10パターン");
-  ASSERT_GE(pattern.size(), 2u);
-  EXPECT_EQ(pattern[0].surface, "10");
-  EXPECT_EQ(pattern[1].surface, "パターン");
+  ASSERT_FALSE(pattern.empty());
+  EXPECT_EQ(pattern.front().surface, "10パターン");
 }
 
 TEST_F(SuzumeApiTest, AnalyzeSingleCharacter) {

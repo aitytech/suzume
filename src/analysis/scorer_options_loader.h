@@ -91,9 +91,6 @@ class ScorerOptionsLoader {
   /// Apply unary options (POS priors, penalties, bonuses) from JSON
   static void applyUnaryOptions(ScorerOptions& opts, const JsonValue& json);
 
-  /// Apply optimal length options from JSON
-  static void applyOptimalLengthOptions(ScorerOptions::OptimalLength& opts, const JsonValue& json);
-
   /// Apply bigram override options from JSON
   static void applyBigramOptions(ScorerOptions::BigramOverrides& opts, const JsonValue& json);
 
@@ -363,43 +360,8 @@ inline void ScorerOptionsLoader::applyUnaryOptions(ScorerOptions& opts, const Js
   SET_OPT(opts, aux_prior, json, "aux_prior");
   SET_OPT(opts, pronoun_prior, json, "pronoun_prior");
 
-  // Penalties
-  SET_OPT(opts, single_kanji_penalty, json, "single_kanji_penalty");
-  SET_OPT(opts, single_hiragana_penalty, json, "single_hiragana_penalty");
-  SET_OPT(opts, symbol_penalty, json, "symbol_penalty");
-  SET_OPT(opts, formal_noun_penalty, json, "formal_noun_penalty");
-  SET_OPT(opts, low_info_penalty, json, "low_info_penalty");
-
   // Bonuses
-  SET_OPT(opts, dictionary_bonus, json, "dictionary_bonus");
   SET_OPT(opts, user_dict_bonus, json, "user_dict_bonus");
-  SET_OPT(opts, optimal_length_bonus, json, "optimal_length_bonus");
-
-  // Optimal length (nested object)
-  if (auto* opt_len = json.get("optimal_length")) {
-    if (opt_len->isObject()) {
-      applyOptimalLengthOptions(opts.optimal_length, *opt_len);
-    }
-  }
-}
-
-// Helper macro for size_t options
-#define SET_SIZE_OPT(opts, field, json, key)          \
-  do {                                                \
-    auto* v = json.get(key);                          \
-    if (v && v->isNumber())                           \
-      opts.field = static_cast<size_t>(v->asFloat()); \
-  } while (0)
-
-inline void ScorerOptionsLoader::applyOptimalLengthOptions(ScorerOptions::OptimalLength& opts, const JsonValue& json) {
-  SET_SIZE_OPT(opts, noun_min, json, "noun_min");
-  SET_SIZE_OPT(opts, noun_max, json, "noun_max");
-  SET_SIZE_OPT(opts, verb_min, json, "verb_min");
-  SET_SIZE_OPT(opts, verb_max, json, "verb_max");
-  SET_SIZE_OPT(opts, adj_min, json, "adj_min");
-  SET_SIZE_OPT(opts, adj_max, json, "adj_max");
-  SET_SIZE_OPT(opts, katakana_min, json, "katakana_min");
-  SET_SIZE_OPT(opts, katakana_max, json, "katakana_max");
 }
 
 inline void ScorerOptionsLoader::applyBigramOptions(ScorerOptions::BigramOverrides& opts, const JsonValue& json) {
@@ -436,7 +398,6 @@ inline void ScorerOptionsLoader::applyVerbCandidateOptions(VerbCandidateOptions&
   SET_OPT(opts, base_cost_verified, json, "base_cost_verified");
   SET_OPT(opts, base_cost_long_verified, json, "base_cost_long_verified");
   // Bonuses
-  SET_OPT(opts, bonus_dict_match, json, "bonus_dict_match");
   SET_OPT(opts, bonus_ichidan, json, "bonus_ichidan");
   SET_OPT(opts, bonus_long_dict, json, "bonus_long_dict");
   SET_OPT(opts, bonus_long_verified, json, "bonus_long_verified");
@@ -486,7 +447,6 @@ inline void ScorerOptionsLoader::applyInflectionOptions(grammar::InflectionScore
   SET_OPT(opts, penalty_godan_non_ra_pure_hiragana, json, "penalty_godan_non_ra_pure_hiragana");
 }
 
-#undef SET_SIZE_OPT
 #undef SET_OPT
 
 inline bool ScorerOptionsLoader::loadFromFile(const std::string& path, ScorerOptions& options, std::string* error_msg) {
@@ -601,7 +561,6 @@ inline int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options) {
 inline int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options, bool report_warnings) {
   using namespace env_override_internal;
   int count = 0;
-  float size_helper = 0.0F;  // Helper for size_t conversions
 
   // Join options (SUZUME_SCORER_JOIN_*)
   {
@@ -637,53 +596,8 @@ inline int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options, bool r
     TRY_ENV("UNARY", particle_prior);
     TRY_ENV("UNARY", aux_prior);
     TRY_ENV("UNARY", pronoun_prior);
-    // Penalties
-    TRY_ENV("UNARY", single_kanji_penalty);
-    TRY_ENV("UNARY", single_hiragana_penalty);
-    TRY_ENV("UNARY", symbol_penalty);
-    TRY_ENV("UNARY", formal_noun_penalty);
-    TRY_ENV("UNARY", low_info_penalty);
     // Bonuses
-    TRY_ENV("UNARY", dictionary_bonus);
     TRY_ENV("UNARY", user_dict_bonus);
-    TRY_ENV("UNARY", optimal_length_bonus);
-  }
-
-  // Optimal length options (SUZUME_SCORER_OPTLEN_*)
-  {
-    auto& opts = options.optimal_length;
-    if (tryGetEnvFloat("SUZUME_SCORER_OPTLEN_noun_min", size_helper, report_warnings)) {
-      opts.noun_min = static_cast<size_t>(size_helper);
-      count++;
-    }
-    if (tryGetEnvFloat("SUZUME_SCORER_OPTLEN_noun_max", size_helper, report_warnings)) {
-      opts.noun_max = static_cast<size_t>(size_helper);
-      count++;
-    }
-    if (tryGetEnvFloat("SUZUME_SCORER_OPTLEN_verb_min", size_helper, report_warnings)) {
-      opts.verb_min = static_cast<size_t>(size_helper);
-      count++;
-    }
-    if (tryGetEnvFloat("SUZUME_SCORER_OPTLEN_verb_max", size_helper, report_warnings)) {
-      opts.verb_max = static_cast<size_t>(size_helper);
-      count++;
-    }
-    if (tryGetEnvFloat("SUZUME_SCORER_OPTLEN_adj_min", size_helper, report_warnings)) {
-      opts.adj_min = static_cast<size_t>(size_helper);
-      count++;
-    }
-    if (tryGetEnvFloat("SUZUME_SCORER_OPTLEN_adj_max", size_helper, report_warnings)) {
-      opts.adj_max = static_cast<size_t>(size_helper);
-      count++;
-    }
-    if (tryGetEnvFloat("SUZUME_SCORER_OPTLEN_katakana_min", size_helper, report_warnings)) {
-      opts.katakana_min = static_cast<size_t>(size_helper);
-      count++;
-    }
-    if (tryGetEnvFloat("SUZUME_SCORER_OPTLEN_katakana_max", size_helper, report_warnings)) {
-      opts.katakana_max = static_cast<size_t>(size_helper);
-      count++;
-    }
   }
 
   // Bigram options (SUZUME_SCORER_BIGRAM_*)
@@ -724,7 +638,6 @@ inline int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options, bool r
     TRY_ENV("VERB", base_cost_verified);
     TRY_ENV("VERB", base_cost_long_verified);
     // Bonuses
-    TRY_ENV("VERB", bonus_dict_match);
     TRY_ENV("VERB", bonus_ichidan);
     TRY_ENV("VERB", bonus_long_dict);
     TRY_ENV("VERB", bonus_long_verified);

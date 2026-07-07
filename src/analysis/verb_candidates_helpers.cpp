@@ -54,23 +54,6 @@ bool hasDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::
   return false;
 }
 
-bool isVerbInDictionaryWithType(const dictionary::DictionaryManager* dict_manager, std::string_view base_form,
-                                grammar::VerbType verb_type) {
-  if (dict_manager == nullptr || base_form.empty()) {
-    return false;
-  }
-  // v0.8: conj_type removed - just check if verb exists with matching surface
-  (void)verb_type;  // No longer used for exact match
-  auto results = dict_manager->lookup(base_form, 0);
-  for (const auto& result : results) {
-    if (result.entry != nullptr && result.entry->surface == base_form &&
-        result.entry->pos == core::PartOfSpeech::Verb) {
-      return true;
-    }
-  }
-  return false;
-}
-
 bool hasNonVerbDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
   if (dict_manager == nullptr) {
     return false;
@@ -96,6 +79,20 @@ bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manage
     }
   }
   return false;
+}
+
+std::string lookupVerbLemma(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
+                            std::string_view fallback) {
+  if (dict_manager != nullptr) {
+    auto results = dict_manager->lookup(surface, 0);
+    for (const auto& result : results) {
+      if (result.entry != nullptr && result.entry->surface == surface &&
+          result.entry->pos == core::PartOfSpeech::Verb && !result.entry->lemma.empty()) {
+        return result.entry->lemma;
+      }
+    }
+  }
+  return std::string(fallback);
 }
 
 // =============================================================================
@@ -407,6 +404,34 @@ bool shouldSkipSuruVerbAuxPattern(std::string_view surface, size_t kanji_count) 
   }
 
   return false;
+}
+
+// =============================================================================
+// Verb Type / Stem Analysis Helpers
+// =============================================================================
+
+std::string baseFormSuffix(grammar::VerbType verb_type) {
+  if (verb_type == grammar::VerbType::Ichidan) {
+    return "る";
+  }
+  const auto* row = grammar::Conjugation::getGodanRow(verb_type);
+  if (row == nullptr) {
+    return "";
+  }
+  return normalize::encodeUtf8(row->base_vowel);
+}
+
+bool isValidIRowIchidanStem(std::string_view stem) {
+  if (stem.size() < 2 * core::kJapaneseCharBytes) {
+    return false;
+  }
+  std::string_view last_char(stem.data() + stem.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes);
+  if (!grammar::endsWithIRow(last_char)) {
+    return false;
+  }
+  std::string_view kanji_part(stem.data(), stem.size() - core::kJapaneseCharBytes);
+  bool is_single_kanji_i = (kanji_part.size() == core::kJapaneseCharBytes && last_char == "い");
+  return !is_single_kanji_i;
 }
 
 bool containsTeFormAuxPattern(std::string_view surface) {

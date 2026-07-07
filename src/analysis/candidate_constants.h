@@ -103,6 +103,50 @@ constexpr float kHiraganaAdjConfScale = 0.5F;
 constexpr float kAdjStemBaseCost = -0.8F;
 constexpr float kAdjStemConfScale = 0.2F;
 
+// Single-kanji i-adjective candidate costs
+// Moderate costs so these beat competing verb candidates.
+constexpr float kSingleKanjiICost = 0.35F;   // 高い, 辛い (in-context 甘いもの)
+constexpr float kSingleKanjiKuCost = 0.52F;  // 甘く, 辛く renyokei
+
+// Minimum inflection confidence to accept an i-adjective candidate
+// (kanji/katakana paths and しそう stem validation)
+constexpr float kIAdjConfMin = 0.5F;
+
+// Single-kanji し + そう disambiguation (adjective vs verb renyokei)
+constexpr float kShiSouAdjConfMin = 0.6F;   // minimum adjective confidence
+constexpr float kShiSouConfMargin = 0.03F;  // adjective must beat verb by this
+
+// Dictionary-confirmed adjective bonus (美味しそう, 難しそう)
+constexpr float kDictAdjBonus = -0.25F;
+
+// Minimum verb hypothesis confidence to treat a ゆく/いく prefix as 連用形
+constexpr float kV1PrefixMinConfidence = 0.3F;
+
+// Compound adjective (2-kanji stem: 薄暗い, 物悲しく)
+constexpr float kCompoundAdjConfMin = 0.3F;   // minimum inflection confidence
+constexpr float kCompoundAdjBaseCost = 0.5F;  // base cost for generated candidate
+
+// Na-adjective candidate costs
+constexpr float kNaAdjYakaCost = 0.2F;  // やか/らか/か + な (華やかな, 静かな)
+constexpr float kNaAdjTekiCost = 1.5F;  // 的 suffix (論理的) — high to prefer NOUN+的+な
+constexpr float kNaAdjStemCost = 0.5F;  // kanji compound + な (獰猛な)
+
+// Hiragana i-adjective confidence thresholds
+constexpr float kHiraAdjConfMin = 0.55F;        // default hiragana-only
+constexpr float kHiraAdjConfParticle = 0.50F;   // particle-starting sequences
+constexpr float kHiraAdjConfProlonged = 0.40F;  // prolonged sound mark (すごーい)
+
+// Hiragana i-adjective cost adjustments
+constexpr float kProlongedSoundBonus = -0.1F;   // colloquial すごーい, やばーい
+constexpr float kLongParticleAdjBonus = -0.5F;  // 5+ char particle-starting (はなはだしい)
+
+// Garu-connection adjective stem (高すぎる, 怖がる)
+constexpr float kGaruAdjConfMin = 0.35F;            // minimum stem+い validity confidence
+constexpr float kDictFallbackAdjConfidence = 0.5F;  // assumed confidence for dict fallback (可愛い)
+
+// Minimum adj-over-verb confidence margin for non-dict しい stem split (話し vs 難し)
+constexpr float kAdjVerbConfDiffMin = 0.15F;
+
 // =============================================================================
 // Verb Candidate Constants (verb_candidates_kanji.cpp, verb_candidates_hiragana.cpp)
 // =============================================================================

@@ -40,16 +40,6 @@ class BigramTable {
    */
   static float getCost(core::ExtendedPOS prev, core::ExtendedPOS next);
 
-  /**
-   * @brief Get the raw bigram table for debugging/inspection
-   */
-  static const std::array<std::array<float, kSize>, kSize>& getTable();
-
-  /**
-   * @brief Get cost by indices (for testing)
-   */
-  static float getCostByIndex(size_t prev_idx, size_t next_idx);
-
  private:
   // The actual 55x55 bigram table
   static const std::array<std::array<float, kSize>, kSize> table_;

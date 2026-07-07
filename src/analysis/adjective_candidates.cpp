@@ -423,9 +423,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
       } else {
         // Use moderate cost to compete with verb candidates (尊う has cost ~0.5)
         // Lower cost wins, so 0.35 should beat verb candidates
-        constexpr float kSingleKanjiICost = 0.35F;
-        SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE] \"" << surface << "\" cost=" << kSingleKanjiICost << "\n");
-        candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, surface, kSingleKanjiICost,
+        SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE] \"" << surface << "\" cost=" << candidate::kSingleKanjiICost << "\n");
+        candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, surface, candidate::kSingleKanjiICost,
                                                CandidateOrigin::AdjectiveI, 0.5F, "single_kanji_i"));
       }
     }
@@ -445,9 +444,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     if (is_adj_context) {
       std::string surface = extractSubstring(codepoints, start_pos, adj_end);
       std::string lemma = extractSubstring(codepoints, start_pos, kanji_end) + "い";
-      constexpr float kSingleKanjiKuCost = 0.52F;
-      SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE_KU] \"" << surface << "\" cost=" << kSingleKanjiKuCost << "\n");
-      candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, lemma, kSingleKanjiKuCost,
+      SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE_KU] \"" << surface << "\" cost=" << candidate::kSingleKanjiKuCost << "\n");
+      candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, lemma, candidate::kSingleKanjiKuCost,
                                              CandidateOrigin::AdjectiveI, 0.5F, "single_kanji_ku"));
     }
   }
@@ -523,7 +521,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // If adjective confidence is meaningfully higher than verb confidence,
         // allow adjective candidate
         // The 0.03 margin prevents ties from incorrectly producing adjective candidates
-        if (adj_confidence >= 0.6F && adj_confidence >= verb_confidence + 0.03F) {
+        if (adj_confidence >= candidate::kShiSouAdjConfMin &&
+            adj_confidence >= verb_confidence + candidate::kShiSouConfMargin) {
           is_dict_adjective = true;
         } else {
           continue;
@@ -599,7 +598,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
       // Base forms like 寒い get exactly 0.5, conjugated forms like 美しかった get 0.68+
       // Require confidence >= 0.5 for i-adjectives
       // Base forms like 寒い get exactly 0.5, conjugated forms like 美しかった get 0.68+
-      if (cand.confidence >= 0.5F && cand.verb_type == grammar::VerbType::IAdjective) {
+      if (cand.confidence >= candidate::kIAdjConfMin && cand.verb_type == grammar::VerbType::IAdjective) {
         // Filter out false positives: いたす honorific pattern
         // Invalid patterns (all have た after the candidate):
         //   - サ変名詞 + いたす: 検討いたします, 勉強いたしました
@@ -609,7 +608,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         //   - 寒いよ (next char is よ)
         //   - 面白い (end of text)
         // Key insight: if minimum confidence (0.5) and next char is た, skip
-        if (cand.confidence <= 0.5F) {
+        if (cand.confidence <= candidate::kIAdjConfMin) {
           if (end_pos < codepoints.size() && codepoints[end_pos] == U'た') {
             continue;  // Skip - likely いたす honorific pattern
           }
@@ -646,7 +645,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // Bonus for adjectives confirmed in dictionary (美味しそう, 難しそう, etc.)
         // This helps beat false-positive suru verb candidates (美味する is invalid)
         if (is_dict_adjective) {
-          cost -= 0.25F;
+          cost += candidate::kDictAdjBonus;
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" -0.25 (dict_adj_bonus)\n");
         }
         // Penalty for non-dictionary i-adjective nominalization (さ ending)
@@ -724,13 +723,13 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
             // already exclude real adjectives, so any plausible verb hypothesis
             // (消え → 消える 0.74, 暮れ → 暮れる 0.3 after e-row ambiguity
             // penalty) marks the prefix as a 連用形.
-            constexpr float kV1PrefixMinConfidence = 0.3F;
             const auto& v1_results = inflection.analyze(v1_prefix);
             for (const auto& v1_res : v1_results) {
               if (v1_res.verb_type == grammar::VerbType::IAdjective) {
                 continue;
               }
-              if (isVerbInDictionary(dict_manager, v1_res.base_form) || v1_res.confidence >= kV1PrefixMinConfidence) {
+              if (isVerbInDictionary(dict_manager, v1_res.base_form) ||
+                  v1_res.confidence >= candidate::kV1PrefixMinConfidence) {
                 prefix_is_verb = true;
                 break;
               }
@@ -815,9 +814,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
               continue;
             const auto& all_cands = inflection.analyze(surface);
             for (const auto& ic : all_cands) {
-              if (ic.confidence >= 0.3F && ic.verb_type == grammar::VerbType::IAdjective) {
-                constexpr float kCompoundAdjBaseCost = 0.5F;
-                float cost = kCompoundAdjBaseCost + (1.0F - ic.confidence) * candidate::kKanjiAdjConfScale;
+              if (ic.confidence >= candidate::kCompoundAdjConfMin && ic.verb_type == grammar::VerbType::IAdjective) {
+                float cost = candidate::kCompoundAdjBaseCost + (1.0F - ic.confidence) * candidate::kKanjiAdjConfScale;
                 SUZUME_DEBUG_LOG_VERBOSE("[ADJ_COMPOUND] \"" << surface << "\" cost=" << cost
                                                              << " conf=" << ic.confidence << "\n");
                 auto adj_cand = makeIAdjCandidate(surface, start_pos, end_pos, ic.base_form, cost,
@@ -1150,7 +1148,8 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
 
       if (is_yaka_pattern) {
         // Stem without な, low cost for common pattern
-        candidates.push_back(makeNaAdjCandidate(stem, start_pos, hira_end - 1, 0.2F, true, 0.9F, "na_adj_yaka_raka"));
+        candidates.push_back(makeNaAdjCandidate(stem, start_pos, hira_end - 1, candidate::kNaAdjYakaCost, true, 0.9F,
+                                                "na_adj_yaka_raka"));
         return candidates;  // Return early for clear pattern match
       }
     }
@@ -1174,8 +1173,8 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
       if (kanji_suffix == suffix) {
         // Found a na-adjective pattern like 理性的, 論理的
         // Higher cost to prefer NOUN + 的(SUFFIX) + な path for MeCab compatibility
-        candidates.push_back(
-            makeNaAdjCandidate(kanji_seq, start_pos, kanji_end, 1.5F, true, 1.0F, "na_adjective_teki"));
+        candidates.push_back(makeNaAdjCandidate(kanji_seq, start_pos, kanji_end, candidate::kNaAdjTekiCost, true, 1.0F,
+                                                "na_adjective_teki"));
         break;  // Use first matching suffix
       }
     }
@@ -1217,7 +1216,8 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
 
     // Found kanji compound + な - potential na-adjective stem
     // Cost similar to dictionary na-adjectives but with small penalty for unknown
-    candidates.push_back(makeNaAdjCandidate(kanji_seq, start_pos, kanji_end, 0.5F, true, 0.8F, "na_adjective_stem"));
+    candidates.push_back(makeNaAdjCandidate(kanji_seq, start_pos, kanji_end, candidate::kNaAdjStemCost, true, 0.8F,
+                                            "na_adjective_stem"));
   }
 
   return candidates;
@@ -1301,7 +1301,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
 
       const auto& test_candidates = inflection.analyze(test_surface);
       for (const auto& cand : test_candidates) {
-        if (cand.verb_type == grammar::VerbType::IAdjective && cand.confidence >= 0.50F) {
+        if (cand.verb_type == grammar::VerbType::IAdjective && cand.confidence >= candidate::kHiraAdjConfParticle) {
           // For particle-starting sequences, require stem length >= 2 characters
           // This prevents に+そうな from being recognized as にい (invalid)
           // Real adjectives have stems of at least 2 chars: あつい, かわいい, etc.
@@ -1417,7 +1417,9 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
       // Multiple consecutive marks (すごーーい) result in even lower confidence
       // For particle-starting sequences, lower threshold (0.50) since these have
       // already been validated as forming valid adjectives (はなはだしい, かわいい)
-      float confidence_threshold = has_prolonged ? 0.40F : starts_with_particle ? 0.50F : 0.55F;
+      float confidence_threshold = has_prolonged          ? candidate::kHiraAdjConfProlonged
+                                   : starts_with_particle ? candidate::kHiraAdjConfParticle
+                                                          : candidate::kHiraAdjConfMin;
       if (cand.confidence >= confidence_threshold && cand.verb_type == grammar::VerbType::IAdjective) {
         // For particle-starting sequences, require stem length >= 2 characters
         // This prevents に+そうな from being recognized as にい (invalid)
@@ -1508,7 +1510,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
         // kanji adjectives like 恐ろしい (kanji adj base=0.2F)
         float cost = candidate::kHiraganaAdjBaseCost + (1.0F - cand.confidence) * candidate::kHiraganaAdjConfScale;
         if (has_prolonged) {
-          cost -= 0.1F;  // Bonus for colloquial patterns like すごーい
+          cost += candidate::kProlongedSoundBonus;  // Bonus for colloquial patterns like すごーい
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" -0.1 (prolonged_sound_bonus)\n");
         }
         // Length-based bonus for adjectives starting with particle characters
@@ -1517,7 +1519,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
         if (starts_with_particle) {
           size_t char_count = end_pos - start_pos;
           if (char_count >= 5) {
-            cost -= 0.5F;  // Strong bonus for long adjectives (はなはだしい)
+            cost += candidate::kLongParticleAdjBonus;  // Strong bonus for long adjectives (はなはだしい)
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" -0.5 (long_particle_adj_bonus)\n");
           }
           // No bonus for 3-4 char sequences (につい, でやばい) - likely particle + adjective split
@@ -1710,7 +1712,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
       bool is_valid_adjective = false;
       float adj_confidence = 0.0F;
       for (const auto& result : adj_results) {
-        if (result.verb_type == grammar::VerbType::IAdjective && result.confidence >= 0.5F) {
+        if (result.verb_type == grammar::VerbType::IAdjective && result.confidence >= candidate::kIAdjConfMin) {
           is_valid_adjective = true;
           adj_confidence = result.confidence;
           break;
@@ -1754,7 +1756,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
 
       // Generate stem candidate with strong bonus
       // おい (INTJ) has cost -1, so stem needs very low cost to win
-      float cost = candidate::kAdjStemExtCost + (1.0F - adj_confidence) * 0.2F;
+      float cost = candidate::kAdjStemExtCost + (1.0F - adj_confidence) * candidate::kAdjStemConfScale;
       SUZUME_DEBUG_LOG("[ADJ_STEM_HIRA] ✓ candidate stem=\"" << stem << "\" base=\"" << base_form << "\" cost=" << cost
                                                              << "\n");
       candidates.push_back(makeIAdjStemCandidate(stem, start_pos, stem_end, base_form, cost,
@@ -1832,7 +1834,7 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
     const auto& all_candidates = inflection.analyze(surface);
     for (const auto& cand : all_candidates) {
       // Require confidence >= 0.5 for i-adjectives
-      if (cand.confidence >= 0.5F && cand.verb_type == grammar::VerbType::IAdjective) {
+      if (cand.confidence >= candidate::kIAdjConfMin && cand.verb_type == grammar::VerbType::IAdjective) {
         // Lower cost than pure katakana noun to prefer adjective reading
         // Cost: 0.2-0.35 based on confidence (lower = better)
         float cost = candidate::kKanjiAdjBaseCost + (1.0F - cand.confidence) * candidate::kKanjiAdjConfScale;
@@ -2126,7 +2128,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       bool is_valid_adjective = false;
       float adj_confidence = 0.0F;
       for (const auto& result : adj_results) {
-        if (result.verb_type == grammar::VerbType::IAdjective && result.confidence >= 0.35F) {
+        if (result.verb_type == grammar::VerbType::IAdjective && result.confidence >= candidate::kGaruAdjConfMin) {
           is_valid_adjective = true;
           adj_confidence = result.confidence;
           break;
@@ -2142,7 +2144,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       if (!is_valid_adjective) {
         if (isAdjectiveInDictionary(dict_manager, base_form)) {
           is_valid_adjective = true;
-          adj_confidence = 0.5F;
+          adj_confidence = candidate::kDictFallbackAdjConfidence;
           SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   dict fallback: \"" << base_form << "\" found in dictionary\n");
         } else {
           continue;
@@ -2268,7 +2270,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       bool is_valid_adjective = false;
       float adj_confidence = 0.0F;
       for (const auto& result : adj_results) {
-        if (result.verb_type == grammar::VerbType::IAdjective && result.confidence >= 0.5F) {
+        if (result.verb_type == grammar::VerbType::IAdjective && result.confidence >= candidate::kIAdjConfMin) {
           is_valid_adjective = true;
           adj_confidence = result.confidence;
           break;
@@ -2319,12 +2321,11 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       // than verb confidence. This prevents generating stems for verb renyokei
       // patterns like 話し (from 話す) where both get similar confidence.
       if (!is_dict_adjective) {
-        constexpr float kConfidenceThreshold = 0.15F;
         float diff = adj_confidence - verb_confidence;
         SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   conf_diff=" << diff << " (adj=" << adj_confidence
                                                            << " verb=" << verb_confidence
-                                                           << " threshold=" << kConfidenceThreshold << ")\n");
-        if (diff < kConfidenceThreshold) {
+                                                           << " threshold=" << candidate::kAdjVerbConfDiffMin << ")\n");
+        if (diff < candidate::kAdjVerbConfDiffMin) {
           SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   skip: conf_diff < threshold\n");
           continue;
         }

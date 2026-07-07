@@ -49,7 +49,6 @@ struct VerbCandidateOptions {
   float base_cost_long_verified = 0.05F;  // Minimal for long verified (line 1055)
 
   // Bonuses (negative = preferred)
-  float bonus_dict_match = -0.2F;     // Dictionary match bonus (line 518)
   float bonus_ichidan = -0.2F;        // Ichidan verb bonus (line 581)
   float bonus_long_dict = -0.3F;      // Long dictionary verb bonus (line 1018)
   float bonus_long_verified = -0.8F;  // Long verified verb bonus (line 1016)

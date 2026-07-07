@@ -113,9 +113,11 @@ struct Suzume::Impl {
   void warnDictionaryLoad(const std::string& path, const core::Error& error) {
     std::string message = "Failed to auto-load dictionary " + path + ": " + error.message;
     dictionary_warnings.push_back(message);
+#ifndef __EMSCRIPTEN__
     if (options.report_scorer_config) {
       std::cerr << "[dictionary] " << message << "\n";
     }
+#endif
   }
 
   Impl(const SuzumeOptions& opts)

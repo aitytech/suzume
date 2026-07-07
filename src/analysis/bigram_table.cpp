@@ -18,17 +18,6 @@ float BigramTable::getCost(core::ExtendedPOS prev, core::ExtendedPOS next) {
   return table_[prev_idx][next_idx];
 }
 
-const std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize>& BigramTable::getTable() {
-  return table_;
-}
-
-float BigramTable::getCostByIndex(size_t prev_idx, size_t next_idx) {
-  if (prev_idx >= kSize || next_idx >= kSize) {
-    return 0.0F;
-  }
-  return table_[prev_idx][next_idx];
-}
-
 // =============================================================================
 // Table Initialization Helper
 // =============================================================================

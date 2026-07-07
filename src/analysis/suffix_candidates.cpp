@@ -11,6 +11,7 @@
 #include "core/utf8_constants.h"
 #include "dictionary/dictionary.h"
 #include "grammar/conjugation.h"
+#include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
 #include "tokenizer_utils.h"
@@ -737,8 +738,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
 
           for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
             std::string base_form = kanji2_stem + std::string(base_suffix);
-            if (verb_helpers::isVerbInDictionaryWithType(dict_manager, base_form, verb_type) ||
-                verb_helpers::isVerbInDictionary(dict_manager, base_form)) {
+            if (verb_helpers::isVerbInDictionary(dict_manager, base_form)) {
               size_t onbin_end = kanji2_end + 1;  // Include ん
               std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
               constexpr float kHatsuonbinCost = -0.5F;
@@ -807,93 +807,6 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   if (first_hira == U'ゃ' || first_hira == U'ゅ' || first_hira == U'ょ' || first_hira == U'ぁ' || first_hira == U'ぃ' ||
       first_hira == U'ぅ' || first_hira == U'ぇ' || first_hira == U'ぉ') {
     return candidates;
-  }
-
-  // Handle sokuon (っ) pattern: 漢字 + っ + (漢字 or 平仮名)
-  // Examples: 横っ面, 取っ手, 引っ込む
-  if (first_hira == U'っ') {
-    // Need at least one more character after っ
-    size_t sokuon_pos = kanji_end;  // Position of っ
-    if (sokuon_pos + 1 >= char_types.size()) {
-      return candidates;  // っ at end - cannot form valid compound
-    }
-
-    // Check what follows っ
-    normalize::CharType next_type = char_types[sokuon_pos + 1];
-    if (next_type == normalize::CharType::Kanji) {
-      // Pattern: 漢字 + っ + 漢字 (e.g., 横っ面, 取っ手)
-      // Find end of kanji sequence after っ
-      size_t kanji2_end = findCharRegionEnd(char_types, sokuon_pos + 1, 3, normalize::CharType::Kanji);
-
-      // Generate candidate(s) for kanji + っ + kanji pattern
-      for (size_t end_pos = sokuon_pos + 2; end_pos <= kanji2_end; ++end_pos) {
-        std::string surface = extractSubstring(codepoints, start_pos, end_pos);
-        if (!surface.empty()) {
-          auto cand = makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Noun, 0.5F, false,
-                                    CandidateOrigin::KanjiHiraganaCompound);
-#ifdef SUZUME_DEBUG_INFO
-          cand.confidence = 0.9F;
-          cand.pattern = "kanji_sokuon_kanji";
-#endif
-          candidates.push_back(cand);
-        }
-      }
-
-      // Also check if there's hiragana after the second kanji (e.g., patterns like 取っ手さばき)
-      if (kanji2_end < char_types.size() && char_types[kanji2_end] == normalize::CharType::Hiragana) {
-        // Find hiragana portion after second kanji
-        size_t hira_end = kanji2_end;
-        while (hira_end < char_types.size() && hira_end - kanji2_end < 4 &&
-               char_types[hira_end] == normalize::CharType::Hiragana) {
-          char32_t ch = codepoints[hira_end];
-          if (normalize::isParticleCodepoint(ch)) {
-            break;
-          }
-          ++hira_end;
-        }
-
-        if (hira_end > kanji2_end) {
-          std::string surface = extractSubstring(codepoints, start_pos, hira_end);
-          if (!surface.empty()) {
-            auto cand = makeCandidate(surface, start_pos, hira_end, core::PartOfSpeech::Noun, 0.8F, false,
-                                      CandidateOrigin::KanjiHiraganaCompound);
-#ifdef SUZUME_DEBUG_INFO
-            cand.confidence = 0.8F;
-            cand.pattern = "kanji_sokuon_kanji_hira";
-#endif
-            candidates.push_back(cand);
-          }
-        }
-      }
-    } else if (next_type == normalize::CharType::Hiragana) {
-      // Pattern: 漢字 + っ + 平仮名 (e.g., 引っ込む, 突っ走る)
-      // Find end of hiragana after っ
-      size_t hira2_end = sokuon_pos + 1;
-      while (hira2_end < char_types.size() && hira2_end - (sokuon_pos + 1) < 4 &&
-             char_types[hira2_end] == normalize::CharType::Hiragana) {
-        char32_t ch = codepoints[hira2_end];
-        if (normalize::isParticleCodepoint(ch)) {
-          break;
-        }
-        ++hira2_end;
-      }
-
-      // Need at least one hiragana after っ (not counting っ itself)
-      if (hira2_end > sokuon_pos + 1) {
-        std::string surface = extractSubstring(codepoints, start_pos, hira2_end);
-        if (!surface.empty()) {
-          auto cand = makeCandidate(surface, start_pos, hira2_end, core::PartOfSpeech::Noun, 1.0F, false,
-                                    CandidateOrigin::KanjiHiraganaCompound);
-#ifdef SUZUME_DEBUG_INFO
-          cand.confidence = 0.7F;
-          cand.pattern = "kanji_sokuon_hira";
-#endif
-          candidates.push_back(cand);
-        }
-      }
-    }
-
-    return candidates;  // Sokuon pattern handled, don't fall through to normal logic
   }
 
   // Skip patterns ending with ん - likely honorific suffixes
@@ -1109,13 +1022,6 @@ bool isNumeralChar(char32_t c) {
   return false;
 }
 
-bool isKnownKatakanaNumericUnit(std::string_view surface) {
-  return utf8::equalsAny(surface, {
-                                      "キロ",     "キログラム",   "メートル",   "センチ", "ミリ", "グラム", "トン",
-                                      "リットル", "ミリリットル", "パーセント", "パー",   "ドル", "ユーロ", "カロリー",
-                                      "ページ",   "ポイント",     "ゴールド",   "アデナ", "ケロ",
-                                  });
-}
 }  // namespace
 
 std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -1178,7 +1084,10 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     }
     if (unit_len >= 1) {  // unit_len <= 8 guaranteed by findCharRegionEnd
       std::string unit_surface = extractSubstring(codepoints, numeral_end, unit_end);
-      if (!isKnownKatakanaNumericUnit(unit_surface)) {
+      // Any all-katakana run merges with the preceding numeral (3キロ, 100メダル);
+      // MeCab treats number + katakana as one quantity token, so there is no
+      // curated unit list. (ヶ/ケ + kanji surfaces are mixed-script and fall through.)
+      if (!normalize::isAllKatakana(unit_surface)) {
         return candidates;
       }
       std::string surface = extractSubstring(codepoints, start_pos, unit_end);

@@ -238,60 +238,6 @@
       ]
     },
     {
-      "description": "100ゴールド (game currency)",
-      "expected": [
-        {
-          "lemma": "100ゴールド",
-          "pos": "Noun",
-          "surface": "100ゴールド"
-        }
-      ],
-      "id": "numeric_unit_game_gold",
-      "input": "100ゴールド",
-      "tags": [
-        "grammar",
-        "numeric",
-        "unit",
-        "game"
-      ]
-    },
-    {
-      "description": "50アデナ (game currency)",
-      "expected": [
-        {
-          "lemma": "50アデナ",
-          "pos": "Noun",
-          "surface": "50アデナ"
-        }
-      ],
-      "id": "numeric_unit_game_adena",
-      "input": "50アデナ",
-      "tags": [
-        "grammar",
-        "numeric",
-        "unit",
-        "game"
-      ]
-    },
-    {
-      "description": "1000ケロ (game currency)",
-      "expected": [
-        {
-          "lemma": "1000ケロ",
-          "pos": "Noun",
-          "surface": "1000ケロ"
-        }
-      ],
-      "id": "numeric_unit_game_kero",
-      "input": "1000ケロ",
-      "tags": [
-        "grammar",
-        "numeric",
-        "unit",
-        "game"
-      ]
-    },
-    {
       "accepted_diff": {
         "category": "design-difference",
         "reason": "Suzume intentional design difference from MeCab normalization"
@@ -1968,6 +1914,30 @@
       ],
       "id": "shida",
       "input": "丸出しだ"
+    },
+    {
+      "description": "number + generic katakana noun merges as one quantity token (general rule, no unit list)",
+      "expected": [
+        {
+          "lemma": "100メダル",
+          "pos": "Noun",
+          "surface": "100メダル"
+        }
+      ],
+      "id": "numeric_unit_generic_katakana",
+      "input": "100メダル"
+    },
+    {
+      "description": "number + katakana noun merge generalizes beyond curated units",
+      "expected": [
+        {
+          "lemma": "3コース",
+          "pos": "Noun",
+          "surface": "3コース"
+        }
+      ],
+      "id": "numeric_unit_generic_katakana_course",
+      "input": "3コース"
     }
   ],
   "description": "General nouns",

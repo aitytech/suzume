@@ -63,12 +63,7 @@ core::Lattice Tokenizer::buildLattice(std::string_view text, const std::vector<c
         addVerbSuffixNounJoinCandidates(lattice, text, codepoints, pos, char_types);
       }
       addTeFormAuxiliaryCandidates(lattice, text, codepoints, pos, char_types);
-    } else if (ct == normalize::CharType::Katakana) {
-      if (mode_ != core::AnalysisMode::Split) {
-        addKatakanaSugiruJoinCandidates(lattice, text, codepoints, pos, char_types);
-      }
     }
-    // addAdjectiveSugiruJoinCandidates is a no-op — removed
 
     SUZUME_DEBUG_LOG("[LATTICE] pos=" << pos << " candidates=" << lattice.edgesAt(pos).size() << "\n");
   }
@@ -728,18 +723,6 @@ void Tokenizer::addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_
                                             const std::vector<char32_t>& codepoints, size_t start_pos,
                                             const std::vector<normalize::CharType>& char_types) const {
   analysis::addPrefixNounJoinCandidates(lattice, text, codepoints, start_pos, char_types, dict_manager_, scorer_);
-}
-
-void Tokenizer::addAdjectiveSugiruJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                                 const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                 const std::vector<normalize::CharType>& char_types) const {
-  analysis::addAdjectiveSugiruJoinCandidates(lattice, text, codepoints, start_pos, char_types, dict_manager_, scorer_);
-}
-
-void Tokenizer::addKatakanaSugiruJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                                const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                const std::vector<normalize::CharType>& char_types) const {
-  analysis::addKatakanaSugiruJoinCandidates(lattice, text, codepoints, start_pos, char_types, scorer_);
 }
 
 void Tokenizer::addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,

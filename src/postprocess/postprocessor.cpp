@@ -337,19 +337,13 @@ bool endsWithDigit(const std::string& surface) {
   return isDigitChar(codepoints.back());
 }
 
+using normalize::isAllKatakana;
 using normalize::isCounterKanji;
-
-bool isKnownKatakanaUnit(const std::string& surface) {
-  return utf8::equalsAny(surface, {
-                                      "キロ",     "キログラム",   "メートル",   "センチ", "ミリ", "グラム", "トン",
-                                      "リットル", "ミリリットル", "パーセント", "パー",   "ドル", "ユーロ", "カロリー",
-                                      "ページ",   "ポイント",     "ゴールド",   "アデナ", "ケロ",
-                                  });
-}
 
 // Check if surface looks like a unit (noun that can follow numbers)
 // For kanji: must start with a counter kanji (円, 分, 時間, etc.)
-// For katakana: explicit known-unit list to avoid merging general nouns.
+// For katakana: any katakana noun merges (MeCab treats number + katakana as one
+// quantity token, e.g. 3キロ, 100メダル), so no curated unit list is needed.
 bool looksLikeUnit(const std::string& surface) {
   if (surface.empty())
     return false;
@@ -366,10 +360,9 @@ bool looksLikeUnit(const std::string& surface) {
     return isCounterKanji(first);
   }
 
-  // Katakana units (キロ, メートル, パーセント, etc.)
-  // Katakana: U+30A0-U+30FF
-  if (first >= 0x30A0 && first <= 0x30FF) {
-    return isKnownKatakanaUnit(surface);
+  // Katakana nouns: any all-katakana surface merges with a preceding numeral
+  if (isAllKatakana(surface)) {
+    return true;
   }
 
   return false;

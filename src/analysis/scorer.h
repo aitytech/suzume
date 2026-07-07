@@ -25,30 +25,8 @@ struct ScorerOptions {
   float aux_prior = 0.2F;
   float pronoun_prior = 0.1F;
 
-  // Penalties
-  float single_kanji_penalty = 2.0F;
-  float single_hiragana_penalty = 1.5F;
-  float symbol_penalty = 1.0F;
-  float formal_noun_penalty = 1.0F;
-  float low_info_penalty = 0.5F;
-
   // Bonuses
-  float dictionary_bonus = -1.0F;
   float user_dict_bonus = -2.0F;
-  float optimal_length_bonus = -0.5F;
-
-  // Optimal length range
-  struct OptimalLength {
-    size_t noun_min = 2;
-    size_t noun_max = 16;  // Long compounds like 独立行政法人情報処理推進機構
-    size_t verb_min = 3;   // Keep at 3 to avoid promoting verb split (食べた→食べ+た)
-    size_t verb_max = 12;  // Increased to accommodate long conjugated forms
-                           // e.g., かけられなくなった (9 chars), 食べさせられなくなった (10 chars)
-    size_t adj_min = 2;
-    size_t adj_max = 6;
-    size_t katakana_min = 3;
-    size_t katakana_max = 12;
-  } optimal_length;
 
   // Bigram cost overrides (NaN = use default table value)
   // Only frequently-adjusted pairs are exposed for tuning

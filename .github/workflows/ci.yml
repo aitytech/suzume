@@ -19,22 +19,30 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: yarn
       - run: yarn install --immutable
       - run: yarn lint
 
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Ratchet on hardcoded word tests / raw score literals / file length,
+      # plus WASM-core purity (no unguarded file-I/O headers). See CLAUDE.md.
+      - run: scripts/check_code_guardrails.sh
+
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: mymindstorm/setup-emsdk@v14
+      - uses: actions/checkout@v7
+      - uses: mymindstorm/setup-emsdk@v16
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: yarn
@@ -46,10 +54,12 @@ jobs:
       - name: Run C++ tests
         run: ctest --test-dir build --output-on-failure
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
       - run: yarn install --immutable
       - run: yarn build
+      - name: Check WASM size regression
+        run: scripts/check_wasm_size.sh dist/suzume-wasm.wasm
       - run: yarn test

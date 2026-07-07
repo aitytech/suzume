@@ -122,32 +122,6 @@ class Tokenizer {
                                              const std::vector<normalize::CharType>& char_types) const;
 
   /**
-   * @brief Add adjective + すぎる compound verb candidates
-   *
-   * Detects i-adjective stem + すぎる patterns and generates compound verb candidates.
-   *
-   * Examples:
-   *   "高すぎる" → compound verb with lemma "高過ぎる"
-   *   "尊すぎて" → "尊すぎ" (verb) + "て" (auxiliary)
-   */
-  void addAdjectiveSugiruJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                        const std::vector<char32_t>& codepoints, size_t start_pos,
-                                        const std::vector<normalize::CharType>& char_types) const;
-
-  /**
-   * @brief Add katakana word + すぎる compound verb candidates
-   *
-   * Detects katakana word + すぎる patterns and generates compound verb candidates.
-   *
-   * Examples:
-   *   "ワンパターンすぎる" → compound verb with lemma "ワンパターンすぎる"
-   *   "シンプルすぎる" → compound verb with lemma "シンプルすぎる"
-   */
-  void addKatakanaSugiruJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                       const std::vector<char32_t>& codepoints, size_t start_pos,
-                                       const std::vector<normalize::CharType>& char_types) const;
-
-  /**
    * @brief Add prefix + noun join candidates
    *
    * Detects productive prefix + noun patterns and generates merged candidates.

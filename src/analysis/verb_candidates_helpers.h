@@ -67,12 +67,6 @@ inline bool isAdjectiveInDictionary(const dictionary::DictionaryManager* dict_ma
 }
 
 /**
- * @brief Check if a verb is in dictionary with matching conjugation type
- */
-bool isVerbInDictionaryWithType(const dictionary::DictionaryManager* dict_manager, std::string_view base_form,
-                                grammar::VerbType verb_type);
-
-/**
  * @brief Check if a surface has a non-verb entry in dictionary
  */
 bool hasNonVerbDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
@@ -83,6 +77,16 @@ bool hasNonVerbDictionaryEntry(const dictionary::DictionaryManager* dict_manager
  * Used to detect compound particles (について, によって, として, etc.)
  */
 bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
+
+/**
+ * @brief Look up a verb's lemma from the dictionary
+ *
+ * Returns the lemma of the first verb entry whose surface exactly matches
+ * @p surface and whose lemma is non-empty. Falls back to @p fallback when the
+ * dictionary is null or no matching verb entry exists.
+ */
+std::string lookupVerbLemma(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
+                            std::string_view fallback);
 
 // =============================================================================
 // Candidate Sorting
@@ -244,6 +248,29 @@ inline float getIchidanConfidence(const std::vector<grammar::InflectionCandidate
   }
   return best;
 }
+
+// =============================================================================
+// Verb Type / Stem Analysis Helpers
+// =============================================================================
+
+/**
+ * @brief Get the terminal-form (終止形) okurigana suffix for a verb type
+ *
+ * Returns the dictionary-form ending: Ichidan yields "る", Godan types yield
+ * their base vowel (GodanKa -> "く", GodanSa -> "す", ...). Returns an empty
+ * string for verb types without a Godan terminal ending (Suru, Kuru,
+ * IAdjective, Unknown).
+ */
+std::string baseFormSuffix(grammar::VerbType verb_type);
+
+/**
+ * @brief Check whether a stem is a valid i-row Ichidan verb stem
+ *
+ * A valid i-row Ichidan stem ends in an i-row hiragana, has at least two
+ * characters, and is not the single-kanji + い pattern (人い -> 人 + いる),
+ * which is almost always NOUN + いる rather than an Ichidan verb.
+ */
+bool isValidIRowIchidanStem(std::string_view stem);
 
 // =============================================================================
 // Character Region Detection

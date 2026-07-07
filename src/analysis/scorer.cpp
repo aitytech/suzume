@@ -183,7 +183,9 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       edge.surface != "ない" && edge.surface != "なく" && edge.surface != "なかっ" && edge.surface != "そう") {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Base bonus -2.5, plus 0.5 per character beyond 3
-    float bonus = (char_len <= 3) ? -2.5F : -2.5F - static_cast<float>(char_len - 3) * 0.5F;
+    float bonus = (char_len <= 3)
+                      ? sc::kBonusHiraganaAdjBase
+                      : sc::kBonusHiraganaAdjBase - static_cast<float>(char_len - 3) * sc::kBonusHiraganaAdjPerChar;
     cost += bonus;
   }
 
@@ -208,7 +210,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       edge.extended_pos != core::ExtendedPOS::AdjStem && grammar::containsKanji(edge.surface) &&
       edge.surface.size() >= 4 * core::kJapaneseCharBytes && utf8::endsWith(edge.surface, "い")) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    cost += lengthScaledBonus(-1.5F, char_len, 4, 0.3F);
+    cost += lengthScaledBonus(sc::kBonusKanjiOkuriganaAdjBase, char_len, 4, sc::kBonusKanjiOkuriganaAdjPerChar);
   }
 
   // Bonus for hiragana adverbs from dictionary
@@ -221,7 +223,9 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Short adverbs (2 chars) get weaker bonus
     // Longer adverbs get stronger bonus (0.5 per character beyond 2)
-    float bonus = (char_len <= 2) ? -1.0F : -2.5F - static_cast<float>(char_len - 2) * 0.5F;
+    float bonus = (char_len <= 2) ? sc::kBonusHiraganaAdverbShort
+                                  : sc::kBonusHiraganaAdverbBase -
+                                        static_cast<float>(char_len - 2) * sc::kBonusHiraganaAdverbPerChar;
     cost += bonus;
   }
 
@@ -232,7 +236,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adverb && !grammar::isPureHiragana(edge.surface)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     if (char_len >= 3) {
-      cost += lengthScaledBonus(-1.5F, char_len, 3, 0.3F);
+      cost += lengthScaledBonus(sc::kBonusNonHiraganaAdverbBase, char_len, 3, sc::kBonusNonHiraganaAdverbPerChar);
     }
   }
 
@@ -244,7 +248,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Determiner && grammar::containsKanji(edge.surface)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     if (char_len >= 3) {
-      cost += lengthScaledBonus(-1.5F, char_len, 3, 0.3F);
+      cost += lengthScaledBonus(sc::kBonusKanjiDeterminerBase, char_len, 3, sc::kBonusKanjiDeterminerPerChar);
     }
   }
 
@@ -255,7 +259,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun && grammar::isPureHiragana(edge.surface)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     if (char_len >= 4) {
-      cost += -1.5F;
+      cost += sc::kBonusLongHiraganaNoun;
     }
   }
 
@@ -270,7 +274,10 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       grammar::isPureHiragana(edge.surface)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Stronger bonus for longer interjections (common greetings are 4-5 chars)
-    float bonus = (char_len <= 2) ? -0.5F : (char_len <= 3) ? -1.5F : -2.0F - static_cast<float>(char_len - 3) * 0.5F;
+    float bonus = (char_len <= 2)   ? sc::kBonusHiraganaInterjectionShort
+                  : (char_len <= 3) ? sc::kBonusHiraganaInterjectionMid
+                                    : sc::kBonusHiraganaInterjectionBase -
+                                          static_cast<float>(char_len - 3) * sc::kBonusHiraganaInterjectionPerChar;
     cost += bonus;
   }
 
@@ -280,7 +287,8 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Interjection && !grammar::isPureHiragana(edge.surface)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Moderate bonus for mixed interjections
-    cost += lengthScaledBonus(-0.5F, char_len, 3, 0.3F);
+    cost +=
+        lengthScaledBonus(sc::kBonusNonHiraganaInterjectionBase, char_len, 3, sc::kBonusNonHiraganaInterjectionPerChar);
   }
 
   // Bonus for hiragana conjunctions from dictionary (たとえば, それから, etc.)
@@ -294,7 +302,9 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Stronger bonus for conjunctions to beat adverb+particle splits
     // Adverb 3-char gets -3.0, plus particle gets bonus, so we need > -3.5
-    float bonus = (char_len <= 3) ? -2.0F : -3.5F - static_cast<float>(char_len - 3) * 0.5F;
+    float bonus = (char_len <= 3) ? sc::kBonusHiraganaConjunctionShort
+                                  : sc::kBonusHiraganaConjunctionBase -
+                                        static_cast<float>(char_len - 3) * sc::kBonusHiraganaConjunctionPerChar;
     cost += bonus;
   }
 
@@ -330,7 +340,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
        edge.surface.compare(0, 3, "無") == 0 || edge.surface.compare(0, 3, "未") == 0)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Base -3.0 for 2-char entries, -0.5 per additional char
-    cost += lengthScaledBonus(-3.0F, char_len, 2, 0.5F);
+    cost += lengthScaledBonus(sc::kBonusNegationPrefixBase, char_len, 2, sc::kBonusNegationPrefixPerChar);
   }
 
   // Bonus for dictionary NOUN entries starting with honorific prefix kanji 御
@@ -340,7 +350,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun && edge.surface.size() >= 6 &&
       edge.surface.compare(0, 3, "御") == 0) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    cost += lengthScaledBonus(-1.0F, char_len, 2, 0.3F);
+    cost += lengthScaledBonus(sc::kBonusHonorificGoNounBase, char_len, 2, sc::kBonusHonorificGoNounPerChar);
   }
 
   // Bonus for hiragana+kanji mixed nouns from dictionary (e.g., なし崩し, みじん切り, お茶)
@@ -826,20 +836,21 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
 
   // Penalty for godan passive/causative-passive renyokei (～Aれ for A-row) → た
   // MeCab splits these as 言わ+れ+た, not 言われ+た
-  // E.g., 言われた → 言わ+れ+た, 売られた → 売ら+れ+た, やらされた → やらさ+れ+た
-  //       書かれた → 書か+れ+た, 読まれた → 読ま+れ+た, 叩かれた → 叩か+れ+た
-  // This cancels the VerbRenyokei→た bonus for godan passive forms
-  // Patterns: われ (wa-row), かれ (ka-row), され (sa-row), たれ (ta-row),
-  //           なれ (na-row), まれ (ma-row), られ (ra-row), ばれ (ba-row), がれ (ga-row)
+  // E.g., 言われた → 言わ+れ+た, 売られた → 売ら+れ+た, 書かれた → 書か+れ+た
+  // A godan passive stem is a godan mizenkei a-row mora (か/が/さ/た/な/ば/ま/ら/わ)
+  // followed by れ; verbTypeFromARowCodepoint recognizes exactly that set (and
+  // rejects non-godan a-row like は so 晴れた stays 晴れ+た). This cancels the
+  // VerbRenyokei→た bonus for godan passive forms.
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      prev.surface.size() >= 6 &&  // At least 2 chars (kanji+Xれ)
-      (utf8::endsWith(prev.surface, "われ") || utf8::endsWith(prev.surface, "かれ") ||
-       utf8::endsWith(prev.surface, "され") || utf8::endsWith(prev.surface, "たれ") ||
-       utf8::endsWith(prev.surface, "なれ") || utf8::endsWith(prev.surface, "まれ") ||
-       utf8::endsWith(prev.surface, "られ") || utf8::endsWith(prev.surface, "ばれ") ||
-       utf8::endsWith(prev.surface, "がれ")) &&
-      next.surface == "た" && next.extended_pos == core::ExtendedPOS::AuxTenseTa) {
-    surface_bonus += cost::kSevere;  // Cancel VerbRenyokei→た bonus
+      prev.surface.size() >= 6 &&  // At least 2 chars (Aれ, e.g. かれ)
+      utf8::endsWith(prev.surface, "れ") && next.surface == "た" &&
+      next.extended_pos == core::ExtendedPOS::AuxTenseTa) {
+    // Codepoint immediately before the trailing れ (3 bytes)
+    std::string_view before(prev.surface.data(), prev.surface.size() - 3);
+    auto before_cps = normalize::toCodepoints(before);
+    if (!before_cps.empty() && grammar::verbTypeFromARowCodepoint(before_cps.back()) != grammar::VerbType::Unknown) {
+      surface_bonus += cost::kSevere;  // Cancel VerbRenyokei→た bonus
+    }
   }
 
   // Surface-based bonus for でし → た/たら (polite past copula / conditional)
@@ -1321,7 +1332,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Need very strong bonus because the かっ unknown verb has high cost (~2.7)
   if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNu && next.extended_pos == core::ExtendedPOS::VerbOnbinkei &&
       next.surface == "かっ") {
-    surface_bonus += cost::kVeryStrongBonus * 2 + cost::kMinorBonus;  // -3.45
+    surface_bonus += sc::kBonusContractedNegPast;  // -3.45
   }
 
   // Penalty for VerbOnbinkei(ん) → Verb(でる) pattern
@@ -1367,7 +1378,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       next.surface.size() >= 6 &&  // "すぎ" is 6 bytes
       next.surface.compare(0, 6, "すぎ") == 0) {
     // Strong bonus to overcome AdjStem→Verb prohibitive penalty
-    surface_bonus += cost::kVeryStrongBonus * 2;
+    surface_bonus += sc::kBonusDoubleVeryStrong;
   }
 
   // Surface-based bonus for AdjNaAdj → すぎ pattern
@@ -1387,7 +1398,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   if (prev.pos == core::PartOfSpeech::Noun && prev.surface.size() >= 6 &&  // 2+ chars (6+ bytes)
       grammar::isAllKanji(std::string(prev.surface)) && next.surface.size() >= 6 &&
       next.surface.compare(0, 6, "すぎ") == 0) {
-    surface_bonus += cost::kVeryStrongBonus * 2;
+    surface_bonus += sc::kBonusDoubleVeryStrong;
   }
 
   // Penalty for AuxCopulaDa(な) → ParticleFinal(ったら) pattern
@@ -1672,7 +1683,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && prev.surface == "で" &&
       next.pos == core::PartOfSpeech::Verb &&
       (next.surface == "ある" || next.surface == "あっ" || next.surface == "あろ" || next.surface == "あり")) {
-    surface_bonus += cost::kVeryStrongBonus * 2;  // -3.2 to overcome ~2.3 total penalty
+    surface_bonus += sc::kBonusDoubleVeryStrong;  // -3.2 to overcome ~2.3 total penalty
   }
 
   // Bonus for で(AuxCopulaDa) → は(ParticleTopic) surface connection

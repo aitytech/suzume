@@ -561,28 +561,9 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // These get ichidan_kanji_i_row_stem penalty which reduces confidence
         // But NOT for e-row stems (て/で), which are often te-form splits
         // Also NOT for single-kanji + い patterns (人い → 人 + いる, not a verb)
-        bool is_i_row_ichidan = false;
-        if (cand.verb_type == grammar::VerbType::Ichidan && !cand.stem.empty() &&
-            cand.stem.size() >= core::kJapaneseCharBytes) {
-          std::string_view last_char(cand.stem.data() + cand.stem.size() - core::kJapaneseCharBytes,
-                                     core::kJapaneseCharBytes);
-          if (grammar::endsWithIRow(last_char)) {
-            // Stem has at least 2 chars?
-            if (cand.stem.size() >= 2 * core::kJapaneseCharBytes) {
-              // Check if stem is single-kanji + い (e.g., 人い)
-              // This pattern is almost always NOUN + いる, not a single verb
-              // Valid ichidan stems are typically multi-char (感じ, 信じ, etc.)
-              std::string kanji_part(cand.stem.data(), cand.stem.size() - core::kJapaneseCharBytes);
-              // If kanji part is exactly 1 kanji (3 bytes), it's likely NOUN + いる
-              bool is_single_kanji_i = (kanji_part.size() == core::kJapaneseCharBytes && last_char == "い");
-              // Multi-char kanji portion like 感じ is a valid ichidan stem
-              is_i_row_ichidan = !is_single_kanji_i;
-            } else {
-              // Single char stem - not a valid i-row ichidan pattern
-              is_i_row_ichidan = false;
-            }
-          }
-        }
+        // Single-kanji + い patterns (人い) are excluded: almost always NOUN + いる,
+        // not a single verb. Valid ichidan stems are multi-char (感じ, 信じ, etc.).
+        bool is_i_row_ichidan = cand.verb_type == grammar::VerbType::Ichidan && vh::isValidIRowIchidanStem(cand.stem);
         float conf_threshold = is_i_row_ichidan ? verb_opts.confidence_ichidan_dict : verb_opts.confidence_standard;
         if (cand.stem == expected_stem && cand.confidence > conf_threshold &&
             cand.verb_type != grammar::VerbType::IAdjective) {
@@ -591,7 +572,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           // mismatches like 経る(GodanRa) matching 経る(Ichidan) when 経つ(GodanTa) is correct.
           // For other patterns (Suru verbs, Ichidan, etc.), use simple lookup.
           bool is_onbin_type = vh::isSokuonbinGodanType(cand.verb_type);
-          bool in_dict = is_onbin_type ? vh::isVerbInDictionaryWithType(dict_manager, cand.base_form, cand.verb_type)
+          bool in_dict = is_onbin_type ? vh::isVerbInDictionary(dict_manager, cand.base_form)
                                        : vh::isVerbInDictionary(dict_manager, cand.base_form);
 
           if (in_dict) {
@@ -616,17 +597,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       // Only proceed if we found a matching candidate
       // Use lower threshold for valid i-row ichidan stems (感じ, 信じ, etc.)
       // but not single-kanji + い patterns (人い → 人 + いる)
-      bool proceed_is_i_row_ichidan = false;
-      if (best.verb_type == grammar::VerbType::Ichidan && !best.stem.empty() &&
-          best.stem.size() >= 2 * core::kJapaneseCharBytes) {
-        std::string_view last_char(best.stem.data() + best.stem.size() - core::kJapaneseCharBytes,
-                                   core::kJapaneseCharBytes);
-        if (grammar::endsWithIRow(last_char)) {
-          std::string kanji_part(best.stem.data(), best.stem.size() - core::kJapaneseCharBytes);
-          bool is_single_kanji_i = (kanji_part.size() == core::kJapaneseCharBytes && last_char == "い");
-          proceed_is_i_row_ichidan = !is_single_kanji_i;
-        }
-      }
+      bool proceed_is_i_row_ichidan =
+          best.verb_type == grammar::VerbType::Ichidan && vh::isValidIRowIchidanStem(best.stem);
 
       // Skip fake ichidan candidates with stem ending in さ (a-row)
       // These are typically suru-verb causative/passive patterns:
@@ -842,44 +814,9 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             // Get second kanji as potential verb stem
             std::string remainder_stem = normalize::utf8::encode({stem_cps[1]});
             // Check if remainder + verb ending is a dictionary verb
-            std::string_view conj_suffix;
-            switch (best.verb_type) {
-              case grammar::VerbType::GodanKa:
-                conj_suffix = "く";
-                break;
-              case grammar::VerbType::GodanGa:
-                conj_suffix = "ぐ";
-                break;
-              case grammar::VerbType::GodanSa:
-                conj_suffix = "す";
-                break;
-              case grammar::VerbType::GodanTa:
-                conj_suffix = "つ";
-                break;
-              case grammar::VerbType::GodanNa:
-                conj_suffix = "ぬ";
-                break;
-              case grammar::VerbType::GodanBa:
-                conj_suffix = "ぶ";
-                break;
-              case grammar::VerbType::GodanMa:
-                conj_suffix = "む";
-                break;
-              case grammar::VerbType::GodanRa:
-                conj_suffix = "る";
-                break;
-              case grammar::VerbType::GodanWa:
-                conj_suffix = "う";
-                break;
-              case grammar::VerbType::Ichidan:
-                conj_suffix = "る";
-                break;
-              default:
-                conj_suffix = "";
-                break;
-            }
+            std::string conj_suffix = vh::baseFormSuffix(best.verb_type);
             if (!conj_suffix.empty()) {
-              std::string remainder_base = remainder_stem + std::string(conj_suffix);
+              std::string remainder_base = remainder_stem + conj_suffix;
               if (vh::isVerbInDictionary(dict_manager, remainder_base)) {
                 // Skip this candidate - prefer noun + verb split
                 SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << surface << "\" remainder \"" << remainder_base
@@ -1044,20 +981,10 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // 1. Base form exists in dictionary as verb (in_dict)
         // 2. OR: Ichidan verb with valid i-row stem (感じる, not 人いる)
         //    that passes confidence threshold
+        // Valid i-row ichidan stems end in i-row hiragana (not e-row te-form/copula)
+        // and exclude single-kanji + い patterns (人い → 人 + いる).
         bool is_ichidan = (best.verb_type == grammar::VerbType::Ichidan);
-        bool has_valid_ichidan_stem = false;
-        if (is_ichidan && !best.stem.empty() && best.stem.size() >= 2 * core::kJapaneseCharBytes) {
-          // Check if stem ends with i-row hiragana (not e-row)
-          // E-row endings are often te-form (見て) or copula (嫌で), not ichidan stems
-          // Also exclude single-kanji + い patterns (人い → 人 + いる)
-          std::string_view last_char(best.stem.data() + best.stem.size() - core::kJapaneseCharBytes,
-                                     core::kJapaneseCharBytes);
-          if (grammar::endsWithIRow(last_char)) {
-            std::string kanji_part(best.stem.data(), best.stem.size() - core::kJapaneseCharBytes);
-            bool is_single_kanji_i = (kanji_part.size() == core::kJapaneseCharBytes && last_char == "い");
-            has_valid_ichidan_stem = !is_single_kanji_i;
-          }
-        }
+        bool has_valid_ichidan_stem = is_ichidan && vh::isValidIRowIchidanStem(best.stem);
         bool recognized_ichidan =
             is_ichidan && has_valid_ichidan_stem && best.confidence > verb_opts.confidence_ichidan_dict;
         // Godan verbs with single-kanji stem + high confidence are also
@@ -2246,8 +2173,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // Phase 1: Dictionary check
         for (const auto& [verb_type, base_suffix] : candidates_to_try) {
           std::string base_form = kanji_stem + std::string(base_suffix);
-          if (vh::isVerbInDictionaryWithType(dict_manager, base_form, verb_type) ||
-              vh::isVerbInDictionary(dict_manager, base_form)) {
+          if (vh::isVerbInDictionary(dict_manager, base_form)) {
             matched_verb_type = verb_type;
             matched_base_form = base_form;
             break;
@@ -2329,8 +2255,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         bool matched_via_dict = false;
         for (const auto& [verb_type, base_suffix] : sokuonbin_types) {
           std::string base_form = kanji_stem + std::string(base_suffix);
-          bool dict_match = vh::isVerbInDictionaryWithType(dict_manager, base_form, verb_type) ||
-                            vh::isVerbInDictionary(dict_manager, base_form);
+          bool dict_match = vh::isVerbInDictionary(dict_manager, base_form);
 #ifdef SUZUME_DEBUG
           all_sokuonbin_candidates.push_back({verb_type, base_form, dict_match});
 #endif
@@ -2533,8 +2458,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             // Skip candidate generation
           } else {
             // Check dictionary first
-            bool in_dict = vh::isVerbInDictionaryWithType(dict_manager, potential_base, grammar::VerbType::GodanRa) ||
-                           vh::isVerbInDictionary(dict_manager, potential_base);
+            bool in_dict = vh::isVerbInDictionary(dict_manager, potential_base);
 
             // Fallback: inflection analysis for common patterns like 閉まる
             // Only use inflection for short hiragana patterns (1 char before っ)
@@ -2612,8 +2536,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         continue;
       }
 
-      bool in_dict_check = vh::isVerbInDictionaryWithType(dict_manager, potential_base, grammar::VerbType::GodanRa) ||
-                           vh::isVerbInDictionary(dict_manager, potential_base);
+      bool in_dict_check = vh::isVerbInDictionary(dict_manager, potential_base);
       bool infl_verified = false;
       if (!in_dict_check && hiragana_before_onbin == 1) {
         const auto& infl_results = inflection.analyze(onbin_surface + "た");
@@ -2665,8 +2588,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         std::string matched_base_form;
         for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
           std::string base_form = kanji_stem + std::string(base_suffix);
-          bool dict_match = vh::isVerbInDictionaryWithType(dict_manager, base_form, verb_type) ||
-                            vh::isVerbInDictionary(dict_manager, base_form);
+          bool dict_match = vh::isVerbInDictionary(dict_manager, base_form);
           if (dict_match && matched_verb_type == grammar::VerbType::Unknown) {
             matched_verb_type = verb_type;
             matched_base_form = base_form;
@@ -2735,8 +2657,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
 
       for (const auto& [verb_type, base_suffix] : n_onbin_types) {
         std::string base_form = kanji_stem + hira_stem + std::string(base_suffix);
-        if (vh::isVerbInDictionaryWithType(dict_manager, base_form, verb_type) ||
-            vh::isVerbInDictionary(dict_manager, base_form)) {
+        if (vh::isVerbInDictionary(dict_manager, base_form)) {
           std::string onbin_surface = extractSubstring(codepoints, start_pos, n_pos + 1);
           constexpr float kHatsuonbinCost = candidate::verb_cost::kStandardBonus;
           SUZUME_DEBUG_VERBOSE_BLOCK {

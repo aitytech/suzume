@@ -191,13 +191,13 @@ TEST_F(JsonValueTypesTest, ScientificNotation) {
 TEST_F(JsonValueTypesTest, IntegerValues) {
   TempJsonFile file(R"({
     "unary": {
-      "single_kanji_penalty": 3
+      "noun_prior": 3
     }
   })");
 
   ScorerOptions opts;
   EXPECT_TRUE(ScorerOptionsLoader::loadFromFile(file.path(), opts));
-  EXPECT_FLOAT_EQ(opts.single_kanji_penalty, 3.0F);
+  EXPECT_FLOAT_EQ(opts.noun_prior, 3.0F);
 }
 
 TEST_F(JsonValueTypesTest, IgnoresUnknownKeys) {

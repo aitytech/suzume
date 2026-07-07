@@ -239,6 +239,19 @@ bool isKanjiCodepoint(char32_t ch);
  */
 bool isCounterKanji(char32_t cp);
 
+/**
+ * @brief Check if every codepoint of a surface is katakana
+ *
+ * Used to merge a numeral with a following katakana noun (3キロ, 100メダル):
+ * MeCab treats any number + katakana-noun as a single quantity token, so this is
+ * a general rule rather than a curated unit list. Long-vowel (ー) and small kana
+ * are included in the katakana range. Empty input returns false.
+ *
+ * @param surface Token surface (UTF-8)
+ * @return true if surface is non-empty and entirely katakana
+ */
+bool isAllKatakana(std::string_view surface);
+
 }  // namespace suzume::normalize
 
 #endif  // SUZUME_NORMALIZE_CHAR_TYPE_H_

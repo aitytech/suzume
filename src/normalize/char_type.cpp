@@ -1,5 +1,7 @@
 #include "char_type.h"
 
+#include "utf8.h"
+
 namespace suzume::normalize {
 
 CharType classifyChar(char32_t codepoint) {
@@ -376,6 +378,22 @@ bool isCounterKanji(char32_t cp) {
     default:
       return false;
   }
+}
+
+bool isAllKatakana(std::string_view surface) {
+  if (surface.empty()) {
+    return false;
+  }
+  auto codepoints = toCodepoints(surface);
+  if (codepoints.empty()) {
+    return false;
+  }
+  for (char32_t cpt : codepoints) {
+    if (classifyChar(cpt) != CharType::Katakana) {
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace suzume::normalize

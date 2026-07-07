@@ -3,11 +3,13 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <limits>
 #include <utility>
 #include <vector>
 
+// <iostream> is pulled in by debug.h only under SUZUME_DEBUG; the debug streaming
+// below goes through SUZUME_DEBUG_STREAM, so no unconditional include here (keeps
+// iostream out of the release/WASM build).
 #include "debug.h"
 #include "lattice.h"
 #include "morpheme.h"
