@@ -164,7 +164,7 @@ bool PreTokenizer::tryMatchUrl(std::string_view text, size_t pos, PreToken& toke
 }
 
 bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& token) const {
-  // Match patterns: YYYY年MM月DD日, YYYY年MM月, YYYY年
+  // Match patterns: YYYY年MM月DD日, YYYY年MM月, YYYY年, YYYY年度 (fiscal year)
   std::string year_str;
   size_t idx = parseInteger(text, pos, year_str);
 
@@ -183,17 +183,20 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
     return false;
   }
   idx = byte_pos;
+  size_t year_end = idx;  // Position right after "年", before any month match
 
   // Try to match month
   std::string month_str;
   size_t month_end = parseInteger(text, idx, month_str);
 
+  bool matched_month = false;
   if (!month_str.empty() && month_str.size() <= 2) {
     byte_pos = month_end;
     if (byte_pos < text.size()) {
       codepoint = normalize::decodeUtf8(text, byte_pos);
       if (codepoint == U'月') {
         idx = byte_pos;
+        matched_month = true;
 
         // Try to match day
         std::string day_str;
@@ -208,6 +211,21 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
             }
           }
         }
+      }
+    }
+  }
+
+  // Fiscal year suffix: N年度 (令和6年度, 2024年度予算). Only applies when no
+  // month was matched — 年度 marks a fiscal/administrative year, distinct
+  // from a calendar date with month/day. Matching it here as part of the
+  // atomic date token avoids leaving 度 stranded at a pretokenizer segment
+  // boundary, where it has no context to attach to the preceding 年.
+  if (!matched_month) {
+    byte_pos = year_end;
+    if (byte_pos < text.size()) {
+      codepoint = normalize::decodeUtf8(text, byte_pos);
+      if (codepoint == U'度') {
+        idx = byte_pos;
       }
     }
   }

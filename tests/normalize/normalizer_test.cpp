@@ -341,14 +341,77 @@ TEST_F(NormalizerTest, CombiningChar_DakutenSeparate) {
   // This tests NFC normalization
   auto result = normalizer_.normalize("か\u3099");
   ASSERT_TRUE(core::isSuccess(result));
-  // Should normalize to single character が
+  EXPECT_EQ(std::get<std::string>(result), "が");
 }
 
 TEST_F(NormalizerTest, CombiningChar_HandakutenSeparate) {
   // ぱ as は + combining handakuten (U+309A)
   auto result = normalizer_.normalize("は\u309A");
   ASSERT_TRUE(core::isSuccess(result));
-  // Should normalize to single character ぱ
+  EXPECT_EQ(std::get<std::string>(result), "ぱ");
+}
+
+TEST_F(NormalizerTest, CombiningChar_KatakanaCombiningDakuten) {
+  // カ + combining dakuten (U+3099) -> ガ
+  auto result = normalizer_.normalize("カ\u3099行");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "ガ行");
+}
+
+TEST_F(NormalizerTest, CombiningChar_KatakanaHandakuten) {
+  // ハ + combining handakuten (U+309A) -> パ
+  auto result = normalizer_.normalize("ハ\u309Aン");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "パン");
+}
+
+TEST_F(NormalizerTest, SpacingMark_KatakanaDakuten) {
+  // カ + spacing dakuten (U+309B) -> ガ
+  auto result = normalizer_.normalize("カ\u309B行");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "ガ行");
+}
+
+TEST_F(NormalizerTest, SpacingMark_HiraganaDakuten) {
+  // か + spacing dakuten (U+309B) -> が
+  auto result = normalizer_.normalize("か\u309B");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "が");
+}
+
+TEST_F(NormalizerTest, SpacingMark_HiraganaHandakuten) {
+  // は + spacing handakuten (U+309C) -> ぱ
+  auto result = normalizer_.normalize("は\u309C");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "ぱ");
+}
+
+TEST_F(NormalizerTest, SpacingMark_TaRowDakuten) {
+  // タ + spacing dakuten (U+309B) -> ダ
+  auto result = normalizer_.normalize("タ\u309Bンス");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "ダンス");
+}
+
+TEST_F(NormalizerTest, SpacingMark_InvalidBaseUnchanged) {
+  // あ cannot take dakuten: sequence passes through unchanged
+  auto result = normalizer_.normalize("あ\u309B");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "あ\u309B");
+}
+
+TEST_F(NormalizerTest, CombiningChar_InvalidBaseUnchanged) {
+  // あ cannot take combining dakuten: sequence passes through unchanged
+  auto result = normalizer_.normalize("あ\u3099");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "あ\u3099");
+}
+
+TEST_F(NormalizerTest, CombiningChar_PrecomposedUnchanged) {
+  // Already-precomposed voiced kana stay as-is
+  auto result = normalizer_.normalize("がぎだばぱ");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "がぎだばぱ");
 }
 
 // ===== Mixed Script Normalization Tests =====

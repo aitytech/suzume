@@ -17,6 +17,7 @@
 #include "join_candidates.h"
 #include "normalize/utf8.h"
 #include "split_candidates.h"
+#include "suffix_candidates.h"
 #include "tokenizer_utils.h"
 #include "verb_candidates_helpers.h"
 
@@ -485,6 +486,34 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
           for (const auto& result : dict_results) {
             if (result.entry != nullptr && result.length >= 2 && result.length < len && result.length * 2 >= len &&
                 result.entry->pos != core::PartOfSpeech::Noun) {
+              // Exception: na-adjective stem + productive noun-forming suffix
+              // (性, 的, etc.) is a genuine compound word (重要性, 必要性),
+              // not an accidental dict-prefix overlap like その後(ADV)+猫.
+              // The productive suffix mechanism (getSuffixEntries/getNaAdjSuffixes)
+              // already scores this pattern on its own merits, so skip the
+              // generic dict-prefix penalty here.
+              if (result.entry->pos == core::PartOfSpeech::Adjective &&
+                  result.entry->extended_pos == core::ExtendedPOS::AdjNaAdj) {
+                std::string tail_surface = extractSubstring(codepoints, candidate.start + result.length, candidate.end);
+                bool tail_is_productive_suffix = false;
+                for (const auto& suffix_entry : getSuffixEntries()) {
+                  if (tail_surface == suffix_entry.suffix) {
+                    tail_is_productive_suffix = true;
+                    break;
+                  }
+                }
+                if (!tail_is_productive_suffix) {
+                  for (const auto& na_suffix : getNaAdjSuffixes()) {
+                    if (tail_surface == na_suffix) {
+                      tail_is_productive_suffix = true;
+                      break;
+                    }
+                  }
+                }
+                if (tail_is_productive_suffix) {
+                  continue;
+                }
+              }
               constexpr float kDictPrefixPenalty = 1.5F;
               adjusted_cost += kDictPrefixPenalty;
               SUZUME_DEBUG_LOG_VERBOSE("[TOK_UNK] \"" << candidate.surface << "\" (NOUN): +" << kDictPrefixPenalty

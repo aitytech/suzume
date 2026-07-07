@@ -1672,6 +1672,99 @@
       ],
       "id": "betagaru",
       "input": "食べたがる"
+    },
+    {
+      "description": "たがる past: 行き+たがっ(AUX,たがる)+た (suzume 1-token design)",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行き"
+        },
+        {
+          "lemma": "たがる",
+          "pos": "Auxiliary",
+          "surface": "たがっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kitagattta",
+      "input": "行きたがった"
+    },
+    {
+      "description": "たがる te-progressive: 見+たがっ+て+いる (suzume 1-token design)",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "たがる",
+          "pos": "Auxiliary",
+          "surface": "たがっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "tagattteiru",
+      "input": "見たがっている"
+    },
+    {
+      "description": "Negative conjecture まい as independent auxiliary after shuushikei: なる+まい",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        },
+        {
+          "lemma": "まい",
+          "pos": "Auxiliary",
+          "surface": "まい"
+        }
+      ],
+      "id": "sounarumai",
+      "input": "そうなるまい"
+    },
+    {
+      "description": "Classical copula なり + past けり: 春+なり+けり",
+      "expected": [
+        {
+          "lemma": "春",
+          "pos": "Noun",
+          "surface": "春"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "narikeri",
+      "input": "春なりけり"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "description": "Kuru kateikei: 来れ(VERB,来る)+ば, not 来+れ",
+      "expected": [
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来れ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "reba_ku",
+      "input": "来れば行く"
+    }
+  ],
+  "description": "verb_conjugation tests",
+  "version": "1.0"
+}

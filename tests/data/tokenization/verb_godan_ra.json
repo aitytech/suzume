@@ -2239,6 +2239,23 @@
         "kanji-verb",
         "past-form"
       ]
+    },
+    {
+      "description": "Duration noun directly adjacent to かかる (no particle) resolves as VERB (掛かる/罹る), not the classical determiner 斯かる",
+      "expected": [
+        {
+          "lemma": "3週間",
+          "pos": "Noun",
+          "surface": "3週間"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "3_kakaru",
+      "input": "3週間かかる"
     }
   ],
   "description": "Godan Ra-row verbs (五段ラ行動詞) - verbs ending in る",

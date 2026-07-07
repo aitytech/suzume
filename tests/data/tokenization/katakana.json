@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "description": "Dakuten-composed katakana row name (normalization covered by normalizer_test)",
+      "expected": [
+        {
+          "lemma": "ガ",
+          "pos": "Noun",
+          "surface": "ガ"
+        },
+        {
+          "lemma": "行",
+          "pos": "Noun",
+          "surface": "行"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "音",
+          "pos": "Noun",
+          "surface": "音"
+        }
+      ],
+      "id": "no",
+      "input": "ガ行の音"
+    }
+  ],
+  "description": "katakana tests",
+  "version": "1.0"
+}

@@ -52,6 +52,9 @@ inline core::ExtendedPOS detectIAdjEpos(const std::string& surface) {
   if (utf8::endsWith(surface, "けれ")) {
     return core::ExtendedPOS::AdjKeForm;  // 美しけれ（ば）
   }
+  if (utf8::endsWith(surface, "かろ")) {
+    return core::ExtendedPOS::AdjMizenkei;  // 美しかろ（う）
+  }
   if (utf8::endsWith(surface, "く")) {
     return core::ExtendedPOS::AdjRenyokei;  // 美しく
   }
@@ -700,6 +703,44 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (mai_auxiliary)\n");
           }
         }
+        // Skip subsidiary-verb ゆく/いく compounds misread as i-adjectives.
+        // Verb 連用形 + ゆく (散りゆく, 消えゆく) ends in く, so inflection
+        // hypothesizes a fake i-adjective base (散りゆい). When the base is
+        // not a dictionary adjective and the part before ゆく/いく is itself
+        // a dictionary verb form, this is the compound-verb construction —
+        // leave it to the verb paths (散り + ゆく).
+        if (!is_dict_adjective && surface.size() > 2 * core::kJapaneseCharBytes &&
+            (utf8::endsWith(surface, "ゆく") || utf8::endsWith(surface, "いく")) &&
+            !isAdjectiveInDictionary(dict_manager, cand.base_form)) {
+          std::string v1_prefix = surface.substr(0, surface.size() - 2 * core::kJapaneseCharBytes);
+          // The prefix is a verb 連用形 when it is a dictionary surface itself
+          // (散り) or when inflection confidently reconstructs a verb from it
+          // (消え → 消える, 過ぎ → 過ぎる). Dictionary verification lowers the
+          // bar; a confident inflection hypothesis alone is also accepted since
+          // the competing i-adjective base (Xゆい) is already known to be fake.
+          bool prefix_is_verb = verb_helpers::hasDictionaryEntry(dict_manager, v1_prefix, core::PartOfSpeech::Verb);
+          if (!prefix_is_verb) {
+            // Low bar: the preconditions (ゆく/いく ending, fake adjective base)
+            // already exclude real adjectives, so any plausible verb hypothesis
+            // (消え → 消える 0.74, 暮れ → 暮れる 0.3 after e-row ambiguity
+            // penalty) marks the prefix as a 連用形.
+            constexpr float kV1PrefixMinConfidence = 0.3F;
+            const auto& v1_results = inflection.analyze(v1_prefix);
+            for (const auto& v1_res : v1_results) {
+              if (v1_res.verb_type == grammar::VerbType::IAdjective) {
+                continue;
+              }
+              if (isVerbInDictionary(dict_manager, v1_res.base_form) || v1_res.confidence >= kV1PrefixMinConfidence) {
+                prefix_is_verb = true;
+                break;
+              }
+            }
+          }
+          if (prefix_is_verb) {
+            SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" is verb renyokei + subsidiary ゆく/いく\n");
+            continue;  // Skip - compound verb, not adjective
+          }
+        }
         // Skip さそう endings (adj nominalization + appearance auxiliary)
         // E.g., 気持ちよさそうに → 気持ちよ + さ + そう + に
         //        なさそう → な + さ + そう (handled separately in hiragana adj)
@@ -968,6 +1009,95 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   // Add all ke-form candidates
   for (auto& var : ke_form_candidates) {
     candidates.push_back(std::move(var));
+  }
+
+  // Add mizenkei (かろ) candidates for the conjectural pattern: stem + かろ + う
+  // I-adjective 未然形: 高い → 高かろ+う, 美しい → 美しかろ+う (推量)
+  // Inflection analysis does not produce this form, and the surface Xかろ is
+  // homographic with verb volitional stems (分かる → 分かろ+う), so generate
+  // only when the lexical signal is decisive: the reconstructed base
+  // (stem + い) is a known dictionary adjective.
+  if (dict_manager != nullptr) {
+    for (size_t karo_pos = kanji_end; karo_pos + 1 < hiragana_end; ++karo_pos) {
+      if (codepoints[karo_pos] != U'か' || codepoints[karo_pos + 1] != U'ろ') {
+        continue;
+      }
+      // Require a following う (推量): 高かろ+う. Without う, Xかろ is far
+      // more likely a verb form, so leave it to the verb candidate paths.
+      if (karo_pos + 2 >= codepoints.size() || codepoints[karo_pos + 2] != U'う') {
+        continue;
+      }
+      std::string miz_lemma = extractSubstring(codepoints, start_pos, karo_pos) + "い";
+      if (!isAdjectiveInDictionary(dict_manager, miz_lemma)) {
+        continue;
+      }
+      UnknownCandidate miz_cand;
+      miz_cand.surface = extractSubstring(codepoints, start_pos, karo_pos + 2);
+      miz_cand.start = start_pos;
+      miz_cand.end = karo_pos + 2;
+      miz_cand.pos = core::PartOfSpeech::Adjective;
+      miz_cand.lemma = miz_lemma;
+      // Dictionary-verified adjective: make the 未然形 win over fake verb
+      // interpretations (ichidan Xかる etc.), mirroring the ke-form handling.
+      miz_cand.cost = candidate::verb_cost::kStrongBonus;
+      miz_cand.has_suffix = true;                              // Conjugated form (未然ウ接続)
+      miz_cand.extended_pos = core::ExtendedPOS::AdjMizenkei;  // For bigram: AdjMizenkei→AuxVolitional
+#ifdef SUZUME_DEBUG_INFO
+      miz_cand.origin = CandidateOrigin::AdjectiveI;
+      miz_cand.confidence = 0.8F;
+      miz_cand.pattern = "i_adjective_karo";
+#endif
+      candidates.push_back(std::move(miz_cand));
+    }
+  }
+
+  // Add classical attributive (文語連体形) き candidates: stem + き + 体言
+  // I-adjective 連体形 in classical Japanese: 美しい → 美しき(花), 古い → 古き(良き時代)
+  // Inflection analysis does not produce this form, and the surface Xき is
+  // homographic with godan-ka verb 連用形 (書き ← 書く), so generate only when
+  // the lexical signal is decisive: the reconstructed base (stem + い) is a
+  // known dictionary adjective. The lemma normalizes to the modern base form.
+  if (dict_manager != nullptr) {
+    for (size_t ki_pos = kanji_end; ki_pos < hiragana_end; ++ki_pos) {
+      if (codepoints[ki_pos] != U'き') {
+        continue;
+      }
+      std::string ki_stem = extractSubstring(codepoints, start_pos, ki_pos);
+      std::string ki_lemma = ki_stem + "い";
+      if (!isAdjectiveInDictionary(dict_manager, ki_lemma)) {
+        continue;
+      }
+      // If stem + く is a real godan-ka verb, Xき is its 連用形 (行き, 焼き),
+      // not the classical adjective form — leave it to the verb paths.
+      if (isVerbInDictionary(dict_manager, ki_stem + "く")) {
+        continue;
+      }
+      // If the surface itself is a dictionary entry (好き, 大好き), the
+      // dictionary interpretation wins — do not shadow it.
+      std::string ki_surface = extractSubstring(codepoints, start_pos, ki_pos + 1);
+      if (verb_helpers::hasNonVerbDictionaryEntry(dict_manager, ki_surface) ||
+          isVerbInDictionary(dict_manager, ki_surface)) {
+        continue;
+      }
+      UnknownCandidate ki_cand;
+      ki_cand.surface = ki_surface;
+      ki_cand.start = start_pos;
+      ki_cand.end = ki_pos + 1;
+      ki_cand.pos = core::PartOfSpeech::Adjective;
+      ki_cand.lemma = ki_lemma;
+      // Dictionary-verified adjective: make the 連体形 win over fake verb
+      // interpretations (godan-ka 美しく etc.), mirroring the ke-form handling.
+      ki_cand.cost = candidate::verb_cost::kStrongBonus;
+      ki_cand.has_suffix = true;  // Conjugated form (連体形)
+      // Attributive form connects like the basic form (ADJ + 体言)
+      ki_cand.extended_pos = core::ExtendedPOS::AdjBasic;
+#ifdef SUZUME_DEBUG_INFO
+      ki_cand.origin = CandidateOrigin::AdjectiveI;
+      ki_cand.confidence = 0.8F;
+      ki_cand.pattern = "i_adjective_classical_ki";
+#endif
+      candidates.push_back(std::move(ki_cand));
+    }
   }
 
   std::sort(candidates.begin(), candidates.end(),

@@ -254,6 +254,8 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
       return "ADJ_かっ";
     case ExtendedPOS::AdjKeForm:
       return "ADJ_け形";
+    case ExtendedPOS::AdjMizenkei:
+      return "ADJ_未然";
     case ExtendedPOS::AdjNaAdj:
       return "ADJ_NA";
 
@@ -268,6 +270,12 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
       return "AUX_否定";
     case ExtendedPOS::AuxNegativeNu:
       return "AUX_否定古";
+    case ExtendedPOS::AuxNegativeMai:
+      return "AUX_打消推量";
+    case ExtendedPOS::AuxClassicalNari:
+      return "AUX_文語断定";
+    case ExtendedPOS::AuxClassicalKeri:
+      return "AUX_文語過去";
 
     // Auxiliaries - Desire/Volition
     case ExtendedPOS::AuxDesireTai:
@@ -394,7 +402,8 @@ PartOfSpeech extendedPosToPos(ExtendedPOS epos) {
     return PartOfSpeech::Verb;
   }
   // Adjective forms -> Adjective
-  if (epos >= ExtendedPOS::AdjBasic && epos <= ExtendedPOS::AdjNaAdj) {
+  // (AdjMizenkei sits outside the contiguous range; see ExtendedPOS comment)
+  if ((epos >= ExtendedPOS::AdjBasic && epos <= ExtendedPOS::AdjNaAdj) || epos == ExtendedPOS::AdjMizenkei) {
     return PartOfSpeech::Adjective;
   }
   // AuxExcessive (すぎる), AuxGaru (がる) -> Verb (MeCab: 動詞,非自立/接尾)
@@ -403,7 +412,10 @@ PartOfSpeech extendedPosToPos(ExtendedPOS epos) {
     return PartOfSpeech::Verb;
   }
   // Auxiliary types -> Auxiliary
-  if (epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) {
+  // (AuxNegativeMai, AuxClassicalNari, AuxClassicalKeri sit outside the contiguous
+  // range; see ExtendedPOS comment)
+  if ((epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai ||
+      epos == ExtendedPOS::AuxClassicalNari || epos == ExtendedPOS::AuxClassicalKeri) {
     return PartOfSpeech::Auxiliary;
   }
   // Particle types -> Particle
@@ -626,6 +638,11 @@ ExtendedPOS detectAdjForm(std::string_view surface, bool is_na_adj) {
   // けれ form (conditional stem): 美しけれ, 高けれ
   if (endsWithAny(surface, {"けれ", "きゃ"})) {
     return ExtendedPOS::AdjKeForm;
+  }
+
+  // かろ form (irrealis stem for 推量): 美しかろ, 高かろ
+  if (endsWithAny(surface, {"かろ"})) {
+    return ExtendedPOS::AdjMizenkei;
   }
 
   // く form (adverbial/renyokei): 美しく, 高く

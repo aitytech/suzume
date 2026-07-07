@@ -1126,6 +1126,33 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict VERB, skipping unknown candidate\n");
           continue;
         }
+        // Skip fake verb candidates homographic with the i-adjective 未然形.
+        // Xかろ(+う) can be a verb volitional stem (分かる → 分かろ+う) or the
+        // i-adjective 未然形 (高い → 高かろ+う); inflection alone yields a
+        // plausible fake base (ichidan 高かる). The lexical signal decides:
+        // when the base form is not a known verb and stem + い is a known
+        // dictionary adjective, prefer the ADJ 未然形 candidate.
+        if (!in_dict && dict_manager != nullptr && utf8::endsWith(surface, "かろ")) {
+          std::string iadj_base = surface.substr(0, surface.size() - 2 * core::kJapaneseCharBytes) + "い";
+          if (vh::isAdjectiveInDictionary(dict_manager, iadj_base)) {
+            SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" ends かろ and " << iadj_base
+                                              << " is i-adjective (prefer ADJ 未然形)\n");
+            continue;
+          }
+        }
+        // Skip fake verb candidates homographic with the classical i-adjective
+        // 連体形 (文語). Xき is usually a godan-ka 連用形 (書き ← 書く), but when
+        // the hypothesized base verb is not in the dictionary and stem + い is a
+        // known dictionary adjective (美しき → 美しい), the surface is the
+        // classical attributive form — prefer the ADJ 連体形 candidate.
+        if (!in_dict && dict_manager != nullptr && utf8::endsWith(surface, "き")) {
+          std::string iadj_base = surface.substr(0, surface.size() - core::kJapaneseCharBytes) + "い";
+          if (vh::isAdjectiveInDictionary(dict_manager, iadj_base)) {
+            SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" ends き and " << iadj_base
+                                              << " is i-adjective (prefer ADJ 連体形)\n");
+            continue;
+          }
+        }
         // Penalize verb candidates absorbing adj く-form + なる suffix chain
         // e.g., 得なくなった should split as 得+なく+なっ+た, not merge as 得る(ichidan)
         // The suffix contains くなっ/くなり/くなる/くなれ = adj renyokei + なる conjugation
@@ -1790,8 +1817,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       char32_t h2 = (kanji_end + 1 < codepoints.size()) ? codepoints[kanji_end + 1] : 0;
       bool is_polite_aux = (h1 == kMa && h2 == kSu);
       // Negative auxiliary ない and its conjugations:
-      // ない (終止/連体), なく (連用), なかっ (た接続), なけれ (仮定)
-      bool is_negative_aux = (h1 == kNa && (h2 == kI || h2 == kKu || h2 == kKa || h2 == kKe));
+      // ない (終止/連体), なく (連用), なかっ (た接続), なけれ (仮定), なきゃ (口語縮約仮定)
+      bool is_negative_aux = (h1 == kNa && (h2 == kI || h2 == kKu || h2 == kKa || h2 == kKe || h2 == kKi));
 
       if (is_polite_aux || is_negative_aux) {
         std::string surface = extractSubstring(codepoints, start_pos, kanji_end);

@@ -257,7 +257,11 @@ void addSpecialPatterns(std::vector<AuxiliaryEntry>& entries) {
   entries.push_back({"なくてはいけない", "なくてはいけない", "なくてはいけない", kAuxNai, kAuxOutBase, kVerbMizenkei});
   entries.push_back({"なきゃいけない", "なきゃいけない", "なきゃいけない", kAuxNai, kAuxOutBase, kVerbMizenkei});
   entries.push_back({"なくちゃ", "なくちゃ", "なくちゃ", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"なきゃ", "なきゃ", "なきゃ", kAuxNai, kAuxOutBase, kVerbMizenkei});
+  // Note: bare なきゃ/なけりゃ (colloquial contractions of なければ) are NOT
+  // auxiliary suffixes here. They are standalone dictionary auxiliaries
+  // (entries.cpp: AuxNegativeNai), so verbs split as mizenkei + なきゃ,
+  // mirroring the なければ → mizenkei + なけれ + ば split. Registering them
+  // here would fuse kanji-stem godan verbs into a single token (書かなきゃ).
 
   // === I-adjective endings (stem attachments) ===
   entries.push_back({"い", "い", "い", kAuxNai, kAuxOutBase, kIAdjStem});

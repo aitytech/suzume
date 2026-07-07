@@ -1,0 +1,111 @@
+{
+  "cases": [
+    {
+      "description": "なきゃ contraction: godan mizenkei + なきゃ(AuxNegativeNai)",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なきゃ"
+        }
+      ],
+      "id": "kanaki",
+      "input": "書かなきゃ"
+    },
+    {
+      "description": "なきゃ contraction: single-kanji ichidan + なきゃ",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なきゃ"
+        }
+      ],
+      "id": "naki",
+      "input": "見なきゃ"
+    },
+    {
+      "description": "なきゃ contraction: kanji godan-ra mizenkei + なきゃ",
+      "expected": [
+        {
+          "lemma": "帰る",
+          "pos": "Verb",
+          "surface": "帰ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なきゃ"
+        }
+      ],
+      "id": "ranaki",
+      "input": "帰らなきゃ"
+    },
+    {
+      "description": "Formal-noun boundary prevents greedy hiragana verb: わけ+わから+ん",
+      "expected": [
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "わかる",
+          "pos": "Verb",
+          "surface": "わから"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        }
+      ],
+      "id": "wakewakaran",
+      "input": "わけわからん"
+    },
+    {
+      "description": "Classical negative ね (ぬ izenkei) as AUX: 行か+ね(AUX,ぬ)+ば+なら+ぬ",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ね"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "kanebanaranu",
+      "input": "行かねばならぬ"
+    }
+  ],
+  "description": "verb_negative tests",
+  "version": "1.0"
+}

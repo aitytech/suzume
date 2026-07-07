@@ -260,9 +260,11 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
 
       // Negation - ない (否定)
       aux("ない", "ない", EPOS::AuxNegativeNai),
-      aux("なかっ", "ない", EPOS::AuxNegativeNai),  // 連用タ接続
-      aux("なけれ", "ない", EPOS::AuxNegativeNai),  // 仮定形 (なけれ+ば)
-      aux("なかろ", "ない", EPOS::AuxNegativeNai),  // 推量形 (なかろ+う)
+      aux("なかっ", "ない", EPOS::AuxNegativeNai),    // 連用タ接続
+      aux("なけれ", "ない", EPOS::AuxNegativeNai),    // 仮定形 (なけれ+ば)
+      aux("なきゃ", "ない", EPOS::AuxNegativeNai),    // 仮定形口語縮約 (なければ→なきゃ, 標準終止)
+      aux("なけりゃ", "ない", EPOS::AuxNegativeNai),  // 仮定形口語縮約 (なければ→なけりゃ)
+      aux("なかろ", "ない", EPOS::AuxNegativeNai),    // 推量形 (なかろ+う)
 
       // Negation - ぬ/ず (文語否定)
       aux("ぬ", "ぬ", EPOS::AuxNegativeNu),
@@ -271,10 +273,15 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       aux("ずとも", "ぬ", EPOS::AuxNegativeNu),
       aux("ざる", "ぬ", EPOS::AuxNegativeNu),     // 連体形 (せざるを得ない)
       aux("ざれ", "ぬ", EPOS::AuxNegativeNu),     // 已然形 (あらざれば)
+      aux("ね", "ぬ", EPOS::AuxNegativeNu),       // 已然形 (行かねば, 死なねば, せねば)
       aux("ごとく", "ごとし", EPOS::Adverb),      // 如く (比況連用形)
       aux("ごとき", "ごとし", EPOS::Determiner),  // 如き (比況連体形)
       // じゃない: removed - split as じゃ(AuxCopulaDa) + ない(AuxNegativeNai)
       aux("ん", "ん", EPOS::AuxNegativeNu),
+
+      // Classical assertion/past なり/けり (文語断定・過去)
+      aux("なり", "なり", EPOS::AuxClassicalNari),  // 終止/連体形 断定 (春なり)
+      aux("けり", "けり", EPOS::AuxClassicalKeri),  // 過去・詠嘆 (なりけり)
 
       // Past/Completion - た (過去・完了)
       aux("た", "た", EPOS::AuxTenseTa),
@@ -288,8 +295,8 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       aux("だろ", "だ", EPOS::AuxCopulaDa),        // mizenkei, connects to う
       aux("でしょ", "です", EPOS::AuxCopulaDesu),  // mizenkei, connects to う
 
-      // Negative conjecture (否定推量)
-      aux("まい", "まい", EPOS::AuxNegativeNu),
+      // Negative conjecture (否定推量): attaches to 終止形 (godan) / 未然形 (ichidan)
+      aux("まい", "まい", EPOS::AuxNegativeMai),
 
       // Conjecture - らしい (推定)
       aux("らしい", "らしい", EPOS::AuxConjectureRashii),
@@ -368,7 +375,13 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       aux("たく", "たい", EPOS::AuxDesireTai),
       aux("たかっ", "たい", EPOS::AuxDesireTai),
       adj("たければ", "たい", EPOS::AuxDesireTai),
-      aux("たがる", "たがる", EPOS::AuxDesireTai),
+      // たがる (3rd-person desiderative): conjugates like a godan-ra verb
+      aux("たがる", "たがる", EPOS::AuxDesireTai),  // 終止/連体
+      aux("たがら", "たがる", EPOS::AuxDesireTai),  // 未然 (+ない)
+      aux("たがろ", "たがる", EPOS::AuxDesireTai),  // 未然推量 (+う)
+      aux("たがり", "たがる", EPOS::AuxDesireTai),  // 連用 (+ます)
+      aux("たがっ", "たがる", EPOS::AuxDesireTai),  // 連用促音便 (+た/て)
+      aux("たがれ", "たがる", EPOS::AuxDesireTai),  // 仮定 (+ば)
 
       // Irregular i-adjective よい/いい (形容詞・アウオ段)
       // MeCab: よければ → よけれ(仮定形) + ば, よかった → よかっ(連用タ接続) + た

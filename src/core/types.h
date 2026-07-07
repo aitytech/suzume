@@ -160,6 +160,19 @@ enum class ExtendedPOS : uint8_t {
   Interjection,     // 感動詞: 何だ、ああ、おい
   Other,            // その他
 
+  // =========================================================================
+  // Late additions
+  // Appended at the end because ExtendedPOS values are serialized as uint8
+  // in compiled binary dictionaries (core.dic/user.dic); inserting into the
+  // groups above would shift existing values and corrupt EPOS decoding.
+  // =========================================================================
+  AdjMizenkei,  // 形容詞未然形(かろ): irrealis stem for 推量 (高かろ-, 美しかろ-)
+
+  AuxNegativeMai,  // 打消推量: まい (attaches to 終止形, unlike ぬ/ん which take 未然形)
+
+  AuxClassicalNari,  // 文語断定: なり (春なり = it is spring)
+  AuxClassicalKeri,  // 文語過去/詠嘆: けり (なりけり)
+
   // Count marker (for array sizing)
   Count_  // Total number of categories
 };
@@ -276,7 +289,7 @@ inline bool isVerbForm(ExtendedPOS epos) {
  * @brief Check if ExtendedPOS is an adjective form
  */
 inline bool isAdjectiveForm(ExtendedPOS epos) {
-  return epos >= ExtendedPOS::AdjBasic && epos <= ExtendedPOS::AdjNaAdj;
+  return (epos >= ExtendedPOS::AdjBasic && epos <= ExtendedPOS::AdjNaAdj) || epos == ExtendedPOS::AdjMizenkei;
 }
 
 /**
@@ -284,7 +297,8 @@ inline bool isAdjectiveForm(ExtendedPOS epos) {
  * Note: AuxExcessive (すぎる) is excluded as it maps to Verb (補助動詞)
  */
 inline bool isAuxiliaryType(ExtendedPOS epos) {
-  return epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru;
+  // (AuxNegativeMai sits outside the contiguous range; see ExtendedPOS comment)
+  return (epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai;
 }
 
 /**

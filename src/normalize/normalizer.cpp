@@ -1,5 +1,6 @@
 #include "normalizer.h"
 
+#include "unicode_tables.h"
 #include "utf8.h"
 
 namespace suzume::normalize {
@@ -102,8 +103,39 @@ constexpr char32_t kHiraganaBo = 0x307C;  // ぼ
 constexpr char32_t kHalfwidthDakuten = 0xFF9E;     // ﾞ
 constexpr char32_t kHalfwidthHandakuten = 0xFF9F;  // ﾟ
 
-// Combines full-width katakana with dakuten, returns combined char or 0 if not applicable
+// Combines kana (hiragana or katakana) with dakuten, returns combined char or 0 if not applicable
 char32_t combineWithDakuten(char32_t base) {
+  // Hiragana ka-row: かきくけこ -> がぎぐげご
+  if (base >= 0x304B && base <= 0x3053 && ((base - 0x304B) % 2 == 0)) {
+    return base + 1;
+  }
+  // Hiragana sa-row: さしすせそ -> ざじずぜぞ
+  if (base >= 0x3055 && base <= 0x305D && ((base - 0x3055) % 2 == 0)) {
+    return base + 1;
+  }
+  // Hiragana ta-row: た(0x305F)->だ, ち(0x3061)->ぢ, つ(0x3064)->づ, て(0x3066)->で, と(0x3068)->ど
+  switch (base) {
+    case 0x305F:
+      return 0x3060;  // た -> だ
+    case 0x3061:
+      return 0x3062;  // ち -> ぢ
+    case 0x3064:
+      return 0x3065;  // つ -> づ
+    case 0x3066:
+      return 0x3067;  // て -> で
+    case 0x3068:
+      return 0x3069;  // と -> ど
+    default:
+      break;
+  }
+  // Hiragana ha-row: はひふへほ -> ばびぶべぼ
+  if (base >= 0x306F && base <= 0x307D && ((base - 0x306F) % 3 == 0)) {
+    return base + 1;
+  }
+  // う -> ゔ
+  if (base == 0x3046) {
+    return 0x3094;
+  }
   // Ka-row: カキクケコ -> ガギグゲゴ
   if (base >= 0x30AB && base <= 0x30B3 && ((base - 0x30AB) % 2 == 0)) {
     return base + 1;
@@ -142,16 +174,37 @@ char32_t combineWithDakuten(char32_t base) {
   if (base == 0x30EF) {
     return 0x30F7;
   }
+  // Iteration marks: ゝ -> ゞ, ヽ -> ヾ
+  if (base == 0x309D) {
+    return 0x309E;
+  }
+  if (base == 0x30FD) {
+    return 0x30FE;
+  }
   return 0;
 }
 
-// Combines full-width katakana with handakuten, returns combined char or 0 if not applicable
+// Combines kana (hiragana or katakana) with handakuten, returns combined char or 0 if not applicable
 char32_t combineWithHandakuten(char32_t base) {
-  // Ha-row only: ハヒフヘホ -> パピプペポ
+  // Hiragana ha-row: はひふへほ -> ぱぴぷぺぽ
+  if (base >= 0x306F && base <= 0x307D && ((base - 0x306F) % 3 == 0)) {
+    return base + 2;
+  }
+  // Ha-row: ハヒフヘホ -> パピプペポ
   if (base >= 0x30CF && base <= 0x30DD && ((base - 0x30CF) % 3 == 0)) {
     return base + 2;
   }
   return 0;
+}
+
+// Returns true if the codepoint is any dakuten mark (half-width, combining, or spacing)
+bool isDakutenMark(char32_t codepoint) {
+  return codepoint == kHalfwidthDakuten || codepoint == kCombiningDakuten || codepoint == kDakuten;
+}
+
+// Returns true if the codepoint is any handakuten mark (half-width, combining, or spacing)
+bool isHandakutenMark(char32_t codepoint) {
+  return codepoint == kHalfwidthHandakuten || codepoint == kCombiningHandakuten || codepoint == kHandakuten;
 }
 
 // Returns normalized character for ヴ + small vowel, or 0 if not applicable
@@ -215,20 +268,20 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
     char32_t normalized_cp = fullwidthToHalfwidth(codepoint, options_.preserve_case);
     normalized_cp = halfwidthKatakanaToFullwidth(normalized_cp);
 
-    // Look ahead for half-width dakuten/handakuten
+    // Look ahead for dakuten/handakuten marks (half-width, combining, or spacing)
     size_t next_pos = pos;
     if (next_pos < text.size()) {
       char32_t next_cp = decodeUtf8(text, next_pos);
 
-      // Check if next char is half-width dakuten or handakuten
-      if (next_cp == kHalfwidthDakuten) {
+      // Check if next char is a dakuten or handakuten mark
+      if (isDakutenMark(next_cp)) {
         char32_t combined = combineWithDakuten(normalized_cp);
         if (combined != 0) {
           pos = next_pos;  // Consume the dakuten
           encodeUtf8(combined, result);
           continue;
         }
-      } else if (next_cp == kHalfwidthHandakuten) {
+      } else if (isHandakutenMark(next_cp)) {
         char32_t combined = combineWithHandakuten(normalized_cp);
         if (combined != 0) {
           pos = next_pos;  // Consume the handakuten

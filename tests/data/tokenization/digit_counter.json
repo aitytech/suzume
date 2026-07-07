@@ -33,6 +33,28 @@
       ],
       "id": "3_ita",
       "input": "3分間続いた"
+    },
+    {
+      "description": "Fiscal year suffix 年度 attaches to the digit+年 date token (令和6年度), instead of leaving 度 stranded and absorbed into the following noun",
+      "expected": [
+        {
+          "lemma": "令和",
+          "pos": "Noun",
+          "surface": "令和"
+        },
+        {
+          "lemma": "6年度",
+          "pos": "Noun",
+          "surface": "6年度"
+        },
+        {
+          "lemma": "予算",
+          "pos": "Noun",
+          "surface": "予算"
+        }
+      ],
+      "id": "6",
+      "input": "令和6年度予算"
     }
   ],
   "description": "digit_counter tests",

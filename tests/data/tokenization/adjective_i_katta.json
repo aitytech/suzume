@@ -257,6 +257,67 @@
       ],
       "id": "kereba_2",
       "input": "甘ければ"
+    },
+    {
+      "description": "i-adjective mizenkei かろ + う (conjecture)",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高かろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "karou",
+      "input": "高かろう"
+    },
+    {
+      "description": "i-adjective mizenkei かろう chained",
+      "expected": [
+        {
+          "lemma": "安い",
+          "pos": "Adjective",
+          "surface": "安かろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "悪い",
+          "pos": "Adjective",
+          "surface": "悪かろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "karou_karou",
+      "input": "安かろう悪かろう"
+    },
+    {
+      "description": "Classical i-adjective attributive き: 美しき(ADJ,美しい)+花",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しき"
+        },
+        {
+          "lemma": "花",
+          "pos": "Noun",
+          "surface": "花"
+        }
+      ],
+      "id": "shiki",
+      "input": "美しき花"
     }
   ],
   "description": "I-adjectives past forms (過去形) - katta forms, past negative, past with desu",

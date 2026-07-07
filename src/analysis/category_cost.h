@@ -65,6 +65,7 @@ constexpr std::array<float, static_cast<size_t>(ExtendedPOS::Count_)> kCategoryC
   table[static_cast<size_t>(ExtendedPOS::AdjStem)] = 0.4F;      // 語幹
   table[static_cast<size_t>(ExtendedPOS::AdjKatt)] = 0.4F;      // かっ形
   table[static_cast<size_t>(ExtendedPOS::AdjKeForm)] = 0.5F;    // け形
+  table[static_cast<size_t>(ExtendedPOS::AdjMizenkei)] = 0.5F;  // 未然形(かろ)
   table[static_cast<size_t>(ExtendedPOS::AdjNaAdj)] = 0.5F;     // ナ形容詞
 
   // ===========================================================================
@@ -77,6 +78,16 @@ constexpr std::array<float, static_cast<size_t>(ExtendedPOS::Count_)> kCategoryC
   // Negation
   table[static_cast<size_t>(ExtendedPOS::AuxNegativeNai)] = 0.3F;  // ない
   table[static_cast<size_t>(ExtendedPOS::AuxNegativeNu)] = 0.4F;   // ぬ (archaic)
+  table[static_cast<size_t>(ExtendedPOS::AuxNegativeMai)] = 0.4F;  // まい (negative volitional)
+
+  // Classical/literary auxiliaries (archaic, closed class)
+  // AuxClassicalNari is deliberately costed higher than other closed-class
+  // auxiliaries: なり alone competes with the common modern VerbRenyokei(なる)
+  // reading (それなり, 大人なり) and should lose that competition by default.
+  // It only wins when followed by けり, where the AuxClassicalNari->AuxClassicalKeri
+  // bigram bonus (see bigram_table.cpp) easily outweighs this extra cost.
+  table[static_cast<size_t>(ExtendedPOS::AuxClassicalNari)] = 0.7F;  // なり (文語断定)
+  table[static_cast<size_t>(ExtendedPOS::AuxClassicalKeri)] = 0.4F;  // けり (文語過去/詠嘆)
 
   // Desire/Volition
   table[static_cast<size_t>(ExtendedPOS::AuxDesireTai)] = 0.3F;   // たい

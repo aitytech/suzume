@@ -80,6 +80,14 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // This helps 消えぬ炎 → 消え+ぬ+炎 over 消えぬ+炎
   setCell(t, EPOS::VerbRenyokei, EPOS::AuxNegativeNu, cost::kModerateBonus);
 
+  // まい (negative volitional) connection grammar:
+  // - Godan 終止形 + まい (行く+まい, なる+まい)
+  // - Ichidan 未然形 + まい (食べ+まい; surfaces carry VerbRenyokei EPOS)
+  // - する/来る 未然形 + まい (し+まい, こ+まい)
+  setCell(t, EPOS::VerbShuushikei, EPOS::AuxNegativeMai, cost::kModerateBonus);
+  setCell(t, EPOS::VerbRenyokei, EPOS::AuxNegativeMai, cost::kModerateBonus);
+  setCell(t, EPOS::VerbMizenkei, EPOS::AuxNegativeMai, cost::kModerateBonus);
+
   // VerbMizenkei → AuxPassive (食べ+られる) - moderate bonus
   setCell(t, EPOS::VerbMizenkei, EPOS::AuxPassive, cost::kModerateBonus);
 
@@ -220,6 +228,9 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
 
   // AdjKeForm → ParticleConj (美しけれ+ば) - strong bonus for conditional splitting
   setCell(t, EPOS::AdjKeForm, EPOS::ParticleConj, cost::kStrongBonus);
+
+  // AdjMizenkei → AuxVolitional (高かろ+う) - strong bonus for conjectural splitting
+  setCell(t, EPOS::AdjMizenkei, EPOS::AuxVolitional, cost::kStrongBonus);
 
   // AdjBasic → AuxCopulaDesu (美しい+です) - moderate bonus
   setCell(t, EPOS::AdjBasic, EPOS::AuxCopulaDesu, cost::kModerateBonus);
@@ -1068,6 +1079,19 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   setCell(t, EPOS::ParticleConj, EPOS::Interjection, cost::kAlmostNever);
   setCell(t, EPOS::ParticleQuote, EPOS::Interjection, cost::kAlmostNever);
   setCell(t, EPOS::ParticleFinal, EPOS::Interjection, cost::kAlmostNever);
+
+  // =========================================================================
+  // Classical assertion/past なり/けり (文語断定・過去)
+  // =========================================================================
+  // AuxClassicalNari → AuxClassicalKeri (なり+けり: 春なりけり) - extreme bonus
+  // なり alone competes with the VerbRenyokei(なる) reading and the character-speech
+  // copula reading (でナリ系), so this chain-specific bonus is what makes the
+  // classical parse win once けり is present; without a following けり, なり still
+  // loses to those readings (see individual word tests for それなり/大人なり/etc.).
+  // Needs to be extreme (not just very-strong) to also beat the single-kanji-noun
+  // fallback penalty that makes the whole thing collapse into one unsplit
+  // kanji_hira_compound NOUN token (e.g. 春 with no dictionary entry of its own).
+  setCell(t, EPOS::AuxClassicalNari, EPOS::AuxClassicalKeri, cost::kExtremeBonus);
 
   return t;
 }

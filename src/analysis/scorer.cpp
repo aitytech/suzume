@@ -689,6 +689,27 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     surface_bonus += cost::kRare;  // Cancel the -0.8 bonus
   }
 
+  // Bonus for VerbRenyokei → subsidiary verb ゆく/いく (補助動詞)
+  // V1 連用形 + ゆく forms the literary compound-verb construction: 散り+ゆく,
+  // 消え+ゆく, 暮れ+ゆく. The generic VerbRenyokei→VerbShuushikei penalty (0.8)
+  // guards against false splits, but ゆく/いく after 連用形 is grammatical and
+  // must beat the kanji-hiragana compound NOUN fallback.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.pos == core::PartOfSpeech::Verb &&
+      (next.surface == "ゆく" || next.surface == "いく")) {
+    surface_bonus += cost::kStrongBonus;
+  }
+
+  // Penalty for VerbRenyokei → れ (AuxPassive) pattern
+  // The passive auxiliary れる attaches to godan 未然形 (VerbMizenkei), never to
+  // 連用形; the VerbRenyokei→AuxPassive strong bonus exists for られ (ichidan/
+  // kuru passive: 食べ+られ, 来+られ). A bare れ after 連用形 is a false split
+  // (来れば → 来+れ+ば instead of 来れ(仮定形)+ば). Hiragana a-row endings are
+  // exempt: short hiragana 未然形 carries VerbRenyokei EPOS (やら+れ+た).
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxPassive &&
+      next.surface == "れ" && !grammar::endsWithARow(prev.surface)) {
+    surface_bonus += cost::kRare;  // Cancel the -0.8 bonus
+  }
+
   // Bonus for て → いただき (humble auxiliary verb) pattern
   // E.g., 食べて+いただき+ます, して+いただけ+ます (MeCab-compatible split)
   // The て→い(AUX)→ただき path incorrectly splits いただき
@@ -870,15 +891,29 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     surface_bonus += cost::kStrongBonus;
   }
 
-  // Bonus for VERB_未然 → AUX_否定古(ず/ずに) connection
-  // Godan mizenkei + classical negative: 書かず, 抜かず, 行かず
+  // Bonus for VERB_未然 → AUX_否定古(ず/ずに/ね) connection
+  // Godan mizenkei + classical negative: 書かず, 抜かず, 行かず, 行かねば
   // The split path needs help to beat merged verb candidates (書かずに as single VERB)
   // because AUX_否定古 → next token connections have default (high) cost.
+  // ね is the 已然形 of the same classical negative (行かねば, 死なねば) and competes
+  // with the dict VERB reading of ね (連用形 of ねる=寝る) and the sentence-final
+  // particle ね; this bonus is what lets the AUX reading win after a verb mizenkei.
   // Note: lexicalized forms like 思わず(ADV) are handled by the candidate generator
   // which skips mizenkei_zu generation when verb+ず is in the dictionary.
   if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
-      (next.surface == "ず" || next.surface == "ずに" || next.surface == "ざる" || next.surface == "ざれ")) {
+      (next.surface == "ず" || next.surface == "ずに" || next.surface == "ざる" || next.surface == "ざれ" ||
+       next.surface == "ね")) {
     surface_bonus += cost::kStrongBonus;
+  }
+
+  // Cancel the ichidan-oriented VerbRenyokei → AuxNegativeNu(ね) bonus (消えぬ pattern)
+  // when prev is not a genuine renyokei/mizenkei form (i.e., doesn't end in an
+  // i-row/e-row hiragana). Some godan verbs get a spurious VerbRenyokei-tagged
+  // candidate for their dictionary shuushikei form (e.g., 行く), which would
+  // otherwise hijack ね away from the sentence-final particle reading (行くね).
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
+      next.surface == "ね" && !grammar::endsWithRenyokeiMarker(prev.surface)) {
+    surface_bonus += cost::kRare;
   }
 
   // Bonus for AUX_否定古(ずに) → VERB connection
@@ -968,6 +1003,19 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       next.pos == core::PartOfSpeech::Other && next.surface.size() == 3 &&  // Single char = 3 bytes UTF-8
       grammar::isPureHiragana(next.surface)) {
     surface_bonus += cost::kAlmostNever;
+  }
+
+  // Penalty for Noun → かかる(Determiner) with no intervening particle
+  // The classical determiner 斯かる always needs a preceding particle, topic
+  // marker, or clause boundary (は+かかる, として+かかる, かかる事態 at clause
+  // start); it never directly follows a bare noun. Direct noun adjacency
+  // (3週間かかる, 5分かかる) is the intransitive verb 掛かる/罹る taking a
+  // duration/quantity noun without a particle. The ParticleCase→Determiner
+  // bigram penalty above only covers noun+particle+かかる (壁にかかる); this
+  // covers noun+かかる directly (3週間かかる).
+  if (prev.pos == core::PartOfSpeech::Noun && next.surface == "かかる" &&
+      next.extended_pos == core::ExtendedPOS::Determiner) {
+    surface_bonus += cost::kStrong;
   }
 
   // Penalty for DET → non-dict single-kanji NOUN
@@ -1387,11 +1435,13 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Short pure-hiragana verbs + ず are likely false parses of nouns/adverbs
   // Long verbs (かかわら+ず) and kanji verbs (表さ+ず) are productive grammar
   // Lexicalized forms like 思わず have their own dict entries (ADV) that win anyway
-  // Note: ん, ぬ, まい, ざる, ざれ excluded — common productive patterns
+  // Note: ん, ぬ, ざる, ざれ, ね excluded — common productive patterns
+  // (ね is 已然形: せねば from する; まい carries its own AuxNegativeMai EPOS and
+  // never matches this rule)
   if (prev.pos == core::PartOfSpeech::Verb && prev.fromDictionary() && grammar::isPureHiragana(prev.surface) &&
       prev.surface.size() <= 9 &&  // ≤3 hiragana chars (9 bytes)
       next.extended_pos == core::ExtendedPOS::AuxNegativeNu && next.surface != "ん" && next.surface != "ぬ" &&
-      next.surface != "まい" && next.surface != "ざる" && next.surface != "ざれ") {
+      next.surface != "ざる" && next.surface != "ざれ" && next.surface != "ね") {
     surface_bonus += cost::kAlmostNever;
   }
 

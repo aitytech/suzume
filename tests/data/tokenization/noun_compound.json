@@ -447,6 +447,28 @@
         "time-noun",
         "compound"
       ]
+    },
+    {
+      "description": "重要性 (na-adjective stem 重要 + productive suffix 性) merges as one compound noun, consistent with 社会性/安全性/可能性",
+      "expected": [
+        {
+          "lemma": "重要性",
+          "pos": "Noun",
+          "surface": "重要性"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "説く",
+          "pos": "Verb",
+          "surface": "説く"
+        }
+      ],
+      "id": "wo_ku",
+      "input": "重要性を説く"
     }
   ],
   "description": "Compound nouns",

@@ -29,6 +29,39 @@ namespace suzume::analysis {
 // Alias for helper functions
 namespace vh = verb_helpers;
 
+namespace {
+
+// Detect a formal-noun prefix boundary inside an unverified hiragana verb stem.
+// A stem that begins with a dictionary formal noun (わけ, こと, もの, ところ, ...)
+// followed by a remainder of two or more characters is usually a noun + verb
+// sequence (わけ + わから), not a single verb (わけわかる is not a word).
+// Formal nouns form independent word boundaries, so callers add a
+// split-preference penalty when this returns true.
+bool hasFormalNounPrefixBoundary(const dictionary::DictionaryManager* dict_manager,
+                                 const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos <= start_pos) {
+    return false;
+  }
+  const size_t total_len = end_pos - start_pos;
+  // Both the noun prefix and the verb remainder need at least two characters
+  if (total_len < 4) {
+    return false;
+  }
+  for (size_t prefix_len = 2; prefix_len + 2 <= total_len; ++prefix_len) {
+    std::string prefix = extractSubstring(codepoints, start_pos, start_pos + prefix_len);
+    auto results = dict_manager->lookup(prefix, 0);
+    for (const auto& result : results) {
+      if (result.entry != nullptr && result.entry->surface == prefix && result.entry->pos == core::PartOfSpeech::Noun &&
+          result.entry->extended_pos == core::ExtendedPOS::NounFormal) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
 std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                              const std::vector<normalize::CharType>& char_types,
                                                              const grammar::Inflection& inflection,
@@ -711,6 +744,12 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
           utf8::contains(surface, "なくなり")) {
         base_cost += bigram_cost::kRare;
       }
+      // Penalty for verb candidates absorbing auxiliary まい (negative volitional)
+      // まい attaches to 終止形 as an independent AUX token: なるまい = なる + まい
+      // Same rule as the kanji verb path (出来まい = 出来 + まい)
+      if (utf8::endsWith(surface, "まい") && surface.size() > 2 * core::kJapaneseCharBytes) {
+        base_cost += bigram_cost::kStrong;
+      }
 
       // Set lemma from inflection analysis for pure hiragana verbs
       // This is essential for P4 (ひらがな動詞活用展開) to work without dictionary
@@ -1073,6 +1112,11 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     // Use positive cost for unconfirmed verbs (long hiragana that might be verbs)
     // This prevents false positives like おねえさん → おねえさ + ん
     float cost = is_valid_verb ? -0.5F : 1.0F;
+    // Unverified stems starting with a formal noun are noun + verb sequences
+    // (わけわから+ん should split as わけ + わから + ん)
+    if (!is_valid_verb && hasFormalNounPrefixBoundary(dict_manager, codepoints, start_pos, mizenkei_end)) {
+      cost += bigram_cost::kStrong;
+    }
     SUZUME_DEBUG_VERBOSE_BLOCK {
       SUZUME_DEBUG_STREAM << "[VERB_CAND] " << mizenkei_surface << " hiragana_mizenkei_n lemma=" << lemma
                           << " cost=" << cost << "\n";
@@ -1201,6 +1245,11 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     float cost_nai = candidate::verb_cost::kStandardBonus;  // -0.5
     if (!is_in_dict && mizenkei_surface.size() >= 6) {      // 2+ char stems
       cost_nai = 0.5F;                                      // Positive cost for unverified candidates
+    }
+    // Unverified stems starting with a formal noun are noun + verb sequences
+    // (わけわから+ない should split as わけ + わから + ない)
+    if (!is_in_dict && hasFormalNounPrefixBoundary(dict_manager, codepoints, start_pos, mizenkei_end)) {
+      cost_nai += bigram_cost::kStrong;
     }
     SUZUME_DEBUG_VERBOSE_BLOCK {
       SUZUME_DEBUG_STREAM << "[VERB_CAND] " << mizenkei_surface << " hiragana_mizenkei_nai lemma=" << lemma
@@ -1331,6 +1380,11 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     // The なきゃ/なければ contraction is an unambiguous mizenkei signal, so give a
     // bonus (verified verbs stronger) to beat the particle split や + らなきゃ.
     float cost = is_in_dict ? candidate::verb_cost::kStrongBonus : candidate::verb_cost::kStandardBonus;
+    // Unverified stems starting with a formal noun are noun + verb sequences
+    // (わけわから+なきゃ should split as わけ + わから + なきゃ)
+    if (!is_in_dict && hasFormalNounPrefixBoundary(dict_manager, codepoints, start_pos, mizenkei_end)) {
+      cost += bigram_cost::kStrong;
+    }
     SUZUME_DEBUG_VERBOSE_BLOCK {
       SUZUME_DEBUG_STREAM << "[VERB_CAND] " << mizenkei_surface << " hiragana_mizenkei_nakya lemma=" << lemma
                           << " cost=" << cost << "\n";
@@ -1376,8 +1430,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Also check if base form exists in dictionary
+    bool is_in_dict = vh::isVerbInDictionary(dict_manager, base_form);
     if (!is_valid_verb) {
-      is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
+      is_valid_verb = is_in_dict;
     }
 
     if (!is_valid_verb)
@@ -1401,12 +1456,17 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       }
     }
 
-    constexpr float kCostNOnbin = candidate::verb_cost::kStandardBonus;
+    float cost_n_onbin = candidate::verb_cost::kStandardBonus;
+    // Unverified stems starting with a formal noun are noun + verb sequences
+    // (わけわかん+ない should split as わけ + わかん + ない)
+    if (!is_in_dict && hasFormalNounPrefixBoundary(dict_manager, codepoints, start_pos, onbin_end)) {
+      cost_n_onbin += bigram_cost::kStrong;
+    }
     SUZUME_DEBUG_VERBOSE_BLOCK {
       SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << " hiragana_n_onbin_nai lemma=" << lemma
-                          << " cost=" << kCostNOnbin << "\n";
+                          << " cost=" << cost_n_onbin << "\n";
     }
-    candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kCostNOnbin, lemma,
+    candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, cost_n_onbin, lemma,
                                            grammar::verbTypeToConjType(grammar::VerbType::GodanRa), true,
                                            CandidateOrigin::VerbHiragana, 0.9F, "hiragana_n_onbin_nai",
                                            core::ExtendedPOS::VerbMizenkei));

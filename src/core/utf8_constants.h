@@ -61,6 +61,7 @@ constexpr char32_t kI = U'い';   // い (0x3044)
 constexpr char32_t kKu = U'く';  // く (0x304F) - for なく (adverbial)
 constexpr char32_t kKa = U'か';  // か (0x304B) - for なかっ (ta-connection)
 constexpr char32_t kKe = U'け';  // け (0x3051) - for なけれ (conditional)
+constexpr char32_t kKi = U'き';  // き (0x304D) - for なきゃ (colloquial conditional contraction)
 
 // Passive/potential られる
 constexpr char32_t kRa = U'ら';  // ら (0x3089)

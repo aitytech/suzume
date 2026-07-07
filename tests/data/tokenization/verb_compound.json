@@ -1528,6 +1528,28 @@
       ],
       "id": "ke_ttta",
       "input": "受け取った"
+    },
+    {
+      "description": "Renyokei + subsidiary ゆく: 散り+ゆく+桜 (suzume tags ゆく Verb)",
+      "expected": [
+        {
+          "lemma": "散る",
+          "pos": "Verb",
+          "surface": "散り"
+        },
+        {
+          "lemma": "ゆく",
+          "pos": "Verb",
+          "surface": "ゆく"
+        },
+        {
+          "lemma": "桜",
+          "pos": "Noun",
+          "surface": "桜"
+        }
+      ],
+      "id": "riyuku",
+      "input": "散りゆく桜"
     }
   ],
   "description": "Compound verbs",
