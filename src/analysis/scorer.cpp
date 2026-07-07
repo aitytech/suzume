@@ -11,6 +11,7 @@
 #include "core/types.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
+#include "grammar/honorific_verbs.h"
 #include "normalize/utf8.h"
 
 #ifdef SUZUME_DEBUG_INFO
@@ -1281,12 +1282,9 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
 
   // Bonus for VerbRenyokei/VerbOnbinkei → VerbRenyokei (honorific verb patterns)
   // E.g., 願い+いたし (お願いいたします), 報告+いたし (ご報告いたします)
-  // Common honorific verb renyokei: いたし, おり, くださ, いただき, もらい, あげ
   // Include VerbOnbinkei since 願い is often recognized as onbin form of 願う
   if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
-      next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      (next.surface == "いたし" || next.surface == "くださ" || next.surface == "いただき" || next.surface == "もらい" ||
-       next.surface == "あげ")) {
+      next.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSubsidiaryHonorificRenyokei(next.surface)) {
     surface_bonus += cost::kVeryStrongBonus;
   }
 
@@ -1294,7 +1292,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // E.g., いただき+ます (いただきます), いたし+ます (いたします)
   // This helps いただき beat い+た+だき pattern
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxTenseMasu &&
-      (prev.surface == "いただき" || prev.surface == "いたし" || prev.surface == "くださ")) {
+      grammar::isHumbleHonorificRenyokei(prev.surface)) {
     surface_bonus += cost::kVeryStrongBonus;
   }
 
