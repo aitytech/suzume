@@ -56,11 +56,11 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.0",
-    "lint-staged": "^17.0.7",
+    "@biomejs/biome": "^2.5.2",
+    "lint-staged": "^17.0.8",
     "simple-git-hooks": "^2.13.1",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.10"
   },
   "volta": {
     "node": "22.21.1",
