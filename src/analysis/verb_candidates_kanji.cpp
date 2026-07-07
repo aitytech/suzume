@@ -707,7 +707,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // Skip suru-verb auxiliary patterns (して, した, している, etc.)
         // For MeCab-compatible split: 勉強して → 勉強 + して
         size_t kanji_count = kanji_end - start_pos;
-        if (vh::shouldSkipSuruVerbAuxPattern(surface, kanji_count)) {
+        if (vh::shouldSkipSuruVerbAuxPattern(surface, kanji_count, inflection)) {
           continue;  // Skip - let the split (noun + suru-aux) win
         }
 

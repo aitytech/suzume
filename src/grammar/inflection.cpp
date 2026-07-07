@@ -84,6 +84,7 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
       // Exceptions for irregular verbs where the suffix IS the conjugated form:
       // - Suru verb with す/し→する (empty stem is allowed)
       // - Suru verb with しろ/せよ→する (imperative, empty stem allowed)
+      // - Suru verb with しよ→する (volitional, empty stem allowed)
       // - Suru verb with すれ→する (hypothetical, empty stem allowed)
       // - Kuru verb with こ/き→くる (empty stem is allowed for mizenkei/renyokei)
       // - Kuru verb with こい→くる (imperative, empty stem allowed)
@@ -94,7 +95,7 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
       if (stem.size() < core::kJapaneseCharBytes &&
           !(ending.verb_type == VerbType::Suru &&
             (ending.suffix == "す" || ending.suffix == "し" || ending.suffix == "しろ" || ending.suffix == "せよ" ||
-             ending.suffix == "すれ")) &&
+             ending.suffix == "しよ" || ending.suffix == "すれ")) &&
           !(ending.verb_type == VerbType::Kuru &&
             (ending.suffix == "こ" || ending.suffix == "き" || ending.suffix == "こい" || ending.suffix == "くれ"))) {
         continue;

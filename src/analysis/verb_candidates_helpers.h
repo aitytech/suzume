@@ -204,8 +204,14 @@ bool shouldSkipCausativeAuxPattern(std::string_view surface, grammar::VerbType v
 
 /**
  * @brief Check if surface matches suru-verb auxiliary patterns
+ *
+ * Detects サ変名詞 + する-auxiliary chains (勉強して, 対応される, 実行させた)
+ * via connection-based inflection analysis: the hiragana tail after the kanji
+ * run must analyze as a conjugation of する with an auxiliary chain attached.
+ * Returns true if the pattern should be skipped (to allow the noun + する-aux
+ * split to win).
  */
-bool shouldSkipSuruVerbAuxPattern(std::string_view surface, size_t kanji_count);
+bool shouldSkipSuruVerbAuxPattern(std::string_view surface, size_t kanji_count, const grammar::Inflection& inflection);
 
 // =============================================================================
 // Auxiliary Pattern Penalty Checks (for verb candidate cost adjustment)

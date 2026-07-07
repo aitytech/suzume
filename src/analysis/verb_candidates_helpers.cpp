@@ -359,50 +359,50 @@ bool shouldSkipCausativeAuxPattern(std::string_view surface, grammar::VerbType v
   return false;
 }
 
-bool shouldSkipSuruVerbAuxPattern(std::string_view surface, size_t kanji_count) {
-  // Only apply to patterns with 2+ kanji
-  if (kanji_count < 2) {
+namespace {
+
+// Check if a hiragana tail analyzes as a conjugation of する with an auxiliary
+// chain (して, しました, してもらっている); bare し and plain する have none.
+bool isSuruAuxChainTail(std::string_view tail, const grammar::Inflection& inflection) {
+  // Empty-stem する conjugations start with し/す/せ; される/させる need the
+  // mizenkei さ with a stem (whole-surface check in the caller covers them)
+  if (!utf8::startsWithAny(tail, {"し", "す", "せ"})) {
     return false;
   }
-
-  // Check for suru-verb auxiliary suffixes
-  static const std::vector<std::string_view> kSuruAuxSuffixes = {
-      // Basic conjugations
-      "して", "した", "しない", "します", "しました", "しません", "している", "していた", "していない", "しています",
-      "していました", "したい", "しよう", "しろ", "せよ", "すれば", "しそう", "しなかった", "しませんでした",
-      // Negative te-form
-      "しなくて", "しないで", "しなく",
-      // Conditional/conjunctive forms
-      "しなければ", "しながら", "しつつ", "したら", "しましたら",
-      // Colloquial contractions
-      "しちゃう", "しちゃった", "しちゃって", "しちゃいます", "しちまう", "しちまった", "しちまって", "しとく",
-      "しといた", "しといて", "しときます", "してる", "してた", "してます", "してました",
-      // te-form + subsidiary verbs
-      "してみる", "していく", "してくる", "してもらう", "してあげる", "してしまう", "してくれる", "してほしい",
-      "してください", "してくれます", "してあります", "しておきます", "しておく",
-      // Subsidiary verbs past/te-forms
-      "してみた", "してみて", "していった", "していって", "してきた", "してきて", "してもらった", "してもらって",
-      "してあげた", "してあげて", "してくれた", "してくれて", "してしまった", "してしまって", "しておいた",
-      "しておいて",
-      // Progressive forms of subsidiary verbs
-      "してもらっている", "してもらっていた", "してもらっています", "してあげている", "してあげていた",
-      "してあげています", "してくれている", "してくれていた", "してくれています", "していっている", "していっていた",
-      "してきている", "してきていた", "してきています",
-      // Passive forms (される conjugations)
-      "される", "された", "されない", "されます", "されました", "されている", "されていた", "されています",
-      "されていました", "されて", "されれば", "されたら",
-      // Causative forms (させる conjugations)
-      "させる", "させた", "させない", "させます", "させました", "させている", "させていた", "させています", "させて",
-      "させれば", "させたら",
-      // Causative-passive forms
-      "させられる", "させられた", "させられて", "させられます"};
-
-  for (const auto& suffix : kSuruAuxSuffixes) {
-    if (utf8::endsWith(surface, suffix) && surface.size() > suffix.size()) {
+  if (utf8::equalsAny(tail, {"しろ", "せよ"})) {  // Imperatives carry no auxiliary chain
+    return true;
+  }
+  for (const auto& cand : inflection.analyze(tail)) {
+    if (cand.verb_type == grammar::VerbType::Suru && cand.stem.empty() && !cand.morphemes.empty()) {
       return true;
     }
   }
+  return false;
+}
 
+}  // namespace
+
+bool shouldSkipSuruVerbAuxPattern(std::string_view surface, size_t kanji_count, const grammar::Inflection& inflection) {
+  // Only apply to patterns with 2+ kanji (typical サ変 noun stems: 勉強, 対応)
+  if (kanji_count < 2) {
+    return false;
+  }
+  // Scan codepoint suffixes of the hiragana tail after the kanji run for a
+  // する-auxiliary chain (勉強して, 空回りして) — ends-with semantics
+  size_t tail_start = normalize::charToByteOffset(surface, kanji_count);
+  std::string_view tail = surface.substr(std::min(tail_start, surface.size()));
+  for (size_t pos = 0; pos < tail.size(); normalize::decodeUtf8(tail, pos)) {
+    if (isSuruAuxChainTail(tail.substr(pos), inflection)) {
+      return true;
+    }
+  }
+  // される/させる need the mizenkei さ with a stem: use a whole-surface サ変
+  // parse whose conjugated part starts with さ (対応される, 実行させた)
+  for (const auto& cand : inflection.analyze(surface)) {
+    if (cand.verb_type == grammar::VerbType::Suru && !cand.morphemes.empty() && utf8::startsWith(cand.suffix, "さ")) {
+      return true;
+    }
+  }
   return false;
 }
 
