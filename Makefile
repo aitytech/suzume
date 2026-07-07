@@ -23,7 +23,7 @@ help:
 	@echo "  make test         - Run all tests (includes dict)"
 	@echo "  make clean        - Clean build directory"
 	@echo "  make rebuild      - Clean and rebuild"
-	@echo "  make format       - Format code with clang-format"
+	@echo "  make format       - Format C++ (clang-format) and MCP server (ruff)"
 	@echo "  make format-check - Check code formatting"
 	@echo "  make configure    - Configure CMake"
 	@echo ""
@@ -81,12 +81,16 @@ rebuild: clean build
 format:
 	@echo "Formatting code..."
 	@find src tests -type f \( -name "*.cpp" -o -name "*.h" \) | xargs $(CLANG_FORMAT) -i
+	@echo "Formatting MCP server (ruff)..."
+	cd scripts/mcp && uv run ruff format . && uv run ruff check --fix .
 	@echo "Format complete!"
 
 # Check code formatting
 format-check:
 	@echo "Checking code formatting..."
 	@find src tests -type f \( -name "*.cpp" -o -name "*.h" \) | xargs $(CLANG_FORMAT) --dry-run --Werror
+	@echo "Checking MCP server formatting (ruff)..."
+	cd scripts/mcp && uv run ruff format --check . && uv run ruff check .
 	@echo "Format check passed!"
 
 # ============================================

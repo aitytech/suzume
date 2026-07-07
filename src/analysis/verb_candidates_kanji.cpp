@@ -1461,11 +1461,27 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         std::string renyokei_surface = extractSubstring(codepoints, start_pos, renyokei_end);
         std::string base_form = renyokei_surface + "る";  // 食べ + る = 食べる
 
+        // Disambiguate i-adjective 仮定形 from ichidan verb 仮定形 for the ければ case.
+        // "高ければ"(高い) and "受ければ"(受ける) are grammatically indistinguishable by
+        // inflection rules alone (both yield a plausible ichidan base 高ける/受ける).
+        // The distinguishing signal is lexical: when kanji-stem + い is a known
+        // i-adjective, this is the adjective 仮定形 (高い→高けれ+ば), not a verb.
+        // Suppress the fake ichidan verb candidate so the i-adjective ke-form wins.
+        bool is_iadj_kateikei = false;
+        if (renyokei_end > start_pos && codepoints[renyokei_end - 1] == U'け' && dict_manager != nullptr) {
+          std::string adj_base = extractSubstring(codepoints, start_pos, renyokei_end - 1) + "い";
+          if (vh::isAdjectiveInDictionary(dict_manager, adj_base)) {
+            SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << surface << "\" ichidan_kateikei: " << adj_base
+                                                      << " is i-adjective (prefer ADJ 仮定形)\n");
+            is_iadj_kateikei = true;
+          }
+        }
+
         // Verify using inflection analysis on the kateikei form
         const auto& all_candidates = inflection.analyze(surface);
         float ichidan_confidence = vh::getIchidanConfidence(all_candidates, 0.3F);
 
-        if (ichidan_confidence >= 0.3F) {
+        if (!is_iadj_kateikei && ichidan_confidence >= 0.3F) {
           // Negative cost to beat the split path 語幹+れ(受身)+ば
           constexpr float kKateikeiCost = candidate::verb_cost::kStrongBonus;
           SUZUME_DEBUG_VERBOSE_BLOCK {

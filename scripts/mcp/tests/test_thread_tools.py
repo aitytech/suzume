@@ -518,9 +518,7 @@ class TestThreadBugsListFilter:
             data = {"id": idx, "text": f"test{idx}", "diff_type": dt}
             if pat:
                 data["pattern"] = pat
-            (bugs_dir / f"{idx:03d}_{dt}_test{idx}.json").write_text(
-                json.dumps(data, ensure_ascii=False)
-            )
+            (bugs_dir / f"{idx:03d}_{dt}_test{idx}.json").write_text(json.dumps(data, ensure_ascii=False))
         monkeypatch.setitem(_BUGS_DIRS, "thread", bugs_dir)
         return bugs_dir
 
@@ -588,8 +586,7 @@ class TestAppendIssueToBugs:
 
 class TestThreadBugsSweep:
     def _make_bug(self, bugs_dir, bug_id, text, diff_type="over-split"):
-        data = {"id": bug_id, "text": text, "diff_type": diff_type,
-                "expected": "x", "suzume": "y"}
+        data = {"id": bug_id, "text": text, "diff_type": diff_type, "expected": "x", "suzume": "y"}
         filepath = bugs_dir / f"{bug_id:03d}_{diff_type}_{text[:10]}.json"
         filepath.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         return filepath
@@ -603,6 +600,7 @@ class TestThreadBugsSweep:
 
         # Mock _compare_surfaces: first call matches, second doesn't
         call_count = [0]
+
         def mock_compare(text):
             call_count[0] += 1
             if text == "テスト":
@@ -629,8 +627,7 @@ class TestThreadBugsSweep:
         self._make_bug(bugs_dir, 1, "a")
         self._make_bug(bugs_dir, 2, "b")
         monkeypatch.setitem(_BUGS_DIRS, "thread", bugs_dir)
-        monkeypatch.setattr("suzume_mcp.tools.thread_tools._compare_surfaces",
-                            lambda text: {"match": True})
+        monkeypatch.setattr("suzume_mcp.tools.thread_tools._compare_surfaces", lambda text: {"match": True})
 
         result = parse_json(run(thread_bugs_sweep()))
         assert result["resolved_count"] == 2

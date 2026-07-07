@@ -729,52 +729,69 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   //  2. Hiragana portion must be short (≤5 chars)
   if (kanji_end == start_pos + 2 && kanji_end < codepoints.size()) {
     char32_t first_hira = codepoints[kanji_end];
-    // For し: must be followed by い/く/け/か (しい-adj conjugation),
-    // NOT そ/な/て/た (suru verb + auxiliary)
-    bool valid_adj_start = (first_hira == U'い' || first_hira == U'く' || first_hira == U'け' || first_hira == U'か');
-    if (first_hira == U'し' && kanji_end + 1 < codepoints.size()) {
-      char32_t second_hira = codepoints[kanji_end + 1];
-      valid_adj_start = (second_hira == U'い' || second_hira == U'く' || second_hira == U'け' || second_hira == U'か');
-    }
-    if (valid_adj_start) {
-      constexpr size_t kMaxHiraganaLen = 5;
-      // Mark existing candidates with has_suffix if they fit the compound pattern
-      for (auto& cand : candidates) {
-        size_t hira_len = cand.end - kanji_end;
-        if (hira_len <= kMaxHiraganaLen) {
-          cand.has_suffix = true;
-        }
+    // Counter-continuation formal nouns (間/分/秒) must not head an i-adjective
+    // compound stem: "3時間続いた" would split as 3時 + 間続い(fake ADJ) instead of
+    // 3時間(counter) + 続い(verb). 間 severs the 時間/年間 counter. Allow only when
+    // the second kanji itself forms a known i-adjective (間近い → 近い is a dict adj),
+    // otherwise the compound is masking a verb renyokei (間続い ← 続く).
+    char32_t head_char = codepoints[start_pos];
+    if (head_char == U'間' || head_char == U'分' || head_char == U'秒') {
+      std::string tail_adj = extractSubstring(codepoints, start_pos + 1, kanji_end) + "い";
+      if (!isAdjectiveInDictionary(dict_manager, tail_adj)) {
+        SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] counter-formal-noun head \"" << head_char << "\" not an i-adj compound\n");
+        goto skip_compound_adj;
       }
-      // Generate new compound candidate if main loop didn't produce one.
-      // The 2-kanji penalty drops inflection confidence below the main loop's
-      // 0.5 threshold for compound adjectives like 薄暗い, 物悲しく.
-      // Use tighter hiragana limits for い/く/か/け (max 2) to prevent
-      // false matches like 一枚ください. し gets more room (max 5) for しかった.
-      if (candidates.empty()) {
-        size_t hira_limit = (first_hira == U'し') ? kMaxHiraganaLen : 2;
-        size_t max_end = std::min(hiragana_end, kanji_end + hira_limit);
-        for (size_t end_pos = max_end; end_pos > kanji_end; --end_pos) {
-          std::string surface = extractSubstring(codepoints, start_pos, end_pos);
-          if (surface.empty())
-            continue;
-          const auto& all_cands = inflection.analyze(surface);
-          for (const auto& ic : all_cands) {
-            if (ic.confidence >= 0.3F && ic.verb_type == grammar::VerbType::IAdjective) {
-              constexpr float kCompoundAdjBaseCost = 0.5F;
-              float cost = kCompoundAdjBaseCost + (1.0F - ic.confidence) * candidate::kKanjiAdjConfScale;
-              SUZUME_DEBUG_LOG_VERBOSE("[ADJ_COMPOUND] \"" << surface << "\" cost=" << cost << " conf=" << ic.confidence
-                                                           << "\n");
-              auto adj_cand = makeIAdjCandidate(surface, start_pos, end_pos, ic.base_form, cost,
-                                                CandidateOrigin::AdjectiveI, ic.confidence, "i_adjective_compound");
-              adj_cand.has_suffix = true;
-              candidates.push_back(std::move(adj_cand));
-              goto compound_adj_done;
-            }
+    }
+    {
+      // For し: must be followed by い/く/け/か (しい-adj conjugation),
+      // NOT そ/な/て/た (suru verb + auxiliary)
+      bool valid_adj_start = (first_hira == U'い' || first_hira == U'く' || first_hira == U'け' || first_hira == U'か');
+      if (first_hira == U'し' && kanji_end + 1 < codepoints.size()) {
+        char32_t second_hira = codepoints[kanji_end + 1];
+        valid_adj_start =
+            (second_hira == U'い' || second_hira == U'く' || second_hira == U'け' || second_hira == U'か');
+      }
+      if (valid_adj_start) {
+        constexpr size_t kMaxHiraganaLen = 5;
+        // Mark existing candidates with has_suffix if they fit the compound pattern
+        for (auto& cand : candidates) {
+          size_t hira_len = cand.end - kanji_end;
+          if (hira_len <= kMaxHiraganaLen) {
+            cand.has_suffix = true;
           }
         }
-      compound_adj_done:;
+        // Generate new compound candidate if main loop didn't produce one.
+        // The 2-kanji penalty drops inflection confidence below the main loop's
+        // 0.5 threshold for compound adjectives like 薄暗い, 物悲しく.
+        // Use tighter hiragana limits for い/く/か/け (max 2) to prevent
+        // false matches like 一枚ください. し gets more room (max 5) for しかった.
+        if (candidates.empty()) {
+          size_t hira_limit = (first_hira == U'し') ? kMaxHiraganaLen : 2;
+          size_t max_end = std::min(hiragana_end, kanji_end + hira_limit);
+          for (size_t end_pos = max_end; end_pos > kanji_end; --end_pos) {
+            std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+            if (surface.empty())
+              continue;
+            const auto& all_cands = inflection.analyze(surface);
+            for (const auto& ic : all_cands) {
+              if (ic.confidence >= 0.3F && ic.verb_type == grammar::VerbType::IAdjective) {
+                constexpr float kCompoundAdjBaseCost = 0.5F;
+                float cost = kCompoundAdjBaseCost + (1.0F - ic.confidence) * candidate::kKanjiAdjConfScale;
+                SUZUME_DEBUG_LOG_VERBOSE("[ADJ_COMPOUND] \"" << surface << "\" cost=" << cost
+                                                             << " conf=" << ic.confidence << "\n");
+                auto adj_cand = makeIAdjCandidate(surface, start_pos, end_pos, ic.base_form, cost,
+                                                  CandidateOrigin::AdjectiveI, ic.confidence, "i_adjective_compound");
+                adj_cand.has_suffix = true;
+                candidates.push_back(std::move(adj_cand));
+                goto compound_adj_done;
+              }
+            }
+          }
+        compound_adj_done:;
+        }
       }
     }
+  skip_compound_adj:;
   }
 
   // Add emphatic variants (すごい → すごいっっ, etc.)
@@ -929,6 +946,14 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
       ke_cand.pos = core::PartOfSpeech::Adjective;
       ke_cand.lemma = cand.lemma;  // Same lemma (美しい, etc.)
       ke_cand.cost = cand.cost + candidate::kAdjKeSplitBonus;
+      // Disambiguate 〜ければ against the homographic ichidan verb 仮定形
+      // (高ければ=高い vs 受ければ=受ける). For an all-kanji stem, inflection alone
+      // produces a plausible fake ichidan (高ける). When the i-adjective base is a
+      // known dictionary adjective, this is decisively the adjective 仮定形, so make
+      // the ke-form win over the fake ichidan renyokei/kateikei verb candidates.
+      if (dict_manager != nullptr && isAdjectiveInDictionary(dict_manager, cand.lemma)) {
+        ke_cand.cost = candidate::verb_cost::kStrongBonus;  // -0.8, beats fake verb paths
+      }
       ke_cand.has_suffix = true;                            // This is a conjugated form (仮定形)
       ke_cand.extended_pos = core::ExtendedPOS::AdjKeForm;  // For bigram: AdjKeForm→ParticleConj
 #ifdef SUZUME_DEBUG_INFO

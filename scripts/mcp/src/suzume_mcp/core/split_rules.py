@@ -74,6 +74,7 @@ def _split_causative_passive(tokens: list[dict]) -> tuple[list[dict], bool]:
 
     return result, applied
 
+
 def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
     """Apply Suzume split rules to MeCab tokens.
 
@@ -213,12 +214,18 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             if verb_part in ("した", "して", "しろ"):
                 result.append({"surface": verb_part[:1], "pos": "動詞", "lemma": "する"})
                 result.append(
-                    {"surface": verb_part[1:], "pos": "助動詞" if verb_part[1:] == "た" else "助詞", "lemma": verb_part[1:]}
+                    {
+                        "surface": verb_part[1:],
+                        "pos": "助動詞" if verb_part[1:] == "た" else "助詞",
+                        "lemma": verb_part[1:],
+                    }
                 )
             elif verb_part in ("される", "された", "させ", "させる"):
                 result.append({"surface": "さ", "pos": "動詞", "lemma": "する"})
                 rest = verb_part[1:]
-                result.append({"surface": rest, "pos": "動詞", "lemma": rest + ("る" if not rest.endswith("る") else "")})
+                result.append(
+                    {"surface": rest, "pos": "動詞", "lemma": rest + ("る" if not rest.endswith("る") else "")}
+                )
             else:
                 result.append({"surface": verb_part, "pos": "動詞", "lemma": "する"})
             if applied_rule is None:
@@ -229,7 +236,7 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
         # MeCab merges verb renyokei + ない as single adjective token
         # (e.g., 揺るぎない, 何気ない), but Suzume correctly splits them
         if t.get("pos") == "形容詞" and surface in VERB_NAI_COMPOUND_ADJECTIVES:
-            verb_part = surface[:-len("ない")]
+            verb_part = surface[: -len("ない")]
             result.append({"surface": verb_part, "pos": "動詞", "lemma": verb_part})
             result.append({"surface": "ない", "pos": "助動詞", "lemma": "ない"})
             if applied_rule is None:
@@ -246,7 +253,7 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             and len(surface) >= 2
             and t.get("conj_form") == "体言接続特殊"
         ):
-            verb_part = surface[:-len("ん")]
+            verb_part = surface[: -len("ん")]
             lemma = t.get("lemma", "")
             result.append({"surface": verb_part, "pos": "動詞", "lemma": lemma})
             result.append({"surface": "ん", "pos": "助動詞", "lemma": "ん"})

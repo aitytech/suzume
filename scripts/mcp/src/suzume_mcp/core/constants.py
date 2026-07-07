@@ -296,8 +296,7 @@ HIRAGANA_COMPOUNDS: dict[str, str] = {
 }
 
 # Search-unit compounds: kanji+okurigana words MeCab splits but Suzume keeps as one token
-SEARCH_UNIT_COMPOUNDS: dict[str, str] = {
-}
+SEARCH_UNIT_COMPOUNDS: dict[str, str] = {}
 
 # Kanji prefix compounds: MeCab splits kanji prefix (接頭詞) + kana-containing noun/verb.
 # Maps prefix kanji → set of following token surfaces that form a valid compound.

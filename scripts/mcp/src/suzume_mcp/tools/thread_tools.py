@@ -438,16 +438,12 @@ async def thread_next(
     return _json_result(result)
 
 
-
-
 @mcp.tool()
 async def thread_reset_progress() -> str:
     """Reset thread check progress to start from the beginning."""
     if PROGRESS_FILE.exists():
         PROGRESS_FILE.unlink()
     return _json_result({"status": "ok", "message": "Progress reset"})
-
-
 
 
 # ============================================================================
@@ -468,7 +464,6 @@ def _next_bug_id(bugs_dir: Path) -> int:
         if m:
             return int(m.group(1)) + 1
     return 1
-
 
 
 def _list_bugs(bugs_dir: Path) -> list[dict]:
@@ -554,9 +549,7 @@ async def thread_report_bug(
 
 
 @mcp.tool()
-async def thread_bugs_list(
-    limit: int = 50, diff_type: str = "", pattern: str = "", source: str = "thread"
-) -> str:
+async def thread_bugs_list(limit: int = 50, diff_type: str = "", pattern: str = "", source: str = "thread") -> str:
     """List reported grammar bugs.
 
     Args:
@@ -667,11 +660,13 @@ async def thread_bugs_sweep(source: str = "thread") -> str:
                 resolved.append(filepath.name)
                 filepath.unlink()
             else:
-                still_open.append({
-                    "file": filepath.name,
-                    "text": text,
-                    "diff_type": result.get("diff_type", "unknown"),
-                })
+                still_open.append(
+                    {
+                        "file": filepath.name,
+                        "text": text,
+                        "diff_type": result.get("diff_type", "unknown"),
+                    }
+                )
         except Exception as e:
             errors.append({"file": filepath.name, "error": str(e)})
 
@@ -686,4 +681,3 @@ async def thread_bugs_sweep(source: str = "thread") -> str:
         result_data["errors"] = errors
 
     return _json_result(result_data)
-

@@ -1212,6 +1212,135 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     break;  // Only generate one candidate per position
   }
 
+  // Generate Godan mizenkei stem candidates before なきゃ/なければ contraction
+  // E.g., やらなきゃ → やら (mizenkei of やる) + なきゃ (contraction of なければ)
+  //       やらなければ → やら (mizenkei of やる) + なけれ (ない仮定形) + ば
+  // MeCab splits: やらなきゃ → やら(動詞,五段,未然形) + なきゃ(助動詞)
+  // Pattern: A-row hiragana (mizenkei ending) + なきゃ OR + なけれ(ば)
+  // Unlike bare ない, the なきゃ/なければ contraction is an unambiguous mizenkei
+  // signal, so the mizenkei candidate receives a bonus to beat the spurious
+  // particle split (や + らなきゃ) and the fabricated ichidan reading (やらなける).
+  for (size_t end_pos = hiragana_end; end_pos >= start_pos + 2; --end_pos) {
+    // Follow pattern begins at end_pos (the mizenkei is start_pos..end_pos)
+    // なきゃ = な + き + ゃ ; なけれ = な + け + れ
+    if (end_pos + 3 > codepoints.size() || codepoints[end_pos] != U'な') {
+      continue;
+    }
+    bool is_nakya = (codepoints[end_pos + 1] == U'き' && codepoints[end_pos + 2] == U'ゃ');
+    bool is_nakere = (codepoints[end_pos + 1] == U'け' && codepoints[end_pos + 2] == U'れ');
+    if (!is_nakya && !is_nakere) {
+      continue;
+    }
+
+    // Check if position end_pos-1 is A-row hiragana (godan mizenkei ending)
+    size_t mizenkei_end = end_pos;
+    if (mizenkei_end <= start_pos) {
+      continue;
+    }
+    char32_t a_row_char = codepoints[mizenkei_end - 1];
+    if (!grammar::isARowCodepoint(a_row_char)) {
+      continue;
+    }
+
+    // Determine verb type and base suffix from the A-row character
+    grammar::VerbType verb_type = grammar::VerbType::Unknown;
+    std::string_view base_suffix;
+    switch (a_row_char) {
+      case U'わ':
+        verb_type = grammar::VerbType::GodanWa;
+        base_suffix = "う";
+        break;
+      case U'か':
+        verb_type = grammar::VerbType::GodanKa;
+        base_suffix = "く";
+        break;
+      case U'が':
+        verb_type = grammar::VerbType::GodanGa;
+        base_suffix = "ぐ";
+        break;
+      case U'さ':
+        verb_type = grammar::VerbType::GodanSa;
+        base_suffix = "す";
+        break;
+      case U'た':
+        verb_type = grammar::VerbType::GodanTa;
+        base_suffix = "つ";
+        break;
+      case U'な':
+        verb_type = grammar::VerbType::GodanNa;
+        base_suffix = "ぬ";
+        break;
+      case U'ば':
+        verb_type = grammar::VerbType::GodanBa;
+        base_suffix = "ぶ";
+        break;
+      case U'ま':
+        verb_type = grammar::VerbType::GodanMa;
+        base_suffix = "む";
+        break;
+      case U'ら':
+        verb_type = grammar::VerbType::GodanRa;
+        base_suffix = "る";
+        break;
+      default:
+        continue;  // Not a recognized mizenkei ending
+    }
+
+    // Construct mizenkei surface and base form
+    std::string mizenkei_surface = extractSubstring(codepoints, start_pos, mizenkei_end);
+    std::string stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
+    std::string base_form = stem + std::string(base_suffix);
+
+    // Validate: analyze the equivalent ない form to confirm it is a valid verb.
+    // E.g., for やら validate やらない → やる (godan-ra). Dictionary is a fallback.
+    std::string full_form = mizenkei_surface + "ない";
+    const auto& analysis = inflection.analyze(full_form);
+    bool is_valid_verb = false;
+    for (const auto& cand : analysis) {
+      if (cand.verb_type == verb_type && cand.base_form == base_form) {
+        is_valid_verb = true;
+        break;
+      }
+    }
+    bool is_in_dict = vh::isVerbInDictionary(dict_manager, base_form);
+    if (!is_valid_verb) {
+      is_valid_verb = is_in_dict;
+    }
+    // GodanSa mizenkei on pure hiragana is almost always spurious (さ is the
+    // causative marker or さん honorific), require dictionary confirmation.
+    if (verb_type == grammar::VerbType::GodanSa && !is_in_dict && grammar::isPureHiragana(stem)) {
+      continue;
+    }
+    if (!is_valid_verb) {
+      continue;
+    }
+
+    // Get lemma from dictionary entry if the mizenkei surface is registered
+    std::string lemma = base_form;
+    if (dict_manager != nullptr) {
+      auto results = dict_manager->lookup(mizenkei_surface, 0);
+      for (const auto& result : results) {
+        if (result.entry != nullptr && result.entry->surface == mizenkei_surface &&
+            result.entry->pos == core::PartOfSpeech::Verb && !result.entry->lemma.empty()) {
+          lemma = result.entry->lemma;
+          break;
+        }
+      }
+    }
+
+    // The なきゃ/なければ contraction is an unambiguous mizenkei signal, so give a
+    // bonus (verified verbs stronger) to beat the particle split や + らなきゃ.
+    float cost = is_in_dict ? candidate::verb_cost::kStrongBonus : candidate::verb_cost::kStandardBonus;
+    SUZUME_DEBUG_VERBOSE_BLOCK {
+      SUZUME_DEBUG_STREAM << "[VERB_CAND] " << mizenkei_surface << " hiragana_mizenkei_nakya lemma=" << lemma
+                          << " cost=" << cost << "\n";
+    }
+    candidates.push_back(makeVerbCandidate(mizenkei_surface, start_pos, mizenkei_end, cost, lemma,
+                                           grammar::verbTypeToConjType(verb_type), true, CandidateOrigin::VerbHiragana,
+                                           0.9F, "hiragana_mizenkei_nakya", core::ExtendedPOS::VerbMizenkei));
+    break;  // Only generate one candidate per position
+  }
+
   // Generate Godan-ra ん音便 stem candidates for colloquial ん+ない pattern
   // E.g., たまんない → たまん (ん音便 of たまる) + ない (negative auxiliary)
   //       わかんない → わかん (ん音便 of わかる) + ない (negative auxiliary)
@@ -1546,6 +1675,14 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     // E.g., "せられ" should be split as せ(causative) + られ(passive), not single verb
     // MeCab-compatible split: 聞かせられた → 聞か + せ + られ + た
     if (utf8::endsWith(stem_surface, "せられ")) {
+      continue;
+    }
+
+    // Skip stems ending in なけ - this is the negative auxiliary ない kateikei (なけれ),
+    // not an ichidan verb なける. Prevents a false single-verb reading for
+    // mizenkei + なければ: やらなければ must split as やら + なけれ(ない) + ば,
+    // never become a fabricated ichidan やらなける.
+    if (utf8::endsWith(stem_surface, "なけ")) {
       continue;
     }
 

@@ -33,6 +33,28 @@
       ],
       "id": "causative_nemurasete",
       "input": "眠らせて"
+    },
+    {
+      "description": "causative せ+ない: せ is AUX せる, not する",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "masenai",
+      "input": "読ませない"
     }
   ],
   "description": "verb_causative tests",

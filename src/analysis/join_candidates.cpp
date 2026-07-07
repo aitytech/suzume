@@ -491,6 +491,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     std::string_view v2_base_ending;              // V2 base form ending (む, す, etc.)
     bool v1_dict_verified = false;                // true if V1 was verified via dictionary (not inflection fallback)
     bool v1_embedded_verified = false;            // true if V1 was verified via an embedded dictionary verb
+    bool v1_ichidan_inflection = false;           // true if V1 is a single-kanji ichidan verb verified by inflection
   };
   V2Match best_match;
 
@@ -729,8 +730,9 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
 
     // Check if V1 base form is in dictionary
     bool v1_verified = false;
-    bool v1_dict_verified = false;      // tracks dict verification for cost calculation
-    bool v1_embedded_verified = false;  // tracks embedded dict verb verification for cost calculation
+    bool v1_dict_verified = false;       // tracks dict verification for cost calculation
+    bool v1_embedded_verified = false;   // tracks embedded dict verb verification for cost calculation
+    bool v1_ichidan_inflection = false;  // single-kanji ichidan V1 confirmed only by inflection
     if (is_sokuonbin) {
       // Try all sokuonbin-compatible godan endings
       for (char32_t ending : kSokuonbinEndings) {
@@ -867,6 +869,15 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         if (infl_result.confidence >= min_confidence) {
           if (infl_result.base_form == v1_base) {
             v1_verified = true;
+            // A single-kanji ichidan V1 (受ける, 逃げる, 助ける) confirmed by
+            // inflection is strong evidence of a real verb, on par with an
+            // embedded dictionary verb: give it the reduced penalty rather than
+            // the full inflection-only penalty so that its compounds (受け取っ+た)
+            // beat a spurious three-way split (受け+取っ+た). These common ichidan
+            // verbs are open-class and therefore absent from the dictionary.
+            if (is_ichidan && kanji_count == 1) {
+              v1_ichidan_inflection = true;
+            }
           } else if (is_sokuonbin) {
             // For sokuonbin, v1_base is just the kanji stem (e.g., 引).
             // Inflection analysis of っ-form (e.g., 引っ) gives base_form
@@ -950,6 +961,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       best_match.v2_base_ending = v2_verb.base_ending;
       best_match.v1_dict_verified = v1_dict_verified;
       best_match.v1_embedded_verified = v1_embedded_verified;
+      best_match.v1_ichidan_inflection = v1_ichidan_inflection;
     }
   }
 
@@ -1046,11 +1058,13 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // Embedded-verified V1 (a dictionary verb embedded after a leading kanji,
     // e.g., 仕立てる = 仕 + 立てる) is partial evidence: cheaper than
     // inflection-only, but still penalized relative to a dict-confirmed V1.
+    // A single-kanji ichidan V1 confirmed by inflection (受ける, 逃げる) is
+    // equally strong partial evidence and shares the reduced penalty tier.
     float v1_bonus = 0.0F;
     if (best_match.v1_dict_verified) {
       v1_bonus = opts.verified_v1_bonus;  // -0.3: reward for dictionary-confirmed V1
-    } else if (best_match.v1_embedded_verified) {
-      v1_bonus = bigram_cost::kMinor;  // +0.5: reduced penalty for embedded dict verb V1
+    } else if (best_match.v1_embedded_verified || best_match.v1_ichidan_inflection) {
+      v1_bonus = bigram_cost::kMinor;  // +0.5: reduced penalty for partial-evidence V1
     } else {
       v1_bonus = bigram_cost::kRare;  // +1.0: penalty for inflection-only V1
     }
@@ -1090,6 +1104,17 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     auto [te_stem, uses_de] =
         generateTeFormStem(best_match.compound_base, "", best_match.v2_verb_type, best_match.v2_base_ending);
 
+    // The te-form stem (e.g., 受け取っ before た) is itself the desired split
+    // candidate, so it must not carry the includes_aux merge penalty. That
+    // penalty exists only to keep the fully-merged inflected form (受け取った as
+    // one token) from beating the stem+auxiliary split; applying it to the stem
+    // as well would wrongly hand the win back to the full V1+V2+aux split when
+    // V1 is an inflection-only verb (e.g., ichidan 受ける, not in the dictionary).
+    float te_stem_cost = final_cost;
+    if (best_match.includes_aux) {
+      te_stem_cost -= bigram_cost::kMinor;
+    }
+
     // Helper lambda to add te-stem edge
     auto addTeStemEdge = [&](const std::string& stem) {
       if (stem.empty() || stem.size() >= compound_surface.size())
@@ -1113,7 +1138,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       }
 
       lattice.addEdge(stem, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(stem_end_pos),
-                      core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, dictionary::ConjugationType::None,
+                      core::PartOfSpeech::Verb, te_stem_cost, flags, compound_lemma, dictionary::ConjugationType::None,
                       core::CandidateOrigin::Unknown, 0.0F, "compound_te_stem", epos, "compound_te_stem");
       return true;
     };

@@ -119,6 +119,7 @@ def _validate_surface(word: str) -> str | None:
         return "Word must not start with '#'."
     return None
 
+
 # POS mapping: SuzumeUtils POS → dictionary format
 _DICT_POS_MAP = {
     "Noun": "NOUN",
@@ -515,7 +516,6 @@ async def dict_add(
         entry_line += f"\t{conj_type}"
 
     if user:
-
         target_file = PROJECT_ROOT / f"data/user/{user}.tsv"
         target_rel = f"data/user/{user}.tsv"
         if dry_run:
@@ -702,9 +702,7 @@ async def dict_validate(fix: bool = False) -> str:
         has_core = any(f.startswith("data/core/") for f in files)
         has_user = any(f.startswith("data/user/") for f in files)
         if has_core and has_user:
-            cross_duplicates.append(
-                {"surface": surface, "files": sorted(files)}
-            )
+            cross_duplicates.append({"surface": surface, "files": sorted(files)})
 
     result: dict = {
         "total_entries": len(entries),
@@ -1278,9 +1276,7 @@ async def dict_bulk_add(
         dry_run: Preview only.
     """
     if pos not in VALID_POS:
-        return _json_result(
-            {"status": "error", "message": f"Invalid POS: {pos}. Valid values: {', '.join(VALID_POS)}"}
-        )
+        return _json_result({"status": "error", "message": f"Invalid POS: {pos}. Valid values: {', '.join(VALID_POS)}"})
     if user and user not in USER_CATEGORIES:
         return _json_result(
             {

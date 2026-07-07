@@ -300,6 +300,13 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // Ensures 聞かせられた → 聞か+せ+られ+た over 聞か+せられた
   setCell(t, EPOS::AuxCausative, EPOS::AuxPassive, cost::kStrongBonus);
 
+  // AuxCausative → AuxNegativeNai (せ+ない, させ+ない in causative negative) - moderate bonus
+  // Ensures 読ませない → 読ま+せ+ない with せ as causative せる, not せ=する (サ変未然).
+  // せ+ない is always causative negation; する negation is しない, so no ambiguity.
+  // Parallel to AuxPassive → AuxNegativeNai; without this the VerbMizenkei→AuxNegativeNai
+  // bonus on the せ=する reading wins asymmetrically only when ない follows.
+  setCell(t, EPOS::AuxCausative, EPOS::AuxNegativeNai, cost::kModerateBonus);
+
   // AuxPassive → AuxTenseMasu (れ+ます in passive polite) - strong bonus
   // Ensures 言われます → 言わ+れ+ます over 言われ+ます
   setCell(t, EPOS::AuxPassive, EPOS::AuxTenseMasu, cost::kStrongBonus);
@@ -742,6 +749,11 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // AuxTenseTa → AuxAspectKuru (た+き) - prohibitive
   // Prevents いただき → い+た+だ+き (きた split creates standalone き entry)
   setCell(t, EPOS::AuxTenseTa, EPOS::AuxAspectKuru, cost::kAlmostNever);
+
+  // AuxTenseTa → AuxGaru (た+がる) - strong penalty
+  // Desiderative がる attaches to renyokei/stem (食べ+たがる, 怖+がる), never to
+  // past た. Prevents 食べたがる → 食べ+た+がる over 食べ+たがる (願望 auxiliary).
+  setCell(t, EPOS::AuxTenseTa, EPOS::AuxGaru, cost::kStrong);
 
   // AuxCopulaDa → AuxAspectKuru (だ+き) - prohibitive
   // Prevents いただき → い+た+だ+き

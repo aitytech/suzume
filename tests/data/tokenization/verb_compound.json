@@ -1511,6 +1511,23 @@
       ],
       "id": "ke_shita",
       "input": "味付け直した"
+    },
+    {
+      "description": "compound verb sokuonbin past stays single: 受け取っ(受け取る)+た",
+      "expected": [
+        {
+          "lemma": "受け取る",
+          "pos": "Verb",
+          "surface": "受け取っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ke_ttta",
+      "input": "受け取った"
     }
   ],
   "description": "Compound verbs",

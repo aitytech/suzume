@@ -655,15 +655,17 @@ async def test_needs_suzume_update(file: str = "", apply: bool = False) -> str:
             inp = case.get("input", "")
             if not inp:
                 continue
-            all_cases_meta.append({
-                "path": path,
-                "basename": basename,
-                "cases_key": cases_key,
-                "idx": idx,
-                "case": case,
-                "data": data,
-                "input": inp,
-            })
+            all_cases_meta.append(
+                {
+                    "path": path,
+                    "basename": basename,
+                    "cases_key": cases_key,
+                    "idx": idx,
+                    "case": case,
+                    "data": data,
+                    "input": inp,
+                }
+            )
             all_inputs.append(inp)
 
     # Batch subprocess call: one process for all inputs

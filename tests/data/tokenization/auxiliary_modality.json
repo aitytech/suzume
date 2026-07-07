@@ -1655,6 +1655,23 @@
       ],
       "id": "ji_nakattta",
       "input": "元気じゃなかった"
+    },
+    {
+      "description": "desiderative auxiliary たがる stays single AUX after renyokei",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "たがる",
+          "pos": "Auxiliary",
+          "surface": "たがる"
+        }
+      ],
+      "id": "betagaru",
+      "input": "食べたがる"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

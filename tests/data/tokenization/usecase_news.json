@@ -1684,10 +1684,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "Complex conditional - Current suzume unifies しよう and います",
       "expected": [
         {
@@ -1783,84 +1779,6 @@
       ],
       "id": "long_complex_condition",
       "input": "もし明日の天気が良ければ、公園でピクニックをしようと思っています",
-      "suzume_expected": [
-        {
-          "pos": "Adverb",
-          "surface": "もし"
-        },
-        {
-          "pos": "Noun",
-          "surface": "明日"
-        },
-        {
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "pos": "Noun",
-          "surface": "天気"
-        },
-        {
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "良ける",
-          "pos": "Verb",
-          "surface": "良けれ"
-        },
-        {
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "pos": "Noun",
-          "surface": "公園"
-        },
-        {
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "pos": "Noun",
-          "surface": "ピクニック"
-        },
-        {
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "しよ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "う"
-        },
-        {
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "思う",
-          "pos": "Verb",
-          "surface": "思っ"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "い"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
       "tags": [
         "long"
       ]

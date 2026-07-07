@@ -625,7 +625,7 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "困難 as NOUN (not ADJ), なけれ as VERB (not ADJ) - POS classification differences"
+        "reason": "suzume classifies なけれ as auxiliary (ない 仮定形) and 困難 as noun (na-adjective stem); accepted POS-limitation vs MeCab"
       },
       "description": "literary-volitional-n-split normalization (乗り越え+ん)",
       "expected": [
@@ -755,7 +755,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "なけれ"
         },
         {

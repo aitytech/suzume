@@ -223,6 +223,40 @@
       ],
       "id": "k6691katttane",
       "input": "暑かったね"
+    },
+    {
+      "description": "i-adjective kateikei ければ resolves as ADJ 高い, not fake ichidan verb",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高けれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "kereba",
+      "input": "高ければ"
+    },
+    {
+      "description": "i-adjective kateikei ければ resolves as ADJ 甘い",
+      "expected": [
+        {
+          "lemma": "甘い",
+          "pos": "Adjective",
+          "surface": "甘けれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "kereba_2",
+      "input": "甘ければ"
     }
   ],
   "description": "I-adjectives past forms (過去形) - katta forms, past negative, past with desu",

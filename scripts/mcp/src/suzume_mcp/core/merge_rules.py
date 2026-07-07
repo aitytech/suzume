@@ -901,11 +901,7 @@ def _postprocess_adj_bungo(result: list[dict], applied_rule: str | None) -> tupl
         if skip_next:
             skip_next = False
             continue
-        if (
-            curr.get("pos") == "形容詞"
-            and curr.get("conj_form") == "文語基本形"
-            and j + 1 < len(result)
-        ):
+        if curr.get("pos") == "形容詞" and curr.get("conj_form") == "文語基本形" and j + 1 < len(result):
             nxt = result[j + 1]
             ns = nxt.get("surface", "")
             if ns.startswith("い") and len(ns) > 1:
@@ -996,27 +992,20 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
         is_merge_allowed_suffix = surface in ("家", "力", "化", "法", "論", "員", "式", "感", "的")
         # Suzume design: 御 is a productive prefix that always splits off
         # (御 + 尽力, 御 + 挨拶, 御 + 協力). Skip kanji-merge after 御 prefix tokens.
-        prev_is_go_prefix = (
-            merged
-            and merged[-1].get("surface", "") == "御"
-            and merged[-1].get("pos", "") == "接頭詞"
-        )
-        if (
-            merged
-            and (
-                (
-                    regex.match(r"^[\p{Han}]+$", surface)
-                    and regex.match(r"^[\p{Han}]+$", merged[-1].get("surface", ""))
-                    and "々" not in merged[-1].get("surface", "")
-                    and merged[-1].get("pos_sub1", "") not in ("副詞可能", "固有名詞", "数")
-                    and merged[-1].get("pos", "") != "副詞"
-                    and (curr.get("pos_sub1", "") != "接尾" or is_merge_allowed_suffix)
-                    and not prev_is_go_prefix
-                )
-                or (
-                    merged[-1].get("surface", "") in _KANJI_HIRA_MERGES
-                    and surface in _KANJI_HIRA_MERGES[merged[-1]["surface"]]
-                )
+        prev_is_go_prefix = merged and merged[-1].get("surface", "") == "御" and merged[-1].get("pos", "") == "接頭詞"
+        if merged and (
+            (
+                regex.match(r"^[\p{Han}]+$", surface)
+                and regex.match(r"^[\p{Han}]+$", merged[-1].get("surface", ""))
+                and "々" not in merged[-1].get("surface", "")
+                and merged[-1].get("pos_sub1", "") not in ("副詞可能", "固有名詞", "数")
+                and merged[-1].get("pos", "") != "副詞"
+                and (curr.get("pos_sub1", "") != "接尾" or is_merge_allowed_suffix)
+                and not prev_is_go_prefix
+            )
+            or (
+                merged[-1].get("surface", "") in _KANJI_HIRA_MERGES
+                and surface in _KANJI_HIRA_MERGES[merged[-1]["surface"]]
             )
         ):
             merged[-1]["surface"] += surface
@@ -1029,9 +1018,7 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
     return merged, applied_rule
 
 
-def _postprocess_search_unit_split(
-    result: list[dict], applied_rule: str | None
-) -> tuple[list[dict], str | None]:
+def _postprocess_search_unit_split(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
     """Re-split kanji-merged tokens that absorbed part of a search-unit compound.
 
     Example: kanji-merge produces AB+C, but BC should be one token.
@@ -1096,9 +1083,7 @@ def _postprocess_ascii_dot_merge(result: list[dict], applied_rule: str | None) -
     return merged, applied_rule
 
 
-def _postprocess_onomatopoeia_tto_merge(
-    result: list[dict], applied_rule: str | None
-) -> tuple[list[dict], str | None]:
+def _postprocess_onomatopoeia_tto_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
     """Merge onomatopoeia stem + っと → Xっと (adverb).
 
     MeCab splits: どき+っと, ぱっ+と, etc.

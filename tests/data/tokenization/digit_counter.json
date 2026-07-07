@@ -11,6 +11,28 @@
       ],
       "id": "digit_jigen_2d",
       "input": "2次元"
+    },
+    {
+      "description": "counter 分間 stays atomic before verb: 3分間+続い+た",
+      "expected": [
+        {
+          "lemma": "3分間",
+          "pos": "Noun",
+          "surface": "3分間"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "3_ita",
+      "input": "3分間続いた"
     }
   ],
   "description": "digit_counter tests",

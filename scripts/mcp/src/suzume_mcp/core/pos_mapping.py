@@ -158,7 +158,6 @@ def map_mecab_pos(token: dict | str) -> str:
     if surface == "まじ" and pos == "助動詞":
         return "Adjective"
 
-
     # や (Kansai copula): 助動詞 -> Particle
     if surface == "や" and pos == "助動詞":
         token["lemma"] = "や"
@@ -218,7 +217,7 @@ def map_mecab_pos(token: dict | str) -> str:
     if pos == "名詞" and pos_sub1 == "特殊" and pos_sub2 == "助動詞語幹":
         return "Auxiliary"
 
-# 名詞,非自立,形容動詞語幹 (みたい) -> Auxiliary
+    # 名詞,非自立,形容動詞語幹 (みたい) -> Auxiliary
     if pos == "名詞" and pos_sub1 == "非自立" and pos_sub2 == "形容動詞語幹":
         return "Auxiliary"
 
@@ -330,7 +329,11 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
 
         # Fix ない after が (particle): 形容詞 -> 助動詞 (negation auxiliary)
         if surface == "ない" and pos == "形容詞":
-            if idx > 0 and tokens[idx - 1].get("surface") == "が" and tokens[idx - 1].get("pos") in ("助詞", "Particle"):
+            if (
+                idx > 0
+                and tokens[idx - 1].get("surface") == "が"
+                and tokens[idx - 1].get("pos") in ("助詞", "Particle")
+            ):
                 t["pos"] = "助動詞"
                 t["lemma"] = "ない"
 

@@ -26,9 +26,11 @@ const std::vector<IAdjSuffix> kIAdjSuffixes = {
     {"い", core::ExtendedPOS::AdjBasic},  // Base form: 美しい
     // MeCab compatibility: かった/くなかった are NOT stored as single tokens
     // They should be split: かった → かっ + た, くなかった → く + なかっ + た
-    {"かっ", core::ExtendedPOS::AdjKatt},        // Ta-connection (連用タ接続): 美しかっ+た
-    {"くない", core::ExtendedPOS::AdjBasic},     // Negative: 美しくない
-    {"くなかっ", core::ExtendedPOS::AdjBasic},   // Negative past before た: 美しくなかっ+た
+    {"かっ", core::ExtendedPOS::AdjKatt},  // Ta-connection (連用タ接続): 美しかっ+た
+    // くない/くなかっ intentionally NOT expanded as single tokens: negatives must
+    // split (辛くない → 辛く + ない) per MeCab normalization. The く renyokei form
+    // below + the ない auxiliary produce the split; storing くない whole would make
+    // dict adjectives under-split (regression against Adjective_general/kunai).
     {"くて", core::ExtendedPOS::AdjRenyokei},    // Te-form: 美しくて
     {"ければ", core::ExtendedPOS::AdjKeForm},    // Conditional: 美しければ
     {"く", core::ExtendedPOS::AdjRenyokei},      // Adverbial/Renyokei: 美しく
