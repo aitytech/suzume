@@ -596,6 +596,18 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       skip_single_char = true;
     }
   }
+  // Skip kanji+い followed by た/て: this い is godan-ka i-onbin forming a
+  // past/te-form verb (続いた, 書いて), not a nominalized renyokei. True
+  // nominalized nouns (間違い, 度合い) never take past た directly.
+  // だ/で are intentionally excluded: copula after a real nominalization
+  // (度合いだ) must keep the noun candidate, and godan-ga onbin (泳いだ)
+  // is on the だ/で side as well.
+  if (first_hiragana == U'い' && kanji_end + 1 < codepoints.size()) {
+    char32_t after_i = codepoints[kanji_end + 1];
+    if (after_i == U'た' || after_i == U'て') {
+      skip_single_char = true;
+    }
+  }
 
   if (!skip_single_char) {
     std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);

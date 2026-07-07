@@ -450,6 +450,55 @@
       ],
       "id": "raseru",
       "input": "走らせる"
+    },
+    {
+      "description": "長い間続いた - auto-generated",
+      "expected": [
+        {
+          "lemma": "長い",
+          "pos": "Adjective",
+          "surface": "長い"
+        },
+        {
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "i_ita",
+      "input": "長い間続いた"
+    },
+    {
+      "description": "間続いた - auto-generated",
+      "expected": [
+        {
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ita",
+      "input": "間続いた"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

@@ -949,13 +949,13 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     surface_bonus += cost::kRare;  // Cancel the bigram bonus
   }
 
-  // Penalty for Noun/ナ形容詞 → い (VerbRenyokei)
-  // 漢字名詞やナ形容詞語幹の後に「い」(いる連用形)が来ることは稀
-  // E.g., 上手いし should be 上手い+し, not 上手+い+し
-  // Exception: This should NOT block patterns like サ変動詞+でき (外出+でき)
+  // Penalty for Noun/ナ形容詞 → い (VerbRenyokei of いる); mirrors the
+  // Noun→AuxAspectIru bigram severity so both readings of a bare-noun-plus-い
+  // are rejected (彼が+いる needs a particle; 間続+い beaten by 間+続い).
+  // E.g., 上手いし should be 上手い+し, not 上手+い+し. Must NOT block サ変+でき (外出+でき).
   if ((prev.extended_pos == core::ExtendedPOS::AdjNaAdj || prev.extended_pos == core::ExtendedPOS::Noun) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface == "い") {
-    surface_bonus += cost::kVeryRare;
+    surface_bonus += cost::kSevere;
   }
 
   // Partial cancel for single-kanji NOUN + し pattern

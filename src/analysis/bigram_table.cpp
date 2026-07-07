@@ -582,10 +582,10 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // Passive auxiliary only follows verb mizenkei, never nouns
   setCell(t, EPOS::Noun, EPOS::AuxPassive, cost::kStrong);
 
-  // Noun → AuxAspectIru (驚+い) - moderate penalty
-  // Nouns don't directly connect to いる auxiliary; need particle (彼が+いる)
-  // Prevents 驚+い+た from beating 驚い+た for verb onbin form
-  setCell(t, EPOS::Noun, EPOS::AuxAspectIru, cost::kRare);
+  // Noun → AuxAspectIru (驚+い) - severe penalty
+  // The aspectual いる attaches only to a te-form, never to a bare noun (real
+  // path て → AuxAspectIru, 食べて+いた). Prevents 間続+い+た beating 間+続い+た.
+  setCell(t, EPOS::Noun, EPOS::AuxAspectIru, cost::kSevere);
 
   // Noun → AuxAspectKuru (先生+き) - near impossible
   // AUX_接近 (くる/き) only appears after て-form (走ってきた, 食べてくる)

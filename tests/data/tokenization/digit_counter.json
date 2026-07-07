@@ -165,6 +165,23 @@
       ],
       "id": "2_ita_2",
       "input": "2週間続いた"
+    },
+    {
+      "description": "Single-kanji i-adjective (速い) after counter stays ADJ, not fake verb",
+      "expected": [
+        {
+          "lemma": "3秒",
+          "pos": "Noun",
+          "surface": "3秒"
+        },
+        {
+          "lemma": "速い",
+          "pos": "Adjective",
+          "surface": "速い"
+        }
+      ],
+      "id": "3_i",
+      "input": "3秒速い"
     }
   ],
   "description": "digit_counter tests",
