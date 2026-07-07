@@ -240,6 +240,32 @@ bool isKanjiCodepoint(char32_t ch);
 bool isCounterKanji(char32_t cp);
 
 /**
+ * @brief Check if a codepoint is a period/duration formal-noun suffix kanji
+ *
+ * Closed class of bound formal nouns marking a span/duration ({間, 分, 秒}).
+ * Distinct from the broader isCounterKanji set: it excludes content-word heads
+ * (人, 本, ...) so that a duration suffix bound to a numeral (3時|間, 2週|間) can
+ * be prevented from heading a fake i-adjective/nominal compound without
+ * suppressing genuine compounds.
+ *
+ * @param code_point Unicode codepoint
+ * @return true if codepoint is a period/duration suffix kanji
+ */
+bool isDurationSuffixKanji(char32_t code_point);
+
+/**
+ * @brief Check if a codepoint is a numeral (Arabic or kanji)
+ *
+ * Covers half-width and full-width Arabic digits plus the basic kanji
+ * numerals (一二三四五六七八九十百千万). Used to anchor counter runs
+ * (3時間, 三十分) during candidate generation.
+ *
+ * @param code_point Unicode codepoint
+ * @return true if codepoint is a numeral
+ */
+bool isNumeralCodepoint(char32_t code_point);
+
+/**
  * @brief Check if every codepoint of a surface is katakana
  *
  * Used to merge a numeral with a following katakana noun (3キロ, 100メダル):

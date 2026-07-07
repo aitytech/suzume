@@ -226,6 +226,11 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
       codepoint = normalize::decodeUtf8(text, byte_pos);
       if (codepoint == U'度') {
         idx = byte_pos;
+      } else if (codepoint == U'間') {
+        // Duration suffix 間 (期間接尾): N年 + 間 = N年間. Same rationale as the
+        // fiscal-year 度 absorption above — keeping 年間 atomic prevents 間 from
+        // being stranded at a segment boundary (2年間続いた → 2年間 + 続い + た).
+        idx = byte_pos;
       }
     }
   }
@@ -579,6 +584,19 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
           }
         }
       }
+    }
+  }
+
+  // Duration suffix 間 (期間接尾): HH時 + 間 = HH時間, HH時MM分 + 間 = duration.
+  // Absorbing 間 into the atomic time token keeps the counter+duration together
+  // so it is not severed at the pretokenizer segment boundary — otherwise 間 is
+  // stranded at a span start and gets absorbed into a fake compound
+  // (3時間続いた → 3時 + 間続い + た instead of 3時間 + 続い + た).
+  size_t kan_pos = idx;
+  if (kan_pos < text.size()) {
+    char32_t codepoint_kan = normalize::decodeUtf8(text, kan_pos);
+    if (codepoint_kan == U'間') {
+      idx = kan_pos;
     }
   }
 

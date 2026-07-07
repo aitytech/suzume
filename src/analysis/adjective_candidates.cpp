@@ -13,6 +13,7 @@
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/patterns.h"
+#include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
 #include "suffix_candidates.h"
@@ -596,8 +597,6 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     for (const auto& cand : all_candidates) {
       // Require confidence >= 0.5 for i-adjectives
       // Base forms like 寒い get exactly 0.5, conjugated forms like 美しかった get 0.68+
-      // Require confidence >= 0.5 for i-adjectives
-      // Base forms like 寒い get exactly 0.5, conjugated forms like 美しかった get 0.68+
       if (cand.confidence >= candidate::kIAdjConfMin && cand.verb_type == grammar::VerbType::IAdjective) {
         // Filter out false positives: いたす honorific pattern
         // Invalid patterns (all have た after the candidate):
@@ -769,16 +768,17 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   //  2. Hiragana portion must be short (≤5 chars)
   if (kanji_end == start_pos + 2 && kanji_end < codepoints.size()) {
     char32_t first_hira = codepoints[kanji_end];
-    // Counter-continuation formal nouns (間/分/秒) must not head an i-adjective
-    // compound stem: "3時間続いた" would split as 3時 + 間続い(fake ADJ) instead of
-    // 3時間(counter) + 続い(verb). 間 severs the 時間/年間 counter. Allow only when
-    // the second kanji itself forms a known i-adjective (間近い → 近い is a dict adj),
-    // otherwise the compound is masking a verb renyokei (間続い ← 続く).
+    // A period/duration formal-noun suffix (間/分/秒) must not head an
+    // i-adjective compound stem: "3分間続いた" would split as 3分 + 間続い(fake
+    // ADJ) instead of 3分間 + 続い(verb), and "長い間続いた" likewise severs 間.
+    // Allow only when the second kanji itself forms a known i-adjective
+    // (間近い → 近い is a dict adj), otherwise the compound is masking a verb
+    // renyokei (間続い ← 続く).
     char32_t head_char = codepoints[start_pos];
-    if (head_char == U'間' || head_char == U'分' || head_char == U'秒') {
+    if (normalize::isDurationSuffixKanji(head_char)) {
       std::string tail_adj = extractSubstring(codepoints, start_pos + 1, kanji_end) + "い";
       if (!isAdjectiveInDictionary(dict_manager, tail_adj)) {
-        SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] counter-formal-noun head \"" << head_char << "\" not an i-adj compound\n");
+        SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] duration-suffix head \"" << head_char << "\" not an i-adj compound\n");
         goto skip_compound_adj;
       }
     }

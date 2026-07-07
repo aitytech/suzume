@@ -55,6 +55,116 @@
       ],
       "id": "6",
       "input": "令和6年度予算"
+    },
+    {
+      "description": "Duration counter 時間 not severed before i-adj-forming verb",
+      "expected": [
+        {
+          "lemma": "3時間",
+          "pos": "Noun",
+          "surface": "3時間"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "3_ita_2",
+      "input": "3時間続いた"
+    },
+    {
+      "description": "Duration counter 時間 not severed before かかる",
+      "expected": [
+        {
+          "lemma": "3時間",
+          "pos": "Noun",
+          "surface": "3時間"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "3_kakattta",
+      "input": "3時間かかった"
+    },
+    {
+      "description": "Duration counter 年間 not severed before 続く",
+      "expected": [
+        {
+          "lemma": "2年間",
+          "pos": "Noun",
+          "surface": "2年間"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "2_ita",
+      "input": "2年間続いた"
+    },
+    {
+      "description": "Multi-digit duration counter 年間 kept atomic",
+      "expected": [
+        {
+          "lemma": "10年間",
+          "pos": "Noun",
+          "surface": "10年間"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "10_ita",
+      "input": "10年間続いた"
+    },
+    {
+      "description": "Duration counter 週間 kept atomic before 続く",
+      "expected": [
+        {
+          "lemma": "2週間",
+          "pos": "Noun",
+          "surface": "2週間"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "2_ita_2",
+      "input": "2週間続いた"
     }
   ],
   "description": "digit_counter tests",

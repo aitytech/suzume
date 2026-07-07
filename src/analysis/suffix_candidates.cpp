@@ -1007,23 +1007,6 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   return candidates;
 }
 
-namespace {
-// Check if a character is a numeral (Arabic or kanji)
-bool isNumeralChar(char32_t c) {
-  // Arabic numerals (half-width and full-width)
-  if ((c >= U'0' && c <= U'9') || (c >= U'０' && c <= U'９')) {
-    return true;
-  }
-  // Kanji numerals
-  if (c == U'一' || c == U'二' || c == U'三' || c == U'四' || c == U'五' || c == U'六' || c == U'七' || c == U'八' ||
-      c == U'九' || c == U'十' || c == U'百' || c == U'千' || c == U'万') {
-    return true;
-  }
-  return false;
-}
-
-}  // namespace
-
 std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                         const std::vector<normalize::CharType>& char_types) {
   std::vector<UnknownCandidate> candidates;
@@ -1034,13 +1017,13 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
   }
 
   // First character(s) must be numeral(s)
-  if (!isNumeralChar(codepoints[start_pos])) {
+  if (!normalize::isNumeralCodepoint(codepoints[start_pos])) {
     return candidates;
   }
 
   // Find the end of the numeral sequence
   size_t numeral_end = start_pos;
-  while (numeral_end < codepoints.size() && isNumeralChar(codepoints[numeral_end])) {
+  while (numeral_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[numeral_end])) {
     ++numeral_end;
   }
 

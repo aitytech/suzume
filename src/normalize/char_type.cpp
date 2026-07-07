@@ -380,6 +380,43 @@ bool isCounterKanji(char32_t cp) {
   }
 }
 
+bool isDurationSuffixKanji(char32_t code_point) {
+  switch (code_point) {
+    case U'間':
+    case U'分':
+    case U'秒':
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool isNumeralCodepoint(char32_t code_point) {
+  // Arabic numerals (half-width and full-width)
+  if ((code_point >= U'0' && code_point <= U'9') || (code_point >= U'０' && code_point <= U'９')) {
+    return true;
+  }
+  // Kanji numerals
+  switch (code_point) {
+    case U'一':
+    case U'二':
+    case U'三':
+    case U'四':
+    case U'五':
+    case U'六':
+    case U'七':
+    case U'八':
+    case U'九':
+    case U'十':
+    case U'百':
+    case U'千':
+    case U'万':
+      return true;
+    default:
+      return false;
+  }
+}
+
 bool isAllKatakana(std::string_view surface) {
   if (surface.empty()) {
     return false;
