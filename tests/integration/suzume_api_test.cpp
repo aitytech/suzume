@@ -97,6 +97,24 @@ TEST_F(SuzumeApiTest, SetModeUpdatesTokenizerAndPostprocessor) {
   EXPECT_GT(split_results.size(), normal_results.size());
 }
 
+TEST_F(SuzumeApiTest, SuruVerbSplitsWithoutCoreDictionary) {
+  // Vanilla (core.dic disabled) must still split 管理する会社 grammatically as
+  // 管理 / する / 会社. The base form する is a closed-class irregular verb held
+  // in L1, so this does not depend on the L2 dictionary. Without a standalone
+  // する token the analyzer mis-splits into 管 / 理する / 会社.
+  SuzumeOptions opts;
+  opts.skip_user_dictionary = true;
+  opts.skip_core_dictionary = true;
+  Suzume instance(opts);
+
+  auto results = instance.analyze("管理する会社");
+  ASSERT_EQ(results.size(), 3u);
+  EXPECT_EQ(results[0].surface, "管理");
+  EXPECT_EQ(results[1].surface, "する");
+  EXPECT_EQ(results[1].pos, core::PartOfSpeech::Verb);
+  EXPECT_EQ(results[2].surface, "会社");
+}
+
 TEST_F(SuzumeApiTest, AnalyzeSimpleText) {
   Suzume instance(makeTestOptions());
   // "Tokyo is beautiful"

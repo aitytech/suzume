@@ -543,6 +543,28 @@
         "subsidiary",
         "kuru"
       ]
+    },
+    {
+      "description": "Suru base form splits cleanly between kanji nouns (vanilla-safe via L1 base form する)",
+      "expected": [
+        {
+          "lemma": "管理",
+          "pos": "Noun",
+          "surface": "管理"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "会社",
+          "pos": "Noun",
+          "surface": "会社"
+        }
+      ],
+      "id": "base_form_between_kanji_nouns",
+      "input": "管理する会社"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

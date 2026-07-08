@@ -341,6 +341,10 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       // Suru verb stem forms (サ変動詞語幹活用形) - VERB, not AUX
       verb("し", "する", EPOS::VerbRenyokei),
       verb("す", "する", EPOS::VerbShuushikei),
+      // Base form: closed-class irregular sahen. Its surface lives only in the
+      // L2 dictionary, so without it here core.dic-disabled (vanilla) parsing
+      // has no standalone する verb token and mis-splits 管理する → 管+理する.
+      verb("する", "する", EPOS::VerbShuushikei),
       verb("さ", "する", EPOS::VerbMizenkei),
       verb("せ", "する", EPOS::VerbMizenkei),  // 認識せざるを得ない
 
