@@ -60,6 +60,26 @@ if(BUILD_WASM)
   )
 endif()
 
+# Shared C-ABI library (libsuzume.dylib/.so) consumed by the Python ctypes binding
+if(BUILD_SHARED AND NOT BUILD_WASM)
+  add_library(suzume_shared SHARED
+    suzume_c.cpp
+  )
+  # No VERSION/SOVERSION: the wheel bundles a single flat libsuzume.{dylib,so}
+  # loaded by ctypes via @loader_path / $ORIGIN, not a system-installed soname.
+  set_target_properties(suzume_shared PROPERTIES
+    OUTPUT_NAME suzume
+  )
+  target_link_libraries(suzume_shared PRIVATE suzume)
+  if(APPLE)
+    # Relocatable dylib so the wheel can bundle it next to the Python package.
+    set_target_properties(suzume_shared PROPERTIES
+      INSTALL_NAME_DIR "@loader_path"
+      BUILD_WITH_INSTALL_NAME_DIR ON
+    )
+  endif()
+endif()
+
 # Independent CLI tool (suzume-cli)
 if(NOT BUILD_WASM)
   add_subdirectory(suzume-cli)

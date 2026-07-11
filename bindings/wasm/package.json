@@ -21,17 +21,15 @@
   "scripts": {
     "prepare": "simple-git-hooks || true",
     "build": "yarn build:wasm && yarn build:js",
-    "build:wasm": "emcmake cmake -B build-wasm -DBUILD_WASM=ON -DENABLE_DEBUG_INFO=OFF -DCMAKE_BUILD_TYPE=Release && cmake --build build-wasm",
+    "build:wasm": "emcmake cmake -B ../../build-wasm -DBUILD_WASM=ON -DENABLE_DEBUG_INFO=OFF -DCMAKE_BUILD_TYPE=Release ../.. && cmake --build ../../build-wasm",
     "build:js": "tsc",
-    "clean": "rm -rf dist build-wasm",
-    "lint": "biome check js/ tests/wasm/",
-    "lint:fix": "biome check --write js/ tests/wasm/",
-    "format": "biome format --write js/ tests/wasm/",
+    "clean": "rm -rf dist ../../build-wasm",
+    "lint": "biome check js/ tests/",
+    "lint:fix": "biome check --write js/ tests/",
+    "format": "biome format --write js/ tests/",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "prepack": "cp README.md .readme-backup && cp README.npm.md README.md",
-    "postpack": "mv .readme-backup README.md",
     "prepublishOnly": "yarn clean && yarn build && yarn lint && yarn test"
   },
   "keywords": [
@@ -46,7 +44,8 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/libraz/suzume.git"
+    "url": "git+https://github.com/libraz/suzume.git",
+    "directory": "bindings/wasm"
   },
   "bugs": {
     "url": "https://github.com/libraz/suzume/issues"
@@ -70,7 +69,7 @@
     "pre-commit": "yarn lint-staged"
   },
   "lint-staged": {
-    "{js,tests/wasm}/**/*.{ts,js}": [
+    "{js,tests}/**/*.{ts,js}": [
       "biome check --write"
     ]
   }

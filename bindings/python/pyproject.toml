@@ -1,0 +1,77 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "suzume"
+# Mirror of the version in the root CMakeLists.txt (single source of truth).
+# scripts/check_version_mirror.sh gates drift.
+version = "0.9.4"
+description = "Lightweight dictionary-independent Japanese morphological analyzer"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+authors = [
+    { name = "libraz", email = "libraz@libraz.net" },
+]
+readme = "README.md"
+keywords = ["japanese", "morphological-analysis", "nlp", "tokenizer", "pos-tagging"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Text Processing :: Linguistic",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://suzume.libraz.net"
+Repository = "https://github.com/libraz/suzume"
+Issues = "https://github.com/libraz/suzume/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.8",
+    "mypy>=1.13",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/suzume"]
+# The compiled shared library and dictionaries are copied in by build_wheel.sh
+# before packaging; force-include them so hatchling ships them in the wheel.
+artifacts = [
+    "src/suzume/*.dylib",
+    "src/suzume/*.so",
+    "src/suzume/*.dic",
+    "src/suzume/py.typed",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/",
+    "tests/",
+    "README.md",
+    "pyproject.toml",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+
+[tool.mypy]
+strict = true
+python_version = "3.10"
+mypy_path = "src"

@@ -19,8 +19,7 @@ int main() {
   auto morphemes = analyzer.analyze("すもももももももものうち");
 
   for (const auto& m : morphemes) {
-    std::cout << m.surface << "\t" << suzume::core::posToString(m.pos) << "\t"
-              << m.getLemma() << "\n";
+    std::cout << m.surface << "\t" << suzume::core::posToString(m.pos) << "\t" << m.getLemma() << "\n";
   }
 
   return 0;

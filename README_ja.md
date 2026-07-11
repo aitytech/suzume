@@ -2,6 +2,7 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/libraz/suzume/ci.yml?branch=main&label=CI)](https://github.com/libraz/suzume/actions)
 [![npm](https://img.shields.io/npm/v/@libraz/suzume)](https://www.npmjs.com/package/@libraz/suzume)
+[![PyPI](https://img.shields.io/pypi/v/suzume)](https://pypi.org/project/suzume/)
 [![codecov](https://codecov.io/gh/libraz/suzume/branch/main/graph/badge.svg)](https://codecov.io/gh/libraz/suzume)
 [![License](https://img.shields.io/github/license/libraz/suzume)](https://github.com/libraz/suzume/blob/main/LICENSE)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue?logo=c%2B%2B)](https://en.cppreference.com/w/cpp/17)
@@ -12,7 +13,7 @@ WebAssemblyでブラウザ上で動作する軽量な日本語トークナイザ
 
 ## 概要
 
-Suzumeは、MeCabやKuromojiなどの従来の形態素解析器が使う大規模辞書（20〜50MB超）の代わりに、文字パターン・接続規則・小規模辞書で日本語テキストをトークン化します。WASMビルドはgzip圧縮で約424KBです。
+Suzumeは、従来の辞書ベースの形態素解析器が使う大規模辞書（20〜50MB超）の代わりに、文字パターン・接続規則・小規模辞書で日本語テキストをトークン化します。WASMビルドはgzip圧縮で約424KBです。
 
 | | 従来の形態素解析器 | Suzume |
 |---|---|---|
@@ -30,15 +31,17 @@ Suzumeは、MeCabやKuromojiなどの従来の形態素解析器が使う大規�
 
 ## インストール
 
+JavaScript / TypeScript（WebAssemblyでブラウザ・Node.js対応）:
+
 ```bash
 npm install @libraz/suzume
+# または: yarn add / pnpm add / bun add @libraz/suzume
 ```
 
-または yarn/pnpm/bun:
+Python（共有ライブラリ同梱のネイティブ実装。追加依存なし）:
+
 ```bash
-yarn add @libraz/suzume
-pnpm add @libraz/suzume
-bun add @libraz/suzume
+pip install suzume
 ```
 
 ## クイックスタート
@@ -67,6 +70,22 @@ suzume.generateTags('美味しいラーメンを食べた', { pos: ['noun'] })
 suzume.generateTags('今日はいい天気ですね', { excludeBasic: true })
 // → [{ tag: '今日', pos: 'noun' }, { tag: '天気', pos: 'noun' }]
 ```
+
+### Python
+
+```python
+from suzume import Suzume
+
+with Suzume() as sz:
+    for m in sz.analyze('すもももももももものうち'):
+        print(m.surface, m.pos_ja)
+
+    # タグ抽出（.text / .pos を持つ Tag オブジェクトを返す）
+    tags = sz.generate_tags('東京に行きました')
+    print([(t.text, t.pos) for t in tags])
+```
+
+Python APIの詳細は [bindings/python/README.md](bindings/python/README.md) を参照してください。
 
 ### ブラウザ（CDN）
 

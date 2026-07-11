@@ -10,8 +10,7 @@
 
 void printMorphemes(const std::vector<suzume::core::Morpheme>& morphemes) {
   for (const auto& m : morphemes) {
-    std::cout << "  " << m.surface << " ["
-              << suzume::core::posToString(m.pos) << "]";
+    std::cout << "  " << m.surface << " [" << suzume::core::posToString(m.pos) << "]";
     if (!m.lemma.empty() && m.lemma != m.surface) {
       std::cout << " (lemma: " << m.lemma << ")";
     }
@@ -32,8 +31,7 @@ int main() {
 
   // Load user dictionary from memory (TSV format: surface\tPOS\treading)
   std::string dict_data = "初音ミク\tNOUN\tはつねみく\n";
-  if (analyzer.loadUserDictionaryFromMemory(dict_data.data(),
-                                            dict_data.size())) {
+  if (analyzer.loadUserDictionaryFromMemory(dict_data.data(), dict_data.size())) {
     std::cout << "\nWith user dictionary:\n";
     printMorphemes(analyzer.analyze(text));
   }

@@ -10,7 +10,7 @@
  * WASM function calls. This file tests the JS-specific concerns.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { Suzume } from '../../dist/index.js';
+import { Suzume } from '../dist/index.js';
 import {
   allocString,
   EXTENDED_OPTIONS_LAYOUT,

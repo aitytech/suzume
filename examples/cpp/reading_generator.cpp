@@ -23,9 +23,8 @@ int main() {
   std::cout << "------\t-------\t---\t-----\t----\n";
 
   for (const auto& m : morphemes) {
-    std::cout << m.surface << "\t" << m.reading << "\t"
-              << suzume::core::posToString(m.pos) << "\t"
-              << m.getLemma() << "\t";
+    std::cout << m.surface << "\t" << m.reading << "\t" << suzume::core::posToString(m.pos) << "\t" << m.getLemma()
+              << "\t";
 
     if (m.conj_form != suzume::grammar::ConjForm::Base) {
       std::cout << suzume::grammar::conjFormToString(m.conj_form);
@@ -41,8 +40,7 @@ int main() {
     if (m.reading.empty() || m.surface == m.reading) {
       std::cout << m.surface;
     } else {
-      std::cout << "<ruby>" << m.surface << "<rp>(</rp><rt>" << m.reading
-                << "</rt><rp>)</rp></ruby>";
+      std::cout << "<ruby>" << m.surface << "<rp>(</rp><rt>" << m.reading << "</rt><rp>)</rp></ruby>";
     }
   }
   std::cout << "\n";

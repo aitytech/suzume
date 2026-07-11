@@ -3,7 +3,7 @@
  * @brief C API implementation for Suzume
  */
 
-#include "suzume_c.h"
+#include "suzume/suzume_c.h"
 
 #include <cstddef>
 #include <cstdlib>

@@ -2,7 +2,8 @@
 # Convenience wrapper for CMake build system
 
 .PHONY: help build test clean rebuild format format-check configure \
-        wasm wasm-dict wasm-test wasm-clean wasm-rebuild dict
+        wasm wasm-dict wasm-test wasm-clean wasm-rebuild dict \
+        python-build python-test python-wheel version-check
 
 # Build directories
 BUILD_DIR := build
@@ -23,9 +24,15 @@ help:
 	@echo "  make test         - Run all tests (includes dict)"
 	@echo "  make clean        - Clean build directory"
 	@echo "  make rebuild      - Clean and rebuild"
-	@echo "  make format       - Format C++ (clang-format) and MCP server (ruff)"
-	@echo "  make format-check - Check code formatting"
+	@echo "  make format       - Auto-fix format/lint: C++, MCP, WASM, Python bindings"
+	@echo "  make format-check - Check formatting across all languages"
 	@echo "  make configure    - Configure CMake"
+	@echo "  make version-check - Verify version is consistent across binding manifests"
+	@echo ""
+	@echo "Python binding targets:"
+	@echo "  make python-build - Build the shared C-ABI library (libsuzume)"
+	@echo "  make python-test  - Run Python binding tests (pytest/ruff/mypy)"
+	@echo "  make python-wheel - Build a platform-tagged wheel"
 	@echo ""
 	@echo "WASM targets (debug info disabled for smaller binary):"
 	@echo "  make wasm         - Build WASM module (includes wasm-dict)"
@@ -77,21 +84,58 @@ clean:
 # Rebuild from scratch
 rebuild: clean build
 
-# Format code with clang-format
+# Auto-fix formatting/lint across every language in the repo:
+# C++ core (clang-format), MCP server (ruff), WASM binding (biome), Python binding (ruff).
 format:
-	@echo "Formatting code..."
-	@find src tests -type f \( -name "*.cpp" -o -name "*.h" \) | xargs $(CLANG_FORMAT) -i
+	@echo "Formatting C++ (clang-format)..."
+	@find src include tests examples -type f \( -name "*.cpp" -o -name "*.h" \) | xargs $(CLANG_FORMAT) -i
 	@echo "Formatting MCP server (ruff)..."
 	cd scripts/mcp && uv run ruff format . && uv run ruff check --fix .
+	@echo "Formatting WASM binding (biome)..."
+	cd bindings/wasm && yarn lint:fix
+	@echo "Formatting Python binding (ruff)..."
+	cd bindings/python && uv run --extra dev ruff format . && uv run --extra dev ruff check --fix .
 	@echo "Format complete!"
 
-# Check code formatting
+# Check-only counterpart for CI (same language fan-out, no writes).
 format-check:
-	@echo "Checking code formatting..."
-	@find src tests -type f \( -name "*.cpp" -o -name "*.h" \) | xargs $(CLANG_FORMAT) --dry-run --Werror
+	@echo "Checking C++ formatting (clang-format)..."
+	@find src include tests examples -type f \( -name "*.cpp" -o -name "*.h" \) | xargs $(CLANG_FORMAT) --dry-run --Werror
 	@echo "Checking MCP server formatting (ruff)..."
 	cd scripts/mcp && uv run ruff format --check . && uv run ruff check .
+	@echo "Checking WASM binding formatting (biome)..."
+	cd bindings/wasm && yarn lint
+	@echo "Checking Python binding formatting (ruff)..."
+	cd bindings/python && uv run --extra dev ruff format --check . && uv run --extra dev ruff check .
 	@echo "Format check passed!"
+
+# ============================================
+# Python binding targets
+# ============================================
+
+# Build shared library + Python package (editable) into a local venv
+python-build:
+	@echo "Building shared library for Python binding..."
+	cmake -B build-shared -DBUILD_SHARED=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release \
+		-DENABLE_DEBUG_INFO=OFF -DENABLE_DEBUG_LOG=OFF
+	cmake --build build-shared --target suzume_shared --parallel
+	@echo "Shared library built: build-shared/lib/"
+
+# Run the Python binding test suite via uv (auto-provisions dev deps)
+python-test: python-build
+	@echo "Running Python binding tests..."
+	cd bindings/python && uv run --extra dev pytest -q \
+		&& uv run --extra dev ruff check . \
+		&& uv run --extra dev ruff format --check . \
+		&& uv run --extra dev mypy src/suzume
+
+# Build a platform-tagged wheel
+python-wheel:
+	cd bindings/python && ./build_wheel.sh
+
+# Verify the version is consistent across every binding manifest
+version-check:
+	scripts/check_version_mirror.sh
 
 # ============================================
 # WASM Targets
@@ -120,12 +164,12 @@ wasm: wasm-dict wasm-configure
 	@rm -f $(WASM_BUILD_DIR)/bin/suzume-wasm.wasm $(WASM_BUILD_DIR)/bin/suzume-wasm.js
 	cmake --build $(WASM_BUILD_DIR) --parallel
 	@echo "WASM build complete!"
-	@ls -lh dist/suzume-wasm.wasm dist/suzume.js
+	@ls -lh bindings/wasm/dist/suzume-wasm.wasm bindings/wasm/dist/suzume.js
 
 # Run WASM tests
 wasm-test: wasm
 	@echo "Running WASM tests..."
-	yarn test
+	cd bindings/wasm && yarn build:js && yarn test
 	@echo "WASM tests complete!"
 
 # Clean WASM build

@@ -1,0 +1,17 @@
+# Bundled build artifacts (produced by build_wheel.sh)
+src/suzume/*.dylib
+src/suzume/*.so
+src/suzume/*.dic
+
+# Wheel / build output
+dist/
+build/
+*.egg-info/
+
+# Environments and caches
+.venv/
+__pycache__/
+*.py[oc]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/

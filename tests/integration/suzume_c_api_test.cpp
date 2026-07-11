@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstring>
 
-#include "suzume_c.h"
+#include "suzume/suzume_c.h"
 
 namespace {
 

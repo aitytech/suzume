@@ -10,19 +10,30 @@ permissions:
   id-token: write
 
 jobs:
-  publish:
+  verify-version:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - name: Verify version matches tag
+      - name: Verify tag matches the canonical version and all mirrors
+        env:
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "::error::Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
+          TAG_VERSION="${REF_NAME#v}"
+          CMAKE_VERSION=$(grep -Eo 'project\(suzume VERSION [0-9]+\.[0-9]+\.[0-9]+' CMakeLists.txt | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+          if [ "$TAG_VERSION" != "$CMAKE_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match CMakeLists.txt version ($CMAKE_VERSION)"
             exit 1
           fi
+          scripts/check_version_mirror.sh
+
+  publish-npm:
+    needs: verify-version
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/wasm
+    steps:
+      - uses: actions/checkout@v7
 
       - uses: mymindstorm/setup-emsdk@v16
 
@@ -35,29 +46,67 @@ jobs:
       - run: corepack enable
       - run: corepack prepare yarn@4.12.0 --activate
 
-      - uses: actions/cache@v6
-        with:
-          path: |
-            .yarn/cache
-            node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
       - name: Build native and compile dictionaries
+        working-directory: ${{ github.workspace }}
         run: |
           cmake -B build -DBUILD_WASM=OFF
           cmake --build build --parallel
           cmake --build build --target build-dict
 
       - name: Run C++ tests
+        working-directory: ${{ github.workspace }}
         run: ctest --test-dir build --output-on-failure
 
       - run: yarn install --immutable
       - run: yarn lint
       - run: yarn build
       - run: yarn test
+      - run: npm publish --access public --provenance
 
+  build-wheels:
+    needs: verify-version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-14   # arm64
+          - os: macos-13   # x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: pip install wheel
+      - name: Build platform wheel
+        working-directory: bindings/python
+        run: ./build_wheel.sh
+      - uses: actions/upload-artifact@v5
+        with:
+          name: wheels-${{ matrix.os }}
+          path: bindings/python/dist/*.whl
+
+  publish-pypi:
+    needs: build-wheels
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+
+  github-release:
+    needs: [publish-npm, publish-pypi]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
@@ -66,5 +115,3 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - run: npm publish --access public --provenance

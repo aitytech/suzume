@@ -33,8 +33,7 @@ int main() {
   std::unordered_map<std::string, std::vector<int>> index;
 
   suzume::postprocess::TagGeneratorOptions tag_opts;
-  tag_opts.pos_filter = suzume::postprocess::kTagPosNoun |
-                        suzume::postprocess::kTagPosVerb;
+  tag_opts.pos_filter = suzume::postprocess::kTagPosNoun | suzume::postprocess::kTagPosVerb;
   tag_opts.exclude_basic = true;
   tag_opts.use_lemma = true;
   tag_opts.min_tag_length = 2;
@@ -51,7 +50,8 @@ int main() {
   for (const auto& [tag, doc_ids] : index) {
     std::cout << "  " << tag << " -> [";
     for (size_t i = 0; i < doc_ids.size(); ++i) {
-      if (i > 0) std::cout << ", ";
+      if (i > 0)
+        std::cout << ", ";
       std::cout << doc_ids[i];
     }
     std::cout << "]\n";

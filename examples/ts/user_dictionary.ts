@@ -6,7 +6,7 @@
  *
  * Run: npx tsx examples/ts/user_dictionary.ts
  */
-import { Suzume } from '../../dist/index.js';
+import { Suzume } from '../../bindings/wasm/dist/index.js';
 
 const suzume = await Suzume.create();
 

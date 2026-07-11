@@ -1,4 +1,4 @@
-import createModule from '../../dist/suzume.js';
+import createModule from '../dist/suzume.js';
 
 export interface WasmModule {
   cwrap: (

@@ -7,10 +7,10 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-# Read version from package.json (single source of truth)
-file(READ "${CMAKE_SOURCE_DIR}/package.json" PACKAGE_JSON)
-string(REGEX MATCH "\"version\": *\"([0-9]+\\.[0-9]+\\.[0-9]+)\"" _ "${PACKAGE_JSON}")
-project(suzume VERSION ${CMAKE_MATCH_1} LANGUAGES CXX)
+# Version is the single source of truth here and is mirrored into every binding
+# manifest (bindings/wasm/package.json, bindings/python/pyproject.toml). Keep them
+# in lockstep; scripts/check_version_mirror.sh gates drift.
+project(suzume VERSION 0.9.4 LANGUAGES CXX)
 
 # Use C++17 standard
 set(CMAKE_CXX_STANDARD 17)
@@ -20,7 +20,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Build options
 option(BUILD_TESTING "Build tests" ON)
 option(BUILD_WASM "Build for WebAssembly" OFF)
+option(BUILD_SHARED "Build the shared C-ABI library (libsuzume) for ctypes bindings" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
+
+# The shared C-ABI library links the static core objects, so they must be PIC.
+if(BUILD_SHARED)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 # Default debug features OFF for WASM, ON otherwise
 if(BUILD_WASM)
@@ -129,9 +135,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Source directories
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
+set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-# Include directories
-include_directories(${SOURCE_DIR})
+# Include directories: src/ for internal headers, include/ for the public C ABI header
+include_directories(${SOURCE_DIR} ${INCLUDE_DIR})
 
 # WASM configuration
 if(BUILD_WASM)
@@ -172,7 +179,7 @@ if(BUILD_WASM)
   endif()
 
   # Output directory for npm package
-  set(WASM_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/dist")
+  set(WASM_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/bindings/wasm/dist")
 endif()
 
 # Add subdirectories

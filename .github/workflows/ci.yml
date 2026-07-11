@@ -18,6 +18,9 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/wasm
     steps:
       - uses: actions/checkout@v7
       - run: corepack enable
@@ -25,6 +28,7 @@ jobs:
         with:
           node-version: 22
           cache: yarn
+          cache-dependency-path: bindings/wasm/yarn.lock
       - run: yarn install --immutable
       - run: yarn lint
 
@@ -35,6 +39,8 @@ jobs:
       # Ratchet on hardcoded word tests / raw score literals / file length,
       # plus WASM-core purity (no unguarded file-I/O headers). See CLAUDE.md.
       - run: scripts/check_code_guardrails.sh
+      # Version must stay in lockstep across every binding manifest.
+      - run: scripts/check_version_mirror.sh
 
   build-and-test:
     runs-on: ubuntu-latest
@@ -46,6 +52,7 @@ jobs:
         with:
           node-version: 22
           cache: yarn
+          cache-dependency-path: bindings/wasm/yarn.lock
       - name: Build native and compile dictionaries
         run: |
           cmake -B build -DBUILD_WASM=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage"
@@ -58,8 +65,38 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
-      - run: yarn install --immutable
-      - run: yarn build
+      - name: Build WASM binding
+        working-directory: bindings/wasm
+        run: |
+          yarn install --immutable
+          yarn build
       - name: Check WASM size regression
-        run: scripts/check_wasm_size.sh dist/suzume-wasm.wasm
-      - run: yarn test
+        run: scripts/check_wasm_size.sh bindings/wasm/dist/suzume-wasm.wasm
+      - name: Run WASM tests
+        working-directory: bindings/wasm
+        run: yarn test
+
+  python-binding:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Build shared C-ABI library
+        run: |
+          cmake -B build-shared -DBUILD_SHARED=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_DEBUG_INFO=OFF -DENABLE_DEBUG_LOG=OFF
+          cmake --build build-shared --target suzume_shared --parallel
+      - name: Install Python binding
+        working-directory: bindings/python
+        run: pip install -e ".[dev]"
+      - name: Lint and type-check
+        working-directory: bindings/python
+        run: |
+          ruff check .
+          ruff format --check .
+          mypy src/suzume
+      - name: Run Python tests
+        working-directory: bindings/python
+        run: pytest -q
