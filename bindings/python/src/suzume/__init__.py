@@ -55,8 +55,7 @@ def _resolve_pos_filter(pos_filter: int | Iterable[str]) -> int:
             mask |= _POS_FILTER_BITS[name]
         except KeyError:
             raise ValueError(
-                f"unknown POS filter name: {name!r} "
-                f"(expected one of {sorted(_POS_FILTER_BITS)})"
+                f"unknown POS filter name: {name!r} (expected one of {sorted(_POS_FILTER_BITS)})"
             ) from None
     return mask
 

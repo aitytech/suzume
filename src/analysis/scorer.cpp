@@ -496,7 +496,8 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // The そう ending is typically from そう (様態 auxiliary), not a verb stem
   // Valid verbs ending in そう are rare and usually have kanji stems
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      utf8::endsWith(edge.surface, "そう") && edge.surface.size() >= core::kThreeJapaneseCharBytes) {  // 3+ chars (at least xそう)
+      utf8::endsWith(edge.surface, "そう") &&
+      edge.surface.size() >= core::kThreeJapaneseCharBytes) {  // 3+ chars (at least xそう)
     cost += cost::kRare;
   }
 
@@ -545,7 +546,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       grammar::containsKanji(edge.surface) &&
       (utf8::endsWith(edge.surface, "て") || utf8::endsWith(edge.surface, "で")) &&
       edge.surface.size() <= core::kFourJapaneseCharBytes) {  // Short te-forms (1-2 kanji + て/で)
-    cost += cost::kSevere;          // Very strong penalty to overcome negative costs
+    cost += cost::kSevere;                                    // Very strong penalty to overcome negative costs
   }
 
   // Penalty for kanji+hiragana verb ta-form candidates (e.g., 書いた, 泳いだ)
@@ -896,8 +897,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Prevents spurious ばなら verb candidate (ばなる godan-ra) from winning
   // over correct split ば(conditional) + なら(なる mizenkei)
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && prev.surface == "ば" &&
-      next.pos == core::PartOfSpeech::Verb &&
-      utf8::equalsAny(next.surface, {"なら", "なり", "なる", "なれ", "なっ"})) {
+      next.pos == core::PartOfSpeech::Verb && utf8::equalsAny(next.surface, {"なら", "なり", "なる", "なれ", "なっ"})) {
     surface_bonus += cost::kStrongBonus;
   }
 
@@ -1271,8 +1271,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Invalid: 願いい (連用形い + さらにい) - this suggests wrong verb base
   // Include VerbRenyokei since 願いい is sometimes assigned as renyokei of 願いう
   if ((prev.extended_pos == core::ExtendedPOS::VerbOnbinkei || prev.extended_pos == core::ExtendedPOS::VerbRenyokei) &&
-      next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
-      utf8::endsWith(prev.surface, "いい")) {
+      next.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::endsWith(prev.surface, "いい")) {
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -1668,8 +1667,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // AuxCopulaDa→VerbShuushikei has kMinor (0.5) bigram + kVeryRare (1.8) の→で surface
   // Total penalty to overcome: ~2.3
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && prev.surface == "で" &&
-      next.pos == core::PartOfSpeech::Verb &&
-      utf8::equalsAny(next.surface, {"ある", "あっ", "あろ", "あり"})) {
+      next.pos == core::PartOfSpeech::Verb && utf8::equalsAny(next.surface, {"ある", "あっ", "あろ", "あり"})) {
     surface_bonus += sc::kBonusDoubleVeryStrong;  // -3.2 to overcome ~2.3 total penalty
   }
 

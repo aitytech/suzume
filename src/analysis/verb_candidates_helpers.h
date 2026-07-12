@@ -187,7 +187,7 @@ inline bool isSuppressedSokuonOnset(const std::vector<char32_t>& codepoints, siz
  */
 inline bool embedsTeFormAuxiliary(std::string_view surface) {
   static constexpr std::string_view kPatterns[] = {
-      "ていく", "ていっ", "ていけ", "ていか",             // 〜ていく directional aspect
+      "ていく", "ていっ", "ていけ", "ていか",                // 〜ていく directional aspect
       "てもら", "てくれ", "てあげ", "てほしい", "てくださ",  // benefactive / request
   };
   for (const std::string_view pat : kPatterns) {

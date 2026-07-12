@@ -78,7 +78,9 @@ GodanVowels encodeGodanVowels(const Conjugation::GodanRow& row) {
           encodeUtf8(row.o_row)};
 }
 
-bool isGodanVerbType(VerbType type) { return Conjugation::getGodanRow(type) != nullptr; }
+bool isGodanVerbType(VerbType type) {
+  return Conjugation::getGodanRow(type) != nullptr;
+}
 
 std::string Conjugation::getStem(const std::string& base_form, VerbType type) {
   if (base_form.empty()) {
