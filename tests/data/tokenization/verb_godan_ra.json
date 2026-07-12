@@ -2256,6 +2256,28 @@
       ],
       "id": "3_kakaru",
       "input": "3週間かかる"
+    },
+    {
+      "description": "Single-kanji verb 当たる stays whole (classical たる aux must not eat verb-final たる)",
+      "expected": [
+        {
+          "lemma": "ボール",
+          "pos": "Noun",
+          "surface": "ボール"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "当たる",
+          "pos": "Verb",
+          "surface": "当たる"
+        }
+      ],
+      "id": "booru_ga_ataru",
+      "input": "ボールが当たる"
     }
   ],
   "description": "Godan Ra-row verbs (五段ラ行動詞) - verbs ending in る",

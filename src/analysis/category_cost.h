@@ -88,6 +88,12 @@ constexpr std::array<float, static_cast<size_t>(ExtendedPOS::Count_)> kCategoryC
   // bigram bonus (see bigram_table.cpp) easily outweighs this extra cost.
   table[static_cast<size_t>(ExtendedPOS::AuxClassicalNari)] = 0.7F;  // なり (文語断定)
   table[static_cast<size_t>(ExtendedPOS::AuxClassicalKeri)] = 0.4F;  // けり (文語過去/詠嘆)
+  // AuxClassicalTari (連体形 たる) is adnominal and only valid before a nominal, so it is
+  // costed high enough that standalone (sentence-final) it LOSES to a single-kanji verb
+  // reading (当たる, 隔たる) — those verbs carry a +1.0 penalty that would otherwise let
+  // 当|たる sneak past. The AuxClassicalTari->Noun/Particle bigram bonus (bigram_table.cpp)
+  // more than repays this cost when a nominal actually follows (堂々たる態度).
+  table[static_cast<size_t>(ExtendedPOS::AuxClassicalTari)] = 0.5F;  // たる (文語断定連体)
 
   // Desire/Volition
   table[static_cast<size_t>(ExtendedPOS::AuxDesireTai)] = 0.3F;   // たい

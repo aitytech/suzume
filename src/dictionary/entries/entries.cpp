@@ -282,6 +282,10 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       // Classical assertion/past なり/けり (文語断定・過去)
       aux("なり", "なり", EPOS::AuxClassicalNari),  // 終止/連体形 断定 (春なり)
       aux("けり", "けり", EPOS::AuxClassicalKeri),  // 過去・詠嘆 (なりけり)
+      // Classical タリ活用 連体形 たる (堂々たる, 確固たる). Only 連体形 is registered:
+      // 終止 たり / 未然 たら / 已然命令 たれ collide with the parallel particle たり,
+      // the conditional たら, and imperative forms, so they are intentionally omitted.
+      aux("たる", "たり", EPOS::AuxClassicalTari),
 
       // Past/Completion - た (過去・完了)
       aux("た", "た", EPOS::AuxTenseTa),

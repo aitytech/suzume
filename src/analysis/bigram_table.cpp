@@ -875,6 +875,13 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // Noun → AuxConjectureRashii (春+らしい) - strong bonus
   setCell(t, EPOS::Noun, EPOS::AuxConjectureRashii, cost::kStrongBonus);
 
+  // AuxAspectIru → AuxConjectureRashii/Mitai (ている+らしい/みたい) - mirror the
+  // VerbShuushikei rows above so the aspectual reading of the 補助動詞 いる is not
+  // undercut at the following conjecture aux. Without these, the Aux→Aux base cost
+  // cancels いる's aspect bonus and the main-verb いる reading wrongly wins.
+  setCell(t, EPOS::AuxAspectIru, EPOS::AuxConjectureRashii, cost::kModerateBonus);
+  setCell(t, EPOS::AuxAspectIru, EPOS::AuxConjectureMitai, cost::kStrongBonus);
+
   // AuxConjectureMitai → AuxCopulaDa (みたい+な) - strong bonus for MeCab-compatible split
   // MeCab splits みたいな as みたい + な(連体形 of だ)
   setCell(t, EPOS::AuxConjectureMitai, EPOS::AuxCopulaDa, cost::kStrongBonus);
@@ -1081,6 +1088,20 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // fallback penalty that makes the whole thing collapse into one unsplit
   // kanji_hira_compound NOUN token (e.g. 春 with no dictionary entry of its own).
   setCell(t, EPOS::AuxClassicalNari, EPOS::AuxClassicalKeri, cost::kExtremeBonus);
+
+  // Classical タリ活用 連体形 たる (堂々たる, 確固たる, 暗澹たる). It is adnominal, so it
+  // MUST be followed by a nominal (…たる態度) or the special particle や (…たるや). Keying
+  // the bonus on this RIGHT-hand context — not on the preceding noun — is what separates
+  // the auxiliary from a single-kanji-stem verb: sentence-final 当たる/隔たる have nothing
+  // after たる, so they keep the verb reading, while 堂々たる態度 gets the boost. (A
+  // left-side Noun→たる bonus cannot make this distinction: the single-kanji verb reading
+  // 当たる is itself heavily penalized, so any left bonus wrongly flips it to 当|たる.)
+  // A Suffix→たる bonus IS safe (a single-kanji verb stem is a Noun, never a Suffix) and
+  // keeps the nominalizer さ as a Suffix in 美しさ+たる (…さたるや).
+  setCell(t, EPOS::Suffix, EPOS::AuxClassicalTari, cost::kStrongBonus);
+  setCell(t, EPOS::AuxClassicalTari, EPOS::Noun, cost::kStrongBonus);
+  setCell(t, EPOS::AuxClassicalTari, EPOS::ParticleBinding, cost::kStrongBonus);
+  setCell(t, EPOS::AuxClassicalTari, EPOS::ParticleCase, cost::kStrongBonus);
 
   return t;
 }

@@ -3125,10 +3125,6 @@
       "input": "ご査収くださいますようお願い申し上げます。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "たる + 漢語 (tari adjective)",
       "expected": [
         {
@@ -3173,42 +3169,7 @@
         }
       ],
       "id": "taru_chide_ni_ita",
-      "input": "暗澹たる気持ちで帰途に就いた。",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "暗澹"
-        },
-        {
-          "pos": "Verb",
-          "surface": "たる"
-        },
-        {
-          "pos": "Noun",
-          "surface": "気持ち"
-        },
-        {
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "pos": "Noun",
-          "surface": "帰途"
-        },
-        {
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "就く",
-          "pos": "Verb",
-          "surface": "就い"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "暗澹たる気持ちで帰途に就いた。"
     },
     {
       "accepted_diff": {
@@ -4670,7 +4631,7 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
+        "reason": "美し(adj-stem as noun) and がたい(compound adj suffix) POS limitations; たる/さ now correct"
       },
       "description": "文語: たるや pattern, がたい suffix, POS diffs",
       "expected": [
@@ -4724,30 +4685,37 @@
       "input": "その美しさたるや、筆舌に尽くしがたい。",
       "suzume_expected": [
         {
+          "lemma": "その",
           "pos": "Determiner",
           "surface": "その"
         },
         {
+          "lemma": "美し",
           "pos": "Noun",
           "surface": "美し"
         },
         {
+          "lemma": "さ",
           "pos": "Suffix",
           "surface": "さ"
         },
         {
-          "pos": "Verb",
+          "lemma": "たり",
+          "pos": "Auxiliary",
           "surface": "たる"
         },
         {
+          "lemma": "や",
           "pos": "Particle",
           "surface": "や"
         },
         {
+          "lemma": "筆舌",
           "pos": "Noun",
           "surface": "筆舌"
         },
         {
+          "lemma": "に",
           "pos": "Particle",
           "surface": "に"
         },
@@ -4757,6 +4725,7 @@
           "surface": "尽くし"
         },
         {
+          "lemma": "がたい",
           "pos": "Other",
           "surface": "がたい"
         }

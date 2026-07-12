@@ -132,6 +132,60 @@
       ],
       "id": "zaruwoenakatta_godan_ka",
       "input": "行かざるを得なかった"
+    },
+    {
+      "description": "ている+らしい: 補助動詞 いる stays Auxiliary before conjecture aux",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        }
+      ],
+      "id": "te_iru_rashii_aux",
+      "input": "食べているらしい"
+    },
+    {
+      "description": "Existence verb いる stays Verb before らしい (minimal pair vs te_iru_rashii_aux)",
+      "expected": [
+        {
+          "lemma": "猫",
+          "pos": "Noun",
+          "surface": "猫"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "いる"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        }
+      ],
+      "id": "neko_ga_iru_rashii",
+      "input": "猫がいるらしい"
     }
   ],
   "description": "verb_auxiliary tests",
