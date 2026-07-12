@@ -1215,6 +1215,43 @@
       ],
       "id": "ga_kareru",
       "input": "意見が分かれる"
+    },
+    {
+      "description": "Isolated past of ichidan 分かれる splits (not absorbed by godan 分かる homograph)",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "二つ",
+          "pos": "Noun",
+          "surface": "二つ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "分かれる",
+          "pos": "Verb",
+          "surface": "分かれ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "michi_futatsu_ni_kareta",
+      "input": "道が二つに分かれた"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",

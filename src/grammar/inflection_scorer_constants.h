@@ -364,9 +364,10 @@ constexpr float kPenaltyIchidanTeStemBaseInvalid = scale::kStrong + scale::kTriv
 // e.g., 公園で = NOUN + copula, 嫌でない = 嫌 + で + ない
 constexpr float kPenaltyIchidanCopulaDePattern = scale::kSevere + scale::kTrivial * 2;  // 0.70F
 
-// Ichidan stems cannot end in u-row hiragana (う, く, す, つ, etc.)
-// U-row endings are Godan dictionary forms (読む, 書く, 話す, etc.)
-constexpr float kPenaltyIchidanURowStemInvalid = scale::kStrong + scale::kTrivial;  // 0.50F
+// Ichidan verb stems can only end in i-row or e-row hiragana (見, 食べ, 起き, 分かれ).
+// Any other final hiragana — a-row (分か), u-row (読む), o-row, or ん — is a Godan
+// conjugation shape, so an Ichidan analysis is grammatically impossible.
+constexpr float kPenaltyIchidanInvalidRowStem = scale::kStrong + scale::kTrivial;  // 0.50F
 
 // Single-kanji Ichidan stem with onbinkei context (侍で as Ichidan) is wrong
 constexpr float kPenaltyIchidanSingleKanjiOnbinInvalid = scale::kSevere;
