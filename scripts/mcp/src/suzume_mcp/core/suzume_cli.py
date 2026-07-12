@@ -36,7 +36,7 @@ def get_suzume_surfaces(text: str, cli_path: Path | None = None, skip_user_dict:
     if not cli.exists():
         raise RuntimeError(f"Suzume CLI not found: {cli}")
 
-    cmd = [str(cli)] + (["--no-user-dict"] if skip_user_dict else []) + [text]
+    cmd = [str(cli), "analyze"] + (["--no-user-dict"] if skip_user_dict else []) + ["--", text]
     result = subprocess.run(
         cmd,
         capture_output=True,
@@ -65,7 +65,7 @@ async def get_suzume_surfaces_async(text: str, cli_path: Path | None = None, ski
     if not cli.exists():
         raise RuntimeError(f"Suzume CLI not found: {cli}")
 
-    args = (["--no-user-dict"] if skip_user_dict else []) + [text]
+    args = ["analyze"] + (["--no-user-dict"] if skip_user_dict else []) + ["--", text]
     proc = await asyncio.create_subprocess_exec(
         str(cli),
         *args,
@@ -102,7 +102,7 @@ async def get_suzume_debug_info(text: str, cli_path: Path | None = None, skip_us
     env = os.environ.copy()
     env["SUZUME_DEBUG"] = "2"
 
-    args = (["--no-user-dict"] if skip_user_dict else []) + [text]
+    args = ["analyze"] + (["--no-user-dict"] if skip_user_dict else []) + ["--", text]
     proc = await asyncio.create_subprocess_exec(
         str(cli),
         *args,

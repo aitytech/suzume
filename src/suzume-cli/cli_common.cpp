@@ -91,36 +91,78 @@ std::string jsonEscape(std::string_view value) {
   std::ostringstream out;
   out << std::hex << std::setfill('0');
 
-  for (unsigned char chr : value) {
-    switch (chr) {
-      case '"':
-        out << "\\\"";
-        break;
-      case '\\':
-        out << "\\\\";
-        break;
-      case '\b':
-        out << "\\b";
-        break;
-      case '\f':
-        out << "\\f";
-        break;
-      case '\n':
-        out << "\\n";
-        break;
-      case '\r':
-        out << "\\r";
-        break;
-      case '\t':
-        out << "\\t";
-        break;
-      default:
-        if (chr < 0x20) {
-          out << "\\u" << std::setw(4) << static_cast<int>(chr);
-        } else {
-          out << static_cast<char>(chr);
+  size_t idx = 0;
+  while (idx < value.size()) {
+    unsigned char chr = static_cast<unsigned char>(value[idx]);
+
+    // ASCII range: apply JSON escaping for control/special characters.
+    if (chr < 0x80) {
+      switch (chr) {
+        case '"':
+          out << "\\\"";
+          break;
+        case '\\':
+          out << "\\\\";
+          break;
+        case '\b':
+          out << "\\b";
+          break;
+        case '\f':
+          out << "\\f";
+          break;
+        case '\n':
+          out << "\\n";
+          break;
+        case '\r':
+          out << "\\r";
+          break;
+        case '\t':
+          out << "\\t";
+          break;
+        default:
+          if (chr < 0x20) {
+            out << "\\u" << std::setw(4) << static_cast<int>(chr);
+          } else {
+            out << static_cast<char>(chr);
+          }
+          break;
+      }
+      ++idx;
+      continue;
+    }
+
+    // Multi-byte UTF-8: determine the expected sequence length from the lead
+    // byte, then verify every continuation byte before passing it through.
+    size_t seq_len = 0;
+    if ((chr & 0xE0) == 0xC0) {
+      seq_len = 2;
+    } else if ((chr & 0xF0) == 0xE0) {
+      seq_len = 3;
+    } else if ((chr & 0xF8) == 0xF0) {
+      seq_len = 4;
+    }
+
+    bool valid = seq_len != 0 && idx + seq_len <= value.size();
+    if (valid) {
+      for (size_t off = 1; off < seq_len; ++off) {
+        if ((static_cast<unsigned char>(value[idx + off]) & 0xC0) != 0x80) {
+          valid = false;
+          break;
         }
-        break;
+      }
+    }
+
+    if (valid) {
+      // Emit the validated multi-byte sequence unchanged.
+      for (size_t off = 0; off < seq_len; ++off) {
+        out << value[idx + off];
+      }
+      idx += seq_len;
+    } else {
+      // Replace a stray/invalid byte with the Unicode replacement character so
+      // the output stays well-formed JSON.
+      out << "\\ufffd";
+      ++idx;
     }
   }
 
@@ -168,8 +210,27 @@ CommandArgs parseArgs(int argc, char* argv[]) {
   CommandArgs args;
 
   int idx = 1;
+  bool positional_only = false;
   while (idx < argc) {
     std::string arg = argv[idx];
+
+    // After a literal "--", every remaining argument is positional text and is
+    // never interpreted as a subcommand or flag.
+    if (positional_only) {
+      if (args.command.empty()) {
+        args.command = "analyze";
+      }
+      args.args.push_back(arg);
+      ++idx;
+      continue;
+    }
+
+    // End-of-options marker.
+    if (arg == "--") {
+      positional_only = true;
+      ++idx;
+      continue;
+    }
 
     // Help flags
     if (arg == "-h" || arg == "--help") {

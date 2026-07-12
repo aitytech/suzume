@@ -314,6 +314,16 @@ bool PreTokenizer::tryMatchStorage(std::string_view text, size_t pos, PreToken& 
   }
   ++idx;
 
+  // Reject when the byte suffix is immediately followed by another ASCII letter
+  // (e.g. the 'p' of Mbps/kbps/bps), which marks a network bit-rate unit rather
+  // than a storage size; let it fall through to normal tokenization instead.
+  if (idx < text.size()) {
+    char next = text[idx];
+    if ((next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z')) {
+      return false;
+    }
+  }
+
   token.surface = std::string(text.substr(pos, idx - pos));
   token.start = pos;
   token.end = idx;
