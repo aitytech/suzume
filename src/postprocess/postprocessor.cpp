@@ -23,6 +23,53 @@ bool isCounterDurationNoun(const std::string& surface) {
   return normalize::isNumeralCodepoint(codepoints.front()) && normalize::isCounterKanji(codepoints.back());
 }
 
+// A compound-verb 連用形 (積み重ね, 組み立て, 話し合い, 繰り返し) is systematically usable as
+// a 連用形転成名詞. Its shape: starts with kanji, ends with hiragana, is composed only of
+// kanji and hiragana, and contains at least two disjoint kanji runs (V1漢字…V2漢字…). The
+// two-run gate is the compound-origin restriction: it excludes single-verb renyokei
+// (読み/書き/続け — one kanji run, genuinely verbal far more often) and hiragana-stem forms
+// (やり直し), keeping only V1+V2 compounds whose nominal reading is reliable.
+bool isCompoundRenyokeiShape(const std::string& surface) {
+  auto codepoints = normalize::toCodepoints(surface);
+  if (codepoints.size() < 3) {
+    return false;
+  }
+  if (normalize::classifyChar(codepoints.front()) != normalize::CharType::Kanji ||
+      normalize::classifyChar(codepoints.back()) != normalize::CharType::Hiragana) {
+    return false;
+  }
+  // A 連用形 ends in an i-row (godan 話し合い→い) or e-row (ichidan 積み重ね→ね, 組み立て→て)
+  // mora; a base form (終止形) ends in a う-row godan terminal (呼び出す, 受け継ぐ) or ichidan
+  // る. Reject base-form endings so a compound 終止形 the lattice still tags VerbRenyokei
+  // (呼び出す, 着付け直す) is not wrongly nominalized — only true renyokei nominalize.
+  const char32_t last_cp = codepoints.back();
+  if (last_cp == U'う' || last_cp == U'く' || last_cp == U'ぐ' || last_cp == U'す' || last_cp == U'つ' ||
+      last_cp == U'ぬ' || last_cp == U'ぶ' || last_cp == U'む' || last_cp == U'る') {
+    return false;
+  }
+  size_t kanji_runs = 0;
+  bool in_kanji_run = false;
+  for (char32_t code : codepoints) {
+    const normalize::CharType type = normalize::classifyChar(code);
+    if (type != normalize::CharType::Kanji && type != normalize::CharType::Hiragana) {
+      return false;
+    }
+    const bool is_kanji = (type == normalize::CharType::Kanji);
+    if (is_kanji && !in_kanji_run) {
+      ++kanji_runs;
+    }
+    in_kanji_run = is_kanji;
+  }
+  return kanji_runs >= 2;
+}
+
+// Right context that forces the nominal reading of a compound renyokei: a case particle
+// (が/を/に/で/へ/…) or a topic/binding particle (は/も) marking it as an argument.
+bool isNominalForcingParticle(const core::Morpheme& next) {
+  return next.pos == core::PartOfSpeech::Particle && (next.extended_pos == core::ExtendedPOS::ParticleCase ||
+                                                      next.extended_pos == core::ExtendedPOS::ParticleTopic);
+}
+
 }  // namespace
 
 Postprocessor::Postprocessor(const PostprocessOptions& options) : options_(options), lemmatizer_() {}
@@ -93,6 +140,26 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
       result[i].pos = core::PartOfSpeech::Suffix;
       result[i].extended_pos = core::ExtendedPOS::Suffix;
       result[i].lemma = "後";
+    }
+  }
+
+  // A compound-verb 連用形 (積み重ね, 組み立て, 話し合い) used as the head of a nominal phrase
+  // is a 連用形転成名詞, not a verb: 努力の積み重ね**が**, 組み立て**が**得意, 経験を積み重ね
+  // (EOS). Retag to NounVerbal with lemma = surface when such a compound-shape VerbRenyokei
+  // is at the end of the sentence or is directly marked by a case/topic particle. Verbal
+  // continuations (た/て/ながら, 連用中止 before 、, a following V2, quotative と) keep VERB.
+  // Runs after lemmatizeAll, so overwriting lemma = surface is final; the retag only fires
+  // when the right neighbor is a particle/EOS, so it never creates NOUN+NOUN adjacency that
+  // would perturb the later noun-compound merge.
+  for (size_t i = 0; i < result.size(); ++i) {
+    if (result[i].pos == core::PartOfSpeech::Verb && result[i].extended_pos == core::ExtendedPOS::VerbRenyokei &&
+        isCompoundRenyokeiShape(result[i].surface) &&
+        (i + 1 == result.size() || isNominalForcingParticle(result[i + 1]))) {
+      result[i].pos = core::PartOfSpeech::Noun;
+      result[i].extended_pos = core::ExtendedPOS::NounVerbal;
+      result[i].lemma = result[i].surface;
+      result[i].conj_type = dictionary::ConjugationType::None;
+      result[i].conj_form = grammar::ConjForm::Base;
     }
   }
 

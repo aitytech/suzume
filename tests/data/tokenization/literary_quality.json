@@ -776,10 +776,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "移り変わり: VERB renyokei used nominally, Suzume classifies as VERB not NOUN"
-      },
       "description": "移り変わり compound verb fix",
       "expected": [
         {
@@ -834,59 +830,7 @@
         }
       ],
       "id": "no_no_ri_wariha_ni_magurushiimonodearu",
-      "input": "世の中の移り変わりは誠に目まぐるしいものである",
-      "suzume_expected": [
-        {
-          "lemma": "世の中",
-          "pos": "Noun",
-          "surface": "世の中"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "移り変わる",
-          "pos": "Verb",
-          "surface": "移り変わり"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "誠",
-          "pos": "Noun",
-          "surface": "誠"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "目まぐるしい",
-          "pos": "Adjective",
-          "surface": "目まぐるしい"
-        },
-        {
-          "lemma": "もの",
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        }
-      ]
+      "input": "世の中の移り変わりは誠に目まぐるしいものである"
     },
     {
       "accepted_diff": {

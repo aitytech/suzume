@@ -1766,6 +1766,141 @@
       ],
       "id": "keikaku_wo_uchitateta",
       "input": "計画を打ち立てた"
+    },
+    {
+      "description": "compound renyokei 積み重ね nominalized after の/before が",
+      "expected": [
+        {
+          "lemma": "日々",
+          "pos": "Noun",
+          "surface": "日々"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "積み重ね",
+          "pos": "Noun",
+          "surface": "積み重ね"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "大切",
+          "pos": "Adjective",
+          "surface": "大切"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "no_mi_nega_da",
+      "input": "日々の積み重ねが大切だ"
+    },
+    {
+      "description": "compound renyokei stays VERB before た (guard)",
+      "expected": [
+        {
+          "lemma": "実績",
+          "pos": "Noun",
+          "surface": "実績"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "積み重ねる",
+          "pos": "Verb",
+          "surface": "積み重ね"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_mi_neta",
+      "input": "実績を積み重ねた"
+    },
+    {
+      "description": "compound verb 組み立てる base-form lemma (not 組み立る)",
+      "expected": [
+        {
+          "lemma": "部品",
+          "pos": "Noun",
+          "surface": "部品"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "組み立てる",
+          "pos": "Verb",
+          "surface": "組み立てる"
+        }
+      ],
+      "id": "wo_mi_teru",
+      "input": "部品を組み立てる"
+    },
+    {
+      "description": "godan compound renyokei 話し合い nominalized before を",
+      "expected": [
+        {
+          "lemma": "話し合い",
+          "pos": "Noun",
+          "surface": "話し合い"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続け"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shi_iwo_keta",
+      "input": "話し合いを続けた"
+    },
+    {
+      "description": "compound renyokei 組み立て nominalized before を",
+      "expected": [
+        {
+          "lemma": "組み立て",
+          "pos": "Noun",
+          "surface": "組み立て"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始める"
+        }
+      ],
+      "id": "mi_tewo_meru",
+      "input": "組み立てを始める"
     }
   ],
   "description": "Compound verbs",
