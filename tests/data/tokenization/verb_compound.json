@@ -1950,6 +1950,50 @@
       ],
       "id": "wo_kizuri_shita",
       "input": "机を引きずり出した"
+    },
+    {
+      "description": "sokuonbin compound V1 (引っ張る) + subsidiary chains into one token",
+      "expected": [
+        {
+          "lemma": "部屋",
+          "pos": "Noun",
+          "surface": "部屋"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "引っ張り出す",
+          "pos": "Verb",
+          "surface": "引っ張り出す"
+        }
+      ],
+      "id": "kara_tt_ri_su",
+      "input": "部屋から引っ張り出す"
+    },
+    {
+      "description": "sokuonbin compound chain 引っ張り込む",
+      "expected": [
+        {
+          "lemma": "仲間",
+          "pos": "Noun",
+          "surface": "仲間"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "引っ張り込む",
+          "pos": "Verb",
+          "surface": "引っ張り込む"
+        }
+      ],
+      "id": "ni_tt_ri_mu",
+      "input": "仲間に引っ張り込む"
     }
   ],
   "description": "Compound verbs",

@@ -507,11 +507,53 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       best_len = res.length;
       dict_compound_v1_lemma = res.entry->lemma;
     }
-    if (best_len > 0) {
+    // Only adopt the dict V1 when a further kanji-written verb follows (出す, 回す): the
+    // subsidiary chain is what this path is for. A hiragana continuation is an auxiliary
+    // (引きずり|ます) that the plain dict renyokei edge already handles, so leave it alone.
+    if (best_len > 0 && char_types[start_pos + best_len] == CharType::Kanji) {
       v2_start = start_pos + best_len;
       is_sokuonbin = false;
       is_ichidan = true;  // makes v1_renyokei_end == v2_start_byte below (multi-hiragana stem)
       dict_compound_v1 = true;
+    }
+  }
+
+  // Sokuonbin compound V1: 単漢字 + っ + 漢字 + 連用形 (引っ張り) whose embedded second verb
+  // (張る) is dict-verified. The sokuonbin compound 引っ張る is rule-derivable, not in the
+  // dictionary, so the branch above misses it; here the whole 引っ張り becomes V1 so a further
+  // subsidiary (出す) chains → 引っ張り出す. The sokuon between two kanji is the compound
+  // signal; a single sokuonbin compound with no trailing verb (突っ込み) is left untouched.
+  if (!dict_compound_v1 && kanji_end == start_pos + 1 && kanji_end < codepoints.size() &&
+      codepoints[kanji_end] == U'っ') {
+    size_t k2_start = kanji_end + 1;
+    if (k2_start < char_types.size() && char_types[k2_start] == CharType::Kanji) {
+      size_t k2_end = findCharRegionEnd(char_types, k2_start, 3, CharType::Kanji);
+      // Require a further kanji-written verb after the renyokei (引っ張り + 出す): this path
+      // only chains a trailing subsidiary. Without it, 引っ越しました (引っ越す + aux) would be
+      // hijacked and the plain 引っ越す compound lost.
+      if (k2_end < codepoints.size() && k2_end + 1 < codepoints.size() &&
+          char_types[k2_end] == CharType::Hiragana && char_types[k2_end + 1] == CharType::Kanji) {
+        char32_t base2 = 0;
+        for (const auto& pat : kGodanRenyokei) {
+          if (pat.renyokei == codepoints[k2_end]) {
+            base2 = pat.base;
+            break;
+          }
+        }
+        if (base2 != 0) {
+          size_t k2_start_byte = charPosToBytePos(codepoints, k2_start);
+          size_t k2_end_byte = charPosToBytePos(codepoints, k2_end);
+          std::string embedded2(text.substr(k2_start_byte, k2_end_byte - k2_start_byte));
+          embedded2 += normalize::utf8::encode({base2});
+          if (dict_manager.lookupExact(embedded2, core::PartOfSpeech::Verb) != nullptr) {
+            v2_start = k2_end + 1;
+            is_sokuonbin = false;
+            is_ichidan = true;
+            dict_compound_v1 = true;
+            dict_compound_v1_lemma = embedded2;  // best-effort; unused once verified
+          }
+        }
+      }
     }
   }
 
