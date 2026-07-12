@@ -210,8 +210,11 @@ std::vector<std::string> Suzume::dictionaryWarnings() const {
 }
 
 std::vector<core::Morpheme> Suzume::analyze(std::string_view text) const {
-  auto morphemes = impl_->analyzer.analyze(text);
-  return impl_->postprocessor.process(morphemes);
+  auto result = impl_->analyzer.analyze(text);
+  if (!result.hasValue()) {
+    return {};
+  }
+  return impl_->postprocessor.process(result.value());
 }
 
 std::vector<core::Morpheme> Suzume::analyzeDebug(std::string_view text, core::Lattice* out_lattice) const {
@@ -220,16 +223,22 @@ std::vector<core::Morpheme> Suzume::analyzeDebug(std::string_view text, core::La
 }
 
 std::vector<postprocess::TagEntry> Suzume::generateTags(std::string_view text) const {
-  auto morphemes = impl_->analyzer.analyze(text);
-  auto processed = impl_->postprocessor.process(morphemes);
+  auto result = impl_->analyzer.analyze(text);
+  if (!result.hasValue()) {
+    return {};
+  }
+  auto processed = impl_->postprocessor.process(result.value());
   postprocess::TagGenerator generator(impl_->options.tag_options);
   return generator.generate(processed);
 }
 
 std::vector<postprocess::TagEntry> Suzume::generateTags(std::string_view text,
                                                         const postprocess::TagGeneratorOptions& options) const {
-  auto morphemes = impl_->analyzer.analyze(text);
-  auto processed = impl_->postprocessor.process(morphemes);
+  auto result = impl_->analyzer.analyze(text);
+  if (!result.hasValue()) {
+    return {};
+  }
+  auto processed = impl_->postprocessor.process(result.value());
   postprocess::TagGenerator generator(options);
   return generator.generate(processed);
 }

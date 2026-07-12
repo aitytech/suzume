@@ -103,13 +103,9 @@ void Analyzer::setMode(core::AnalysisMode mode) {
   tokenizer_ = std::make_unique<Tokenizer>(dict_manager_, scorer_, unknown_gen_, options_.mode);
 }
 
-std::vector<core::Morpheme> Analyzer::analyze(std::string_view text) const {
+core::Expected<std::vector<core::Morpheme>, core::Error> Analyzer::analyze(std::string_view text) const {
   if (text.empty()) {
-    return {};
-  }
-  if (!normalize::isValidUtf8(text)) {
-    SUZUME_DEBUG_LOG("[ANALYZER] Invalid UTF-8 input\n");
-    return {};
+    return std::vector<core::Morpheme>{};
   }
 
   // Normalize once up front so pretoken boundaries and morpheme offsets share a
@@ -122,11 +118,11 @@ std::vector<core::Morpheme> Analyzer::analyze(std::string_view text) const {
       SUZUME_DEBUG_STREAM << "[ANALYZER] Normalization failed: " << error.message
                           << " (code=" << static_cast<int>(error.code) << ")\n";
     }
-    return {};
+    return core::makeUnexpected(std::get<core::Error>(std::move(norm_result)));
   }
-  std::string normalized = std::get<std::string>(norm_result);
+  std::string normalized = std::get<std::string>(std::move(norm_result));
   if (normalized.empty()) {
-    return {};
+    return std::vector<core::Morpheme>{};
   }
   std::string_view norm_text = normalized;
 

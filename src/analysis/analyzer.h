@@ -8,6 +8,7 @@
 #include "analysis/scorer.h"
 #include "analysis/tokenizer.h"
 #include "analysis/unknown.h"
+#include "core/error.h"
 #include "core/morpheme.h"
 #include "core/types.h"
 #include "core/viterbi.h"
@@ -62,9 +63,10 @@ class Analyzer {
   /**
    * @brief Analyze text
    * @param text UTF-8 text
-   * @return Vector of morphemes
+   * @return Vector of morphemes on success (empty input yields an empty
+   *         vector), or the normalizer error (e.g. InvalidUtf8) on failure
    */
-  std::vector<core::Morpheme> analyze(std::string_view text) const;
+  core::Expected<std::vector<core::Morpheme>, core::Error> analyze(std::string_view text) const;
 
   /**
    * @brief Debug analyze - returns lattice information for debugging

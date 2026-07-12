@@ -16,6 +16,7 @@
 #include <string_view>
 
 #include "grammar/conjugation.h"
+#include "normalize/utf8.h"
 #include "postprocess/tag_generator.h"
 #include "suzume.h"
 
@@ -116,6 +117,23 @@ SUZUME_EXPORT void suzume_init_extended_options(suzume_extended_options_t* optio
   options->merge_compounds = 0;
 }
 
+SUZUME_EXPORT void suzume_init_tag_options(suzume_tag_options_t* options) {
+  if (options == nullptr) {
+    return;
+  }
+  options->pos_filter = 0;
+  options->exclude_basic = 0;
+  options->use_lemma = 1;
+  options->min_length = 2;
+  options->max_tags = 0;
+  options->exclude_particles = 1;
+  options->exclude_auxiliaries = 1;
+  options->exclude_formal_nouns = 1;
+  options->exclude_low_info = 1;
+  options->remove_duplicates = 1;
+  options->size = sizeof(suzume_tag_options_t);
+}
+
 SUZUME_EXPORT suzume_t suzume_create_with_extended_options(const suzume_extended_options_t* options) {
   clearLastError();
   try {
@@ -164,6 +182,13 @@ SUZUME_EXPORT void suzume_destroy(suzume_t handle) {
 SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text) {
   if (handle == nullptr || text == nullptr) {
     setLastError("suzume_analyze: null handle or text");
+    return nullptr;
+  }
+
+  // Distinguish malformed input from a legitimately empty result: the public
+  // analyze() returns an empty vector for both, so validate at the boundary.
+  if (!suzume::normalize::isValidUtf8(text)) {
+    setLastError("suzume_analyze: invalid UTF-8 input");
     return nullptr;
   }
 
@@ -459,6 +484,10 @@ SUZUME_EXPORT size_t suzume_sizeof_extended_options(void) {
   return sizeof(suzume_extended_options_t);
 }
 
+SUZUME_EXPORT size_t suzume_sizeof_options(void) {
+  return sizeof(suzume_options_t);
+}
+
 SUZUME_EXPORT size_t suzume_offsetof_result(uint32_t field) {
   switch (field) {
     case 0:
@@ -542,6 +571,8 @@ SUZUME_EXPORT size_t suzume_offsetof_tag_options(uint32_t field) {
       return offsetof(suzume_tag_options_t, exclude_low_info);
     case 9:
       return offsetof(suzume_tag_options_t, remove_duplicates);
+    case 10:
+      return offsetof(suzume_tag_options_t, size);
     default:
       return static_cast<size_t>(-1);
   }
@@ -563,6 +594,19 @@ SUZUME_EXPORT size_t suzume_offsetof_extended_options(uint32_t field) {
       return offsetof(suzume_extended_options_t, lemmatize);
     case 6:
       return offsetof(suzume_extended_options_t, merge_compounds);
+    default:
+      return static_cast<size_t>(-1);
+  }
+}
+
+SUZUME_EXPORT size_t suzume_offsetof_options(uint32_t field) {
+  switch (field) {
+    case 0:
+      return offsetof(suzume_options_t, preserve_vu);
+    case 1:
+      return offsetof(suzume_options_t, preserve_case);
+    case 2:
+      return offsetof(suzume_options_t, preserve_symbols);
     default:
       return static_cast<size_t>(-1);
   }

@@ -24,6 +24,11 @@ extern "C" {
 
 /**
  * @brief Opaque handle to Suzume instance
+ *
+ * A handle is NOT thread-safe: the analyzer keeps per-handle mutable state,
+ * so calling suzume_analyze / suzume_generate_tags concurrently on the same
+ * handle is undefined behavior. Use one handle per thread, or serialize all
+ * calls that share a handle. Distinct handles may be used concurrently.
  */
 typedef struct SuzumeHandle* suzume_t;
 
@@ -69,8 +74,8 @@ typedef struct {
  * @brief Analysis options structure.
  *
  * This basic form exposes normalization toggles and symbol handling only.
- * Use suzume_create_v2() with suzume_extended_options_t for analysis mode,
- * lemmatization, compound merging, and scorer options.
+ * Use suzume_create_with_extended_options() with suzume_extended_options_t
+ * for analysis mode, lemmatization, and compound merging.
  */
 typedef struct {
   int preserve_vu;      /**< Preserve ヴ (don't normalize to ビ etc.) */
@@ -101,6 +106,8 @@ typedef struct {
 /**
  * @brief Create a new Suzume instance with default options
  * @return Handle to Suzume instance, or NULL on failure
+ * @note The returned handle is not thread-safe for concurrent analysis
+ *       calls; see suzume_t.
  */
 SUZUME_EXPORT suzume_t suzume_create(void);
 
@@ -139,7 +146,11 @@ SUZUME_EXPORT void suzume_destroy(suzume_t handle);
  * @param handle Suzume handle
  * @param text UTF-8 encoded Japanese text
  * @return Analysis result allocated by Suzume, or NULL on failure.
+ *         Invalid UTF-8 input fails with NULL and a suzume_last_error()
+ *         message; empty input succeeds with an empty result (count == 0).
  *         Non-NULL results must be freed exactly once with suzume_result_free.
+ * @note Not thread-safe with respect to other calls on the same handle;
+ *       see suzume_t.
  */
 SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text);
 
@@ -160,7 +171,14 @@ SUZUME_EXPORT void suzume_result_free(suzume_result_t* result);
 SUZUME_EXPORT suzume_tags_t* suzume_generate_tags(suzume_t handle, const char* text);
 
 /**
- * @brief Tag generation options
+ * @brief Tag generation options.
+ *
+ * Set size to sizeof(suzume_tag_options_t), or call suzume_init_tag_options()
+ * to populate size together with the documented defaults. The fields listed
+ * before size are always read; fields appended in future versions are read
+ * only when size covers them, so structs from callers compiled against an
+ * older layout stay valid. size trails the pre-existing fields (instead of
+ * leading as in suzume_extended_options_t) to keep their offsets stable.
  */
 typedef struct {
   uint8_t pos_filter;       /**< POS bitmask: 1=noun, 2=verb, 4=adjective, 8=adverb (0=all) */
@@ -173,7 +191,15 @@ typedef struct {
   int exclude_formal_nouns; /**< Exclude formal nouns (default: 1) */
   int exclude_low_info;     /**< Exclude low information words (default: 1) */
   int remove_duplicates;    /**< Remove duplicate tags (default: 1) */
+  uint32_t size;            /**< Structure size for forward compatibility */
 } suzume_tag_options_t;
+
+/**
+ * @brief Initialize tag options with Suzume defaults
+ * @param options Pointer to options structure to initialize
+ * @note Passing NULL is allowed and has no effect.
+ */
+SUZUME_EXPORT void suzume_init_tag_options(suzume_tag_options_t* options);
 
 /**
  * @brief Generate tags from Japanese text with options
@@ -238,7 +264,10 @@ SUZUME_EXPORT size_t suzume_dictionary_warning_count(suzume_t handle);
  * @brief Get dictionary warning message by index
  * @param handle Suzume handle
  * @param index Warning index
- * @return Warning string owned by Suzume, or NULL if out of range
+ * @return Warning string owned by Suzume, or NULL if out of range.
+ *         The pointer is valid only until the next suzume_dictionary_warning
+ *         call from the same thread or until the handle is destroyed,
+ *         whichever comes first; copy the string to retain it.
  */
 SUZUME_EXPORT const char* suzume_dictionary_warning(suzume_t handle, size_t index);
 
@@ -268,6 +297,11 @@ SUZUME_EXPORT size_t suzume_sizeof_tag_options(void);
 SUZUME_EXPORT size_t suzume_sizeof_extended_options(void);
 
 /**
+ * @brief Get sizeof(suzume_options_t)
+ */
+SUZUME_EXPORT size_t suzume_sizeof_options(void);
+
+/**
  * @brief Get byte offset of field in suzume_result_t
  * @param field 0=morphemes, 1=count
  */
@@ -293,7 +327,7 @@ SUZUME_EXPORT size_t suzume_offsetof_tags(uint32_t field);
  * @param field 0=pos_filter, 1=exclude_basic, 2=use_lemma,
  *              3=min_length, 4=max_tags, 5=exclude_particles,
  *              6=exclude_auxiliaries, 7=exclude_formal_nouns,
- *              8=exclude_low_info, 9=remove_duplicates
+ *              8=exclude_low_info, 9=remove_duplicates, 10=size
  */
 SUZUME_EXPORT size_t suzume_offsetof_tag_options(uint32_t field);
 
@@ -304,6 +338,12 @@ SUZUME_EXPORT size_t suzume_offsetof_tag_options(uint32_t field);
  *              6=merge_compounds
  */
 SUZUME_EXPORT size_t suzume_offsetof_extended_options(uint32_t field);
+
+/**
+ * @brief Get byte offset of field in suzume_options_t
+ * @param field 0=preserve_vu, 1=preserve_case, 2=preserve_symbols
+ */
+SUZUME_EXPORT size_t suzume_offsetof_options(uint32_t field);
 
 /**
  * @brief Allocate memory (for WASM interop)
