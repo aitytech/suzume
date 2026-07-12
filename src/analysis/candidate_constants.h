@@ -170,6 +170,13 @@ constexpr float kModerateBonus = -0.3F;
 constexpr float kStrongBonus = -0.8F;
 // Weak penalty for uncertain verb patterns (passive, causative, zu-form)
 constexpr float kWeakPenalty = 0.1F;
+// Bonus for a kanji dict-verb imperative/kateikei standing sentence-final (書け, 読め, 止まれ).
+// A bare え-row form terminating a clause is the imperative (命令形) of the base verb (読め→読む);
+// the potential-verb reading (読める) is a distinct word that needs the full surface or a
+// continuation (読めます/読めば). Applied only when no auxiliary/ば continuation follows, so
+// 読める/走れます/止まれる are untouched. Sized to beat both the spurious potential-verb renyokei
+// candidate (~-0.17) and the 未然+受身れ split (止ま+れ) that otherwise win over the single token.
+constexpr float kImperativeFinalBonus = -0.8F;
 }  // namespace verb_cost
 
 // =============================================================================

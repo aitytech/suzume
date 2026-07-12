@@ -563,6 +563,30 @@
       ],
       "id": "soup_wo_samashita",
       "input": "スープを冷ました"
+    },
+    {
+      "description": "Godan imperative resolves to base verb, not 止む+れ passive split",
+      "expected": [
+        {
+          "lemma": "止まる",
+          "pos": "Verb",
+          "surface": "止まれ"
+        }
+      ],
+      "id": "mare",
+      "input": "止まれ"
+    },
+    {
+      "description": "Bare godan imperative lemmatizes to base verb 読む, not potential 読める",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読め"
+        }
+      ],
+      "id": "me",
+      "input": "読め"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

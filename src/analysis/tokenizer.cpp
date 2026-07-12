@@ -12,7 +12,9 @@
 #include "analysis/tokenizer.h"
 
 #include "analysis/category_cost.h"
+#include "candidate_constants.h"
 #include "core/debug.h"
+#include "grammar/char_patterns.h"
 #include "core/utf8_constants.h"
 #include "join_candidates.h"
 #include "normalize/utf8.h"
@@ -121,6 +123,25 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 
     // Cost is now derived from ExtendedPOS via getCategoryCost()
     float cost = analysis::getCategoryCost(result.entry->extended_pos);
+
+    // A bare え-row dict-verb imperative closing a clause (書け, 止まれ) is the 命令形 of the
+    // base verb, not the potential-verb renyokei; without this the spurious 未然+受身れ split
+    // (止ま+れ, lemma 止む) wins. Gated so any auxiliary/ば continuation (走れます/走れば/止まれる)
+    // leaves the connection scores byte-identical.
+    if (result.entry->pos == core::PartOfSpeech::Verb &&
+        (result.entry->extended_pos == core::ExtendedPOS::VerbKateikei ||
+         result.entry->extended_pos == core::ExtendedPOS::VerbMeireikei) &&
+        grammar::containsKanji(result.entry->surface)) {
+      const bool continues = end_pos < codepoints.size() &&
+                             (codepoints[end_pos] == U'ば' ||
+                              verb_helpers::isPassiveAuxContinuation(codepoints, end_pos, /*strict_masu=*/true));
+      if (!continues) {
+        cost += candidate::verb_cost::kImperativeFinalBonus;
+        // Flag the tuned cost so the scorer honours it even when it lands on exactly 0.0
+        // (0.0 is otherwise read as "unset" and falls back to the category cost).
+        flags |= core::LatticeEdge::kHasCustomCost;
+      }
+    }
 
     lattice.addEdge(result.entry->surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
                     result.entry->pos, cost, flags, result.entry->lemma, dictionary::ConjugationType::None,
