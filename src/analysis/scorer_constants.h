@@ -2,8 +2,11 @@
 #define SUZUME_ANALYSIS_SCORER_CONSTANTS_H_
 
 #include <cstddef>
+#include <string_view>
 
 #include "analysis/bigram_table.h"
+#include "core/types.h"
+#include "grammar/char_patterns.h"
 
 // =============================================================================
 // Scorer Constants
@@ -260,6 +263,26 @@ constexpr float kBonusDoubleVeryStrong = scale::kVeryStrongBonus * 2;  // -3.2
 // Contracted negative past AuxNegativeNu(ん) → VerbOnbinkei(かっ): くだらなかった
 // Very strong bonus because the かっ unknown verb candidate has high cost (~2.7)
 constexpr float kBonusContractedNegPast = scale::kVeryStrongBonus * 2 + scale::kMinorBonus;  // -3.45
+
+// Bonus for a split productive kanji V1連用 + kanji V2連用 compound verb
+// (読み+終え, 書き+始め). Two kanji content-verb 連用形 halves that already split
+// mark a genuine V1+V2 compound (MeCab splits 読み終える), so V1 must stay
+// VerbRenyokei instead of collapsing to a deverbal NOUN (読み as 名詞, which wins
+// via NOUN→VerbRenyokei after an adverb). The global no-bonus policy for
+// VerbRenyokei→VerbRenyokei (bigram_table.cpp) guards hiragana-tail lexicalized
+// compounds (抱き+しめ); single-token lexical compounds (受け入れ) never expose
+// this junction, so gating on kanji in BOTH surfaces only refines the POS of
+// already-split pairs. Returns 0 when the pattern does not apply.
+inline float compoundVerbSplitBonus(core::ExtendedPOS prev_epos, std::string_view prev_surface,
+                                    core::ExtendedPOS next_epos, std::string_view next_surface) {
+  if (prev_epos != core::ExtendedPOS::VerbRenyokei || next_epos != core::ExtendedPOS::VerbRenyokei) {
+    return 0.0F;
+  }
+  if (!grammar::containsKanji(prev_surface) || !grammar::containsKanji(next_surface)) {
+    return 0.0F;
+  }
+  return scale::kModerateBonus;
+}
 
 }  // namespace suzume::analysis::scorer
 

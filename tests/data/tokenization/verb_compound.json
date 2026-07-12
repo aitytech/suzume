@@ -1594,6 +1594,60 @@
       ],
       "id": "keteiku",
       "input": "続けていく"
+    },
+    {
+      "description": "compound V1 renyokei stays Verb after adverb (not deverbal Noun)",
+      "expected": [
+        {
+          "lemma": "まだ",
+          "pos": "Adverb",
+          "surface": "まだ"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "終える",
+          "pos": "Verb",
+          "surface": "終え"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "mada_mi_eta",
+      "input": "まだ読み終えた"
+    },
+    {
+      "description": "compound V1 renyokei stays Verb after adverb",
+      "expected": [
+        {
+          "lemma": "ゆっくり",
+          "pos": "Adverb",
+          "surface": "ゆっくり"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "yuttkuri_ki_meta",
+      "input": "ゆっくり書き始めた"
     }
   ],
   "description": "Compound verbs",

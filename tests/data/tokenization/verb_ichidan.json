@@ -1193,6 +1193,28 @@
       ],
       "id": "desiderative_neg_past_tabetaku",
       "input": "食べたくなかった"
+    },
+    {
+      "description": "分かれる (ichidan) lemma not confused with godan 分かる potential",
+      "expected": [
+        {
+          "lemma": "意見",
+          "pos": "Noun",
+          "surface": "意見"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "分かれる",
+          "pos": "Verb",
+          "surface": "分かれる"
+        }
+      ],
+      "id": "ga_kareru",
+      "input": "意見が分かれる"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",

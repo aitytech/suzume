@@ -701,14 +701,14 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   }
 
   // Bonus for VerbRenyokei → subsidiary verb ゆく/いく (補助動詞)
-  // V1 連用形 + ゆく forms the literary compound-verb construction: 散り+ゆく,
-  // 消え+ゆく, 暮れ+ゆく. The generic VerbRenyokei→VerbShuushikei penalty (0.8)
-  // guards against false splits, but ゆく/いく after 連用形 is grammatical and
-  // must beat the kanji-hiragana compound NOUN fallback.
+  // V1 連用形 + ゆく forms the literary compound-verb construction (散り+ゆく, 消え+ゆく, 暮れ+ゆく).
+  // The generic VerbRenyokei→VerbShuushikei penalty (0.8) guards against false
+  // splits, but ゆく/いく after 連用形 is grammatical and beats the NOUN fallback.
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.pos == core::PartOfSpeech::Verb &&
       (next.surface == "ゆく" || next.surface == "いく")) {
     surface_bonus += cost::kStrongBonus;
   }
+  surface_bonus += sc::compoundVerbSplitBonus(prev.extended_pos, prev.surface, next.extended_pos, next.surface);
 
   // Penalty for VerbRenyokei → れ (AuxPassive) pattern
   // The passive auxiliary れる attaches to godan 未然形 (VerbMizenkei), never to
