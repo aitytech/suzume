@@ -607,6 +607,33 @@
       ],
       "id": "shokuji_no_ato_noun",
       "input": "食事の後で会う"
+    },
+    {
+      "description": "kanji+hiragana noun 宝くじ stays whole (orphan-viability gate)",
+      "expected": [
+        {
+          "lemma": "宝くじ",
+          "pos": "Noun",
+          "surface": "宝くじ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kujiwo_ttta",
+      "input": "宝くじを買った"
     }
   ],
   "description": "Suffixes (さん、的、化)",

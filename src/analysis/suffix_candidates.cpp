@@ -866,7 +866,28 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
                                 first_hira == U'ぐ' || first_hira == U'す' || first_hira == U'つ' ||
                                 first_hira == U'ぬ' || first_hira == U'ぶ' || first_hira == U'る');
     if (is_godan_shuushikei) {
-      looks_like_aux = true;
+      // The 終止形 split hypothesis (kanji+first_hira is a complete verb, the rest starts
+      // a new word) is only sound when the stranded remainder is lexically realizable.
+      // When exactly one hiragana would be orphaned (hiragana_len == 2), require that a
+      // dictionary word can start there; otherwise the "verb" reading strands junk (宝く|じ)
+      // and we must keep the kanji+hiragana noun (宝くじ) whole. Standalone single hiragana
+      // are a closed class (final particles よ/ね/な, copula, …) all in L1, and formal-noun
+      // continuations (こと) are caught by scanning across the particle break — so 休むこと,
+      // 飲むな, 帰るね, 行くよ still split as before.
+      bool orphan_split_viable = true;
+      if (hiragana_len == 2 && dict_manager != nullptr) {
+        size_t orphan_pos = kanji_end + 1;
+        size_t ctx_end = orphan_pos;
+        while (ctx_end < char_types.size() && ctx_end - orphan_pos < 3 &&
+               char_types[ctx_end] == normalize::CharType::Hiragana) {
+          ++ctx_end;
+        }
+        std::string orphan_ctx = extractSubstring(codepoints, orphan_pos, ctx_end);
+        orphan_split_viable = !dict_manager->lookup(orphan_ctx, 0).empty();
+      }
+      if (orphan_split_viable) {
+        looks_like_aux = true;
+      }
     }
     // Renyokei + そう/たい/ます
     // For godan verbs: し,み,き,ぎ,ち,り,い,び (i-row)
