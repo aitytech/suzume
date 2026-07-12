@@ -1901,6 +1901,55 @@
       ],
       "id": "mi_tewo_meru",
       "input": "組み立てを始める"
+    },
+    {
+      "description": "dict-verified compound V1 (引きずる) + subsidiary V2 joins into one token",
+      "expected": [
+        {
+          "lemma": "犯人",
+          "pos": "Noun",
+          "surface": "犯人"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "引きずり出す",
+          "pos": "Verb",
+          "surface": "引きずり出す"
+        }
+      ],
+      "id": "wo_kizuri_su",
+      "input": "犯人を引きずり出す"
+    },
+    {
+      "description": "nested compound te-stem split 引きずり出し|た",
+      "expected": [
+        {
+          "lemma": "机",
+          "pos": "Noun",
+          "surface": "机"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "引きずり出す",
+          "pos": "Verb",
+          "surface": "引きずり出し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_kizuri_shita",
+      "input": "机を引きずり出した"
     }
   ],
   "description": "Compound verbs",

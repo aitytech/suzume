@@ -463,6 +463,58 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     v2_start = kanji_end + 1;
   }
 
+  // Dict-verified compound V1: a lexicalized multi-morpheme verb (引きずる, L2) has a
+  // renyokei (引きずり) with a hiragana-medial stem that the single-kanji-stem rule above
+  // cannot represent, so a following subsidiary V2 never joins (引きずり|出す). If the
+  // dictionary holds such a Verb renyokei (lemma≠surface, ≥3 chars, one leading kanji run
+  // followed by hiragana) spanning start_pos, adopt it as V1: point V2 past it and mark it
+  // ichidan-like so v1_renyokei_end == v2_start (compound base = 引きずり + 出す). Reuses the
+  // whole V2-matching / emission path below. Scoped to the hiragana-medial shape so it does
+  // not duplicate rule-handled compounds (走り出す, 話し合う).
+  bool dict_compound_v1 = false;
+  std::string dict_compound_v1_lemma;
+  {
+    size_t probe_byte = charPosToBytePos(codepoints, start_pos);
+    size_t best_len = 0;
+    for (const auto& res : dict_manager.lookup(text, probe_byte)) {
+      if (res.entry == nullptr || res.entry->pos != core::PartOfSpeech::Verb || res.length < 3 ||
+          res.entry->lemma.empty() || res.entry->lemma == res.entry->surface ||
+          start_pos + res.length >= codepoints.size() || res.length <= best_len) {
+        continue;
+      }
+      // Require exactly one leading kanji run then hiragana (引 + きずり): the shape the rule
+      // path mis-segments. Rejects multi-kanji-run compounds (話 し 合 い) already handled.
+      if (char_types[start_pos + 1] != CharType::Hiragana) {
+        continue;
+      }
+      size_t kanji_runs = 0;
+      bool in_kanji = false;
+      bool shape_ok = true;
+      for (size_t idx = start_pos; idx < start_pos + res.length; ++idx) {
+        const bool is_kanji = char_types[idx] == CharType::Kanji;
+        if (is_kanji && !in_kanji) {
+          ++kanji_runs;
+        }
+        in_kanji = is_kanji;
+        if (kanji_runs > 1) {
+          shape_ok = false;
+          break;
+        }
+      }
+      if (!shape_ok || kanji_runs != 1) {
+        continue;
+      }
+      best_len = res.length;
+      dict_compound_v1_lemma = res.entry->lemma;
+    }
+    if (best_len > 0) {
+      v2_start = start_pos + best_len;
+      is_sokuonbin = false;
+      is_ichidan = true;  // makes v1_renyokei_end == v2_start_byte below (multi-hiragana stem)
+      dict_compound_v1 = true;
+    }
+  }
+
   if (v2_start >= codepoints.size()) {
     return;
   }
@@ -719,39 +771,44 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // Build the V1 base form for verification
     std::string v1_base;
     size_t v1_end_byte = is_ichidan ? v2_start_byte : charPosToBytePos(codepoints, kanji_end);
-    v1_base = std::string(text.substr(start_byte, v1_end_byte - start_byte));
-
-    if (is_sokuonbin) {
-      // Sokuonbin: try く/つ/う/る endings to find dictionary match
-      // E.g., 突 + く = 突く, 打 + つ = 打つ
-      // Leave base_ending = 0 for now, will be set if match found
-    } else if (!is_ichidan) {
-      v1_base += normalize::utf8::encode({base_ending});
-    } else {
-      v1_base += "る";
-    }
-
     // Check if V1 base form is in dictionary
-    bool v1_verified = false;
-    bool v1_dict_verified = false;       // tracks dict verification for cost calculation
-    bool v1_embedded_verified = false;   // tracks embedded dict verb verification for cost calculation
-    bool v1_ichidan_inflection = false;  // single-kanji ichidan V1 confirmed only by inflection
-    if (is_sokuonbin) {
-      // Try all sokuonbin-compatible godan endings
-      for (char32_t ending : kSokuonbinEndings) {
-        std::string candidate = v1_base + normalize::utf8::encode({ending});
-        if (dict_manager.lookupExact(candidate, core::PartOfSpeech::Verb) != nullptr) {
+    bool v1_verified = dict_compound_v1;
+    bool v1_dict_verified = dict_compound_v1;  // tracks dict verification for cost calculation
+    bool v1_embedded_verified = false;         // tracks embedded dict verb verification for cost calculation
+    bool v1_ichidan_inflection = false;        // single-kanji ichidan V1 confirmed only by inflection
+    if (dict_compound_v1) {
+      // Already resolved: V1 is the dict-verified compound verb (引きずる).
+      v1_base = dict_compound_v1_lemma;
+    } else {
+      v1_base = std::string(text.substr(start_byte, v1_end_byte - start_byte));
+
+      if (is_sokuonbin) {
+        // Sokuonbin: try く/つ/う/る endings to find dictionary match
+        // E.g., 突 + く = 突く, 打 + つ = 打つ
+        // Leave base_ending = 0 for now, will be set if match found
+      } else if (!is_ichidan) {
+        v1_base += normalize::utf8::encode({base_ending});
+      } else {
+        v1_base += "る";
+      }
+
+      if (is_sokuonbin) {
+        // Try all sokuonbin-compatible godan endings
+        for (char32_t ending : kSokuonbinEndings) {
+          std::string candidate = v1_base + normalize::utf8::encode({ending});
+          if (dict_manager.lookupExact(candidate, core::PartOfSpeech::Verb) != nullptr) {
+            v1_verified = true;
+            v1_dict_verified = true;
+            v1_base = candidate;
+            base_ending = ending;
+            break;
+          }
+        }
+      } else {
+        if (dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr) {
           v1_verified = true;
           v1_dict_verified = true;
-          v1_base = candidate;
-          base_ending = ending;
-          break;
         }
-      }
-    } else {
-      if (dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr) {
-        v1_verified = true;
-        v1_dict_verified = true;
       }
     }
 
