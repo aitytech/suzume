@@ -499,6 +499,70 @@
       ],
       "id": "ita",
       "input": "間続いた"
+    },
+    {
+      "description": "Single-kanji godan-sa 覚ます recognized (覚まし+た), not swallowed as unknown noun",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "目",
+          "pos": "Noun",
+          "surface": "目"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "覚ます",
+          "pos": "Verb",
+          "surface": "覚まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kare_me_wo_samashita",
+      "input": "彼は目を覚ました"
+    },
+    {
+      "description": "Single-kanji godan-sa 冷ます recognized (冷まし+た)",
+      "expected": [
+        {
+          "lemma": "スープ",
+          "pos": "Noun",
+          "surface": "スープ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "冷ます",
+          "pos": "Verb",
+          "surface": "冷まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "soup_wo_samashita",
+      "input": "スープを冷ました"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",
