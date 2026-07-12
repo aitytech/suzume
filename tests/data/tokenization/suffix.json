@@ -548,6 +548,65 @@
       ],
       "id": "ppanashi_dashippanashi",
       "input": "出しっぱなしだ"
+    },
+    {
+      "description": "後 after a duration counter is tagged Suffix (名詞,接尾)",
+      "expected": [
+        {
+          "lemma": "2時間",
+          "pos": "Noun",
+          "surface": "2時間"
+        },
+        {
+          "lemma": "後",
+          "pos": "Suffix",
+          "surface": "後"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "会う",
+          "pos": "Verb",
+          "surface": "会う"
+        }
+      ],
+      "id": "ni_jikan_go_suffix",
+      "input": "2時間後に会う"
+    },
+    {
+      "description": "後 after an ordinary noun stays Noun (minimal pair vs duration+後 Suffix)",
+      "expected": [
+        {
+          "lemma": "食事",
+          "pos": "Noun",
+          "surface": "食事"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "後",
+          "pos": "Noun",
+          "surface": "後"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "会う",
+          "pos": "Verb",
+          "surface": "会う"
+        }
+      ],
+      "id": "shokuji_no_ato_noun",
+      "input": "食事の後で会う"
     }
   ],
   "description": "Suffixes (さん、的、化)",

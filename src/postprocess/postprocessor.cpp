@@ -9,6 +9,22 @@
 
 namespace suzume::postprocess {
 
+namespace {
+
+// Check if a surface is a counter/duration quantity that a temporal 後 attaches to
+// as a suffix (2時間, 10日, 5分): first codepoint is a numeral and the last is a
+// counter kanji. MeCab tags 後 after such a quantity as 名詞,接尾 (Suffix), whereas
+// 後 after an ordinary noun (食事の後) stays a plain noun.
+bool isCounterDurationNoun(const std::string& surface) {
+  auto codepoints = normalize::toCodepoints(surface);
+  if (codepoints.empty()) {
+    return false;
+  }
+  return normalize::isNumeralCodepoint(codepoints.front()) && normalize::isCounterKanji(codepoints.back());
+}
+
+}  // namespace
+
 Postprocessor::Postprocessor(const PostprocessOptions& options) : options_(options), lemmatizer_() {}
 
 Postprocessor::Postprocessor(const dictionary::DictionaryManager* dict_manager, const PostprocessOptions& options)
@@ -65,6 +81,18 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
       result[i].lemma = "の";
       result[i].conj_type = dictionary::ConjugationType::None;
       result[i].conj_form = grammar::ConjForm::Base;
+    }
+  }
+
+  // Temporal 後 after a counter/duration quantity is a suffix, not a standalone
+  // noun (2時間+後, 10日+後, 5分+後 → 名詞,接尾). Runs after numeric merging so the
+  // quantity token is final. 前 is never a suffix in MeCab, so this is 後-only.
+  for (size_t i = 1; i < result.size(); ++i) {
+    if (result[i].surface == "後" && result[i].pos == core::PartOfSpeech::Noun &&
+        result[i - 1].pos == core::PartOfSpeech::Noun && isCounterDurationNoun(result[i - 1].surface)) {
+      result[i].pos = core::PartOfSpeech::Suffix;
+      result[i].extended_pos = core::ExtendedPOS::Suffix;
+      result[i].lemma = "後";
     }
   }
 
@@ -594,8 +622,7 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(const std::ve
           size_t skip = i + 2;
           while (skip < morphemes.size()) {
             const auto skip_cps = normalize::toCodepoints(morphemes[skip].surface);
-            const bool is_prolonged =
-                std::all_of(skip_cps.begin(), skip_cps.end(), normalize::isProlongedSoundMark);
+            const bool is_prolonged = std::all_of(skip_cps.begin(), skip_cps.end(), normalize::isProlongedSoundMark);
             if (!is_prolonged)
               break;
             merged.surface += morphemes[skip].surface;
