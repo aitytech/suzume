@@ -403,6 +403,22 @@ std::string baseFormSuffix(grammar::VerbType verb_type);
  */
 bool isValidIRowIchidanStem(std::string_view stem);
 
+/**
+ * @brief Check if an inflection suffix contains auxiliary verb patterns
+ *
+ * Looks for た/て/で/だ/ない/れ, which indicate a complete inflected form (as
+ * opposed to a bare renyokei ending like し/み that is nominal, not verbal,
+ * evidence). ます is intentionally excluded for MeCab-compatible splits
+ * (申し上げます -> 申し上げ + ます). Shared by the compound-verb join path and
+ * the sokuonbin-prefix stem probe so both treat conjugation evidence alike.
+ */
+inline bool hasAuxiliarySuffix(std::string_view suffix) {
+  if (suffix.empty()) {
+    return false;
+  }
+  return utf8::containsAny(suffix, {"た", "て", "で", "だ", "ない", "れ"});
+}
+
 // =============================================================================
 // Character Region Detection
 // =============================================================================

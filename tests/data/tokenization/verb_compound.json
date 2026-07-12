@@ -1994,6 +1994,87 @@
       ],
       "id": "ni_tt_ri_mu",
       "input": "仲間に引っ張り込む"
+    },
+    {
+      "description": "Sokuonbin-prefix single verb (走る embedded), past",
+      "expected": [
+        {
+          "lemma": "車",
+          "pos": "Noun",
+          "surface": "車"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "突っ走る",
+          "pos": "Verb",
+          "surface": "突っ走っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ga_tt_ttta",
+      "input": "車が突っ走った"
+    },
+    {
+      "description": "Sokuonbin-prefix single verb (掻く embedded), shuushikei",
+      "expected": [
+        {
+          "lemma": "猫",
+          "pos": "Noun",
+          "surface": "猫"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "背中",
+          "pos": "Noun",
+          "surface": "背中"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "引っ掻く",
+          "pos": "Verb",
+          "surface": "引っ掻く"
+        }
+      ],
+      "id": "ga_wo_tt_ku",
+      "input": "猫が背中を引っ掻く"
+    },
+    {
+      "description": "Sokuonbin compound verb V1 (引っ掻き) + 回す, dict-verified embedded 掻く",
+      "expected": [
+        {
+          "lemma": "犯人",
+          "pos": "Noun",
+          "surface": "犯人"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "引っ掻き回す",
+          "pos": "Verb",
+          "surface": "引っ掻き回す"
+        }
+      ],
+      "id": "wo_tt_ki_su",
+      "input": "犯人を引っ掻き回す"
     }
   ],
   "description": "Compound verbs",

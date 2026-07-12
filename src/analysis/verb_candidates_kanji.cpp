@@ -53,6 +53,53 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
     return candidates;
   }
 
+  // Sokuonbin-prefixed verb stem: single kanji + っ + kanji run (突っ走, 引っ掻).
+  // The sokuon is the contracted renyokei of a prefixing verb (突き -> 突っ); the
+  // shape kanji+っ+kanji cannot be represented by the plain "kanji run + okurigana"
+  // stem model, so the stem is extended to span the embedded verb when it is a
+  // dictionary-verified verb showing conjugation evidence (shuushikei or an aux
+  // suffix). The dictionary gate + evidence gate exclude same-shape nominal/
+  // adjectival compounds (真っ盛り: 盛る not in dict; 手っ取り早い: 取り is a bare
+  // renyokei, nominal). Once extended, all downstream conjugation/aux-split logic
+  // treats 突っ走 exactly like any kanji stem.
+  // True once the stem has been extended over a dictionary-verified embedded verb;
+  // the resulting compound (突っ走る) is itself absent from the dictionary, so this
+  // flag lets the confidence-gate and cost logic below treat it as verified.
+  bool sokuonbin_stem_verified = false;
+  // Correct lemma for the extended compound: sokuon prefix + embedded verb base
+  // (吹っ + 飛ぶ = 吹っ飛ぶ). Forced explicitly at emission because the hatsuonbin
+  // ん of the full surface is onbin-ambiguous (吹っ飛ん could derive 吹っ飛む), and
+  // the embedded analysis is the authoritative source of the base form.
+  std::string sokuonbin_lemma;
+  grammar::VerbType sokuonbin_verb_type = grammar::VerbType::Unknown;
+  if (dict_manager != nullptr && kanji_end == start_pos + 1 && codepoints[kanji_end] == core::hiragana::kSmallTsu &&
+      kanji_end + 1 < char_types.size() && char_types[kanji_end + 1] == normalize::CharType::Kanji) {
+    size_t kanji2_end = vh::findCharRegionEnd(char_types, kanji_end + 1, 3, normalize::CharType::Kanji);
+    // Skip hatsuonbin (ん) continuations: 吹っ飛んだ's ん is onbin-ambiguous (ぶ/む/ぬ)
+    // and 漢っ漢+ん compounds are already resolved by the dedicated
+    // sokuon_kanji_hatsuonbin suffix candidate with the correct base. The verbs this
+    // probe is needed for (走る っ-onbin, 掻く い-onbin) never use ん-onbin.
+    if (kanji2_end < char_types.size() && char_types[kanji2_end] == normalize::CharType::Hiragana &&
+        codepoints[kanji2_end] != U'ん') {
+      size_t probe_end = vh::findCharRegionEnd(char_types, kanji2_end, 12, normalize::CharType::Hiragana);
+      std::string embedded = extractSubstring(codepoints, kanji_end + 1, probe_end);
+      for (const auto& res : inflection.analyze(embedded)) {
+        // Shuushikei (surface == base, 走る) or a multi-character conjugation suffix
+        // (った/いた/ります/ろう…) is verbal evidence. A bare renyokei — a single
+        // i-row suffix (取り, 盛り) — is nominal and must not pass; standalone
+        // renyokei of true compounds is handled by the compound-join path instead.
+        bool conjugation_evidence = (embedded == res.base_form) || normalize::utf8Length(res.suffix) >= 2;
+        if (conjugation_evidence && vh::isVerbInDictionary(dict_manager, res.base_form)) {
+          sokuonbin_lemma = extractSubstring(codepoints, start_pos, kanji_end + 1) + res.base_form;
+          sokuonbin_verb_type = res.verb_type;
+          kanji_end = kanji2_end;  // stem now spans 突っ走 / 引っ掻; downstream logic unchanged
+          sokuonbin_stem_verified = true;
+          break;
+        }
+      }
+    }
+  }
+
   // Check if first hiragana is a particle that can NEVER be part of a verb
   // E.g., "領収書を" - を is a particle, not part of a verb
   // Note about が and に:
@@ -539,7 +586,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // Single-kanji + い patterns (人い) are excluded: almost always NOUN + いる,
         // not a single verb. Valid ichidan stems are multi-char (感じ, 信じ, etc.).
         bool is_i_row_ichidan = cand.verb_type == grammar::VerbType::Ichidan && vh::isValidIRowIchidanStem(cand.stem);
-        float conf_threshold = is_i_row_ichidan ? verb_opts.confidence_ichidan_dict : verb_opts.confidence_standard;
+        float conf_threshold =
+            (is_i_row_ichidan || sokuonbin_stem_verified) ? verb_opts.confidence_ichidan_dict : verb_opts.confidence_standard;
         if (cand.stem == expected_stem && cand.confidence > conf_threshold &&
             cand.verb_type != grammar::VerbType::IAdjective) {
           // Check whether this candidate's base form exists in the dictionary as a
@@ -566,6 +614,10 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       if (is_dict_verified) {
         best = dict_verified_best;
       }
+      // A sokuonbin compound (突っ走る) is absent from the dictionary but was built
+      // over a verified embedded verb; treat it as verified for the proceed gate so
+      // its bare 終止形/意志形 (conf ~0.45) is not dropped by the standard threshold.
+      is_dict_verified = is_dict_verified || sokuonbin_stem_verified;
 
       // Only proceed if we found a matching candidate
       // Use lower threshold for valid i-row ichidan stems (感じ, 信じ, etc.)
@@ -953,7 +1005,11 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         bool recognized_godan = !is_ichidan && !in_dict && !best.stem.empty() &&
                                 best.stem.size() == core::kJapaneseCharBytes &&
                                 best.confidence >= verb_opts.confidence_ichidan_dict;
-        bool has_suffix = in_dict || recognized_ichidan || recognized_godan;
+        // A sokuonbin compound built over a verified embedded verb (突っ走り) is a
+        // genuine verb even though its multi-kanji stem is absent from the
+        // dictionary; exempt it from the exceeds_dict_length penalty so its
+        // renyokei competes with the noun split before the ます auxiliary.
+        bool has_suffix = in_dict || recognized_ichidan || recognized_godan || sokuonbin_stem_verified;
         // Determine extended_pos based on verb type and surface ending
         // Godan-wa verbs ending in い are renyokei (戦い), not onbinkei
         // Godan-ka/ga verbs ending in い are onbinkei (書い, 泳い)
@@ -1053,9 +1109,12 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
                               << " in_dict=" << in_dict << " has_suffix=" << has_suffix << "\n";
         }
         // Don't set lemma here - let lemmatizer derive it with dictionary verification
-        // The lemmatizer will use stem-matching logic to pick the correct base form
+        // The lemmatizer will use stem-matching logic to pick the correct base form.
+        // Exception: sokuonbin compounds carry the lemma built from the embedded verb
+        // base, which the surface-based lemmatizer cannot recover past the onbin.
+        const char* forced_lemma = sokuonbin_stem_verified ? sokuonbin_lemma.c_str() : "";
         candidates.push_back(makeVerbCandidate(
-            surface, start_pos, end_pos, base_cost, "", grammar::verbTypeToConjType(best.verb_type), has_suffix,
+            surface, start_pos, end_pos, base_cost, forced_lemma, grammar::verbTypeToConjType(best.verb_type), has_suffix,
             CandidateOrigin::VerbKanji, best.confidence, grammar::verbTypeToString(best.verb_type).data(), verb_epos));
         // Don't break - try other stem lengths too
       }
@@ -2145,6 +2204,16 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             matched_base_form = base_form;
             matched_via_dict = true;
           }
+        }
+        // Sokuonbin compound (突っ走る) whose stem was verified via its embedded verb:
+        // the compound itself is absent from the dictionary, so emit the onbin stem
+        // (突っ走っ) here with the embedded verb's type/base so た/て split off exactly
+        // like a plain verb (走った → 走っ + た), rather than the whole form winning.
+        if (matched_verb_type == grammar::VerbType::Unknown && sokuonbin_stem_verified &&
+            sokuonbin_verb_type != grammar::VerbType::Unknown && !sokuonbin_lemma.empty()) {
+          matched_verb_type = sokuonbin_verb_type;
+          matched_base_form = sokuonbin_lemma;
+          matched_via_dict = true;
         }
         // Phase 2: Inflection analysis fallback
         // Try progressively shorter surfaces to handle cases where hiragana_end

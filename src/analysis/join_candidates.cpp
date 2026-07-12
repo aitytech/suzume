@@ -354,19 +354,6 @@ const TeFormAuxiliary kTeFormAuxiliaries[] = {
 // Cost bonus imported from candidate_constants.h:
 // candidate::kTeFormAuxBonus
 
-/**
- * @brief Check if inflection suffix contains auxiliary verb patterns
- * Looks for た/て/で/ない/れ patterns that indicate complete inflected forms
- * (as opposed to just renyokei endings like し/み)
- * Note: で is for hatsuonbin te-form (読ん+で, 飛ん+で)
- */
-inline bool hasAuxiliarySuffix(std::string_view suffix) {
-  if (suffix.empty())
-    return false;
-  // Note: "ます" excluded for MeCab-compatible split (e.g., 申し上げます → 申し上げ + ます)
-  return utf8::containsAny(suffix, {"た", "て", "で", "だ", "ない", "れ"});
-}
-
 }  // namespace
 
 void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text,
@@ -693,7 +680,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
             // inflection matches (and vice versa). This prevents e.g. いた
             // (ichidan いる ta-form) from falsely matching godan 入る(いる).
             if (infl_result.confidence >= 0.3F && infl_result.base_form == expected_base &&
-                hasAuxiliarySuffix(infl_result.suffix) &&
+                verb_helpers::hasAuxiliarySuffix(infl_result.suffix) &&
                 !(v2_verb.verb_type == V2VerbType::Godan && infl_result.verb_type == grammar::VerbType::Ichidan) &&
                 !(v2_verb.verb_type == V2VerbType::Ichidan && infl_result.verb_type != grammar::VerbType::Ichidan)) {
               matched_inflected = true;
@@ -750,7 +737,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
                       // Check if base form matches V2 surface (kanji form)
                       // Require the suffix to contain actual auxiliary patterns
                       if (infl_result.confidence >= 0.35F && infl_result.base_form == v2_surface &&
-                          hasAuxiliarySuffix(infl_result.suffix)) {
+                          verb_helpers::hasAuxiliarySuffix(infl_result.suffix)) {
                         matched_inflected = true;
                         matched_len = v2_end_byte - v2_start_byte;
                         inflection_includes_aux = true;  // Mark that this match includes aux
