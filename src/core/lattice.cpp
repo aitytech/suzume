@@ -119,6 +119,14 @@ std::vector<LatticeEdge> Lattice::edgesAt(size_t pos) const {
   return result;
 }
 
+const std::vector<uint32_t>& Lattice::edgeIdsAt(size_t pos) const {
+  static const std::vector<uint32_t> empty_ids;
+  if (pos >= edge_indices_by_start_.size()) {
+    return empty_ids;
+  }
+  return edge_indices_by_start_[pos];
+}
+
 const LatticeEdge& Lattice::getEdge(size_t edge_id) const {
   static const LatticeEdge empty_edge{};
   if (edge_id < all_edges_.size()) {

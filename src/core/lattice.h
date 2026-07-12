@@ -127,6 +127,14 @@ class Lattice {
   std::vector<LatticeEdge> edgesAt(size_t pos) const;
 
   /**
+   * @brief Get IDs of all edges starting at a position (no copy)
+   * @note Returns a reference to internal storage. Resolve each ID with
+   *       getEdge(); prefer this over edgesAt() on hot paths to avoid
+   *       building a temporary edge vector.
+   */
+  const std::vector<uint32_t>& edgeIdsAt(size_t pos) const;
+
+  /**
    * @brief Get edge by ID
    * @param edge_id Edge ID
    * @return Edge reference
