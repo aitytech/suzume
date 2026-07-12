@@ -32,7 +32,10 @@ from suzume import Suzume
 
 with Suzume() as sz:
     for tag in sz.generate_tags("東京都に住んでいます"):
-        print(tag.text, tag.pos)
+        print(tag.tag, tag.pos)
+
+    # Restrict to selected parts of speech by name (or a raw bitmask).
+    nouns = sz.generate_tags("美味しいラーメンを食べた", pos_filter=["noun"])
 ```
 
 ## API
@@ -44,7 +47,9 @@ thread-safe, so use one instance per thread.
 
 - `mode` — `"normal"`, `"search"`, or `"split"` (or a `Mode` enum member).
 - `analyze(text) -> list[Morpheme]` — tokenize with full POS information.
-- `generate_tags(text, **options) -> list[Tag]` — extract keyword tags.
+- `generate_tags(text, **options) -> list[Tag]` — extract keyword tags. The
+  `pos_filter` option accepts a raw bitmask (1=noun, 2=verb, 4=adjective,
+  8=adverb) or an iterable of POS names such as `["noun", "verb"]`.
 - `load_user_dict(csv)` — add a user dictionary from CSV text.
 - `load_binary_dict(data)` — load a compiled `.dic` dictionary from memory.
 - `dictionary_warnings` — warnings raised while auto-loading dictionaries.
@@ -53,10 +58,11 @@ thread-safe, so use one instance per thread.
 
 A frozen dataclass with `surface`, `pos`, `base_form`, `pos_ja`, `conj_type`,
 `conj_form`, `extended_pos`, `start`, `end`, the `is_*` flags, and `score`.
+`conj_type` and `conj_form` are `None` for non-conjugating words.
 
 ### `Tag`
 
-A frozen dataclass with `text` and `pos`.
+A frozen dataclass with `tag` and `pos`.
 
 ### `suzume.version()`
 

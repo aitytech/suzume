@@ -13,6 +13,7 @@ Example:
 from __future__ import annotations
 
 import ctypes
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
 from types import TracebackType
@@ -34,6 +35,31 @@ __all__ = [
 
 _lib = load_library()
 
+# POS names accepted by ``generate_tags(pos_filter=...)``, mapped to their
+# bitmask value. Names and casing mirror the WASM binding's TagOptions.pos.
+_POS_FILTER_BITS = {"noun": 1, "verb": 2, "adjective": 4, "adverb": 8}
+
+
+def _resolve_pos_filter(pos_filter: int | Iterable[str]) -> int:
+    """Resolve a ``pos_filter`` argument to a native bitmask.
+
+    Accepts a raw bitmask ``int`` (passed through unchanged) or an iterable of
+    POS names (``"noun"``, ``"verb"``, ``"adjective"``, ``"adverb"``) whose bits
+    are OR-ed together.
+    """
+    if isinstance(pos_filter, int):
+        return pos_filter
+    mask = 0
+    for name in pos_filter:
+        try:
+            mask |= _POS_FILTER_BITS[name]
+        except KeyError:
+            raise ValueError(
+                f"unknown POS filter name: {name!r} "
+                f"(expected one of {sorted(_POS_FILTER_BITS)})"
+            ) from None
+    return mask
+
 
 class SuzumeError(RuntimeError):
     """Raised when a native suzume call fails."""
@@ -51,7 +77,7 @@ class Mode(str, Enum):
         return {Mode.NORMAL: 0, Mode.SEARCH: 1, Mode.SPLIT: 2}[self]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Morpheme:
     """A single analyzed token."""
 
@@ -59,8 +85,8 @@ class Morpheme:
     pos: str
     base_form: str
     pos_ja: str
-    conj_type: str
-    conj_form: str
+    conj_type: str | None = None
+    conj_form: str | None = None
     extended_pos: str
     start: int
     end: int
@@ -76,12 +102,21 @@ class Morpheme:
 class Tag:
     """A generated tag: the keyword text plus its part of speech."""
 
-    text: str
+    tag: str
     pos: str
 
 
 def _decode(value: bytes | None) -> str:
     return value.decode("utf-8") if value else ""
+
+
+def _decode_optional(value: bytes | None) -> str | None:
+    """Decode a native string, mapping the empty string to ``None``.
+
+    A non-conjugating word yields an empty native conjugation field; expose that
+    as ``None`` rather than ``""`` to match the WASM binding's null semantics.
+    """
+    return value.decode("utf-8") if value else None
 
 
 def version() -> str:
@@ -169,8 +204,8 @@ class Suzume:
                         pos=_decode(m.pos),
                         base_form=_decode(m.base_form),
                         pos_ja=_decode(m.pos_ja),
-                        conj_type=_decode(m.conj_type),
-                        conj_form=_decode(m.conj_form),
+                        conj_type=_decode_optional(m.conj_type),
+                        conj_form=_decode_optional(m.conj_form),
                         extended_pos=_decode(m.extended_pos),
                         start=int(m.start),
                         end=int(m.end),
@@ -190,7 +225,7 @@ class Suzume:
         self,
         text: str,
         *,
-        pos_filter: int = 0,
+        pos_filter: int | Iterable[str] = 0,
         exclude_basic: bool = False,
         use_lemma: bool = True,
         min_length: int = 2,
@@ -203,12 +238,14 @@ class Suzume:
     ) -> list[Tag]:
         """Generate keyword tags from ``text``.
 
-        ``pos_filter`` is a bitmask (1=noun, 2=verb, 4=adjective, 8=adverb;
-        0=all). All other flags map directly to the native tag options.
+        ``pos_filter`` selects which parts of speech to keep. Pass either a raw
+        bitmask ``int`` (1=noun, 2=verb, 4=adjective, 8=adverb; 0=all) or an
+        iterable of POS names, e.g. ``["noun", "verb"]``, whose bits are OR-ed
+        together. All other flags map directly to the native tag options.
         """
         handle = self._require_handle()
         opts = SuzumeTagOptions(
-            pos_filter=pos_filter,
+            pos_filter=_resolve_pos_filter(pos_filter),
             exclude_basic=int(exclude_basic),
             use_lemma=int(use_lemma),
             min_length=min_length,
@@ -228,7 +265,7 @@ class Suzume:
             data = result.contents
             out: list[Tag] = []
             for idx in range(data.count):
-                out.append(Tag(text=_decode(data.tags[idx]), pos=_decode(data.pos[idx])))
+                out.append(Tag(tag=_decode(data.tags[idx]), pos=_decode(data.pos[idx])))
             return out
         finally:
             _lib.suzume_tags_free(result)

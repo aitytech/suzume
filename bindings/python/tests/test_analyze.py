@@ -30,6 +30,18 @@ def test_offsets_are_ordered_and_within_text() -> None:
         assert cur.start >= prev.start
 
 
+def test_conjugation_fields_are_none_for_non_conjugating_words() -> None:
+    with Suzume() as sz:
+        result = sz.analyze("東京都に住む")
+    for m in result:
+        assert m.conj_type is None or isinstance(m.conj_type, str)
+        assert m.conj_form is None or isinstance(m.conj_form, str)
+    # A particle such as に does not conjugate, so its fields are None (not "").
+    particles = [m for m in result if m.surface == "に"]
+    assert particles
+    assert all(p.conj_type is None and p.conj_form is None for p in particles)
+
+
 def test_empty_string_yields_no_morphemes() -> None:
     with Suzume() as sz:
         assert sz.analyze("") == []

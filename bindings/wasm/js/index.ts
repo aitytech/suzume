@@ -188,7 +188,12 @@ const registry = new FinalizationRegistry((ref: CleanupRef) => {
 });
 
 /**
- * Suzume instance for Japanese morphological analysis
+ * Suzume instance for Japanese morphological analysis.
+ *
+ * Error contract note: under the WebAssembly build, a memory-allocation failure
+ * aborts the module rather than returning NULL, so the C++ allocation-failure
+ * path (which maps to a NULL return and a thrown Error on native/Python) is
+ * effectively unreachable here.
  */
 export class Suzume {
   private module: EmscriptenModule;
@@ -385,6 +390,9 @@ export class Suzume {
 
       try {
         const heap = module.HEAPU32;
+        // Zero the whole struct first so any field the C ABI may append later
+        // defaults to zero instead of reading back uninitialized malloc bytes.
+        new Uint8Array(heap.buffer).fill(0, optionsPtr, optionsPtr + OPTIONS_SIZE);
         const modeMap: Record<NonNullable<SuzumeOptions['mode']>, number> = {
           normal: 0,
           search: 1,

@@ -61,6 +61,17 @@ const suzume = await Suzume.create({
 })
 ```
 
+## Error handling
+
+Analysis and tag-generation methods throw an `Error` (carrying the C API's last
+error message) when the underlying call fails.
+
+Note that the error contract differs from the native and Python bindings on one
+point: under the WebAssembly build, a memory-allocation failure aborts the
+module instead of returning `NULL`. The C++ code path that maps an allocation
+failure to a `NULL` return is therefore effectively unreachable in WASM, so you
+will observe an abort rather than a thrown `Error` in that specific case.
+
 ## Documentation
 
 - [Getting Started](https://suzume.libraz.net/docs/getting-started)

@@ -47,7 +47,8 @@ export const TAGS_LAYOUT = {
 } as const;
 
 export const TAG_OPTIONS_LAYOUT = {
-  size: 40,
+  // Total struct size; includes the trailing uint32_t `size` field (offset 40).
+  size: 44,
   posFilter: 0,
   excludeBasic: 4,
   useLemma: 8,

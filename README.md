@@ -80,9 +80,9 @@ with Suzume() as sz:
     for m in sz.analyze('すもももももももものうち'):
         print(m.surface, m.pos_ja)
 
-    # Tag extraction (returns Tag objects with .text / .pos)
+    # Tag extraction (returns Tag objects with .tag / .pos)
     tags = sz.generate_tags('東京に行きました')
-    print([(t.text, t.pos) for t in tags])
+    print([(t.tag, t.pos) for t in tags])
 ```
 
 See [bindings/python/README.md](bindings/python/README.md) for the full Python API.
