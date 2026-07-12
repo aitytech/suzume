@@ -640,6 +640,60 @@
           "surface": "読める"
         }
       ]
+    },
+    {
+      "description": "lexicalized godan verb 引きずる recognized as single verb (L2)",
+      "expected": [
+        {
+          "lemma": "足",
+          "pos": "Noun",
+          "surface": "足"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "引きずる",
+          "pos": "Verb",
+          "surface": "引きずる"
+        }
+      ],
+      "id": "wo_kizuru",
+      "input": "足を引きずる"
+    },
+    {
+      "description": "引きずる te-form 引きずっ|て in context",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "引きずる",
+          "pos": "Verb",
+          "surface": "引きずっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩く"
+        }
+      ],
+      "id": "wo_kizuttte_ku",
+      "input": "荷物を引きずって歩く"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",
