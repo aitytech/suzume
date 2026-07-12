@@ -710,17 +710,10 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           continue;  // Skip - let the split (noun + suru-aux) win
         }
 
-        // Skip て+subsidiary verb patterns (てもらう, てくれ, てあげ, etc.)
-        // For MeCab-compatible split: 助けてもらう → 助け + て + もらう
-        //                            食べてくれる → 食べ + て + くれる
-        // These patterns should be split to allow subsidiary verb analysis
-        if (surface.find("てもらう") != std::string::npos || surface.find("てもらっ") != std::string::npos ||
-            surface.find("てもらい") != std::string::npos || surface.find("てもらえ") != std::string::npos ||
-            surface.find("てくれる") != std::string::npos || surface.find("てくれま") != std::string::npos ||
-            surface.find("てくれた") != std::string::npos || surface.find("てくれて") != std::string::npos ||
-            surface.find("てくれな") != std::string::npos || surface.find("てほしい") != std::string::npos ||
-            surface.find("てあげる") != std::string::npos || surface.find("てあげま") != std::string::npos ||
-            surface.find("てあげた") != std::string::npos) {
+        // Skip te-form + subsidiary/aspect verb patterns (てもらう, てくれ, てあげ,
+        // ていく, ている, てお, ...): these split as verb te-form + auxiliary
+        // (助けてもらう → 助け+て+もらう, 食べていく → 食べ+て+いく).
+        if (vh::embedsTeFormAuxiliary(surface)) {
           continue;  // Skip - let the split (verb te-form + subsidiary verb) win
         }
 

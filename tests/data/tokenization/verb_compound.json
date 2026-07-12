@@ -1550,6 +1550,50 @@
       ],
       "id": "riyuku",
       "input": "散りゆく桜"
+    },
+    {
+      "description": "食べていく - auto-generated",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Verb",
+          "surface": "いく"
+        }
+      ],
+      "id": "beteiku",
+      "input": "食べていく"
+    },
+    {
+      "description": "続けていく - auto-generated",
+      "expected": [
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続け"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Verb",
+          "surface": "いく"
+        }
+      ],
+      "id": "keteiku",
+      "input": "続けていく"
     }
   ],
   "description": "Compound verbs",

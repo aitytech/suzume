@@ -174,6 +174,31 @@ inline bool isSuppressedSokuonOnset(const std::vector<char32_t>& codepoints, siz
 }
 
 /**
+ * @brief True when a single-verb candidate surface embeds a て/で-form followed
+ *        by a subsidiary or aspect verb that would otherwise merge into one verb.
+ *
+ * The 〜ていく directional aspect ends in く, so a candidate like 食べていく is
+ * mis-generated as a lone godan-ka verb and must be split (食べ+て+いく), unlike
+ * 食べている where the plain split already wins. The benefactive/request verbs
+ * (てもらう/てくれ/てあげ/てほしい) likewise split (助けてもらう → 助け+て+もらう).
+ * Continuation 〜ている/ておく is intentionally NOT matched here: it would also
+ * catch verbs whose renyokei ends in て (慌て+ている, 捨て+ておく) and strand the
+ * stem.
+ */
+inline bool embedsTeFormAuxiliary(std::string_view surface) {
+  static constexpr std::string_view kPatterns[] = {
+      "ていく", "ていっ", "ていけ", "ていか",             // 〜ていく directional aspect
+      "てもら", "てくれ", "てあげ", "てほしい", "てくださ",  // benefactive / request
+  };
+  for (const std::string_view pat : kPatterns) {
+    if (surface.find(pat) != std::string_view::npos) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * @brief Extend candidates with emphatic suffix variants
  *
  * For each verb/adjective candidate, checks if input continues with emphatic
