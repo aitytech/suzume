@@ -155,15 +155,6 @@ char32_t getHiraganaVowel(char32_t c) {
   }
 }
 
-bool isTeTaFormSokuon(const std::vector<char32_t>& codepoints, size_t sokuon_pos) {
-  if (sokuon_pos + 1 >= codepoints.size()) {
-    return false;  // Sokuon at end - could be emphatic
-  }
-  char32_t next = codepoints[sokuon_pos + 1];
-  // っ+て, っ+た patterns are te/ta forms, not emphatic
-  return next == core::hiragana::kTe || next == core::hiragana::kTa;
-}
-
 void addEmphaticVariants(std::vector<UnknownCandidate>& candidates, const std::vector<char32_t>& codepoints) {
   std::vector<UnknownCandidate> emphatic_variants;
 
@@ -180,9 +171,11 @@ void addEmphaticVariants(std::vector<UnknownCandidate>& candidates, const std::v
     while (emphatic_end < codepoints.size()) {
       char32_t c = codepoints[emphatic_end];
       if (isEmphaticChar(c)) {
-        // Special case: っ followed by て/た is verb te-form, not emphatic
-        if ((c == core::hiragana::kSmallTsu || c == U'ッ') && isTeTaFormSokuon(codepoints, emphatic_end)) {
-          break;  // Stop - this is part of a verb, not emphatic
+        // Stop before a sokuon that begins a te/ta-form, colloquial auxiliary
+        // (っす/っさ/っせ) or Godan quotative (っと): it is a separate morpheme.
+        if ((c == core::hiragana::kSmallTsu || c == U'ッ') && cand.end > 0 &&
+            isSuppressedSokuonOnset(codepoints, emphatic_end, cand.pos, codepoints[cand.end - 1])) {
+          break;
         }
         emphatic_suffix += normalize::encodeUtf8(c);
         ++emphatic_end;

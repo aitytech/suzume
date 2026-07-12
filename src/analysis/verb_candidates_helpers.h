@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "core/types.h"
+#include "core/utf8_constants.h"
 #include "dictionary/dictionary.h"
 #include "grammar/conjugation.h"
 #include "grammar/inflection.h"
@@ -64,6 +65,28 @@ inline bool isVerbInDictionary(const dictionary::DictionaryManager* dict_manager
  */
 inline bool isAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form) {
   return hasDictionaryEntry(dict_manager, base_form, core::PartOfSpeech::Adjective);
+}
+
+/**
+ * @brief Check if a surface exists in dictionary as a noun (exact match)
+ *
+ * Reports a hit only for an entry whose surface equals @p surface, so a shorter
+ * dictionary prefix (e.g. a single-kanji noun) does not spuriously match a
+ * longer verb candidate.
+ */
+inline bool isNounInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
+  return hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Noun);
+}
+
+/**
+ * @brief Check if a surface exists in dictionary as a noun or adjective (exact match)
+ *
+ * Reports a hit only for an entry whose surface equals @p surface (see
+ * isNounInDictionary for the exact-match rationale).
+ */
+inline bool isNounOrAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
+  return hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Noun) ||
+         hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Adjective);
 }
 
 /**
@@ -117,9 +140,38 @@ bool isEmphaticChar(char32_t c);
 char32_t getHiraganaVowel(char32_t c);
 
 /**
- * @brief Check if position is likely part of a verb te/ta-form, not emphatic
+ * @brief Decide whether a sokuon (っ/ッ) begins a following morpheme rather than
+ *        attaching to the base candidate as emphatic elongation.
+ *
+ * A sokuon after a verb/adjective/auxiliary is normally emphatic (行くっ, やばいっ).
+ * It must instead be released when it begins:
+ *   - a te/ta-form (って/った),
+ *   - the colloquial polite auxiliary っす/っさ/っせ (=です), or
+ *   - a Godan quotative っと after a 終止形 (u-row) verb (行く+っと).
+ * In those cases the base candidate must stop before the sokuon so the following
+ * morpheme (て/た/っす/っと ...) can split off. This is the single guard shared by
+ * the dictionary path (tokenizer) and the unknown-word path (addEmphaticVariants),
+ * so both split an i-adjective/verb stem + っす identically.
+ *
+ * @param codepoints Full input codepoints.
+ * @param sokuon_pos Index of the sokuon character.
+ * @param base_pos   POS of the base candidate (Verb enables the っと quotative check).
+ * @param base_final Final codepoint of the base candidate.
+ * @return true if the sokuon should be released (not absorbed as emphatic).
  */
-bool isTeTaFormSokuon(const std::vector<char32_t>& codepoints, size_t sokuon_pos);
+inline bool isSuppressedSokuonOnset(const std::vector<char32_t>& codepoints, size_t sokuon_pos,
+                                    core::PartOfSpeech base_pos, char32_t base_final) {
+  if (sokuon_pos + 1 >= codepoints.size()) {
+    return false;  // Sokuon at end - keep as emphatic
+  }
+  char32_t next = codepoints[sokuon_pos + 1];
+  // Te/ta-form (って/った) or colloquial polite auxiliary っす/っさ/っせ (=です).
+  if (next == core::hiragana::kTe || next == core::hiragana::kTa || next == U'す' || next == U'さ' || next == U'せ') {
+    return true;
+  }
+  // Godan quotative っと after a 終止形 (u-row) verb: 行く+っと, not 行くっ+と.
+  return next == U'と' && base_pos == core::PartOfSpeech::Verb && normalize::isURowHiragana(base_final);
+}
 
 /**
  * @brief Extend candidates with emphatic suffix variants

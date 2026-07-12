@@ -156,9 +156,9 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // v0.8: Base cost from ExtendedPOS category
   float category_cost = getCategoryCost(edge.extended_pos);
 
-  // Use edge.cost if explicitly set (non-zero), otherwise use category cost
-  // This allows candidates (e.g., adjective stem + すぎる) to have custom costs
-  float cost = (edge.cost != 0.0F) ? edge.cost : category_cost;
+  // HasCustomCost distinguishes a tuned 0.0 from "unset"; unflagged edges use non-zero edge.cost, else category.
+  const bool use_edge_cost = edge.hasCustomCost() || edge.cost != 0.0F;
+  float cost = use_edge_cost ? edge.cost : category_cost;
 
   // Length-scaled bonus helper: base + per_char * (char_len - min_len)
   auto lengthScaledBonus = [](float base, size_t char_len, size_t min_len, float per_char) {
@@ -588,7 +588,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   SUZUME_DEBUG_VERBOSE_BLOCK {
     // Base source type
     const char* source = edge.fromDictionary() ? "dict" : edge.isUnknown() ? "unk" : "infl";
-    const char* cost_from = (edge.cost != 0.0F) ? "edge" : "category";
+    const char* cost_from = use_edge_cost ? "edge" : "category";
 
     SUZUME_DEBUG_STREAM << "[WORD] \"" << edge.surface << "\" (" << source;
 #ifdef SUZUME_DEBUG_INFO
@@ -602,7 +602,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
 #endif
     SUZUME_DEBUG_STREAM << ") cost=" << cost << " (from " << cost_from << ")";
     SUZUME_DEBUG_STREAM << " [cat=" << category_cost;
-    if (edge.cost != 0.0F) {
+    if (use_edge_cost) {
       SUZUME_DEBUG_STREAM << " edge=" << edge.cost;
     }
     // Show epos with source indicator
@@ -780,7 +780,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       next.surface.size() >= 6 && next.surface.compare(0, 6, "させ") == 0) {
     // Check if prev is a single-kanji ichidan verb stem (見, 寝, 着, etc.)
     bool is_single_kanji_ichidan = false;
-    if (prev.surface.size() == 3) {  // Single kanji (3 bytes in UTF-8)
+    if (normalize::utf8Length(prev.surface) == 1) {  // Single character (codepoint-aware)
       auto codepoints = normalize::toCodepoints(prev.surface);
       if (!codepoints.empty()) {
         is_single_kanji_ichidan = verb_helpers::isSingleKanjiIchidan(codepoints[0]);
@@ -1460,7 +1460,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Exception: し (suru renyokei) is valid for サ変 pattern (得+し, 得する)
   // Exception: Katakana verbs (バズっ, ググっ) are valid after nouns (超バズった)
   // Exception: Kanji-initial verbs (本+買っ) are valid noun+verb (dropped を)
-  if (prev.pos == core::PartOfSpeech::Noun && prev.surface.size() == 3 &&  // Single kanji (3 bytes UTF-8)
+  if (prev.pos == core::PartOfSpeech::Noun && normalize::utf8Length(prev.surface) == 1 &&  // Single char
       next.pos == core::PartOfSpeech::Verb &&
       (next.extended_pos == core::ExtendedPOS::VerbRenyokei || next.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
       next.surface != "し" &&  // Exclude suru renyokei (サ変動詞パターン)
@@ -1816,7 +1816,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Penalty for single-kanji NOUN → pure-hiragana VERB_未然 (non-dict)
   // E.g., 分+から should be 分から (single verb), not 分(NOUN) + から(VERB かる)
   // When a dictionary entry exists for combined form, penalize the split
-  if (prev.pos == core::PartOfSpeech::Noun && prev.surface.size() == core::kJapaneseCharBytes &&  // Single kanji
+  if (prev.pos == core::PartOfSpeech::Noun && normalize::utf8Length(prev.surface) == 1 &&  // Single char
       grammar::isAllKanji(prev.surface) && next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
       !next.fromDictionary() && grammar::isPureHiragana(next.surface)) {
     surface_bonus += cost::kVeryRare;  // Penalize split to favor combined dict verb
@@ -1879,11 +1879,11 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     surface_bonus += cost::kModerateBonus;
   }
 
-  // Penalty for conjunction after single-char token
-  // Conjunctions start clauses and don't follow bare single characters
-  // in running text without punctuation. This prevents verb stems
-  // (醒, 覚, 冷) from splitting before conjunctions (まして, etc.)
-  if (next.pos == core::PartOfSpeech::Conjunction && prev.surface.size() <= 3) {  // Single CJK/kana character (3 bytes)
+  // Penalty for conjunction directly after a bare single-char token (keeps verb stems
+  // 醒/覚/冷 from splitting before まして). Symbol prev excluded so punctuation may
+  // precede a conjunction (雨、しかし…); codepoint count stays correct for 4-byte kanji.
+  if (next.pos == core::PartOfSpeech::Conjunction && prev.pos != core::PartOfSpeech::Symbol &&
+      normalize::utf8Length(prev.surface) == 1) {
     surface_bonus += cost::kAlmostNever;
   }
 

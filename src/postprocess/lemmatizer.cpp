@@ -5,6 +5,7 @@
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
+#include "grammar/inflection_scorer_constants.h"
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 
@@ -363,6 +364,104 @@ bool hasExactVerbEntry(const dictionary::DictionaryManager* dict_manager, std::s
   return false;
 }
 
+// Check if string ends with suffix (internal helper mirroring Lemmatizer::endsWith)
+bool endsWithSuffix(std::string_view str, std::string_view suffix) {
+  return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+// =============================================================================
+// Shared lemma-correction helpers
+//
+// These encapsulate corrections applied identically from both lemmatize()
+// (single morpheme) and lemmatizeAll() (vector pass) so there is one source of
+// truth. Each returns the corrected lemma, or an empty string when the pattern
+// does not apply (meaning: leave the existing lemma unchanged). The POS guard
+// (Verb / Adverb) stays at the call site.
+// =============================================================================
+
+// サ変動詞 classical form: 漢字2文字以上+す → 漢字+する
+// e.g., 確認す → 確認する, 運動す → 運動する.
+// Single kanji + す (出す, 消す) are GodanSa, not Suru, so require a 2+ kanji stem.
+std::string fixSuruClassical(std::string_view lemma) {
+  if (!endsWithSuffix(lemma, "す") || endsWithSuffix(lemma, "する")) {
+    return "";
+  }
+  std::string stem(lemma.substr(0, lemma.size() - core::kJapaneseCharBytes));
+  if (stem.size() >= core::kTwoJapaneseCharBytes && grammar::isAllKanji(stem)) {
+    return stem + "する";
+  }
+  return "";
+}
+
+// Compound verbs analyzed as ichidan but actually サ変/godan-sa: [stem]しる → [stem]する/す
+// e.g., 対しる → 対する, 関しる → 関する (single kanji → サ変),
+//       やりなおしる → やりなおす (multi-char → godan-sa).
+// Note: 応じる, 存じる, 信じる, 感じる are genuine ichidan (じる, not しる) and unaffected.
+std::string fixShiru(std::string_view lemma) {
+  if (!endsWithSuffix(lemma, "しる")) {
+    return "";
+  }
+  std::string stem(lemma.substr(0, lemma.size() - core::kTwoJapaneseCharBytes));
+  if (stem.size() < core::kJapaneseCharBytes) {
+    return "";
+  }
+  if (stem.size() == core::kJapaneseCharBytes && grammar::isAllKanji(stem)) {
+    return stem + "する";
+  }
+  return stem + "す";
+}
+
+// Potential verb (可能動詞): single-token 〜れる keeps lemma = surface.
+// e.g., 書ける, 泊まれる, 読める. Passive forms are split (読ま+れる), so a single
+// 〜れる token is treated as potential (ichidan), whose lemma is the surface itself.
+std::string fixPotentialVerb(const core::Morpheme& morpheme) {
+  if (morpheme.pos == core::PartOfSpeech::Verb && endsWithPotentialVerbSuffix(morpheme.surface)) {
+    return morpheme.surface;
+  }
+  return "";
+}
+
+// Tari-adjective adverb: strip trailing と, e.g., 颯爽と → 颯爽, 堂々と → 堂々.
+// Pattern: exactly 漢字2文字 + と (6 bytes kanji + 3 bytes と). MeCab uses the stem as lemma.
+std::string fixTariAdverb(std::string_view surface) {
+  constexpr size_t kTariAdverbLen = core::kTwoJapaneseCharBytes + core::kJapaneseCharBytes;
+  if (surface.size() != kTariAdverbLen || !endsWithSuffix(surface, "と")) {
+    return "";
+  }
+  std::string stem(surface.substr(0, core::kTwoJapaneseCharBytes));
+  if (grammar::isAllKanji(stem) ||
+      (stem.size() == core::kTwoJapaneseCharBytes && stem.substr(core::kJapaneseCharBytes) == "々")) {
+    return stem;
+  }
+  return "";
+}
+
+// 撥音便 godan base from a stem whose original onbin form ended in ん.
+// Tries stem + む/ぶ/ぬ against the dictionary; falls back to む (most common
+// 撥音便) when the stem is all kanji. Returns empty if nothing applies.
+// e.g., 読ん → 読む, 学ん → 学ぶ, 死ん → 死ぬ.
+std::string fixHatsuonbin(std::string_view stem, const dictionary::DictionaryManager* dict_manager) {
+  if (stem.empty()) {
+    return "";
+  }
+  if (dict_manager != nullptr) {
+    for (std::string_view ending : {"む", "ぶ", "ぬ"}) {
+      std::string base = std::string(stem) + std::string(ending);
+      auto results = dict_manager->lookup(base, 0);
+      for (const auto& result : results) {
+        if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Verb) {
+          return base;
+        }
+      }
+    }
+  }
+  // Kanji-fallback guard: assume む for kanji stems when no dictionary match is found.
+  if (grammar::isAllKanji(stem)) {
+    return std::string(stem) + "む";
+  }
+  return "";
+}
+
 }  // namespace
 
 bool Lemmatizer::endsWith(std::string_view str, std::string_view suffix) {
@@ -589,19 +688,12 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
     return morpheme.lemma;
   }
 
-  // Tari-adjective adverbs: remove trailing と from lemma
-  // e.g., 颯爽と → 颯爽, 堂々と → 堂々
-  // Pattern: 漢字2文字 + と (6 bytes kanji + 3 bytes と = 9 bytes)
+  // Tari-adjective adverbs: remove trailing と from lemma (颯爽と → 颯爽, 堂々と → 堂々)
   // This check runs even for dictionary entries where lemma == surface
   if (morpheme.pos == core::PartOfSpeech::Adverb) {
-    constexpr size_t kTariAdverbLen = core::kTwoJapaneseCharBytes + core::kJapaneseCharBytes;
-    if (morpheme.surface.size() == kTariAdverbLen && endsWith(morpheme.surface, "と")) {
-      std::string stem = morpheme.surface.substr(0, core::kTwoJapaneseCharBytes);
-      // Verify stem is 2 kanji characters (or iteration mark pattern like 堂々)
-      if (grammar::isAllKanji(stem) ||
-          (stem.size() == core::kTwoJapaneseCharBytes && stem.substr(core::kJapaneseCharBytes) == "々")) {
-        return stem;
-      }
+    std::string tari_stem = fixTariAdverb(morpheme.surface);
+    if (!tari_stem.empty()) {
+      return tari_stem;
     }
   }
 
@@ -609,13 +701,8 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
   // (lemma == surface means it's a default that may need re-derivation)
   if (!morpheme.lemma.empty() && morpheme.lemma != morpheme.surface) {
     // Fix potential verb (可能動詞) lemma FIRST: 泊まれる should have lemma=泊まれる, not 泊む
-    // Potential verbs are single tokens ending in 〜れる (e.g., 書ける, 泊まれる, 読める)
-    // The inflection analyzer incorrectly derives lemma as godan base (泊む from 泊まれる)
-    // but potential verbs are ichidan verbs - their lemma should be surface itself
-    // Passive forms are split (読ま+れる), so single token 〜れる is likely potential
-    if (morpheme.pos == core::PartOfSpeech::Verb && endsWithPotentialVerbSuffix(morpheme.surface)) {
-      // Single token 〜れる verb: treat as potential verb, lemma = surface
-      return morpheme.surface;
+    if (std::string potential = fixPotentialVerb(morpheme); !potential.empty()) {
+      return potential;
     }
 
     // B45: Special fix for ない adjective + さ + そう pattern
@@ -667,15 +754,10 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
       }
     }
 
-    // Check for サ変動詞 classical form: 漢字2文字以上+す → 漢字+する
-    // e.g., 確認す → 確認する, 運動す → 運動する
-    // Single kanji + す (出す, 消す) are GodanSa, not Suru
-    if (morpheme.pos == core::PartOfSpeech::Verb && endsWith(morpheme.lemma, "す") &&
-        !endsWith(morpheme.lemma, "する")) {
-      std::string stem = morpheme.lemma.substr(0, morpheme.lemma.size() - core::kJapaneseCharBytes);
-      // Check if stem is 2+ kanji characters (6+ bytes)
-      if (stem.size() >= core::kTwoJapaneseCharBytes && grammar::isAllKanji(stem)) {
-        return stem + "する";
+    // Check for サ変動詞 classical form: 漢字2文字以上+す → 漢字+する (確認す → 確認する)
+    if (morpheme.pos == core::PartOfSpeech::Verb) {
+      if (std::string suru = fixSuruClassical(morpheme.lemma); !suru.empty()) {
+        return suru;
       }
     }
 
@@ -683,36 +765,12 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
     // E.g., 学ん → lemma=学む (wrong) → should be 学ぶ (correct)
     // The candidate generator may produce wrong lemma when dictionary lookup fails
     if (morpheme.pos == core::PartOfSpeech::Verb && endsWith(morpheme.surface, "ん") &&
-        endsWith(morpheme.lemma, "む") && morpheme.lemma.size() >= core::kTwoJapaneseCharBytes &&
-        dict_manager_ != nullptr) {
+        endsWith(morpheme.lemma, "む") && morpheme.lemma.size() >= core::kTwoJapaneseCharBytes) {
       std::string stem = morpheme.lemma.substr(0, morpheme.lemma.size() - core::kJapaneseCharBytes);
-      // Try ぶ (学ぶ, 遊ぶ, 飛ぶ, etc.)
-      std::string bu_form = stem + "ぶ";
-      auto results_bu = dict_manager_->lookup(bu_form, 0);
-      for (const auto& r : results_bu) {
-        if (r.entry != nullptr && r.entry->pos == core::PartOfSpeech::Verb) {
-          return bu_form;
-        }
+      if (std::string fixed = fixHatsuonbin(stem, dict_manager_); !fixed.empty()) {
+        return fixed;
       }
-      // Try ぬ (死ぬ)
-      std::string nu_form = stem + "ぬ";
-      auto results_nu = dict_manager_->lookup(nu_form, 0);
-      for (const auto& r : results_nu) {
-        if (r.entry != nullptr && r.entry->pos == core::PartOfSpeech::Verb) {
-          return nu_form;
-        }
-      }
-      // Original む form - keep it
-    }
-
-    // Fix potential verb (可能動詞) lemma: 泊まれる should have lemma=泊まれる, not 泊む
-    // Potential verbs are single tokens ending in 〜れる (e.g., 書ける, 泊まれる, 読める)
-    // The inflection analyzer incorrectly derives lemma as godan base (泊む from 泊まれる)
-    // but potential verbs are ichidan verbs - their lemma should be surface itself
-    // Passive forms are split (読ま+れる), so single token 〜れる is likely potential
-    if (morpheme.pos == core::PartOfSpeech::Verb && endsWithPotentialVerbSuffix(morpheme.surface)) {
-      // Single token 〜れる verb: treat as potential verb, lemma = surface
-      return morpheme.surface;
+      // No correction found - keep the original む form
     }
 
     return morpheme.lemma;
@@ -734,17 +792,9 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
     case core::PartOfSpeech::Auxiliary:
     case core::PartOfSpeech::Conjunction:
     case core::PartOfSpeech::Adverb: {
-      // Tari-adjective adverbs: remove trailing と from lemma
-      // e.g., 颯爽と → 颯爽, 堂々と → 堂々
-      // Pattern: 漢字2文字 + と (6 bytes kanji + 3 bytes と = 9 bytes)
-      constexpr size_t kTariAdverbLen = core::kTwoJapaneseCharBytes + core::kJapaneseCharBytes;
-      if (morpheme.surface.size() == kTariAdverbLen && endsWith(morpheme.surface, "と")) {
-        std::string stem = morpheme.surface.substr(0, core::kTwoJapaneseCharBytes);
-        // Verify stem is 2 kanji characters (or iteration mark pattern like 堂々)
-        if (grammar::isAllKanji(stem) ||
-            (stem.size() == core::kTwoJapaneseCharBytes && stem.substr(core::kJapaneseCharBytes) == "々")) {
-          return stem;
-        }
+      // Tari-adjective adverbs: remove trailing と from lemma (颯爽と → 颯爽, 堂々と → 堂々)
+      if (std::string tari_stem = fixTariAdverb(morpheme.surface); !tari_stem.empty()) {
+        return tari_stem;
       }
       return morpheme.surface;
     }
@@ -771,31 +821,14 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
   // it equals the surface (which means the surface is already a dictionary form)
   // Only fall back to rule-based if grammar analysis returned empty/failed
   if (!grammar_result.empty()) {
-    // Check for サ変動詞 classical form: 漢字2文字以上+す → 漢字+する
-    // e.g., 勉強す → 勉強する, 運動す → 運動する
-    // Single kanji + す (出す, 消す) are GodanSa, not Suru
-    if (morpheme.pos == core::PartOfSpeech::Verb && endsWith(grammar_result, "す") &&
-        !endsWith(grammar_result, "する")) {
-      std::string stem = grammar_result.substr(0, grammar_result.size() - core::kJapaneseCharBytes);
-      // Check if stem is 2+ kanji characters (6+ bytes)
-      if (stem.size() >= core::kTwoJapaneseCharBytes && grammar::isAllKanji(stem)) {
-        return stem + "する";
+    // Check for サ変動詞 classical form: 漢字2文字以上+す → 漢字+する (勉強す → 勉強する)
+    // Check for compound しる verbs: 対しる → 対する, やりなおしる → やりなおす
+    if (morpheme.pos == core::PartOfSpeech::Verb) {
+      if (std::string suru = fixSuruClassical(grammar_result); !suru.empty()) {
+        return suru;
       }
-    }
-    // Check for compound verbs that conjugate like サ変: [stem]しる → [stem]する
-    // e.g., 対しる → 対する, 関しる → 関する, やりなおしる → やりなおす
-    // These verbs are incorrectly analyzed as ichidan (stem + る) but should be サ変/godan-sa
-    // Note: 応じる, 存じる, 信じる, 感じる are actual ichidan verbs (じる, not しる)
-    if (morpheme.pos == core::PartOfSpeech::Verb && endsWith(grammar_result, "しる")) {
-      std::string stem = grammar_result.substr(0, grammar_result.size() - core::kTwoJapaneseCharBytes);
-      if (stem.size() >= core::kJapaneseCharBytes) {
-        // Single kanji stem: compound する-verb (対する, 関する, etc.)
-        if (stem.size() == core::kJapaneseCharBytes && grammar::isAllKanji(stem)) {
-          return stem + "する";
-        }
-        // Multi-character stem: compound godan-sa verb (やりなおす, etc.)
-        // Convert しる → す (godan-sa base form)
-        return stem + "す";
+      if (std::string shiru = fixShiru(grammar_result); !shiru.empty()) {
+        return shiru;
       }
     }
     // For passive verbs, grammar-based returns the passive form as base (e.g., いわれる)
@@ -813,9 +846,8 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
       // vs Passive: godan_mizen + れる → split as 読ま+れる
       // Since this morpheme is a single token ending in 〜れる, it's likely a potential verb.
       // (Passive forms would be split into 未然形 + れる by the tokenizer)
-      if (endsWithPotentialVerbSuffix(morpheme.surface)) {
-        // Single token 〜れる verb: treat as potential verb, lemma = surface
-        return morpheme.surface;
+      if (std::string potential = fixPotentialVerb(morpheme); !potential.empty()) {
+        return potential;
       }
 
       std::string rule_result = lemmatizeVerb(morpheme.surface);
@@ -843,37 +875,8 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
       if (endsWith(sfc, "ん") && endsWith(grammar_result, "る") &&
           grammar_result.size() >= core::kTwoJapaneseCharBytes) {
         std::string stem = grammar_result.substr(0, grammar_result.size() - core::kJapaneseCharBytes);
-        // Try all three 撥音便 endings with dictionary verification
-        if (dict_manager_ != nullptr) {
-          // Try む first (most common: 読む, 飲む, etc.)
-          std::string godan_mu_form = stem + "む";
-          auto results_mu = dict_manager_->lookup(godan_mu_form, 0);
-          for (const auto& r : results_mu) {
-            if (r.entry != nullptr && r.entry->pos == core::PartOfSpeech::Verb) {
-              return godan_mu_form;
-            }
-          }
-          // Try ぶ (学ぶ, 遊ぶ, 飛ぶ, etc.)
-          std::string godan_bu_form = stem + "ぶ";
-          auto results_bu = dict_manager_->lookup(godan_bu_form, 0);
-          for (const auto& r : results_bu) {
-            if (r.entry != nullptr && r.entry->pos == core::PartOfSpeech::Verb) {
-              return godan_bu_form;
-            }
-          }
-          // Try ぬ (死ぬ)
-          std::string godan_nu_form = stem + "ぬ";
-          auto results_nu = dict_manager_->lookup(godan_nu_form, 0);
-          for (const auto& r : results_nu) {
-            if (r.entry != nullptr && r.entry->pos == core::PartOfSpeech::Verb) {
-              return godan_nu_form;
-            }
-          }
-        }
-        // Fallback: if stem is kanji, assume む (most common 撥音便 pattern)
-        std::string godan_form = stem + "む";
-        if (!stem.empty() && grammar::isAllKanji(stem)) {
-          return godan_form;
+        if (std::string fixed = fixHatsuonbin(stem, dict_manager_); !fixed.empty()) {
+          return fixed;
         }
       }
       // イ音便: surface ends with い, result ends with う → く or ぐ
@@ -944,15 +947,11 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
       morpheme.lemma = "ない";
     }
 
-    // Fix classical suru-verb lemma: 漢字2文字以上+す → 漢字+する
-    // e.g., 確認す → 確認する, 運動す → 運動する
+    // Fix classical suru-verb lemma: 漢字2文字以上+す → 漢字+する (確認す → 確認する)
     // The verb_candidates sometimes returns classical form that needs conversion
-    if (morpheme.pos == core::PartOfSpeech::Verb && !morpheme.lemma.empty() && endsWith(morpheme.lemma, "す") &&
-        !endsWith(morpheme.lemma, "する")) {
-      std::string stem = morpheme.lemma.substr(0, morpheme.lemma.size() - core::kJapaneseCharBytes);
-      // Check if stem is 2+ kanji characters (6+ bytes)
-      if (stem.size() >= core::kTwoJapaneseCharBytes && grammar::isAllKanji(stem)) {
-        morpheme.lemma = stem + "する";
+    if (morpheme.pos == core::PartOfSpeech::Verb) {
+      if (std::string suru = fixSuruClassical(morpheme.lemma); !suru.empty()) {
+        morpheme.lemma = suru;
       }
     }
 
@@ -963,41 +962,25 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
     }
 
     // Fix tari-adjective adverb lemma: 颯爽と → 颯爽, 堂々と → 堂々
-    // Pattern: 漢字2文字 + と (6 bytes kanji + 3 bytes と = 9 bytes)
     // MeCab uses stem only as lemma for tari-adverbs
-    constexpr size_t kTariAdverbLen = core::kTwoJapaneseCharBytes + core::kJapaneseCharBytes;
-    if (morpheme.pos == core::PartOfSpeech::Adverb && morpheme.surface.size() == kTariAdverbLen &&
-        endsWith(morpheme.surface, "と")) {
-      std::string stem = morpheme.surface.substr(0, core::kTwoJapaneseCharBytes);
-      // Verify stem is 2 kanji characters (or iteration mark pattern like 堂々)
-      if (grammar::isAllKanji(stem) ||
-          (stem.size() == core::kTwoJapaneseCharBytes && stem.substr(core::kJapaneseCharBytes) == "々")) {
-        morpheme.lemma = stem;
+    if (morpheme.pos == core::PartOfSpeech::Adverb) {
+      if (std::string tari_stem = fixTariAdverb(morpheme.surface); !tari_stem.empty()) {
+        morpheme.lemma = tari_stem;
       }
     }
 
     // Fix potential verb (可能動詞) lemma: 泊まれる should have lemma=泊まれる, not 泊む
-    // Potential verbs are single tokens ending in 〜れる (e.g., 書ける, 泊まれる, 読める)
-    // The inflection analyzer incorrectly derives lemma as godan base (泊む from 泊まれる)
-    // but potential verbs are ichidan verbs - their lemma should be surface itself
-    // Passive forms are split (読ま+れる), so single token 〜れる is likely potential
-    if (morpheme.pos == core::PartOfSpeech::Verb && morpheme.lemma != morpheme.surface &&
-        endsWithPotentialVerbSuffix(morpheme.surface)) {
-      // Single token 〜れる verb: treat as potential verb, lemma = surface
-      morpheme.lemma = morpheme.surface;
+    if (morpheme.lemma != morpheme.surface) {
+      if (std::string potential = fixPotentialVerb(morpheme); !potential.empty()) {
+        morpheme.lemma = potential;
+      }
     }
 
-    // Fix compound verbs analyzed as ichidan but actually godan-sa
-    // E.g., lemma=やりなおしる → やりなおす, lemma=たのしる → たのす (if non-kanji stem)
-    if (morpheme.pos == core::PartOfSpeech::Verb && endsWith(morpheme.lemma, "しる") &&
-        morpheme.lemma.size() > core::kTwoJapaneseCharBytes) {
-      std::string stem = morpheme.lemma.substr(0, morpheme.lemma.size() - core::kTwoJapaneseCharBytes);
-      if (stem.size() == core::kJapaneseCharBytes && grammar::isAllKanji(stem)) {
-        // Single kanji + しる → する (サ変: 対する, 関する)
-        morpheme.lemma = stem + "する";
-      } else if (stem.size() > core::kJapaneseCharBytes) {
-        // Multi-char stem + しる → す (godan-sa: やりなおす)
-        morpheme.lemma = stem + "す";
+    // Fix compound verbs analyzed as ichidan but actually サ変/godan-sa
+    // E.g., lemma=やりなおしる → やりなおす, lemma=対しる → 対する
+    if (morpheme.pos == core::PartOfSpeech::Verb) {
+      if (std::string shiru = fixShiru(morpheme.lemma); !shiru.empty()) {
+        morpheme.lemma = shiru;
       }
     }
 
@@ -1095,7 +1078,10 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
       // This is onbin form - fix lemma from 〜う to 〜く or 〜ぐ
       std::string stem = morpheme.lemma.substr(0, morpheme.lemma.size() - core::kJapaneseCharBytes);
       // Check if next is voiced (だ/で) → 〜ぐ, otherwise → 〜く
-      if (utf8::equalsAny(next_surface, {"だ", "で"})) {
+      if (grammar::inflection::isValidKanjiIStemException(morpheme.surface)) {
+        // Kami-ichidan renyokei (率い, 老い, ...) - dictionary form is surface + る
+        morpheme.lemma = morpheme.surface + "る";
+      } else if (utf8::equalsAny(next_surface, {"だ", "で"})) {
         morpheme.lemma = stem + "ぐ";  // GodanGa: 泳い+だ → 泳ぐ
       } else {
         morpheme.lemma = stem + "く";  // GodanKa: 書い+た → 書く
@@ -1103,15 +1089,17 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
     }
     // Fix irregular sokuonbin: いっ+た/て → いく (not いう)
     // いく is the only godan-ka verb that uses 促音便 instead of イ音便
-    // Apply when preceded by motion particle (に/へ) or adjective renyokei (〜く)
+    // Apply when preceded by the て particle (〜ていく construction: 出て+いっ+た),
+    // a motion particle (に/へ), or adjective renyokei (〜く)
     // Do NOT apply after quotative markers (と/そう/こう etc.) where いっ = 言う
     if (morpheme.pos == core::PartOfSpeech::Verb && endsWith(morpheme.surface, "いっ") &&
         morpheme.lemma.size() >= core::kTwoJapaneseCharBytes && endsWith(morpheme.lemma, "いう") &&
         utf8::equalsAny(next_surface, {"た", "て", "たら", "ちゃ"}) && i > 0) {
+      bool has_te_particle = morphemes[i - 1].surface == "て";
       bool has_motion_particle = utf8::equalsAny(morphemes[i - 1].surface, {"に", "へ"});
       bool has_adj_renyokei =
           morphemes[i - 1].pos == core::PartOfSpeech::Adjective && endsWith(morphemes[i - 1].surface, "く");
-      if (has_motion_particle || has_adj_renyokei) {
+      if (has_te_particle || has_motion_particle || has_adj_renyokei) {
         std::string stem = morpheme.lemma.substr(0, morpheme.lemma.size() - core::kTwoJapaneseCharBytes);
         morpheme.lemma = stem + "いく";
       }

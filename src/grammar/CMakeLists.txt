@@ -6,7 +6,6 @@ add_library(suzume_grammar STATIC
   char_patterns.cpp
   conjugation.cpp
   conjugator.cpp
-  connection.cpp
   inflection.cpp
   inflection_scorer.cpp
   patterns.cpp

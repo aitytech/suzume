@@ -16,12 +16,36 @@ using normalize::encodeUtf8;
 
 namespace {
 
-// Generate all Godan verb endings from Conjugation::getGodanRows()
+// Fixed Godan-type iteration order for deterministic ending generation.
+//
+// Conjugation::getGodanRows() returns an unordered_map whose iteration order is
+// implementation-defined, which makes tie-breaking between candidates that share
+// an onbin form (立っ → 立つ/立る/立う, 軋ん → 軋む/軋ぶ/軋ぬ) differ across standard
+// libraries. Iterating in this explicit order instead yields identical candidate
+// ordering on every platform (cross-binding output contract).
+//
+// The order is chosen to agree with Conjugation::getGodanTypesByOnbin()'s declared
+// onbin preference, so that when no dictionary entry breaks the tie the same lemma
+// wins everywhere:
+//   - い-onbin: Ka before Ga
+//   - っ-onbin: Ka before Ra before Ta before Wa
+//   - ん-onbin: Ma before Ba before Na
+constexpr VerbType kGodanTypeOrder[] = {
+    VerbType::GodanKa, VerbType::GodanGa, VerbType::GodanSa, VerbType::GodanMa, VerbType::GodanBa,
+    VerbType::GodanNa, VerbType::GodanRa, VerbType::GodanTa, VerbType::GodanWa,
+};
+
+// Generate all Godan verb endings from Conjugation::getGodanRow()
 std::vector<VerbEnding> generateGodanEndings() {
   std::vector<VerbEnding> endings;
   endings.reserve(80);  // Approx 9 types * 9 forms
 
-  for (const auto& [type, row] : Conjugation::getGodanRows()) {
+  for (VerbType type : kGodanTypeOrder) {
+    const auto* row_ptr = Conjugation::getGodanRow(type);
+    if (row_ptr == nullptr) {
+      continue;
+    }
+    const auto& row = *row_ptr;
     std::string base = encodeUtf8(row.base_vowel);
     std::string a_row = encodeUtf8(row.a_row);
     std::string i_row = encodeUtf8(row.i_row);

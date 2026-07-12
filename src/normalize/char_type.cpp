@@ -57,6 +57,7 @@ CharType classifyChar(char32_t codepoint) {
   // Common punctuation and symbols
   if ((codepoint >= 0x3000 && codepoint <= 0x303F) ||  // CJK Symbols and Punctuation
       (codepoint >= 0xFF00 && codepoint <= 0xFF0F) ||  // Full-width symbols
+      (codepoint >= 0xFF61 && codepoint <= 0xFF65) ||  // Half-width CJK punctuation (｡｢｣､･)
       (codepoint >= 0x0020 && codepoint <= 0x002F) ||  // ASCII punctuation
       (codepoint >= 0x003A && codepoint <= 0x0040) ||  // ASCII punctuation
       (codepoint >= 0x005B && codepoint <= 0x0060) ||  // ASCII punctuation

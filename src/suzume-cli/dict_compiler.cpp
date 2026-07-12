@@ -182,8 +182,12 @@ bool isTrivialEntry(std::string_view surface) {
     }
   }
 
-  // All meaningful characters are the same type (or none found): trivial
-  return true;
+  // A "trivial" entry is a run the tokenizer already reconstructs from character
+  // type alone: a pure-katakana run (loanword) or a pure-kanji run (compound).
+  // Pure-hiragana words carry real lexical value and are NOT reconstructable
+  // (e.g. つめあわせ would mis-split into つめあわ + せ), so they are never
+  // trivial — nor are alphabet/digit-only or symbol-only surfaces.
+  return primary_type == CharType::Katakana || primary_type == CharType::Kanji;
 }
 
 DictCompiler::DictCompiler() = default;

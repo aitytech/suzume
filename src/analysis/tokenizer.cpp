@@ -209,31 +209,20 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
         }
       }
 
-      // Add emphatic variant if we found any emphatic characters
-      if (!emphatic_suffix.empty()) {
-        // Skip emphatic form if it looks like the sokuon is part of a polite auxiliary
-        // E.g., いいっす should be いい+っす, not いいっ+す
-        // Check: if emphatic_suffix is just っ and followed by す/さ/せ
-        if (emphatic_suffix == "っ" && emphatic_end < codepoints.size()) {
-          char32_t after_sokuon = codepoints[emphatic_end];
-          // Skip if followed by す/さ/せ (common polite auxiliary patterns)
-          if (after_sokuon == U'す' || after_sokuon == U'さ' || after_sokuon == U'せ') {
-            // Don't create emphatic form - let っす/っさ/っせ be parsed separately
+      // Release a lone sokuon that actually begins a separate morpheme rather
+      // than attaching as emphatic elongation.
+      if (emphatic_suffix == "っ" && emphatic_end < codepoints.size()) {
+        char32_t after_sokuon = codepoints[emphatic_end];
+        // Colloquial polite auxiliary っす/っさ/っせ (=です): let it split off.
+        if (after_sokuon == U'す' || after_sokuon == U'さ' || after_sokuon == U'せ') {
+          emphatic_suffix.clear();
+        } else if (after_sokuon == U'て' || after_sokuon == U'と') {
+          // Quotative って / っと after a Godan 終止形 (u-row) verb: 行く+って,
+          // not 行くっ+て. Restricting to 終止形 endings preserves the emphatic
+          // sokuon that doubles as the onbin candidate for other stems.
+          if (result.entry->pos == core::PartOfSpeech::Verb && end_pos > start_pos &&
+              normalize::isURowHiragana(codepoints[end_pos - 1])) {
             emphatic_suffix.clear();
-          }
-          // Skip emphatic for verbs + っ + て/と (quotative って pattern)
-          // E.g., 行くって should be 行く+って, not 行くっ+て
-          // Godan verbs in 終止形 (ending く/す/つ/う/ぐ/ぶ/む/ぬ) + っ + て = quotative
-          else if (after_sokuon == U'て' || after_sokuon == U'と') {
-            if (result.entry->pos == core::PartOfSpeech::Verb && end_pos > start_pos) {
-              char32_t verb_final = codepoints[end_pos - 1];
-              // Godan 終止形 endings that shouldn't have emphatic っ before quotative て
-              if (verb_final == U'く' || verb_final == U'す' || verb_final == U'つ' || verb_final == U'う' ||
-                  verb_final == U'ぐ' || verb_final == U'ぶ' || verb_final == U'む' || verb_final == U'ぬ' ||
-                  verb_final == U'る') {
-                emphatic_suffix.clear();
-              }
-            }
           }
         }
       }

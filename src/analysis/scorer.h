@@ -34,7 +34,7 @@ struct ScorerOptions {
   struct BigramOverrides {
     // High-impact pairs (adjust with caution)
     float noun_to_suffix = std::numeric_limits<float>::quiet_NaN();  // default: -0.8
-    float prefix_to_noun = std::numeric_limits<float>::quiet_NaN();  // default: -1.5
+    float prefix_to_noun = std::numeric_limits<float>::quiet_NaN();  // default: -0.5
     float prefix_to_verb = std::numeric_limits<float>::quiet_NaN();  // default: -0.5
     float pron_to_aux = std::numeric_limits<float>::quiet_NaN();     // default: 0.2
 
@@ -44,7 +44,7 @@ struct ScorerOptions {
     float verb_to_aux = std::numeric_limits<float>::quiet_NaN();   // default: 0.0
 
     // Adjective connections
-    float adj_to_aux = std::numeric_limits<float>::quiet_NaN();   // default: 0.5
+    float adj_to_aux = std::numeric_limits<float>::quiet_NaN();   // default: 0.0
     float adj_to_verb = std::numeric_limits<float>::quiet_NaN();  // default: 0.5
     float adj_to_adj = std::numeric_limits<float>::quiet_NaN();   // default: 0.8
 

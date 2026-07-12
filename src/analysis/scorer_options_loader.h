@@ -14,13 +14,14 @@
 // Priority: Default < JSON file < Environment variables
 // =============================================================================
 
+#include <cerrno>
+#include <cstdlib>
 #include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
 
 #ifndef __EMSCRIPTEN__
-#include <cstdlib>
 #include <iostream>
 #endif
 
@@ -290,9 +291,23 @@ inline JsonValue ScorerOptionsLoader::Parser::parseNumber() {
     while (pos_ < json_.size() && (json_[pos_] >= '0' && json_[pos_] <= '9'))
       pos_++;
   }
-  if (pos_ > start) {
-    result.number_value = std::stof(json_.substr(start, pos_ - start));
+  if (pos_ == start) {
+    setError("Invalid number in JSON");
+    return result;
   }
+  // Exception-free parse: std::strtof never throws (unlike std::stof). Validate
+  // that the whole token was consumed and the magnitude is in range, mirroring
+  // the environment-variable path (env_override_internal::tryGetEnvFloat).
+  std::string number_str = json_.substr(start, pos_ - start);
+  const char* begin_ptr = number_str.c_str();
+  char* end_ptr = nullptr;
+  errno = 0;
+  float parsed = std::strtof(begin_ptr, &end_ptr);
+  if (end_ptr == begin_ptr || *end_ptr != '\0' || errno == ERANGE) {
+    setError("Invalid number in JSON");
+    return result;
+  }
+  result.number_value = parsed;
   return result;
 }
 

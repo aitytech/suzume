@@ -523,15 +523,8 @@ ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix) {
     if (endsWithAny(suffix, {"たら", "だら"})) {
       return ExtendedPOS::VerbTaraForm;
     }
-    // た/だ forms (past) - but not た that follows っ/ん (onbin)
+    // た/だ forms (past), including onbin variants (書いた, 読んだ)
     if (endsWithAny(suffix, {"た", "だ"})) {
-      // Check if た/だ is preceded by っ/ん in the full suffix
-      if (suffix.size() > 3) {  // More than just た/だ
-        std::string_view pre = suffix.substr(0, suffix.size() - 3);
-        if (endsWithAny(pre, {"っ", "ん", "い"})) {
-          return ExtendedPOS::VerbTaForm;  // 書いた, 読んだ
-        }
-      }
       return ExtendedPOS::VerbTaForm;
     }
     // て/で forms

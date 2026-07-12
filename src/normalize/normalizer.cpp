@@ -268,6 +268,16 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
     char32_t normalized_cp = fullwidthToHalfwidth(codepoint, options_.preserve_case);
     normalized_cp = halfwidthKatakanaToFullwidth(normalized_cp);
 
+    // A half-width dakuten/handakuten reaching this point did not combine with a
+    // preceding kana (combinable ones are consumed in the look-ahead below).
+    // Map such a stray mark to its full-width standalone form so that both
+    // encodings classify and segment identically (e.g. ｱﾞ matches ア゛).
+    if (normalized_cp == kHalfwidthDakuten) {
+      normalized_cp = kDakuten;
+    } else if (normalized_cp == kHalfwidthHandakuten) {
+      normalized_cp = kHandakuten;
+    }
+
     // Look ahead for dakuten/handakuten marks (half-width, combining, or spacing)
     size_t next_pos = pos;
     if (next_pos < text.size()) {
@@ -278,8 +288,10 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
         char32_t combined = combineWithDakuten(normalized_cp);
         if (combined != 0) {
           pos = next_pos;  // Consume the dakuten
-          encodeUtf8(combined, result);
-          continue;
+          // Fall through instead of emitting directly: a combined ヴ/ゔ must be
+          // vu-normalized identically to a pre-composed one so that both
+          // encodings of the same text yield the same tokens.
+          normalized_cp = combined;
         }
       } else if (isHandakutenMark(next_cp)) {
         char32_t combined = combineWithHandakuten(normalized_cp);

@@ -47,10 +47,11 @@ TEST(IsTrivialEntryTest, PureKatakanaThreeChars) {
   EXPECT_TRUE(isTrivialEntry("プログラム"));
 }
 
-// Pure hiragana 3+ chars: trivial
+// Pure hiragana: non-trivial. Hiragana runs carry lexical value and are not
+// reconstructable from character type alone, so they are kept.
 TEST(IsTrivialEntryTest, PureHiraganaThreeChars) {
-  EXPECT_TRUE(isTrivialEntry("ありがとう"));
-  EXPECT_TRUE(isTrivialEntry("こんにちは"));
+  EXPECT_FALSE(isTrivialEntry("ありがとう"));
+  EXPECT_FALSE(isTrivialEntry("こんにちは"));
 }
 
 // 2-char entries: always non-trivial (kept)
@@ -89,10 +90,10 @@ TEST(IsTrivialEntryTest, EmptyString) {
   EXPECT_FALSE(isTrivialEntry(""));
 }
 
-// Pure alphabet 3+ chars: trivial
+// Pure alphabet: non-trivial (only katakana/kanji runs are reconstructable).
 TEST(IsTrivialEntryTest, PureAlphabetThreeChars) {
-  EXPECT_TRUE(isTrivialEntry("ABC"));
-  EXPECT_TRUE(isTrivialEntry("test"));
+  EXPECT_FALSE(isTrivialEntry("ABC"));
+  EXPECT_FALSE(isTrivialEntry("test"));
 }
 
 // Mixed alphabet+digit: non-trivial (kept)

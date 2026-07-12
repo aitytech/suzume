@@ -13,18 +13,21 @@ from .constants import (
 from .pos_mapping import _is_katakana_onomatopoeia
 
 
-def preprocess_for_mecab(text: str) -> tuple[str, dict[int, dict]]:
+def preprocess_for_mecab(text: str) -> tuple[str, dict[tuple[int, str], dict]]:
     """Replace slang stems with standard ones before MeCab analysis.
 
     Returns:
-        Tuple of (processed text, replacements dict keyed by position).
+        Tuple of (processed text, replacements dict keyed by (start position,
+        category)). Keying on the category as well as the start position keeps
+        replacements from different categories that happen to match at the same
+        offset from silently overwriting one another.
     """
-    replacements: dict[int, dict] = {}
+    replacements: dict[tuple[int, str], dict] = {}
 
     # Slang adjectives
     for slang, standard in SLANG_ADJ_STEMS.items():
         for m in regex.finditer(regex.escape(slang) + r"[いかくけさ]", text):
-            replacements[m.start()] = {
+            replacements[(m.start(), "slang_adj")] = {
                 "original": slang,
                 "replacement": standard,
                 "length": len(slang),
@@ -33,7 +36,7 @@ def preprocess_for_mecab(text: str) -> tuple[str, dict[int, dict]]:
     # Slang verbs
     for slang, standard in SLANG_VERB_STEMS.items():
         for m in regex.finditer(regex.escape(slang) + r"[らりるれろっ]", text):
-            replacements[m.start()] = {
+            replacements[(m.start(), "slang_verb")] = {
                 "original": slang,
                 "replacement": standard,
                 "length": len(slang),
@@ -42,7 +45,7 @@ def preprocess_for_mecab(text: str) -> tuple[str, dict[int, dict]]:
     # Unusual names
     for name, standard in UNUSUAL_NAMES.items():
         for m in regex.finditer(regex.escape(name) + r"(さん|ちゃん|様|君|殿)", text):
-            replacements[m.start()] = {
+            replacements[(m.start(), "unusual_name")] = {
                 "original": name,
                 "replacement": standard,
                 "length": len(name),
@@ -51,7 +54,7 @@ def preprocess_for_mecab(text: str) -> tuple[str, dict[int, dict]]:
     # Word exceptions
     for word, standard in WORD_EXCEPTIONS.items():
         for m in regex.finditer(regex.escape(word), text):
-            replacements[m.start()] = {
+            replacements[(m.start(), "word_exception")] = {
                 "original": word,
                 "replacement": standard,
                 "length": len(word),
@@ -60,21 +63,24 @@ def preprocess_for_mecab(text: str) -> tuple[str, dict[int, dict]]:
     # Emphatic sokuon
     for pattern, standard in EMPHATIC_SOKUON.items():
         for m in regex.finditer(regex.escape(pattern) + r"(?!て)", text):
-            replacements[m.start()] = {
+            replacements[(m.start(), "emphatic_sokuon")] = {
                 "original": pattern,
                 "replacement": standard,
                 "length": len(pattern),
             }
 
     # Apply replacements in reverse position order
-    for pos in sorted(replacements.keys(), reverse=True):
-        r = replacements[pos]
+    for key in sorted(replacements, key=lambda k: k[0], reverse=True):
+        pos = key[0]
+        r = replacements[key]
         text = text[:pos] + r["replacement"] + text[pos + r["length"] :]
 
     return text, replacements
 
 
-def postprocess_mecab_tokens(tokens: list[dict], original_text: str, replacements: dict[int, dict]) -> list[dict]:
+def postprocess_mecab_tokens(
+    tokens: list[dict], original_text: str, replacements: dict[tuple[int, str], dict]
+) -> list[dict]:
     """Restore slang terms in tokens after MeCab processing."""
     if not replacements:
         return tokens

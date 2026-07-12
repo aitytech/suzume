@@ -4,7 +4,8 @@
 // =============================================================================
 // ExtendedPOS Bigram Connection Table
 // =============================================================================
-// Replaces 90+ check functions with a single 55x55 bigram table.
+// Replaces 90+ check functions with a single kSize x kSize bigram table
+// (kSize = ExtendedPOS::Count_).
 //
 // Design Principles:
 //   1. All connection costs are determined by ExtendedPOS bigram (no exceptions)
@@ -41,7 +42,7 @@ class BigramTable {
   static float getCost(core::ExtendedPOS prev, core::ExtendedPOS next);
 
  private:
-  // The actual 55x55 bigram table
+  // The actual kSize x kSize bigram table (kSize = ExtendedPOS::Count_)
   static const std::array<std::array<float, kSize>, kSize> table_;
 
   // Initialize table with grammatical connection costs

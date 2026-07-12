@@ -112,9 +112,26 @@ std::vector<core::Morpheme> Analyzer::analyze(std::string_view text) const {
     return {};
   }
 
-  // Short text: process directly
-  if (text.size() <= kMaxChunkBytes) {
-    return analyzeWithPretokenizer(text, 0);
+  // Normalize once up front so pretoken boundaries and morpheme offsets share a
+  // single normalized-text coordinate system. Length-changing normalization
+  // (e.g. ｶ+ﾞ → ガ) would otherwise desync raw pretoken and normalized offsets.
+  auto norm_result = normalizer_.normalize(text);
+  if (!core::isSuccess(norm_result)) {
+    SUZUME_DEBUG_BLOCK {
+      auto& error = std::get<core::Error>(norm_result);
+      SUZUME_DEBUG_STREAM << "[ANALYZER] Normalization failed: " << error.message
+                          << " (code=" << static_cast<int>(error.code) << ")\n";
+    }
+    return {};
+  }
+  std::string normalized = std::get<std::string>(norm_result);
+  if (normalized.empty()) {
+    return {};
+  }
+  std::string_view norm_text = normalized;
+
+  if (norm_text.size() <= kMaxChunkBytes) {  // short text: process directly
+    return analyzeWithPretokenizer(norm_text, 0);
   }
 
   // Long text: split at sentence boundaries before pretokenizer
@@ -123,12 +140,12 @@ std::vector<core::Morpheme> Analyzer::analyze(std::string_view text) const {
   size_t pos = 0;
   size_t char_pos = 0;
 
-  while (pos < text.size()) {
-    size_t scan_end = std::min(pos + kMaxChunkBytes, text.size());
+  while (pos < norm_text.size()) {
+    size_t scan_end = std::min(pos + kMaxChunkBytes, norm_text.size());
     size_t best_break = 0;
 
     for (size_t i = pos; i < scan_end;) {
-      size_t blen = sentenceBoundaryLen(text, i);
+      size_t blen = sentenceBoundaryLen(norm_text, i);
       if (blen > 0) {
         best_break = i + blen;
         i += blen;
@@ -138,23 +155,23 @@ std::vector<core::Morpheme> Analyzer::analyze(std::string_view text) const {
     }
 
     size_t chunk_end;
-    if (scan_end >= text.size()) {
-      chunk_end = text.size();
+    if (scan_end >= norm_text.size()) {
+      chunk_end = norm_text.size();
     } else if (best_break > pos) {
       chunk_end = best_break;
     } else {
-      chunk_end = findUtf8Boundary(text, scan_end);
+      chunk_end = findUtf8Boundary(norm_text, scan_end);
       if (chunk_end <= pos) {
         chunk_end = scan_end;
       }
     }
 
-    auto morphemes = analyzeWithPretokenizer(text.substr(pos, chunk_end - pos), char_pos);
+    auto morphemes = analyzeWithPretokenizer(norm_text.substr(pos, chunk_end - pos), char_pos);
     for (auto& m : morphemes) {
       result.push_back(std::move(m));
     }
 
-    char_pos += countChars(text, pos, chunk_end);
+    char_pos += countChars(norm_text, pos, chunk_end);
     pos = chunk_end;
   }
 
@@ -296,13 +313,11 @@ std::vector<core::Morpheme> Analyzer::analyzeSpan(std::string_view text, size_t 
       }
     }
 
-    // Analyze this chunk
     auto morphemes = analyzeChunk(text.substr(pos, chunk_end - pos), char_offset + char_pos);
     for (auto& m : morphemes) {
       result.push_back(std::move(m));
     }
 
-    // Count characters in this chunk for offset tracking
     char_pos += countChars(text, pos, chunk_end);
     pos = chunk_end;
   }
@@ -315,23 +330,8 @@ std::vector<core::Morpheme> Analyzer::analyzeChunk(std::string_view text, size_t
     return {};
   }
 
-  // Normalize text
-  auto norm_result = normalizer_.normalize(text);
-  if (!core::isSuccess(norm_result)) {
-    SUZUME_DEBUG_BLOCK {
-      auto& error = std::get<core::Error>(norm_result);
-      SUZUME_DEBUG_STREAM << "[ANALYZER] Normalization failed: " << error.message
-                          << " (code=" << static_cast<int>(error.code) << ")\n";
-    }
-    return {};
-  }
-  std::string normalized = std::get<std::string>(norm_result);
-  if (normalized.empty()) {
-    return {};
-  }
-
-  // Decode to codepoints
-  std::vector<char32_t> codepoints = normalize::utf8::decode(normalized);
+  // Text is already normalized by analyze(); decode directly to codepoints.
+  std::vector<char32_t> codepoints = normalize::utf8::decode(text);
   if (codepoints.empty()) {
     SUZUME_DEBUG_LOG("[ANALYZER] UTF-8 decode failed\n");
     return {};
@@ -345,7 +345,7 @@ std::vector<core::Morpheme> Analyzer::analyzeChunk(std::string_view text, size_t
   }
 
   // Build lattice
-  core::Lattice lattice = tokenizer_->buildLattice(normalized, codepoints, char_types);
+  core::Lattice lattice = tokenizer_->buildLattice(text, codepoints, char_types);
 
   // Check if lattice is valid
   if (!lattice.isValid()) {

@@ -27,7 +27,6 @@ using verb_helpers::findCharRegionEnd;
 using verb_helpers::getHiraganaVowel;
 using verb_helpers::isAdjectiveInDictionary;
 using verb_helpers::isEmphaticChar;
-using verb_helpers::isTeTaFormSokuon;
 using verb_helpers::isVerbInDictionary;
 
 namespace {

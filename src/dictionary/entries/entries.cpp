@@ -659,10 +659,13 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       aux("ますの", "ます", EPOS::Unknown),
       aux("だわ", "だ", EPOS::Unknown),
 
-      // Youth slang (若者言葉)
-      aux("っす", "です", EPOS::Unknown),
-      aux("っした", "でした", EPOS::Unknown),
-      aux("っすか", "ですか", EPOS::Unknown),
+      // Youth slang (若者言葉) - っす/っすか are colloquial です, so tag them as the
+      // polite copula rather than falling back to the Auxiliary default (AuxTenseTa),
+      // which would wrongly reward a verb 音便形 + っす reading (つい+っす) over the
+      // intended stem + っす split (きつい+っす).
+      aux("っす", "です", EPOS::AuxCopulaDesu),
+      aux("っした", "でした", EPOS::AuxCopulaDesu),
+      aux("っすか", "ですか", EPOS::AuxCopulaDesu),
 
       // Rabbit-like (兎系)
       aux("ぴょん", "だ", EPOS::Unknown),
@@ -736,7 +739,8 @@ std::vector<DictionaryEntry> getConjunctionEntries() {
       conj("且つ", ""),
       conj("かつ", "且つ"),
       conj("更に", ""),
-      conj("次に", ""),
+      // 次に is 次(noun)+に(particle), not a closed-class conjunction — the oracle
+      // splits it, so keep it out of L1 to avoid a spurious single-token merge.
       conj("しかも", ""),
       conj("そのうえ", ""),
 

@@ -10,9 +10,7 @@
 #ifndef SUZUME_GRAMMAR_CONNECTION_H_
 #define SUZUME_GRAMMAR_CONNECTION_H_
 
-#include <algorithm>
 #include <cstdint>
-#include <vector>
 
 namespace suzume::grammar {
 
@@ -78,51 +76,6 @@ constexpr uint16_t kParticle = 0x0400;
 constexpr uint16_t kNoun = 0x0500;
 
 }  // namespace conn
-
-/**
- * @brief Connection cost between morphemes
- *
- * Sparse matrix implementation using sorted vector with binary search.
- * WASM-compatible (no std::unordered_map).
- */
-class ConnectionMatrix {
- public:
-  ConnectionMatrix();
-
-  /**
-   * @brief Get connection cost between two morphemes
-   * @param left_right_id Right ID of left morpheme
-   * @param right_left_id Left ID of right morpheme
-   * @return Connection cost (kInfinite if not connectable)
-   */
-  int16_t getCost(uint16_t left_right_id, uint16_t right_left_id) const;
-
-  /**
-   * @brief Check if connection is valid
-   */
-  bool canConnect(uint16_t left_right_id, uint16_t right_left_id) const;
-
-  static constexpr int16_t kInfinite = 32767;
-  static constexpr int16_t kDefaultCost = 0;
-
- private:
-  struct ConnectionEntry {
-    uint32_t key;  // (left_id << 16) | right_id
-    int16_t cost;
-
-    bool operator<(const ConnectionEntry& other) const { return key < other.key; }
-  };
-
-  std::vector<ConnectionEntry> entries_;
-
-  void initRules();
-  void addRule(uint16_t left_id, uint16_t right_id, int16_t cost = 0);
-};
-
-/**
- * @brief Get global connection matrix instance
- */
-const ConnectionMatrix& getConnectionMatrix();
 
 }  // namespace suzume::grammar
 

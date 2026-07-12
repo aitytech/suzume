@@ -1,6 +1,8 @@
 #ifndef SUZUME_GRAMMAR_INFLECTION_SCORER_CONSTANTS_H_
 #define SUZUME_GRAMMAR_INFLECTION_SCORER_CONSTANTS_H_
 
+#include <string_view>
+
 // =============================================================================
 // Inflection Scorer Constants
 // =============================================================================
@@ -430,6 +432,9 @@ inline constexpr const char* kValidKanjiIStemExceptions[] = {
     "用い",  // 用いる (to use)
     "率い",  // 率いる (to lead)
     "報い",  // 報いる (to repay)
+    "老い",  // 老いる (to age)
+    "悔い",  // 悔いる (to regret)
+    "強い",  // 強いる (to force/compel)
     // 漢字+じ (za-row ichidan / ザ行一段)
     "論じ",    // 論じる (to discuss)
     "信じ",    // 信じる (to believe)
@@ -449,6 +454,23 @@ inline constexpr const char* kValidKanjiIStemExceptions[] = {
 };
 inline constexpr size_t kValidKanjiIStemExceptionCount =
     sizeof(kValidKanjiIStemExceptions) / sizeof(kValidKanjiIStemExceptions[0]);
+
+/**
+ * @brief Tests whether a stem is a known kanji + i-row Ichidan renyokei.
+ *
+ * Membership predicate over kValidKanjiIStemExceptions, shared with the
+ * analysis and postprocess layers so the closed exception set has a single
+ * source of truth. For every stem in the set the dictionary form is
+ * stem + る (率い → 率いる, 論じ → 論じる).
+ */
+inline constexpr bool isValidKanjiIStemException(std::string_view stem) {
+  for (const char* exception : kValidKanjiIStemExceptions) {
+    if (stem == exception) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // Valid て-ending Ichidan stems (exceptions to て-form confusion)
 // 捨てる, 棄てる have legitimate て-ending stems

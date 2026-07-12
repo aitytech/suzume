@@ -115,7 +115,9 @@ core::Expected<size_t, core::Error> BinaryDictionary::loadFromFile(const std::st
     return result;
   }
 
-  data_ = std::move(loaded_data);
+  // loaded_data is not retained: the trie and entries own independent copies of
+  // everything they need (deserialized units and constructed strings), so the
+  // raw file bytes can be freed here.
   trie_ = std::move(loaded_trie);
   entries_ = std::move(loaded_entries);
   return result;
@@ -134,7 +136,7 @@ core::Expected<size_t, core::Error> BinaryDictionary::loadFromMemory(const uint8
     return result;
   }
 
-  data_ = std::move(loaded_data);
+  // loaded_data is not retained (see loadFromFile): decoded structures own copies.
   trie_ = std::move(loaded_trie);
   entries_ = std::move(loaded_entries);
   return result;
@@ -546,7 +548,17 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
 
   DoubleArray trie;
   if (!trie.build(keys, values)) {
-    return core::makeUnexpected(core::Error(core::ErrorCode::InternalError, "Failed to build dictionary trie"));
+    // Trie construction most commonly fails on duplicate keys. entries_ is sorted
+    // by surface above, so duplicates are adjacent — scan cheaply and name the
+    // first offending surface to make dictionary-compilation errors actionable.
+    std::string message = "Failed to build dictionary trie (" + std::to_string(entries_.size()) + " entries)";
+    for (size_t idx = 1; idx < keys.size(); ++idx) {
+      if (keys[idx] == keys[idx - 1]) {
+        message += "; duplicate surface: \"" + keys[idx] + "\"";
+        break;
+      }
+    }
+    return core::makeUnexpected(core::Error(core::ErrorCode::InternalError, message));
   }
 
   auto trie_data = trie.serialize();

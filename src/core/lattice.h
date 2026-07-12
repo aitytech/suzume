@@ -22,7 +22,8 @@ enum class EdgeFlags : uint8_t {
   IsFormalNoun = 1 << 2,
   IsLowInfo = 1 << 3,
   // Note: bit 4 is reserved for kIsUnknown legacy constant
-  HasSuffix = 1 << 5  // Has suffix following (e.g., verb stem + aux)
+  HasSuffix = 1 << 5,     // Has suffix following (e.g., verb stem + aux)
+  HasCustomCost = 1 << 6  // Edge carries a deliberately tuned cost (distinguishes a genuine 0.0)
 };
 
 inline EdgeFlags operator|(EdgeFlags lhs, EdgeFlags rhs) {
@@ -62,6 +63,7 @@ struct LatticeEdge {
   static constexpr uint8_t kIsFormalNoun = static_cast<uint8_t>(EdgeFlags::IsFormalNoun);
   static constexpr uint8_t kIsLowInfo = static_cast<uint8_t>(EdgeFlags::IsLowInfo);
   static constexpr uint8_t kIsUnknown = 1 << 4;
+  static constexpr uint8_t kHasCustomCost = static_cast<uint8_t>(EdgeFlags::HasCustomCost);
 
   // Flag accessors
   bool fromDictionary() const { return hasFlag(flags, EdgeFlags::FromDictionary); }
@@ -69,6 +71,7 @@ struct LatticeEdge {
   bool isFormalNoun() const { return hasFlag(flags, EdgeFlags::IsFormalNoun); }
   bool isLowInfo() const { return hasFlag(flags, EdgeFlags::IsLowInfo); }
   bool hasSuffix() const { return hasFlag(flags, EdgeFlags::HasSuffix); }
+  bool hasCustomCost() const { return hasFlag(flags, EdgeFlags::HasCustomCost); }
   bool isUnknown() const { return (static_cast<uint8_t>(flags) & kIsUnknown) != 0; }
 };
 

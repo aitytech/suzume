@@ -132,19 +132,23 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
         }
       }
 
-      // Validate GodanKa vs GodanGa: both have い-onbin, but differ in te-form voicing
-      // GodanKa (書く) uses て/た: 書いて, 書いた
-      // GodanGa (泳ぐ) uses で/だ: 泳いで, 泳いだ
-      // When analyzing with te-form auxiliary, check voicing compatibility
-      if (ending.suffix == "い" && ending.is_onbin && !aux_chain.empty()) {
-        const std::string& first_aux = aux_chain.back();  // First matched aux
-        bool is_voiced_aux = isVoicedAux(first_aux);
-        bool is_unvoiced_aux = isUnvoicedAux(first_aux);
-        if (is_unvoiced_aux && ending.verb_type == VerbType::GodanGa) {
-          continue;  // GodanGa requires voiced aux (で/だ), skip unvoiced
-        }
-        if (is_voiced_aux && ending.verb_type == VerbType::GodanKa) {
-          continue;  // GodanKa requires unvoiced aux (て/た), skip voiced
+      // Validate onbin voicing: a Godan verb's te/ta-form voicing must match its
+      // onbin type, uniformly across い/っ/ん onbin (GodanRow::voiced_ta).
+      // Unvoiced onbin (書い/立っ/買っ → GodanKa/Ta/Ra/Wa) requires て/た.
+      // Voiced onbin (泳い/読ん/飛ん → GodanGa/Ma/Ba/Na) requires で/だ.
+      // This rejects mismatches like 立っだ (→立つ) and 読んた (→読む).
+      if (ending.is_onbin && !aux_chain.empty()) {
+        const Conjugation::GodanRow* row = Conjugation::getGodanRow(ending.verb_type);
+        if (row != nullptr) {
+          const std::string& first_aux = aux_chain.back();  // First matched aux
+          bool is_voiced_aux = isVoicedAux(first_aux);
+          bool is_unvoiced_aux = isUnvoicedAux(first_aux);
+          if (row->voiced_ta && is_unvoiced_aux) {
+            continue;  // Voiced onbin verb requires voiced aux (で/だ), skip unvoiced
+          }
+          if (!row->voiced_ta && is_voiced_aux) {
+            continue;  // Unvoiced onbin verb requires unvoiced aux (て/た), skip voiced
+          }
         }
       }
 

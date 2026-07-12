@@ -21,6 +21,172 @@
       ],
       "id": "reba_ku",
       "input": "来れば行く"
+    },
+    {
+      "description": "出ていった - auto-generated",
+      "expected": [
+        {
+          "lemma": "出る",
+          "pos": "Verb",
+          "surface": "出"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Verb",
+          "surface": "いっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "teittta",
+      "input": "出ていった"
+    },
+    {
+      "description": "荷物を持っていった - auto-generated",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "持つ",
+          "pos": "Verb",
+          "surface": "持っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Verb",
+          "surface": "いっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_ttteittta",
+      "input": "荷物を持っていった"
+    },
+    {
+      "description": "率いた - auto-generated",
+      "expected": [
+        {
+          "lemma": "率いる",
+          "pos": "Verb",
+          "surface": "率い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ita",
+      "input": "率いた"
+    },
+    {
+      "description": "老いた - auto-generated",
+      "expected": [
+        {
+          "lemma": "老いる",
+          "pos": "Verb",
+          "surface": "老い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ita_2",
+      "input": "老いた"
+    },
+    {
+      "description": "悔いた - auto-generated",
+      "expected": [
+        {
+          "lemma": "悔いる",
+          "pos": "Verb",
+          "surface": "悔い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ita_3",
+      "input": "悔いた"
+    },
+    {
+      "description": "報いた - auto-generated",
+      "expected": [
+        {
+          "lemma": "報いる",
+          "pos": "Verb",
+          "surface": "報い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ita_4",
+      "input": "報いた"
+    },
+    {
+      "description": "きついっす - auto-generated",
+      "expected": [
+        {
+          "lemma": "きつい",
+          "pos": "Adjective",
+          "surface": "きつい"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "っす"
+        }
+      ],
+      "id": "kitsuittsu",
+      "input": "きついっす"
+    },
+    {
+      "description": "眠いっす - auto-generated",
+      "expected": [
+        {
+          "lemma": "眠い",
+          "pos": "Adjective",
+          "surface": "眠い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "っす"
+        }
+      ],
+      "id": "ittsu",
+      "input": "眠いっす"
     }
   ],
   "description": "verb_conjugation tests",

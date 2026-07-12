@@ -321,6 +321,11 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
             t["pos"] = "助動詞"
             t["lemma"] = "だ"
 
+        # Fix っす: colloquial contraction of です; canonical base form is です
+        if surface in ("っす", "っした", "っすか"):
+            t["pos"] = "助動詞"
+            t["lemma"] = "です"
+
         # Fix ない/なかっ after じゃ: 形容詞 -> 助動詞
         if surface in ("ない", "なかっ") and pos == "形容詞":
             if idx > 0 and tokens[idx - 1].get("surface") == "じゃ":

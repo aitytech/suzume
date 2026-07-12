@@ -1,6 +1,7 @@
 #ifndef SUZUME_CORE_ERROR_H_
 #define SUZUME_CORE_ERROR_H_
 
+#include <cassert>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -124,12 +125,21 @@ class Expected {
   T& value() & { return data_; }
   T&& value() && { return std::move(data_); }
 
-  const E& error() const& { return error_; }
-  E& error() & { return error_; }
+  const E& error() const& {
+    assert(!has_value_ && "error() called on a value-holding Expected");
+    return error_;
+  }
+  E& error() & {
+    assert(!has_value_ && "error() called on a value-holding Expected");
+    return error_;
+  }
 
  private:
   T data_{};
-  E error_{ErrorCode::Success};
+  // Sentinel (non-Success) so a misused error() on a value-holding Expected does
+  // not read as Success. Error-holding constructors overwrite this with the real
+  // error, leaving the correct case unchanged.
+  E error_{ErrorCode::InternalError};
   bool has_value_;
 };
 

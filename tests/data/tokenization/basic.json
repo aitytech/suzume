@@ -424,6 +424,65 @@
       ],
       "id": "shikashinagara_sono_niha_ganai",
       "input": "しかしながら、その主張には根拠がない。"
+    },
+    {
+      "description": "暑い、しかし平気だ - auto-generated",
+      "expected": [
+        {
+          "lemma": "暑い",
+          "pos": "Adjective",
+          "surface": "暑い"
+        },
+        {
+          "lemma": "しかし",
+          "pos": "Conjunction",
+          "surface": "しかし"
+        },
+        {
+          "lemma": "平気",
+          "pos": "Noun",
+          "surface": "平気"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "i_shikashi_da",
+      "input": "暑い、しかし平気だ"
+    },
+    {
+      "description": "道が混む、そして遅れる - auto-generated",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "混む",
+          "pos": "Verb",
+          "surface": "混む"
+        },
+        {
+          "lemma": "そして",
+          "pos": "Conjunction",
+          "surface": "そして"
+        },
+        {
+          "lemma": "遅れる",
+          "pos": "Verb",
+          "surface": "遅れる"
+        }
+      ],
+      "id": "ga_mu_soshite_reru",
+      "input": "道が混む、そして遅れる"
     }
   ],
   "description": "Basic tokenization tests",

@@ -272,7 +272,12 @@ float calculateConfidence(VerbType type, std::string_view stem, size_t aux_total
         looks_godan = endsWithChar(stem, kRenyokeiEndings, kRenyokeiCount);
       }
 
-      if (looks_godan) {
+      // Skip the "looks godan" penalty for kanji + い kami-ichidan verbs
+      // (率いる, 老いる, 悔いる, 報いる, 強いる, 用いる). Their renyokei/onbin stem
+      // ends in い, which resembles GodanKa い-onbin (率いた looks like 率く), but
+      // the correct lemma is the いる form. The same exception set guards the
+      // onbin-marker path above, so both paths agree via one source of truth.
+      if (looks_godan && !isInArray(stem, inflection::kValidKanjiIStemExceptions)) {
         // Stem matches Godan conjugation pattern for this context
         float pen = GET_OPT(penalty_ichidan_looks_godan, inflection::kPenaltyIchidanLooksGodan);
         base -= pen;
@@ -300,9 +305,12 @@ float calculateConfidence(VerbType type, std::string_view stem, size_t aux_total
       // Pattern: 行い + ます → 行いる (wrong) vs 行 + います → 行う (correct)
       // Pattern: 手伝い + ます → 手伝いる (wrong) vs 手伝 + います → 手伝う (correct)
       // Stems like 行い, 手伝い (kanji + い) are more likely Godan renyokei than Ichidan
-      // Exception: 用い (from 用いる) is a valid Ichidan stem, but rare
+      // Exception: kanji + い kami-ichidan verbs (用い, 率い, 報い, 老い, 悔い, 強い)
+      // are valid Ichidan renyokei stems; the shared exception set guards them so
+      // the lemmatizer resolves 率い → 率いる rather than a spurious godan lemma.
       // Apply strong penalty when stem ends with kanji + い in renyokei context
-      if (required_conn == conn::kVerbRenyokei && stem_len >= core::kTwoJapaneseCharBytes) {
+      if (required_conn == conn::kVerbRenyokei && stem_len >= core::kTwoJapaneseCharBytes &&
+          !isInArray(stem, inflection::kValidKanjiIStemExceptions)) {
         std::string_view last3 = stem.substr(stem_len - core::kJapaneseCharBytes);  // Last 3 bytes = い
         std::string_view prev3 =
             stem.substr(stem_len - core::kTwoJapaneseCharBytes, core::kJapaneseCharBytes);  // Previous char
@@ -1026,8 +1034,10 @@ float calculateConfidence(VerbType type, std::string_view stem, size_t aux_total
     std::string_view last = stem.substr(stem_len - core::kJapaneseCharBytes);
 
     // Stems ending in "い" are likely na-adjectives (幸い, 厄介, etc.)
-    // These should be parsed as noun + particle, not verb conjugation
-    if (last == "い") {
+    // These should be parsed as noun + particle, not verb conjugation.
+    // Exception: kanji + い kami-ichidan verbs (率いた, 報いた, 老いた) are real
+    // te/ta-forms of 率いる/報いる/老いる, guarded by the shared exception set.
+    if (last == "い" && !isInArray(stem, inflection::kValidKanjiIStemExceptions)) {
       base -= inflection::kPenaltyTeFormNaAdjective;
       logConfidenceAdjustment(-inflection::kPenaltyTeFormNaAdjective, "te_form_na_adjective");
     }

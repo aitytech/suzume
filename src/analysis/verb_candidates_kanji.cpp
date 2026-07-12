@@ -17,6 +17,7 @@
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
+#include "grammar/inflection_scorer_constants.h"
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
@@ -998,6 +999,13 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // Godan-ka/ga verbs ending in い are onbinkei (書い, 泳い)
         core::ExtendedPOS verb_epos = core::ExtendedPOS::Unknown;  // Auto-detect
         if (utf8::endsWith(surface, "い")) {
+          // Skip godan readings of known kami-ichidan renyokei stems (率い,
+          // 老い, 強い, ...): the godan lemma would be wrong (率く/率う).
+          // The ichidan_renyokei path generates the correct 〜いる candidate.
+          if (grammar::inflection::isValidKanjiIStemException(surface)) {
+            SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is kami-ichidan renyokei, skipping godan reading\n");
+            continue;
+          }
           if (best.verb_type == grammar::VerbType::GodanWa) {
             verb_epos = core::ExtendedPOS::VerbRenyokei;
           } else if (best.verb_type == grammar::VerbType::GodanKa || best.verb_type == grammar::VerbType::GodanGa) {
@@ -1010,40 +1018,18 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // Also prevents i-adjectives (美しい, 正しい, 楽しい) from being
         // misclassified as godan-wa verbs (base 美しう, etc.)
         // This check applies to godan-wa renyokei forms (ending in い)
-        bool skip_godan_wa_renyokei = false;
-        if (verb_epos == core::ExtendedPOS::VerbRenyokei && dict_manager != nullptr) {
-          auto results = dict_manager->lookup(surface, 0);
-          for (const auto& result : results) {
-            if (result.entry != nullptr &&
-                (result.entry->pos == core::PartOfSpeech::Noun || result.entry->pos == core::PartOfSpeech::Adjective)) {
-              skip_godan_wa_renyokei = true;
-              SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict "
-                                                << (result.entry->pos == core::PartOfSpeech::Noun ? "NOUN" : "ADJ")
-                                                << ", skipping godan-wa renyokei\n");
-              break;
-            }
-          }
-        }
-        if (skip_godan_wa_renyokei) {
+        if (verb_epos == core::ExtendedPOS::VerbRenyokei && vh::isNounOrAdjectiveInDictionary(dict_manager, surface)) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict NOUN/ADJ, skipping godan-wa renyokei\n");
           continue;  // Skip this candidate, use dictionary entry instead
         }
         // Skip ichidan ta-form if stem is registered as NOUN in dictionary
         // e.g., 感じた → stem 感じ is dict NOUN, so skip (prefer 感じ(NOUN) + た(AUX))
         // This prevents nominalized verb renyokei forms from appearing as conjugated verbs
-        bool skip_ichidan_ta = false;
-        if (best.verb_type == grammar::VerbType::Ichidan && dict_manager != nullptr && !best.stem.empty()) {
-          // The stem for ichidan ta-form is the renyokei (e.g., 感じ for 感じた)
-          auto stem_results = dict_manager->lookup(best.stem, 0);
-          for (const auto& result : stem_results) {
-            if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun) {
-              skip_ichidan_ta = true;
-              SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" stem \"" << best.stem
-                                                << "\" is dict NOUN, skipping ichidan ta-form\n");
-              break;
-            }
-          }
-        }
-        if (skip_ichidan_ta) {
+        // The stem for ichidan ta-form is the renyokei (e.g., 感じ for 感じた)
+        if (best.verb_type == grammar::VerbType::Ichidan && !best.stem.empty() &&
+            vh::isNounInDictionary(dict_manager, best.stem)) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" stem \"" << best.stem
+                                            << "\" is dict NOUN, skipping ichidan ta-form\n");
           continue;  // Skip this candidate, prefer NOUN + た split
         }
         // Skip if surface is already a registered VERB in dictionary
@@ -1095,7 +1081,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           auto prefix_results = dict_manager->lookup(surface, 0);
           for (const auto& result : prefix_results) {
             if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Verb &&
-                result.length < surface.size()) {
+                result.length < normalize::utf8Length(surface)) {
               base_cost += 2.0F;
               SUZUME_DEBUG_LOG("[COST_ADJ] \"" << surface << "\" +2.0 (godan_wa_exceeds_dict_verb)\n");
               break;
@@ -1130,9 +1116,11 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       // で (te-form/particle), に (particle), へ (particle) are rarely Ichidan stem endings
       // These almost always represent kanji + particle (雨で→雨+で, 本に→本+に)
       // Also skip い (i) - this is almost always an i-adjective suffix (面白い, 高い)
-      // not an ichidan verb renyoukei
+      // not an ichidan verb renyoukei. The closed set of kami-ichidan
+      // renyokei stems ending in い (率い, 用い, ...) is exempted.
       bool is_common_particle = (first_hira == U'で' || first_hira == U'に' || first_hira == U'へ');
-      bool is_i_adjective_suffix = (first_hira == U'い');
+      bool is_i_adjective_suffix = (first_hira == U'い') && !grammar::inflection::isValidKanjiIStemException(
+                                                                extractSubstring(codepoints, start_pos, kanji_end + 1));
       bool is_single_kanji = (kanji_end == start_pos + 1);
       // Skip kuru irregular verb: 来 + て/た should not be treated as ichidan
       // 来る is kuru irregular, not ichidan (来て should have lemma 来る, not 来てる)
@@ -1180,16 +1168,9 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // Skip if surface is registered as NOUN in dictionary
         // This prevents nominalized verb forms (売り上げ, 楽しみ, 晴れ) from being tokenized as VERB
         // when they are explicitly registered as nouns
-        bool surface_is_dict_noun = false;
-        if (dict_manager != nullptr) {
-          auto results = dict_manager->lookup(surface, 0);
-          for (const auto& result : results) {
-            if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun) {
-              surface_is_dict_noun = true;
-              SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict NOUN, skipping ichidan_renyokei\n");
-              break;
-            }
-          }
+        bool surface_is_dict_noun = vh::isNounInDictionary(dict_manager, surface);
+        if (surface_is_dict_noun) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict NOUN, skipping ichidan_renyokei\n");
         }
         // Skip if splitting at a kanji boundary yields a known dictionary verb
         // E.g., 血浴び → 血 + 浴び(る) — 浴びる is a dict verb, so 血浴びる is not a real verb
@@ -1206,8 +1187,18 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             }
           }
         }
+        // A surface that is also a dictionary i-adjective (強い) is verbal
+        // only in conjugation contexts: renyokei + た/て or mizenkei + られ/させ.
+        // Elsewhere (predicate/attributive use: 力が強い, 強い風) the adjective
+        // reading is correct, so skip the verb candidate.
+        bool adj_homograph_blocked = false;
+        if (vh::isAdjectiveInDictionary(dict_manager, surface)) {
+          char32_t next_cp = (renyokei_end < codepoints.size()) ? codepoints[renyokei_end] : U'\0';
+          adj_homograph_blocked = !(next_cp == U'た' || next_cp == U'て' || next_cp == U'ら' || next_cp == U'さ' ||
+                                    next_cp == U'る' || next_cp == U'れ');
+        }
         if (!prefer_suru && !prefer_godan && ichidan_cand.confidence > conf_threshold && !surface_is_dict_noun &&
-            !suffix_is_dict_verb) {
+            !suffix_is_dict_verb && !adj_homograph_blocked) {
           // Negative cost to strongly favor split over combined analysis
           // Combined forms get optimal_length bonus (-0.5), so we need to be lower
           float base_cost =
@@ -1286,17 +1277,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // Skip surfaces ending in ない — almost always adjective (少ない) or negative suffix
         bool ends_in_nai = (second_hira == U'い' && first_hira == U'な');
         if (!prefer_suru && !prefer_godan && !ends_in_nai && ichidan_cand.confidence > kMultiCharIchidanThreshold) {
-          bool surface_is_dict_entry = false;
-          if (dict_manager != nullptr) {
-            auto results = dict_manager->lookup(surface, 0);
-            for (const auto& result : results) {
-              if (result.entry != nullptr && (result.entry->pos == core::PartOfSpeech::Noun ||
-                                              result.entry->pos == core::PartOfSpeech::Adjective)) {
-                surface_is_dict_entry = true;
-                break;
-              }
-            }
-          }
+          bool surface_is_dict_entry = vh::isNounOrAdjectiveInDictionary(dict_manager, surface);
           if (!surface_is_dict_entry) {
             float base_cost =
                 verb_opts.bonus_ichidan + (1.0F - ichidan_cand.confidence) * verb_opts.confidence_cost_scale_small;
@@ -1340,18 +1321,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       if (best_sa.confidence <= 0.5F)
         continue;
 
-      // Skip if surface is a dictionary NOUN
-      bool surface_is_dict_noun = false;
-      if (dict_manager != nullptr) {
-        auto results = dict_manager->lookup(surface, 0);
-        for (const auto& result : results) {
-          if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun) {
-            surface_is_dict_noun = true;
-            break;
-          }
-        }
-      }
-      if (surface_is_dict_noun)
+      // Skip if surface is a dictionary NOUN (exact match)
+      if (vh::isNounInDictionary(dict_manager, surface))
         continue;
 
       // For short godan-sa patterns, require dict verification to avoid

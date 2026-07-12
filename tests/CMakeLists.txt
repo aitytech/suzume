@@ -52,7 +52,6 @@ set(TEST_SOURCES
   dictionary/user_dict_test.cpp
   dictionary/dict_string_pool_test.cpp
   grammar/conjugator_test.cpp
-  grammar/connection_test.cpp
   grammar/conjugation_test.cpp
   grammar/inflection_basic_test.cpp
   grammar/inflection_potential_test.cpp

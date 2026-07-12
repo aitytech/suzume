@@ -81,6 +81,15 @@ constexpr ConjSuffix kGodanKaFull[] = {
     {"かない", conn::kAuxOutBase}, {"かなかった", conn::kAuxOutTa}, {"かなくて", conn::kAuxOutTe},
 };
 
+// Irregular いく (行く) - 促音便: past/te-forms use った/って, not the regular
+// GodanKa い-onbin いた/いて. Only the onbin column differs from kGodanKaFull;
+// ます系 and 未然形 (いきます, いかない) follow regular GodanKa.
+constexpr ConjSuffix kGodanKaIkuIrregular[] = {
+    {"く", conn::kAuxOutBase},     {"った", conn::kAuxOutTa},       {"ったら", conn::kAuxOutBase},
+    {"って", conn::kAuxOutTe},     {"きます", conn::kAuxOutMasu},   {"きました", conn::kAuxOutTa},
+    {"かない", conn::kAuxOutBase}, {"かなかった", conn::kAuxOutTa}, {"かなくて", conn::kAuxOutTe},
+};
+
 // Godan-Sa (五段さ行) - full
 constexpr ConjSuffix kGodanSaFull[] = {
     {"す", conn::kAuxOutBase},     {"した", conn::kAuxOutTa},       {"したら", conn::kAuxOutBase},
@@ -566,9 +575,9 @@ void addSpecialPatterns(std::vector<AuxiliaryEntry>& entries) {
   entries.push_back({"続けている", "つづけている", "続ける", kAuxRenyokei, kAuxOutBase, kVerbRenyokei});
   entries.push_back({"直している", "なおしている", "直す", kAuxRenyokei, kAuxOutBase, kVerbRenyokei});
 
-  // === てくる/ていく extended (いった, いって) ===
-  entries.push_back({"いった", "いった", "いく", kAuxTeiku, kAuxOutTa, kAuxOutTe});
-  entries.push_back({"いって", "いって", "いく", kAuxTeiku, kAuxOutTe, kAuxOutTe});
+  // Note: ていく forms いった/いって/いったら are generated from the いく
+  // AuxiliaryBase via the irregular 促音便 table (kGodanKaIkuIrregular), so they
+  // are intentionally not duplicated here.
 
   // === Imperative forms for te-form compounds ===
   // てこい (持ってこい, やってこい) - kuru imperative after te-form
@@ -642,6 +651,10 @@ std::vector<AuxiliaryEntry> expandAuxiliaryBase(const AuxiliaryBase& base) {
     case VerbType::GodanWa:
       return is_benefactive ? generateWithStem(base, kGodanWaTeAttach) : generateWithStem(base, kGodanWaFull);
     case VerbType::GodanKa:
+      // いく (ていく auxiliary) is an irregular 促音便 verb: いった/いって, not いいた/いいて.
+      if (base.left_id == conn::kAuxTeiku) {
+        return generateWithStem(base, kGodanKaIkuIrregular);
+      }
       return generateWithStem(base, kGodanKaFull);
     case VerbType::GodanSa:
       return generateWithStem(base, kGodanSaFull);

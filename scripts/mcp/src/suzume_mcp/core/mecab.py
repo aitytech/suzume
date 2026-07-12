@@ -38,11 +38,17 @@ async def mecab_analyze_async(text: str) -> list[dict]:
 
 
 def _parse_mecab_output(output: str) -> list[dict]:
-    """Parse MeCab tab-separated output into token dicts."""
+    """Parse MeCab tab-separated output into token dicts.
+
+    Multi-line input produces several EOS-delimited blocks; all of them are
+    parsed and their tokens concatenated in order. EOS and blank separator
+    lines are skipped rather than treated as a terminator, so nothing after
+    an embedded newline is dropped.
+    """
     tokens = []
     for line in output.split("\n"):
         if line == "EOS" or line == "":
-            break
+            continue
         parts = line.split("\t", 1)
         if len(parts) < 1:
             continue
