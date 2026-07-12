@@ -394,6 +394,13 @@ bool isTemporalRelationSuffixKanji(char32_t code_point) {
   }
 }
 
+bool isIntervalCompoundSecondKanji(char32_t code_point) {
+  // Kanji that form an 間-initial interval word (間隔). After a duration counter
+  // a member kanji takes the interval reading (N年|間隔) while a non-member takes
+  // the duration reading (N年間|続けた, N時間|半). Extend as the closed class needs.
+  return code_point == U'隔';
+}
+
 bool isTemporalSpanSuffixKanji(char32_t code_point) {
   switch (code_point) {
     case U'中':

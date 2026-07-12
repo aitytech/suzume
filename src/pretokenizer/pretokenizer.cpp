@@ -43,10 +43,16 @@ bool absorbsPeriodKan(std::string_view text, size_t pos_after_kan) {
     return true;  // 間 + 後/前 → duration + relational suffix (2時間|後, 5年間|前)
   }
   if (idx >= text.size()) {
-    return false;  // 間 + lone kanji at end → interval (…間隔)
+    // 間 + lone kanji at end: interval only for an 間X compound (…間隔), else duration
+    return !normalize::isIntervalCompoundSecondKanji(next_cp);
   }
   char32_t after_cp = normalize::decodeUtf8(text, idx);
-  return normalize::isKanjiCodepoint(after_cp);  // 2+ kanji → duration, else interval
+  if (normalize::isKanjiCodepoint(after_cp)) {
+    return true;  // 2+ kanji → duration (時間営業, 年間活動)
+  }
+  // 間 + single kanji + non-kanji: interval only when the kanji forms an 間X compound
+  // (間隔で), else the counter takes the duration reading (年間|続けた, 時間|半).
+  return !normalize::isIntervalCompoundSecondKanji(next_cp);
 }
 
 // Check if byte is ASCII alpha

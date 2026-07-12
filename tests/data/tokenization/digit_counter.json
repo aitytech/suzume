@@ -403,6 +403,70 @@
       ],
       "id": "10_de_ga_ru",
       "input": "10分間隔で電車が来る"
+    },
+    {
+      "description": "Duration 間 absorbed into 10年間, not fused into 間続ける",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "10年間",
+          "pos": "Noun",
+          "surface": "10年間"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続け"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kare_10nenkan_tsuzuketa",
+      "input": "彼は10年間続けた"
+    },
+    {
+      "description": "間 not fused with following pronoun 彼 (5年間|彼, not 間彼)",
+      "expected": [
+        {
+          "lemma": "5年間",
+          "pos": "Noun",
+          "surface": "5年間"
+        },
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "待ち続ける",
+          "pos": "Verb",
+          "surface": "待ち続け"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "5nenkan_kare_wo_machitsuzuketa",
+      "input": "5年間彼を待ち続けた"
     }
   ],
   "description": "digit_counter tests",

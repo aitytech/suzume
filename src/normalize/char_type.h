@@ -268,6 +268,19 @@ bool isDurationSuffixKanji(char32_t code_point);
 bool isTemporalRelationSuffixKanji(char32_t code_point);
 
 /**
+ * @brief Check if a codepoint is the second kanji of an 間-initial interval word (間隔)
+ *
+ * Closed class of kanji that form an interval word when they follow the period
+ * 間. After a duration counter, N年間隔 must split as N年|間隔 (interval), whereas a
+ * non-member kanji keeps the duration reading (N年間|続けた, N時間|半). Distinguishes
+ * the interval signal from a duration counter followed by an unrelated word.
+ *
+ * @param code_point Unicode codepoint
+ * @return true if codepoint heads an 間X interval compound
+ */
+bool isIntervalCompoundSecondKanji(char32_t code_point);
+
+/**
  * @brief Check if a codepoint is a temporal-span suffix kanji ({中, 末})
  *
  * Closed class of bound suffixes marking a span within, or the end of, a named
