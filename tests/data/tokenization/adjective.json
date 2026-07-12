@@ -129,6 +129,38 @@
       ],
       "id": "kion_ga_agaru",
       "input": "気温が上がる"
+    },
+    {
+      "description": "Lexicalized nai-adjective もったいない kept whole, not split into もった+い+ない",
+      "expected": [
+        {
+          "lemma": "もったいない",
+          "pos": "Adjective",
+          "surface": "もったいない"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "mottainai_koto_wo_shita",
+      "input": "もったいないことをした"
     }
   ],
   "description": "adjective tests",
