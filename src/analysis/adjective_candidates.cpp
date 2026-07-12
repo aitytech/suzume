@@ -1221,7 +1221,8 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
 std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints,
                                                                   size_t start_pos,
                                                                   const std::vector<normalize::CharType>& char_types,
-                                                                  const grammar::Inflection& inflection) {
+                                                                  const grammar::Inflection& inflection,
+                                                                  const dictionary::DictionaryManager* dict_manager) {
   std::vector<UnknownCandidate> candidates;
 
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Hiragana) {
@@ -1420,6 +1421,29 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
         // This prevents に+そうな from being recognized as にい (invalid)
         if (starts_with_particle && normalize::utf8Length(cand.stem) < 2) {
           continue;  // Stem too short for a valid adjective
+        }
+        // A particle followed by a dictionary verb in a complete past/te form is
+        // not an adjective: にかかった → に + かかる, mis-reconstructed as the
+        // non-word base にかい. Gate on a た/て/だ/で ending so a bare renyokei tail
+        // (でかい → で + 買い) cannot fire — those are genuine adjectives, not verbs.
+        if (starts_with_particle && !isAdjectiveInDictionary(dict_manager, cand.base_form) &&
+            (utf8::endsWith(surface, "た") || utf8::endsWith(surface, "て") || utf8::endsWith(surface, "だ") ||
+             utf8::endsWith(surface, "で"))) {
+          std::string after_particle = extractSubstring(codepoints, start_pos + 1, end_pos);
+          bool tail_is_dict_verb = false;
+          for (const auto& vres : inflection.analyze(after_particle)) {
+            if (vres.verb_type == grammar::VerbType::IAdjective) {
+              continue;
+            }
+            if (isVerbInDictionary(dict_manager, vres.base_form)) {
+              tail_is_dict_verb = true;
+              break;
+            }
+          }
+          if (tail_is_dict_verb) {
+            SUZUME_DEBUG_LOG_VERBOSE("[HIRA_ADJ_SKIP] \"" << surface << "\" particle + dict verb, skipping\n");
+            continue;
+          }
         }
         // For prolonged sound mark patterns, require normalized stem >= 2 characters
         // The inflection analyzer works on the choon-expanded form (ばーい → ばあい),

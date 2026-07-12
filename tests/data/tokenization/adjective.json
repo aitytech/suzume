@@ -217,6 +217,50 @@
       ],
       "id": "kai",
       "input": "温かいスープ"
+    },
+    {
+      "description": "Particle に + verb かかる must not merge into a fake i-adjective にかい",
+      "expected": [
+        {
+          "lemma": "修理",
+          "pos": "Noun",
+          "surface": "修理"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nikakattta",
+      "input": "修理にかかった"
+    },
+    {
+      "description": "Colloquial i-adjective でかい preserved before noun",
+      "expected": [
+        {
+          "lemma": "でかい",
+          "pos": "Adjective",
+          "surface": "でかい"
+        },
+        {
+          "lemma": "魚",
+          "pos": "Noun",
+          "surface": "魚"
+        }
+      ],
+      "id": "dekai",
+      "input": "でかい魚"
     }
   ],
   "description": "adjective tests",

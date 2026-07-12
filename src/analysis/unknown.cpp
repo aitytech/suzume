@@ -684,7 +684,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateHiraganaAdjectiveCan
     std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
     const std::vector<normalize::CharType>& char_types) const {
   // Delegate to the standalone function
-  return analysis::generateHiraganaAdjectiveCandidates(codepoints, start_pos, char_types, inflection_);
+  return analysis::generateHiraganaAdjectiveCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_);
 }
 
 std::vector<UnknownCandidate> UnknownWordGenerator::generateNaAdjectiveCandidates(
