@@ -170,9 +170,10 @@ enum class ExtendedPOS : uint8_t {
 
   AuxNegativeMai,  // 打消推量: まい (attaches to 終止形, unlike ぬ/ん which take 未然形)
 
-  AuxClassicalNari,  // 文語断定: なり (春なり = it is spring)
-  AuxClassicalKeri,  // 文語過去/詠嘆: けり (なりけり)
-  AuxClassicalTari,  // 文語断定タリ活用連体形: たる (堂々たる, 確固たる)
+  AuxClassicalNari,   // 文語断定: なり (春なり = it is spring)
+  AuxClassicalKeri,   // 文語過去/詠嘆: けり (なりけり)
+  AuxClassicalTari,   // 文語断定タリ活用連体形: たる (堂々たる, 確固たる)
+  AuxClassicalBeshi,  // 文語当為べし連体形: べき (来たるべき, 読むべき)
 
   // Count marker (for array sizing)
   Count_  // Total number of categories

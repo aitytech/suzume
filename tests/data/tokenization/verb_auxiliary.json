@@ -186,6 +186,28 @@
       ],
       "id": "neko_ga_iru_rashii",
       "input": "猫がいるらしい"
+    },
+    {
+      "description": "べき+formal noun こと stays Noun",
+      "expected": [
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やる"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        }
+      ],
+      "id": "yarubekikoto",
+      "input": "やるべきこと"
     }
   ],
   "description": "verb_auxiliary tests",

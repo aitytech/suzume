@@ -94,6 +94,10 @@ constexpr std::array<float, static_cast<size_t>(ExtendedPOS::Count_)> kCategoryC
   // 当|たる sneak past. The AuxClassicalTari->Noun/Particle bigram bonus (bigram_table.cpp)
   // more than repays this cost when a nominal actually follows (堂々たる態度).
   table[static_cast<size_t>(ExtendedPOS::AuxClassicalTari)] = 0.5F;  // たる (文語断定連体)
+  // AuxClassicalBeshi (連体形 べき) preserves べき's prior word cost (it used to ride
+  // AuxVolitional's 0.3); the adnominal べき→Noun and 終止形/受身→べき bigram bonuses in
+  // bigram_table.cpp carry its placement, so the category cost stays neutral at 0.3.
+  table[static_cast<size_t>(ExtendedPOS::AuxClassicalBeshi)] = 0.3F;  // べき (文語当為)
 
   // Desire/Volition
   table[static_cast<size_t>(ExtendedPOS::AuxDesireTai)] = 0.3F;   // たい

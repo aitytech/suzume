@@ -5383,6 +5383,43 @@
       ],
       "id": "tohamasanikonokotoda",
       "input": "一石二鳥とはまさにこのことだ。"
+    },
+    {
+      "description": "classical 来/たる/べき adnominal chain",
+      "expected": [
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "日",
+          "pos": "Noun",
+          "surface": "日"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "備える",
+          "pos": "Verb",
+          "surface": "備える"
+        }
+      ],
+      "id": "tarubeki_ni_eru",
+      "input": "来たるべき日に備える"
     }
   ],
   "description": "literary_classic tests",

@@ -327,7 +327,7 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       // Obligation (当為)
       // Classical obligation auxiliary べし - connects after verb shuushikei
       // Note: べきだ/べきで/べきでは removed - MeCab splits as べき+だ/で/では
-      aux("べき", "べし", EPOS::AuxVolitional),  // 連体形: 食べるべき
+      aux("べき", "べし", EPOS::AuxClassicalBeshi),  // 連体形: 食べるべき, 来たるべき
 
       // Passive/Potential (受身・可能)
       aux("れ", "れる", EPOS::AuxPassive),

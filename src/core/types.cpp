@@ -279,6 +279,8 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
       return "AUX_文語過去";
     case ExtendedPOS::AuxClassicalTari:
       return "AUX_文語断定連体";
+    case ExtendedPOS::AuxClassicalBeshi:
+      return "AUX_文語当為";
 
     // Auxiliaries - Desire/Volition
     case ExtendedPOS::AuxDesireTai:
@@ -415,11 +417,11 @@ PartOfSpeech extendedPosToPos(ExtendedPOS epos) {
     return PartOfSpeech::Verb;
   }
   // Auxiliary types -> Auxiliary
-  // (AuxNegativeMai, AuxClassicalNari, AuxClassicalKeri, AuxClassicalTari sit outside
-  // the contiguous range; see ExtendedPOS comment)
+  // (AuxNegativeMai, AuxClassicalNari, AuxClassicalKeri, AuxClassicalTari, AuxClassicalBeshi
+  // sit outside the contiguous range; see ExtendedPOS comment)
   if ((epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai ||
       epos == ExtendedPOS::AuxClassicalNari || epos == ExtendedPOS::AuxClassicalKeri ||
-      epos == ExtendedPOS::AuxClassicalTari) {
+      epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalBeshi) {
     return PartOfSpeech::Auxiliary;
   }
   // Particle types -> Particle

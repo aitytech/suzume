@@ -1461,7 +1461,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Exception: Single-kanji ichidan verb stems + causative させ (見+させる, etc.)
   if (prev.extended_pos == core::ExtendedPOS::Noun && prev.surface.size() == 3 &&  // Single kanji (3 bytes in UTF-8)
       (next.extended_pos == core::ExtendedPOS::AuxVolitional || next.extended_pos == core::ExtendedPOS::AuxPassive ||
-       next.extended_pos == core::ExtendedPOS::AuxPotential || next.extended_pos == core::ExtendedPOS::AuxCausative)) {
+       next.extended_pos == core::ExtendedPOS::AuxPotential || next.extended_pos == core::ExtendedPOS::AuxCausative ||
+       next.extended_pos == core::ExtendedPOS::AuxClassicalBeshi)) {
     // Check if this is single-kanji ichidan + causative させ (should be allowed)
     bool is_ichidan_causative = false;
     if (next.extended_pos == core::ExtendedPOS::AuxCausative && utf8::startsWith(next.surface, "させ")) {

@@ -1103,6 +1103,17 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   setCell(t, EPOS::AuxClassicalTari, EPOS::ParticleBinding, cost::kStrongBonus);
   setCell(t, EPOS::AuxClassicalTari, EPOS::ParticleCase, cost::kStrongBonus);
 
+  // AuxClassicalBeshi (当為べし 連体形 べき). べし attaches to the 連体形 of ラ変-type words,
+  // so たる+べき joins (来たるべき, 然るべき); as a 連体形 it must precede a nominal, hence
+  // べき→Noun/NounFormal (来たるべき日, やるべきこと). The 終止形→べき and 受身→べき cells
+  // migrate the former AuxVolitional bonuses (食べるべき, 書かれるべき) now that べき is its
+  // own EPOS; the original AuxVolitional cells stay in place for genuine う/よう volitional paths.
+  setCell(t, EPOS::AuxClassicalTari, EPOS::AuxClassicalBeshi, cost::kStrongBonus);
+  setCell(t, EPOS::AuxClassicalBeshi, EPOS::Noun, cost::kModerateBonus);
+  setCell(t, EPOS::AuxClassicalBeshi, EPOS::NounFormal, cost::kModerateBonus);
+  setCell(t, EPOS::VerbShuushikei, EPOS::AuxClassicalBeshi, cost::kStrongBonus);
+  setCell(t, EPOS::AuxPassive, EPOS::AuxClassicalBeshi, cost::kStrongBonus);
+
   return t;
 }
 
