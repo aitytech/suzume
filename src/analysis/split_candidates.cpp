@@ -142,14 +142,7 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
         // Counter prefix + non-counter kanji: allow only if the kanji run is a dict entry (2次元).
         size_t kanji_start_byte = charPosToBytePos(codepoints, first_end);
         std::string kanji_part(text.substr(kanji_start_byte, end_byte - kanji_start_byte));
-        auto lookup = dict_manager.lookup(kanji_part, 0);
-        bool found_exact = false;
-        for (const auto& r : lookup) {
-          if (r.entry != nullptr && r.entry->surface == kanji_part) {
-            found_exact = true;
-            break;
-          }
-        }
+        bool found_exact = dict_manager.lookupExact(kanji_part) != nullptr;
         if (!found_exact) {
           continue;  // Skip: kanji portion not a known word
         }
@@ -374,15 +367,8 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
         if (cand.confidence < 0.5F) {
           continue;
         }
-        auto base_results = dict_manager.lookup(cand.base_form, 0);
-        for (const auto& result : base_results) {
-          if (result.entry != nullptr && result.entry->surface == cand.base_form &&
-              result.entry->pos == core::PartOfSpeech::Verb) {
-            base_in_dict = true;
-            break;
-          }
-        }
-        if (base_in_dict) {
+        if (dict_manager.lookupExact(cand.base_form, core::PartOfSpeech::Verb) != nullptr) {
+          base_in_dict = true;
           break;
         }
       }
@@ -396,14 +382,7 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
         if (verb_start < kanji_end) {
           size_t compound_end_byte = charPosToBytePos(codepoints, verb_start + 1);
           std::string compound(text.substr(start_byte, compound_end_byte - start_byte));
-          auto compound_results = dict_manager.lookup(compound, 0);
-          bool compound_in_dict = false;
-          for (const auto& result : compound_results) {
-            if (result.entry != nullptr && result.entry->surface == compound) {
-              compound_in_dict = true;
-              break;
-            }
-          }
+          bool compound_in_dict = dict_manager.lookupExact(compound) != nullptr;
           if (compound_in_dict) {
             continue;  // Skip this split, prefer compound word
           }
@@ -418,13 +397,10 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
             std::string last_kanji = normalize::encodeUtf8(noun_cps.back());
             // Check last_kanji + verb_part (e.g., 除+する = 掃除する? no, but 除する? no)
             std::string alt_word = last_kanji + std::string(verb_part);
-            auto alt_results = dict_manager.lookup(alt_word, 0);
-            for (const auto& result : alt_results) {
-              if (result.entry != nullptr && result.entry->surface == alt_word) {
-                SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_NV] skip \"" << noun_surface << "\" + \"" << verb_part
-                                                              << "\": alt dict word \"" << alt_word << "\" exists\n");
-                goto next_split;
-              }
+            if (dict_manager.lookupExact(alt_word) != nullptr) {
+              SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_NV] skip \"" << noun_surface << "\" + \"" << verb_part
+                                                            << "\": alt dict word \"" << alt_word << "\" exists\n");
+              goto next_split;
             }
             // Check last_kanji + first_kanji_of_verb (e.g., 崩+壊 = 崩壊)
             // This catches compounds where the verb's kanji belongs to a noun

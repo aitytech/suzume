@@ -135,6 +135,19 @@ class DictionaryManager {
   std::vector<LookupResult> lookup(std::string_view text, size_t start_pos) const;
 
   /**
+   * @brief Look up an exact-surface entry, optionally constrained by POS
+   *
+   * Scans lookup(surface, 0) for the first entry whose surface equals @p surface
+   * exactly (so a shorter dictionary prefix does not spuriously match). When
+   * @p pos is PartOfSpeech::Unknown the first exact-surface entry of any POS is
+   * returned; otherwise only an entry with the matching POS is returned.
+   *
+   * @return the matching entry, or nullptr if none exists
+   */
+  const DictionaryEntry* lookupExact(std::string_view surface,
+                                     core::PartOfSpeech pos = core::PartOfSpeech::Unknown) const;
+
+  /**
    * @brief Get the core dictionary
    */
   const CoreDictionary& coreDictionary() const;

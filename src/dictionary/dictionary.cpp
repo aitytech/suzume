@@ -71,6 +71,20 @@ std::vector<LookupResult> DictionaryManager::lookup(std::string_view text, size_
   return results;
 }
 
+const DictionaryEntry* DictionaryManager::lookupExact(std::string_view surface, core::PartOfSpeech pos) const {
+  if (surface.empty()) {
+    return nullptr;
+  }
+  auto results = lookup(surface, 0);
+  for (const auto& result : results) {
+    if (result.entry != nullptr && result.entry->surface == surface &&
+        (pos == core::PartOfSpeech::Unknown || result.entry->pos == pos)) {
+      return result.entry;
+    }
+  }
+  return nullptr;
+}
+
 const CoreDictionary& DictionaryManager::coreDictionary() const {
   return *core_dict_;
 }

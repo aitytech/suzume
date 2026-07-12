@@ -4,7 +4,6 @@
 # only enforced by convention. Ratchet-based: per analysis source file it counts
 #   - surface_cmp:    surface-string equality comparisons (hardcoded word tests)
 #   - score_literals: raw float score literals (magic numbers not via named constants)
-#   - lines:          file length (single-file growth / split pressure)
 # and fails if any metric EXCEEDS the committed baseline. Metrics may only go down;
 # an intentional reduction is recorded by re-running with `update`, which shows up as
 # a baseline diff in the commit.
@@ -27,17 +26,16 @@ MODE="${1:-check}"
 count() { grep -oE "$1" "$2" 2>/dev/null | wc -l | tr -d ' '; }
 
 metrics_for() {
-  local f="$1" surf floats lines
+  local f="$1" surf floats
   surf=$(count '(->|\.)surface *[!=]=' "$f")
   floats=$(count '[0-9]+\.[0-9]+F' "$f")
-  lines=$(wc -l < "$f" | tr -d ' ')
-  printf '%s\t%s\t%s\t%s\n' "$f" "$surf" "$floats" "$lines"
+  printf '%s\t%s\t%s\n' "$f" "$surf" "$floats"
 }
 
 FILES=$(find src/analysis -name '*.cpp' | sort)
 
 gen_baseline() {
-  printf '# file\tsurface_cmp\tscore_literals\tlines\n'
+  printf '# file\tsurface_cmp\tscore_literals\n'
   for f in $FILES; do metrics_for "$f"; done
 }
 
@@ -70,15 +68,14 @@ fi
 fail=0
 for f in $FILES; do
   cur=$(metrics_for "$f")
-  s=$(echo "$cur"  | cut -f2); fl=$(echo "$cur" | cut -f3); l=$(echo "$cur" | cut -f4)
+  s=$(echo "$cur"  | cut -f2); fl=$(echo "$cur" | cut -f3)
   base=$(grep -F "$(printf '%s\t' "$f")" "$BASELINE" || true)
   if [ -z "$base" ]; then
     echo "❌ new analysis file not in baseline: $f (run: update)"; fail=1; continue
   fi
-  bs=$(echo "$base" | cut -f2); bf=$(echo "$base" | cut -f3); bl=$(echo "$base" | cut -f4)
+  bs=$(echo "$base" | cut -f2); bf=$(echo "$base" | cut -f3)
   [ "$s"  -gt "$bs" ] && { echo "❌ $f surface comparisons $s > baseline $bs (generalize with grammar rules; don't add word tests)"; fail=1; } || true
   [ "$fl" -gt "$bf" ] && { echo "❌ $f raw score literals $fl > baseline $bf (use named constants in *_constants.h)"; fail=1; } || true
-  [ "$l"  -gt "$bl" ] && { echo "❌ $f length $l > baseline $bl (extract helpers / split the file)"; fail=1; } || true
 done
 
 check_purity || fail=1

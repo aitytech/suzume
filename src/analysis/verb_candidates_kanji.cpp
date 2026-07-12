@@ -127,15 +127,11 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   if (start_pos > 0 && dict_manager != nullptr && char_types[start_pos - 1] == normalize::CharType::Kanji) {
     std::string boundary_pair =
         normalize::encodeUtf8(codepoints[start_pos - 1]) + normalize::encodeUtf8(codepoints[start_pos]);
-    auto pair_results = dict_manager->lookup(boundary_pair, 0);
-    for (const auto& result : pair_results) {
-      if (result.entry != nullptr && result.entry->surface == boundary_pair) {
-        mid_compound_penalty = bigram_cost::kMinor;
-        SUZUME_DEBUG_LOG("[COST_ADJ] verb candidates at pos " << start_pos << " +" << mid_compound_penalty
-                                                              << " (boundary pair \"" << boundary_pair
-                                                              << "\" is dict word)\n");
-        break;
-      }
+    if (dict_manager->lookupExact(boundary_pair) != nullptr) {
+      mid_compound_penalty = bigram_cost::kMinor;
+      SUZUME_DEBUG_LOG("[COST_ADJ] verb candidates at pos " << start_pos << " +" << mid_compound_penalty
+                                                            << " (boundary pair \"" << boundary_pair
+                                                            << "\" is dict word)\n");
     }
   }
 
@@ -384,22 +380,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             if (dict_manager != nullptr) {
               std::string zu_form = surface + "ず";
               std::string zuni_form = surface + "ずに";
-              auto zu_results = dict_manager->lookup(zu_form, 0);
-              for (const auto& r : zu_results) {
-                if (r.entry != nullptr && r.entry->surface == zu_form) {
-                  dict_has_zu_form = true;
-                  break;
-                }
-              }
-              if (!dict_has_zu_form) {
-                auto zuni_results = dict_manager->lookup(zuni_form, 0);
-                for (const auto& r : zuni_results) {
-                  if (r.entry != nullptr && r.entry->surface == zuni_form) {
-                    dict_has_zu_form = true;
-                    break;
-                  }
-                }
-              }
+              dict_has_zu_form =
+                  dict_manager->lookupExact(zu_form) != nullptr || dict_manager->lookupExact(zuni_form) != nullptr;
             }
             if (!dict_has_zu_form) {
               constexpr float kCost = candidate::verb_cost::kWeakPenalty;
@@ -905,16 +887,11 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             if (base_cps.size() >= 3 && normalize::isKanjiCodepoint(base_cps[0])) {
               std::vector<char32_t> hira_only(base_cps.begin() + 1, base_cps.end());
               std::string hira_portion = normalize::utf8::encode(hira_only);
-              auto results = dict_manager->lookup(hira_portion, 0);
-              for (const auto& result : results) {
-                if (result.entry != nullptr && result.entry->surface == hira_portion &&
-                    (result.entry->pos == core::PartOfSpeech::Auxiliary ||
-                     result.entry->pos == core::PartOfSpeech::Verb)) {
-                  base_cost += bigram_cost::kRare;
-                  SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \""
-                                           << surface << "\" +1.0 (single_kanji_godan_hira_is_dict_word_penalty)\n");
-                  break;
-                }
+              if (verb_helpers::hasDictionaryEntry(dict_manager, hira_portion, core::PartOfSpeech::Auxiliary) ||
+                  verb_helpers::isVerbInDictionary(dict_manager, hira_portion)) {
+                base_cost += bigram_cost::kRare;
+                SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface
+                                                         << "\" +1.0 (single_kanji_godan_hira_is_dict_word_penalty)\n");
               }
             }
           }
@@ -2238,18 +2215,12 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           // Check if any prefix of kanji_stem is a dictionary noun
           for (size_t prefix_len = 1; prefix_len < kanji_end - start_pos; ++prefix_len) {
             std::string prefix = extractSubstring(codepoints, start_pos, start_pos + prefix_len);
-            auto lookup_results = dict_manager->lookup(prefix, 0);
-            for (const auto& result : lookup_results) {
-              if (result.entry != nullptr && result.entry->surface == prefix &&
-                  result.entry->pos == core::PartOfSpeech::Noun) {
-                starts_with_dict_noun = true;
-                SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << kanji_stem << "\" starts with dict noun \"" << prefix
-                                                          << "\"\n");
-                break;
-              }
-            }
-            if (starts_with_dict_noun)
+            if (verb_helpers::isNounInDictionary(dict_manager, prefix)) {
+              starts_with_dict_noun = true;
+              SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << kanji_stem << "\" starts with dict noun \"" << prefix
+                                                        << "\"\n");
               break;
+            }
           }
           // Also check: if removing single-kanji prefix leaves a valid dict verb
           // E.g., 本買う → 本 + 買う, where 買う is a dict verb

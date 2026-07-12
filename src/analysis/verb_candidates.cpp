@@ -124,20 +124,8 @@ std::vector<UnknownCandidate> generateCompoundVerbCandidates(const std::vector<c
       }
 
       // Check if base form exists in dictionary as a verb
-      auto results = dict_manager->lookup(infl_cand.base_form, 0);
-      for (const auto& result : results) {
-        if (result.entry == nullptr) {
-          continue;
-        }
-        if (result.entry->surface != infl_cand.base_form) {
-          continue;
-        }
-        if (result.entry->pos != core::PartOfSpeech::Verb) {
-          continue;
-        }
-
+      if (verb_helpers::isVerbInDictionary(dict_manager, infl_cand.base_form)) {
         // v0.8: conj_type removed - just verify verb exists in dictionary
-        // Found a match! Generate candidate
         // Note: Don't set lemma here - let lemmatizer derive it more accurately
         candidates.push_back(makeVerbCandidate(surface, start_pos, end_pos, verb_opts.base_cost_low, "",
                                                dictionary::ConjugationType::None,  // v0.8: conj_type no longer used
@@ -292,16 +280,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
 
         // Skip if katakana stem is already a dict noun (e.g., フェラ, ネタ)
         // These should be noun+って, not verb sokuonbin+て
-        bool skip_sokuonbin = false;
-        if (dict_manager) {
-          auto stem_results = dict_manager->lookup(kata_part, 0);
-          for (const auto& r : stem_results) {
-            if (r.entry && r.entry->surface == kata_part && r.entry->pos == core::PartOfSpeech::Noun) {
-              skip_sokuonbin = true;
-              break;
-            }
-          }
-        }
+        bool skip_sokuonbin = verb_helpers::isNounInDictionary(dict_manager, kata_part);
         if (skip_sokuonbin) {
           SUZUME_DEBUG_VERBOSE_BLOCK {
             SUZUME_DEBUG_STREAM << "[VERB_SKIP] \"" << kata_part << "\" is dict noun, skip katakana_sokuonbin\n";
