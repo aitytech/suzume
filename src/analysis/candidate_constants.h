@@ -127,6 +127,10 @@ constexpr float kDictAdjBonus = -0.25F;
 // Minimum verb hypothesis confidence to treat a ゆく/いく prefix as 連用形
 constexpr float kV1PrefixMinConfidence = 0.3F;
 
+// Minimum inflection confidence for a prefix-compound's second kanji to count as
+// a verb stem and thus suppress the compound (今食べてる → 今|食べ|てる)
+constexpr float kPrefixCompoundVerbStemConf = 0.5F;
+
 // Compound adjective (2-kanji stem: 薄暗い, 物悲しく)
 constexpr float kCompoundAdjConfMin = 0.3F;   // minimum inflection confidence
 constexpr float kCompoundAdjBaseCost = 0.5F;  // base cost for generated candidate

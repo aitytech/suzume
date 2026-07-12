@@ -194,7 +194,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
     // Generate prefix + single kanji compound candidates
     // e.g., 今日, 今週, 本日, 全国 (prefix-like compounds)
-    auto prefix_compounds = generatePrefixCompoundCandidates(codepoints, start_pos, char_types);
+    auto prefix_compounds = generatePrefixCompoundCandidates(codepoints, start_pos, char_types, inflection_);
     candidates.insert(candidates.end(), prefix_compounds.begin(), prefix_compounds.end());
   }
 

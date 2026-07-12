@@ -7,10 +7,12 @@
 
 #include <unordered_set>
 
+#include "candidate_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
 #include "dictionary/dictionary.h"
 #include "grammar/conjugation.h"
+#include "grammar/inflection.h"
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
@@ -1174,7 +1176,8 @@ bool isInterrogativeKanji(char32_t cp) {
 
 std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints,
                                                                size_t start_pos,
-                                                               const std::vector<normalize::CharType>& char_types) {
+                                                               const std::vector<normalize::CharType>& char_types,
+                                                               const grammar::Inflection& inflection) {
   std::vector<UnknownCandidate> candidates;
 
   // Need at least 2 kanji characters
@@ -1217,6 +1220,28 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
       (start_pos + 2 < char_types.size() && char_types[start_pos + 2] == normalize::CharType::Kanji);
   bool followed_by_span_suffix = (followed_by_kanji && start_pos + 2 < codepoints.size() &&
                                   normalize::isTemporalSpanSuffixKanji(codepoints[start_pos + 2]));
+
+  // Suppress the compound when the second kanji heads a verb that continues into
+  // the following hiragana. Temporal-unit kanji (日/週/月/年/朝/晩/夜) are never
+  // verb stems, so this only fires for verb-stem kanji: 今食べてる must split as
+  // 今|食べ|てる, not 今食|べてる. Probe the second kanji plus a growing hiragana
+  // window (食べ → 食べる ichidan) since the full run (食べてる) may include a
+  // colloquial aux the inflection analyzer cannot peel.
+  if (!followed_by_kanji && start_pos + 2 < char_types.size() &&
+      char_types[start_pos + 2] == normalize::CharType::Hiragana) {
+    size_t hira_end = start_pos + 2;
+    while (hira_end < char_types.size() && char_types[hira_end] == normalize::CharType::Hiragana) {
+      ++hira_end;
+    }
+    for (size_t probe_end = start_pos + 3; probe_end <= hira_end; ++probe_end) {
+      std::string verb_probe = extractSubstring(codepoints, start_pos + 1, probe_end);
+      grammar::InflectionCandidate best = inflection.getBest(verb_probe);
+      if (best.verb_type != grammar::VerbType::Unknown &&
+          best.confidence >= candidate::kPrefixCompoundVerbStemConf) {
+        return candidates;
+      }
+    }
+  }
 
   if (!followed_by_kanji || followed_by_span_suffix) {
     std::string surface = extractSubstring(codepoints, start_pos, start_pos + 2);

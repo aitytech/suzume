@@ -1216,6 +1216,50 @@
       ],
       "id": "michi_futatsu_ni_kareta",
       "input": "道が二つに分かれた"
+    },
+    {
+      "description": "Temporal noun 今 must not merge into following verb-stem kanji (今|食べ|てる, not 今食|べてる)",
+      "expected": [
+        {
+          "lemma": "今",
+          "pos": "Noun",
+          "surface": "今"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "てる",
+          "pos": "Auxiliary",
+          "surface": "てる"
+        }
+      ],
+      "id": "beteru",
+      "input": "今食べてる"
+    },
+    {
+      "description": "Temporal noun 今 splits before particle から",
+      "expected": [
+        {
+          "lemma": "今",
+          "pos": "Noun",
+          "surface": "今"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "kara_ku",
+      "input": "今から行く"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",

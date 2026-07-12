@@ -17,6 +17,10 @@ namespace suzume::dictionary {
 class DictionaryManager;
 }
 
+namespace suzume::grammar {
+class Inflection;
+}
+
 namespace suzume::analysis {
 
 struct UnknownCandidate;
@@ -166,11 +170,15 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
  * @param codepoints Text as codepoints
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
+ * @param inflection Inflection analyzer, used to suppress the compound when the
+ *        second kanji heads a verb continuing into the following hiragana
+ *        (今食べてる → 今|食べ|てる, not 今食|べてる)
  * @return Vector of candidates
  */
 std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints,
                                                                size_t start_pos,
-                                                               const std::vector<normalize::CharType>& char_types);
+                                                               const std::vector<normalize::CharType>& char_types,
+                                                               const grammar::Inflection& inflection);
 
 /**
  * @brief Check if a codepoint is a prefix-like kanji
