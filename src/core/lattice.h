@@ -96,11 +96,6 @@ class Lattice {
   Lattice& operator=(Lattice&&) = default;
 
   /**
-   * @brief Add an edge to the lattice
-   */
-  void addEdge(const LatticeEdge& edge);
-
-  /**
    * @brief Add an edge with parameters
    * @param surface Surface string
    * @param start Start position

@@ -68,8 +68,17 @@ bool parseSizeOption(std::string_view value, size_t* out) {
   try {
     size_t parsed_len = 0;
     unsigned long long parsed = std::stoull(std::string(value), &parsed_len, 10);
-    if (parsed_len != value.size() || parsed > std::numeric_limits<size_t>::max()) {
+    if (parsed_len != value.size()) {
       return false;
+    }
+    // std::stoull already rejects values exceeding unsigned long long. Only when
+    // size_t is narrower than unsigned long long (e.g. ILP32) can a parsed value
+    // still overflow size_t; on LP64 the two share a width, so this guard is
+    // compiled out rather than left as an always-false comparison.
+    if constexpr (std::numeric_limits<size_t>::max() < std::numeric_limits<unsigned long long>::max()) {
+      if (parsed > std::numeric_limits<size_t>::max()) {
+        return false;
+      }
     }
     *out = static_cast<size_t>(parsed);
     return true;

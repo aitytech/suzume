@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 
 #include "normalize/utf8.h"
 
@@ -536,8 +537,9 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
   }
 
   // Validate hour (0-23 or 1-24)
-  int hour = std::stoi(hour_str);
-  if (hour < 0 || hour > 24) {
+  int hour = 0;
+  if (std::from_chars(hour_str.data(), hour_str.data() + hour_str.size(), hour).ec != std::errc() || hour < 0 ||
+      hour > 24) {
     return false;
   }
 
@@ -558,8 +560,9 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
   size_t min_end = parseInteger(text, idx, min_str);
 
   if (!min_str.empty() && min_str.size() <= 2) {
-    int minute = std::stoi(min_str);
-    if (minute >= 0 && minute <= 59) {
+    int minute = 0;
+    if (std::from_chars(min_str.data(), min_str.data() + min_str.size(), minute).ec == std::errc() && minute >= 0 &&
+        minute <= 59) {
       byte_pos = min_end;
       if (byte_pos < text.size()) {
         codepoint = normalize::decodeUtf8(text, byte_pos);
@@ -571,8 +574,9 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
           size_t sec_end = parseInteger(text, idx, sec_str);
 
           if (!sec_str.empty() && sec_str.size() <= 2) {
-            int second = std::stoi(sec_str);
-            if (second >= 0 && second <= 59) {
+            int second = 0;
+            if (std::from_chars(sec_str.data(), sec_str.data() + sec_str.size(), second).ec == std::errc() &&
+                second >= 0 && second <= 59) {
               byte_pos = sec_end;
               if (byte_pos < text.size()) {
                 codepoint = normalize::decodeUtf8(text, byte_pos);

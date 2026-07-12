@@ -18,29 +18,6 @@ bool isValidExtendedPos(ExtendedPOS extended_pos) {
 
 Lattice::Lattice(size_t text_length) : text_length_(text_length), edge_indices_by_start_(text_length + 1) {}
 
-void Lattice::addEdge(const LatticeEdge& edge) {
-  if (edge.start < edge.end && edge.end <= text_length_ && isValidPos(edge.pos) &&
-      isValidExtendedPos(edge.extended_pos) && all_edges_.size() < kMaxEdges) {
-    LatticeEdge new_edge = edge;
-    new_edge.id = static_cast<uint32_t>(all_edges_.size());
-    // Set extended_pos if not already set - auto-detect for verbs/adjectives
-    if (new_edge.extended_pos == ExtendedPOS::Unknown) {
-      if (new_edge.pos == PartOfSpeech::Verb) {
-        new_edge.extended_pos = detectVerbForm(new_edge.surface, {});
-      } else if (new_edge.pos == PartOfSpeech::Adjective) {
-        // Check conj_type for na-adjective
-        bool is_na = new_edge.conj_type == dictionary::ConjugationType::NaAdjective;
-        new_edge.extended_pos = detectAdjForm(new_edge.surface, is_na);
-      } else {
-        new_edge.extended_pos = posToExtendedPos(new_edge.pos);
-      }
-    }
-    all_edges_.push_back(new_edge);
-    edge_indices_by_start_[edge.start].push_back(new_edge.id);
-    ++edge_count_;
-  }
-}
-
 size_t Lattice::addEdge(std::string_view surface, uint32_t start, uint32_t end, PartOfSpeech pos, float cost,
                         uint8_t flags, std::string_view lemma, dictionary::ConjugationType conj_type,
                         [[maybe_unused]] CandidateOrigin origin, [[maybe_unused]] float origin_confidence,
