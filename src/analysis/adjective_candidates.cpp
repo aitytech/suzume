@@ -742,6 +742,37 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (mai_auxiliary)\n");
           }
         }
+        // Skip a fake i-adjective that is really [noun] + a dictionary verb whose
+        // onbin tail reconstructs a non-word かい/たい-shaped base: 手間+かかった →
+        // 手間かい, 2時間半+かかった → 半かい. These share the [X]+かい shape with
+        // genuine adjectives (細かい), so distinguish by dictionary — skip only when
+        // the base is not a dictionary adjective, its stem ends in hiragana (excludes
+        // pure-kanji stems like 高い), and the hiragana tail is itself a complete
+        // conjugation of a dictionary verb (かかった → かかる). [noun][verb] is not
+        // an adjective, so skip rather than penalize (mirrors the ゆく/いく case).
+        if (!is_dict_adjective && !isAdjectiveInDictionary(dict_manager, cand.base_form)) {
+          std::string_view base_sv(cand.base_form);
+          if (base_sv.size() > core::kJapaneseCharBytes && utf8::endsWith(base_sv, "い")) {
+            std::string_view stem = base_sv.substr(0, base_sv.size() - core::kJapaneseCharBytes);
+            char32_t stem_last = utf8::decodeFirstChar(utf8::lastChar(stem));
+            if (stem_last != 0 && kana::isHiraganaCodepoint(stem_last)) {
+              bool tail_is_dict_verb = false;
+              for (const auto& vres : inflection.analyze(hiragana_part)) {
+                if (vres.verb_type == grammar::VerbType::IAdjective) {
+                  continue;
+                }
+                if (isVerbInDictionary(dict_manager, vres.base_form)) {
+                  tail_is_dict_verb = true;
+                  break;
+                }
+              }
+              if (tail_is_dict_verb) {
+                SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" tail is dict verb, skipping fake adjective\n");
+                continue;
+              }
+            }
+          }
+        }
         // Skip subsidiary-verb ゆく/いく compounds misread as i-adjectives.
         // Verb 連用形 + ゆく (散りゆく, 消えゆく) ends in く, so inflection
         // hypothesizes a fake i-adjective base (散りゆい). When the base is

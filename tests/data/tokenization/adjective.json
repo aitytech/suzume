@@ -161,6 +161,62 @@
       ],
       "id": "mottainai_koto_wo_shita",
       "input": "もったいないことをした"
+    },
+    {
+      "description": "Noun + かかる (verb) must not merge into a fake i-adjective 手間かい",
+      "expected": [
+        {
+          "lemma": "手間",
+          "pos": "Noun",
+          "surface": "手間"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kakattta",
+      "input": "手間かかった"
+    },
+    {
+      "description": "Genuine kanji-stem かい adjective 細かい preserved (past form)",
+      "expected": [
+        {
+          "lemma": "細かい",
+          "pos": "Adjective",
+          "surface": "細かかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kakattta_2",
+      "input": "細かかった"
+    },
+    {
+      "description": "Genuine かい adjective 温かい preserved before noun",
+      "expected": [
+        {
+          "lemma": "温かい",
+          "pos": "Adjective",
+          "surface": "温かい"
+        },
+        {
+          "lemma": "スープ",
+          "pos": "Noun",
+          "surface": "スープ"
+        }
+      ],
+      "id": "kai",
+      "input": "温かいスープ"
     }
   ],
   "description": "adjective tests",
