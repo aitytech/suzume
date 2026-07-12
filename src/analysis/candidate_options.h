@@ -76,6 +76,13 @@ struct SplitOptions {
   // Digit + 2-kanji counter split bonus
   float digit_kanji_2_bonus = -0.2F;
 
+  // Extra bonus when a counter run ends in the period suffix 間 (分間/時間/年間).
+  // Tips the tie between a duration reading (30分間|営業) and a rightward kanji
+  // compound that swallows 間 (30分|間営業). Kept small so a stranded single
+  // kanji after 間 (3年|間隔, where 隔 alone is costly) still prefers the
+  // interval reading.
+  float duration_period_bonus = -0.3F;
+
   // Digit + 3+ kanji penalty (rare, likely wrong)
   float digit_kanji_3_penalty = 0.5F;
 

@@ -254,6 +254,20 @@ bool isCounterKanji(char32_t cp);
 bool isDurationSuffixKanji(char32_t code_point);
 
 /**
+ * @brief Check if a codepoint is a temporal-relation suffix kanji ({後, 前})
+ *
+ * Closed class of bound relational suffixes that attach to a preceding time
+ * expression to place it relative to now (N時間後, 2週間前, 3年後). They are the
+ * one exception to "a lone kanji after a period 間 is an interval word": 間+後 is
+ * not the compound 間後 but the duration 時間/週間 followed by the suffix 後. Used
+ * to keep the duration atomic (5時間|後) instead of severing it (5時|間後).
+ *
+ * @param code_point Unicode codepoint
+ * @return true if codepoint is a temporal-relation suffix kanji
+ */
+bool isTemporalRelationSuffixKanji(char32_t code_point);
+
+/**
  * @brief Check if a codepoint is a numeral (Arabic or kanji)
  *
  * Covers half-width and full-width Arabic digits plus the basic kanji

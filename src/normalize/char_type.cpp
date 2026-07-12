@@ -392,6 +392,16 @@ bool isDurationSuffixKanji(char32_t code_point) {
   }
 }
 
+bool isTemporalRelationSuffixKanji(char32_t code_point) {
+  switch (code_point) {
+    case U'後':
+    case U'前':
+      return true;
+    default:
+      return false;
+  }
+}
+
 bool isNumeralCodepoint(char32_t code_point) {
   // Arabic numerals (half-width and full-width)
   if ((code_point >= U'0' && code_point <= U'9') || (code_point >= U'０' && code_point <= U'９')) {

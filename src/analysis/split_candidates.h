@@ -23,6 +23,32 @@
 namespace suzume::analysis {
 
 /**
+ * @brief Extra split-cost adjustment for a digit+counter run ending in period 間
+ *
+ * A counter run whose last kanji is the period suffix 間 (分間/時間/年間) prefers
+ * the duration reading over a rightward 間-compound. `period_bonus` tips the
+ * common tie (30分|間営業 → 30分間|営業); it is applied twice when 間 is followed
+ * by a lone temporal-relation suffix 後/前, which belongs to the duration
+ * (2週|間前 → 2週間|前) rather than a 間後/間前 compound. A stranded non-suffix
+ * kanji (3年|間隔) keeps the single bonus so the interval reading still wins.
+ *
+ * @param codepoints Unicode codepoints
+ * @param candidate_end End position (exclusive) of the counter-run candidate
+ * @param period_bonus Base duration bonus (opts.duration_period_bonus)
+ * @return Cost adjustment to add (0 when the run does not end in 間)
+ */
+inline float periodSuffixSplitBonus(const std::vector<char32_t>& codepoints, size_t candidate_end, float period_bonus) {
+  if (candidate_end == 0 || codepoints[candidate_end - 1] != U'間') {
+    return 0.0F;
+  }
+  float bonus = period_bonus;
+  if (candidate_end < codepoints.size() && normalize::isTemporalRelationSuffixKanji(codepoints[candidate_end])) {
+    bonus += period_bonus;  // 後/前 belongs to the duration, not a 間後/間前 compound
+  }
+  return bonus;
+}
+
+/**
  * @brief Add mixed script joining candidates
  *
  * Detects transitions between scripts (Alphabet+Kanji, Alphabet+Katakana,

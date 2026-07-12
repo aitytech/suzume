@@ -121,13 +121,11 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
         }
       }
 
-      // Apply length-based bonus/penalty
-      float length_adjustment;
+      float length_adjustment;  // length-based bonus/penalty
       if (counter_prefix_len == 0) {
         // First kanji is not a counter (学園, 世界, etc.) — skip
         continue;
-      } else if (kanji_len <= counter_prefix_len) {
-        // All kanji are counters
+      } else if (kanji_len <= counter_prefix_len) {  // all kanji are counters
         if (kanji_len == 1) {
           if (codepoints[first_end] == U'対') {
             length_adjustment = bigram_cost::kStrong;  // 2対1 → 2|対|1
@@ -136,12 +134,12 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
           }
         } else if (kanji_len == 2) {
           length_adjustment = opts.digit_kanji_2_bonus;  // 5分間, 3時間
+          length_adjustment += periodSuffixSplitBonus(codepoints, candidate_end, opts.duration_period_bonus);
         } else {
           length_adjustment = opts.digit_kanji_3_penalty;  // Rare
         }
       } else {
-        // Counter prefix + non-counter kanji: only allow when the full kanji
-        // portion exists as a dictionary entry (e.g., 次元 in dict → 2次元 OK)
+        // Counter prefix + non-counter kanji: allow only if the kanji run is a dict entry (2次元).
         size_t kanji_start_byte = charPosToBytePos(codepoints, first_end);
         std::string kanji_part(text.substr(kanji_start_byte, end_byte - kanji_start_byte));
         auto lookup = dict_manager.lookup(kanji_part, 0);

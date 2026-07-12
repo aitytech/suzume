@@ -4,6 +4,7 @@
 #include <cctype>
 #include <charconv>
 
+#include "normalize/char_type.h"
 #include "normalize/utf8.h"
 
 namespace suzume::pretokenizer {
@@ -13,6 +14,39 @@ namespace {
 // Check if byte is ASCII digit
 bool isAsciiDigit(char chr) {
   return chr >= '0' && chr <= '9';
+}
+
+// Decide whether a period suffix 間 immediately following a time/duration
+// counter (N時/N年) should be absorbed into the atomic counter token.
+//
+// Absorb by default — N時間/N年間 are lexicalized durations, so keeping them
+// atomic prevents 間 from being stranded at a segment boundary. The single
+// exception is the interval signal: 間 followed by a lone kanji that is itself
+// followed by a non-kanji boundary (間隔で, 間近に). There the trailing kanji
+// would be stranded, so 間 heads the following interval word (間隔/間近) rather
+// than the counter. When 間 is followed by two or more kanji (時間営業, 年間活動)
+// or by a non-kanji (年間の, 年間で), the duration reading is correct. This
+// mirrors the cost-model discrimination that split_candidates applies to the
+// non-pretokenized N分間 path.
+//
+// `pos_after_kan` is the byte offset of the character following 間.
+bool absorbsPeriodKan(std::string_view text, size_t pos_after_kan) {
+  if (pos_after_kan >= text.size()) {
+    return true;  // 間 at end of input → duration
+  }
+  size_t idx = pos_after_kan;
+  char32_t next_cp = normalize::decodeUtf8(text, idx);
+  if (!normalize::isKanjiCodepoint(next_cp)) {
+    return true;  // 間 + hiragana/particle → duration (年間の, 年間で)
+  }
+  if (normalize::isTemporalRelationSuffixKanji(next_cp)) {
+    return true;  // 間 + 後/前 → duration + relational suffix (2時間|後, 5年間|前)
+  }
+  if (idx >= text.size()) {
+    return false;  // 間 + lone kanji at end → interval (…間隔)
+  }
+  char32_t after_cp = normalize::decodeUtf8(text, idx);
+  return normalize::isKanjiCodepoint(after_cp);  // 2+ kanji → duration, else interval
 }
 
 // Check if byte is ASCII alpha
@@ -227,10 +261,10 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
       codepoint = normalize::decodeUtf8(text, byte_pos);
       if (codepoint == U'度') {
         idx = byte_pos;
-      } else if (codepoint == U'間') {
-        // Duration suffix 間 (期間接尾): N年 + 間 = N年間. Same rationale as the
-        // fiscal-year 度 absorption above — keeping 年間 atomic prevents 間 from
-        // being stranded at a segment boundary (2年間続いた → 2年間 + 続い + た).
+      } else if (codepoint == U'間' && absorbsPeriodKan(text, byte_pos)) {
+        // Duration suffix 間 (期間接尾): N年 + 間 = N年間. Absorbed only when it
+        // is not the interval signal 間 + stranded-kanji (see absorbsPeriodKan),
+        // so 3年間活動 stays 3年間|活動 while 3年間隔 splits as 3年|間隔.
         idx = byte_pos;
       }
     }
@@ -601,15 +635,13 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
     }
   }
 
-  // Duration suffix 間 (期間接尾): HH時 + 間 = HH時間, HH時MM分 + 間 = duration.
-  // Absorbing 間 into the atomic time token keeps the counter+duration together
-  // so it is not severed at the pretokenizer segment boundary — otherwise 間 is
-  // stranded at a span start and gets absorbed into a fake compound
-  // (3時間続いた → 3時 + 間続い + た instead of 3時間 + 続い + た).
+  // Duration suffix 間 (期間接尾): HH時 + 間 = HH時間. Absorbed only when it is
+  // not the interval signal 間 + stranded-kanji (see absorbsPeriodKan), so
+  // 24時間営業 stays 24時間|営業 while 5時間隔 splits as 5時|間隔.
   size_t kan_pos = idx;
   if (kan_pos < text.size()) {
     char32_t codepoint_kan = normalize::decodeUtf8(text, kan_pos);
-    if (codepoint_kan == U'間') {
+    if (codepoint_kan == U'間' && absorbsPeriodKan(text, kan_pos)) {
       idx = kan_pos;
     }
   }

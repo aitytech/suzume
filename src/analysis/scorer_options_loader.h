@@ -358,6 +358,7 @@ inline void ScorerOptionsLoader::applySplitOptions(SplitOptions& opts, const Jso
   SET_OPT(opts, alpha_katakana_bonus, json, "alpha_katakana_bonus");
   SET_OPT(opts, digit_kanji_1_bonus, json, "digit_kanji_1_bonus");
   SET_OPT(opts, digit_kanji_2_bonus, json, "digit_kanji_2_bonus");
+  SET_OPT(opts, duration_period_bonus, json, "duration_period_bonus");
   SET_OPT(opts, digit_kanji_3_penalty, json, "digit_kanji_3_penalty");
   SET_OPT(opts, dict_split_bonus, json, "dict_split_bonus");
   SET_OPT(opts, split_base_cost, json, "split_base_cost");
@@ -593,6 +594,7 @@ inline int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options, bool r
     TRY_ENV("SPLIT", alpha_katakana_bonus);
     TRY_ENV("SPLIT", digit_kanji_1_bonus);
     TRY_ENV("SPLIT", digit_kanji_2_bonus);
+    TRY_ENV("SPLIT", duration_period_bonus);
     TRY_ENV("SPLIT", digit_kanji_3_penalty);
     TRY_ENV("SPLIT", dict_split_bonus);
     TRY_ENV("SPLIT", split_base_cost);

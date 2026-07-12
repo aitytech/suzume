@@ -182,6 +182,227 @@
       ],
       "id": "3_i",
       "input": "3秒速い"
+    },
+    {
+      "description": "period 分間 + noun stays duration, not 間-compound",
+      "expected": [
+        {
+          "lemma": "30分間",
+          "pos": "Noun",
+          "surface": "30分間"
+        },
+        {
+          "lemma": "営業",
+          "pos": "Noun",
+          "surface": "営業"
+        }
+      ],
+      "id": "30",
+      "input": "30分間営業"
+    },
+    {
+      "description": "period 年間 + noun stays duration",
+      "expected": [
+        {
+          "lemma": "3年間",
+          "pos": "Noun",
+          "surface": "3年間"
+        },
+        {
+          "lemma": "活動",
+          "pos": "Noun",
+          "surface": "活動"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "3_shita",
+      "input": "3年間活動した"
+    },
+    {
+      "description": "period 時間 + noun stays duration",
+      "expected": [
+        {
+          "lemma": "24時間",
+          "pos": "Noun",
+          "surface": "24時間"
+        },
+        {
+          "lemma": "営業",
+          "pos": "Noun",
+          "surface": "営業"
+        }
+      ],
+      "id": "24",
+      "input": "24時間営業"
+    },
+    {
+      "description": "period 週間 + relational suffix 前 stays duration",
+      "expected": [
+        {
+          "lemma": "2週間",
+          "pos": "Noun",
+          "surface": "2週間"
+        },
+        {
+          "lemma": "前",
+          "pos": "Noun",
+          "surface": "前"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "会う",
+          "pos": "Verb",
+          "surface": "会っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "2_ni_ttta",
+      "input": "2週間前に会った"
+    },
+    {
+      "description": "period 時間 + relational suffix 前 stays duration",
+      "expected": [
+        {
+          "lemma": "5時間",
+          "pos": "Noun",
+          "surface": "5時間"
+        },
+        {
+          "lemma": "前",
+          "pos": "Noun",
+          "surface": "前"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "到着",
+          "pos": "Noun",
+          "surface": "到着"
+        }
+      ],
+      "id": "5_ni",
+      "input": "5時間前に到着"
+    },
+    {
+      "description": "interval 間隔 wins over duration when kanji strands",
+      "expected": [
+        {
+          "lemma": "3年",
+          "pos": "Noun",
+          "surface": "3年"
+        },
+        {
+          "lemma": "間隔",
+          "pos": "Noun",
+          "surface": "間隔"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "点検",
+          "pos": "Noun",
+          "surface": "点検"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "3_de_suru",
+      "input": "3年間隔で点検する"
+    },
+    {
+      "description": "interval 間隔 wins for 時 counter",
+      "expected": [
+        {
+          "lemma": "5時",
+          "pos": "Noun",
+          "surface": "5時"
+        },
+        {
+          "lemma": "間隔",
+          "pos": "Noun",
+          "surface": "間隔"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "運行",
+          "pos": "Noun",
+          "surface": "運行"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "5_de_suru",
+      "input": "5時間隔で運行する"
+    },
+    {
+      "description": "interval 間隔 wins for 分 counter",
+      "expected": [
+        {
+          "lemma": "10分",
+          "pos": "Noun",
+          "surface": "10分"
+        },
+        {
+          "lemma": "間隔",
+          "pos": "Noun",
+          "surface": "間隔"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "電車",
+          "pos": "Noun",
+          "surface": "電車"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来る"
+        }
+      ],
+      "id": "10_de_ga_ru",
+      "input": "10分間隔で電車が来る"
     }
   ],
   "description": "digit_counter tests",
