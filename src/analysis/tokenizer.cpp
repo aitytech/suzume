@@ -143,6 +143,23 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       }
     }
 
+    // A godan potential (読める) is a derived form of its base verb, so lemmatize it to the base
+    // (読める→読む): it is generated from the base paradigm with lemma = the base verb (読む),
+    // i.e. a VerbShuushikei ending in an え-row kana + る whose lemma differs from its surface.
+    // The boost lets that dict form beat the independent-ichidan reading. Excluded: independent
+    // ichidan verbs (割れる==割れる have lemma == surface, and 自他 pairs like 切れる are registered
+    // as ICHIDAN so no potential form is generated); られる passive/potential (来られる); and
+    // irregular L1 forms whose lemma differs for other reasons (す→する) that do not end え-row + る.
+    if (result.entry->pos == core::PartOfSpeech::Verb &&
+        result.entry->extended_pos == core::ExtendedPOS::VerbShuushikei &&
+        std::string_view(result.entry->lemma) != std::string_view(result.entry->surface) &&
+        utf8::endsWith(result.entry->surface, "る") && !utf8::endsWith(result.entry->surface, "られる") &&
+        grammar::endsWithERow(
+            std::string_view(result.entry->surface).substr(0, result.entry->surface.size() - core::kJapaneseCharBytes))) {
+      cost += candidate::verb_cost::kImperativeFinalBonus;
+      flags |= core::LatticeEdge::kHasCustomCost;
+    }
+
     lattice.addEdge(result.entry->surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
                     result.entry->pos, cost, flags, result.entry->lemma, dictionary::ConjugationType::None,
                     core::CandidateOrigin::Dictionary, 1.0F, {}, result.entry->extended_pos, "dict");

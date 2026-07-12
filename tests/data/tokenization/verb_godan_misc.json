@@ -587,6 +587,59 @@
       ],
       "id": "me",
       "input": "読め"
+    },
+    {
+      "accepted_diff": {
+        "category": "lemma-policy",
+        "reason": "Potential verb 読める lemmatizes to its base verb 読む (search-unit policy); MeCab keeps 読める"
+      },
+      "description": "Potential 読める lemmatizes to base 読む in-sentence (search-unit policy; MeCab keeps 読める)",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "読める",
+          "pos": "Verb",
+          "surface": "読める"
+        }
+      ],
+      "id": "kono_ga_meru",
+      "input": "この本が読める",
+      "suzume_expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読める"
+        }
+      ]
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

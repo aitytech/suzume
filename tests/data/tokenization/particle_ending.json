@@ -105,6 +105,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "lemma-policy",
+        "reason": "Potential verb 行ける lemmatizes to its base verb 行く (search-unit policy); MeCab keeps 行ける"
+      },
       "description": "Wonder particle かな",
       "expected": [
         {
@@ -125,6 +129,23 @@
       ],
       "id": "sentence_ending_kana",
       "input": "行けるかな",
+      "suzume_expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行ける"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "な",
+          "pos": "Particle",
+          "surface": "な"
+        }
+      ],
       "tags": [
         "particle",
         "sentence_ending"

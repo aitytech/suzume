@@ -1347,10 +1347,6 @@
       "input": "われながら情けない。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation: surfaces match, POS classification differs from MeCab"
-      },
       "description": "かく as classical demonstrative adverb should not split into か+く",
       "expected": [
         {
@@ -1425,79 +1421,7 @@
         }
       ],
       "id": "kaku_classical_adverb",
-      "input": "かくも壮大なる計画を立てた人物がいたとは。",
-      "suzume_expected": [
-        {
-          "lemma": "かく",
-          "pos": "Adverb",
-          "surface": "かく"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "壮大",
-          "pos": "Adjective",
-          "surface": "壮大"
-        },
-        {
-          "lemma": "なる",
-          "pos": "Verb",
-          "surface": "なる"
-        },
-        {
-          "lemma": "計画",
-          "pos": "Noun",
-          "surface": "計画"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "立つ",
-          "pos": "Verb",
-          "surface": "立て"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "人物",
-          "pos": "Noun",
-          "surface": "人物"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "い"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        }
-      ]
+      "input": "かくも壮大なる計画を立てた人物がいたとは。"
     },
     {
       "description": "四字熟語+漢語(様相を呈する)",

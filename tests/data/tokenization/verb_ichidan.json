@@ -1260,6 +1260,50 @@
       ],
       "id": "kara_ku",
       "input": "今から行く"
+    },
+    {
+      "description": "Intransitive 切れる keeps its own lemma (not lemmatized to 切る potential base)",
+      "expected": [
+        {
+          "lemma": "糸",
+          "pos": "Noun",
+          "surface": "糸"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "切れる",
+          "pos": "Verb",
+          "surface": "切れる"
+        }
+      ],
+      "id": "ga_reru",
+      "input": "糸が切れる"
+    },
+    {
+      "description": "自発 verb 聞こえる keeps its own lemma, not 聞く",
+      "expected": [
+        {
+          "lemma": "音",
+          "pos": "Noun",
+          "surface": "音"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "聞こえる",
+          "pos": "Verb",
+          "surface": "聞こえる"
+        }
+      ],
+      "id": "ga_koeru",
+      "input": "音が聞こえる"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",

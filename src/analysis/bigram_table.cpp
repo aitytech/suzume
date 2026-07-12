@@ -1089,6 +1089,12 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // kanji_hira_compound NOUN token (e.g. 春 with no dictionary entry of its own).
   setCell(t, EPOS::AuxClassicalNari, EPOS::AuxClassicalKeri, cost::kExtremeBonus);
 
+  // 連体形 なる (壮大なる計画): a na-adjective stem + なる is the classical adnominal 断定, not
+  // the verb 成る. Only the left context (AdjNaAdj→なる) is rewarded: a right-context なる→Noun
+  // bonus would misfire on the 終助詞 なり (鳴るなり法隆寺), and 〜になる/〜となる keep the verb
+  // reading because a particle, not a na-adjective stem, precedes なる.
+  setCell(t, EPOS::AdjNaAdj, EPOS::AuxClassicalNari, cost::kStrongBonus);
+
   // Classical タリ活用 連体形 たる (堂々たる, 確固たる, 暗澹たる). It is adnominal, so it
   // MUST be followed by a nominal (…たる態度) or the special particle や (…たるや). Keying
   // the bonus on this RIGHT-hand context — not on the preceding noun — is what separates
