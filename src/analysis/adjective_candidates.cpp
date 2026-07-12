@@ -1970,8 +1970,17 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       const auto& adj_results = inflection.analyze(base_form);
       bool is_valid_adjective = false;
       float adj_confidence = 0.0F;
+      // A single-kanji stem is validated by inflection shape alone too easily: 上い
+      // (conf 0.42) looks like an i-adjective but is really the godan verb stem of
+      // 上がる. Require dictionary confirmation for single-kanji stems (real ones —
+      // 寒い, 高い, 痛い — are all registered), while multi-kanji/extended stems
+      // (恥ずかしい) keep the inflection path.
+      const bool single_kanji_stem = (kanji_end - start_pos == 1);
       for (const auto& result : adj_results) {
         if (result.verb_type == grammar::VerbType::IAdjective && result.confidence >= candidate::kGaruAdjConfMin) {
+          if (single_kanji_stem && !isAdjectiveInDictionary(dict_manager, base_form)) {
+            continue;
+          }
           is_valid_adjective = true;
           adj_confidence = result.confidence;
           break;

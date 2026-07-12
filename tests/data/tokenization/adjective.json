@@ -107,6 +107,28 @@
       ],
       "id": "yasumu_mamonaku",
       "input": "休む間もなく働いた"
+    },
+    {
+      "description": "Single-kanji godan verb 上がる not mis-split into fake i-adjective stem 上い + がる",
+      "expected": [
+        {
+          "lemma": "気温",
+          "pos": "Noun",
+          "surface": "気温"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "上がる",
+          "pos": "Verb",
+          "surface": "上がる"
+        }
+      ],
+      "id": "kion_ga_agaru",
+      "input": "気温が上がる"
     }
   ],
   "description": "adjective tests",
