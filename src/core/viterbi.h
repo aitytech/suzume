@@ -23,6 +23,17 @@ namespace suzume::core {
 
 inline constexpr size_t kNumExtendedPosTypes = static_cast<size_t>(ExtendedPOS::Count_);
 
+// BOS (beginning-of-sentence) connection-cost adjustments. A morpheme that
+// cannot naturally start a sentence is penalized; a conjunction is rewarded.
+inline constexpr float kBosSuffixPenalty = 3.0F;         // Suffix cannot lead a sentence
+inline constexpr float kBosConjunctionBonus = -0.5F;     // でも / しかし are natural at BOS
+inline constexpr float kBosAppearanceSouPenalty = 0.5F;  // 様態そう should be demonstrative at BOS
+inline constexpr float kBosAspectIkuPenalty = 1.0F;      // いく aspect needs a preceding て-form
+inline constexpr float kBosTensePenalty = 2.0F;          // た/だ needs a preceding verb/adj stem
+inline constexpr float kBosFinalParticlePenalty = 2.0F;  // Sentence-final particle cannot lead
+// Per-transition tie-break: slightly prefer fewer, longer morphemes.
+inline constexpr float kTransitionCost = 0.001F;
+
 /**
  * @brief Viterbi result with path and cost
  */
@@ -61,9 +72,11 @@ class Viterbi {
       return result;
     }
 
-    // State info for (position, ExtendedPOS) pair tracking.
-    // Using ExtendedPOS preserves fine-grained states needed by the scorer.
-    // This eliminates hash overhead and O(n) position scanning
+    // State info keyed on (position, ExtendedPOS), keeping only the cheapest
+    // predecessor per key. This avoids hash overhead and O(n) position scanning,
+    // but it does NOT distinguish surfaces: connection rules that branch on the
+    // predecessor's surface string cannot pull a higher-cost path back into
+    // contention once a same-EPOS competitor has pruned it.
     struct StateInfo {
       float cost{std::numeric_limits<float>::max()};
       int prev_edge{-1};
@@ -116,39 +129,30 @@ class Viterbi {
             conn_cost = scorer.connectionCost(prev, edge);
           } else {
             // BOS (beginning of sentence) connection cost
-            // Suffix should not appear at sentence start
             if (edge.pos == PartOfSpeech::Suffix) {
-              conn_cost = 3.0F;  // High penalty for suffix at BOS
+              conn_cost = kBosSuffixPenalty;
             }
-            // Conjunction at sentence start is natural (e.g., でも, しかし)
             if (edge.pos == PartOfSpeech::Conjunction) {
-              conn_cost = -0.5F;  // Bonus for conjunction at BOS
+              conn_cost = kBosConjunctionBonus;
             }
-            // AuxAppearanceSou (様態そう) should not appear at sentence start
-            // At BOS, そう should be demonstrative na-adjective, not appearance aux
-            // E.g., "そうかもしれません" - そう is demonstrative
+            // At BOS, そう should be a demonstrative na-adjective, not appearance aux
+            // (e.g. "そうかもしれません").
             if (edge.extended_pos == ExtendedPOS::AuxAppearanceSou) {
-              conn_cost += 0.5F;  // Penalty for appearance aux at BOS
+              conn_cost += kBosAppearanceSouPenalty;
             }
-            // AuxAspectIku (いく aspect) should not appear at sentence start
-            // At BOS, いく should be verb (行く) or part of pronoun (いくつ)
-            // AuxAspectIku is only valid after て-form (食べていく, 走っていく)
+            // いく aspect is only valid after a て-form (食べていく); at BOS it is the
+            // verb 行く or part of a pronoun (いくつ).
             if (edge.extended_pos == ExtendedPOS::AuxAspectIku) {
-              conn_cost += 1.0F;  // Penalty for aspect aux at BOS
+              conn_cost += kBosAspectIkuPenalty;
             }
-            // AuxTenseTa (た/だ past) requires preceding verb/adj stem
             if (edge.extended_pos == ExtendedPOS::AuxTenseTa) {
-              conn_cost += 2.0F;
+              conn_cost += kBosTensePenalty;
             }
-            // Sentence-ending particles cannot appear at sentence start
             if (edge.extended_pos == ExtendedPOS::ParticleFinal) {
-              conn_cost += 2.0F;
+              conn_cost += kBosFinalParticlePenalty;
             }
           }
 
-          // Small per-transition cost to prefer fewer morphemes (longer tokens)
-          // This breaks ties when paths have equal cost
-          constexpr float kTransitionCost = 0.001F;
           float total = state_info.cost + word_cost + conn_cost + kTransitionCost;
           size_t next_epos_idx = static_cast<size_t>(edge.extended_pos);
           if (next_epos_idx >= kNumExtendedPosTypes) {
