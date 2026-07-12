@@ -106,6 +106,7 @@ const SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"入れる", "いれる", "れる", V2VerbType::Ichidan},      // 取り入れる, 持ち入れる
     {"分ける", "わける", "ける", V2VerbType::Ichidan},      // 切り分ける, 振り分ける
     {"立てる", "たてる", "てる", V2VerbType::Ichidan},      // 組み立てる, 打ち立てる
+    {"重ねる", "かさねる", "ねる", V2VerbType::Ichidan},    // 積み重ねる, 折り重ねる
     {"広げる", "ひろげる", "げる", V2VerbType::Ichidan},    // 繰り広げる, 押し広げる
     {"受ける", "うける", "ける", V2VerbType::Ichidan},      // 引き受ける, 請け受ける
     {"降りる", "おりる", "りる", V2VerbType::Ichidan},      // 乗り降りる
@@ -482,6 +483,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     size_t matched_len = 0;
     std::string compound_base;
     bool is_renyokei = false;          // true if matched via renyokei entry
+    bool renyokei_form = false;        // true if the winning match was a renyokei-form match
     bool is_mizenkei = false;          // true if matched via mizenkei form
     bool includes_aux = false;         // true if inflection match includes aux suffix
     bool matched_via_reading = false;  // true if V2 was matched via hiragana reading
@@ -953,6 +955,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       best_match.matched_len = matched_len;
       best_match.compound_base = compound_base;
       best_match.is_renyokei = is_renyokei_entry && (matched_kanji || matched_reading);
+      best_match.renyokei_form = matched_renyokei;
       best_match.is_mizenkei = matched_mizenkei;
       best_match.includes_aux = inflection_includes_aux;
       best_match.matched_via_reading = matched_reading || matched_inflected || matched_renyokei_via_reading;
@@ -1095,8 +1098,20 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       return;
     }
 
+    // Renyokei-form compound (組み立て, 打ち立て): its surface can end in て/た/る, whose
+    // auto-detected verb form would be VerbTeForm and wrongly trigger the te-form split
+    // penalty in the scorer. Tag such matches explicitly as VerbRenyokei so the whole
+    // compound competes fairly with the V1連用+V2 split; base-form matches keep the
+    // pos-derived default (Unknown → auto-detect, e.g. 組み立てる → VerbShuushikei).
+    // Require a 2+char V2 renyokei (立て, 重ね): a single-mora V2 renyokei ending in
+    // て/で (出る→で) is genuinely te-form-ambiguous, so 持ち+で(出) must keep the penalty
+    // and lose to 気持ち+で rather than winning as a spurious 持ちで compound.
+    bool renyokei_multichar = best_match.renyokei_form && best_match.matched_len >= core::kTwoJapaneseCharBytes;
+    core::ExtendedPOS compound_epos = renyokei_multichar ? core::ExtendedPOS::VerbRenyokei : core::ExtendedPOS::Unknown;
     lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
-                    core::PartOfSpeech::Verb, final_cost, flags, compound_lemma);
+                    core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, dictionary::ConjugationType::None,
+                    core::CandidateOrigin::Unknown, candidate::kNoOriginConfidence, "compound", compound_epos,
+                    "compound");
 
     // MeCab compatibility: Generate te-form euphonic stem candidate
     // This enables MeCab-compatible te-form splitting: 話し合って → 話し合っ|て

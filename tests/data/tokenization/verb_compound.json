@@ -1648,6 +1648,124 @@
       ],
       "id": "yuttkuri_ki_meta",
       "input": "ゆっくり書き始めた"
+    },
+    {
+      "description": "Lexical compound 積み重ねる joins (V2 重ねる) rather than over-splitting",
+      "expected": [
+        {
+          "lemma": "努力",
+          "pos": "Noun",
+          "surface": "努力"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "積み重ねる",
+          "pos": "Verb",
+          "surface": "積み重ね"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "doryoku_wo_tsumikasanete_kita",
+      "input": "努力を積み重ねてきた"
+    },
+    {
+      "description": "積み重ねる past joins whole (renyokei 重ね)",
+      "expected": [
+        {
+          "lemma": "経験",
+          "pos": "Noun",
+          "surface": "経験"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "積み重ねる",
+          "pos": "Verb",
+          "surface": "積み重ね"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "keiken_wo_tsumikasaneta",
+      "input": "経験を積み重ねた"
+    },
+    {
+      "description": "組み立てる renyokei tagged VerbRenyokei (not te-form), joins past without over-split",
+      "expected": [
+        {
+          "lemma": "部品",
+          "pos": "Noun",
+          "surface": "部品"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "組み立てる",
+          "pos": "Verb",
+          "surface": "組み立て"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "buhin_wo_kumitateta",
+      "input": "部品を組み立てた"
+    },
+    {
+      "description": "打ち立てる renyokei compound joins (same fix as 組み立てる)",
+      "expected": [
+        {
+          "lemma": "計画",
+          "pos": "Noun",
+          "surface": "計画"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "打ち立てる",
+          "pos": "Verb",
+          "surface": "打ち立て"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "keikaku_wo_uchitateta",
+      "input": "計画を打ち立てた"
     }
   ],
   "description": "Compound verbs",

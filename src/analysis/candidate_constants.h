@@ -21,6 +21,11 @@ namespace suzume::analysis::candidate {
 // Join Candidate Constants (join_candidates.cpp)
 // =============================================================================
 
+// Neutral origin-confidence for lattice edges that carry no inflection confidence
+// (debug-only field). Named so callers needing an explicit ExtendedPOS argument can
+// reach it positionally without a raw score literal.
+constexpr float kNoOriginConfidence = 0.0F;
+
 // Compound verb bonus (連用形 + 補助動詞)
 // E.g., 読み+終わる, 書き+始める
 constexpr float kCompoundVerbBonus = -0.8F;
