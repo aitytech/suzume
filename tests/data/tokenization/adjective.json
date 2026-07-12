@@ -21,6 +21,92 @@
       ],
       "id": "real_adj_tsumetaku_nakatta",
       "input": "冷たくなかった"
+    },
+    {
+      "description": "間もなく lexicalized as one adverbial adjective (lemma 間もない)",
+      "expected": [
+        {
+          "lemma": "間もない",
+          "pos": "Adjective",
+          "surface": "間もなく"
+        },
+        {
+          "lemma": "到着",
+          "pos": "Noun",
+          "surface": "到着"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "mamonaku_touchaku",
+      "input": "間もなく到着します"
+    },
+    {
+      "description": "時間もなく stays 時間+も+なく (間 after kanji blocks 間もなく lexicalization)",
+      "expected": [
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "jikan_mo_naku",
+      "input": "時間もなく終わった"
+    },
+    {
+      "description": "間もなく after a verb (hiragana-preceded) is atomic",
+      "expected": [
+        {
+          "lemma": "休む",
+          "pos": "Verb",
+          "surface": "休む"
+        },
+        {
+          "lemma": "間もない",
+          "pos": "Adjective",
+          "surface": "間もなく"
+        },
+        {
+          "lemma": "働く",
+          "pos": "Verb",
+          "surface": "働い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "yasumu_mamonaku",
+      "input": "休む間もなく働いた"
     }
   ],
   "description": "adjective tests",

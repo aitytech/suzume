@@ -341,6 +341,20 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
                                                           const dictionary::DictionaryManager* dict_manager) {
   std::vector<UnknownCandidate> candidates;
 
+  // Lexicalized adverbial adjective 間もなく (連用形 of 間もない, "soon"). Emitted as one
+  // token ONLY when 間 is not preceded by a kanji, so 時間もなく / 居間もなく still split as
+  // 時間|も|なく — a plain dictionary entry cannot express "not after kanji", but a guarded
+  // candidate can. The base form 間もない is deliberately not lexicalized (MeCab splits it
+  // as 間|も|ない), so only the 連用形 is recognized here.
+  if (start_pos + 3 < codepoints.size() && codepoints[start_pos] == U'間' && codepoints[start_pos + 1] == U'も' &&
+      codepoints[start_pos + 2] == U'な' && codepoints[start_pos + 3] == U'く' &&
+      (start_pos == 0 || start_pos - 1 >= char_types.size() ||
+       char_types[start_pos - 1] != normalize::CharType::Kanji)) {
+    candidates.push_back(makeIAdjCandidate("間もなく", start_pos, start_pos + 4, "間もない",
+                                           candidate::kCompoundAdjBaseCost, CandidateOrigin::AdjectiveI,
+                                           candidate::kDictFallbackAdjConfidence, "ma_mo_naku"));
+  }
+
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
     return candidates;
   }
@@ -408,16 +422,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     }
     if (!is_verb_context) {
       std::string surface = extractSubstring(codepoints, start_pos, adj_end);
-      bool is_dict_noun = false;
-      if (dict_manager != nullptr) {
-        auto results = dict_manager->lookup(surface, 0);
-        for (const auto& r : results) {
-          if (r.entry != nullptr && r.entry->surface == surface && r.entry->pos == core::PartOfSpeech::Noun) {
-            is_dict_noun = true;
-            break;
-          }
-        }
-      }
+      bool is_dict_noun = verb_helpers::isNounInDictionary(dict_manager, surface);
       if (is_dict_noun) {
         SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE] \"" << surface << "\" is dict NOUN, skipping ADJ candidate\n");
       } else {
