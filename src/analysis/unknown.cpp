@@ -67,6 +67,47 @@ bool isRightBoundaryParticle(char32_t code_point) {
   }
 }
 
+// Hiragana that reads as a particle when it appears WORD-INTERNALLY during a
+// bracketed-noun scan. A native noun may span at most one of these (こども, ともだち);
+// a second one marks a genuine particle chain and stops the scan. を/が/の are
+// handled as hard stops separately (they never sit inside a native hiragana noun).
+bool isInternalParticleChar(char32_t code_point) {
+  switch (code_point) {
+    case U'は':
+    case U'に':
+    case U'へ':
+    case U'で':
+    case U'と':
+    case U'も':
+    case U'か':
+      return true;
+    default:
+      return false;
+  }
+}
+
+// Phonologically impossible hiragana word starts: small kana (拗音・促音), the
+// moraic nasal ん, and the case particles を/が which never begin a native word.
+bool isImpossibleHiraganaStart(char32_t code_point) {
+  switch (code_point) {
+    case U'ん':
+    case U'を':
+    case U'が':
+    case U'ゃ':
+    case U'ゅ':
+    case U'ょ':
+    case U'ぁ':
+    case U'ぃ':
+    case U'ぅ':
+    case U'ぇ':
+    case U'ぉ':
+    case U'っ':
+      return true;
+    default:
+      return false;
+  }
+}
+
 }  // namespace
 
 UnknownWordGenerator::UnknownWordGenerator(const UnknownOptions& options,
@@ -586,26 +627,6 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
 #endif
       candidates.push_back(cand);
 
-      // Post-particle noun promotion: a non-particle-initial hiragana run bracketed by
-      // genuine particles (私は|たばこ|を) is more likely a content noun than the merged
-      // particle-blob (はたばこ), which is exempt from the exceeds_dict_length penalty and
-      // otherwise wins. Emit a PARALLEL Noun candidate (has_suffix → same exemption) for a
-      // short (2-4 char) run whose left neighbor is a particle preceded by a non-hiragana
-      // content word (or sentence start) and whose right neighbor is a particle. Keeps the
-      // Other candidate too; a real dictionary/verb reading of the span still outranks it.
-      if (start_type == normalize::CharType::Hiragana && !started_with_particle && len >= 2 && len <= 4 &&
-          start_pos >= 2 && isLeftBoundaryParticle(codepoints[start_pos - 1]) &&
-          char_types[start_pos - 2] != normalize::CharType::Hiragana && candidate_end < codepoints.size() &&
-          isRightBoundaryParticle(codepoints[candidate_end])) {
-        float noun_cost = getCostForType(start_type, len) + candidate::kPostParticleNounPenalty;
-        auto noun_cand = makeCandidate(surface, start_pos, candidate_end, core::PartOfSpeech::Noun, noun_cost,
-                                       /*has_suffix=*/true, CandidateOrigin::SameType);
-#ifdef SUZUME_DEBUG_INFO
-        noun_cand.pattern = "post_particle_noun";
-#endif
-        candidates.push_back(noun_cand);
-      }
-
       // Emit a standalone SUFFIX candidate for plural-honorific 方 when it sits
       // at the tail of a kanji_seq (i.e., preceded by another kanji). Enables
       // splits like 皆様(NOUN) + 方(SUFFIX) for 皆様方. Restricting to "prev is
@@ -621,6 +642,52 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
 #endif
         candidates.push_back(suffix_cand);
       }
+    }
+  }
+
+  // Bracketed hiragana noun promotion. A short hiragana run genuinely bracketed by
+  // particles (私は|たばこ|を, 彼は|ともだち|と) reads as a content noun, but the
+  // same-type scan above truncates at the first internal particle character and a
+  // particle-initial run (にんじん) is only ever emitted as a penalized particle-noun,
+  // so the correct whole-run candidate never reaches the lattice. This dedicated
+  // scan is independent of that truncation and emits an ADDITIVE Noun candidate; the
+  // Other/particle candidates remain and any real dictionary/verb/adverb reading of
+  // the span still outranks the ~1.8 Noun, so it wins only when nothing better spans
+  // the bracket and never shatters the run. Left bracket: a boundary particle
+  // preceded by a non-hiragana content word (私は…, 彼は…). Right bracket: a boundary
+  // particle. の is excluded on both sides (genitive marks a compound boundary).
+  if (start_type == normalize::CharType::Hiragana && start_pos >= 2 &&
+      isLeftBoundaryParticle(codepoints[start_pos - 1]) &&
+      char_types[start_pos - 2] != normalize::CharType::Hiragana &&
+      !isImpossibleHiraganaStart(codepoints[start_pos])) {
+    bool particle_initial =
+        (codepoints[start_pos] == U'は' || codepoints[start_pos] == U'に' || codepoints[start_pos] == U'へ');
+    size_t max_internal = particle_initial ? 0 : 1;
+    size_t internal_particles = 0;
+    size_t scan = start_pos + 1;
+    while (scan < codepoints.size() && scan - start_pos < 4 && char_types[scan] == normalize::CharType::Hiragana) {
+      char32_t curr = codepoints[scan];
+      if (curr == U'を' || curr == U'が' || curr == U'の') {
+        break;  // hard stops: never sit inside a native hiragana noun
+      }
+      if (isInternalParticleChar(curr)) {
+        if (internal_particles >= max_internal) {
+          break;
+        }
+        ++internal_particles;
+      }
+      ++scan;
+    }
+    size_t len = scan - start_pos;
+    if (len >= 2 && scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan])) {
+      std::string surface = extractSubstring(codepoints, start_pos, scan);
+      float noun_cost = getCostForType(start_type, len) + candidate::kPostParticleNounPenalty;
+      auto noun_cand = makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun, noun_cost,
+                                     /*has_suffix=*/true, CandidateOrigin::SameType);
+#ifdef SUZUME_DEBUG_INFO
+      noun_cand.pattern = "bracketed_hira_noun";
+#endif
+      candidates.push_back(noun_cand);
     }
   }
 

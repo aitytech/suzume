@@ -236,6 +236,70 @@
       ],
       "id": "hahasamiwo_u",
       "input": "私ははさみを使う"
+    },
+    {
+      "description": "Bracketed hiragana noun (particle-both-sides), truncation-independent scan",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ともだち",
+          "pos": "Noun",
+          "surface": "ともだち"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "会う",
+          "pos": "Verb",
+          "surface": "会う"
+        }
+      ],
+      "id": "hatomodachito_u",
+      "input": "彼はともだちと会う"
+    },
+    {
+      "description": "Bracketed hiragana noun, particle-initial run promoted",
+      "expected": [
+        {
+          "lemma": "私",
+          "pos": "Pronoun",
+          "surface": "私"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "にんじん",
+          "pos": "Noun",
+          "surface": "にんじん"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        }
+      ],
+      "id": "haninjinwo_beru",
+      "input": "私はにんじんを食べる"
     }
   ],
   "description": "particle_topic tests",
