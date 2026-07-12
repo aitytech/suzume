@@ -68,6 +68,15 @@ constexpr float kDictSplitBonus = -0.5F;
 // Added to all split candidates as baseline cost
 constexpr float kSplitBaseCost = 1.0F;
 
+// Quantified-time + relational-suffix split bonus (三日|後, 十年|前, 数日|後, 半年|後)
+// A temporal counter (日/年/分…) followed by 後/前 is always compositional; the
+// whole run is otherwise emitted as one kanji_seq unknown word (三日後), so this
+// discounts the left counter token enough for the split path to win over the
+// merged token while the standalone 後/前 comes from the single-kanji candidate.
+// Strong enough to also beat a productive-prefix join (半 in 半年後 → 半+年後 at 0.4);
+// only ever applied when 後/前 follows a temporal counter, so it cannot over-split.
+constexpr float kCounterRelationSplitBonus = -1.2F;
+
 // Noun + Verb split bonus
 // E.g., 勉強+する, 説明+する
 constexpr float kNounVerbSplitBonus = -1.0F;

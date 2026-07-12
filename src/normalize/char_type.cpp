@@ -394,6 +394,33 @@ bool isTemporalRelationSuffixKanji(char32_t code_point) {
   }
 }
 
+bool isTemporalCounterKanji(char32_t code_point) {
+  switch (code_point) {
+    case U'日':
+    case U'月':
+    case U'年':
+    case U'週':
+    case U'時':
+    case U'分':
+    case U'秒':
+    case U'間':
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool isQuantityPrefixKanji(char32_t code_point) {
+  switch (code_point) {
+    case U'数':
+    case U'半':
+    case U'何':
+      return true;
+    default:
+      return false;
+  }
+}
+
 bool isIntervalCompoundSecondKanji(char32_t code_point) {
   // Kanji that form an 間-initial interval word (間隔). After a duration counter
   // a member kanji takes the interval reading (N年|間隔) while a non-member takes

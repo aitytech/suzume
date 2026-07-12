@@ -307,6 +307,33 @@ bool isTemporalSpanSuffixKanji(char32_t code_point);
 bool isNumeralCodepoint(char32_t code_point);
 
 /**
+ * @brief Check if a codepoint is a temporal counter kanji ({日, 月, 年, 週, 時, 分, 秒, 間})
+ *
+ * The subset of counter kanji that measure a span of time. Distinct from the
+ * broader isCounterKanji set: a temporal counter followed by a relational suffix
+ * 後/前 is always compositional (三日|後, 十年|前, 五分|前), whereas a non-temporal
+ * counter forms a lexical whole (一人前, not 一人|前). Used to split the relational
+ * suffix off a quantified time expression while leaving 一人前/一人称 intact.
+ *
+ * @param code_point Unicode codepoint
+ * @return true if codepoint is a temporal counter kanji
+ */
+bool isTemporalCounterKanji(char32_t code_point);
+
+/**
+ * @brief Check if a codepoint is an inexact quantity prefix kanji ({数, 半, 何})
+ *
+ * Non-numeral heads of a quantity expression: 数日 ("several days"), 半年 ("half a
+ * year"), 何年 ("how many years"). Treated like a numeral when anchoring a counter
+ * run so that 数日後/半年後/何年前 split their relational suffix the same way 三日後
+ * does.
+ *
+ * @param code_point Unicode codepoint
+ * @return true if codepoint is an inexact quantity prefix kanji
+ */
+bool isQuantityPrefixKanji(char32_t code_point);
+
+/**
  * @brief Check if every codepoint of a surface is katakana
  *
  * Used to merge a numeral with a following katakana noun (3キロ, 100メダル):

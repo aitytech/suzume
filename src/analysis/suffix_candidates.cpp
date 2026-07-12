@@ -1045,6 +1045,53 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     return candidates;
   }
 
+  // Quantified time + relational suffix: split 後/前 off a numeral/quantity run that
+  // ends in a temporal counter (三日|後, 十年|前, 数日|後, 半年|前). The whole run is
+  // otherwise emitted as one kanji_seq token; the left counter token already exists
+  // as a kanji_seq candidate, so a discounted duplicate lets the split path win. The
+  // counter must be temporal, keeping lexical wholes on non-temporal counters intact
+  // (一人前, not 一人|前).
+  {
+    size_t scan = start_pos;
+    bool has_quantity = false;
+    if (normalize::isQuantityPrefixKanji(codepoints[scan])) {
+      ++scan;
+      has_quantity = true;
+    }
+    while (scan < codepoints.size() && normalize::isNumeralCodepoint(codepoints[scan])) {
+      ++scan;
+      has_quantity = true;
+    }
+    size_t counter_start = scan;
+    while (scan < codepoints.size()) {
+      if (normalize::isTemporalCounterKanji(codepoints[scan])) {
+        ++scan;
+        continue;
+      }
+      // ヶ/ケ heads a counter only with a following kanji (ヶ月); take it as part of
+      // the temporal run when that kanji is itself a temporal counter (三ヶ月|後).
+      if ((codepoints[scan] == U'ヶ' || codepoints[scan] == U'ケ') && scan + 1 < codepoints.size() &&
+          normalize::isTemporalCounterKanji(codepoints[scan + 1])) {
+        scan += 2;
+        continue;
+      }
+      break;
+    }
+    if (has_quantity && scan > counter_start && scan < codepoints.size() &&
+        normalize::isTemporalRelationSuffixKanji(codepoints[scan])) {
+      std::string surface = extractSubstring(codepoints, start_pos, scan);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun,
+                                  candidate::kCounterRelationSplitBonus, false, CandidateOrigin::Counter);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "counter_relation_split";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+  }
+
   // First character(s) must be numeral(s)
   if (!normalize::isNumeralCodepoint(codepoints[start_pos])) {
     return candidates;

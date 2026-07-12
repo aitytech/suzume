@@ -12,15 +12,17 @@ namespace suzume::postprocess {
 namespace {
 
 // Check if a surface is a counter/duration quantity that a temporal 後 attaches to
-// as a suffix (2時間, 10日, 5分): first codepoint is a numeral and the last is a
-// counter kanji. MeCab tags 後 after such a quantity as 名詞,接尾 (Suffix), whereas
-// 後 after an ordinary noun (食事の後) stays a plain noun.
+// as a suffix (2時間, 10日, 5分, 数日, 半年): first codepoint is a numeral or inexact
+// quantity prefix (数/半/何) and the last is a counter kanji. MeCab tags 後 after such
+// a quantity as 名詞,接尾 (Suffix), whereas 後 after an ordinary noun (食事の後) stays a
+// plain noun.
 bool isCounterDurationNoun(const std::string& surface) {
   auto codepoints = normalize::toCodepoints(surface);
   if (codepoints.empty()) {
     return false;
   }
-  return normalize::isNumeralCodepoint(codepoints.front()) && normalize::isCounterKanji(codepoints.back());
+  return (normalize::isNumeralCodepoint(codepoints.front()) || normalize::isQuantityPrefixKanji(codepoints.front())) &&
+         normalize::isCounterKanji(codepoints.back());
 }
 
 // A compound-verb 連用形 (積み重ね, 組み立て, 話し合い, 繰り返し) is systematically usable as

@@ -467,6 +467,168 @@
       ],
       "id": "5nenkan_kare_wo_machitsuzuketa",
       "input": "5年間彼を待ち続けた"
+    },
+    {
+      "description": "kanji-numeral counter + temporal-relation suffix 後 splits (三日|後)",
+      "expected": [
+        {
+          "lemma": "三日",
+          "pos": "Noun",
+          "surface": "三日"
+        },
+        {
+          "lemma": "後",
+          "pos": "Suffix",
+          "surface": "後"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "会う",
+          "pos": "Verb",
+          "surface": "会お"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "ni_ou",
+      "input": "三日後に会おう"
+    },
+    {
+      "description": "kanji-numeral counter + 前 splits, 前 stays Noun (十年|前)",
+      "expected": [
+        {
+          "lemma": "十年",
+          "pos": "Noun",
+          "surface": "十年"
+        },
+        {
+          "lemma": "前",
+          "pos": "Noun",
+          "surface": "前"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "no",
+      "input": "十年前の話"
+    },
+    {
+      "description": "inexact quantity prefix 数 + counter + 後 splits (数日|後)",
+      "expected": [
+        {
+          "lemma": "数日",
+          "pos": "Noun",
+          "surface": "数日"
+        },
+        {
+          "lemma": "後",
+          "pos": "Suffix",
+          "surface": "後"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "決める",
+          "pos": "Verb",
+          "surface": "決める"
+        }
+      ],
+      "id": "ni_meru",
+      "input": "数日後に決める"
+    },
+    {
+      "description": "inexact quantity prefix 半 + counter + 後 splits over productive-prefix join (半年|後)",
+      "expected": [
+        {
+          "lemma": "半年",
+          "pos": "Noun",
+          "surface": "半年"
+        },
+        {
+          "lemma": "後",
+          "pos": "Suffix",
+          "surface": "後"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "届く",
+          "pos": "Verb",
+          "surface": "届く"
+        }
+      ],
+      "id": "ni_ku",
+      "input": "半年後に届く"
+    },
+    {
+      "description": "ヶ月 temporal counter + 後 splits (三ヶ月|後)",
+      "expected": [
+        {
+          "lemma": "三ヶ月",
+          "pos": "Noun",
+          "surface": "三ヶ月"
+        },
+        {
+          "lemma": "後",
+          "pos": "Suffix",
+          "surface": "後"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "会う",
+          "pos": "Verb",
+          "surface": "会う"
+        }
+      ],
+      "id": "ni_u",
+      "input": "三ヶ月後に会う"
+    },
+    {
+      "description": "non-temporal counter 人 keeps lexical whole (一人前, not 一人|前)",
+      "expected": [
+        {
+          "lemma": "一人前",
+          "pos": "Noun",
+          "surface": "一人前"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "ninaru",
+      "input": "一人前になる"
     }
   ],
   "description": "digit_counter tests",
