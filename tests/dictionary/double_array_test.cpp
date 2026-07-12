@@ -218,9 +218,14 @@ TEST_F(DoubleArrayTest, DeserializeInvalidData) {
   std::vector<uint8_t> bad_magic = {'X', 'X', 'X', 'X', 0, 0, 0, 0};
   EXPECT_FALSE(trie2.deserialize(bad_magic.data(), bad_magic.size()));
 
+  // A DA02 blob (previous format) must be rejected: its check == parent encoding
+  // would be misread as parent + 1 by the current lookup.
+  std::vector<uint8_t> old_format = {'D', 'A', '0', '2', 0, 0, 0, 0};
+  EXPECT_FALSE(trie2.deserialize(old_format.data(), old_format.size()));
+
   // Unit count claims far more data than the buffer contains. This must be
   // rejected without overflowing the expected-size calculation on 32-bit builds.
-  std::vector<uint8_t> huge_count = {'D', 'A', '0', '2', 0, 0, 0, 0};
+  std::vector<uint8_t> huge_count = {'D', 'A', '0', '3', 0, 0, 0, 0};
   uint32_t num_units = UINT32_MAX;
   std::memcpy(huge_count.data() + 4, &num_units, sizeof(num_units));
   EXPECT_FALSE(trie2.deserialize(huge_count.data(), huge_count.size()));
@@ -231,11 +236,49 @@ TEST_F(DoubleArrayTest, DeserializeFailurePreservesExistingTrie) {
   std::vector<uint32_t> values = {7};
   EXPECT_TRUE(trie_.build(keys, values));
 
-  std::vector<uint8_t> huge_count = {'D', 'A', '0', '2', 0, 0, 0, 0};
+  std::vector<uint8_t> huge_count = {'D', 'A', '0', '3', 0, 0, 0, 0};
   uint32_t num_units = UINT32_MAX;
   std::memcpy(huge_count.data() + 4, &num_units, sizeof(num_units));
   EXPECT_FALSE(trie_.deserialize(huge_count.data(), huge_count.size()));
   EXPECT_EQ(trie_.exactMatch("a"), 7);
+}
+
+// Regression: a byte that is not a child of the root must never be accepted as a
+// transition. Before the parent+1 check sentinel, an empty cell (check == 0) was
+// indistinguishable from a genuine child of the root (parent_pos == 0), so a
+// lookup whose first byte's XOR slot landed on an empty cell false-matched.
+TEST_F(DoubleArrayTest, RootTransitionRejectsEmptyCells) {
+  // Sparse first bytes force wide bases and interior empty cells.
+  std::vector<std::string> keys = {std::string("\x01z", 2),
+                                   std::string("\x7f"
+                                               "z",
+                                               2),
+                                   std::string("\xf0"
+                                               "z",
+                                               2)};
+  std::vector<uint32_t> values = {1, 2, 3};
+  ASSERT_TRUE(trie_.build(keys, values));
+
+  const auto is_root_child = [](int byte) { return byte == 0x01 || byte == 0x7f || byte == 0xf0; };
+  for (int byte = 0; byte < 256; ++byte) {
+    std::string one(1, static_cast<char>(byte));
+    EXPECT_EQ(trie_.exactMatch(one), -1) << "single byte=" << byte;
+    if (!is_root_child(byte)) {
+      // A two-byte key whose first byte is not a root child must miss outright.
+      EXPECT_TRUE(trie_.commonPrefixSearch(one + "z").empty()) << "prefix byte=" << byte;
+    }
+  }
+
+  // Genuine members still resolve.
+  EXPECT_EQ(trie_.exactMatch(std::string("\x01z", 2)), 1);
+  EXPECT_EQ(trie_.exactMatch(std::string("\x7f"
+                                         "z",
+                                         2)),
+            2);
+  EXPECT_EQ(trie_.exactMatch(std::string("\xf0"
+                                         "z",
+                                         2)),
+            3);
 }
 
 TEST_F(DoubleArrayTest, Clear) {

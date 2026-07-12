@@ -183,7 +183,11 @@ void DoubleArray::buildRecursive(BuildState& state, const std::vector<std::strin
     if (child_pos >= state.units.size()) {
       state.resize(child_pos + kBlockSize);
     }
-    state.units[child_pos].check = static_cast<uint32_t>(parent_pos);
+    // Store parent_pos + 1 so that an unused cell (check == 0) is never mistaken
+    // for a child of the root (parent_pos == 0). Lookups compare against
+    // node_pos + 1 to match. Reserving 0 as the "no parent" sentinel is the only
+    // way to disambiguate empty cells from root children in this XOR layout.
+    state.units[child_pos].check = static_cast<uint32_t>(parent_pos + 1);
     state.used[child_pos] = true;
   }
 
@@ -237,7 +241,7 @@ int32_t DoubleArray::exactMatch(std::string_view key) const {
       return -1;
     }
 
-    if (units_[child_pos].check != node_pos) {
+    if (units_[child_pos].check != node_pos + 1) {  // +1: 0 is the "no parent" sentinel
       return -1;
     }
 
@@ -252,7 +256,7 @@ int32_t DoubleArray::exactMatch(std::string_view key) const {
     return -1;
   }
 
-  if (units_[leaf_pos].check != node_pos) {
+  if (units_[leaf_pos].check != node_pos + 1) {
     return -1;
   }
 
@@ -278,7 +282,7 @@ std::vector<DoubleArray::Result> DoubleArray::commonPrefixSearch(std::string_vie
     size_t base_val = units_[node_pos].base();
     size_t leaf_pos = base_val ^ 0;
 
-    if (leaf_pos < units_.size() && units_[leaf_pos].check == node_pos && units_[leaf_pos].hasLeaf()) {
+    if (leaf_pos < units_.size() && units_[leaf_pos].check == node_pos + 1 && units_[leaf_pos].hasLeaf()) {
       Result res{};
       res.value = units_[leaf_pos].value();
       res.length = idx - start;
@@ -298,7 +302,7 @@ std::vector<DoubleArray::Result> DoubleArray::commonPrefixSearch(std::string_vie
     uint8_t chr = toByte(text[idx]);
     size_t child_pos = base_val ^ chr;
 
-    if (child_pos >= units_.size() || units_[child_pos].check != node_pos) {
+    if (child_pos >= units_.size() || units_[child_pos].check != node_pos + 1) {
       break;
     }
 
@@ -318,9 +322,14 @@ size_t DoubleArray::memoryUsage() const {
 
 std::vector<uint8_t> DoubleArray::serialize() const {
   // Format:
-  // [4 bytes] magic "DA02"
+  // [4 bytes] magic "DA03"
   // [4 bytes] number of units
   // [units * 8 bytes] unit data (base_or_value, check)
+  //
+  // DA03 differs from DA02 only in the `check` encoding: it stores parent+1 so
+  // that check == 0 is an unambiguous "no parent" sentinel (see buildRecursive).
+  // The bump makes the loader reject DA02 blobs, whose check == parent would be
+  // misread as node_pos + 1.
 
   size_t num_units = units_.size();
   size_t total_size = 8 + num_units * sizeof(Unit);
@@ -332,7 +341,7 @@ std::vector<uint8_t> DoubleArray::serialize() const {
   ptr[0] = 'D';
   ptr[1] = 'A';
   ptr[2] = '0';
-  ptr[3] = '2';
+  ptr[3] = '3';
   ptr += 4;
 
   // Number of units
@@ -356,7 +365,7 @@ bool DoubleArray::deserialize(const uint8_t* data, size_t size) {
   }
 
   // Check magic
-  if (data[0] != 'D' || data[1] != 'A' || data[2] != '0' || data[3] != '2') {
+  if (data[0] != 'D' || data[1] != 'A' || data[2] != '0' || data[3] != '3') {
     return false;
   }
 
