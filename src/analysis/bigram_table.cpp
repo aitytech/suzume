@@ -384,6 +384,12 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   setCell(t, EPOS::AuxTenseTa, EPOS::VerbTaForm, cost::kAlmostNever);
   setCell(t, EPOS::AuxTenseTa, EPOS::VerbTaraForm, cost::kAlmostNever);
 
+  // ParticleTopic → AuxTenseTa - prohibit
+  // The past auxiliary attaches to a verb/adjective renyokei, never to a topic
+  // particle, so は+た is not a real boundary. Prevents an isolated hiragana noun
+  // from splitting into は(係助詞)+た(過去)+… (はたけ → は+た+け).
+  setCell(t, EPOS::ParticleTopic, EPOS::AuxTenseTa, cost::kSevere);
+
   // AuxAspectIru → AuxTenseTa (い+た) - moderate bonus
   setCell(t, EPOS::AuxAspectIru, EPOS::AuxTenseTa, cost::kModerateBonus);
 

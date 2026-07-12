@@ -1962,6 +1962,18 @@
       ],
       "id": "tamago",
       "input": "たまご"
+    },
+    {
+      "description": "Isolated hiragana noun (畑) kept whole; particle-topic + past-aux connection is prohibited so は/た/け does not win",
+      "expected": [
+        {
+          "lemma": "はたけ",
+          "pos": "Noun",
+          "surface": "はたけ"
+        }
+      ],
+      "id": "hatake",
+      "input": "はたけ"
     }
   ],
   "description": "General nouns",
