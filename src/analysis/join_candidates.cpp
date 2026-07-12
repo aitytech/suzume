@@ -15,6 +15,7 @@
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
 #include "tokenizer_utils.h"
+#include "verb_candidates_helpers.h"
 
 namespace suzume::analysis {
 
@@ -739,29 +740,18 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       // Try all sokuonbin-compatible godan endings
       for (char32_t ending : kSokuonbinEndings) {
         std::string candidate = v1_base + normalize::utf8::encode({ending});
-        auto v1_results = dict_manager.lookup(candidate, 0);
-        for (const auto& result : v1_results) {
-          if (result.entry != nullptr && result.entry->surface == candidate &&
-              result.entry->pos == core::PartOfSpeech::Verb) {
-            v1_verified = true;
-            v1_dict_verified = true;
-            v1_base = candidate;
-            base_ending = ending;
-            break;
-          }
-        }
-        if (v1_verified)
-          break;
-      }
-    } else {
-      auto v1_results = dict_manager.lookup(v1_base, 0);
-      for (const auto& result : v1_results) {
-        if (result.entry != nullptr && result.entry->surface == v1_base &&
-            result.entry->pos == core::PartOfSpeech::Verb) {
+        if (dict_manager.lookupExact(candidate, core::PartOfSpeech::Verb) != nullptr) {
           v1_verified = true;
           v1_dict_verified = true;
+          v1_base = candidate;
+          base_ending = ending;
           break;
         }
+      }
+    } else {
+      if (dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr) {
+        v1_verified = true;
+        v1_dict_verified = true;
       }
     }
 
@@ -783,16 +773,11 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         // Try to determine V1 base form for compound lemma
         for (char32_t ending : kSokuonbinEndings) {
           std::string candidate = v1_base + normalize::utf8::encode({ending});
-          auto v1_results = dict_manager.lookup(candidate, 0);
-          for (const auto& result : v1_results) {
-            if (result.entry != nullptr && result.entry->surface == candidate) {
-              v1_base = candidate;
-              base_ending = ending;
-              break;
-            }
-          }
-          if (v1_base == candidate)
+          if (dict_manager.lookupExact(candidate) != nullptr) {
+            v1_base = candidate;
+            base_ending = ending;
             break;
+          }
         }
       }
 
@@ -805,15 +790,10 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         size_t v1_second_char_byte = charPosToBytePos(codepoints, start_pos + 1);
         std::string embedded_base(text.substr(v1_second_char_byte, v1_end_byte - v1_second_char_byte));
         embedded_base += "る";
-        auto embedded_results = dict_manager.lookup(embedded_base, 0);
-        for (const auto& result : embedded_results) {
-          if (result.entry != nullptr && result.entry->surface == embedded_base &&
-              result.entry->pos == core::PartOfSpeech::Verb) {
-            v1_verified = true;
-            v1_embedded_verified = true;
-            SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND] V1 verified via embedded dict verb \"" << embedded_base << "\"\n");
-            break;
-          }
+        if (dict_manager.lookupExact(embedded_base, core::PartOfSpeech::Verb) != nullptr) {
+          v1_verified = true;
+          v1_embedded_verified = true;
+          SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND] V1 verified via embedded dict verb \"" << embedded_base << "\"\n");
         }
       }
 
@@ -844,14 +824,9 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       if (use_inflection_fallback) {
         size_t v1_renyokei_end = is_ichidan ? v2_start_byte : charPosToBytePos(codepoints, kanji_end + 1);
         std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
-        auto renyokei_results = dict_manager.lookup(v1_renyokei, 0);
-        for (const auto& result : renyokei_results) {
-          if (result.entry != nullptr && result.entry->surface == v1_renyokei &&
-              result.entry->pos != core::PartOfSpeech::Verb) {
-            // V1 renyokei is a known non-verb word, don't form compound
-            use_inflection_fallback = false;
-            break;
-          }
+        if (verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, v1_renyokei)) {
+          // V1 renyokei is a known non-verb word, don't form compound
+          use_inflection_fallback = false;
         }
       }
 
@@ -977,21 +952,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     size_t compound_end_byte = v2_start_byte + best_match.matched_len;
 
     // Find character position for compound end
-    size_t compound_end_pos = v2_start;
-    size_t byte_count = v2_start_byte;
-    while (compound_end_pos < codepoints.size() && byte_count < compound_end_byte) {
-      char32_t code = codepoints[compound_end_pos];
-      if (code < 0x80) {
-        byte_count += 1;
-      } else if (code < 0x800) {
-        byte_count += 2;
-      } else if (code < 0x10000) {
-        byte_count += 3;
-      } else {
-        byte_count += 4;
-      }
-      ++compound_end_pos;
-    }
+    size_t compound_end_pos = advanceCharsToBytePos(codepoints, v2_start, v2_start_byte, compound_end_byte);
 
     // Build the compound verb surface
     std::string compound_surface(text.substr(start_byte, compound_end_byte - start_byte));
@@ -1000,24 +961,20 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // UNLESS followed by an auxiliary suffix (た/て/で/ない) which indicates verb usage.
     // This prevents nominalized compound verbs (売り上げ, 打ち合わせ) from being tokenized as VERB
     // when standalone, while allowing 切り替えた, 打ち合わせて to be parsed as compound verbs.
-    auto noun_check_results = dict_manager.lookup(compound_surface, 0);
-    for (const auto& result : noun_check_results) {
-      if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun &&
-          result.entry->surface == compound_surface) {
-        // Check if followed by auxiliary suffix
-        bool followed_by_aux = false;
-        if (compound_end_pos < codepoints.size()) {
-          char32_t next_cp = codepoints[compound_end_pos];
-          // た/て/で/な(い)/れ/ら/ま(す) indicate verb conjugation
-          followed_by_aux = (next_cp == U'た' || next_cp == U'て' || next_cp == U'で' || next_cp == U'な' ||
-                             next_cp == U'れ' || next_cp == U'ら' || next_cp == U'ま' || next_cp == U'ず');
-        }
-        if (!followed_by_aux) {
-          SUZUME_DEBUG_LOG("[COMPOUND_SKIP] \"" << compound_surface << "\" is dict NOUN, skipping compound verb\n");
-          return;
-        }
-        SUZUME_DEBUG_LOG("[COMPOUND] \"" << compound_surface << "\" is dict NOUN but followed by aux, allowing\n");
+    if (dict_manager.lookupExact(compound_surface, core::PartOfSpeech::Noun) != nullptr) {
+      // Check if followed by auxiliary suffix
+      bool followed_by_aux = false;
+      if (compound_end_pos < codepoints.size()) {
+        char32_t next_cp = codepoints[compound_end_pos];
+        // た/て/で/な(い)/れ/ら/ま(す) indicate verb conjugation
+        followed_by_aux = (next_cp == U'た' || next_cp == U'て' || next_cp == U'で' || next_cp == U'な' ||
+                           next_cp == U'れ' || next_cp == U'ら' || next_cp == U'ま' || next_cp == U'ず');
       }
+      if (!followed_by_aux) {
+        SUZUME_DEBUG_LOG("[COMPOUND_SKIP] \"" << compound_surface << "\" is dict NOUN, skipping compound verb\n");
+        return;
+      }
+      SUZUME_DEBUG_LOG("[COMPOUND] \"" << compound_surface << "\" is dict NOUN but followed by aux, allowing\n");
     }
 
     // Skip if a hiragana-V2 variant of compound_base is registered as VERB in dictionary.
@@ -1039,14 +996,10 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       std::string v1_renyokei_text(text.substr(start_byte, v2_start_byte - start_byte));
       std::string hira_v2_compound = v1_renyokei_text + best_match.v2_reading;
       if (hira_v2_compound != best_match.compound_base) {
-        auto verb_check = dict_manager.lookup(hira_v2_compound, 0);
-        for (const auto& result : verb_check) {
-          if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Verb &&
-              result.entry->surface == hira_v2_compound) {
-            SUZUME_DEBUG_LOG("[COMPOUND_SKIP] kanji compound \""
-                             << best_match.compound_base << "\" yields to dict verb \"" << hira_v2_compound << "\"\n");
-            return;
-          }
+        if (dict_manager.lookupExact(hira_v2_compound, core::PartOfSpeech::Verb) != nullptr) {
+          SUZUME_DEBUG_LOG("[COMPOUND_SKIP] kanji compound \""
+                           << best_match.compound_base << "\" yields to dict verb \"" << hira_v2_compound << "\"\n");
+          return;
         }
       }
     }
@@ -1376,15 +1329,7 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       }
 
       // Verify V1 is in dictionary as a verb
-      auto v1_results = dict_manager.lookup(v1_base, 0);
-      bool v1_verified = false;
-      for (const auto& result : v1_results) {
-        if (result.entry != nullptr && result.entry->surface == v1_base &&
-            result.entry->pos == core::PartOfSpeech::Verb) {
-          v1_verified = true;
-          break;
-        }
-      }
+      bool v1_verified = dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr;
 
       // Fallback: use inflection analysis for unknown V1 verbs
       if (!v1_verified) {
@@ -1403,21 +1348,7 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       size_t compound_end_byte = v2_start_byte + matched_v2_len;
 
       // Find character position for compound end
-      size_t compound_end_pos = v2_start;
-      size_t byte_count = v2_start_byte;
-      while (compound_end_pos < codepoints.size() && byte_count < compound_end_byte) {
-        char32_t code = codepoints[compound_end_pos];
-        if (code < 0x80) {
-          byte_count += 1;
-        } else if (code < 0x800) {
-          byte_count += 2;
-        } else if (code < 0x10000) {
-          byte_count += 3;
-        } else {
-          byte_count += 4;
-        }
-        ++compound_end_pos;
-      }
+      size_t compound_end_pos = advanceCharsToBytePos(codepoints, v2_start, v2_start_byte, compound_end_byte);
 
       // Build compound verb surface and base form
       std::string compound_surface(text.substr(start_byte, compound_end_byte - start_byte));

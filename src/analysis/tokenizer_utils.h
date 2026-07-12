@@ -51,6 +51,23 @@ inline size_t findCharRegionEnd(const std::vector<normalize::CharType>& char_typ
  */
 size_t charPosToBytePos(const std::vector<char32_t>& codepoints, size_t char_pos);
 
+/**
+ * @brief Advance a character position until its byte offset reaches a target
+ *
+ * Starting from @p start_char (whose UTF-8 byte offset is @p start_byte), walk
+ * forward one codepoint at a time, accumulating each codepoint's UTF-8 byte
+ * length, and stop as soon as the accumulated byte offset is no longer below
+ * @p target_byte or the codepoints are exhausted.
+ *
+ * @param codepoints Vector of Unicode codepoints
+ * @param start_char Character position to start from (0-indexed)
+ * @param start_byte Byte offset corresponding to @p start_char
+ * @param target_byte Byte offset to advance up to
+ * @return Character position whose byte offset reaches @p target_byte
+ */
+size_t advanceCharsToBytePos(const std::vector<char32_t>& codepoints, size_t start_char, size_t start_byte,
+                             size_t target_byte);
+
 }  // namespace suzume::analysis
 
 #endif  // SUZUME_ANALYSIS_TOKENIZER_UTILS_H_

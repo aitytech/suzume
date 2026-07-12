@@ -33,6 +33,14 @@ bool isSingleKanjiIchidan(char32_t c) {
   return false;
 }
 
+bool isSingleKanjiIchidanSurface(std::string_view surface) {
+  if (normalize::utf8Length(surface) != 1) {
+    return false;
+  }
+  auto codepoints = normalize::toCodepoints(surface);
+  return !codepoints.empty() && isSingleKanjiIchidan(codepoints[0]);
+}
+
 // =============================================================================
 // Dictionary Lookup Helpers
 // =============================================================================
@@ -93,6 +101,17 @@ std::string lookupVerbLemma(const dictionary::DictionaryManager* dict_manager, s
     }
   }
   return std::string(fallback);
+}
+
+bool isVerifiedVerbBase(const dictionary::DictionaryManager* dict_manager, const grammar::Inflection& inflection,
+                        std::string_view base_form, float min_confidence, bool require_godan) {
+  if (isVerbInDictionary(dict_manager, base_form)) {
+    return true;
+  }
+  auto infl_result = inflection.getBest(base_form);
+  bool type_ok = require_godan ? grammar::isGodanVerbType(infl_result.verb_type)
+                               : infl_result.verb_type == grammar::VerbType::Ichidan;
+  return infl_result.confidence > min_confidence && type_ok;
 }
 
 // =============================================================================
@@ -300,11 +319,6 @@ bool endsWithKuNaruPattern(std::string_view surface) {
          utf8::endsWith(surface, "くなった") || utf8::endsWith(surface, "くなって");
 }
 
-bool isGodanVerbType(grammar::VerbType verb_type) {
-  // Use centralized GodanRow lookup instead of manual enumeration
-  return grammar::Conjugation::getGodanRow(verb_type) != nullptr;
-}
-
 bool isSokuonbinGodanType(grammar::VerbType verb_type) {
   return verb_type == grammar::VerbType::GodanRa || verb_type == grammar::VerbType::GodanTa ||
          verb_type == grammar::VerbType::GodanWa || verb_type == grammar::VerbType::GodanKa;
@@ -329,6 +343,30 @@ bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType ver
   return utf8::endsWith(surface, "れる") || utf8::endsWith(surface, "れた") || utf8::endsWith(surface, "れて") ||
          utf8::endsWith(surface, "れない") || utf8::endsWith(surface, "れます") || utf8::endsWith(surface, "れたい") ||
          utf8::endsWith(surface, "れたく");
+}
+
+bool isPassiveAuxContinuation(const std::vector<char32_t>& codepoints, size_t pos_after_re, bool strict_masu) {
+  if (pos_after_re >= codepoints.size()) {
+    return false;
+  }
+  char32_t after_re = codepoints[pos_after_re];
+  // れる, れた, れて
+  if (after_re == U'る' || after_re == U'た' || after_re == U'て') {
+    return true;
+  }
+  // れな (れない, れなかった)
+  if (after_re == U'な' && pos_after_re + 1 < codepoints.size() && codepoints[pos_after_re + 1] == U'い') {
+    return true;
+  }
+  // れま (れます, れました); the strict form requires す/せ (excludes bare ま)
+  if (after_re == U'ま') {
+    if (!strict_masu) {
+      return true;
+    }
+    return pos_after_re + 1 < codepoints.size() &&
+           (codepoints[pos_after_re + 1] == U'す' || codepoints[pos_after_re + 1] == U'せ');
+  }
+  return false;
 }
 
 bool shouldSkipCausativeAuxPattern(std::string_view surface, grammar::VerbType verb_type) {
@@ -443,6 +481,27 @@ bool containsCausativeAuxPattern(std::string_view surface) {
     }
   }
   return false;
+}
+
+VerbClassBests bestByVerbClass(const std::vector<grammar::InflectionCandidate>& candidates) {
+  // Value-initialize so every field (including each accumulator's confidence) starts
+  // at zero; the loop then keeps the highest-confidence candidate per verb class.
+  VerbClassBests bests{};
+  for (const auto& cand : candidates) {
+    if (cand.has_explanatory_suffix) {
+      continue;
+    }
+    if (cand.verb_type == grammar::VerbType::Ichidan && cand.confidence > bests.ichidan.confidence) {
+      bests.ichidan = cand;
+    }
+    if (cand.verb_type == grammar::VerbType::Suru && cand.confidence > bests.suru.confidence) {
+      bests.suru = cand;
+    }
+    if (grammar::isGodanVerbType(cand.verb_type) && cand.confidence > bests.godan.confidence) {
+      bests.godan = cand;
+    }
+  }
+  return bests;
 }
 
 }  // namespace suzume::analysis::verb_helpers

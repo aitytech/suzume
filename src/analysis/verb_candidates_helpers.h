@@ -39,6 +39,14 @@ namespace suzume::analysis::verb_helpers {
  */
 bool isSingleKanjiIchidan(char32_t c);
 
+/**
+ * @brief Check if a surface form is exactly one single-kanji Ichidan verb
+ *
+ * True when the surface consists of exactly one codepoint and that codepoint
+ * is a known single-kanji Ichidan verb (see isSingleKanjiIchidan).
+ */
+bool isSingleKanjiIchidanSurface(std::string_view surface);
+
 // =============================================================================
 // Dictionary Lookup Helpers
 // =============================================================================
@@ -110,6 +118,17 @@ bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manage
  */
 std::string lookupVerbLemma(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
                             std::string_view fallback);
+
+/**
+ * @brief Verify a constructed base form as a real verb
+ *
+ * Accepts the base form when it is a dictionary verb, or when inflection
+ * analysis recognizes it with confidence strictly above @p min_confidence as
+ * a Godan verb (@p require_godan true) or an Ichidan verb (@p require_godan
+ * false).
+ */
+bool isVerifiedVerbBase(const dictionary::DictionaryManager* dict_manager, const grammar::Inflection& inflection,
+                        std::string_view base_form, float min_confidence, bool require_godan);
 
 // =============================================================================
 // Candidate Sorting
@@ -244,11 +263,6 @@ bool containsKuNaruPattern(std::string_view surface);
 bool endsWithKuNaruPattern(std::string_view surface);
 
 /**
- * @brief Check if verb type is a Godan verb
- */
-bool isGodanVerbType(grammar::VerbType verb_type);
-
-/**
  * @brief Check if verb type uses sokuonbin (っ音便)
  * @param verb_type The verb type to check
  * @return true if GodanRa, GodanTa, GodanWa, or GodanKa
@@ -273,6 +287,20 @@ std::vector<std::pair<grammar::VerbType, std::string_view>> getGodanTypesByOnbin
  * @brief Check if surface contains passive/potential auxiliary patterns
  */
 bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType verb_type);
+
+/**
+ * @brief Check whether the codepoint after passive れ continues an auxiliary chain
+ *
+ * Matches the passive/potential continuation set after れ (or られ):
+ * る/た/て immediately, な only when followed by い (れない, れなかった), and
+ * ま (れます, れました). With @p strict_masu the ま branch additionally
+ * requires a following す or せ (れます/れません), excluding bare ま.
+ *
+ * @param codepoints Full input codepoints
+ * @param pos_after_re Index of the codepoint immediately after れ
+ * @param strict_masu Require す/せ after ま
+ */
+bool isPassiveAuxContinuation(const std::vector<char32_t>& codepoints, size_t pos_after_re, bool strict_masu);
 
 /**
  * @brief Check if surface contains causative auxiliary patterns
@@ -331,6 +359,26 @@ inline float getIchidanConfidence(const std::vector<grammar::InflectionCandidate
   }
   return best;
 }
+
+/**
+ * @brief Best inflection candidate per verb class (Ichidan / Suru / Godan)
+ *
+ * Members left unmatched keep confidence 0.0 and are otherwise
+ * default-constructed.
+ */
+struct VerbClassBests {
+  grammar::InflectionCandidate ichidan;
+  grammar::InflectionCandidate suru;
+  grammar::InflectionCandidate godan;
+};
+
+/**
+ * @brief Scan inflection candidates for the best Ichidan, Suru, and Godan entries
+ *
+ * Candidates matched via のだ/んだ stripping (has_explanatory_suffix) are
+ * ignored. Ties keep the earlier candidate (strict > comparison).
+ */
+VerbClassBests bestByVerbClass(const std::vector<grammar::InflectionCandidate>& candidates);
 
 // =============================================================================
 // Verb Type / Stem Analysis Helpers

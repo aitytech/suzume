@@ -779,13 +779,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::AuxCausative &&
       utf8::startsWith(next.surface, "させ")) {
     // Check if prev is a single-kanji ichidan verb stem (見, 寝, 着, etc.)
-    bool is_single_kanji_ichidan = false;
-    if (normalize::utf8Length(prev.surface) == 1) {  // Single character (codepoint-aware)
-      auto codepoints = normalize::toCodepoints(prev.surface);
-      if (!codepoints.empty()) {
-        is_single_kanji_ichidan = verb_helpers::isSingleKanjiIchidan(codepoints[0]);
-      }
-    }
+    bool is_single_kanji_ichidan = verb_helpers::isSingleKanjiIchidanSurface(prev.surface);
     if (is_single_kanji_ichidan) {
       // Bonus for single-kanji ichidan verb → させ (見+させる, 寝+させる)
       surface_bonus += cost::kVeryStrongBonus;
@@ -1471,10 +1465,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     // Check if this is single-kanji ichidan + causative させ (should be allowed)
     bool is_ichidan_causative = false;
     if (next.extended_pos == core::ExtendedPOS::AuxCausative && utf8::startsWith(next.surface, "させ")) {
-      auto codepoints = normalize::toCodepoints(prev.surface);
-      if (!codepoints.empty() && verb_helpers::isSingleKanjiIchidan(codepoints[0])) {
-        is_ichidan_causative = true;
-      }
+      is_ichidan_causative = verb_helpers::isSingleKanjiIchidanSurface(prev.surface);
     }
     if (!is_ichidan_causative) {
       surface_bonus += cost::kVeryRare;

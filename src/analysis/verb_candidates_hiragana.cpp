@@ -782,22 +782,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
 
     // Check for passive patterns after れ
     // All passive patterns split at mizenkei (いわ + れる/れ) for MeCab compatibility
-    bool is_passive_pattern = false;
-    if (mizenkei_end + 1 < codepoints.size()) {
-      char32_t after_re = codepoints[mizenkei_end + 1];
-      // れる, れた, れて
-      if (after_re == U'る' || after_re == U'た' || after_re == U'て') {
-        is_passive_pattern = true;
-      }
-      // れな (れない, れなかった)
-      else if (after_re == U'な' && mizenkei_end + 2 < codepoints.size() && codepoints[mizenkei_end + 2] == U'い') {
-        is_passive_pattern = true;
-      }
-      // れま (れます, れました, れません, れませんでした)
-      else if (after_re == U'ま') {
-        is_passive_pattern = true;
-      }
-    }
+    // Loose ま-branch: bare ま (れます, れました, れません, れませんでした) qualifies.
+    bool is_passive_pattern = vh::isPassiveAuxContinuation(codepoints, mizenkei_end + 1, /*strict_masu=*/false);
 
     if (!is_passive_pattern) {
       continue;
@@ -838,8 +824,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     // E.g., やらされた = やらさ (mizenkei of やらす) + れ + た
     // やらす is the causative form of やる but not in dictionary
     if (!is_valid_verb && verb_type == grammar::VerbType::GodanSa) {
-      auto infl_result = inflection.getBest(base_form);
-      is_valid_verb = infl_result.confidence > 0.5F && vh::isGodanVerbType(infl_result.verb_type);
+      is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, 0.5F, true);
     }
 
     if (!is_valid_verb) {
@@ -916,22 +901,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Check for られる, られた, られて, られな, られま patterns
-    bool is_potential_passive_pattern = false;
-    if (ra_pos + 2 < codepoints.size()) {
-      char32_t third_aux = codepoints[ra_pos + 2];
-      // られる, られた, られて
-      if (third_aux == U'る' || third_aux == U'た' || third_aux == U'て') {
-        is_potential_passive_pattern = true;
-      }
-      // られな (られない, られなかった)
-      else if (third_aux == U'な' && ra_pos + 3 < codepoints.size() && codepoints[ra_pos + 3] == U'い') {
-        is_potential_passive_pattern = true;
-      }
-      // られま (られます, られました)
-      else if (third_aux == U'ま') {
-        is_potential_passive_pattern = true;
-      }
-    }
+    // れ sits at ra_pos+1, so the continuation index is ra_pos+2 (loose ま-branch).
+    bool is_potential_passive_pattern = vh::isPassiveAuxContinuation(codepoints, ra_pos + 2, /*strict_masu=*/false);
 
     if (!is_potential_passive_pattern) {
       continue;

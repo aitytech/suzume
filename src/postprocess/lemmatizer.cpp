@@ -355,13 +355,7 @@ bool hasExactVerbEntry(const dictionary::DictionaryManager* dict_manager, std::s
   if (dict_manager == nullptr) {
     return false;
   }
-  auto results = dict_manager->lookup(surface, 0);
-  for (const auto& result : results) {
-    if (result.entry != nullptr && result.entry->surface == surface && result.entry->pos == core::PartOfSpeech::Verb) {
-      return true;
-    }
-  }
-  return false;
+  return dict_manager->lookupExact(surface, core::PartOfSpeech::Verb) != nullptr;
 }
 
 // =============================================================================
@@ -416,11 +410,8 @@ std::string fixSpecialRaRowLemma(std::string_view lemma, const dictionary::Dicti
     return "";
   }
   std::string ru_form = std::string(utf8::dropLast2Chars(lemma)) + "る";
-  auto results = dict->lookup(ru_form, 0);
-  for (const auto& result : results) {
-    if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Verb && result.entry->surface == ru_form) {
-      return ru_form;
-    }
+  if (dict->lookupExact(ru_form, core::PartOfSpeech::Verb) != nullptr) {
+    return ru_form;
   }
   return "";
 }
@@ -693,6 +684,19 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
   // When lemma == surface, we need to re-derive for conjugated forms
   if (morpheme.is_from_dictionary && !morpheme.lemma.empty() && morpheme.lemma != morpheme.surface) {
     return morpheme.lemma;
+  }
+
+  // A verb tagged 終止形/連体形 is already in its dictionary form, so its lemma is
+  // the surface itself. Skip the re-derivation below, whose ている-contraction rules
+  // (kVerbEndings "てる"→"る") would otherwise corrupt genuine ichidan base forms
+  // ending in てる — 立てる→立る, 捨てる→捨る, 組み立てる→組み立る. Those contraction
+  // rules only need to fire on tokens the tokenizer keeps whole as contractions, but
+  // real contractions (見てる) are always split (見+てる), never left as a 終止形 verb.
+  if (morpheme.pos == core::PartOfSpeech::Verb &&
+      (morpheme.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+       morpheme.extended_pos == core::ExtendedPOS::VerbRentaikei) &&
+      (morpheme.lemma.empty() || morpheme.lemma == morpheme.surface)) {
+    return std::string(morpheme.surface);
   }
 
   // Tari-adjective adverbs: remove trailing と from lemma (颯爽と → 颯爽, 堂々と → 堂々)

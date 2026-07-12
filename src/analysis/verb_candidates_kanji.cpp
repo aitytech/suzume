@@ -166,11 +166,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             std::string base_form = kanji_stem + std::string(base_suffix);
 
             // Verify the base form is a valid verb
-            bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
-            if (!is_valid_verb) {
-              auto infl_result = inflection.getBest(base_form);
-              is_valid_verb = infl_result.confidence > 0.5F && vh::isGodanVerbType(infl_result.verb_type);
-            }
+            bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, 0.5F, true);
 
             if (is_valid_verb) {
               size_t renyokei_end = kanji_end + 1;
@@ -204,11 +200,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         std::string base_form = ichidan_stem + "る";
 
         // Verify the base form is a valid ichidan verb
-        bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
-        if (!is_valid_verb) {
-          auto infl_result = inflection.getBest(base_form);
-          is_valid_verb = infl_result.confidence > 0.5F && infl_result.verb_type == grammar::VerbType::Ichidan;
-        }
+        bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, 0.5F, false);
 
         if (is_valid_verb) {
           size_t renyokei_end = kanji_end + 1;
@@ -611,7 +603,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // E.g., "伝えいた" falsely matches as GodanKa "伝えく" but 伝える is ichidan
         // Exception: GodanRa (passive/causative) with "られ" suffix is valid
         // E.g., "定められた" has stem "定め" (ichidan) + passive suffix
-        bool is_godan = vh::isGodanVerbType(best.verb_type);
+        bool is_godan = grammar::isGodanVerbType(best.verb_type);
         if (is_godan && stem_end > kanji_end && stem_end <= codepoints.size()) {
           // Check if the last character of the stem is e-row hiragana
           char32_t last_char = codepoints[stem_end - 1];
@@ -1103,25 +1095,10 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // This is important for ambiguous cases like 入れ (godan 入る imperative vs ichidan 入れる renyoukei)
         const auto& all_cands = inflection.analyze(surface);
         // Find the best Ichidan, Suru, and Godan candidates
-        grammar::InflectionCandidate ichidan_cand;
-        grammar::InflectionCandidate suru_cand;
-        grammar::InflectionCandidate godan_cand;
-        ichidan_cand.confidence = 0.0F;
-        suru_cand.confidence = 0.0F;
-        godan_cand.confidence = 0.0F;
-        for (const auto& cand : all_cands) {
-          if (cand.has_explanatory_suffix)
-            continue;
-          if (cand.verb_type == grammar::VerbType::Ichidan && cand.confidence > ichidan_cand.confidence) {
-            ichidan_cand = cand;
-          }
-          if (cand.verb_type == grammar::VerbType::Suru && cand.confidence > suru_cand.confidence) {
-            suru_cand = cand;
-          }
-          if (vh::isGodanVerbType(cand.verb_type) && cand.confidence > godan_cand.confidence) {
-            godan_cand = cand;
-          }
-        }
+        vh::VerbClassBests bests = vh::bestByVerbClass(all_cands);
+        const grammar::InflectionCandidate& ichidan_cand = bests.ichidan;
+        const grammar::InflectionCandidate& suru_cand = bests.suru;
+        const grammar::InflectionCandidate& godan_cand = bests.godan;
         // Skip if there's a suru-verb or godan-verb candidate with higher confidence
         // e.g., 勉強し has suru conf=0.82 vs ichidan conf=0.3 - prefer suru
         // e.g., 走り has godan conf=0.61 vs ichidan conf=0.3 - prefer godan
@@ -1219,25 +1196,10 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         size_t renyokei_end = kanji_end + 2;
         std::string surface = extractSubstring(codepoints, start_pos, renyokei_end);
         const auto& all_cands = inflection.analyze(surface);
-        grammar::InflectionCandidate ichidan_cand;
-        grammar::InflectionCandidate suru_cand;
-        grammar::InflectionCandidate godan_cand;
-        ichidan_cand.confidence = 0.0F;
-        suru_cand.confidence = 0.0F;
-        godan_cand.confidence = 0.0F;
-        for (const auto& cand : all_cands) {
-          if (cand.has_explanatory_suffix)
-            continue;
-          if (cand.verb_type == grammar::VerbType::Ichidan && cand.confidence > ichidan_cand.confidence) {
-            ichidan_cand = cand;
-          }
-          if (cand.verb_type == grammar::VerbType::Suru && cand.confidence > suru_cand.confidence) {
-            suru_cand = cand;
-          }
-          if (vh::isGodanVerbType(cand.verb_type) && cand.confidence > godan_cand.confidence) {
-            godan_cand = cand;
-          }
-        }
+        vh::VerbClassBests bests = vh::bestByVerbClass(all_cands);
+        const grammar::InflectionCandidate& ichidan_cand = bests.ichidan;
+        const grammar::InflectionCandidate& suru_cand = bests.suru;
+        const grammar::InflectionCandidate& godan_cand = bests.godan;
         bool prefer_suru = (suru_cand.confidence > ichidan_cand.confidence);
         bool prefer_godan = (godan_cand.confidence > ichidan_cand.confidence);
         // Higher confidence threshold for multi-char stems to avoid false positives
@@ -1821,23 +1783,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           } else {
             // Check for passive patterns: れる, れた, れて, れない, れます
             // E.g., 言われる → 言わ (mizenkei) + れる (passive AUX)
-            size_t re_pos = mizenkei_end;
-            if (re_pos + 1 < codepoints.size()) {
-              char32_t after_re = codepoints[re_pos + 1];
-              // れる, れた, れて
-              if (after_re == U'る' || after_re == U'た' || after_re == U'て') {
-                is_passive_pattern = true;
-              }
-              // れな (れない, れなかった)
-              else if (after_re == U'な' && re_pos + 2 < codepoints.size() && codepoints[re_pos + 2] == U'い') {
-                is_passive_pattern = true;
-              }
-              // れま (れます, れました, れません)
-              else if (after_re == U'ま' && re_pos + 2 < codepoints.size() &&
-                       (codepoints[re_pos + 2] == U'す' || codepoints[re_pos + 2] == U'せ')) {
-                is_passive_pattern = true;
-              }
-            }
+            // Strict ま-branch: bare ま requires a following す/せ (れます/れません).
+            is_passive_pattern = vh::isPassiveAuxContinuation(codepoints, mizenkei_end + 1, /*strict_masu=*/true);
           }
         }
         // Check for classical negation ぬ pattern
@@ -1946,8 +1893,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
                   // For non-passive patterns (ない, ぬ, etc.), allow inflection fallback
                   // For WA-row passive, also allow with higher confidence threshold
                   float threshold = is_passive_pattern ? 0.6F : 0.5F;
-                  auto infl_result = inflection.getBest(base_form);
-                  is_valid_verb = infl_result.confidence > threshold && vh::isGodanVerbType(infl_result.verb_type);
+                  is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, threshold, true);
                 }
 
                 // Skip irregular verb 来る for passive — its passive is 来+られる, not 来ら+れる
@@ -2050,11 +1996,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             std::string stem = extractSubstring(codepoints, start_pos, scan_pos);
             std::string base_form = stem + std::string(base_suffix);
             // Verify this is a valid verb
-            bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
-            if (!is_valid_verb) {
-              auto infl_result = inflection.getBest(base_form);
-              is_valid_verb = infl_result.confidence > 0.5F && vh::isGodanVerbType(infl_result.verb_type);
-            }
+            bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, 0.5F, true);
             if (is_valid_verb) {
               std::string surface = extractSubstring(codepoints, start_pos, multi_miz_end);
               constexpr float kCost = candidate::verb_cost::kStandardBonus;  // Same as other negative patterns
