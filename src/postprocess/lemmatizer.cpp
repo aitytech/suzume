@@ -834,8 +834,12 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
       if (std::string suru = fixSuruClassical(grammar_result); !suru.empty()) {
         return suru;
       }
-      if (std::string shiru = fixShiru(grammar_result); !shiru.empty()) {
-        return shiru;
+      // fixShiru rewrites an ichidan-misanalyzed サ変/godan-sa ~しる (対しる→対する).
+      // A genuine GodanRa verb ending in しる (走る/はしる) must not be touched.
+      if (morpheme.conj_type != dictionary::ConjugationType::GodanRa) {
+        if (std::string shiru = fixShiru(grammar_result); !shiru.empty()) {
+          return shiru;
+        }
       }
     }
     // For passive verbs, grammar-based returns the passive form as base (e.g., いわれる)
@@ -985,7 +989,8 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
 
     // Fix compound verbs analyzed as ichidan but actually サ変/godan-sa
     // E.g., lemma=やりなおしる → やりなおす, lemma=対しる → 対する
-    if (morpheme.pos == core::PartOfSpeech::Verb) {
+    if (morpheme.pos == core::PartOfSpeech::Verb &&
+        morpheme.conj_type != dictionary::ConjugationType::GodanRa) {
       if (std::string shiru = fixShiru(morpheme.lemma); !shiru.empty()) {
         morpheme.lemma = shiru;
       }

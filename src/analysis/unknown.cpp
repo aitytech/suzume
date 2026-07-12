@@ -669,14 +669,37 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
         (codepoints[start_pos] == U'は' || codepoints[start_pos] == U'に' || codepoints[start_pos] == U'へ');
     size_t max_internal = particle_initial ? 0 : 1;
     size_t internal_particles = 0;
+    // A multi-char L1 particle (ながら, まで, から, だけ, …) beginning at a position is a
+    // real right boundary: terminate the run there rather than swallowing its head into
+    // the noun (…およぎ|ながら, never およぎな|がら where ながら's が is mistaken for a bracket).
+    auto multi_char_particle_at = [&](size_t pos) -> bool {
+      if (dict_manager_ == nullptr || pos >= codepoints.size()) {
+        return false;
+      }
+      size_t win_end = pos + 4 < codepoints.size() ? pos + 4 : codepoints.size();
+      std::string window = extractSubstring(codepoints, pos, win_end);
+      for (const auto& res : dict_manager_->lookup(window, 0)) {
+        if (res.entry != nullptr && res.entry->pos == core::PartOfSpeech::Particle && res.length >= 2) {
+          return true;
+        }
+      }
+      return false;
+    };
     size_t scan = start_pos + 1;
     while (scan < codepoints.size() && scan - start_pos < 4 && char_types[scan] == normalize::CharType::Hiragana) {
       char32_t curr = codepoints[scan];
       if (curr == U'を' || curr == U'が' || curr == U'の') {
         break;  // hard stops: never sit inside a native hiragana noun
       }
+      if (multi_char_particle_at(scan)) {
+        break;  // stop before a multi-char particle boundary
+      }
       if (isInternalParticleChar(curr)) {
-        if (internal_particles >= max_internal) {
+        // A particle char followed by a fresh (non-hiragana) word is a trailing case
+        // particle (…およぎ|に|行く): stop before it so the right-bracket test sees it.
+        // At the run's end it is word-final (こども), so keep it, capped by max_internal.
+        bool word_follows = scan + 1 < codepoints.size() && char_types[scan + 1] != normalize::CharType::Hiragana;
+        if (word_follows || internal_particles >= max_internal) {
           break;
         }
         ++internal_particles;
@@ -684,8 +707,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
       ++scan;
     }
     size_t len = scan - start_pos;
-    // Right bracket: a boundary particle, or a clause boundary (sentence end / symbol).
-    bool right_particle = scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan]);
+    // Right bracket: a single boundary particle, a multi-char particle start, or a
+    // clause boundary (sentence end / symbol).
+    bool right_particle =
+        (scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan])) || multi_char_particle_at(scan);
     bool right_clause = (scan == codepoints.size()) || (scan < codepoints.size() &&
                                                         char_types[scan] == normalize::CharType::Symbol);
     // Whole-run candidate is safe at length 2 only when both sides are real particles

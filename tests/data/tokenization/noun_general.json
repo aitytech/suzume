@@ -1974,6 +1974,18 @@
       ],
       "id": "hatake",
       "input": "はたけ"
+    },
+    {
+      "description": "Isolated hiragana noun kept whole; the EOS penalty on bare renyokei き prevents an ひこう+き split (き cannot end a sentence)",
+      "expected": [
+        {
+          "lemma": "ひこうき",
+          "pos": "Other",
+          "surface": "ひこうき"
+        }
+      ],
+      "id": "hikouki",
+      "input": "ひこうき"
     }
   ],
   "description": "General nouns",

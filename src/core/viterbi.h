@@ -34,6 +34,12 @@ inline constexpr float kBosAspectIkuPenalty = 1.0F;      // いく aspect needs 
 inline constexpr float kBosAspectKuruPenalty = 3.0F;     // くる aspect (き) needs a preceding て-form
 inline constexpr float kBosTensePenalty = 2.0F;          // た/だ needs a preceding verb/adj stem
 inline constexpr float kBosFinalParticlePenalty = 2.0F;  // Sentence-final particle cannot lead
+
+// EOS (end-of-sentence) cost adjustments, symmetric to the BOS set above. A
+// morpheme that cannot naturally END a sentence is penalized, so an isolated
+// hiragana word is not carved into a stem plus a dangling auxiliary/aspect.
+inline constexpr float kEosAspectKuruPenalty = 3.0F;  // き (来 aspect) needs a following stem (ひこうき → ひこう+き)
+
 // Per-transition tie-break: slightly prefer fewer, longer morphemes.
 inline constexpr float kTransitionCost = 0.001F;
 
@@ -173,6 +179,16 @@ class Viterbi {
         }
         const float word_cost = scorer.wordCost(edge);
 
+        // EOS penalty: an edge that terminates the sentence but cannot naturally
+        // end one (mirror of the BOS penalties below). Added once per edge.
+        // Restricted to the bare renyokei き (a single codepoint): it needs a
+        // following た/て/ます, whereas the 終止形 くる/くれる legitimately ends a
+        // sentence (勉強してくる) and must not be penalized.
+        float eos_cost = 0.0F;
+        if (edge.end == text_len && edge.extended_pos == ExtendedPOS::AuxAspectKuru && edge.end - pos == 1) {
+          eos_cost += kEosAspectKuruPenalty;
+        }
+
         // Find the cheapest predecessor for this edge across all retained
         // states at this position.
         float best_total = std::numeric_limits<float>::max();
@@ -218,7 +234,7 @@ class Viterbi {
               }
             }
 
-            const float total = entry.cost + word_cost + conn_cost + kTransitionCost;
+            const float total = entry.cost + word_cost + conn_cost + eos_cost + kTransitionCost;
 
             SUZUME_DEBUG_VERBOSE_BLOCK {
               SUZUME_DEBUG_STREAM << "[VITERBI] pos=" << pos << " \"" << edge.surface << "\" (" << posToString(edge.pos)

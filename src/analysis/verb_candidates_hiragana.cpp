@@ -1531,8 +1531,32 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       continue;
     }
 
+    // Default to the ichidan interpretation (stem + る). For the +ます follower a
+    // godan renyokei reading is equally licensed (泳ぎ→泳ぐ, 踊り→踊る), so prefer it
+    // when at least as confident: emit the systematic verb base instead of a
+    // fabricated 泳ぎる/踊りる. て/た/ない/れば stay ichidan-only — there a bare
+    // i-row stem is genuinely ichidan (godan would need onbin or an a-row mizenkei).
+    std::string chosen_base = base_form;
+    dictionary::ConjugationType chosen_conj = dictionary::ConjugationType::Ichidan;
+    float chosen_confidence = ichidan_confidence;
+    if (is_followed_by_masu) {
+      grammar::VerbType godan_type = grammar::verbTypeFromIRowCodepoint(stem_end_char);
+      if (godan_type != grammar::VerbType::Unknown) {
+        std::string godan_base = extractSubstring(codepoints, start_pos, end_pos - 1) +
+                                 std::string(grammar::godanBaseSuffixFromIRow(stem_end_char));
+        for (const auto& cand : stem_analysis) {
+          if (cand.verb_type == godan_type && cand.base_form == godan_base && cand.confidence >= chosen_confidence) {
+            chosen_base = godan_base;
+            chosen_conj = grammar::verbTypeToConjType(godan_type);
+            chosen_confidence = cand.confidence;
+            break;
+          }
+        }
+      }
+    }
+
     // Check if base form is in dictionary (gives confidence boost)
-    bool is_dict_verb = vh::isVerbInDictionary(dict_manager, base_form);
+    bool is_dict_verb = vh::isVerbInDictionary(dict_manager, chosen_base);
 
     // Skip causative+passive auxiliary chain patterns
     // E.g., "せられ" should be split as せ(causative) + られ(passive), not single verb
@@ -1580,13 +1604,12 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     // But not too high to break valid patterns like してほしい
     float cost = is_dict_verb ? -0.8F : 0.5F;
     SUZUME_DEBUG_VERBOSE_BLOCK {
-      SUZUME_DEBUG_STREAM << "[VERB_CAND] " << stem_surface << " hiragana_ichidan_renyokei lemma=" << base_form
-                          << " conf=" << ichidan_confidence << (is_dict_verb ? " [dict]" : "") << " cost=" << cost
+      SUZUME_DEBUG_STREAM << "[VERB_CAND] " << stem_surface << " hiragana_renyokei lemma=" << chosen_base
+                          << " conf=" << chosen_confidence << (is_dict_verb ? " [dict]" : "") << " cost=" << cost
                           << "\n";
     }
-    candidates.push_back(makeVerbCandidate(stem_surface, start_pos, end_pos, cost, base_form,
-                                           dictionary::ConjugationType::Ichidan, true, CandidateOrigin::VerbHiragana,
-                                           ichidan_confidence, "hiragana_ichidan_renyokei"));
+    candidates.push_back(makeVerbCandidate(stem_surface, start_pos, end_pos, cost, chosen_base, chosen_conj, true,
+                                           CandidateOrigin::VerbHiragana, chosen_confidence, "hiragana_renyokei"));
 
     // Also generate kateikei stem if followed by れば
     // E.g., できれば → できれ (kateikei of できる) + ば

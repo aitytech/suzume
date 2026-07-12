@@ -300,6 +300,38 @@
       ],
       "id": "haninjinwo_beru",
       "input": "私はにんじんを食べる"
+    },
+    {
+      "description": "Trailing case particle に is not absorbed into the bracketed hiragana noun (は|およぎ|に), so no はおよぎ particle+noun blob. POS/lemma of およぎ diverge from MeCab (nominal-slot rare-hiragana godan-ga)",
+      "expected": [
+        {
+          "lemma": "私",
+          "pos": "Pronoun",
+          "surface": "私"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "およぎ",
+          "pos": "Noun",
+          "surface": "およぎ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "haoyogini_ku",
+      "input": "私はおよぎに行く"
     }
   ],
   "description": "particle_topic tests",

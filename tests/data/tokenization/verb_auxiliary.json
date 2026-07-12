@@ -208,6 +208,67 @@
       ],
       "id": "yarubekikoto",
       "input": "やるべきこと"
+    },
+    {
+      "description": "Pure-hiragana godan-ga renyokei before ます keeps the systematic verb base (およぐ), not a fabricated ichidan およぎる",
+      "expected": [
+        {
+          "lemma": "毎日",
+          "pos": "Noun",
+          "surface": "毎日"
+        },
+        {
+          "lemma": "およぐ",
+          "pos": "Verb",
+          "surface": "およぎ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "oyogimasu",
+      "input": "毎日およぎます"
+    },
+    {
+      "description": "GodanRa renyokei はしり before ます lemmatizes to はしる; the fixShiru サ変 rewrite must not clobber a genuine godan-ra ~しる verb into はす",
+      "expected": [
+        {
+          "lemma": "はしる",
+          "pos": "Verb",
+          "surface": "はしり"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "hashirimasu",
+      "input": "はしります"
+    },
+    {
+      "description": "Bracketed-hiragana-noun scan stops at the multi-char particle ながら (およぎ|ながら), never carving ながら's が into a boundary (およぎな|がら). POS/lemma of およぎ diverge from MeCab (rare-hiragana godan-ga nominalization)",
+      "expected": [
+        {
+          "lemma": "およぎ",
+          "pos": "Noun",
+          "surface": "およぎ"
+        },
+        {
+          "lemma": "ながら",
+          "pos": "Particle",
+          "surface": "ながら"
+        },
+        {
+          "lemma": "考える",
+          "pos": "Verb",
+          "surface": "考える"
+        }
+      ],
+      "id": "oyoginagara_eru",
+      "input": "およぎながら考える"
     }
   ],
   "description": "verb_auxiliary tests",
