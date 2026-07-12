@@ -114,6 +114,37 @@ inline UnknownCandidate makeNaAdjCandidate(const std::string& surface, size_t st
   return cand;
 }
 
+/**
+ * @brief Derive a conjugated i-adjective variant by trimming trailing kana off
+ *        an existing candidate.
+ *
+ * Spins the renyokei/katt/ke conjugation forms out of a full adjective surface
+ * for MeCab-compatible splits (良くない → 良く + ない, 美しかった → 美しかっ + た).
+ * The variant keeps the source lemma/origin/confidence, drops @p char_trim
+ * trailing characters (all such tails are 3-byte kana), applies @p cost_bonus on
+ * top of the source cost, and carries the connection-form @p epos. Callers keep
+ * their own endsWith() guard and may override the cost afterward (e.g. the
+ * ke-form dictionary-adjective disambiguation).
+ */
+inline UnknownCandidate makeTrimmedAdjVariant(const UnknownCandidate& cand, size_t char_trim, float cost_bonus,
+                                              core::ExtendedPOS epos, [[maybe_unused]] const char* pattern) {
+  UnknownCandidate var;
+  var.surface = cand.surface.substr(0, cand.surface.size() - char_trim * core::kJapaneseCharBytes);
+  var.start = cand.start;
+  var.end = cand.end - char_trim;
+  var.pos = core::PartOfSpeech::Adjective;
+  var.lemma = cand.lemma;
+  var.cost = cand.cost + cost_bonus;
+  var.has_suffix = true;
+  var.extended_pos = epos;
+#ifdef SUZUME_DEBUG_INFO
+  var.origin = cand.origin;
+  var.confidence = cand.confidence;
+  var.pattern = pattern;
+#endif
+  return var;
+}
+
 // Normalize prolonged sound marks (ー) to vowels based on preceding character
 // e.g., すごーい → すごおい, やばーい → やばあい
 // Also handles consecutive marks: すごーーい → すごおおい
@@ -850,59 +881,20 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     // Check if surface ends with くない (negative form)
     if (utf8::endsWith(cand.surface, "くない")) {
       // Generate ku-form variant: 良くない → 良く
-      UnknownCandidate ku_cand;
-      ku_cand.surface = cand.surface.substr(0, cand.surface.size() - 6);  // Remove ない (2 chars)
-      ku_cand.start = cand.start;
-      ku_cand.end = cand.end - 2;  // 2 characters (ない)
-      ku_cand.pos = core::PartOfSpeech::Adjective;
-      ku_cand.lemma = cand.lemma;  // Same lemma (良い)
-      ku_cand.cost = cand.cost + candidate::kAdjKuSplitBonus;
-      ku_cand.has_suffix = true;                              // This is a conjugated form
-      ku_cand.extended_pos = core::ExtendedPOS::AdjRenyokei;  // For bigram: AdjRenyokei→AuxNegativeNai
-#ifdef SUZUME_DEBUG_INFO
-      ku_cand.origin = cand.origin;
-      ku_cand.confidence = cand.confidence;
-      ku_cand.pattern = "i_adjective_ku_nai";
-#endif
-      ku_neg_candidates.push_back(ku_cand);
+      ku_neg_candidates.push_back(makeTrimmedAdjVariant(cand, 2, candidate::kAdjKuSplitBonus,
+                                                        core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_nai"));
     }
     // Check if surface ends with くなかった (negative past full form)
     else if (utf8::endsWith(cand.surface, "くなかった")) {
       // Generate ku-form variant: 良くなかった → 良く
-      UnknownCandidate ku_cand;
-      ku_cand.surface = cand.surface.substr(0, cand.surface.size() - 12);  // Remove なかった (4 chars)
-      ku_cand.start = cand.start;
-      ku_cand.end = cand.end - 4;  // 4 characters (なかった)
-      ku_cand.pos = core::PartOfSpeech::Adjective;
-      ku_cand.lemma = cand.lemma;  // Same lemma (良い)
-      ku_cand.cost = cand.cost + candidate::kAdjKuSplitBonus;
-      ku_cand.has_suffix = true;                              // This is a conjugated form
-      ku_cand.extended_pos = core::ExtendedPOS::AdjRenyokei;  // For bigram: AdjRenyokei→AuxNegativeNai
-#ifdef SUZUME_DEBUG_INFO
-      ku_cand.origin = cand.origin;
-      ku_cand.confidence = cand.confidence;
-      ku_cand.pattern = "i_adjective_ku_nakatta";
-#endif
-      ku_neg_candidates.push_back(ku_cand);
+      ku_neg_candidates.push_back(makeTrimmedAdjVariant(cand, 4, candidate::kAdjKuSplitBonus,
+                                                        core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_nakatta"));
     }
     // Check if surface ends with くなかっ (negative past before た)
     else if (utf8::endsWith(cand.surface, "くなかっ")) {
       // Generate ku-form variant: 良くなかっ → 良く
-      UnknownCandidate ku_cand;
-      ku_cand.surface = cand.surface.substr(0, cand.surface.size() - 9);  // Remove なかっ (3 chars)
-      ku_cand.start = cand.start;
-      ku_cand.end = cand.end - 3;  // 3 characters (なかっ)
-      ku_cand.pos = core::PartOfSpeech::Adjective;
-      ku_cand.lemma = cand.lemma;  // Same lemma (良い)
-      ku_cand.cost = cand.cost + candidate::kAdjKuSplitBonus;
-      ku_cand.has_suffix = true;                              // This is a conjugated form
-      ku_cand.extended_pos = core::ExtendedPOS::AdjRenyokei;  // For bigram: AdjRenyokei→AuxNegativeNai
-#ifdef SUZUME_DEBUG_INFO
-      ku_cand.origin = cand.origin;
-      ku_cand.confidence = cand.confidence;
-      ku_cand.pattern = "i_adjective_ku_nakatt";
-#endif
-      ku_neg_candidates.push_back(ku_cand);
+      ku_neg_candidates.push_back(makeTrimmedAdjVariant(cand, 3, candidate::kAdjKuSplitBonus,
+                                                        core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_nakatt"));
     }
   }
 
@@ -921,21 +913,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     // Check if surface ends with くて (te-form)
     if (utf8::endsWith(cand.surface, "くて")) {
       // Generate ku-form variant: ウザくて → ウザく
-      UnknownCandidate ku_cand;
-      ku_cand.surface = cand.surface.substr(0, cand.surface.size() - 3);  // Remove て (1 char = 3 bytes)
-      ku_cand.start = cand.start;
-      ku_cand.end = cand.end - 1;  // 1 character (て)
-      ku_cand.pos = core::PartOfSpeech::Adjective;
-      ku_cand.lemma = cand.lemma;  // Same lemma (ウザい)
-      ku_cand.cost = cand.cost + candidate::kAdjKuSplitBonus;
-      ku_cand.has_suffix = true;                              // This is a conjugated form
-      ku_cand.extended_pos = core::ExtendedPOS::AdjRenyokei;  // For bigram: AdjRenyokei→ParticleConj
-#ifdef SUZUME_DEBUG_INFO
-      ku_cand.origin = cand.origin;
-      ku_cand.confidence = cand.confidence;
-      ku_cand.pattern = "i_adjective_ku_te";
-#endif
-      ku_te_candidates.push_back(ku_cand);
+      ku_te_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKuSplitBonus,
+                                                       core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_te"));
     }
   }
   // Add all ku-te-form candidates
@@ -950,22 +929,9 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   for (const auto& cand : candidates) {
     // Check if surface ends with かった (i-adjective past form)
     if (utf8::endsWith(cand.surface, "かった")) {
-      // Generate katt-form variant: 美しかった → 美しかっ
-      UnknownCandidate katt_cand;
-      katt_cand.surface = cand.surface.substr(0, cand.surface.size() - core::kJapaneseCharBytes);  // Remove た
-      katt_cand.start = cand.start;
-      katt_cand.end = cand.end - 1;  // 1 character (た)
-      katt_cand.pos = core::PartOfSpeech::Adjective;
-      katt_cand.lemma = cand.lemma;  // Same lemma (美しい, etc.)
-      katt_cand.cost = cand.cost + candidate::kAdjKattSplitBonus;
-      katt_cand.has_suffix = true;                          // This is a conjugated form (連用タ接続)
-      katt_cand.extended_pos = core::ExtendedPOS::AdjKatt;  // For bigram: AdjKatt→AuxTenseTa
-#ifdef SUZUME_DEBUG_INFO
-      katt_cand.origin = cand.origin;
-      katt_cand.confidence = cand.confidence;
-      katt_cand.pattern = "i_adjective_katt";
-#endif
-      katt_form_candidates.push_back(katt_cand);
+      // Generate katt-form variant: 美しかった → 美しかっ (連用タ接続; AdjKatt→AuxTenseTa)
+      katt_form_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKattSplitBonus,
+                                                           core::ExtendedPOS::AdjKatt, "i_adjective_katt"));
     }
   }
 
@@ -981,14 +947,9 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   for (const auto& cand : candidates) {
     // Check if surface ends with ければ (i-adjective conditional form)
     if (utf8::endsWith(cand.surface, "ければ")) {
-      // Generate ke-form variant: 美しければ → 美しけれ
-      UnknownCandidate ke_cand;
-      ke_cand.surface = cand.surface.substr(0, cand.surface.size() - core::kJapaneseCharBytes);  // Remove ば
-      ke_cand.start = cand.start;
-      ke_cand.end = cand.end - 1;  // 1 character (ば)
-      ke_cand.pos = core::PartOfSpeech::Adjective;
-      ke_cand.lemma = cand.lemma;  // Same lemma (美しい, etc.)
-      ke_cand.cost = cand.cost + candidate::kAdjKeSplitBonus;
+      // Generate ke-form variant: 美しければ → 美しけれ (仮定形; AdjKeForm→ParticleConj)
+      auto ke_cand = makeTrimmedAdjVariant(cand, 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm,
+                                           "i_adjective_kere");
       // Disambiguate 〜ければ against the homographic ichidan verb 仮定形
       // (高ければ=高い vs 受ければ=受ける). For an all-kanji stem, inflection alone
       // produces a plausible fake ichidan (高ける). When the i-adjective base is a
@@ -997,13 +958,6 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
       if (dict_manager != nullptr && isAdjectiveInDictionary(dict_manager, cand.lemma)) {
         ke_cand.cost = candidate::verb_cost::kStrongBonus;  // -0.8, beats fake verb paths
       }
-      ke_cand.has_suffix = true;                            // This is a conjugated form (仮定形)
-      ke_cand.extended_pos = core::ExtendedPOS::AdjKeForm;  // For bigram: AdjKeForm→ParticleConj
-#ifdef SUZUME_DEBUG_INFO
-      ke_cand.origin = cand.origin;
-      ke_cand.confidence = cand.confidence;
-      ke_cand.pattern = "i_adjective_kere";
-#endif
       ke_form_candidates.push_back(ke_cand);
     }
   }
@@ -1552,61 +1506,22 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
     // Check if surface ends with くない
     if (utf8::endsWith(cand.surface, "くない")) {
       // Generate ku-form variant: しんどくない → しんどく
-      UnknownCandidate ku_cand;
-      ku_cand.surface = cand.surface.substr(0, cand.surface.size() - core::kTwoJapaneseCharBytes);  // Remove ない
-      ku_cand.start = cand.start;
-      ku_cand.end = cand.end - 2;  // 2 characters (ない)
-      ku_cand.pos = core::PartOfSpeech::Adjective;
-      ku_cand.lemma = cand.lemma;  // Same lemma (しんどい)
-      ku_cand.cost = cand.cost + candidate::kAdjKuSplitBonusWeak;
-      ku_cand.has_suffix = true;                              // This is a conjugated form
-      ku_cand.extended_pos = core::ExtendedPOS::AdjRenyokei;  // For bigram: AdjRenyokei→AuxNegativeNai
-#ifdef SUZUME_DEBUG_INFO
-      ku_cand.origin = cand.origin;
-      ku_cand.confidence = cand.confidence;
-      ku_cand.pattern = "i_adjective_hira_ku";
-#endif
-      ku_form_candidates.push_back(ku_cand);
+      ku_form_candidates.push_back(makeTrimmedAdjVariant(cand, 2, candidate::kAdjKuSplitBonusWeak,
+                                                         core::ExtendedPOS::AdjRenyokei, "i_adjective_hira_ku"));
     }
     // Also check for くなかった pattern (negative past)
     // E.g., 良くなかった → 良く + なかった
     else if (utf8::endsWith(cand.surface, "くなかった")) {
       // Generate ku-form variant: 良くなかった → 良く
-      UnknownCandidate ku_cand;
-      ku_cand.surface = cand.surface.substr(0, cand.surface.size() - 12);  // Remove なかった (4 chars = 12 bytes)
-      ku_cand.start = cand.start;
-      ku_cand.end = cand.end - 4;  // 4 characters (なかった)
-      ku_cand.pos = core::PartOfSpeech::Adjective;
-      ku_cand.lemma = cand.lemma;  // Same lemma (良い)
-      ku_cand.cost = cand.cost + candidate::kAdjKuSplitBonusWeak;
-      ku_cand.has_suffix = true;                              // This is a conjugated form
-      ku_cand.extended_pos = core::ExtendedPOS::AdjRenyokei;  // For bigram: AdjRenyokei→AuxNegativeNai
-#ifdef SUZUME_DEBUG_INFO
-      ku_cand.origin = cand.origin;
-      ku_cand.confidence = cand.confidence;
-      ku_cand.pattern = "i_adjective_ku_nakatta";
-#endif
-      ku_form_candidates.push_back(ku_cand);
+      ku_form_candidates.push_back(makeTrimmedAdjVariant(cand, 4, candidate::kAdjKuSplitBonusWeak,
+                                                         core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_nakatta"));
     }
     // Also check for くなかっ pattern (negative past before た)
     // E.g., 良くなかっ → 良く + なかっ
     else if (utf8::endsWith(cand.surface, "くなかっ")) {
       // Generate ku-form variant: 良くなかっ → 良く
-      UnknownCandidate ku_cand;
-      ku_cand.surface = cand.surface.substr(0, cand.surface.size() - 9);  // Remove なかっ (3 chars = 9 bytes)
-      ku_cand.start = cand.start;
-      ku_cand.end = cand.end - 3;  // 3 characters (なかっ)
-      ku_cand.pos = core::PartOfSpeech::Adjective;
-      ku_cand.lemma = cand.lemma;  // Same lemma (良い)
-      ku_cand.cost = cand.cost + candidate::kAdjKuSplitBonusWeak;
-      ku_cand.has_suffix = true;                              // This is a conjugated form
-      ku_cand.extended_pos = core::ExtendedPOS::AdjRenyokei;  // For bigram: AdjRenyokei→AuxNegativeNai
-#ifdef SUZUME_DEBUG_INFO
-      ku_cand.origin = cand.origin;
-      ku_cand.confidence = cand.confidence;
-      ku_cand.pattern = "i_adjective_ku_nakatt";
-#endif
-      ku_form_candidates.push_back(ku_cand);
+      ku_form_candidates.push_back(makeTrimmedAdjVariant(cand, 3, candidate::kAdjKuSplitBonusWeak,
+                                                         core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_nakatt"));
     }
   }
 
@@ -1627,22 +1542,9 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
       if (utf8::endsWith(cand.surface, "んかった")) {
         continue;
       }
-      // Generate katt-form variant: よかった → よかっ
-      UnknownCandidate katt_cand;
-      katt_cand.surface = cand.surface.substr(0, cand.surface.size() - core::kJapaneseCharBytes);  // Remove た
-      katt_cand.start = cand.start;
-      katt_cand.end = cand.end - 1;  // 1 character (た)
-      katt_cand.pos = core::PartOfSpeech::Adjective;
-      katt_cand.lemma = cand.lemma;                                // Same lemma (よい, 寒い, etc.)
-      katt_cand.cost = cand.cost + candidate::kAdjKattSplitBonus;  // Lower cost to prefer split (MeCab compat)
-      katt_cand.has_suffix = true;                                 // This is a conjugated form (連用タ接続)
-      katt_cand.extended_pos = core::ExtendedPOS::AdjKatt;         // For bigram: AdjKatt→AuxTenseTa
-#ifdef SUZUME_DEBUG_INFO
-      katt_cand.origin = cand.origin;
-      katt_cand.confidence = cand.confidence;
-      katt_cand.pattern = "i_adjective_hira_katt";
-#endif
-      katt_form_candidates.push_back(katt_cand);
+      // Generate katt-form variant: よかった → よかっ (連用タ接続; AdjKatt→AuxTenseTa)
+      katt_form_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKattSplitBonus,
+                                                           core::ExtendedPOS::AdjKatt, "i_adjective_hira_katt"));
     }
   }
 
@@ -1658,22 +1560,9 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   for (const auto& cand : candidates) {
     // Check if surface ends with ければ (i-adjective conditional form)
     if (utf8::endsWith(cand.surface, "ければ")) {
-      // Generate ke-form variant: よければ → よけれ
-      UnknownCandidate ke_cand;
-      ke_cand.surface = cand.surface.substr(0, cand.surface.size() - core::kJapaneseCharBytes);  // Remove ば
-      ke_cand.start = cand.start;
-      ke_cand.end = cand.end - 1;  // 1 character (ば)
-      ke_cand.pos = core::PartOfSpeech::Adjective;
-      ke_cand.lemma = cand.lemma;                              // Same lemma (よい, etc.)
-      ke_cand.cost = cand.cost + candidate::kAdjKeSplitBonus;  // Slightly lower cost to prefer split
-      ke_cand.has_suffix = true;                               // This is a conjugated form (仮定形)
-      ke_cand.extended_pos = core::ExtendedPOS::AdjKeForm;     // For bigram: AdjKeForm→ParticleConj
-#ifdef SUZUME_DEBUG_INFO
-      ke_cand.origin = cand.origin;
-      ke_cand.confidence = cand.confidence;
-      ke_cand.pattern = "i_adjective_hira_kere";
-#endif
-      ke_form_candidates.push_back(ke_cand);
+      // Generate ke-form variant: よければ → よけれ (仮定形; AdjKeForm→ParticleConj)
+      ke_form_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKeSplitBonus,
+                                                         core::ExtendedPOS::AdjKeForm, "i_adjective_hira_kere"));
     }
   }
 
@@ -1860,21 +1749,8 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   std::vector<UnknownCandidate> katt_form_candidates;
   for (const auto& cand : candidates) {
     if (utf8::endsWith(cand.surface, "かった")) {
-      UnknownCandidate katt_cand;
-      katt_cand.surface = cand.surface.substr(0, cand.surface.size() - core::kJapaneseCharBytes);
-      katt_cand.start = cand.start;
-      katt_cand.end = cand.end - 1;
-      katt_cand.pos = core::PartOfSpeech::Adjective;
-      katt_cand.lemma = cand.lemma;
-      katt_cand.cost = cand.cost + candidate::kAdjKattSplitBonus;
-      katt_cand.has_suffix = true;
-      katt_cand.extended_pos = core::ExtendedPOS::AdjKatt;
-#ifdef SUZUME_DEBUG_INFO
-      katt_cand.origin = cand.origin;
-      katt_cand.confidence = cand.confidence;
-      katt_cand.pattern = "i_adjective_kata_katt";
-#endif
-      katt_form_candidates.push_back(katt_cand);
+      katt_form_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKattSplitBonus,
+                                                           core::ExtendedPOS::AdjKatt, "i_adjective_kata_katt"));
     }
   }
   for (auto& var : katt_form_candidates) {
@@ -1886,21 +1762,9 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   std::vector<UnknownCandidate> ku_te_candidates;
   for (const auto& cand : candidates) {
     if (utf8::endsWith(cand.surface, "くて")) {
-      UnknownCandidate ku_cand;
-      ku_cand.surface = cand.surface.substr(0, cand.surface.size() - 3);  // Remove て (1 char = 3 bytes)
-      ku_cand.start = cand.start;
-      ku_cand.end = cand.end - 1;  // 1 character (て)
-      ku_cand.pos = core::PartOfSpeech::Adjective;
-      ku_cand.lemma = cand.lemma;
-      ku_cand.cost = cand.cost + candidate::kAdjKuSplitBonus;
-      ku_cand.has_suffix = true;
-      ku_cand.extended_pos = core::ExtendedPOS::AdjRenyokei;  // For bigram: AdjRenyokei→ParticleConj
-#ifdef SUZUME_DEBUG_INFO
-      ku_cand.origin = cand.origin;
-      ku_cand.confidence = cand.confidence;
-      ku_cand.pattern = "i_adjective_kata_ku_te";
-#endif
-      ku_te_candidates.push_back(ku_cand);
+      // AdjRenyokei→ParticleConj
+      ku_te_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKuSplitBonus,
+                                                       core::ExtendedPOS::AdjRenyokei, "i_adjective_kata_ku_te"));
     }
   }
   for (auto& var : ku_te_candidates) {
@@ -1912,21 +1776,9 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   std::vector<UnknownCandidate> ku_nai_candidates;
   for (const auto& cand : candidates) {
     if (utf8::endsWith(cand.surface, "くない")) {
-      UnknownCandidate ku_cand;
-      ku_cand.surface = cand.surface.substr(0, cand.surface.size() - core::kTwoJapaneseCharBytes);  // Remove ない
-      ku_cand.start = cand.start;
-      ku_cand.end = cand.end - 2;  // 2 characters (ない)
-      ku_cand.pos = core::PartOfSpeech::Adjective;
-      ku_cand.lemma = cand.lemma;
-      ku_cand.cost = cand.cost + candidate::kAdjKuSplitBonusWeak;
-      ku_cand.has_suffix = true;
-      ku_cand.extended_pos = core::ExtendedPOS::AdjRenyokei;  // For bigram: AdjRenyokei→AuxNegativeNai
-#ifdef SUZUME_DEBUG_INFO
-      ku_cand.origin = cand.origin;
-      ku_cand.confidence = cand.confidence;
-      ku_cand.pattern = "i_adjective_kata_ku_nai";
-#endif
-      ku_nai_candidates.push_back(ku_cand);
+      // AdjRenyokei→AuxNegativeNai
+      ku_nai_candidates.push_back(makeTrimmedAdjVariant(cand, 2, candidate::kAdjKuSplitBonusWeak,
+                                                        core::ExtendedPOS::AdjRenyokei, "i_adjective_kata_ku_nai"));
     }
   }
   for (auto& var : ku_nai_candidates) {
@@ -1938,21 +1790,8 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   std::vector<UnknownCandidate> ke_form_candidates;
   for (const auto& cand : candidates) {
     if (utf8::endsWith(cand.surface, "ければ")) {
-      UnknownCandidate ke_cand;
-      ke_cand.surface = cand.surface.substr(0, cand.surface.size() - core::kJapaneseCharBytes);
-      ke_cand.start = cand.start;
-      ke_cand.end = cand.end - 1;
-      ke_cand.pos = core::PartOfSpeech::Adjective;
-      ke_cand.lemma = cand.lemma;
-      ke_cand.cost = cand.cost + candidate::kAdjKeSplitBonus;
-      ke_cand.has_suffix = true;
-      ke_cand.extended_pos = core::ExtendedPOS::AdjKeForm;
-#ifdef SUZUME_DEBUG_INFO
-      ke_cand.origin = cand.origin;
-      ke_cand.confidence = cand.confidence;
-      ke_cand.pattern = "i_adjective_kata_kere";
-#endif
-      ke_form_candidates.push_back(ke_cand);
+      ke_form_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKeSplitBonus,
+                                                         core::ExtendedPOS::AdjKeForm, "i_adjective_kata_kere"));
     }
   }
   for (auto& var : ke_form_candidates) {
