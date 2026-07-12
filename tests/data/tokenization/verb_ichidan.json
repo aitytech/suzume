@@ -1095,10 +1095,6 @@
       "input": "聞こえてくる"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "Ichidan shuushikei: 捨てる+わけ (not compound noun 捨てるわけ)",
       "expected": [
         {
@@ -1133,39 +1129,7 @@
         }
       ],
       "id": "ichidan_shuushikei_suteruwake",
-      "input": "捨てるわけにはいかぬ",
-      "suzume_expected": [
-        {
-          "lemma": "捨る",
-          "pos": "Verb",
-          "surface": "捨てる"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "いく",
-          "pos": "Verb",
-          "surface": "いか"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ぬ"
-        }
-      ]
+      "input": "捨てるわけにはいかぬ"
     },
     {
       "description": "Ichidan verb renyokei + desiderative たい should not be recognized as i-adjective",

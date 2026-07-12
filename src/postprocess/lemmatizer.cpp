@@ -686,16 +686,19 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
     return morpheme.lemma;
   }
 
-  // A verb tagged 終止形/連体形 is already in its dictionary form, so its lemma is
-  // the surface itself. Skip the re-derivation below, whose ている-contraction rules
-  // (kVerbEndings "てる"→"る") would otherwise corrupt genuine ichidan base forms
-  // ending in てる — 立てる→立る, 捨てる→捨る, 組み立てる→組み立る. Those contraction
-  // rules only need to fire on tokens the tokenizer keeps whole as contractions, but
-  // real contractions (見てる) are always split (見+てる), never left as a 終止形 verb.
+  // An ichidan verb in 終止形/連体形 whose surface ends in てる (立てる, 捨てる, 組み立てる)
+  // is already its own dictionary form, so its lemma IS the surface. Return it directly,
+  // overriding any lemma the candidate edge may have mis-derived (verb_candidates gives
+  // 立てる the bogus ichidan base 立る) and skipping the re-derivation below, whose
+  // ている-contraction rule (kVerbEndings "てる"→"る") would otherwise corrupt these to
+  // 立る/捨る/組み立る. Real ている-contractions (見てる) never reach here — the tokenizer
+  // always splits them (見+てる) — so no whole 終止形 てる-verb is a contraction. Scoped to
+  // てる (not all base verbs) so genuine re-derivations stay intact, e.g. potential
+  // バズれる→バズる. A dictionary entry with its own distinct lemma is returned above.
   if (morpheme.pos == core::PartOfSpeech::Verb &&
       (morpheme.extended_pos == core::ExtendedPOS::VerbShuushikei ||
        morpheme.extended_pos == core::ExtendedPOS::VerbRentaikei) &&
-      (morpheme.lemma.empty() || morpheme.lemma == morpheme.surface)) {
+      utf8::endsWith(morpheme.surface, "てる")) {
     return std::string(morpheme.surface);
   }
 
@@ -1004,6 +1007,18 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
     // 2. Lemma equals surface AND it's a conjugated form (not dictionary form)
     //    Dictionary forms end with: る, う, く, ぐ, す, つ, ぬ, ぶ, む (verbs), い (adjectives)
     bool needs_lemmatization = morpheme.lemma.empty();
+    // A 終止形/連体形 てる-ending ichidan verb is its own dictionary form, so its lemma must be
+    // the surface. When a candidate edge attached a mis-derived lemma — e.g. 立てる carrying
+    // the ichidan base 立る from verb_candidates — the empty/equals-surface tests below leave
+    // it untouched (neither empty nor equal), preserving the wrong lemma. Force
+    // re-lemmatization so the てる gate in lemmatize() restores the surface; a genuine
+    // dictionary lemma is still protected there by the is_from_dictionary short-circuit.
+    if (!needs_lemmatization && morpheme.pos == core::PartOfSpeech::Verb && morpheme.lemma != morpheme.surface &&
+        utf8::endsWith(morpheme.surface, "てる") &&
+        (morpheme.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+         morpheme.extended_pos == core::ExtendedPOS::VerbRentaikei)) {
+      needs_lemmatization = true;
+    }
     if (!needs_lemmatization && morpheme.lemma == morpheme.surface) {
       if (morpheme.pos == core::PartOfSpeech::Verb) {
         // Check if surface looks like a dictionary form verb

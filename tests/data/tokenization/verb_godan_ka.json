@@ -683,10 +683,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "にはいかない: は+いか split (not はいか as false verb)",
       "expected": [
         {
@@ -721,39 +717,7 @@
         }
       ],
       "id": "niha_ikanai_split",
-      "input": "捨てるわけにはいかない",
-      "suzume_expected": [
-        {
-          "lemma": "捨る",
-          "pos": "Verb",
-          "surface": "捨てる"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "いく",
-          "pos": "Verb",
-          "surface": "いか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "捨てるわけにはいかない"
     }
   ],
   "description": "Godan Ka-row verbs (五段カ行動詞) - verbs ending in く",
