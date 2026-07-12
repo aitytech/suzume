@@ -992,14 +992,8 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   // E.g., 下さい is dict verb (くださる), not compound noun
   {
     std::string full_surface = extractSubstring(codepoints, start_pos, hiragana_end);
-    if (dict_manager != nullptr && !full_surface.empty()) {
-      auto entries = dict_manager->lookup(full_surface, 0);
-      for (const auto& entry : entries) {
-        if (entry.entry != nullptr && entry.entry->surface == full_surface &&
-            entry.entry->pos == core::PartOfSpeech::Verb) {
-          return candidates;  // Skip - dict verb should win
-        }
-      }
+    if (verb_helpers::isVerbInDictionary(dict_manager, full_surface)) {
+      return candidates;  // Skip - dict verb should win
     }
   }
 
@@ -1194,14 +1188,16 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
 
   // Generate 2-character compound (prefix + single kanji) ONLY when:
   // - Not followed by more kanji, OR
-  // - Followed by 中 (which becomes 3-char compound below)
+  // - Followed by a temporal-span suffix kanji 中/末, which binds to the
+  //   prefix-formed temporal noun (今月|中, 今月|末) rather than extending the
+  //   kanji compound.
   // This prevents invalid splits like 翌営|業日 (should be 翌営業日)
   bool followed_by_kanji =
       (start_pos + 2 < char_types.size() && char_types[start_pos + 2] == normalize::CharType::Kanji);
-  bool followed_by_chuu =
-      (followed_by_kanji && start_pos + 2 < codepoints.size() && codepoints[start_pos + 2] == U'中');
+  bool followed_by_span_suffix = (followed_by_kanji && start_pos + 2 < codepoints.size() &&
+                                  normalize::isTemporalSpanSuffixKanji(codepoints[start_pos + 2]));
 
-  if (!followed_by_kanji || followed_by_chuu) {
+  if (!followed_by_kanji || followed_by_span_suffix) {
     std::string surface = extractSubstring(codepoints, start_pos, start_pos + 2);
     if (!surface.empty()) {
       // Strong bonus to prefer compound over split

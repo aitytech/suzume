@@ -2272,6 +2272,65 @@
         "business",
         "compound_particle"
       ]
+    },
+    {
+      "description": "来月+末 splits (temporal prefix + 末 span suffix)",
+      "expected": [
+        {
+          "lemma": "来月",
+          "pos": "Noun",
+          "surface": "来月"
+        },
+        {
+          "lemma": "末",
+          "pos": "Noun",
+          "surface": "末"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "納品",
+          "pos": "Noun",
+          "surface": "納品"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "raigetsu_matsu_split",
+      "input": "来月末までに納品する"
+    },
+    {
+      "description": "Lexicalized 月末 stays one token (no temporal prefix; discriminator guard)",
+      "expected": [
+        {
+          "lemma": "月末",
+          "pos": "Noun",
+          "surface": "月末"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "締め切る",
+          "pos": "Verb",
+          "surface": "締め切る"
+        }
+      ],
+      "id": "getsumatsu_merged",
+      "input": "月末に締め切る"
     }
   ],
   "version": "1.0"

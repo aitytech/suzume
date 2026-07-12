@@ -268,6 +268,20 @@ bool isDurationSuffixKanji(char32_t code_point);
 bool isTemporalRelationSuffixKanji(char32_t code_point);
 
 /**
+ * @brief Check if a codepoint is a temporal-span suffix kanji ({中, 末})
+ *
+ * Closed class of bound suffixes marking a span within, or the end of, a named
+ * time period: 今月中 ("during this month"), 今月末 ("end of this month"). They
+ * attach to a prefix-formed temporal noun (今/来/先/昨/翌/毎 + 月/週/年…) rather
+ * than extending the kanji compound, so 今月末 tokenizes as 今月 + 末, mirroring
+ * the existing 今月 + 中 behavior.
+ *
+ * @param code_point Unicode codepoint
+ * @return true if codepoint is a temporal-span suffix kanji
+ */
+bool isTemporalSpanSuffixKanji(char32_t code_point);
+
+/**
  * @brief Check if a codepoint is a numeral (Arabic or kanji)
  *
  * Covers half-width and full-width Arabic digits plus the basic kanji
