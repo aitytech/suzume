@@ -116,11 +116,12 @@ std::vector<StemForm> Conjugator::generateKuruStems(const std::string& stem, con
   std::vector<StemForm> forms;
   VerbType type = VerbType::Kuru;
 
-  // 来る: き (連用形), こ (未然形)
+  // 来る: き (連用形), こ (未然形), こい (命令形)
   forms.push_back({base_form, type, base_form, conn::kVerbBase});
   forms.push_back({stem + "き", type, base_form, conn::kVerbRenyokei});
   forms.push_back({stem + "き", type, base_form, conn::kVerbOnbinkei});
   forms.push_back({stem + "こ", type, base_form, conn::kVerbMizenkei});
+  forms.push_back({stem + "い", type, base_form, conn::kVerbMeireikei});
 
   return forms;
 }

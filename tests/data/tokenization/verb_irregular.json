@@ -2093,6 +2093,40 @@
       ],
       "id": "hyougen_dekiru",
       "input": "表現できる"
+    },
+    {
+      "description": "Kuru (カ変) imperative 来い lemmatizes to 来る, not an i-adjective",
+      "expected": [
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来い"
+        }
+      ],
+      "id": "i",
+      "input": "来い"
+    },
+    {
+      "description": "Kuru imperative 来い after directional へ",
+      "expected": [
+        {
+          "lemma": "こっち",
+          "pos": "Pronoun",
+          "surface": "こっち"
+        },
+        {
+          "lemma": "へ",
+          "pos": "Particle",
+          "surface": "へ"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来い"
+        }
+      ],
+      "id": "kottchihe_i",
+      "input": "こっちへ来い"
     }
   ],
   "description": "Irregular verbs (する、くる)",

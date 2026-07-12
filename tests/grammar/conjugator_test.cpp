@@ -307,7 +307,7 @@ TEST_F(ConjugatorTest, KuruStems) {
   // getStem("くる", Kuru) removes last char る, stem = "く"
   // generateKuruStems prepends stem to each suffix
   auto forms = conjugator_.generateStems("くる", VerbType::Kuru);
-  ASSERT_EQ(forms.size(), 4u);
+  ASSERT_EQ(forms.size(), 5u);
 
   auto* base = findByRightId(forms, conn::kVerbBase);
   ASSERT_NE(base, nullptr);
@@ -325,11 +325,15 @@ TEST_F(ConjugatorTest, KuruStems) {
   auto* mizenkei = findByRightId(forms, conn::kVerbMizenkei);
   ASSERT_NE(mizenkei, nullptr);
   EXPECT_EQ(mizenkei->surface, "くこ");
+
+  auto* meireikei = findByRightId(forms, conn::kVerbMeireikei);
+  ASSERT_NE(meireikei, nullptr);
+  EXPECT_EQ(meireikei->surface, "くい");
 }
 
 TEST_F(ConjugatorTest, KuruKanjiBaseSuffixUsesDisplayBase) {
   auto forms = conjugator_.generateStems("来る", VerbType::Kuru);
-  ASSERT_EQ(forms.size(), 4u);
+  ASSERT_EQ(forms.size(), 5u);
 
   for (const auto& form : forms) {
     EXPECT_EQ(form.base_suffix, "来る");

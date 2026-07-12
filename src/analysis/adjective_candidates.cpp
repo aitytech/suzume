@@ -454,8 +454,14 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     if (!is_verb_context) {
       std::string surface = extractSubstring(codepoints, start_pos, adj_end);
       bool is_dict_noun = verb_helpers::isNounInDictionary(dict_manager, surface);
+      // A surface that is itself a dictionary verb conjugation (来い = 来る 命令形,
+      // or a godan-wa renyokei like 買い) is not an adjective — 来 is a verb stem,
+      // unlike a genuine single-kanji adjective stem (濃い, 良い).
+      bool is_dict_verb = verb_helpers::hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Verb);
       if (is_dict_noun) {
         SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE] \"" << surface << "\" is dict NOUN, skipping ADJ candidate\n");
+      } else if (is_dict_verb) {
+        SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE] \"" << surface << "\" is dict VERB, skipping ADJ candidate\n");
       } else {
         // Use moderate cost to compete with verb candidates (尊う has cost ~0.5)
         // Lower cost wins, so 0.35 should beat verb candidates
