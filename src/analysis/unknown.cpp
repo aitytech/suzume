@@ -656,9 +656,14 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
   // the bracket and never shatters the run. Left bracket: a boundary particle
   // preceded by a non-hiragana content word (私は…, 彼は…). Right bracket: a boundary
   // particle. の is excluded on both sides (genitive marks a compound boundary).
-  if (start_type == normalize::CharType::Hiragana && start_pos >= 2 &&
-      isLeftBoundaryParticle(codepoints[start_pos - 1]) &&
-      char_types[start_pos - 2] != normalize::CharType::Hiragana &&
+  // Left bracket: a boundary particle after a non-hiragana content word (私は…), or a
+  // clause boundary — sentence start / a preceding symbol (punctuation). の is not a
+  // left boundary here (genitive marks a compound boundary).
+  bool left_particle_bracket = start_pos >= 2 && isLeftBoundaryParticle(codepoints[start_pos - 1]) &&
+                               char_types[start_pos - 2] != normalize::CharType::Hiragana;
+  bool left_clause_bracket =
+      (start_pos == 0) || (start_pos >= 1 && char_types[start_pos - 1] == normalize::CharType::Symbol);
+  if (start_type == normalize::CharType::Hiragana && (left_particle_bracket || left_clause_bracket) &&
       !isImpossibleHiraganaStart(codepoints[start_pos])) {
     bool particle_initial =
         (codepoints[start_pos] == U'は' || codepoints[start_pos] == U'に' || codepoints[start_pos] == U'へ');
@@ -679,7 +684,16 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
       ++scan;
     }
     size_t len = scan - start_pos;
-    if (len >= 2 && scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan])) {
+    // Right bracket: a boundary particle, or a clause boundary (sentence end / symbol).
+    bool right_particle = scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan]);
+    bool right_clause = (scan == codepoints.size()) || (scan < codepoints.size() &&
+                                                        char_types[scan] == normalize::CharType::Symbol);
+    // Whole-run candidate is safe at length 2 only when both sides are real particles
+    // (私は|はし|を). A run leaning on any clause boundary needs length >= 3, so short
+    // isolated hiragana — usually adverbs/particles (もう, すぐ, ため) — are not promoted.
+    bool fully_particle_bracketed = left_particle_bracket && right_particle;
+    size_t min_len = fully_particle_bracketed ? 2 : 3;
+    if (len >= min_len && (right_particle || right_clause)) {
       std::string surface = extractSubstring(codepoints, start_pos, scan);
       float noun_cost = getCostForType(start_type, len) + candidate::kPostParticleNounPenalty;
       auto noun_cand = makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun, noun_cost,

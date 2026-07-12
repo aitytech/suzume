@@ -1938,6 +1938,30 @@
       ],
       "id": "numeric_unit_generic_katakana_course",
       "input": "3コース"
+    },
+    {
+      "description": "Isolated hiragana noun kept whole via clause-bracket promotion",
+      "expected": [
+        {
+          "lemma": "こども",
+          "pos": "Noun",
+          "surface": "こども"
+        }
+      ],
+      "id": "kodomo",
+      "input": "こども"
+    },
+    {
+      "description": "Isolated hiragana noun (卵) kept whole; MeCab splits たま/ご, suzume keeps one search unit",
+      "expected": [
+        {
+          "lemma": "たまご",
+          "pos": "Noun",
+          "surface": "たまご"
+        }
+      ],
+      "id": "tamago",
+      "input": "たまご"
     }
   ],
   "description": "General nouns",
