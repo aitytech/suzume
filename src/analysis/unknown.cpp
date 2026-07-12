@@ -15,6 +15,7 @@
 
 #include "adjective_candidates.h"
 #include "analysis/scorer_constants.h"
+#include "candidate_constants.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "normalize/char_type.h"
@@ -25,6 +26,48 @@
 #include "verb_candidates.h"
 
 namespace suzume::analysis {
+
+namespace {
+
+// Particle that can immediately PRECEDE a content noun (私は…, 本を…, 犬が…). Used as
+// the left bracket of a post-particle noun promotion.
+bool isLeftBoundaryParticle(char32_t code_point) {
+  switch (code_point) {
+    case U'は':
+    case U'が':
+    case U'を':
+    case U'に':
+    case U'で':
+    case U'へ':
+    case U'と':
+    case U'も':
+    case U'の':
+      return true;
+    default:
+      return false;
+  }
+}
+
+// Particle that can immediately FOLLOW a content noun (…を, …が, …は). Used as the
+// right bracket. の and end-of-input are excluded: の frequently follows a verb
+// nominalization (食べるの) and would over-promote.
+bool isRightBoundaryParticle(char32_t code_point) {
+  switch (code_point) {
+    case U'を':
+    case U'が':
+    case U'は':
+    case U'も':
+    case U'に':
+    case U'で':
+    case U'へ':
+    case U'と':
+      return true;
+    default:
+      return false;
+  }
+}
+
+}  // namespace
 
 UnknownWordGenerator::UnknownWordGenerator(const UnknownOptions& options,
                                            const dictionary::DictionaryManager* dict_manager)
@@ -542,6 +585,26 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
       }
 #endif
       candidates.push_back(cand);
+
+      // Post-particle noun promotion: a non-particle-initial hiragana run bracketed by
+      // genuine particles (私は|たばこ|を) is more likely a content noun than the merged
+      // particle-blob (はたばこ), which is exempt from the exceeds_dict_length penalty and
+      // otherwise wins. Emit a PARALLEL Noun candidate (has_suffix → same exemption) for a
+      // short (2-4 char) run whose left neighbor is a particle preceded by a non-hiragana
+      // content word (or sentence start) and whose right neighbor is a particle. Keeps the
+      // Other candidate too; a real dictionary/verb reading of the span still outranks it.
+      if (start_type == normalize::CharType::Hiragana && !started_with_particle && len >= 2 && len <= 4 &&
+          start_pos >= 2 && isLeftBoundaryParticle(codepoints[start_pos - 1]) &&
+          char_types[start_pos - 2] != normalize::CharType::Hiragana && candidate_end < codepoints.size() &&
+          isRightBoundaryParticle(codepoints[candidate_end])) {
+        float noun_cost = getCostForType(start_type, len) + candidate::kPostParticleNounPenalty;
+        auto noun_cand = makeCandidate(surface, start_pos, candidate_end, core::PartOfSpeech::Noun, noun_cost,
+                                       /*has_suffix=*/true, CandidateOrigin::SameType);
+#ifdef SUZUME_DEBUG_INFO
+        noun_cand.pattern = "post_particle_noun";
+#endif
+        candidates.push_back(noun_cand);
+      }
 
       // Emit a standalone SUFFIX candidate for plural-honorific 方 when it sits
       // at the tail of a kanji_seq (i.e., preceded by another kanji). Enables

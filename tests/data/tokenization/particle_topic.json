@@ -172,6 +172,70 @@
           "surface": "た"
         }
       ]
+    },
+    {
+      "description": "particle-bracketed hiragana noun promoted over particle-blob (は|たばこ|を)",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "たばこ",
+          "pos": "Noun",
+          "surface": "たばこ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "吸う",
+          "pos": "Verb",
+          "surface": "吸う"
+        }
+      ],
+      "id": "hatabakowo_u",
+      "input": "彼はたばこを吸う"
+    },
+    {
+      "description": "particle-start hiragana noun はさみ stays whole after topic は",
+      "expected": [
+        {
+          "lemma": "私",
+          "pos": "Pronoun",
+          "surface": "私"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "はさみ",
+          "pos": "Noun",
+          "surface": "はさみ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "hahasamiwo_u",
+      "input": "私ははさみを使う"
     }
   ],
   "description": "particle_topic tests",

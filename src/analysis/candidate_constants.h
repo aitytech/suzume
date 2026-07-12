@@ -81,6 +81,14 @@ constexpr float kCounterRelationSplitBonus = -1.2F;
 // E.g., 勉強+する, 説明+する
 constexpr float kNounVerbSplitBonus = -1.0F;
 
+// Post-particle noun promotion penalty (は|たばこ|を: たばこ as a Noun)
+// A non-particle-initial hiragana run bracketed by genuine particles (私は…を) is
+// far more likely a content noun than the merged particle-blob (はたばこ). Emit a
+// parallel Noun candidate exempt from the exceeds_dict_length penalty; this small
+// positive cost keeps it just below a real dictionary/verb reading so it wins only
+// when nothing better spans the bracket, never shattering (た|ば|こ).
+constexpr float kPostParticleNounPenalty = 0.4F;
+
 // Verified verb in split bonus
 // Applied when verb component is verified in dictionary
 constexpr float kVerifiedVerbBonus = -0.8F;
