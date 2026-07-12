@@ -23,11 +23,23 @@ Suzume tokenizes Japanese text using character patterns, connection rules, and a
 | **POS Tagging** | Yes | Yes |
 | **Lemmatization** | Yes | Yes |
 
+### How the output differs
+
+The difference isn't accuracy — it's the *unit*. Suzume splits text into search-friendly tokens (merging compounds, numbers, and dates) rather than minimal morphemes:
+
+```
+Input:            データベースで3人が検索する
+Dictionary-based: データ / ベース / で / 3 / 人 / が / 検索 / する
+Suzume:           データベース / で / 3人 / が / 検索 / する
+```
+
+See [Tokenization Differences](https://suzume.libraz.net/docs/mecab-comparison) for the full list of intentional design differences and known limitations.
+
 ### Trade-offs
 
 - **Smaller footprint** — No large dictionary download; suitable for frontend, edge, and serverless environments
 - **Handles unknown words** — Feature-based analysis doesn't fail on words missing from a dictionary
-- **Less accurate on edge cases** — Traditional dictionary-based analyzers will be more accurate for specialized vocabulary and complex linguistic analysis
+- **Compounds stay merged** — Without a full dictionary, Suzume cannot split kanji/katakana compounds into their parts (e.g. `東京都庁前` stays one token); register specific split points via the user dictionary
 
 ## Installation
 
@@ -124,6 +136,7 @@ make test     # Run tests
 - [API Reference](https://suzume.libraz.net/docs/api) — API documentation
 - [User Dictionary](https://suzume.libraz.net/docs/user-dictionary) — Adding custom words
 - [How It Works](https://suzume.libraz.net/docs/how-it-works) — Technical details
+- [Tokenization Differences](https://suzume.libraz.net/docs/mecab-comparison) — How Suzume differs from dictionary-based analyzers
 
 ## License
 
