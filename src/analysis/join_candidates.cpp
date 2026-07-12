@@ -11,6 +11,7 @@
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/inflection.h"
+#include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
 #include "tokenizer_utils.h"
@@ -248,13 +249,12 @@ inline std::string generateKanjiRenyokei(std::string_view kanji_surface, std::st
   // Find where kanji ends and okurigana begins
   // Kanji surface should have same kanji prefix as reading suffix is okurigana
   size_t kanji_bytes = 0;
-  for (size_t i = 0; i < kanji_surface.size(); i += 3) {
-    auto byte = static_cast<unsigned char>(kanji_surface[i]);
-    if (byte >= 0xE4 && byte <= 0xE9) {  // CJK kanji range
-      kanji_bytes = i + 3;
-    } else {
-      break;
-    }
+  for (size_t scan_pos = 0; scan_pos < kanji_surface.size();) {
+    size_t next_pos = scan_pos;
+    if (!normalize::isKanjiCodepoint(normalize::decodeUtf8(kanji_surface, next_pos)))
+      break;  // stop at okurigana
+    kanji_bytes = next_pos;
+    scan_pos = next_pos;
   }
   if (kanji_bytes == 0)
     return "";
