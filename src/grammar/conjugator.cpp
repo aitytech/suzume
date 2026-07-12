@@ -12,39 +12,6 @@ namespace suzume::grammar {
 
 using normalize::encodeUtf8;
 
-namespace {
-
-// Godan row data
-struct GodanRow {
-  char32_t base_char;  // 終止形: く
-  char32_t a_row;      // 未然形: か
-  char32_t i_row;      // 連用形: き
-  std::string onbin;   // 音便: い, っ, ん
-  bool voiced;         // た→だ
-};
-
-const GodanRow* getGodanRow(VerbType type) {
-  static const GodanRow kRows[] = {
-      {U'く', U'か', U'き', "い", false},  // GodanKa
-      {U'ぐ', U'が', U'ぎ', "い", true},   // GodanGa
-      {U'す', U'さ', U'し', "", false},    // GodanSa
-      {U'つ', U'た', U'ち', "っ", false},  // GodanTa
-      {U'ぬ', U'な', U'に', "ん", true},   // GodanNa
-      {U'ぶ', U'ば', U'び', "ん", true},   // GodanBa
-      {U'む', U'ま', U'み', "ん", true},   // GodanMa
-      {U'る', U'ら', U'り', "っ", false},  // GodanRa
-      {U'う', U'わ', U'い', "っ", false},  // GodanWa
-  };
-
-  int idx = static_cast<int>(type) - static_cast<int>(VerbType::GodanKa);
-  if (idx < 0 || idx >= 9) {
-    return nullptr;
-  }
-  return &kRows[idx];
-}
-
-}  // namespace
-
 Conjugator::Conjugator() = default;
 
 std::string Conjugator::getStem(const std::string& base_form, VerbType type) const {
@@ -93,12 +60,12 @@ std::vector<StemForm> Conjugator::generateStems(const std::string& base_form, Ve
 std::vector<StemForm> Conjugator::generateGodanStems(const std::string& stem, const std::string& base_form,
                                                      VerbType type) const {
   std::vector<StemForm> forms;
-  const auto* row = getGodanRow(type);
+  const auto* row = Conjugation::getGodanRow(type);
   if (row == nullptr) {
     return forms;
   }
 
-  std::string base_suffix = encodeUtf8(row->base_char);
+  std::string base_suffix = encodeUtf8(row->base_vowel);
   std::string a_suffix = encodeUtf8(row->a_row);
   std::string i_suffix = encodeUtf8(row->i_row);
 
@@ -142,7 +109,9 @@ std::vector<StemForm> Conjugator::generateSuruStems(const std::string& stem, con
   std::vector<StemForm> forms;
   VerbType type = VerbType::Suru;
 
-  // する: し (連用形・音便形), さ (未然形), せ (未然形/可能)
+  // する stems produced here: base form, し (連用形・音便形), さ (未然形).
+  // The し/せ mizenkei variants (しない, せず) are supplied by the Conjugation
+  // analyzer on the tokenizer path; this generator feeds dictionary inspection.
   forms.push_back({base_form, type, "する", conn::kVerbBase});
   forms.push_back({stem + "し", type, "する", conn::kVerbRenyokei});
   forms.push_back({stem + "し", type, "する", conn::kVerbOnbinkei});

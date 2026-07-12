@@ -568,13 +568,11 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         float conf_threshold = is_i_row_ichidan ? verb_opts.confidence_ichidan_dict : verb_opts.confidence_standard;
         if (cand.stem == expected_stem && cand.confidence > conf_threshold &&
             cand.verb_type != grammar::VerbType::IAdjective) {
-          // Check if this candidate's base_form exists in dictionary
-          // For っ-onbin patterns (GodanRa/Ta/Wa/Ka), use type-aware lookup to avoid
-          // mismatches like 経る(GodanRa) matching 経る(Ichidan) when 経つ(GodanTa) is correct.
-          // For other patterns (Suru verbs, Ichidan, etc.), use simple lookup.
-          bool is_onbin_type = vh::isSokuonbinGodanType(cand.verb_type);
-          bool in_dict = is_onbin_type ? vh::isVerbInDictionary(dict_manager, cand.base_form)
-                                       : vh::isVerbInDictionary(dict_manager, cand.base_form);
+          // Check whether this candidate's base form exists in the dictionary as a
+          // verb. The lookup is by surface, so disambiguation among っ-onbin types
+          // (GodanRa/Ta/Wa/Ka) comes from each candidate carrying its own base_form
+          // (e.g. 経る vs 経つ), not from a type-aware lookup.
+          bool in_dict = vh::isVerbInDictionary(dict_manager, cand.base_form);
 
           if (in_dict) {
             // Prefer dictionary-verified candidates

@@ -418,7 +418,7 @@ constexpr float kPenaltySuruOnbinStemInvalid = scale::kStrong + scale::kTrivial;
 // Suru verb negative (〜ない) directly attached to kanji stem
 // True suru negatives use し: 勉強しない, not *勉強ない
 // Pattern like 問題ない should be NOUN + ADJ, not suru-verb negative
-constexpr float kPenaltySuruDirectNai = scale::kProhibitive;  // 3.5F
+constexpr float kPenaltySuruDirectNai = scale::kProhibitive;  // 0.80F
 
 // =============================================================================
 // Stem Exception Lists (Valid or Invalid Patterns)

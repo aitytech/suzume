@@ -23,9 +23,11 @@ bool endsWithVerbNegative(std::string_view surface) {
     return true;
   }
 
-  // Ichidan verb + ない (e-row/i-row stem ending + ない)
-  // 食べない → べない, 見ない → みない, etc.
-  // Note: These patterns can appear when a kanji is followed by hiragana
+  // Ichidan verb + ない (e-row stem ending + ない)
+  // 食べない → べない, 眺めない → めない, etc.
+  // Only e-row endings are matched; i-row Ichidan negatives (見ない → みない)
+  // are not covered here. These patterns can appear when a kanji is followed
+  // by hiragana.
   if (utf8::equalsAny(last9, {"べない", "めない", "せない", "てない", "ねない", "けない", "げない", "れない"})) {
     return true;
   }
