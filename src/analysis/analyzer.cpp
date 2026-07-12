@@ -1,6 +1,7 @@
 #include "analysis/analyzer.h"
 
 #include <algorithm>
+#include <functional>
 
 #include "core/debug.h"
 #include "normalize/char_type.h"
@@ -60,6 +61,65 @@ inline size_t countChars(std::string_view text, size_t from, size_t to) {
     }
   }
   return count;
+}
+
+// Split long text into sentence-level chunks and analyze each one.
+//
+// Scans forward up to kMaxChunkBytes looking for the last sentence boundary; if
+// none is found, falls back to a UTF-8 character boundary (and finally to
+// scan_end) so progress is always made. Each chunk is handed to `process` along
+// with its character offset (base_offset plus the characters consumed so far),
+// and the results are concatenated in order.
+//
+// Non-templated by design (std::function) so the compiled body is shared by all
+// call sites rather than instantiated per lambda type.
+std::vector<core::Morpheme> chunkBySentenceBoundary(
+    std::string_view text, size_t base_offset,
+    const std::function<std::vector<core::Morpheme>(std::string_view chunk, size_t chunk_char_offset)>& process) {
+  std::vector<core::Morpheme> result;
+  size_t pos = 0;
+  size_t char_pos = 0;
+
+  while (pos < text.size()) {
+    // Scan forward up to kMaxChunkBytes looking for last sentence boundary
+    size_t scan_end = std::min(pos + kMaxChunkBytes, text.size());
+    size_t best_break = 0;  // byte position of best break point (after boundary char)
+
+    for (size_t i = pos; i < scan_end;) {
+      size_t blen = sentenceBoundaryLen(text, i);
+      if (blen > 0) {
+        best_break = i + blen;
+        i += blen;
+      } else {
+        ++i;
+      }
+    }
+
+    size_t chunk_end;
+    if (scan_end >= text.size()) {
+      // Last chunk: take everything
+      chunk_end = text.size();
+    } else if (best_break > pos) {
+      // Split at the last sentence boundary within range
+      chunk_end = best_break;
+    } else {
+      // No sentence boundary found: split at UTF-8 character boundary
+      chunk_end = findUtf8Boundary(text, scan_end);
+      if (chunk_end <= pos) {
+        chunk_end = scan_end;  // Safety: advance at least to scan_end
+      }
+    }
+
+    auto morphemes = process(text.substr(pos, chunk_end - pos), base_offset + char_pos);
+    for (auto& m : morphemes) {
+      result.push_back(std::move(m));
+    }
+
+    char_pos += countChars(text, pos, chunk_end);
+    pos = chunk_end;
+  }
+
+  return result;
 }
 
 }  // namespace
@@ -132,46 +192,9 @@ core::Expected<std::vector<core::Morpheme>, core::Error> Analyzer::analyze(std::
 
   // Long text: split at sentence boundaries before pretokenizer
   // This prevents pretokenizer from scanning 100MB+ in one pass.
-  std::vector<core::Morpheme> result;
-  size_t pos = 0;
-  size_t char_pos = 0;
-
-  while (pos < norm_text.size()) {
-    size_t scan_end = std::min(pos + kMaxChunkBytes, norm_text.size());
-    size_t best_break = 0;
-
-    for (size_t i = pos; i < scan_end;) {
-      size_t blen = sentenceBoundaryLen(norm_text, i);
-      if (blen > 0) {
-        best_break = i + blen;
-        i += blen;
-      } else {
-        ++i;
-      }
-    }
-
-    size_t chunk_end;
-    if (scan_end >= norm_text.size()) {
-      chunk_end = norm_text.size();
-    } else if (best_break > pos) {
-      chunk_end = best_break;
-    } else {
-      chunk_end = findUtf8Boundary(norm_text, scan_end);
-      if (chunk_end <= pos) {
-        chunk_end = scan_end;
-      }
-    }
-
-    auto morphemes = analyzeWithPretokenizer(norm_text.substr(pos, chunk_end - pos), char_pos);
-    for (auto& m : morphemes) {
-      result.push_back(std::move(m));
-    }
-
-    char_pos += countChars(norm_text, pos, chunk_end);
-    pos = chunk_end;
-  }
-
-  return result;
+  return chunkBySentenceBoundary(norm_text, 0, [this](std::string_view chunk, size_t chunk_char_offset) {
+    return analyzeWithPretokenizer(chunk, chunk_char_offset);
+  });
 }
 
 std::vector<core::Morpheme> Analyzer::analyzeWithPretokenizer(std::string_view text, size_t base_char_offset) const {
@@ -275,50 +298,9 @@ std::vector<core::Morpheme> Analyzer::analyzeSpan(std::string_view text, size_t 
   }
 
   // Long text: split at sentence boundaries to bound memory usage
-  std::vector<core::Morpheme> result;
-  size_t pos = 0;
-  size_t char_pos = 0;
-
-  while (pos < text.size()) {
-    // Scan forward up to kMaxChunkBytes looking for last sentence boundary
-    size_t scan_end = std::min(pos + kMaxChunkBytes, text.size());
-    size_t best_break = 0;  // byte position of best break point (after boundary char)
-
-    for (size_t i = pos; i < scan_end;) {
-      size_t blen = sentenceBoundaryLen(text, i);
-      if (blen > 0) {
-        best_break = i + blen;
-        i += blen;
-      } else {
-        ++i;
-      }
-    }
-
-    size_t chunk_end;
-    if (scan_end >= text.size()) {
-      // Last chunk: take everything
-      chunk_end = text.size();
-    } else if (best_break > pos) {
-      // Split at the last sentence boundary within range
-      chunk_end = best_break;
-    } else {
-      // No sentence boundary found: split at UTF-8 character boundary
-      chunk_end = findUtf8Boundary(text, scan_end);
-      if (chunk_end <= pos) {
-        chunk_end = scan_end;  // Safety: advance at least to scan_end
-      }
-    }
-
-    auto morphemes = analyzeChunk(text.substr(pos, chunk_end - pos), char_offset + char_pos);
-    for (auto& m : morphemes) {
-      result.push_back(std::move(m));
-    }
-
-    char_pos += countChars(text, pos, chunk_end);
-    pos = chunk_end;
-  }
-
-  return result;
+  return chunkBySentenceBoundary(text, char_offset, [this](std::string_view chunk, size_t chunk_char_offset) {
+    return analyzeChunk(chunk, chunk_char_offset);
+  });
 }
 
 std::vector<core::Morpheme> Analyzer::analyzeChunk(std::string_view text, size_t char_offset) const {
@@ -359,44 +341,11 @@ std::vector<core::Morpheme> Analyzer::analyzeChunk(std::string_view text, size_t
   core::ViterbiResult vresult = viterbi_.solve(lattice, scorer_);
 
   // Convert to morphemes with offset adjustment
-  std::vector<core::Morpheme> morphemes;
-  morphemes.reserve(vresult.path.size());
-
-  for (size_t edge_id : vresult.path) {
-    const core::LatticeEdge& edge = lattice.getEdge(edge_id);
-
-    core::Morpheme morpheme;
-    morpheme.surface = std::string(edge.surface);
-    morpheme.pos = edge.pos;
-    morpheme.extended_pos = edge.extended_pos;
-    morpheme.start = char_offset + edge.start;
-    morpheme.end = char_offset + edge.end;
-    morpheme.start_pos = char_offset + edge.start;
-    morpheme.end_pos = char_offset + edge.end;
-
-    if (!edge.lemma.empty()) {
-      morpheme.lemma = std::string(edge.lemma);
-    } else {
-      morpheme.lemma = morpheme.surface;
-    }
-
-    morpheme.features.is_dictionary = edge.fromDictionary();
-    morpheme.features.is_user_dict = edge.fromUserDict();
-    morpheme.features.is_formal_noun = edge.isFormalNoun();
-    morpheme.features.is_low_info = edge.isLowInfo();
-    morpheme.features.score = edge.cost;
-    morpheme.is_from_dictionary = edge.fromDictionary();
-    morpheme.is_unknown = edge.isUnknown();
-    morpheme.conj_type = edge.conj_type;
-
-    morphemes.push_back(std::move(morpheme));
-  }
-
-  return morphemes;
+  return pathToMorphemes(vresult, lattice, char_offset);
 }
 
 std::vector<core::Morpheme> Analyzer::pathToMorphemes(const core::ViterbiResult& result, const core::Lattice& lattice,
-                                                      std::string_view /*original_text*/) {
+                                                      size_t base_char_offset) {
   std::vector<core::Morpheme> morphemes;
   morphemes.reserve(result.path.size());
 
@@ -407,10 +356,10 @@ std::vector<core::Morpheme> Analyzer::pathToMorphemes(const core::ViterbiResult&
     morpheme.surface = std::string(edge.surface);
     morpheme.pos = edge.pos;
     morpheme.extended_pos = edge.extended_pos;
-    morpheme.start = edge.start;
-    morpheme.end = edge.end;
-    morpheme.start_pos = edge.start;
-    morpheme.end_pos = edge.end;
+    morpheme.start = base_char_offset + edge.start;
+    morpheme.end = base_char_offset + edge.end;
+    morpheme.start_pos = base_char_offset + edge.start;
+    morpheme.end_pos = base_char_offset + edge.end;
 
     if (!edge.lemma.empty()) {
       morpheme.lemma = std::string(edge.lemma);
@@ -485,7 +434,7 @@ std::vector<core::Morpheme> Analyzer::analyzeDebug(std::string_view text, core::
   core::ViterbiResult vresult = viterbi_.solve(lattice, scorer_);
 
   // Convert to morphemes
-  auto morphemes = pathToMorphemes(vresult, lattice, text);
+  auto morphemes = pathToMorphemes(vresult, lattice);
 
   // Move lattice to output if requested (after analysis is done)
   if (out_lattice != nullptr) {

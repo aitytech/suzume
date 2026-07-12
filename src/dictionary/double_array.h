@@ -128,6 +128,27 @@ class DoubleArray {
 
   std::vector<Unit> units_;
 
+  /**
+   * @brief Read the leaf value reachable from a node via the null terminator
+   * @param node_pos Current node position
+   * @param out_value Set to the leaf value when a leaf is present
+   * @return true if the node has a leaf child, false otherwise
+   *
+   * @note Honors the DA03 `check == node_pos + 1` child sentinel.
+   */
+  bool tryLeaf(size_t node_pos, int32_t& out_value) const;
+
+  /**
+   * @brief Transition from a node on a single byte
+   * @param node_pos Current node position
+   * @param chr Transition byte
+   * @param next_pos Set to the child position when the transition exists
+   * @return true if a valid child exists, false otherwise
+   *
+   * @note Honors the DA03 `check == node_pos + 1` child sentinel.
+   */
+  bool transition(size_t node_pos, uint8_t chr, size_t& next_pos) const;
+
   // Build helpers
   struct BuildState {
     std::vector<Unit> units;

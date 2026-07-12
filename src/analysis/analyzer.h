@@ -124,10 +124,15 @@ class Analyzer {
   std::vector<core::Morpheme> analyzeChunk(std::string_view text, size_t char_offset) const;
 
   /**
-   * @brief Convert Viterbi result to morphemes
+   * @brief Convert a Viterbi path into morphemes.
+   *
+   * @param result Viterbi result whose path edges are converted.
+   * @param lattice Lattice the edge ids index into.
+   * @param base_char_offset Character offset added to every edge start/end so
+   *        chunked analysis reports positions in the full-text coordinate space.
    */
   static std::vector<core::Morpheme> pathToMorphemes(const core::ViterbiResult& result, const core::Lattice& lattice,
-                                                     std::string_view original_text);
+                                                     size_t base_char_offset = 0);
 };
 
 }  // namespace suzume::analysis

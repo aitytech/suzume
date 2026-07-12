@@ -10,8 +10,6 @@
 
 namespace suzume::grammar {
 
-using normalize::encodeUtf8;
-
 Conjugator::Conjugator() = default;
 
 std::string Conjugator::getStem(const std::string& base_form, VerbType type) const {
@@ -31,20 +29,13 @@ std::vector<StemForm> Conjugator::generateStems(const std::string& base_form, Ve
     base_suffix = std::string(utf8::lastChar(base_form));
   }
 
+  if (isGodanVerbType(type)) {
+    return generateGodanStems(stem, base_form, type);
+  }
+
   switch (type) {
     case VerbType::Ichidan:
       return generateIchidanStems(stem, base_form);
-
-    case VerbType::GodanKa:
-    case VerbType::GodanGa:
-    case VerbType::GodanSa:
-    case VerbType::GodanTa:
-    case VerbType::GodanNa:
-    case VerbType::GodanBa:
-    case VerbType::GodanMa:
-    case VerbType::GodanRa:
-    case VerbType::GodanWa:
-      return generateGodanStems(stem, base_form, type);
 
     case VerbType::Suru:
       return generateSuruStems(stem, base_form);
@@ -65,9 +56,10 @@ std::vector<StemForm> Conjugator::generateGodanStems(const std::string& stem, co
     return forms;
   }
 
-  std::string base_suffix = encodeUtf8(row->base_vowel);
-  std::string a_suffix = encodeUtf8(row->a_row);
-  std::string i_suffix = encodeUtf8(row->i_row);
+  const GodanVowels vowels = encodeGodanVowels(*row);
+  const std::string& base_suffix = vowels.base;
+  const std::string& a_suffix = vowels.a;
+  const std::string& i_suffix = vowels.i;
 
   // 終止形 (Base)
   forms.push_back({base_form, type, base_suffix, conn::kVerbBase});

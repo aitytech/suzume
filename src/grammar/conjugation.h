@@ -166,6 +166,38 @@ class Conjugation {
 };
 
 /**
+ * @brief UTF-8 encoded vowel-row surfaces for a Godan verb row.
+ *
+ * Holds the terminal (base) and あ/い/え/お-row kana of a Godan row as UTF-8
+ * strings, ready for stem concatenation.
+ */
+struct GodanVowels {
+  std::string base;  // 終止形母音: く, ぐ, す...
+  std::string a;     // あ段 (未然形): か, が, さ...
+  std::string i;     // い段 (連用形): き, ぎ, し...
+  std::string e;     // え段 (仮定/命令形): け, げ, せ...
+  std::string o;     // お段 (意志形): こ, ご, そ...
+};
+
+/**
+ * @brief Encode a Godan row's vowel codepoints into UTF-8 strings.
+ * @param row Godan row data
+ * @return GodanVowels with base/a/i/e/o surfaces
+ */
+GodanVowels encodeGodanVowels(const Conjugation::GodanRow& row);
+
+/**
+ * @brief Whether a verb type is one of the nine Godan conjugation rows.
+ *
+ * Derived from Conjugation::getGodanRow() so the set stays in sync with the
+ * single Godan-row source of truth.
+ *
+ * @param type Verb type to test
+ * @return True if @p type has a Godan row
+ */
+bool isGodanVerbType(VerbType type);
+
+/**
  * @brief Convert ConjugationType to VerbType
  */
 inline VerbType conjTypeToVerbType(dictionary::ConjugationType conj_type) {

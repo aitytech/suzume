@@ -10,6 +10,7 @@
 #include "core/debug.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
+#include "normalize/utf8.h"
 
 namespace suzume::dictionary {
 
@@ -20,29 +21,6 @@ constexpr uint8_t kFlagFormalNoun = 0x01;
 constexpr uint8_t kFlagInterjection = 0x08;
 constexpr uint8_t kFlagProperFamily = 0x10;
 constexpr uint8_t kFlagProperGiven = 0x20;
-
-/**
- * @brief Count UTF-8 characters in a byte range
- * @param text Full text
- * @param start_byte Start byte position
- * @param byte_length Length in bytes
- * @return Number of UTF-8 characters
- */
-size_t countUtf8Chars(std::string_view text, size_t start_byte, size_t byte_length) {
-  size_t char_count = 0;
-  size_t end_byte = start_byte + byte_length;
-
-  for (size_t pos = start_byte; pos < end_byte && pos < text.size();) {
-    auto byte = static_cast<uint8_t>(text[pos]);
-    // Count UTF-8 lead bytes (not continuation bytes 10xxxxxx)
-    if ((byte & 0xC0) != 0x80) {
-      ++char_count;
-    }
-    ++pos;
-  }
-
-  return char_count;
-}
 
 uint8_t posToUint8(core::PartOfSpeech pos) {
   return static_cast<uint8_t>(pos);
@@ -417,7 +395,7 @@ std::vector<LookupResult> BinaryDictionary::lookup(std::string_view text, size_t
       LookupResult result{};
       result.entry_id = static_cast<uint32_t>(tres.value);
       // Convert byte length from trie to character count
-      result.length = countUtf8Chars(text, start_pos, tres.length);
+      result.length = normalize::utf8Length(text.substr(start_pos, tres.length));
       result.entry = &entries_[tres.value];
       results.push_back(result);
     }

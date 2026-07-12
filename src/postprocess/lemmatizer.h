@@ -80,11 +80,6 @@ class Lemmatizer {
   bool verifyCandidateWithDictionary(const grammar::InflectionCandidate& candidate) const;
 
   /**
-   * @brief Check if string ends with suffix
-   */
-  static bool endsWith(std::string_view str, std::string_view suffix);
-
-  /**
    * @brief Lemmatize verb (fallback)
    */
   static std::string lemmatizeVerb(std::string_view surface);

@@ -197,7 +197,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // Surface pattern: 1 kanji + い (2 chars total)
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&
       edge.extended_pos != core::ExtendedPOS::AdjStem &&
-      edge.surface.size() == 6 &&  // 2 chars (1 kanji + い) = 6 bytes
+      edge.surface.size() == core::kTwoJapaneseCharBytes &&  // 2 chars (1 kanji + い) = 6 bytes
       utf8::endsWith(edge.surface, "い") &&
       grammar::isAllKanji(std::string(edge.surface.substr(0, 3)))) {  // First char is kanji
     cost += cost::kModerateBonus;                                     // -0.5 to beat godan-wa verb candidate
@@ -337,8 +337,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       (edge.pos == core::PartOfSpeech::Adjective || edge.pos == core::PartOfSpeech::Noun ||
        edge.pos == core::PartOfSpeech::Adverb) &&
       edge.surface.size() >= 6 &&  // At least 2 chars (prefix + something)
-      (edge.surface.compare(0, 3, "非") == 0 || edge.surface.compare(0, 3, "不") == 0 ||
-       edge.surface.compare(0, 3, "無") == 0 || edge.surface.compare(0, 3, "未") == 0)) {
+      sc::startsWithNegationPrefix(edge.surface)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Base -3.0 for 2-char entries, -0.5 per additional char
     cost += lengthScaledBonus(sc::kBonusNegationPrefixBase, char_len, 2, sc::kBonusNegationPrefixPerChar);
@@ -385,7 +384,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // These are L1 closed-class morphemes that should beat false verb candidates
   // E.g., 血まみれ should be 血+まみれ(SUFFIX), not 血まみ(VERB)+れ(AUX)
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Suffix && grammar::isPureHiragana(edge.surface) &&
-      edge.surface.size() >= 9) {  // 3+ chars (9+ bytes)
+      edge.surface.size() >= core::kThreeJapaneseCharBytes) {  // 3+ chars (9+ bytes)
     cost += sc::kBonusLongSuffix;
   }
 
@@ -393,7 +392,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // These compete with L1 function word entries (DET, AUX) which have lower category costs.
   // Dictionary registration indicates standalone verb usage should take precedence.
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      edge.surface.length() <= 6) {  // ≤2 chars
+      edge.surface.length() <= core::kTwoJapaneseCharBytes) {  // ≤2 chars
     cost += sc::kBonusShortHiraganaVerb;
   }
 
@@ -404,7 +403,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // legitimate verb renyokei like 行き, 読み, 書き
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb &&
       edge.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      edge.surface.length() >= 9) {  // ≥3 chars (at least 2 kanji + 1 hiragana)
+      edge.surface.length() >= core::kThreeJapaneseCharBytes) {  // ≥3 chars (at least 2 kanji + 1 hiragana)
     // Count kanji characters
     size_t kanji_count = 0;
     for (char32_t cp : suzume::normalize::utf8::decode(edge.surface)) {
@@ -425,10 +424,11 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // as they are more likely to be legitimate verbs written in hiragana
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb &&
       edge.extended_pos == core::ExtendedPOS::VerbOnbinkei && grammar::isPureHiragana(edge.surface) &&
-      edge.surface.size() >= 6) {  // 2+ chars (avoid single-char like ん)
+      edge.surface.size() >= core::kTwoJapaneseCharBytes) {  // 2+ chars (avoid single-char like ん)
     // Reduced penalty for short forms (2-4 chars = 6-12 bytes)
     // to allow common hiragana verbs like もらっ, あげっ to compete
-    cost += (edge.surface.size() <= 12) ? sc::kPenaltyHatsuonbinShort : sc::kPenaltyHatsuonbinLong;
+    cost += (edge.surface.size() <= core::kFourJapaneseCharBytes) ? sc::kPenaltyHatsuonbinShort
+                                                                  : sc::kPenaltyHatsuonbinLong;
   }
 
   // Penalty for pure-hiragana verb forms containing "さん" pattern
@@ -443,7 +443,8 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       // Penalize if:
       // 1. さん appears after 0-2 hiragana chars (likely name+さん or just さん)
       // 2. The verb form is short enough to be a misanalysis
-      if (san_pos <= 6 && edge.surface.size() <= 15) {  // 0-2 chars before, up to 5 total
+      if (san_pos <= core::kTwoJapaneseCharBytes &&
+          edge.surface.size() <= core::kFiveJapaneseCharBytes) {  // 0-2 chars before, up to 5 total
         cost += sc::kPenaltySanPatternVerb;
       }
     }
@@ -455,7 +456,8 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // Valid verbs like "につける" don't exist; this is a mis-analysis
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb &&
       edge.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isPureHiragana(edge.surface) &&
-      utf8::startsWith(edge.surface, "に") && edge.surface.size() >= 6 && edge.surface.size() <= 12) {  // 2-4 chars
+      utf8::startsWith(edge.surface, "に") && edge.surface.size() >= core::kTwoJapaneseCharBytes &&
+      edge.surface.size() <= core::kFourJapaneseCharBytes) {  // 2-4 chars
     cost += sc::kPenaltyNiPrefixVerb;
   }
 
@@ -464,7 +466,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // Should be ござい|ませ|ん|でし (aux chain), not ございませんでし (verb)
   // Valid long verbs typically have kanji stems
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      edge.surface.size() >= 18) {  // 6+ hiragana chars (6*3=18 bytes)
+      edge.surface.size() >= core::kSixJapaneseCharBytes) {  // 6+ hiragana chars (6*3=18 bytes)
     cost += sc::kPenaltyVeryLongHiraganaVerb;
   }
 
@@ -473,7 +475,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // Only renyokei: base forms like "づけられる" (from づける) are legitimate
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb &&
       edge.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isPureHiragana(edge.surface) &&
-      edge.surface.size() >= 15) {  // 5+ hiragana chars (5*3=15 bytes)
+      edge.surface.size() >= core::kFiveJapaneseCharBytes) {  // 5+ hiragana chars (5*3=15 bytes)
     cost += sc::kPenaltyVeryLongHiraganaVerb;
   }
 
@@ -494,7 +496,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // The そう ending is typically from そう (様態 auxiliary), not a verb stem
   // Valid verbs ending in そう are rare and usually have kanji stems
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      utf8::endsWith(edge.surface, "そう") && edge.surface.size() >= 9) {  // 3+ chars (at least xそう)
+      utf8::endsWith(edge.surface, "そう") && edge.surface.size() >= core::kThreeJapaneseCharBytes) {  // 3+ chars (at least xそう)
     cost += cost::kRare;
   }
 
@@ -542,7 +544,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   if (edge.pos == core::PartOfSpeech::Verb && edge.extended_pos == core::ExtendedPOS::VerbTeForm &&
       grammar::containsKanji(edge.surface) &&
       (utf8::endsWith(edge.surface, "て") || utf8::endsWith(edge.surface, "で")) &&
-      edge.surface.size() <= 12) {  // Short te-forms (1-2 kanji + て/で)
+      edge.surface.size() <= core::kFourJapaneseCharBytes) {  // Short te-forms (1-2 kanji + て/で)
     cost += cost::kSevere;          // Very strong penalty to overcome negative costs
   }
 
@@ -562,7 +564,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // Dictionary registration indicates compound adjective should take precedence.
   // Pattern: kanji stem + hiragana suffix forming an i-adjective
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&
-      edge.surface.length() >= 12) {  // ≥4 chars (kanji + ひらがな suffix)
+      edge.surface.length() >= core::kFourJapaneseCharBytes) {  // ≥4 chars (kanji + ひらがな suffix)
     // Check if surface contains kanji — compound adjective from dictionary
     // Covers both base form (い) and inflected forms (く, かっ, けれ, etc.)
     if (grammar::containsKanji(edge.surface)) {
@@ -643,8 +645,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // E.g., 読み+すぎる, 書き+すぎた, 食べ+すぎ (MeCab-compatible split)
   // The default VERB→VERB penalty should not apply to auxiliary verbs
   float surface_bonus = 0.0F;
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface.size() >= 6 &&  // "すぎ" is 6 bytes
-      next.surface.compare(0, 6, "すぎ") == 0) {
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::startsWith(next.surface, "すぎ")) {
     surface_bonus = cost::kStrongBonus;
   }
 
@@ -726,8 +727,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // The て→い(AUX)→ただき path incorrectly splits いただき
   // いただく is a humble auxiliary verb that should not be split after て
   if (prev.surface == "て" && prev.extended_pos == core::ExtendedPOS::ParticleConj &&
-      next.surface.size() >= 9 &&  // "いただ" is 9 bytes (3 hiragana × 3 bytes)
-      next.surface.compare(0, 9, "いただ") == 0 && next.pos == core::PartOfSpeech::Verb) {
+      utf8::startsWith(next.surface, "いただ") && next.pos == core::PartOfSpeech::Verb) {
     surface_bonus += cost::kVeryStrongBonus;
   }
 
@@ -756,7 +756,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Verbs ending in らし are rare (探らし from 探る is the main exception)
   // Single-kanji noun + らしい is a common pattern that should be protected
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      prev.surface.size() >= 6 &&  // At least 2 chars (kanji + らし)
+      prev.surface.size() >= core::kTwoJapaneseCharBytes &&  // At least 2 chars (kanji + らし)
       utf8::endsWith(prev.surface, "らし") && next.extended_pos == core::ExtendedPOS::AuxAspectIru) {
     surface_bonus += cost::kAlmostNever;
   }
@@ -766,8 +766,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // E.g., 食べ+させ+られ+た (not 食べ+さ+せ+られ+た)
   // Apply bonus when connecting to AuxCausative with surface starting with させ
   if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbMizenkei) &&
-      next.extended_pos == core::ExtendedPOS::AuxCausative && next.surface.size() >= 6 &&  // "させ" is 6 bytes
-      next.surface.compare(0, 6, "させ") == 0) {
+      next.extended_pos == core::ExtendedPOS::AuxCausative && utf8::startsWith(next.surface, "させ")) {
     surface_bonus += cost::kVeryStrongBonus;
   }
 
@@ -777,7 +776,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Exception: Single-kanji ichidan verb stems should connect directly to させ
   // E.g., 見させる = 見+させる (ichidan 見る), not 見+さ+せる
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::AuxCausative &&
-      next.surface.size() >= 6 && next.surface.compare(0, 6, "させ") == 0) {
+      utf8::startsWith(next.surface, "させ")) {
     // Check if prev is a single-kanji ichidan verb stem (見, 寝, 着, etc.)
     bool is_single_kanji_ichidan = false;
     if (normalize::utf8Length(prev.surface) == 1) {  // Single character (codepoint-aware)
@@ -843,7 +842,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // rejects non-godan a-row like は so 晴れた stays 晴れ+た). This cancels the
   // VerbRenyokei→た bonus for godan passive forms.
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      prev.surface.size() >= 6 &&  // At least 2 chars (Aれ, e.g. かれ)
+      prev.surface.size() >= core::kTwoJapaneseCharBytes &&  // At least 2 chars (Aれ, e.g. かれ)
       utf8::endsWith(prev.surface, "れ") && next.surface == "た" &&
       next.extended_pos == core::ExtendedPOS::AuxTenseTa) {
     // Codepoint immediately before the trailing れ (3 bytes)
@@ -889,7 +888,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   if (prev.pos == core::PartOfSpeech::Verb && prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       prev.fromDictionary() && prev.surface != "で" && !grammar::endsWithARow(prev.surface) &&
       (next.pos == core::PartOfSpeech::Adjective || next.pos == core::PartOfSpeech::Auxiliary) &&
-      (next.surface == "なく" || next.surface == "ない" || next.surface == "なかっ" || next.surface == "なけれ")) {
+      utf8::equalsAny(next.surface, {"なく", "ない", "なかっ", "なけれ"})) {
     surface_bonus += cost::kStrongBonus;
   }
 
@@ -898,8 +897,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // over correct split ば(conditional) + なら(なる mizenkei)
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && prev.surface == "ば" &&
       next.pos == core::PartOfSpeech::Verb &&
-      (next.surface == "なら" || next.surface == "なり" || next.surface == "なる" || next.surface == "なれ" ||
-       next.surface == "なっ")) {
+      utf8::equalsAny(next.surface, {"なら", "なり", "なる", "なれ", "なっ"})) {
     surface_bonus += cost::kStrongBonus;
   }
 
@@ -913,8 +911,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Note: lexicalized forms like 思わず(ADV) are handled by the candidate generator
   // which skips mizenkei_zu generation when verb+ず is in the dictionary.
   if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
-      (next.surface == "ず" || next.surface == "ずに" || next.surface == "ざる" || next.surface == "ざれ" ||
-       next.surface == "ね")) {
+      utf8::equalsAny(next.surface, {"ず", "ずに", "ざる", "ざれ", "ね"})) {
     surface_bonus += cost::kStrongBonus;
   }
 
@@ -974,7 +971,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Only penalize very short verbs (2 chars or less) to avoid affecting なくし, etc.
   // Exception: "い" (いる renyokei) has specific bonus rule below for PART_格→い pattern
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase &&
-      prev.surface.size() <= 3 &&  // Single hiragana char (3 bytes in UTF-8)
+      prev.surface.size() <= core::kJapaneseCharBytes &&  // Single hiragana char (3 bytes in UTF-8)
       next.pos == core::PartOfSpeech::Verb && !next.fromDictionary() && grammar::isPureHiragana(next.surface) &&
       next.surface.size() <= 6 &&  // 2 chars or less (6 bytes in UTF-8)
       next.surface != "い") {      // Exclude い - has specific rule
@@ -1275,8 +1272,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Include VerbRenyokei since 願いい is sometimes assigned as renyokei of 願いう
   if ((prev.extended_pos == core::ExtendedPOS::VerbOnbinkei || prev.extended_pos == core::ExtendedPOS::VerbRenyokei) &&
       next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
-      prev.surface.size() >= 6 &&  // At least 2 hiragana (6 bytes)
-      prev.surface.compare(prev.surface.size() - 6, 6, "いい") == 0) {
+      utf8::endsWith(prev.surface, "いい")) {
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -1362,8 +1358,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // E.g., ございます should be ござい+ます, not ご+ざい+ます
   // The prefix ご is for nouns (ご報告), not for splitting ござる
   if (prev.extended_pos == core::ExtendedPOS::Prefix && prev.surface == "ご" &&
-      next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface.size() >= 6 &&
-      next.surface.compare(0, 6, "ざい") == 0) {
+      next.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::startsWith(next.surface, "ざい")) {
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -1373,8 +1368,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // But AdjStem+すぎ is valid grammar (i-adjective stem + すぎる)
   // Exclude VerbTeForm (すぎて) - should split as すぎ+て
   if (prev.extended_pos == core::ExtendedPOS::AdjStem && next.extended_pos != core::ExtendedPOS::VerbTeForm &&
-      next.surface.size() >= 6 &&  // "すぎ" is 6 bytes
-      next.surface.compare(0, 6, "すぎ") == 0) {
+      utf8::startsWith(next.surface, "すぎ")) {
     // Strong bonus to overcome AdjStem→Verb prohibitive penalty
     surface_bonus += sc::kBonusDoubleVeryStrong;
   }
@@ -1383,8 +1377,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // E.g., シンプル+すぎない, 静か+すぎる (na-adjective + sugiru)
   // NOUN→VERB_連用 has bonus from bigram table, which can beat ADJ_NA path
   // This helps dictionary ADJ_NA entries beat unknown NOUN candidates
-  if (prev.extended_pos == core::ExtendedPOS::AdjNaAdj && next.surface.size() >= 6 &&
-      next.surface.compare(0, 6, "すぎ") == 0) {
+  if (prev.extended_pos == core::ExtendedPOS::AdjNaAdj && utf8::startsWith(next.surface, "すぎ")) {
     surface_bonus += cost::kStrongBonus;
   }
 
@@ -1394,8 +1387,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // because ADJ_語幹→すぎ has a very strong surface bonus (-3.2)
   // Only apply to all-kanji surfaces (not katakana/verb renyokei)
   if (prev.pos == core::PartOfSpeech::Noun && prev.surface.size() >= 6 &&  // 2+ chars (6+ bytes)
-      grammar::isAllKanji(std::string(prev.surface)) && next.surface.size() >= 6 &&
-      next.surface.compare(0, 6, "すぎ") == 0) {
+      grammar::isAllKanji(std::string(prev.surface)) && utf8::startsWith(next.surface, "すぎ")) {
     surface_bonus += sc::kBonusDoubleVeryStrong;
   }
 
@@ -1449,8 +1441,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // never matches this rule)
   if (prev.pos == core::PartOfSpeech::Verb && prev.fromDictionary() && grammar::isPureHiragana(prev.surface) &&
       prev.surface.size() <= 9 &&  // ≤3 hiragana chars (9 bytes)
-      next.extended_pos == core::ExtendedPOS::AuxNegativeNu && next.surface != "ん" && next.surface != "ぬ" &&
-      next.surface != "ざる" && next.surface != "ざれ" && next.surface != "ね") {
+      next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
+      !utf8::equalsAny(next.surface, {"ん", "ぬ", "ざる", "ざれ", "ね"})) {
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -1479,8 +1471,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
        next.extended_pos == core::ExtendedPOS::AuxPotential || next.extended_pos == core::ExtendedPOS::AuxCausative)) {
     // Check if this is single-kanji ichidan + causative させ (should be allowed)
     bool is_ichidan_causative = false;
-    if (next.extended_pos == core::ExtendedPOS::AuxCausative && next.surface.size() >= 6 &&
-        next.surface.compare(0, 6, "させ") == 0) {
+    if (next.extended_pos == core::ExtendedPOS::AuxCausative && utf8::startsWith(next.surface, "させ")) {
       auto codepoints = normalize::toCodepoints(prev.surface);
       if (!codepoints.empty() && verb_helpers::isSingleKanjiIchidan(codepoints[0])) {
         is_ichidan_causative = true;
@@ -1496,8 +1487,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // In "何でもありだな", "もありだ" should be も+あり+だ, not もありする+た
   // This pattern only appears after particles (で in でもあり)
   if (prev.pos == core::PartOfSpeech::Particle && next.pos == core::PartOfSpeech::Verb &&
-      (next.surface == "もあり" || next.surface == "もありだ" || next.surface == "もある" ||
-       next.surface == "もあっ")) {
+      utf8::equalsAny(next.surface, {"もあり", "もありだ", "もある", "もあっ"})) {
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -1649,8 +1639,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // E.g., 不可能 → 不|可能 is wrong (不可能 is a single word)
   // But お|茶, ご|報告 are valid (honorific prefix + noun)
   // Only penalize negation prefixes followed by single kanji
-  if (prev.extended_pos == core::ExtendedPOS::Prefix &&
-      (prev.surface == "非" || prev.surface == "不" || prev.surface == "無" || prev.surface == "未") &&
+  if (prev.extended_pos == core::ExtendedPOS::Prefix && sc::isNegationPrefix(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::Noun && next.surface.size() == 3) {  // Single kanji (3 bytes in UTF-8)
     surface_bonus += cost::kAlmostNever;
   }
@@ -1680,7 +1669,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Total penalty to overcome: ~2.3
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && prev.surface == "で" &&
       next.pos == core::PartOfSpeech::Verb &&
-      (next.surface == "ある" || next.surface == "あっ" || next.surface == "あろ" || next.surface == "あり")) {
+      utf8::equalsAny(next.surface, {"ある", "あっ", "あろ", "あり"})) {
     surface_bonus += sc::kBonusDoubleVeryStrong;  // -3.2 to overcome ~2.3 total penalty
   }
 
@@ -1723,8 +1712,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Godan te-form with で uses onbinkei (飲ん+で, 読ん+で), not renyokei
   // AUX_断定(で) only attaches to nouns/na-adj (静かで, 学生で), not verbs
   // Without this, kanji+り nouns like 夏祭り get falsely parsed as VERB_連用
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface.size() >= 3 &&
-      next.surface.compare(0, 3, "で") == 0) {
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::startsWith(next.surface, "で")) {
     if (next.extended_pos == core::ExtendedPOS::ParticleConj) {
       surface_bonus += cost::kMinor;  // +0.5 to cancel the -0.5 bigram bonus
     } else if (next.extended_pos == core::ExtendedPOS::AuxCopulaDa) {
@@ -1801,7 +1789,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Valid kanji+hiragana た-forms like 食べた are not affected (not pure hiragana)
   if ((prev.pos == core::PartOfSpeech::Noun || prev.pos == core::PartOfSpeech::Pronoun) &&
       next.extended_pos == core::ExtendedPOS::VerbTaForm && !next.fromDictionary() &&
-      grammar::isPureHiragana(next.surface) && next.surface.size() <= 12) {  // 4 chars or less (12 bytes in UTF-8)
+      grammar::isPureHiragana(next.surface) &&
+      next.surface.size() <= core::kFourJapaneseCharBytes) {  // 4 chars or less (12 bytes in UTF-8)
     surface_bonus += cost::kVeryRare;
   }
 

@@ -15,6 +15,10 @@ namespace suzume::grammar {
 
 // Import kana constants for backward compatibility
 // These are now defined in core/kana_constants.h
+using kana::kERow;
+using kana::kERowCount;
+using kana::kIRow;
+using kana::kIRowCount;
 using kana::kMizenkeiCount;
 using kana::kMizenkeiEndings;
 using kana::kOnbinCount;
@@ -96,17 +100,8 @@ bool isPureHiragana(std::string_view stem);
  */
 bool isPureKatakana(std::string_view stem);
 
-// Note: kOnbinEndings, kMizenkeiEndings, kRenyokeiEndings are now
+// Note: kOnbinEndings, kMizenkeiEndings, kRenyokeiEndings, kIRow, kERow are now
 // imported from kana_constants.h via using declarations at the top of this file.
-
-// Full i-row hiragana: み, き, ぎ, し, じ, ち, ぢ, に, び, り, い
-// Includes い for u-verbs (会う→会い), じ/ぢ for ichidan verbs (感じる, etc.)
-extern const char* kIRowEndings[];
-extern const size_t kIRowCount;
-
-// E-row hiragana for Ichidan renyokei: べ, め, せ, け, げ, て, ね, れ, え, で, ぜ, へ, ぺ
-extern const char* kERowEndings[];
-extern const size_t kERowCount;
 
 /**
  * @brief Check if stem ends with i-row hiragana (godan renyokei markers)

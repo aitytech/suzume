@@ -1,5 +1,7 @@
 #include "postprocess/postprocessor.h"
 
+#include <algorithm>
+
 #include "core/debug.h"
 #include "core/utf8_constants.h"
 #include "normalize/char_type.h"
@@ -572,13 +574,8 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(const std::ve
     // Check if next morpheme is ー (or consecutive ーs)
     if (i + 1 < morphemes.size()) {
       const auto& next = morphemes[i + 1];
-      bool next_is_prolonged = true;
-      for (char32_t cp : normalize::toCodepoints(next.surface)) {
-        if (cp != 0x30FC) {  // ー
-          next_is_prolonged = false;
-          break;
-        }
-      }
+      const auto next_cps = normalize::toCodepoints(next.surface);
+      const bool next_is_prolonged = std::all_of(next_cps.begin(), next_cps.end(), normalize::isProlongedSoundMark);
 
       if (next_is_prolonged && !next.surface.empty()) {
         const auto& current = morphemes[i];
@@ -596,13 +593,9 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(const std::ve
           // Skip any additional ー tokens
           size_t skip = i + 2;
           while (skip < morphemes.size()) {
-            bool is_prolonged = true;
-            for (char32_t cp : normalize::toCodepoints(morphemes[skip].surface)) {
-              if (cp != 0x30FC) {
-                is_prolonged = false;
-                break;
-              }
-            }
+            const auto skip_cps = normalize::toCodepoints(morphemes[skip].surface);
+            const bool is_prolonged =
+                std::all_of(skip_cps.begin(), skip_cps.end(), normalize::isProlongedSoundMark);
             if (!is_prolonged)
               break;
             merged.surface += morphemes[skip].surface;

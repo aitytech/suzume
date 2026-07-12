@@ -225,6 +225,42 @@ void DoubleArray::buildRecursive(BuildState& state, const std::vector<std::strin
   }
 }
 
+bool DoubleArray::tryLeaf(size_t node_pos, int32_t& out_value) const {
+  size_t base_val = units_[node_pos].base();
+  size_t leaf_pos = base_val ^ 0;  // XOR with null terminator
+
+  if (leaf_pos >= units_.size()) {
+    return false;
+  }
+
+  if (units_[leaf_pos].check != node_pos + 1) {  // +1: 0 is the "no parent" sentinel
+    return false;
+  }
+
+  if (!units_[leaf_pos].hasLeaf()) {
+    return false;
+  }
+
+  out_value = units_[leaf_pos].value();
+  return true;
+}
+
+bool DoubleArray::transition(size_t node_pos, uint8_t chr, size_t& next_pos) const {
+  size_t base_val = units_[node_pos].base();
+  size_t child_pos = base_val ^ chr;
+
+  if (child_pos >= units_.size()) {
+    return false;
+  }
+
+  if (units_[child_pos].check != node_pos + 1) {  // +1: 0 is the "no parent" sentinel
+    return false;
+  }
+
+  next_pos = child_pos;
+  return true;
+}
+
 int32_t DoubleArray::exactMatch(std::string_view key) const {
   if (units_.empty()) {
     return -1;
@@ -233,38 +269,20 @@ int32_t DoubleArray::exactMatch(std::string_view key) const {
   size_t node_pos = 0;
 
   for (char idx : key) {
-    uint8_t chr = toByte(idx);
-    size_t base_val = units_[node_pos].base();
-    size_t child_pos = base_val ^ chr;
-
-    if (child_pos >= units_.size()) {
+    size_t next_pos = 0;
+    if (!transition(node_pos, toByte(idx), next_pos)) {
       return -1;
     }
-
-    if (units_[child_pos].check != node_pos + 1) {  // +1: 0 is the "no parent" sentinel
-      return -1;
-    }
-
-    node_pos = child_pos;
+    node_pos = next_pos;
   }
 
   // Check for null terminator (leaf)
-  size_t base_val = units_[node_pos].base();
-  size_t leaf_pos = base_val ^ 0;
-
-  if (leaf_pos >= units_.size()) {
+  int32_t value = 0;
+  if (!tryLeaf(node_pos, value)) {
     return -1;
   }
 
-  if (units_[leaf_pos].check != node_pos + 1) {
-    return -1;
-  }
-
-  if (!units_[leaf_pos].hasLeaf()) {
-    return -1;
-  }
-
-  return units_[leaf_pos].value();
+  return value;
 }
 
 std::vector<DoubleArray::Result> DoubleArray::commonPrefixSearch(std::string_view text, size_t start,
@@ -279,12 +297,10 @@ std::vector<DoubleArray::Result> DoubleArray::commonPrefixSearch(std::string_vie
 
   for (size_t idx = start; idx <= text.size(); ++idx) {
     // Check for null terminator (leaf) at current position
-    size_t base_val = units_[node_pos].base();
-    size_t leaf_pos = base_val ^ 0;
-
-    if (leaf_pos < units_.size() && units_[leaf_pos].check == node_pos + 1 && units_[leaf_pos].hasLeaf()) {
+    int32_t value = 0;
+    if (tryLeaf(node_pos, value)) {
       Result res{};
-      res.value = units_[leaf_pos].value();
+      res.value = value;
       res.length = idx - start;
       results.push_back(res);
 
@@ -299,14 +315,12 @@ std::vector<DoubleArray::Result> DoubleArray::commonPrefixSearch(std::string_vie
     }
 
     // Transition to next node
-    uint8_t chr = toByte(text[idx]);
-    size_t child_pos = base_val ^ chr;
-
-    if (child_pos >= units_.size() || units_[child_pos].check != node_pos + 1) {
+    size_t next_pos = 0;
+    if (!transition(node_pos, toByte(text[idx]), next_pos)) {
       break;
     }
 
-    node_pos = child_pos;
+    node_pos = next_pos;
   }
 
   return results;

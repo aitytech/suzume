@@ -8,11 +8,7 @@
 
 #include "verb_endings.h"
 
-#include "normalize/utf8.h"
-
 namespace suzume::grammar {
-
-using normalize::encodeUtf8;
 
 namespace {
 
@@ -46,11 +42,12 @@ std::vector<VerbEnding> generateGodanEndings() {
       continue;
     }
     const auto& row = *row_ptr;
-    std::string base = encodeUtf8(row.base_vowel);
-    std::string a_row = encodeUtf8(row.a_row);
-    std::string i_row = encodeUtf8(row.i_row);
-    std::string e_row = encodeUtf8(row.e_row);
-    std::string o_row = encodeUtf8(row.o_row);
+    const GodanVowels vowels = encodeGodanVowels(row);
+    const std::string& base = vowels.base;
+    const std::string& a_row = vowels.a;
+    const std::string& i_row = vowels.i;
+    const std::string& e_row = vowels.e;
+    const std::string& o_row = vowels.o;
 
     // Onbinkei (音便形)
     if (!row.onbin.empty()) {

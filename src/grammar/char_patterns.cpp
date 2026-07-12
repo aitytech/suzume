@@ -6,7 +6,6 @@
 #include "char_patterns.h"
 
 #include <unordered_map>
-#include <unordered_set>
 
 #include "core/kana_constants.h"
 #include "core/utf8_constants.h"
@@ -66,24 +65,17 @@ bool anyCharMatches(std::string_view str, Predicate pred) {
 
 }  // namespace
 
-// Onbin, Mizenkei, Renyokei endings are now defined in kana_constants.h
-// Use kana:: namespace versions via the aliases in char_patterns.h
-
-// Full i-row hiragana including い for u-verb stems
-// Includes voiced/semi-voiced variants for ichidan/godan disambiguation.
-const char* kIRowEndings[] = {"い", "き", "ぎ", "し", "じ", "ち", "ぢ", "に", "ひ", "び", "ぴ", "み", "り"};
-const size_t kIRowCount = 13;
-
-// E-row hiragana for Ichidan renyokei
-const char* kERowEndings[] = {"べ", "め", "せ", "け", "げ", "て", "ね", "れ", "え", "で", "ぜ", "へ", "ぺ"};
-const size_t kERowCount = 13;
+// Onbin, Mizenkei, Renyokei and i-row/e-row endings are now defined in
+// kana_constants.h. Use kana:: namespace versions via the aliases in
+// char_patterns.h (kIRow includes い for u-verb stems; kERow is the ichidan
+// renyokei set).
 
 bool endsWithIRow(std::string_view stem) {
-  return endsWithChar(stem, kIRowEndings, kIRowCount);
+  return endsWithChar(stem, kIRow, kIRowCount);
 }
 
 bool endsWithERow(std::string_view stem) {
-  return endsWithChar(stem, kERowEndings, kERowCount);
+  return endsWithChar(stem, kERow, kERowCount);
 }
 
 bool endsWithOnbin(std::string_view stem) {
@@ -149,12 +141,8 @@ bool isPureKatakana(std::string_view stem) {
 }
 
 bool isSmallKana(std::string_view ch) {
-  // Static set for O(1) lookup - initialized once
-  static const std::unordered_set<std::string_view> kSmallKana = {// Hiragana small kana (拗音・促音)
-                                                                  "ょ", "ゃ", "ゅ", "ぁ", "ぃ", "ぅ", "ぇ", "ぉ", "っ",
-                                                                  // Katakana small kana
-                                                                  "ョ", "ャ", "ュ", "ァ", "ィ", "ゥ", "ェ", "ォ", "ッ"};
-  return kSmallKana.count(ch) > 0;
+  char32_t cp = utf8::decodeFirstChar(ch);
+  return cp != 0 && kana::isSmallKanaCodepoint(cp);
 }
 
 bool startsWithHiragana(std::string_view s) {
@@ -203,63 +191,55 @@ char32_t getVowelForChar(char32_t ch) {
 
 namespace {
 
-// Lookup GodanRow by a_row codepoint (cached for efficiency)
+// Build (once) and return a codepoint-keyed map derived from
+// Conjugation::getGodanRows(). keyFn maps a GodanRow to its char32_t key;
+// valFn maps a (VerbType, GodanRow) pair to the stored value. The cache is a
+// function-local static, so every distinct (Value, KeyFn, ValueFn)
+// instantiation owns its own map built on first use.
+template <typename Value, typename KeyFn, typename ValueFn>
+const std::unordered_map<char32_t, Value>& godanRowCache(KeyFn keyFn, ValueFn valFn) {
+  static const std::unordered_map<char32_t, Value> kCache = [&]() {
+    std::unordered_map<char32_t, Value> cache;
+    for (const auto& [type, row] : Conjugation::getGodanRows()) {
+      cache[keyFn(row)] = valFn(type, row);
+    }
+    return cache;
+  }();
+  return kCache;
+}
+
+// Pair-valued lookups: return a pointer into the cache, nullptr on miss.
 const std::pair<VerbType, const Conjugation::GodanRow*>* lookupByARow(char32_t a_row_cp) {
-  // Build lookup table on first access
-  static const auto kARowLookup = []() {
-    std::unordered_map<char32_t, std::pair<VerbType, const Conjugation::GodanRow*>> lookup;
-    for (const auto& [type, row] : Conjugation::getGodanRows()) {
-      lookup[row.a_row] = {type, &row};
-    }
-    return lookup;
-  }();
-
-  auto it = kARowLookup.find(a_row_cp);
-  return it != kARowLookup.end() ? &it->second : nullptr;
+  const auto& cache = godanRowCache<std::pair<VerbType, const Conjugation::GodanRow*>>(
+      [](const auto& row) { return row.a_row; },
+      [](VerbType type, const auto& row) { return std::make_pair(type, &row); });
+  auto it = cache.find(a_row_cp);
+  return it != cache.end() ? &it->second : nullptr;
 }
 
-// Cache for base suffix strings (避免毎回生成)
-const std::string& getBaseSuffixCached(char32_t base_vowel) {
-  static const auto kBaseSuffixCache = []() {
-    std::unordered_map<char32_t, std::string> cache;
-    for (const auto& [type, row] : Conjugation::getGodanRows()) {
-      cache[row.a_row] = encodeUtf8(row.base_vowel);
-    }
-    return cache;
-  }();
+// String-valued caches: return a reference into the cache, empty sentinel on miss.
+const std::string& getBaseSuffixCached(char32_t a_row_cp) {
+  const auto& cache = godanRowCache<std::string>([](const auto& row) { return row.a_row; },
+                                                 [](VerbType, const auto& row) { return encodeUtf8(row.base_vowel); });
   static const std::string kEmpty;
-
-  // Note: We look up by a_row, not base_vowel
-  // This function is called with a_row codepoint
-  auto it = kBaseSuffixCache.find(base_vowel);
-  return it != kBaseSuffixCache.end() ? it->second : kEmpty;
+  auto it = cache.find(a_row_cp);
+  return it != cache.end() ? it->second : kEmpty;
 }
-// Cache for A-row suffix strings from U-row
+
 const std::string& getARowSuffixFromURowCached(char32_t u_row_cp) {
-  static const auto kCache = []() {
-    std::unordered_map<char32_t, std::string> cache;
-    for (const auto& [type, row] : Conjugation::getGodanRows()) {
-      cache[row.base_vowel] = encodeUtf8(row.a_row);
-    }
-    return cache;
-  }();
+  const auto& cache = godanRowCache<std::string>([](const auto& row) { return row.base_vowel; },
+                                                 [](VerbType, const auto& row) { return encodeUtf8(row.a_row); });
   static const std::string kEmpty;
-  auto it = kCache.find(u_row_cp);
-  return it != kCache.end() ? it->second : kEmpty;
+  auto it = cache.find(u_row_cp);
+  return it != cache.end() ? it->second : kEmpty;
 }
 
-// Cache for I-row suffix strings from U-row
 const std::string& getIRowSuffixFromURowCached(char32_t u_row_cp) {
-  static const auto kCache = []() {
-    std::unordered_map<char32_t, std::string> cache;
-    for (const auto& [type, row] : Conjugation::getGodanRows()) {
-      cache[row.base_vowel] = encodeUtf8(row.i_row);
-    }
-    return cache;
-  }();
+  const auto& cache = godanRowCache<std::string>([](const auto& row) { return row.base_vowel; },
+                                                 [](VerbType, const auto& row) { return encodeUtf8(row.i_row); });
   static const std::string kEmpty;
-  auto it = kCache.find(u_row_cp);
-  return it != kCache.end() ? it->second : kEmpty;
+  auto it = cache.find(u_row_cp);
+  return it != cache.end() ? it->second : kEmpty;
 }
 
 }  // namespace
@@ -285,34 +265,22 @@ VerbType verbTypeFromARowCodepoint(char32_t a_row_cp) {
 
 namespace {
 
-// Lookup GodanRow by i_row codepoint (cached for efficiency)
+// Pair-valued lookup by i_row: return a pointer into the cache, nullptr on miss.
 const std::pair<VerbType, const Conjugation::GodanRow*>* lookupByIRow(char32_t i_row_cp) {
-  // Build lookup table on first access
-  static const auto kIRowLookup = []() {
-    std::unordered_map<char32_t, std::pair<VerbType, const Conjugation::GodanRow*>> lookup;
-    for (const auto& [type, row] : Conjugation::getGodanRows()) {
-      lookup[row.i_row] = {type, &row};
-    }
-    return lookup;
-  }();
-
-  auto it = kIRowLookup.find(i_row_cp);
-  return it != kIRowLookup.end() ? &it->second : nullptr;
+  const auto& cache = godanRowCache<std::pair<VerbType, const Conjugation::GodanRow*>>(
+      [](const auto& row) { return row.i_row; },
+      [](VerbType type, const auto& row) { return std::make_pair(type, &row); });
+  auto it = cache.find(i_row_cp);
+  return it != cache.end() ? &it->second : nullptr;
 }
 
-// Cache for base suffix strings from I-row
+// String-valued cache keyed by i_row: empty sentinel on miss.
 const std::string& getBaseSuffixFromIRowCached(char32_t i_row_cp) {
-  static const auto kBaseSuffixCache = []() {
-    std::unordered_map<char32_t, std::string> cache;
-    for (const auto& [type, row] : Conjugation::getGodanRows()) {
-      cache[row.i_row] = encodeUtf8(row.base_vowel);
-    }
-    return cache;
-  }();
+  const auto& cache = godanRowCache<std::string>([](const auto& row) { return row.i_row; },
+                                                 [](VerbType, const auto& row) { return encodeUtf8(row.base_vowel); });
   static const std::string kEmpty;
-
-  auto it = kBaseSuffixCache.find(i_row_cp);
-  return it != kBaseSuffixCache.end() ? it->second : kEmpty;
+  auto it = cache.find(i_row_cp);
+  return it != cache.end() ? it->second : kEmpty;
 }
 
 }  // namespace

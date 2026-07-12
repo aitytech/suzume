@@ -73,6 +73,13 @@ std::vector<std::pair<VerbType, std::string_view>> Conjugation::getGodanTypesByO
   return {};
 }
 
+GodanVowels encodeGodanVowels(const Conjugation::GodanRow& row) {
+  return {encodeUtf8(row.base_vowel), encodeUtf8(row.a_row), encodeUtf8(row.i_row), encodeUtf8(row.e_row),
+          encodeUtf8(row.o_row)};
+}
+
+bool isGodanVerbType(VerbType type) { return Conjugation::getGodanRow(type) != nullptr; }
+
 std::string Conjugation::getStem(const std::string& base_form, VerbType type) {
   if (base_form.empty()) {
     return "";
@@ -193,20 +200,13 @@ VerbType Conjugation::detectType(const std::string& base_form) {
 std::vector<ConjugatedForm> Conjugation::generate(const std::string& base_form, VerbType type) const {
   std::string stem = getStem(base_form, type);
 
+  if (isGodanVerbType(type)) {
+    return generateGodan(stem, base_form, type);
+  }
+
   switch (type) {
     case VerbType::Ichidan:
       return generateIchidan(stem, base_form);
-
-    case VerbType::GodanKa:
-    case VerbType::GodanGa:
-    case VerbType::GodanSa:
-    case VerbType::GodanTa:
-    case VerbType::GodanNa:
-    case VerbType::GodanBa:
-    case VerbType::GodanMa:
-    case VerbType::GodanRa:
-    case VerbType::GodanWa:
-      return generateGodan(stem, base_form, type);
 
     case VerbType::Suru:
       return generateSuru(stem, base_form);
@@ -237,10 +237,11 @@ std::vector<ConjugatedForm> Conjugation::generateGodan(const std::string& stem, 
   // 基本形
   forms.push_back(makeForm(base_form, base_form, stem, type, ""));
 
-  std::string a = encodeUtf8(row.a_row);
-  std::string i = encodeUtf8(row.i_row);
-  std::string e = encodeUtf8(row.e_row);
-  std::string o = encodeUtf8(row.o_row);
+  const GodanVowels vowels = encodeGodanVowels(row);
+  const std::string& a = vowels.a;
+  const std::string& i = vowels.i;
+  const std::string& e = vowels.e;
+  const std::string& o = vowels.o;
 
   // 未然形 + ない系
   forms.push_back(makeForm(stem + a + "ない", base_form, stem, type, "ない"));
@@ -396,6 +397,64 @@ std::vector<ConjugatedForm> Conjugation::generateIAdjective(const std::string& s
 std::vector<Conjugation::DictionarySuffix> Conjugation::getDictionarySuffixes(VerbType type) const {
   std::vector<DictionarySuffix> suffixes;
 
+  if (isGodanVerbType(type)) {
+    const GodanRow* row_ptr = getGodanRow(type);
+    if (row_ptr == nullptr) {
+      return suffixes;
+    }
+    const auto& row = *row_ptr;
+
+    const GodanVowels vowels = encodeGodanVowels(row);
+    const std::string& base = vowels.base;
+    const std::string& a = vowels.a;
+    const std::string& i = vowels.i;
+    const std::string& e = vowels.e;
+    const std::string& o = vowels.o;
+    std::string ta = row.voiced_ta ? "だ" : "た";
+    std::string te = row.voiced_ta ? "で" : "て";
+
+    // Base form
+    suffixes.push_back({base, false, core::ExtendedPOS::VerbShuushikei});
+    // Renyokei (for compound usage)
+    suffixes.push_back({i, false, core::ExtendedPOS::VerbRenyokei});
+    // Mizenkei (for ない split: 書か + ない → 書く)
+    suffixes.push_back({a, false, core::ExtendedPOS::VerbMizenkei});
+
+    // 音便形 (サ行以外) - standalone onbin form for MeCab-compatible split
+    // E.g., 書いた → 書い + た, 飲んだ → 飲ん + だ
+    // The onbin form needs to be a separate candidate to enable the split
+    if (!row.onbin.empty()) {
+      suffixes.push_back({row.onbin, false, core::ExtendedPOS::VerbOnbinkei});  // Onbin: 書い, 飲ん, あっ, etc.
+    }
+    // Note: onbin + た/て/たら is handled by split path (connection rules)
+
+    // Negative forms (mizenkei + ない)
+    // 書かない excluded for MeCab compat: split as 書か + ない
+    suffixes.push_back({a + "ん", false, core::ExtendedPOS::VerbMizenkei});  // Contracted: 書かん (mizenkei + ん)
+    suffixes.push_back({a + "ぬ", false, core::ExtendedPOS::VerbMizenkei});  // Classical: 書かぬ (mizenkei + ぬ)
+    // 書かなかった excluded for MeCab compat: split as 書か+なかっ+た
+
+    // Conditional
+    // Kateikei (仮定形) standalone, for MeCab-compatible split: 書け + ば.
+    // Godan e-row form serves as both kateikei and meireikei; emit both
+    // ExtendedPOS so the kateikei + ば split path can win over a merged form.
+    suffixes.push_back({e, false, core::ExtendedPOS::VerbKateikei});  // Conditional stem: 書け
+
+    // Volitional mizenkei (for MeCab-compatible split: 書こ + う)
+    suffixes.push_back({o, false, core::ExtendedPOS::VerbMizenkei});  // Volitional mizenkei: 書こ
+
+    // Imperative (exclude for Ka/Ga to avoid conflict with potential)
+    if (type != VerbType::GodanKa && type != VerbType::GodanGa) {
+      suffixes.push_back({e, false, core::ExtendedPOS::VerbMeireikei});  // Imperative: 待て
+    }
+
+    // Potential forms (五段 → え段 + る)
+    suffixes.push_back({e + "る", true, core::ExtendedPOS::VerbShuushikei});  // Potential: 書ける
+    // 書けない excluded for MeCab compat: split as 書け + ない
+    // 書けなかった excluded for MeCab compat: split as 書け+なかっ+た
+    return suffixes;
+  }
+
   switch (type) {
     case VerbType::Ichidan:
       // 一段動詞: 食べる → 食べ + suffix
@@ -415,71 +474,6 @@ std::vector<Conjugation::DictionarySuffix> Conjugation::getDictionarySuffixes(Ve
           {"ろ", false, core::ExtendedPOS::VerbMeireikei},  // Imperative: 食べろ
       };
       break;
-
-    case VerbType::GodanKa:
-    case VerbType::GodanGa:
-    case VerbType::GodanSa:
-    case VerbType::GodanTa:
-    case VerbType::GodanNa:
-    case VerbType::GodanBa:
-    case VerbType::GodanMa:
-    case VerbType::GodanRa:
-    case VerbType::GodanWa: {
-      const GodanRow* row_ptr = getGodanRow(type);
-      if (row_ptr == nullptr) {
-        return suffixes;
-      }
-      const auto& row = *row_ptr;
-
-      std::string base = encodeUtf8(row.base_vowel);
-      std::string a = encodeUtf8(row.a_row);
-      std::string i = encodeUtf8(row.i_row);
-      std::string e = encodeUtf8(row.e_row);
-      std::string o = encodeUtf8(row.o_row);
-      std::string ta = row.voiced_ta ? "だ" : "た";
-      std::string te = row.voiced_ta ? "で" : "て";
-
-      // Base form
-      suffixes.push_back({base, false, core::ExtendedPOS::VerbShuushikei});
-      // Renyokei (for compound usage)
-      suffixes.push_back({i, false, core::ExtendedPOS::VerbRenyokei});
-      // Mizenkei (for ない split: 書か + ない → 書く)
-      suffixes.push_back({a, false, core::ExtendedPOS::VerbMizenkei});
-
-      // 音便形 (サ行以外) - standalone onbin form for MeCab-compatible split
-      // E.g., 書いた → 書い + た, 飲んだ → 飲ん + だ
-      // The onbin form needs to be a separate candidate to enable the split
-      if (!row.onbin.empty()) {
-        suffixes.push_back({row.onbin, false, core::ExtendedPOS::VerbOnbinkei});  // Onbin: 書い, 飲ん, あっ, etc.
-      }
-      // Note: onbin + た/て/たら is handled by split path (connection rules)
-
-      // Negative forms (mizenkei + ない)
-      // 書かない excluded for MeCab compat: split as 書か + ない
-      suffixes.push_back({a + "ん", false, core::ExtendedPOS::VerbMizenkei});  // Contracted: 書かん (mizenkei + ん)
-      suffixes.push_back({a + "ぬ", false, core::ExtendedPOS::VerbMizenkei});  // Classical: 書かぬ (mizenkei + ぬ)
-      // 書かなかった excluded for MeCab compat: split as 書か+なかっ+た
-
-      // Conditional
-      // Kateikei (仮定形) standalone, for MeCab-compatible split: 書け + ば.
-      // Godan e-row form serves as both kateikei and meireikei; emit both
-      // ExtendedPOS so the kateikei + ば split path can win over a merged form.
-      suffixes.push_back({e, false, core::ExtendedPOS::VerbKateikei});  // Conditional stem: 書け
-
-      // Volitional mizenkei (for MeCab-compatible split: 書こ + う)
-      suffixes.push_back({o, false, core::ExtendedPOS::VerbMizenkei});  // Volitional mizenkei: 書こ
-
-      // Imperative (exclude for Ka/Ga to avoid conflict with potential)
-      if (type != VerbType::GodanKa && type != VerbType::GodanGa) {
-        suffixes.push_back({e, false, core::ExtendedPOS::VerbMeireikei});  // Imperative: 待て
-      }
-
-      // Potential forms (五段 → え段 + る)
-      suffixes.push_back({e + "る", true, core::ExtendedPOS::VerbShuushikei});  // Potential: 書ける
-      // 書けない excluded for MeCab compat: split as 書け + ない
-      // 書けなかった excluded for MeCab compat: split as 書け+なかっ+た
-      break;
-    }
 
     case VerbType::Suru:
       // サ変: する (MeCab-compatible: exclude split forms)

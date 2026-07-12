@@ -17,6 +17,7 @@
 #include "dictionary/entries/interjections.h"
 #include "dictionary/entries/particles.h"
 #include "dictionary/entries/pronouns.h"
+#include "normalize/utf8.h"
 
 namespace suzume::dictionary {
 
@@ -123,28 +124,6 @@ void CoreDictionary::buildTrie() {
   trie_.build(keys, values);
 }
 
-namespace {
-
-/**
- * @brief Count UTF-8 characters in a byte range
- */
-size_t countUtf8Chars(std::string_view text, size_t start_byte, size_t byte_length) {
-  size_t char_count = 0;
-  size_t end_byte = start_byte + byte_length;
-
-  for (size_t pos = start_byte; pos < end_byte && pos < text.size();) {
-    auto byte = static_cast<uint8_t>(text[pos]);
-    if ((byte & 0xC0) != 0x80) {
-      ++char_count;
-    }
-    ++pos;
-  }
-
-  return char_count;
-}
-
-}  // namespace
-
 std::vector<LookupResult> CoreDictionary::lookup(std::string_view text, size_t start_pos) const {
   std::vector<LookupResult> results;
 
@@ -172,7 +151,7 @@ std::vector<LookupResult> CoreDictionary::lookup(std::string_view text, size_t s
       LookupResult result{};
       result.entry_id = static_cast<uint32_t>(idx);
       // Convert byte length to character count
-      result.length = countUtf8Chars(text, start_pos, tres.length);
+      result.length = normalize::utf8Length(text.substr(start_pos, tres.length));
       result.entry = &entries_[idx];
       results.push_back(result);
     }

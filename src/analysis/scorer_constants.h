@@ -6,6 +6,7 @@
 
 #include "analysis/bigram_table.h"
 #include "core/types.h"
+#include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 
 // =============================================================================
@@ -282,6 +283,35 @@ inline float compoundVerbSplitBonus(core::ExtendedPOS prev_epos, std::string_vie
     return 0.0F;
   }
   return scale::kModerateBonus;
+}
+
+// =============================================================================
+// Negation-Prefix Kanji Predicates
+// =============================================================================
+// The negation prefixes 非/不/無/未 form single lexical items (不可能, 非常,
+// 無理, 未定). A dictionary entry beginning with one gets a length-scaled bonus
+// so the whole word beats the PREFIX+NOUN split, and a standalone prefix from
+// this set must not attach to a following single-kanji noun.
+constexpr std::string_view kNegationPrefixKanji[] = {"非", "不", "無", "未"};
+
+/// True if the surface begins with a negation-prefix kanji (非/不/無/未).
+[[nodiscard]] inline bool startsWithNegationPrefix(std::string_view surface) {
+  for (std::string_view prefix : kNegationPrefixKanji) {
+    if (utf8::startsWith(surface, prefix)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/// True if the surface is exactly a negation-prefix kanji (非/不/無/未).
+[[nodiscard]] inline bool isNegationPrefix(std::string_view surface) {
+  for (std::string_view kanji : kNegationPrefixKanji) {
+    if (surface == kanji) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace suzume::analysis::scorer

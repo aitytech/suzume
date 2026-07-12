@@ -321,7 +321,7 @@ bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType ver
   }
 
   // Only apply remaining checks to Godan verbs
-  if (!isGodanVerbType(verb_type)) {
+  if (!grammar::isGodanVerbType(verb_type)) {
     return false;
   }
 
@@ -338,7 +338,7 @@ bool shouldSkipCausativeAuxPattern(std::string_view surface, grammar::VerbType v
   }
 
   // Godan causative: せる, せた, せて
-  if (isGodanVerbType(verb_type)) {
+  if (grammar::isGodanVerbType(verb_type)) {
     return utf8::endsWith(surface, "せる") || utf8::endsWith(surface, "せた") || utf8::endsWith(surface, "せて");
   }
 

@@ -43,6 +43,21 @@ constexpr size_t kFourJapaneseCharBytes = kJapaneseCharBytes * 4;  // 12
 /// Length of five Japanese characters in bytes (e.g., "させられる", "させられた")
 constexpr size_t kFiveJapaneseCharBytes = kJapaneseCharBytes * 5;  // 15
 
+/// Length of six Japanese characters in bytes
+constexpr size_t kSixJapaneseCharBytes = kJapaneseCharBytes * 6;  // 18
+
+/// Number of UTF-8 bytes required to encode a single Unicode codepoint.
+/// Returns 1/2/3/4; codepoints above U+10FFFF are treated as 4 bytes.
+[[nodiscard]] inline constexpr size_t utf8ByteLength(char32_t codepoint) noexcept {
+  if (codepoint < 0x80)
+    return 1;
+  if (codepoint < 0x800)
+    return 2;
+  if (codepoint < 0x10000)
+    return 3;
+  return 4;
+}
+
 // =============================================================================
 // Hiragana Codepoint Constants for Auxiliary Patterns
 // =============================================================================
