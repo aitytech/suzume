@@ -582,16 +582,17 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // Passive auxiliary only follows verb mizenkei, never nouns
   setCell(t, EPOS::Noun, EPOS::AuxPassive, cost::kStrong);
 
-  // Noun → AuxAspectIru (驚+い) - severe penalty
-  // The aspectual いる attaches only to a te-form, never to a bare noun (real
-  // path て → AuxAspectIru, 食べて+いた). Prevents 間続+い+た beating 間+続い+た.
+  // Noun → aspect auxiliary いる/くる (驚+い, 先生+き): aspect attaches only to a
+  // te-form, never a bare noun (食べて+いた, 走って+きた). Prevents 間続+い+た and
+  // overcomes the DET→NOUN bonus on prefix compounds like 先生.
   setCell(t, EPOS::Noun, EPOS::AuxAspectIru, cost::kSevere);
-
-  // Noun → AuxAspectKuru (先生+き) - near impossible
-  // AUX_接近 (くる/き) only appears after て-form (走ってきた, 食べてくる)
-  // Never after nouns. Needs a very high penalty to overcome the strong
-  // DET→NOUN bonus (-2.5) on prefix compounds like 先生
   setCell(t, EPOS::Noun, EPOS::AuxAspectKuru, cost::kProhibitive);
+
+  // Binding particle (は/も) → aspect auxiliary: aspect attaches only to a
+  // te-form, so は/も before き/いく/いる is a mis-parse (ではきもの → で+は+きもの).
+  setCell(t, EPOS::ParticleTopic, EPOS::AuxAspectKuru, cost::kProhibitive);
+  setCell(t, EPOS::ParticleTopic, EPOS::AuxAspectIku, cost::kProhibitive);
+  setCell(t, EPOS::ParticleTopic, EPOS::AuxAspectIru, cost::kSevere);
 
   // NaAdj → AuxCopulaDa (静か+だ) - strong bonus
   setCell(t, EPOS::AdjNaAdj, EPOS::AuxCopulaDa, cost::kStrongBonus);
@@ -599,9 +600,8 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // NaAdj → AuxCopulaDesu (静か+です) - strong bonus
   setCell(t, EPOS::AdjNaAdj, EPOS::AuxCopulaDesu, cost::kStrongBonus);
 
-  // Adverb → AuxCopulaDa/Desu - penalty (adverbs don't directly take copula)
-  // E.g., そうです: そう should be na-adjective, not adverb
-  // Adverbs modify verbs/adjectives, not replace them before copula
+  // Adverb → AuxCopulaDa/Desu - penalty: adverbs modify verbs/adjectives, they
+  // don't directly take copula (そうです: そう should be na-adjective, not adverb).
   setCell(t, EPOS::Adverb, EPOS::AuxCopulaDa, cost::kRare);
   setCell(t, EPOS::Adverb, EPOS::AuxCopulaDesu, cost::kRare);
 

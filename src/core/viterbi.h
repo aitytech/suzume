@@ -31,6 +31,7 @@ inline constexpr float kBosSuffixPenalty = 3.0F;         // Suffix cannot lead a
 inline constexpr float kBosConjunctionBonus = -0.5F;     // でも / しかし are natural at BOS
 inline constexpr float kBosAppearanceSouPenalty = 0.5F;  // 様態そう should be demonstrative at BOS
 inline constexpr float kBosAspectIkuPenalty = 1.0F;      // いく aspect needs a preceding て-form
+inline constexpr float kBosAspectKuruPenalty = 3.0F;     // くる aspect (き) needs a preceding て-form
 inline constexpr float kBosTensePenalty = 2.0F;          // た/だ needs a preceding verb/adj stem
 inline constexpr float kBosFinalParticlePenalty = 2.0F;  // Sentence-final particle cannot lead
 // Per-transition tie-break: slightly prefer fewer, longer morphemes.
@@ -203,6 +204,11 @@ class Viterbi {
               // verb 行く or part of a pronoun (いくつ).
               if (edge.extended_pos == ExtendedPOS::AuxAspectIku) {
                 conn_cost += kBosAspectIkuPenalty;
+              }
+              // くる aspect (き) is only valid after a て-form; at BOS it is 来る
+              // or part of a noun (きもの).
+              if (edge.extended_pos == ExtendedPOS::AuxAspectKuru) {
+                conn_cost += kBosAspectKuruPenalty;
               }
               if (edge.extended_pos == ExtendedPOS::AuxTenseTa) {
                 conn_cost += kBosTensePenalty;
