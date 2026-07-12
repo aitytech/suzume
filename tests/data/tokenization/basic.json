@@ -483,6 +483,60 @@
       ],
       "id": "ga_mu_soshite_reru",
       "input": "道が混む、そして遅れる"
+    },
+    {
+      "description": "たぶんそうです - auto-generated",
+      "expected": [
+        {
+          "lemma": "たぶん",
+          "pos": "Adverb",
+          "surface": "たぶん"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "tabunsoudesu",
+      "input": "たぶんそうです"
+    },
+    {
+      "description": "それはたぶんそうだ - auto-generated",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "たぶん",
+          "pos": "Adverb",
+          "surface": "たぶん"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "sorehatabunsouda",
+      "input": "それはたぶんそうだ"
     }
   ],
   "description": "Basic tokenization tests",
