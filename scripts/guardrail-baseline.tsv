@@ -2,7 +2,7 @@
 src/analysis/adjective_candidates.cpp	0	28
 src/analysis/analyzer.cpp	0	0
 src/analysis/bigram_table.cpp	0	2
-src/analysis/join_candidates.cpp	8	33
+src/analysis/join_candidates.cpp	0	33
 src/analysis/scorer.cpp	124	175
 src/analysis/split_candidates.cpp	1	7
 src/analysis/suffix_candidates.cpp	0	40
@@ -11,5 +11,5 @@ src/analysis/tokenizer.cpp	0	12
 src/analysis/unknown.cpp	0	47
 src/analysis/verb_candidates_helpers.cpp	4	3
 src/analysis/verb_candidates_hiragana.cpp	1	42
-src/analysis/verb_candidates_kanji.cpp	2	85
+src/analysis/verb_candidates_kanji.cpp	2	79
 src/analysis/verb_candidates.cpp	0	8
