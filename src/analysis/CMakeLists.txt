@@ -1,10 +1,14 @@
 # Analysis module CMakeLists.txt
 
 add_library(suzume_analysis STATIC
-  adjective_candidates.cpp
+  adjective_candidates_hiragana.cpp
+  adjective_candidates_kanji.cpp
+  adjective_candidates_stem.cpp
   analyzer.cpp
   bigram_table.cpp
-  join_candidates.cpp
+  join_compound_verb.cpp
+  join_noun.cpp
+  join_te_aux.cpp
   scorer.cpp
   split_candidates.cpp
   suffix_candidates.cpp
