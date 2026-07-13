@@ -386,6 +386,18 @@ std::string fixSuruClassical(std::string_view lemma) {
 // e.g., 対しる → 対する, 関しる → 関する (single kanji → サ変),
 //       やりなおしる → やりなおす (multi-char → godan-sa).
 // Note: 応じる, 存じる, 信じる, 感じる are genuine ichidan (じる, not しる) and unaffected.
+//
+// The single-kanji threshold here is the INVERSE of fixSuruClassical's: there a
+// single kanji + す is left alone (出す/消す are real GodanSa), while here a single
+// kanji + しる is corrected to する (サ変). The two thresholds are deliberately
+// opposite because they key off which conjugation the surface actually witnesses
+// (す-shuushi vs しる-misanalysis); do NOT unify them into one rule.
+//
+// Caveat: the multi-char `stem + "す"` branch is UNVERIFIED against the dictionary,
+// so a stem that shadows a GODAN_WA verb yields a non-word (あらしる→あらす where the
+// real verb is 洗う) — the same surface-indistinguishable ambiguity as the s88
+// あらって→あらる case. Kept as the best available default; adding a dict check here
+// is an open question, not a bug to silently "fix".
 std::string fixShiru(std::string_view lemma) {
   if (!utf8::endsWith(lemma, "しる")) {
     return "";
@@ -799,7 +811,12 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
     case core::PartOfSpeech::Auxiliary:
     case core::PartOfSpeech::Conjunction:
     case core::PartOfSpeech::Adverb: {
-      // Tari-adjective adverbs: remove trailing と from lemma (颯爽と → 颯爽, 堂々と → 堂々)
+      // Tari-adjective adverbs: remove trailing と from lemma (颯爽と → 颯爽, 堂々と → 堂々).
+      // For Adverb this call is a no-op — an Adverb surface was already run through
+      // fixTariAdverb at the top of lemmatize() and returned there if it matched, so
+      // by here it never matches. It is retained (not narrowed) because this case
+      // also covers Noun/Pronoun/Particle/Auxiliary/Conjunction, which do NOT hit
+      // that early path and legitimately need the correction.
       if (std::string tari_stem = fixTariAdverb(morpheme.surface); !tari_stem.empty()) {
         return tari_stem;
       }
