@@ -751,7 +751,11 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
 
         // Skip godan volitional patterns ending with おう (e.g., 行こう, 書こう)
         // For MeCab-compatible split: 行こう → 行こ + う
-        // O-row + う patterns: こう, ごう, そう, とう, のう, ぼう, もう, ろう, おう
+        // O-row + う patterns: こう, ごう, そう, とう, のう, ぼう, もう, ろう, おう.
+        // This is a DELIBERATE Godan-mizenkei subset, not the full o-row: よう is
+        // the ichidan volitional (handled just above), and を/ど/ほ/ぞ never form a
+        // Godan mizenkei. Do NOT widen to kana::isORowCodepoint — it would over-match
+        // をう/どう/ほう and wrongly skip valid verb candidates.
         if (surface.size() >= 6) {
           std::string last_two = surface.substr(surface.size() - 6);  // 2 hiragana = 6 bytes
           if (last_two == "こう" || last_two == "ごう" || last_two == "そう" || last_two == "とう" ||

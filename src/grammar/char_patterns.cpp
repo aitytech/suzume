@@ -150,9 +150,12 @@ bool startsWithHiragana(std::string_view s) {
   return cp != 0 && kana::isHiraganaCodepoint(cp);
 }
 
-// A-row (あ段) endings for verb mizenkei detection
-// Includes all mizenkei endings plus あ for completeness
-// Note: Slightly broader than kMizenkeiEndings to catch edge cases
+// A-row (あ段) endings for Godan mizenkei detection.
+// This is a DELIBERATE subset of the full phonological a-row (kana::kARow),
+// which also carries だ/ざ/は/ぱ/や — none of which are Godan mizenkei endings.
+// In particular だ (copula) and は must NOT match here, so this cannot be
+// replaced by the kana::isARowCodepoint predicate the way endsWithORow uses
+// isORowCodepoint. The curated list is the source of truth for this grammar.
 const char* kARowEndings[] = {"あ", "か", "が", "さ", "た", "な", "ば", "ま", "ら", "わ"};
 const size_t kARowCount = 10;
 
