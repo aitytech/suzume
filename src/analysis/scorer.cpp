@@ -199,7 +199,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       edge.extended_pos != core::ExtendedPOS::AdjStem &&
       edge.surface.size() == core::kTwoJapaneseCharBytes &&  // 2 chars (1 kanji + い) = 6 bytes
       utf8::endsWith(edge.surface, "い") &&
-      grammar::isAllKanji(std::string(edge.surface.substr(0, 3)))) {  // First char is kanji
+      grammar::isAllKanji(edge.surface.substr(0, 3))) {  // First char is kanji
     cost += cost::kModerateBonus;                                     // -0.5 to beat godan-wa verb candidate
   }
 
@@ -1394,7 +1394,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // because ADJ_語幹→すぎ has a very strong surface bonus (-3.2)
   // Only apply to all-kanji surfaces (not katakana/verb renyokei)
   if (prev.pos == core::PartOfSpeech::Noun && prev.surface.size() >= 6 &&  // 2+ chars (6+ bytes)
-      grammar::isAllKanji(std::string(prev.surface)) && utf8::startsWith(next.surface, "すぎ")) {
+      grammar::isAllKanji(prev.surface) && utf8::startsWith(next.surface, "すぎ")) {
     surface_bonus += sc::kBonusDoubleVeryStrong;
   }
 
@@ -1826,7 +1826,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       (prev.surface == "それで" || prev.surface == "そこで" || prev.surface == "ここで") &&
       (next.extended_pos == core::ExtendedPOS::VerbOnbinkei || next.extended_pos == core::ExtendedPOS::VerbTaForm) &&
       next.surface.size() >= 3 &&  // At least 1 kanji (3 bytes)
-      grammar::isAllKanji(std::string(next.surface.substr(0, 3))) &&
+      grammar::isAllKanji(next.surface.substr(0, 3)) &&
       !utf8::startsWith(next.surface, "ござ")) {  // Exclude honorific ござる
     surface_bonus += cost::kAlmostNever;
   }

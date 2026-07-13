@@ -324,7 +324,7 @@ bool isSokuonbinGodanType(grammar::VerbType verb_type) {
          verb_type == grammar::VerbType::GodanWa || verb_type == grammar::VerbType::GodanKa;
 }
 
-std::vector<std::pair<grammar::VerbType, std::string_view>> getGodanTypesByOnbin(std::string_view onbin) {
+const std::vector<std::pair<grammar::VerbType, std::string_view>>& getGodanTypesByOnbin(std::string_view onbin) {
   return grammar::Conjugation::getGodanTypesByOnbin(onbin);
 }
 

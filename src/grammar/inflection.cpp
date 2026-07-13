@@ -17,13 +17,14 @@ namespace suzume::grammar {
 namespace {
 
 // Check if auxiliary starts with voiced te-form (で/だ)
+// startsWith already covers the bare で/だ case, so no separate equalsAny check.
 inline bool isVoicedAux(std::string_view aux) {
-  return utf8::equalsAny(aux, {"で", "だ"}) || utf8::startsWith(aux, "で") || utf8::startsWith(aux, "だ");
+  return utf8::startsWith(aux, "で") || utf8::startsWith(aux, "だ");
 }
 
 // Check if auxiliary starts with unvoiced te-form (て/た)
 inline bool isUnvoicedAux(std::string_view aux) {
-  return utf8::equalsAny(aux, {"て", "た"}) || utf8::startsWith(aux, "て") || utf8::startsWith(aux, "た");
+  return utf8::startsWith(aux, "て") || utf8::startsWith(aux, "た");
 }
 
 }  // namespace

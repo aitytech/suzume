@@ -748,7 +748,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
         // When the second kanji is followed by ん, check if kanji2+ぶ/む/ぬ is in dict
         if (kanji2_end < codepoints.size() && codepoints[kanji2_end] == U'ん' && dict_manager != nullptr) {
           std::string kanji2_stem = extractSubstring(codepoints, sokuon_pos + 1, kanji2_end);
-          auto hatsuonbin_types = verb_helpers::getGodanTypesByOnbin("ん");
+          const auto& hatsuonbin_types = verb_helpers::getGodanTypesByOnbin("ん");
 
           for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
             std::string base_form = kanji2_stem + std::string(base_suffix);

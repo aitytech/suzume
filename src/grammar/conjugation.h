@@ -114,8 +114,9 @@ class Conjugation {
    *
    * @param onbin Onbin pattern to match ("い", "っ", "ん", or "")
    * @return Vector of (VerbType, base suffix) pairs in deterministic preference order.
+   *         Returns a reference to a shared immutable table (no per-call allocation).
    */
-  static std::vector<std::pair<VerbType, std::string_view>> getGodanTypesByOnbin(std::string_view onbin);
+  static const std::vector<std::pair<VerbType, std::string_view>>& getGodanTypesByOnbin(std::string_view onbin);
 
   /**
    * @brief Generate all conjugated forms for a verb

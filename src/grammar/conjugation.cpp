@@ -56,21 +56,31 @@ const Conjugation::GodanRow* Conjugation::getGodanRow(VerbType type) {
   return it != rows.end() ? &it->second : nullptr;
 }
 
-std::vector<std::pair<VerbType, std::string_view>> Conjugation::getGodanTypesByOnbin(std::string_view onbin) {
+const std::vector<std::pair<VerbType, std::string_view>>& Conjugation::getGodanTypesByOnbin(std::string_view onbin) {
+  // The onbin→godan-type maps are compile-time constant; hold them in function-local
+  // statics so hot-path callers get a reference instead of a freshly allocated vector.
+  static const std::vector<std::pair<VerbType, std::string_view>> kIOnbin = {{VerbType::GodanKa, "く"},
+                                                                             {VerbType::GodanGa, "ぐ"}};
+  // 行く has irregular 促音便 (行っ), while normal GodanKa uses イ音便.
+  static const std::vector<std::pair<VerbType, std::string_view>> kSokuonbin = {
+      {VerbType::GodanKa, "く"}, {VerbType::GodanRa, "る"}, {VerbType::GodanTa, "つ"}, {VerbType::GodanWa, "う"}};
+  static const std::vector<std::pair<VerbType, std::string_view>> kHatsuonbin = {
+      {VerbType::GodanMa, "む"}, {VerbType::GodanBa, "ぶ"}, {VerbType::GodanNa, "ぬ"}};
+  static const std::vector<std::pair<VerbType, std::string_view>> kSaOnbin = {{VerbType::GodanSa, "す"}};
+  static const std::vector<std::pair<VerbType, std::string_view>> kEmpty = {};
   if (onbin == "い") {
-    return {{VerbType::GodanKa, "く"}, {VerbType::GodanGa, "ぐ"}};
+    return kIOnbin;
   }
   if (onbin == "っ") {
-    // 行く has irregular 促音便 (行っ), while normal GodanKa uses イ音便.
-    return {{VerbType::GodanKa, "く"}, {VerbType::GodanRa, "る"}, {VerbType::GodanTa, "つ"}, {VerbType::GodanWa, "う"}};
+    return kSokuonbin;
   }
   if (onbin == "ん") {
-    return {{VerbType::GodanMa, "む"}, {VerbType::GodanBa, "ぶ"}, {VerbType::GodanNa, "ぬ"}};
+    return kHatsuonbin;
   }
   if (onbin.empty()) {
-    return {{VerbType::GodanSa, "す"}};
+    return kSaOnbin;
   }
-  return {};
+  return kEmpty;
 }
 
 GodanVowels encodeGodanVowels(const Conjugation::GodanRow& row) {

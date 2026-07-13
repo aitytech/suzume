@@ -1383,7 +1383,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Try different verb types based on onbin type
-    auto candidates_to_try = vh::getGodanTypesByOnbin(is_sokuonbin ? "っ" : "ん");
+    const auto& candidates_to_try = vh::getGodanTypesByOnbin(is_sokuonbin ? "っ" : "ん");
 
     // Try each verb type and check dictionary or inflection analysis
     for (const auto& [verb_type, base_suffix] : candidates_to_try) {
@@ -1719,7 +1719,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
         std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
 
-        auto sokuonbin_types = vh::getGodanTypesByOnbin("っ");
+        const auto& sokuonbin_types = vh::getGodanTypesByOnbin("っ");
 
         bool found_dict_match = false;
         for (const auto& [verb_type, base_suffix] : sokuonbin_types) {
@@ -1798,7 +1798,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
         std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
 
-        auto hatsuonbin_types = vh::getGodanTypesByOnbin("ん");
+        const auto& hatsuonbin_types = vh::getGodanTypesByOnbin("ん");
 
         for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
           std::string potential_base = stem + std::string(base_suffix);

@@ -2107,7 +2107,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // Determine candidate verb types based on onbin type
         // Uses centralized GodanRow data instead of manual enumeration
         std::string_view onbin_str = is_hatsuonbin ? "ん" : "い";
-        auto candidates_to_try = vh::getGodanTypesByOnbin(onbin_str);
+        const auto& candidates_to_try = vh::getGodanTypesByOnbin(onbin_str);
         // Get the kanji stem
         std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
         // First, check dictionary for ALL verb types before falling back to inflection
@@ -2178,7 +2178,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       // Basic te/ta form patterns (て, た, たら, たり), ちゃう (ち), and とく (と) contractions
       bool is_te_ta_pattern = (next_char == U'て' || next_char == U'た' || next_char == U'ち' || next_char == U'と');
       if (is_te_ta_pattern) {
-        auto sokuonbin_types = vh::getGodanTypesByOnbin("っ");
+        const auto& sokuonbin_types = vh::getGodanTypesByOnbin("っ");
         // Get the kanji stem
         std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
 
@@ -2527,7 +2527,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       // Basic te/ta form patterns (で, だ)
       bool is_de_da_pattern = (next_char == U'で' || next_char == U'だ');
       if (is_de_da_pattern) {
-        auto hatsuonbin_types = vh::getGodanTypesByOnbin("ん");
+        const auto& hatsuonbin_types = vh::getGodanTypesByOnbin("ん");
         // Get the kanji stem
         std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
 
@@ -2601,7 +2601,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
       std::string hira_stem = (n_pos > kanji_end) ? extractSubstring(codepoints, kanji_end, n_pos) : "";
 
-      auto n_onbin_types = vh::getGodanTypesByOnbin("ん");
+      const auto& n_onbin_types = vh::getGodanTypesByOnbin("ん");
 
       for (const auto& [verb_type, base_suffix] : n_onbin_types) {
         std::string base_form = kanji_stem + hira_stem + std::string(base_suffix);

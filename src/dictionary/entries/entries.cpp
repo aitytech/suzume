@@ -504,11 +504,8 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       // 間違いない → 間違い + ない (not 間違いない as single token)
       // These are handled by noun + ない connection
 
-      // Potential/Passive/Causative (generic)
-      aux("れる", "れる", EPOS::AuxPassive),
-      aux("られる", "られる", EPOS::AuxPassive),
-      aux("せる", "せる", EPOS::AuxCausative),
-      aux("させる", "させる", EPOS::AuxCausative),
+      // Note: れる/られる/せる/させる (shuushikei) are registered above with the
+      // Passive/Causative groups; no duplicate generic registration needed here.
 
       // Polite existence - ございます (丁重)
       // MeCab splits: ござい + ます (renyokei + polite)

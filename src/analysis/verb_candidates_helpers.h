@@ -279,9 +279,9 @@ bool isSokuonbinGodanType(grammar::VerbType verb_type);
  * - "" (none) → GodanSa
  *
  * @param onbin Onbin pattern to match ("い", "っ", "ん", or "")
- * @return Vector of (VerbType, base_suffix) pairs
+ * @return Reference to a shared immutable table of (VerbType, base_suffix) pairs
  */
-std::vector<std::pair<grammar::VerbType, std::string_view>> getGodanTypesByOnbin(std::string_view onbin);
+const std::vector<std::pair<grammar::VerbType, std::string_view>>& getGodanTypesByOnbin(std::string_view onbin);
 
 /**
  * @brief Check if surface contains passive/potential auxiliary patterns
