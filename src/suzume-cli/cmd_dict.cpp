@@ -119,7 +119,7 @@ int cmdDictInfo(const std::vector<std::string>& args, bool /* verbose */) {
   const std::string& path = args[0];
 
   // Check file extension
-  if (path.size() >= 4 && path.substr(path.size() - 4) == ".dic") {
+  if (hasExtension(path, ".dic")) {
     // Binary dictionary
     dictionary::BinaryDictionary dict;
     auto result = dict.loadFromFile(path);
@@ -270,12 +270,7 @@ int cmdDictCompile(const std::vector<std::string>& args, bool verbose) {
   // Single file mode: dict compile foo.tsv -> foo.dic
   if (file_args.size() == 1) {
     const std::string& tsv_path = file_args[0];
-    std::string dic_path;
-    if (tsv_path.size() >= 4 && tsv_path.substr(tsv_path.size() - 4) == ".tsv") {
-      dic_path = tsv_path.substr(0, tsv_path.size() - 4) + ".dic";
-    } else {
-      dic_path = tsv_path + ".dic";
-    }
+    std::string dic_path = swapOrAppendExtension(tsv_path, ".tsv", ".dic");
 
     // Single arg might be a glob pattern
     auto expanded = expandGlob(tsv_path);
@@ -310,7 +305,7 @@ int cmdDictCompile(const std::vector<std::string>& args, bool verbose) {
 
   // Multi-file mode: last arg is output .dic, rest are input .tsv files
   const std::string& dic_path = file_args.back();
-  if (dic_path.size() < 4 || dic_path.substr(dic_path.size() - 4) != ".dic") {
+  if (!hasExtension(dic_path, ".dic")) {
     printError("Output file must have .dic extension: " + dic_path);
     return 1;
   }
@@ -340,11 +335,7 @@ int cmdDictDecompile(const std::vector<std::string>& args, bool verbose) {
     tsv_path = args[1];
   } else {
     // Auto-generate output path: replace .dic with .tsv
-    if (dic_path.size() >= 4 && dic_path.substr(dic_path.size() - 4) == ".dic") {
-      tsv_path = dic_path.substr(0, dic_path.size() - 4) + ".tsv";
-    } else {
-      tsv_path = dic_path + ".tsv";
-    }
+    tsv_path = swapOrAppendExtension(dic_path, ".dic", ".tsv");
   }
 
   DictCompiler compiler;
@@ -392,7 +383,7 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
   }
 
   // Load dictionary
-  if (path.size() >= 4 && path.substr(path.size() - 4) == ".dic") {
+  if (hasExtension(path, ".dic")) {
     // Binary dictionary
     dictionary::BinaryDictionary dict;
     auto result = dict.loadFromFile(path);

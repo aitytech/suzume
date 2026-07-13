@@ -176,6 +176,17 @@ void stripUtf8Bom(std::string* value) {
   }
 }
 
+bool hasExtension(std::string_view path, std::string_view ext) {
+  return path.size() >= ext.size() && path.substr(path.size() - ext.size()) == ext;
+}
+
+std::string swapOrAppendExtension(std::string_view path, std::string_view from_ext, std::string_view to_ext) {
+  if (hasExtension(path, from_ext)) {
+    return std::string(path.substr(0, path.size() - from_ext.size())) + std::string(to_ext);
+  }
+  return std::string(path) + std::string(to_ext);
+}
+
 std::string wildcardToRegex(std::string_view pattern) {
   std::string regex_str;
   regex_str.reserve(pattern.size() * 2);

@@ -68,6 +68,17 @@ void stripUtf8Bom(std::string* value);
 std::string wildcardToRegex(std::string_view pattern);
 
 /**
+ * @brief True if @p path ends with @p ext (e.g. ".dic"). ASCII, case-sensitive.
+ */
+bool hasExtension(std::string_view path, std::string_view ext);
+
+/**
+ * @brief Swap a trailing @p from_ext for @p to_ext (e.g. ".tsv" -> ".dic"); if
+ *        @p path does not end with @p from_ext, @p to_ext is appended instead.
+ */
+std::string swapOrAppendExtension(std::string_view path, std::string_view from_ext, std::string_view to_ext);
+
+/**
  * @brief Check if input is from terminal (not piped)
  */
 bool isTerminal();
