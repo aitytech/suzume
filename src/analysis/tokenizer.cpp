@@ -27,6 +27,28 @@ namespace suzume::analysis {
 
 using verb_helpers::getHiraganaVowel;
 
+namespace {
+
+// True if every char position in [start, end) has CharType `type`. When
+// `allow_choon` is set, the prolonged sound mark (ー) is also accepted as part
+// of the run (colloquial すごーい, katakana loanwords). Bounds-checked against
+// both char_types and codepoints so callers can pass raw candidate ranges.
+bool allCharsAre(const std::vector<normalize::CharType>& char_types, const std::vector<char32_t>& codepoints,
+                 size_t start, size_t end, normalize::CharType type, bool allow_choon) {
+  for (size_t idx = start; idx < end && idx < char_types.size(); ++idx) {
+    if (char_types[idx] == type) {
+      continue;
+    }
+    if (allow_choon && idx < codepoints.size() && normalize::isProlongedSoundMark(codepoints[idx])) {
+      continue;
+    }
+    return false;
+  }
+  return true;
+}
+
+}  // namespace
+
 Tokenizer::Tokenizer(const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
                      const UnknownWordGenerator& unknown_gen, core::AnalysisMode mode)
     : dict_manager_(dict_manager),
@@ -349,19 +371,8 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
           // Also allow prolonged sound mark (ー) as part of hiragana sequence
           // for colloquial patterns like すごーい, やばーい, かわいー
           if (result.length <= 2 && candidate.end - candidate.start >= 3) {
-            bool all_hiragana_or_choon = true;
-            for (size_t idx = candidate.start; idx < candidate.end && idx < char_types.size(); ++idx) {
-              bool is_valid = (char_types[idx] == normalize::CharType::Hiragana);
-              // Allow prolonged sound mark (ー, U+30FC) as part of hiragana
-              if (!is_valid && idx < codepoints.size() && normalize::isProlongedSoundMark(codepoints[idx])) {
-                is_valid = true;
-              }
-              if (!is_valid) {
-                all_hiragana_or_choon = false;
-                break;
-              }
-            }
-            if (all_hiragana_or_choon) {
+            if (allCharsAre(char_types, codepoints, candidate.start, candidate.end, normalize::CharType::Hiragana,
+                            /*allow_choon=*/true)) {
               skip_penalty = true;
               skip_reason = "pure_hiragana_verb";
               break;
@@ -391,14 +402,8 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       size_t len = candidate.end - candidate.start;
       // Check for 2-char hiragana verbs ending in て/で
       if (len == 2 && surface.size() >= core::kJapaneseCharBytes) {
-        bool all_hiragana = true;
-        for (size_t idx = candidate.start; idx < candidate.end && idx < char_types.size(); ++idx) {
-          if (char_types[idx] != normalize::CharType::Hiragana) {
-            all_hiragana = false;
-            break;
-          }
-        }
-        if (all_hiragana) {
+        if (allCharsAre(char_types, codepoints, candidate.start, candidate.end, normalize::CharType::Hiragana,
+                        /*allow_choon=*/false)) {
           // Check if ends with て or で (te-form markers)
           std::string_view last_char = utf8::lastChar(surface);
           if (utf8::equalsAny(last_char, {"て", "で"})) {
@@ -418,14 +423,8 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
           utf8::endsWith(surface, "ちゃう") || utf8::endsWith(surface, "ちゃっ") || utf8::endsWith(surface, "ちゃい");
       if (ends_chau) {
         // Check if all hiragana
-        bool all_hira = true;
-        for (size_t idx = candidate.start; idx < candidate.end && idx < char_types.size(); ++idx) {
-          if (char_types[idx] != normalize::CharType::Hiragana) {
-            all_hira = false;
-            break;
-          }
-        }
-        if (all_hira) {
+        if (allCharsAre(char_types, codepoints, candidate.start, candidate.end, normalize::CharType::Hiragana,
+                        /*allow_choon=*/false)) {
           skip_penalty = false;
           skip_reason = nullptr;
         }
@@ -439,44 +438,31 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     bool skip_dict_penalty = false;
     [[maybe_unused]] const char* skip_dict_reason = nullptr;
     if (!skip_penalty && candidate.pos == core::PartOfSpeech::Other && candidate.end - candidate.start >= 4) {
-      bool all_hiragana_or_choon = true;
-      bool all_same = true;
-      char32_t first_cp = 0;
-      for (size_t idx = candidate.start; idx < candidate.end && idx < char_types.size(); ++idx) {
-        bool is_valid = (char_types[idx] == normalize::CharType::Hiragana);
-        // Allow prolonged sound mark (ー, U+30FC) as part of hiragana
-        if (!is_valid && idx < codepoints.size() && normalize::isProlongedSoundMark(codepoints[idx])) {
-          is_valid = true;
-        }
-        if (!is_valid) {
-          all_hiragana_or_choon = false;
-          break;
-        }
-        if (idx < codepoints.size()) {
+      if (allCharsAre(char_types, codepoints, candidate.start, candidate.end, normalize::CharType::Hiragana,
+                      /*allow_choon=*/true)) {
+        // Reduce penalty only for varied sequences, not runs of one repeated
+        // char (ーーーー, ああああ) which are usually noise.
+        bool all_same = true;
+        char32_t first_cp = 0;
+        for (size_t idx = candidate.start; idx < candidate.end && idx < codepoints.size(); ++idx) {
           if (idx == candidate.start) {
             first_cp = codepoints[idx];
           } else if (codepoints[idx] != first_cp) {
             all_same = false;
+            break;
           }
         }
-      }
-      if (all_hiragana_or_choon && !all_same) {
-        reduced_penalty = true;
+        if (!all_same) {
+          reduced_penalty = true;
+        }
       }
     }
 
     // Skip dict length penalty for katakana sequences (loanwords)
     // Loanwords like マスカラ, デスクトップ often exceed dictionary coverage
     if (!skip_penalty && candidate.pos == core::PartOfSpeech::Noun && candidate.end - candidate.start >= 3) {
-      bool all_katakana = true;
-      for (size_t idx = candidate.start; idx < candidate.end && idx < char_types.size(); ++idx) {
-        if (char_types[idx] != normalize::CharType::Katakana &&
-            !(idx < codepoints.size() && normalize::isProlongedSoundMark(codepoints[idx]))) {
-          all_katakana = false;
-          break;
-        }
-      }
-      if (all_katakana) {
+      if (allCharsAre(char_types, codepoints, candidate.start, candidate.end, normalize::CharType::Katakana,
+                      /*allow_choon=*/true)) {
         skip_dict_penalty = true;
         skip_dict_reason = "all_katakana";
       }
@@ -489,14 +475,8 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     if (!skip_penalty && !skip_dict_penalty && candidate.pos == core::PartOfSpeech::Noun) {
       size_t len = candidate.end - candidate.start;
       if (len >= 2 && len <= 6) {
-        bool all_kanji = true;
-        for (size_t idx = candidate.start; idx < candidate.end && idx < char_types.size(); ++idx) {
-          if (char_types[idx] != normalize::CharType::Kanji) {
-            all_kanji = false;
-            break;
-          }
-        }
-        if (all_kanji) {
+        if (allCharsAre(char_types, codepoints, candidate.start, candidate.end, normalize::CharType::Kanji,
+                        /*allow_choon=*/false)) {
           skip_dict_penalty = true;
           skip_dict_reason = "all_kanji_compound";
 
@@ -584,16 +564,11 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     // These should not be penalized heavily - they are legitimate verb forms
     bool is_pure_hiragana_verb = false;
     if (candidate.pos == core::PartOfSpeech::Verb && candidate.end - candidate.start >= 2) {
-      bool all_hiragana = true;
-      for (size_t idx = candidate.start; idx < candidate.end && idx < char_types.size(); ++idx) {
-        if (char_types[idx] != normalize::CharType::Hiragana) {
-          all_hiragana = false;
-          break;
-        }
-      }
       // Only skip penalty for short pure hiragana verbs (2-4 chars)
       // Longer ones might be suspicious (e.g., いただきます could be wrong split)
-      if (all_hiragana && candidate.end - candidate.start <= 4) {
+      if (candidate.end - candidate.start <= 4 &&
+          allCharsAre(char_types, codepoints, candidate.start, candidate.end, normalize::CharType::Hiragana,
+                      /*allow_choon=*/false)) {
         is_pure_hiragana_verb = true;
       }
     }
@@ -605,14 +580,8 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     if (candidate.pos == core::PartOfSpeech::Verb && candidate.end - candidate.start >= 2 &&
         candidate.start < char_types.size() && char_types[candidate.start] == normalize::CharType::Kanji) {
       // Check: first char is kanji, rest are hiragana
-      bool rest_hiragana = true;
-      for (size_t idx = candidate.start + 1; idx < candidate.end && idx < char_types.size(); ++idx) {
-        if (char_types[idx] != normalize::CharType::Hiragana) {
-          rest_hiragana = false;
-          break;
-        }
-      }
-      if (rest_hiragana) {
+      if (allCharsAre(char_types, codepoints, candidate.start + 1, candidate.end, normalize::CharType::Hiragana,
+                      /*allow_choon=*/false)) {
         is_kanji_stem_verb = true;
       }
     }

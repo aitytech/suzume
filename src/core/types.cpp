@@ -123,37 +123,11 @@ PartOfSpeech stringToPos(std::string_view str) {
 }
 
 ExtendedPOS posToDefaultExtendedPOS(PartOfSpeech pos) {
-  switch (pos) {
-    case PartOfSpeech::Noun:
-      return ExtendedPOS::Noun;
-    case PartOfSpeech::Verb:
-      return ExtendedPOS::VerbShuushikei;
-    case PartOfSpeech::Adjective:
-      return ExtendedPOS::AdjBasic;
-    case PartOfSpeech::Adverb:
-      return ExtendedPOS::Adverb;
-    case PartOfSpeech::Particle:
-      return ExtendedPOS::ParticleCase;
-    case PartOfSpeech::Auxiliary:
-      return ExtendedPOS::AuxTenseTa;
-    case PartOfSpeech::Pronoun:
-      return ExtendedPOS::Pronoun;
-    case PartOfSpeech::Conjunction:
-      return ExtendedPOS::Conjunction;
-    case PartOfSpeech::Determiner:
-      return ExtendedPOS::Determiner;
-    case PartOfSpeech::Prefix:
-      return ExtendedPOS::Prefix;
-    case PartOfSpeech::Suffix:
-      return ExtendedPOS::Suffix;
-    case PartOfSpeech::Symbol:
-      return ExtendedPOS::Symbol;
-    case PartOfSpeech::Interjection:
-      return ExtendedPOS::Interjection;
-    case PartOfSpeech::Count_:
-    default:
-      return ExtendedPOS::Unknown;
-  }
+  // Same POS→EPOS mapping as posToExtendedPos; the only difference is the
+  // fallback for unmapped POS (Unknown here vs Other there). No mapped POS
+  // yields ExtendedPOS::Other, so remapping Other→Unknown is exact.
+  ExtendedPOS epos = posToExtendedPos(pos);
+  return epos == ExtendedPOS::Other ? ExtendedPOS::Unknown : epos;
 }
 
 bool isTaggable(PartOfSpeech pos) {
