@@ -689,10 +689,8 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
 
           if (kanji_prefix_len > 0 && kanji_prefix_len < v2_surface_decoded.size()) {
             // Check if text at v2_start matches the kanji prefix
-            size_t kanji_prefix_byte_len = 0;
-            for (size_t idx = 0; idx < kanji_prefix_len; ++idx) {
-              kanji_prefix_byte_len += 3;  // Kanji are 3 bytes in UTF-8
-            }
+            // (kanji prefixes here are all 3-byte CJK codepoints).
+            size_t kanji_prefix_byte_len = kanji_prefix_len * core::kJapaneseCharBytes;
 
             if (v2_start_byte + kanji_prefix_byte_len <= text.size()) {
               std::string_view text_kanji_prefix = text.substr(v2_start_byte, kanji_prefix_byte_len);
