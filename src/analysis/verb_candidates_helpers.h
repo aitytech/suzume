@@ -361,6 +361,24 @@ inline float getIchidanConfidence(const std::vector<grammar::InflectionCandidate
 }
 
 /**
+ * @brief Check whether a polite-auxiliary (ます family) follows at @p pos.
+ *
+ * ます / まし / ませ attach only to a verb renyokei, never to a bare noun, so
+ * this licenses the verb reading of a noun/renyokei homograph (感じます).
+ * Matches ま followed by す (ます), し (ました), or せ (ません).
+ *
+ * @param codepoints Full input codepoints
+ * @param pos Index expected to hold the leading ま
+ */
+inline bool masuAuxFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos + 1 >= codepoints.size() || codepoints[pos] != U'ま') {
+    return false;
+  }
+  const char32_t next = codepoints[pos + 1];
+  return next == U'す' || next == U'し' || next == U'せ';
+}
+
+/**
  * @brief Best inflection candidate per verb class (Ichidan / Suru / Godan)
  *
  * Members left unmatched keep confidence 0.0 and are otherwise

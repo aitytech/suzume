@@ -1304,6 +1304,45 @@
       ],
       "id": "ga_koeru",
       "input": "音が聞こえる"
+    },
+    {
+      "description": "Ichidan renyokei before masu wins over dict-noun homograph",
+      "expected": [
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "jimasu",
+      "input": "感じます"
+    },
+    {
+      "description": "Ichidan renyokei + mashita over dict-noun homograph",
+      "expected": [
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "jimashita",
+      "input": "感じました"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",
