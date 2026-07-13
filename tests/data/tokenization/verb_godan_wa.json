@@ -669,6 +669,171 @@
       ],
       "id": "tsukaimasu",
       "input": "つかいます"
+    },
+    {
+      "description": "つかいました - regression test",
+      "expected": [
+        {
+          "lemma": "つかう",
+          "pos": "Verb",
+          "surface": "つかい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tsukaimashita",
+      "input": "つかいました"
+    },
+    {
+      "description": "つかいません - regression test",
+      "expected": [
+        {
+          "lemma": "つかう",
+          "pos": "Verb",
+          "surface": "つかい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ませ"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        }
+      ],
+      "id": "tsukaimasen",
+      "input": "つかいません"
+    },
+    {
+      "description": "かいました - regression test",
+      "expected": [
+        {
+          "lemma": "かう",
+          "pos": "Verb",
+          "surface": "かい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kaimashita",
+      "input": "かいました"
+    },
+    {
+      "description": "むかいました - regression test",
+      "expected": [
+        {
+          "lemma": "むかう",
+          "pos": "Verb",
+          "surface": "むかい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "mukaimashita",
+      "input": "むかいました"
+    },
+    {
+      "description": "かう - regression test",
+      "expected": [
+        {
+          "lemma": "かう",
+          "pos": "Verb",
+          "surface": "かう"
+        }
+      ],
+      "id": "kau",
+      "input": "かう"
+    },
+    {
+      "description": "すう - regression test",
+      "expected": [
+        {
+          "lemma": "すう",
+          "pos": "Verb",
+          "surface": "すう"
+        }
+      ],
+      "id": "suu",
+      "input": "すう"
+    },
+    {
+      "description": "むかう - regression test",
+      "expected": [
+        {
+          "lemma": "むかう",
+          "pos": "Verb",
+          "surface": "むかう"
+        }
+      ],
+      "id": "mukau",
+      "input": "むかう"
+    },
+    {
+      "description": "つかう - regression test",
+      "expected": [
+        {
+          "lemma": "つかう",
+          "pos": "Verb",
+          "surface": "つかう"
+        }
+      ],
+      "id": "tsukau",
+      "input": "つかう"
+    },
+    {
+      "description": "あらう - regression test",
+      "expected": [
+        {
+          "lemma": "あらう",
+          "pos": "Verb",
+          "surface": "あらう"
+        }
+      ],
+      "id": "arau",
+      "input": "あらう"
+    },
+    {
+      "description": "itta - 1-char stem sokuonbin, MeCab reads as いう (言った); ambiguous with 行った",
+      "expected": [
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ittta",
+      "input": "いった"
     }
   ],
   "description": "Godan Wa-row verbs (五段ワ行動詞) - verbs ending in う",

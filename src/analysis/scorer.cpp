@@ -873,6 +873,20 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     surface_bonus += cost::kVeryStrongBonus;
   }
 
+  // The volitional auxiliary is realized as bare う only after an o-row mizenkei
+  // (書こ+う, 泳ご+う, しよ+う; the ichidan form is the 2-mora 食べ+よう). A bare
+  // う after any non-o-row verb ending is impossible Japanese — an a-row mizenkei
+  // (つか of つく) or a u-row shuushikei (す of する) never takes the volitional う
+  // — yet the spurious split would otherwise beat the real godan-wa verb
+  // (つかう/使う, あらう/洗う, すう/吸う). Penalize so the whole-verb reading wins.
+  // A single-mora AuxVolitional surface is necessarily bare う (the ichidan form
+  // is the 2-mora よう), so the byte-length gate identifies it without a surface
+  // string compare.
+  if (next.extended_pos == core::ExtendedPOS::AuxVolitional && next.surface.size() == core::kJapaneseCharBytes &&
+      prev.pos == core::PartOfSpeech::Verb && !grammar::endsWithORow(prev.surface)) {
+    surface_bonus += cost::kSevere;
+  }
+
   // Bonus for dict VERB_連用 → ない/なく/なかっ/なけれ (negative auxiliary)
   // VERB→ADJ bigram (0.8) is high, making split path lose to merged candidates
   // E.g., でき+なく should beat できなく, し+なく should beat しなく

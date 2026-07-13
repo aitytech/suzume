@@ -283,6 +283,50 @@
       ],
       "id": "taihen_na_koto_da",
       "input": "大変なことだ"
+    },
+    {
+      "description": "konna fuu ni - fuu bound formal noun",
+      "expected": [
+        {
+          "lemma": "こんな",
+          "pos": "Determiner",
+          "surface": "こんな"
+        },
+        {
+          "lemma": "ふう",
+          "pos": "Noun",
+          "surface": "ふう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        }
+      ],
+      "id": "konnafuuni",
+      "input": "こんなふうに"
+    },
+    {
+      "description": "sonna fuu ni - fuu bound formal noun",
+      "expected": [
+        {
+          "lemma": "そんな",
+          "pos": "Determiner",
+          "surface": "そんな"
+        },
+        {
+          "lemma": "ふう",
+          "pos": "Noun",
+          "surface": "ふう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        }
+      ],
+      "id": "sonnafuuni",
+      "input": "そんなふうに"
     }
   ],
   "description": "Formal nouns (こと、もの、ところ)",

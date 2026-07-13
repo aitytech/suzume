@@ -257,6 +257,22 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
             ++hiragana_end;
             continue;
           }
+          // Check if followed by う (godan-wa shuushikei/rentaikei base form:
+          // つかう→使う, むかう→向かう, すう is not か-initial). Scoring rejects
+          // the impossible mizenkei+volitational reading (つか+う) separately.
+          if (hiragana_end + 1 < codepoints.size() && codepoints[hiragana_end + 1] == U'う') {
+            ++hiragana_end;
+            continue;
+          }
+          // Check if followed by わ + {な,れ,せ,ず} (godan-wa mizenkei:
+          // つかわない, つかわれる, つかわせる, つかわず). か+わ+ん is already
+          // covered by the A-row + ん rule above.
+          if (hiragana_end + 2 < codepoints.size() && codepoints[hiragana_end + 1] == U'わ' &&
+              (codepoints[hiragana_end + 2] == U'な' || codepoints[hiragana_end + 2] == U'れ' ||
+               codepoints[hiragana_end + 2] == U'せ' || codepoints[hiragana_end + 2] == U'ず')) {
+            ++hiragana_end;
+            continue;
+          }
         }
 
         // で: OK if preceded by ん (んで = te-form) or き (できる)
@@ -391,7 +407,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       // (surface.substr() returns a temporary std::string)
       std::string_view last_char(surface.data() + surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes);
       if (last_char != "る" && last_char != "て" && last_char != "で" && last_char != "た" && last_char != "だ" &&
-          last_char != "れ") {
+          last_char != "れ" && last_char != "う") {
         continue;  // Skip 2-char hiragana not ending with valid verb suffix
       }
     }
@@ -1492,6 +1508,16 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   // Pattern: 2+ char sequence ending with e-row or i-row hiragana followed by て or た
   // Note: Ichidan verbs have both e-row stems (食べる) and i-row stems (感じる, 過ぎる)
   // Uses inflection analysis confidence to validate (dictionary lookup as bonus)
+  //
+  // A run that starts with で right after a hatsuonbin ん is the voiced te-form
+  // particle of the preceding verb (読ん+で, 飲ん+で), so its でき is
+  // で(particle)+き(くる), never the renyokei of できる. Only the ます-family
+  // licenser is suppressed for this shape (see is_followed_by_masu below) so
+  // 読んできました stays 読ん+で+き+まし+た. The plain て/た path is deliberately
+  // left intact — 取り組んできた already resolves to …+で+き+た on its own, and
+  // blocking the reading there would instead flip it to でき+た.
+  const bool leading_de_after_hatsuonbin =
+      codepoints[start_pos] == U'で' && start_pos > 0 && codepoints[start_pos - 1] == U'ん';
   for (size_t end_pos = start_pos + 2; end_pos < hiragana_end; ++end_pos) {
     // Check if position end_pos-1 is e-row or i-row hiragana (ichidan renyokei ending)
     // E-row: 食べる, 見える → 食べ, 見え
@@ -1512,14 +1538,13 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
     char32_t next_char = codepoints[end_pos];
     bool is_followed_by_te_ta = (next_char == U'て' || next_char == U'た');
-    bool is_followed_by_masu = false;
     bool is_followed_by_reba = false;
-    // Check for polite ます auxiliary pattern (e.g., できます → でき + ます).
-    // Restricted to ま+す (not まし/ませ): accepting まし would let renyokei でき
-    // beat the で(particle)+き(くる) reading of 読んできました.
-    if (next_char == U'ま' && end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'す') {
-      is_followed_by_masu = true;
-    }
+    // Check for a polite ます-family auxiliary (ます / まし / ませ). All three
+    // attach only to a verb renyokei, so they license the renyokei reading of a
+    // renyokei/aux homograph (つかい→使う, かい→買う before ました/ません). The
+    // ん+で te-form shape is excluded so でき before まし is not mis-read as the
+    // renyokei of できる (読んできました → 読ん+で+き+まし+た).
+    bool is_followed_by_masu = vh::masuAuxFollowsAt(codepoints, end_pos) && !leading_de_after_hatsuonbin;
     // Check for conditional れば pattern (e.g., できれば → でき + れ + ば)
     // This case is handled separately below for kateikei stem generation
     if (next_char == U'れ' && end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'ば') {

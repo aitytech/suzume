@@ -591,7 +591,15 @@ float calculateConfidence(VerbType type, std::string_view stem, size_t aux_total
                           type == VerbType::GodanMa || type == VerbType::GodanWa);
   if (is_godan_non_ra && stem_len == core::kJapaneseCharBytes && !containsKanji(stem)) {
     // Exception: い(く) = 行く is valid
-    if (!(type == VerbType::GodanKa && stem == "い")) {
+    bool is_iku = (type == VerbType::GodanKa && stem == "い");
+    // Exception: the bare-う dictionary form of a single-kana GodanWa stem is a
+    // systematically real verb (かう/買う, すう/吸う, ぬう/縫う, いう/言う, あう/会う).
+    // Scoped to the base form (conn = kVerbBase, suffix = the single mora う, no
+    // auxiliaries) so onbin/renyokei shapes (かって, かい) keep the penalty and
+    // don't fabricate かう readings elsewhere.
+    bool is_godan_wa_base = (type == VerbType::GodanWa && required_conn == conn::kVerbBase && aux_count == 0 &&
+                             suffix_len == core::kJapaneseCharBytes);
+    if (!is_iku && !is_godan_wa_base) {
       float pen = GET_OPT(penalty_godan_single_hiragana_stem, inflection::kPenaltyGodanSingleHiraganaStem);
       base -= pen;
       logConfidenceAdjustment(-pen, "godan_single_hiragana_stem");

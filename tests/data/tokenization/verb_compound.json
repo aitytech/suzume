@@ -2075,6 +2075,33 @@
       ],
       "id": "wo_tt_ki_su",
       "input": "犯人を引っ掻き回す"
+    },
+    {
+      "description": "yonde kimasu - te-form + kuru + masu, de must stay particle",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "き"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "ndekimasu",
+      "input": "読んできます"
     }
   ],
   "description": "Compound verbs",

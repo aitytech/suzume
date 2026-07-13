@@ -197,6 +197,18 @@ bool startsWithHiragana(std::string_view s);
 bool endsWithARow(std::string_view stem);
 
 /**
+ * @brief Check if stem ends with o-row hiragana (verb volitional mizenkei)
+ * @param stem The stem to check
+ * @return True if the final codepoint is o-row hiragana
+ *
+ * O-row (お段) hiragana is the mizenkei a Godan verb takes before the
+ * volitional auxiliary う (書こ+う, 泳ご+う, 読も+う, しよ+う). Used to reject
+ * an う reading after any non-o-row verb ending (つか+う, あら+う, す+う are
+ * ungrammatical — a-row/u-row endings never take the volitional う).
+ */
+bool endsWithORow(std::string_view stem);
+
+/**
  * @brief Get the vowel row character for any hiragana character
  * @param ch Unicode codepoint to check
  * @return The vowel (あ/い/う/え/お) for the character's row, or ch if not hiragana

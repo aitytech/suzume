@@ -1013,6 +1013,10 @@ std::vector<DictionaryEntry> getFormalNounEntries() {
       // Hiragana-only forms
       formal_noun("よう", ""),
       formal_noun("ほう", ""),  // B49: lowered cost
+      // 風 (manner/style): bound formal noun (こんなふうに, そういうふうに).
+      // Registered so the u-ending verb candidate path does not fabricate a
+      // ふう/VERB reading now that 2-char う stems are admitted.
+      formal_noun("ふう", ""),
       formal_noun("わけ", ""),
       formal_noun("はず", "はず"),
       formal_noun("つもり", ""),

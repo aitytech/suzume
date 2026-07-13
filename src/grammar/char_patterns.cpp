@@ -156,8 +156,17 @@ bool startsWithHiragana(std::string_view s) {
 const char* kARowEndings[] = {"あ", "か", "が", "さ", "た", "な", "ば", "ま", "ら", "わ"};
 const size_t kARowCount = 10;
 
+// O-row (お段) endings: the mizenkei a Godan verb takes before volitional う
+const char* kORowEndings[] = {"お", "こ", "ご", "そ", "ぞ", "と", "ど", "の",
+                              "ほ", "ぼ", "ぽ", "も", "よ", "ろ", "を"};
+const size_t kORowCount = 15;
+
 bool endsWithARow(std::string_view stem) {
   return endsWithChar(stem, kARowEndings, kARowCount);
+}
+
+bool endsWithORow(std::string_view stem) {
+  return endsWithChar(stem, kORowEndings, kORowCount);
 }
 
 char32_t getVowelForChar(char32_t ch) {
