@@ -31,6 +31,37 @@ namespace vh = verb_helpers;
 
 namespace {
 
+// Godan mizenkei forms derived from an a-row (未然形) ending. Shared by the
+// ん / ない / なきゃ mizenkei candidate loops, which each add their own
+// validation, cost, and skip rules on top of this common derivation.
+struct GodanMizenkeiForms {
+  char32_t a_row_char;
+  grammar::VerbType verb_type;
+  std::string_view base_suffix;
+  std::string mizenkei_surface;
+  std::string stem;
+  std::string base_form;
+};
+
+// Derive the godan mizenkei forms for the a-row char at codepoints[mizenkei_end-1].
+// Returns false when that char is not a recognized a-row godan mizenkei ending.
+bool deriveGodanMizenkeiForms(const std::vector<char32_t>& codepoints, size_t start_pos, size_t mizenkei_end,
+                              GodanMizenkeiForms& out) {
+  out.a_row_char = codepoints[mizenkei_end - 1];
+  if (!grammar::isARowCodepoint(out.a_row_char)) {
+    return false;
+  }
+  out.verb_type = grammar::verbTypeFromARowCodepoint(out.a_row_char);
+  out.base_suffix = grammar::godanBaseSuffixFromARow(out.a_row_char);
+  if (out.verb_type == grammar::VerbType::Unknown || out.base_suffix.empty()) {
+    return false;
+  }
+  out.mizenkei_surface = extractSubstring(codepoints, start_pos, mizenkei_end);
+  out.stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
+  out.base_form = out.stem + std::string(out.base_suffix);
+  return true;
+}
+
 // Detect a formal-noun prefix boundary inside an unverified hiragana verb stem.
 // A stem that begins with a dictionary formal noun (わけ, こと, もの, ところ, ...)
 // followed by a remainder of two or more characters is usually a noun + verb
@@ -1021,28 +1052,18 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     if (mizenkei_end <= start_pos)
       continue;
 
-    char32_t a_row_char = codepoints[mizenkei_end - 1];  // The A-row character
-    if (!grammar::isARowCodepoint(a_row_char)) {
+    GodanMizenkeiForms forms;
+    if (!deriveGodanMizenkeiForms(codepoints, start_pos, mizenkei_end, forms)) {
       continue;
     }
-
     // Skip さ+ん pattern - さん is almost always an honorific suffix, not verb 未然形+ん
     // E.g., おねえさん, おかあさん, おじさん should not be parsed as verb + contracted negative
-    if (a_row_char == U'さ') {
+    if (forms.a_row_char == U'さ') {
       continue;
     }
-
-    // Determine verb type and base suffix from the A-row character (さ handled above)
-    grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(a_row_char);
-    std::string_view base_suffix = grammar::godanBaseSuffixFromARow(a_row_char);
-    if (verb_type == grammar::VerbType::Unknown || base_suffix.empty()) {
-      continue;  // Not a recognized mizenkei ending
-    }
-
-    // Construct mizenkei surface and base form
-    std::string mizenkei_surface = extractSubstring(codepoints, start_pos, mizenkei_end);
-    std::string stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
-    std::string base_form = stem + std::string(base_suffix);
+    grammar::VerbType verb_type = forms.verb_type;
+    const std::string& mizenkei_surface = forms.mizenkei_surface;
+    const std::string& base_form = forms.base_form;
 
     // Validate: check if base form exists in dictionary
     // The inflection analysis is too permissive and will match almost any input,
@@ -1098,22 +1119,14 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     if (mizenkei_end <= start_pos)
       continue;
 
-    char32_t a_row_char = codepoints[mizenkei_end - 1];  // The A-row character
-    if (!grammar::isARowCodepoint(a_row_char)) {
+    GodanMizenkeiForms forms;
+    if (!deriveGodanMizenkeiForms(codepoints, start_pos, mizenkei_end, forms)) {
       continue;
     }
-
-    // Determine verb type from A-row character
-    grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(a_row_char);
-    std::string_view base_suffix = grammar::godanBaseSuffixFromARow(a_row_char);
-    if (verb_type == grammar::VerbType::Unknown || base_suffix.empty()) {
-      continue;  // Not a recognized mizenkei ending
-    }
-
-    // Construct mizenkei surface and base form
-    std::string mizenkei_surface = extractSubstring(codepoints, start_pos, mizenkei_end);
-    std::string stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
-    std::string base_form = stem + std::string(base_suffix);
+    grammar::VerbType verb_type = forms.verb_type;
+    const std::string& mizenkei_surface = forms.mizenkei_surface;
+    const std::string& stem = forms.stem;
+    const std::string& base_form = forms.base_form;
 
     // Validate: analyze the full form (including ない) to check if it's a valid verb
     std::string full_form = mizenkei_surface + "ない";
@@ -1191,22 +1204,14 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     if (mizenkei_end <= start_pos) {
       continue;
     }
-    char32_t a_row_char = codepoints[mizenkei_end - 1];
-    if (!grammar::isARowCodepoint(a_row_char)) {
+    GodanMizenkeiForms forms;
+    if (!deriveGodanMizenkeiForms(codepoints, start_pos, mizenkei_end, forms)) {
       continue;
     }
-
-    // Determine verb type and base suffix from the A-row character
-    grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(a_row_char);
-    std::string_view base_suffix = grammar::godanBaseSuffixFromARow(a_row_char);
-    if (verb_type == grammar::VerbType::Unknown || base_suffix.empty()) {
-      continue;  // Not a recognized mizenkei ending
-    }
-
-    // Construct mizenkei surface and base form
-    std::string mizenkei_surface = extractSubstring(codepoints, start_pos, mizenkei_end);
-    std::string stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
-    std::string base_form = stem + std::string(base_suffix);
+    grammar::VerbType verb_type = forms.verb_type;
+    const std::string& mizenkei_surface = forms.mizenkei_surface;
+    const std::string& stem = forms.stem;
+    const std::string& base_form = forms.base_form;
 
     // Validate: analyze the equivalent ない form to confirm it is a valid verb.
     // E.g., for やら validate やらない → やる (godan-ra). Dictionary is a fallback.
