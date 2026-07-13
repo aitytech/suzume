@@ -15,12 +15,8 @@
 # --- Interjections ---
 
 # --- Pronouns (代名詞) ---
-あちこち	PRONOUN
-おまえ	PRONOUN
-みんな	PRONOUN
 
 # --- Interjections (感動詞) ---
-ああ	INTERJECTION
 ありがとう	INTERJECTION
 お疲れ様	INTERJECTION
 おはよう	INTERJECTION
@@ -33,12 +29,8 @@
 何だ	INTERJECTION
 
 # --- Conjunctions (接続詞) ---
-たとえば	CONJUNCTION
-でも	CONJUNCTION
 
 # --- Particles (助詞) ---
-といった	PARTICLE
-に対して	PARTICLE
 
 # --- Other (その他) ---
 あいよ	OTHER
@@ -46,21 +38,17 @@
 あーあ	OTHER
 いくよ	OTHER
 いや	OTHER
-うわ	OTHER
 うわー	OTHER
 うわーー	OTHER
 うーん	OTHER
-えっと	OTHER
 えー	OTHER
 えーっと	OTHER
-えーと	OTHER
 おおー	OTHER
 おー	OTHER
 ガチかよ	OTHER
 がんば	OTHER
 ごめん	OTHER
 そうだね	OTHER
-だるい	OTHER
 ないわ	OTHER
 無いわ	OTHER
 はぁ	OTHER
@@ -68,18 +56,12 @@
 はじめまして	OTHER
 初見です	OTHER
 はてな	OTHER
-ふーん	OTHER
 へー	OTHER
 ほー	OTHER
 マジかよ	OTHER
 またな	OTHER
 またね	OTHER
 んー	OTHER
-もっとも	CONJUNCTION
-そうして	CONJUNCTION
-いつ	PRONOUN
-されど	CONJUNCTION
-すなわち	CONJUNCTION
-しかしながら	CONJUNCTION
-ゆえに	CONJUNCTION
 ついで	CONJUNCTION
+がたい	OTHER
+といった	PARTICLE

@@ -232,10 +232,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "verb form: context-dependent POS/lemma"
-      },
       "description": "景気回復に伴い - GodanWa renyokei",
       "expected": [
         {
@@ -256,20 +252,6 @@
       ],
       "id": "godanwa_tomonai",
       "input": "景気回復に伴い",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "景気回復"
-        },
-        {
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "pos": "Adjective",
-          "surface": "伴い"
-        }
-      ],
       "tags": [
         "godanwa",
         "renyokei"
@@ -941,6 +923,60 @@
       ],
       "id": "katttekuru",
       "input": "向かってくる"
+    },
+    {
+      "description": "Godan-Wa sokuonbin lemma: 従っ→従う (not non-word 従る)",
+      "expected": [
+        {
+          "lemma": "先生",
+          "pos": "Noun",
+          "surface": "先生"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "従う",
+          "pos": "Verb",
+          "surface": "従っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ni_ttta",
+      "input": "先生に従った"
+    },
+    {
+      "description": "Godan-Wa sokuonbin lemma: 覆っ→覆う (not non-word 覆る)",
+      "expected": [
+        {
+          "lemma": "布",
+          "pos": "Noun",
+          "surface": "布"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "覆う",
+          "pos": "Verb",
+          "surface": "覆っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "de_ttta",
+      "input": "布で覆った"
     }
   ],
   "description": "Godan Wa-row verbs (五段ワ行動詞) - verbs ending in う",

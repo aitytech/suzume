@@ -717,7 +717,9 @@ std::vector<DictionaryEntry> getConjunctionEntries() {
       // Sequential (順接)
       conj("従って", ""),
       conj("故に", ""),
+      conj("ゆえに", ""),
       conj("そして", ""),
+      conj("そうして", ""),
       conj("それから", ""),
       conj("それで", ""),
       conj("だから", ""),
@@ -726,6 +728,7 @@ std::vector<DictionaryEntry> getConjunctionEntries() {
 
       // Adversative (逆接)
       conj("しかし", ""),
+      conj("しかしながら", ""),
       conj("だが", ""),
       conj("けれども", ""),
       conj("だけど", ""),  // colloquial variant
@@ -735,6 +738,8 @@ std::vector<DictionaryEntry> getConjunctionEntries() {
       conj("だって", ""),  // にもかかわらず removed for MeCab compat
       conj("どころか", ""),
       conj("ものの", ""),
+      conj("されど", ""),
+      conj("もっとも", ""),
 
       // Parallel/Addition (並列・添加)
       conj("又", ""),
@@ -758,6 +763,7 @@ std::vector<DictionaryEntry> getConjunctionEntries() {
 
       // Explanation/Supplement (説明・補足)
       conj("即ち", ""),
+      conj("すなわち", ""),
       conj("例えば", ""),
       conj("但し", ""),
       conj("尚", ""),
@@ -798,6 +804,7 @@ std::vector<DictionaryEntry> getDeterminerEntries() {
       // Demonstrative determiners (指示連体詞) - この/その/あの/どの
       det("この", ""),
       det("その", ""),
+      det("其の", ""),  // kanji variant of その
       det("あの", ""),
       det("どの", ""),
       // Demonstrative determiners (指示連体詞) - こんな/そんな/あんな/どんな
@@ -811,6 +818,7 @@ std::vector<DictionaryEntry> getDeterminerEntries() {
       det("あらゆる", ""),
       det("いかなる", ""),
       det("いわゆる", ""),
+      det("いろんな", ""),  // colloquial variety determiner (= いろいろな), not an adjective
       det("おかしな", ""),
       det("同じ", ""),  // same - prevent VERB confusion
 
@@ -833,6 +841,7 @@ std::vector<DictionaryEntry> getDeterminerEntries() {
       // Determiners with kanji - B51: lowered cost to prioritize over NOUN unknown
       det("大きな", ""),
       det("小さな", ""),
+      det("おっきな", ""),  // colloquial variant of 大きな
 
       // Classical possessive determiner (我が家, 我が子, 我が国)
       det("我が", ""),
@@ -879,6 +888,7 @@ std::vector<DictionaryEntry> getPronounEntries() {
       // B39: お前 needs low cost to beat PREFIX(お)+NOUN(前) split (connection bonus -1.5)
       // PREFIX→NOUN path has cost ~-1.2, so お前 needs cost < -1.2 to win
       pronoun("お前", ""),
+      pronoun("おまえ", ""),
 
       // Second person plural removed - use pronoun + たち suffix
 
@@ -912,6 +922,7 @@ std::vector<DictionaryEntry> getPronounEntries() {
       pronoun("そっち", ""),
       pronoun("あっち", ""),
       pronoun("どっち", ""),
+      pronoun("あちこち", ""),
 
       // Demonstrative - medial (中称)
       pronoun("それ", ""),

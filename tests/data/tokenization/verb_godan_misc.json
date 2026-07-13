@@ -711,6 +711,104 @@
       ],
       "id": "haittta",
       "input": "はいった"
+    },
+    {
+      "description": "Godan-Ba hatsuonbin lemma: 選ん→選ぶ (not non-word 選む)",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "wo_nda",
+      "input": "本を選んだ"
+    },
+    {
+      "description": "Pure-hiragana Godan-Ba hatsuonbin lemma: えらん→えらぶ",
+      "expected": [
+        {
+          "lemma": "えらぶ",
+          "pos": "Verb",
+          "surface": "えらん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "eranda",
+      "input": "えらんだ"
+    },
+    {
+      "description": "Godan-Ba hatsuonbin lemma: 転ん→転ぶ (not non-word 転む)",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "転ぶ",
+          "pos": "Verb",
+          "surface": "転ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "de_nda",
+      "input": "道で転んだ"
+    },
+    {
+      "description": "Godan-Ba hatsuonbin lemma: 運ん→運ぶ (not non-word 運む)",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "運ぶ",
+          "pos": "Verb",
+          "surface": "運ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "wo_nda_2",
+      "input": "荷物を運んだ"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

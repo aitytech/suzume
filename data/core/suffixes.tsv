@@ -15,13 +15,9 @@
 ヶ所	SUFFIX
 がち	SUFFIX
 ごろ	SUFFIX
-さま	SUFFIX
-さん	SUFFIX
 っ子	SUFFIX
 度	SUFFIX
-ら	SUFFIX
 
 # --- Other (その他) ---
-がた	OTHER
-がたい	OTHER
-ども	OTHER
+がた	SUFFIX
+ども	SUFFIX
