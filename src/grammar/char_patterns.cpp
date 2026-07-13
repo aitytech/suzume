@@ -292,11 +292,25 @@ const std::string& getBaseSuffixFromIRowCached(char32_t i_row_cp) {
   return it != cache.end() ? it->second : kEmpty;
 }
 
+// String-valued cache keyed by e_row (仮定形/potential stem): empty sentinel on miss.
+const std::string& getBaseSuffixFromERowCached(char32_t e_row_cp) {
+  const auto& cache = godanRowCache<std::string>([](const auto& row) { return row.e_row; },
+                                                 [](VerbType, const auto& row) { return encodeUtf8(row.base_vowel); });
+  static const std::string kEmpty;
+  auto it = cache.find(e_row_cp);
+  return it != cache.end() ? it->second : kEmpty;
+}
+
 }  // namespace
 
 std::string_view godanBaseSuffixFromIRow(char32_t i_row_cp) {
   // Use cached lookup derived from Conjugation::getGodanRows()
   return getBaseSuffixFromIRowCached(i_row_cp);
+}
+
+std::string_view godanBaseSuffixFromERow(char32_t e_row_cp) {
+  // Use cached lookup derived from Conjugation::getGodanRows()
+  return getBaseSuffixFromERowCached(e_row_cp);
 }
 
 VerbType verbTypeFromIRowCodepoint(char32_t i_row_cp) {

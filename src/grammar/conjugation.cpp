@@ -7,6 +7,7 @@
 
 #include <algorithm>
 
+#include "core/kana_constants.h"
 #include "core/utf8_constants.h"
 #include "normalize/utf8.h"
 
@@ -170,10 +171,11 @@ VerbType Conjugation::detectType(const std::string& base_form) {
     // This is a heuristic - not always correct
     if (base_form.size() >= core::kTwoJapaneseCharBytes) {
       std::string prev = base_form.substr(base_form.size() - core::kTwoJapaneseCharBytes, core::kJapaneseCharBytes);
-      // え段: え, け, せ, て, ね, へ, め, れ, げ, ぜ, で, べ, ぺ
-      // い段: い, き, し, ち, に, ひ, み, り, ぎ, じ, ぢ, び, ぴ
-      if (utf8::equalsAny(prev, {"べ", "め", "せ", "て", "け", "れ", "え", "ね", "げ", "ぜ", "で", "へ",
-                                 "み", "き", "し", "ち", "に", "り", "い", "ひ", "び", "ぎ", "じ"})) {
+      // An e-row (え段) or i-row (い段) hiragana before the final る marks an
+      // Ichidan verb (食べ+る, 見え+る); a kanji or other kana ending falls
+      // through to GodanRa.
+      char32_t prev_cp = utf8::decodeFirstChar(prev);
+      if (kana::isERowCodepoint(prev_cp) || kana::isIRowCodepoint(prev_cp)) {
         return VerbType::Ichidan;
       }
     }

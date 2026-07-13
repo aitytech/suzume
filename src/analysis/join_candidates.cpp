@@ -270,23 +270,14 @@ inline std::string generateKanjiRenyokei(std::string_view kanji_surface, std::st
   return result;
 }
 
-// 連用形 (continuative form) endings for Godan verbs
-struct RenyokeiPattern {
-  char32_t renyokei;  // 連用形 ending
-  char32_t base;      // Base form ending
-};
-
-const RenyokeiPattern kGodanRenyokei[] = {
-    {U'き', U'く'},  // 書き → 書く
-    {U'ぎ', U'ぐ'},  // 泳ぎ → 泳ぐ
-    {U'し', U'す'},  // 話し → 話す
-    {U'ち', U'つ'},  // 持ち → 持つ
-    {U'に', U'ぬ'},  // 死に → 死ぬ
-    {U'び', U'ぶ'},  // 飛び → 飛ぶ
-    {U'み', U'む'},  // 読み → 読む
-    {U'り', U'る'},  // 取り → 取る
-    {U'い', U'う'},  // 思い → 思う
-};
+// Map a Godan i-row 連用形 codepoint (き, ぎ, し, ...) to its dictionary-form
+// codepoint (く, ぐ, す, ...); returns 0 when the char is not a Godan renyokei
+// ending. Backed by the shared Conjugation-derived table in grammar so the
+// い段→終止形 mapping lives in exactly one place.
+inline char32_t godanRenyokeiBaseCp(char32_t renyokei_cp) {
+  std::string_view base = grammar::godanBaseSuffixFromIRow(renyokei_cp);
+  return base.empty() ? 0 : utf8::decodeFirstChar(base);
+}
 
 // Cost bonuses imported from candidate_constants.h:
 // candidate::kCompoundVerbBonus, candidate::kVerifiedV1Bonus
@@ -382,13 +373,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   char32_t renyokei_char = codepoints[kanji_end];
 
   // Check if it's a valid 連用形 ending
-  char32_t base_ending = 0;
-  for (const auto& pattern : kGodanRenyokei) {
-    if (pattern.renyokei == renyokei_char) {
-      base_ending = pattern.base;
-      break;
-    }
-  }
+  char32_t base_ending = godanRenyokeiBaseCp(renyokei_char);
 
   // Check for sokuonbin (っ) compound pattern: 突っ込む, 引っ張る, ぶっ壊す
   // Sokuonbin verbs: godan-ka(く), godan-ta(つ), godan-wa(う), godan-ra(る)
@@ -414,9 +399,9 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // B63: We need to skip this hiragana when looking for V2
     char32_t hira = codepoints[kanji_end];
     bool is_e_row_stem = grammar::isERowCodepoint(hira);
-    // Note: I-row includes some chars also in kGodanRenyokei (き, ぎ, し, ち, etc.)
-    // but by the time we reach this branch (is_ichidan=true), those cases
-    // have already been excluded because they set base_ending in the loop above.
+    // Note: I-row includes some chars that are also Godan renyokei endings
+    // (き, ぎ, し, ち, etc.), but by the time we reach this branch
+    // (is_ichidan=true) those cases have already set base_ending above.
     bool is_i_row_stem = grammar::isIRowCodepoint(hira);
 
     if (is_e_row_stem || is_i_row_stem) {
@@ -520,13 +505,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       // hijacked and the plain 引っ越す compound lost.
       if (k2_end < codepoints.size() && k2_end + 1 < codepoints.size() &&
           char_types[k2_end] == CharType::Hiragana && char_types[k2_end + 1] == CharType::Kanji) {
-        char32_t base2 = 0;
-        for (const auto& pat : kGodanRenyokei) {
-          if (pat.renyokei == codepoints[k2_end]) {
-            base2 = pat.base;
-            break;
-          }
-        }
+        char32_t base2 = godanRenyokeiBaseCp(codepoints[k2_end]);
         if (base2 != 0) {
           size_t k2_start_byte = charPosToBytePos(codepoints, k2_start);
           size_t k2_end_byte = charPosToBytePos(codepoints, k2_end);
@@ -1392,13 +1371,7 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       char32_t last_char = codepoints[v2_start - 1];
 
       // Check if it's a valid renyokei ending
-      char32_t base_ending = 0;
-      for (const auto& pattern : kGodanRenyokei) {
-        if (pattern.renyokei == last_char) {
-          base_ending = pattern.base;
-          break;
-        }
-      }
+      char32_t base_ending = godanRenyokeiBaseCp(last_char);
 
       // Build V1 base form
       std::string v1_base;

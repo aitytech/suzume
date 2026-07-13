@@ -1138,33 +1138,21 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
           // Map e-row ending to godan base: え→う, け→く, げ→ぐ, etc.
           std::string_view surface_tail(morpheme.surface.data() + morpheme.surface.size() - core::kJapaneseCharBytes,
                                         core::kJapaneseCharBytes);
+          // Map e-row ending to godan base (け→く, せ→す, ...) via the shared
+          // Conjugation-derived table. れ is ambiguous and handled separately.
+          char32_t tail_cp = utf8::decodeFirstChar(surface_tail);
           std::string godan_base;
-          if (surface_tail == "え")
-            godan_base = "う";
-          else if (surface_tail == "け")
-            godan_base = "く";
-          else if (surface_tail == "げ")
-            godan_base = "ぐ";
-          else if (surface_tail == "せ")
-            godan_base = "す";
-          else if (surface_tail == "て")
-            godan_base = "つ";
-          else if (surface_tail == "ね")
-            godan_base = "ぬ";
-          else if (surface_tail == "べ")
-            godan_base = "ぶ";
-          else if (surface_tail == "め")
-            godan_base = "む";
-          else if (surface_tail == "れ") {
+          if (tail_cp == U'れ') {
             // Check if this is ichidan conditional (食べれ+ば → 食べる)
             // rather than godan-ra conditional (取れ+ば → 取る)
             // For ichidan: surface_stem + る == original lemma
             std::string surface_stem = morpheme.surface.substr(0, morpheme.surface.size() - core::kJapaneseCharBytes);
-            if (surface_stem + "る" == morpheme.lemma) {
-              // Ichidan conditional - lemma is already correct, don't convert
-            } else {
+            if (surface_stem + "る" != morpheme.lemma) {
               godan_base = "る";
             }
+            // else: ichidan conditional - lemma is already correct, don't convert
+          } else {
+            godan_base = std::string(grammar::godanBaseSuffixFromERow(tail_cp));
           }
           if (!godan_base.empty()) {
             morpheme.lemma = stem + godan_base;

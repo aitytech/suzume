@@ -7,6 +7,7 @@
 
 #include <algorithm>
 
+#include "char_patterns.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
 #include "inflection_scorer.h"
@@ -218,16 +219,11 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
           // This prevents 奪われた → 奪わ+された → 奪わする (wrong)
           // Valid suru stems are all-kanji (開催) or katakana (ドライブ)
           if (ending.suffix.empty() && !aux_chain.empty()) {
-            // Check if last character is hiragana (verb conjugation suffix)
-            // A-row: あ か が さ た な は ば ま ら わ
-            // These are common mizenkei endings for godan verbs
-            if (utf8::equalsAny(last_char, {"あ", "か", "が", "さ", "た", "な", "ば", "ま", "ら", "わ"})) {
-              invalid_stem = true;
-            }
-            // E-row: け げ せ て ね べ め れ え
-            // These are common potential stems or Ichidan stem endings
-            // This prevents 話せ + なくなった → 話せする (wrong)
-            if (utf8::equalsAny(last_char, {"け", "げ", "せ", "て", "ね", "べ", "め", "れ", "え"})) {
+            // A-row endings are common godan mizenkei; e-row endings are common
+            // potential/ichidan stems. Either means the "stem" is really a verb
+            // conjugation, so the empty-suffix suru reading is invalid.
+            // (prevents 奪われた → 奪わする, 話せなくなった → 話せする, etc.)
+            if (endsWithARow(last_char) || endsWithERow(last_char)) {
               invalid_stem = true;
             }
             // Single-kanji stems are NOT valid for empty suffix suru patterns

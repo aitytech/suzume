@@ -284,6 +284,17 @@ VerbType verbTypeFromARowCodepoint(char32_t a_row_cp);
 std::string_view godanBaseSuffixFromIRow(char32_t i_row_cp);
 
 /**
+ * @brief Get Godan verb base suffix from E-row (仮定形/potential) ending
+ * @param e_row_cp E-row codepoint (け, せ, て, etc.)
+ * @return Corresponding u-row ending (く, す, つ, etc.), or empty if invalid
+ *
+ * Mapping: け→く, げ→ぐ, せ→す, て→つ, ね→ぬ, べ→ぶ, め→む, れ→る, え→う
+ * Used to derive a Godan dictionary form from a conditional/potential stem
+ * (取れ→取る) or from a mis-analyzed ichidan-potential lemma (書け→書く).
+ */
+std::string_view godanBaseSuffixFromERow(char32_t e_row_cp);
+
+/**
  * @brief Get VerbType from I-row renyokei ending
  * @param i_row_cp I-row codepoint (き, し, ち, etc.)
  * @return Corresponding VerbType, or Unknown if invalid

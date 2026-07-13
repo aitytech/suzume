@@ -141,7 +141,16 @@ inline bool isKatakanaCodepoint(char32_t cp) {
 }
 
 inline bool isKanjiCodepoint(char32_t cp) {
-  return (cp >= 0x4E00 && cp <= 0x9FFF) || (cp >= 0x3400 && cp <= 0x4DBF);
+  // Single source of truth for "is this codepoint a kanji". normalize:: forwards
+  // to this so every layer (grammar compound-verb probes, analysis, char typing)
+  // agrees on the extended/compatibility/radical ranges, not just the BMP core.
+  return (cp >= 0x4E00 && cp <= 0x9FFF) ||    // CJK Unified Ideographs
+         (cp >= 0x3400 && cp <= 0x4DBF) ||    // CJK Extension A
+         (cp >= 0x20000 && cp <= 0x2A6DF) ||  // CJK Extension B
+         (cp >= 0x2A700 && cp <= 0x2B73F) ||  // CJK Extension C
+         (cp >= 0x2B740 && cp <= 0x2B81F) ||  // CJK Extension D
+         (cp >= 0xF900 && cp <= 0xFAFF) ||    // CJK Compatibility Ideographs
+         (cp >= 0x2F00 && cp <= 0x2FDF);      // Kangxi Radicals
 }
 
 inline bool isOnbinCodepoint(char32_t cp) {

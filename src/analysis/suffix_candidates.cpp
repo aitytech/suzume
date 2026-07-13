@@ -11,6 +11,7 @@
 #include "core/debug.h"
 #include "core/utf8_constants.h"
 #include "dictionary/dictionary.h"
+#include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
 #include "grammar/inflection.h"
 #include "normalize/char_type.h"
@@ -442,36 +443,6 @@ std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& co
   return candidates;
 }
 
-/**
- * @brief Map a godan verb renyokei ending to its base form ending
- * @param renyokei Renyokei (continuative) ending codepoint (i-row)
- * @return Base form ending codepoint, or 0 if not a godan renyokei ending
- */
-inline char32_t godanRenyokeiToBaseEnding(char32_t renyokei) {
-  switch (renyokei) {
-    case U'き':
-      return U'く';  // 書き → 書く
-    case U'ぎ':
-      return U'ぐ';  // 泳ぎ → 泳ぐ
-    case U'し':
-      return U'す';  // 出し → 出す
-    case U'ち':
-      return U'つ';  // 持ち → 持つ
-    case U'に':
-      return U'ぬ';  // 死に → 死ぬ
-    case U'び':
-      return U'ぶ';  // 飛び → 飛ぶ
-    case U'み':
-      return U'む';  // 読み → 読む
-    case U'り':
-      return U'る';  // 取り → 取る
-    case U'い':
-      return U'う';  // 思い → 思う
-    default:
-      return 0;
-  }
-}
-
 std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints,
                                                                 size_t start_pos,
                                                                 const std::vector<normalize::CharType>& char_types,
@@ -631,8 +602,8 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       // a non-hiragana character, or end of text — so verbal continuations
       // (ながら, ます, たい...) keep the verb reading.
       if (kanji_count == 2 && dict_manager != nullptr) {
-        char32_t base_ending = godanRenyokeiToBaseEnding(first_hiragana);
-        if (base_ending != 0) {
+        std::string_view base_ending = grammar::godanBaseSuffixFromIRow(first_hiragana);
+        if (!base_ending.empty()) {
           bool nominal_context = true;
           size_t after_pos = kanji_end + 1;
           if (after_pos < char_types.size() && char_types[after_pos] == normalize::CharType::Hiragana) {
@@ -640,8 +611,7 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
             nominal_context = normalize::isParticleCodepoint(after_char) || after_char == U'だ';
           }
           if (nominal_context) {
-            std::string verb_base =
-                normalize::encodeUtf8(codepoints[kanji_end - 1]) + normalize::encodeUtf8(base_ending);
+            std::string verb_base = normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending);
             if (verb_helpers::isVerbInDictionary(dict_manager, verb_base)) {
               nom1_cost -= 0.6F;
             }

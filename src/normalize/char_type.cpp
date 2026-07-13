@@ -24,14 +24,8 @@ CharType classifyChar(char32_t codepoint) {
     return CharType::Kanji;
   }
 
-  // CJK Unified Ideographs (kanji)
-  if ((codepoint >= 0x4E00 && codepoint <= 0x9FFF) ||    // CJK Unified Ideographs
-      (codepoint >= 0x3400 && codepoint <= 0x4DBF) ||    // CJK Extension A
-      (codepoint >= 0x20000 && codepoint <= 0x2A6DF) ||  // CJK Extension B
-      (codepoint >= 0x2A700 && codepoint <= 0x2B73F) ||  // CJK Extension C
-      (codepoint >= 0x2B740 && codepoint <= 0x2B81F) ||  // CJK Extension D
-      (codepoint >= 0xF900 && codepoint <= 0xFAFF) ||    // CJK Compatibility Ideographs
-      (codepoint >= 0x2F00 && codepoint <= 0x2FDF)) {    // Kangxi Radicals
+  // CJK Unified Ideographs and extensions (kanji)
+  if (isKanjiCodepoint(codepoint)) {
     return CharType::Kanji;
   }
 
@@ -274,14 +268,8 @@ bool isORowHiragana(char32_t ch) {
 }
 
 bool isKanjiCodepoint(char32_t ch) {
-  // CJK Unified Ideographs and extensions
-  return (ch >= 0x4E00 && ch <= 0x9FFF) ||    // CJK Unified Ideographs
-         (ch >= 0x3400 && ch <= 0x4DBF) ||    // CJK Extension A
-         (ch >= 0x20000 && ch <= 0x2A6DF) ||  // CJK Extension B
-         (ch >= 0x2A700 && ch <= 0x2B73F) ||  // CJK Extension C
-         (ch >= 0x2B740 && ch <= 0x2B81F) ||  // CJK Extension D
-         (ch >= 0xF900 && ch <= 0xFAFF) ||    // CJK Compatibility Ideographs
-         (ch >= 0x2F00 && ch <= 0x2FDF);      // Kangxi Radicals
+  // Delegate to the single kanji-range definition in core/kana_constants.h.
+  return kana::isKanjiCodepoint(ch);
 }
 
 bool isCounterKanji(char32_t cp) {
