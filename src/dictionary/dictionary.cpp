@@ -1,5 +1,6 @@
 #include "dictionary/dictionary.h"
 
+#include <array>
 #include <cstdlib>
 #ifndef __EMSCRIPTEN__
 #include <filesystem>
@@ -10,6 +11,73 @@
 #include "dictionary/user_dict.h"
 
 namespace suzume::dictionary {
+
+namespace {
+
+// Single source of truth for conjugation-type spellings.
+//   canonical  - short SCREAMING_SNAKE used in TSV/CLI output ("" for None)
+//   pascal     - PascalCase enum name
+//   screaming  - long SCREAMING_SNAKE alias (== canonical except None/INTJ/
+//                FAMILY/GIVEN, which spell out NONE/INTERJECTION/PROPER_*)
+struct ConjTypeAlias {
+  ConjugationType type;
+  std::string_view canonical;
+  std::string_view pascal;
+  std::string_view screaming;
+};
+
+constexpr std::array<ConjTypeAlias, 18> kConjTypeAliases = {{
+    {ConjugationType::None, "", "None", "NONE"},
+    {ConjugationType::Ichidan, "ICHIDAN", "Ichidan", "ICHIDAN"},
+    {ConjugationType::GodanKa, "GODAN_KA", "GodanKa", "GODAN_KA"},
+    {ConjugationType::GodanGa, "GODAN_GA", "GodanGa", "GODAN_GA"},
+    {ConjugationType::GodanSa, "GODAN_SA", "GodanSa", "GODAN_SA"},
+    {ConjugationType::GodanTa, "GODAN_TA", "GodanTa", "GODAN_TA"},
+    {ConjugationType::GodanNa, "GODAN_NA", "GodanNa", "GODAN_NA"},
+    {ConjugationType::GodanBa, "GODAN_BA", "GodanBa", "GODAN_BA"},
+    {ConjugationType::GodanMa, "GODAN_MA", "GodanMa", "GODAN_MA"},
+    {ConjugationType::GodanRa, "GODAN_RA", "GodanRa", "GODAN_RA"},
+    {ConjugationType::GodanWa, "GODAN_WA", "GodanWa", "GODAN_WA"},
+    {ConjugationType::Suru, "SURU", "Suru", "SURU"},
+    {ConjugationType::Kuru, "KURU", "Kuru", "KURU"},
+    {ConjugationType::IAdjective, "I_ADJ", "IAdjective", "I_ADJ"},
+    {ConjugationType::NaAdjective, "NA_ADJ", "NaAdjective", "NA_ADJ"},
+    {ConjugationType::Interjection, "INTJ", "Interjection", "INTERJECTION"},
+    {ConjugationType::ProperFamily, "FAMILY", "ProperFamily", "PROPER_FAMILY"},
+    {ConjugationType::ProperGiven, "GIVEN", "ProperGiven", "PROPER_GIVEN"},
+}};
+
+}  // namespace
+
+std::string_view conjTypeToCanonicalString(ConjugationType type) {
+  for (const auto& alias : kConjTypeAliases) {
+    if (alias.type == type) {
+      return alias.canonical;
+    }
+  }
+  return "";
+}
+
+std::optional<ConjugationType> conjTypeFromCanonical(std::string_view str) {
+  if (str.empty() || str == "NONE") {
+    return ConjugationType::None;
+  }
+  for (const auto& alias : kConjTypeAliases) {
+    if (!alias.canonical.empty() && alias.canonical == str) {
+      return alias.type;
+    }
+  }
+  return std::nullopt;
+}
+
+std::optional<ConjugationType> conjTypeFromAnyAlias(std::string_view str) {
+  for (const auto& alias : kConjTypeAliases) {
+    if (alias.pascal == str || alias.screaming == str) {
+      return alias.type;
+    }
+  }
+  return std::nullopt;
+}
 
 #ifndef __EMSCRIPTEN__
 namespace {

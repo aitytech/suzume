@@ -46,15 +46,10 @@ bool isNumericField(std::string_view field) {
 }
 
 bool isConjugationTypeField(std::string_view field) {
-  return field == "Ichidan" || field == "GodanKa" || field == "GodanGa" || field == "GodanSa" || field == "GodanTa" ||
-         field == "GodanNa" || field == "GodanBa" || field == "GodanMa" || field == "GodanRa" || field == "GodanWa" ||
-         field == "Suru" || field == "Kuru" || field == "IAdjective" || field == "NaAdjective" ||
-         field == "Interjection" || field == "ProperFamily" || field == "ProperGiven" || field == "None" ||
-         field == "ICHIDAN" || field == "GODAN_KA" || field == "GODAN_GA" || field == "GODAN_SA" ||
-         field == "GODAN_TA" || field == "GODAN_NA" || field == "GODAN_BA" || field == "GODAN_MA" ||
-         field == "GODAN_RA" || field == "GODAN_WA" || field == "SURU" || field == "KURU" || field == "I_ADJ" ||
-         field == "NA_ADJ" || field == "INTERJECTION" || field == "PROPER_FAMILY" || field == "PROPER_GIVEN" ||
-         field == "NONE";
+  // Accepts the long PascalCase / SCREAMING_SNAKE aliases (Ichidan/ICHIDAN,
+  // Interjection/INTERJECTION, ...), but not the short INTJ/FAMILY/GIVEN forms;
+  // a field spelled that way is treated as a lemma, not a conjugation type.
+  return conjTypeFromAnyAlias(field).has_value();
 }
 
 bool isValidPos(core::PartOfSpeech pos) {

@@ -50,6 +50,7 @@ set(TEST_SOURCES
   # dictionary/core_dict_test.cpp  # v0.8: removed (verb expansion deleted)
   dictionary/user_dict_test.cpp
   dictionary/dict_string_pool_test.cpp
+  dictionary/conj_type_test.cpp
   grammar/conjugator_test.cpp
   grammar/conjugation_test.cpp
   grammar/inflection_basic_test.cpp

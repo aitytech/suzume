@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -37,6 +38,36 @@ enum class ConjugationType : uint8_t {
   ProperFamily = 16,  // 固有名詞(姓): 優木, 田中
   ProperGiven = 17,   // 固有名詞(名): せつ菜, 太郎
 };
+
+/**
+ * @brief Canonical serialized form of a conjugation type.
+ *
+ * Returns the short SCREAMING_SNAKE spelling used in TSV/CLI output
+ * ("ICHIDAN", "GODAN_KA", ..., "I_ADJ", "NA_ADJ", "INTJ", "FAMILY", "GIVEN");
+ * None serializes to an empty string.
+ */
+std::string_view conjTypeToCanonicalString(ConjugationType type);
+
+/**
+ * @brief Parse a conjugation type from its canonical spelling.
+ *
+ * Accepts the empty string and "NONE" (→ None) plus every short canonical form
+ * produced by conjTypeToCanonicalString (including "INTJ"/"FAMILY"/"GIVEN").
+ * Returns std::nullopt for anything else. Callers that must reject a subset
+ * (e.g. proper-name or interjection markers) filter the result themselves.
+ */
+std::optional<ConjugationType> conjTypeFromCanonical(std::string_view str);
+
+/**
+ * @brief Parse a conjugation type from any long-form alias.
+ *
+ * Accepts the PascalCase enum names ("Ichidan", "GodanKa", "Interjection",
+ * "ProperFamily", ...) and their long SCREAMING_SNAKE equivalents ("ICHIDAN",
+ * "GODAN_KA", "INTERJECTION", "PROPER_FAMILY", ..., plus "I_ADJ"/"NA_ADJ").
+ * Does NOT accept the short "INTJ"/"FAMILY"/"GIVEN" canonical forms. Returns
+ * std::nullopt for anything else.
+ */
+std::optional<ConjugationType> conjTypeFromAnyAlias(std::string_view str);
 
 /**
  * @brief Dictionary entry (simplified v0.8)

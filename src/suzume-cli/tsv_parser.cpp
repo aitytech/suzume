@@ -179,56 +179,11 @@ core::Expected<dictionary::ConjugationType, core::Error> TsvParser::parseConjTyp
   }
   str = str.substr(start, end - start + 1);
 
-  if (str.empty() || str == "NONE") {
-    return dictionary::ConjugationType::None;
-  }
-  if (str == "ICHIDAN") {
-    return dictionary::ConjugationType::Ichidan;
-  }
-  if (str == "GODAN_KA") {
-    return dictionary::ConjugationType::GodanKa;
-  }
-  if (str == "GODAN_GA") {
-    return dictionary::ConjugationType::GodanGa;
-  }
-  if (str == "GODAN_SA") {
-    return dictionary::ConjugationType::GodanSa;
-  }
-  if (str == "GODAN_TA") {
-    return dictionary::ConjugationType::GodanTa;
-  }
-  if (str == "GODAN_NA") {
-    return dictionary::ConjugationType::GodanNa;
-  }
-  if (str == "GODAN_BA") {
-    return dictionary::ConjugationType::GodanBa;
-  }
-  if (str == "GODAN_MA") {
-    return dictionary::ConjugationType::GodanMa;
-  }
-  if (str == "GODAN_RA") {
-    return dictionary::ConjugationType::GodanRa;
-  }
-  if (str == "GODAN_WA") {
-    return dictionary::ConjugationType::GodanWa;
-  }
-  if (str == "SURU") {
-    return dictionary::ConjugationType::Suru;
-  }
-  if (str == "KURU") {
-    return dictionary::ConjugationType::Kuru;
-  }
-  if (str == "I_ADJ") {
-    return dictionary::ConjugationType::IAdjective;
-  }
-  if (str == "NA_ADJ") {
-    return dictionary::ConjugationType::NaAdjective;
-  }
-  if (str == "FAMILY") {
-    return dictionary::ConjugationType::ProperFamily;
-  }
-  if (str == "GIVEN") {
-    return dictionary::ConjugationType::ProperGiven;
+  // Interjection is carried via the POS field, not conj_type, so "INTJ" is not a
+  // valid conjugation column here even though it is a canonical spelling.
+  auto conj_type = dictionary::conjTypeFromCanonical(str);
+  if (conj_type && *conj_type != dictionary::ConjugationType::Interjection) {
+    return *conj_type;
   }
 
   return core::makeUnexpected(core::Error(
@@ -282,51 +237,12 @@ core::Expected<size_t, core::Error> writeTsvFile(const std::string& path, const 
 
     if (entry.conj_type != dictionary::ConjugationType::None) {
       file << "\t";
-      switch (entry.conj_type) {
-        case dictionary::ConjugationType::Ichidan:
-          file << "ICHIDAN";
-          break;
-        case dictionary::ConjugationType::GodanKa:
-          file << "GODAN_KA";
-          break;
-        case dictionary::ConjugationType::GodanGa:
-          file << "GODAN_GA";
-          break;
-        case dictionary::ConjugationType::GodanSa:
-          file << "GODAN_SA";
-          break;
-        case dictionary::ConjugationType::GodanTa:
-          file << "GODAN_TA";
-          break;
-        case dictionary::ConjugationType::GodanNa:
-          file << "GODAN_NA";
-          break;
-        case dictionary::ConjugationType::GodanBa:
-          file << "GODAN_BA";
-          break;
-        case dictionary::ConjugationType::GodanMa:
-          file << "GODAN_MA";
-          break;
-        case dictionary::ConjugationType::GodanRa:
-          file << "GODAN_RA";
-          break;
-        case dictionary::ConjugationType::GodanWa:
-          file << "GODAN_WA";
-          break;
-        case dictionary::ConjugationType::Suru:
-          file << "SURU";
-          break;
-        case dictionary::ConjugationType::Kuru:
-          file << "KURU";
-          break;
-        case dictionary::ConjugationType::IAdjective:
-          file << "I_ADJ";
-          break;
-        case dictionary::ConjugationType::NaAdjective:
-          file << "NA_ADJ";
-          break;
-        default:
-          break;
+      // Only verb/adjective conjugation is serialized; interjection and
+      // proper-name markers leave the conjugation column empty (v0.8 format).
+      if (entry.conj_type != dictionary::ConjugationType::Interjection &&
+          entry.conj_type != dictionary::ConjugationType::ProperFamily &&
+          entry.conj_type != dictionary::ConjugationType::ProperGiven) {
+        file << dictionary::conjTypeToCanonicalString(entry.conj_type);
       }
     }
 
