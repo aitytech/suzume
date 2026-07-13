@@ -834,6 +834,91 @@
       ],
       "id": "ittta",
       "input": "いった"
+    },
+    {
+      "description": "向かった - auto-generated",
+      "expected": [
+        {
+          "lemma": "向かう",
+          "pos": "Verb",
+          "surface": "向かっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kattta",
+      "input": "向かった"
+    },
+    {
+      "description": "向かって - auto-generated",
+      "expected": [
+        {
+          "lemma": "向かう",
+          "pos": "Verb",
+          "surface": "向かっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "kattte",
+      "input": "向かって"
+    },
+    {
+      "description": "向かおう - auto-generated",
+      "expected": [
+        {
+          "lemma": "向かう",
+          "pos": "Verb",
+          "surface": "向かお"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kaou",
+      "input": "向かおう"
+    },
+    {
+      "description": "むかった - auto-generated",
+      "expected": [
+        {
+          "lemma": "むかう",
+          "pos": "Verb",
+          "surface": "むかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "mukattta",
+      "input": "むかった"
+    },
+    {
+      "description": "むかおう - auto-generated",
+      "expected": [
+        {
+          "lemma": "むかう",
+          "pos": "Verb",
+          "surface": "むかお"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "mukaou",
+      "input": "むかおう"
     }
   ],
   "description": "Godan Wa-row verbs (五段ワ行動詞) - verbs ending in う",

@@ -694,6 +694,23 @@
       ],
       "id": "wo_kizuttte_ku",
       "input": "荷物を引きずって歩く"
+    },
+    {
+      "description": "はいった - auto-generated",
+      "expected": [
+        {
+          "lemma": "はいる",
+          "pos": "Verb",
+          "surface": "はいっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "haittta",
+      "input": "はいった"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

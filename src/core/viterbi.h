@@ -34,6 +34,7 @@ inline constexpr float kBosAspectIkuPenalty = 1.0F;      // いく aspect needs 
 inline constexpr float kBosAspectKuruPenalty = 3.0F;     // くる aspect (き) needs a preceding て-form
 inline constexpr float kBosTensePenalty = 2.0F;          // た/だ needs a preceding verb/adj stem
 inline constexpr float kBosFinalParticlePenalty = 2.0F;  // Sentence-final particle cannot lead
+inline constexpr float kBosTopicParticlePenalty = 1.0F;  // 係助詞 は/も cannot lead a sentence
 
 // EOS (end-of-sentence) cost adjustments, symmetric to the BOS set above. A
 // morpheme that cannot naturally END a sentence is penalized, so an isolated
@@ -231,6 +232,12 @@ class Viterbi {
               }
               if (edge.extended_pos == ExtendedPOS::ParticleFinal) {
                 conn_cost += kBosFinalParticlePenalty;
+              }
+              // A 係助詞 (は/も) marks a topic against a preceding phrase; it cannot
+              // open a sentence. Keeps はいった → はいっ (入る) from splitting into
+              // は + いっ (言う) at BOS.
+              if (edge.extended_pos == ExtendedPOS::ParticleTopic) {
+                conn_cost += kBosTopicParticlePenalty;
               }
             }
 

@@ -2395,7 +2395,15 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           // Build potential base form and verify it exists in dictionary or inflection
           // This prevents false positives like 食べてしまる
           std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
-          std::string potential_base = stem + "る";
+          // 促音便 is shared across godan ラ/ワ/タ, so the base's conjugation type is
+          // lexical and cannot be read off the っ surface. Default to ラ行 (the common
+          // case: 閉まる/走る) but prefer a dictionary-verified ワ行 base (向かう over
+          // the non-word 向かる) when the dictionary carries it — mirroring the
+          // hiragana onbin path's dict-preference tie-break.
+          std::string godan_wa_base = stem + "う";
+          bool prefer_godan_wa = vh::isVerbInDictionary(dict_manager, godan_wa_base);
+          std::string potential_base = prefer_godan_wa ? godan_wa_base : stem + "る";
+          grammar::VerbType onbin_verb_type = prefer_godan_wa ? grammar::VerbType::GodanWa : grammar::VerbType::GodanRa;
 
           // Skip if hiragana before っ is だ (copula pattern)
           // E.g., 本だった = 本 + だっ + た (noun + copula), not 本だる (verb)
@@ -2445,7 +2453,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
               }
               candidates.push_back(makeVerbCandidate(
                   onbin_surface, start_pos, onbin_end, kExtendedSokuonbinCost, potential_base,
-                  grammar::verbTypeToConjType(grammar::VerbType::GodanRa), true, CandidateOrigin::VerbKanji, 0.9F,
+                  grammar::verbTypeToConjType(onbin_verb_type), true, CandidateOrigin::VerbKanji, 0.9F,
                   "extended_sokuonbin", core::ExtendedPOS::VerbOnbinkei));
             }
           }  // end else (not copula だ pattern)
