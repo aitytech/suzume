@@ -62,16 +62,10 @@ std::string jsonEscape(std::string_view value);
 void stripUtf8Bom(std::string* value);
 
 /**
- * @brief Read all lines from stdin
- * @return Vector of lines
+ * @brief Translate a shell-style wildcard pattern (* and ?) into an ECMAScript
+ *        regex string, escaping all other regex metacharacters.
  */
-std::vector<std::string> readStdin();
-
-/**
- * @brief Read single line from stdin
- * @return Line (empty if EOF)
- */
-std::string readLine();
+std::string wildcardToRegex(std::string_view pattern);
 
 /**
  * @brief Check if input is from terminal (not piped)

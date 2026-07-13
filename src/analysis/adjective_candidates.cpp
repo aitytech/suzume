@@ -1092,8 +1092,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     }
   }
 
-  std::sort(candidates.begin(), candidates.end(),
-            [](const UnknownCandidate& lhs, const UnknownCandidate& rhs) { return lhs.cost < rhs.cost; });
+  verb_helpers::sortCandidatesByCost(candidates);
 
   return candidates;
 }
@@ -1720,8 +1719,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   }
 
   // Sort by cost
-  std::sort(candidates.begin(), candidates.end(),
-            [](const UnknownCandidate& lhs, const UnknownCandidate& rhs) { return lhs.cost < rhs.cost; });
+  verb_helpers::sortCandidatesByCost(candidates);
 
   return candidates;
 }
@@ -1890,8 +1888,7 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   }
 
   // Sort by cost
-  std::sort(candidates.begin(), candidates.end(),
-            [](const UnknownCandidate& lhs, const UnknownCandidate& rhs) { return lhs.cost < rhs.cost; });
+  verb_helpers::sortCandidatesByCost(candidates);
 
   return candidates;
 }

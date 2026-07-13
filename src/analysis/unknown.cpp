@@ -16,6 +16,7 @@
 #include "adjective_candidates.h"
 #include "analysis/scorer_constants.h"
 #include "candidate_constants.h"
+#include "core/kana_constants.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "normalize/char_type.h"
@@ -89,23 +90,11 @@ bool isInternalParticleChar(char32_t code_point) {
 // Phonologically impossible hiragana word starts: small kana (拗音・促音), the
 // moraic nasal ん, and the case particles を/が which never begin a native word.
 bool isImpossibleHiraganaStart(char32_t code_point) {
-  switch (code_point) {
-    case U'ん':
-    case U'を':
-    case U'が':
-    case U'ゃ':
-    case U'ゅ':
-    case U'ょ':
-    case U'ぁ':
-    case U'ぃ':
-    case U'ぅ':
-    case U'ぇ':
-    case U'ぉ':
-    case U'っ':
-      return true;
-    default:
-      return false;
-  }
+  // Small kana (拗音・促音) share the single kana:: source of truth; ん and the case
+  // particles を/が never begin a native hiragana word. Callers gate on hiragana,
+  // so the katakana half of isSmallKanaCodepoint is never reached here.
+  return kana::isSmallKanaCodepoint(code_point) || code_point == U'ん' || code_point == U'を' ||
+         code_point == U'が';
 }
 
 }  // namespace
@@ -364,9 +353,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
 
     // Skip small kana (拗音・促音) - Japanese words don't start with these
     // ゃゅょぁぃぅぇぉっ are always part of compound sounds (e.g., きょう not ょう)
-    if (first_char == U'ゃ' || first_char == U'ゅ' || first_char == U'ょ' || first_char == U'ぁ' ||
-        first_char == U'ぃ' || first_char == U'ぅ' || first_char == U'ぇ' || first_char == U'ぉ' ||
-        first_char == U'っ') {
+    if (kana::isSmallKanaCodepoint(first_char)) {
       return candidates;  // Phonologically impossible word start
     }
 
@@ -893,9 +880,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandi
       return candidates;
     }
     // Skip small kana (ゃゅょぁぃぅぇぉっ) - these don't start words
-    if (first_char == U'ゃ' || first_char == U'ゅ' || first_char == U'ょ' || first_char == U'ぁ' ||
-        first_char == U'ぃ' || first_char == U'ぅ' || first_char == U'ぇ' || first_char == U'ぉ' ||
-        first_char == U'っ') {
+    if (kana::isSmallKanaCodepoint(first_char)) {
       return candidates;
     }
   }
@@ -903,9 +888,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandi
   // Skip small katakana as well
   if (start_type == normalize::CharType::Katakana) {
     char32_t first_char = codepoints[start_pos];
-    if (first_char == U'ャ' || first_char == U'ュ' || first_char == U'ョ' || first_char == U'ァ' ||
-        first_char == U'ィ' || first_char == U'ゥ' || first_char == U'ェ' || first_char == U'ォ' ||
-        first_char == U'ッ') {
+    if (kana::isSmallKanaCodepoint(first_char)) {
       return candidates;
     }
   }

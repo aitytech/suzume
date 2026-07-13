@@ -5,9 +5,6 @@
 
 #include "conjugator.h"
 
-#include "core/utf8_constants.h"
-#include "normalize/utf8.h"
-
 namespace suzume::grammar {
 
 Conjugator::Conjugator() = default;
@@ -22,12 +19,6 @@ VerbType Conjugator::detectType(const std::string& base_form) const {
 
 std::vector<StemForm> Conjugator::generateStems(const std::string& base_form, VerbType type) const {
   std::string stem = getStem(base_form, type);
-
-  // Get base suffix (e.g., く for GodanKa)
-  std::string base_suffix;
-  if (base_form.size() >= core::kJapaneseCharBytes) {
-    base_suffix = std::string(utf8::lastChar(base_form));
-  }
 
   if (isGodanVerbType(type)) {
     return generateGodanStems(stem, base_form, type);

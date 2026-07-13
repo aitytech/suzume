@@ -7,6 +7,7 @@
 #include <iostream>
 #include <regex>
 
+#include "cli_common.h"
 #include "dict_compiler.h"
 #include "dictionary/binary_dict.h"
 #include "dictionary/core_dict.h"
@@ -212,22 +213,7 @@ std::vector<std::string> expandGlob(const std::string& pattern) {
   }
 
   // Convert glob pattern to regex
-  std::string regex_str;
-  for (char ch : file_pattern) {
-    if (ch == '*') {
-      regex_str += ".*";
-    } else if (ch == '?') {
-      regex_str += ".";
-    } else if (ch == '.' || ch == '^' || ch == '$' || ch == '+' || ch == '(' || ch == ')' || ch == '[' || ch == ']' ||
-               ch == '|' || ch == '\\') {
-      regex_str += '\\';
-      regex_str += ch;
-    } else {
-      regex_str += ch;
-    }
-  }
-
-  std::regex re(regex_str);
+  std::regex re(wildcardToRegex(file_pattern));
   std::vector<std::string> matches;
 
   for (const auto& entry : fs::directory_iterator(dir)) {
@@ -402,21 +388,7 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
   std::regex pattern_regex;
   bool has_pattern = !pattern.empty();
   if (has_pattern) {
-    std::string regex_str;
-    for (char chr : pattern) {
-      if (chr == '*') {
-        regex_str += ".*";
-      } else if (chr == '?') {
-        regex_str += ".";
-      } else if (chr == '.' || chr == '^' || chr == '$' || chr == '+' || chr == '(' || chr == ')' || chr == '[' ||
-                 chr == ']' || chr == '|' || chr == '\\') {
-        regex_str += '\\';
-        regex_str += chr;
-      } else {
-        regex_str += chr;
-      }
-    }
-    pattern_regex = std::regex(regex_str);
+    pattern_regex = std::regex(wildcardToRegex(pattern));
   }
 
   // Load dictionary
@@ -495,22 +467,7 @@ int cmdDictSearch(const std::vector<std::string>& args, bool /* verbose */) {
   std::string pattern = args[1];
 
   // Convert simple wildcard to regex
-  std::string regex_str;
-  for (char chr : pattern) {
-    if (chr == '*') {
-      regex_str += ".*";
-    } else if (chr == '?') {
-      regex_str += ".";
-    } else if (chr == '.' || chr == '^' || chr == '$' || chr == '+' || chr == '(' || chr == ')' || chr == '[' ||
-               chr == ']' || chr == '|' || chr == '\\') {
-      regex_str += '\\';
-      regex_str += chr;
-    } else {
-      regex_str += chr;
-    }
-  }
-
-  std::regex regex_pattern(regex_str);
+  std::regex regex_pattern(wildcardToRegex(pattern));
 
   // Load and search
   TsvParser parser;

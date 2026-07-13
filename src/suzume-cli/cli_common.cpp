@@ -176,21 +176,23 @@ void stripUtf8Bom(std::string* value) {
   }
 }
 
-std::vector<std::string> readStdin() {
-  std::vector<std::string> lines;
-  std::string line;
-  while (std::getline(std::cin, line)) {
-    lines.push_back(std::move(line));
+std::string wildcardToRegex(std::string_view pattern) {
+  std::string regex_str;
+  regex_str.reserve(pattern.size() * 2);
+  for (char chr : pattern) {
+    if (chr == '*') {
+      regex_str += ".*";
+    } else if (chr == '?') {
+      regex_str += ".";
+    } else if (chr == '.' || chr == '^' || chr == '$' || chr == '+' || chr == '(' || chr == ')' || chr == '[' ||
+               chr == ']' || chr == '|' || chr == '\\') {
+      regex_str += '\\';
+      regex_str += chr;
+    } else {
+      regex_str += chr;
+    }
   }
-  return lines;
-}
-
-std::string readLine() {
-  std::string line;
-  if (std::getline(std::cin, line)) {
-    return line;
-  }
-  return "";
+  return regex_str;
 }
 
 bool isTerminal() {

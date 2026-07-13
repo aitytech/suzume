@@ -319,11 +319,6 @@ bool endsWithKuNaruPattern(std::string_view surface) {
          utf8::endsWith(surface, "くなった") || utf8::endsWith(surface, "くなって");
 }
 
-bool isSokuonbinGodanType(grammar::VerbType verb_type) {
-  return verb_type == grammar::VerbType::GodanRa || verb_type == grammar::VerbType::GodanTa ||
-         verb_type == grammar::VerbType::GodanWa || verb_type == grammar::VerbType::GodanKa;
-}
-
 const std::vector<std::pair<grammar::VerbType, std::string_view>>& getGodanTypesByOnbin(std::string_view onbin) {
   return grammar::Conjugation::getGodanTypesByOnbin(onbin);
 }

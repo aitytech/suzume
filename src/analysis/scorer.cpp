@@ -184,10 +184,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       edge.surface != "ない" && edge.surface != "なく" && edge.surface != "なかっ" && edge.surface != "そう") {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Base bonus -2.5, plus 0.5 per character beyond 3
-    float bonus = (char_len <= 3)
-                      ? sc::kBonusHiraganaAdjBase
-                      : sc::kBonusHiraganaAdjBase - static_cast<float>(char_len - 3) * sc::kBonusHiraganaAdjPerChar;
-    cost += bonus;
+    cost += lengthScaledBonus(sc::kBonusHiraganaAdjBase, char_len, 3, sc::kBonusHiraganaAdjPerChar);
   }
 
   // Bonus for kanji+い i-adjectives from dictionary
@@ -572,9 +569,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       // Longer compounds need stronger bonus to beat noun+adj split paths
       // Must overcome NOUN→dict_ADJ surface bonus (-0.5) on the split path
       size_t char_len = suzume::normalize::utf8Length(edge.surface);
-      float bonus = sc::kBonusCompoundAdjBase -
-                    static_cast<float>(char_len > 4 ? char_len - 4 : 0) * sc::kBonusCompoundAdjPerChar;
-      cost += bonus;
+      cost += lengthScaledBonus(sc::kBonusCompoundAdjBase, char_len, 4, sc::kBonusCompoundAdjPerChar);
     }
   }
 
@@ -1626,14 +1621,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       prev.surface.size() <= 9 &&  // 2-3 hiragana
       (next.surface == "し" || next.surface == "き")) {
     // Check prev is all hiragana
-    bool prev_is_hira = true;
-    for (char32_t cp : normalize::utf8::decode(prev.surface)) {
-      if (!kana::isHiraganaCodepoint(cp)) {
-        prev_is_hira = false;
-        break;
-      }
-    }
-    if (prev_is_hira && (next.extended_pos == core::ExtendedPOS::VerbRenyokei ||
+    if (grammar::isPureHiragana(prev.surface) && (next.extended_pos == core::ExtendedPOS::VerbRenyokei ||
                          next.extended_pos == core::ExtendedPOS::ParticleConj)) {
       surface_bonus += cost::kStrong;
     }

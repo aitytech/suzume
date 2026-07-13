@@ -218,21 +218,7 @@ bool InteractiveSession::cmdList(const std::vector<std::string>& args) {
   // Convert pattern to regex if provided
   std::unique_ptr<std::regex> regex_pattern;
   if (!pattern.empty()) {
-    std::string regex_str;
-    for (char chr : pattern) {
-      if (chr == '*') {
-        regex_str += ".*";
-      } else if (chr == '?') {
-        regex_str += ".";
-      } else if (chr == '.' || chr == '^' || chr == '$' || chr == '+' || chr == '(' || chr == ')' || chr == '[' ||
-                 chr == ']' || chr == '|' || chr == '\\') {
-        regex_str += '\\';
-        regex_str += chr;
-      } else {
-        regex_str += chr;
-      }
-    }
-    regex_pattern = std::make_unique<std::regex>(regex_str);
+    regex_pattern = std::make_unique<std::regex>(wildcardToRegex(pattern));
   }
 
   size_t count = 0;
@@ -274,22 +260,7 @@ bool InteractiveSession::cmdSearch(const std::vector<std::string>& args) {
   std::string pattern = args[0];
 
   // Convert wildcard pattern to regex
-  std::string regex_str;
-  for (char chr : pattern) {
-    if (chr == '*') {
-      regex_str += ".*";
-    } else if (chr == '?') {
-      regex_str += ".";
-    } else if (chr == '.' || chr == '^' || chr == '$' || chr == '+' || chr == '(' || chr == ')' || chr == '[' ||
-               chr == ']' || chr == '|' || chr == '\\') {
-      regex_str += '\\';
-      regex_str += chr;
-    } else {
-      regex_str += chr;
-    }
-  }
-
-  std::regex regex_pattern(regex_str);
+  std::regex regex_pattern(wildcardToRegex(pattern));
 
   size_t count = 0;
   for (const auto& entry : entries_) {

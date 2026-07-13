@@ -330,51 +330,10 @@ core::Expected<size_t, core::Error> DictCompiler::compileEntries(const std::vect
       base_entry.extended_pos = core::ExtendedPOS::AdjBasic;
       expanded_entries = expandIAdjective(base_entry);
     } else if (tsv_entry.pos == core::PartOfSpeech::Verb) {
-      // Verb: detect type and expand
-      grammar::VerbType verb_type = grammar::VerbType::Unknown;
-
-      // Use conj_type hint if available, otherwise detect
-      switch (tsv_entry.conj_type) {
-        case dictionary::ConjugationType::Ichidan:
-          verb_type = grammar::VerbType::Ichidan;
-          break;
-        case dictionary::ConjugationType::GodanKa:
-          verb_type = grammar::VerbType::GodanKa;
-          break;
-        case dictionary::ConjugationType::GodanGa:
-          verb_type = grammar::VerbType::GodanGa;
-          break;
-        case dictionary::ConjugationType::GodanSa:
-          verb_type = grammar::VerbType::GodanSa;
-          break;
-        case dictionary::ConjugationType::GodanTa:
-          verb_type = grammar::VerbType::GodanTa;
-          break;
-        case dictionary::ConjugationType::GodanNa:
-          verb_type = grammar::VerbType::GodanNa;
-          break;
-        case dictionary::ConjugationType::GodanBa:
-          verb_type = grammar::VerbType::GodanBa;
-          break;
-        case dictionary::ConjugationType::GodanMa:
-          verb_type = grammar::VerbType::GodanMa;
-          break;
-        case dictionary::ConjugationType::GodanRa:
-          verb_type = grammar::VerbType::GodanRa;
-          break;
-        case dictionary::ConjugationType::GodanWa:
-          verb_type = grammar::VerbType::GodanWa;
-          break;
-        case dictionary::ConjugationType::Suru:
-          verb_type = grammar::VerbType::Suru;
-          break;
-        case dictionary::ConjugationType::Kuru:
-          verb_type = grammar::VerbType::Kuru;
-          break;
-        default:
-          // Auto-detect if not specified
-          verb_type = grammar::Conjugation::detectType(tsv_entry.surface);
-          break;
+      // Verb: use conj_type hint if it names a verb type, otherwise auto-detect.
+      grammar::VerbType verb_type = grammar::conjTypeToVerbType(tsv_entry.conj_type);
+      if (verb_type == grammar::VerbType::Unknown || verb_type == grammar::VerbType::IAdjective) {
+        verb_type = grammar::Conjugation::detectType(tsv_entry.surface);
       }
 
       base_entry.extended_pos = core::ExtendedPOS::VerbShuushikei;
