@@ -2112,17 +2112,10 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
         // First, check dictionary for ALL verb types before falling back to inflection
         // This ensures dictionary-verified verbs take precedence
-        grammar::VerbType matched_verb_type = grammar::VerbType::Unknown;
-        std::string matched_base_form;
         // Phase 1: Dictionary check
-        for (const auto& [verb_type, base_suffix] : candidates_to_try) {
-          std::string base_form = kanji_stem + std::string(base_suffix);
-          if (vh::isVerbInDictionary(dict_manager, base_form)) {
-            matched_verb_type = verb_type;
-            matched_base_form = base_form;
-            break;
-          }
-        }
+        auto onbin_match = vh::firstGodanOnbinDictBase(dict_manager, kanji_stem, onbin_str);
+        grammar::VerbType matched_verb_type = onbin_match.verb_type;
+        std::string matched_base_form = std::move(onbin_match.base_form);
         // Phase 2: Inflection analysis fallback
         if (matched_verb_type == grammar::VerbType::Unknown && kanji_end > start_pos) {
           std::string full_surface = extractSubstring(codepoints, start_pos, hiragana_end);
@@ -2540,16 +2533,9 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
 
         // First, check dictionary for ALL verb types
-        grammar::VerbType matched_verb_type = grammar::VerbType::Unknown;
-        std::string matched_base_form;
-        for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
-          std::string base_form = kanji_stem + std::string(base_suffix);
-          bool dict_match = vh::isVerbInDictionary(dict_manager, base_form);
-          if (dict_match && matched_verb_type == grammar::VerbType::Unknown) {
-            matched_verb_type = verb_type;
-            matched_base_form = base_form;
-          }
-        }
+        auto hatsuonbin_match = vh::firstGodanOnbinDictBase(dict_manager, kanji_stem, "ん");
+        grammar::VerbType matched_verb_type = hatsuonbin_match.verb_type;
+        std::string matched_base_form = std::move(hatsuonbin_match.base_form);
         // Phase 2: Inflection analysis fallback
         if (matched_verb_type == grammar::VerbType::Unknown) {
           std::string full_surface = extractSubstring(codepoints, start_pos, hiragana_end);
@@ -2609,22 +2595,19 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
       std::string hira_stem = (n_pos > kanji_end) ? extractSubstring(codepoints, kanji_end, n_pos) : "";
 
-      const auto& n_onbin_types = vh::getGodanTypesByOnbin("ん");
-
-      for (const auto& [verb_type, base_suffix] : n_onbin_types) {
-        std::string base_form = kanji_stem + hira_stem + std::string(base_suffix);
-        if (vh::isVerbInDictionary(dict_manager, base_form)) {
-          std::string onbin_surface = extractSubstring(codepoints, start_pos, n_pos + 1);
-          constexpr float kHatsuonbinCost = candidate::verb_cost::kStandardBonus;
-          SUZUME_DEBUG_VERBOSE_BLOCK {
-            SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << " kanji_hatsuonbin_standalone lemma=" << base_form
-                                << " cost=" << kHatsuonbinCost << "\n";
-          }
-          candidates.push_back(makeVerbCandidate(
-              onbin_surface, start_pos, n_pos + 1, kHatsuonbinCost, base_form, grammar::verbTypeToConjType(verb_type),
-              true, CandidateOrigin::VerbKanji, 0.9F, "kanji_hatsuonbin", core::ExtendedPOS::VerbOnbinkei));
-          break;
+      auto n_onbin_match = vh::firstGodanOnbinDictBase(dict_manager, kanji_stem + hira_stem, "ん");
+      if (n_onbin_match.matched) {
+        std::string onbin_surface = extractSubstring(codepoints, start_pos, n_pos + 1);
+        constexpr float kHatsuonbinCost = candidate::verb_cost::kStandardBonus;
+        SUZUME_DEBUG_VERBOSE_BLOCK {
+          SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface
+                              << " kanji_hatsuonbin_standalone lemma=" << n_onbin_match.base_form
+                              << " cost=" << kHatsuonbinCost << "\n";
         }
+        candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, n_pos + 1, kHatsuonbinCost,
+                                               n_onbin_match.base_form, grammar::verbTypeToConjType(n_onbin_match.verb_type),
+                                               true, CandidateOrigin::VerbKanji, 0.9F, "kanji_hatsuonbin",
+                                               core::ExtendedPOS::VerbOnbinkei));
       }
       break;  // Only process first ん in the region
     }

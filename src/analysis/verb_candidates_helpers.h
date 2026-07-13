@@ -277,6 +277,35 @@ bool endsWithKuNaruPattern(std::string_view surface);
 const std::vector<std::pair<grammar::VerbType, std::string_view>>& getGodanTypesByOnbin(std::string_view onbin);
 
 /**
+ * @brief Result of matching an onbin stem against the dictionary's godan verbs.
+ *
+ * @c base_suffix points into the immutable getGodanTypesByOnbin() table and is
+ * valid for the program's lifetime. When @c matched is false, @c verb_type is
+ * Unknown, @c base_form is empty, and @c base_suffix is empty.
+ */
+struct GodanOnbinDictMatch {
+  grammar::VerbType verb_type = grammar::VerbType::Unknown;
+  std::string base_form;              // stem + base_suffix
+  std::string_view base_suffix = "";  // the matched suffix from the table
+  bool matched = false;
+};
+
+/**
+ * @brief First (verb_type, stem+base_suffix) pair for @p onbin whose base form
+ *        is a dictionary verb, in getGodanTypesByOnbin() table order.
+ *
+ * Reproduces the phase-1 "check every godan candidate, keep the first dictionary
+ * hit" scan shared by the onbin candidate generators.
+ *
+ * @param dict_manager Dictionary manager (may be null → no match)
+ * @param stem         Verb stem to which each table suffix is appended
+ * @param onbin        Onbin pattern ("い", "っ", "ん", or "")
+ * @return The first dictionary-verified match, or an unmatched result
+ */
+GodanOnbinDictMatch firstGodanOnbinDictBase(const dictionary::DictionaryManager* dict_manager, std::string_view stem,
+                                            std::string_view onbin);
+
+/**
  * @brief Check if surface contains passive/potential auxiliary patterns
  */
 bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType verb_type);

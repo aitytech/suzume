@@ -323,6 +323,17 @@ const std::vector<std::pair<grammar::VerbType, std::string_view>>& getGodanTypes
   return grammar::Conjugation::getGodanTypesByOnbin(onbin);
 }
 
+GodanOnbinDictMatch firstGodanOnbinDictBase(const dictionary::DictionaryManager* dict_manager, std::string_view stem,
+                                            std::string_view onbin) {
+  for (const auto& [verb_type, base_suffix] : getGodanTypesByOnbin(onbin)) {
+    std::string base_form = std::string(stem) + std::string(base_suffix);
+    if (isVerbInDictionary(dict_manager, base_form)) {
+      return GodanOnbinDictMatch{verb_type, std::move(base_form), base_suffix, true};
+    }
+  }
+  return GodanOnbinDictMatch{};
+}
+
 bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType verb_type) {
   // Skip patterns containing classical passive + べき
   if (utf8::endsWith(surface, "れべき")) {

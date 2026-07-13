@@ -718,30 +718,26 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
         // When the second kanji is followed by ん, check if kanji2+ぶ/む/ぬ is in dict
         if (kanji2_end < codepoints.size() && codepoints[kanji2_end] == U'ん' && dict_manager != nullptr) {
           std::string kanji2_stem = extractSubstring(codepoints, sokuon_pos + 1, kanji2_end);
-          const auto& hatsuonbin_types = verb_helpers::getGodanTypesByOnbin("ん");
 
-          for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
-            std::string base_form = kanji2_stem + std::string(base_suffix);
-            if (verb_helpers::isVerbInDictionary(dict_manager, base_form)) {
-              size_t onbin_end = kanji2_end + 1;  // Include ん
-              std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
-              constexpr float kHatsuonbinCost = -0.5F;
-              auto cand = makeCandidate(onbin_surface, start_pos, onbin_end, core::PartOfSpeech::Verb, kHatsuonbinCost,
-                                        false, CandidateOrigin::KanjiHiraganaCompound);
-              // Full base form includes the first kanji + っ
-              std::string full_kanji = extractSubstring(codepoints, start_pos, kanji2_end);
-              cand.lemma = full_kanji + std::string(base_suffix);
-              cand.conj_type = grammar::verbTypeToConjType(verb_type);
-              cand.extended_pos = core::ExtendedPOS::VerbOnbinkei;
+          auto hatsuonbin_match = verb_helpers::firstGodanOnbinDictBase(dict_manager, kanji2_stem, "ん");
+          if (hatsuonbin_match.matched) {
+            size_t onbin_end = kanji2_end + 1;  // Include ん
+            std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
+            constexpr float kHatsuonbinCost = -0.5F;
+            auto cand = makeCandidate(onbin_surface, start_pos, onbin_end, core::PartOfSpeech::Verb, kHatsuonbinCost,
+                                      false, CandidateOrigin::KanjiHiraganaCompound);
+            // Full base form includes the first kanji + っ
+            std::string full_kanji = extractSubstring(codepoints, start_pos, kanji2_end);
+            cand.lemma = full_kanji + std::string(hatsuonbin_match.base_suffix);
+            cand.conj_type = grammar::verbTypeToConjType(hatsuonbin_match.verb_type);
+            cand.extended_pos = core::ExtendedPOS::VerbOnbinkei;
 #ifdef SUZUME_DEBUG_INFO
-              cand.confidence = 0.9F;
-              cand.pattern = "sokuon_kanji_hatsuonbin";
+            cand.confidence = 0.9F;
+            cand.pattern = "sokuon_kanji_hatsuonbin";
 #endif
-              SUZUME_DEBUG_LOG("[SUFFIX_CAND] " << onbin_surface << " sokuon_kanji_hatsuonbin lemma=" << cand.lemma
-                                                << " cost=" << kHatsuonbinCost << "\n");
-              candidates.push_back(cand);
-              break;
-            }
+            SUZUME_DEBUG_LOG("[SUFFIX_CAND] " << onbin_surface << " sokuon_kanji_hatsuonbin lemma=" << cand.lemma
+                                              << " cost=" << kHatsuonbinCost << "\n");
+            candidates.push_back(cand);
           }
         }
       } else if (next_type == normalize::CharType::Hiragana) {

@@ -1726,24 +1726,21 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
 
         const auto& sokuonbin_types = vh::getGodanTypesByOnbin("っ");
 
-        bool found_dict_match = false;
-        for (const auto& [verb_type, base_suffix] : sokuonbin_types) {
-          std::string potential_base = stem + std::string(base_suffix);
-          bool in_dict = vh::isVerbInDictionary(dict_manager, potential_base);
-          if (in_dict) {
-            constexpr float kHiraganaSokuonbinCost = candidate::verb_cost::kStandardBonus;
-            SUZUME_DEBUG_VERBOSE_BLOCK {
-              SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << " hiragana_sokuonbin lemma=" << potential_base
-                                  << " type=" << grammar::verbTypeToString(verb_type)
-                                  << " cost=" << kHiraganaSokuonbinCost << "\n";
-            }
-            candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaSokuonbinCost,
-                                                   potential_base, grammar::verbTypeToConjType(verb_type), true,
-                                                   CandidateOrigin::VerbHiragana, 0.9F, "hiragana_sokuonbin",
-                                                   core::ExtendedPOS::VerbOnbinkei));
-            found_dict_match = true;
-            break;  // Found valid base, stop trying other types
+        auto sokuonbin_match = vh::firstGodanOnbinDictBase(dict_manager, stem, "っ");
+        bool found_dict_match = sokuonbin_match.matched;
+        if (found_dict_match) {
+          constexpr float kHiraganaSokuonbinCost = candidate::verb_cost::kStandardBonus;
+          SUZUME_DEBUG_VERBOSE_BLOCK {
+            SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface
+                                << " hiragana_sokuonbin lemma=" << sokuonbin_match.base_form
+                                << " type=" << grammar::verbTypeToString(sokuonbin_match.verb_type)
+                                << " cost=" << kHiraganaSokuonbinCost << "\n";
           }
+          candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaSokuonbinCost,
+                                                 sokuonbin_match.base_form,
+                                                 grammar::verbTypeToConjType(sokuonbin_match.verb_type), true,
+                                                 CandidateOrigin::VerbHiragana, 0.9F, "hiragana_sokuonbin",
+                                                 core::ExtendedPOS::VerbOnbinkei));
         }
         // Phase 2: Inflection analysis fallback for short hiragana stems (e.g., やっ)
         // Only for stems of 1-2 characters (e.g., や, やる → やっ)
@@ -1803,24 +1800,20 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
         std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
 
-        const auto& hatsuonbin_types = vh::getGodanTypesByOnbin("ん");
-
-        for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
-          std::string potential_base = stem + std::string(base_suffix);
-          bool in_dict = vh::isVerbInDictionary(dict_manager, potential_base);
-          if (in_dict) {
-            constexpr float kHiraganaHatsuonbinCost = candidate::verb_cost::kStandardBonus;
-            SUZUME_DEBUG_VERBOSE_BLOCK {
-              SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << " hiragana_hatsuonbin lemma=" << potential_base
-                                  << " type=" << grammar::verbTypeToString(verb_type)
-                                  << " cost=" << kHiraganaHatsuonbinCost << "\n";
-            }
-            candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaHatsuonbinCost,
-                                                   potential_base, grammar::verbTypeToConjType(verb_type), true,
-                                                   CandidateOrigin::VerbHiragana, 0.9F, "hiragana_hatsuonbin",
-                                                   core::ExtendedPOS::VerbOnbinkei));
-            break;  // Found valid base, stop trying other types
+        auto hatsuonbin_match = vh::firstGodanOnbinDictBase(dict_manager, stem, "ん");
+        if (hatsuonbin_match.matched) {
+          constexpr float kHiraganaHatsuonbinCost = candidate::verb_cost::kStandardBonus;
+          SUZUME_DEBUG_VERBOSE_BLOCK {
+            SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface
+                                << " hiragana_hatsuonbin lemma=" << hatsuonbin_match.base_form
+                                << " type=" << grammar::verbTypeToString(hatsuonbin_match.verb_type)
+                                << " cost=" << kHiraganaHatsuonbinCost << "\n";
           }
+          candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaHatsuonbinCost,
+                                                 hatsuonbin_match.base_form,
+                                                 grammar::verbTypeToConjType(hatsuonbin_match.verb_type), true,
+                                                 CandidateOrigin::VerbHiragana, 0.9F, "hiragana_hatsuonbin",
+                                                 core::ExtendedPOS::VerbOnbinkei));
         }
       }
     }
