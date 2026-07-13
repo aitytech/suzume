@@ -60,6 +60,26 @@ bool hasFormalNounPrefixBoundary(const dictionary::DictionaryManager* dict_manag
   return false;
 }
 
+// True when a pronoun word ends exactly at @p pos (誰/何/だれ/なに/どこ/いつ …).
+// A following か is then the particle か (誰か + いる), never the 2nd mora of a
+// godan-wa verb stem, so a か…renyokei candidate at @p pos must be discouraged.
+bool pronounEndsAt(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                   size_t pos) {
+  if (dict_manager == nullptr || pos == 0) {
+    return false;
+  }
+  const size_t max_len = pos < 3 ? pos : 3;
+  for (size_t len = 1; len <= max_len; ++len) {
+    std::string word = extractSubstring(codepoints, pos - len, pos);
+    for (const auto& result : dict_manager->lookup(word, 0)) {
+      if (result.entry != nullptr && result.length == len && result.entry->pos == core::PartOfSpeech::Pronoun) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -227,6 +247,15 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
               ++hiragana_end;
               continue;
             }
+          }
+          // Check if followed by い + ま (godan-wa renyokei before ます:
+          // つかい→使う, むかい→向かう). Guarded by the following ま so bare
+          // か + いる sequences (誰か+いる) still break here; the pronoun-か
+          // cases are additionally discouraged by the renyokei cost gate.
+          if (hiragana_end + 2 < codepoints.size() && codepoints[hiragana_end + 1] == U'い' &&
+              codepoints[hiragana_end + 2] == U'ま') {
+            ++hiragana_end;
+            continue;
           }
         }
 
@@ -1485,7 +1514,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     bool is_followed_by_te_ta = (next_char == U'て' || next_char == U'た');
     bool is_followed_by_masu = false;
     bool is_followed_by_reba = false;
-    // Check for polite ます auxiliary pattern (e.g., できます → でき + ます)
+    // Check for polite ます auxiliary pattern (e.g., できます → でき + ます).
+    // Restricted to ま+す (not まし/ませ): accepting まし would let renyokei でき
+    // beat the で(particle)+き(くる) reading of 読んできました.
     if (next_char == U'ま' && end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'す') {
       is_followed_by_masu = true;
     }
@@ -1603,6 +1634,12 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     // competing with dictionary compound particles like について
     // But not too high to break valid patterns like してほしい
     float cost = is_dict_verb ? -0.8F : 0.5F;
+    // A godan-wa renyokei starting か…い immediately after a pronoun (誰かい, なにかい)
+    // is spurious: the か is the particle か and い is いる's renyokei
+    // (誰か + い + ます). Discourage it so the particle reading wins.
+    if (codepoints[start_pos] == U'か' && pronounEndsAt(dict_manager, codepoints, start_pos)) {
+      cost += bigram_cost::kStrong;
+    }
     SUZUME_DEBUG_VERBOSE_BLOCK {
       SUZUME_DEBUG_STREAM << "[VERB_CAND] " << stem_surface << " hiragana_renyokei lemma=" << chosen_base
                           << " conf=" << chosen_confidence << (is_dict_verb ? " [dict]" : "") << " cost=" << cost

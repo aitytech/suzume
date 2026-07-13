@@ -942,6 +942,10 @@ std::vector<DictionaryEntry> getPronounEntries() {
       // Cost -1.5 to beat: 今(1.4) + 何(-1.9) + conn(0.5) = 0.0 < 今何(0.5)
       pronoun("誰", ""),
       pronoun("何", ""),
+      // Hiragana interrogatives (だれ=誰, なに=何): closed class, mirror the
+      // kanji forms so 誰か/何か boundaries resolve in pure-hiragana text
+      pronoun("だれ", ""),
+      pronoun("なに", ""),
 
       // Interrogatives (疑問詞)
       pronoun("いつ", ""),

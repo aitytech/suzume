@@ -652,6 +652,23 @@
       ],
       "id": "ukagau_noda",
       "input": "窺うのだ"
+    },
+    {
+      "description": "Pure-hiragana godan-wa renyokei before masu (使います)",
+      "expected": [
+        {
+          "lemma": "つかう",
+          "pos": "Verb",
+          "surface": "つかい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "tsukaimasu",
+      "input": "つかいます"
     }
   ],
   "description": "Godan Wa-row verbs (五段ワ行動詞) - verbs ending in う",

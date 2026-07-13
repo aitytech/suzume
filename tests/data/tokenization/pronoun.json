@@ -473,6 +473,82 @@
       ],
       "id": "nani_mo_shinai",
       "input": "何もしない"
+    },
+    {
+      "description": "Interrogative-ka gate: 誰 + か(particle) + い(いる) + ます, not fake godan-wa かう",
+      "expected": [
+        {
+          "lemma": "誰",
+          "pos": "Pronoun",
+          "surface": "誰"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "い"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "kaimasuka",
+      "input": "誰かいますか"
+    },
+    {
+      "description": "Hiragana pronoun search-unit split: なに + か(particle) + いる (MeCab merges なにか as adverb)",
+      "expected": [
+        {
+          "lemma": "なに",
+          "pos": "Pronoun",
+          "surface": "なに"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "nanikairu",
+      "input": "なにかいる"
+    },
+    {
+      "description": "Hiragana interrogative pronoun boundary: だれ + か(particle) + いる",
+      "expected": [
+        {
+          "lemma": "だれ",
+          "pos": "Pronoun",
+          "surface": "だれ"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "darekairu",
+      "input": "だれかいる"
     }
   ],
   "description": "Pronouns",
