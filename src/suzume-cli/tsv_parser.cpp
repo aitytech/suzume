@@ -160,55 +160,14 @@ core::Expected<core::PartOfSpeech, core::Error> TsvParser::parsePos(std::string_
   }
   str = str.substr(start, end - start + 1);
 
-  // Map string to POS
-  if (str == "NOUN") {
-    return core::PartOfSpeech::Noun;
+  // Map string to POS via the shared canonical parser (proper nouns use Noun
+  // POS; FAMILY/GIVEN is carried in conj_type).
+  auto pos = core::stringToPosStrict(str);
+  if (!pos) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::ParseError, "Line " + std::to_string(line) + ": Invalid POS: " + std::string(str)));
   }
-  if (str == "PROPN" || str == "PROPER_NOUN") {
-    return core::PartOfSpeech::Noun;  // Proper nouns use Noun POS; FAMILY/GIVEN in conj_type
-  }
-  if (str == "VERB") {
-    return core::PartOfSpeech::Verb;
-  }
-  if (str == "ADJECTIVE" || str == "ADJ") {
-    return core::PartOfSpeech::Adjective;
-  }
-  if (str == "ADVERB" || str == "ADV") {
-    return core::PartOfSpeech::Adverb;
-  }
-  if (str == "PARTICLE") {
-    return core::PartOfSpeech::Particle;
-  }
-  if (str == "AUXILIARY" || str == "AUX") {
-    return core::PartOfSpeech::Auxiliary;
-  }
-  if (str == "CONJUNCTION" || str == "CONJ") {
-    return core::PartOfSpeech::Conjunction;
-  }
-  if (str == "SYMBOL" || str == "SYM") {
-    return core::PartOfSpeech::Symbol;
-  }
-  if (str == "OTHER") {
-    return core::PartOfSpeech::Other;
-  }
-  if (str == "PHRASE") {
-    return core::PartOfSpeech::Other;  // Map PHRASE to Other
-  }
-  if (str == "INTJ" || str == "INTERJECTION") {
-    return core::PartOfSpeech::Interjection;
-  }
-  if (str == "PRONOUN" || str == "PRON") {
-    return core::PartOfSpeech::Pronoun;
-  }
-  if (str == "DETERMINER" || str == "DET" || str == "ADNOMINAL") {
-    return core::PartOfSpeech::Determiner;
-  }
-  if (str == "SUFFIX") {
-    return core::PartOfSpeech::Suffix;
-  }
-
-  return core::makeUnexpected(
-      core::Error(core::ErrorCode::ParseError, "Line " + std::to_string(line) + ": Invalid POS: " + std::string(str)));
+  return *pos;
 }
 
 core::Expected<dictionary::ConjugationType, core::Error> TsvParser::parseConjType(std::string_view str, size_t line) {

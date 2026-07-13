@@ -34,6 +34,27 @@ TEST(TypesTest, StringToPosConvertsAllTypes) {
   EXPECT_EQ(stringToPos("UNKNOWN"), PartOfSpeech::Other);
 }
 
+TEST(TypesTest, StringToPosAcceptsLongAliases) {
+  // Long-form English aliases must resolve, not fall through to Other.
+  EXPECT_EQ(stringToPos("ADJECTIVE"), PartOfSpeech::Adjective);
+  EXPECT_EQ(stringToPos("ADVERB"), PartOfSpeech::Adverb);
+  EXPECT_EQ(stringToPos("AUXILIARY"), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(stringToPos("CONJUNCTION"), PartOfSpeech::Conjunction);
+  EXPECT_EQ(stringToPos("PRONOUN"), PartOfSpeech::Pronoun);
+  EXPECT_EQ(stringToPos("DETERMINER"), PartOfSpeech::Determiner);
+  EXPECT_EQ(stringToPos("INTERJECTION"), PartOfSpeech::Interjection);
+  EXPECT_EQ(stringToPos("PROPN"), PartOfSpeech::Noun);
+}
+
+TEST(TypesTest, StringToPosStrictRejectsUnknown) {
+  // Strict variant distinguishes the OTHER aliases from genuinely invalid input.
+  EXPECT_EQ(stringToPosStrict("OTHER"), PartOfSpeech::Other);
+  EXPECT_EQ(stringToPosStrict("PHRASE"), PartOfSpeech::Other);
+  EXPECT_EQ(stringToPosStrict("ADJECTIVE"), PartOfSpeech::Adjective);
+  EXPECT_FALSE(stringToPosStrict("NOPE").has_value());
+  EXPECT_FALSE(stringToPosStrict("").has_value());
+}
+
 TEST(TypesTest, AnalysisModeHasCorrectValues) {
   EXPECT_NE(AnalysisMode::Normal, AnalysisMode::Search);
   EXPECT_NE(AnalysisMode::Search, AnalysisMode::Split);

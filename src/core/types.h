@@ -2,6 +2,7 @@
 #define SUZUME_CORE_TYPES_H_
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -232,7 +233,18 @@ std::string_view posToString(PartOfSpeech pos);
 std::string_view posToJapanese(PartOfSpeech pos);
 
 /**
- * @brief Convert string to part of speech
+ * @brief Parse a part-of-speech name, returning nullopt for unrecognized input.
+ *
+ * Canonical POS parser shared by the TSV loader, user-dictionary loader, and
+ * interactive editor. Accepts the English canonical short forms, their long
+ * aliases (e.g. ADJECTIVE, ADVERB), and the Japanese names. PROPN/PROPER_NOUN
+ * map to Noun (Suzume has no dedicated proper-noun POS); OTHER/PHRASE/その他
+ * map to Other.
+ */
+std::optional<PartOfSpeech> stringToPosStrict(std::string_view str);
+
+/**
+ * @brief Convert string to part of speech, returning Other for unknown input.
  */
 PartOfSpeech stringToPos(std::string_view str);
 

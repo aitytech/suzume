@@ -78,33 +78,34 @@ std::string_view posToJapanese(PartOfSpeech pos) {
   }
 }
 
-PartOfSpeech stringToPos(std::string_view str) {
-  // English names
-  if (str == "NOUN" || str == "名詞") {
+std::optional<PartOfSpeech> stringToPosStrict(std::string_view str) {
+  // Canonical short forms, their long aliases, and Japanese names. PROPN maps
+  // to Noun (no dedicated proper-noun POS); OTHER/PHRASE map to Other.
+  if (str == "NOUN" || str == "名詞" || str == "PROPN" || str == "PROPER_NOUN") {
     return PartOfSpeech::Noun;
   }
   if (str == "VERB" || str == "動詞") {
     return PartOfSpeech::Verb;
   }
-  if (str == "ADJ" || str == "形容詞") {
+  if (str == "ADJ" || str == "ADJECTIVE" || str == "形容詞") {
     return PartOfSpeech::Adjective;
   }
-  if (str == "ADV" || str == "副詞") {
+  if (str == "ADV" || str == "ADVERB" || str == "副詞") {
     return PartOfSpeech::Adverb;
   }
   if (str == "PARTICLE" || str == "助詞") {
     return PartOfSpeech::Particle;
   }
-  if (str == "AUX" || str == "助動詞") {
+  if (str == "AUX" || str == "AUXILIARY" || str == "助動詞") {
     return PartOfSpeech::Auxiliary;
   }
-  if (str == "CONJ" || str == "接続詞") {
+  if (str == "CONJ" || str == "CONJUNCTION" || str == "接続詞") {
     return PartOfSpeech::Conjunction;
   }
-  if (str == "DET" || str == "連体詞") {
+  if (str == "DET" || str == "DETERMINER" || str == "ADNOMINAL" || str == "連体詞") {
     return PartOfSpeech::Determiner;
   }
-  if (str == "PRON" || str == "代名詞") {
+  if (str == "PRON" || str == "PRONOUN" || str == "代名詞") {
     return PartOfSpeech::Pronoun;
   }
   if (str == "PREFIX" || str == "接頭辞") {
@@ -113,13 +114,20 @@ PartOfSpeech stringToPos(std::string_view str) {
   if (str == "SUFFIX" || str == "接尾辞") {
     return PartOfSpeech::Suffix;
   }
-  if (str == "INTJ" || str == "感動詞") {
+  if (str == "INTJ" || str == "INTERJECTION" || str == "感動詞") {
     return PartOfSpeech::Interjection;
   }
-  if (str == "SYMBOL" || str == "記号") {
+  if (str == "SYMBOL" || str == "SYM" || str == "記号") {
     return PartOfSpeech::Symbol;
   }
-  return PartOfSpeech::Other;
+  if (str == "OTHER" || str == "PHRASE" || str == "その他") {
+    return PartOfSpeech::Other;
+  }
+  return std::nullopt;
+}
+
+PartOfSpeech stringToPos(std::string_view str) {
+  return stringToPosStrict(str).value_or(PartOfSpeech::Other);
 }
 
 ExtendedPOS posToDefaultExtendedPOS(PartOfSpeech pos) {
