@@ -919,6 +919,28 @@
       ],
       "id": "mukaou",
       "input": "むかおう"
+    },
+    {
+      "description": "godan-wa te_aux sokuonbin lemma prefers dict WA base (向かう not 向かる)",
+      "expected": [
+        {
+          "lemma": "向かう",
+          "pos": "Verb",
+          "surface": "向かっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "くる"
+        }
+      ],
+      "id": "katttekuru",
+      "input": "向かってくる"
     }
   ],
   "description": "Godan Wa-row verbs (五段ワ行動詞) - verbs ending in う",

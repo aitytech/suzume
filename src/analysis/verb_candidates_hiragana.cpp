@@ -888,13 +888,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     // OR check if base form exists (for kanji compounds like 言わ)
     bool is_valid_verb = vh::isVerbInDictionary(dict_manager, mizenkei_surface);
     if (!is_valid_verb) {
-      // Fallback: check base form with verb type matching for onbin types
-      if (verb_type == grammar::VerbType::GodanWa || verb_type == grammar::VerbType::GodanKa ||
-          verb_type == grammar::VerbType::GodanTa || verb_type == grammar::VerbType::GodanRa) {
-        is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
-      } else {
-        is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
-      }
+      // Fallback: check the reconstructed base form (kanji compounds like 言わ→言う)
+      is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
     }
     // Fallback for GodanSa: use inflection analysis for causative verb patterns
     // E.g., やらされた = やらさ (mizenkei of やらす) + れ + た

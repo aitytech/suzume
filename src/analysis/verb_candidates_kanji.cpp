@@ -2476,7 +2476,14 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       size_t onbin_end = pos + 1;  // Position after っ
       std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
       std::string stem = extractSubstring(codepoints, start_pos, pos);
-      std::string potential_base = stem + "る";
+      // 促音便 is shared across godan ラ/ワ/タ, so the base's conjugation type is
+      // lexical and cannot be read off the っ surface. Default to ラ行 but prefer a
+      // dictionary-verified ワ行 base (向かう over the non-word 向かる) — mirroring the
+      // trailing-っ extended_sokuonbin path above.
+      std::string godan_wa_base = stem + "う";
+      bool prefer_godan_wa = vh::isVerbInDictionary(dict_manager, godan_wa_base);
+      std::string potential_base = prefer_godan_wa ? godan_wa_base : stem + "る";
+      grammar::VerbType onbin_verb_type = prefer_godan_wa ? grammar::VerbType::GodanWa : grammar::VerbType::GodanRa;
 
       // Check hiragana part for known false patterns
       std::string hiragana_part = extractSubstring(codepoints, kanji_end, onbin_end);
@@ -2505,7 +2512,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
                               << (in_dict_check ? " [dict]" : " [infl]") << " cost=" << kTeAuxSokuonbinCost << "\n";
         }
         candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kTeAuxSokuonbinCost, potential_base,
-                                               grammar::verbTypeToConjType(grammar::VerbType::GodanRa), true,
+                                               grammar::verbTypeToConjType(onbin_verb_type), true,
                                                CandidateOrigin::VerbKanji, 0.9F, "te_aux_sokuonbin",
                                                core::ExtendedPOS::VerbOnbinkei));
       }
