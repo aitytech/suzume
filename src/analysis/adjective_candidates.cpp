@@ -1861,26 +1861,13 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   std::vector<UnknownCandidate> stem_sou_candidates;
   for (const auto& cand : candidates) {
     if (utf8::endsWith(cand.surface, "そう")) {
-      // Extract stem (remove そう)
-      std::string stem_surface = cand.surface.substr(0, cand.surface.size() - core::kTwoJapaneseCharBytes);
-      if (stem_surface.empty()) {
+      // Skip if trimming そう would leave an empty stem.
+      if (cand.surface.size() <= core::kTwoJapaneseCharBytes) {
         continue;
       }
-      UnknownCandidate stem_cand;
-      stem_cand.surface = stem_surface;
-      stem_cand.start = cand.start;
-      stem_cand.end = cand.end - 2;  // 2 characters (そう)
-      stem_cand.pos = core::PartOfSpeech::Adjective;
-      stem_cand.lemma = cand.lemma;
-      stem_cand.cost = cand.cost + candidate::kAdjStemSplitBonus;
-      stem_cand.has_suffix = true;
-      stem_cand.extended_pos = core::ExtendedPOS::AdjStem;  // For bigram: AdjStem→AuxAppearanceSou
-#ifdef SUZUME_DEBUG_INFO
-      stem_cand.origin = cand.origin;
-      stem_cand.confidence = cand.confidence;
-      stem_cand.pattern = "i_adjective_kata_stem_sou";
-#endif
-      stem_sou_candidates.push_back(stem_cand);
+      // Trim そう (2 chars) → AdjStem for the AdjStem→AuxAppearanceSou bigram.
+      stem_sou_candidates.push_back(makeTrimmedAdjVariant(cand, 2, candidate::kAdjStemSplitBonus,
+                                                          core::ExtendedPOS::AdjStem, "i_adjective_kata_stem_sou"));
     }
   }
   for (auto& var : stem_sou_candidates) {
