@@ -447,11 +447,10 @@ bool looksLikeUnit(const std::string& surface) {
   if (surface.empty())
     return false;
 
-  auto codepoints = suzume::normalize::toCodepoints(surface);
-  if (codepoints.empty())
-    return false;
-
-  char32_t first = codepoints[0];
+  // Only the first codepoint drives the kanji-unit branch; kanji/katakana are
+  // 3-byte, so decoding just the leading char avoids allocating a codepoint
+  // vector. Non-3-byte leads decode to 0 and fall through to the katakana check.
+  char32_t first = utf8::decodeFirstChar(surface);
 
   // Kanji units: first char must be a counter kanji
   // CJK Unified Ideographs: U+4E00-U+9FFF
@@ -472,11 +471,8 @@ bool endsWithContinuableUnit(const std::string& surface) {
   if (surface.empty())
     return false;
 
-  auto codepoints = suzume::normalize::toCodepoints(surface);
-  if (codepoints.empty())
-    return false;
-
-  char32_t last_ch = codepoints.back();
+  // Targets 兆/億/万/千/百 are all 3-byte kanji; decode only the trailing char.
+  char32_t last_ch = utf8::decodeLastChar(surface);
   // Units that can be followed by more numbers (兆, 億, 万, 千, 百)
   return last_ch == U'兆' || last_ch == U'億' || last_ch == U'万' || last_ch == U'千' || last_ch == U'百';
 }

@@ -3,7 +3,6 @@
 add_library(suzume_core STATIC
   types.cpp
   error.cpp
-  string_pool.cpp
   lattice.cpp
   viterbi.cpp
 )

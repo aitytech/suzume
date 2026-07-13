@@ -586,9 +586,7 @@ float calculateConfidence(VerbType type, std::string_view stem, size_t aux_total
   // Exception: い(く) is a valid GodanKa verb (行く)
   // GodanWa with single hiragana stem (ら→らう, ま→まう) are typically not real verbs
   // Real GodanWa verbs like 買う, 舞う use kanji stems
-  bool is_godan_non_ra = (type == VerbType::GodanKa || type == VerbType::GodanGa || type == VerbType::GodanSa ||
-                          type == VerbType::GodanTa || type == VerbType::GodanNa || type == VerbType::GodanBa ||
-                          type == VerbType::GodanMa || type == VerbType::GodanWa);
+  bool is_godan_non_ra = isGodanVerbType(type) && type != VerbType::GodanRa;
   if (is_godan_non_ra && stem_len == core::kJapaneseCharBytes && !containsKanji(stem)) {
     // Exception: い(く) = 行く is valid
     bool is_iku = (type == VerbType::GodanKa && stem == "い");
