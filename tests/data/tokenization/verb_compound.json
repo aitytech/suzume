@@ -2306,6 +2306,62 @@
       ],
       "id": "meguriattte",
       "input": "めぐりあって"
+    },
+    {
+      "description": "Hiragana compound verb te-form: うけとる (V1 うける ichidan dict-verified enables the join)",
+      "expected": [
+        {
+          "lemma": "うけとる",
+          "pos": "Verb",
+          "surface": "うけとっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "uketottte",
+      "input": "うけとって"
+    },
+    {
+      "description": "Hiragana compound verb うけとる in sentence context",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "うけとる",
+          "pos": "Verb",
+          "surface": "うけとっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wouketottta",
+      "input": "荷物をうけとった"
+    },
+    {
+      "description": "Hiragana compound verb うけつける renyokei (うける V1 dict-verification generalizes the うけ- family)",
+      "expected": [
+        {
+          "lemma": "うけつける",
+          "pos": "Verb",
+          "surface": "うけつけ"
+        }
+      ],
+      "id": "uketsuke",
+      "input": "うけつけ"
     }
   ],
   "description": "Compound verbs",
