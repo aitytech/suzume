@@ -297,6 +297,67 @@
         "colloquial",
         "regression"
       ]
+    },
+    {
+      "description": "危なさそう - auto-generated",
+      "expected": [
+        {
+          "lemma": "危ない",
+          "pos": "Adjective",
+          "surface": "危な"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Auxiliary",
+          "surface": "そう"
+        }
+      ],
+      "id": "nasasou",
+      "input": "危なさそう"
+    },
+    {
+      "description": "切なさそう - auto-generated",
+      "expected": [
+        {
+          "lemma": "切ない",
+          "pos": "Adjective",
+          "surface": "切な"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Auxiliary",
+          "surface": "そう"
+        }
+      ],
+      "id": "nasasou_2",
+      "input": "切なさそう"
+    },
+    {
+      "description": "儚さ - auto-generated",
+      "expected": [
+        {
+          "lemma": "儚い",
+          "pos": "Adjective",
+          "surface": "儚"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        }
+      ],
+      "id": "sa",
+      "input": "儚さ"
     }
   ],
   "description": "I-adjectives compound/derived forms (複合・派生) - sou patterns, nominalization, contracted forms",
