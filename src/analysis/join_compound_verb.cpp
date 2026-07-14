@@ -1284,6 +1284,29 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
         }
       }
 
+      // Try V2 te-form euphonic stem match (e.g., こもっ from こもる for とじこもって).
+      // Restricted to an exact match against the promised euphonic stem, followed by
+      // て/た (or で/だ for voiced onbin), so that arbitrary inflected forms cannot
+      // over-join. Godan only: an ichidan te-stem equals its renyokei (matched above),
+      // and the single-char で stem of 出る is particle-ambiguous.
+      bool matched_v2_te_stem = false;
+      if (matched_v2_len == 0 && v2_verb.verb_type == V2VerbType::Godan) {
+        auto [v2_te_stem, v2_te_uses_de] =
+            generateTeFormStem(v2_surface, v2_reading, v2_verb.verb_type, v2_verb.base_ending);
+        if (v2_te_stem.size() > core::kJapaneseCharBytes &&
+            v2_start_byte + v2_te_stem.size() + core::kJapaneseCharBytes <= text.size() &&
+            text.substr(v2_start_byte, v2_te_stem.size()) == v2_te_stem) {
+          std::string_view next_char = text.substr(v2_start_byte + v2_te_stem.size(), core::kJapaneseCharBytes);
+          bool next_matches_te_form =
+              v2_te_uses_de ? (next_char == "で" || next_char == "だ") : (next_char == "て" || next_char == "た");
+          if (next_matches_te_form) {
+            matched_v2_len = v2_te_stem.size();
+            matched_v2_te_stem = true;
+            matched_v2_via_reading = true;
+          }
+        }
+      }
+
       if (matched_v2_len == 0) {
         continue;
       }
@@ -1360,7 +1383,18 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
 
       uint8_t flags = core::LatticeEdge::kFromDictionary;
 
-      if (matched_v2_renyokei) {
+      if (matched_v2_te_stem) {
+        // V2 matched via te-form euphonic stem — the compound surface is the
+        // te-stem itself (とじこもっ before て), so tag it with the onbin EPOS
+        // (renyokei for し-stems) mirroring the kanji compound te-stem edge.
+        core::ExtendedPOS te_stem_epos = getTeFormType(v2_verb.base_ending) == TeFormType::Renyokei
+                                             ? core::ExtendedPOS::VerbRenyokei
+                                             : core::ExtendedPOS::VerbOnbinkei;
+        lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
+                        core::PartOfSpeech::Verb, final_cost, flags, compound_base, dictionary::ConjugationType::None,
+                        core::CandidateOrigin::Unknown, candidate::kNoOriginConfidence, "hira_compound_te_stem",
+                        te_stem_epos, "hira_compound_te_stem");
+      } else if (matched_v2_renyokei) {
         // V2 matched in renyokei form — add compound renyokei candidate
         // e.g., とりあげ (from とりあげる) for とりあげない
         lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),

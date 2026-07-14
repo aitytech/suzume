@@ -2208,6 +2208,104 @@
       ],
       "id": "ni_jikomottte_tekonai",
       "input": "部屋に閉じこもって出てこない"
+    },
+    {
+      "description": "とじこもって - auto-generated",
+      "expected": [
+        {
+          "lemma": "とじこもる",
+          "pos": "Verb",
+          "surface": "とじこもっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "tojikomottte",
+      "input": "とじこもって"
+    },
+    {
+      "description": "部屋にとじこもって出てこない - auto-generated",
+      "expected": [
+        {
+          "lemma": "部屋",
+          "pos": "Noun",
+          "surface": "部屋"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "とじこもる",
+          "pos": "Verb",
+          "surface": "とじこもっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "出る",
+          "pos": "Verb",
+          "surface": "出"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "nitojikomottte_tekonai",
+      "input": "部屋にとじこもって出てこない"
+    },
+    {
+      "description": "よみとって - auto-generated",
+      "expected": [
+        {
+          "lemma": "よみとる",
+          "pos": "Verb",
+          "surface": "よみとっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "yomitottte",
+      "input": "よみとって"
+    },
+    {
+      "description": "めぐりあって - auto-generated",
+      "expected": [
+        {
+          "lemma": "めぐりあう",
+          "pos": "Verb",
+          "surface": "めぐりあっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "meguriattte",
+      "input": "めぐりあって"
     }
   ],
   "description": "Compound verbs",
