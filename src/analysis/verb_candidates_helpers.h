@@ -393,6 +393,21 @@ inline bool masuAuxFollowsAt(const std::vector<char32_t>& codepoints, size_t pos
 }
 
 /**
+ * @brief Check whether an ichidan causative auxiliary (させ family) follows at @p pos.
+ *
+ * The causative させる attaches only to a verb mizenkei, never to a bare noun,
+ * so — like the ます family — it licenses the verb reading of a noun/renyokei
+ * homograph (感じさせる → 感じ(VERB) + させる, not 感じ(NOUN) + さ + せる).
+ * Matches さ followed by せ (させる/させた/させ...).
+ *
+ * @param codepoints Full input codepoints
+ * @param pos Index expected to hold the leading さ
+ */
+inline bool causativeSaseFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  return pos + 1 < codepoints.size() && codepoints[pos] == U'さ' && codepoints[pos + 1] == U'せ';
+}
+
+/**
  * @brief Check whether a character can start a する-auxiliary after renyokei し.
  *
  * Covers the continuations of する in renyokei position:

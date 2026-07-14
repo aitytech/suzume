@@ -326,11 +326,13 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         // Skip if surface is registered as NOUN in dictionary
         // This prevents nominalized verb forms (売り上げ, 楽しみ, 晴れ) from being tokenized as VERB
         // when they are explicitly registered as nouns.
-        // Exception: a following ます-family auxiliary attaches only to a verb
-        // renyokei, so the verb reading of a noun homograph must survive
-        // (感じます → 感じ(VERB)/感じる + ます); standalone 感じ stays NOUN.
-        bool masu_follows = vh::masuAuxFollowsAt(codepoints, renyokei_end);
-        bool surface_is_dict_noun = !masu_follows && vh::isNounInDictionary(dict_manager, surface);
+        // Exception: a following ます-family or causative させ auxiliary attaches
+        // only to a verb renyokei/mizenkei, so the verb reading of a noun homograph
+        // must survive (感じます → 感じ(VERB) + ます; 感じさせる → 感じ(VERB) + させる,
+        // not 感じ(NOUN) + さ + せる); standalone 感じ stays NOUN.
+        bool verb_aux_follows =
+            vh::masuAuxFollowsAt(codepoints, renyokei_end) || vh::causativeSaseFollowsAt(codepoints, renyokei_end);
+        bool surface_is_dict_noun = !verb_aux_follows && vh::isNounInDictionary(dict_manager, surface);
         if (surface_is_dict_noun) {
           SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict NOUN, skipping ichidan_renyokei\n");
         }

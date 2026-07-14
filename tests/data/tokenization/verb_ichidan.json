@@ -1343,6 +1343,94 @@
       ],
       "id": "jimashita",
       "input": "感じました"
+    },
+    {
+      "description": "感じさせる - auto-generated",
+      "expected": [
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じ"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させる"
+        }
+      ],
+      "id": "jisaseru",
+      "input": "感じさせる"
+    },
+    {
+      "description": "感じさせた - auto-generated",
+      "expected": [
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じ"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "jisaseta",
+      "input": "感じさせた"
+    },
+    {
+      "description": "美しさを感じさせる - auto-generated",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美し"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じ"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させる"
+        }
+      ],
+      "id": "shisawo_jisaseru",
+      "input": "美しさを感じさせる"
+    },
+    {
+      "description": "論じさせる - auto-generated",
+      "expected": [
+        {
+          "lemma": "論じる",
+          "pos": "Verb",
+          "surface": "論じ"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させる"
+        }
+      ],
+      "id": "jisaseru_2",
+      "input": "論じさせる"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",
