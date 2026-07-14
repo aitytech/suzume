@@ -924,24 +924,16 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
             }
           }
         }
-        // grammar_result not found in dictionary - try onbin correction
+        // grammar_result not found in dictionary - try onbin correction.
+        // Reverse-derive the godan base from the イ音便 table (く before ぐ),
+        // matching candidate generation's order so this fallback and the analysis
+        // layer agree on ties (a stem in the dictionary as both, e.g. つく/つぐ).
         std::string stem(utf8::dropLastChar(grammar_result));
-        // Check GodanGa first (ぐ), then GodanKa (く)
-        // Order matters: if both exist, prefer the dictionary-verified one
-        if (dict_manager_ != nullptr) {
-          std::string godan_ga_form = stem + "ぐ";
-          auto results_ga = dict_manager_->lookup(godan_ga_form, 0);
-          for (const auto& r : results_ga) {
-            if (r.entry != nullptr && r.entry->pos == core::PartOfSpeech::Verb) {
-              return godan_ga_form;
-            }
-          }
-          std::string godan_ka_form = stem + "く";
-          auto results_ka = dict_manager_->lookup(godan_ka_form, 0);
-          for (const auto& r : results_ka) {
-            if (r.entry != nullptr && r.entry->pos == core::PartOfSpeech::Verb) {
-              return godan_ka_form;
-            }
+        for (const auto& [verb_type, base_suffix] : grammar::Conjugation::getGodanTypesByOnbin("い")) {
+          (void)verb_type;
+          std::string base_form = stem + std::string(base_suffix);
+          if (hasExactVerbEntry(dict_manager_, base_form)) {
+            return base_form;
           }
         }
         // No dictionary verification available - return grammar_result as-is
@@ -1108,7 +1100,11 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
     if (morpheme.pos == core::PartOfSpeech::Verb && utf8::endsWith(morpheme.surface, "い") &&
         utf8::endsWith(morpheme.lemma, "う") && morpheme.lemma.size() >= core::kTwoJapaneseCharBytes &&
         utf8::equalsAny(next_surface, {"た", "て", "だ", "で"})) {
-      // This is onbin form - fix lemma from 〜う to 〜く or 〜ぐ
+      // This is onbin form - fix lemma from 〜う to 〜く or 〜ぐ.
+      // The tiebreak here is the following token's voicing (だ/で ⇒ ガ行), which is
+      // deterministic and dictionary-free — do NOT route this through the dict-order
+      // helper (getGodanTypesByOnbin is Ka-first and dict-gated): voicing correctly
+      // handles out-of-dict verbs (凪いだ→凪ぐ) and voiced ties (ついだ→つぐ).
       std::string stem(utf8::dropLastChar(morpheme.lemma));
       // Check if next is voiced (だ/で) → 〜ぐ, otherwise → 〜く
       if (grammar::inflection::isValidKanjiIStemException(morpheme.surface)) {
