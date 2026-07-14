@@ -1,6 +1,6 @@
-#include "dictionary/dictionary.h"
-
 #include <gtest/gtest.h>
+
+#include "dictionary/dictionary.h"
 
 namespace suzume {
 namespace dictionary {

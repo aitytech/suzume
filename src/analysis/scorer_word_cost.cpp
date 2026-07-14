@@ -1,9 +1,8 @@
-#include "analysis/scorer.h"
-
 #include <cmath>
 
 #include "analysis/bigram_table.h"
 #include "analysis/category_cost.h"
+#include "analysis/scorer.h"
 #include "analysis/scorer_constants.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "core/debug.h"
@@ -61,9 +60,8 @@ float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&
       edge.extended_pos != core::ExtendedPOS::AdjStem &&
       edge.surface.size() == core::kTwoJapaneseCharBytes &&  // 2 chars (1 kanji + い) = 6 bytes
-      utf8::endsWith(edge.surface, "い") &&
-      grammar::isAllKanji(edge.surface.substr(0, 3))) {  // First char is kanji
-    bonus += cost::kModerateBonus;                                   // -0.5 to beat godan-wa verb candidate
+      utf8::endsWith(edge.surface, "い") && grammar::isAllKanji(edge.surface.substr(0, 3))) {  // First char is kanji
+    bonus += cost::kModerateBonus;  // -0.5 to beat godan-wa verb candidate
   }
 
   // Bonus for kanji+okurigana i-adjectives from dictionary (情けない, etc.)
@@ -363,11 +361,11 @@ float computeFixedExpressionDictBonus(const core::LatticeEdge& edge) {
       grammar::isPureHiragana(edge.surface)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Stronger bonus for longer interjections (common greetings are 4-5 chars)
-    float interjection_bonus = (char_len <= 2)   ? sc::kBonusHiraganaInterjectionShort
-                               : (char_len <= 3) ? sc::kBonusHiraganaInterjectionMid
-                                                 : sc::kBonusHiraganaInterjectionBase -
-                                                       static_cast<float>(char_len - 3) *
-                                                           sc::kBonusHiraganaInterjectionPerChar;
+    float interjection_bonus = (char_len <= 2) ? sc::kBonusHiraganaInterjectionShort
+                               : (char_len <= 3)
+                                   ? sc::kBonusHiraganaInterjectionMid
+                                   : sc::kBonusHiraganaInterjectionBase -
+                                         static_cast<float>(char_len - 3) * sc::kBonusHiraganaInterjectionPerChar;
     bonus += interjection_bonus;
   }
 
@@ -392,10 +390,10 @@ float computeFixedExpressionDictBonus(const core::LatticeEdge& edge) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Stronger bonus for conjunctions to beat adverb+particle splits
     // Adverb 3-char gets -3.0, plus particle gets bonus, so we need > -3.5
-    float conjunction_bonus = (char_len <= 3) ? sc::kBonusHiraganaConjunctionShort
-                                              : sc::kBonusHiraganaConjunctionBase -
-                                                    static_cast<float>(char_len - 3) *
-                                                        sc::kBonusHiraganaConjunctionPerChar;
+    float conjunction_bonus = (char_len <= 3)
+                                  ? sc::kBonusHiraganaConjunctionShort
+                                  : sc::kBonusHiraganaConjunctionBase -
+                                        static_cast<float>(char_len - 3) * sc::kBonusHiraganaConjunctionPerChar;
     bonus += conjunction_bonus;
   }
 

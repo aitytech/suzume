@@ -6,13 +6,12 @@
  * and UnknownWordGenerator::generateOnomatopoeiaCandidates.
  */
 
-#include "analysis/unknown.h"
-
 #include <algorithm>
 #include <cstdint>
 
 #include "adjective_candidates.h"
 #include "analysis/scorer_constants.h"
+#include "analysis/unknown.h"
 #include "candidate_constants.h"
 #include "core/kana_constants.h"
 #include "core/utf8_constants.h"

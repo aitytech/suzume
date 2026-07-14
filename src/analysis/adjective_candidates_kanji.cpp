@@ -3,10 +3,10 @@
  * @brief Kanji i-adjective and na-adjective candidate generation
  */
 
-#include "adjective_candidates.h"
-
 #include <algorithm>
 
+#include "adjective_candidates.h"
+#include "adjective_candidates_internal.h"
 #include "analysis/candidate_constants.h"
 #include "analysis/scorer_constants.h"
 #include "core/debug.h"
@@ -19,7 +19,6 @@
 #include "suffix_candidates.h"
 #include "unknown.h"
 #include "verb_candidates_helpers.h"
-#include "adjective_candidates_internal.h"
 
 namespace suzume::analysis {
 
@@ -550,7 +549,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
                 }
               }
               if (tail_is_dict_verb) {
-                SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" tail is dict verb, skipping fake adjective\n");
+                SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface
+                                                         << "\" tail is dict verb, skipping fake adjective\n");
                 continue;
               }
             }
@@ -768,8 +768,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     // Check if surface ends with ければ (i-adjective conditional form)
     if (utf8::endsWith(cand.surface, "ければ")) {
       // Generate ke-form variant: 美しければ → 美しけれ (仮定形; AdjKeForm→ParticleConj)
-      auto ke_cand = makeTrimmedAdjVariant(cand, 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm,
-                                           "i_adjective_kere");
+      auto ke_cand =
+          makeTrimmedAdjVariant(cand, 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm, "i_adjective_kere");
       // Disambiguate 〜ければ against the homographic ichidan verb 仮定形
       // (高ければ=高い vs 受ければ=受ける). For an all-kanji stem, inflection alone
       // produces a plausible fake ichidan (高ける). When the i-adjective base is a

@@ -6,13 +6,12 @@
  * particle-boundary helpers used exclusively by it.
  */
 
-#include "analysis/unknown.h"
-
 #include <algorithm>
 #include <cstdint>
 
 #include "adjective_candidates.h"
 #include "analysis/scorer_constants.h"
+#include "analysis/unknown.h"
 #include "candidate_constants.h"
 #include "core/kana_constants.h"
 #include "core/utf8_constants.h"
@@ -91,8 +90,7 @@ bool isImpossibleHiraganaStart(char32_t code_point) {
   // Small kana (拗音・促音) share the single kana:: source of truth; ん and the case
   // particles を/が never begin a native hiragana word. Callers gate on hiragana,
   // so the katakana half of isSmallKanaCodepoint is never reached here.
-  return kana::isSmallKanaCodepoint(code_point) || code_point == U'ん' || code_point == U'を' ||
-         code_point == U'が';
+  return kana::isSmallKanaCodepoint(code_point) || code_point == U'ん' || code_point == U'を' || code_point == U'が';
 }
 
 }  // namespace
@@ -471,8 +469,8 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
     // clause boundary (sentence end / symbol).
     bool right_particle =
         (scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan])) || multi_char_particle_at(scan);
-    bool right_clause = (scan == codepoints.size()) || (scan < codepoints.size() &&
-                                                        char_types[scan] == normalize::CharType::Symbol);
+    bool right_clause =
+        (scan == codepoints.size()) || (scan < codepoints.size() && char_types[scan] == normalize::CharType::Symbol);
     // Whole-run candidate is safe at length 2 only when both sides are real particles
     // (私は|はし|を). A run leaning on any clause boundary needs length >= 3, so short
     // isolated hiragana — usually adverbs/particles (もう, すぐ, ため) — are not promoted.

@@ -164,8 +164,8 @@ core::Expected<core::PartOfSpeech, core::Error> TsvParser::parsePos(std::string_
   // POS; FAMILY/GIVEN is carried in conj_type).
   auto pos = core::stringToPosStrict(str);
   if (!pos) {
-    return core::makeUnexpected(
-        core::Error(core::ErrorCode::ParseError, "Line " + std::to_string(line) + ": Invalid POS: " + std::string(str)));
+    return core::makeUnexpected(core::Error(core::ErrorCode::ParseError,
+                                            "Line " + std::to_string(line) + ": Invalid POS: " + std::string(str)));
   }
   return *pos;
 }

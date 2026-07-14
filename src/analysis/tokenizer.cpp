@@ -14,8 +14,8 @@
 #include "analysis/category_cost.h"
 #include "candidate_constants.h"
 #include "core/debug.h"
-#include "grammar/char_patterns.h"
 #include "core/utf8_constants.h"
+#include "grammar/char_patterns.h"
 #include "join_candidates.h"
 #include "normalize/utf8.h"
 #include "split_candidates.h"
@@ -176,8 +176,8 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
         result.entry->extended_pos == core::ExtendedPOS::VerbShuushikei &&
         std::string_view(result.entry->lemma) != std::string_view(result.entry->surface) &&
         utf8::endsWith(result.entry->surface, "る") && !utf8::endsWith(result.entry->surface, "られる") &&
-        grammar::endsWithERow(
-            std::string_view(result.entry->surface).substr(0, result.entry->surface.size() - core::kJapaneseCharBytes))) {
+        grammar::endsWithERow(std::string_view(result.entry->surface)
+                                  .substr(0, result.entry->surface.size() - core::kJapaneseCharBytes))) {
       cost += candidate::verb_cost::kImperativeFinalBonus;
       flags |= core::LatticeEdge::kHasCustomCost;
     }

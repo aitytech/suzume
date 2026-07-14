@@ -3,10 +3,10 @@
  * @brief Hiragana and katakana i-adjective candidate generation
  */
 
-#include "adjective_candidates.h"
-
 #include <algorithm>
 
+#include "adjective_candidates.h"
+#include "adjective_candidates_internal.h"
 #include "analysis/candidate_constants.h"
 #include "analysis/scorer_constants.h"
 #include "core/debug.h"
@@ -19,7 +19,6 @@
 #include "suffix_candidates.h"
 #include "unknown.h"
 #include "verb_candidates_helpers.h"
-#include "adjective_candidates_internal.h"
 
 namespace suzume::analysis {
 

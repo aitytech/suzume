@@ -217,8 +217,7 @@ void appendGodanMizenkeiZuCandidates(const std::vector<char32_t>& codepoints, si
 void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                      size_t hiragana_end, const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,
-                                     const VerbCandidateOptions& verb_opts,
-                                     std::vector<UnknownCandidate>& candidates) {
+                                     const VerbCandidateOptions& verb_opts, std::vector<UnknownCandidate>& candidates) {
   if (kanji_end < hiragana_end) {
     char32_t first_hira = codepoints[kanji_end];
     // E-row hiragana: え, け, せ, て, ね, へ, め, れ, げ, ぜ, で, べ, ぺ
@@ -386,8 +385,7 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
 void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                      size_t hiragana_end, const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,
-                                     const VerbCandidateOptions& verb_opts,
-                                     std::vector<UnknownCandidate>& candidates) {
+                                     const VerbCandidateOptions& verb_opts, std::vector<UnknownCandidate>& candidates) {
   if (hiragana_end > kanji_end) {
     size_t max_renyokei_end = std::min(kanji_end + 4, hiragana_end + 1);
     for (size_t renyokei_end = kanji_end + 1; renyokei_end <= max_renyokei_end && renyokei_end <= codepoints.size();
@@ -1343,8 +1341,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // Single-kanji + い patterns (人い) are excluded: almost always NOUN + いる,
         // not a single verb. Valid ichidan stems are multi-char (感じ, 信じ, etc.).
         bool is_i_row_ichidan = cand.verb_type == grammar::VerbType::Ichidan && vh::isValidIRowIchidanStem(cand.stem);
-        float conf_threshold =
-            (is_i_row_ichidan || sokuonbin_stem_verified) ? verb_opts.confidence_ichidan_dict : verb_opts.confidence_standard;
+        float conf_threshold = (is_i_row_ichidan || sokuonbin_stem_verified) ? verb_opts.confidence_ichidan_dict
+                                                                             : verb_opts.confidence_standard;
         if (cand.stem == expected_stem && cand.confidence > conf_threshold &&
             cand.verb_type != grammar::VerbType::IAdjective) {
           // Check whether this candidate's base form exists in the dictionary as a
@@ -1874,9 +1872,10 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         // Exception: sokuonbin compounds carry the lemma built from the embedded verb
         // base, which the surface-based lemmatizer cannot recover past the onbin.
         const char* forced_lemma = sokuonbin_stem_verified ? sokuonbin_lemma.c_str() : "";
-        candidates.push_back(makeVerbCandidate(
-            surface, start_pos, end_pos, base_cost, forced_lemma, grammar::verbTypeToConjType(best.verb_type), has_suffix,
-            CandidateOrigin::VerbKanji, best.confidence, grammar::verbTypeToString(best.verb_type).data(), verb_epos));
+        candidates.push_back(makeVerbCandidate(surface, start_pos, end_pos, base_cost, forced_lemma,
+                                               grammar::verbTypeToConjType(best.verb_type), has_suffix,
+                                               CandidateOrigin::VerbKanji, best.confidence,
+                                               grammar::verbTypeToString(best.verb_type).data(), verb_epos));
         // Don't break - try other stem lengths too
       }
     }
@@ -2538,10 +2537,10 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
                 SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << " extended_sokuonbin lemma=" << potential_base
                                     << (in_dict ? " [dict]" : " [infl]") << " cost=" << kExtendedSokuonbinCost << "\n";
               }
-              candidates.push_back(makeVerbCandidate(
-                  onbin_surface, start_pos, onbin_end, kExtendedSokuonbinCost, potential_base,
-                  grammar::verbTypeToConjType(onbin_verb_type), true, CandidateOrigin::VerbKanji, 0.9F,
-                  "extended_sokuonbin", core::ExtendedPOS::VerbOnbinkei));
+              candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kExtendedSokuonbinCost,
+                                                     potential_base, grammar::verbTypeToConjType(onbin_verb_type), true,
+                                                     CandidateOrigin::VerbKanji, 0.9F, "extended_sokuonbin",
+                                                     core::ExtendedPOS::VerbOnbinkei));
             }
           }  // end else (not copula だ pattern)
         }  // end else (not quotative って pattern)
@@ -2705,10 +2704,10 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
                               << " kanji_hatsuonbin_standalone lemma=" << n_onbin_match.base_form
                               << " cost=" << kHatsuonbinCost << "\n";
         }
-        candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, n_pos + 1, kHatsuonbinCost,
-                                               n_onbin_match.base_form, grammar::verbTypeToConjType(n_onbin_match.verb_type),
-                                               true, CandidateOrigin::VerbKanji, 0.9F, "kanji_hatsuonbin",
-                                               core::ExtendedPOS::VerbOnbinkei));
+        candidates.push_back(
+            makeVerbCandidate(onbin_surface, start_pos, n_pos + 1, kHatsuonbinCost, n_onbin_match.base_form,
+                              grammar::verbTypeToConjType(n_onbin_match.verb_type), true, CandidateOrigin::VerbKanji,
+                              0.9F, "kanji_hatsuonbin", core::ExtendedPOS::VerbOnbinkei));
       }
       break;  // Only process first ん in the region
     }

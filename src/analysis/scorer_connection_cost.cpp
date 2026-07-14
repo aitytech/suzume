@@ -1,9 +1,8 @@
-#include "analysis/scorer.h"
-
 #include <cmath>
 
 #include "analysis/bigram_table.h"
 #include "analysis/category_cost.h"
+#include "analysis/scorer.h"
 #include "analysis/scorer_constants.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "core/debug.h"
@@ -860,7 +859,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   return bonus;
 }
 
-}  // namespace (connection-cost surface rules)
+}  // namespace
 
 float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeEdge& next) const {
   float base_cost = bigramCost(prev.pos, next.pos);
@@ -1114,7 +1113,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       (next.surface == "し" || next.surface == "き")) {
     // Check prev is all hiragana
     if (grammar::isPureHiragana(prev.surface) && (next.extended_pos == core::ExtendedPOS::VerbRenyokei ||
-                         next.extended_pos == core::ExtendedPOS::ParticleConj)) {
+                                                  next.extended_pos == core::ExtendedPOS::ParticleConj)) {
       surface_bonus += cost::kStrong;
     }
   }

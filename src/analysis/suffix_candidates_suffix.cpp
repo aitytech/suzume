@@ -3,8 +3,6 @@
  * @brief Suffix-based unknown word candidate generation
  */
 
-#include "suffix_candidates.h"
-
 #include <unordered_set>
 
 #include "candidate_constants.h"
@@ -17,6 +15,7 @@
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
+#include "suffix_candidates.h"
 #include "tokenizer_utils.h"
 #include "unknown.h"
 #include "verb_candidates_helpers.h"

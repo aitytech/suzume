@@ -3,8 +3,6 @@
  * @brief Suffix-based unknown word candidate generation
  */
 
-#include "suffix_candidates.h"
-
 #include <unordered_set>
 
 #include "candidate_constants.h"
@@ -17,6 +15,7 @@
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
+#include "suffix_candidates.h"
 #include "tokenizer_utils.h"
 #include "unknown.h"
 #include "verb_candidates_helpers.h"
@@ -130,8 +129,7 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
     for (size_t probe_end = start_pos + 3; probe_end <= hira_end; ++probe_end) {
       std::string verb_probe = extractSubstring(codepoints, start_pos + 1, probe_end);
       grammar::InflectionCandidate best = inflection.getBest(verb_probe);
-      if (best.verb_type != grammar::VerbType::Unknown &&
-          best.confidence >= candidate::kPrefixCompoundVerbStemConf) {
+      if (best.verb_type != grammar::VerbType::Unknown && best.confidence >= candidate::kPrefixCompoundVerbStemConf) {
         return candidates;
       }
     }

@@ -3,14 +3,13 @@
  * @brief Te-form auxiliary and taru-adjective join candidate generation
  */
 
-#include "join_candidates.h"
-
 #include "bigram_table.h"
 #include "candidate_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/inflection.h"
+#include "join_candidates.h"
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"

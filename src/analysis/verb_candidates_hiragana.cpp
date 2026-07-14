@@ -540,8 +540,7 @@ void appendMizenkeiNakyaCandidates(const std::vector<char32_t>& codepoints, size
 // Godan-ra ん音便 + negative ない (たまんない → たまん + ない), where stem + る
 // is a godan-ra verb.
 void appendNOnbinNaiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
-                               const grammar::Inflection& inflection,
-                               const dictionary::DictionaryManager* dict_manager,
+                               const grammar::Inflection& inflection, const dictionary::DictionaryManager* dict_manager,
                                std::vector<UnknownCandidate>& candidates) {
   // Pattern: stem + ん + ない where stem + る is a godan-ra verb
   for (size_t n_pos = start_pos + 1; n_pos < hiragana_end; ++n_pos) {
@@ -727,8 +726,7 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
       // Verified only for genuinely rule-only forms: if the onbin surface is
       // itself a dictionary entry, that edge carries the authoritative reading
       // and this candidate must not undercut it (であった あっ, いった いっ).
-      const bool onbin_surface_in_dict =
-          dict_manager != nullptr && dict_manager->lookupExact(onbin_surface) != nullptr;
+      const bool onbin_surface_in_dict = dict_manager != nullptr && dict_manager->lookupExact(onbin_surface) != nullptr;
       onbin_cand.lemma_verified = lemma_dict_verified && !onbin_surface_in_dict;
       candidates.push_back(std::move(onbin_cand));
       break;  // Found valid candidate for this position
@@ -1793,11 +1791,10 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
                                 << " type=" << grammar::verbTypeToString(sokuonbin_match.verb_type)
                                 << " cost=" << kHiraganaSokuonbinCost << "\n";
           }
-          auto sokuonbin_cand = makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaSokuonbinCost,
-                                                  sokuonbin_match.base_form,
-                                                  grammar::verbTypeToConjType(sokuonbin_match.verb_type), true,
-                                                  CandidateOrigin::VerbHiragana, 0.9F, "hiragana_sokuonbin",
-                                                  core::ExtendedPOS::VerbOnbinkei);
+          auto sokuonbin_cand = makeVerbCandidate(
+              onbin_surface, start_pos, onbin_end, kHiraganaSokuonbinCost, sokuonbin_match.base_form,
+              grammar::verbTypeToConjType(sokuonbin_match.verb_type), true, CandidateOrigin::VerbHiragana, 0.9F,
+              "hiragana_sokuonbin", core::ExtendedPOS::VerbOnbinkei);
           // Verified only when the onbin surface is not itself a dictionary
           // entry (that edge would carry the authoritative reading).
           sokuonbin_cand.lemma_verified =
@@ -1871,11 +1868,10 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
                                 << " type=" << grammar::verbTypeToString(hatsuonbin_match.verb_type)
                                 << " cost=" << kHiraganaHatsuonbinCost << "\n";
           }
-          auto hatsuonbin_cand = makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaHatsuonbinCost,
-                                                   hatsuonbin_match.base_form,
-                                                   grammar::verbTypeToConjType(hatsuonbin_match.verb_type), true,
-                                                   CandidateOrigin::VerbHiragana, 0.9F, "hiragana_hatsuonbin",
-                                                   core::ExtendedPOS::VerbOnbinkei);
+          auto hatsuonbin_cand = makeVerbCandidate(
+              onbin_surface, start_pos, onbin_end, kHiraganaHatsuonbinCost, hatsuonbin_match.base_form,
+              grammar::verbTypeToConjType(hatsuonbin_match.verb_type), true, CandidateOrigin::VerbHiragana, 0.9F,
+              "hiragana_hatsuonbin", core::ExtendedPOS::VerbOnbinkei);
           // Verified only when the onbin surface is not itself a dictionary
           // entry (that edge would carry the authoritative reading).
           hatsuonbin_cand.lemma_verified =

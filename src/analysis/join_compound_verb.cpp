@@ -3,14 +3,13 @@
  * @brief Compound-verb join candidate generation for tokenizer
  */
 
-#include "join_candidates.h"
-
 #include "bigram_table.h"
 #include "candidate_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/inflection.h"
+#include "join_candidates.h"
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
@@ -440,8 +439,8 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       // Require a further kanji-written verb after the renyokei (引っ張り + 出す): this path
       // only chains a trailing subsidiary. Without it, 引っ越しました (引っ越す + aux) would be
       // hijacked and the plain 引っ越す compound lost.
-      if (k2_end < codepoints.size() && k2_end + 1 < codepoints.size() &&
-          char_types[k2_end] == CharType::Hiragana && char_types[k2_end + 1] == CharType::Kanji) {
+      if (k2_end < codepoints.size() && k2_end + 1 < codepoints.size() && char_types[k2_end] == CharType::Hiragana &&
+          char_types[k2_end + 1] == CharType::Kanji) {
         char32_t base2 = godanRenyokeiBaseCp(codepoints[k2_end]);
         if (base2 != 0) {
           size_t k2_start_byte = charPosToBytePos(codepoints, k2_start);
