@@ -10,6 +10,8 @@ add_library(suzume_analysis STATIC
   join_noun.cpp
   join_te_aux.cpp
   scorer.cpp
+  scorer_connection_cost.cpp
+  scorer_word_cost.cpp
   split_candidates.cpp
   suffix_candidates.cpp
   tokenizer.cpp

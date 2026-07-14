@@ -7,7 +7,9 @@ src/analysis/bigram_table.cpp	0	2
 src/analysis/join_compound_verb.cpp	0	12
 src/analysis/join_noun.cpp	0	19
 src/analysis/join_te_aux.cpp	0	2
-src/analysis/scorer.cpp	124	175
+src/analysis/scorer_connection_cost.cpp	119	4
+src/analysis/scorer_word_cost.cpp	5	1
+src/analysis/scorer.cpp	0	170
 src/analysis/split_candidates.cpp	1	7
 src/analysis/suffix_candidates.cpp	0	40
 src/analysis/tokenizer_utils.cpp	0	0
