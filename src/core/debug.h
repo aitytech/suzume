@@ -79,6 +79,8 @@ class Debug {
 
 #else  // SUZUME_DEBUG not defined - complete elimination
 
+#include <ostream>  // std::ostream for the NullStream manipulator overload below
+
 #define SUZUME_DEBUG_LOG(expr) ((void)0)
 #define SUZUME_DEBUG_LOG_VERBOSE(expr) ((void)0)
 #define SUZUME_DEBUG_LOG_TRACE(expr) ((void)0)
