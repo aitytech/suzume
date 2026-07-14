@@ -59,50 +59,10 @@ constexpr ConjSuffix kIchidanProgressive[] = {
     {"て", conn::kAuxOutTe},   {"ます", conn::kAuxOutMasu}, {"ました", conn::kAuxOutTa},
 };
 
-// Godan-Wa (五段わ行) - full
-constexpr ConjSuffix kGodanWaFull[] = {
-    {"う", conn::kAuxOutBase},     {"った", conn::kAuxOutTa},       {"ったら", conn::kAuxOutBase},
-    {"って", conn::kAuxOutTe},     {"います", conn::kAuxOutMasu},   {"いました", conn::kAuxOutTa},
-    {"わない", conn::kAuxOutBase}, {"わなかった", conn::kAuxOutTa}, {"わなくて", conn::kAuxOutTe},
-};
-
-// Godan-Wa te-attachment (no masu for MeCab compatibility)
-constexpr ConjSuffix kGodanWaTeAttach[] = {
-    {"う", conn::kAuxOutBase},
-    {"った", conn::kAuxOutTa},
-    {"ったら", conn::kAuxOutBase},
-    {"って", conn::kAuxOutTe},
-};
-
-// Godan-Ka (五段か行) - full
-constexpr ConjSuffix kGodanKaFull[] = {
-    {"く", conn::kAuxOutBase},     {"いた", conn::kAuxOutTa},       {"いたら", conn::kAuxOutBase},
-    {"いて", conn::kAuxOutTe},     {"きます", conn::kAuxOutMasu},   {"きました", conn::kAuxOutTa},
-    {"かない", conn::kAuxOutBase}, {"かなかった", conn::kAuxOutTa}, {"かなくて", conn::kAuxOutTe},
-};
-
-// Irregular いく (行く) - 促音便: past/te-forms use った/って, not the regular
-// GodanKa い-onbin いた/いて. Only the onbin column differs from kGodanKaFull;
-// ます系 and 未然形 (いきます, いかない) follow regular GodanKa.
-constexpr ConjSuffix kGodanKaIkuIrregular[] = {
-    {"く", conn::kAuxOutBase},     {"った", conn::kAuxOutTa},       {"ったら", conn::kAuxOutBase},
-    {"って", conn::kAuxOutTe},     {"きます", conn::kAuxOutMasu},   {"きました", conn::kAuxOutTa},
-    {"かない", conn::kAuxOutBase}, {"かなかった", conn::kAuxOutTa}, {"かなくて", conn::kAuxOutTe},
-};
-
-// Godan-Sa (五段さ行) - full
-constexpr ConjSuffix kGodanSaFull[] = {
-    {"す", conn::kAuxOutBase},     {"した", conn::kAuxOutTa},       {"したら", conn::kAuxOutBase},
-    {"して", conn::kAuxOutTe},     {"します", conn::kAuxOutMasu},   {"しました", conn::kAuxOutTa},
-    {"さない", conn::kAuxOutBase}, {"さなかった", conn::kAuxOutTa}, {"さなくて", conn::kAuxOutTe},
-};
-
-// Godan-Ra (五段ら行) - full
-constexpr ConjSuffix kGodanRaFull[] = {
-    {"る", conn::kAuxOutBase},     {"った", conn::kAuxOutTa},       {"ったら", conn::kAuxOutBase},
-    {"って", conn::kAuxOutTe},     {"ります", conn::kAuxOutMasu},   {"りました", conn::kAuxOutTa},
-    {"らない", conn::kAuxOutBase}, {"らなかった", conn::kAuxOutTa}, {"らなくて", conn::kAuxOutTe},
-};
+// Godan suffix tables (Wa/Ka/Sa/Ra and the いく 促音便 irregular) are derived at
+// startup from Conjugation::getGodanRow() — see deriveGodanSuffixes() below — so
+// the per-row phonology (onbin surface, 濁点 on た, い段/あ段 kana) lives only in
+// getGodanRows() instead of being hand-copied into six parallel tables here.
 
 // Kuru (カ変) - irregular, full forms
 constexpr ConjSuffix kKuruFull[] = {
@@ -139,6 +99,64 @@ std::vector<AuxiliaryEntry> generateWithStem(const AuxiliaryBase& base, const Co
 
   std::vector<AuxiliaryEntry> result;
   result.reserve(N);
+  for (const auto& suf : suffixes) {
+    result.push_back(
+        {stem + suf.suffix, reading_stem + suf.suffix, base.surface, base.left_id, suf.right_id, base.required_conn});
+  }
+  return result;
+}
+
+// A godan suffix derived from a GodanRow. Mirrors ConjSuffix but built at runtime.
+struct DerivedSuffix {
+  std::string suffix;
+  uint16_t right_id;
+};
+
+// Derive a godan base's suffixes from its GodanRow, in the fixed order the hand-
+// written tables used: base, ta, tara, te, [masu, mashita, nai, nakatta, nakute].
+// The right_id column is uniform across all godan rows, so it derives too.
+// @param te_attach_only  Benefactive bases stop after te (no masu/negative), the
+//                        old kGodanWaTeAttach subset.
+// @param force_sokuonbin いく-type 促音便 irregular: onbin becomes っ (った/って);
+//                        ます系 and 未然形 still follow the regular row.
+std::vector<DerivedSuffix> deriveGodanSuffixes(VerbType type, bool te_attach_only, bool force_sokuonbin) {
+  std::vector<DerivedSuffix> forms;
+  const Conjugation::GodanRow* row_ptr = Conjugation::getGodanRow(type);
+  if (row_ptr == nullptr) {
+    return forms;
+  }
+  Conjugation::GodanRow row = *row_ptr;
+  if (force_sokuonbin) {
+    row.onbin = "っ";
+  }
+  const GodanVowels vowels = encodeGodanVowels(row);
+  const std::string onbin = onbinFormOf(row);
+  const std::string ta_kana = row.voiced_ta ? "だ" : "た";
+  const std::string te_kana = row.voiced_ta ? "で" : "て";
+
+  forms.push_back({vowels.base, conn::kAuxOutBase});
+  forms.push_back({onbin + ta_kana, conn::kAuxOutTa});
+  forms.push_back({onbin + ta_kana + "ら", conn::kAuxOutBase});
+  forms.push_back({onbin + te_kana, conn::kAuxOutTe});
+  if (te_attach_only) {
+    return forms;
+  }
+  forms.push_back({vowels.i + "ます", conn::kAuxOutMasu});
+  forms.push_back({vowels.i + "ました", conn::kAuxOutTa});
+  forms.push_back({vowels.a + "ない", conn::kAuxOutBase});
+  forms.push_back({vowels.a + "なかった", conn::kAuxOutTa});
+  forms.push_back({vowels.a + "なくて", conn::kAuxOutTe});
+  return forms;
+}
+
+// Godan counterpart of generateWithStem(), fed by deriveGodanSuffixes().
+std::vector<AuxiliaryEntry> generateGodanWithStem(const AuxiliaryBase& base, bool te_attach_only,
+                                                  bool force_sokuonbin) {
+  std::string stem = dropLastChar(base.surface);
+  std::string reading_stem = dropLastChar(base.reading);
+  const auto suffixes = deriveGodanSuffixes(base.conj_type, te_attach_only, force_sokuonbin);
+  std::vector<AuxiliaryEntry> result;
+  result.reserve(suffixes.size());
   for (const auto& suf : suffixes) {
     result.push_back(
         {stem + suf.suffix, reading_stem + suf.suffix, base.surface, base.left_id, suf.right_id, base.required_conn});
@@ -649,17 +667,13 @@ std::vector<AuxiliaryEntry> expandAuxiliaryBase(const AuxiliaryBase& base) {
       }
       return generateWithStem(base, kIchidanFull);
     case VerbType::GodanWa:
-      return is_benefactive ? generateWithStem(base, kGodanWaTeAttach) : generateWithStem(base, kGodanWaFull);
     case VerbType::GodanKa:
-      // いく (ていく auxiliary) is an irregular 促音便 verb: いった/いって, not いいた/いいて.
-      if (base.left_id == conn::kAuxTeiku) {
-        return generateWithStem(base, kGodanKaIkuIrregular);
-      }
-      return generateWithStem(base, kGodanKaFull);
     case VerbType::GodanSa:
-      return generateWithStem(base, kGodanSaFull);
     case VerbType::GodanRa:
-      return generateWithStem(base, kGodanRaFull);
+      // Benefactive bases (てもらう) stop after te; いく (ていく) is 促音便 irregular
+      // (いった/いって). Only もらう(Wa) is a benefactive godan base and only いく(Ka)
+      // carries kAuxTeiku, so the shared call reproduces the old per-type tables.
+      return generateGodanWithStem(base, is_benefactive, base.left_id == conn::kAuxTeiku);
     case VerbType::Kuru:
       return generateFullForms(base, kKuruFull);
     case VerbType::IAdjective:
