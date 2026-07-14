@@ -297,6 +297,94 @@
       ],
       "id": "i_3",
       "input": "間違い"
+    },
+    {
+      "description": "子供らしくない - auto-generated",
+      "expected": [
+        {
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "rashikunai",
+      "input": "子供らしくない"
+    },
+    {
+      "description": "大人らしくなかった - auto-generated",
+      "expected": [
+        {
+          "lemma": "大人",
+          "pos": "Noun",
+          "surface": "大人"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "rashikunakattta",
+      "input": "大人らしくなかった"
+    },
+    {
+      "description": "自分らしくない - auto-generated",
+      "expected": [
+        {
+          "lemma": "自分",
+          "pos": "Noun",
+          "surface": "自分"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "rashikunai_2",
+      "input": "自分らしくない"
+    },
+    {
+      "description": "馬鹿らしくない - auto-generated",
+      "expected": [
+        {
+          "lemma": "馬鹿らしい",
+          "pos": "Adjective",
+          "surface": "馬鹿らしく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "rashikunai_3",
+      "input": "馬鹿らしくない"
     }
   ],
   "description": "adjective tests",

@@ -525,8 +525,15 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // 春らしい → 春 + らしい, not 春らし(adj) + い
         // Must have at least 2 chars before らしい to avoid penalizing standalone らしい
         if (!is_dict_adjective && surface.size() >= 3 * core::kJapaneseCharBytes) {
+          // Also match the らしく + negative forms (らしくない/らしくなかっ/らしくなかった):
+          // their surface ends in the negative, not らしく, so the ku-form trimmed
+          // variant would otherwise inherit an unpenalized cost and keep 子供らしく
+          // merged (子供らしくない → 子供 + らしく + ない). A genuine adjective whose
+          // stem before らしく is a non-word (素晴らしい) stays merged because splitting
+          // it off leaves the costly non-word 素晴.
           if (utf8::endsWith(surface, "らしい") || utf8::endsWith(surface, "らしく") ||
-              utf8::endsWith(surface, "らしかっ")) {
+              utf8::endsWith(surface, "らしかっ") || utf8::endsWith(surface, "らしくない") ||
+              utf8::endsWith(surface, "らしくなかっ") || utf8::endsWith(surface, "らしくなかった")) {
             cost += candidate::kAdjModeratePenalty;  // Promote adj/noun + らしい split
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +1.5 (rashii_conjecture)\n");
           }

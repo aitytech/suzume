@@ -881,6 +881,13 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // Noun → AuxConjectureRashii (春+らしい) - strong bonus
   setCell(t, EPOS::Noun, EPOS::AuxConjectureRashii, cost::kStrongBonus);
 
+  // AuxConjectureRashii → AuxNegativeNai (子供らしく+ない) - extreme bonus, mirroring
+  // AdjRenyokei → AuxNegativeNai. らしく is the 連用形 of the auxiliary らしい and the
+  // only AuxConjectureRashii form that precedes ない, so this negation split (子供 +
+  // らしく + ない) is favored the same way as a genuine adjective's く-form + ない.
+  // Genuine derived adjectives (素晴らしい) stay merged via their dict-inflected 連用形.
+  setCell(t, EPOS::AuxConjectureRashii, EPOS::AuxNegativeNai, cost::kExtremeBonus);
+
   // AuxAspectIru → AuxConjectureRashii/Mitai (ている+らしい/みたい) - mirror the
   // VerbShuushikei rows above so the aspectual reading of the 補助動詞 いる is not
   // undercut at the following conjecture aux. Without these, the Aux→Aux base cost
