@@ -444,6 +444,29 @@ inline bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t
 }
 
 /**
+ * @brief Check whether the いただく paradigm begins at @p pos.
+ *
+ * The receptive humble auxiliary いただく conjugates as いただ + ka-row kana
+ * or the onbin い: いただか(ない), いただき, いただく, いただけ(ば/ます),
+ * いただこ(う), いただい(た/て). A candidate that ends by absorbing this
+ * leading い steals the auxiliary's onset (ご覧いただき → 覧い+ただき,
+ * お使いいただく → 使+いい+ただく), so generators use this gate to keep the
+ * い with いただく.
+ *
+ * @param codepoints Full input codepoints
+ * @param pos Index expected to hold the leading い
+ */
+inline bool itadakuParadigmStartsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos + 3 >= codepoints.size() || codepoints[pos] != U'い' || codepoints[pos + 1] != U'た' ||
+      codepoints[pos + 2] != U'だ') {
+    return false;
+  }
+  const char32_t inflected = codepoints[pos + 3];
+  return inflected == U'か' || inflected == U'き' || inflected == U'く' || inflected == U'け' || inflected == U'こ' ||
+         inflected == U'い';
+}
+
+/**
  * @brief Best inflection candidate per verb class (Ichidan / Suru / Godan)
  *
  * Members left unmatched keep confidence 0.0 and are otherwise

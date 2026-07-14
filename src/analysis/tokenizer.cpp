@@ -132,6 +132,16 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // Calculate end position in characters
     size_t end_pos = start_pos + result.length;
 
+    // Skip a dictionary adjective ending in double い when its final い is the
+    // leading い of the receptive auxiliary いただく: the adjective reading
+    // would fuse a wa-row renyokei's い with the auxiliary's onset
+    // (お使いいただく → 使い+いただく, not 使+いい+ただく). Plain いい in
+    // predicate/attributive position is untouched (no ただ+inflection follows).
+    if (result.entry->pos == core::PartOfSpeech::Adjective && result.length >= 2 && codepoints[end_pos - 1] == U'い' &&
+        codepoints[end_pos - 2] == U'い' && verb_helpers::itadakuParadigmStartsAt(codepoints, end_pos - 1)) {
+      continue;
+    }
+
     // Create edge
     // v0.8: flags derived from extended_pos, cost from getCategoryCost()
     uint8_t flags = core::LatticeEdge::kFromDictionary;

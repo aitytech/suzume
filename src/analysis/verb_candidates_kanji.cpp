@@ -1873,6 +1873,16 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict NOUN/ADJ, skipping godan-wa renyokei\n");
           continue;  // Skip this candidate, use dictionary entry instead
         }
+        // Skip fabricated godan-wa renyokei whose trailing い is really the
+        // leading い of the receptive auxiliary いただく. Unverified wa-row
+        // hypotheses (覧い ← 覧う) would otherwise absorb the auxiliary's
+        // onset (ご覧いただき → 覧い+ただき); dictionary-verified wa-row verbs
+        // (使い ← 使う) keep their candidate.
+        if (verb_epos == core::ExtendedPOS::VerbRenyokei && !in_dict && end_pos > 0 &&
+            vh::itadakuParadigmStartsAt(codepoints, end_pos - 1)) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" trailing い starts いただく paradigm\n");
+          continue;  // Skip - keep the い with いただく
+        }
         // Skip ichidan ta-form if stem is registered as NOUN in dictionary
         // e.g., 感じた → stem 感じ is dict NOUN, so skip (prefer 感じ(NOUN) + た(AUX))
         // This prevents nominalized verb renyokei forms from appearing as conjugated verbs

@@ -646,6 +646,109 @@
       ],
       "id": "o_keshita",
       "input": "お預けした"
+    },
+    {
+      "description": "Receptive いただく: keep whole after i-ending renyokei (使い), no いい/ADJ glue",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "使い",
+          "pos": "Noun",
+          "surface": "使い"
+        },
+        {
+          "lemma": "いただく",
+          "pos": "Verb",
+          "surface": "いただく"
+        }
+      ],
+      "id": "o_iitadaku",
+      "input": "お使いいただく"
+    },
+    {
+      "description": "Receptive いただき after honorific single-kanji ご覧, no 覧い fabrication",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "覧",
+          "pos": "Noun",
+          "surface": "覧"
+        },
+        {
+          "lemma": "いただく",
+          "pos": "Verb",
+          "surface": "いただき"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "go_itadakimasu",
+      "input": "ご覧いただきます"
+    },
+    {
+      "description": "Receptive いただける (potential) after ご覧",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "覧",
+          "pos": "Noun",
+          "surface": "覧"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Verb",
+          "surface": "いただけ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "go_itadakemasuka",
+      "input": "ご覧いただけますか"
+    },
+    {
+      "description": "Receptive いただく after sahen noun ご利用",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "利用",
+          "pos": "Noun",
+          "surface": "利用"
+        },
+        {
+          "lemma": "いただく",
+          "pos": "Verb",
+          "surface": "いただく"
+        }
+      ],
+      "id": "go_itadaku",
+      "input": "ご利用いただく"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",
