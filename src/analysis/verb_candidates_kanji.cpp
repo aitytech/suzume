@@ -32,6 +32,39 @@ namespace vh = verb_helpers;
 
 namespace {
 
+// The 促音便 base is lexically ラ/ワ/タ-ambiguous from the っ surface alone, so
+// default to ラ行 (閉まる/走る) but prefer a dictionary-verified ワ行 base (向かう
+// over the non-word 向かる) when the dictionary carries it. Shared by the
+// trailing-っ (extended_sokuonbin) and mid-surface (te_aux_sokuonbin) paths.
+struct SokuonbinBase {
+  std::string base;
+  grammar::VerbType type;
+};
+SokuonbinBase resolveSokuonbinBase(const dictionary::DictionaryManager* dict_manager, const std::string& stem) {
+  std::string godan_wa_base = stem + "う";
+  if (vh::isVerbInDictionary(dict_manager, godan_wa_base)) {
+    return {godan_wa_base, grammar::VerbType::GodanWa};
+  }
+  return {stem + "る", grammar::VerbType::GodanRa};
+}
+
+// Fallback verification for a 促音便 base when it is not in the dictionary:
+// only for single-char stems, accept a GodanRa inflection analysis of
+// onbin_surface + た with confidence ≥ 0.3.
+bool sokuonbinInflVerified(const grammar::Inflection& inflection, const std::string& onbin_surface,
+                           const std::string& potential_base, size_t hiragana_before_onbin) {
+  if (hiragana_before_onbin != 1) {
+    return false;
+  }
+  for (const auto& result : inflection.analyze(onbin_surface + "た")) {
+    if (result.verb_type == grammar::VerbType::GodanRa && result.base_form == potential_base &&
+        result.confidence >= 0.3F) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Godan mizenkei pattern: single-kanji + A-row + れ/せ (passive/causative)
 // E.g., 騙される → 騙さ (mizenkei of 騙す) + れる (passive)
 //       囲まれる → 囲ま (mizenkei of 囲む) + れる (passive)
@@ -2481,15 +2514,9 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           // Build potential base form and verify it exists in dictionary or inflection
           // This prevents false positives like 食べてしまる
           std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
-          // 促音便 is shared across godan ラ/ワ/タ, so the base's conjugation type is
-          // lexical and cannot be read off the っ surface. Default to ラ行 (the common
-          // case: 閉まる/走る) but prefer a dictionary-verified ワ行 base (向かう over
-          // the non-word 向かる) when the dictionary carries it — mirroring the
-          // hiragana onbin path's dict-preference tie-break.
-          std::string godan_wa_base = stem + "う";
-          bool prefer_godan_wa = vh::isVerbInDictionary(dict_manager, godan_wa_base);
-          std::string potential_base = prefer_godan_wa ? godan_wa_base : stem + "る";
-          grammar::VerbType onbin_verb_type = prefer_godan_wa ? grammar::VerbType::GodanWa : grammar::VerbType::GodanRa;
+          const SokuonbinBase sokuon = resolveSokuonbinBase(dict_manager, stem);
+          const std::string& potential_base = sokuon.base;
+          const grammar::VerbType onbin_verb_type = sokuon.type;
 
           // Skip if hiragana before っ is だ (copula pattern)
           // E.g., 本だった = 本 + だっ + た (noun + copula), not 本だる (verb)
@@ -2503,19 +2530,9 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             bool in_dict = vh::isVerbInDictionary(dict_manager, potential_base);
 
             // Fallback: inflection analysis for common patterns like 閉まる
-            // Only use inflection for short hiragana patterns (1 char before っ)
-            // Longer patterns like となっ may be noun+particle+verb (一丸+と+なる)
-            bool infl_verified = false;
-            if (!in_dict && hiragana_before_onbin == 1) {
-              const auto& infl_results = inflection.analyze(onbin_surface + "た");
-              for (const auto& result : infl_results) {
-                if (result.verb_type == grammar::VerbType::GodanRa && result.base_form == potential_base &&
-                    result.confidence >= 0.3F) {
-                  infl_verified = true;
-                  break;
-                }
-              }
-            }
+            // (single-char stems only; longer となっ may be noun+particle+verb).
+            bool infl_verified =
+                !in_dict && sokuonbinInflVerified(inflection, onbin_surface, potential_base, hiragana_before_onbin);
 
             // Skip if this is an i-adjective katt-form (美しかっ → 美しい, 高かっ → 高い)
             // The stem ends with か, so remove か and add い to get adjective base form
@@ -2569,14 +2586,9 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       size_t onbin_end = pos + 1;  // Position after っ
       std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
       std::string stem = extractSubstring(codepoints, start_pos, pos);
-      // 促音便 is shared across godan ラ/ワ/タ, so the base's conjugation type is
-      // lexical and cannot be read off the っ surface. Default to ラ行 but prefer a
-      // dictionary-verified ワ行 base (向かう over the non-word 向かる) — mirroring the
-      // trailing-っ extended_sokuonbin path above.
-      std::string godan_wa_base = stem + "う";
-      bool prefer_godan_wa = vh::isVerbInDictionary(dict_manager, godan_wa_base);
-      std::string potential_base = prefer_godan_wa ? godan_wa_base : stem + "る";
-      grammar::VerbType onbin_verb_type = prefer_godan_wa ? grammar::VerbType::GodanWa : grammar::VerbType::GodanRa;
+      const SokuonbinBase sokuon = resolveSokuonbinBase(dict_manager, stem);
+      const std::string& potential_base = sokuon.base;
+      const grammar::VerbType onbin_verb_type = sokuon.type;
 
       // Check hiragana part for known false patterns
       std::string hiragana_part = extractSubstring(codepoints, kanji_end, onbin_end);
@@ -2586,17 +2598,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       }
 
       bool in_dict_check = vh::isVerbInDictionary(dict_manager, potential_base);
-      bool infl_verified = false;
-      if (!in_dict_check && hiragana_before_onbin == 1) {
-        const auto& infl_results = inflection.analyze(onbin_surface + "た");
-        for (const auto& result : infl_results) {
-          if (result.verb_type == grammar::VerbType::GodanRa && result.base_form == potential_base &&
-              result.confidence >= 0.3F) {
-            infl_verified = true;
-            break;
-          }
-        }
-      }
+      bool infl_verified =
+          !in_dict_check && sokuonbinInflVerified(inflection, onbin_surface, potential_base, hiragana_before_onbin);
 
       if (in_dict_check || infl_verified) {
         constexpr float kTeAuxSokuonbinCost = candidate::verb_cost::kModerateBonus;
