@@ -500,6 +500,15 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
               SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" godan_sa kanji+まし pattern (likely verb+ます)\n");
               continue;
             }
+            // Block [e-row]+し followed by a する-auxiliary: the surface is an
+            // ichidan renyokei + する renyokei (お伝えします → 伝え+し+ます),
+            // not a godan-sa stem — verbs of the form 漢字+e-row+す don't
+            // exist, so the false lemma (伝えす) would glue the humble form.
+            if (grammar::isERowCodepoint(codepoints[renyokei_end - 2]) && renyokei_end < codepoints.size() &&
+                vh::isSuruAuxiliaryStarter(codepoints[renyokei_end])) {
+              SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" godan_sa ichidan-renyokei+し+する-aux pattern\n");
+              continue;
+            }
             // 2+ hiragana non-ます pattern (尽くし) — allow with penalty
             non_dict_penalty = bigram_cost::kMinor;
           }

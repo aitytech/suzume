@@ -82,18 +82,7 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
     size_t next_pos = kanji_end + 1;
     if (next_pos < codepoints.size()) {
       char32_t next_char = codepoints[next_pos];
-      // Common suru-auxiliary starting characters
-      // ちゃ: contracted (しちゃう)
-      // て/た: te/ta form (して, した)
-      // な: negative (しない)
-      // ま: polite (します)
-      // よ: volitional (しよう)
-      // ろ/れ: imperative (しろ/しれ)
-      // ば: conditional (すれば - but follows せ not し)
-      // そ: そう pattern (しそう)
-      if (next_char == U'ち' || next_char == U'て' || next_char == U'た' || next_char == U'な' || next_char == U'ま' ||
-          next_char == U'よ' || next_char == U'ろ' || next_char == U'そ' || next_char == U'と' || next_char == U'か' ||
-          next_char == U'つ') {
+      if (verb_helpers::isSuruAuxiliaryStarter(next_char)) {
         // This looks like a suru-verb pattern - skip nominalization
         return candidates;
       }
@@ -116,16 +105,33 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
     // i-adjective (美しい, 正しい, 激しい), not nominalized noun
     if (second_hiragana == U'げ' || second_hiragana == U'け' || second_hiragana == U'り' || second_hiragana == U'え' ||
         second_hiragana == U'し') {
+      // Trailing し followed by a suru-auxiliary (or kanji) is ichidan renyokei
+      // + する (お伝えします, お届けして), not a nominalization — skip the noun
+      // so the verb split can win. し at end of text or before a particle keeps
+      // the noun candidate (genuine nominalizations survive).
+      bool trailing_shi_is_suru = false;
+      if (second_hiragana == U'し') {
+        size_t after_shi_pos = hiragana_end + 1;
+        if (after_shi_pos < codepoints.size()) {
+          char32_t after_shi = codepoints[after_shi_pos];
+          if (verb_helpers::isSuruAuxiliaryStarter(after_shi) ||
+              (after_shi_pos < char_types.size() && char_types[after_shi_pos] == normalize::CharType::Kanji)) {
+            trailing_shi_is_suru = true;
+          }
+        }
+      }
       // Generate 2-hiragana candidate
-      std::string surface = extractSubstring(codepoints, start_pos, hiragana_end + 1);
-      if (!surface.empty()) {
-        auto cand = makeCandidate(surface, start_pos, hiragana_end + 1, core::PartOfSpeech::Noun, 0.8F, false,
-                                  CandidateOrigin::NominalizedNoun);
+      if (!trailing_shi_is_suru) {
+        std::string surface = extractSubstring(codepoints, start_pos, hiragana_end + 1);
+        if (!surface.empty()) {
+          auto cand = makeCandidate(surface, start_pos, hiragana_end + 1, core::PartOfSpeech::Noun, 0.8F, false,
+                                    CandidateOrigin::NominalizedNoun);
 #ifdef SUZUME_DEBUG_INFO
-        cand.confidence = 0.8F;
-        cand.pattern = "nominalized_2hira";
+          cand.confidence = 0.8F;
+          cand.pattern = "nominalized_2hira";
 #endif
-        candidates.push_back(cand);
+          candidates.push_back(cand);
+        }
       }
     }
   }

@@ -401,6 +401,21 @@ inline bool masuAuxFollowsAt(const std::vector<char32_t>& codepoints, size_t pos
 }
 
 /**
+ * @brief Check whether a character can start a する-auxiliary after renyokei し.
+ *
+ * Covers the continuations of する in renyokei position:
+ * ちゃ (contracted しちゃう), て/た (して/した), な (しない), ま (します),
+ * よ (しよう), ろ (imperative しろ), そ (しそう), と/か/つ (しとく/しかける/しつつ).
+ * Used to tell a renyokei し + する-auxiliary chain apart from a nominalized
+ * noun or a false godan-sa stem that would absorb the し.
+ */
+inline bool isSuruAuxiliaryStarter(char32_t next_char) {
+  return next_char == U'ち' || next_char == U'て' || next_char == U'た' || next_char == U'な' || next_char == U'ま' ||
+         next_char == U'よ' || next_char == U'ろ' || next_char == U'そ' || next_char == U'と' || next_char == U'か' ||
+         next_char == U'つ';
+}
+
+/**
  * @brief Check whether a ない-family negative begins at @p pos.
  *
  * Matches the negative auxiliary ない and its conjugated/contracted onsets:

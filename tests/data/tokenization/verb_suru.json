@@ -565,6 +565,87 @@
       ],
       "id": "base_form_between_kanji_nouns",
       "input": "管理する会社"
+    },
+    {
+      "description": "Humble お+ichidan renyokei+する: shi must split, not glue as 伝えし",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "伝え",
+          "pos": "Noun",
+          "surface": "伝え"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "o_eshimasu",
+      "input": "お伝えします"
+    },
+    {
+      "description": "Humble お+ichidan renyokei+する (ke-row stem)",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "届け",
+          "pos": "Noun",
+          "surface": "届け"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "o_keshimasu",
+      "input": "お届けします"
+    },
+    {
+      "description": "Humble お+ichidan renyokei+した (shi before ta suru-aux)",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "預け",
+          "pos": "Noun",
+          "surface": "預け"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "o_keshita",
+      "input": "お預けした"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",
