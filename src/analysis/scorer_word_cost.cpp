@@ -25,23 +25,16 @@ namespace sc = suzume::analysis::scorer;
 
 namespace suzume::analysis {
 
-float Scorer::wordCost(const core::LatticeEdge& edge) const {
-  // v0.8: Base cost from ExtendedPOS category
-  float category_cost = getCategoryCost(edge.extended_pos);
+namespace {
 
-  // HasCustomCost distinguishes a tuned 0.0 from "unset"; unflagged edges use non-zero edge.cost, else category.
-  const bool use_edge_cost = edge.hasCustomCost() || edge.cost != 0.0F;
-  float cost = use_edge_cost ? edge.cost : category_cost;
+/// Length-scaled bonus helper: base - per_char * (char_len - min_len).
+float lengthScaledBonus(float base, size_t char_len, size_t min_len, float per_char) {
+  return base - static_cast<float>(char_len > min_len ? char_len - min_len : 0) * per_char;
+}
 
-  // Length-scaled bonus helper: base + per_char * (char_len - min_len)
-  auto lengthScaledBonus = [](float base, size_t char_len, size_t min_len, float per_char) {
-    return base - static_cast<float>(char_len > min_len ? char_len - min_len : 0) * per_char;
-  };
-
-  // User dictionary bonus (still needed for user customization)
-  if (edge.fromUserDict()) {
-    cost += options_.user_dict_bonus;
-  }
+/// Dictionary bonuses for i-adjectives (hiragana, kanji+い, kanji+okurigana).
+float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
+  float bonus{};
 
   // Bonus for hiragana i-adjectives from dictionary
   // Prevents misanalysis as verb+たい (e.g., つめたい → つめ+たい)
@@ -57,7 +50,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       edge.surface != "ない" && edge.surface != "なく" && edge.surface != "なかっ" && edge.surface != "そう") {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Base bonus -2.5, plus 0.5 per character beyond 3
-    cost += lengthScaledBonus(sc::kBonusHiraganaAdjBase, char_len, 3, sc::kBonusHiraganaAdjPerChar);
+    bonus += lengthScaledBonus(sc::kBonusHiraganaAdjBase, char_len, 3, sc::kBonusHiraganaAdjPerChar);
   }
 
   // Bonus for kanji+い i-adjectives from dictionary
@@ -70,7 +63,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       edge.surface.size() == core::kTwoJapaneseCharBytes &&  // 2 chars (1 kanji + い) = 6 bytes
       utf8::endsWith(edge.surface, "い") &&
       grammar::isAllKanji(edge.surface.substr(0, 3))) {  // First char is kanji
-    cost += cost::kModerateBonus;                                     // -0.5 to beat godan-wa verb candidate
+    bonus += cost::kModerateBonus;                                   // -0.5 to beat godan-wa verb candidate
   }
 
   // Bonus for kanji+okurigana i-adjectives from dictionary (情けない, etc.)
@@ -81,190 +74,15 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       edge.extended_pos != core::ExtendedPOS::AdjStem && grammar::containsKanji(edge.surface) &&
       edge.surface.size() >= 4 * core::kJapaneseCharBytes && utf8::endsWith(edge.surface, "い")) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    cost += lengthScaledBonus(sc::kBonusKanjiOkuriganaAdjBase, char_len, 4, sc::kBonusKanjiOkuriganaAdjPerChar);
+    bonus += lengthScaledBonus(sc::kBonusKanjiOkuriganaAdjBase, char_len, 4, sc::kBonusKanjiOkuriganaAdjPerChar);
   }
 
-  // Bonus for hiragana adverbs from dictionary
-  // Prevents misanalysis as verb+ん (e.g., たくさん → たくさ+ん)
-  // and compound splits (e.g., どうして → どう+し+て)
-  // Longer adverbs get stronger bonus to beat split paths
-  // Short adverbs (2 chars) get weaker bonus to avoid false matches in patterns
-  // like かもしれない (should not be か+もし+れない)
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adverb && grammar::isPureHiragana(edge.surface)) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    // Short adverbs (2 chars) get weaker bonus
-    // Longer adverbs get stronger bonus (0.5 per character beyond 2)
-    float bonus = (char_len <= 2) ? sc::kBonusHiraganaAdverbShort
-                                  : sc::kBonusHiraganaAdverbBase -
-                                        static_cast<float>(char_len - 2) * sc::kBonusHiraganaAdverbPerChar;
-    cost += bonus;
-  }
+  return bonus;
+}
 
-  // Bonus for non-hiragana adverbs from dictionary (初めて, 大して, etc.)
-  // These contain kanji so the pure-hiragana adverb bonus above doesn't apply.
-  // They compete with verb renyokei + て split paths which get connection bonuses.
-  // E.g., 初めて(ADV, cost=0.5) vs 初め(VERB_連用, -0.13) + て(PART, conn=-0.5)
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adverb && !grammar::isPureHiragana(edge.surface)) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    if (char_len >= 3) {
-      cost += lengthScaledBonus(sc::kBonusNonHiraganaAdverbBase, char_len, 3, sc::kBonusNonHiraganaAdverbPerChar);
-    }
-  }
-
-  // Bonus for dictionary determiners/adnominals containing kanji (小さな, 大きな, etc.)
-  // These compete with ADJ_語幹 + suffix split paths which get connection bonuses.
-  // E.g., 小さな(DET, cost=0.4) vs 小(ADJ_語幹, -0.68) + さ(SUFFIX, 0) + な(AUX)
-  // Only apply to kanji-containing entries to avoid boosting pure hiragana determiners
-  // like といった which should remain as particles
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Determiner && grammar::containsKanji(edge.surface)) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    if (char_len >= 3) {
-      cost += lengthScaledBonus(sc::kBonusKanjiDeterminerBase, char_len, 3, sc::kBonusKanjiDeterminerPerChar);
-    }
-  }
-
-  // Bonus for longer hiragana nouns from dictionary (ふともも, ひとつ, etc.)
-  // These compete with adverb+noun split paths that get adverb bonus + connection bonus.
-  // E.g., ふともも(NOUN, 0.5) vs ふと(ADV, -0.5) + もも(NOUN, 0.5, conn=-0.5) = -0.5
-  // Without bonus, the split path wins even though the longer dict match is better.
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun && grammar::isPureHiragana(edge.surface)) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    if (char_len >= 4) {
-      cost += sc::kBonusLongHiraganaNoun;
-    }
-  }
-
-  // Bonus for hiragana interjections/greetings from dictionary
-  // Prevents misanalysis like さようなら → さ+よう+なら (volitional pattern)
-  // or ありがとう → あり+が+とう (verb + particle + noun pattern)
-  // These are fixed expressions that should remain as single tokens
-  // Longer interjections get stronger bonus to beat common split patterns
-  // Note: applies to both Interjection (L1/L2) and Other (legacy)
-  if (edge.fromDictionary() &&
-      (edge.pos == core::PartOfSpeech::Interjection || edge.pos == core::PartOfSpeech::Other) &&
-      grammar::isPureHiragana(edge.surface)) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    // Stronger bonus for longer interjections (common greetings are 4-5 chars)
-    float bonus = (char_len <= 2)   ? sc::kBonusHiraganaInterjectionShort
-                  : (char_len <= 3) ? sc::kBonusHiraganaInterjectionMid
-                                    : sc::kBonusHiraganaInterjectionBase -
-                                          static_cast<float>(char_len - 3) * sc::kBonusHiraganaInterjectionPerChar;
-    cost += bonus;
-  }
-
-  // Bonus for non-hiragana interjections from dictionary (お疲れ様, etc.)
-  // Mixed script interjections also need bonus to beat split paths
-  // E.g., お疲れ様 should not split as お+疲れ+様
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Interjection && !grammar::isPureHiragana(edge.surface)) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    // Moderate bonus for mixed interjections
-    cost +=
-        lengthScaledBonus(sc::kBonusNonHiraganaInterjectionBase, char_len, 3, sc::kBonusNonHiraganaInterjectionPerChar);
-  }
-
-  // Bonus for hiragana conjunctions from dictionary (たとえば, それから, etc.)
-  // Prevents misanalysis like たとえば → たとえ+ば (adverb + particle)
-  // These are fixed expressions that should remain as single tokens
-  // Needs to beat adverb bonus path, so use stronger bonus
-  // Exclude でも - it has ambiguous interpretation (conjunction vs 副助詞)
-  // and context-dependent splitting (彼女でもない → 彼女+で+も+ない)
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Conjunction && grammar::isPureHiragana(edge.surface) &&
-      edge.surface != "でも") {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    // Stronger bonus for conjunctions to beat adverb+particle splits
-    // Adverb 3-char gets -3.0, plus particle gets bonus, so we need > -3.5
-    float bonus = (char_len <= 3) ? sc::kBonusHiraganaConjunctionShort
-                                  : sc::kBonusHiraganaConjunctionBase -
-                                        static_cast<float>(char_len - 3) * sc::kBonusHiraganaConjunctionPerChar;
-    cost += bonus;
-  }
-
-  // Bonus for compound particles from dictionary (について, によって, として, etc.)
-  // These are multi-character particles that should not be split into verb+て patterns
-  // Helps compound particles compete with high-bonus splits like し+て (-1 connection bonus)
-  // Also applies to kanji-containing particles (において, に関して, に際して, に対して)
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Particle) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    // Compound particles are 3+ chars (について, によって, として, において, etc.)
-    // Give strong bonus to beat verb+て split paths
-    if (char_len >= 3) {
-      cost += sc::kBonusCompoundParticle;
-    }
-  }
-
-  // Bonus for みたい (conjecture auxiliary) from dictionary
-  // Works together with bigram bonuses and spurious verb penalty
-  if (edge.fromDictionary() && edge.extended_pos == core::ExtendedPOS::AuxConjectureMitai) {
-    cost += sc::kBonusMitaiDict;
-  }
-
-  // Bonus for dictionary entries starting with negation prefixes (非/不/無/未)
-  // E.g., 不可能, 非常, 無理, 無限, 無鉄砲 - these are single lexical items
-  // Without this bonus, PREFIX+NOUN split path wins due to strong connection bonus (-2)
-  // Dictionary entries should take precedence over compositional analysis
-  // Scales with length so longer entries (無理やり) beat shorter ones (無理)
-  if (edge.fromDictionary() &&
-      (edge.pos == core::PartOfSpeech::Adjective || edge.pos == core::PartOfSpeech::Noun ||
-       edge.pos == core::PartOfSpeech::Adverb) &&
-      edge.surface.size() >= 6 &&  // At least 2 chars (prefix + something)
-      sc::startsWithNegationPrefix(edge.surface)) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    // Base -3.0 for 2-char entries, -0.5 per additional char
-    cost += lengthScaledBonus(sc::kBonusNegationPrefixBase, char_len, 2, sc::kBonusNegationPrefixPerChar);
-  }
-
-  // Bonus for dictionary NOUN entries starting with honorific prefix kanji 御
-  // E.g., 御者, 御所, 御曹司 are lexicalized words where 御 is part of the noun,
-  // not a separable prefix. Without this bonus, the strong PREFIX→NOUN bigram
-  // bonus (-1.3) makes 御(PREFIX) + X split path cheaper than the dict entry.
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun && edge.surface.size() >= 6 &&
-      edge.surface.compare(0, 3, "御") == 0) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    cost += lengthScaledBonus(sc::kBonusHonorificGoNounBase, char_len, 2, sc::kBonusHonorificGoNounPerChar);
-  }
-
-  // Bonus for hiragana+kanji mixed nouns from dictionary (e.g., なし崩し, みじん切り, お茶)
-  // These are idiomatic expressions that should not be split
-  // E.g., なし崩し should not be split as な+し+崩し (AUX+PARTICLE+NOUN)
-  // Requires 3+ chars with both hiragana and kanji
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    if (char_len >= 3 && grammar::isMixedHiraganaKanji(edge.surface)) {
-      if (char_len >= 4) {
-        // Length-scaled bonus for long mixed nouns (お兄ちゃん, お父さん, なし崩し)
-        cost += lengthScaledBonus(sc::kBonusLongMixedNounBase, char_len, 4, -sc::kBonusLongMixedNounPerChar);
-      } else {
-        cost += sc::kBonusMixedNoun;
-      }
-    }
-  }
-
-  // Bonus for long all-kanji nouns from dictionary (4+ chars)
-  // Split path gets dict+dict connection bonus (-0.5) and split_candidates
-  // both-in-dict bonus (-0.2), making it -0.7 cheaper than 1-token path.
-  // Length-scaled bonus ensures registered compounds beat split paths.
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun && grammar::isAllKanji(edge.surface)) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    if (char_len >= 4) {
-      cost += lengthScaledBonus(sc::kBonusLongKanjiNounBase, char_len, 4, -sc::kBonusLongKanjiNounPerChar);
-    }
-  }
-
-  // Bonus for multi-char hiragana suffixes from dictionary (e.g., まみれ, だらけ, ごと)
-  // These are L1 closed-class morphemes that should beat false verb candidates
-  // E.g., 血まみれ should be 血+まみれ(SUFFIX), not 血まみ(VERB)+れ(AUX)
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Suffix && grammar::isPureHiragana(edge.surface) &&
-      edge.surface.size() >= core::kThreeJapaneseCharBytes) {  // 3+ chars (9+ bytes)
-    cost += sc::kBonusLongSuffix;
-  }
-
-  // Bonus for short hiragana verbs from dictionary (e.g., なる, ある, いる, する)
-  // These compete with L1 function word entries (DET, AUX) which have lower category costs.
-  // Dictionary registration indicates standalone verb usage should take precedence.
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      edge.surface.length() <= core::kTwoJapaneseCharBytes) {  // ≤2 chars
-    cost += sc::kBonusShortHiraganaVerb;
-  }
+/// Penalties for spurious non-dictionary verb renyokei/stem candidates.
+float computeSpuriousVerbPenalty(const core::LatticeEdge& edge) {
+  float penalty{};
 
   // Penalty for spurious kanji+hiragana verb renyokei not in dictionary
   // These are often false positives like 学生み (学生みる doesn't exist)
@@ -282,7 +100,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       }
     }
     if (kanji_count >= 2) {
-      cost += sc::kPenaltySpuriousVerbRenyokei;
+      penalty += sc::kPenaltySpuriousVerbRenyokei;
     }
   }
 
@@ -297,8 +115,8 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       edge.surface.size() >= core::kTwoJapaneseCharBytes) {  // 2+ chars (avoid single-char like ん)
     // Reduced penalty for short forms (2-4 chars = 6-12 bytes)
     // to allow common hiragana verbs like もらっ, あげっ to compete
-    cost += (edge.surface.size() <= core::kFourJapaneseCharBytes) ? sc::kPenaltyHatsuonbinShort
-                                                                  : sc::kPenaltyHatsuonbinLong;
+    penalty += (edge.surface.size() <= core::kFourJapaneseCharBytes) ? sc::kPenaltyHatsuonbinShort
+                                                                     : sc::kPenaltyHatsuonbinLong;
   }
 
   // Penalty for pure-hiragana verb forms containing "さん" pattern
@@ -315,7 +133,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       // 2. The verb form is short enough to be a misanalysis
       if (san_pos <= core::kTwoJapaneseCharBytes &&
           edge.surface.size() <= core::kFiveJapaneseCharBytes) {  // 0-2 chars before, up to 5 total
-        cost += sc::kPenaltySanPatternVerb;
+        penalty += sc::kPenaltySanPatternVerb;
       }
     }
   }
@@ -328,7 +146,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       edge.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isPureHiragana(edge.surface) &&
       utf8::startsWith(edge.surface, "に") && edge.surface.size() >= core::kTwoJapaneseCharBytes &&
       edge.surface.size() <= core::kFourJapaneseCharBytes) {  // 2-4 chars
-    cost += sc::kPenaltyNiPrefixVerb;
+    penalty += sc::kPenaltyNiPrefixVerb;
   }
 
   // Penalty for very long pure-hiragana verb candidates not in dictionary
@@ -337,7 +155,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // Valid long verbs typically have kanji stems
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
       edge.surface.size() >= core::kSixJapaneseCharBytes) {  // 6+ hiragana chars (6*3=18 bytes)
-    cost += sc::kPenaltyVeryLongHiraganaVerb;
+    penalty += sc::kPenaltyVeryLongHiraganaVerb;
   }
 
   // Penalty for 5-char pure-hiragana verb renyokei not in dictionary
@@ -346,7 +164,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb &&
       edge.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isPureHiragana(edge.surface) &&
       edge.surface.size() >= core::kFiveJapaneseCharBytes) {  // 5+ hiragana chars (5*3=15 bytes)
-    cost += sc::kPenaltyVeryLongHiraganaVerb;
+    penalty += sc::kPenaltyVeryLongHiraganaVerb;
   }
 
   // Penalty for kanji+hiragana verb renyokei ending in いし pattern
@@ -358,8 +176,15 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb &&
       edge.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::containsKanji(edge.surface) &&
       utf8::endsWith(edge.surface, "いし") && edge.surface.size() >= 9) {  // At least 1 kanji + いし (3 + 6 bytes)
-    cost += sc::kPenaltyIshiVerbRenyokei;
+    penalty += sc::kPenaltyIshiVerbRenyokei;
   }
+
+  return penalty;
+}
+
+/// Penalties for spurious verb candidates identified by their inflected endings (そう/てき/まし/てい/te/ta).
+float computeVerbEndingPenalty(const core::LatticeEdge& edge) {
+  float penalty{};
 
   // Penalty for pure-hiragana verb candidates ending with そう
   // E.g., "なさそう" should be な + さ + そう, not なさそう (verb)
@@ -368,7 +193,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
       utf8::endsWith(edge.surface, "そう") &&
       edge.surface.size() >= core::kThreeJapaneseCharBytes) {  // 3+ chars (at least xそう)
-    cost += cost::kRare;
+    penalty += cost::kRare;
   }
 
   // Penalty for pure-hiragana verb candidates ending with てき
@@ -377,7 +202,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // Exception: できる is valid but is in dictionary
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
       utf8::endsWith(edge.surface, "てき") && edge.surface.size() >= 9) {  // 3+ chars (at least xてき)
-    cost += cost::kVeryRare;
+    penalty += cost::kVeryRare;
   }
 
   // Penalty for pure-hiragana verb candidates ending with まし
@@ -385,7 +210,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // The まし ending is almost always ます (polite aux) renyokei form
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
       utf8::endsWith(edge.surface, "まし") && edge.surface.size() >= 9) {  // 3+ chars (at least xまし)
-    cost += cost::kVeryRare;
+    penalty += cost::kVeryRare;
   }
 
   // Penalty for pure-hiragana verb candidates ending with てい
@@ -393,7 +218,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // The てい ending is almost always て (particle) + い (いる renyokei)
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
       utf8::endsWith(edge.surface, "てい") && edge.surface.size() >= 9) {  // 3+ chars (at least xてい)
-    cost += cost::kVeryRare;
+    penalty += cost::kVeryRare;
   }
 
   // Penalty for pure-hiragana verb te-form candidates not in dictionary
@@ -404,7 +229,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb &&
       edge.extended_pos == core::ExtendedPOS::VerbTeForm && grammar::isPureHiragana(edge.surface) &&
       edge.surface.size() >= 9) {  // 3+ chars (9 bytes) - allows して, きて
-    cost += cost::kVeryRare;
+    penalty += cost::kVeryRare;
   }
 
   // Penalty for kanji+hiragana verb te-form candidates (e.g., 押して, 泳いで)
@@ -416,7 +241,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       grammar::containsKanji(edge.surface) &&
       (utf8::endsWith(edge.surface, "て") || utf8::endsWith(edge.surface, "で")) &&
       edge.surface.size() <= core::kFourJapaneseCharBytes) {  // Short te-forms (1-2 kanji + て/で)
-    cost += cost::kSevere;                                    // Very strong penalty to overcome negative costs
+    penalty += cost::kSevere;                                 // Very strong penalty to overcome negative costs
   }
 
   // Penalty for kanji+hiragana verb ta-form candidates (e.g., 書いた, 泳いだ)
@@ -427,8 +252,269 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
       edge.extended_pos == core::ExtendedPOS::VerbTaForm && grammar::containsKanji(edge.surface) &&
       (utf8::endsWith(edge.surface, "いた") || utf8::endsWith(edge.surface, "いだ")) &&
       edge.surface.size() <= 12) {  // Short ta-forms (1-2 kanji + いた/いだ)
-    cost += cost::kSevere;          // Strong penalty to prefer onbin + auxiliary split
+    penalty += cost::kSevere;       // Strong penalty to prefer onbin + auxiliary split
   }
+
+  return penalty;
+}
+
+/// Dictionary bonuses for long nouns, hiragana suffixes, and short hiragana verbs.
+float computeNounSuffixVerbDictBonus(const core::LatticeEdge& edge) {
+  float bonus{};
+
+  // Bonus for hiragana+kanji mixed nouns from dictionary (e.g., なし崩し, みじん切り, お茶)
+  // These are idiomatic expressions that should not be split
+  // E.g., なし崩し should not be split as な+し+崩し (AUX+PARTICLE+NOUN)
+  // Requires 3+ chars with both hiragana and kanji
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    if (char_len >= 3 && grammar::isMixedHiraganaKanji(edge.surface)) {
+      if (char_len >= 4) {
+        // Length-scaled bonus for long mixed nouns (お兄ちゃん, お父さん, なし崩し)
+        bonus += lengthScaledBonus(sc::kBonusLongMixedNounBase, char_len, 4, -sc::kBonusLongMixedNounPerChar);
+      } else {
+        bonus += sc::kBonusMixedNoun;
+      }
+    }
+  }
+
+  // Bonus for long all-kanji nouns from dictionary (4+ chars)
+  // Split path gets dict+dict connection bonus (-0.5) and split_candidates
+  // both-in-dict bonus (-0.2), making it -0.7 cheaper than 1-token path.
+  // Length-scaled bonus ensures registered compounds beat split paths.
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun && grammar::isAllKanji(edge.surface)) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    if (char_len >= 4) {
+      bonus += lengthScaledBonus(sc::kBonusLongKanjiNounBase, char_len, 4, -sc::kBonusLongKanjiNounPerChar);
+    }
+  }
+
+  // Bonus for multi-char hiragana suffixes from dictionary (e.g., まみれ, だらけ, ごと)
+  // These are L1 closed-class morphemes that should beat false verb candidates
+  // E.g., 血まみれ should be 血+まみれ(SUFFIX), not 血まみ(VERB)+れ(AUX)
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Suffix && grammar::isPureHiragana(edge.surface) &&
+      edge.surface.size() >= core::kThreeJapaneseCharBytes) {  // 3+ chars (9+ bytes)
+    bonus += sc::kBonusLongSuffix;
+  }
+
+  // Bonus for short hiragana verbs from dictionary (e.g., なる, ある, いる, する)
+  // These compete with L1 function word entries (DET, AUX) which have lower category costs.
+  // Dictionary registration indicates standalone verb usage should take precedence.
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
+      edge.surface.length() <= core::kTwoJapaneseCharBytes) {  // ≤2 chars
+    bonus += sc::kBonusShortHiraganaVerb;
+  }
+
+  return bonus;
+}
+
+/// Dictionary bonuses for みたい auxiliary and prefixed entries (negation prefix, honorific 御).
+float computeMitaiAndPrefixDictBonus(const core::LatticeEdge& edge) {
+  float bonus{};
+
+  // Bonus for みたい (conjecture auxiliary) from dictionary
+  // Works together with bigram bonuses and spurious verb penalty
+  if (edge.fromDictionary() && edge.extended_pos == core::ExtendedPOS::AuxConjectureMitai) {
+    bonus += sc::kBonusMitaiDict;
+  }
+
+  // Bonus for dictionary entries starting with negation prefixes (非/不/無/未)
+  // E.g., 不可能, 非常, 無理, 無限, 無鉄砲 - these are single lexical items
+  // Without this bonus, PREFIX+NOUN split path wins due to strong connection bonus (-2)
+  // Dictionary entries should take precedence over compositional analysis
+  // Scales with length so longer entries (無理やり) beat shorter ones (無理)
+  if (edge.fromDictionary() &&
+      (edge.pos == core::PartOfSpeech::Adjective || edge.pos == core::PartOfSpeech::Noun ||
+       edge.pos == core::PartOfSpeech::Adverb) &&
+      edge.surface.size() >= 6 &&  // At least 2 chars (prefix + something)
+      sc::startsWithNegationPrefix(edge.surface)) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    // Base -3.0 for 2-char entries, -0.5 per additional char
+    bonus += lengthScaledBonus(sc::kBonusNegationPrefixBase, char_len, 2, sc::kBonusNegationPrefixPerChar);
+  }
+
+  // Bonus for dictionary NOUN entries starting with honorific prefix kanji 御
+  // E.g., 御者, 御所, 御曹司 are lexicalized words where 御 is part of the noun,
+  // not a separable prefix. Without this bonus, the strong PREFIX→NOUN bigram
+  // bonus (-1.3) makes 御(PREFIX) + X split path cheaper than the dict entry.
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun && edge.surface.size() >= 6 &&
+      edge.surface.compare(0, 3, "御") == 0) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    bonus += lengthScaledBonus(sc::kBonusHonorificGoNounBase, char_len, 2, sc::kBonusHonorificGoNounPerChar);
+  }
+
+  return bonus;
+}
+
+/// Dictionary bonuses for fixed expressions: interjections, conjunctions, compound particles.
+float computeFixedExpressionDictBonus(const core::LatticeEdge& edge) {
+  float bonus{};
+
+  // Bonus for hiragana interjections/greetings from dictionary
+  // Prevents misanalysis like さようなら → さ+よう+なら (volitional pattern)
+  // or ありがとう → あり+が+とう (verb + particle + noun pattern)
+  // These are fixed expressions that should remain as single tokens
+  // Longer interjections get stronger bonus to beat common split patterns
+  // Note: applies to both Interjection (L1/L2) and Other (legacy)
+  if (edge.fromDictionary() &&
+      (edge.pos == core::PartOfSpeech::Interjection || edge.pos == core::PartOfSpeech::Other) &&
+      grammar::isPureHiragana(edge.surface)) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    // Stronger bonus for longer interjections (common greetings are 4-5 chars)
+    float interjection_bonus = (char_len <= 2)   ? sc::kBonusHiraganaInterjectionShort
+                               : (char_len <= 3) ? sc::kBonusHiraganaInterjectionMid
+                                                 : sc::kBonusHiraganaInterjectionBase -
+                                                       static_cast<float>(char_len - 3) *
+                                                           sc::kBonusHiraganaInterjectionPerChar;
+    bonus += interjection_bonus;
+  }
+
+  // Bonus for non-hiragana interjections from dictionary (お疲れ様, etc.)
+  // Mixed script interjections also need bonus to beat split paths
+  // E.g., お疲れ様 should not split as お+疲れ+様
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Interjection && !grammar::isPureHiragana(edge.surface)) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    // Moderate bonus for mixed interjections
+    bonus +=
+        lengthScaledBonus(sc::kBonusNonHiraganaInterjectionBase, char_len, 3, sc::kBonusNonHiraganaInterjectionPerChar);
+  }
+
+  // Bonus for hiragana conjunctions from dictionary (たとえば, それから, etc.)
+  // Prevents misanalysis like たとえば → たとえ+ば (adverb + particle)
+  // These are fixed expressions that should remain as single tokens
+  // Needs to beat adverb bonus path, so use stronger bonus
+  // Exclude でも - it has ambiguous interpretation (conjunction vs 副助詞)
+  // and context-dependent splitting (彼女でもない → 彼女+で+も+ない)
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Conjunction && grammar::isPureHiragana(edge.surface) &&
+      edge.surface != "でも") {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    // Stronger bonus for conjunctions to beat adverb+particle splits
+    // Adverb 3-char gets -3.0, plus particle gets bonus, so we need > -3.5
+    float conjunction_bonus = (char_len <= 3) ? sc::kBonusHiraganaConjunctionShort
+                                              : sc::kBonusHiraganaConjunctionBase -
+                                                    static_cast<float>(char_len - 3) *
+                                                        sc::kBonusHiraganaConjunctionPerChar;
+    bonus += conjunction_bonus;
+  }
+
+  // Bonus for compound particles from dictionary (について, によって, として, etc.)
+  // These are multi-character particles that should not be split into verb+て patterns
+  // Helps compound particles compete with high-bonus splits like し+て (-1 connection bonus)
+  // Also applies to kanji-containing particles (において, に関して, に際して, に対して)
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Particle) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    // Compound particles are 3+ chars (について, によって, として, において, etc.)
+    // Give strong bonus to beat verb+て split paths
+    if (char_len >= 3) {
+      bonus += sc::kBonusCompoundParticle;
+    }
+  }
+
+  return bonus;
+}
+
+/// Dictionary bonuses for kanji determiners and long hiragana nouns.
+float computeDeterminerNounDictBonus(const core::LatticeEdge& edge) {
+  float bonus{};
+
+  // Bonus for dictionary determiners/adnominals containing kanji (小さな, 大きな, etc.)
+  // These compete with ADJ_語幹 + suffix split paths which get connection bonuses.
+  // E.g., 小さな(DET, cost=0.4) vs 小(ADJ_語幹, -0.68) + さ(SUFFIX, 0) + な(AUX)
+  // Only apply to kanji-containing entries to avoid boosting pure hiragana determiners
+  // like といった which should remain as particles
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Determiner && grammar::containsKanji(edge.surface)) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    if (char_len >= 3) {
+      bonus += lengthScaledBonus(sc::kBonusKanjiDeterminerBase, char_len, 3, sc::kBonusKanjiDeterminerPerChar);
+    }
+  }
+
+  // Bonus for longer hiragana nouns from dictionary (ふともも, ひとつ, etc.)
+  // These compete with adverb+noun split paths that get adverb bonus + connection bonus.
+  // E.g., ふともも(NOUN, 0.5) vs ふと(ADV, -0.5) + もも(NOUN, 0.5, conn=-0.5) = -0.5
+  // Without bonus, the split path wins even though the longer dict match is better.
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun && grammar::isPureHiragana(edge.surface)) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    if (char_len >= 4) {
+      bonus += sc::kBonusLongHiraganaNoun;
+    }
+  }
+
+  return bonus;
+}
+
+/// Dictionary bonuses for adverbs (pure hiragana and non-hiragana).
+float computeAdverbDictBonus(const core::LatticeEdge& edge) {
+  float bonus{};
+
+  // Bonus for hiragana adverbs from dictionary
+  // Prevents misanalysis as verb+ん (e.g., たくさん → たくさ+ん)
+  // and compound splits (e.g., どうして → どう+し+て)
+  // Longer adverbs get stronger bonus to beat split paths
+  // Short adverbs (2 chars) get weaker bonus to avoid false matches in patterns
+  // like かもしれない (should not be か+もし+れない)
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adverb && grammar::isPureHiragana(edge.surface)) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    // Short adverbs (2 chars) get weaker bonus
+    // Longer adverbs get stronger bonus (0.5 per character beyond 2)
+    float adverb_bonus = (char_len <= 2) ? sc::kBonusHiraganaAdverbShort
+                                         : sc::kBonusHiraganaAdverbBase -
+                                               static_cast<float>(char_len - 2) * sc::kBonusHiraganaAdverbPerChar;
+    bonus += adverb_bonus;
+  }
+
+  // Bonus for non-hiragana adverbs from dictionary (初めて, 大して, etc.)
+  // These contain kanji so the pure-hiragana adverb bonus above doesn't apply.
+  // They compete with verb renyokei + て split paths which get connection bonuses.
+  // E.g., 初めて(ADV, cost=0.5) vs 初め(VERB_連用, -0.13) + て(PART, conn=-0.5)
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adverb && !grammar::isPureHiragana(edge.surface)) {
+    size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    if (char_len >= 3) {
+      bonus += lengthScaledBonus(sc::kBonusNonHiraganaAdverbBase, char_len, 3, sc::kBonusNonHiraganaAdverbPerChar);
+    }
+  }
+
+  return bonus;
+}
+
+}  // namespace
+
+float Scorer::wordCost(const core::LatticeEdge& edge) const {
+  // v0.8: Base cost from ExtendedPOS category
+  float category_cost = getCategoryCost(edge.extended_pos);
+
+  // HasCustomCost distinguishes a tuned 0.0 from "unset"; unflagged edges use non-zero edge.cost, else category.
+  const bool use_edge_cost = edge.hasCustomCost() || edge.cost != 0.0F;
+  float cost = use_edge_cost ? edge.cost : category_cost;
+
+  // User dictionary bonus (still needed for user customization)
+  if (edge.fromUserDict()) {
+    cost += options_.user_dict_bonus;
+  }
+
+  // Dictionary bonuses for i-adjectives (hiragana, kanji+い, kanji+okurigana).
+  cost += computeAdjectiveDictBonus(edge);
+
+  // Dictionary bonuses for adverbs (pure hiragana and non-hiragana).
+  cost += computeAdverbDictBonus(edge);
+
+  // Dictionary bonuses for kanji determiners and long hiragana nouns.
+  cost += computeDeterminerNounDictBonus(edge);
+
+  // Dictionary bonuses for fixed expressions: interjections, conjunctions, compound particles.
+  cost += computeFixedExpressionDictBonus(edge);
+
+  // Dictionary bonuses for みたい auxiliary and prefixed entries (negation prefix, honorific 御).
+  cost += computeMitaiAndPrefixDictBonus(edge);
+
+  // Dictionary bonuses for long nouns, hiragana suffixes, and short hiragana verbs.
+  cost += computeNounSuffixVerbDictBonus(edge);
+
+  // Penalties for spurious non-dictionary verb renyokei/stem candidates.
+  cost += computeSpuriousVerbPenalty(edge);
+
+  // Penalties for spurious verb candidates identified by their inflected endings (そう/てき/まし/てい/te/ta).
+  cost += computeVerbEndingPenalty(edge);
 
   // Bonus for compound adjectives from dictionary (e.g., 男らしい, 女らしい)
   // These compete with noun+らしい split which has -1.5 connection bonus.
