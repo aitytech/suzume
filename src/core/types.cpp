@@ -484,6 +484,14 @@ ExtendedPOS posToExtendedPos(PartOfSpeech pos) {
 // Verb Form Detection Helpers
 // =============================================================================
 
+// NOTE: postprocess::Lemmatizer::detectConjForm() also maps endings to
+// conjugation forms, but over a different input domain (post-merge morpheme
+// surface plus lemma and next-morpheme context, verbs and adjectives) with
+// intentionally different ending sets and tier order. The same ending can
+// legitimately classify differently across the two (e.g. なければ: Kateikei here
+// via the ば tier, Mizenkei there via the negative tier; って/った: TeForm/TaForm
+// here, Onbinkei there), and ConjForm::Ishikei has no ExtendedPOS counterpart.
+// The two mappings are not copies of one table and must not be merged.
 ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix) {
   // Empty surface defaults to shuushi
   if (surface.empty()) {

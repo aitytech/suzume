@@ -1197,6 +1197,13 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
   }
 }
 
+// NOTE: core::detectVerbForm() also maps endings to conjugation forms, but over
+// a different input domain (pre-merge verb surface plus suffix chain, verbs only)
+// with intentionally different ending sets and tier order. The same ending can
+// legitimately classify differently across the two (e.g. なければ: Mizenkei here
+// via the negative tier, Kateikei there via the ば tier; って/った: Onbinkei here,
+// TeForm/TaForm there), and Ishikei has no ExtendedPOS counterpart. The two
+// mappings are not copies of one table and must not be merged.
 grammar::ConjForm Lemmatizer::detectConjForm(std::string_view surface, std::string_view lemma, core::PartOfSpeech pos,
                                              std::string_view next_lemma) {
   // Only verbs and adjectives have conjugation forms
