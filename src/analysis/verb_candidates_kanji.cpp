@@ -876,11 +876,16 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
     char32_t kanji_char = codepoints[start_pos];
 
     if (vh::isSingleKanjiIchidan(kanji_char)) {
-      // Check if followed by polite ます or negative auxiliary
+      // Check if followed by a polite ます-family auxiliary or negative auxiliary.
+      // The ます family (ます/まし(た)/ませ(ん)/ましょ(う)) attaches only to a verb
+      // renyokei, so the bare-kanji ichidan renyokei reading is licensed here
+      // (見ました → 見+まし+た). Godan-sa homographs are unaffected: their
+      // renyokei inserts し before the auxiliary (出しました), so the kanji is
+      // never immediately followed by ま in that reading.
       using namespace suzume::core::hiragana;
       char32_t h1 = codepoints[kanji_end];
       char32_t h2 = (kanji_end + 1 < codepoints.size()) ? codepoints[kanji_end + 1] : 0;
-      bool is_polite_aux = (h1 == kMa && h2 == kSu);
+      bool is_polite_aux = vh::masuAuxFollowsAt(codepoints, kanji_end);
       // Negative auxiliary ない and its conjugations:
       // ない (終止/連体), なく (連用), なかっ (た接続), なけれ (仮定), なきゃ (口語縮約仮定)
       bool is_negative_aux = (h1 == kNa && (h2 == kI || h2 == kKu || h2 == kKa || h2 == kKe || h2 == kKi));

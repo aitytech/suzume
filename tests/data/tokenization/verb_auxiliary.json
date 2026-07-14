@@ -350,6 +350,104 @@
       ],
       "id": "tttekonai",
       "input": "帰ってこない"
+    },
+    {
+      "description": "Single-kanji ichidan renyokei licensed by a following masu-family aux (見る)",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "mashita",
+      "input": "見ました"
+    },
+    {
+      "description": "Single-kanji ichidan + ました generalizes across the closed kanji-stem set (着る)",
+      "expected": [
+        {
+          "lemma": "着る",
+          "pos": "Verb",
+          "surface": "着"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "mashita_2",
+      "input": "着ました"
+    },
+    {
+      "description": "Single-kanji ichidan + polite negative past; no fabricated godan 出む (出る)",
+      "expected": [
+        {
+          "lemma": "出る",
+          "pos": "Verb",
+          "surface": "出"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ませ"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "でし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "masendeshita",
+      "input": "出ませんでした"
+    },
+    {
+      "description": "Single-kanji ichidan + volitional masu (ましょう) fires the masu-family gate (見る)",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ましょ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "mashi_u",
+      "input": "見ましょう"
     }
   ],
   "description": "verb_auxiliary tests",
