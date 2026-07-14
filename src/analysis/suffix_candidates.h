@@ -126,21 +126,6 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
                                                                  const std::vector<normalize::CharType>& char_types);
 
 /**
- * @brief Generate がち suffix candidates for kanji+hiragana sequences
- *
- * Detects kanji verb stem + がち patterns:
- *   - 忘れがち (忘れる renyokei + がち)
- *   - 遅れがち (遅れる renyokei + がち)
- *
- * @param codepoints Text as codepoints
- * @param start_pos Start position (character index)
- * @param char_types Character types for each position
- * @return Vector of candidates
- */
-std::vector<UnknownCandidate> generateGachiSuffixCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                            const std::vector<normalize::CharType>& char_types);
-
-/**
  * @brief Generate counter candidates for numeral + つ patterns
  *
  * Detects closed-class counter patterns:

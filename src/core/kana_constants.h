@@ -1,8 +1,7 @@
 #ifndef SUZUME_CORE_KANA_CONSTANTS_H_
 #define SUZUME_CORE_KANA_CONSTANTS_H_
 
-#include <string_view>
-#include <unordered_set>
+#include <cstddef>
 
 namespace suzume::kana {
 

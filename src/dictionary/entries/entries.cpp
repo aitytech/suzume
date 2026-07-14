@@ -1035,7 +1035,7 @@ std::vector<DictionaryEntry> getFormalNounEntries() {
       formal_noun("仕方", ""),
       formal_noun("ありきたり", "ありきたり"),  // Low cost to prevent あり+き+たり split, na-adjective stem
       formal_noun("たたずまい", "たたずまい"),  // noun, not suru-verb
-      // NOTE: 〜がち forms are now handled by generateGachiSuffixCandidates() in suffix_candidates.cpp
+      // NOTE: 〜がち forms are split as V連用形 + がち (suffix) by the split path, not merged.
       // B35: Idiom component (eaves bracket - used in うだつが上がらない)
       formal_noun("うだつ", "うだつ"),
   };

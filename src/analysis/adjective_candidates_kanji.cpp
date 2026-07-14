@@ -25,11 +25,9 @@ namespace suzume::analysis {
 using verb_helpers::addEmphaticVariants;
 using verb_helpers::findCharRegionEnd;
 using verb_helpers::isAdjectiveInDictionary;
-using verb_helpers::isEmphaticChar;
 using verb_helpers::isVerbInDictionary;
 
 using adj_detail::makeIAdjCandidate;
-using adj_detail::makeIAdjStemCandidate;
 using adj_detail::makeTrimmedAdjVariant;
 
 namespace {

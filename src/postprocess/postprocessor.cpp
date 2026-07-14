@@ -83,15 +83,11 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
   std::vector<core::Morpheme> result = morphemes;
   [[maybe_unused]] size_t before_count = 0;
 
-  // Note: NOUN + SUFFIX merging is intentionally disabled.
-  // We keep tokens separate: PREFIX + NOUN + SUFFIX
-  // e.g., お姉さん → お(PREFIX) + 姉(NOUN) + さん(SUFFIX)
-  // result = mergeNounSuffix(result);
-  SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] mergeNounSuffix: disabled\n");
+  // NOUN + SUFFIX merging is intentionally NOT applied: tokens stay separate as
+  // PREFIX + NOUN + SUFFIX (e.g., お姉さん → お(PREFIX) + 姉(NOUN) + さん(SUFFIX)).
 
   // Convert PREFIX + VERB to PREFIX + NOUN (renyoukei nominalization)
   // e.g., お願い → お(PREFIX) + 願い(NOUN), not 願い(VERB)
-  before_count = result.size();
   result = convertPrefixVerbToNoun(result);
   // Note: this function logs individual changes, so no summary needed
 
@@ -102,9 +98,7 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
     SUZUME_DEBUG_LOG("[POSTPROC] mergeNumericExpressions: " << before_count << " → " << result.size() << "\n");
   }
 
-  // Disabled for MeCab compatibility (MeCab keeps na-adjective + な separate)
-  // result = mergeNaAdjectiveNa(result);
-  SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] mergeNaAdjectiveNa: disabled (MeCab compat)\n");
+  // na-adjective + な is intentionally kept separate for MeCab compatibility.
 
   // Apply lemmatization
   if (options_.lemmatize) {
@@ -355,58 +349,6 @@ std::vector<core::Morpheme> Postprocessor::mergeVerbRenyokeiMono(const std::vect
   return result;
 }
 
-std::vector<core::Morpheme> Postprocessor::mergeNounSuffix(const std::vector<core::Morpheme>& morphemes) {
-  if (morphemes.empty()) {
-    return morphemes;
-  }
-
-  std::vector<core::Morpheme> result;
-  result.reserve(morphemes.size());
-
-  size_t idx = 0;
-  while (idx < morphemes.size()) {
-    const auto& current = morphemes[idx];
-
-    // Check if this is a noun followed by suffix(es)
-    if (current.pos == core::PartOfSpeech::Noun || current.pos == core::PartOfSpeech::Pronoun) {
-      core::Morpheme merged = current;
-      size_t merge_end = idx + 1;
-
-      // Collect consecutive suffixes
-      while (merge_end < morphemes.size() && morphemes[merge_end].pos == core::PartOfSpeech::Suffix) {
-        const auto& suffix = morphemes[merge_end];
-        merged.surface += suffix.surface;
-        merged.end = suffix.end;
-        merged.end_pos = suffix.end_pos;
-        ++merge_end;
-      }
-
-      if (merge_end > idx + 1) {
-        // Merged at least one suffix - result is always NOUN
-        merged.pos = core::PartOfSpeech::Noun;
-        merged.lemma = merged.surface;  // Compound noun lemma is itself
-        SUZUME_DEBUG_BLOCK {
-          SUZUME_DEBUG_STREAM << "[POSTPROC] Merged noun+suffix: ";
-          for (size_t i = idx; i < merge_end; ++i) {
-            if (i > idx)
-              SUZUME_DEBUG_STREAM << " + ";
-            SUZUME_DEBUG_STREAM << "\"" << morphemes[i].surface << "\"";
-          }
-          SUZUME_DEBUG_STREAM << " → \"" << merged.surface << "\"\n";
-        }
-      }
-
-      result.push_back(merged);
-      idx = merge_end;
-    } else {
-      result.push_back(current);
-      ++idx;
-    }
-  }
-
-  return result;
-}
-
 namespace {
 
 // Check if a character is a digit (ASCII or fullwidth)
@@ -589,58 +531,6 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(const std::ve
         SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged indefinite+suffix: \""
                                  << current.surface << "\" + \"" << next.surface << "\" → \"" << merged.surface
                                  << "\"\n");
-
-        result.push_back(merged);
-        idx += 2;
-        continue;
-      }
-    }
-
-    result.push_back(current);
-    ++idx;
-  }
-
-  return result;
-}
-
-std::vector<core::Morpheme> Postprocessor::mergeNaAdjectiveNa(const std::vector<core::Morpheme>& morphemes) {
-  if (morphemes.size() < 2) {
-    return morphemes;
-  }
-
-  std::vector<core::Morpheme> result;
-  result.reserve(morphemes.size());
-
-  size_t idx = 0;
-  while (idx < morphemes.size()) {
-    const auto& current = morphemes[idx];
-
-    // Check if this is a na-adjective followed by な particle
-    if (idx + 1 < morphemes.size() && current.pos == core::PartOfSpeech::Adjective &&
-        morphemes[idx + 1].pos == core::PartOfSpeech::Particle && morphemes[idx + 1].surface == "な") {
-      // Check if the adjective is a na-adjective (doesn't end with い)
-      // Use lemma for checking since surface may be normalized
-      bool is_na_adj = true;
-      std::string_view check_str = current.lemma.empty() ? current.surface : current.lemma;
-      if (check_str.size() >= core::kJapaneseCharBytes) {
-        std::string_view last_char = check_str.substr(check_str.size() - core::kJapaneseCharBytes);
-        // i-adjectives end with い (exceptions: きれい, きらい, 嫌い, みたい)
-        if (last_char == "い" && !utf8::equalsAny(check_str, {"きれい", "きらい", "嫌い", "みたい"})) {
-          is_na_adj = false;
-          SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Detected i-adjective: \"" << check_str << "\", not merging with な\n");
-        }
-      }
-
-      if (is_na_adj) {
-        // Merge na-adjective + な
-        core::Morpheme merged = current;
-        merged.surface += morphemes[idx + 1].surface;
-        merged.end = morphemes[idx + 1].end;
-        merged.end_pos = morphemes[idx + 1].end_pos;
-        // Keep lemma as the base form (e.g., 静か)
-
-        SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged na-adj: \"" << current.surface << "\" + \"な\" → \""
-                                                                << merged.surface << "\"\n");
 
         result.push_back(merged);
         idx += 2;

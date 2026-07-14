@@ -58,19 +58,9 @@ class Postprocessor {
   static std::vector<core::Morpheme> mergeNounCompounds(const std::vector<core::Morpheme>& morphemes);
 
   /**
-   * @brief Merge NOUN/PRONOUN + SUFFIX into compound noun
-   */
-  static std::vector<core::Morpheme> mergeNounSuffix(const std::vector<core::Morpheme>& morphemes);
-
-  /**
    * @brief Merge consecutive numeric expressions (e.g., 3億 + 5000万円 → 3億5000万円)
    */
   static std::vector<core::Morpheme> mergeNumericExpressions(const std::vector<core::Morpheme>& morphemes);
-
-  /**
-   * @brief Merge na-adjective + な into attributive form (e.g., 静か + な → 静かな)
-   */
-  static std::vector<core::Morpheme> mergeNaAdjectiveNa(const std::vector<core::Morpheme>& morphemes);
 
   /**
    * @brief Convert PREFIX + VERB to PREFIX + NOUN (renyoukei nominalization)

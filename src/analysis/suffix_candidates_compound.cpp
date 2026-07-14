@@ -3,8 +3,6 @@
  * @brief Suffix-based unknown word candidate generation
  */
 
-#include <unordered_set>
-
 #include "candidate_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"

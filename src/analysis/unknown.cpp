@@ -184,11 +184,6 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
     auto compound_nouns = generateKanjiHiraganaCompoundCandidates(codepoints, start_pos, char_types, dict_manager_);
     candidates.insert(candidates.end(), compound_nouns.begin(), compound_nouns.end());
 
-    // Generate がち suffix candidates for kanji verb stems
-    // e.g., 忘れがち, 遅れがち
-    auto gachi_suffix = generateGachiSuffixCandidates(codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), gachi_suffix.begin(), gachi_suffix.end());
-
     // Generate counter candidates for numeral + つ patterns
     // e.g., 一つ, 二つ, ..., 九つ (closed class)
     auto counters = generateCounterCandidates(codepoints, start_pos, char_types);

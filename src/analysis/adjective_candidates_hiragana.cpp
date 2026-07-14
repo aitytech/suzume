@@ -45,7 +45,7 @@ std::string normalizeProlongedSoundMark(const std::vector<char32_t>& codepoints,
     char32_t ch = codepoints[i];
 
     // Check for prolonged sound mark (ー, U+30FC)
-    if (ch == 0x30FC && i > start) {
+    if (normalize::isProlongedSoundMark(ch) && i > start) {
       // Find the first non-ー character before this position
       char32_t prev = 0;
       for (size_t j = i; j > start; --j) {
@@ -67,7 +67,7 @@ std::string normalizeProlongedSoundMark(const std::vector<char32_t>& codepoints,
 // Check if sequence contains a prolonged sound mark
 bool containsProlongedSoundMark(const std::vector<char32_t>& codepoints, size_t start, size_t end) {
   for (size_t i = start; i < end; ++i) {
-    if (codepoints[i] == 0x30FC) {
+    if (normalize::isProlongedSoundMark(codepoints[i])) {
       return true;
     }
   }
@@ -92,7 +92,7 @@ std::string normalizeBaseForm(const std::string& base_form, const std::vector<ch
   size_t choon_count = 0;
   size_t first_choon_pos = 0;
   for (size_t i = start; i < end; ++i) {
-    if (original_codepoints[i] == 0x30FC) {
+    if (normalize::isProlongedSoundMark(original_codepoints[i])) {
       if (choon_count == 0) {
         first_choon_pos = i;
       }

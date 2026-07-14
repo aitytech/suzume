@@ -196,13 +196,16 @@ void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, c
   // Get byte positions
   size_t start_byte = charPosToBytePos(codepoints, start_pos);
 
+  // The first-part lookup depends only on start_byte, so it is loop-invariant;
+  // hoist it out and filter by result.length per split point below.
+  const auto first_results = dict_manager.lookup(text, start_byte);
+
   // Try different split points
   for (size_t split_point = 2; split_point < kanji_len; ++split_point) {
     size_t first_end = start_pos + split_point;
     size_t first_end_byte = charPosToBytePos(codepoints, first_end);
 
     // Check if the first part matches a dictionary entry
-    auto first_results = dict_manager.lookup(text, start_byte);
     bool first_in_dict = false;
     bool first_is_formal_noun = false;
     const auto& opts = scorer.splitOpts();

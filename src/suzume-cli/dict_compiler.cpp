@@ -69,26 +69,9 @@ std::vector<dictionary::DictionaryEntry> expandIAdjective(const dictionary::Dict
     result.push_back(new_entry);
   }
 
-  // Contracted forms for ない-ending adjectives (e.g., くだらない → くだらん)
-  // DISABLED: MeCab splits くだらん as くだら(verb未然形)+ん(助動詞)
-  // Keeping contracted forms in dictionary prevents MeCab-compatible splitting
-  // if (utf8::endsWith(stem, "な")) {
-  //   std::string contracted_stem = std::string(utf8::dropLastChar(stem)) + "ん";
-  //   static const std::vector<std::string> kContractedSuffixes = {
-  //       "",           // くだらん
-  //       "かった",     // くだらんかった
-  //       "ければ",     // くだらんければ
-  //       "かったら",   // くだらんかったら
-  //   };
-  //   for (const auto& suffix : kContractedSuffixes) {
-  //     dictionary::DictionaryEntry new_entry;
-  //     new_entry.surface = contracted_stem + suffix;
-  //     new_entry.pos = core::PartOfSpeech::Adjective;
-  //     new_entry.extended_pos = core::ExtendedPOS::AdjBasic;
-  //     new_entry.lemma = lemma;
-  //     result.push_back(new_entry);
-  //   }
-  // }
+  // Contracted forms for ない-ending adjectives (くだらない → くだらん) are
+  // intentionally NOT expanded into the dictionary: MeCab splits くだらん as
+  // くだら(verb未然形) + ん(助動詞), and dictionary entries would block that split.
 
   return result;
 }

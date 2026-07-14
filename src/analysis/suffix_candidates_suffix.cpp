@@ -3,8 +3,6 @@
  * @brief Suffix-based unknown word candidate generation
  */
 
-#include <unordered_set>
-
 #include "candidate_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
@@ -114,35 +112,6 @@ const std::vector<std::string_view>& getNaAdjSuffixes() {
 // Productive Hiragana Suffix Patterns (生産的接尾辞)
 // =============================================================================
 
-namespace {
-
-// Check if the stem looks like a verb renyokei (連用形)
-// This is a heuristic based on common patterns
-bool looksLikeVerbRenyokei(std::string_view stem) {
-  if (stem.empty()) {
-    return false;
-  }
-
-  // Minimum 2 characters (1 Japanese char = 3 bytes)
-  if (stem.size() < 3) {
-    return false;
-  }
-
-  // Get the last character (Japanese = 3 bytes)
-  std::string_view last_char = utf8::lastChar(stem);
-
-  // Common verb renyokei endings (i-row for godan, e-row for ichidan)
-  // Godan: し、み、き、ぎ、ち、り、い、び、に、ひ
-  // Ichidan: べ、め、け、げ、せ、ぜ、て、で、ね、へ、ぺ、え、れ
-  return utf8::equalsAny(last_char,
-                         {
-                             "し", "み", "き", "ぎ", "ち", "り", "い", "び", "に", "ひ",             // Godan i-row
-                             "べ", "め", "け", "げ", "せ", "ぜ", "て", "で", "ね", "へ", "え", "れ"  // Ichidan e-row
-                         });
-}
-
-}  // namespace
-
 std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vector<char32_t>& codepoints,
                                                                  size_t start_pos,
                                                                  const std::vector<normalize::CharType>& char_types) {
@@ -176,19 +145,8 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
 
     std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
 
-    // Pattern 1: V連用形 + がち (tendency suffix)
-    // MeCab compatibility: Don't generate merged V+がち candidates
-    // MeCab splits as あり|がち, なり|がち (verb renyokei + suffix)
-    // Disabled to let the split path win
-    // if (surface.size() >= kGachiLen + 3 && utf8::endsWith(surface, "がち")) {
-    //   std::string_view stem = std::string_view(surface).substr(0, surface.size() - kGachiLen);
-    //   if (looksLikeVerbRenyokei(stem)) {
-    //     candidates.push_back(makeSuffixCandidate(
-    //         surface, start_pos, candidate_end, core::PartOfSpeech::Noun, -0.5F,
-    //         surface, 0.9F, "verb_renyokei_gachi"));
-    //     return candidates;  // Found valid がち candidate
-    //   }
-    // }
+    // がち (tendency suffix) is intentionally NOT merged here: MeCab splits
+    // あり|がち, なり|がち (verb renyokei + suffix), so the split path wins.
 
     // Pattern 2: V連用形 + っぽい (resemblance suffix)
     // Examples: 子供っぽい、安っぽい、忘れっぽい
@@ -227,81 +185,6 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
           return candidates;
         }
         break;
-      }
-    }
-  }
-
-  return candidates;
-}
-
-std::vector<UnknownCandidate> generateGachiSuffixCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                            const std::vector<normalize::CharType>& char_types) {
-  std::vector<UnknownCandidate> candidates;
-
-  // MeCab compatibility: Don't generate merged V+がち candidates
-  // MeCab splits as 遅れ|がち, 忘れ|がち (verb renyokei + suffix)
-  // Return empty to let the split path win
-  return candidates;
-
-  // For kanji-starting sequences ending with がち
-  // Pattern: Kanji+ Hiragana(renyokei) + がち
-  // Examples: 忘れがち (忘れ = 忘れる renyokei), 遅れがち (遅れ = 遅れる renyokei)
-  if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
-  }
-
-  // Find kanji portion (1-3 chars)
-  size_t kanji_end = findCharRegionEnd(char_types, start_pos, 4, normalize::CharType::Kanji);
-
-  if (kanji_end == start_pos) {
-    return candidates;
-  }
-
-  // Need hiragana after kanji
-  if (kanji_end >= char_types.size() || char_types[kanji_end] != normalize::CharType::Hiragana) {
-    return candidates;
-  }
-
-  // Look for がち pattern within the hiragana portion
-  // We need to find positions where がち appears
-  constexpr size_t kGachiLen = 6;  // "がち" = 2 chars * 3 bytes
-
-  // Try different lengths of hiragana (2 to 4 chars for renyokei + がち)
-  for (size_t hira_len = 2; hira_len <= 4; ++hira_len) {
-    size_t candidate_end = kanji_end + hira_len;
-    if (candidate_end > char_types.size()) {
-      break;
-    }
-
-    // Check all positions are hiragana
-    bool all_hiragana = true;
-    for (size_t i = kanji_end; i < candidate_end; ++i) {
-      if (char_types[i] != normalize::CharType::Hiragana) {
-        all_hiragana = false;
-        break;
-      }
-    }
-    if (!all_hiragana) {
-      continue;
-    }
-
-    std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
-
-    // Check if ends with がち
-    if (surface.size() >= kGachiLen + 3 && utf8::endsWith(surface, "がち")) {
-      // Check if hiragana before がち is a valid renyokei ending
-      std::string hiragana_part = extractSubstring(codepoints, kanji_end, candidate_end);
-      std::string_view renyokei_ending;
-      if (hiragana_part.size() > kGachiLen) {
-        renyokei_ending = std::string_view(hiragana_part).substr(0, hiragana_part.size() - kGachiLen);
-      }
-
-      // For ichidan verbs, renyokei is just one hiragana (れ for 忘れる, れ for 遅れる)
-      // Empty or valid renyokei ending is acceptable
-      if (renyokei_ending.empty() || looksLikeVerbRenyokei(renyokei_ending)) {
-        candidates.push_back(makeSuffixCandidate(surface, start_pos, candidate_end, core::PartOfSpeech::Noun, -0.5F,
-                                                 surface, 0.9F, "kanji_verb_renyokei_gachi"));
-        break;  // Found one valid candidate, no need to check longer patterns
       }
     }
   }

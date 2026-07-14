@@ -103,38 +103,22 @@ std::string Conjugation::getStem(const std::string& base_form, VerbType type) {
     return base_form;
   }
 
-  switch (type) {
-    case VerbType::Ichidan:
-    case VerbType::GodanKa:
-    case VerbType::GodanGa:
-    case VerbType::GodanSa:
-    case VerbType::GodanTa:
-    case VerbType::GodanNa:
-    case VerbType::GodanBa:
-    case VerbType::GodanMa:
-    case VerbType::GodanRa:
-    case VerbType::GodanWa:
-    case VerbType::IAdjective:
-      // Remove last hiragana (3 bytes in UTF-8)
-      return base_form.substr(0, len - core::kJapaneseCharBytes);
-
-    case VerbType::Suru:
-      if (base_form == "する") {
-        return "";
-      }
-      // Xする → X (remove する = 6 bytes)
-      if (len >= core::kTwoJapaneseCharBytes) {
-        return base_form.substr(0, len - core::kTwoJapaneseCharBytes);
-      }
+  // Suru is the only type whose stem is not "base minus its final kana":
+  // Xする drops する (two chars) and bare する has an empty stem.
+  if (type == VerbType::Suru) {
+    if (base_form == "する") {
       return "";
-
-    case VerbType::Kuru:
-      // 来る → 来 (remove る = 3 bytes)
-      return base_form.substr(0, len - core::kJapaneseCharBytes);
-
-    default:
-      return base_form.substr(0, len - core::kJapaneseCharBytes);
+    }
+    // Xする → X (remove する = 6 bytes)
+    if (len >= core::kTwoJapaneseCharBytes) {
+      return base_form.substr(0, len - core::kTwoJapaneseCharBytes);
+    }
+    return "";
   }
+
+  // Every other type (Ichidan, all Godan rows, IAdjective, Kuru) drops its
+  // final kana (3 bytes in UTF-8).
+  return base_form.substr(0, len - core::kJapaneseCharBytes);
 }
 
 VerbType Conjugation::detectType(const std::string& base_form) {
