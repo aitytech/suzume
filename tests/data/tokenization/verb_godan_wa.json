@@ -977,6 +977,125 @@
       ],
       "id": "de_ttta",
       "input": "布で覆った"
+    },
+    {
+      "description": "Pure-hiragana godan-wa sokuonbin: ちがう te-form",
+      "expected": [
+        {
+          "lemma": "ちがう",
+          "pos": "Verb",
+          "surface": "ちがっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "chigattte",
+      "input": "ちがって"
+    },
+    {
+      "description": "Pure-hiragana godan-wa sokuonbin: かよう te-form",
+      "expected": [
+        {
+          "lemma": "かよう",
+          "pos": "Verb",
+          "surface": "かよっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "kayottte",
+      "input": "かよって"
+    },
+    {
+      "description": "Pure-hiragana godan-wa sokuonbin: はらう past",
+      "expected": [
+        {
+          "lemma": "はらう",
+          "pos": "Verb",
+          "surface": "はらっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "harattta",
+      "input": "はらった"
+    },
+    {
+      "description": "Pure-hiragana godan-wa sokuonbin: ひろう past",
+      "expected": [
+        {
+          "lemma": "ひろう",
+          "pos": "Verb",
+          "surface": "ひろっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "hirottta",
+      "input": "ひろった"
+    },
+    {
+      "description": "Pure-hiragana godan-wa sokuonbin: ならう te-form",
+      "expected": [
+        {
+          "lemma": "ならう",
+          "pos": "Verb",
+          "surface": "ならっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "narattte",
+      "input": "ならって"
+    },
+    {
+      "description": "Pure-hiragana godan-wa sokuonbin: おもう past (MeCab gives non-word おもる)",
+      "expected": [
+        {
+          "lemma": "おもう",
+          "pos": "Verb",
+          "surface": "おもっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "omottta",
+      "input": "おもった"
+    },
+    {
+      "description": "Pure-hiragana godan-wa sokuonbin: すう te-form (すう/する ambiguous, pick すう)",
+      "expected": [
+        {
+          "lemma": "すう",
+          "pos": "Verb",
+          "surface": "すっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "suttte",
+      "input": "すって"
     }
   ],
   "description": "Godan Wa-row verbs (五段ワ行動詞) - verbs ending in う",

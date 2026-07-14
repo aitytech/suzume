@@ -809,6 +809,142 @@
       ],
       "id": "wo_nda_2",
       "input": "荷物を運んだ"
+    },
+    {
+      "description": "Pure-hiragana godan-ba hatsuonbin: あそぶ te-form",
+      "expected": [
+        {
+          "lemma": "あそぶ",
+          "pos": "Verb",
+          "surface": "あそん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "asonde",
+      "input": "あそんで"
+    },
+    {
+      "description": "Pure-hiragana godan-ma hatsuonbin: のむ past",
+      "expected": [
+        {
+          "lemma": "のむ",
+          "pos": "Verb",
+          "surface": "のん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "nonda",
+      "input": "のんだ"
+    },
+    {
+      "description": "Pure-hiragana godan-ma hatsuonbin: つつむ te-form",
+      "expected": [
+        {
+          "lemma": "つつむ",
+          "pos": "Verb",
+          "surface": "つつん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "tsutsunde",
+      "input": "つつんで"
+    },
+    {
+      "description": "Pure-hiragana godan-ba hatsuonbin: よろこぶ te-form",
+      "expected": [
+        {
+          "lemma": "よろこぶ",
+          "pos": "Verb",
+          "surface": "よろこん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "yorokonde",
+      "input": "よろこんで"
+    },
+    {
+      "description": "Pure-hiragana godan-ba hatsuonbin: とぶ past",
+      "expected": [
+        {
+          "lemma": "とぶ",
+          "pos": "Verb",
+          "surface": "とん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "tonda",
+      "input": "とんだ"
+    },
+    {
+      "description": "Pure-hiragana godan-ma hatsuonbin: かむ te-form (MeCab reads noun かん)",
+      "expected": [
+        {
+          "lemma": "かむ",
+          "pos": "Verb",
+          "surface": "かん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "kande",
+      "input": "かんで"
+    },
+    {
+      "description": "Pure-hiragana godan-ma hatsuonbin: よむ past (よむ/よぶ ambiguous, pick よむ)",
+      "expected": [
+        {
+          "lemma": "よむ",
+          "pos": "Verb",
+          "surface": "よん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "yonda",
+      "input": "よんだ"
+    },
+    {
+      "description": "Pure-hiragana godan-ba hatsuonbin: ならぶ te-form (MeCab splits as なる mizenkei)",
+      "expected": [
+        {
+          "lemma": "ならぶ",
+          "pos": "Verb",
+          "surface": "ならん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "narande",
+      "input": "ならんで"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",
