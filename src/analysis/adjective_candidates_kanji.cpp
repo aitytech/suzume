@@ -502,11 +502,12 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (compound_adj_penalty)\n");
         }
         // Penalty for く + なる patterns (i-adjective adverbial + なる verb)
-        // MeCab splits these: 良くなる → 良く + なる, 高くなった → 高く + なっ + た
+        // MeCab splits these: 良くなる → 良く + なる, 高くなった → 高く + なっ + た.
+        // Scan the whole surface (not just its end) so trailing auxiliaries after
+        // the absorbed なる (寒くなってきた = 寒く+なっ+て+き+た) are still caught.
         // Must have at least 2 chars before くなる to avoid penalizing standalone patterns
         if (!is_dict_adjective && surface.size() >= 3 * core::kJapaneseCharBytes) {
-          // Check for くなる/くなっ/くなり/くなれ/くなら/くなった patterns
-          if (verb_helpers::endsWithKuNaruPattern(surface)) {
+          if (verb_helpers::containsKuNaruPattern(surface)) {
             cost += candidate::kAdjSplitForcePenalty;  // Force adj く-form + なる split
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (ku_naru_split)\n");
           }

@@ -310,13 +310,8 @@ bool isCompoundAdjectivePattern(std::string_view surface) {
 
 bool containsKuNaruPattern(std::string_view surface) {
   return surface.find("くなっ") != std::string::npos || surface.find("くなり") != std::string::npos ||
-         surface.find("くなる") != std::string::npos || surface.find("くなれ") != std::string::npos;
-}
-
-bool endsWithKuNaruPattern(std::string_view surface) {
-  return utf8::endsWith(surface, "くなる") || utf8::endsWith(surface, "くなっ") || utf8::endsWith(surface, "くなり") ||
-         utf8::endsWith(surface, "くなれ") || utf8::endsWith(surface, "くなら") ||
-         utf8::endsWith(surface, "くなった") || utf8::endsWith(surface, "くなって");
+         surface.find("くなる") != std::string::npos || surface.find("くなれ") != std::string::npos ||
+         surface.find("くなら") != std::string::npos;
 }
 
 const std::vector<std::pair<grammar::VerbType, std::string_view>>& getGodanTypesByOnbin(std::string_view onbin) {

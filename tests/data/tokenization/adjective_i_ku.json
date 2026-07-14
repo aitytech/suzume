@@ -235,6 +235,65 @@
         "adjective",
         "colloquial"
       ]
+    },
+    {
+      "description": "Adjective ku-form + naru + te-kita stays split (whole-surface ku-naru scan)",
+      "expected": [
+        {
+          "lemma": "寒い",
+          "pos": "Adjective",
+          "surface": "寒く"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kunatttekita",
+      "input": "寒くなってきた"
+    },
+    {
+      "description": "高くなりすぎた - auto-generated",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高く"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なり"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kunarisugita",
+      "input": "高くなりすぎた"
     }
   ],
   "description": "I-adjectives ku-forms (連用形) - adverbial, negative, te-form, ku-naru patterns",

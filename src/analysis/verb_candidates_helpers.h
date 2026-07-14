@@ -255,14 +255,6 @@ bool isCompoundAdjectivePattern(std::string_view surface);
 bool containsKuNaruPattern(std::string_view surface);
 
 /**
- * @brief Check if surface ends with adj renyokei + なる conjugation pattern
- *
- * Matches: くなる, くなっ, くなり, くなれ, くなら, くなった, くなって at the end.
- * Used to penalize kanji i-adjective candidates absorbing く+なる suffix.
- */
-bool endsWithKuNaruPattern(std::string_view surface);
-
-/**
  * @brief Get Godan VerbTypes that use a specific onbin pattern
  *
  * Onbin patterns:
