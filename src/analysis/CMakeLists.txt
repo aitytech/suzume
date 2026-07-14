@@ -13,7 +13,10 @@ add_library(suzume_analysis STATIC
   scorer_connection_cost.cpp
   scorer_word_cost.cpp
   split_candidates.cpp
-  suffix_candidates.cpp
+  suffix_candidates_compound.cpp
+  suffix_candidates_counter.cpp
+  suffix_candidates_prefix.cpp
+  suffix_candidates_suffix.cpp
   tokenizer.cpp
   tokenizer_utils.cpp
   unknown.cpp
