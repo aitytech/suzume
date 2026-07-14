@@ -945,6 +945,108 @@
       ],
       "id": "narande",
       "input": "ならんで"
+    },
+    {
+      "description": "Pure-hiragana godan-ma hatsuonbin: しずむ te-form",
+      "expected": [
+        {
+          "lemma": "しずむ",
+          "pos": "Verb",
+          "surface": "しずん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "shizunde",
+      "input": "しずんで"
+    },
+    {
+      "description": "Pure-hiragana godan-ma hatsuonbin: やすむ te-form",
+      "expected": [
+        {
+          "lemma": "やすむ",
+          "pos": "Verb",
+          "surface": "やすん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "yasunde",
+      "input": "やすんで"
+    },
+    {
+      "description": "Pure-hiragana godan-ba hatsuonbin: さけぶ te-form",
+      "expected": [
+        {
+          "lemma": "さけぶ",
+          "pos": "Verb",
+          "surface": "さけん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "sakende",
+      "input": "さけんで"
+    },
+    {
+      "description": "Pure-hiragana godan-ba hatsuonbin: ころぶ te-form",
+      "expected": [
+        {
+          "lemma": "ころぶ",
+          "pos": "Verb",
+          "surface": "ころん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "koronde",
+      "input": "ころんで"
+    },
+    {
+      "description": "Pure-hiragana godan-ba hatsuonbin: むすぶ te-form",
+      "expected": [
+        {
+          "lemma": "むすぶ",
+          "pos": "Verb",
+          "surface": "むすん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "musunde",
+      "input": "むすんで"
+    },
+    {
+      "description": "Pure-hiragana godan-ba hatsuonbin: まなぶ te-form",
+      "expected": [
+        {
+          "lemma": "まなぶ",
+          "pos": "Verb",
+          "surface": "まなん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "manande",
+      "input": "まなんで"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",
