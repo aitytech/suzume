@@ -749,6 +749,82 @@
       ],
       "id": "go_itadaku",
       "input": "ご利用いただく"
+    },
+    {
+      "description": "Humble お+godan renyokei(待ち)+する: shi splits, no 待ちし godan-sa fabrication",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "待ち",
+          "pos": "Noun",
+          "surface": "待ち"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "o_chishimasu",
+      "input": "お待ちします"
+    },
+    {
+      "description": "Humble お+待ち+して (shi before te suru-aux)",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "待ち",
+          "pos": "Noun",
+          "surface": "待ち"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "o_chishite",
+      "input": "お待ちして"
+    },
+    {
+      "description": "Humble お+立ち: godan renyokei kept, no 立ちし glue path",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "立ち",
+          "pos": "Noun",
+          "surface": "立ち"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "o_chikudasai",
+      "input": "お立ちください"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

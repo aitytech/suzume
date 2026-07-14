@@ -500,13 +500,17 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
               SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" godan_sa kanji+まし pattern (likely verb+ます)\n");
               continue;
             }
-            // Block [e-row]+し followed by a する-auxiliary: the surface is an
-            // ichidan renyokei + する renyokei (お伝えします → 伝え+し+ます),
-            // not a godan-sa stem — verbs of the form 漢字+e-row+す don't
-            // exist, so the false lemma (伝えす) would glue the humble form.
-            if (grammar::isERowCodepoint(codepoints[renyokei_end - 2]) && renyokei_end < codepoints.size() &&
-                vh::isSuruAuxiliaryStarter(codepoints[renyokei_end])) {
-              SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" godan_sa ichidan-renyokei+し+する-aux pattern\n");
+            // Block [renyokei vowel]+し followed by a する-auxiliary: the surface
+            // is a verb renyokei + する renyokei (お伝えします → 伝え+し+ます,
+            // お待ちします → 待ち+し+ます), not a godan-sa stem. Real godan-sa
+            // verbs keep し directly after the kanji (貸し←貸す, 話し←話す), so
+            // the char before し is a kanji there; a hiragana i-row (godan) or
+            // e-row (ichidan) renyokei vowel before し means the godan-sa base
+            // (待ちす/伝えす) is fabricated and would glue the humble form.
+            char32_t before_shi = codepoints[renyokei_end - 2];
+            if ((grammar::isIRowCodepoint(before_shi) || grammar::isERowCodepoint(before_shi)) &&
+                renyokei_end < codepoints.size() && vh::isSuruAuxiliaryStarter(codepoints[renyokei_end])) {
+              SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" godan_sa verb-renyokei+し+する-aux pattern\n");
               continue;
             }
             // 2+ hiragana non-ます pattern (尽くし) — allow with penalty
