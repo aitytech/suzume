@@ -85,6 +85,7 @@ const SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"替える", "かえる", "える", V2VerbType::Ichidan},      // 切り替える
     {"換える", "かえる", "える", V2VerbType::Ichidan},      // 入れ換える
     {"合わせる", "あわせる", "せる", V2VerbType::Ichidan},  // 組み合わせる
+    {"浮かべる", "うかべる", "べる", V2VerbType::Ichidan},  // 思い浮かべる
     {"切れる", "きれる", "れる", V2VerbType::Ichidan},      // 使い切れる
     {"出る", "でる", "る", V2VerbType::Ichidan},            // 飛び出る
     {"上げる", "あげる", "げる", V2VerbType::Ichidan},      // 売り上げる, 取り上げる
@@ -924,6 +925,19 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     } else if (!inflection_includes_aux && best_match.includes_aux) {
       // Match without aux beats match with aux
       should_update = true;
+    } else if (best_match.is_mizenkei && (matched_kanji || matched_reading)) {
+      // A full V2 base-form match (組み合わせる via ichidan 合わせる) competes
+      // with a shorter V2-mizenkei causative/passive reading of another table
+      // entry (組み合わ + せる via godan 合う). Prefer the whole compound only
+      // when the dictionary attests it as an established lexeme — as a verb, or
+      // via its nominalized renyokei (組み合わせ, 問い合わせ are dict nouns).
+      // Otherwise the mizenkei reading is the grammatically correct one
+      // (話し合わせる = 話し合う + せる causative).
+      std::string nominalized = generateRenyokei(compound_base, "", v2_verb.verb_type);
+      if (dict_manager.lookupExact(compound_base, core::PartOfSpeech::Verb) != nullptr ||
+          (!nominalized.empty() && dict_manager.lookupExact(nominalized, core::PartOfSpeech::Noun) != nullptr)) {
+        should_update = true;
+      }
     }
 
     if (should_update) {

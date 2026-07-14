@@ -714,6 +714,20 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
     return std::string(morpheme.surface);
   }
 
+  // Likewise for dictionary-backed 終止形/連体形 verbs ending in せる (見せる,
+  // 合わせる, and lexical compounds like 組み合わせる): the surface is already
+  // the dictionary form, so its lemma IS the surface. The grammar re-derivation
+  // below would misread the ichidan せる ending as the causative auxiliary and
+  // strip it (組み合わせる → 組み合う). Scoped to dictionary-backed edges: a
+  // token that is genuinely mizenkei+させる never reaches here as one
+  // dictionary-flagged 終止形 token (the tokenizer splits it: 話し合わ+せる).
+  if (morpheme.is_from_dictionary && morpheme.pos == core::PartOfSpeech::Verb &&
+      (morpheme.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+       morpheme.extended_pos == core::ExtendedPOS::VerbRentaikei) &&
+      utf8::endsWith(morpheme.surface, "せる")) {
+    return std::string(morpheme.surface);
+  }
+
   // Tari-adjective adverbs: remove trailing と from lemma (颯爽と → 颯爽, 堂々と → 堂々)
   // This check runs even for dictionary entries where lemma == surface
   if (morpheme.pos == core::PartOfSpeech::Adverb) {

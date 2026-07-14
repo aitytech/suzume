@@ -2423,6 +2423,76 @@
       ],
       "id": "shi_wanai",
       "input": "話し合わない"
+    },
+    {
+      "description": "Dict-attested lexical compound (ichidan 合わせる V2) beats 合わ+せる causative",
+      "expected": [
+        {
+          "lemma": "組み合わせる",
+          "pos": "Verb",
+          "surface": "組み合わせる"
+        }
+      ],
+      "id": "mi_waseru",
+      "input": "組み合わせる"
+    },
+    {
+      "description": "Dict-attested 問い合わせる kept whole (not 問い合わ+せる)",
+      "expected": [
+        {
+          "lemma": "問い合わせる",
+          "pos": "Verb",
+          "surface": "問い合わせる"
+        }
+      ],
+      "id": "i_waseru",
+      "input": "問い合わせる"
+    },
+    {
+      "description": "Non-dict 合わせる compound stays causative split 掛け合わ+せる (MeCab-aligned)",
+      "expected": [
+        {
+          "lemma": "掛け合う",
+          "pos": "Verb",
+          "surface": "掛け合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "ke_waseru",
+      "input": "掛け合わせる"
+    },
+    {
+      "description": "Productive V2 浮かべる compound kept whole",
+      "expected": [
+        {
+          "lemma": "思い浮かべる",
+          "pos": "Verb",
+          "surface": "思い浮かべる"
+        }
+      ],
+      "id": "i_kaberu",
+      "input": "思い浮かべる"
+    },
+    {
+      "description": "思い浮かべる past: renyokei 思い浮かべ splits from た",
+      "expected": [
+        {
+          "lemma": "思い浮かべる",
+          "pos": "Verb",
+          "surface": "思い浮かべ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "i_kabeta",
+      "input": "思い浮かべた"
     }
   ],
   "description": "Compound verbs",
