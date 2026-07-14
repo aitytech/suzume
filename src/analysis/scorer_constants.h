@@ -93,6 +93,12 @@ constexpr float kPenaltySpuriousVerbRenyokei = scale::kStrong;
 constexpr float kPenaltyHatsuonbinShort = scale::kRare;   // 2-4 chars
 constexpr float kPenaltyHatsuonbinLong = scale::kSevere;  // 5+ chars
 
+// Penalty for an unknown-verb candidate whose lemma (base form) is not
+// dictionary-verified. A bare godan renyokei with no auxiliary chain and an
+// unattested base is rarely a genuine verb usage, so the competing noun/suffix
+// split should win (こども+たち over こど+もたち).
+constexpr float kPenaltyUnverifiedVerbLemma = scale::kRare;
+
 // Penalty for pure-hiragana verb forms containing さん pattern
 constexpr float kPenaltySanPatternVerb = scale::kSevere;
 

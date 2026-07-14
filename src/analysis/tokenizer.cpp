@@ -668,6 +668,11 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     if (candidate.has_suffix) {
       flags |= static_cast<uint8_t>(core::EdgeFlags::HasSuffix);
     }
+    // Relay dict-verified-lemma marking so the scorer can exempt genuine verb
+    // onbin forms from the spurious-onbin penalty.
+    if (candidate.lemma_verified) {
+      flags |= static_cast<uint8_t>(core::EdgeFlags::LemmaVerified);
+    }
 
 #ifdef SUZUME_DEBUG_INFO
     lattice.addEdge(surface_str, static_cast<uint32_t>(candidate.start), static_cast<uint32_t>(candidate.end),

@@ -110,7 +110,9 @@ float computeSpuriousVerbPenalty(const core::LatticeEdge& edge) {
   // This helps prevent が+おさん misanalysis (should be がお+さん)
   // Exception: short hiragana verbs (2-4 chars like もらっ, あげっ) get reduced penalty
   // as they are more likely to be legitimate verbs written in hiragana
-  if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb &&
+  // Exception: an onbin edge whose base lemma was dictionary-verified during
+  // candidate generation (LemmaVerified) is a genuine verb form and is exempt.
+  if (!edge.lemmaVerified() && edge.pos == core::PartOfSpeech::Verb &&
       edge.extended_pos == core::ExtendedPOS::VerbOnbinkei && grammar::isPureHiragana(edge.surface) &&
       edge.surface.size() >= core::kTwoJapaneseCharBytes) {  // 2+ chars (avoid single-char like ん)
     // Reduced penalty for short forms (2-4 chars = 6-12 bytes)

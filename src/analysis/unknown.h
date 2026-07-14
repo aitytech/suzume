@@ -52,7 +52,8 @@ struct UnknownCandidate {
   core::ExtendedPOS extended_pos{core::ExtendedPOS::Unknown};  // Fine-grained POS for bigram
   float cost{0.0F};
   bool has_suffix{false};
-  std::string lemma;  // Base form (for verbs/adjectives)
+  bool lemma_verified{false};  // Lemma (base form) attested as a dictionary verb at generation time
+  std::string lemma;           // Base form (for verbs/adjectives)
   dictionary::ConjugationType conj_type{dictionary::ConjugationType::None};
 
 #ifdef SUZUME_DEBUG_INFO

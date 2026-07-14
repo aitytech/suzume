@@ -678,6 +678,9 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
 
       // Check if base form exists in dictionary as this verb type
       bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
+      // Capture dictionary attestation before the inflection fallback below may
+      // set is_valid_verb on a non-dictionary base.
+      const bool lemma_dict_verified = is_valid_verb;
 
       // For tense patterns (っ+た/て, ん+だ/で), also use inflection analysis
       // This handles common verbs like かう, やる that may not be in dictionary
@@ -714,9 +717,16 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
                             << " lemma=" << base_form << " cost=" << cost << "\n";
       }
       const char* pattern = is_sokuonbin ? "hiragana_sokuonbin" : "hiragana_hatsuonbin";
-      candidates.push_back(makeVerbCandidate(
-          onbin_surface, start_pos, onbin_pos + 1, cost, base_form, grammar::verbTypeToConjType(verb_type), true,
-          CandidateOrigin::VerbHiragana, 0.9F, pattern, core::ExtendedPOS::VerbOnbinkei));
+      auto onbin_cand = makeVerbCandidate(onbin_surface, start_pos, onbin_pos + 1, cost, base_form,
+                                          grammar::verbTypeToConjType(verb_type), true, CandidateOrigin::VerbHiragana,
+                                          0.9F, pattern, core::ExtendedPOS::VerbOnbinkei);
+      // Verified only for genuinely rule-only forms: if the onbin surface is
+      // itself a dictionary entry, that edge carries the authoritative reading
+      // and this candidate must not undercut it (であった あっ, いった いっ).
+      const bool onbin_surface_in_dict =
+          dict_manager != nullptr && dict_manager->lookupExact(onbin_surface) != nullptr;
+      onbin_cand.lemma_verified = lemma_dict_verified && !onbin_surface_in_dict;
+      candidates.push_back(std::move(onbin_cand));
       break;  // Found valid candidate for this position
     }
   }
@@ -1478,9 +1488,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
             (next_after == U'ま' || next_after == U'そ' || next_after == U'な' || next_after == U'た' ||
              next_after == U'や' || next_after == U'に' || next_after == U'つ');
         if (!licenses_renyokei) {
-          base_cost += bigram_cost::kRare;
+          base_cost += scorer::kPenaltyUnverifiedVerbLemma;
           SUZUME_DEBUG_LOG_VERBOSE("[VERB_PENALTY] \"" << surface << "\" unverified_bare_renyokei +"
-                                                       << bigram_cost::kRare << "\n");
+                                                       << scorer::kPenaltyUnverifiedVerbLemma << "\n");
         }
       }
 
@@ -1779,11 +1789,16 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
                                 << " type=" << grammar::verbTypeToString(sokuonbin_match.verb_type)
                                 << " cost=" << kHiraganaSokuonbinCost << "\n";
           }
-          candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaSokuonbinCost,
-                                                 sokuonbin_match.base_form,
-                                                 grammar::verbTypeToConjType(sokuonbin_match.verb_type), true,
-                                                 CandidateOrigin::VerbHiragana, 0.9F, "hiragana_sokuonbin",
-                                                 core::ExtendedPOS::VerbOnbinkei));
+          auto sokuonbin_cand = makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaSokuonbinCost,
+                                                  sokuonbin_match.base_form,
+                                                  grammar::verbTypeToConjType(sokuonbin_match.verb_type), true,
+                                                  CandidateOrigin::VerbHiragana, 0.9F, "hiragana_sokuonbin",
+                                                  core::ExtendedPOS::VerbOnbinkei);
+          // Verified only when the onbin surface is not itself a dictionary
+          // entry (that edge would carry the authoritative reading).
+          sokuonbin_cand.lemma_verified =
+              dict_manager == nullptr || dict_manager->lookupExact(onbin_surface) == nullptr;
+          candidates.push_back(std::move(sokuonbin_cand));
         }
         // Phase 2: Inflection analysis fallback for short hiragana stems (e.g., やっ)
         // Only for stems of 1-2 characters (e.g., や, やる → やっ)
@@ -1852,11 +1867,16 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
                                 << " type=" << grammar::verbTypeToString(hatsuonbin_match.verb_type)
                                 << " cost=" << kHiraganaHatsuonbinCost << "\n";
           }
-          candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaHatsuonbinCost,
-                                                 hatsuonbin_match.base_form,
-                                                 grammar::verbTypeToConjType(hatsuonbin_match.verb_type), true,
-                                                 CandidateOrigin::VerbHiragana, 0.9F, "hiragana_hatsuonbin",
-                                                 core::ExtendedPOS::VerbOnbinkei));
+          auto hatsuonbin_cand = makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaHatsuonbinCost,
+                                                   hatsuonbin_match.base_form,
+                                                   grammar::verbTypeToConjType(hatsuonbin_match.verb_type), true,
+                                                   CandidateOrigin::VerbHiragana, 0.9F, "hiragana_hatsuonbin",
+                                                   core::ExtendedPOS::VerbOnbinkei);
+          // Verified only when the onbin surface is not itself a dictionary
+          // entry (that edge would carry the authoritative reading).
+          hatsuonbin_cand.lemma_verified =
+              dict_manager == nullptr || dict_manager->lookupExact(onbin_surface) == nullptr;
+          candidates.push_back(std::move(hatsuonbin_cand));
         }
       }
     }
