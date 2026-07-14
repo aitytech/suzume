@@ -78,6 +78,7 @@ const SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"開く", "ひらく", "く", V2VerbType::Godan},    // 切り開く, 押し開く
     {"組む", "くむ", "む", V2VerbType::Godan},      // 取り組む, 組み組む
     {"上る", "のぼる", "る", V2VerbType::Godan},    // 立ち上る, 這い上る
+    {"こもる", "こもる", "る", V2VerbType::Godan},  // 閉じこもる, 立てこもる, 引きこもる
     // Ichidan verbs (一段)
     {"続ける", "つづける", "ける", V2VerbType::Ichidan},    // 読み続ける, 読みつづける
     {"つける", nullptr, "ける", V2VerbType::Ichidan},       // 見つける

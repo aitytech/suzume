@@ -177,6 +177,9 @@ COMPOUND_VERB_V2_GODAN: list[str] = [
     "つかる",
     "入る",
     "いる",
+    "こもる",
+    "籠る",
+    "籠もる",
 ]
 
 COMPOUND_VERB_V2_ICHIDAN: list[str] = [

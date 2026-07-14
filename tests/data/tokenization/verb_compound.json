@@ -2102,6 +2102,65 @@
       ],
       "id": "ndekimasu",
       "input": "読んできます"
+    },
+    {
+      "description": "家に立てこもった - auto-generated",
+      "expected": [
+        {
+          "lemma": "家",
+          "pos": "Noun",
+          "surface": "家"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "立てこもる",
+          "pos": "Verb",
+          "surface": "立てこもっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ni_tekomottta",
+      "input": "家に立てこもった"
+    },
+    {
+      "description": "部屋に閉じこもりがちだ - auto-generated",
+      "expected": [
+        {
+          "lemma": "部屋",
+          "pos": "Noun",
+          "surface": "部屋"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "閉じこもる",
+          "pos": "Verb",
+          "surface": "閉じこもり"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_jikomorigachida",
+      "input": "部屋に閉じこもりがちだ"
     }
   ],
   "description": "Compound verbs",

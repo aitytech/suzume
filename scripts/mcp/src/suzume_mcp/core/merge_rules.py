@@ -641,6 +641,23 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                         if applied_rule is None:
                             applied_rule = "compound-verb"
 
+        # 9b. Lexicalized こもる compounds MeCab fails to merge because the
+        # renyokei prefix (引き) is highly productive and tagged as a noun.
+        # As a tokenizer, 引きこもり/引きこもる is a single search unit; treat こもる
+        # as V2 even when MeCab tags the preceding renyokei form as a noun.
+        if not merged and t.get("pos") == "名詞":
+            j = i + 1
+            if j < len(tokens):
+                nxt = tokens[j]
+                next_lemma = nxt.get("lemma") or nxt.get("surface", "")
+                if nxt.get("pos") == "動詞" and next_lemma in ("こもる", "籠る", "籠もる"):
+                    combined = t.get("surface", "") + nxt.get("surface", "")
+                    result.append({"surface": combined, "pos": "動詞", "lemma": t.get("surface", "") + "こもる"})
+                    i = j + 1
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = "komoru-compound"
+
         # 10. Lexicalized hiragana words
         if not merged:
             for word in sorted(HIRAGANA_COMPOUNDS.keys(), key=len, reverse=True):

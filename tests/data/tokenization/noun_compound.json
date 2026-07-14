@@ -22,35 +22,16 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "lemma/POS normalization differences"
-      },
       "description": "B30: 引きこもり should be single noun",
       "expected": [
         {
-          "lemma": "引き",
-          "pos": "Noun",
-          "surface": "引き"
-        },
-        {
-          "lemma": "こもる",
+          "lemma": "引きこもる",
           "pos": "Verb",
-          "surface": "こもり"
+          "surface": "引きこもり"
         }
       ],
       "id": "hikikomori_noun",
       "input": "引きこもり",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "引き"
-        },
-        {
-          "pos": "Verb",
-          "surface": "こもり"
-        }
-      ],
       "tags": [
         "noun",
         "compound"
@@ -469,6 +450,33 @@
       ],
       "id": "wo_ku",
       "input": "重要性を説く"
+    },
+    {
+      "description": "引きこもりがちな生活 - auto-generated",
+      "expected": [
+        {
+          "lemma": "引きこもる",
+          "pos": "Verb",
+          "surface": "引きこもり"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "生活",
+          "pos": "Noun",
+          "surface": "生活"
+        }
+      ],
+      "id": "kikomorigachina",
+      "input": "引きこもりがちな生活"
     }
   ],
   "description": "Compound nouns",
