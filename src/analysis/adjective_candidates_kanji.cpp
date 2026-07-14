@@ -144,6 +144,33 @@ bool shouldSkipSimplePatterns(const std::string& surface, const std::string& hir
   return false;
 }
 
+/**
+ * @brief Check if the character at pos puts a preceding い in verb-onbin context
+ *
+ * い followed by て/た/だ/や belongs to a godan onbin form (届いて, 泳いだ,
+ * 続いた), not an i-adjective base. で also counts as onbin (泳いで) unless it
+ * starts です (良いです = ADJ + AUX).
+ *
+ * @param codepoints Full text codepoints
+ * @param pos Position of the character right after the い
+ * @return true if the い is a verb-onbin surface, not an adjective ending
+ */
+bool isVerbOnbinContextAfterI(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos >= codepoints.size()) {
+    return false;
+  }
+  char32_t next = codepoints[pos];
+  if (next == U'て' || next == U'た' || next == U'だ' || next == U'や') {
+    return true;
+  }
+  if (next == U'で') {
+    // で is verb onbin context (泳いで) UNLESS followed by す (です)
+    bool is_desu = (pos + 1 < codepoints.size() && codepoints[pos + 1] == U'す');
+    return !is_desu;
+  }
+  return false;
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -220,17 +247,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     //        使いやすい(verb renyokei)
     // Exception: で followed by す (part of です) is NOT verb context
     //   良いです = ADJ + AUX, not VERB onbin
-    bool is_verb_context = false;
-    if (adj_end < codepoints.size()) {
-      char32_t next = codepoints[adj_end];
-      if (next == U'て' || next == U'た' || next == U'だ' || next == U'や') {
-        is_verb_context = true;
-      } else if (next == U'で') {
-        // で is verb onbin context (泳いで) UNLESS followed by す (です)
-        bool is_desu = (adj_end + 1 < codepoints.size() && codepoints[adj_end + 1] == U'す');
-        is_verb_context = !is_desu;
-      }
-    }
+    bool is_verb_context = isVerbOnbinContextAfterI(codepoints, adj_end);
     if (!is_verb_context) {
       std::string surface = extractSubstring(codepoints, start_pos, adj_end);
       bool is_dict_noun = verb_helpers::isNounInDictionary(dict_manager, surface);
@@ -624,13 +641,30 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     // A period/duration formal-noun suffix (間/分/秒) must not head an
     // i-adjective compound stem: "3分間続いた" would split as 3分 + 間続い(fake
     // ADJ) instead of 3分間 + 続い(verb), and "長い間続いた" likewise severs 間.
-    // Allow only when the second kanji itself forms a known i-adjective
-    // (間近い → 近い is a dict adj), otherwise the compound is masking a verb
-    // renyokei (間続い ← 続く).
+    // Allow only when the second kanji itself forms a genuine i-adjective
+    // (間近い → 近い, 分厚い → 厚い), otherwise the compound is masking a verb
+    // renyokei (間続い ← 続く). Common tail adjectives are open-class and
+    // rule-derived, so a dictionary hit alone is too narrow: accept the tail
+    // by rule when it is not a dictionary noun/verb form itself (勢い, 洗い,
+    // 違い are nominalizations, not adjectives), inflection recognizes
+    // kanji+い as an i-adjective, and the compound's い is not a verb-onbin
+    // surface (間続いた, 分置いて).
     char32_t head_char = codepoints[start_pos];
     if (normalize::isDurationSuffixKanji(head_char)) {
       std::string tail_adj = extractSubstring(codepoints, start_pos + 1, kanji_end) + "い";
-      if (!isAdjectiveInDictionary(dict_manager, tail_adj)) {
+      bool tail_is_i_adj = isAdjectiveInDictionary(dict_manager, tail_adj);
+      if (!tail_is_i_adj && !(first_hira == U'い' && isVerbOnbinContextAfterI(codepoints, kanji_end + 1)) &&
+          !verb_helpers::isNounInDictionary(dict_manager, tail_adj) &&
+          !verb_helpers::hasDictionaryEntry(dict_manager, tail_adj, core::PartOfSpeech::Verb)) {
+        for (const auto& tail_res : inflection.analyze(tail_adj)) {
+          if (tail_res.verb_type == grammar::VerbType::IAdjective &&
+              tail_res.confidence >= candidate::kCompoundAdjConfMin) {
+            tail_is_i_adj = true;
+            break;
+          }
+        }
+      }
+      if (!tail_is_i_adj) {
         SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] duration-suffix head \"" << head_char << "\" not an i-adj compound\n");
         goto skip_compound_adj;
       }

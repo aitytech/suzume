@@ -261,6 +261,42 @@
       ],
       "id": "dekai",
       "input": "でかい魚"
+    },
+    {
+      "description": "Duration-head kanji-compound i-adjective (分+厚い); rule-derived tail 厚い licenses ADJ",
+      "expected": [
+        {
+          "lemma": "分厚い",
+          "pos": "Adjective",
+          "surface": "分厚い"
+        }
+      ],
+      "id": "i",
+      "input": "分厚い"
+    },
+    {
+      "description": "Duration-head kanji-compound i-adjective (間+近い) tagged ADJ not NOUN",
+      "expected": [
+        {
+          "lemma": "間近い",
+          "pos": "Adjective",
+          "surface": "間近い"
+        }
+      ],
+      "id": "i_2",
+      "input": "間近い"
+    },
+    {
+      "description": "Guard: duration head + verb-nominalization tail (違い is dict verb) stays NOUN",
+      "expected": [
+        {
+          "lemma": "間違い",
+          "pos": "Noun",
+          "surface": "間違い"
+        }
+      ],
+      "id": "i_3",
+      "input": "間違い"
     }
   ],
   "description": "adjective tests",
