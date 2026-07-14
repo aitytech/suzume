@@ -682,15 +682,19 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
       // set is_valid_verb on a non-dictionary base.
       const bool lemma_dict_verified = is_valid_verb;
 
-      // For tense patterns (っ+た/て, ん+だ/で), also use inflection analysis
-      // This handles common verbs like かう, やる that may not be in dictionary
-      // but can be validated via inflection analysis of the full pattern
-      // Exception: skip short particle-starting stems (となっ should be と+なっ)
-      // Longer stems like はじまっ (3+ chars) are allowed
-      if (!is_valid_verb && is_tense_pattern && !starts_with_short_particle_stem) {
+      // For sokuonbin tense patterns (っ+た/て), also use inflection analysis:
+      // it validates common verbs like かう, やる that may not be in the dictionary.
+      // Hatsuonbin (ん) is deliberately EXCLUDED: its godan type is rule-ambiguous
+      // (む/ぶ/ぬ are table-identical, all endorsed at equal confidence), so the
+      // fallback would validate a table-first NON-WORD base (あそんで→あそむ). The
+      // ん-onbin lemma must come from the dictionary path instead (bounded L2 +
+      // the dedicated hatsuonbin generator), never from an inflection guess.
+      // Exception: skip short particle-starting stems (となっ should be と+なっ);
+      // longer stems like はじまっ (3+ chars) are allowed.
+      if (!is_valid_verb && is_tense_pattern && is_sokuonbin && !starts_with_short_particle_stem) {
         // Construct full form: onbin + tense suffix (e.g., かった, やった)
         std::string_view tense_char = (next_char == U'た' || next_char == U'だ') ? "た" : "て";
-        std::string full_form = stem + (is_sokuonbin ? "っ" : "ん") + std::string(tense_char);
+        std::string full_form = stem + "っ" + std::string(tense_char);
         const auto& analysis = inflection.analyze(full_form);
         for (const auto& cand : analysis) {
           // Lower threshold (0.25) for short stems like かっ, やっ
