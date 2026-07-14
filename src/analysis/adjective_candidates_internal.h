@@ -14,6 +14,20 @@
 namespace suzume::analysis::adj_detail {
 
 // =============================================================================
+// Cost Helpers
+// =============================================================================
+
+/**
+ * @brief Confidence-scaled candidate cost: base + (1 - confidence) * scale
+ *
+ * The shared shape for adjective candidate costs — a base cost that a higher
+ * inflection confidence discounts toward (lower cost wins in the lattice).
+ */
+inline float confidenceScaledCost(float base, float confidence, float scale) {
+  return base + (1.0F - confidence) * scale;
+}
+
+// =============================================================================
 // UnknownCandidate Factory Helpers
 // =============================================================================
 

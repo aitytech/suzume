@@ -161,6 +161,43 @@ std::string normalizeBaseForm(const std::string& base_form, const std::vector<ch
   return base_form;
 }
 
+// Emit a whole-word i-adjective candidate for a spelled-out reduplicated 〜しい
+// adjective (バカバカしい, ばかばかしくない). The doubled stem is otherwise pre-empted
+// by an onomatopoeia ADV candidate (aa_doubled / abab_pattern) plus a split-off しい
+// tail, so this bypasses the particle-boundary and ending gates the regular scanners
+// apply and lets inflection analyze the full surface directly. The caller's existing
+// ku/katt/ke trim loops spin the conjugation splits (…しく, …しかっ) out of the emitted
+// base. Shared by the hiragana and katakana generators (the kanji path handles its own
+// stem-length case), so the reduplication rule lives in one place for all three scripts.
+void addReduplicatedShiiAdjective(std::vector<UnknownCandidate>& candidates, const std::vector<char32_t>& codepoints,
+                                  size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                  const grammar::Inflection& inflection, CandidateOrigin origin) {
+  if (!verb_helpers::isReduplicatedShiiAdjectiveHead(codepoints, start_pos)) {
+    return;
+  }
+  // し and every inflection ending after it are hiragana; scan that run.
+  size_t shi_pos = start_pos + 4;
+  size_t hira_end = verb_helpers::findCharRegionEnd(char_types, shi_pos, 8, normalize::CharType::Hiragana);
+  // Longest-first so the full conjugated surface (…しくない) is chosen; the caller's
+  // trim loops then derive …しく. Minimum end covers し + い (base form しい).
+  for (size_t end_pos = hira_end; end_pos >= shi_pos + 2; --end_pos) {
+    std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+    for (const auto& cand : inflection.analyze(surface)) {
+      if (cand.verb_type != grammar::VerbType::IAdjective || cand.confidence < candidate::kIAdjConfMin) {
+        continue;
+      }
+      float cost = adj_detail::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
+                                                    candidate::kKanjiAdjConfScale) +
+                   candidate::kReduplicatedShiiAdjBonus;
+      auto adj = makeIAdjCandidate(surface, start_pos, end_pos, cand.base_form, cost, origin, cand.confidence,
+                                   "i_adjective_reduplicated");
+      adj.has_suffix = true;  // Morphologically recognized; skip exceeds_dict_length penalty
+      candidates.push_back(std::move(adj));
+      return;
+    }
+  }
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints,
@@ -182,6 +219,13 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   if (first_char == U'を') {
     return candidates;
   }
+
+  // Fully spelled-out reduplicated 〜しい adjective (ばかばかしい): the doubled stem is
+  // otherwise pre-empted by the abab_pattern ADV candidate and the particle-boundary
+  // scan below truncates at the internal か. The trim loops later in this function turn
+  // the emitted base into …しく for the negative/adverbial forms.
+  addReduplicatedShiiAdjective(candidates, codepoints, start_pos, char_types, inflection,
+                               CandidateOrigin::AdjectiveIHiragana);
 
   // STEP 1: Find maximum hiragana sequence (without breaking at particles)
   // This allows us to analyze the full sequence first for adjectives like
@@ -691,57 +735,52 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
     return candidates;
   }
 
-  // Must be followed by hiragana (i-adjective endings)
-  if (kata_end >= char_types.size() || char_types[kata_end] != normalize::CharType::Hiragana) {
-    return candidates;
-  }
+  // Fully spelled-out reduplicated 〜しい adjective (バカバカしい): the doubled katakana
+  // stem is otherwise pre-empted by the aa_doubled ADV candidate, and its しい ending
+  // starts with し, which the ending gate below rejects. Emit the whole-word adjective
+  // here; the trim loops after the main loop derive the …しく split.
+  addReduplicatedShiiAdjective(candidates, codepoints, start_pos, char_types, inflection, CandidateOrigin::AdjectiveI);
 
-  // Check if first hiragana is a valid i-adjective ending start
-  // I-adjective endings: い, か(った), く(ない/て), け(れば), さ(そう), そ(う) etc.
-  char32_t first_hira = codepoints[kata_end];
-  size_t kata_len = kata_end - start_pos;
-  if (first_hira != U'い' && first_hira != U'か' && first_hira != U'く' && first_hira != U'け' && first_hira != U'さ' &&
-      first_hira != U'そ') {
-    return candidates;
-  }
+  // The main loop only runs for a katakana stem followed by a valid i-adjective ending
+  // start. When it does not apply (e.g. the reduplicated しい handled above), fall through
+  // to the shared emphatic/trim/sort tail so the emitted candidate still gets its splits.
+  if (kata_end < char_types.size() && char_types[kata_end] == normalize::CharType::Hiragana) {
+    // I-adjective endings: い, か(った), く(ない/て), け(れば), さ(そう), そ(う) etc.
+    char32_t first_hira = codepoints[kata_end];
+    size_t kata_len = kata_end - start_pos;
+    bool valid_ending_start = (first_hira == U'い' || first_hira == U'か' || first_hira == U'く' ||
+                               first_hira == U'け' || first_hira == U'さ' || first_hira == U'そ');
+    // For さ (nominalization), restrict to short katakana stems (2 chars max)
+    // Valid: エモさ, キモさ, ウザさ, ダサさ (2-char stems)
+    // Invalid: レイプさ (3-char stem, レイプい doesn't exist)
+    if (valid_ending_start && !(first_hira == U'さ' && kata_len > 2)) {
+      // Find hiragana portion (up to 8 chars for conjugation endings)
+      size_t hira_end = findCharRegionEnd(char_types, kata_end, 8, normalize::CharType::Hiragana);
 
-  // For さ (nominalization), restrict to short katakana stems (2 chars max)
-  // Valid: エモさ, キモさ, ウザさ, ダサさ (2-char stems)
-  // Invalid: レイプさ (3-char stem, レイプい doesn't exist)
-  if (first_hira == U'さ' && kata_len > 2) {
-    return candidates;
-  }
+      // Try different ending lengths, starting from longest
+      for (size_t end_pos = hira_end; end_pos > kata_end; --end_pos) {
+        std::string surface = extractSubstring(codepoints, start_pos, end_pos);
 
-  // Find hiragana portion (up to 8 chars for conjugation endings)
-  size_t hira_end = findCharRegionEnd(char_types, kata_end, 8, normalize::CharType::Hiragana);
+        if (surface.empty()) {
+          continue;
+        }
 
-  // Need at least 1 hiragana for the い ending
-  if (hira_end <= kata_end) {
-    return candidates;
-  }
-
-  // Try different ending lengths, starting from longest
-  for (size_t end_pos = hira_end; end_pos > kata_end; --end_pos) {
-    std::string surface = extractSubstring(codepoints, start_pos, end_pos);
-
-    if (surface.empty()) {
-      continue;
-    }
-
-    // Check all candidates for IAdjective
-    const auto& all_candidates = inflection.analyze(surface);
-    for (const auto& cand : all_candidates) {
-      // Require confidence >= 0.5 for i-adjectives
-      if (cand.confidence >= candidate::kIAdjConfMin && cand.verb_type == grammar::VerbType::IAdjective) {
-        // Lower cost than pure katakana noun to prefer adjective reading
-        // Cost: 0.2-0.35 based on confidence (lower = better)
-        float cost = candidate::kKanjiAdjBaseCost + (1.0F - cand.confidence) * candidate::kKanjiAdjConfScale;
-        auto adj_cand = makeIAdjCandidate(surface, start_pos, end_pos, cand.base_form, cost,
-                                          CandidateOrigin::AdjectiveI, cand.confidence, "i_adjective_kata");
-        // Skip exceeds_dict_length penalty - this is a morphologically recognized pattern
-        adj_cand.has_suffix = true;
-        candidates.push_back(std::move(adj_cand));
-        break;  // Only add one adjective candidate per surface
+        // Check all candidates for IAdjective
+        const auto& all_candidates = inflection.analyze(surface);
+        for (const auto& cand : all_candidates) {
+          // Require confidence >= 0.5 for i-adjectives
+          if (cand.confidence >= candidate::kIAdjConfMin && cand.verb_type == grammar::VerbType::IAdjective) {
+            // Lower cost than pure katakana noun to prefer adjective reading
+            // Cost: 0.2-0.35 based on confidence (lower = better)
+            float cost = candidate::kKanjiAdjBaseCost + (1.0F - cand.confidence) * candidate::kKanjiAdjConfScale;
+            auto adj_cand = makeIAdjCandidate(surface, start_pos, end_pos, cand.base_form, cost,
+                                              CandidateOrigin::AdjectiveI, cand.confidence, "i_adjective_kata");
+            // Skip exceeds_dict_length penalty - this is a morphologically recognized pattern
+            adj_cand.has_suffix = true;
+            candidates.push_back(std::move(adj_cand));
+            break;  // Only add one adjective candidate per surface
+          }
+        }
       }
     }
   }

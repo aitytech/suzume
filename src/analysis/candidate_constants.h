@@ -171,6 +171,14 @@ constexpr float kHiraAdjConfProlonged = 0.40F;  // prolonged sound mark (すご�
 constexpr float kProlongedSoundBonus = -0.1F;   // colloquial すごーい, やばーい
 constexpr float kLongParticleAdjBonus = -0.5F;  // 5+ char particle-starting (はなはだしい)
 
+// Full-reduplication 〜しい adjective bonus (馬鹿馬鹿しい, バカバカしい, ばかばかしい)
+// A spelled-out doubled stem is otherwise pre-empted by onomatopoeia ADV candidates
+// (aa_doubled -1.0 / abab_pattern 0.1) plus a split-off しい tail, so the whole-word
+// adjective needs a strong bonus to win. Applied only when the surface matches the
+// reduplicated head (see verb_helpers::isReduplicatedShiiAdjectiveHead), where the
+// adjective reading is decisively correct across all three scripts.
+constexpr float kReduplicatedShiiAdjBonus = -0.8F;
+
 // Garu-connection adjective stem (高すぎる, 怖がる)
 constexpr float kGaruAdjConfMin = 0.35F;            // minimum stem+い validity confidence
 constexpr float kDictFallbackAdjConfidence = 0.5F;  // assumed confidence for dict fallback (可愛い)

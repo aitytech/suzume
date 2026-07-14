@@ -385,6 +385,93 @@
       ],
       "id": "rashikunai_3",
       "input": "馬鹿らしくない"
+    },
+    {
+      "description": "full-reduplication しい adjective",
+      "expected": [
+        {
+          "lemma": "馬鹿馬鹿しい",
+          "pos": "Adjective",
+          "surface": "馬鹿馬鹿しい"
+        }
+      ],
+      "id": "shii",
+      "input": "馬鹿馬鹿しい"
+    },
+    {
+      "description": "full-reduplication しい adjective",
+      "expected": [
+        {
+          "lemma": "馬鹿馬鹿しい",
+          "pos": "Adjective",
+          "surface": "馬鹿馬鹿しく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shikunai",
+      "input": "馬鹿馬鹿しくない"
+    },
+    {
+      "description": "full-reduplication しい adjective",
+      "expected": [
+        {
+          "lemma": "バカバカしい",
+          "pos": "Adjective",
+          "surface": "バカバカしい"
+        }
+      ],
+      "id": "shii_2",
+      "input": "バカバカしい"
+    },
+    {
+      "description": "full-reduplication しい adjective",
+      "expected": [
+        {
+          "lemma": "バカバカしい",
+          "pos": "Adjective",
+          "surface": "バカバカしく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shikunai_2",
+      "input": "バカバカしくない"
+    },
+    {
+      "description": "full-reduplication しい adjective",
+      "expected": [
+        {
+          "lemma": "ばかばかしい",
+          "pos": "Adjective",
+          "surface": "ばかばかしい"
+        }
+      ],
+      "id": "bakabakashii",
+      "input": "ばかばかしい"
+    },
+    {
+      "description": "full-reduplication しい adjective",
+      "expected": [
+        {
+          "lemma": "ばかばかしい",
+          "pos": "Adjective",
+          "surface": "ばかばかしく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "bakabakashikunai",
+      "input": "ばかばかしくない"
     }
   ],
   "description": "adjective tests",

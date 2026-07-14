@@ -255,6 +255,22 @@ bool isCompoundAdjectivePattern(std::string_view surface);
 bool containsKuNaruPattern(std::string_view surface);
 
 /**
+ * @brief Detect a fully spelled-out reduplicated 〜しい adjective head at @p start_pos
+ *
+ * 畳語 i-adjectives whose doubled stem is written out instead of using the
+ * iteration mark: a repeated two-character unit (XYXY) followed by し and an
+ * i-adjective inflection onset (い/く/か/け), e.g. 馬鹿馬鹿しい, バカバカしく,
+ * ばかばかしかった. The halves are compared by codepoint, so one rule covers
+ * kanji and both kana scripts. The iteration-mark spelling (若々しい) needs no
+ * special handling because 々 keeps the stem within the regular 2-kanji path.
+ *
+ * @param codepoints Full input codepoints
+ * @param start_pos Index of the first character of the doubled unit
+ * @return true if positions [start_pos, start_pos+5] form the reduplicated head
+ */
+bool isReduplicatedShiiAdjectiveHead(const std::vector<char32_t>& codepoints, size_t start_pos);
+
+/**
  * @brief Get Godan VerbTypes that use a specific onbin pattern
  *
  * Onbin patterns:

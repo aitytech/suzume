@@ -197,8 +197,17 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     return candidates;
   }
 
-  // Find kanji portion (1-2 characters for i-adjectives; no 3-char kanji stems exist)
+  // Find kanji portion (1-2 characters for i-adjectives; no 3-char kanji stems exist).
+  // The only longer stems are fully spelled-out reduplications (馬鹿馬鹿しい), whose
+  // doubled 2-kanji unit + し + inflection onset is detected explicitly so the
+  // 4-kanji stem is not truncated to 馬鹿馬 + 鹿しい.
   size_t kanji_end = findCharRegionEnd(char_types, start_pos, 2, normalize::CharType::Kanji);
+  bool reduplicated_stem = false;
+  if (verb_helpers::isReduplicatedShiiAdjectiveHead(codepoints, start_pos) &&
+      findCharRegionEnd(char_types, start_pos, 4, normalize::CharType::Kanji) == start_pos + 4) {
+    kanji_end = start_pos + 4;
+    reduplicated_stem = true;
+  }
 
   if (kanji_end == start_pos) {
     return candidates;

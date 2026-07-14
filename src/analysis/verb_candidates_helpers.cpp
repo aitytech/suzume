@@ -314,6 +314,24 @@ bool containsKuNaruPattern(std::string_view surface) {
          surface.find("くなら") != std::string::npos;
 }
 
+bool isReduplicatedShiiAdjectiveHead(const std::vector<char32_t>& codepoints, size_t start_pos) {
+  if (start_pos + 5 >= codepoints.size()) {
+    return false;
+  }
+  // Doubled two-character unit XYXY, compared by codepoint so the same rule
+  // serves kanji and both kana scripts.
+  if (codepoints[start_pos] != codepoints[start_pos + 2] || codepoints[start_pos + 1] != codepoints[start_pos + 3]) {
+    return false;
+  }
+  if (codepoints[start_pos + 4] != U'し') {
+    return false;
+  }
+  // い/く/か/け start the i-adjective inflection endings after し:
+  // しい, しく(ない/て), しかっ(た)/しかろ(う), しけれ(ば).
+  const char32_t onset = codepoints[start_pos + 5];
+  return onset == U'い' || onset == U'く' || onset == U'か' || onset == U'け';
+}
+
 const std::vector<std::pair<grammar::VerbType, std::string_view>>& getGodanTypesByOnbin(std::string_view onbin) {
   return grammar::Conjugation::getGodanTypesByOnbin(onbin);
 }
