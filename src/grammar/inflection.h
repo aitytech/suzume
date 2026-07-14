@@ -27,13 +27,13 @@ namespace suzume::grammar {
  * @brief Analysis candidate from inflection analysis
  */
 struct InflectionCandidate {
-  std::string base_form;                ///< Inferred base form: 住む
-  std::string stem;                     ///< Stem: 住
-  std::string suffix;                   ///< Suffix chain: んでいます
-  VerbType verb_type;                   ///< Verb type: GodanMa
-  float confidence;                     ///< Confidence: 0.0-1.0
-  std::vector<std::string> morphemes;   ///< Decomposed: [ん, で, い, ます]
-  bool has_explanatory_suffix = false;  ///< True if matched via のだ/んだ stripping
+  std::string base_form;                  ///< Inferred base form: 住む
+  std::string stem;                       ///< Stem: 住
+  std::string suffix;                     ///< Suffix chain: んでいます
+  VerbType verb_type{VerbType::Unknown};  ///< Verb type: GodanMa
+  float confidence{0.0F};                 ///< Confidence: 0.0-1.0
+  std::vector<std::string> morphemes;     ///< Decomposed: [ん, で, い, ます]
+  bool has_explanatory_suffix = false;    ///< True if matched via のだ/んだ stripping
 };
 
 /**
