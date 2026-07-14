@@ -1025,15 +1025,18 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // Inflection analysis can verify verb forms that aren't real words (e.g., 進す),
     // so unverified compounds should be more expensive to prevent false positives
     // like 進し続ける winning over 前進+し+続ける.
+    // A single-kanji ichidan V1 confirmed by inflection (受ける, 植える, 投げる)
+    // is an unambiguous open-class verb, absent from the dictionary only because
+    // it is rule-derivable — as strong as a dict-confirmed V1. It shares the full
+    // bonus so its compound (受け入れ, 投げ入れ) beats a spurious split under a
+    // following passive/potential られる (受け+入れ+られる).
     // Embedded-verified V1 (a dictionary verb embedded after a leading kanji,
-    // e.g., 仕立てる = 仕 + 立てる) is partial evidence: cheaper than
-    // inflection-only, but still penalized relative to a dict-confirmed V1.
-    // A single-kanji ichidan V1 confirmed by inflection (受ける, 逃げる) is
-    // equally strong partial evidence and shares the reduced penalty tier.
+    // e.g., 仕立てる = 仕 + 立てる) is weaker evidence: the leading kanji is
+    // unconstrained, so it keeps the reduced penalty relative to a dict-confirmed V1.
     float v1_bonus = 0.0F;
-    if (best_match.v1_dict_verified) {
-      v1_bonus = opts.verified_v1_bonus;  // -0.3: reward for dictionary-confirmed V1
-    } else if (best_match.v1_embedded_verified || best_match.v1_ichidan_inflection) {
+    if (best_match.v1_dict_verified || best_match.v1_ichidan_inflection) {
+      v1_bonus = opts.verified_v1_bonus;  // -0.3: reward for a confirmed real V1
+    } else if (best_match.v1_embedded_verified) {
       v1_bonus = bigram_cost::kMinor;  // +0.5: reduced penalty for partial-evidence V1
     } else {
       v1_bonus = bigram_cost::kRare;  // +1.0: penalty for inflection-only V1

@@ -2493,6 +2493,84 @@
       ],
       "id": "i_kabeta",
       "input": "思い浮かべた"
+    },
+    {
+      "description": "Single-kanji ichidan V1 compound stays joined under passive rareru",
+      "expected": [
+        {
+          "lemma": "受け入れる",
+          "pos": "Verb",
+          "surface": "受け入れ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "ke_rerareru",
+      "input": "受け入れられる"
+    },
+    {
+      "description": "受け止められない - auto-generated",
+      "expected": [
+        {
+          "lemma": "受け止める",
+          "pos": "Verb",
+          "surface": "受け止め"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ke_merarenai",
+      "input": "受け止められない"
+    },
+    {
+      "description": "植え付けられる - auto-generated",
+      "expected": [
+        {
+          "lemma": "植え付ける",
+          "pos": "Verb",
+          "surface": "植え付け"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "e_kerareru",
+      "input": "植え付けられる"
+    },
+    {
+      "description": "投げ入れられた - auto-generated",
+      "expected": [
+        {
+          "lemma": "投げ入れる",
+          "pos": "Verb",
+          "surface": "投げ入れ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ge_rerareta",
+      "input": "投げ入れられた"
     }
   ],
   "description": "Compound verbs",
