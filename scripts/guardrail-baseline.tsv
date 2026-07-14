@@ -17,7 +17,9 @@ src/analysis/suffix_candidates_prefix.cpp	0	2
 src/analysis/suffix_candidates_suffix.cpp	0	15
 src/analysis/tokenizer_utils.cpp	0	0
 src/analysis/tokenizer.cpp	0	12
-src/analysis/unknown.cpp	0	47
+src/analysis/unknown_same_type.cpp	0	13
+src/analysis/unknown_speech.cpp	0	14
+src/analysis/unknown.cpp	0	20
 src/analysis/verb_candidates_helpers.cpp	4	3
 src/analysis/verb_candidates_hiragana.cpp	1	42
 src/analysis/verb_candidates_kanji.cpp	2	79

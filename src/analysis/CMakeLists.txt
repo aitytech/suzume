@@ -20,6 +20,8 @@ add_library(suzume_analysis STATIC
   tokenizer.cpp
   tokenizer_utils.cpp
   unknown.cpp
+  unknown_same_type.cpp
+  unknown_speech.cpp
   verb_candidates.cpp
   verb_candidates_helpers.cpp
   verb_candidates_hiragana.cpp
