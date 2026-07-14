@@ -89,6 +89,12 @@ GodanVowels encodeGodanVowels(const Conjugation::GodanRow& row) {
           encodeUtf8(row.o_row)};
 }
 
+std::string onbinFormOf(const Conjugation::GodanRow& row) {
+  // サ行 has no real onbin; its 連用形 (い段) doubles as the onbinkei form
+  // (話し + た). Every other row has an explicit onbin surface (い/っ/ん).
+  return row.onbin.empty() ? encodeUtf8(row.i_row) : row.onbin;
+}
+
 bool isGodanVerbType(VerbType type) {
   return Conjugation::getGodanRow(type) != nullptr;
 }
@@ -166,30 +172,15 @@ VerbType Conjugation::detectType(const std::string& base_form) {
     return VerbType::GodanRa;
   }
 
-  // 五段 based on ending
-  if (last == "く") {
-    return VerbType::GodanKa;
-  }
-  if (last == "ぐ") {
-    return VerbType::GodanGa;
-  }
-  if (last == "す") {
-    return VerbType::GodanSa;
-  }
-  if (last == "つ") {
-    return VerbType::GodanTa;
-  }
-  if (last == "ぬ") {
-    return VerbType::GodanNa;
-  }
-  if (last == "ぶ") {
-    return VerbType::GodanBa;
-  }
-  if (last == "む") {
-    return VerbType::GodanMa;
-  }
-  if (last == "う") {
-    return VerbType::GodanWa;
+  // 五段: the final u-row kana (く/ぐ/す/つ/ぬ/ぶ/む/う) identifies the Godan row
+  // by its base_vowel. る is resolved above (Ichidan vs GodanRa) and never reaches
+  // here; deriving from getGodanRows() keeps this in sync with the single
+  // Godan-row source of truth instead of a parallel hand-written branch chain.
+  const char32_t last_cp = utf8::decodeFirstChar(last);
+  for (const auto& [type, row] : getGodanRows()) {
+    if (row.base_vowel == last_cp) {
+      return type;
+    }
   }
 
   return VerbType::Unknown;

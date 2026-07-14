@@ -49,19 +49,12 @@ std::vector<VerbEnding> generateGodanEndings() {
     const std::string& e_row = vowels.e;
     const std::string& o_row = vowels.o;
 
-    // Onbinkei (音便形)
-    if (!row.onbin.empty()) {
-      endings.push_back({row.onbin, base, type, conn::kVerbOnbinkei, true});
-    }
+    // Onbinkei (音便形): explicit onbin (い/っ/ん) or, for サ行, the い段 form.
+    endings.push_back({onbinFormOf(row), base, type, conn::kVerbOnbinkei, true});
 
-    // Special case: GodanKa has っ-onbin for いく (irregular)
+    // Special case: GodanKa also has っ-onbin for いく (irregular)
     if (type == VerbType::GodanKa) {
       endings.push_back({"っ", base, type, conn::kVerbOnbinkei, true});
-    }
-
-    // Special case: GodanSa has no real onbin, but uses し for both renyokei and onbinkei
-    if (type == VerbType::GodanSa) {
-      endings.push_back({i_row, base, type, conn::kVerbOnbinkei, true});
     }
 
     // Renyokei (連用形)

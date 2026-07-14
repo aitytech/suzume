@@ -188,6 +188,17 @@ struct GodanVowels {
 GodanVowels encodeGodanVowels(const Conjugation::GodanRow& row);
 
 /**
+ * @brief The onbinkei (音便形) kana surface for a Godan row.
+ *
+ * Returns the row's explicit onbin surface (い/っ/ん), or — for サ行, which has
+ * no real onbin — the い段 (連用形) kana that doubles as the onbinkei form.
+ *
+ * @param row Godan row data
+ * @return UTF-8 onbinkei surface
+ */
+std::string onbinFormOf(const Conjugation::GodanRow& row);
+
+/**
  * @brief Whether a verb type is one of the nine Godan conjugation rows.
  *
  * Derived from Conjugation::getGodanRow() so the set stays in sync with the

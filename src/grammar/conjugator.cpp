@@ -61,13 +61,8 @@ std::vector<StemForm> Conjugator::generateGodanStems(const std::string& stem, co
   // 連用形 (Renyokei): 書き
   forms.push_back({stem + i_suffix, type, base_suffix, conn::kVerbRenyokei});
 
-  // 音便形 (Onbinkei): 書い, 読ん, 持っ
-  if (!row->onbin.empty()) {
-    forms.push_back({stem + row->onbin, type, base_suffix, conn::kVerbOnbinkei});
-  } else {
-    // サ行: 連用形が音便形を兼ねる (話し + た)
-    forms.push_back({stem + i_suffix, type, base_suffix, conn::kVerbOnbinkei});
-  }
+  // 音便形 (Onbinkei): 書い, 読ん, 持っ — or, for サ行, 連用形 doubles as onbinkei (話し + た).
+  forms.push_back({stem + onbinFormOf(*row), type, base_suffix, conn::kVerbOnbinkei});
 
   return forms;
 }
