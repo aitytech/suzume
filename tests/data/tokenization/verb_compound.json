@@ -2362,6 +2362,67 @@
       ],
       "id": "uketsuke",
       "input": "うけつけ"
+    },
+    {
+      "description": "Compound verb negative conditional: mizenkei splits from なけれ+ば",
+      "expected": [
+        {
+          "lemma": "話し合う",
+          "pos": "Verb",
+          "surface": "話し合わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "shi_wanakereba",
+      "input": "話し合わなければ"
+    },
+    {
+      "description": "Compound verb (godan-ma) negative conditional split",
+      "expected": [
+        {
+          "lemma": "取り組む",
+          "pos": "Verb",
+          "surface": "取り組ま"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "ri_manakereba",
+      "input": "取り組まなければ"
+    },
+    {
+      "description": "Compound verb plain negative: mizenkei splits from ない",
+      "expected": [
+        {
+          "lemma": "話し合う",
+          "pos": "Verb",
+          "surface": "話し合わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shi_wanai",
+      "input": "話し合わない"
     }
   ],
   "description": "Compound verbs",

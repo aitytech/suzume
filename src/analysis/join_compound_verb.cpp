@@ -1174,10 +1174,14 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         if (stem_end_pos > codepoints.size())
           return false;
 
-        // Check that what follows is a passive/causative marker (れ or せ)
+        // Check that what follows attaches to mizenkei: a passive/causative
+        // marker (れ/せ) or a negative auxiliary (な of ない/なけれ/なかっ, or
+        // ず). Without the negative case the split path is missing and the
+        // fully merged compound wins (話し合わなければ → one token instead of
+        // 話し合わ|なけれ|ば).
         if (stem_end_pos < codepoints.size()) {
           char32_t next_char = codepoints[stem_end_pos];
-          if (next_char != U'れ' && next_char != U'せ')
+          if (next_char != U'れ' && next_char != U'せ' && next_char != U'な' && next_char != U'ず')
             return false;
         }
 
