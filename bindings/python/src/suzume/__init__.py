@@ -254,6 +254,7 @@ class Suzume:
             exclude_formal_nouns=int(exclude_formal_nouns),
             exclude_low_info=int(exclude_low_info),
             remove_duplicates=int(remove_duplicates),
+            size=ctypes.sizeof(SuzumeTagOptions),
         )
         result = _lib.suzume_generate_tags_with_options(
             handle, text.encode("utf-8"), ctypes.byref(opts)

@@ -164,6 +164,7 @@ interface CLayouts {
     excludeFormalNouns: number;
     excludeLowInfo: number;
     removeDuplicates: number;
+    structSize: number;
   };
   extendedOptions: {
     size: number;
@@ -340,6 +341,7 @@ export class Suzume {
         excludeFormalNouns: offsetofTagOptions(7),
         excludeLowInfo: offsetofTagOptions(8),
         removeDuplicates: offsetofTagOptions(9),
+        structSize: offsetofTagOptions(10),
       },
       extendedOptions: {
         size: sizeofExtendedOptions(),
@@ -518,6 +520,10 @@ export class Suzume {
             options.excludeLowInfo !== false ? 1 : 0;
           heapU32[(optionsPtr + layout.removeDuplicates) >> 2] =
             options.removeDuplicates !== false ? 1 : 0;
+          // Forward-compat marker: the malloc'd buffer is uninitialized, so set
+          // the trailing size field to the full struct size the way the native
+          // header documents (mirrors the extended-options path above).
+          heapU32[(optionsPtr + layout.structSize) >> 2] = layout.size;
 
           const tagsPtr = this._generateTagsWithOptions(this.handle, textPtr, optionsPtr);
           if (tagsPtr === 0) {

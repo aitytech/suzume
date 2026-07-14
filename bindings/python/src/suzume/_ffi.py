@@ -81,6 +81,10 @@ class SuzumeTagOptions(ctypes.Structure):
         ("exclude_formal_nouns", ctypes.c_int),
         ("exclude_low_info", ctypes.c_int),
         ("remove_duplicates", ctypes.c_int),
+        # Trailing forward-compat marker: callers set it to sizeof(struct) so a
+        # future field appended after it is read only when size covers it. Kept
+        # last to preserve the offsets of the pre-existing fields.
+        ("size", ctypes.c_uint32),
     ]
 
 
