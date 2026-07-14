@@ -1938,6 +1938,14 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           base_cost += bigram_cost::kSevere;  // Force split
           SUZUME_DEBUG_LOG("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kSevere << " (ku_naru_verb_suffix)\n");
         }
+        // Penalize verb candidates absorbing the negative adverbial なく (ない's 連用形).
+        // MeCab splits mizenkei + なく: 行かなくて → 行か + なく + て, not 行かなく(verb).
+        // The mizenkei-split candidate (is_naku_pattern above) supplies the split path;
+        // this penalty stops the inflection analyzer's whole-span reading from winning.
+        if (best.suffix.find("なく") != std::string::npos) {
+          base_cost += bigram_cost::kSevere;  // Force split
+          SUZUME_DEBUG_LOG("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kSevere << " (negative_naku_suffix)\n");
+        }
         // Penalize unverified godan-wa candidates that extend beyond a
         // shorter dict verb at the same position. These false positives
         // absorb い from the next word (いただく, いく, etc.)
@@ -2066,6 +2074,14 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             codepoints[mizenkei_end + 2] == U'っ') {
           is_nakatt_pattern = true;
         }
+        // Check for negative adverbial なく pattern (ない's 連用形; MeCab-compatible split)
+        // E.g., 行かなくて → 行か (mizenkei) + なく (negative adj) + て
+        //       食べなくなる counterpart is handled elsewhere; here we split the godan
+        //       mizenkei so なく does not get absorbed into a spurious verb form.
+        bool is_naku_pattern = false;
+        if (next_char == U'な' && mizenkei_end + 1 < codepoints.size() && codepoints[mizenkei_end + 1] == U'く') {
+          is_naku_pattern = true;
+        }
         // Check for causative auxiliary せ pattern (MeCab-compatible split)
         // E.g., 聞かせられた → 聞か (mizenkei) + せ (causative AUX) + られ + た
         //       書かせる → 書か (mizenkei) + せる (causative AUX)
@@ -2090,7 +2106,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           }
         }
         if (is_beki_pattern || is_nu_pattern || is_n_pattern || is_nai_pattern || is_nakatt_pattern ||
-            is_passive_pattern || is_causative_pattern) {
+            is_naku_pattern || is_passive_pattern || is_causative_pattern) {
           // Derive VerbType from the A-row ending (e.g., か → GodanKa)
           grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(first_hira);
           if (verb_type != grammar::VerbType::Unknown) {
