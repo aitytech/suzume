@@ -40,7 +40,7 @@ with Suzume() as sz:
 
 ## API
 
-### `Suzume(*, mode="normal", preserve_vu=False, preserve_case=True, preserve_symbols=False, lemmatize=True, merge_compounds=False)`
+### `Suzume(*, mode="normal", preserve_vu=True, preserve_case=True, preserve_symbols=False, lemmatize=True, merge_compounds=False)`
 
 An analyzer instance. Use it as a context manager (or call `close()`); it is not
 thread-safe, so use one instance per thread.
