@@ -65,6 +65,35 @@ bool sokuonbinInflVerified(const grammar::Inflection& inflection, const std::str
   return false;
 }
 
+// Inflection-analysis fallback for a kanji 音便 stem whose base was not found in
+// the dictionary: pick the highest-confidence (≥0.5) inflection of full_surface
+// whose base_form/type matches one of the onbin candidate types. Shared by the
+// い/ん extended-onbin and the て/だ hatsuonbin paths.
+struct OnbinInflMatch {
+  grammar::VerbType type{grammar::VerbType::Unknown};
+  std::string base_form;
+};
+OnbinInflMatch bestOnbinInflMatch(const grammar::Inflection& inflection, const std::string& full_surface,
+                                  const std::string& kanji_stem,
+                                  const std::vector<std::pair<grammar::VerbType, std::string_view>>& onbin_types) {
+  OnbinInflMatch match;
+  float best_conf = 0.0F;
+  for (const auto& result : inflection.analyze(full_surface)) {
+    if (result.confidence >= 0.5F && result.confidence > best_conf) {
+      for (const auto& [verb_type, base_suffix] : onbin_types) {
+        std::string base_form = kanji_stem + std::string(base_suffix);
+        if (result.base_form == base_form && result.verb_type == verb_type) {
+          match.type = verb_type;
+          match.base_form = base_form;
+          best_conf = result.confidence;
+          break;
+        }
+      }
+    }
+  }
+  return match;
+}
+
 // Godan mizenkei pattern: single-kanji + A-row + れ/せ (passive/causative)
 // E.g., 騙される → 騙さ (mizenkei of 騙す) + れる (passive)
 //       囲まれる → 囲ま (mizenkei of 囲む) + れる (passive)
@@ -2242,24 +2271,13 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         auto onbin_match = vh::firstGodanOnbinDictBase(dict_manager, kanji_stem, onbin_str);
         grammar::VerbType matched_verb_type = onbin_match.verb_type;
         std::string matched_base_form = std::move(onbin_match.base_form);
-        // Phase 2: Inflection analysis fallback
+        // Inflection analysis fallback (dictionary lookup above found nothing)
         if (matched_verb_type == grammar::VerbType::Unknown && kanji_end > start_pos) {
           std::string full_surface = extractSubstring(codepoints, start_pos, hiragana_end);
-          const auto& infl_results = inflection.analyze(full_surface);
-          float best_conf = 0.0F;
-          for (const auto& result : infl_results) {
-            if (result.confidence >= 0.5F && result.confidence > best_conf) {
-              // Check if this result matches one of our candidate verb types
-              for (const auto& [verb_type, base_suffix] : candidates_to_try) {
-                std::string base_form = kanji_stem + std::string(base_suffix);
-                if (result.base_form == base_form && result.verb_type == verb_type) {
-                  matched_verb_type = verb_type;
-                  matched_base_form = base_form;
-                  best_conf = result.confidence;
-                  break;
-                }
-              }
-            }
+          OnbinInflMatch infl = bestOnbinInflMatch(inflection, full_surface, kanji_stem, candidates_to_try);
+          if (infl.type != grammar::VerbType::Unknown) {
+            matched_verb_type = infl.type;
+            matched_base_form = std::move(infl.base_form);
           }
         }
         if (matched_verb_type == grammar::VerbType::Unknown) {
@@ -2639,23 +2657,13 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         auto hatsuonbin_match = vh::firstGodanOnbinDictBase(dict_manager, kanji_stem, "ん");
         grammar::VerbType matched_verb_type = hatsuonbin_match.verb_type;
         std::string matched_base_form = std::move(hatsuonbin_match.base_form);
-        // Phase 2: Inflection analysis fallback
+        // Inflection analysis fallback (dictionary lookup above found nothing)
         if (matched_verb_type == grammar::VerbType::Unknown) {
           std::string full_surface = extractSubstring(codepoints, start_pos, hiragana_end);
-          const auto& infl_results = inflection.analyze(full_surface);
-          float best_conf = 0.0F;
-          for (const auto& result : infl_results) {
-            if (result.confidence >= 0.5F && result.confidence > best_conf) {
-              for (const auto& [verb_type, base_suffix] : hatsuonbin_types) {
-                std::string base_form = kanji_stem + std::string(base_suffix);
-                if (result.base_form == base_form && result.verb_type == verb_type) {
-                  matched_verb_type = verb_type;
-                  matched_base_form = base_form;
-                  best_conf = result.confidence;
-                  break;
-                }
-              }
-            }
+          OnbinInflMatch infl = bestOnbinInflMatch(inflection, full_surface, kanji_stem, hatsuonbin_types);
+          if (infl.type != grammar::VerbType::Unknown) {
+            matched_verb_type = infl.type;
+            matched_base_form = std::move(infl.base_form);
           }
         }
 
