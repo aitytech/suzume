@@ -401,6 +401,34 @@ inline bool masuAuxFollowsAt(const std::vector<char32_t>& codepoints, size_t pos
 }
 
 /**
+ * @brief Check whether a ない-family negative begins at @p pos.
+ *
+ * Matches the negative auxiliary ない and its conjugated/contracted onsets:
+ * ない, なかっ(た), なく(て), なけれ(ば), なきゃ. A bare な followed by
+ * anything else (なる, なさい, ...) does not match, so callers can use this as
+ * an unambiguous "negation follows" gate after a verb mizenkei.
+ *
+ * @param codepoints Full input codepoints
+ * @param pos Index expected to hold the leading な
+ */
+inline bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos + 1 >= codepoints.size() || codepoints[pos] != U'な') {
+    return false;
+  }
+  const char32_t second = codepoints[pos + 1];
+  if (second == U'い' || second == U'く') {
+    return true;  // ない / なく(て)
+  }
+  if (pos + 2 >= codepoints.size()) {
+    return false;
+  }
+  const char32_t third = codepoints[pos + 2];
+  return (second == U'か' && third == U'っ') ||  // なかっ(た)
+         (second == U'け' && third == U'れ') ||  // なけれ(ば)
+         (second == U'き' && third == U'ゃ');    // なきゃ
+}
+
+/**
  * @brief Best inflection candidate per verb class (Ichidan / Suru / Godan)
  *
  * Members left unmatched keep confidence 0.0 and are otherwise

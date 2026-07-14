@@ -269,6 +269,87 @@
       ],
       "id": "oyoginagara_eru",
       "input": "およぎながら考える"
+    },
+    {
+      "description": "出てこない - auto-generated",
+      "expected": [
+        {
+          "lemma": "出る",
+          "pos": "Verb",
+          "surface": "出"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "tekonai",
+      "input": "出てこない"
+    },
+    {
+      "description": "誰もこない - auto-generated",
+      "expected": [
+        {
+          "lemma": "誰",
+          "pos": "Pronoun",
+          "surface": "誰"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Verb",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "mokonai",
+      "input": "誰もこない"
+    },
+    {
+      "description": "帰ってこない - auto-generated",
+      "expected": [
+        {
+          "lemma": "帰る",
+          "pos": "Verb",
+          "surface": "帰っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "tttekonai",
+      "input": "帰ってこない"
     }
   ],
   "description": "verb_auxiliary tests",

@@ -734,6 +734,44 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
   }
 }
 
+// Irregular 来る (カ変) mizenkei こ before a ない-family negative (こない,
+// こなかった, こなくて, こなければ, こなきゃ). The surface こ is far too
+// frequent as a word fragment for an unconditional dictionary entry (こと,
+// これ, きのこ, ...), but こ immediately followed by the negative auxiliary is
+// unambiguously 来る + negation, so the candidate is generated only under that
+// gate. The reading is chosen from the preceding context, mirroring MeCab:
+//   - after て: directional auxiliary てくる (出て + こ + ない) → Auxiliary / AuxAspectKuru
+//   - otherwise: main verb 来る (誰も + こ + ない, こない)        → Verb / VerbMizenkei
+// Emitting a single context-appropriate reading avoids relying on an
+// AuxAspectKuru→ない bigram, which would also mis-flip other てくる auxiliaries
+// (くれ, etc.) sharing that ExtendedPOS.
+void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     std::vector<UnknownCandidate>& candidates) {
+  if (codepoints[start_pos] != U'こ' || !vh::naiNegativeFollowsAt(codepoints, start_pos + 1)) {
+    return;
+  }
+  const std::string surface = extractSubstring(codepoints, start_pos, start_pos + 1);
+  constexpr float kCost = candidate::verb_cost::kStandardBonus;
+  const bool subsidiary = start_pos > 0 && codepoints[start_pos - 1] == U'て';
+  SUZUME_DEBUG_VERBOSE_BLOCK {
+    SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " hiragana_kuru_mizenkei_nai lemma=くる cost=" << kCost
+                        << " subsidiary=" << subsidiary << "\n";
+  }
+  if (subsidiary) {
+    auto aux_cand =
+        makeCandidate(surface, start_pos, start_pos + 1, core::PartOfSpeech::Auxiliary, kCost, true,
+                      CandidateOrigin::VerbHiragana, core::ExtendedPOS::AuxAspectKuru, "hiragana_kuru_mizenkei_nai");
+    aux_cand.lemma = "くる";
+    aux_cand.conj_type = dictionary::ConjugationType::Kuru;
+    candidates.push_back(std::move(aux_cand));
+    return;
+  }
+  candidates.push_back(makeVerbCandidate(surface, start_pos, start_pos + 1, kCost, "くる",
+                                         dictionary::ConjugationType::Kuru, true, CandidateOrigin::VerbHiragana,
+                                         candidate::kHighOriginConfidence, "hiragana_kuru_mizenkei_nai",
+                                         core::ExtendedPOS::VerbMizenkei));
+}
+
 // 1-char ichidan renyokei before て/た (ねて → ね + て). Requires the base form
 // (stem + る) in the dictionary, except for the auxiliary みる after て/で.
 void appendIchidanRenyokei1CharCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -813,6 +851,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Hiragana) {
     return candidates;
   }
+
+  // Context-gated irregular 来る mizenkei: こ + ない-family negative
+  appendKuruMizenkeiNaiCandidates(codepoints, start_pos, candidates);
 
   // Skip if starting character is a particle that is NEVER a verb stem
   // Note: Characters that CAN be verb stems are NOT skipped:

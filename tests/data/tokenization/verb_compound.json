@@ -2161,6 +2161,53 @@
       ],
       "id": "ni_jikomorigachida",
       "input": "部屋に閉じこもりがちだ"
+    },
+    {
+      "description": "部屋に閉じこもって出てこない - auto-generated",
+      "expected": [
+        {
+          "lemma": "部屋",
+          "pos": "Noun",
+          "surface": "部屋"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "閉じこもる",
+          "pos": "Verb",
+          "surface": "閉じこもっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "出る",
+          "pos": "Verb",
+          "surface": "出"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ni_jikomottte_tekonai",
+      "input": "部屋に閉じこもって出てこない"
     }
   ],
   "description": "Compound verbs",

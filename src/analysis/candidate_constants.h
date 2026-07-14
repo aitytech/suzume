@@ -26,6 +26,11 @@ namespace suzume::analysis::candidate {
 // reach it positionally without a raw score literal.
 constexpr float kNoOriginConfidence = 0.0F;
 
+// High origin-confidence for a rule-derived candidate whose surface context makes
+// the analysis effectively unambiguous (e.g. the gated 来る mizenkei こ before a
+// ない-family negative).
+constexpr float kHighOriginConfidence = 0.9F;
+
 // Compound verb bonus (連用形 + 補助動詞)
 // E.g., 読み+終わる, 書き+始める
 constexpr float kCompoundVerbBonus = -0.8F;

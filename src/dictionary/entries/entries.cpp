@@ -627,7 +627,10 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       aux("くる", "くる", EPOS::AuxAspectKuru),
       // MeCab compat: split き+た/て/ます separately
       aux("き", "くる", EPOS::AuxAspectKuru),
-      aux("こない", "くる", EPOS::AuxAspectKuru),
+      // Note: no unconditional こ (来る mizenkei) entry — the surface is far too
+      // frequent as a word fragment (こと, これ, きのこ, ...). こ is generated
+      // context-gated before a ない-family negative in
+      // generateHiraganaVerbCandidates (こない → こ + ない).
 
       // Explanatory (説明) - MeCab compat: split as の/ん + だ/です/でした
       // Removed のだ/のです/のでした/んだ/んです/んでした to allow split
