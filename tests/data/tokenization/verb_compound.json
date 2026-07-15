@@ -2608,6 +2608,104 @@
       ],
       "id": "wo_mi_netekita",
       "input": "実績を積み重ねてきた"
+    },
+    {
+      "description": "通り過ぎた - auto-generated",
+      "expected": [
+        {
+          "lemma": "通り過ぎる",
+          "pos": "Verb",
+          "surface": "通り過ぎ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ri_gita",
+      "input": "通り過ぎた"
+    },
+    {
+      "description": "電車が通り過ぎていく - auto-generated",
+      "expected": [
+        {
+          "lemma": "電車",
+          "pos": "Noun",
+          "surface": "電車"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "通り過ぎる",
+          "pos": "Verb",
+          "surface": "通り過ぎ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Verb",
+          "surface": "いく"
+        }
+      ],
+      "id": "ga_ri_giteiku",
+      "input": "電車が通り過ぎていく"
+    },
+    {
+      "description": "時が過ぎ去った - auto-generated",
+      "expected": [
+        {
+          "lemma": "時",
+          "pos": "Noun",
+          "surface": "時"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "過ぎ去る",
+          "pos": "Verb",
+          "surface": "過ぎ去っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ga_gi_ttta",
+      "input": "時が過ぎ去った"
+    },
+    {
+      "description": "行き過ぎた行動 - auto-generated",
+      "expected": [
+        {
+          "lemma": "行き過ぎる",
+          "pos": "Verb",
+          "surface": "行き過ぎ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "行動",
+          "pos": "Noun",
+          "surface": "行動"
+        }
+      ],
+      "id": "ki_gita",
+      "input": "行き過ぎた行動"
     }
   ],
   "description": "Compound verbs",
