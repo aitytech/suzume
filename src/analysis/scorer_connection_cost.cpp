@@ -11,6 +11,7 @@
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/honorific_verbs.h"
+#include "normalize/char_type.h"
 #include "normalize/utf8.h"
 
 #ifdef SUZUME_DEBUG_INFO
@@ -537,9 +538,12 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
     bonus += cost::kVeryStrongBonus;
   }
 
-  // Penalty for SYMBOL → short hiragana → AUX pattern
-  // E.g., （+と+う should not happen (furigana shouldn't split into particles/aux)
-  if (prev.pos == core::PartOfSpeech::Symbol && next.pos == core::PartOfSpeech::Auxiliary) {
+  // Penalty for SYMBOL → short hiragana → AUX pattern (furigana), gated to an
+  // opening bracket only. Emoji, closing brackets, and other symbols are a soft
+  // boundary that still license a following copula: 天気😀です, 犬🐕でした,
+  // 本(重要)です, 評価◎です must keep です/でした whole rather than splitting で|す.
+  if (prev.pos == core::PartOfSpeech::Symbol && next.pos == core::PartOfSpeech::Auxiliary &&
+      normalize::isOpeningBracket(utf8::decodeFirstChar(prev.surface))) {
     bonus += cost::kVeryRare;
   }
 

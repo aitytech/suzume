@@ -203,6 +203,14 @@ bool isExtendedParticle(char32_t ch) {
          ch == U'と' || ch == U'も';
 }
 
+bool isOpeningBracket(char32_t ch) {
+  // ASCII/full-width parentheses used for furigana readings, plus the common
+  // CJK opening brackets. Closing brackets, emoji, and other symbols are
+  // excluded: text after them (犬🐕です, 本(重要)です) continues normally.
+  return ch == U'(' || ch == U'（' || ch == U'「' || ch == U'『' || ch == U'【' || ch == U'〔' || ch == U'〈' ||
+         ch == U'《' || ch == U'［' || ch == U'[' || ch == U'｛' || ch == U'{';
+}
+
 bool isProlongedSoundMark(char32_t ch) {
   // U+30FC: Katakana-Hiragana Prolonged Sound Mark (ー)
   // Used in both katakana and colloquial hiragana (すごーい, やばーい)

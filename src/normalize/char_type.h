@@ -110,6 +110,19 @@ bool isNeverAdjectiveStemAfterKanji(char32_t ch);
 bool isExtendedParticle(char32_t ch);
 
 /**
+ * @brief Check if character is an opening bracket / parenthesis
+ *
+ * Opening brackets introduce parenthetical readings (furigana) such as
+ * 東京（とうきょう）, where the hiragana inside must stay as one token rather
+ * than splitting into particles/auxiliaries. Covers ASCII and full-width
+ * parentheses plus the common CJK opening brackets.
+ *
+ * @param ch Unicode codepoint
+ * @return true if character is an opening bracket
+ */
+bool isOpeningBracket(char32_t ch);
+
+/**
  * @brief Check if character is the prolonged sound mark (長音符)
  *
  * The prolonged sound mark (ー, U+30FC) is used to extend vowel sounds.
