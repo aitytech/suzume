@@ -111,6 +111,55 @@
         "interjection",
         "greeting"
       ]
+    },
+    {
+      "description": "いいえ、大丈夫です - auto-generated",
+      "expected": [
+        {
+          "lemma": "いいえ",
+          "pos": "Interjection",
+          "surface": "いいえ"
+        },
+        {
+          "lemma": "大丈夫",
+          "pos": "Adjective",
+          "surface": "大丈夫"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "iie_desu",
+      "input": "いいえ、大丈夫です"
+    },
+    {
+      "description": "さあ、始めましょう - auto-generated",
+      "expected": [
+        {
+          "lemma": "さあ",
+          "pos": "Interjection",
+          "surface": "さあ"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始め"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ましょ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "saa_memashi_u",
+      "input": "さあ、始めましょう"
     }
   ],
   "description": "Interjections and greetings (感動詞・挨拶)",

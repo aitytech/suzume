@@ -832,6 +832,99 @@
       ],
       "id": "narubeku_ku_tekudasai",
       "input": "なるべく早く来てください"
+    },
+    {
+      "description": "父ならびに母 - auto-generated",
+      "expected": [
+        {
+          "lemma": "父",
+          "pos": "Noun",
+          "surface": "父"
+        },
+        {
+          "lemma": "ならびに",
+          "pos": "Conjunction",
+          "surface": "ならびに"
+        },
+        {
+          "lemma": "母",
+          "pos": "Noun",
+          "surface": "母"
+        }
+      ],
+      "id": "narabini",
+      "input": "父ならびに母"
+    },
+    {
+      "description": "ただし条件がある - auto-generated",
+      "expected": [
+        {
+          "lemma": "ただし",
+          "pos": "Conjunction",
+          "surface": "ただし"
+        },
+        {
+          "lemma": "条件",
+          "pos": "Noun",
+          "surface": "条件"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "tadashi_gaaru",
+      "input": "ただし条件がある"
+    },
+    {
+      "description": "東京および大阪 - auto-generated",
+      "expected": [
+        {
+          "lemma": "東京",
+          "pos": "Noun",
+          "surface": "東京"
+        },
+        {
+          "lemma": "および",
+          "pos": "Conjunction",
+          "surface": "および"
+        },
+        {
+          "lemma": "大阪",
+          "pos": "Noun",
+          "surface": "大阪"
+        }
+      ],
+      "id": "oyobi",
+      "input": "東京および大阪"
+    },
+    {
+      "description": "そんな大きな家 - auto-generated",
+      "expected": [
+        {
+          "lemma": "そんな",
+          "pos": "Determiner",
+          "surface": "そんな"
+        },
+        {
+          "lemma": "大きな",
+          "pos": "Determiner",
+          "surface": "大きな"
+        },
+        {
+          "lemma": "家",
+          "pos": "Noun",
+          "surface": "家"
+        }
+      ],
+      "id": "sonna_kina",
+      "input": "そんな大きな家"
     }
   ],
   "description": "adverb tests",
