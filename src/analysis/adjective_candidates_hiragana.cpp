@@ -335,7 +335,18 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
         bool next_is_prolonged =
             (hiragana_end + 1 < char_types.size() && normalize::isProlongedSoundMark(codepoints[hiragana_end + 1]));
         if (!next_is_prolonged) {
-          if (normalize::isExtendedParticle(curr_char) || curr_char == U'や') {
+          // か heading the i-adjective past connective かっ (…かった/…かっ) is a
+          // conjugation, not the question particle — keep scanning so the whole past
+          // form becomes one adjective candidate (うれしかった, たのしかった). Without this
+          // the scan truncates at か and only the bare stem (うれし) is emitted, letting
+          // a fake godan verb (うれしかう) win. A non-adjective tail is still rejected by
+          // the inflection confidence gate below. Exclude なかっ (negative auxiliary past):
+          // 〜たくなかった/〜くなかった split as aux (たく|なかっ|た), so a な directly before
+          // かっ must still break — the rare ない-family adjective (少なかった) is left to the
+          // pre-existing split rather than mis-scored as one token.
+          bool is_katt_past = curr_char == U'か' && hiragana_end + 1 < codepoints.size() &&
+                              codepoints[hiragana_end + 1] == U'っ' && codepoints[hiragana_end - 1] != U'な';
+          if (!is_katt_past && (normalize::isExtendedParticle(curr_char) || curr_char == U'や')) {
             break;  // Stop before the particle
           }
         }

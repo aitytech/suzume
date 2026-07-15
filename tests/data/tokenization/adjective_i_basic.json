@@ -1605,6 +1605,82 @@
       ],
       "id": "nai_dattta",
       "input": "呆気ない結末だった"
+    },
+    {
+      "description": "とてもうれしかった - auto-generated",
+      "expected": [
+        {
+          "lemma": "とても",
+          "pos": "Adverb",
+          "surface": "とても"
+        },
+        {
+          "lemma": "うれしい",
+          "pos": "Adjective",
+          "surface": "うれしかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "totemoureshikattta",
+      "input": "とてもうれしかった"
+    },
+    {
+      "description": "とてもたのしかった - auto-generated",
+      "expected": [
+        {
+          "lemma": "とても",
+          "pos": "Adverb",
+          "surface": "とても"
+        },
+        {
+          "lemma": "たのしい",
+          "pos": "Adjective",
+          "surface": "たのしかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "totemotanoshikattta",
+      "input": "とてもたのしかった"
+    },
+    {
+      "description": "映画はおもしろかったです - auto-generated",
+      "expected": [
+        {
+          "lemma": "映画",
+          "pos": "Noun",
+          "surface": "映画"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "おもしろい",
+          "pos": "Adjective",
+          "surface": "おもしろかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "haomoshirokatttadesu",
+      "input": "映画はおもしろかったです"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional",

@@ -1392,6 +1392,17 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       // Build compound verb surface and base form
       std::string compound_surface(text.substr(start_byte, compound_end_byte - start_byte));
 
+      // A 〜かっ te-stem (V2 = かう/かつ/かる) whose full 〜かった form is a confident
+      // i-adjective past is really an adjective, not a hiragana compound: うれしかっ is
+      // うれしい past (V1 うれし only "verifies" as a verb via the non-word godan reading
+      // うれす). Suppress the spurious compound so the i-adjective candidate wins.
+      if (utf8::endsWith(compound_surface, "かっ")) {
+        auto adj_past = inflection.getBest(compound_surface + "た");
+        if (adj_past.verb_type == grammar::VerbType::IAdjective && adj_past.confidence >= candidate::kIAdjConfMin) {
+          continue;
+        }
+      }
+
       // Compound base (lemma) = V1 renyokei + V2 in appropriate form
       // When V2 matched via kanji surface: use kanji (やり + 直す = やり直す)
       // When V2 matched via hiragana reading: use hiragana (やり + なおす = やりなおす)
