@@ -2331,6 +2331,65 @@
       ],
       "id": "getsumatsu_merged",
       "input": "月末に締め切る"
+    },
+    {
+      "description": "部長がおっしゃいます - auto-generated",
+      "expected": [
+        {
+          "lemma": "部長",
+          "pos": "Noun",
+          "surface": "部長"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "おっしゃる",
+          "pos": "Verb",
+          "surface": "おっしゃい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "gaottshi_imasu",
+      "input": "部長がおっしゃいます"
+    },
+    {
+      "description": "先生がおっしゃいました - auto-generated",
+      "expected": [
+        {
+          "lemma": "先生",
+          "pos": "Noun",
+          "surface": "先生"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "おっしゃる",
+          "pos": "Verb",
+          "surface": "おっしゃい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "gaottshi_imashita",
+      "input": "先生がおっしゃいました"
     }
   ],
   "version": "1.0"
