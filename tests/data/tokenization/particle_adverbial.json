@@ -310,6 +310,77 @@
       ],
       "id": "soresura_ranai",
       "input": "それすら知らない"
+    },
+    {
+      "description": "お金さえない - auto-generated",
+      "expected": [
+        {
+          "lemma": "お金",
+          "pos": "Noun",
+          "surface": "お金"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "o_saenai",
+      "input": "お金さえない"
+    },
+    {
+      "description": "お金こそない - auto-generated",
+      "expected": [
+        {
+          "lemma": "お金",
+          "pos": "Noun",
+          "surface": "お金"
+        },
+        {
+          "lemma": "こそ",
+          "pos": "Particle",
+          "surface": "こそ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "o_kosonai",
+      "input": "お金こそない"
+    },
+    {
+      "description": "お金さえあれば - auto-generated",
+      "expected": [
+        {
+          "lemma": "お金",
+          "pos": "Noun",
+          "surface": "お金"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "o_saeareba",
+      "input": "お金さえあれば"
     }
   ],
   "description": "particle_adverbial tests",

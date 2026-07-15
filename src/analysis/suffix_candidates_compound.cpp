@@ -595,6 +595,15 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     }
   }
 
+  // Skip when the hiragana portion ends in a focus particle (副助詞/係助詞)
+  // tail, optionally followed by ない: 金さえない is noun + 係助詞 さえ + ない,
+  // never a single compound noun. A hiragana portion that IS exactly a
+  // particle (先ほど, 中ほど) was already skipped by the exact-dictionary-word
+  // check above, so this only rejects particle + negative absorption blobs.
+  if (verb_helpers::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, hiragana_end)) {
+    return candidates;  // Skip - noun + focus particle split should win
+  }
+
   // Generate candidate with cost based on pattern
   std::string surface = extractSubstring(codepoints, start_pos, hiragana_end);
   if (!surface.empty()) {

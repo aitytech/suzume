@@ -1559,6 +1559,23 @@
       ],
       "id": "wo_rita",
       "input": "傘を借りた"
+    },
+    {
+      "description": "押さえない - auto-generated",
+      "expected": [
+        {
+          "lemma": "押さえる",
+          "pos": "Verb",
+          "surface": "押さえ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "saenai",
+      "input": "押さえない"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",

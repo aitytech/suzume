@@ -90,6 +90,42 @@ bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manage
   return false;
 }
 
+bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager,
+                               const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                               core::ExtendedPOS particle_pos) {
+  if (dict_manager == nullptr || end_pos <= start_pos || end_pos > codepoints.size()) {
+    return false;
+  }
+  // Strip a trailing negative auxiliary (ない / なかっ / なかった).
+  size_t tail_end = end_pos;
+  size_t total_len = end_pos - start_pos;
+  if (total_len >= 4 && codepoints[end_pos - 4] == U'な' && codepoints[end_pos - 3] == U'か' &&
+      codepoints[end_pos - 2] == U'っ' && codepoints[end_pos - 1] == U'た') {
+    tail_end = end_pos - 4;
+  } else if (total_len >= 3 && codepoints[end_pos - 3] == U'な' && codepoints[end_pos - 2] == U'か' &&
+             codepoints[end_pos - 1] == U'っ') {
+    tail_end = end_pos - 3;
+  } else if (total_len >= 2 && codepoints[end_pos - 2] == U'な' && codepoints[end_pos - 1] == U'い') {
+    tail_end = end_pos - 2;
+  }
+  // Probe particle suffixes of 2+ codepoints, keeping a non-empty prefix.
+  for (size_t particle_len = 2; start_pos + particle_len < tail_end; ++particle_len) {
+    std::string suffix = extractSubstring(codepoints, tail_end - particle_len, tail_end);
+    const dictionary::DictionaryEntry* suffix_entry = dict_manager->lookupExact(suffix);
+    if (suffix_entry != nullptr && suffix_entry->extended_pos == particle_pos) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool endsWithFocusParticleTail(const dictionary::DictionaryManager* dict_manager,
+                               const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  return endsWithParticleTailOfPos(dict_manager, codepoints, start_pos, end_pos,
+                                   core::ExtendedPOS::ParticleAdverbial) ||
+         endsWithParticleTailOfPos(dict_manager, codepoints, start_pos, end_pos, core::ExtendedPOS::ParticleBinding);
+}
+
 std::string lookupVerbLemma(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
                             std::string_view fallback) {
   if (dict_manager != nullptr) {
