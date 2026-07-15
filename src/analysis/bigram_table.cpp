@@ -541,6 +541,12 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   setCell(t, EPOS::Determiner, EPOS::AdjBasic, kDeterminerNounBonus);
   setCell(t, EPOS::Determiner, EPOS::AdjRenyokei, kDeterminerNounBonus);
 
+  // Determiner → Determiner (そんな+大きな, こんな+小さな) - strong bonus
+  // Demonstrative determiners stack with descriptive ones; without this the
+  // high POS-level DET→DET default (0.8) makes the fragment path win
+  // (そんな大きな → そん(NOUN)+な(AUX_断定)+大きな).
+  setCell(t, EPOS::Determiner, EPOS::Determiner, cost::kStrongBonus);
+
   // ParticleCase → Determiner (rare; 連体詞 rarely follows case particles)
   // Determiners introduce a new modifier clause and don't follow が/を/に/と/から/etc.
   // Counteracts overly strong DET→NOUN bonus for verb-ambiguous hiragana DET like かかる

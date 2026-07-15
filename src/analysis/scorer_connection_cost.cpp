@@ -856,7 +856,36 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kRare;
   }
 
+  // Penalty for pure-hiragana Conjunction → bare single-hiragana non-particle
+  // A conjunction is a complete word; a following lone hiragana verb/aux/unknown
+  // is never a natural continuation. When the conjunction surface is a proper
+  // prefix of a longer i-adjective, this is the fragment path that must lose:
+  // ただしい → ただし(CONJ)+い must lose to the ただしい adjective.
+  // Particles are exempt: they legitimately form compound conjunctions
+  // (されど+も, だけど+も).
+  if (prev.pos == core::PartOfSpeech::Conjunction && grammar::isPureHiragana(prev.surface) &&
+      next.pos != core::PartOfSpeech::Particle && grammar::isPureHiragana(next.surface) &&
+      next.surface.size() <= 3) {  // Single hiragana (3 bytes)
+    bonus += cost::kNever;
+  }
+
   return bonus;
+}
+
+/// Penalty for a bare single-character potential auxiliary (え/得, renyokei of
+/// える/得る) followed by anything other than a continuation morpheme.
+/// The renyokei form only occurs in chains like あり+え+ない / 解決し+得+ない /
+/// あり+え+て, so a following noun/verb/symbol means the え is a fragment of a
+/// longer word (いいえ → いい+え, ねえ → ね+え). The multi-character
+/// shuushikei える/うる legitimately ends a clause and is exempt.
+float computeBarePotentialRenyokeiPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  float penalty{};
+  if (prev.extended_pos == core::ExtendedPOS::AuxPotential && prev.surface.size() <= 3 &&  // Single character (3 bytes)
+      next.pos != core::PartOfSpeech::Auxiliary && next.pos != core::PartOfSpeech::Particle &&
+      next.pos != core::PartOfSpeech::Suffix) {
+    penalty += cost::kSevere;
+  }
+  return penalty;
 }
 
 }  // namespace
@@ -901,6 +930,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   surface_bonus += computeProgressiveHonorificBonus(prev, next);
 
   surface_bonus += computeSugiFinalParticleBonus(prev, next);
+
+  surface_bonus += computeBarePotentialRenyokeiPenalty(prev, next);
 
   // Note: "かも" is kept as single token per SuzumeUtils.pm normalization
   // (か+も → かも merge rule). No penalty for AUX → かも.

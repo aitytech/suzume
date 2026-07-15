@@ -749,7 +749,9 @@ std::vector<DictionaryEntry> getConjunctionEntries() {
       // Parallel/Addition (並列・添加)
       conj("又", ""),
       conj("及び", ""),
+      conj("および", ""),
       conj("並びに", ""),
+      conj("ならびに", ""),
       conj("且つ", ""),
       conj("かつ", "且つ"),
       conj("更に", ""),
@@ -771,6 +773,7 @@ std::vector<DictionaryEntry> getConjunctionEntries() {
       conj("すなわち", ""),
       conj("例えば", ""),
       conj("但し", ""),
+      conj("ただし", ""),
       conj("尚", ""),
       conj("つまり", ""),
       conj("たとえば", ""),
@@ -1069,6 +1072,7 @@ std::vector<DictionaryEntry> getInterjectionEntries() {
       intj("あれ"),    // Confusion
       intj("あれっ"),  // Confusion (emphatic)
       intj("まあ"),    // Surprise/Moderation
+      intj("さあ"),    // Prompting/Urging
       intj("ねえ"),    // Attention-getting (also particle, but standalone usage)
       // Responses
       intj("はい"),    // Yes
@@ -1078,6 +1082,7 @@ std::vector<DictionaryEntry> getInterjectionEntries() {
       // Hesitation/Filler
       intj("えーと"),  // Hesitation
       intj("えっと"),  // Hesitation
+      intj("ええと"),  // Hesitation
       intj("あの"),    // Hesitation (also determiner)
       intj("その"),    // Hesitation (rare, also determiner)
   };
