@@ -341,6 +341,15 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
       SUZUME_DEBUG_LOG_VERBOSE("[ADJ_NAI] dict-confirmed nai-adj: \"" << surface << "\"\n");
     }
 
+    // A 2+ consecutive-kanji stem directly followed by exactly ない is a noun plus the
+    // adjective/auxiliary ない (問題+ない, 関係+ない, 心配+ない), never a single
+    // i-adjective — a genuine i-adjective stem is never a multi-kanji noun. Suppress the
+    // fused candidate so the 名詞|ない split path wins (as 仕方ない already does).
+    // Dictionary-confirmed 2-kanji nai-adjectives (味気ない etc.) keep their fused form.
+    if (hiragana_part == "ない" && (kanji_end - start_pos) >= 2 && !isAdjectiveInDictionary(dict_manager, surface)) {
+      continue;
+    }
+
     // Skip patterns that are サ変動詞 + て + auxiliary
     // E.g., 説明してほしい = 説明(noun) + し(suru renyokei) + て + ほしい
     // These should split, not be treated as single adjectives

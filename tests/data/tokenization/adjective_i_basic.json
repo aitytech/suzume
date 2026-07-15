@@ -1472,6 +1472,139 @@
       ],
       "id": "omedetai",
       "input": "おめでたい"
+    },
+    {
+      "description": "問題ないと思う - auto-generated",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "naito_u",
+      "input": "問題ないと思う"
+    },
+    {
+      "description": "仕事に関係ないことを話す - auto-generated",
+      "expected": [
+        {
+          "lemma": "仕事",
+          "pos": "Noun",
+          "surface": "仕事"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "関係",
+          "pos": "Noun",
+          "surface": "関係"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話す"
+        }
+      ],
+      "id": "ni_naikotowo_su",
+      "input": "仕事に関係ないことを話す"
+    },
+    {
+      "description": "何気ない一言が心に残る - auto-generated",
+      "expected": [
+        {
+          "lemma": "何気ない",
+          "pos": "Adjective",
+          "surface": "何気ない"
+        },
+        {
+          "lemma": "一言",
+          "pos": "Noun",
+          "surface": "一言"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "心",
+          "pos": "Noun",
+          "surface": "心"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "残る",
+          "pos": "Verb",
+          "surface": "残る"
+        }
+      ],
+      "id": "nai_ga_ni_ru",
+      "input": "何気ない一言が心に残る"
+    },
+    {
+      "description": "呆気ない結末だった - auto-generated",
+      "expected": [
+        {
+          "lemma": "呆気ない",
+          "pos": "Adjective",
+          "surface": "呆気ない"
+        },
+        {
+          "lemma": "結末",
+          "pos": "Noun",
+          "surface": "結末"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nai_dattta",
+      "input": "呆気ない結末だった"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional",
