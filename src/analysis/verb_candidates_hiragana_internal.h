@@ -6,6 +6,15 @@
 
 namespace suzume::analysis::hiragana_verb_detail {
 
+// Guard (fabricated closed-class absorption family, tail class): true when the
+// hiragana run [start_pos, end_pos) is a verb prefix followed by a 副助詞
+// (しか/とか), so the run is verb + particle rather than a single fabricated
+// 未然形 (やるしか → や|る|しか, never a form of the non-word 〜しく). Declared
+// here so the guard can be exercised directly by characterization tests; see the
+// guard-family note in verb_candidates_helpers.h.
+bool endsWithParticleAfterVerb(const dictionary::DictionaryManager* dict_manager, const grammar::Inflection& inflection,
+                               const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);
+
 bool pronounEndsAt(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
                    size_t pos);
 void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,

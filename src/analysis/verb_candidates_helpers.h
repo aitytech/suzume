@@ -109,6 +109,41 @@ bool hasNonVerbDictionaryEntry(const dictionary::DictionaryManager* dict_manager
  */
 bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
 
+// =============================================================================
+// Fabricated closed-class absorption guards
+// =============================================================================
+// A recurring defect this family defends against: a verb/adjective candidate
+// generator builds a NON-dictionary conjugation whose surface swallows an
+// adjacent closed-class morpheme, because that morpheme's kana coincide with an
+// inflectional ending. The 副助詞 しか / 係助詞 さえ・すら end in an a-row か/え
+// that matches a godan mizenkei; a て/で-form + 補助動詞 みる has an internal
+// てみ/でみ that matches an ichidan stem. Unchecked, these fabricated tokens
+// (水しく for 水しか, 金さう for 金さえ, やってみる for やっ+て+み) outscore the
+// correct split.
+//
+// The guards reject such fabrications and fall into three shapes by where the
+// closed-class element sits relative to the fabricated verb:
+//   - Tail  (T): the run ends in [word] + particle (+ negative). Helpers:
+//                endsWithParticleTailOfPos, endsWithFocusParticleTail (副助詞 ‖
+//                係助詞), and hiragana_verb_detail::endsWithParticleAfterVerb
+//                (verb-prefix + 副助詞). Plus an inline 副助詞 head check in the
+//                kanji adjective path.
+//   - Embed (E): an internal て/で + 補助動詞 must split the run. Helpers:
+//                embedsTeFormMiruAuxiliary (て/で + みる), embedsTeFormAuxiliary
+//                (ていく / benefactive-request). Plus inline てくれ/てもら/てあげ
+//                and で + auxiliary-chain checks in the onbin paths — see the
+//                per-site comments there for why each set differs from the
+//                helper's pattern list (ている/ておく are deliberately absent).
+//   - Head  (H): a leading 副助詞 opens the hiragana portion of an adjective —
+//                inline in the kanji adjective path.
+//
+// Shared invariant: a real verb/adjective that genuinely embeds these kana
+// (押さえる, 起こす) is protected by its own dictionary base form, so every guard
+// is gated on the candidate NOT being a dictionary word (`in_dict` / an
+// exact-surface lookup) before it fires. Helper call sites and the T3 definition
+// carry an @see back-reference to this note.
+// =============================================================================
+
 /**
  * @brief Check if a span ends in a dictionary particle of the given POS
  *

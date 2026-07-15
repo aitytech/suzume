@@ -214,7 +214,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             std::string base_form = kanji_stem + std::string(base_suffix);
 
             // Verify the base form is a valid verb
-            bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, 0.5F, true);
+            bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form,
+                                                        candidate::verb_cost::kConstructedVerbMinConfidence, true);
 
             if (is_valid_verb) {
               size_t renyokei_end = kanji_end + 1;
@@ -248,7 +249,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         std::string base_form = ichidan_stem + "る";
 
         // Verify the base form is a valid ichidan verb
-        bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, 0.5F, false);
+        bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form,
+                                                    candidate::verb_cost::kConstructedVerbMinConfidence, false);
 
         if (is_valid_verb) {
           size_t renyokei_end = kanji_end + 1;

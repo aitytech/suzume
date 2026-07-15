@@ -94,6 +94,7 @@ bool hasFormalNounPrefixBoundary(const dictionary::DictionaryManager* dict_manag
 // case/final particles that legitimately follow a real mizenkei are never swept
 // up. A single-mora prefix (る in るしか) is a bare verb-ending fragment, never a
 // word, so the whole candidate is garbage; a longer prefix must itself be a verb.
+// @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
 bool endsWithParticleAfterVerb(const dictionary::DictionaryManager* dict_manager, const grammar::Inflection& inflection,
                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
   if (dict_manager == nullptr || end_pos <= start_pos) {
@@ -125,7 +126,8 @@ bool endsWithParticleAfterVerb(const dictionary::DictionaryManager* dict_manager
       return true;
     }
     const auto& analysis = inflection.analyze(probe);
-    if (!analysis.empty() && analysis[0].verb_type != grammar::VerbType::Unknown && analysis[0].confidence >= 0.5F) {
+    if (!analysis.empty() && analysis[0].verb_type != grammar::VerbType::Unknown &&
+        analysis[0].confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) {
       return true;
     }
   }
@@ -213,7 +215,8 @@ void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, si
     // E.g., やらされた = やらさ (mizenkei of やらす) + れ + た
     // やらす is the causative form of やる but not in dictionary
     if (!is_valid_verb && verb_type == grammar::VerbType::GodanSa) {
-      is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, 0.5F, true);
+      is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form,
+                                             candidate::verb_cost::kConstructedVerbMinConfidence, true);
     }
 
     if (!is_valid_verb) {
@@ -325,7 +328,8 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
     if (!is_valid_ichidan) {
       // Check if inflection analysis recognizes base_form as ichidan
       const auto& analysis = inflection.analyze(base_form);
-      if (!analysis.empty() && analysis[0].verb_type == grammar::VerbType::Ichidan && analysis[0].confidence >= 0.5F) {
+      if (!analysis.empty() && analysis[0].verb_type == grammar::VerbType::Ichidan &&
+          analysis[0].confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) {
         is_valid_ichidan = true;
       }
     }

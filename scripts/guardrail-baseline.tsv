@@ -29,11 +29,11 @@ src/analysis/unknown_speech.cpp	0	14
 src/analysis/verb_candidates.cpp	0	7
 src/analysis/verb_candidates_helpers.cpp	4	0
 src/analysis/verb_candidates_hiragana.cpp	0	6
-src/analysis/verb_candidates_hiragana_mizenkei.cpp	1	13
+src/analysis/verb_candidates_hiragana_mizenkei.cpp	1	10
 src/analysis/verb_candidates_hiragana_onbin.cpp	0	14
-src/analysis/verb_candidates_kanji.cpp	0	7
+src/analysis/verb_candidates_kanji.cpp	0	5
 src/analysis/verb_candidates_kanji_ichidan.cpp	0	8
 src/analysis/verb_candidates_kanji_inflection.cpp	2	11
-src/analysis/verb_candidates_kanji_mizenkei.cpp	0	19
+src/analysis/verb_candidates_kanji_mizenkei.cpp	0	16
 src/analysis/verb_candidates_kanji_onbin.cpp	0	13
 src/analysis/verb_candidates_kanji_renyokei.cpp	0	11

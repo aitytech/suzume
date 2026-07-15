@@ -349,7 +349,8 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                 if (!is_valid_verb && allow_inflection_fallback) {
                   // For non-passive patterns (ない, ぬ, etc.), allow inflection fallback
                   // For WA-row passive, also allow with higher confidence threshold
-                  float threshold = is_passive_pattern ? 0.6F : 0.5F;
+                  float threshold = is_passive_pattern ? candidate::verb_cost::kConstructedVerbPassiveMinConfidence
+                                                       : candidate::verb_cost::kConstructedVerbMinConfidence;
                   is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, threshold, true);
                 }
 
@@ -453,12 +454,14 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
             std::string stem = extractSubstring(codepoints, start_pos, scan_pos);
             std::string base_form = stem + std::string(base_suffix);
             // Verify this is a valid verb
-            bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, 0.5F, true);
+            bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form,
+                                                        candidate::verb_cost::kConstructedVerbMinConfidence, true);
             // Reject a fabricated mizenkei that merely absorbs a trailing
             // binding particle (係助詞): 水すらない is noun + すら + ない, never
             // the mizenkei of a non-word godan-ra verb 水する. Only すら ends in
             // an a-row mora among binding particles, and no genuine godan verb
             // ends in 〜する, so this cannot suppress a real conjugation.
+            // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
             if (is_valid_verb && !vh::isVerbInDictionary(dict_manager, base_form) &&
                 vh::endsWithParticleTailOfPos(dict_manager, codepoints, start_pos, multi_miz_end,
                                               core::ExtendedPOS::ParticleBinding)) {

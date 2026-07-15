@@ -664,6 +664,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
             // adjective past keeps っ right after しか (美味しかっ + た), while
             // noun + しか(…ない) never has the っ. Skip surfaces whose hiragana
             // portion opens with an adverbial particle not followed by っ.
+            // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
             if (end_pos >= kanji_end + 2 && dict_manager != nullptr) {
               std::string leading_hira = extractSubstring(codepoints, kanji_end, kanji_end + 2);
               const dictionary::DictionaryEntry* particle_entry = dict_manager->lookupExact(leading_hira);

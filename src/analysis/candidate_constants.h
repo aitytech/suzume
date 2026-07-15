@@ -284,6 +284,15 @@ constexpr float kWeakPenalty = 0.1F;
 // 読める/走れます/止まれる are untouched. Sized to beat both the spurious potential-verb renyokei
 // candidate (~-0.17) and the 未然+受身れ split (止ま+れ) that otherwise win over the single token.
 constexpr float kImperativeFinalBonus = -0.8F;
+// Minimum inflection confidence to accept a rule-constructed verb reading of a
+// hiragana run — either a base form built by a candidate generator
+// (isVerifiedVerbBase) or a prefix probed by a tail guard. Below this bar the run
+// is treated as a non-word and the candidate/guard rejects it. Shared so the
+// acceptance threshold stays uniform across the fabricated closed-class
+// absorption guard family (see the guard-family note in verb_candidates_helpers.h).
+constexpr float kConstructedVerbMinConfidence = 0.5F;
+// Stricter bar for WA-row passive base forms, which match spuriously more often.
+constexpr float kConstructedVerbPassiveMinConfidence = 0.6F;
 }  // namespace verb_cost
 
 // =============================================================================

@@ -600,6 +600,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   // never a single compound noun. A hiragana portion that IS exactly a
   // particle (先ほど, 中ほど) was already skipped by the exact-dictionary-word
   // check above, so this only rejects particle + negative absorption blobs.
+  // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
   if (verb_helpers::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, hiragana_end)) {
     return candidates;  // Skip - noun + focus particle split should win
   }

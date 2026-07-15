@@ -446,6 +446,7 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     // always [verb te-form] + みる (やってみ = やっ + て + み, われてみ =
     // われ + て + み), never a single ichidan verb やってみる. This also
     // suppresses the kateikei variant below (やってみれ from やってみれば).
+    // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
     if (!is_dict_verb && vh::embedsTeFormMiruAuxiliary(codepoints, start_pos, end_pos)) {
       continue;
     }
