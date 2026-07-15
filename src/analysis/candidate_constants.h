@@ -142,6 +142,14 @@ constexpr float kLeadingNounCounterSplitBonus = -1.2F;
 // an ordinary kanji noun — not a counter/relation/span suffix or interval member 隔).
 constexpr float kDurationSpanSplitBonus = -1.2F;
 
+// Numeral + single kanji counter merge bonus (三十度, 九十度, 三十分, 十本). A multi-
+// digit kanji numeral before a counter that doubles as a nominal suffix (度: 態度,
+// 難易度) is pulled apart by the suffix reading plus the suffix-stem split (三十|度),
+// which the plain kanji_seq merge (cost 1.0) cannot beat. This discounts the merged
+// number+counter unit below the split. Applied only to a lone counter kanji at a
+// kanji→non-kanji boundary, so a following kanji (五度目, 五度見た) keeps its boundary.
+constexpr float kNumeralCounterMergeBonus = -0.5F;
+
 // Noun + Verb split bonus
 // E.g., 勉強+する, 説明+する
 constexpr float kNounVerbSplitBonus = -1.0F;

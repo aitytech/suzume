@@ -519,6 +519,119 @@
       ],
       "id": "unnamed",
       "input": "三ヶ月間"
+    },
+    {
+      "description": "気温は三十度だ - auto-generated",
+      "expected": [
+        {
+          "lemma": "気温",
+          "pos": "Noun",
+          "surface": "気温"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "三十度",
+          "pos": "Noun",
+          "surface": "三十度"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ha_da",
+      "input": "気温は三十度だ"
+    },
+    {
+      "description": "角度は九十度になる - auto-generated",
+      "expected": [
+        {
+          "lemma": "角度",
+          "pos": "Noun",
+          "surface": "角度"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "九十度",
+          "pos": "Noun",
+          "surface": "九十度"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "ha_ninaru",
+      "input": "角度は九十度になる"
+    },
+    {
+      "description": "五度見た - auto-generated",
+      "expected": [
+        {
+          "lemma": "五度",
+          "pos": "Noun",
+          "surface": "五度"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ta",
+      "input": "五度見た"
+    },
+    {
+      "description": "三年間隔で開催する - auto-generated",
+      "expected": [
+        {
+          "lemma": "三年",
+          "pos": "Noun",
+          "surface": "三年"
+        },
+        {
+          "lemma": "間隔",
+          "pos": "Noun",
+          "surface": "間隔"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "開催",
+          "pos": "Noun",
+          "surface": "開催"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "de_suru",
+      "input": "三年間隔で開催する"
     }
   ],
   "description": "number_counter tests",
