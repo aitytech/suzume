@@ -800,6 +800,38 @@
       ],
       "id": "annani_ttta",
       "input": "あんなに頑張った"
+    },
+    {
+      "description": "なるべく早く来てください - auto-generated",
+      "expected": [
+        {
+          "lemma": "なるべく",
+          "pos": "Adverb",
+          "surface": "なるべく"
+        },
+        {
+          "lemma": "早い",
+          "pos": "Adjective",
+          "surface": "早く"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "narubeku_ku_tekudasai",
+      "input": "なるべく早く来てください"
     }
   ],
   "description": "adverb tests",

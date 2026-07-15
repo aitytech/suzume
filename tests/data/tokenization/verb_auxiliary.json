@@ -517,6 +517,97 @@
       ],
       "id": "zaruwo_nai",
       "input": "寝ざるを得ない"
+    },
+    {
+      "description": "問題を解決すべく努力した - auto-generated",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "解決",
+          "pos": "Noun",
+          "surface": "解決"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "す"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べく"
+        },
+        {
+          "lemma": "努力",
+          "pos": "Noun",
+          "surface": "努力"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_subeku_shita",
+      "input": "問題を解決すべく努力した"
+    },
+    {
+      "description": "しかるべく対応する - auto-generated",
+      "expected": [
+        {
+          "lemma": "しかる",
+          "pos": "Verb",
+          "surface": "しかる"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べく"
+        },
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "shikarubeku_suru",
+      "input": "しかるべく対応する"
+    },
+    {
+      "description": "見るべし - auto-generated",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べし"
+        }
+      ],
+      "id": "rubeshi",
+      "input": "見るべし"
     }
   ],
   "description": "verb_auxiliary tests",
