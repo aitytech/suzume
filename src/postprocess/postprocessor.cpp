@@ -202,6 +202,13 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
     SUZUME_DEBUG_LOG("[POSTPROC] mergeVerbRenyokeiMono: " << before_count << " → " << result.size() << "\n");
   }
 
+  // Merge lexicalized 副詞 that the lattice mis-split (決して, 大して, ちゃんと)
+  before_count = result.size();
+  result = mergeLexicalizedAdverbs(result);
+  if (result.size() != before_count) {
+    SUZUME_DEBUG_LOG("[POSTPROC] mergeLexicalizedAdverbs: " << before_count << " → " << result.size() << "\n");
+  }
+
   // Merge noun compounds
   if (options_.merge_noun_compounds) {
     before_count = result.size();
@@ -377,6 +384,55 @@ std::vector<core::Morpheme> Postprocessor::mergeVerbRenyokeiMono(const std::vect
       result.push_back(merged);
       ++i;  // skip もの
       continue;
+    }
+    result.push_back(morphemes[i]);
+  }
+
+  return result;
+}
+
+std::vector<core::Morpheme> Postprocessor::mergeLexicalizedAdverbs(const std::vector<core::Morpheme>& morphemes) {
+  if (morphemes.size() < 2) {
+    return morphemes;
+  }
+
+  std::vector<core::Morpheme> result;
+  result.reserve(morphemes.size());
+
+  for (size_t i = 0; i < morphemes.size(); ++i) {
+    if (i + 1 < morphemes.size() && morphemes[i + 1].pos == core::PartOfSpeech::Particle) {
+      const core::Morpheme& cur = morphemes[i];
+      const core::Morpheme& nxt = morphemes[i + 1];
+
+      // 決して/大して: the lattice reads these kanji-initial 副詞 as a non-word サ変 連用形
+      // (決す/大す) plus て. They cannot be L1 entries because an L1 決して would swallow the 決 of
+      // 解決して. Merging on the already-split lattice is safe: 解決して yields 解決|し|て (no 決し
+      // token), so only the genuine 副詞 reading (決し/大し with the non-word lemma) reaches here.
+      const bool is_sahen_te =
+          cur.pos == core::PartOfSpeech::Verb && nxt.surface == "て" &&
+          ((cur.surface == "決し" && cur.lemma == "決す") || (cur.surface == "大し" && cur.lemma == "大す"));
+
+      // ちゃんと: 接尾辞 ちゃん + と. Gated on the previous token not being a Noun so 赤ちゃんと
+      // (赤|ちゃん|と) keeps 赤ちゃん together (→ 赤|ちゃんと) rather than merging the ちゃん away.
+      const bool is_chanto = cur.surface == "ちゃん" && cur.pos == core::PartOfSpeech::Suffix && nxt.surface == "と" &&
+                             (result.empty() || result.back().pos != core::PartOfSpeech::Noun);
+
+      if (is_sahen_te || is_chanto) {
+        core::Morpheme merged = cur;
+        merged.surface += nxt.surface;
+        merged.pos = core::PartOfSpeech::Adverb;
+        merged.extended_pos = core::ExtendedPOS::Adverb;
+        merged.lemma = merged.surface;
+        merged.conj_type = dictionary::ConjugationType::None;
+        merged.conj_form = grammar::ConjForm::Base;
+        merged.end = nxt.end;
+        merged.end_pos = nxt.end_pos;
+        SUZUME_DEBUG_LOG("[POSTPROC] Merged lexicalized adverb: \"" << cur.surface << "\"+\"" << nxt.surface
+                                                                    << "\" → \"" << merged.surface << "\"\n");
+        result.push_back(merged);
+        ++i;  // skip the particle
+        continue;
+      }
     }
     result.push_back(morphemes[i]);
   }

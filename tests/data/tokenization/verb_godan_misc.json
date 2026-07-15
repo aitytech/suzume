@@ -1101,6 +1101,28 @@
       ],
       "id": "metttani_ga_ranai",
       "input": "めったに雨が降らない"
+    },
+    {
+      "description": "ちゃんと食べた - auto-generated",
+      "expected": [
+        {
+          "lemma": "ちゃんと",
+          "pos": "Adverb",
+          "surface": "ちゃんと"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "chi_nto_beta",
+      "input": "ちゃんと食べた"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

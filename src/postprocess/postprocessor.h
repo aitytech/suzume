@@ -75,6 +75,12 @@ class Postprocessor {
   static std::vector<core::Morpheme> mergeVerbRenyokeiMono(const std::vector<core::Morpheme>& morphemes);
 
   /**
+   * @brief Merge a lexicalized 副詞 mis-split into a non-word サ変/接尾辞 + particle
+   * e.g., 決し(非語 決す)+て → 決して, 大し(非語 大す)+て → 大して, ちゃん(接尾辞)+と → ちゃんと
+   */
+  static std::vector<core::Morpheme> mergeLexicalizedAdverbs(const std::vector<core::Morpheme>& morphemes);
+
+  /**
    * @brief Merge prolonged sound mark (ー) with preceding token
    * e.g., あの + ー → あのー, すごー + ーー → すごー
    * Also merges consecutive ーs into one.

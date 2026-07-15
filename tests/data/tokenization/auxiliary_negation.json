@@ -101,6 +101,50 @@
         "negative",
         "classical"
       ]
+    },
+    {
+      "description": "決して忘れない - auto-generated",
+      "expected": [
+        {
+          "lemma": "決して",
+          "pos": "Adverb",
+          "surface": "決して"
+        },
+        {
+          "lemma": "忘れる",
+          "pos": "Verb",
+          "surface": "忘れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shite_renai",
+      "input": "決して忘れない"
+    },
+    {
+      "description": "大して問題ない - auto-generated",
+      "expected": [
+        {
+          "lemma": "大して",
+          "pos": "Adverb",
+          "surface": "大して"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shite_nai",
+      "input": "大して問題ない"
     }
   ],
   "description": "Negation auxiliaries (ない、ぬ)",

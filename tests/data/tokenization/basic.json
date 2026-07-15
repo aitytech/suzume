@@ -554,6 +554,33 @@
       ],
       "id": "douzoyoroshiku",
       "input": "どうぞよろしく"
+    },
+    {
+      "description": "宿題をちゃんとやる - auto-generated",
+      "expected": [
+        {
+          "lemma": "宿題",
+          "pos": "Noun",
+          "surface": "宿題"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "ちゃんと",
+          "pos": "Adverb",
+          "surface": "ちゃんと"
+        },
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やる"
+        }
+      ],
+      "id": "wochi_ntoyaru",
+      "input": "宿題をちゃんとやる"
     }
   ],
   "description": "Basic tokenization tests",
