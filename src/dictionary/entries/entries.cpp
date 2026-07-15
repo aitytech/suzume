@@ -143,6 +143,7 @@ std::vector<DictionaryEntry> getParticleEntries() {
       particle("なら", EPOS::ParticleConj),
       // Note: ら removed - たら handles conditional, ら suffix is in L2 as SUFFIX
       particle("ながら", EPOS::ParticleConj),
+      particle("つつ", EPOS::ParticleConj),  // 反復・並行の接続助詞 (連用形接続): 重ね+つつ, 増加し+つつ+ある
       particle("のに", EPOS::ParticleConj),
       particle("ので", EPOS::ParticleConj),
       particle("けれど", EPOS::ParticleConj),

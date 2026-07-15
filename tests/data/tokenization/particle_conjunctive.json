@@ -1,0 +1,121 @@
+{
+  "cases": [
+    {
+      "description": "接続助詞 つつ splits off a verb renyokei (重ね+つつ)",
+      "expected": [
+        {
+          "lemma": "議論",
+          "pos": "Noun",
+          "surface": "議論"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "重ねる",
+          "pos": "Verb",
+          "surface": "重ね"
+        },
+        {
+          "lemma": "つつ",
+          "pos": "Particle",
+          "surface": "つつ"
+        },
+        {
+          "lemma": "結論",
+          "pos": "Noun",
+          "surface": "結論"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "出す",
+          "pos": "Verb",
+          "surface": "出す"
+        }
+      ],
+      "id": "wo_netsutsu_wo_su",
+      "input": "議論を重ねつつ結論を出す"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "ある (progressive 補助動詞) POS Auxiliary vs Verb is the known 非自立-verb deferred class; the つつ surface split is correct"
+      },
+      "description": "サ変 し + つつ + ある progressive (increase in progress)",
+      "expected": [
+        {
+          "lemma": "人口",
+          "pos": "Noun",
+          "surface": "人口"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "増加",
+          "pos": "Noun",
+          "surface": "増加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "つつ",
+          "pos": "Particle",
+          "surface": "つつ"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "ha_shitsutsuaru",
+      "input": "人口は増加しつつある",
+      "suzume_expected": [
+        {
+          "lemma": "人口",
+          "pos": "Noun",
+          "surface": "人口"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "増加",
+          "pos": "Noun",
+          "surface": "増加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "つつ",
+          "pos": "Particle",
+          "surface": "つつ"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Auxiliary",
+          "surface": "ある"
+        }
+      ]
+    }
+  ],
+  "description": "particle_conjunctive tests",
+  "version": "1.0"
+}
