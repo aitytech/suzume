@@ -182,6 +182,7 @@ std::vector<DictionaryEntry> getParticleEntries() {
       particle("など", EPOS::ParticleAdverbial),
       particle("とか", EPOS::ParticleAdverbial),  // 並立 (AとかBとか)
       particle("なんて", EPOS::ParticleAdverbial),
+      particle("ずつ", EPOS::ParticleAdverbial),  // distributive 副助詞 - prevent ず(打消)+つ split after a quantity
       particle("ってば", EPOS::ParticleFinal),
       particle("ったら", EPOS::ParticleFinal),
   };

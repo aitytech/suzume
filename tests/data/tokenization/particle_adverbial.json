@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "description": "Distributive ずつ stays whole after a counter",
+      "expected": [
+        {
+          "lemma": "一つ",
+          "pos": "Noun",
+          "surface": "一つ"
+        },
+        {
+          "lemma": "ずつ",
+          "pos": "Particle",
+          "surface": "ずつ"
+        },
+        {
+          "lemma": "数える",
+          "pos": "Verb",
+          "surface": "数え"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tsuzutsu_eta",
+      "input": "一つずつ数えた"
+    },
+    {
+      "description": "Distributive ずつ after numeral+counter",
+      "expected": [
+        {
+          "lemma": "三個",
+          "pos": "Noun",
+          "surface": "三個"
+        },
+        {
+          "lemma": "ずつ",
+          "pos": "Particle",
+          "surface": "ずつ"
+        },
+        {
+          "lemma": "配る",
+          "pos": "Verb",
+          "surface": "配っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "zutsu_ttta",
+      "input": "三個ずつ配った"
+    }
+  ],
+  "description": "particle_adverbial tests",
+  "version": "1.0"
+}
