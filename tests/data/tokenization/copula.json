@@ -532,6 +532,114 @@
       ],
       "id": "sunawachi_toha_no_dearu",
       "input": "すなわち、人間とは矛盾の塊である。"
+    },
+    {
+      "description": "今日はいい天気😀です - auto-generated",
+      "expected": [
+        {
+          "lemma": "今日",
+          "pos": "Noun",
+          "surface": "今日"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        },
+        {
+          "lemma": "天気",
+          "pos": "Noun",
+          "surface": "天気"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "haii_desu",
+      "input": "今日はいい天気😀です"
+    },
+    {
+      "description": "これは犬🐕でした - auto-generated",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "犬",
+          "pos": "Noun",
+          "surface": "犬"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "でし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "koreha_deshita",
+      "input": "これは犬🐕でした"
+    },
+    {
+      "description": "評価は◎です - auto-generated",
+      "expected": [
+        {
+          "lemma": "評価",
+          "pos": "Noun",
+          "surface": "評価"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "ha_desu",
+      "input": "評価は◎です"
+    },
+    {
+      "description": "東京(晴れ)です - auto-generated",
+      "expected": [
+        {
+          "lemma": "東京",
+          "pos": "Noun",
+          "surface": "東京"
+        },
+        {
+          "lemma": "晴れ",
+          "pos": "Noun",
+          "surface": "晴れ"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "(_re)desu",
+      "input": "東京(晴れ)です"
     }
   ],
   "description": "Copula patterns (だ、です、である)",
