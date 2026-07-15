@@ -2127,6 +2127,82 @@
       ],
       "id": "kottchihe_i",
       "input": "こっちへ来い"
+    },
+    {
+      "description": "全部食べちゃった - auto-generated",
+      "expected": [
+        {
+          "lemma": "全部",
+          "pos": "Noun",
+          "surface": "全部"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ちゃう",
+          "pos": "Verb",
+          "surface": "ちゃっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "bechi_ttta",
+      "input": "全部食べちゃった"
+    },
+    {
+      "description": "全部飲んじゃった - auto-generated",
+      "expected": [
+        {
+          "lemma": "全部",
+          "pos": "Noun",
+          "surface": "全部"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nji_ttta",
+      "input": "全部飲んじゃった"
+    },
+    {
+      "description": "全部食べちゃう - auto-generated",
+      "expected": [
+        {
+          "lemma": "全部",
+          "pos": "Noun",
+          "surface": "全部"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ちゃう",
+          "pos": "Verb",
+          "surface": "ちゃう"
+        }
+      ],
+      "id": "bechi_u",
+      "input": "全部食べちゃう"
     }
   ],
   "description": "Irregular verbs (する、くる)",

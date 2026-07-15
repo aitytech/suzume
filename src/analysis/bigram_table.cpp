@@ -161,9 +161,12 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // This handles contracted forms where ておく → とく
   setCell(t, EPOS::VerbRenyokei, EPOS::AuxAspectOku, cost::kStrongBonus);
 
-  // VerbRenyokei → AuxAspectShimau (食べ+ちゃっ contraction of 食べてしまう) - strong bonus
-  // This handles contracted forms where てしまう → ちゃう
-  setCell(t, EPOS::VerbRenyokei, EPOS::AuxAspectShimau, cost::kStrongBonus);
+  // VerbRenyokei → AuxAspectShimau (食べ+ちゃっ contraction of 食べてしまう) - very strong bonus
+  // This handles contracted forms where てしまう → ちゃう. Dict ちゃっ is base POS
+  // Verb, so the base VERB→VERB bigram (+0.8) would cancel out a mere strong
+  // bonus (-0.8, net 0); use very-strong so the net (-0.8) matches the working
+  // VerbOnbinkei → AuxTenseTa connection (食べ+た).
+  setCell(t, EPOS::VerbRenyokei, EPOS::AuxAspectShimau, cost::kVeryStrongBonus);
 
   // =========================================================================
   // Verb Forms → Particles

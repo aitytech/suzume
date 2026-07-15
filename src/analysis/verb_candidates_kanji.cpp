@@ -1735,11 +1735,15 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           base_cost += 2.0F;  // Strong penalty to force split
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (compound_adj_penalty)\n");
         }
-        // Penalize 2-kanji verb candidates whose base form is not in dict
+        // Penalize 2+-kanji verb candidates whose base form is not in dict
         // Most real 2-kanji verbs (行う, 伴う, etc.) are in the dictionary.
         // False 2-kanji patterns like 柿食えば (柿 + 食えば) have base 柿食う
         // which is not a real verb. Apply penalty so noun + verb split wins.
-        if (kanji_count == 2 && !in_dict) {
+        // Extended from ==2 to >=2: a 3+-leading-kanji "verb" whose base is not
+        // in any dictionary is likewise noun+verb over-merge or a suru-compound
+        // (全部食べちゃった misparsed with 全部食 as a fake verb stem); real 2-kanji
+        // verbs are dict entries, so they are unaffected by widening the range.
+        if (kanji_count >= 2 && !in_dict) {
           base_cost += bigram_cost::kRare;
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +1.0 (two_kanji_non_dict_penalty)\n");
         }

@@ -65,6 +65,14 @@ constexpr float kVerifiedV1Bonus = -0.3F;
 // Applied when noun component is verified in dictionary
 constexpr float kVerifiedNounBonus = -0.3F;
 
+// Unverified 3-char prefix+noun join penalty (全部食, 全部飲 from 全部食べちゃった).
+// A productive prefix (全 etc.) greedily takes the whole following kanji run as
+// its noun part; when that noun is not a dictionary entry and the combined
+// surface is 3 chars, the previous +0.8 penalty still left the join cheaper
+// than the plain 2-char kanji_seq noun split (1.0), so a fake noun like 全部食
+// won over 全部|食. Raised so the final cost clears the split-path cost.
+constexpr float kUnverifiedPrefixJoin3charPenalty = 1.4F;
+
 // Te-form + auxiliary bonus
 // E.g., 食べて+いる, 走って+しまう
 constexpr float kTeFormAuxBonus = -0.8F;

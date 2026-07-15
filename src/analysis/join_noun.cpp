@@ -167,8 +167,9 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
     // Penalty: +2.0 base, +0.5 per extra char
     final_cost += 2.0F + 0.5F * static_cast<float>(total_len - 4);
   } else if (total_len == 3 && !noun_in_dict) {
-    // Moderate penalty for 3-char unverified
-    final_cost += 0.8F;
+    // Penalty for 3-char unverified so the join cannot beat the plain
+    // 2-char kanji_seq noun split (e.g. 全部食 vs 全部|食 from 全部食べちゃった).
+    final_cost += candidate::kUnverifiedPrefixJoin3charPenalty;
   }
 
   if (noun_in_dict) {
