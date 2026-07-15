@@ -123,6 +123,15 @@ constexpr float kCounterHalfSuffixCost = 0.0F;
 // compounds.
 constexpr float kCounterNounSplitBonus = -1.2F;
 
+// Leading noun/prefix + numeral + counter split bonus (徒歩|五分, 約|二時間,
+// 気温|三十度, 定員|五名). A leading kanji noun or numeric-aggregation prefix glued
+// to a following numeral+counter phrase is otherwise emitted as one kanji_seq unknown
+// word that beats the split on total cost. This discounts the leading token enough for
+// the split path to win, keeping the numeral+counter as its own search unit. Applied
+// only under the structural gates in generateCounterCandidates (2+ leading kanji or a
+// numeric-aggregation prefix, and a counter kanji right after the numerals).
+constexpr float kLeadingNounCounterSplitBonus = -1.2F;
+
 // Noun + Verb split bonus
 // E.g., 勉強+する, 説明+する
 constexpr float kNounVerbSplitBonus = -1.0F;

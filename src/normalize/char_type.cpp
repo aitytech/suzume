@@ -417,6 +417,17 @@ bool isQuantityPrefixKanji(char32_t code_point) {
   }
 }
 
+bool isNumericApproxPrefixKanji(char32_t code_point) {
+  switch (code_point) {
+    case U'約':
+    case U'計':
+    case U'総':
+      return true;
+    default:
+      return false;
+  }
+}
+
 bool isIntervalCompoundSecondKanji(char32_t code_point) {
   // Kanji that form an 間-initial interval word (間隔). After a duration counter
   // a member kanji takes the interval reading (N年|間隔) while a non-member takes

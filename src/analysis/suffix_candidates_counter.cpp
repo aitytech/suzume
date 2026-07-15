@@ -182,6 +182,51 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     }
   }
 
+  // Leading kanji noun/prefix + numeral(s) + counter: split before the numeral so the
+  // numeral+counter search unit stays intact (徒歩|五分, 約|二時間, 気温|三十度,
+  // 定員|五名). The whole run is otherwise one kanji_seq NOUN that beats the split on
+  // total cost, so a discounted duplicate of the leading token lets the split win.
+  // Structural gates keep lexical wholes intact: the leading run is either a numeric-
+  // aggregation prefix (約/計/総) or 2+ kanji — a single non-prefix kanji heads a
+  // lexical compound (中二階, 高三) — and the numeral must be immediately followed by a
+  // counter kanji or a katakana unit (五メートル, 五キロ), so a bare numeral compound
+  // (十字路, 百貨店, 世界一) or a kanji-run non-counter (東京五輪, 富士五湖) never fires.
+  {
+    size_t lead = start_pos;
+    while (lead < codepoints.size() && lead < char_types.size() && char_types[lead] == normalize::CharType::Kanji &&
+           !normalize::isNumeralCodepoint(codepoints[lead])) {
+      ++lead;
+    }
+    size_t lead_len = lead - start_pos;
+    bool lead_is_prefix = lead_len == 1 && normalize::isNumericApproxPrefixKanji(codepoints[start_pos]);
+    if ((lead_len >= 2 || lead_is_prefix) && lead < codepoints.size() &&
+        normalize::isNumeralCodepoint(codepoints[lead])) {
+      size_t num_end = lead;
+      while (num_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[num_end])) {
+        ++num_end;
+      }
+      bool counter_follows = num_end < codepoints.size() &&
+                             (normalize::isCounterKanji(codepoints[num_end]) ||
+                              (num_end < char_types.size() && char_types[num_end] == normalize::CharType::Katakana));
+      if (counter_follows) {
+        std::string surface = extractSubstring(codepoints, start_pos, lead);
+        if (!surface.empty()) {
+          // An approximation prefix (約/計/総) is a Prefix modifying the quantity; a
+          // multi-kanji leading run is an ordinary Noun.
+          core::PartOfSpeech lead_pos = lead_is_prefix ? core::PartOfSpeech::Prefix : core::PartOfSpeech::Noun;
+          core::ExtendedPOS lead_epos = lead_is_prefix ? core::ExtendedPOS::Prefix : core::ExtendedPOS::Unknown;
+          auto cand = makeCandidate(surface, start_pos, lead, lead_pos, candidate::kLeadingNounCounterSplitBonus, false,
+                                    CandidateOrigin::Counter, lead_epos);
+          cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+          cand.pattern = "leading_noun_counter_split";
+#endif
+          candidates.push_back(cand);
+        }
+      }
+    }
+  }
+
   // First character(s) must be numeral(s)
   if (!normalize::isNumeralCodepoint(codepoints[start_pos])) {
     return candidates;

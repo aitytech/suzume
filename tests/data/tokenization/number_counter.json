@@ -259,6 +259,119 @@
       ],
       "id": "shita_2",
       "input": "二台故障した"
+    },
+    {
+      "description": "徒歩五分で着く - auto-generated",
+      "expected": [
+        {
+          "lemma": "徒歩",
+          "pos": "Noun",
+          "surface": "徒歩"
+        },
+        {
+          "lemma": "五分",
+          "pos": "Noun",
+          "surface": "五分"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "着く",
+          "pos": "Verb",
+          "surface": "着く"
+        }
+      ],
+      "id": "de_ku",
+      "input": "徒歩五分で着く"
+    },
+    {
+      "description": "約二時間待った - auto-generated",
+      "expected": [
+        {
+          "lemma": "約",
+          "pos": "Prefix",
+          "surface": "約"
+        },
+        {
+          "lemma": "二時間",
+          "pos": "Noun",
+          "surface": "二時間"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ttta_2",
+      "input": "約二時間待った"
+    },
+    {
+      "description": "定員五名の教室 - auto-generated",
+      "expected": [
+        {
+          "lemma": "定員",
+          "pos": "Noun",
+          "surface": "定員"
+        },
+        {
+          "lemma": "五名",
+          "pos": "Noun",
+          "surface": "五名"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "教室",
+          "pos": "Noun",
+          "surface": "教室"
+        }
+      ],
+      "id": "no_2",
+      "input": "定員五名の教室"
+    },
+    {
+      "description": "約百人が集まった - auto-generated",
+      "expected": [
+        {
+          "lemma": "約",
+          "pos": "Prefix",
+          "surface": "約"
+        },
+        {
+          "lemma": "百人",
+          "pos": "Noun",
+          "surface": "百人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "集まる",
+          "pos": "Verb",
+          "surface": "集まっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ga_mattta",
+      "input": "約百人が集まった"
     }
   ],
   "description": "number_counter tests",

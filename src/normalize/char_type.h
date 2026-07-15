@@ -347,6 +347,19 @@ bool isTemporalCounterKanji(char32_t code_point);
 bool isQuantityPrefixKanji(char32_t code_point);
 
 /**
+ * @brief Check if a codepoint is a numeric-aggregation prefix kanji ({約, 計, 総})
+ *
+ * A closed set of single-kanji heads that precede a numeral+counter phrase without
+ * being part of it: 約二時間 ("about two hours"), 計五名 ("five in total"), 総勢十名.
+ * Used to split the prefix off the numeral+counter search unit (約|二時間), which a
+ * multi-kanji leading noun (徒歩|五分) already qualifies for by length.
+ *
+ * @param code_point Unicode codepoint
+ * @return true if codepoint is a numeric-aggregation prefix kanji
+ */
+bool isNumericApproxPrefixKanji(char32_t code_point);
+
+/**
  * @brief Check if every codepoint of a surface is katakana
  *
  * Used to merge a numeral with a following katakana noun (3キロ, 100メダル):

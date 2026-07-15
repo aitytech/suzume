@@ -16,6 +16,11 @@ from .constants import (
     TARI_ADVERB_STEMS,
 )
 
+# Numeric-approximation/aggregation prefixes that modify a whole quantity and split
+# off the following number+counter (約|二時間, 計|五名), unlike ordinal 第 which binds
+# to its number (第三十四|回). Mirrors normalize::isNumericApproxPrefixKanji in the core.
+_APPROX_NUMERIC_PREFIXES = {"約", "計", "総"}
+
 
 def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str | None]:
     """Apply Suzume merge rules to MeCab tokens.
@@ -121,6 +126,9 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 is_percent = ns == "%"
                 is_decimal = ns == "."
                 is_consecutive_number = np == "名詞" and ns1 == "数" and regex.match(r"^[0-9０-９]+$", ns)
+                is_kanji_number_run = (
+                    np == "名詞" and ns1 == "数" and regex.match(r"^[一二三四五六七八九十百千万億兆〇零]+$", ns)
+                )
                 is_alpha_unit = regex.match(r"^[A-Za-z]+$", ns) and np == "名詞"
 
                 if any(
@@ -138,6 +146,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                         is_decimal,
                         is_alpha_unit,
                         is_consecutive_number,
+                        is_kanji_number_run,
                     ]
                 ):
                     combined += ns
@@ -176,7 +185,16 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
 
         # 2b. Prefix + number (第一, 第二, etc.)
         # Only merge numbers, not counters — 第一+毛 should stay split
-        if not merged and t.get("pos") == "接頭詞" and t.get("pos_sub1") == "数接続":
+        # An approximation prefix (約/計/総) modifies the whole quantity and splits off
+        # the number+counter (約|二時間, 計|五名), unlike an ordinal prefix (第) that binds
+        # to its number (第三十四|回). Skip approximation prefixes here so the number binds
+        # right to its counter via the number+counter rule.
+        if (
+            not merged
+            and t.get("pos") == "接頭詞"
+            and t.get("pos_sub1") == "数接続"
+            and t.get("surface", "") not in _APPROX_NUMERIC_PREFIXES
+        ):
             j = i + 1
             combined = t.get("surface", "")
             while j < len(tokens):
@@ -474,6 +492,11 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     and nxt.get("pos_sub1", "") not in ("接尾", "固有名詞", "形容動詞語幹", "副詞可能")
                 )
                 if not next_mergeable:
+                    break
+                # A number after a plain noun is a quantity boundary, not part of a kanji
+                # compound (徒歩|五分, 定員|五名, 気温|三十度 — never 徒歩五|分). The number
+                # binds right to its counter via the number+counter rule.
+                if nxt.get("pos_sub1") == "数":
                     break
                 combined += ns
                 j += 1
@@ -1018,6 +1041,9 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
                 and merged[-1].get("pos_sub1", "") not in ("副詞可能", "固有名詞", "数")
                 and merged[-1].get("pos", "") != "副詞"
                 and (curr.get("pos_sub1", "") != "接尾" or is_merge_allowed_suffix)
+                # A number+counter unit (五分, 二時間, 五名) is its own search unit and
+                # must not fold into a preceding noun/prefix (徒歩|五分, 約|二時間).
+                and curr.get("pos_sub1", "") != "数"
                 and not prev_is_go_prefix
             )
             or (
