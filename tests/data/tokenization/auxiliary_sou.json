@@ -26,6 +26,70 @@
       ],
       "id": "kyoushi_da_sou_da",
       "input": "教師だそうだ"
+    },
+    {
+      "description": "食べなさそうだ - auto-generated",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "な"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "benasasouda",
+      "input": "食べなさそうだ"
+    },
+    {
+      "description": "できなさそうだ - auto-generated",
+      "expected": [
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "な"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "dekinasasouda",
+      "input": "できなさそうだ"
     }
   ],
   "description": "auxiliary_sou tests",
