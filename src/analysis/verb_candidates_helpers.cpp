@@ -484,21 +484,11 @@ bool isValidIRowIchidanStem(std::string_view stem) {
 }
 
 bool containsTeFormAuxPattern(std::string_view surface) {
-  for (size_t i = 0; i < scorer::kTeFormAuxPenaltyPatternsSize; ++i) {
-    if (utf8::contains(surface, scorer::kTeFormAuxPenaltyPatterns[i])) {
-      return true;
-    }
-  }
-  return false;
+  return utf8::containsAny(surface, scorer::kTeFormAuxPenaltyPatterns);
 }
 
 bool containsCausativeAuxPattern(std::string_view surface) {
-  for (size_t i = 0; i < scorer::kCausativeAuxPenaltyPatternsSize; ++i) {
-    if (utf8::contains(surface, scorer::kCausativeAuxPenaltyPatterns[i])) {
-      return true;
-    }
-  }
-  return false;
+  return utf8::containsAny(surface, scorer::kCausativeAuxPenaltyPatterns);
 }
 
 VerbClassBests bestByVerbClass(const std::vector<grammar::InflectionCandidate>& candidates) {

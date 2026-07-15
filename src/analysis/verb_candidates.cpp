@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "analysis/candidate_constants.h"
 #include "analysis/scorer_constants.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "core/debug.h"
@@ -252,7 +253,8 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
     if (best.confidence > verb_opts.confidence_katakana && best.verb_type != grammar::VerbType::IAdjective) {
       // Lower cost than pure katakana noun to prefer verb reading
       // Cost: 0.4-0.55 based on confidence (lower = better)
-      float cost = verb_opts.base_cost_standard + (1.0F - best.confidence) * verb_opts.confidence_cost_scale;
+      float cost = candidate::confidenceScaledCost(verb_opts.base_cost_standard, best.confidence,
+                                                   verb_opts.confidence_cost_scale);
       candidates.push_back(makeVerbCandidate(
           surface, start_pos, end_pos, cost, best.base_form, grammar::verbTypeToConjType(best.verb_type), false,
           CandidateOrigin::VerbKatakana, best.confidence, grammar::verbTypeToString(best.verb_type).data()));

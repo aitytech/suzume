@@ -231,7 +231,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       // Need: stem + connection(0.5) + すぎる(0.4) < compound(0.35)
       // Required: stem < 0.35 - 0.5 - 0.4 = -0.55
       float cost =
-          adj_detail::confidenceScaledCost(candidate::kAdjStemBaseCost, adj_confidence, candidate::kAdjStemConfScale);
+          candidate::confidenceScaledCost(candidate::kAdjStemBaseCost, adj_confidence, candidate::kAdjStemConfScale);
       SUZUME_DEBUG_LOG("[ADJ_STEM]   ✓ candidate stem=\"" << stem << "\" cost=" << cost << "\n");
       candidates.push_back(makeIAdjStemCandidate(stem, start_pos, kanji_end, base_form, cost,
                                                  CandidateOrigin::AdjectiveI, adj_confidence, "adj_stem_garu_conn"));
@@ -374,7 +374,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       // (美味しそう → 美味し + そう)
       // Need stronger negative cost like garu-connection pattern
       float cost =
-          adj_detail::confidenceScaledCost(candidate::kAdjStemBaseCost, adj_confidence, candidate::kAdjStemConfScale);
+          candidate::confidenceScaledCost(candidate::kAdjStemBaseCost, adj_confidence, candidate::kAdjStemConfScale);
       SUZUME_DEBUG_LOG("[ADJ_STEM]   ✓ candidate stem=\"" << stem << "\" cost=" << cost << "\n");
       candidates.push_back(makeIAdjStemCandidate(stem, start_pos, stem_end, base_form, cost,
                                                  CandidateOrigin::AdjectiveI, adj_confidence, "adj_stem_shii"));

@@ -1,10 +1,5 @@
 #include "normalize/exceptions.h"
 
-// Note: Core particle definitions are also in core/kana_constants.h
-// (kCaseParticles, kBindingParticles, kFinalParticles, kConjunctiveParticles)
-// These sets maintain their own definitions for type compatibility with
-// std::unordered_set, while kana_constants.h uses constexpr arrays.
-
 namespace suzume::normalize {
 
 // =============================================================================
@@ -94,10 +89,9 @@ const std::unordered_set<std::string_view> kSingleKanjiExceptions = {
 // Particles, auxiliaries, and other grammatical elements
 // that are valid as single hiragana tokens.
 // Note: Case/binding particles overlap with kParticleStrings below.
-// See also: kana::kCaseParticles, kana::kBindingParticles in kana_constants.h
 
 const std::unordered_set<std::string_view> kSingleHiraganaExceptions = {
-    // Case particles (格助詞) - also in kParticleStrings, kana::kCaseParticles
+    // Case particles (格助詞) - also in kParticleStrings
     "が",
     "を",
     "に",
@@ -105,10 +99,10 @@ const std::unordered_set<std::string_view> kSingleHiraganaExceptions = {
     "と",
     "へ",
     "の",
-    // Binding particles (係助詞) - also in kParticleStrings, kana::kBindingParticles
+    // Binding particles (係助詞) - also in kParticleStrings
     "は",
     "も",
-    // Final particles (終助詞) - see kana::kFinalParticles
+    // Final particles (終助詞)
     "か",
     "な",
     "ね",
@@ -117,7 +111,7 @@ const std::unordered_set<std::string_view> kSingleHiraganaExceptions = {
     // Auxiliary (助動詞)
     "だ",
     "た",
-    // Conjunctive particles (接続助詞) - see kana::kConjunctiveParticles
+    // Conjunctive particles (接続助詞)
     "て",
     "ば",
 };
@@ -198,10 +192,9 @@ const std::vector<std::string_view> kHiraganaCompoundVerbAuxPrefixes = {
 // Particles that should not be treated as verb endings when generating
 // verb candidates from kanji + hiragana patterns.
 // Note: Case/binding particles overlap with kSingleHiraganaExceptions above.
-// See also: kana::kCaseParticles, kana::kBindingParticles in kana_constants.h
 
 const std::unordered_set<std::string_view> kParticleStrings = {
-    // Case particles (格助詞) - also in kSingleHiraganaExceptions, kana::kCaseParticles
+    // Case particles (格助詞) - also in kSingleHiraganaExceptions
     "が",
     "を",
     "に",
@@ -209,7 +202,7 @@ const std::unordered_set<std::string_view> kParticleStrings = {
     "と",
     "へ",
     "の",
-    // Binding particles (係助詞) - also in kSingleHiraganaExceptions, kana::kBindingParticles
+    // Binding particles (係助詞) - also in kSingleHiraganaExceptions
     "は",
     "も",
     // Other particles (副助詞・接続助詞)

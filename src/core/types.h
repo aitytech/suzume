@@ -193,14 +193,14 @@ enum class AnalysisMode : uint8_t {
 /**
  * @brief Check whether a PartOfSpeech value is inside the declared enum range.
  */
-[[nodiscard]] inline constexpr bool isValidPartOfSpeech(PartOfSpeech pos) noexcept {
+[[nodiscard]] constexpr bool isValidPartOfSpeech(PartOfSpeech pos) noexcept {
   return static_cast<size_t>(pos) < static_cast<size_t>(PartOfSpeech::Count_);
 }
 
 /**
  * @brief Check whether an ExtendedPOS value is inside the declared enum range.
  */
-[[nodiscard]] inline constexpr bool isValidExtendedPos(ExtendedPOS extended_pos) noexcept {
+[[nodiscard]] constexpr bool isValidExtendedPos(ExtendedPOS extended_pos) noexcept {
   return static_cast<size_t>(extended_pos) < static_cast<size_t>(ExtendedPOS::Count_);
 }
 

@@ -6,51 +6,6 @@
 namespace suzume::kana {
 
 // =============================================================================
-// Hiragana Vowel Row Constants (五十音 - 母音行)
-// =============================================================================
-// Each row contains all hiragana characters that share the same vowel ending.
-// These are fundamental to Japanese verb conjugation patterns.
-
-// あ段 (a-row): Characters ending with 'a' vowel
-// Used for: Mizenkei (未然形), negative forms
-inline constexpr const char* kARow[] = {"あ", "か", "が", "さ", "ざ", "た", "だ", "な",
-                                        "は", "ば", "ぱ", "ま", "や", "ら", "わ"};
-inline constexpr size_t kARowCount = sizeof(kARow) / sizeof(kARow[0]);
-
-// い段 (i-row): Characters ending with 'i' vowel
-// Used for: Renyokei (連用形) of godan verbs, kami-ichidan verbs
-inline constexpr const char* kIRow[] = {"い", "き", "ぎ", "し", "じ", "ち", "ぢ", "に", "ひ", "び", "ぴ", "み", "り"};
-inline constexpr size_t kIRowCount = sizeof(kIRow) / sizeof(kIRow[0]);
-
-// う段 (u-row): Characters ending with 'u' vowel
-// Used for: Dictionary form (終止形) of godan verbs
-inline constexpr const char* kURow[] = {"う", "く", "ぐ", "す", "ず", "つ", "づ",
-                                        "ぬ", "ふ", "ぶ", "ぷ", "む", "ゆ", "る"};
-inline constexpr size_t kURowCount = sizeof(kURow) / sizeof(kURow[0]);
-
-// え段 (e-row): Characters ending with 'e' vowel
-// Used for: Renyokei (連用形) of shimo-ichidan verbs, imperative, potential
-inline constexpr const char* kERow[] = {"え", "け", "げ", "せ", "ぜ", "て", "で", "ね", "へ", "べ", "ぺ", "め", "れ"};
-inline constexpr size_t kERowCount = sizeof(kERow) / sizeof(kERow[0]);
-
-// お段 (o-row): Characters ending with 'o' vowel
-// Used for: Volitional (意志形)
-inline constexpr const char* kORow[] = {"お", "こ", "ご", "そ", "ぞ", "と", "ど", "の",
-                                        "ほ", "ぼ", "ぽ", "も", "よ", "ろ", "を"};
-inline constexpr size_t kORowCount = sizeof(kORow) / sizeof(kORow[0]);
-
-// =============================================================================
-// Onbin (音便) Endings
-// =============================================================================
-// Sound changes that occur in verb conjugations:
-// - っ (促音便): From つ, く verbs before て/た
-// - ん (撥音便): From む, ぬ, ぶ verbs before で/だ
-// - い (イ音便): From く, ぐ verbs before て/た
-
-inline constexpr const char* kOnbinEndings[] = {"い", "っ", "ん"};
-inline constexpr size_t kOnbinCount = sizeof(kOnbinEndings) / sizeof(kOnbinEndings[0]);
-
-// =============================================================================
 // Verb Conjugation Specific Endings
 // =============================================================================
 
@@ -62,38 +17,6 @@ inline constexpr size_t kMizenkeiCount = sizeof(kMizenkeiEndings) / sizeof(kMize
 // (い is the renyokei of う-row verbs like 思う→思い)
 inline constexpr const char* kRenyokeiEndings[] = {"き", "ぎ", "し", "ち", "に", "び", "み", "り"};
 inline constexpr size_t kRenyokeiCount = sizeof(kRenyokeiEndings) / sizeof(kRenyokeiEndings[0]);
-
-// =============================================================================
-// Small Kana (拗音・促音)
-// =============================================================================
-// These cannot start a word and are always part of compound sounds.
-
-inline constexpr const char* kSmallHiragana[] = {"ゃ", "ゅ", "ょ", "ぁ", "ぃ", "ぅ", "ぇ", "ぉ", "っ"};
-inline constexpr size_t kSmallHiraganaCount = sizeof(kSmallHiragana) / sizeof(kSmallHiragana[0]);
-
-inline constexpr const char* kSmallKatakana[] = {"ャ", "ュ", "ョ", "ァ", "ィ", "ゥ", "ェ", "ォ", "ッ"};
-inline constexpr size_t kSmallKatakanaCount = sizeof(kSmallKatakana) / sizeof(kSmallKatakana[0]);
-
-// =============================================================================
-// Common Particles (助詞)
-// =============================================================================
-// These are valid as single-character tokens.
-
-// 格助詞 (Case particles)
-inline constexpr const char* kCaseParticles[] = {"が", "を", "に", "で", "と", "へ", "の"};
-inline constexpr size_t kCaseParticleCount = sizeof(kCaseParticles) / sizeof(kCaseParticles[0]);
-
-// 係助詞 (Binding/Topic particles)
-inline constexpr const char* kBindingParticles[] = {"は", "も"};
-inline constexpr size_t kBindingParticleCount = sizeof(kBindingParticles) / sizeof(kBindingParticles[0]);
-
-// 終助詞 (Final particles)
-inline constexpr const char* kFinalParticles[] = {"か", "な", "ね", "よ", "わ"};
-inline constexpr size_t kFinalParticleCount = sizeof(kFinalParticles) / sizeof(kFinalParticles[0]);
-
-// 接続助詞 (Conjunctive particles)
-inline constexpr const char* kConjunctiveParticles[] = {"て", "ば"};
-inline constexpr size_t kConjunctiveParticleCount = sizeof(kConjunctiveParticles) / sizeof(kConjunctiveParticles[0]);
 
 // =============================================================================
 // Codepoint-based Row Checks

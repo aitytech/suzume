@@ -13,16 +13,9 @@
 
 namespace suzume::grammar {
 
-// Import kana constants for backward compatibility
-// These are now defined in core/kana_constants.h
-using kana::kERow;
-using kana::kERowCount;
-using kana::kIRow;
-using kana::kIRowCount;
+// Import the curated conjugation-ending tables used by the inflection scorer.
 using kana::kMizenkeiCount;
 using kana::kMizenkeiEndings;
-using kana::kOnbinCount;
-using kana::kOnbinEndings;
 using kana::kRenyokeiCount;
 using kana::kRenyokeiEndings;
 
@@ -100,8 +93,8 @@ bool isPureHiragana(std::string_view stem);
  */
 bool isPureKatakana(std::string_view stem);
 
-// Note: kOnbinEndings, kMizenkeiEndings, kRenyokeiEndings, kIRow, kERow are now
-// imported from kana_constants.h via using declarations at the top of this file.
+// Note: kMizenkeiEndings and kRenyokeiEndings are imported from
+// kana_constants.h for the inflection scorer.
 
 /**
  * @brief Check if stem ends with i-row hiragana (godan renyokei markers)

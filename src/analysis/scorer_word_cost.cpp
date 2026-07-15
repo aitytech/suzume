@@ -361,11 +361,10 @@ float computeFixedExpressionDictBonus(const core::LatticeEdge& edge) {
       grammar::isPureHiragana(edge.surface)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Stronger bonus for longer interjections (common greetings are 4-5 chars)
-    float interjection_bonus = (char_len <= 2) ? sc::kBonusHiraganaInterjectionShort
-                               : (char_len <= 3)
-                                   ? sc::kBonusHiraganaInterjectionMid
-                                   : sc::kBonusHiraganaInterjectionBase -
-                                         static_cast<float>(char_len - 3) * sc::kBonusHiraganaInterjectionPerChar;
+    float interjection_bonus = (char_len <= 2)   ? sc::kBonusHiraganaInterjectionShort
+                               : (char_len <= 3) ? sc::kBonusHiraganaInterjectionMid
+                                                 : lengthScaledBonus(sc::kBonusHiraganaInterjectionBase, char_len, 3,
+                                                                     sc::kBonusHiraganaInterjectionPerChar);
     bonus += interjection_bonus;
   }
 
@@ -390,10 +389,9 @@ float computeFixedExpressionDictBonus(const core::LatticeEdge& edge) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Stronger bonus for conjunctions to beat adverb+particle splits
     // Adverb 3-char gets -3.0, plus particle gets bonus, so we need > -3.5
-    float conjunction_bonus = (char_len <= 3)
-                                  ? sc::kBonusHiraganaConjunctionShort
-                                  : sc::kBonusHiraganaConjunctionBase -
-                                        static_cast<float>(char_len - 3) * sc::kBonusHiraganaConjunctionPerChar;
+    float conjunction_bonus = (char_len <= 3) ? sc::kBonusHiraganaConjunctionShort
+                                              : lengthScaledBonus(sc::kBonusHiraganaConjunctionBase, char_len, 3,
+                                                                  sc::kBonusHiraganaConjunctionPerChar);
     bonus += conjunction_bonus;
   }
 
@@ -457,9 +455,9 @@ float computeAdverbDictBonus(const core::LatticeEdge& edge) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     // Short adverbs (2 chars) get weaker bonus
     // Longer adverbs get stronger bonus (0.5 per character beyond 2)
-    float adverb_bonus = (char_len <= 2) ? sc::kBonusHiraganaAdverbShort
-                                         : sc::kBonusHiraganaAdverbBase -
-                                               static_cast<float>(char_len - 2) * sc::kBonusHiraganaAdverbPerChar;
+    float adverb_bonus =
+        (char_len <= 2) ? sc::kBonusHiraganaAdverbShort
+                        : lengthScaledBonus(sc::kBonusHiraganaAdverbBase, char_len, 2, sc::kBonusHiraganaAdverbPerChar);
     bonus += adverb_bonus;
   }
 

@@ -186,8 +186,8 @@ void addReduplicatedShiiAdjective(std::vector<UnknownCandidate>& candidates, con
       if (cand.verb_type != grammar::VerbType::IAdjective || cand.confidence < candidate::kIAdjConfMin) {
         continue;
       }
-      float cost = adj_detail::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
-                                                    candidate::kKanjiAdjConfScale) +
+      float cost = candidate::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
+                                                   candidate::kKanjiAdjConfScale) +
                    candidate::kReduplicatedShiiAdjBonus;
       auto adj = makeIAdjCandidate(surface, start_pos, end_pos, cand.base_form, cost, origin, cand.confidence,
                                    "i_adjective_reduplicated");
@@ -523,8 +523,8 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
         // Base cost for hiragana i-adjective candidates
         // Use slightly elevated base to avoid fragments like ろしい beating
         // kanji adjectives like 恐ろしい (kanji adj base=0.2F)
-        float cost = adj_detail::confidenceScaledCost(candidate::kHiraganaAdjBaseCost, cand.confidence,
-                                                      candidate::kHiraganaAdjConfScale);
+        float cost = candidate::confidenceScaledCost(candidate::kHiraganaAdjBaseCost, cand.confidence,
+                                                     candidate::kHiraganaAdjConfScale);
         if (has_prolonged) {
           cost += candidate::kProlongedSoundBonus;  // Bonus for colloquial patterns like すごーい
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" -0.1 (prolonged_sound_bonus)\n");
@@ -696,7 +696,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
       // Generate stem candidate with strong bonus
       // おい (INTJ) has cost -1, so stem needs very low cost to win
       float cost =
-          adj_detail::confidenceScaledCost(candidate::kAdjStemExtCost, adj_confidence, candidate::kAdjStemConfScale);
+          candidate::confidenceScaledCost(candidate::kAdjStemExtCost, adj_confidence, candidate::kAdjStemConfScale);
       SUZUME_DEBUG_LOG("[ADJ_STEM_HIRA] ✓ candidate stem=\"" << stem << "\" base=\"" << base_form << "\" cost=" << cost
                                                              << "\n");
       candidates.push_back(makeIAdjStemCandidate(stem, start_pos, stem_end, base_form, cost,
@@ -769,8 +769,8 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
           if (cand.confidence >= candidate::kIAdjConfMin && cand.verb_type == grammar::VerbType::IAdjective) {
             // Lower cost than pure katakana noun to prefer adjective reading
             // Cost: 0.2-0.35 based on confidence (lower = better)
-            float cost = adj_detail::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
-                                                          candidate::kKanjiAdjConfScale);
+            float cost = candidate::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
+                                                         candidate::kKanjiAdjConfScale);
             auto adj_cand = makeIAdjCandidate(surface, start_pos, end_pos, cand.base_form, cost,
                                               CandidateOrigin::AdjectiveI, cand.confidence, "i_adjective_kata");
             // Skip exceeds_dict_length penalty - this is a morphologically recognized pattern

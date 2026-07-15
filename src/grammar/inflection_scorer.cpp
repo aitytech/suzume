@@ -261,7 +261,7 @@ float calculateConfidence(VerbType type, std::string_view stem, size_t aux_total
 
       // Onbin context: stems ending in い, っ, ん suggest Godan
       if (required_conn == conn::kVerbOnbinkei) {
-        looks_godan = endsWithChar(stem, kOnbinEndings, kOnbinCount);
+        looks_godan = endsWithOnbin(stem);
       }
       // Mizenkei context: stems ending in a-row suggest Godan
       else if (required_conn == conn::kVerbMizenkei) {

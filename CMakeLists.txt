@@ -149,13 +149,6 @@ if(BUILD_WASM)
   add_compile_options(-Os -flto)
   add_link_options(-Os -flto)
 
-  # Emscripten compile options
-  add_compile_options(
-    -sWASM=1
-    -sMODULARIZE=1
-    -sEXPORT_ES6=1
-  )
-
   # Emscripten link options
   add_link_options(
     -sWASM=1

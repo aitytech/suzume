@@ -365,8 +365,8 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
             !suffix_is_dict_verb && !adj_homograph_blocked) {
           // Negative cost to strongly favor split over combined analysis
           // Combined forms get optimal_length bonus (-0.5), so we need to be lower
-          float base_cost =
-              verb_opts.bonus_ichidan + (1.0F - ichidan_cand.confidence) * verb_opts.confidence_cost_scale_small;
+          float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
+                                                            verb_opts.confidence_cost_scale_small);
           // Set has_suffix=true to skip exceeds_dict_length penalty for MeCab compatibility
           // Ichidan renyokei stems are valid morphological units (論じ, 信じ, etc.)
           // Set lemma to the base form (e.g., 入れ → 入れる, 論じ → 論じる)
@@ -428,8 +428,8 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         if (!prefer_suru && !prefer_godan && !ends_in_nai && ichidan_cand.confidence > kMultiCharIchidanThreshold) {
           bool surface_is_dict_entry = vh::isNounOrAdjectiveInDictionary(dict_manager, surface);
           if (!surface_is_dict_entry) {
-            float base_cost =
-                verb_opts.bonus_ichidan + (1.0F - ichidan_cand.confidence) * verb_opts.confidence_cost_scale_small;
+            float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
+                                                              verb_opts.confidence_cost_scale_small);
             candidates.push_back(makeVerbCandidate(surface, start_pos, renyokei_end, base_cost, ichidan_cand.base_form,
                                                    grammar::verbTypeToConjType(ichidan_cand.verb_type), true,
                                                    CandidateOrigin::VerbKanji, ichidan_cand.confidence,
@@ -521,7 +521,8 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         }
       }
 
-      float base_cost = verb_opts.bonus_ichidan + (1.0F - best_sa.confidence) * verb_opts.confidence_cost_scale_small +
+      float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, best_sa.confidence,
+                                                        verb_opts.confidence_cost_scale_small) +
                         non_dict_penalty;
       SUZUME_DEBUG_VERBOSE_BLOCK {
         SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " godan_sa_renyokei lemma=" << best_sa.base_form
@@ -705,8 +706,8 @@ void appendCausativeRenyokeiCandidates(const std::vector<char32_t>& codepoints, 
         float ichidan_confidence = vh::getIchidanConfidence(all_candidates);
 
         if (ichidan_confidence >= 0.4F) {
-          float base_cost =
-              verb_opts.bonus_ichidan + (1.0F - ichidan_confidence) * verb_opts.confidence_cost_scale_small;
+          float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_confidence,
+                                                            verb_opts.confidence_cost_scale_small);
           SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << surface << " causative_renyokei lemma=" << causative_base
                                                   << " conf=" << ichidan_confidence << " cost=" << base_cost << "\n");
           candidates.push_back(makeVerbCandidate(surface, start_pos, renyokei_end, base_cost, causative_base,
@@ -787,8 +788,9 @@ void appendGodanPassiveRenyokeiCandidates(const std::vector<char32_t>& codepoint
             // Add penalty so the MeCab-compatible split path (縛ら+れ) can compete
             // Without this, the merged form (縛られ) has too low a cost (-0.16)
             // and always beats the split path (縛ら(0.1) + れ(aux))
-            float base_cost = verb_opts.bonus_ichidan +
-                              (1.0F - ichidan_confidence) * verb_opts.confidence_cost_scale_small + bigram_cost::kMinor;
+            float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_confidence,
+                                                              verb_opts.confidence_cost_scale_small) +
+                              bigram_cost::kMinor;
 
             // Skip renyokei candidate for べき patterns
             if (!is_beki_pattern) {
@@ -1636,7 +1638,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         }
 
         // Lower cost for higher confidence matches
-        float base_cost = verb_opts.base_cost_standard + (1.0F - best.confidence) * verb_opts.confidence_cost_scale;
+        float base_cost = candidate::confidenceScaledCost(verb_opts.base_cost_standard, best.confidence,
+                                                          verb_opts.confidence_cost_scale);
         // MeCab compatibility: Suru verbs should split as noun + する
         // Add penalty for unified suru-verb candidates to prefer split
         // e.g., 勉強する → 勉強 + する (split preferred)
@@ -1712,7 +1715,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         bool is_suru = (best.verb_type == grammar::VerbType::Suru);
         if (!is_comp_adj && in_dict && !is_suru) {
           // Found in dictionary - give strong bonus (not for suru-verbs)
-          base_cost = verb_opts.base_cost_verified + (1.0F - best.confidence) * verb_opts.confidence_cost_scale_medium;
+          base_cost = candidate::confidenceScaledCost(verb_opts.base_cost_verified, best.confidence,
+                                                      verb_opts.confidence_cost_scale_medium);
           // Godan-ra renyokei ambiguity: 降り can be from 降る(godan-ra) or
           // 降りる(ichidan). When ichidan form exists in dict, penalize godan-ra
           // so the more specific ichidan interpretation wins.

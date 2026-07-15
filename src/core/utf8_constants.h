@@ -22,11 +22,6 @@ namespace suzume::core {
 /// Applies to hiragana, katakana, and kanji
 constexpr size_t kJapaneseCharBytes = 3;
 
-/// Convenience aliases for specific character types (all equal to kJapaneseCharBytes)
-constexpr size_t kHiraganaBytes = kJapaneseCharBytes;
-constexpr size_t kKatakanaBytes = kJapaneseCharBytes;
-constexpr size_t kKanjiBytes = kJapaneseCharBytes;
-
 // =============================================================================
 // Common Multi-Character Lengths
 // =============================================================================
@@ -86,8 +81,6 @@ constexpr char32_t kRu = U'る';  // る (0x308B)
 // Te/ta forms
 constexpr char32_t kTe = U'て';   // て (0x3066)
 constexpr char32_t kTa = U'た';   // た (0x305F)
-constexpr char32_t kDe = U'で';   // で (0x3067)
-constexpr char32_t kDa = U'だ';   // だ (0x3060)
 constexpr char32_t kTo = U'と';   // と (0x3068)
 constexpr char32_t kChi = U'ち';  // ち (0x3061)
 
@@ -160,6 +153,17 @@ using suzume::core::kTwoJapaneseCharBytes;
 /// @return true if s contains any of the patterns
 [[nodiscard]] inline bool containsAny(std::string_view s, std::initializer_list<std::string_view> patterns) noexcept {
   for (const auto& pattern : patterns) {
+    if (s.find(pattern) != std::string_view::npos) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/// Check a named fixed-size pattern table without maintaining a separate count.
+template <size_t Size>
+[[nodiscard]] bool containsAny(std::string_view s, const std::string_view (&patterns)[Size]) noexcept {
+  for (const auto pattern : patterns) {
     if (s.find(pattern) != std::string_view::npos) {
       return true;
     }

@@ -65,21 +65,19 @@ bool anyCharMatches(std::string_view str, Predicate pred) {
 
 }  // namespace
 
-// Onbin, Mizenkei, Renyokei and i-row/e-row endings are now defined in
-// kana_constants.h. Use kana:: namespace versions via the aliases in
-// char_patterns.h (kIRow includes い for u-verb stems; kERow is the ichidan
-// renyokei set).
-
 bool endsWithIRow(std::string_view stem) {
-  return endsWithChar(stem, kIRow, kIRowCount);
+  const char32_t codepoint = utf8::decodeLastChar(stem);
+  return codepoint != 0 && kana::isIRowCodepoint(codepoint);
 }
 
 bool endsWithERow(std::string_view stem) {
-  return endsWithChar(stem, kERow, kERowCount);
+  const char32_t codepoint = utf8::decodeLastChar(stem);
+  return codepoint != 0 && kana::isERowCodepoint(codepoint);
 }
 
 bool endsWithOnbin(std::string_view stem) {
-  return endsWithChar(stem, kOnbinEndings, kOnbinCount);
+  const char32_t codepoint = utf8::decodeLastChar(stem);
+  return codepoint != 0 && kana::isOnbinCodepoint(codepoint);
 }
 
 bool endsWithRenyokeiMarker(std::string_view stem) {
@@ -151,8 +149,9 @@ bool startsWithHiragana(std::string_view s) {
 }
 
 // A-row (あ段) endings for Godan mizenkei detection.
-// This is a DELIBERATE subset of the full phonological a-row (kana::kARow),
-// which also carries だ/ざ/は/ぱ/や — none of which are Godan mizenkei endings.
+// This is a DELIBERATE subset of the full phonological a-row recognized by
+// kana::isARowCodepoint, which also carries だ/ざ/は/ぱ/や — none of which are
+// Godan mizenkei endings.
 // In particular だ (copula) and は must NOT match here, so this cannot be
 // replaced by the kana::isARowCodepoint predicate the way endsWithORow uses
 // isORowCodepoint. The curated list is the source of truth for this grammar.
@@ -164,7 +163,7 @@ bool endsWithARow(std::string_view stem) {
 }
 
 // O-row (お段) ending: the mizenkei a Godan verb takes before volitional う.
-// Shares the single kana::kORow source of truth via the codepoint predicate.
+// Shares the kana::isORowCodepoint source of truth.
 bool endsWithORow(std::string_view stem) {
   char32_t cp = utf8::decodeLastChar(stem);
   return cp != 0 && kana::isORowCodepoint(cp);

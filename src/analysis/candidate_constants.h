@@ -19,6 +19,17 @@
 
 namespace suzume::analysis::candidate {
 
+/**
+ * @brief Candidate cost discounted by inflection confidence.
+ *
+ * Shared by verb and adjective generators so the scoring shape remains
+ * consistent: a confidence of 1.0 keeps the base cost, and lower confidence
+ * adds up to @p scale.
+ */
+[[nodiscard]] constexpr float confidenceScaledCost(float base, float confidence, float scale) noexcept {
+  return base + (1.0F - confidence) * scale;
+}
+
 // =============================================================================
 // Join Candidate Constants (join_candidates.cpp)
 // =============================================================================
@@ -100,6 +111,17 @@ constexpr float kCounterRelationSplitBonus = -1.2F;
 // noun so connection scoring can distinguish it from an ordinary single-kanji
 // noun in front of a hiragana verb (三時間|半|かかった).
 constexpr float kCounterHalfSuffixCost = 0.0F;
+
+// Quantity + object-counter split bonus (三名|参加, 二台|故障, 五冊|注文)
+// A numeral + discrete-object counter followed by an independent two-kanji noun
+// is a compositional quantity phrase, but the whole run is otherwise emitted as
+// one kanji_seq unknown word (三名参加) that beats the two-token split on total
+// cost. This discounts the counter-phrase token enough for the split path to
+// win; the trailing noun keeps its ordinary kanji_seq cost. Applied only under
+// the structural gates in generateCounterCandidates (single object counter,
+// exactly two trailing kanji, non-reduplicated), so it cannot shatter lexical
+// compounds.
+constexpr float kCounterNounSplitBonus = -1.2F;
 
 // Noun + Verb split bonus
 // E.g., 勉強+する, 説明+する

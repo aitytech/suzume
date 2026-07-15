@@ -14,13 +14,13 @@ struct ParsedLine {
   std::string error;
 };
 
-std::string trimAsciiWhitespace(std::string field) {
+std::string trimAsciiWhitespace(std::string_view field) {
   size_t field_start = field.find_first_not_of(" \t");
   size_t field_end = field.find_last_not_of(" \t");
   if (field_start == std::string::npos) {
     return "";
   }
-  return field.substr(field_start, field_end - field_start + 1);
+  return std::string(field.substr(field_start, field_end - field_start + 1));
 }
 
 bool isAsciiWhitespace(char chr) {

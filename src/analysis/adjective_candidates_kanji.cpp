@@ -419,8 +419,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
 
         // Lower base cost (0.2F) to beat verb candidates after POS prior adjustment
         // ADJ prior (0.3) is higher than VERB prior (0.2), so we need lower edge cost
-        float cost = adj_detail::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
-                                                      candidate::kKanjiAdjConfScale);
+        float cost = candidate::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
+                                                     candidate::kKanjiAdjConfScale);
         // Penalty for non-dictionary i-adjective nominalization (さ ending)
         // This prevents false positives like 勉強さ (from non-existent 勉強い)
         // from beating suru-verb split path (勉強 + さ + れる)
@@ -645,8 +645,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
             const auto& all_cands = inflection.analyze(surface);
             for (const auto& ic : all_cands) {
               if (ic.confidence >= candidate::kCompoundAdjConfMin && ic.verb_type == grammar::VerbType::IAdjective) {
-                float cost = adj_detail::confidenceScaledCost(candidate::kCompoundAdjBaseCost, ic.confidence,
-                                                              candidate::kKanjiAdjConfScale);
+                float cost = candidate::confidenceScaledCost(candidate::kCompoundAdjBaseCost, ic.confidence,
+                                                             candidate::kKanjiAdjConfScale);
                 SUZUME_DEBUG_LOG_VERBOSE("[ADJ_COMPOUND] \"" << surface << "\" cost=" << cost
                                                              << " conf=" << ic.confidence << "\n");
                 auto adj_cand = makeIAdjCandidate(surface, start_pos, end_pos, ic.base_form, cost,

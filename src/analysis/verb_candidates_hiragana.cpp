@@ -1428,7 +1428,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       }
 
       // Lower cost for higher confidence matches
-      float base_cost = verb_opts.base_cost_high + (1.0F - best.confidence) * verb_opts.confidence_cost_scale;
+      float base_cost =
+          candidate::confidenceScaledCost(verb_opts.base_cost_high, best.confidence, verb_opts.confidence_cost_scale);
 
       // Give significant bonus for dictionary-verified hiragana verbs
       // This helps them beat the particle+adj+particle split path
@@ -1476,7 +1477,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       }
 
       if (is_dictionary_verb && (candidate_len >= 5 || is_conditional || is_teoku_contraction)) {
-        base_cost = verb_opts.base_cost_verified + (1.0F - best.confidence) * verb_opts.confidence_cost_scale_medium;
+        base_cost = candidate::confidenceScaledCost(verb_opts.base_cost_verified, best.confidence,
+                                                    verb_opts.confidence_cost_scale_medium);
       } else if (is_short_te_form) {
         // Short te-form with high confidence: give strong bonus to beat particle splits
         // e.g., ねて (conf=0.79) should beat ね(PARTICLE) + て(PARTICLE)
@@ -1499,19 +1501,22 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         if (has_1char_verb_in_dict) {
           // Prefer split path (で+て) over combined (でて) when verb is in dictionary
           // Use moderate cost that can be beaten by 1-char renyokei candidate
-          base_cost = verb_opts.base_cost_low + (1.0F - best.confidence) * verb_opts.confidence_cost_scale_small;
+          base_cost = candidate::confidenceScaledCost(verb_opts.base_cost_low, best.confidence,
+                                                      verb_opts.confidence_cost_scale_small);
         } else if (starts_with_common_particle) {
           // Extra strong bonus: need to beat particle paths around -0.5
-          base_cost = verb_opts.bonus_long_verified + (1.0F - best.confidence) * verb_opts.confidence_cost_scale_small;
+          base_cost = candidate::confidenceScaledCost(verb_opts.bonus_long_verified, best.confidence,
+                                                      verb_opts.confidence_cost_scale_small);
         } else {
-          base_cost = verb_opts.bonus_long_dict + (1.0F - best.confidence) * verb_opts.confidence_cost_scale_small;
+          base_cost = candidate::confidenceScaledCost(verb_opts.bonus_long_dict, best.confidence,
+                                                      verb_opts.confidence_cost_scale_small);
         }
       } else if (is_medium_past_form) {
         // Medium-length past form verbs (3-4 chars ending with た/だ)
         // e.g., つかれた (conf=0.43) should beat つ+か+れた split
         // Give bonus to compete with particle splits
-        base_cost =
-            verb_opts.confidence_cost_scale_medium + (1.0F - best.confidence) * verb_opts.confidence_cost_scale_medium;
+        base_cost = candidate::confidenceScaledCost(verb_opts.confidence_cost_scale_medium, best.confidence,
+                                                    verb_opts.confidence_cost_scale_medium);
       } else if (looks_like_ichidan_dict_form) {
         // Ichidan dictionary form (e-row stem + る)
         // e.g., たべる (conf=0.39), しらべる, つかれる
@@ -1520,9 +1525,11 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         bool starts_with_aux_like_char = (first_char == U'た' || first_char == U'で' || first_char == U'に');
         if (starts_with_aux_like_char) {
           // Extra bonus: need to beat た(AUX) + べる(AUX) split
-          base_cost = verb_opts.base_cost_verified + (1.0F - best.confidence) * verb_opts.confidence_cost_scale_medium;
+          base_cost = candidate::confidenceScaledCost(verb_opts.base_cost_verified, best.confidence,
+                                                      verb_opts.confidence_cost_scale_medium);
         } else {
-          base_cost = verb_opts.base_cost_low + (1.0F - best.confidence) * verb_opts.confidence_cost_scale_medium;
+          base_cost = candidate::confidenceScaledCost(verb_opts.base_cost_low, best.confidence,
+                                                      verb_opts.confidence_cost_scale_medium);
         }
       } else if (candidate_len >= 7 && best.confidence >= verb_opts.confidence_very_high) {
         // For long hiragana verb forms (7+ chars) with high confidence,
@@ -1540,11 +1547,11 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         if (starts_with_particle_char) {
           // Extra strong bonus for forms starting with particle-like char
           // e.g., かけられなくなった should strongly beat か + けられなくなった
-          base_cost =
-              verb_opts.base_cost_long_verified + (1.0F - best.confidence) * verb_opts.confidence_cost_scale_small;
+          base_cost = candidate::confidenceScaledCost(verb_opts.base_cost_long_verified, best.confidence,
+                                                      verb_opts.confidence_cost_scale_small);
         } else {
-          base_cost = verb_opts.confidence_cost_scale_medium +
-                      (1.0F - best.confidence) * verb_opts.confidence_cost_scale_medium;
+          base_cost = candidate::confidenceScaledCost(verb_opts.confidence_cost_scale_medium, best.confidence,
+                                                      verb_opts.confidence_cost_scale_medium);
         }
       }
 

@@ -20,6 +20,31 @@
 
 namespace suzume::analysis {
 
+namespace {
+
+// Discrete-object counter kanji whose numeral+counter phrase is a pure quantity
+// (三名, 二台, 五冊, 三箱) and never heads a lexical compound. Deliberately
+// narrower than normalize::isCounterKanji: measure/rank/event counters (段, 本,
+// 枚, 件, 頭, 級, …) head four-character lexical nouns (五段活用, 一本調子,
+// 一枚看板, 一件落着, 三頭政治) and must keep merging with what follows.
+bool isObjectCounterKanji(char32_t code_point) {
+  switch (code_point) {
+    case U'人':
+    case U'名':
+    case U'台':
+    case U'冊':
+    case U'箱':
+    case U'袋':
+    case U'匹':
+    case U'個':
+      return true;
+    default:
+      return false;
+  }
+}
+
+}  // namespace
+
 std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                         const std::vector<normalize::CharType>& char_types) {
   std::vector<UnknownCandidate> candidates;
@@ -103,6 +128,55 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
           half_cand.pattern = "counter_half_suffix";
 #endif
           candidates.push_back(half_cand);
+        }
+      }
+    }
+  }
+
+  // Quantity + object counter + independent kanji noun: a numeral+counter phrase
+  // followed by exactly two more kanji is compositional (三名|参加, 二台|故障,
+  // 五冊|注文) — the counter phrase is a search-unit boundary. The whole run is
+  // otherwise emitted as one kanji_seq token that beats the split on total cost,
+  // so a discounted duplicate of the counter phrase lets the split path win.
+  // Structural gates keep lexical wholes intact:
+  //   - discrete-object counters only (isObjectCounterKanji above); measure/rank
+  //     counters head lexical compounds and never fire here
+  //   - exactly two trailing kanji ending the run: one trailing kanji is a
+  //     lexical suffix compound (一人前, 一年生, 二階建て), three or more a
+  //     longer lexical term (三人称単数, 二世帯住宅)
+  //   - a numeral/quantity kanji heading the trailing pair marks a reduplicated
+  //     idiom (十人十色, 一日千秋) and blocks the split
+  {
+    size_t scan = start_pos;
+    bool has_quantity = false;
+    if (normalize::isQuantityPrefixKanji(codepoints[scan])) {
+      ++scan;
+      has_quantity = true;
+    }
+    while (scan < codepoints.size() && normalize::isNumeralCodepoint(codepoints[scan])) {
+      ++scan;
+      has_quantity = true;
+    }
+    if (has_quantity && scan < codepoints.size() && isObjectCounterKanji(codepoints[scan])) {
+      size_t counter_end = scan + 1;
+      bool trailing_two_kanji = counter_end + 1 < char_types.size() &&
+                                char_types[counter_end] == normalize::CharType::Kanji &&
+                                char_types[counter_end + 1] == normalize::CharType::Kanji;
+      bool run_ends_after_pair =
+          counter_end + 2 >= char_types.size() || char_types[counter_end + 2] != normalize::CharType::Kanji;
+      bool trailing_is_reduplication =
+          trailing_two_kanji && (normalize::isNumeralCodepoint(codepoints[counter_end]) ||
+                                 normalize::isQuantityPrefixKanji(codepoints[counter_end]));
+      if (trailing_two_kanji && run_ends_after_pair && !trailing_is_reduplication) {
+        std::string surface = extractSubstring(codepoints, start_pos, counter_end);
+        if (!surface.empty()) {
+          auto cand = makeCandidate(surface, start_pos, counter_end, core::PartOfSpeech::Noun,
+                                    candidate::kCounterNounSplitBonus, false, CandidateOrigin::Counter);
+          cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+          cand.pattern = "counter_object_split";
+#endif
+          candidates.push_back(cand);
         }
       }
     }

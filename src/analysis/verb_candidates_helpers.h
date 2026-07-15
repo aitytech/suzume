@@ -331,8 +331,8 @@ const std::vector<std::pair<grammar::VerbType, std::string_view>>& getGodanTypes
  */
 struct GodanOnbinDictMatch {
   grammar::VerbType verb_type = grammar::VerbType::Unknown;
-  std::string base_form;              // stem + base_suffix
-  std::string_view base_suffix = "";  // the matched suffix from the table
+  std::string base_form;         // stem + base_suffix
+  std::string_view base_suffix;  // the matched suffix from the table
   bool matched = false;
 };
 

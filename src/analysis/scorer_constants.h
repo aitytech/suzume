@@ -128,7 +128,7 @@ constexpr const char* kSuffixSou = "そう";  // conjecture/hearsay
 // Te-form + auxiliary patterns for verb candidate penalty (17 patterns)
 // Used in: verb_candidates_helpers.cpp (containsTeFormAuxPattern)
 // Excludes てある/である/ておる/でおる/ていく/でいく/であげ (rare in compound verbs)
-constexpr const char* kTeFormAuxPenaltyPatterns[] = {
+constexpr std::string_view kTeFormAuxPenaltyPatterns[] = {
     "てくる",
     "でくる",
     "てくれ",
@@ -150,18 +150,14 @@ constexpr const char* kTeFormAuxPenaltyPatterns[] = {
     // Note: でき is NOT included — it conflicts with できる (suru potential form)
     "てき",
 };
-constexpr size_t kTeFormAuxPenaltyPatternsSize =
-    sizeof(kTeFormAuxPenaltyPatterns) / sizeof(kTeFormAuxPenaltyPatterns[0]);
 
 // Causative auxiliary patterns for verb candidate penalty
 // Used in: verb_candidates_helpers.cpp (containsCausativeAuxPattern)
 // Pattern: verb mizenkei + せ/させ + auxiliary (ない/て/た/ず/る/ろ/よ/なく)
-constexpr const char* kCausativeAuxPenaltyPatterns[] = {
+constexpr std::string_view kCausativeAuxPenaltyPatterns[] = {
     "せない",   "せなく",   "せなかっ", "せて",   "せた",   "せず",   "せる",   "せろ",   "せよ",
     "させない", "させなく", "させて",   "させた", "させず", "させる", "させろ", "させよ",
 };
-constexpr size_t kCausativeAuxPenaltyPatternsSize =
-    sizeof(kCausativeAuxPenaltyPatterns) / sizeof(kCausativeAuxPenaltyPatterns[0]);
 
 // I-adjective conjugation suffixes (standalone, not verb candidates)
 // These patterns are conjugation endings for i-adjectives:
