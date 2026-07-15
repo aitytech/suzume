@@ -880,14 +880,14 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
       std::string stem = extractSubstring(codepoints, start_pos, hira_end - 1);
       size_t stem_hira_len = hira_len - 1;
 
-      // Check for やか/らか/か patterns
+      // Check for やか/らか patterns (productive OOV derivation).
+      // Bare single-か na-adjectives (静か/豊か/厳か等) are a closed lexical class served
+      // by L2, NOT emitted here: the bare-か branch also fired on the 終助詞 かな after a
+      // noun (東京かな → 東|京か|な, 犬かな → 犬|か|な broke likewise).
       bool is_yaka_pattern = false;
       if (stem_hira_len >= 2) {
         std::string stem_suffix = extractSubstring(codepoints, kanji_end, hira_end - 1);
-        is_yaka_pattern = utf8::equalsAny(stem_suffix, {"やか", "らか", "か"});
-      } else if (stem_hira_len == 1) {
-        // Single か (e.g., 豊か, 静か)
-        is_yaka_pattern = (codepoints[kanji_end] == U'か');
+        is_yaka_pattern = utf8::equalsAny(stem_suffix, {"やか", "らか"});
       }
 
       if (is_yaka_pattern) {

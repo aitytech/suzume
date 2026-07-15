@@ -1365,6 +1365,28 @@
         "na-adjective",
         "modifier"
       ]
+    },
+    {
+      "description": "厳かな式 - auto-generated",
+      "expected": [
+        {
+          "lemma": "厳か",
+          "pos": "Adjective",
+          "surface": "厳か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "式",
+          "pos": "Noun",
+          "surface": "式"
+        }
+      ],
+      "id": "kana",
+      "input": "厳かな式"
     }
   ],
   "description": "Na-adjectives (ナ形容詞)",
