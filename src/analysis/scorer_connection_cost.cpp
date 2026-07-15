@@ -608,12 +608,16 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kAlmostNever;
   }
 
-  // Penalty for NOUN/PRONOUN → だけど (CONJ) pattern
-  // MeCab splits "彼女だけどいいね" as 彼女+だ+けど+いい+ね
-  // だけど as conjunction is valid at sentence start or after particles,
-  // but after nouns/pronouns, it should be だ(AUX) + けど(PART)
-  if ((prev.pos == core::PartOfSpeech::Noun || prev.pos == core::PartOfSpeech::Pronoun) && next.surface == "だけど" &&
-      next.extended_pos == core::ExtendedPOS::Conjunction) {
+  // Penalty for predicate → copula-compound conjunction (だから/だけど/だが/…) pattern
+  // These conjunctions are the copula だ fused with a particle (から/けど/が). They are
+  // valid at a sentence/clause boundary, but after a copula-taking predicate (noun,
+  // pronoun, adverb, na-adjective stem, or 様態 そう) they must split as だ(AUX) + PART:
+  // 彼女だけど → 彼女+だ+けど, 静かだから → 静か+だ+から, 危なそうだから → 危な+そう+だ+から.
+  // Keyed on the だ onset rather than each surface so the rule generalizes across the set.
+  if (next.extended_pos == core::ExtendedPOS::Conjunction && utf8::startsWith(next.surface, "だ") &&
+      (prev.pos == core::PartOfSpeech::Noun || prev.pos == core::PartOfSpeech::Pronoun ||
+       prev.pos == core::PartOfSpeech::Adverb || prev.pos == core::PartOfSpeech::Adjective ||
+       prev.extended_pos == core::ExtendedPOS::AuxAppearanceSou)) {
     bonus += cost::kAlmostNever;
   }
 
