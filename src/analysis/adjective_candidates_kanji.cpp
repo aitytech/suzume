@@ -223,7 +223,16 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   // This prevents "来てい" from being parsed as an adjective (来ている = verb)
   char32_t first_hiragana = codepoints[kanji_end];
   if (normalize::isNeverAdjectiveStemAfterKanji(first_hiragana)) {
-    return candidates;  // These particles follow nouns/verbs, not adjective stems
+    // Exception: medial も in a lexical i-adjective (頼もしい, 好もしい, and their
+    // conjugations 頼もしく/頼もしかっ…). The adjective-forming stem consonant し
+    // immediately follows も; the 係助詞 reading (本もない = 本 + も + ない) never
+    // places し after も, so require it here. する cases that also read も+し
+    // (見もしない) are dropped downstream by the loop's verb-negative filter.
+    bool medial_mo_adjective = first_hiragana == U'も' && kanji_end == start_pos + 1 &&
+                               kanji_end + 1 < codepoints.size() && codepoints[kanji_end + 1] == U'し';
+    if (!medial_mo_adjective) {
+      return candidates;  // These particles follow nouns/verbs, not adjective stems
+    }
   }
 
   size_t hiragana_end = findCharRegionEnd(char_types, kanji_end, 8, normalize::CharType::Hiragana);
