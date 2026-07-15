@@ -1,0 +1,210 @@
+{
+  "cases": [
+    {
+      "description": "補助形容詞にくい語幹 + さ nominalizer (not に+く+さ)",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "にく",
+          "pos": "Noun",
+          "surface": "にく"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じる"
+        }
+      ],
+      "id": "minikusawo_jiru",
+      "input": "読みにくさを感じる"
+    },
+    {
+      "description": "Hiragana tendency suffix ぎみ (=気味) does not split the noun 風邪",
+      "expected": [
+        {
+          "lemma": "風邪",
+          "pos": "Noun",
+          "surface": "風邪"
+        },
+        {
+          "lemma": "ぎみ",
+          "pos": "Suffix",
+          "surface": "ぎみ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        }
+      ],
+      "id": "gimino_ga_i",
+      "input": "風邪ぎみの人が多い"
+    },
+    {
+      "description": "サ変 遅刻+し+がち, and がち+だ+が copula-compound split",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "遅刻",
+          "pos": "Noun",
+          "surface": "遅刻"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "今日",
+          "pos": "Noun",
+          "surface": "今日"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "元気",
+          "pos": "Adjective",
+          "surface": "元気"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ha_shigachidaga_ha_da",
+      "input": "彼は遅刻しがちだが今日は元気だ"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "大事 形状詞 POS Noun vs Adjective is a pre-existing na-adjectival-noun limitation; the やすさ surface is correct"
+      },
+      "description": "補助形容詞やすい語幹 + さ nominalizer (not や+す+さ)",
+      "expected": [
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使い"
+        },
+        {
+          "lemma": "やすい",
+          "pos": "Adjective",
+          "surface": "やす"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "大事",
+          "pos": "Adjective",
+          "surface": "大事"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "iyasusaga_da",
+      "input": "使いやすさが大事だ",
+      "suzume_expected": [
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使い"
+        },
+        {
+          "lemma": "やすい",
+          "pos": "Adjective",
+          "surface": "やす"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "大事",
+          "pos": "Noun",
+          "surface": "大事"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ]
+    }
+  ],
+  "description": "suffix_general tests",
+  "version": "1.0"
+}

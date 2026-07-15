@@ -627,11 +627,16 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // These conjunctions are the copula だ fused with a particle (から/けど/が). They are
   // valid at a sentence/clause boundary, but after a copula-taking predicate (noun,
   // pronoun, adverb, na-adjective stem, or 様態 そう) they must split as だ(AUX) + PART:
-  // 彼女だけど → 彼女+だ+けど, 静かだから → 静か+だ+から, 危なそうだから → 危な+そう+だ+から.
+  // 彼女だけど → 彼女+だ+けど, 静かだから → 静か+だ+から, 危なそうだから → 危な+そう+だ+から,
+  // 遅刻しがちだが → がち(SUFFIX)+だ+が (nominal suffixes take the copula too).
   // Keyed on the だ onset rather than each surface so the rule generalizes across the set.
+  // Other (unknown noun-like blobs) is included so the copula still splits when a
+  // nominal suffix is demoted to Other in the presence of the fused conjunction:
+  // がち would otherwise drop to Other purely to dodge this penalty (遅刻しがちだが).
   if (next.extended_pos == core::ExtendedPOS::Conjunction && utf8::startsWith(next.surface, "だ") &&
       (prev.pos == core::PartOfSpeech::Noun || prev.pos == core::PartOfSpeech::Pronoun ||
        prev.pos == core::PartOfSpeech::Adverb || prev.pos == core::PartOfSpeech::Adjective ||
+       prev.pos == core::PartOfSpeech::Suffix || prev.pos == core::PartOfSpeech::Other ||
        prev.extended_pos == core::ExtendedPOS::AuxAppearanceSou)) {
     bonus += cost::kAlmostNever;
   }

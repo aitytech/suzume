@@ -93,6 +93,21 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       }
     }
   }
+  // A kanji+し token that is NOT a genuine deverbal noun (last kanji + す ∉ dict)
+  // is a sahen renyokei that must split off, not a nominalized noun. Apply this
+  // only to a multi-kanji stem (遅刻し→遅刻+し, 遅刻す∉dict) or a fragment starting
+  // mid kanji-run (刻し inside 遅刻し, 刻す∉dict); a standalone single kanji + し is
+  // left alone so the classical adjective-stem nominalization stays a noun
+  // (寒し, 美し — both 寒す/美す ∉ dict). Deverbal compounds keep the noun reading
+  // regardless of position (丸出し→出す, 手渡し→渡す, 年越し→越す, 話し→話す).
+  const bool preceded_by_kanji = start_pos > 0 && char_types[start_pos - 1] == normalize::CharType::Kanji;
+  if (first_hiragana == U'し' && dict_manager != nullptr && (kanji_count >= 2 || preceded_by_kanji)) {
+    std::string_view base_ending = grammar::godanBaseSuffixFromIRow(first_hiragana);
+    std::string verb_base = normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending);
+    if (!verb_helpers::isVerbInDictionary(dict_manager, verb_base)) {
+      return candidates;
+    }
+  }
 
   // Check for 1 or 2 hiragana (e.g., け or 上げ)
   size_t hiragana_end = kanji_end + 1;

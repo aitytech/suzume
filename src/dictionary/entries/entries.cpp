@@ -477,6 +477,10 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       // MeCab: 傷だらけ → 傷 + だらけ (noun + suffix)
       suffix("だらけ", "だらけ"),
 
+      // Tendency suffix ぎみ — hiragana spelling of 気味 (風邪ぎみ, 緊張ぎみ, 疲れぎみ)
+      // MeCab: 風邪ぎみ → 風邪 + ぎみ (noun + suffix)
+      suffix("ぎみ", "ぎみ"),
+
       // Verb renyokei suffix っぱなし (出しっぱなし, 置きっぱなし)
       // MeCab: 出しっぱなし → 出し + っぱなし (verb renyokei + suffix)
       suffix("っぱなし", "っぱなし"),
@@ -489,6 +493,11 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       adj("やすい", "やすい", EPOS::AdjBasic),
       adj("やすく", "やすい", EPOS::AdjRenyokei),
       adj("やすかっ", "やすい", EPOS::AdjKatt),
+      // Stem form (語幹/ガル接続) for さ-nominalization, mirroring よ/な stems:
+      // MeCab: 使いやすさ → 使い + やす(語幹) + さ. Only やす needs this — にく already
+      // has a NOUN reading (肉/にく) in the dictionary that carries 読みにくさ, whereas
+      // no やす noun exists, so 読みやすさ would otherwise fragment into や+す+さ.
+      adj("やす", "やすい", EPOS::AdjStem),
 
       // Adjective suffix っぽい (～っぽい: 子供っぽい, 忘れっぽい)
       // MeCab: 子供っぽい → 子供 + っぽい
