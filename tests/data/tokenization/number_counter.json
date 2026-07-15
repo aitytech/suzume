@@ -183,6 +183,82 @@
       ],
       "id": "kakaru",
       "input": "一ヶ月半かかる"
+    },
+    {
+      "description": "三名参加した - auto-generated",
+      "expected": [
+        {
+          "lemma": "三名",
+          "pos": "Noun",
+          "surface": "三名"
+        },
+        {
+          "lemma": "参加",
+          "pos": "Noun",
+          "surface": "参加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shita",
+      "input": "三名参加した"
+    },
+    {
+      "description": "五冊注文する - auto-generated",
+      "expected": [
+        {
+          "lemma": "五冊",
+          "pos": "Noun",
+          "surface": "五冊"
+        },
+        {
+          "lemma": "注文",
+          "pos": "Noun",
+          "surface": "注文"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru",
+      "input": "五冊注文する"
+    },
+    {
+      "description": "二台故障した - auto-generated",
+      "expected": [
+        {
+          "lemma": "二台",
+          "pos": "Noun",
+          "surface": "二台"
+        },
+        {
+          "lemma": "故障",
+          "pos": "Noun",
+          "surface": "故障"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shita_2",
+      "input": "二台故障した"
     }
   ],
   "description": "number_counter tests",
