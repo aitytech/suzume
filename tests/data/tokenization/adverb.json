@@ -724,6 +724,82 @@
       ],
       "id": "jimejime_shita",
       "input": "じめじめした"
+    },
+    {
+      "description": "こんなに難しいとは - auto-generated",
+      "expected": [
+        {
+          "lemma": "こんなに",
+          "pos": "Adverb",
+          "surface": "こんなに"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        }
+      ],
+      "id": "konnani_shiitoha",
+      "input": "こんなに難しいとは"
+    },
+    {
+      "description": "そんなに簡単じゃない - auto-generated",
+      "expected": [
+        {
+          "lemma": "そんなに",
+          "pos": "Adverb",
+          "surface": "そんなに"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "じゃ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "sonnani_ji_nai",
+      "input": "そんなに簡単じゃない"
+    },
+    {
+      "description": "あんなに頑張った - auto-generated",
+      "expected": [
+        {
+          "lemma": "あんなに",
+          "pos": "Adverb",
+          "surface": "あんなに"
+        },
+        {
+          "lemma": "頑張る",
+          "pos": "Verb",
+          "surface": "頑張っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "annani_ttta",
+      "input": "あんなに頑張った"
     }
   ],
   "description": "adverb tests",
