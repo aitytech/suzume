@@ -62,6 +62,106 @@
           "surface": "おかしい"
         }
       ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "様態そう is grammar-first tagged Auxiliary (documented intentional divergence from MeCab's Adjective). Surface split 危な|そう|だ|から is correct."
+      },
+      "description": "危なそうだから逃げた - auto-generated",
+      "expected": [
+        {
+          "lemma": "危ない",
+          "pos": "Adjective",
+          "surface": "危な"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "逃げる",
+          "pos": "Verb",
+          "surface": "逃げ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nasoudakara_geta",
+      "input": "危なそうだから逃げた",
+      "suzume_expected": [
+        {
+          "lemma": "危ない",
+          "pos": "Adjective",
+          "surface": "危な"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Auxiliary",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "逃げる",
+          "pos": "Verb",
+          "surface": "逃げ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
+    },
+    {
+      "description": "静かだから寝る - auto-generated",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "寝る",
+          "pos": "Verb",
+          "surface": "寝る"
+        }
+      ],
+      "id": "kadakara_ru",
+      "input": "静かだから寝る"
     }
   ],
   "description": "particle_conj tests",
