@@ -10,6 +10,7 @@
 #include "analysis/candidate_constants.h"
 #include "analysis/scorer_constants.h"
 #include "core/debug.h"
+#include "core/kana_constants.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/patterns.h"
@@ -217,6 +218,13 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   // Unlike other particles (は, か, わ, etc.) that can start valid adjectives,
   // を is exclusively an object marker and never begins a Japanese adjective
   if (first_char == U'を') {
+    return candidates;
+  }
+
+  // Skip if starting with a small kana (拗音・促音: ゃ/ゅ/ょ/っ/ぁ…). No Japanese
+  // word starts with a small kana, so an adjective candidate here would cut
+  // through the preceding digraph.
+  if (kana::isSmallKanaCodepoint(first_char)) {
     return candidates;
   }
 

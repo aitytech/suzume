@@ -14,6 +14,7 @@
 #include "analysis/scorer_constants.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "core/debug.h"
+#include "core/kana_constants.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
@@ -855,10 +856,19 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   // Context-gated irregular 来る mizenkei: こ + ない-family negative
   appendKuruMizenkeiNaiCandidates(codepoints, start_pos, candidates);
 
+  // Skip if starting with a small kana (拗音・促音: ゃ/ゅ/ょ/っ/ぁ…). No Japanese
+  // word starts with a small kana — it always continues the preceding digraph, so
+  // any candidate here would cut through it. E.g., おっしゃい must not spawn a
+  // fragment verb ゃい (fabricated godan-wa ゃう).
+  char32_t first_char = codepoints[start_pos];
+  if (kana::isSmallKanaCodepoint(first_char)) {
+    SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " small_kana_start (impossible word start)\n");
+    return candidates;
+  }
+
   // Skip if starting character is a particle that is NEVER a verb stem
   // Note: Characters that CAN be verb stems are NOT skipped:
   //   - な→なる/なくす, て→できる, や→やる, か→かける/かえる
-  char32_t first_char = codepoints[start_pos];
   if (normalize::isNeverVerbStemAtStart(first_char)) {
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_BLACKLIST] pos=" << start_pos << " char=U+" << std::hex
                                                      << static_cast<uint32_t>(first_char) << std::dec
@@ -1702,15 +1712,10 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       continue;
     }
 
-    // Construct stem and base form
+    // Construct stem and base form. Small-kana starts (っぱいし, ゃい, …) are
+    // already rejected by the function-entry guard.
     std::string stem_surface = extractSubstring(codepoints, start_pos, end_pos);
     std::string base_form = stem_surface + "る";
-
-    // Skip stems starting with っ (sokuon) - no Japanese verb stem begins with っ
-    // E.g., しっぱいしている → っぱいし should not be a verb candidate
-    if (codepoints[start_pos] == U'っ') {
-      continue;
-    }
 
     // Use inflection analysis to validate - check if stem is recognized as ichidan
     const auto& stem_analysis = inflection.analyze(stem_surface);
