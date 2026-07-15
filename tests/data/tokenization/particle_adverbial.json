@@ -53,6 +53,72 @@
       ],
       "id": "zutsu_ttta",
       "input": "三個ずつ配った"
+    },
+    {
+      "description": "やるしかない - auto-generated",
+      "expected": [
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やる"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "yarushikanai",
+      "input": "やるしかない"
+    },
+    {
+      "description": "みるしかない - auto-generated",
+      "expected": [
+        {
+          "lemma": "みる",
+          "pos": "Verb",
+          "surface": "みる"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "mirushikanai",
+      "input": "みるしかない"
+    },
+    {
+      "description": "いるしかない - auto-generated",
+      "expected": [
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "いる"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "irushikanai",
+      "input": "いるしかない"
     }
   ],
   "description": "particle_adverbial tests",

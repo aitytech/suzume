@@ -92,6 +92,52 @@ bool hasFormalNounPrefixBoundary(const dictionary::DictionaryManager* dict_manag
   return false;
 }
 
+// True when an unverified hiragana mizenkei surface is really [verb] + [adverbial
+// particle] rather than a single verb. しか is a 副助詞 and there is no godan verb
+// 〜しく, so みるしか / やるしか must split as verb + しか, never be fabricated as the
+// 未然形 of the non-word 〜しく (which would then absorb しか and connect cheaply to
+// ない). The suffix is matched against ParticleAdverbial only (しか/とか) so that
+// case/final particles that legitimately follow a real mizenkei are never swept
+// up. A single-mora prefix (る in るしか) is a bare verb-ending fragment, never a
+// word, so the whole candidate is garbage; a longer prefix must itself be a verb.
+bool endsWithParticleAfterVerb(const dictionary::DictionaryManager* dict_manager, const grammar::Inflection& inflection,
+                               const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos <= start_pos) {
+    return false;
+  }
+  const size_t total_len = end_pos - start_pos;
+  if (total_len < 3) {  // need a 1+ char prefix and a 2+ char particle suffix
+    return false;
+  }
+  for (size_t prefix_len = 1; prefix_len + 2 <= total_len; ++prefix_len) {
+    size_t split = start_pos + prefix_len;
+    std::string suffix = extractSubstring(codepoints, split, end_pos);
+    const dictionary::DictionaryEntry* suffix_entry = dict_manager->lookupExact(suffix);
+    if (suffix_entry == nullptr || suffix_entry->extended_pos != core::ExtendedPOS::ParticleAdverbial) {
+      continue;
+    }
+    if (prefix_len == 1) {
+      return true;
+    }
+    // Probe the prefix for a verb. Strip a leading te-form particle first, since
+    // て/で + verb + しか (てみるしか = て + みる + しか) is a subsidiary-verb
+    // sequence whose verb sits after て.
+    size_t probe_start = start_pos;
+    if (codepoints[start_pos] == U'て' || codepoints[start_pos] == U'で') {
+      probe_start = start_pos + 1;
+    }
+    std::string probe = extractSubstring(codepoints, probe_start, split);
+    if (vh::isVerbInDictionary(dict_manager, probe)) {
+      return true;
+    }
+    const auto& analysis = inflection.analyze(probe);
+    if (!analysis.empty() && analysis[0].verb_type != grammar::VerbType::Unknown && analysis[0].confidence >= 0.5F) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // True when a pronoun word ends exactly at @p pos (誰/何/だれ/なに/どこ/いつ …).
 // A following か is then the particle か (誰か + いる), never the 2nd mora of a
 // godan-wa verb stem, so a か…renyokei candidate at @p pos must be discouraged.
@@ -424,6 +470,11 @@ void appendMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t
       is_valid_verb = is_in_dict;
     }
     if (verb_type == grammar::VerbType::GodanSa && !is_in_dict && grammar::isPureHiragana(stem)) {
+      continue;
+    }
+    // Reject a fabricated mizenkei that merely absorbs a trailing adverbial
+    // particle (みるしか / やるしか = verb + しか, never the 未然形 of a non-word).
+    if (!is_in_dict && endsWithParticleAfterVerb(dict_manager, inflection, codepoints, start_pos, mizenkei_end)) {
       continue;
     }
 
