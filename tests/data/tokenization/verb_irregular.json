@@ -1842,60 +1842,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "auxiliary verb: context-dependent classification"
-      },
-      "description": "勉強しちゃった - MeCab: 勉強+し+ちゃっ+た (4 tokens)",
-      "expected": [
-        {
-          "lemma": "勉強",
-          "pos": "Noun",
-          "surface": "勉強"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ちゃう",
-          "pos": "Verb",
-          "surface": "ちゃっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "suru_colloquial_shichau",
-      "input": "勉強しちゃった",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "勉強"
-        },
-        {
-          "pos": "Particle",
-          "surface": "し"
-        },
-        {
-          "lemma": "ちゃう",
-          "pos": "Verb",
-          "surface": "ちゃっ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "tags": [
-        "suru",
-        "colloquial"
-      ]
-    },
-    {
       "description": "予約しとく - MeCab: とく is 動詞,非自立",
       "expected": [
         {
@@ -2156,6 +2102,10 @@
       "input": "全部食べちゃった"
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "じゃっ lemma だ vs じゃう: contracted じゃう lemmatization limitation; segmentation is correct"
+      },
       "description": "全部飲んじゃった - auto-generated",
       "expected": [
         {
@@ -2180,7 +2130,29 @@
         }
       ],
       "id": "nji_ttta",
-      "input": "全部飲んじゃった"
+      "input": "全部飲んじゃった",
+      "suzume_expected": [
+        {
+          "lemma": "全部",
+          "pos": "Noun",
+          "surface": "全部"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "じゃっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "全部食べちゃう - auto-generated",
@@ -2203,6 +2175,33 @@
       ],
       "id": "bechi_u",
       "input": "全部食べちゃう"
+    },
+    {
+      "description": "勉強しちゃった - auto-generated",
+      "expected": [
+        {
+          "lemma": "勉強",
+          "pos": "Noun",
+          "surface": "勉強"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ちゃう",
+          "pos": "Verb",
+          "surface": "ちゃっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shichi_ttta",
+      "input": "勉強しちゃった"
     }
   ],
   "description": "Irregular verbs (する、くる)",

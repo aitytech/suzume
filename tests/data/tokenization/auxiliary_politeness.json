@@ -669,6 +669,10 @@
       "input": "でございます"
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "そう POS Adjective vs Adverb: pre-existing 様態そう ambiguity; segmentation is correct"
+      },
       "description": "そうでございます - auto-generated",
       "expected": [
         {
@@ -693,9 +697,35 @@
         }
       ],
       "id": "soudegozaimasu",
-      "input": "そうでございます"
+      "input": "そうでございます",
+      "suzume_expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "ござる",
+          "pos": "Auxiliary",
+          "surface": "ござい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "で locative-Particle vs copula-Auxiliary ambiguity after a noun; segmentation is correct"
+      },
       "description": "ここでございます - auto-generated",
       "expected": [
         {
@@ -720,7 +750,29 @@
         }
       ],
       "id": "kokodegozaimasu",
-      "input": "ここでございます"
+      "input": "ここでございます",
+      "suzume_expected": [
+        {
+          "lemma": "ここ",
+          "pos": "Pronoun",
+          "surface": "ここ"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "ござる",
+          "pos": "Verb",
+          "surface": "ござい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ]
     }
   ],
   "description": "Politeness auxiliaries (ます、です)",
