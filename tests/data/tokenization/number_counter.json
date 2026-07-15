@@ -85,6 +85,104 @@
       ],
       "id": "reta",
       "input": "数キロ離れた場所"
+    },
+    {
+      "description": "三時間半かかった - auto-generated",
+      "expected": [
+        {
+          "lemma": "三時間",
+          "pos": "Noun",
+          "surface": "三時間"
+        },
+        {
+          "lemma": "半",
+          "pos": "Noun",
+          "surface": "半"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kakattta",
+      "input": "三時間半かかった"
+    },
+    {
+      "description": "五分半かかった - auto-generated",
+      "expected": [
+        {
+          "lemma": "五分",
+          "pos": "Noun",
+          "surface": "五分"
+        },
+        {
+          "lemma": "半",
+          "pos": "Noun",
+          "surface": "半"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kakattta_2",
+      "input": "五分半かかった"
+    },
+    {
+      "description": "三時半に集合 - auto-generated",
+      "expected": [
+        {
+          "lemma": "三時半",
+          "pos": "Noun",
+          "surface": "三時半"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "集合",
+          "pos": "Noun",
+          "surface": "集合"
+        }
+      ],
+      "id": "ni",
+      "input": "三時半に集合"
+    },
+    {
+      "description": "一ヶ月半かかる - auto-generated",
+      "expected": [
+        {
+          "lemma": "一ヶ月",
+          "pos": "Noun",
+          "surface": "一ヶ月"
+        },
+        {
+          "lemma": "半",
+          "pos": "Noun",
+          "surface": "半"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "kakaru",
+      "input": "一ヶ月半かかる"
     }
   ],
   "description": "number_counter tests",

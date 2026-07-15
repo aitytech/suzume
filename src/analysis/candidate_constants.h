@@ -82,6 +82,14 @@ constexpr float kSplitBaseCost = 1.0F;
 // only ever applied when 後/前 follows a temporal counter, so it cannot over-split.
 constexpr float kCounterRelationSplitBonus = -1.2F;
 
+// Counter-quantity 半 suffix token (三時間|半, 五分|半). Zero defers to the
+// NounNumber category cost; the discount that lets the split beat the merged
+// kanji_seq run lives on the left counter token (kCounterRelationSplitBonus).
+// The candidate exists to carry the NounNumber EPOS, marking 半 as a quantity
+// noun so connection scoring can distinguish it from an ordinary single-kanji
+// noun in front of a hiragana verb (三時間|半|かかった).
+constexpr float kCounterHalfSuffixCost = 0.0F;
+
 // Noun + Verb split bonus
 // E.g., 勉強+する, 説明+する
 constexpr float kNounVerbSplitBonus = -1.0F;

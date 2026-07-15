@@ -945,7 +945,10 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Exception: し (suru renyokei) is valid for サ変 pattern (得+し, 得する)
   // Exception: Katakana verbs (バズっ, ググっ) are valid after nouns (超バズった)
   // Exception: Kanji-initial verbs (本+買っ) are valid noun+verb (dropped を)
-  if (prev.pos == core::PartOfSpeech::Noun && normalize::utf8Length(prev.surface) == 1 &&  // Single char
+  // Exception: NounNumber quantity tokens (半 split off a duration-counter run)
+  //            legitimately precede verbs directly (三時間|半|かかった)
+  if (prev.pos == core::PartOfSpeech::Noun && prev.extended_pos != core::ExtendedPOS::NounNumber &&
+      normalize::utf8Length(prev.surface) == 1 &&  // Single char
       next.pos == core::PartOfSpeech::Verb &&
       (next.extended_pos == core::ExtendedPOS::VerbRenyokei || next.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
       next.surface != "し" &&  // Exclude suru renyokei (サ変動詞パターン)

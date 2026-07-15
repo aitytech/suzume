@@ -61,8 +61,22 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
       }
       break;
     }
-    if (has_quantity && scan > counter_start && scan < codepoints.size() &&
-        normalize::isTemporalRelationSuffixKanji(codepoints[scan])) {
+    // A temporal counter run followed by a suffix that is always compositional:
+    //   - 後/前 relation suffix (三日|後, 十年|前)
+    //   - 半 "and a half" (三時間|半, 二年|半, 五分|半, 六ヶ月|半)
+    // The 半 case excludes a run ending in bare 時, which keeps the clock reading
+    // (三時半 = half past three), not a duration-plus-half.
+    bool suffix_is_compositional = false;
+    bool suffix_is_half = false;
+    if (scan < codepoints.size()) {
+      if (normalize::isTemporalRelationSuffixKanji(codepoints[scan])) {
+        suffix_is_compositional = true;
+      } else if (scan > 0 && codepoints[scan] == U'半' && codepoints[scan - 1] != U'時') {
+        suffix_is_compositional = true;
+        suffix_is_half = true;
+      }
+    }
+    if (has_quantity && scan > counter_start && suffix_is_compositional) {
       std::string surface = extractSubstring(codepoints, start_pos, scan);
       if (!surface.empty()) {
         auto cand = makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun,
@@ -72,6 +86,24 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
         cand.pattern = "counter_relation_split";
 #endif
         candidates.push_back(cand);
+      }
+      // Unlike 後/前 (single-kanji dict relation nouns), the split-off 半 only
+      // exists as a generic kanji_seq NOUN, which the single-kanji-noun →
+      // hiragana-verb compound protection penalizes before かかっ/すぎ etc.
+      // Emit it as a NounNumber quantity token so that connection scoring can
+      // recognize it as a legitimate pre-verb quantity (三時間|半|かかった).
+      if (suffix_is_half) {
+        std::string half_surface = extractSubstring(codepoints, scan, scan + 1);
+        if (!half_surface.empty()) {
+          auto half_cand =
+              makeCandidate(half_surface, scan, scan + 1, core::PartOfSpeech::Noun, candidate::kCounterHalfSuffixCost,
+                            false, CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
+          half_cand.lemma = half_surface;
+#ifdef SUZUME_DEBUG_INFO
+          half_cand.pattern = "counter_half_suffix";
+#endif
+          candidates.push_back(half_cand);
+        }
       }
     }
   }
