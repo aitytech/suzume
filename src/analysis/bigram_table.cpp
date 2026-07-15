@@ -244,10 +244,12 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   setCell(t, EPOS::AdjBasic, EPOS::Noun, cost::kModerateBonus);
   setCell(t, EPOS::AdjBasic, EPOS::NounFormal, cost::kModerateBonus);
 
-  // AdjBasic → ParticleNo (少ない+の, 美味しい+の) - minor bonus
-  // Without this, NOUN+ない(AUX)+の path beats adjective+の path
-  // because AuxNeg→ParticleNo has a strong bonus (-0.8)
-  setCell(t, EPOS::AdjBasic, EPOS::ParticleNo, cost::kMinorBonus);
+  // AdjBasic → ParticleNo (少ない+の, 美味しい+の, いいの) - moderate bonus
+  // Without this, NOUN+ない(AUX)+の path beats adjective+の path because
+  // AuxNeg→ParticleNo has a strong bonus (-0.8). The nominalizer の after an
+  // i-adjective 終止形 is extremely common, so keep it ahead of the hira_noun_seq
+  // fallback that otherwise merges のか into one NOUN (いいのか → いい|の|か).
+  setCell(t, EPOS::AdjBasic, EPOS::ParticleNo, cost::kModerateBonus);
 
   // AdjStem → AuxAppearanceSou (美し+そう) - very strong bonus
   // Must beat adverb bonus (-1.0 for 2-char hiragana) to prefer auxiliary
