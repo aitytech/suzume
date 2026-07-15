@@ -115,6 +115,16 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 ns2 = nxt.get("pos_sub2", "")
 
                 is_counter = np == "名詞" and ns1 == "接尾" and ns2 == "助数詞"
+                # The span marker 間 (名詞/接尾/一般) closes a month-counter duration
+                # (三ヶ月+間 → 三ヶ月間), matching the single-token 年間/時間/週間/分間 that
+                # MeCab already emits whole. Without this ヶ月 splits from 間, which then
+                # folds rightward into a following noun (三ヶ月|間勉強 non-word).
+                is_span_kan = (
+                    ns == "間"
+                    and np == "名詞"
+                    and ns1 == "接尾"
+                    and regex.search(r"(?:ヶ月|ケ月|カ月|ヵ月|箇月|か月)$", combined)
+                )
                 is_calendar_month = ns == "月" and regex.match(r"^(?:1[0-2]|[1-9])$", combined)
                 is_katakana_noun = np == "名詞" and regex.match(r"^[\u30A0-\u30FF]+$", ns)
                 is_chuu_suffix = ns == "中" and np == "名詞" and ns1 == "接尾"
@@ -134,6 +144,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 if any(
                     [
                         is_counter,
+                        is_span_kan,
                         is_calendar_month,
                         is_katakana_noun,
                         is_chuu_suffix,

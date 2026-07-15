@@ -132,6 +132,16 @@ constexpr float kCounterNounSplitBonus = -1.2F;
 // numeric-aggregation prefix, and a counter kanji right after the numerals).
 constexpr float kLeadingNounCounterSplitBonus = -1.2F;
 
+// Duration span + following noun split bonus (三年間|勉強, 三ヶ月間|入院, 二時間|睡眠).
+// A numeral-led temporal-counter run closed by the span marker 間 is a complete
+// duration; a kanji noun right after 間 is a separate word. The whole run is otherwise
+// emitted as one kanji_seq unknown word (三年間勉強) that beats the split on total cost.
+// This discounts the duration-phrase token enough for the split to win, keeping the
+// duration as its own search unit. Applied only under the structural gates in
+// generateCounterCandidates (run ends in 間 preceded by a temporal counter, followed by
+// an ordinary kanji noun — not a counter/relation/span suffix or interval member 隔).
+constexpr float kDurationSpanSplitBonus = -1.2F;
+
 // Noun + Verb split bonus
 // E.g., 勉強+する, 説明+する
 constexpr float kNounVerbSplitBonus = -1.0F;

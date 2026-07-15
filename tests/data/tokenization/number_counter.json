@@ -372,6 +372,153 @@
       ],
       "id": "ga_mattta",
       "input": "約百人が集まった"
+    },
+    {
+      "description": "三ヶ月間入院した - auto-generated",
+      "expected": [
+        {
+          "lemma": "三ヶ月間",
+          "pos": "Noun",
+          "surface": "三ヶ月間"
+        },
+        {
+          "lemma": "入院",
+          "pos": "Noun",
+          "surface": "入院"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shita_3",
+      "input": "三ヶ月間入院した"
+    },
+    {
+      "description": "三年間勉強した - auto-generated",
+      "expected": [
+        {
+          "lemma": "三年間",
+          "pos": "Noun",
+          "surface": "三年間"
+        },
+        {
+          "lemma": "勉強",
+          "pos": "Noun",
+          "surface": "勉強"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shita_4",
+      "input": "三年間勉強した"
+    },
+    {
+      "description": "二時間睡眠をとった - auto-generated",
+      "expected": [
+        {
+          "lemma": "二時間",
+          "pos": "Noun",
+          "surface": "二時間"
+        },
+        {
+          "lemma": "睡眠",
+          "pos": "Noun",
+          "surface": "睡眠"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "とる",
+          "pos": "Verb",
+          "surface": "とっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wotottta",
+      "input": "二時間睡眠をとった"
+    },
+    {
+      "description": "五年間目標を持つ - auto-generated",
+      "expected": [
+        {
+          "lemma": "五年間",
+          "pos": "Noun",
+          "surface": "五年間"
+        },
+        {
+          "lemma": "目標",
+          "pos": "Noun",
+          "surface": "目標"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "持つ",
+          "pos": "Verb",
+          "surface": "持つ"
+        }
+      ],
+      "id": "wo_tsu",
+      "input": "五年間目標を持つ"
+    },
+    {
+      "description": "二時間目の授業 - auto-generated",
+      "expected": [
+        {
+          "lemma": "二時間目",
+          "pos": "Noun",
+          "surface": "二時間目"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "授業",
+          "pos": "Noun",
+          "surface": "授業"
+        }
+      ],
+      "id": "no_3",
+      "input": "二時間目の授業"
+    },
+    {
+      "description": "三ヶ月間 - auto-generated",
+      "expected": [
+        {
+          "lemma": "三ヶ月間",
+          "pos": "Noun",
+          "surface": "三ヶ月間"
+        }
+      ],
+      "id": "unnamed",
+      "input": "三ヶ月間"
     }
   ],
   "description": "number_counter tests",

@@ -133,6 +133,62 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     }
   }
 
+  // Duration span + independent kanji noun: a numeral-led temporal-counter run closed
+  // by the span marker 間 (三年間, 三ヶ月間, 二時間) is a complete duration, and a kanji
+  // noun immediately after 間 is a separate word (三年間|勉強, 三ヶ月間|入院, 二時間|睡眠).
+  // The whole run is otherwise one kanji_seq token that beats the split on total cost, so
+  // a discounted duplicate of the duration phrase lets the split path win. The trailing
+  // kanji must be an ordinary noun char: a temporal counter (三日月 = one word), a
+  // relation/span suffix (後/前/中/末, handled elsewhere), or the interval member 隔
+  // (三年間隔 = 三年|間隔) keeps its own reading. The run must start with a numeral: a
+  // quantity prefix (半年間, 数年間) is not a MeCab number+counter unit, so its 間 stays
+  // a separate suffix in the expected (半年|間) and must not be fused here.
+  {
+    size_t scan = start_pos;
+    bool has_quantity = false;
+    while (scan < codepoints.size() && normalize::isNumeralCodepoint(codepoints[scan])) {
+      ++scan;
+      has_quantity = true;
+    }
+    size_t counter_start = scan;
+    while (scan < codepoints.size()) {
+      if (normalize::isTemporalCounterKanji(codepoints[scan])) {
+        ++scan;
+        continue;
+      }
+      if ((codepoints[scan] == U'ヶ' || codepoints[scan] == U'ケ') && scan + 1 < codepoints.size() &&
+          normalize::isTemporalCounterKanji(codepoints[scan + 1])) {
+        scan += 2;
+        continue;
+      }
+      break;
+    }
+    // The run must end in 間 and that 間 must be preceded by another counter char in the
+    // run (a bare numeral+間 is not a duration), with an ordinary kanji noun following.
+    // A lone 目 is an ordinal suffix that binds to the duration (二時間目 = one word),
+    // like the relation/span suffixes; keep it whole. When another kanji follows, 目
+    // instead heads a noun (五年間|目標, 三年間|目的) and the split proceeds.
+    bool trailing_ordinal_me = codepoints[scan] == U'目' &&
+                               (scan + 1 >= char_types.size() || char_types[scan + 1] != normalize::CharType::Kanji);
+    if (has_quantity && scan > counter_start && codepoints[scan - 1] == U'間' && scan - 1 > counter_start &&
+        scan < char_types.size() && char_types[scan] == normalize::CharType::Kanji && !trailing_ordinal_me &&
+        !normalize::isTemporalCounterKanji(codepoints[scan]) &&
+        !normalize::isTemporalRelationSuffixKanji(codepoints[scan]) &&
+        !normalize::isTemporalSpanSuffixKanji(codepoints[scan]) &&
+        !normalize::isIntervalCompoundSecondKanji(codepoints[scan])) {
+      std::string surface = extractSubstring(codepoints, start_pos, scan);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun,
+                                  candidate::kDurationSpanSplitBonus, false, CandidateOrigin::Counter);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "duration_span_split";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+  }
+
   // Quantity + object counter + independent kanji noun: a numeral+counter phrase
   // followed by exactly two more kanji is compositional (三名|参加, 二台|故障,
   // 五冊|注文) — the counter phrase is a search-unit boundary. The whole run is
