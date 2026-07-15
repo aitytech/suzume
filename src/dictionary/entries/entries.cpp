@@ -601,6 +601,11 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       verb("じゃう", "じゃう", EPOS::AuxAspectShimau),
       verb("じゃっ", "じゃう", EPOS::AuxAspectShimau),
       verb("じゃい", "じゃう", EPOS::AuxAspectShimau),
+      // Volitional stems (mizenkei before う): 食べちゃおう, 読んじゃおう. ちゃお is a
+      // lexicalized verb (like ちゃう) but じゃお follows the で+contraction reading and
+      // is tagged as an auxiliary, mirroring MeCab's ちゃう=Verb / じゃ=Auxiliary split.
+      verb("ちゃお", "ちゃう", EPOS::AuxAspectShimau),
+      aux("じゃお", "じゃう", EPOS::AuxAspectShimau),
 
       // Contracted forms: てる/とく (progressive/preparation)
       // MeCab: 動詞,非自立 → Auxiliary (subsidiary verbs)
