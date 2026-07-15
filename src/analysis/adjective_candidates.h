@@ -113,6 +113,27 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(
     const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types,
     const grammar::Inflection& inflection, const dictionary::DictionaryManager* dict_manager = nullptr);
 
+/**
+ * @brief Append i-adjective 未然形 conjectural candidates (stem + かろ + う)
+ *
+ * The presumptive form 高かろう / うれしかろう / よかろう is not produced by
+ * inflection analysis, and the surface Xかろ is homographic with a verb
+ * volitional stem (分かろう ← 分かる). A candidate is therefore emitted only when
+ * the reconstructed base (stem + い) is a decisive i-adjective — a dictionary
+ * adjective, or one the inflection analyzer recognizes with adjective-level
+ * confidence — and a う follows. Shared by the kanji and pure-hiragana adjective
+ * generators.
+ *
+ * @param scan_start First index where the trailing かろ may begin (kanji_end for
+ *        a kanji stem, start_pos for a pure-hiragana stem); the stem before かろ
+ *        must be non-empty.
+ * @param scan_end   One past the last index to scan (hiragana region end).
+ */
+void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
+                              size_t scan_end, const grammar::Inflection& inflection,
+                              const dictionary::DictionaryManager* dict_manager,
+                              std::vector<UnknownCandidate>& candidates);
+
 }  // namespace suzume::analysis
 
 #endif  // SUZUME_ANALYSIS_ADJECTIVE_CANDIDATES_H_

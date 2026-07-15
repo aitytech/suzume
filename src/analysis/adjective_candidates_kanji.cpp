@@ -837,44 +837,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   }
 
   // Add mizenkei (かろ) candidates for the conjectural pattern: stem + かろ + う
-  // I-adjective 未然形: 高い → 高かろ+う, 美しい → 美しかろ+う (推量)
-  // Inflection analysis does not produce this form, and the surface Xかろ is
-  // homographic with verb volitional stems (分かる → 分かろ+う), so generate
-  // only when the lexical signal is decisive: the reconstructed base
-  // (stem + い) is a known dictionary adjective.
-  if (dict_manager != nullptr) {
-    for (size_t karo_pos = kanji_end; karo_pos + 1 < hiragana_end; ++karo_pos) {
-      if (codepoints[karo_pos] != U'か' || codepoints[karo_pos + 1] != U'ろ') {
-        continue;
-      }
-      // Require a following う (推量): 高かろ+う. Without う, Xかろ is far
-      // more likely a verb form, so leave it to the verb candidate paths.
-      if (karo_pos + 2 >= codepoints.size() || codepoints[karo_pos + 2] != U'う') {
-        continue;
-      }
-      std::string miz_lemma = extractSubstring(codepoints, start_pos, karo_pos) + "い";
-      if (!isAdjectiveInDictionary(dict_manager, miz_lemma)) {
-        continue;
-      }
-      UnknownCandidate miz_cand;
-      miz_cand.surface = extractSubstring(codepoints, start_pos, karo_pos + 2);
-      miz_cand.start = start_pos;
-      miz_cand.end = karo_pos + 2;
-      miz_cand.pos = core::PartOfSpeech::Adjective;
-      miz_cand.lemma = miz_lemma;
-      // Dictionary-verified adjective: make the 未然形 win over fake verb
-      // interpretations (ichidan Xかる etc.), mirroring the ke-form handling.
-      miz_cand.cost = candidate::verb_cost::kStrongBonus;
-      miz_cand.has_suffix = true;                              // Conjugated form (未然ウ接続)
-      miz_cand.extended_pos = core::ExtendedPOS::AdjMizenkei;  // For bigram: AdjMizenkei→AuxVolitional
-#ifdef SUZUME_DEBUG_INFO
-      miz_cand.origin = CandidateOrigin::AdjectiveI;
-      miz_cand.confidence = 0.8F;
-      miz_cand.pattern = "i_adjective_karo";
-#endif
-      candidates.push_back(std::move(miz_cand));
-    }
-  }
+  // (高かろう, 美しかろう). Shared with the pure-hiragana generator.
+  appendIAdjKaroCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager, candidates);
 
   // Add classical attributive (文語連体形) き candidates: stem + き + 体言
   // I-adjective 連体形 in classical Japanese: 美しい → 美しき(花), 古い → 古き(良き時代)

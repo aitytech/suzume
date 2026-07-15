@@ -139,6 +139,9 @@ constexpr float kSingleKanjiKuCost = 0.52F;  // 甘く, 辛く renyokei
 // (kanji/katakana paths and しそう stem validation)
 constexpr float kIAdjConfMin = 0.5F;
 
+// Debug confidence recorded on the generated 未然形 (かろ) conjectural candidate
+constexpr float kIAdjKaroConfidence = 0.8F;
+
 // Single-kanji し + そう disambiguation (adjective vs verb renyokei)
 constexpr float kShiSouAdjConfMin = 0.6F;   // minimum adjective confidence
 constexpr float kShiSouConfMargin = 0.03F;  // adjective must beat verb by this

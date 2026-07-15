@@ -472,6 +472,67 @@
       ],
       "id": "bakabakashikunai",
       "input": "ばかばかしくない"
+    },
+    {
+      "description": "それがよかろう - auto-generated",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よかろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "soregayokarou",
+      "input": "それがよかろう"
+    },
+    {
+      "description": "うれしかろう - auto-generated",
+      "expected": [
+        {
+          "lemma": "うれしい",
+          "pos": "Adjective",
+          "surface": "うれしかろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "ureshikarou",
+      "input": "うれしかろう"
+    },
+    {
+      "description": "楽しかろう - auto-generated",
+      "expected": [
+        {
+          "lemma": "楽しい",
+          "pos": "Adjective",
+          "surface": "楽しかろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "shikarou",
+      "input": "楽しかろう"
     }
   ],
   "description": "adjective tests",

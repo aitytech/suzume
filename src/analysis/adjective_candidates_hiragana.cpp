@@ -253,6 +253,13 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
     return candidates;
   }
 
+  // Add mizenkei (かろ) conjectural candidates (うれしかろう, よかろう) up front, before
+  // the particle-boundary early-returns below: よ / な heads are treated as particle
+  // starts and would otherwise skip the かろ generation. The inflection analyzer does
+  // not emit this form, and it is gated on a decisive i-adjective base to reject the
+  // verb-volitional homograph (わかろう).
+  appendIAdjKaroCandidates(codepoints, start_pos, start_pos, max_hiragana_end, inflection, dict_manager, candidates);
+
   // STEP 2: Determine the hiragana_end for candidate generation
   // If first char is a particle, we only allow the full sequence if it's a valid adjective
   // Otherwise, we break at particle boundaries for shorter subsequences
