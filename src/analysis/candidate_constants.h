@@ -150,13 +150,6 @@ constexpr float kIAdjConfMin = 0.5F;
 // Debug confidence recorded on the generated 未然形 (かろ) conjectural candidate
 constexpr float kIAdjKaroConfidence = 0.8F;
 
-// Single-kanji し + そう disambiguation (adjective vs verb renyokei)
-constexpr float kShiSouAdjConfMin = 0.6F;   // minimum adjective confidence
-constexpr float kShiSouConfMargin = 0.03F;  // adjective must beat verb by this
-
-// Dictionary-confirmed adjective bonus (美味しそう, 難しそう)
-constexpr float kDictAdjBonus = -0.25F;
-
 // Minimum verb hypothesis confidence to treat a ゆく/いく prefix as 連用形
 constexpr float kV1PrefixMinConfidence = 0.3F;
 

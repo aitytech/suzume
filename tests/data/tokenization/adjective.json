@@ -533,6 +533,75 @@
       ],
       "id": "shikarou",
       "input": "楽しかろう"
+    },
+    {
+      "description": "とても優しそうな人だ - auto-generated",
+      "expected": [
+        {
+          "lemma": "とても",
+          "pos": "Adverb",
+          "surface": "とても"
+        },
+        {
+          "lemma": "優しい",
+          "pos": "Adjective",
+          "surface": "優し"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Auxiliary",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "totemo_shisouna_da",
+      "input": "とても優しそうな人だ"
+    },
+    {
+      "description": "思いのほか難しかった - auto-generated",
+      "expected": [
+        {
+          "lemma": "思い",
+          "pos": "Noun",
+          "surface": "思い"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ほか",
+          "pos": "Noun",
+          "surface": "ほか"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "inohoka_shikattta",
+      "input": "思いのほか難しかった"
     }
   ],
   "description": "adjective tests",

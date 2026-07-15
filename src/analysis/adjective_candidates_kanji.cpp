@@ -308,93 +308,6 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
       continue;
     }
 
-    // For し + そう patterns (話しそう, 難しそう, 美味しそう, etc.), use inflection
-    // analysis to distinguish verb renyokei + そう from adjective + そう.
-    // Works for both single and multi-kanji stems.
-    // 難しそう → 難しい has higher confidence than 難す → allow adjective candidate
-    // 美味しそう → 美味しい has higher confidence than 美味す → allow adjective candidate
-    // 話しそう → 話す is in dictionary (handled by dict lookup below) → skip
-    //
-    // Strategy: Compare adjective confidence with verb confidence.
-    // If adjective confidence is higher, prefer adjective interpretation.
-    // For dictionary-registered verbs, the dictionary lookup below will handle them.
-    bool is_dict_adjective = false;
-    if (hiragana_part.size() >= core::kThreeJapaneseCharBytes &&
-        hiragana_part.substr(0, core::kJapaneseCharBytes) == "し" &&
-        hiragana_part.substr(core::kJapaneseCharBytes, core::kTwoJapaneseCharBytes) == "そう") {
-      std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
-
-      // Get adjective confidence for kanji + しい
-      std::string adj_form = kanji_stem + "しい";
-      float adj_confidence = 0.0F;
-      const auto& adj_results = inflection.analyze(adj_form);
-      for (const auto& result : adj_results) {
-        if (result.verb_type == grammar::VerbType::IAdjective && result.confidence > adj_confidence) {
-          adj_confidence = result.confidence;
-        }
-      }
-
-      // Get verb confidence for kanji + す
-      std::string verb_form = kanji_stem + "す";
-      float verb_confidence = 0.0F;
-      const auto& verb_results = inflection.analyze(verb_form);
-      for (const auto& result : verb_results) {
-        if (result.verb_type == grammar::VerbType::GodanSa && result.confidence > verb_confidence) {
-          verb_confidence = result.confidence;
-        }
-      }
-
-      // Use dictionary to check for real verbs like 話す, 出す
-      if (isVerbInDictionary(dict_manager, verb_form)) {
-        continue;  // Real verb exists in dictionary, prefer verb interpretation
-      }
-
-      // Check for suru-verb patterns: if kanji stem is 2+ characters and ends with
-      // kanji, it's likely a suru-verb (遅刻しそう → 遅刻する, not 遅刻しい)
-      // Single-kanji patterns like 難しそう (難しい) are valid adjectives.
-      // Exception: known adjectives like 美味しい should still be allowed.
-      size_t kanji_char_count = kanji_end - start_pos;
-      if (kanji_char_count >= 2) {
-        // Check if this is a known adjective in dictionary (e.g., 美味しい)
-        std::string adj_full = kanji_stem + "しい";
-        if (!isAdjectiveInDictionary(dict_manager, adj_full)) {
-          // Multi-kanji + し + そう without known adjective is suru-verb + auxiliary
-          // (遅刻しそう, 勉強しそう, 検討しそう, etc.)
-          continue;
-        }
-        // Known adjective like 美味しい, allow the candidate
-        is_dict_adjective = true;
-      } else {
-        // Single-kanji pattern, use confidence comparison
-        // If adjective confidence is meaningfully higher than verb confidence,
-        // allow adjective candidate
-        // The 0.03 margin prevents ties from incorrectly producing adjective candidates
-        if (adj_confidence >= candidate::kShiSouAdjConfMin &&
-            adj_confidence >= verb_confidence + candidate::kShiSouConfMargin) {
-          is_dict_adjective = true;
-        } else {
-          continue;
-        }
-      }
-    }
-
-    // For き + そう patterns, check if stem + く exists as a verb.
-    // If a godan-ku verb exists, this is likely verb renyoukei + そう, not adjective.
-    // 書きそう → 書く (verb exists) → skip adjective candidate
-    // 大きそう → 大く (verb doesn't exist) → allow adjective candidate
-    // This is the inverse of し pattern: we check for verb existence, not adjective.
-    if (hiragana_part.size() >= core::kThreeJapaneseCharBytes &&
-        hiragana_part.substr(0, core::kJapaneseCharBytes) == "き" &&
-        hiragana_part.substr(core::kJapaneseCharBytes, core::kTwoJapaneseCharBytes) == "そう") {
-      // Construct potential verb form: kanji + く
-      std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
-      std::string verb_form = kanji_stem + "く";
-      if (isVerbInDictionary(dict_manager, verb_form)) {
-        continue;  // Verb exists, so this is verb renyoukei + そう, skip adjective
-      }
-      // No verb found, allow adjective candidate (e.g., 大きそう → 大きい)
-    }
-
     // B57: For single kanji + ければ patterns (叩ければ, 引ければ, etc.),
     // check if the kanji + く is a verb. If so, this is likely verb potential + conditional,
     // not an adjective pattern.
@@ -485,19 +398,34 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
           }
         }
 
+        // 様態 そう span guard: an i-adjective never inflects through そう —
+        // そう is always a separate appearance auxiliary. When the inflection
+        // engine reconstructed the base by reading そう(な/だ/に…) as an
+        // adjective ending (surface = stem + そう…, base = stem + い), the span
+        // over-reaches the stem: the AdjStem generator emits the bare stem
+        // (優し, 高, 大き) and そう attaches as its own token. This also covers
+        // verb renyokei + そう (書きそう, 遅刻しそう), whose hypothesized base
+        // stem + い is a non-word.
+        {
+          std::string_view base_sv(cand.base_form);
+          std::string_view surf_sv(surface);
+          if (utf8::endsWith(base_sv, "い")) {
+            std::string_view stem_sv = base_sv.substr(0, base_sv.size() - core::kJapaneseCharBytes);
+            if (surf_sv.size() > stem_sv.size() && utf8::startsWith(surf_sv, stem_sv) &&
+                utf8::startsWith(surf_sv.substr(stem_sv.size()), scorer::kSuffixSou)) {
+              SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" spans 様態そう, stem path handles split\n");
+              continue;
+            }
+          }
+        }
+
         // Lower base cost (0.2F) to beat verb candidates after POS prior adjustment
         // ADJ prior (0.3) is higher than VERB prior (0.2), so we need lower edge cost
         float cost = candidate::kKanjiAdjBaseCost + (1.0F - cand.confidence) * candidate::kKanjiAdjConfScale;
-        // Bonus for adjectives confirmed in dictionary (美味しそう, 難しそう, etc.)
-        // This helps beat false-positive suru verb candidates (美味する is invalid)
-        if (is_dict_adjective) {
-          cost += candidate::kDictAdjBonus;
-          SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" -0.25 (dict_adj_bonus)\n");
-        }
         // Penalty for non-dictionary i-adjective nominalization (さ ending)
         // This prevents false positives like 勉強さ (from non-existent 勉強い)
         // from beating suru-verb split path (勉強 + さ + れる)
-        if (!is_dict_adjective && surface.size() >= 3 && utf8::endsWith(surface, "さ")) {
+        if (surface.size() >= 3 && utf8::endsWith(surface, "さ")) {
           cost += candidate::kAdjModeratePenalty;  // Unconfirmed さ nominalization
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +1.5 (unconfirmed_sa_nom)\n");
         }
@@ -505,8 +433,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // MeCab splits these: 使いにくい → 使い + にくい
         // Must be non-dictionary adjectives with >= 4 characters to avoid penalizing
         // standalone やすい/にくい/がたい which are in the dictionary
-        if (!is_dict_adjective && surface.size() >= 4 * core::kJapaneseCharBytes &&
-            verb_helpers::isCompoundAdjectivePattern(surface)) {
+        if (surface.size() >= 4 * core::kJapaneseCharBytes && verb_helpers::isCompoundAdjectivePattern(surface)) {
           cost += candidate::kAdjSplitForcePenalty;  // Force split
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (compound_adj_penalty)\n");
         }
@@ -515,7 +442,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // Scan the whole surface (not just its end) so trailing auxiliaries after
         // the absorbed なる (寒くなってきた = 寒く+なっ+て+き+た) are still caught.
         // Must have at least 2 chars before くなる to avoid penalizing standalone patterns
-        if (!is_dict_adjective && surface.size() >= 3 * core::kJapaneseCharBytes) {
+        if (surface.size() >= 3 * core::kJapaneseCharBytes) {
           if (verb_helpers::containsKuNaruPattern(surface)) {
             cost += candidate::kAdjSplitForcePenalty;  // Force adj く-form + なる split
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (ku_naru_split)\n");
@@ -523,7 +450,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         }
         // Penalty for とい/という endings (noun + quotative patterns, not adjectives)
         // E.g., 友人という → 友人 + という (determiner), not 友人とい(adj) + う
-        if (!is_dict_adjective && surface.size() >= 3 * core::kJapaneseCharBytes) {
+        if (surface.size() >= 3 * core::kJapaneseCharBytes) {
           if (utf8::endsWith(surface, "とい") || utf8::endsWith(surface, "という")) {
             cost += candidate::kAdjSplitForcePenalty;  // Protect NOUN + という pattern
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (toiu_pattern)\n");
@@ -533,7 +460,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // E.g., 美しいらしい → 美しい + らしい, not 美しいらし(adj) + い
         // 春らしい → 春 + らしい, not 春らし(adj) + い
         // Must have at least 2 chars before らしい to avoid penalizing standalone らしい
-        if (!is_dict_adjective && surface.size() >= 3 * core::kJapaneseCharBytes) {
+        if (surface.size() >= 3 * core::kJapaneseCharBytes) {
           // Also match the らしく + negative forms (らしくない/らしくなかっ/らしくなかった):
           // their surface ends in the negative, not らしく, so the ku-form trimmed
           // variant would otherwise inherit an unpenalized cost and keep 子供らしく
@@ -550,7 +477,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // Penalty for まい endings (verb + negative volitional auxiliary)
         // E.g., 知るまい → 知る + まい, 出来まい → 出来 + まい
         // まい is an auxiliary attached to verb dictionary form, not an i-adjective suffix
-        if (!is_dict_adjective && surface.size() >= 2 * core::kJapaneseCharBytes) {
+        if (surface.size() >= 2 * core::kJapaneseCharBytes) {
           if (utf8::endsWith(surface, "まい")) {
             cost += candidate::kAdjSplitForcePenalty;  // Promote verb + まい split
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (mai_auxiliary)\n");
@@ -564,7 +491,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // pure-kanji stems like 高い), and the hiragana tail is itself a complete
         // conjugation of a dictionary verb (かかった → かかる). [noun][verb] is not
         // an adjective, so skip rather than penalize (mirrors the ゆく/いく case).
-        if (!is_dict_adjective && !isAdjectiveInDictionary(dict_manager, cand.base_form)) {
+        if (!isAdjectiveInDictionary(dict_manager, cand.base_form)) {
           std::string_view base_sv(cand.base_form);
           if (base_sv.size() > core::kJapaneseCharBytes && utf8::endsWith(base_sv, "い")) {
             std::string_view stem = base_sv.substr(0, base_sv.size() - core::kJapaneseCharBytes);
@@ -594,7 +521,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // not a dictionary adjective and the part before ゆく/いく is itself
         // a dictionary verb form, this is the compound-verb construction —
         // leave it to the verb paths (散り + ゆく).
-        if (!is_dict_adjective && surface.size() > 2 * core::kJapaneseCharBytes &&
+        if (surface.size() > 2 * core::kJapaneseCharBytes &&
             (utf8::endsWith(surface, "ゆく") || utf8::endsWith(surface, "いく")) &&
             !isAdjectiveInDictionary(dict_manager, cand.base_form)) {
           std::string v1_prefix = surface.substr(0, surface.size() - 2 * core::kJapaneseCharBytes);
@@ -630,7 +557,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // E.g., 気持ちよさそうに → 気持ちよ + さ + そう + に
         //        なさそう → な + さ + そう (handled separately in hiragana adj)
         // adj-stem + さ(nominalizer) + そう(appearance) should be split
-        if (!is_dict_adjective && surface.size() >= 3 * core::kJapaneseCharBytes) {
+        if (surface.size() >= 3 * core::kJapaneseCharBytes) {
           if (utf8::endsWith(surface, "さそう") || utf8::endsWith(surface, "さそうに") ||
               utf8::endsWith(surface, "さそうな") || utf8::endsWith(surface, "さそうだ")) {
             continue;  // Skip - force adj + さ + そう split
@@ -808,6 +735,15 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   for (auto& var : katt_form_candidates) {
     candidates.push_back(std::move(var));
   }
+
+  // The past た is always a separate auxiliary: an i-adjective past never stands
+  // as one かった token (難しかっ|た, 良くなかっ|た). Every span ending in かった
+  // produced its trimmed かっ variant above, so drop the merged span itself —
+  // it only ever wins over the split when a preceding modifier's connection
+  // bonus favors the terminal-form EPOS, which is exactly the wrong parse.
+  candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
+                                  [](const UnknownCandidate& cand) { return utf8::endsWith(cand.surface, "かった"); }),
+                   candidates.end());
 
   // Add ke-form candidates for kereba patterns
   // This enables MeCab-compatible split: 美しければ → 美しけれ + ば
