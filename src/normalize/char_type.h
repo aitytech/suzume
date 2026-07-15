@@ -369,6 +369,19 @@ bool isQuantityPrefixKanji(char32_t code_point);
 bool isNumericApproxPrefixKanji(char32_t code_point);
 
 /**
+ * @brief Check if a stem-final kanji + suffix pair is the lexical binding 年度
+ *
+ * 年 followed by 度 forms the lexical noun 年度 (fiscal year), not the degree/
+ * frequency suffix reading of 度 (満足度, 三十度). Used to keep a temporal noun
+ * ending in 年 fused with a trailing lone 度 (今年度, 来年度, 令和三年度).
+ *
+ * @param stem_last Last codepoint of the preceding noun
+ * @param suffix Codepoint of the following suffix
+ * @return true if the pair is the 年度 lexical binding
+ */
+bool isFiscalYearBindingPair(char32_t stem_last, char32_t suffix);
+
+/**
  * @brief Check if every codepoint of a surface is katakana
  *
  * Used to merge a numeral with a following katakana noun (3キロ, 100メダル):

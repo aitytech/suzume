@@ -2149,6 +2149,42 @@
       ],
       "id": "unnamed_6",
       "input": "一昨日"
+    },
+    {
+      "description": "今年度 - auto-generated",
+      "expected": [
+        {
+          "lemma": "今年度",
+          "pos": "Noun",
+          "surface": "今年度"
+        }
+      ],
+      "id": "unnamed_7",
+      "input": "今年度"
+    },
+    {
+      "description": "来年度 - auto-generated",
+      "expected": [
+        {
+          "lemma": "来年度",
+          "pos": "Noun",
+          "surface": "来年度"
+        }
+      ],
+      "id": "unnamed_8",
+      "input": "来年度"
+    },
+    {
+      "description": "昨年度 - auto-generated",
+      "expected": [
+        {
+          "lemma": "昨年度",
+          "pos": "Noun",
+          "surface": "昨年度"
+        }
+      ],
+      "id": "unnamed_9",
+      "input": "昨年度"
     }
   ],
   "description": "General nouns",

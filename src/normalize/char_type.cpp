@@ -447,6 +447,12 @@ bool isTemporalSpanSuffixKanji(char32_t code_point) {
   }
 }
 
+bool isFiscalYearBindingPair(char32_t stem_last, char32_t suffix) {
+  // 年 + 度 binds as the lexical noun 年度 (fiscal year); the trailing 度 is not
+  // the degree/frequency suffix here, so X年度 stays whole (今年度, 来年度).
+  return stem_last == U'年' && suffix == U'度';
+}
+
 bool isTemporalAdverbialNounPair(char32_t first, char32_t second) {
   // Compositional: temporal prefix + temporal unit (今年, 昨日, 来週, 先月, 翌朝, 毎回)
   const bool prefix =

@@ -588,6 +588,21 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kRare;  // +1.0 to counteract -0.8 bonus
   }
 
+  // Penalty for 年+度 lexical binding pattern (年度, fiscal year)
+  // A kanji noun ending in 年 followed by the lone suffix 度 forms 年度, not a
+  // NOUN+degree/frequency-suffix split. Without this, the NOUN→SUFFIX bigram
+  // bonus (-0.8) makes 今年|度 cheaper than the whole 今年度.
+  if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix &&
+      grammar::isAllKanji(prev.surface) && next.surface.size() == core::kJapaneseCharBytes &&
+      grammar::isAllKanji(next.surface)) {
+    auto prev_codepoints = normalize::toCodepoints(prev.surface);
+    auto next_codepoints = normalize::toCodepoints(next.surface);
+    if (prev_codepoints.size() >= 2 && next_codepoints.size() == 1 &&
+        normalize::isFiscalYearBindingPair(prev_codepoints.back(), next_codepoints.front())) {
+      bonus += cost::kRare;  // +1.0 to neutralize -0.8 bigram bonus
+    }
+  }
+
   // Penalty for 3+ char non-dict kanji NOUN → 1-char SUFFIX pattern
   // For non-dict 3+ char kanji NOUN preceding a single-kanji suffix, the 4-char
   // input is often two 2-char kango compounds (新規 + 手法) rather than
