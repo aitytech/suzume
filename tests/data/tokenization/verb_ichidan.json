@@ -1431,6 +1431,134 @@
       ],
       "id": "jisaseru_2",
       "input": "論じさせる"
+    },
+    {
+      "description": "本を借りて読んだ - auto-generated",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "借りる",
+          "pos": "Verb",
+          "surface": "借り"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "wo_rite_nda",
+      "input": "本を借りて読んだ"
+    },
+    {
+      "description": "ボールが転がって落ちた - auto-generated",
+      "expected": [
+        {
+          "lemma": "ボール",
+          "pos": "Noun",
+          "surface": "ボール"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "転がる",
+          "pos": "Verb",
+          "surface": "転がっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "落ちる",
+          "pos": "Verb",
+          "surface": "落ち"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ga_gattte_chita",
+      "input": "ボールが転がって落ちた"
+    },
+    {
+      "description": "五分が過ぎた - auto-generated",
+      "expected": [
+        {
+          "lemma": "五分",
+          "pos": "Noun",
+          "surface": "五分"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Verb",
+          "surface": "過ぎ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ga_gita",
+      "input": "五分が過ぎた"
+    },
+    {
+      "description": "傘を借りた - auto-generated",
+      "expected": [
+        {
+          "lemma": "傘",
+          "pos": "Noun",
+          "surface": "傘"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "借りる",
+          "pos": "Verb",
+          "surface": "借り"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_rita",
+      "input": "傘を借りた"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",
