@@ -1,5 +1,7 @@
 #include "char_type.h"
 
+#include <array>
+
 #include "core/kana_constants.h"
 #include "utf8.h"
 
@@ -443,6 +445,33 @@ bool isTemporalSpanSuffixKanji(char32_t code_point) {
     default:
       return false;
   }
+}
+
+bool isTemporalAdverbialNounPair(char32_t first, char32_t second) {
+  // Compositional: temporal prefix + temporal unit (今年, 昨日, 来週, 先月, 翌朝, 毎回)
+  const bool prefix =
+      (first == U'今' || first == U'来' || first == U'先' || first == U'昨' || first == U'翌' || first == U'毎');
+  const bool unit = (second == U'日' || second == U'週' || second == U'月' || second == U'年' || second == U'回' ||
+                     second == U'朝' || second == U'晩' || second == U'夜');
+  if (prefix && unit) {
+    return true;
+  }
+  // Closed residual set of 副詞可能 temporal nouns.
+  static constexpr std::array<std::array<char32_t, 2>, 9> kAdverbialTemporalNouns = {{{U'現', U'在'},
+                                                                                      {U'明', U'日'},
+                                                                                      {U'本', U'日'},
+                                                                                      {U'当', U'時'},
+                                                                                      {U'従', U'来'},
+                                                                                      {U'最', U'近'},
+                                                                                      {U'将', U'来'},
+                                                                                      {U'今', U'後'},
+                                                                                      {U'過', U'去'}}};
+  for (const auto& pair : kAdverbialTemporalNouns) {
+    if (pair[0] == first && pair[1] == second) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool isNumeralCodepoint(char32_t code_point) {

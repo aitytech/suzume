@@ -308,6 +308,15 @@ bool isIntervalCompoundSecondKanji(char32_t code_point);
 bool isTemporalSpanSuffixKanji(char32_t code_point);
 
 /**
+ * @brief Check if a 2-kanji pair forms an adverbial (副詞可能) temporal noun.
+ *
+ * These nouns (現在, 昨日, 今年…) detach from a following kanji noun rather than
+ * gluing into the run: 現在担当者 → 現在 | 担当者. Covers a compositional class
+ * ({今来先昨翌毎} + {日週月年回朝晩夜}) plus a closed residual set.
+ */
+bool isTemporalAdverbialNounPair(char32_t first, char32_t second);
+
+/**
  * @brief Check if a codepoint is a numeral (Arabic or kanji)
  *
  * Covers half-width and full-width Arabic digits plus the basic kanji

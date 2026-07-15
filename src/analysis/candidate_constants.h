@@ -150,6 +150,11 @@ constexpr float kDurationSpanSplitBonus = -1.2F;
 // kanji→non-kanji boundary, so a following kanji (五度目, 五度見た) keeps its boundary.
 constexpr float kNumeralCounterMergeBonus = -0.5F;
 
+// Temporal-noun boundary: an adverbial temporal noun (現在, 昨日) heading a
+// 2+-kanji noun run splits off (現在|担当者) rather than merging the whole run.
+// Applied in suffix_candidates_prefix.cpp.
+constexpr float kTemporalNounBoundarySplitBonus = -1.2F;
+
 // Noun + Verb split bonus
 // E.g., 勉強+する, 説明+する
 constexpr float kNounVerbSplitBonus = -1.0F;

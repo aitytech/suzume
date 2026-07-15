@@ -157,6 +157,22 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
                                                                const grammar::Inflection& inflection);
 
 /**
+ * @brief Generate a temporal-noun boundary split candidate
+ *
+ * Detects an adverbial temporal noun (現在, 昨日) heading a longer kanji run and
+ * discounts the split point so it beats the unknown-word kanji-run merge:
+ *   - 現在担当者 (genzai tantousha) -> 現在 | 担当者
+ *   - 昨日会議 (kinou kaigi) -> 昨日 | 会議
+ *
+ * @param codepoints Text as codepoints
+ * @param start_pos Start position (character index)
+ * @param char_types Character types for each position
+ * @return Vector of candidates
+ */
+std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
+    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types);
+
+/**
  * @brief Check if a codepoint is a prefix-like kanji
  *
  * Returns true for kanji that commonly form temporal/formal compounds:

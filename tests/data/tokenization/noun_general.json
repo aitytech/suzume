@@ -2062,6 +2062,69 @@
       ],
       "id": "soreha_kana",
       "input": "それは東京かな"
+    },
+    {
+      "description": "現在担当者 - auto-generated",
+      "expected": [
+        {
+          "lemma": "現在",
+          "pos": "Noun",
+          "surface": "現在"
+        },
+        {
+          "lemma": "担当者",
+          "pos": "Noun",
+          "surface": "担当者"
+        }
+      ],
+      "id": "unnamed",
+      "input": "現在担当者"
+    },
+    {
+      "description": "昨日会議 - auto-generated",
+      "expected": [
+        {
+          "lemma": "昨日",
+          "pos": "Noun",
+          "surface": "昨日"
+        },
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        }
+      ],
+      "id": "unnamed_2",
+      "input": "昨日会議"
+    },
+    {
+      "description": "今年結婚 - auto-generated",
+      "expected": [
+        {
+          "lemma": "今年",
+          "pos": "Noun",
+          "surface": "今年"
+        },
+        {
+          "lemma": "結婚",
+          "pos": "Noun",
+          "surface": "結婚"
+        }
+      ],
+      "id": "unnamed_3",
+      "input": "今年結婚"
+    },
+    {
+      "description": "新規顧客 - auto-generated",
+      "expected": [
+        {
+          "lemma": "新規顧客",
+          "pos": "Noun",
+          "surface": "新規顧客"
+        }
+      ],
+      "id": "unnamed_4",
+      "input": "新規顧客"
     }
   ],
   "description": "General nouns",

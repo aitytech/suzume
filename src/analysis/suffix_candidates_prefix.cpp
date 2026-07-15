@@ -158,4 +158,44 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
   return candidates;
 }
 
+std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
+    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types) {
+  std::vector<UnknownCandidate> candidates;
+
+  // Need temporal 2-kanji + at least 2 more trailing kanji (gate against lexical
+  // 1-kanji suffixes: 現在地/将来性 must stay whole).
+  if (start_pos + 3 >= codepoints.size() || start_pos + 3 >= char_types.size()) {
+    return candidates;
+  }
+  for (size_t offset = 0; offset < 4; ++offset) {
+    if (char_types[start_pos + offset] != normalize::CharType::Kanji) {
+      return candidates;
+    }
+  }
+
+  if (!normalize::isTemporalAdverbialNounPair(codepoints[start_pos], codepoints[start_pos + 1])) {
+    return candidates;
+  }
+
+  // The 3rd kanji being a span/relation suffix is handled elsewhere (今月|中/末,
+  // …後/前) — don't compete there.
+  if (normalize::isTemporalSpanSuffixKanji(codepoints[start_pos + 2]) ||
+      normalize::isTemporalRelationSuffixKanji(codepoints[start_pos + 2])) {
+    return candidates;
+  }
+
+  std::string surface = extractSubstring(codepoints, start_pos, start_pos + 2);
+  if (!surface.empty()) {
+    auto cand = makeCandidate(surface, start_pos, start_pos + 2, core::PartOfSpeech::Noun,
+                              candidate::kTemporalNounBoundarySplitBonus, false, CandidateOrigin::PrefixCompound);
+#ifdef SUZUME_DEBUG_INFO
+    cand.confidence = candidate::kHighOriginConfidence;
+    cand.pattern = "temporal_noun_boundary";
+#endif
+    candidates.push_back(cand);
+  }
+
+  return candidates;
+}
+
 }  // namespace suzume::analysis

@@ -193,6 +193,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
     // e.g., 今日, 今週, 本日, 全国 (prefix-like compounds)
     auto prefix_compounds = generatePrefixCompoundCandidates(codepoints, start_pos, char_types, inflection_);
     candidates.insert(candidates.end(), prefix_compounds.begin(), prefix_compounds.end());
+
+    // Generate temporal-noun boundary split candidates (現在|担当者, 昨日|会議)
+    auto temporal_boundary_candidates = generateTemporalNounBoundaryCandidates(codepoints, start_pos, char_types);
+    candidates.insert(candidates.end(), temporal_boundary_candidates.begin(), temporal_boundary_candidates.end());
   }
 
   // Generate hiragana verb candidates (pure hiragana verbs like いく, くる)
