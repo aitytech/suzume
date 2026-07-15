@@ -602,6 +602,87 @@
       ],
       "id": "inohoka_shikattta",
       "input": "思いのほか難しかった"
+    },
+    {
+      "description": "彼は優しくて頼もしい - auto-generated",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "優しい",
+          "pos": "Adjective",
+          "surface": "優しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "頼もしい",
+          "pos": "Adjective",
+          "surface": "頼もしい"
+        }
+      ],
+      "id": "ha_shikute_moshii",
+      "input": "彼は優しくて頼もしい"
+    },
+    {
+      "description": "好もしい人物だ - auto-generated",
+      "expected": [
+        {
+          "lemma": "好もしい",
+          "pos": "Adjective",
+          "surface": "好もしい"
+        },
+        {
+          "lemma": "人物",
+          "pos": "Noun",
+          "surface": "人物"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "moshii_da",
+      "input": "好もしい人物だ"
+    },
+    {
+      "description": "この本もない - auto-generated",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "kono_monai",
+      "input": "この本もない"
     }
   ],
   "description": "adjective tests",
