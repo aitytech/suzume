@@ -2571,6 +2571,43 @@
       ],
       "id": "ge_rerareta",
       "input": "投げ入れられた"
+    },
+    {
+      "description": "実績を積み重ねてきた - auto-generated",
+      "expected": [
+        {
+          "lemma": "実績",
+          "pos": "Noun",
+          "surface": "実績"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "積み重ねる",
+          "pos": "Verb",
+          "surface": "積み重ね"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_mi_netekita",
+      "input": "実績を積み重ねてきた"
     }
   ],
   "description": "Compound verbs",
