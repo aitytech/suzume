@@ -8,6 +8,8 @@ add_library(suzume_grammar STATIC
   conjugator.cpp
   inflection.cpp
   inflection_scorer.cpp
+  inflection_scorer_form_potential.cpp
+  inflection_scorer_stem_godan.cpp
   patterns.cpp
   verb_endings.cpp
 )

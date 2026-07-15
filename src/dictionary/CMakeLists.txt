@@ -8,7 +8,14 @@ add_library(suzume_dictionary STATIC
   double_array.cpp
   binary_dict.cpp
   string_pool.cpp
-  entries/entries.cpp
+  entries/auxiliaries.cpp
+  entries/compound_particles.cpp
+  entries/conjunctions.cpp
+  entries/determiners.cpp
+  entries/formal_nouns.cpp
+  entries/interjections.cpp
+  entries/particles.cpp
+  entries/pronouns.cpp
 )
 
 target_include_directories(suzume_dictionary

@@ -1,9 +1,9 @@
 """Test file utilities ported from TestFileUtils.pm."""
 
 import json
-import os
-import tempfile
 from pathlib import Path
+
+from .file_utils import atomic_write_text
 
 
 def get_test_data_dir(project_root: Path) -> Path:
@@ -25,11 +25,7 @@ def load_json(path: Path) -> dict:
 def save_json(path: Path, data: dict) -> None:
     """Save data as JSON with consistent formatting."""
     content = json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as tmp:
-        tmp.write(content + "\n")
-        tmp_path = Path(tmp.name)
-    os.replace(tmp_path, path)
+    atomic_write_text(path, content + "\n")
 
 
 def find_test_by_input(project_root: Path, input_text: str) -> dict | None:

@@ -6,6 +6,7 @@ import re
 import unicodedata
 from pathlib import Path
 
+from ..core.json_utils import json_result as _json_result
 from ..core.suzume_cli import get_expected_tokens_subprocess, get_suzume_surfaces
 from ..server import PROJECT_ROOT, mcp
 
@@ -26,11 +27,6 @@ def _bugs_dir(source: str = "thread") -> Path:
         return _BUGS_DIRS[source]
     # Fallback: assume skill name pattern
     return PROJECT_ROOT / ".claude" / "skills" / f"{source}-quality-check" / "bugs"
-
-
-def _json_result(obj: dict) -> str:
-    """Serialize result dict to JSON string."""
-    return json.dumps(obj, ensure_ascii=False, indent=2)
 
 
 # ============================================================================

@@ -1,0 +1,236 @@
+/**
+ * @file verb_candidates_kanji_ichidan.cpp
+ * @brief Rare and single-kanji ichidan candidate patterns
+ */
+
+#include <algorithm>
+#include <cmath>
+
+#include "analysis/bigram_table.h"
+#include "analysis/candidate_constants.h"
+#include "analysis/scorer_constants.h"
+#include "analysis/verb_candidates_helpers.h"
+#include "analysis/verb_candidates_kanji_internal.h"
+#include "core/debug.h"
+#include "core/utf8_constants.h"
+#include "grammar/char_patterns.h"
+#include "grammar/conjugation.h"
+#include "grammar/inflection_scorer_constants.h"
+#include "normalize/char_type.h"
+#include "normalize/exceptions.h"
+#include "normalize/utf8.h"
+#include "suffix_candidates.h"
+#include "unknown.h"
+#include "verb_candidates.h"
+
+namespace suzume::analysis::kanji_verb_detail {
+namespace vh = verb_helpers;
+
+void appendIchidanStemRareCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                     size_t hiragana_end, const grammar::Inflection& inflection,
+                                     const dictionary::DictionaryManager* dict_manager,
+                                     std::vector<UnknownCandidate>& candidates) {
+  // Check if followed by られ+X pattern (られた, られる, られべき, られます, etc.)
+  bool has_rare_suffix = false;
+  size_t stem_end = 0;
+
+  // Pattern 1: Kanji + E/I row hiragana + られ+X (e.g., 信じ+られべき, 認め+られた)
+  if (kanji_end < hiragana_end) {
+    char32_t first_hira = codepoints[kanji_end];
+    if (grammar::isERowCodepoint(first_hira) || grammar::isIRowCodepoint(first_hira)) {
+      size_t ichidan_stem_end = kanji_end + 1;
+      // Check for られ pattern (at least 2 chars)
+      if (ichidan_stem_end + 1 < codepoints.size() && codepoints[ichidan_stem_end] == U'ら' &&
+          codepoints[ichidan_stem_end + 1] == U'れ') {
+        has_rare_suffix = true;
+        stem_end = ichidan_stem_end;
+      }
+    }
+  }
+
+  // Pattern 2: Single kanji + られ+X (e.g., 見+られべき)
+  // Only for known single-kanji Ichidan verbs
+  if (!has_rare_suffix && kanji_end == start_pos + 1) {
+    char32_t kanji_char = codepoints[start_pos];
+    if (vh::isSingleKanjiIchidan(kanji_char)) {
+      // Check for られ suffix right after the single kanji
+      using namespace suzume::core::hiragana;
+      if (kanji_end + 1 < codepoints.size() && codepoints[kanji_end] == kRa && codepoints[kanji_end + 1] == kRe) {
+        has_rare_suffix = true;
+        stem_end = kanji_end;
+      }
+    }
+  }
+
+  if (has_rare_suffix && stem_end > start_pos) {
+    std::string surface = extractSubstring(codepoints, start_pos, stem_end);
+    // Construct base form: stem + る (e.g., 信じ → 信じる, 見 → 見る)
+    std::string base_form = surface + "る";
+
+    // Verify the base form exists in dictionary or is valid Ichidan verb
+    bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
+    if (!is_valid_verb) {
+      // Check if inflection analyzer recognizes this as Ichidan verb
+      // Use >= threshold to include edge cases like 信じる (conf=0.3)
+      // Check ALL candidates, not just best, because godan/ichidan may have same confidence
+      const auto& all_cands = inflection.analyze(base_form);
+      for (const auto& cand : all_cands) {
+        if (cand.verb_type == grammar::VerbType::Ichidan && cand.confidence >= 0.3F) {
+          is_valid_verb = true;
+          break;
+        }
+      }
+    }
+
+    if (is_valid_verb) {
+      // Negative cost to beat single-verb inflection path (which gets optimal_length -0.5 bonus)
+      constexpr float kCost = candidate::verb_cost::kStandardBonus;
+      SUZUME_DEBUG_VERBOSE_BLOCK {
+        SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " ichidan_stem_rare lemma=" << base_form
+                            << " cost=" << kCost << "\n";
+      }
+      candidates.push_back(makeVerbCandidate(surface, start_pos, stem_end, kCost, base_form,
+                                             grammar::verbTypeToConjType(grammar::VerbType::Ichidan), true,
+                                             CandidateOrigin::VerbKanji, 0.9F, "ichidan_stem_rare"));
+    }
+  }
+}
+
+// Generate single-kanji Ichidan verb candidates for auxiliary patterns
+// E.g., 寝ます → 寝(VERB) + ます(AUX), 見ます → 見(VERB) + ます(AUX)
+// Covers polite ます / negative ない, た/て, colloquial contractions,
+// られる, volitional, and causative auxiliary attachments.
+void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                        size_t hiragana_end, std::vector<UnknownCandidate>& candidates) {
+  if (kanji_end == start_pos + 1 && hiragana_end > kanji_end) {
+    char32_t kanji_char = codepoints[start_pos];
+
+    if (vh::isSingleKanjiIchidan(kanji_char)) {
+      // Check if followed by a polite ます-family auxiliary or negative auxiliary.
+      // The ます family (ます/まし(た)/ませ(ん)/ましょ(う)) attaches only to a verb
+      // renyokei, so the bare-kanji ichidan renyokei reading is licensed here
+      // (見ました → 見+まし+た). Godan-sa homographs are unaffected: their
+      // renyokei inserts し before the auxiliary (出しました), so the kanji is
+      // never immediately followed by ま in that reading.
+      using namespace suzume::core::hiragana;
+      char32_t h1 = codepoints[kanji_end];
+      char32_t h2 = (kanji_end + 1 < codepoints.size()) ? codepoints[kanji_end + 1] : 0;
+      bool is_polite_aux = vh::masuAuxFollowsAt(codepoints, kanji_end);
+      // Negative auxiliary ない and its conjugations:
+      // ない (終止/連体), なく (連用), なかっ (た接続), なけれ (仮定), なきゃ (口語縮約仮定)
+      bool is_negative_aux = (h1 == kNa && (h2 == kI || h2 == kKu || h2 == kKa || h2 == kKe || h2 == kKi));
+      // Classical negative auxiliary ず/ざる/ざれ also attaches to the ichidan
+      // mizenkei (= bare stem): 見ざるを得ない → 見 + ざる, 見ずに → 見 + ずに.
+      bool is_classical_negative_aux = (h1 == kZu) || (h1 == kZa && (h2 == kRu || h2 == kRe));
+
+      if (is_polite_aux || is_negative_aux || is_classical_negative_aux) {
+        std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
+        std::string base_form = surface + "る";
+        constexpr float kCost = candidate::verb_cost::kStandardBonus;  // Strong bonus to beat NOUN candidate
+        SUZUME_DEBUG_VERBOSE_BLOCK {
+          SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " single_kanji_ichidan_polite lemma=" << base_form
+                              << " cost=" << kCost << "\n";
+        }
+        candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end, kCost, base_form,
+                                               grammar::verbTypeToConjType(grammar::VerbType::Ichidan), true,
+                                               CandidateOrigin::VerbKanji, 0.9F, "single_kanji_ichidan_polite"));
+      }
+
+      // Also handle た and て patterns for single-kanji Ichidan verbs
+      // E.g., 寝た → 寝(VERB) + た(AUX), 見て → 見(VERB) + て(PARTICLE)
+      // MeCab splits these as: 寝+た, 見+て
+      bool is_ta_aux = (h1 == kTa);
+      bool is_te_particle = (h1 == kTe);
+      if (is_ta_aux || is_te_particle) {
+        std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
+        std::string base_form = surface + "る";
+        constexpr float kCost = candidate::verb_cost::kStrongBonus;  // Strong bonus to beat unified dictionary entry
+        SUZUME_DEBUG_VERBOSE_BLOCK {
+          SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " single_kanji_ichidan_ta_te lemma=" << base_form
+                              << " cost=" << kCost << "\n";
+        }
+        candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end, kCost, base_form,
+                                               grammar::verbTypeToConjType(grammar::VerbType::Ichidan), true,
+                                               CandidateOrigin::VerbKanji, 0.9F, "single_kanji_ichidan_ta_te"));
+      }
+
+      // Handle colloquial contraction patterns for single-kanji Ichidan verbs
+      // MeCab splits these as: 見+とく, 見+ちゃう, etc.
+      // と → とく, といた, といて (ておく contraction: 見とく = 見ておく)
+      // ち → ちゃう, ちゃった (てしまう contraction: 見ちゃう = 見てしまう)
+      // ど → どく, どいた (voiced ておく: only for godan onbin, but check anyway)
+      bool is_toku_aux = (h1 == kTo);
+      bool is_chau_aux = (h1 == kChi);
+      if (is_toku_aux || is_chau_aux) {
+        std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
+        std::string base_form = surface + "る";
+        constexpr float kCost = candidate::verb_cost::kStrongBonus;  // Strong bonus to beat unified contraction entry
+        SUZUME_DEBUG_VERBOSE_BLOCK {
+          SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " single_kanji_ichidan_colloquial lemma=" << base_form
+                              << " cost=" << kCost << "\n";
+        }
+        candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end, kCost, base_form,
+                                               grammar::verbTypeToConjType(grammar::VerbType::Ichidan), true,
+                                               CandidateOrigin::VerbKanji, 0.9F, "single_kanji_ichidan_colloquial"));
+      }
+
+      // Handle られる pattern for single-kanji Ichidan verbs
+      // E.g., 見られる → 見(VERB) + られる(AUX), 寝られる → 寝(VERB) + られる(AUX)
+      // MeCab splits these as: 見+られる (passive/potential form)
+      // Note: For ichidan verbs, the passive/potential is られる (not れる)
+      bool is_rareru_aux = (h1 == kRa && h2 == kRe);
+      if (is_rareru_aux) {
+        std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
+        std::string base_form = surface + "る";
+        constexpr float kCost =
+            candidate::verb_cost::kStrongBonus;  // Strong bonus to beat godan mizenkei interpretation
+        SUZUME_DEBUG_VERBOSE_BLOCK {
+          SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " single_kanji_ichidan_rareru lemma=" << base_form
+                              << " cost=" << kCost << "\n";
+        }
+        candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end, kCost, base_form,
+                                               grammar::verbTypeToConjType(grammar::VerbType::Ichidan), true,
+                                               CandidateOrigin::VerbKanji, 0.9F, "single_kanji_ichidan_rareru"));
+      }
+
+      // Handle volitional pattern for single-kanji Ichidan verbs
+      // E.g., 見よう → 見よ (volitional stem) + う (aux)
+      // MeCab splits as: 見よ (動詞,未然ウ接続) + う (助動詞)
+      bool is_volitional_aux = (h1 == kYo && h2 == kU);
+      if (is_volitional_aux) {
+        // Generate 漢字+よ as volitional stem
+        std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
+        std::string base_form = extractSubstring(codepoints, start_pos, kanji_end) + "る";
+        constexpr float kCost = candidate::verb_cost::kStrongBonus;  // Strong bonus to beat compound interpretation
+        SUZUME_DEBUG_VERBOSE_BLOCK {
+          SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " single_kanji_ichidan_volitional lemma=" << base_form
+                              << " cost=" << kCost << "\n";
+        }
+        candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end + 1, kCost, base_form,
+                                               grammar::verbTypeToConjType(grammar::VerbType::Ichidan), true,
+                                               CandidateOrigin::VerbKanji, 0.9F, "single_kanji_ichidan_volitional",
+                                               core::ExtendedPOS::VerbMizenkei));
+      }
+
+      // Handle causative させ/させる/させられ pattern for single-kanji Ichidan verbs
+      // E.g., 見させる → 見(VERB mizenkei) + させる(AUX causative)
+      //       見させられた → 見(VERB mizenkei) + させ + られ + た
+      // MeCab splits these as: 見+させる (not 見さ+せる like godan-sa)
+      bool is_saseru_aux = (h1 == kSa && h2 == kSe);
+      if (is_saseru_aux) {
+        std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
+        std::string base_form = surface + "る";
+        constexpr float kCost = candidate::verb_cost::kStrongBonus;  // Strong bonus to beat NOUN candidate
+        SUZUME_DEBUG_VERBOSE_BLOCK {
+          SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " single_kanji_ichidan_causative lemma=" << base_form
+                              << " cost=" << kCost << "\n";
+        }
+        candidates.push_back(makeVerbCandidate(
+            surface, start_pos, kanji_end, kCost, base_form, grammar::verbTypeToConjType(grammar::VerbType::Ichidan),
+            true, CandidateOrigin::VerbKanji, 0.9F, "single_kanji_ichidan_causative", core::ExtendedPOS::VerbMizenkei));
+      }
+    }
+  }
+}
+
+}  // namespace suzume::analysis::kanji_verb_detail

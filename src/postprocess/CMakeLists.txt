@@ -2,6 +2,9 @@
 
 add_library(suzume_postprocess STATIC
   lemmatizer.cpp
+  lemmatizer_batch.cpp
+  lemmatizer_conj_form.cpp
+  lemmatizer_rules.cpp
   postprocessor.cpp
   tag_generator.cpp
 )
