@@ -26,6 +26,13 @@ CharType classifyChar(char32_t codepoint) {
     return CharType::Kanji;
   }
 
+  // Ideographic number zero (〇) - treat as Kanji so it joins numeral runs
+  // (二〇二五年, 一〇〇). U+3007 lives in the CJK Symbols block, so it must be
+  // caught before the symbol range below or it is dropped as a symbol.
+  if (codepoint == 0x3007) {
+    return CharType::Kanji;
+  }
+
   // CJK Unified Ideographs and extensions (kanji)
   if (isKanjiCodepoint(codepoint)) {
     return CharType::Kanji;
@@ -487,6 +494,7 @@ bool isNumeralCodepoint(char32_t code_point) {
   }
   // Kanji numerals
   switch (code_point) {
+    case U'〇':  // Ideographic number zero (U+3007)
     case U'一':
     case U'二':
     case U'三':

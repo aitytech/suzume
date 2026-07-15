@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "description": "Ideographic number zero joins numeral run (surface must not vanish)",
+      "expected": [
+        {
+          "lemma": "二〇二五年",
+          "pos": "Noun",
+          "surface": "二〇二五年"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "完成",
+          "pos": "Noun",
+          "surface": "完成"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ni_suru",
+      "input": "二〇二五年に完成する"
+    },
+    {
+      "description": "Ideographic number zero in counter run",
+      "expected": [
+        {
+          "lemma": "一〇〇人",
+          "pos": "Noun",
+          "surface": "一〇〇人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "並ぶ",
+          "pos": "Verb",
+          "surface": "並ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_nda",
+      "input": "一〇〇人が並んだ"
+    }
+  ],
+  "description": "noun_number tests",
+  "version": "1.0"
+}
