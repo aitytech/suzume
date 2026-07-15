@@ -119,6 +119,72 @@
       ],
       "id": "irushikanai",
       "input": "いるしかない"
+    },
+    {
+      "description": "水しかない - auto-generated",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shikanai",
+      "input": "水しかない"
+    },
+    {
+      "description": "時間しかない - auto-generated",
+      "expected": [
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shikanai_2",
+      "input": "時間しかない"
+    },
+    {
+      "description": "お金しかない - auto-generated",
+      "expected": [
+        {
+          "lemma": "お金",
+          "pos": "Noun",
+          "surface": "お金"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "o_shikanai",
+      "input": "お金しかない"
     }
   ],
   "description": "particle_adverbial tests",

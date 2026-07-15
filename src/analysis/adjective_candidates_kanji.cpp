@@ -660,6 +660,19 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
             std::string surface = extractSubstring(codepoints, start_pos, end_pos);
             if (surface.empty())
               continue;
+            // The 副助詞 しか is not an adjective conjugation: a genuine しい-
+            // adjective past keeps っ right after しか (美味しかっ + た), while
+            // noun + しか(…ない) never has the っ. Skip surfaces whose hiragana
+            // portion opens with an adverbial particle not followed by っ.
+            if (end_pos >= kanji_end + 2 && dict_manager != nullptr) {
+              std::string leading_hira = extractSubstring(codepoints, kanji_end, kanji_end + 2);
+              const dictionary::DictionaryEntry* particle_entry = dict_manager->lookupExact(leading_hira);
+              if (particle_entry != nullptr && particle_entry->extended_pos == core::ExtendedPOS::ParticleAdverbial &&
+                  (end_pos == kanji_end + 2 || codepoints[kanji_end + 2] != U'っ')) {
+                SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" hiragana head is adverbial particle\n");
+                continue;
+              }
+            }
             const auto& all_cands = inflection.analyze(surface);
             for (const auto& ic : all_cands) {
               if (ic.confidence >= candidate::kCompoundAdjConfMin && ic.verb_type == grammar::VerbType::IAdjective) {

@@ -94,6 +94,43 @@ OnbinInflMatch bestOnbinInflMatch(const grammar::Inflection& inflection, const s
   return match;
 }
 
+// True when the span [start_pos, end_pos) ends in a dictionary-registered
+// adverbial particle (副助詞), optionally followed by the negative ない /
+// なかっ / なかった. The 副助詞 しか ends in the a-row mora か, which coincides
+// with the godan-ka mizenkei/onbin ending, so a fabricated (non-dictionary)
+// verb conjugation can absorb noun + しか(…ない) (水しかない read as a form of
+// the non-word 水しく). There is no productive godan verb 〜しく; such a span is
+// always [word] + 副助詞 (+ negative), never a single verb. The particle must
+// be 2+ codepoints so the single mora か of a genuine godan-ka mizenkei
+// (行かない) can never match.
+bool endsWithAdverbialParticleTail(const dictionary::DictionaryManager* dict_manager,
+                                   const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos <= start_pos || end_pos > codepoints.size()) {
+    return false;
+  }
+  // Strip a trailing negative auxiliary (ない / なかっ / なかった).
+  size_t tail_end = end_pos;
+  size_t total_len = end_pos - start_pos;
+  if (total_len >= 4 && codepoints[end_pos - 4] == U'な' && codepoints[end_pos - 3] == U'か' &&
+      codepoints[end_pos - 2] == U'っ' && codepoints[end_pos - 1] == U'た') {
+    tail_end = end_pos - 4;
+  } else if (total_len >= 3 && codepoints[end_pos - 3] == U'な' && codepoints[end_pos - 2] == U'か' &&
+             codepoints[end_pos - 1] == U'っ') {
+    tail_end = end_pos - 3;
+  } else if (total_len >= 2 && codepoints[end_pos - 2] == U'な' && codepoints[end_pos - 1] == U'い') {
+    tail_end = end_pos - 2;
+  }
+  // Probe particle suffixes of 2+ codepoints, keeping a non-empty prefix.
+  for (size_t particle_len = 2; start_pos + particle_len < tail_end; ++particle_len) {
+    std::string suffix = extractSubstring(codepoints, tail_end - particle_len, tail_end);
+    const dictionary::DictionaryEntry* suffix_entry = dict_manager->lookupExact(suffix);
+    if (suffix_entry != nullptr && suffix_entry->extended_pos == core::ExtendedPOS::ParticleAdverbial) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Godan mizenkei pattern: single-kanji + A-row + れ/せ (passive/causative)
 // E.g., 騙される → 騙さ (mizenkei of 騙す) + れる (passive)
 //       囲まれる → 囲ま (mizenkei of 囲む) + れる (passive)
@@ -1713,6 +1750,13 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         bool is_comp_adj = vh::isCompoundAdjectivePattern(surface);
         bool in_dict = vh::isVerbInDictionary(dict_manager, best.base_form);
         bool is_suru = (best.verb_type == grammar::VerbType::Suru);
+        // Reject a fabricated conjugation that merely absorbs a trailing
+        // adverbial particle (+ optional negative): 水しかない is noun + 副助詞
+        // しか + ない, never a form of the non-word godan-ka verb 水しく.
+        if (!in_dict && endsWithAdverbialParticleTail(dict_manager, codepoints, start_pos, end_pos)) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" fabricated verb absorbing adverbial particle\n");
+          continue;
+        }
         if (!is_comp_adj && in_dict && !is_suru) {
           // Found in dictionary - give strong bonus (not for suru-verbs)
           base_cost = candidate::confidenceScaledCost(verb_opts.base_cost_verified, best.confidence,
