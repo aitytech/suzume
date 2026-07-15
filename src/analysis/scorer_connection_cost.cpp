@@ -738,11 +738,29 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
     bonus += cost::kAlmostNever;
   }
 
-  // Bonus for VerbRenyokei/VerbOnbinkei → VerbRenyokei (honorific verb patterns)
-  // E.g., 願い+いたし (お願いいたします), 報告+いたし (ご報告いたします)
+  // Penalty for ParticleAdverbial → single-mora hiragana VerbRenyokei.
+  // A subsidiary/adverbial particle (しか, だけ, ばかり…) directly followed by a
+  // one-mora hiragana renyokei is a fabricated over-split: the particle path
+  // severs a real verb compound (し+かね) and reads the trailing mora as a bare
+  // ichidan renyokei (ね ← 寝る). Genuine ParticleAdverbial→VerbRenyokei
+  // sequences (かも+しれ, など+あり, でも+あり) always carry a ≥2-mora renyokei
+  // stem, and a one-kanji renyokei (だけ+寝) keeps its self-standing stem, so
+  // gating on a single hiragana character leaves those untouched while
+  // countering the ParticleAdverbial→VerbRenyokei bonus that the false path
+  // would otherwise receive.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial &&
+      next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface.size() == core::kJapaneseCharBytes &&
+      normalize::classifyChar(utf8::decodeFirstChar(next.surface)) == normalize::CharType::Hiragana) {
+    bonus += cost::kStrong;
+  }
+
+  // Bonus for VerbRenyokei/VerbOnbinkei → VerbRenyokei (subsidiary verb patterns)
+  // E.g., 願い+いたし (お願いいたします), 報告+いたし (ご報告いたします),
+  //       し+かね (賛成しかねます), 沿い+かね (ご期待に沿いかねます)
   // Include VerbOnbinkei since 願い is often recognized as onbin form of 願う
   if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
-      next.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSubsidiaryHonorificRenyokei(next.surface)) {
+      next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      (grammar::isSubsidiaryHonorificRenyokei(next.surface) || grammar::isModalSubsidiaryRenyokei(next.surface))) {
     bonus += cost::kVeryStrongBonus;
   }
 

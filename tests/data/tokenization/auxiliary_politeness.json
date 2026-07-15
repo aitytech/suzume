@@ -773,6 +773,112 @@
           "surface": "ます"
         }
       ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "かね (かねる 補助動詞) POS Verb vs Auxiliary is the known 非自立-verb→Auxiliary deferred class; surface segmentation is correct"
+      },
+      "description": "Humble いたし + modal subsidiary かね stays segmented (no fake i-adjective)",
+      "expected": [
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "いたす",
+          "pos": "Verb",
+          "surface": "いたし"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かね"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "itashikanemasu",
+      "input": "対応いたしかねます",
+      "suzume_expected": [
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "いたす",
+          "pos": "Verb",
+          "surface": "いたし"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Verb",
+          "surface": "かね"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "かね (かねる 補助動詞) POS Verb vs Auxiliary is the known 非自立-verb→Auxiliary deferred class; surface segmentation is correct"
+      },
+      "description": "サ変 し + modal subsidiary かね (not しか+ね)",
+      "expected": [
+        {
+          "lemma": "賛成",
+          "pos": "Noun",
+          "surface": "賛成"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かね"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "shikanemasu",
+      "input": "賛成しかねます",
+      "suzume_expected": [
+        {
+          "lemma": "賛成",
+          "pos": "Noun",
+          "surface": "賛成"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Verb",
+          "surface": "かね"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ]
     }
   ],
   "description": "Politeness auxiliaries (ます、です)",

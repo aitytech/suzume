@@ -659,8 +659,11 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // Needs to overcome DET→NOUN bonus (-2.5) when competing with な+どの path.
   setCell(t, EPOS::ParticleAdverbial, EPOS::ParticleNo, cost::kVeryStrongBonus);
 
-  // ParticleAdverbial → VerbRenyokei (かも+しれ in かもしれない) - strong bonus
-  // This favors かも+しれ+ない over か+もし+れない
+  // ParticleAdverbial → VerbRenyokei (かも+しれ in かもしれない, など+あり, でも+あり)
+  // - strong bonus. Favors かも+しれ+ない over か+もし+れない and keeps a real
+  //   verb renyokei after a subsidiary particle. A single-mora renyokei after
+  //   this particle is a false over-split (し+かね misread as しか+ね←寝る) and
+  //   is penalized by surface length in scorer_connection_cost.cpp.
   setCell(t, EPOS::ParticleAdverbial, EPOS::VerbRenyokei, cost::kStrongBonus);
 
   // ParticleAdverbial → VerbShuushikei (でも+行く) - strong bonus
@@ -948,6 +951,13 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // Adjective 終止形 followed by verb 未然形 is grammatically unusual
   // Prevents 盛りだくさん → 盛りだく+さ+ん over dictionary entry
   setCell(t, EPOS::AdjBasic, EPOS::VerbMizenkei, cost::kVeryRare);
+
+  // AdjBasic → AuxTenseTa (対応い+た) - severe penalty
+  // An i-adjective 終止形 directly followed by past た is grammatically
+  // impossible: the adjectival past is 連用形かっ + た (高かっ+た), which
+  // travels the separate ADJ_かっ → AUX_過去 edge. Killing this edge removes
+  // fabricated i-adjective paths such as 対応い+た+しか+ね for 対応いたしかねます.
+  setCell(t, EPOS::AdjBasic, EPOS::AuxTenseTa, cost::kSevere);
 
   // AdjStem → AuxConjectureMitai: unnatural (美し+みたい should be 美しい+みたい)
   setCell(t, EPOS::AdjStem, EPOS::AuxConjectureMitai, cost::kAlmostNever);
