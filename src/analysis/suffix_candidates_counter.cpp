@@ -108,9 +108,22 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     }
   }
 
+  // A number + katakana unit merges only when the numeral is written in (half- or
+  // full-width) digits: 3キロ, 100ドル, ５センチ are one quantity token. A kanji
+  // numeral before katakana (五センチ, 十キロメートル) is split at the natural
+  // kanji→katakana boundary (五|センチ), matching MeCab, so it must not merge here.
+  bool numeral_is_digits = true;
+  for (size_t idx = start_pos; idx < numeral_end; ++idx) {
+    if (char_types[idx] != normalize::CharType::Digit) {
+      numeral_is_digits = false;
+      break;
+    }
+  }
+
   // Check for katakana unit suffix (e.g., キロ, ドル, メートル, パーセント)
   // Generate digit + katakana unit candidates like 3キロ, 100ドル, 80パーセント
-  if (numeral_end < char_types.size() && char_types[numeral_end] == normalize::CharType::Katakana) {
+  if (numeral_is_digits && numeral_end < char_types.size() &&
+      char_types[numeral_end] == normalize::CharType::Katakana) {
     // Find end of katakana sequence (max 8 chars for reasonable unit length)
     size_t unit_end = findCharRegionEnd(char_types, numeral_end, 8, normalize::CharType::Katakana);
 

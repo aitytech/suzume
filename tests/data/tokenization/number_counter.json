@@ -1,0 +1,92 @@
+{
+  "cases": [
+    {
+      "description": "五センチメートルの差 - auto-generated",
+      "expected": [
+        {
+          "lemma": "五",
+          "pos": "Noun",
+          "surface": "五"
+        },
+        {
+          "lemma": "センチメートル",
+          "pos": "Noun",
+          "surface": "センチメートル"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "差",
+          "pos": "Noun",
+          "surface": "差"
+        }
+      ],
+      "id": "no",
+      "input": "五センチメートルの差"
+    },
+    {
+      "description": "十キロメートル走った - auto-generated",
+      "expected": [
+        {
+          "lemma": "十",
+          "pos": "Noun",
+          "surface": "十"
+        },
+        {
+          "lemma": "キロメートル",
+          "pos": "Noun",
+          "surface": "キロメートル"
+        },
+        {
+          "lemma": "走る",
+          "pos": "Verb",
+          "surface": "走っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ttta",
+      "input": "十キロメートル走った"
+    },
+    {
+      "description": "数キロ離れた場所 - auto-generated",
+      "expected": [
+        {
+          "lemma": "数",
+          "pos": "Noun",
+          "surface": "数"
+        },
+        {
+          "lemma": "キロ",
+          "pos": "Noun",
+          "surface": "キロ"
+        },
+        {
+          "lemma": "離れる",
+          "pos": "Verb",
+          "surface": "離れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "場所",
+          "pos": "Noun",
+          "surface": "場所"
+        }
+      ],
+      "id": "reta",
+      "input": "数キロ離れた場所"
+    }
+  ],
+  "description": "number_counter tests",
+  "version": "1.0"
+}
