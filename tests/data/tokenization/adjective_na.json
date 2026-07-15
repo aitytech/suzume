@@ -1387,6 +1387,89 @@
       ],
       "id": "kana",
       "input": "厳かな式"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "さまざま 形状詞 POS Noun vs Adjective is the same reduplicated-adjectival-noun limitation as いろいろ (Adverb vs Adjective); surface is correct"
+      },
+      "description": "Reduplicated 形状詞 さまざま stays whole before な (no さ+まざま split)",
+      "expected": [
+        {
+          "lemma": "さまざま",
+          "pos": "Adjective",
+          "surface": "さまざま"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "観点",
+          "pos": "Noun",
+          "surface": "観点"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "議論",
+          "pos": "Noun",
+          "surface": "議論"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "samazamana_kara_shita",
+      "input": "さまざまな観点から議論した",
+      "suzume_expected": [
+        {
+          "lemma": "さまざま",
+          "pos": "Noun",
+          "surface": "さまざま"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "観点",
+          "pos": "Noun",
+          "surface": "観点"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "議論",
+          "pos": "Noun",
+          "surface": "議論"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     }
   ],
   "description": "Na-adjectives (ナ形容詞)",
