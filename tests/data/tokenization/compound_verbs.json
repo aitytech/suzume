@@ -139,6 +139,45 @@
       ],
       "id": "ha_no_iwo_ni_metamama_kani_chi_ttta",
       "input": "彼は万感の思いを胸に秘めたまま静かに立ち去った"
+    },
+    {
+      "description": "彼は立ち止まった - auto-generated",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "立ち止まる",
+          "pos": "Verb",
+          "surface": "立ち止まっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ha_chi_mattta",
+      "input": "彼は立ち止まった"
+    },
+    {
+      "description": "思い止まる - auto-generated",
+      "expected": [
+        {
+          "lemma": "思い止まる",
+          "pos": "Verb",
+          "surface": "思い止まる"
+        }
+      ],
+      "id": "i_maru",
+      "input": "思い止まる"
     }
   ],
   "description": "compound_verbs tests",
