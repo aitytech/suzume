@@ -478,6 +478,18 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // Ensures そんだけ → そん+だけ over そん+だ+け
   setCell(t, EPOS::Noun, EPOS::ParticleAdverbial, cost::kStrongBonus);
 
+  // Noun → ParticleBinding (時間+さえ, 水+すら) - strong bonus
+  // Binding particles attach to nouns just like adverbial ones; without this
+  // 時間さえ loses to 時間+さ(する未然, suru-passive surface bonus)+え and
+  // 水すら is absorbed into a fabricated verb blob
+  setCell(t, EPOS::Noun, EPOS::ParticleBinding, cost::kStrongBonus);
+
+  // ParticleBinding → AdjBasic (さえ+ない, すら+ない) - moderate bonus
+  // Existence-negation ない after a binding particle (時間さえない);
+  // mirrors NounFormal→AdjBasic. Without this the fragment path
+  // さ(する未然)+え(AUX可能)+ない outruns さえ+ない via the AUX chain bonus
+  setCell(t, EPOS::ParticleBinding, EPOS::AdjBasic, cost::kModerateBonus);
+
   // Noun → AdjNaAdj (一番+獰猛, とても+大切) - strong bonus
   // Prevents long kanji noun from absorbing na-adjective stem
   // (e.g., 一番獰猛+な → 一番+獰猛+な)

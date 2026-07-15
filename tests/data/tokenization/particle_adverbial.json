@@ -185,6 +185,131 @@
       ],
       "id": "o_shikanai",
       "input": "お金しかない"
+    },
+    {
+      "description": "時間さえない - auto-generated",
+      "expected": [
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "saenai",
+      "input": "時間さえない"
+    },
+    {
+      "description": "水さえある - auto-generated",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "saearu",
+      "input": "水さえある"
+    },
+    {
+      "description": "水さえあればいい - auto-generated",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "saearebaii",
+      "input": "水さえあればいい"
+    },
+    {
+      "description": "水すらない - auto-generated",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "すら",
+          "pos": "Particle",
+          "surface": "すら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "suranai",
+      "input": "水すらない"
+    },
+    {
+      "description": "それすら知らない - auto-generated",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "すら",
+          "pos": "Particle",
+          "surface": "すら"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "soresura_ranai",
+      "input": "それすら知らない"
     }
   ],
   "description": "particle_adverbial tests",

@@ -95,16 +95,17 @@ OnbinInflMatch bestOnbinInflMatch(const grammar::Inflection& inflection, const s
 }
 
 // True when the span [start_pos, end_pos) ends in a dictionary-registered
-// adverbial particle (副助詞), optionally followed by the negative ない /
-// なかっ / なかった. The 副助詞 しか ends in the a-row mora か, which coincides
+// particle of the given extended POS, optionally followed by the negative
+// ない / なかっ / なかった. The 副助詞 しか ends in the a-row mora か, which coincides
 // with the godan-ka mizenkei/onbin ending, so a fabricated (non-dictionary)
 // verb conjugation can absorb noun + しか(…ない) (水しかない read as a form of
 // the non-word 水しく). There is no productive godan verb 〜しく; such a span is
 // always [word] + 副助詞 (+ negative), never a single verb. The particle must
 // be 2+ codepoints so the single mora か of a genuine godan-ka mizenkei
 // (行かない) can never match.
-bool endsWithAdverbialParticleTail(const dictionary::DictionaryManager* dict_manager,
-                                   const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager,
+                               const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                               core::ExtendedPOS particle_pos) {
   if (dict_manager == nullptr || end_pos <= start_pos || end_pos > codepoints.size()) {
     return false;
   }
@@ -124,11 +125,16 @@ bool endsWithAdverbialParticleTail(const dictionary::DictionaryManager* dict_man
   for (size_t particle_len = 2; start_pos + particle_len < tail_end; ++particle_len) {
     std::string suffix = extractSubstring(codepoints, tail_end - particle_len, tail_end);
     const dictionary::DictionaryEntry* suffix_entry = dict_manager->lookupExact(suffix);
-    if (suffix_entry != nullptr && suffix_entry->extended_pos == core::ExtendedPOS::ParticleAdverbial) {
+    if (suffix_entry != nullptr && suffix_entry->extended_pos == particle_pos) {
       return true;
     }
   }
   return false;
+}
+
+bool endsWithAdverbialParticleTail(const dictionary::DictionaryManager* dict_manager,
+                                   const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  return endsWithParticleTailOfPos(dict_manager, codepoints, start_pos, end_pos, core::ExtendedPOS::ParticleAdverbial);
 }
 
 // Godan mizenkei pattern: single-kanji + A-row + れ/せ (passive/causative)
@@ -2316,6 +2322,18 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
             std::string base_form = stem + std::string(base_suffix);
             // Verify this is a valid verb
             bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, 0.5F, true);
+            // Reject a fabricated mizenkei that merely absorbs a trailing
+            // binding particle (係助詞): 水すらない is noun + すら + ない, never
+            // the mizenkei of a non-word godan-ra verb 水する. Only すら ends in
+            // an a-row mora among binding particles, and no genuine godan verb
+            // ends in 〜する, so this cannot suppress a real conjugation.
+            if (is_valid_verb && !vh::isVerbInDictionary(dict_manager, base_form) &&
+                endsWithParticleTailOfPos(dict_manager, codepoints, start_pos, multi_miz_end,
+                                          core::ExtendedPOS::ParticleBinding)) {
+              SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << extractSubstring(codepoints, start_pos, multi_miz_end)
+                                                << "\" fabricated mizenkei absorbing binding particle\n");
+              is_valid_verb = false;
+            }
             if (is_valid_verb) {
               std::string surface = extractSubstring(codepoints, start_pos, multi_miz_end);
               constexpr float kCost = candidate::verb_cost::kStandardBonus;  // Same as other negative patterns
