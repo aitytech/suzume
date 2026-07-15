@@ -492,139 +492,6 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "揺るぎない: ない is ADJ (compound adjective) not AUX (negative). Suzume treats 揺るぎない as adj, MeCab as verb+aux."
-      },
-      "description": "verb-nai-compound-split normalization (揺るぎ+ない)",
-      "expected": [
-        {
-          "lemma": "されど",
-          "pos": "Conjunction",
-          "surface": "されど"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "決意",
-          "pos": "Noun",
-          "surface": "決意"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "揺るぎ",
-          "pos": "Verb",
-          "surface": "揺るぎ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "もの",
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "saredomo_no_ha_ruginaimonodeattta",
-      "input": "されども彼の決意は揺るぎないものであった",
-      "suzume_expected": [
-        {
-          "lemma": "されど",
-          "pos": "Conjunction",
-          "surface": "されど"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "決意",
-          "pos": "Noun",
-          "surface": "決意"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "揺るぐ",
-          "pos": "Verb",
-          "surface": "揺るぎ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        },
-        {
-          "lemma": "もの",
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
-    },
-    {
-      "accepted_diff": {
-        "category": "pos-limitation",
         "reason": "suzume classifies なけれ as auxiliary (ない 仮定形) and 困難 as noun (na-adjective stem); accepted POS-limitation vs MeCab"
       },
       "description": "literary-volitional-n-split normalization (乗り越え+ん)",
@@ -1747,6 +1614,73 @@
       ],
       "id": "omachi_itadakemasu_honorific_split",
       "input": "お待ちいただけます"
+    },
+    {
+      "description": "されども彼の決意は揺るぎないものであった - auto-generated",
+      "expected": [
+        {
+          "lemma": "されど",
+          "pos": "Conjunction",
+          "surface": "されど"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "決意",
+          "pos": "Noun",
+          "surface": "決意"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "揺るぎ",
+          "pos": "Verb",
+          "surface": "揺るぎ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "saredomo_no_ha_ruginaimonodeattta",
+      "input": "されども彼の決意は揺るぎないものであった"
     }
   ],
   "description": "literary_quality tests",

@@ -155,6 +155,25 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
     }
   }
 
+  // A verb 連用形 directly followed by the non-existence ない takes the 否定助動詞 ない, and
+  // MeCab keeps the 連用形 as a Verb whose 原形 is the surface itself (揺るぎ+ない → 揺るぎ =
+  // 動詞 lemma 揺るぎ, ない = 助動詞), not the dictionary 終止形 揺るぐ. A trailing 体言 can pull
+  // ない into an attributive Adjective reading (揺るぎない**信念**); the 連用形 keeps its Verb POS
+  // and ない stays the 否定助動詞. Retag the lemma to the surface and ない → Auxiliary. The
+  // 未然形+ない negation (食べ+ない, 見+ない) never reaches here (its ない is already an Auxiliary),
+  // and 〜くない/〜たくない keep an adjectival stem, not a VerbRenyokei, so this fires only on the
+  // 連用形 + 非存在ない idiom.
+  for (size_t i = 1; i < result.size(); ++i) {
+    if (result[i].surface == "ない" && result[i].pos == core::PartOfSpeech::Adjective &&
+        result[i - 1].pos == core::PartOfSpeech::Verb &&
+        result[i - 1].extended_pos == core::ExtendedPOS::VerbRenyokei) {
+      result[i - 1].lemma = result[i - 1].surface;
+      result[i].pos = core::PartOfSpeech::Auxiliary;
+      result[i].extended_pos = core::ExtendedPOS::AuxNegativeNai;
+      result[i].lemma = "ない";
+    }
+  }
+
   // A compound-verb 連用形 (積み重ね, 組み立て, 話し合い) used as the head of a nominal phrase
   // is a 連用形転成名詞, not a verb: 努力の積み重ね**が**, 組み立て**が**得意, 経験を積み重ね
   // (EOS). Retag to NounVerbal with lemma = surface when such a compound-shape VerbRenyokei

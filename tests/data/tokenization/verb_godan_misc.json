@@ -1047,6 +1047,28 @@
       ],
       "id": "manande",
       "input": "まなんで"
+    },
+    {
+      "description": "揺るぎない信念 - auto-generated",
+      "expected": [
+        {
+          "lemma": "揺るぎ",
+          "pos": "Verb",
+          "surface": "揺るぎ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "信念",
+          "pos": "Noun",
+          "surface": "信念"
+        }
+      ],
+      "id": "ruginai",
+      "input": "揺るぎない信念"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",
