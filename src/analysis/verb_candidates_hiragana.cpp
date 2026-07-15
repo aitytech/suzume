@@ -1852,6 +1852,14 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       continue;
     }
 
+    // Skip te-form + subsidiary みる spans: an internal て/で followed by み is
+    // always [verb te-form] + みる (やってみ = やっ + て + み, われてみ =
+    // われ + て + み), never a single ichidan verb やってみる. This also
+    // suppresses the kateikei variant below (やってみれ from やってみれば).
+    if (!is_dict_verb && vh::embedsTeFormMiruAuxiliary(codepoints, start_pos, end_pos)) {
+      continue;
+    }
+
     // Skip a fabricated verb that spans an auxiliary prefix + auxiliary tail:
     // でござい → で(AuxCopulaDa) + ござい(AuxGozaru). MeCab always keeps a
     // closed-class auxiliary chain split, so an open-class verb whose leading

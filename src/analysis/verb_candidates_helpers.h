@@ -285,6 +285,30 @@ inline bool embedsTeFormAuxiliary(std::string_view surface) {
 }
 
 /**
+ * @brief True when a candidate span embeds a te-form て/で immediately followed
+ *        by み past its first codepoint.
+ *
+ * An internal て/で inside a verb surface is always a conjugation boundary (the
+ * te-form particle or its voiced onbin form), and a following み is the onset of
+ * the subsidiary verb みる, so the span is [te-form] + みる, never a single
+ * conjugated verb (食べてみれば = 食べ + て + みれ + ば, やってみ = やっ + て +
+ * み). No real verb embeds てみ/でみ inside one conjugated form. The codepoint
+ * at @p start_pos is exempt: a candidate that merely begins with て/で (てみ
+ * itself, で-leading runs) is a different shape and is left untouched.
+ */
+inline bool embedsTeFormMiruAuxiliary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (end_pos > codepoints.size()) {
+    return false;
+  }
+  for (size_t pos = start_pos + 1; pos + 1 < end_pos; ++pos) {
+    if ((codepoints[pos] == core::hiragana::kTe || codepoints[pos] == U'で') && codepoints[pos + 1] == U'み') {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * @brief Extend candidates with emphatic suffix variants
  *
  * For each verb/adjective candidate, checks if input continues with emphatic

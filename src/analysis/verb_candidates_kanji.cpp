@@ -1724,6 +1724,13 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
           SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" fabricated verb absorbing focus particle\n");
           continue;
         }
+        // Reject a fabricated conjugation that spans a te-form + the subsidiary
+        // verb みる: an internal て/で followed by み is always [verb te-form] +
+        // みる (食べてみれば = 食べ + て + みれ + ば), never one conjugated verb.
+        if (!in_dict && vh::embedsTeFormMiruAuxiliary(codepoints, start_pos, end_pos)) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" fabricated verb spanning te-form + みる\n");
+          continue;
+        }
         if (!is_comp_adj && in_dict && !is_suru) {
           // Found in dictionary - give strong bonus (not for suru-verbs)
           base_cost = candidate::confidenceScaledCost(verb_opts.base_cost_verified, best.confidence,
