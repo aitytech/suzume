@@ -2706,6 +2706,109 @@
       ],
       "id": "ki_gita",
       "input": "行き過ぎた行動"
+    },
+    {
+      "description": "食べ過ぎた - auto-generated",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Auxiliary",
+          "surface": "過ぎ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "be_gita",
+      "input": "食べ過ぎた"
+    },
+    {
+      "description": "働き過ぎは体に悪い - auto-generated",
+      "expected": [
+        {
+          "lemma": "働く",
+          "pos": "Verb",
+          "surface": "働き"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Auxiliary",
+          "surface": "過ぎ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "体",
+          "pos": "Noun",
+          "surface": "体"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "悪い",
+          "pos": "Adjective",
+          "surface": "悪い"
+        }
+      ],
+      "id": "ki_giha_ni_i",
+      "input": "働き過ぎは体に悪い"
+    },
+    {
+      "description": "走り過ぎる - auto-generated",
+      "expected": [
+        {
+          "lemma": "走る",
+          "pos": "Verb",
+          "surface": "走り"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Auxiliary",
+          "surface": "過ぎる"
+        }
+      ],
+      "id": "ri_giru",
+      "input": "走り過ぎる"
+    },
+    {
+      "description": "使い過ぎに注意 - auto-generated",
+      "expected": [
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使い"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Auxiliary",
+          "surface": "過ぎ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "注意",
+          "pos": "Noun",
+          "surface": "注意"
+        }
+      ],
+      "id": "i_gini",
+      "input": "使い過ぎに注意"
     }
   ],
   "description": "Compound verbs",

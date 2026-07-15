@@ -139,6 +139,22 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
     }
   }
 
+  // Kanji 過ぎ/過ぎる directly after a verb 連用形 is the excessive subsidiary すぎる
+  // (食べ過ぎ, 使い過ぎ, 働き過ぎ, 走り過ぎる → 過ぎ = 動詞,非自立 → Auxiliary, lemma 過ぎる),
+  // not a standalone verb 過ぎる (時間が過ぎる stays Verb after a case particle). The
+  // lexicalized compounds 通り過ぎる/過ぎ去る/行き過ぎる are single L2 tokens, so no standalone
+  // 過ぎ follows a V1 here. Also repairs the bare-renyokei fake godan reading 過ぐ → 過ぎる.
+  // Hiragana すぎ keeps POS Verb (MeCab orthography split), so this is kanji-過ぎ only.
+  for (size_t i = 1; i < result.size(); ++i) {
+    if ((result[i].surface == "過ぎ" || result[i].surface == "過ぎる") && result[i].pos == core::PartOfSpeech::Verb &&
+        result[i - 1].pos == core::PartOfSpeech::Verb &&
+        result[i - 1].extended_pos == core::ExtendedPOS::VerbRenyokei) {
+      result[i].pos = core::PartOfSpeech::Auxiliary;
+      result[i].extended_pos = core::ExtendedPOS::AuxExcessive;
+      result[i].lemma = "過ぎる";
+    }
+  }
+
   // A compound-verb 連用形 (積み重ね, 組み立て, 話し合い) used as the head of a nominal phrase
   // is a 連用形転成名詞, not a verb: 努力の積み重ね**が**, 組み立て**が**得意, 経験を積み重ね
   // (EOS). Retag to NounVerbal with lemma = surface when such a compound-shape VerbRenyokei
