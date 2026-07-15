@@ -1,6 +1,8 @@
 #ifndef SUZUME_ANALYSIS_CANDIDATE_CONSTANTS_H_
 #define SUZUME_ANALYSIS_CANDIDATE_CONSTANTS_H_
 
+#include <cstddef>
+
 // =============================================================================
 // Candidate Generation Constants
 // =============================================================================
@@ -25,6 +27,15 @@ namespace suzume::analysis::candidate {
 // (debug-only field). Named so callers needing an explicit ExtendedPOS argument can
 // reach it positionally without a raw score literal.
 constexpr float kNoOriginConfidence = 0.0F;
+
+// Last-resort single-character edge used to keep the lattice connected.
+constexpr float kFallbackCandidateCost = 5.0F;
+
+// Colloquial emphatic suffixes (やばいっ, きたあああ).
+constexpr size_t kEmphaticMinRepeatedVowels = 2;
+constexpr float kEmphaticRepeatedVowelBonus = -0.5F;
+constexpr float kEmphaticRepeatedVowelLengthPenalty = 0.05F;
+constexpr float kEmphaticCharacterPenalty = 0.3F;
 
 // High origin-confidence for a rule-derived candidate whose surface context makes
 // the analysis effectively unambiguous (e.g. the gated 来る mizenkei こ before a

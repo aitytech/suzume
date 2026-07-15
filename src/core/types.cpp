@@ -144,8 +144,7 @@ bool isTaggable(PartOfSpeech pos) {
 }
 
 bool isContentWord(PartOfSpeech pos) {
-  return pos == PartOfSpeech::Noun || pos == PartOfSpeech::Verb || pos == PartOfSpeech::Adjective ||
-         pos == PartOfSpeech::Adverb;
+  return isTaggable(pos);
 }
 
 bool isFunctionWord(PartOfSpeech pos) {

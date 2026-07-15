@@ -4,6 +4,7 @@ import json
 import os
 import re
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 
 from ..core.mecab import mecab_analyze
@@ -170,28 +171,39 @@ def _map_conj_type(token: dict) -> str:
     return ""
 
 
-def _load_entries_from_files(file_list: list[str]) -> tuple[list[dict], dict[str, list[dict]]]:
-    """Load dictionary entries from a list of file paths."""
-    entries = []
-    by_surface: dict[str, list[dict]] = {}
+def _iter_dictionary_lines(file_list: list[str], *, include_disabled: bool = False) -> Iterator[tuple[str, int, str]]:
+    """Yield (relative path, line number, active entry text) for dictionary data."""
+    disabled_prefix = "#DISABLED# "
     for file_rel in file_list:
         filepath = PROJECT_ROOT / file_rel
         if not filepath.exists():
             continue
         for line_num, line in enumerate(filepath.read_text(encoding="utf-8").splitlines(), 1):
+            if line.startswith(disabled_prefix):
+                if include_disabled:
+                    yield file_rel, line_num, line[len(disabled_prefix) :]
+                continue
             if line.startswith("#") or not line.strip():
                 continue
-            fields = line.split("\t")
-            entry = {
-                "surface": fields[0],
-                "pos": fields[1] if len(fields) > 1 else "",
-                "conj_type": fields[2] if len(fields) > 2 else "",
-                "line_num": line_num,
-                "raw": line,
-                "file": file_rel,
-            }
-            entries.append(entry)
-            by_surface.setdefault(fields[0], []).append(entry)
+            yield file_rel, line_num, line
+
+
+def _load_entries_from_files(file_list: list[str]) -> tuple[list[dict], dict[str, list[dict]]]:
+    """Load dictionary entries from a list of file paths."""
+    entries = []
+    by_surface: dict[str, list[dict]] = {}
+    for file_rel, line_num, line in _iter_dictionary_lines(file_list):
+        fields = line.split("\t")
+        entry = {
+            "surface": fields[0],
+            "pos": fields[1] if len(fields) > 1 else "",
+            "conj_type": fields[2] if len(fields) > 2 else "",
+            "line_num": line_num,
+            "raw": line,
+            "file": file_rel,
+        }
+        entries.append(entry)
+        by_surface.setdefault(fields[0], []).append(entry)
     return entries, by_surface
 
 
@@ -212,35 +224,17 @@ def _load_all_entries() -> tuple[list[dict], dict[str, list[dict]]]:
 
 def _find_word_in_files(word: str) -> str | None:
     """Find word in core dict files, return file path or None."""
-    for file_rel in ALL_DICT_FILES:
-        filepath = PROJECT_ROOT / file_rel
-        if not filepath.exists():
-            continue
-        for line in filepath.read_text(encoding="utf-8").splitlines():
-            if line.startswith("#") or not line.strip():
-                continue
-            surface = line.split("\t")[0]
-            if surface == word:
-                return file_rel
-            if line.startswith("#DISABLED# "):
-                disabled_surface = line[len("#DISABLED# ") :].split("\t")[0]
-                if disabled_surface == word:
-                    return file_rel
+    for file_rel, _, line in _iter_dictionary_lines(list(ALL_DICT_FILES), include_disabled=True):
+        if line.split("\t")[0] == word:
+            return file_rel
     return None
 
 
 def _find_word_in_user_files(word: str) -> str | None:
     """Find word in user dict files."""
-    for cat in USER_CATEGORIES:
-        filepath = PROJECT_ROOT / f"data/user/{cat}.tsv"
-        if not filepath.exists():
-            continue
-        for line in filepath.read_text(encoding="utf-8").splitlines():
-            if line.startswith("#") or not line.strip():
-                continue
-            surface = line.split("\t")[0]
-            if surface == word:
-                return f"data/user/{cat}.tsv"
+    for file_rel, _, line in _iter_dictionary_lines(_all_user_files()):
+        if line.split("\t")[0] == word:
+            return file_rel
     return None
 
 
@@ -800,17 +794,11 @@ async def dict_grep(pattern: str, user: str = "", search_all: bool = False) -> s
     else:
         files = list(ALL_DICT_FILES)
 
-    matches = []
-    for file_rel in files:
-        filepath = PROJECT_ROOT / file_rel
-        if not filepath.exists():
-            continue
-        for line in filepath.read_text(encoding="utf-8").splitlines():
-            if not line.strip() or line.startswith("#"):
-                continue
-            surface = line.split("\t")[0]
-            if rx.search(surface):
-                matches.append({"file": file_rel, "entry": line})
+    matches = [
+        {"file": file_rel, "entry": line}
+        for file_rel, _, line in _iter_dictionary_lines(files)
+        if rx.search(line.split("\t")[0])
+    ]
 
     return _json_result({"pattern": pattern, "matches": matches, "total": len(matches)})
 
@@ -1093,16 +1081,10 @@ async def dict_remove_matching(
         files = list(ALL_DICT_FILES)
 
     matches = []
-    for file_rel in files:
-        filepath = PROJECT_ROOT / file_rel
-        if not filepath.exists():
-            continue
-        for line in filepath.read_text(encoding="utf-8").splitlines():
-            if not line.strip() or line.startswith("#"):
-                continue
-            surface = line.split("\t")[0]
-            if rx.search(surface):
-                matches.append({"file": file_rel, "surface": surface, "entry": line})
+    for file_rel, _, line in _iter_dictionary_lines(files):
+        surface = line.split("\t")[0]
+        if rx.search(surface):
+            matches.append({"file": file_rel, "surface": surface, "entry": line})
 
     if not matches:
         return _json_result({"pattern": pattern, "matches": [], "total": 0, "applied": False})

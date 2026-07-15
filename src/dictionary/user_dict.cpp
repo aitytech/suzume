@@ -52,14 +52,6 @@ bool isConjugationTypeField(std::string_view field) {
   return conjTypeFromAnyAlias(field).has_value();
 }
 
-bool isValidPos(core::PartOfSpeech pos) {
-  return static_cast<size_t>(pos) < static_cast<size_t>(core::PartOfSpeech::Count_);
-}
-
-bool isValidExtendedPos(core::ExtendedPOS extended_pos) {
-  return static_cast<size_t>(extended_pos) < static_cast<size_t>(core::ExtendedPOS::Count_);
-}
-
 ParsedLine parseDelimitedLine(std::string_view line, char delimiter) {
   ParsedLine result;
   std::string field;
@@ -170,7 +162,7 @@ core::Expected<size_t, core::Error> UserDictionary::loadFromMemory(const char* d
 }
 
 void UserDictionary::addEntry(const DictionaryEntry& entry) {
-  if (entry.surface.empty() || !isValidPos(entry.pos) || !isValidExtendedPos(entry.extended_pos)) {
+  if (entry.surface.empty() || !core::isValidPartOfSpeech(entry.pos) || !core::isValidExtendedPos(entry.extended_pos)) {
     return;
   }
 

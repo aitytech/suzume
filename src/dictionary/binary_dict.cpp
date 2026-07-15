@@ -31,7 +31,7 @@ core::PartOfSpeech uint8ToPos(uint8_t val) {
 }
 
 bool isValidPos(uint8_t val) {
-  return val < static_cast<uint8_t>(core::PartOfSpeech::Count_);
+  return core::isValidPartOfSpeech(static_cast<core::PartOfSpeech>(val));
 }
 
 uint8_t extendedPosToUint8(core::ExtendedPOS epos) {
@@ -46,7 +46,7 @@ core::ExtendedPOS uint8ToExtendedPos(uint8_t val) {
 }
 
 bool isValidExtendedPos(uint8_t val) {
-  return val < static_cast<uint8_t>(core::ExtendedPOS::Count_);
+  return core::isValidExtendedPos(static_cast<core::ExtendedPOS>(val));
 }
 
 struct BinaryDictEntryV0 {

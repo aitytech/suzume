@@ -213,9 +213,6 @@ add_custom_target(build-dict
   COMMENT "Compiling TSV dictionaries to binary format"
 )
 
-# Collect all core TSV files for validation
-file(GLOB CORE_TSV_FILES "${DICT_DATA_DIR}/core/*.tsv")
-
 # Custom target: validate-dict - Validate all TSV dictionaries
 add_custom_target(validate-dict
   COMMAND ${CMAKE_COMMAND} -E echo "Validating core dictionaries..."

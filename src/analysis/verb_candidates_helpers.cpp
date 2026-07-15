@@ -7,6 +7,7 @@
 
 #include <algorithm>
 
+#include "analysis/candidate_constants.h"
 #include "analysis/scorer_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
@@ -174,6 +175,63 @@ char32_t getHiraganaVowel(char32_t c) {
   }
 }
 
+EmphaticSuffixMatch matchEmphaticSuffix(const std::vector<char32_t>& codepoints, size_t base_end,
+                                        core::PartOfSpeech base_pos, SokuonOnsetPolicy policy) {
+  EmphaticSuffixMatch match;
+  match.end = base_end;
+  if (base_end == 0 || base_end > codepoints.size()) {
+    return match;
+  }
+
+  while (match.end < codepoints.size() && isEmphaticChar(codepoints[match.end])) {
+    const char32_t codepoint = codepoints[match.end];
+    if (policy == SokuonOnsetPolicy::Candidate && (codepoint == core::hiragana::kSmallTsu || codepoint == U'ッ') &&
+        isSuppressedSokuonOnset(codepoints, match.end, base_pos, codepoints[base_end - 1], policy)) {
+      break;
+    }
+    match.suffix += normalize::encodeUtf8(codepoint);
+    ++match.standard_char_count;
+    ++match.end;
+  }
+
+  if (policy == SokuonOnsetPolicy::DictionaryEntry && match.suffix == "っ" && match.end < codepoints.size() &&
+      isSuppressedSokuonOnset(codepoints, base_end, base_pos, codepoints[base_end - 1], policy)) {
+    match.suffix.clear();
+    match.standard_char_count = 0;
+    return match;
+  }
+
+  const char32_t repeated_vowel = getHiraganaVowel(codepoints[base_end - 1]);
+  if (repeated_vowel == 0 || match.end >= codepoints.size()) {
+    return match;
+  }
+
+  const size_t vowel_start = match.end;
+  while (match.end < codepoints.size() && codepoints[match.end] == repeated_vowel) {
+    ++match.repeated_vowel_count;
+    ++match.end;
+  }
+  if (match.repeated_vowel_count < candidate::kEmphaticMinRepeatedVowels) {
+    match.repeated_vowel_count = 0;
+    match.end = vowel_start;
+    return match;
+  }
+
+  for (size_t idx = 0; idx < match.repeated_vowel_count; ++idx) {
+    match.suffix += normalize::encodeUtf8(repeated_vowel);
+  }
+
+  return match;
+}
+
+float emphaticCostAdjustment(const EmphaticSuffixMatch& match) {
+  if (match.repeated_vowel_count >= candidate::kEmphaticMinRepeatedVowels) {
+    const auto char_count = static_cast<float>(match.standard_char_count + match.repeated_vowel_count);
+    return candidate::kEmphaticRepeatedVowelBonus + candidate::kEmphaticRepeatedVowelLengthPenalty * char_count;
+  }
+  return candidate::kEmphaticCharacterPenalty * static_cast<float>(match.standard_char_count);
+}
+
 void addEmphaticVariants(std::vector<UnknownCandidate>& candidates, const std::vector<char32_t>& codepoints) {
   std::vector<UnknownCandidate> emphatic_variants;
 
@@ -183,73 +241,14 @@ void addEmphaticVariants(std::vector<UnknownCandidate>& candidates, const std::v
       continue;
     }
 
-    // Check if there are emphatic characters after the candidate
-    size_t emphatic_end = cand.end;
-    std::string emphatic_suffix;
-
-    while (emphatic_end < codepoints.size()) {
-      char32_t c = codepoints[emphatic_end];
-      if (isEmphaticChar(c)) {
-        // Stop before a sokuon that begins a te/ta-form, colloquial auxiliary
-        // (っす/っさ/っせ) or Godan quotative (っと): it is a separate morpheme.
-        if ((c == core::hiragana::kSmallTsu || c == U'ッ') && cand.end > 0 &&
-            isSuppressedSokuonOnset(codepoints, emphatic_end, cand.pos, codepoints[cand.end - 1])) {
-          break;
-        }
-        emphatic_suffix += normalize::encodeUtf8(c);
-        ++emphatic_end;
-      } else {
-        break;
-      }
-    }
-
-    // Track standard emphatic chars separately for cost calculation
-    size_t standard_emphatic_chars = emphatic_suffix.size() / core::kJapaneseCharBytes;
-
-    // Also check for repeated vowels matching the final character's vowel
-    size_t vowel_repeat_count = 0;
-    if (cand.end > 0 && emphatic_end < codepoints.size()) {
-      char32_t final_char = codepoints[cand.end - 1];
-      char32_t expected_vowel = getHiraganaVowel(final_char);
-
-      if (expected_vowel != 0) {
-        size_t vowel_start = emphatic_end;
-
-        // Count consecutive occurrences of the expected vowel
-        while (emphatic_end < codepoints.size() && codepoints[emphatic_end] == expected_vowel) {
-          ++vowel_repeat_count;
-          ++emphatic_end;
-        }
-
-        // Require at least 2 repeated vowels for emphatic pattern
-        if (vowel_repeat_count >= 2) {
-          for (size_t i = 0; i < vowel_repeat_count; ++i) {
-            emphatic_suffix += normalize::encodeUtf8(expected_vowel);
-          }
-        } else {
-          // Not enough repetition, reset position
-          emphatic_end = vowel_start;
-          vowel_repeat_count = 0;
-        }
-      }
-    }
+    const auto emphatic = matchEmphaticSuffix(codepoints, cand.end, cand.pos);
 
     // Add emphatic variant if we found any emphatic characters
-    if (!emphatic_suffix.empty()) {
+    if (!emphatic.empty()) {
       UnknownCandidate emphatic_cand = cand;
-      emphatic_cand.surface += emphatic_suffix;
-      emphatic_cand.end = emphatic_end;
-      float cost_adjustment;
-
-      if (vowel_repeat_count >= 2) {
-        // Give a BONUS for vowel repetition to compete with split alternatives
-        float char_count = static_cast<float>(emphatic_suffix.size() / core::kJapaneseCharBytes);
-        cost_adjustment = -0.5F + 0.05F * char_count;
-      } else {
-        // Standard emphatic chars (sokuon/chouon/small vowels) use penalty
-        cost_adjustment = 0.3F * static_cast<float>(standard_emphatic_chars);
-      }
-      emphatic_cand.cost += cost_adjustment;
+      emphatic_cand.surface += emphatic.suffix;
+      emphatic_cand.end = emphatic.end;
+      emphatic_cand.cost += emphaticCostAdjustment(emphatic);
 #ifdef SUZUME_DEBUG_INFO
       emphatic_cand.pattern += "_emphatic";
 #endif

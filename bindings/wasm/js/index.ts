@@ -451,11 +451,7 @@ export class Suzume {
   analyze(text: string): Morpheme[] {
     this.ensureAlive();
 
-    const textBytes = this.module.lengthBytesUTF8(text) + 1;
-    const textPtr = this.module._malloc(textBytes);
-
-    try {
-      this.module.stringToUTF8(text, textPtr, textBytes);
+    return this.withUtf8String(text, (textPtr) => {
       const resultPtr = this._analyze(this.handle, textPtr);
 
       if (resultPtr === 0) {
@@ -467,9 +463,7 @@ export class Suzume {
       } finally {
         this._resultFree(resultPtr);
       }
-    } finally {
-      this.module._free(textPtr);
-    }
+    });
   }
 
   /**
@@ -482,12 +476,7 @@ export class Suzume {
   generateTags(text: string, options?: TagOptions): Tag[] {
     this.ensureAlive();
 
-    const textBytes = this.module.lengthBytesUTF8(text) + 1;
-    const textPtr = this.module._malloc(textBytes);
-
-    try {
-      this.module.stringToUTF8(text, textPtr, textBytes);
-
+    return this.withUtf8String(text, (textPtr) => {
       if (options) {
         // Build pos_filter bitmask
         let posFilter = 0;
@@ -525,35 +514,14 @@ export class Suzume {
           // header documents (mirrors the extended-options path above).
           heapU32[(optionsPtr + layout.structSize) >> 2] = layout.size;
 
-          const tagsPtr = this._generateTagsWithOptions(this.handle, textPtr, optionsPtr);
-          if (tagsPtr === 0) {
-            throw new Error(`Suzume tag generation failed: ${this.lastError || 'unknown error'}`);
-          }
-
-          try {
-            return this.parseTags(tagsPtr);
-          } finally {
-            this._tagsFree(tagsPtr);
-          }
+          return this.consumeTags(this._generateTagsWithOptions(this.handle, textPtr, optionsPtr));
         } finally {
           this.module._free(optionsPtr);
         }
       }
 
-      const tagsPtr = this._generateTags(this.handle, textPtr);
-
-      if (tagsPtr === 0) {
-        throw new Error(`Suzume tag generation failed: ${this.lastError || 'unknown error'}`);
-      }
-
-      try {
-        return this.parseTags(tagsPtr);
-      } finally {
-        this._tagsFree(tagsPtr);
-      }
-    } finally {
-      this.module._free(textPtr);
-    }
+      return this.consumeTags(this._generateTags(this.handle, textPtr));
+    });
   }
 
   /**
@@ -565,15 +533,10 @@ export class Suzume {
   loadUserDictionary(data: string): boolean {
     this.ensureAlive();
 
-    const dataBytes = this.module.lengthBytesUTF8(data) + 1;
-    const dataPtr = this.module._malloc(dataBytes);
-
-    try {
-      this.module.stringToUTF8(data, dataPtr, dataBytes);
-      return this._loadUserDict(this.handle, dataPtr, dataBytes - 1) === 1;
-    } finally {
-      this.module._free(dataPtr);
-    }
+    return this.withUtf8String(
+      data,
+      (dataPtr, dataBytes) => this._loadUserDict(this.handle, dataPtr, dataBytes - 1) === 1,
+    );
   }
 
   /**
@@ -672,6 +635,31 @@ export class Suzume {
   private ensureAlive(): void {
     if (this.handle === 0) {
       throw new Error('Suzume instance has been destroyed');
+    }
+  }
+
+  private withUtf8String<T>(
+    value: string,
+    operation: (pointer: number, byteLength: number) => T,
+  ): T {
+    const byteLength = this.module.lengthBytesUTF8(value) + 1;
+    const pointer = this.module._malloc(byteLength);
+    try {
+      this.module.stringToUTF8(value, pointer, byteLength);
+      return operation(pointer, byteLength);
+    } finally {
+      this.module._free(pointer);
+    }
+  }
+
+  private consumeTags(tagsPtr: number): Tag[] {
+    if (tagsPtr === 0) {
+      throw new Error(`Suzume tag generation failed: ${this.lastError || 'unknown error'}`);
+    }
+    try {
+      return this.parseTags(tagsPtr);
+    } finally {
+      this._tagsFree(tagsPtr);
     }
   }
 

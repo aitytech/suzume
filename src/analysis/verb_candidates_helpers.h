@@ -159,38 +159,76 @@ bool isEmphaticChar(char32_t c);
 char32_t getHiraganaVowel(char32_t c);
 
 /**
+ * @brief A matched emphatic suffix and the input position after it.
+ */
+struct EmphaticSuffixMatch {
+  std::string suffix;
+  size_t end = 0;
+  size_t standard_char_count = 0;
+  size_t repeated_vowel_count = 0;
+
+  [[nodiscard]] bool empty() const { return suffix.empty(); }
+};
+
+/**
+ * @brief Context-specific treatment of a sokuon before て/た.
+ */
+enum class SokuonOnsetPolicy {
+  Candidate,        // Generated full-form candidate: release っ from って/った.
+  DictionaryEntry,  // Dictionary stem: preserve productive onbin (あらっ+て/た).
+};
+
+/**
  * @brief Decide whether a sokuon (っ/ッ) begins a following morpheme rather than
  *        attaching to the base candidate as emphatic elongation.
  *
  * A sokuon after a verb/adjective/auxiliary is normally emphatic (行くっ, やばいっ).
- * It must instead be released when it begins:
- *   - a te/ta-form (って/った),
- *   - the colloquial polite auxiliary っす/っさ/っせ (=です), or
- *   - a Godan quotative っと after a 終止形 (u-row) verb (行く+っと).
- * In those cases the base candidate must stop before the sokuon so the following
- * morpheme (て/た/っす/っと ...) can split off. This is the single guard shared by
- * the dictionary path (tokenizer) and the unknown-word path (addEmphaticVariants),
- * so both split an i-adjective/verb stem + っす identically.
+ * It must instead be released when it begins the colloquial polite auxiliary
+ * っす/っさ/っせ or a Godan quotative っと. Generated full-form candidates also
+ * release っ from って/った. Dictionary stems retain productive onbin before
+ * て/た (あらっ+て/た), except for a u-row dictionary form that would otherwise
+ * absorb a separate って. The shared policy keeps these intentional differences
+ * explicit while reusing the scanning and cost logic.
  *
  * @param codepoints Full input codepoints.
  * @param sokuon_pos Index of the sokuon character.
  * @param base_pos   POS of the base candidate (Verb enables the っと quotative check).
  * @param base_final Final codepoint of the base candidate.
+ * @param policy     Candidate source policy for って/った handling.
  * @return true if the sokuon should be released (not absorbed as emphatic).
  */
 inline bool isSuppressedSokuonOnset(const std::vector<char32_t>& codepoints, size_t sokuon_pos,
-                                    core::PartOfSpeech base_pos, char32_t base_final) {
+                                    core::PartOfSpeech base_pos, char32_t base_final, SokuonOnsetPolicy policy) {
   if (sokuon_pos + 1 >= codepoints.size()) {
     return false;  // Sokuon at end - keep as emphatic
   }
   char32_t next = codepoints[sokuon_pos + 1];
-  // Te/ta-form (って/った) or colloquial polite auxiliary っす/っさ/っせ (=です).
-  if (next == core::hiragana::kTe || next == core::hiragana::kTa || next == U'す' || next == U'さ' || next == U'せ') {
+  // Colloquial polite auxiliary っす/っさ/っせ (=です).
+  if (next == U'す' || next == U'さ' || next == U'せ') {
     return true;
   }
-  // Godan quotative っと after a 終止形 (u-row) verb: 行く+っと, not 行くっ+と.
-  return next == U'と' && base_pos == core::PartOfSpeech::Verb && normalize::isURowHiragana(base_final);
+  const bool u_row_verb = base_pos == core::PartOfSpeech::Verb && normalize::isURowHiragana(base_final);
+  if (next == U'と') {
+    return u_row_verb;  // Godan quotative っと: 行く+っと, not 行くっ+と.
+  }
+  if (policy == SokuonOnsetPolicy::DictionaryEntry) {
+    // A dictionary stem such as あら must retain the onbin っ in あらっ+て/た.
+    return next == core::hiragana::kTe && u_row_verb;
+  }
+  return next == core::hiragana::kTe || next == core::hiragana::kTa;
 }
+
+/**
+ * @brief Match standard emphatic marks and repeated final vowels after a candidate.
+ */
+EmphaticSuffixMatch matchEmphaticSuffix(const std::vector<char32_t>& codepoints, size_t base_end,
+                                        core::PartOfSpeech base_pos,
+                                        SokuonOnsetPolicy policy = SokuonOnsetPolicy::Candidate);
+
+/**
+ * @brief Return the cost adjustment for a matched emphatic suffix.
+ */
+float emphaticCostAdjustment(const EmphaticSuffixMatch& match);
 
 /**
  * @brief True when a single-verb candidate surface embeds a て/で-form followed

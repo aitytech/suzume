@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include "normalize/char_type.h"
@@ -67,6 +68,11 @@ size_t charPosToBytePos(const std::vector<char32_t>& codepoints, size_t char_pos
  */
 size_t advanceCharsToBytePos(const std::vector<char32_t>& codepoints, size_t start_char, size_t start_byte,
                              size_t target_byte);
+
+/**
+ * @brief Encode a codepoint range as UTF-8.
+ */
+std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t start, size_t end);
 
 }  // namespace suzume::analysis
 

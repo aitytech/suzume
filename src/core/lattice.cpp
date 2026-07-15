@@ -4,18 +4,6 @@
 
 namespace suzume::core {
 
-namespace {
-
-bool isValidPos(PartOfSpeech pos) {
-  return static_cast<size_t>(pos) < static_cast<size_t>(PartOfSpeech::Count_);
-}
-
-bool isValidExtendedPos(ExtendedPOS extended_pos) {
-  return static_cast<size_t>(extended_pos) < static_cast<size_t>(ExtendedPOS::Count_);
-}
-
-}  // namespace
-
 Lattice::Lattice(size_t text_length) : text_length_(text_length), edge_indices_by_start_(text_length + 1) {}
 
 size_t Lattice::addEdge(std::string_view surface, uint32_t start, uint32_t end, PartOfSpeech pos, float cost,
@@ -23,7 +11,7 @@ size_t Lattice::addEdge(std::string_view surface, uint32_t start, uint32_t end, 
                         [[maybe_unused]] CandidateOrigin origin, [[maybe_unused]] float origin_confidence,
                         [[maybe_unused]] std::string_view origin_detail, ExtendedPOS extended_pos,
                         [[maybe_unused]] std::string_view epos_source) {
-  if (start >= end || end > text_length_ || !isValidPos(pos) || !isValidExtendedPos(extended_pos) ||
+  if (start >= end || end > text_length_ || !isValidPartOfSpeech(pos) || !isValidExtendedPos(extended_pos) ||
       all_edges_.size() >= kMaxEdges) {
     return static_cast<size_t>(-1);
   }

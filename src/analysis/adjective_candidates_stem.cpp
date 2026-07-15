@@ -230,7 +230,8 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       // Use strong negative cost to prefer ADJ_stem + すぎる split over compound
       // Need: stem + connection(0.5) + すぎる(0.4) < compound(0.35)
       // Required: stem < 0.35 - 0.5 - 0.4 = -0.55
-      float cost = candidate::kAdjStemBaseCost + (1.0F - adj_confidence) * candidate::kAdjStemConfScale;
+      float cost =
+          adj_detail::confidenceScaledCost(candidate::kAdjStemBaseCost, adj_confidence, candidate::kAdjStemConfScale);
       SUZUME_DEBUG_LOG("[ADJ_STEM]   ✓ candidate stem=\"" << stem << "\" cost=" << cost << "\n");
       candidates.push_back(makeIAdjStemCandidate(stem, start_pos, kanji_end, base_form, cost,
                                                  CandidateOrigin::AdjectiveI, adj_confidence, "adj_stem_garu_conn"));
@@ -315,15 +316,9 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
 
       // Validate that this looks like a real adjective
       const auto& adj_results = inflection.analyze(base_form);
-      bool is_valid_adjective = false;
-      float adj_confidence = 0.0F;
-      for (const auto& result : adj_results) {
-        if (result.verb_type == grammar::VerbType::IAdjective && result.confidence >= candidate::kIAdjConfMin) {
-          is_valid_adjective = true;
-          adj_confidence = result.confidence;
-          break;
-        }
-      }
+      const float adj_confidence =
+          adj_detail::firstConfidenceAtLeast(adj_results, grammar::VerbType::IAdjective, candidate::kIAdjConfMin);
+      const bool is_valid_adjective = adj_confidence != 0.0F;
 
       SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   base=\"" << base_form << "\" is_valid=" << is_valid_adjective
                                                       << " conf=" << adj_confidence << "\n");
@@ -338,13 +333,8 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
       std::string verb_form = kanji_stem + "す";  // e.g., 話す (not 話しす)
       const auto& verb_results = inflection.analyze(verb_form);
-      float verb_confidence = 0.0F;
-      for (const auto& result : verb_results) {
-        if ((result.verb_type == grammar::VerbType::GodanSa || result.verb_type == grammar::VerbType::Suru) &&
-            result.confidence > verb_confidence) {
-          verb_confidence = result.confidence;
-        }
-      }
+      const float verb_confidence =
+          adj_detail::maxConfidenceFor(verb_results, {grammar::VerbType::GodanSa, grammar::VerbType::Suru});
 
       // Check if the verb form (kanji + す) is in the dictionary
       // If it is, this is likely a verb renyokei, not an adjective stem
@@ -383,7 +373,8 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       // Dictionary adjectives get strong bonus to prefer MeCab-compatible split
       // (美味しそう → 美味し + そう)
       // Need stronger negative cost like garu-connection pattern
-      float cost = candidate::kAdjStemBaseCost + (1.0F - adj_confidence) * candidate::kAdjStemConfScale;
+      float cost =
+          adj_detail::confidenceScaledCost(candidate::kAdjStemBaseCost, adj_confidence, candidate::kAdjStemConfScale);
       SUZUME_DEBUG_LOG("[ADJ_STEM]   ✓ candidate stem=\"" << stem << "\" cost=" << cost << "\n");
       candidates.push_back(makeIAdjStemCandidate(stem, start_pos, stem_end, base_form, cost,
                                                  CandidateOrigin::AdjectiveI, adj_confidence, "adj_stem_shii"));

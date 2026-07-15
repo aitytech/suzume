@@ -308,8 +308,8 @@ KANJI_PREFIX_COMPOUNDS: dict[str, set[str]] = {
     "微": {"笑み", "笑む", "笑ん", "笑え", "笑っ", "笑わ", "笑い"},
 }
 
-# Family/honorific terms that merge with お prefix
-FAMILY_TERMS: set[str] = {
+# Family/honorific lexemes used both with and without an お prefix
+_HONORIFIC_FAMILY_TERMS: set[str] = {
     "兄ちゃん",
     "姉ちゃん",
     "兄さん",
@@ -321,6 +321,12 @@ FAMILY_TERMS: set[str] = {
     "爺さん",
     "婆さん",
     "嫁さん",
+    "客様",
+    "客さん",
+}
+
+# Colloquial tails that only become family terms after adding お.
+_COLLOQUIAL_FAMILY_TAILS: set[str] = {
     "じさん",
     "ばさん",
     "じいさん",
@@ -331,9 +337,11 @@ FAMILY_TERMS: set[str] = {
     "かあさん",
     "もちゃ",
     "っさん",
-    "客様",
-    "客さん",
 }
+
+# Family/honorific terms that merge with お prefix.
+FAMILY_TERMS: set[str] = _HONORIFIC_FAMILY_TERMS | _COLLOQUIAL_FAMILY_TAILS
+_PREFIXED_FAMILY_TERMS = {f"お{term}" for term in FAMILY_TERMS}
 
 # Colloquial pronouns to merge
 COLLOQUIAL_PRONOUNS: list[str] = ["どいつ", "こいつ", "そいつ", "あいつ"]
@@ -342,39 +350,17 @@ COLLOQUIAL_PRONOUNS: list[str] = ["どいつ", "こいつ", "そいつ", "あい
 HONORIFIC_SUFFIXES: list[str] = ["さん", "ちゃん", "様", "君", "殿", "さま"]
 
 # Words where honorific suffix is part of the lexeme
-HONORIFIC_EXCEPTIONS: set[str] = {
-    "お兄ちゃん",
-    "お姉ちゃん",
-    "お兄さん",
-    "お姉さん",
-    "お嬢さん",
-    "お嬢様",
-    "お父さん",
-    "お母さん",
-    "お爺さん",
-    "お婆さん",
-    "お嫁さん",
-    "お客様",
-    "お客さん",
-    "兄ちゃん",
-    "姉ちゃん",
-    "兄さん",
-    "姉さん",
-    "嬢さん",
-    "嬢様",
-    "父さん",
-    "母さん",
-    "爺さん",
-    "婆さん",
-    "嫁さん",
-    "客様",
-    "客さん",
-    "皆様",
-    "皆さん",
-}
+HONORIFIC_EXCEPTIONS: set[str] = (
+    _HONORIFIC_FAMILY_TERMS
+    | {f"お{term}" for term in _HONORIFIC_FAMILY_TERMS}
+    | {
+        "皆様",
+        "皆さん",
+    }
+)
 
 # Words where お/ご is part of the lexeme (not separable prefix)
-PREFIX_EXCEPTIONS: set[str] = {
+PREFIX_EXCEPTIONS: set[str] = _PREFIXED_FAMILY_TERMS | {
     "お出で",
     "おいで",
     "おすすめ",
@@ -389,29 +375,6 @@ PREFIX_EXCEPTIONS: set[str] = {
     "おっぱい",
     "おしっこ",
     "おもらし",
-    "おじさん",
-    "おばさん",
-    "おじいさん",
-    "おばあさん",
-    "おにいさん",
-    "おねえさん",
-    "おとうさん",
-    "おかあさん",
-    "おっさん",
-    "おもちゃ",
-    "お兄ちゃん",
-    "お姉ちゃん",
-    "お兄さん",
-    "お姉さん",
-    "お嬢さん",
-    "お嬢様",
-    "お父さん",
-    "お母さん",
-    "お爺さん",
-    "お婆さん",
-    "お嫁さん",
-    "お客様",
-    "お客さん",
 }
 
 # User-dict registered kanji+katakana compounds (skip splitting)

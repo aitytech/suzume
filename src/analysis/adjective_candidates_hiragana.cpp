@@ -523,7 +523,8 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
         // Base cost for hiragana i-adjective candidates
         // Use slightly elevated base to avoid fragments like ろしい beating
         // kanji adjectives like 恐ろしい (kanji adj base=0.2F)
-        float cost = candidate::kHiraganaAdjBaseCost + (1.0F - cand.confidence) * candidate::kHiraganaAdjConfScale;
+        float cost = adj_detail::confidenceScaledCost(candidate::kHiraganaAdjBaseCost, cand.confidence,
+                                                      candidate::kHiraganaAdjConfScale);
         if (has_prolonged) {
           cost += candidate::kProlongedSoundBonus;  // Bonus for colloquial patterns like すごーい
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" -0.1 (prolonged_sound_bonus)\n");
@@ -659,17 +660,10 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
 
       // Validate that this forms a valid i-adjective
       const auto& adj_results = inflection.analyze(base_form);
-      bool is_valid_adjective = false;
-      float adj_confidence = 0.0F;
-      for (const auto& result : adj_results) {
-        if (result.verb_type == grammar::VerbType::IAdjective && result.confidence >= candidate::kIAdjConfMin) {
-          is_valid_adjective = true;
-          adj_confidence = result.confidence;
-          break;
-        }
-      }
+      const float adj_confidence =
+          adj_detail::firstConfidenceAtLeast(adj_results, grammar::VerbType::IAdjective, candidate::kIAdjConfMin);
 
-      if (!is_valid_adjective) {
+      if (adj_confidence == 0.0F) {
         continue;
       }
 
@@ -680,14 +674,9 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
       std::string verb_form = verb_stem + "す";                 // e.g., おい + す = おいす (not real)
 
       // Check verb confidence from inflection analyzer
-      float verb_confidence = 0.0F;
       const auto& verb_results = inflection.analyze(verb_form);
-      for (const auto& result : verb_results) {
-        if ((result.verb_type == grammar::VerbType::GodanSa || result.verb_type == grammar::VerbType::Suru) &&
-            result.confidence > verb_confidence) {
-          verb_confidence = result.confidence;
-        }
-      }
+      const float verb_confidence =
+          adj_detail::maxConfidenceFor(verb_results, {grammar::VerbType::GodanSa, grammar::VerbType::Suru});
 
       // Require adjective confidence to be higher than verb confidence
       // This filters out false positives like 話しそう (話す renyokei + そう)
@@ -706,7 +695,8 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
 
       // Generate stem candidate with strong bonus
       // おい (INTJ) has cost -1, so stem needs very low cost to win
-      float cost = candidate::kAdjStemExtCost + (1.0F - adj_confidence) * candidate::kAdjStemConfScale;
+      float cost =
+          adj_detail::confidenceScaledCost(candidate::kAdjStemExtCost, adj_confidence, candidate::kAdjStemConfScale);
       SUZUME_DEBUG_LOG("[ADJ_STEM_HIRA] ✓ candidate stem=\"" << stem << "\" base=\"" << base_form << "\" cost=" << cost
                                                              << "\n");
       candidates.push_back(makeIAdjStemCandidate(stem, start_pos, stem_end, base_form, cost,
@@ -779,7 +769,8 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
           if (cand.confidence >= candidate::kIAdjConfMin && cand.verb_type == grammar::VerbType::IAdjective) {
             // Lower cost than pure katakana noun to prefer adjective reading
             // Cost: 0.2-0.35 based on confidence (lower = better)
-            float cost = candidate::kKanjiAdjBaseCost + (1.0F - cand.confidence) * candidate::kKanjiAdjConfScale;
+            float cost = adj_detail::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
+                                                          candidate::kKanjiAdjConfScale);
             auto adj_cand = makeIAdjCandidate(surface, start_pos, end_pos, cand.base_form, cost,
                                               CandidateOrigin::AdjectiveI, cand.confidence, "i_adjective_kata");
             // Skip exceeds_dict_length penalty - this is a morphologically recognized pattern

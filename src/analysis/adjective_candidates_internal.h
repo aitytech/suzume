@@ -6,6 +6,8 @@
 #ifndef SUZUME_ANALYSIS_ADJECTIVE_CANDIDATES_INTERNAL_H_
 #define SUZUME_ANALYSIS_ADJECTIVE_CANDIDATES_INTERNAL_H_
 
+#include <algorithm>
+#include <initializer_list>
 #include <string>
 
 #include "core/utf8_constants.h"
@@ -25,6 +27,33 @@ namespace suzume::analysis::adj_detail {
  */
 inline float confidenceScaledCost(float base, float confidence, float scale) {
   return base + (1.0F - confidence) * scale;
+}
+
+/**
+ * @brief First confidence at or above a threshold for one inflection type.
+ */
+inline float firstConfidenceAtLeast(const std::vector<grammar::InflectionCandidate>& candidates, grammar::VerbType type,
+                                    float minimum) {
+  for (const auto& candidate : candidates) {
+    if (candidate.verb_type == type && candidate.confidence >= minimum) {
+      return candidate.confidence;
+    }
+  }
+  return 0.0F;
+}
+
+/**
+ * @brief Highest confidence among a small set of inflection types.
+ */
+inline float maxConfidenceFor(const std::vector<grammar::InflectionCandidate>& candidates,
+                              std::initializer_list<grammar::VerbType> types) {
+  float confidence = 0.0F;
+  for (const auto& candidate : candidates) {
+    if (std::find(types.begin(), types.end(), candidate.verb_type) != types.end()) {
+      confidence = std::max(confidence, candidate.confidence);
+    }
+  }
+  return confidence;
 }
 
 // =============================================================================

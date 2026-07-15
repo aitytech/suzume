@@ -6,23 +6,14 @@
 #include "tokenizer_utils.h"
 
 #include "core/utf8_constants.h"
+#include "normalize/utf8.h"
 
 namespace suzume::analysis {
 
 size_t charPosToBytePos(const std::vector<char32_t>& codepoints, size_t char_pos) {
   size_t byte_pos = 0;
   for (size_t idx = 0; idx < char_pos && idx < codepoints.size(); ++idx) {
-    // Calculate UTF-8 byte length for this codepoint
-    char32_t code = codepoints[idx];
-    if (code < 0x80) {
-      byte_pos += 1;
-    } else if (code < 0x800) {
-      byte_pos += 2;
-    } else if (code < 0x10000) {
-      byte_pos += 3;
-    } else {
-      byte_pos += 4;
-    }
+    byte_pos += core::utf8ByteLength(codepoints[idx]);
   }
   return byte_pos;
 }
@@ -36,6 +27,10 @@ size_t advanceCharsToBytePos(const std::vector<char32_t>& codepoints, size_t sta
     ++char_pos;
   }
   return char_pos;
+}
+
+std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t start, size_t end) {
+  return normalize::encodeRange(codepoints, start, end);
 }
 
 }  // namespace suzume::analysis

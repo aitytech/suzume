@@ -27,15 +27,6 @@ struct UnknownCandidate;
 struct UnknownOptions;
 
 /**
- * @brief Extract substring from codepoints to UTF-8
- * @param codepoints Vector of Unicode codepoints
- * @param start Start index (inclusive)
- * @param end End index (exclusive)
- * @return UTF-8 encoded string
- */
-std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t start, size_t end);
-
-/**
  * @brief Suffix entry for kanji compounds
  */
 struct SuffixEntry {

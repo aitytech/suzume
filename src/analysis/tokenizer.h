@@ -175,11 +175,6 @@ class Tokenizer {
   void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
                                        const std::vector<char32_t>& codepoints, size_t start_pos,
                                        const std::vector<normalize::CharType>& char_types) const;
-
-  /**
-   * @brief Convert character position to byte position
-   */
-  static size_t charPosToBytePos(const std::vector<char32_t>& codepoints, size_t char_pos);
 };
 
 }  // namespace suzume::analysis

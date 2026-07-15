@@ -1,6 +1,7 @@
 #ifndef SUZUME_CORE_TYPES_H_
 #define SUZUME_CORE_TYPES_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -188,6 +189,20 @@ enum class AnalysisMode : uint8_t {
   Search,  // Search mode (keep noun compounds)
   Split    // Split mode (fine-grained segmentation)
 };
+
+/**
+ * @brief Check whether a PartOfSpeech value is inside the declared enum range.
+ */
+[[nodiscard]] inline constexpr bool isValidPartOfSpeech(PartOfSpeech pos) noexcept {
+  return static_cast<size_t>(pos) < static_cast<size_t>(PartOfSpeech::Count_);
+}
+
+/**
+ * @brief Check whether an ExtendedPOS value is inside the declared enum range.
+ */
+[[nodiscard]] inline constexpr bool isValidExtendedPos(ExtendedPOS extended_pos) noexcept {
+  return static_cast<size_t>(extended_pos) < static_cast<size_t>(ExtendedPOS::Count_);
+}
 
 /**
  * @brief Origin of candidate generation (for debug)

@@ -25,8 +25,6 @@
 
 namespace suzume::analysis {
 
-using verb_helpers::getHiraganaVowel;
-
 namespace {
 
 // True if every char position in [start, end) has CharType `type`. When
@@ -102,18 +100,12 @@ core::Lattice Tokenizer::buildLattice(std::string_view text, const std::vector<c
       size_t byte_end = charPosToBytePos(codepoints, pos + 1);
       std::string surface(text.substr(byte_start, byte_end - byte_start));
 
-      // Use OTHER POS with high cost - this should only be chosen as last resort
-      constexpr float kFallbackCost = 5.0F;
       lattice.addEdge(surface, static_cast<uint32_t>(pos), static_cast<uint32_t>(pos + 1), core::PartOfSpeech::Other,
-                      kFallbackCost, core::LatticeEdge::kIsUnknown);
+                      candidate::kFallbackCandidateCost, core::LatticeEdge::kIsUnknown);
     }
   }
 
   return lattice;
-}
-
-size_t Tokenizer::charPosToBytePos(const std::vector<char32_t>& codepoints, size_t char_pos) {
-  return analysis::charPosToBytePos(codepoints, char_pos);
 }
 
 void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view text,
@@ -196,133 +188,27 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
                     result.entry->pos, cost, flags, result.entry->lemma, dictionary::ConjugationType::None,
                     core::CandidateOrigin::Dictionary, 1.0F, {}, result.entry->extended_pos, "dict");
 
-    // Emphatic suffix pattern: word + っ/ッ/ー/ぁぃぅぇぉ/ァィゥェォ (colloquial emphasis)
-    // E.g., です→ですっ, ます→ますっ, 行く→行くっ, やばいーー, だぁー
-    // Handles consecutive sokuon (っっ), chouon (ーー), and small vowels (ぁぃぅぇぉ)
-    // Also handles vowel repetition: きた + ああああ → きたああああ
-    // Only apply to verbs, auxiliaries, and adjectives (typical emphatic targets)
+    // Extend verbs, auxiliaries, and adjectives with colloquial emphasis
+    // (ですっ, 行くーー, きたあああ). Unknown candidates use the same matcher.
     if (end_pos < codepoints.size() &&
         (result.entry->pos == core::PartOfSpeech::Verb || result.entry->pos == core::PartOfSpeech::Auxiliary ||
          result.entry->pos == core::PartOfSpeech::Adjective)) {
-      // Count consecutive emphatic characters (sokuon/chouon/small vowels)
-      size_t emphatic_end = end_pos;
-      std::string emphatic_suffix;
-      while (emphatic_end < codepoints.size()) {
-        char32_t c = codepoints[emphatic_end];
-        // Sokuon (促音)
-        if (c == core::hiragana::kSmallTsu) {
-          emphatic_suffix += "っ";
-        } else if (c == U'ッ') {
-          emphatic_suffix += "ッ";
-          // Chouon (長音)
-        } else if (c == U'ー') {
-          emphatic_suffix += "ー";
-          // Small hiragana vowels (小書きひらがな母音)
-        } else if (c == U'ぁ') {
-          emphatic_suffix += "ぁ";
-        } else if (c == U'ぃ') {
-          emphatic_suffix += "ぃ";
-        } else if (c == U'ぅ') {
-          emphatic_suffix += "ぅ";
-        } else if (c == U'ぇ') {
-          emphatic_suffix += "ぇ";
-        } else if (c == U'ぉ') {
-          emphatic_suffix += "ぉ";
-          // Small katakana vowels (小書きカタカナ母音)
-        } else if (c == U'ァ') {
-          emphatic_suffix += "ァ";
-        } else if (c == U'ィ') {
-          emphatic_suffix += "ィ";
-        } else if (c == U'ゥ') {
-          emphatic_suffix += "ゥ";
-        } else if (c == U'ェ') {
-          emphatic_suffix += "ェ";
-        } else if (c == U'ォ') {
-          emphatic_suffix += "ォ";
-        } else {
-          break;
-        }
-        ++emphatic_end;
-      }
-
-      // Track standard emphatic chars separately for cost calculation
-      size_t standard_emphatic_chars = emphatic_suffix.size() / core::kJapaneseCharBytes;
-
-      // Also check for repeated vowels matching the final character's vowel
-      // E.g., きた + ああああ → きたああああ (た ends in あ-vowel)
-      // Requires at least 2 consecutive vowels to be considered emphatic
-      size_t vowel_repeat_count = 0;
-      if (end_pos > start_pos && emphatic_end < codepoints.size()) {
-        // Get final character of the dictionary entry
-        char32_t final_char = codepoints[end_pos - 1];
-        char32_t expected_vowel = getHiraganaVowel(final_char);
-
-        if (expected_vowel != 0) {
-          size_t vowel_start = emphatic_end;
-
-          // Count consecutive occurrences of the expected vowel
-          while (emphatic_end < codepoints.size() && codepoints[emphatic_end] == expected_vowel) {
-            ++vowel_repeat_count;
-            ++emphatic_end;
-          }
-
-          // Require at least 2 repeated vowels for emphatic pattern
-          if (vowel_repeat_count >= 2) {
-            for (size_t i = 0; i < vowel_repeat_count; ++i) {
-              emphatic_suffix += normalize::encodeUtf8(expected_vowel);
-            }
-          } else {
-            // Not enough repetition, reset position
-            emphatic_end = vowel_start;
-            vowel_repeat_count = 0;
-          }
-        }
-      }
-
-      // Release a lone sokuon that actually begins a separate morpheme rather
-      // than attaching as emphatic elongation.
-      if (emphatic_suffix == "っ" && emphatic_end < codepoints.size()) {
-        char32_t after_sokuon = codepoints[emphatic_end];
-        // Colloquial polite auxiliary っす/っさ/っせ (=です): let it split off.
-        if (after_sokuon == U'す' || after_sokuon == U'さ' || after_sokuon == U'せ') {
-          emphatic_suffix.clear();
-        } else if (after_sokuon == U'て' || after_sokuon == U'と') {
-          // Quotative って / っと after a Godan 終止形 (u-row) verb: 行く+って,
-          // not 行くっ+て. Restricting to 終止形 endings preserves the emphatic
-          // sokuon that doubles as the onbin candidate for other stems.
-          if (result.entry->pos == core::PartOfSpeech::Verb && end_pos > start_pos &&
-              normalize::isURowHiragana(codepoints[end_pos - 1])) {
-            emphatic_suffix.clear();
-          }
-        }
-      }
-      if (!emphatic_suffix.empty()) {
-        std::string emphatic_surface = result.entry->surface + emphatic_suffix;
-        float cost_adjustment;
-
-        if (vowel_repeat_count >= 2) {
-          // Give a BONUS for vowel repetition to compete with split alternatives
-          // E.g., きたああああ should beat きた + ああああ
-          float char_count = static_cast<float>(emphatic_suffix.size() / core::kJapaneseCharBytes);
-          cost_adjustment = -0.5F + 0.05F * char_count;
-        } else {
-          // Standard emphatic chars (sokuon/chouon/small vowels) use penalty
-          cost_adjustment = 0.3F * static_cast<float>(standard_emphatic_chars);
-        }
-
+      const auto emphatic = verb_helpers::matchEmphaticSuffix(codepoints, end_pos, result.entry->pos,
+                                                              verb_helpers::SokuonOnsetPolicy::DictionaryEntry);
+      if (!emphatic.empty()) {
         // Determine extended_pos for emphatic form
         // Sokuon-ending verb forms should be VerbOnbinkei (音便形)
         core::ExtendedPOS emphatic_epos = result.entry->extended_pos;
-        if (result.entry->pos == core::PartOfSpeech::Verb && emphatic_suffix == "っ") {
+        if (result.entry->pos == core::PartOfSpeech::Verb && emphatic.suffix == "っ") {
           // E.g., い(連用形) + っ → いっ(音便形) for と+いっ+て pattern
           emphatic_epos = core::ExtendedPOS::VerbOnbinkei;
         }
 
-        lattice.addEdge(emphatic_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(emphatic_end),
-                        result.entry->pos,
-                        cost + cost_adjustment,  // cost from getCategoryCost()
-                        flags, result.entry->lemma, dictionary::ConjugationType::None,
-                        core::CandidateOrigin::Dictionary, 1.0F, {}, emphatic_epos, "dict_emphatic");
+        lattice.addEdge(result.entry->surface + emphatic.suffix, static_cast<uint32_t>(start_pos),
+                        static_cast<uint32_t>(emphatic.end), result.entry->pos,
+                        cost + verb_helpers::emphaticCostAdjustment(emphatic), flags, result.entry->lemma,
+                        dictionary::ConjugationType::None, core::CandidateOrigin::Dictionary, 1.0F, {}, emphatic_epos,
+                        "dict_emphatic");
       }
     }
   }

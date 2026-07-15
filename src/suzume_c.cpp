@@ -74,6 +74,22 @@ std::optional<suzume::core::AnalysisMode> parseAnalysisMode(int mode) {
   }
 }
 
+suzume_tags_t* makeTagsResult(const std::vector<suzume::postprocess::TagEntry>& tags) {
+  std::unique_ptr<suzume_tags_t, decltype(&suzume_tags_free)> result(new suzume_tags_t(), suzume_tags_free);
+  result->count = tags.size();
+  if (result->count == 0) {
+    return result.release();
+  }
+
+  result->tags = new char* [result->count] {};
+  result->pos = new const char* [result->count] {};
+  for (size_t idx = 0; idx < result->count; ++idx) {
+    result->tags[idx] = copyString(tags[idx].tag);
+    result->pos[idx] = copyString(suzume::core::posToString(tags[idx].pos));
+  }
+  return result.release();
+}
+
 }  // namespace
 
 extern "C" {
@@ -292,28 +308,7 @@ SUZUME_EXPORT suzume_tags_t* suzume_generate_tags(suzume_t handle, const char* t
 
   clearLastError();
   try {
-    auto tags = handle->instance.generateTags(text);
-
-    std::unique_ptr<suzume_tags_t, decltype(&suzume_tags_free)> result(new suzume_tags_t(), suzume_tags_free);
-    result->count = tags.size();
-
-    if (result->count == 0) {
-      result->tags = nullptr;
-      result->pos = nullptr;
-      return result.release();
-    }
-
-    result->tags = new char* [result->count] {};
-    result->pos = new const char* [result->count] {};
-
-    for (size_t idx = 0; idx < result->count; ++idx) {
-      result->tags[idx] = copyString(tags[idx].tag);
-
-      auto pos_str = suzume::core::posToString(tags[idx].pos);
-      result->pos[idx] = copyString(pos_str);
-    }
-
-    return result.release();
+    return makeTagsResult(handle->instance.generateTags(text));
   } catch (...) {
     setLastErrorFromException();
     return nullptr;
@@ -341,28 +336,7 @@ SUZUME_EXPORT suzume_tags_t* suzume_generate_tags_with_options(suzume_t handle, 
     tag_opts.exclude_low_info = (options->exclude_low_info != 0);
     tag_opts.remove_duplicates = (options->remove_duplicates != 0);
 
-    auto tags = handle->instance.generateTags(text, tag_opts);
-
-    std::unique_ptr<suzume_tags_t, decltype(&suzume_tags_free)> result(new suzume_tags_t(), suzume_tags_free);
-    result->count = tags.size();
-
-    if (result->count == 0) {
-      result->tags = nullptr;
-      result->pos = nullptr;
-      return result.release();
-    }
-
-    result->tags = new char* [result->count] {};
-    result->pos = new const char* [result->count] {};
-
-    for (size_t idx = 0; idx < result->count; ++idx) {
-      result->tags[idx] = copyString(tags[idx].tag);
-
-      auto pos_str = suzume::core::posToString(tags[idx].pos);
-      result->pos[idx] = copyString(pos_str);
-    }
-
-    return result.release();
+    return makeTagsResult(handle->instance.generateTags(text, tag_opts));
   } catch (...) {
     setLastErrorFromException();
     return nullptr;

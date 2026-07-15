@@ -202,11 +202,9 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   // doubled 2-kanji unit + し + inflection onset is detected explicitly so the
   // 4-kanji stem is not truncated to 馬鹿馬 + 鹿しい.
   size_t kanji_end = findCharRegionEnd(char_types, start_pos, 2, normalize::CharType::Kanji);
-  bool reduplicated_stem = false;
   if (verb_helpers::isReduplicatedShiiAdjectiveHead(codepoints, start_pos) &&
       findCharRegionEnd(char_types, start_pos, 4, normalize::CharType::Kanji) == start_pos + 4) {
     kanji_end = start_pos + 4;
-    reduplicated_stem = true;
   }
 
   if (kanji_end == start_pos) {
@@ -421,7 +419,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
 
         // Lower base cost (0.2F) to beat verb candidates after POS prior adjustment
         // ADJ prior (0.3) is higher than VERB prior (0.2), so we need lower edge cost
-        float cost = candidate::kKanjiAdjBaseCost + (1.0F - cand.confidence) * candidate::kKanjiAdjConfScale;
+        float cost = adj_detail::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
+                                                      candidate::kKanjiAdjConfScale);
         // Penalty for non-dictionary i-adjective nominalization (さ ending)
         // This prevents false positives like 勉強さ (from non-existent 勉強い)
         // from beating suru-verb split path (勉強 + さ + れる)
@@ -646,7 +645,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
             const auto& all_cands = inflection.analyze(surface);
             for (const auto& ic : all_cands) {
               if (ic.confidence >= candidate::kCompoundAdjConfMin && ic.verb_type == grammar::VerbType::IAdjective) {
-                float cost = candidate::kCompoundAdjBaseCost + (1.0F - ic.confidence) * candidate::kKanjiAdjConfScale;
+                float cost = adj_detail::confidenceScaledCost(candidate::kCompoundAdjBaseCost, ic.confidence,
+                                                              candidate::kKanjiAdjConfScale);
                 SUZUME_DEBUG_LOG_VERBOSE("[ADJ_COMPOUND] \"" << surface << "\" cost=" << cost
                                                              << " conf=" << ic.confidence << "\n");
                 auto adj_cand = makeIAdjCandidate(surface, start_pos, end_pos, ic.base_form, cost,

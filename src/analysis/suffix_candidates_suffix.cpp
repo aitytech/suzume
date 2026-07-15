@@ -56,11 +56,6 @@ inline UnknownCandidate makeSuffixCandidateNoLemma(const std::string& surface, s
   return cand;
 }
 
-std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t start, size_t end) {
-  // Use encodeRange directly to avoid intermediate vector allocation
-  return normalize::encodeRange(codepoints, start, end);
-}
-
 const std::vector<SuffixEntry>& getSuffixEntries() {
   static const std::vector<SuffixEntry> kSuffixes = {
       {"化する", core::PartOfSpeech::Verb},
