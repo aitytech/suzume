@@ -115,6 +115,7 @@ const SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"締める", "しめる", "める", V2VerbType::Ichidan},      // 抱きしめる, 締め締める
     {"止める", "とめる", "める", V2VerbType::Ichidan},      // 受け止める, 食い止める
     {"入る", "いる", "る", V2VerbType::Godan},              // 飛び入る, 立ち入る
+    {"止まる", "とまる", "る", V2VerbType::Godan},          // 立ち止まる, 踏み止まる, 思い止まる
 };
 
 // Sokuonbin-compatible godan verb endings (く, つ, う, る)
