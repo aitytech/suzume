@@ -303,6 +303,38 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     }
   }
 
+  // Approximate-quantity prefix + numeral run + counter: 数/何 modify the numeral
+  // run they head (数十件, 何十回, 数百万円) and belong inside the quantity token.
+  // The merged numeral+counter candidate below (十件) otherwise undercuts the whole
+  // kanji_seq token (数十件) and strands the prefix (数|十件), so the same discounted
+  // merge is emitted extended over the prefix. Gates mirror the plain merge: a lone
+  // counter kanji at a kanji→non-kanji boundary. The prefix must be directly
+  // followed by a numeral, so a prefix bound straight to a counter (数日, 半年,
+  // 何回), a prefix heading an ordinary noun (数値, 数学), and the reverse pattern
+  // (十数年: 数 binds the following 年, not the preceding numeral) never fire.
+  if (normalize::isQuantityPrefixKanji(codepoints[start_pos]) &&
+      normalize::isNumeralCodepoint(codepoints[start_pos + 1])) {
+    size_t num_end = start_pos + 1;
+    while (num_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[num_end])) {
+      ++num_end;
+    }
+    bool lone_counter_at_boundary =
+        num_end < char_types.size() && normalize::isCounterKanji(codepoints[num_end]) &&
+        (num_end + 1 >= char_types.size() || char_types[num_end + 1] != normalize::CharType::Kanji);
+    if (lone_counter_at_boundary) {
+      std::string surface = extractSubstring(codepoints, start_pos, num_end + 1);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, num_end + 1, core::PartOfSpeech::Noun,
+                                  candidate::kNumeralCounterMergeBonus, false, CandidateOrigin::Counter);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "quantity_prefix_counter_merge";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+  }
+
   // First character(s) must be numeral(s)
   if (!normalize::isNumeralCodepoint(codepoints[start_pos])) {
     return candidates;

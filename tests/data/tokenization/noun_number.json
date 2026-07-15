@@ -53,6 +53,92 @@
       ],
       "id": "ga_nda",
       "input": "一〇〇人が並んだ"
+    },
+    {
+      "description": "Approx prefix 数 binds forward through numeral+counter run",
+      "expected": [
+        {
+          "lemma": "数十件",
+          "pos": "Noun",
+          "surface": "数十件"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "申し込み",
+          "pos": "Noun",
+          "surface": "申し込み"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "no_shi_migaattta",
+      "input": "数十件の申し込みがあった"
+    },
+    {
+      "description": "Approx prefix 何 + 十回",
+      "expected": [
+        {
+          "lemma": "何十回",
+          "pos": "Noun",
+          "surface": "何十回"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "繰り返す",
+          "pos": "Verb",
+          "surface": "繰り返し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "mo_ri_shita",
+      "input": "何十回も繰り返した"
+    },
+    {
+      "description": "数 through multi-digit numeral run 百万 + counter 円",
+      "expected": [
+        {
+          "lemma": "数百万円",
+          "pos": "Noun",
+          "surface": "数百万円"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kakattta",
+      "input": "数百万円かかった"
     }
   ],
   "description": "noun_number tests",
