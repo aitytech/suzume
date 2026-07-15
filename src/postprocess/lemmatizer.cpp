@@ -428,6 +428,45 @@ std::string fixSpecialRaRowLemma(std::string_view lemma, const dictionary::Dicti
   return "";
 }
 
+// Ichidan renyokei misread as a godan base: a bare renyokei directly followed
+// by a bare て/た cannot be godan — every godan verb takes onbin before て/た
+// (借る→借って, 過ぐ→過いで), so 借り+て must be ichidan 借りる, not godan-ra 借る.
+// Exclusions: し-ending renyokei (godan-sa takes bare て with no onbin: 話し+て
+// → 話す) and い-ending surfaces (書い+て is a godan-ka onbin stem, surface-
+// indistinguishable from kami-ichidan 老い+て). じ is omitted because it has no
+// plain godan う-row counterpart, so it never carries a wrong godan lemma.
+// Fires only when the current lemma IS the wrong godan reconstruction of this
+// renyokei (stem + う-row kana of the same gyo); any other lemma source (a
+// dictionary lemma, an already-correct ichidan base) is left untouched. The
+// POS/ExtendedPOS (Verb 連用形) guard stays at the call site.
+std::string fixIchidanRenyokeiBeforeTe(std::string_view surface, std::string_view lemma,
+                                       std::string_view next_surface) {
+  if (!utf8::equalsAny(next_surface, {"て", "た"}) || surface.size() < core::kJapaneseCharBytes) {
+    return "";
+  }
+  // い-row kana → う-row kana of the same gyo (し/い/じ excluded, see above).
+  struct RowMapping {
+    std::string_view i_row;
+    std::string_view u_row;
+  };
+  static constexpr RowMapping kIRowToURow[] = {
+      {"き", "く"}, {"ぎ", "ぐ"}, {"ち", "つ"}, {"ぢ", "づ"}, {"に", "ぬ"},
+      {"ひ", "ふ"}, {"び", "ぶ"}, {"ぴ", "ぷ"}, {"み", "む"}, {"り", "る"},
+  };
+  std::string_view tail = utf8::lastChar(surface);
+  for (const auto& mapping : kIRowToURow) {
+    if (tail != mapping.i_row) {
+      continue;
+    }
+    std::string godan_base = std::string(utf8::dropLastChar(surface)) + std::string(mapping.u_row);
+    if (lemma == godan_base) {
+      return std::string(surface) + "る";
+    }
+    break;
+  }
+  return "";
+}
+
 // Potential verb (可能動詞): single-token 〜れる keeps lemma = surface.
 // e.g., 書ける, 泊まれる, 読める. Passive forms are split (読ま+れる), so a single
 // 〜れる token is treated as potential (ichidan), whose lemma is the surface itself.
@@ -1128,6 +1167,14 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
         morpheme.lemma = stem + "ぐ";  // GodanGa: 泳い+だ → 泳ぐ
       } else {
         morpheme.lemma = stem + "く";  // GodanKa: 書い+た → 書く
+      }
+    }
+    // Fix ichidan renyokei misread as a godan base using next morpheme context
+    // 連用形+て/た: 借り+て → lemma 借りる (not godan-ra 借る), 過ぎ+て → 過ぎる (not godan-ga 過ぐ)
+    if (morpheme.pos == core::PartOfSpeech::Verb && morpheme.extended_pos == core::ExtendedPOS::VerbRenyokei) {
+      if (std::string ichidan = fixIchidanRenyokeiBeforeTe(morpheme.surface, morpheme.lemma, next_surface);
+          !ichidan.empty()) {
+        morpheme.lemma = ichidan;
       }
     }
     // Fix irregular sokuonbin: いっ+た/て → いく (not いう)
