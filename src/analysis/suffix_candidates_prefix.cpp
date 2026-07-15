@@ -90,11 +90,14 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
     return candidates;
   }
 
-  // A temporal prefix kanji heads a compound only at the start of a kanji run.
-  // Preceded by another kanji these characters are overwhelmingly the TAIL of a
-  // kango noun (将来/従来/以来, 優先, 一昨), so emitting the discounted prefix
-  // compound mid-run would carve that noun apart (将|来性, 一|昨日).
-  if (start_pos > 0 && char_types[start_pos - 1] == normalize::CharType::Kanji) {
+  // Suppress the compound when it would strand a LONE preceding kanji: that kanji
+  // plus this prefix char form a kango noun whose tail this is (将+来, 従+来,
+  // 一+昨), so emitting the discounted compound would carve the noun apart
+  // (将|来性, 一|昨日). A two-or-more-kanji left context is instead a real
+  // preceding word (佐藤+先生, 山田+先生), where the compound correctly splits it
+  // off — so only bail when exactly one kanji precedes.
+  if (start_pos > 0 && char_types[start_pos - 1] == normalize::CharType::Kanji &&
+      (start_pos < 2 || char_types[start_pos - 2] != normalize::CharType::Kanji)) {
     return candidates;
   }
 
