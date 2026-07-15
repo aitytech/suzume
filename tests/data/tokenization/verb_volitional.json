@@ -216,6 +216,60 @@
       ],
       "id": "shimaoutoshita",
       "input": "しまおうとした"
+    },
+    {
+      "description": "先に食べちゃおう - auto-generated",
+      "expected": [
+        {
+          "lemma": "先",
+          "pos": "Noun",
+          "surface": "先"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ちゃう",
+          "pos": "Verb",
+          "surface": "ちゃお"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "ni_bechi_ou",
+      "input": "先に食べちゃおう"
+    },
+    {
+      "description": "読んじゃおう - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃお"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "nji_ou",
+      "input": "読んじゃおう"
     }
   ],
   "description": "verb_volitional tests",
