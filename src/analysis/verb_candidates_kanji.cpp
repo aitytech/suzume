@@ -904,8 +904,11 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
       // Negative auxiliary ない and its conjugations:
       // ない (終止/連体), なく (連用), なかっ (た接続), なけれ (仮定), なきゃ (口語縮約仮定)
       bool is_negative_aux = (h1 == kNa && (h2 == kI || h2 == kKu || h2 == kKa || h2 == kKe || h2 == kKi));
+      // Classical negative auxiliary ず/ざる/ざれ also attaches to the ichidan
+      // mizenkei (= bare stem): 見ざるを得ない → 見 + ざる, 見ずに → 見 + ずに.
+      bool is_classical_negative_aux = (h1 == kZu) || (h1 == kZa && (h2 == kRu || h2 == kRe));
 
-      if (is_polite_aux || is_negative_aux) {
+      if (is_polite_aux || is_negative_aux || is_classical_negative_aux) {
         std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
         std::string base_form = surface + "る";
         constexpr float kCost = candidate::verb_cost::kStandardBonus;  // Strong bonus to beat NOUN candidate

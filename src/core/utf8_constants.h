@@ -105,6 +105,10 @@ constexpr char32_t kU = U'う';   // う (0x3046)
 constexpr char32_t kSa = U'さ';  // さ (0x3055)
 constexpr char32_t kSe = U'せ';  // せ (0x305B)
 
+// Classical negative auxiliary ず/ざる/ざれ (attaches to mizenkei)
+constexpr char32_t kZu = U'ず';  // ず (0x305A) - 終止形 / ずに
+constexpr char32_t kZa = U'ざ';  // ざ (0x3056) - ざる (連体) / ざれ (已然)
+
 }  // namespace hiragana
 
 }  // namespace suzume::core
