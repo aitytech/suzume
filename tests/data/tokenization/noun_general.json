@@ -2125,6 +2125,30 @@
       ],
       "id": "unnamed_4",
       "input": "新規顧客"
+    },
+    {
+      "description": "将来性 - auto-generated",
+      "expected": [
+        {
+          "lemma": "将来性",
+          "pos": "Noun",
+          "surface": "将来性"
+        }
+      ],
+      "id": "unnamed_5",
+      "input": "将来性"
+    },
+    {
+      "description": "一昨日 - auto-generated",
+      "expected": [
+        {
+          "lemma": "一昨日",
+          "pos": "Noun",
+          "surface": "一昨日"
+        }
+      ],
+      "id": "unnamed_6",
+      "input": "一昨日"
     }
   ],
   "description": "General nouns",
