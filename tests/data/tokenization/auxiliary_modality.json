@@ -1765,6 +1765,28 @@
       ],
       "id": "narikeri",
       "input": "春なりけり"
+    },
+    {
+      "description": "たいしたものだ - auto-generated",
+      "expected": [
+        {
+          "lemma": "たいした",
+          "pos": "Determiner",
+          "surface": "たいした"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "taishitamonoda",
+      "input": "たいしたものだ"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

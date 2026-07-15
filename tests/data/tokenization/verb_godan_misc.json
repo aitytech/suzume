@@ -1069,6 +1069,38 @@
       ],
       "id": "ruginai",
       "input": "揺るぎない信念"
+    },
+    {
+      "description": "めったに雨が降らない - auto-generated",
+      "expected": [
+        {
+          "lemma": "めったに",
+          "pos": "Adverb",
+          "surface": "めったに"
+        },
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降る",
+          "pos": "Verb",
+          "surface": "降ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "metttani_ga_ranai",
+      "input": "めったに雨が降らない"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

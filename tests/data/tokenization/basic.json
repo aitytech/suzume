@@ -537,6 +537,23 @@
       ],
       "id": "sorehatabunsouda",
       "input": "それはたぶんそうだ"
+    },
+    {
+      "description": "どうぞよろしく - auto-generated",
+      "expected": [
+        {
+          "lemma": "どうぞ",
+          "pos": "Adverb",
+          "surface": "どうぞ"
+        },
+        {
+          "lemma": "よろしく",
+          "pos": "Adverb",
+          "surface": "よろしく"
+        }
+      ],
+      "id": "douzoyoroshiku",
+      "input": "どうぞよろしく"
     }
   ],
   "description": "Basic tokenization tests",
