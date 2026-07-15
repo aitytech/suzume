@@ -1801,6 +1801,24 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       continue;
     }
 
+    // Skip a fabricated verb that spans an auxiliary prefix + auxiliary tail:
+    // でござい → で(AuxCopulaDa) + ござい(AuxGozaru). MeCab always keeps a
+    // closed-class auxiliary chain split, so an open-class verb whose leading
+    // codepoint is itself an AUX and whose remainder after that codepoint is
+    // exactly an AUX is re-merging what must stay apart. Both halves must be
+    // dictionary auxiliaries: the remainder condition alone would wrongly skip
+    // real verbs like しまう (し is a particle, not an AUX → しまい stays), and
+    // the 2-codepoint floor on the remainder protects genuine short stems かい
+    // (い = いる 連用形) and でき (き = くる 連用形).
+    if (!is_dict_verb && dict_manager != nullptr && end_pos - start_pos >= 3) {
+      std::string aux_first = extractSubstring(codepoints, start_pos, start_pos + 1);
+      std::string aux_remainder = extractSubstring(codepoints, start_pos + 1, end_pos);
+      if (dict_manager->lookupExact(aux_first, core::PartOfSpeech::Auxiliary) != nullptr &&
+          vh::hasDictionaryEntry(dict_manager, aux_remainder, core::PartOfSpeech::Auxiliary)) {
+        continue;
+      }
+    }
+
     // Strong negative cost to beat NOUN + て(VERB from てる) split
     // Dictionary-verified verbs get stronger bonus
     // Non-dictionary verbs get moderate positive cost to avoid spurious candidates

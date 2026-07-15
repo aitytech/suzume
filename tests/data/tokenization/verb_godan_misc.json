@@ -1123,6 +1123,23 @@
       ],
       "id": "chi_nto_beta",
       "input": "ちゃんと食べた"
+    },
+    {
+      "description": "しまいます - auto-generated",
+      "expected": [
+        {
+          "lemma": "しまう",
+          "pos": "Verb",
+          "surface": "しまい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "shimaimasu",
+      "input": "しまいます"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

@@ -832,8 +832,9 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // AuxCopulaDa → AuxNegativeNai (じゃ+ない, で+ない) - moderate bonus
   setCell(t, EPOS::AuxCopulaDa, EPOS::AuxNegativeNai, cost::kModerateBonus);
 
-  // AuxCopulaDa → AuxGozaru (で+ございます) - moderate bonus
-  setCell(t, EPOS::AuxCopulaDa, EPOS::AuxGozaru, cost::kModerateBonus);
+  // AuxCopulaDa → AuxGozaru (で+ございます) - strong bonus
+  // Must beat the で(出る連用形)+ございます verb-candidate reading
+  setCell(t, EPOS::AuxCopulaDa, EPOS::AuxGozaru, cost::kStrongBonus);
 
   // AuxGozaru → AuxTenseMasu (ござい+ます) - strong bonus to prevent verb candidate win
   // Without this, verb_candidates generates "ございる" which beats dictionary "ござる"
