@@ -141,12 +141,17 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
   // kanji must be an ordinary noun char: a temporal counter (三日月 = one word), a
   // relation/span suffix (後/前/中/末, handled elsewhere), or a lone ordinal 目 (二時間目)
   // keeps its own reading. The interval member 隔 heads 間隔 (三年間隔 = 三年|間隔), so the
-  // split falls BEFORE 間 instead. The run must start with a numeral: a quantity prefix
-  // (半年間, 数年間) is not a MeCab number+counter unit, so its 間 stays a separate suffix
-  // in the expected (半年|間) and must not be fused here.
+  // split falls BEFORE 間 instead. The run heads with a numeral or a quantity prefix
+  // (数, 半, 何): a 間-closed duration does not merge with a following independent kanji
+  // noun (数年間|海外) regardless of how its interior tokenizes — the split-after-間 here
+  // only carves the following noun off; the 半年 vs 半|年 interior is decided elsewhere.
   {
     size_t scan = start_pos;
     bool has_quantity = false;
+    if (scan < codepoints.size() && normalize::isQuantityPrefixKanji(codepoints[scan])) {
+      ++scan;
+      has_quantity = true;
+    }
     while (scan < codepoints.size() && normalize::isNumeralCodepoint(codepoints[scan])) {
       ++scan;
       has_quantity = true;

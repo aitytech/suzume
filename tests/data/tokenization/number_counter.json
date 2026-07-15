@@ -632,6 +632,97 @@
       ],
       "id": "de_suru",
       "input": "三年間隔で開催する"
+    },
+    {
+      "description": "数年間海外にいた - auto-generated",
+      "expected": [
+        {
+          "lemma": "数年間",
+          "pos": "Noun",
+          "surface": "数年間"
+        },
+        {
+          "lemma": "海外",
+          "pos": "Noun",
+          "surface": "海外"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "niita",
+      "input": "数年間海外にいた"
+    },
+    {
+      "description": "数年間勉強した - auto-generated",
+      "expected": [
+        {
+          "lemma": "数年間",
+          "pos": "Noun",
+          "surface": "数年間"
+        },
+        {
+          "lemma": "勉強",
+          "pos": "Noun",
+          "surface": "勉強"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shita_5",
+      "input": "数年間勉強した"
+    },
+    {
+      "description": "何年間海外にいた - auto-generated",
+      "expected": [
+        {
+          "lemma": "何年間",
+          "pos": "Noun",
+          "surface": "何年間"
+        },
+        {
+          "lemma": "海外",
+          "pos": "Noun",
+          "surface": "海外"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "niita_2",
+      "input": "何年間海外にいた"
     }
   ],
   "description": "number_counter tests",
