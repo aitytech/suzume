@@ -1200,6 +1200,41 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       continue;  // Skip - dictionary has non-verb entry for this surface
     }
 
+    // Filter out volitional-shaped surfaces (お-row kana + う) of dictionary-
+    // attested verbs. A conjugated verb surface can end in う only as its
+    // dictionary form (しまう, まよう, おもう), in which case it equals the
+    // analyzed base form. When the surface differs from the base form,
+    // [お-row]+う is the volitional shape (未然形 お-row + auxiliary う):
+    // なろう = なろ + う. Emitting it merged (auto-tagged 連用形 by
+    // detectVerbForm's fallback) pre-empts the 未然形 + AuxVolitional split
+    // path, so suppress the merged candidate. Restricted to dict-attested
+    // bases: for unknown verbs no 未然形 edge exists, so the merged reading
+    // stays (and spurious o-row stem edges inside longer words are avoided).
+    if (pre_filter_len >= 2 && codepoints[end_pos - 1] == U'う' && grammar::isORowCodepoint(codepoints[end_pos - 2]) &&
+        best.base_form != surface) {
+      bool base_is_dict_aux = vh::hasDictionaryEntry(dict_manager, best.base_form, core::PartOfSpeech::Auxiliary);
+      if (is_dictionary_verb || base_is_dict_aux) {
+        // Dictionary verbs already expose their 未然形 as a dict edge (なろ).
+        // Aux-registered subsidiary verbs (しまう) list only hand-picked
+        // forms, so generate the 未然形 stem here to complete the split path
+        // (しまおう → しまお + う).
+        const auto* godan_row = grammar::Conjugation::getGodanRow(best.verb_type);
+        if (!is_dictionary_verb && godan_row != nullptr && godan_row->o_row == codepoints[end_pos - 2] &&
+            pre_filter_len >= 3) {
+          std::string stem_surface = extractSubstring(codepoints, start_pos, end_pos - 1);
+          SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << stem_surface
+                                                  << " hiragana_volitional_mizenkei lemma=" << best.base_form << "\n");
+          candidates.push_back(makeVerbCandidate(
+              stem_surface, start_pos, end_pos - 1, candidate::verb_cost::kWeakPenalty, best.base_form,
+              grammar::verbTypeToConjType(best.verb_type), true, CandidateOrigin::VerbHiragana, best.confidence,
+              "hiragana_volitional_mizenkei", core::ExtendedPOS::VerbMizenkei));
+        }
+        SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << surface << "\" skip volitional_shape (base=" << best.base_form
+                                                  << ")\n");
+        continue;  // Let 未然形 + う (AuxVolitional) split win
+      }
+    }
+
     // Filter out verb stems that would form compound particles with て/で
     // e.g., によっ + て = によって (particle), とし + て = として (particle)
     // These compound particles exist as dictionary entries and should not be

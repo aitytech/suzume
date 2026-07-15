@@ -132,6 +132,90 @@
       ],
       "id": "ikoutosuru",
       "input": "行こうとする"
+    },
+    {
+      "description": "彼女は美しくなろうとしている - auto-generated",
+      "expected": [
+        {
+          "lemma": "彼女",
+          "pos": "Pronoun",
+          "surface": "彼女"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しく"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "ha_shikunaroutoshiteiru",
+      "input": "彼女は美しくなろうとしている"
+    },
+    {
+      "description": "しまおうとした - auto-generated",
+      "expected": [
+        {
+          "lemma": "しまう",
+          "pos": "Verb",
+          "surface": "しまお"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shimaoutoshita",
+      "input": "しまおうとした"
     }
   ],
   "description": "verb_volitional tests",
