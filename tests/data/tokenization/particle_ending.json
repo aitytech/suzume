@@ -288,6 +288,43 @@
         "conjunctive",
         "sentence_ending"
       ]
+    },
+    {
+      "description": "これでいいのかな - auto-generated",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "な",
+          "pos": "Particle",
+          "surface": "な"
+        }
+      ],
+      "id": "koredeiinokana",
+      "input": "これでいいのかな"
     }
   ],
   "description": "Sentence-ending particles (ね、よ、な)",
