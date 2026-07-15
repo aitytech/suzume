@@ -452,6 +452,17 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     if ((is_renyokei || is_ichidan_stem) && (second_hira == U'そ' || second_hira == U'た' || second_hira == U'ま')) {
       looks_like_aux = true;
     }
+    // Negative + 様態 そう (なさそう): the negative auxiliary ない nominalized as
+    // なさ, carrying 様態 そう. Attaches to a verb stem (見なさそう = 見 + なさそう,
+    // 食べなさそう = 食べ + なさそう) and is never a compound noun. This is the
+    // negative counterpart of the renyokei + そう handling above, so let the
+    // verb + な + さ + そう decomposition win instead of merging into one noun.
+    if (hiragana_len >= 3) {
+      std::string hira_portion = extractSubstring(codepoints, kanji_end, hiragana_end);
+      if (hira_portion.find("なさそ") != std::string::npos) {
+        looks_like_aux = true;
+      }
+    }
     // Renyokei + なさい (polite imperative)
     // e.g., 書きなさい, 起きなさい - these should split as verb + なさい
     if ((is_renyokei || is_ichidan_stem) && hiragana_len >= 4) {

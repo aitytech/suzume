@@ -61,6 +61,12 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   // This helps かもしれない → かも+しれ+ない over かも+し+れ+ない
   setCell(t, EPOS::VerbRenyokei, EPOS::AuxNegativeNai, cost::kStrongBonus);
 
+  // VerbRenyokei → AdjStem (食べ+な, でき+な) - minor bonus. The negative ない is stored
+  // as an adjective stem (な/ない) and attaches to a verb 未然形, which shares the ichidan
+  // renyokei surface. Overrides the default cross-category penalty so the negative reading
+  // 食べ + な(ない) + さ + そう wins over the 断定 copula な, without over-splitting でき.
+  setCell(t, EPOS::VerbRenyokei, EPOS::AdjStem, cost::kMinorBonus);
+
   // VerbMizenkei → AuxNegativeNu (くだら+ん contracted negative) - moderate bonus
   setCell(t, EPOS::VerbMizenkei, EPOS::AuxNegativeNu, cost::kModerateBonus);
 
