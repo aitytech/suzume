@@ -152,5 +152,20 @@ TEST_F(DictCompilerTest, KuruExpansionGeneratesRealKanjiSurfaces) {
   EXPECT_FALSE(has_surface("来こ"));
 }
 
+TEST_F(DictCompilerTest, NaAdjectiveStoresSpecificExtendedPos) {
+  auto input = writeFile("adjective.tsv", "穏やか\tADJECTIVE\tNA_ADJ\n");
+  auto output = temp_dir_ / "adjective.dic";
+
+  DictCompiler compiler;
+  auto compile_result = compiler.compile(input.string(), output.string());
+  ASSERT_TRUE(compile_result.hasValue()) << compile_result.error().message;
+
+  dictionary::BinaryDictionary dict;
+  ASSERT_TRUE(dict.loadFromFile(output.string()).hasValue());
+  const auto* entry = dict.lookupExact("穏やか");
+  ASSERT_NE(entry, nullptr);
+  EXPECT_EQ(entry->extended_pos, core::ExtendedPOS::AdjNaAdj);
+}
+
 }  // namespace
 }  // namespace suzume::cli

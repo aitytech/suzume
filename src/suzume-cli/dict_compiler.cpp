@@ -276,12 +276,14 @@ core::Expected<size_t, core::Error> DictCompiler::compileEntries(const std::vect
 
     if (tsv_entry.conj_type == dictionary::ConjugationType::Interjection) {
       base_entry.extended_pos = core::ExtendedPOS::Interjection;
+    } else if (tsv_entry.conj_type == dictionary::ConjugationType::NaAdjective) {
+      base_entry.extended_pos = core::ExtendedPOS::AdjNaAdj;
     } else if (tsv_entry.conj_type == dictionary::ConjugationType::ProperFamily) {
       base_entry.extended_pos = core::ExtendedPOS::NounProperFamily;
     } else if (tsv_entry.conj_type == dictionary::ConjugationType::ProperGiven) {
       base_entry.extended_pos = core::ExtendedPOS::NounProperGiven;
     } else {
-      base_entry.extended_pos = core::ExtendedPOS::Unknown;
+      base_entry.extended_pos = core::posToExtendedPos(base_entry.pos);
     }
 
     if (seen_surfaces.count(base_entry.surface) > 0) {
