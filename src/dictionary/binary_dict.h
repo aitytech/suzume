@@ -20,46 +20,26 @@ namespace suzume::dictionary {
  * @brief Binary dictionary header
  */
 struct BinaryDictHeader {
-  uint32_t magic;          // "SZMD" (0x444D5A53)
-  uint16_t version_major;  // Major version (2 = compact format)
-  uint16_t version_minor;  // Minor version
-  uint32_t entry_count;    // Number of entries
-  uint32_t trie_offset;    // Offset to trie data
-  uint32_t trie_size;      // Size of trie data
-  uint32_t entry_offset;   // Offset to entry array
-  uint32_t string_offset;  // Offset to string pool
-  uint32_t flags;          // v2.3 entry encoding; zero in older formats
-  uint32_t checksum;       // CRC32 checksum (reserved)
+  uint32_t magic;         // "SZMD" (0x444D5A53)
+  uint32_t entry_count;   // Number of entries
+  uint32_t surface_size;  // Size of the front-coded surface table
+  uint8_t version;        // Format version
+  uint8_t flags;          // Entry encoding
+  uint16_t reserved;      // Must be zero
 
   static constexpr uint32_t kMagic = 0x444D5A53;  // "SZMD"
-  static constexpr uint16_t kVersionMajor = 2;
-  static constexpr uint16_t kVersionMinor = 3;
-  static constexpr uint32_t kEntryEncodingMask = 0x03;
-  static constexpr uint32_t kGrammarOnlyEntries = 0x01;  // 1 byte/entry, no differing lemmas
-  static constexpr uint32_t kPackedEntries = 0x02;       // 2 bytes/entry, 11-bit lemma + 5-bit grammar
-  static constexpr uint32_t kWideEntries = 0x03;         // 3 bytes/entry, 16-bit lemma + 8-bit grammar
+  static constexpr uint8_t kVersion = 1;
+  static constexpr uint8_t kEntryEncodingMask = 0x03;
+  static constexpr uint8_t kGrammarOnlyEntries = 0x01;  // 1 byte/entry, no differing lemmas
+  static constexpr uint8_t kPackedEntries = 0x02;       // 2 bytes/entry, 11-bit lemma + 5-bit grammar
+  static constexpr uint8_t kWideEntries = 0x03;         // 3 bytes/entry, 16-bit lemma + 8-bit grammar
 };
+static_assert(sizeof(BinaryDictHeader) == 16);
 
 /**
- * @brief Legacy binary dictionary entry record v2.2 (8 bytes)
- *
- * Surface strings are encoded by the trie and reconstructed when loading, so
- * only a differing lemma needs to be retained in the string pool.
- */
-struct BinaryDictEntry {
-  uint32_t lemma_offset;  // Lemma offset (0 = same as surface)
-  uint8_t lemma_length;   // Lemma byte length (0 = same as surface, max 255)
-  uint8_t pos;            // Part of speech
-  uint8_t extended_pos;   // Extended POS for fine-grained connection scoring
-  uint8_t reserved;       // Reserved, must be zero
-};
-
-static_assert(sizeof(BinaryDictEntry) == 8, "BinaryDictEntry must remain an 8-byte v2.2 on-disk record");
-
-/**
- * v2.3 stores a POS/ExtendedPOS palette followed by an adaptive one-, two-, or
- * three-byte entry array. The lemma table contains length-prefixed,
- * deduplicated strings. The header flags select the entry encoding.
+ * The format stores front-coded sorted UTF-8 surfaces, a POS/ExtendedPOS palette, an
+ * adaptive one-, two-, or three-byte entry array, and a length-prefixed,
+ * deduplicated lemma table. The runtime DoubleArray is rebuilt while loading.
  */
 inline constexpr size_t kWideCompactEntrySize = 3;
 
@@ -68,7 +48,7 @@ inline constexpr size_t kWideCompactEntrySize = 3;
  *
  * File format:
  *   [Header]
- *   [Double-Array Trie]
+ *   [Front-coded Surface Table]
  *   [Entry Array]
  *   [String Pool]
  */

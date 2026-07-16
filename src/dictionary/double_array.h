@@ -29,14 +29,6 @@ class DoubleArray {
     size_t length;  // Match length in bytes
   };
 
-  /**
-   * @brief Key and value stored in the trie
-   */
-  struct KeyValue {
-    std::string key;
-    int32_t value;
-  };
-
   DoubleArray();
   ~DoubleArray() = default;
 
@@ -55,6 +47,11 @@ class DoubleArray {
    * @note Keys MUST be sorted. Unsorted keys will cause incorrect results.
    */
   bool build(const std::vector<std::string>& keys, const std::vector<int32_t>& values);
+
+  /**
+   * @brief Build with each key's sorted index as its value
+   */
+  bool build(const std::vector<std::string>& keys);
 
   /**
    * @brief Build with uint32_t values (convenience overload)
@@ -78,16 +75,6 @@ class DoubleArray {
   std::vector<Result> commonPrefixSearch(std::string_view text, size_t start = 0, size_t max_results = 0) const;
 
   /**
-   * @brief Enumerate all stored keys with their values
-   * @param key_values Replaced with the complete key/value list on success
-   * @return true on success, false if the serialized structure is malformed
-   *
-   * The key bytes are reconstructed from XOR transitions. This allows binary
-   * dictionary records to omit their duplicate copy of each surface string.
-   */
-  bool enumerate(std::vector<KeyValue>& key_values) const;
-
-  /**
    * @brief Get size of the double-array (number of units)
    */
   size_t size() const { return units_.size(); }
@@ -106,20 +93,6 @@ class DoubleArray {
    * @brief Get memory usage in bytes
    */
   size_t memoryUsage() const;
-
-  /**
-   * @brief Serialize to binary data
-   * @return Binary representation
-   */
-  std::vector<uint8_t> serialize() const;
-
-  /**
-   * @brief Deserialize from binary data
-   * @param data Binary data
-   * @param size Data size
-   * @return true on success
-   */
-  bool deserialize(const uint8_t* data, size_t size);
 
  private:
   /**
@@ -152,7 +125,7 @@ class DoubleArray {
    * @param out_value Set to the leaf value when a leaf is present
    * @return true if the node has a leaf child, false otherwise
    *
-   * @note Honors the DA03 `check == node_pos + 1` child sentinel.
+   * @note `check == node_pos + 1`; zero is reserved for an empty unit.
    */
   bool tryLeaf(size_t node_pos, int32_t& out_value) const;
 
@@ -163,7 +136,7 @@ class DoubleArray {
    * @param next_pos Set to the child position when the transition exists
    * @return true if a valid child exists, false otherwise
    *
-   * @note Honors the DA03 `check == node_pos + 1` child sentinel.
+   * @note `check == node_pos + 1`; zero is reserved for an empty unit.
    */
   bool transition(size_t node_pos, uint8_t chr, size_t& next_pos) const;
 
@@ -177,8 +150,9 @@ class DoubleArray {
     size_t findBase(const std::vector<uint8_t>& children);
   };
 
-  void buildRecursive(BuildState& state, const std::vector<std::string>& keys, const std::vector<int32_t>& values,
+  void buildRecursive(BuildState& state, const std::vector<std::string>& keys, const std::vector<int32_t>* values,
                       size_t begin, size_t end, size_t depth, size_t parent_pos);
+  bool buildInternal(const std::vector<std::string>& keys, const std::vector<int32_t>* values);
 };
 
 }  // namespace suzume::dictionary
