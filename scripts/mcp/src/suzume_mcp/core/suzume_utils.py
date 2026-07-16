@@ -11,17 +11,26 @@ from .postprocessors import (
     postprocess_de_aru,
     postprocess_de_particle,
     postprocess_demo,
+    postprocess_fuu_formal_noun,
     postprocess_gozai_verb,
+    postprocess_hiragana_godan_wa_terminal,
+    postprocess_hiragana_purpose_noun,
+    postprocess_honorific_request,
     postprocess_ii,
     postprocess_ikaga,
+    postprocess_indefinite_ka,
     postprocess_iru_aux,
     postprocess_mecab_tokens,
+    postprocess_miru_aux,
     postprocess_n_kuruwa,
     postprocess_na_adj_noun,
     postprocess_nai_context,
     postprocess_nara_verb,
+    postprocess_short_hiragana_onbin,
     postprocess_sou,
     postprocess_sou_aux,
+    postprocess_subsidiary_yuku,
+    postprocess_tagaru_aux,
     postprocess_taihen,
     postprocess_tsuke_noun,
     postprocess_you_noun,
@@ -94,6 +103,23 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     postprocess_demo(tokens)
     postprocess_ii(tokens)
     postprocess_iru_aux(tokens)
+    postprocess_miru_aux(tokens)
+    if postprocess_tagaru_aux(tokens) and applied_rule is None:
+        applied_rule = "tagaru-search-unit"
+    if postprocess_fuu_formal_noun(tokens) and applied_rule is None:
+        applied_rule = "fuu-formal-noun"
+    if postprocess_indefinite_ka(tokens) and applied_rule is None:
+        applied_rule = "indefinite-ka"
+    if postprocess_subsidiary_yuku(tokens) and applied_rule is None:
+        applied_rule = "subsidiary-yuku"
+    if postprocess_hiragana_purpose_noun(tokens) and applied_rule is None:
+        applied_rule = "hiragana-purpose-noun"
+    if postprocess_short_hiragana_onbin(tokens) and applied_rule is None:
+        applied_rule = "short-hiragana-onbin"
+    if postprocess_hiragana_godan_wa_terminal(tokens) and applied_rule is None:
+        applied_rule = "hiragana-godan-wa-terminal"
+    if postprocess_honorific_request(tokens) and applied_rule is None:
+        applied_rule = "honorific-request-renyokei"
     postprocess_de_particle(tokens)
     postprocess_de_aru(tokens)
     postprocess_gozai_verb(tokens)

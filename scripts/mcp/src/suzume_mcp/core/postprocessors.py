@@ -216,8 +216,206 @@ def postprocess_iru_aux(tokens: list[dict]) -> None:
             t["lemma"] = "いる"
 
 
+def postprocess_miru_aux(tokens: list[dict]) -> None:
+    """Classify trial みる after a te-form boundary as Auxiliary."""
+    trial_surfaces = {"み", "みる", "みれ", "みろ", "みよ"}
+    for idx in range(1, len(tokens)):
+        token = tokens[idx]
+        if token.get("surface") not in trial_surfaces:
+            continue
+        prev_idx = idx - 1
+        if tokens[prev_idx].get("surface") == "も" and prev_idx > 0:
+            prev_idx -= 1
+        if tokens[prev_idx].get("surface") not in ("て", "で"):
+            continue
+        token["pos"] = "Auxiliary"
+        token["lemma"] = "みる"
+
+
+def postprocess_tagaru_aux(tokens: list[dict]) -> bool:
+    """Keep the desiderative-observation auxiliary たがる as one search unit."""
+    tagaru_forms = frozenset({"がら", "がり", "がる", "がれ", "がろ", "がっ"})
+    changed = False
+    idx = 0
+    while idx + 1 < len(tokens):
+        if tokens[idx].get("surface") == "た" and tokens[idx + 1].get("surface") in tagaru_forms:
+            surface = "た" + tokens[idx + 1].get("surface", "")
+            tokens[idx : idx + 2] = [{"surface": surface, "pos": "Auxiliary", "lemma": "たがる"}]
+            changed = True
+        idx += 1
+    return changed
+
+
+def postprocess_fuu_formal_noun(tokens: list[dict]) -> bool:
+    """Normalize demonstrative + ふう + に as grammatical search units."""
+    joined = "".join(token.get("surface", "") for token in tokens)
+    match = regex.fullmatch(r"([こそあど]んな)ふうに", joined)
+    if match:
+        tokens[:] = [
+            {"surface": match.group(1), "pos": "Determiner", "lemma": match.group(1)},
+            {"surface": "ふう", "pos": "Noun", "lemma": "ふう"},
+            {"surface": "に", "pos": "Particle", "lemma": "に"},
+        ]
+        return True
+    for token in tokens:
+        if token.get("surface") == "ふう" and token.get("pos") != "Noun":
+            token["pos"] = "Noun"
+            token["lemma"] = "ふう"
+            return True
+    return False
+
+
+def postprocess_indefinite_ka(tokens: list[dict]) -> bool:
+    """Separate indefinite か from a pronoun and restore existential いる."""
+    indefinite_pronoun_stems = frozenset({"なに", "何", "だれ", "誰", "どこ", "どちら", "どれ", "どなた"})
+    changed = False
+    idx = 0
+    while idx < len(tokens):
+        token = tokens[idx]
+        surface = token.get("surface", "")
+        stem = surface[:-1] if surface.endswith("か") else ""
+        if stem in indefinite_pronoun_stems:
+            tokens[idx : idx + 1] = [
+                {"surface": stem, "pos": "Pronoun", "lemma": stem},
+                {"surface": "か", "pos": "Particle", "lemma": "か"},
+            ]
+            changed = True
+            idx += 1
+        elif idx > 0 and tokens[idx - 1].get("pos") == "Pronoun" and surface == "かい":
+            tokens[idx : idx + 1] = [
+                {"surface": "か", "pos": "Particle", "lemma": "か"},
+                {"surface": "い", "pos": "Verb", "lemma": "いる"},
+            ]
+            changed = True
+            idx += 1
+        idx += 1
+
+    for idx in range(1, len(tokens)):
+        if tokens[idx - 1].get("surface") == "か" and tokens[idx].get("surface") in ("い", "いる"):
+            tokens[idx]["pos"] = "Verb"
+            tokens[idx]["lemma"] = "いる"
+            changed = True
+    return changed
+
+
+def postprocess_subsidiary_yuku(tokens: list[dict]) -> bool:
+    """Treat literary 連用形 + ゆく/いく as a subsidiary verb."""
+    changed = False
+    for idx in range(1, len(tokens)):
+        if tokens[idx - 1].get("pos") == "Verb" and tokens[idx].get("surface") in ("ゆく", "いく"):
+            tokens[idx]["pos"] = "Verb"
+            tokens[idx]["lemma"] = tokens[idx].get("surface")
+            changed = True
+    return changed
+
+
+def postprocess_hiragana_purpose_noun(tokens: list[dict]) -> bool:
+    """Use a nominal search unit for hiragana activity + に + motion verb."""
+    changed = False
+    motion_lemmas = {"行く", "来る", "帰る"}
+    for idx in range(len(tokens) - 2):
+        token = tokens[idx]
+        if (
+            token.get("pos") == "Verb"
+            and regex.fullmatch(r"\p{Hiragana}+", token.get("surface", ""))
+            and tokens[idx + 1].get("surface") == "に"
+            and tokens[idx + 2].get("lemma") in motion_lemmas
+        ):
+            token["pos"] = "Noun"
+            token["lemma"] = token.get("surface")
+            changed = True
+    return changed
+
+
+def postprocess_short_hiragana_onbin(tokens: list[dict]) -> bool:
+    """Normalize a short pure-hiragana 撥音便 immediately before だ/で."""
+    changed = False
+    for idx in range(len(tokens) - 1):
+        token = tokens[idx]
+        surface = token.get("surface", "")
+        if (
+            len(surface) == 2
+            and surface.endswith("ん")
+            and regex.fullmatch(r"\p{Hiragana}+", surface)
+            and tokens[idx].get("pos") in ("Noun", "Verb")
+            and tokens[idx + 1].get("surface") in ("だ", "で")
+        ):
+            lemma = token.get("lemma", "")
+            has_valid_onbin_lemma = (
+                token.get("pos") == "Verb" and lemma[:-1] == surface[:-1] and lemma.endswith(("む", "ぶ", "ぬ"))
+            )
+            if has_valid_onbin_lemma:
+                continue
+            token["pos"] = "Verb"
+            token["lemma"] = surface[:-1] + "む"
+            changed = True
+    return changed
+
+
+def postprocess_hiragana_godan_wa_terminal(tokens: list[dict]) -> bool:
+    """Merge a pure-hiragana Godan-wa base split from final auxiliary う."""
+    if len(tokens) != 2 or tokens[0].get("pos") != "Verb" or tokens[1].get("surface") != "う":
+        return False
+    stem = tokens[0].get("surface", "")
+    # An o-row stem followed by う is normally a volitional form (e.g. 書こう),
+    # not a dictionary-form Godan-wa verb split at its final vowel.
+    if stem and stem[-1] in "おこそとのほもよろをごぞどぼぽょ":
+        return False
+    surface = stem + "う"
+    if len(surface) < 3 or not regex.fullmatch(r"\p{Hiragana}+", surface):
+        return False
+    tokens[:] = [{"surface": surface, "pos": "Verb", "lemma": surface}]
+    return True
+
+
+def postprocess_honorific_request(tokens: list[dict]) -> bool:
+    """Restore a verbal stem in an honorific or humble construction.
+
+    Some analyzers classify a nominally homographic stem such as ``立ち`` as a
+    noun even though ``ください``, ``いたす``, or ``いただく`` supplies a verbal
+    continuation. I-row Godan stems and e-row Ichidan stems can both recover
+    their dictionary form from conjugation structure without a lexical exception
+    table.
+    """
+    godan_renyokei_to_base = {
+        "い": "う",
+        "き": "く",
+        "ぎ": "ぐ",
+        "し": "す",
+        "ち": "つ",
+        "に": "ぬ",
+        "び": "ぶ",
+        "み": "む",
+        "り": "る",
+    }
+    changed = False
+    for idx in range(1, len(tokens) - 1):
+        prefix = tokens[idx - 1]
+        stem = tokens[idx]
+        continuation = tokens[idx + 1]
+        surface = stem.get("surface", "")
+        if (
+            prefix.get("pos") == "Prefix"
+            and prefix.get("surface") in ("お", "ご")
+            and stem.get("pos") == "Noun"
+            and surface
+            and continuation.get("pos") == "Verb"
+            and continuation.get("lemma") in ("くださる", "いたす", "いただく")
+        ):
+            final = surface[-1]
+            if final in godan_renyokei_to_base:
+                stem["pos"] = "Verb"
+                stem["lemma"] = surface[:-1] + godan_renyokei_to_base[final]
+                changed = True
+            elif final in "えけげせぜてでねへべめれ":
+                stem["pos"] = "Verb"
+                stem["lemma"] = surface + "る"
+                changed = True
+    return changed
+
+
 def postprocess_de_particle(tokens: list[dict]) -> None:
-    """No-op: MeCab correctly distinguishes copula で(Aux) from particle で(Part)."""
+    """Keep the upstream copula/particle distinction for で unchanged."""
     pass
 
 
@@ -385,7 +583,7 @@ def postprocess_nai_context(tokens: list[dict]) -> None:
 
 
 def postprocess_nara_verb(tokens: list[dict]) -> None:
-    """Fix なら before ない/なく/なかっ: Auxiliary -> Verb(なる)."""
+    """Fix なら before negative auxiliaries: Auxiliary -> Verb(なる)."""
     for i in range(len(tokens) - 1):
         t = tokens[i]
         if t.get("surface") != "なら":
@@ -393,6 +591,6 @@ def postprocess_nara_verb(tokens: list[dict]) -> None:
         if t.get("pos") not in ("Auxiliary", "Particle"):
             continue
         nxt_surface = tokens[i + 1].get("surface", "")
-        if nxt_surface in ("ない", "なく", "なかっ"):
+        if nxt_surface in ("ない", "なく", "なかっ", "ぬ"):
             t["pos"] = "Verb"
             t["lemma"] = "なる"

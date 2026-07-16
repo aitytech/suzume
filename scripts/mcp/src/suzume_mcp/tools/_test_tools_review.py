@@ -34,7 +34,8 @@ async def test_accept_diff(
 ) -> str:
     """Accept Suzume's current output as valid by adding suzume_expected field.
 
-    Keeps MeCab-compatible expected for reference but marks Suzume's output as acceptable.
+    Keeps the normalized reference expected for comparison while marking Suzume's
+    output as an intentional tokenizer difference.
 
     Args:
         input_text: Input text to accept diff for (mutually exclusive with all_failed).

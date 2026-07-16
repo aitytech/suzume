@@ -4,11 +4,21 @@ from suzume_mcp.core.postprocessors import (
     postprocess_copula_neg,
     postprocess_de_particle,
     postprocess_demo,
+    postprocess_fuu_formal_noun,
+    postprocess_hiragana_godan_wa_terminal,
+    postprocess_hiragana_purpose_noun,
+    postprocess_honorific_request,
     postprocess_ii,
     postprocess_ikaga,
+    postprocess_indefinite_ka,
     postprocess_iru_aux,
+    postprocess_miru_aux,
     postprocess_na_adj_noun,
+    postprocess_nara_verb,
+    postprocess_short_hiragana_onbin,
     postprocess_sou,
+    postprocess_subsidiary_yuku,
+    postprocess_tagaru_aux,
     postprocess_te,
     postprocess_tsuke_noun,
     preprocess_for_mecab,
@@ -105,6 +115,145 @@ class TestPostprocessIruAux:
         tokens = [_tok("猫", "Noun"), _tok("いる", "Verb")]
         postprocess_iru_aux(tokens)
         assert tokens[1]["pos"] == "Verb"
+
+
+class TestPostprocessMiruAux:
+    def test_miru_after_te(self):
+        tokens = [_tok("て", "Particle"), _tok("み", "Verb", lemma="みる")]
+        postprocess_miru_aux(tokens)
+        assert tokens[1]["pos"] == "Auxiliary"
+
+    def test_miru_after_emphatic_mo(self):
+        tokens = [
+            _tok("て", "Particle"),
+            _tok("も", "Particle"),
+            _tok("み", "Verb", lemma="みる"),
+        ]
+        postprocess_miru_aux(tokens)
+        assert tokens[2]["pos"] == "Auxiliary"
+
+    def test_miru_standalone(self):
+        tokens = [_tok("花", "Noun"), _tok("を", "Particle"), _tok("みる", "Verb")]
+        postprocess_miru_aux(tokens)
+        assert tokens[2]["pos"] == "Verb"
+
+
+class TestPostprocessNaraVerb:
+    def test_nara_before_classical_negative(self):
+        tokens = [_tok("なら", "Auxiliary"), _tok("ぬ", "Auxiliary")]
+        postprocess_nara_verb(tokens)
+        assert tokens[0] == _tok("なら", "Verb", lemma="なる")
+
+
+class TestPostprocessHonorificRequest:
+    def test_godan_renyokei_before_kudasaru(self):
+        tokens = [
+            _tok("お", "Prefix"),
+            _tok("立ち", "Noun"),
+            _tok("ください", "Verb", lemma="くださる"),
+        ]
+        assert postprocess_honorific_request(tokens)
+        assert tokens[1] == _tok("立ち", "Verb", lemma="立つ")
+
+    def test_ichidan_renyokei_before_kudasaru(self):
+        tokens = [
+            _tok("お", "Prefix"),
+            _tok("答え", "Noun"),
+            _tok("ください", "Verb", lemma="くださる"),
+        ]
+        assert postprocess_honorific_request(tokens)
+        assert tokens[1] == _tok("答え", "Verb", lemma="答える")
+
+    def test_godan_renyokei_before_itasu(self):
+        tokens = [
+            _tok("お", "Prefix"),
+            _tok("願い", "Noun"),
+            _tok("いたし", "Verb", lemma="いたす"),
+        ]
+        assert postprocess_honorific_request(tokens)
+        assert tokens[1] == _tok("願い", "Verb", lemma="願う")
+
+    def test_godan_renyokei_before_itadaku(self):
+        tokens = [
+            _tok("お", "Prefix"),
+            _tok("使い", "Noun"),
+            _tok("いただく", "Verb", lemma="いただく"),
+        ]
+        assert postprocess_honorific_request(tokens)
+        assert tokens[1] == _tok("使い", "Verb", lemma="使う")
+
+    def test_object_noun_is_not_changed(self):
+        tokens = [
+            _tok("お", "Prefix"),
+            _tok("茶", "Noun"),
+            _tok("ください", "Verb", lemma="くださる"),
+        ]
+        assert not postprocess_honorific_request(tokens)
+        assert tokens[1]["pos"] == "Noun"
+
+
+class TestTokenizerSearchUnitNormalizers:
+    def test_tagaru_forms_one_auxiliary(self):
+        tokens = [_tok("食べ", "Verb"), _tok("た", "Auxiliary"), _tok("がる", "Verb")]
+        assert postprocess_tagaru_aux(tokens)
+        assert tokens == [_tok("食べ", "Verb"), _tok("たがる", "Auxiliary", lemma="たがる")]
+
+    def test_past_auxiliary_before_case_particle_is_not_tagaru(self):
+        tokens = [_tok("い", "Auxiliary", lemma="いる"), _tok("た", "Auxiliary"), _tok("が", "Particle")]
+        assert not postprocess_tagaru_aux(tokens)
+        assert [token["surface"] for token in tokens] == ["い", "た", "が"]
+
+    def test_demonstrative_fuu_is_split(self):
+        tokens = [_tok("そんなふうに", "Auxiliary")]
+        assert postprocess_fuu_formal_noun(tokens)
+        assert [token["surface"] for token in tokens] == ["そんな", "ふう", "に"]
+        assert tokens[1]["pos"] == "Noun"
+
+    def test_indefinite_pronoun_and_existential(self):
+        tokens = [_tok("なにか", "Adverb"), _tok("いる", "Auxiliary")]
+        assert postprocess_indefinite_ka(tokens)
+        assert [(token["surface"], token["pos"]) for token in tokens] == [
+            ("なに", "Pronoun"),
+            ("か", "Particle"),
+            ("いる", "Verb"),
+        ]
+
+    def test_subsidiary_yuku_is_verbal(self):
+        tokens = [_tok("散り", "Verb", lemma="散る"), _tok("ゆく", "Auxiliary")]
+        assert postprocess_subsidiary_yuku(tokens)
+        assert tokens[1]["pos"] == "Verb"
+
+    def test_hiragana_purpose_is_nominal_search_unit(self):
+        tokens = [_tok("およぎ", "Verb", lemma="およぐ"), _tok("に", "Particle"), _tok("行く", "Verb")]
+        assert postprocess_hiragana_purpose_noun(tokens)
+        assert tokens[0] == _tok("およぎ", "Noun")
+
+    def test_short_hiragana_onbin(self):
+        tokens = [_tok("かん", "Noun"), _tok("で", "Particle")]
+        assert postprocess_short_hiragana_onbin(tokens)
+        assert tokens[0] == _tok("かん", "Verb", lemma="かむ")
+
+    def test_valid_hatsuonbin_lemma_is_preserved(self):
+        tokens = [_tok("とん", "Verb", lemma="とぶ"), _tok("だ", "Auxiliary")]
+        assert not postprocess_short_hiragana_onbin(tokens)
+        assert tokens[0] == _tok("とん", "Verb", lemma="とぶ")
+
+    def test_suffix_before_copula_is_not_onbin(self):
+        tokens = [_tok("さん", "Suffix"), _tok("で", "Auxiliary")]
+        assert not postprocess_short_hiragana_onbin(tokens)
+
+    def test_hiragana_godan_wa_terminal(self):
+        tokens = [_tok("つか", "Verb"), _tok("う", "Auxiliary")]
+        assert postprocess_hiragana_godan_wa_terminal(tokens)
+        assert tokens == [_tok("つかう", "Verb")]
+
+    def test_o_row_volitional_is_not_merged(self):
+        tokens = [_tok("むかお", "Verb", lemma="むかう"), _tok("う", "Auxiliary")]
+        assert not postprocess_hiragana_godan_wa_terminal(tokens)
+
+    def test_adjective_volitional_is_not_merged(self):
+        tokens = [_tok("うれしかろ", "Adjective", lemma="うれしい"), _tok("う", "Auxiliary")]
+        assert not postprocess_hiragana_godan_wa_terminal(tokens)
 
 
 class TestPostprocessDeParticle:
