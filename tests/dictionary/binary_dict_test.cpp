@@ -41,6 +41,101 @@ std::vector<uint8_t> buildTestDict(const std::string& surface, core::PartOfSpeec
   return result.value();
 }
 
+struct LegacyEntryV0 {
+  uint32_t surface_offset;
+  uint32_t lemma_offset;
+  uint8_t surface_length;
+  uint8_t lemma_length;
+  uint8_t pos;
+  uint8_t flags;
+};
+
+struct LegacyEntryV1 {
+  uint32_t surface_offset;
+  uint32_t lemma_offset;
+  uint8_t surface_length;
+  uint8_t lemma_length;
+  uint8_t pos;
+  uint8_t flags;
+  uint8_t extended_pos;
+  uint8_t reserved[3];
+};
+
+static_assert(sizeof(LegacyEntryV0) == 12);
+static_assert(sizeof(LegacyEntryV1) == 16);
+
+std::vector<uint8_t> buildLegacyTestDict(uint16_t minor_version, const std::string& surface, const std::string& lemma,
+                                         core::PartOfSpeech pos, core::ExtendedPOS extended_pos, uint8_t flags) {
+  DoubleArray trie;
+  EXPECT_TRUE(trie.build(std::vector<std::string>{surface}, std::vector<uint32_t>{0}));
+  auto trie_data = trie.serialize();
+
+  std::vector<uint8_t> string_pool;
+  if (minor_version < 2) {
+    string_pool.assign(surface.begin(), surface.end());
+  }
+  uint32_t lemma_offset = 0;
+  uint8_t lemma_length = 0;
+  if (lemma != surface) {
+    lemma_offset = static_cast<uint32_t>(string_pool.size());
+    lemma_length = static_cast<uint8_t>(lemma.size());
+    string_pool.insert(string_pool.end(), lemma.begin(), lemma.end());
+  }
+
+  size_t record_size = minor_version == 0   ? sizeof(LegacyEntryV0)
+                       : minor_version == 1 ? sizeof(LegacyEntryV1)
+                                            : sizeof(BinaryDictEntry);
+  BinaryDictHeader header{};
+  header.magic = BinaryDictHeader::kMagic;
+  header.version_major = BinaryDictHeader::kVersionMajor;
+  header.version_minor = minor_version;
+  header.entry_count = 1;
+  header.trie_offset = sizeof(BinaryDictHeader);
+  header.trie_size = static_cast<uint32_t>(trie_data.size());
+  header.entry_offset = header.trie_offset + header.trie_size;
+  header.string_offset = header.entry_offset + static_cast<uint32_t>(record_size);
+
+  std::vector<uint8_t> data(header.string_offset + string_pool.size());
+  std::memcpy(data.data(), &header, sizeof(header));
+  std::memcpy(data.data() + header.trie_offset, trie_data.data(), trie_data.size());
+
+  if (minor_version == 0) {
+    LegacyEntryV0 record{};
+    record.surface_offset = 0;
+    record.lemma_offset = lemma_offset;
+    record.surface_length = static_cast<uint8_t>(surface.size());
+    record.lemma_length = lemma_length;
+    record.pos = static_cast<uint8_t>(pos);
+    record.flags = flags;
+    std::memcpy(data.data() + header.entry_offset, &record, sizeof(record));
+  } else if (minor_version == 1) {
+    LegacyEntryV1 record{};
+    record.surface_offset = 0;
+    record.lemma_offset = lemma_offset;
+    record.surface_length = static_cast<uint8_t>(surface.size());
+    record.lemma_length = lemma_length;
+    record.pos = static_cast<uint8_t>(pos);
+    record.flags = flags;
+    record.extended_pos = static_cast<uint8_t>(extended_pos);
+    std::memcpy(data.data() + header.entry_offset, &record, sizeof(record));
+  } else {
+    BinaryDictEntry record{};
+    record.lemma_offset = lemma_offset;
+    record.lemma_length = lemma_length;
+    record.pos = static_cast<uint8_t>(pos);
+    record.extended_pos = static_cast<uint8_t>(extended_pos);
+    std::memcpy(data.data() + header.entry_offset, &record, sizeof(record));
+  }
+  std::memcpy(data.data() + header.string_offset, string_pool.data(), string_pool.size());
+  return data;
+}
+
+size_t compactRecordOffset(const std::vector<uint8_t>& data) {
+  const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
+  const size_t palette_count = data[header->entry_offset];
+  return header->entry_offset + 1 + palette_count * 2;
+}
+
 TEST_F(BinaryDictTest, WriteAndLoadEmpty) {
   BinaryDictWriter writer;
 
@@ -85,6 +180,127 @@ TEST_F(BinaryDictTest, WriteAndLoadSingleEntry) {
   EXPECT_EQ(results[0].entry->surface, "test");
   EXPECT_EQ(results[0].entry->pos, core::PartOfSpeech::Noun);
   // v0.8: cost check removed - cost is now derived from extended_pos
+}
+
+TEST_F(BinaryDictTest, LoadFromMemoryOwnsDecodedData) {
+  BinaryDictionary dict;
+  {
+    auto data = buildTestDict("test", core::PartOfSpeech::Noun);
+    auto load_result = dict.loadFromMemory(data.data(), data.size());
+    ASSERT_TRUE(load_result.hasValue());
+  }
+
+  auto results = dict.lookup("test", 0);
+  ASSERT_EQ(results.size(), 1u);
+  EXPECT_EQ(results[0].entry->surface, "test");
+}
+
+TEST_F(BinaryDictTest, CompactFormatStoresOnlyDifferingLemma) {
+  auto same_lemma = buildTestDict("surface", core::PartOfSpeech::Noun);
+  const auto* same_header = reinterpret_cast<const BinaryDictHeader*>(same_lemma.data());
+  EXPECT_EQ(same_header->version_minor, 3);
+  EXPECT_EQ(same_header->flags, BinaryDictHeader::kGrammarOnlyEntries);
+  EXPECT_EQ(same_header->string_offset, same_lemma.size());
+  EXPECT_EQ(same_header->string_offset - same_header->entry_offset, 1 + 2 + 1);
+
+  BinaryDictWriter writer;
+  DictionaryEntry entry;
+  entry.surface = "changed";
+  entry.lemma = "base";
+  entry.pos = core::PartOfSpeech::Verb;
+  writer.addEntry(entry);
+  auto result = writer.build();
+  ASSERT_TRUE(result.hasValue());
+  const auto* header = reinterpret_cast<const BinaryDictHeader*>(result.value().data());
+  EXPECT_EQ(header->flags, BinaryDictHeader::kPackedEntries);
+  EXPECT_EQ(header->string_offset - header->entry_offset, 1 + 2 + 2);
+  EXPECT_EQ(result.value().size() - header->string_offset, entry.lemma.size() + 1);
+}
+
+TEST_F(BinaryDictTest, LoadsLegacyMinorTwoRecord) {
+  auto data = buildLegacyTestDict(2, "changed", "base", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, 0);
+  BinaryDictionary dict;
+  auto result = dict.loadFromMemory(data.data(), data.size());
+  ASSERT_TRUE(result.hasValue());
+  const auto* entry = dict.getEntry(0);
+  ASSERT_NE(entry, nullptr);
+  EXPECT_EQ(entry->surface, "changed");
+  EXPECT_EQ(entry->lemma, "base");
+  EXPECT_EQ(entry->extended_pos, core::ExtendedPOS::VerbRenyokei);
+}
+
+TEST_F(BinaryDictTest, UsesWideCompactEntriesForLargeGrammarPalette) {
+  BinaryDictWriter writer;
+  size_t entry_idx = 0;
+  for (uint8_t pos = 0; pos < static_cast<uint8_t>(core::PartOfSpeech::Count_) && entry_idx < 33; ++pos) {
+    for (uint8_t epos = 0; epos < static_cast<uint8_t>(core::ExtendedPOS::Count_) && entry_idx < 33;
+         ++epos, ++entry_idx) {
+      writer.addEntry({"test" + std::to_string(entry_idx), static_cast<core::PartOfSpeech>(pos),
+                       static_cast<core::ExtendedPOS>(epos), "base"});
+    }
+  }
+
+  auto build_result = writer.build();
+  ASSERT_TRUE(build_result.hasValue());
+  const auto* header = reinterpret_cast<const BinaryDictHeader*>(build_result.value().data());
+  EXPECT_EQ(header->version_minor, 3);
+  EXPECT_EQ(header->flags, BinaryDictHeader::kWideEntries);
+
+  BinaryDictionary dict;
+  auto load_result = dict.loadFromMemory(build_result.value().data(), build_result.value().size());
+  ASSERT_TRUE(load_result.hasValue());
+  EXPECT_EQ(load_result.value(), 33u);
+  ASSERT_NE(dict.lookupExact("test0"), nullptr);
+  EXPECT_EQ(dict.lookupExact("test0")->lemma, "base");
+}
+
+TEST_F(BinaryDictTest, FallsBackToMinorTwoWhenGrammarPaletteOverflows) {
+  BinaryDictWriter writer;
+  size_t entry_idx = 0;
+  for (uint8_t pos = 0; pos < static_cast<uint8_t>(core::PartOfSpeech::Count_) && entry_idx < 256; ++pos) {
+    for (uint8_t epos = 0; epos < static_cast<uint8_t>(core::ExtendedPOS::Count_) && entry_idx < 256;
+         ++epos, ++entry_idx) {
+      writer.addEntry({"test" + std::to_string(entry_idx), static_cast<core::PartOfSpeech>(pos),
+                       static_cast<core::ExtendedPOS>(epos), ""});
+    }
+  }
+  ASSERT_EQ(entry_idx, 256u);
+
+  auto build_result = writer.build();
+  ASSERT_TRUE(build_result.hasValue());
+  const auto* header = reinterpret_cast<const BinaryDictHeader*>(build_result.value().data());
+  EXPECT_EQ(header->version_minor, 2);
+
+  BinaryDictionary dict;
+  auto load_result = dict.loadFromMemory(build_result.value().data(), build_result.value().size());
+  ASSERT_TRUE(load_result.hasValue());
+  EXPECT_EQ(load_result.value(), 256u);
+}
+
+TEST_F(BinaryDictTest, LoadsLegacyMinorOneRecord) {
+  auto data = buildLegacyTestDict(1, "changed", "base", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, 0);
+  BinaryDictionary dict;
+  auto result = dict.loadFromMemory(data.data(), data.size());
+  ASSERT_TRUE(result.hasValue());
+  const auto* entry = dict.getEntry(0);
+  ASSERT_NE(entry, nullptr);
+  EXPECT_EQ(entry->surface, "changed");
+  EXPECT_EQ(entry->lemma, "base");
+  EXPECT_EQ(entry->extended_pos, core::ExtendedPOS::VerbRenyokei);
+}
+
+TEST_F(BinaryDictTest, LoadsLegacyMinorZeroFlags) {
+  constexpr uint8_t kLegacyFormalNoun = 0x01;
+  auto data = buildLegacyTestDict(0, "formal", "formal", core::PartOfSpeech::Noun, core::ExtendedPOS::Unknown,
+                                  kLegacyFormalNoun);
+  BinaryDictionary dict;
+  auto result = dict.loadFromMemory(data.data(), data.size());
+  ASSERT_TRUE(result.hasValue());
+  const auto* entry = dict.getEntry(0);
+  ASSERT_NE(entry, nullptr);
+  EXPECT_EQ(entry->surface, "formal");
+  EXPECT_EQ(entry->lemma, "formal");
+  EXPECT_EQ(entry->extended_pos, core::ExtendedPOS::NounFormal);
 }
 
 TEST_F(BinaryDictTest, WriteAndLoadMultipleEntries) {
@@ -222,10 +438,14 @@ TEST_F(BinaryDictTest, LoadRejectsTruncatedEntryTable) {
 }
 
 TEST_F(BinaryDictTest, LoadRejectsOutOfRangeStringReference) {
-  auto data = buildTestDict("test", core::PartOfSpeech::Noun);
-  const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
-  auto* entry = reinterpret_cast<BinaryDictEntry*>(data.data() + header->entry_offset);
-  entry->surface_offset = static_cast<uint32_t>(data.size());
+  BinaryDictWriter writer;
+  writer.addEntry({"changed", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "base"});
+  auto build_result = writer.build();
+  ASSERT_TRUE(build_result.hasValue());
+  auto data = std::move(build_result.value());
+  const size_t record_offset = compactRecordOffset(data);
+  data[record_offset] = 2;  // Only lemma index 1 exists.
+  data[record_offset + 1] = 0;
 
   BinaryDictionary dict;
   auto result = dict.loadFromMemory(data.data(), data.size());
@@ -235,45 +455,40 @@ TEST_F(BinaryDictTest, LoadRejectsOutOfRangeStringReference) {
 TEST_F(BinaryDictTest, LoadRejectsInvalidPosValue) {
   auto data = buildTestDict("test", core::PartOfSpeech::Noun);
   const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
-  auto* entry = reinterpret_cast<BinaryDictEntry*>(data.data() + header->entry_offset);
-  entry->pos = static_cast<uint8_t>(core::PartOfSpeech::Count_);
+  data[header->entry_offset + 1] = static_cast<uint8_t>(core::PartOfSpeech::Count_);
 
   BinaryDictionary dict;
   auto result = dict.loadFromMemory(data.data(), data.size());
   EXPECT_FALSE(result.hasValue());
-  EXPECT_NE(result.error().message.find("Invalid dictionary POS value"), std::string::npos);
+  EXPECT_NE(result.error().message.find("Invalid dictionary grammar palette value"), std::string::npos);
 }
 
 TEST_F(BinaryDictTest, LoadRejectsInvalidExtendedPosValue) {
   auto data = buildTestDict("test", core::PartOfSpeech::Noun);
   const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
-  auto* entry = reinterpret_cast<BinaryDictEntry*>(data.data() + header->entry_offset);
-  entry->extended_pos = static_cast<uint8_t>(core::ExtendedPOS::Count_);
+  data[header->entry_offset + 2] = static_cast<uint8_t>(core::ExtendedPOS::Count_);
 
   BinaryDictionary dict;
   auto result = dict.loadFromMemory(data.data(), data.size());
   EXPECT_FALSE(result.hasValue());
-  EXPECT_NE(result.error().message.find("Invalid dictionary extended POS value"), std::string::npos);
+  EXPECT_NE(result.error().message.find("Invalid dictionary grammar palette value"), std::string::npos);
 }
 
-TEST_F(BinaryDictTest, LoadRejectsEmptySurface) {
+TEST_F(BinaryDictTest, LoadRejectsTrieEntryWithoutRecord) {
   auto data = buildTestDict("test", core::PartOfSpeech::Noun);
-  const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
-  auto* entry = reinterpret_cast<BinaryDictEntry*>(data.data() + header->entry_offset);
-  entry->surface_length = 0;
+  auto* header = reinterpret_cast<BinaryDictHeader*>(data.data());
+  header->entry_count = 0;
 
   BinaryDictionary dict;
   auto result = dict.loadFromMemory(data.data(), data.size());
   EXPECT_FALSE(result.hasValue());
-  EXPECT_NE(result.error().message.find("surface must not be empty"), std::string::npos);
+  EXPECT_NE(result.error().message.find("counts differ"), std::string::npos);
 }
 
 TEST_F(BinaryDictTest, LoadFailurePreservesExistingDictionary) {
   auto good_data = buildTestDict("keep", core::PartOfSpeech::Noun);
   auto bad_data = buildTestDict("bad", core::PartOfSpeech::Noun);
-  const auto* header = reinterpret_cast<const BinaryDictHeader*>(bad_data.data());
-  auto* entry = reinterpret_cast<BinaryDictEntry*>(bad_data.data() + header->entry_offset);
-  entry->surface_offset = static_cast<uint32_t>(bad_data.size());
+  bad_data[compactRecordOffset(bad_data)] = 1;  // Only grammar palette index 0 exists.
 
   BinaryDictionary dict;
   auto good_result = dict.loadFromMemory(good_data.data(), good_data.size());

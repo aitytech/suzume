@@ -13,17 +13,40 @@
 
 // Types for Emscripten module
 interface EmscriptenModule {
-  cwrap: (
-    name: string,
-    returnType: string | null,
-    argTypes: string[],
-  ) => (...args: unknown[]) => unknown;
   UTF8ToString: (ptr: number) => string;
   stringToUTF8: (str: string, ptr: number, maxBytes: number) => void;
   lengthBytesUTF8: (str: string) => number;
   _malloc: (size: number) => number;
   _free: (ptr: number) => void;
   HEAPU32: Uint32Array;
+  _suzume_create: () => number;
+  _suzume_create_with_extended_options: (optionsPtr: number) => number;
+  _suzume_destroy: (handle: number) => void;
+  _suzume_analyze: (handle: number, textPtr: number) => number;
+  _suzume_result_free: (resultPtr: number) => void;
+  _suzume_generate_tags: (handle: number, textPtr: number) => number;
+  _suzume_generate_tags_with_options: (
+    handle: number,
+    textPtr: number,
+    optionsPtr: number,
+  ) => number;
+  _suzume_tags_free: (tagsPtr: number) => void;
+  _suzume_load_user_dict: (handle: number, dataPtr: number, size: number) => number;
+  _suzume_load_binary_dict: (handle: number, dataPtr: number, size: number) => number;
+  _suzume_version: () => number;
+  _suzume_last_error: () => number;
+  _suzume_dictionary_warning_count: (handle: number) => number;
+  _suzume_dictionary_warning: (handle: number, index: number) => number;
+  _suzume_sizeof_result: () => number;
+  _suzume_sizeof_morpheme: () => number;
+  _suzume_sizeof_tags: () => number;
+  _suzume_sizeof_tag_options: () => number;
+  _suzume_sizeof_extended_options: () => number;
+  _suzume_offsetof_result: (field: number) => number;
+  _suzume_offsetof_morpheme: (field: number) => number;
+  _suzume_offsetof_tags: (field: number) => number;
+  _suzume_offsetof_tag_options: (field: number) => number;
+  _suzume_offsetof_extended_options: (field: number) => number;
 }
 
 /**
@@ -180,10 +203,7 @@ interface CLayouts {
 
 const registry = new FinalizationRegistry((ref: CleanupRef) => {
   if (ref.handle !== 0) {
-    const destroyHandle = ref.module.cwrap('suzume_destroy', null, ['number']) as (
-      handle: number,
-    ) => void;
-    destroyHandle(ref.handle);
+    ref.module._suzume_destroy(ref.handle);
     ref.handle = 0;
   }
 });
@@ -220,84 +240,31 @@ export class Suzume {
     this.cleanupRef = { module, handle };
     registry.register(this, this.cleanupRef, this.unregisterToken);
 
-    // Wrap C functions
-    this._analyze = module.cwrap('suzume_analyze', 'number', ['number', 'number']) as (
-      handle: number,
-      textPtr: number,
-    ) => number;
-
-    this._resultFree = module.cwrap('suzume_result_free', null, ['number']) as (
-      resultPtr: number,
-    ) => void;
-
-    this._generateTags = module.cwrap('suzume_generate_tags', 'number', ['number', 'number']) as (
-      handle: number,
-      textPtr: number,
-    ) => number;
-
-    this._generateTagsWithOptions = module.cwrap('suzume_generate_tags_with_options', 'number', [
-      'number',
-      'number',
-      'number',
-    ]) as (handle: number, textPtr: number, optionsPtr: number) => number;
-
-    this._tagsFree = module.cwrap('suzume_tags_free', null, ['number']) as (
-      tagsPtr: number,
-    ) => void;
-
-    this._loadUserDict = module.cwrap('suzume_load_user_dict', 'number', [
-      'number',
-      'number',
-      'number',
-    ]) as (handle: number, dataPtr: number, size: number) => number;
-
-    this._loadBinaryDict = module.cwrap('suzume_load_binary_dict', 'number', [
-      'number',
-      'number',
-      'number',
-    ]) as (handle: number, dataPtr: number, size: number) => number;
-
-    this._version = module.cwrap('suzume_version', 'number', []) as () => number;
-    this._lastError = module.cwrap('suzume_last_error', 'number', []) as () => number;
-    this._dictionaryWarningCount = module.cwrap('suzume_dictionary_warning_count', 'number', [
-      'number',
-    ]) as (handle: number) => number;
-    this._dictionaryWarning = module.cwrap('suzume_dictionary_warning', 'number', [
-      'number',
-      'number',
-    ]) as (handle: number, index: number) => number;
+    this._analyze = module._suzume_analyze;
+    this._resultFree = module._suzume_result_free;
+    this._generateTags = module._suzume_generate_tags;
+    this._generateTagsWithOptions = module._suzume_generate_tags_with_options;
+    this._tagsFree = module._suzume_tags_free;
+    this._loadUserDict = module._suzume_load_user_dict;
+    this._loadBinaryDict = module._suzume_load_binary_dict;
+    this._version = module._suzume_version;
+    this._lastError = module._suzume_last_error;
+    this._dictionaryWarningCount = module._suzume_dictionary_warning_count;
+    this._dictionaryWarning = module._suzume_dictionary_warning;
     this.layouts = layouts ?? Suzume.loadCLayouts(module);
   }
 
   private static loadCLayouts(module: EmscriptenModule): CLayouts {
-    const sizeofResult = module.cwrap('suzume_sizeof_result', 'number', []) as () => number;
-    const sizeofMorpheme = module.cwrap('suzume_sizeof_morpheme', 'number', []) as () => number;
-    const sizeofTags = module.cwrap('suzume_sizeof_tags', 'number', []) as () => number;
-    const sizeofTagOptions = module.cwrap(
-      'suzume_sizeof_tag_options',
-      'number',
-      [],
-    ) as () => number;
-    const sizeofExtendedOptions = module.cwrap(
-      'suzume_sizeof_extended_options',
-      'number',
-      [],
-    ) as () => number;
-    const offsetofResult = module.cwrap('suzume_offsetof_result', 'number', ['number']) as (
-      field: number,
-    ) => number;
-    const offsetofMorpheme = module.cwrap('suzume_offsetof_morpheme', 'number', ['number']) as (
-      field: number,
-    ) => number;
-    const offsetofTags = module.cwrap('suzume_offsetof_tags', 'number', ['number']) as (
-      field: number,
-    ) => number;
-    const offsetofTagOptions = module.cwrap('suzume_offsetof_tag_options', 'number', [
-      'number',
-    ]) as (field: number) => number;
-    const offsetofExtendedOptions = module.cwrap('suzume_offsetof_extended_options', 'number', [
-      'number',
-    ]) as (field: number) => number;
+    const sizeofResult = module._suzume_sizeof_result;
+    const sizeofMorpheme = module._suzume_sizeof_morpheme;
+    const sizeofTags = module._suzume_sizeof_tags;
+    const sizeofTagOptions = module._suzume_sizeof_tag_options;
+    const sizeofExtendedOptions = module._suzume_sizeof_extended_options;
+    const offsetofResult = module._suzume_offsetof_result;
+    const offsetofMorpheme = module._suzume_offsetof_morpheme;
+    const offsetofTags = module._suzume_offsetof_tags;
+    const offsetofTagOptions = module._suzume_offsetof_tag_options;
+    const offsetofExtendedOptions = module._suzume_offsetof_extended_options;
 
     return {
       result: {
@@ -416,22 +383,17 @@ export class Suzume {
         heap[(optionsPtr + layout.lemmatize) >> 2] = options.lemmatize !== false ? 1 : 0;
         heap[(optionsPtr + layout.mergeCompounds) >> 2] = options.mergeCompounds === true ? 1 : 0;
 
-        const createWithOptions = module.cwrap('suzume_create_with_extended_options', 'number', [
-          'number',
-        ]) as (optionsPtr: number) => number;
-        handle = createWithOptions(optionsPtr);
+        handle = module._suzume_create_with_extended_options(optionsPtr);
       } finally {
         module._free(optionsPtr);
       }
     } else {
       // Create with default options
-      const createHandle = module.cwrap('suzume_create', 'number', []) as () => number;
-      handle = createHandle();
+      handle = module._suzume_create();
     }
 
     if (handle === 0) {
-      const lastError = module.cwrap('suzume_last_error', 'number', []) as () => number;
-      const message = module.UTF8ToString(lastError());
+      const message = module.UTF8ToString(module._suzume_last_error());
       throw new Error(
         message
           ? `Failed to create Suzume instance: ${message}`
@@ -623,10 +585,7 @@ export class Suzume {
   destroy(): void {
     if (this.handle !== 0) {
       registry.unregister(this.unregisterToken);
-      const destroyHandle = this.module.cwrap('suzume_destroy', null, ['number']) as (
-        handle: number,
-      ) => void;
-      destroyHandle(this.handle);
+      this.module._suzume_destroy(this.handle);
       this.handle = 0;
       this.cleanupRef.handle = 0;
     }

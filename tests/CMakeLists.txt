@@ -47,9 +47,8 @@ set(TEST_SOURCES
   dictionary/trie_test.cpp
   dictionary/double_array_test.cpp
   dictionary/binary_dict_test.cpp
-  # dictionary/core_dict_test.cpp  # v0.8: removed (verb expansion deleted)
+  dictionary/core_dict_test.cpp
   dictionary/user_dict_test.cpp
-  dictionary/dict_string_pool_test.cpp
   dictionary/conj_type_test.cpp
   grammar/conjugator_test.cpp
   grammar/conjugation_test.cpp

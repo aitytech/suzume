@@ -10,18 +10,40 @@ interface EmscriptenModuleOptions {
 }
 
 interface EmscriptenModule {
-  cwrap: (
-    name: string,
-    returnType: string | null,
-    argTypes: string[],
-  ) => (...args: unknown[]) => unknown;
-  ccall: (name: string, returnType: string | null, argTypes: string[], args: unknown[]) => unknown;
   UTF8ToString: (ptr: number, maxBytesToRead?: number) => string;
   stringToUTF8: (str: string, outPtr: number, maxBytesToWrite: number) => void;
   lengthBytesUTF8: (str: string) => number;
   _malloc: (size: number) => number;
   _free: (ptr: number) => void;
   HEAPU32: Uint32Array;
+  _suzume_create: () => number;
+  _suzume_create_with_extended_options: (optionsPtr: number) => number;
+  _suzume_destroy: (handle: number) => void;
+  _suzume_analyze: (handle: number, textPtr: number) => number;
+  _suzume_result_free: (resultPtr: number) => void;
+  _suzume_generate_tags: (handle: number, textPtr: number) => number;
+  _suzume_generate_tags_with_options: (
+    handle: number,
+    textPtr: number,
+    optionsPtr: number,
+  ) => number;
+  _suzume_tags_free: (tagsPtr: number) => void;
+  _suzume_load_user_dict: (handle: number, dataPtr: number, size: number) => number;
+  _suzume_load_binary_dict: (handle: number, dataPtr: number, size: number) => number;
+  _suzume_version: () => number;
+  _suzume_last_error: () => number;
+  _suzume_dictionary_warning_count: (handle: number) => number;
+  _suzume_dictionary_warning: (handle: number, index: number) => number;
+  _suzume_sizeof_result: () => number;
+  _suzume_sizeof_morpheme: () => number;
+  _suzume_sizeof_tags: () => number;
+  _suzume_sizeof_tag_options: () => number;
+  _suzume_sizeof_extended_options: () => number;
+  _suzume_offsetof_result: (field: number) => number;
+  _suzume_offsetof_morpheme: (field: number) => number;
+  _suzume_offsetof_tags: (field: number) => number;
+  _suzume_offsetof_tag_options: (field: number) => number;
+  _suzume_offsetof_extended_options: (field: number) => number;
 }
 
 declare function createModule(options?: EmscriptenModuleOptions): Promise<EmscriptenModule>;

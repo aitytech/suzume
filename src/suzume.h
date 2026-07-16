@@ -110,7 +110,7 @@ class Suzume {
   /**
    * @brief Warnings produced while auto-loading dictionaries at construction.
    */
-  std::vector<std::string> dictionaryWarnings() const;
+  const std::vector<std::string>& dictionaryWarnings() const;
 
   /**
    * @brief Analyze text into morphemes

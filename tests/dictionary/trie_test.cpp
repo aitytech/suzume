@@ -28,6 +28,20 @@ TEST(TrieTest, LookupNotFound) {
   EXPECT_TRUE(result.empty());
 }
 
+TEST(TrieTest, LookupViewReturnsOwnedEntryIdsWithoutCopying) {
+  Trie trie;
+  trie.insert("テスト", 3);
+  trie.insert("テスト", 7);
+
+  const auto* result = trie.lookupView("テスト");
+  ASSERT_NE(result, nullptr);
+  ASSERT_EQ(result->size(), 2);
+  EXPECT_EQ((*result)[0], 3);
+  EXPECT_EQ((*result)[1], 7);
+  EXPECT_EQ(trie.lookupView("テス"), nullptr);
+  EXPECT_EQ(trie.lookupView(""), nullptr);
+}
+
 TEST(TrieTest, InsertJapanese) {
   Trie trie;
   trie.insert("日本", 1);

@@ -7,7 +7,6 @@ add_library(suzume_dictionary STATIC
   trie.cpp
   double_array.cpp
   binary_dict.cpp
-  string_pool.cpp
   entries/auxiliaries.cpp
   entries/compound_particles.cpp
   entries/conjunctions.cpp

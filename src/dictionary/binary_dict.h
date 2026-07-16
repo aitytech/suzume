@@ -28,29 +28,40 @@ struct BinaryDictHeader {
   uint32_t trie_size;      // Size of trie data
   uint32_t entry_offset;   // Offset to entry array
   uint32_t string_offset;  // Offset to string pool
-  uint32_t flags;          // Reserved flags
+  uint32_t flags;          // v2.3 entry encoding; zero in older formats
   uint32_t checksum;       // CRC32 checksum (reserved)
 
   static constexpr uint32_t kMagic = 0x444D5A53;  // "SZMD"
   static constexpr uint16_t kVersionMajor = 2;
-  static constexpr uint16_t kVersionMinor = 1;
+  static constexpr uint16_t kVersionMinor = 3;
+  static constexpr uint32_t kEntryEncodingMask = 0x03;
+  static constexpr uint32_t kGrammarOnlyEntries = 0x01;  // 1 byte/entry, no differing lemmas
+  static constexpr uint32_t kPackedEntries = 0x02;       // 2 bytes/entry, 11-bit lemma + 5-bit grammar
+  static constexpr uint32_t kWideEntries = 0x03;         // 3 bytes/entry, 16-bit lemma + 8-bit grammar
 };
 
 /**
- * @brief Binary dictionary entry record v2 (compact, 12 bytes)
+ * @brief Legacy binary dictionary entry record v2.2 (8 bytes)
  *
- * Reduced from v1's 20 bytes by removing unused fields (conj_type, cost, reserved).
+ * Surface strings are encoded by the trie and reconstructed when loading, so
+ * only a differing lemma needs to be retained in the string pool.
  */
 struct BinaryDictEntry {
-  uint32_t surface_offset;  // Surface offset in string pool
-  uint32_t lemma_offset;    // Lemma offset (0 = same as surface)
-  uint8_t surface_length;   // Surface byte length (max 255)
-  uint8_t lemma_length;     // Lemma byte length (0 = same as surface, max 255)
-  uint8_t pos;              // Part of speech
-  uint8_t flags;            // Flags (formal_noun, interjection, proper_family, proper_given)
-  uint8_t extended_pos;     // Extended POS for fine-grained connection scoring
-  uint8_t reserved[3];      // Reserved, must be zero
+  uint32_t lemma_offset;  // Lemma offset (0 = same as surface)
+  uint8_t lemma_length;   // Lemma byte length (0 = same as surface, max 255)
+  uint8_t pos;            // Part of speech
+  uint8_t extended_pos;   // Extended POS for fine-grained connection scoring
+  uint8_t reserved;       // Reserved, must be zero
 };
+
+static_assert(sizeof(BinaryDictEntry) == 8, "BinaryDictEntry must remain an 8-byte v2.2 on-disk record");
+
+/**
+ * v2.3 stores a POS/ExtendedPOS palette followed by an adaptive one-, two-, or
+ * three-byte entry array. The lemma table contains length-prefixed,
+ * deduplicated strings. The header flags select the entry encoding.
+ */
+inline constexpr size_t kWideCompactEntrySize = 3;
 
 /**
  * @brief Binary dictionary (read-only, memory-mapped friendly)
@@ -61,10 +72,10 @@ struct BinaryDictEntry {
  *   [Entry Array]
  *   [String Pool]
  */
-class BinaryDictionary : public IDictionary {
+class BinaryDictionary {
  public:
   BinaryDictionary();
-  ~BinaryDictionary() override;
+  ~BinaryDictionary();
 
   /**
    * @brief Load dictionary from file
@@ -84,17 +95,23 @@ class BinaryDictionary : public IDictionary {
   /**
    * @brief Lookup entries at position
    */
-  std::vector<LookupResult> lookup(std::string_view text, size_t start_pos) const override;
+  std::vector<LookupResult> lookup(std::string_view text, size_t start_pos) const;
+
+  /**
+   * @brief Look up an exact-surface entry, optionally constrained by POS
+   */
+  const DictionaryEntry* lookupExact(std::string_view surface,
+                                     core::PartOfSpeech pos = core::PartOfSpeech::Unknown) const;
 
   /**
    * @brief Get entry by ID
    */
-  const DictionaryEntry* getEntry(uint32_t idx) const override;
+  const DictionaryEntry* getEntry(uint32_t idx) const;
 
   /**
    * @brief Get number of entries
    */
-  size_t size() const override { return entries_.size(); }
+  size_t size() const { return entries_.size(); }
 
   /**
    * @brief Check if dictionary is loaded
@@ -105,7 +122,7 @@ class BinaryDictionary : public IDictionary {
   DoubleArray trie_;
   std::vector<DictionaryEntry> entries_;
 
-  core::Expected<size_t, core::Error> parseData(const std::vector<uint8_t>& data, DoubleArray& trie,
+  core::Expected<size_t, core::Error> parseData(const uint8_t* data, size_t size, DoubleArray& trie,
                                                 std::vector<DictionaryEntry>& entries);
 };
 

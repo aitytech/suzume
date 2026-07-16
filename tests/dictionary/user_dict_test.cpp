@@ -96,6 +96,24 @@ TEST(UserDictTest, LookupNotFound) {
   EXPECT_TRUE(results.empty());
 }
 
+TEST(UserDictTest, LookupExactPreservesRegistrationOrderAndFiltersPos) {
+  UserDictionary dict;
+  dict.addEntry({"テスト", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, ""});
+  dict.addEntry({"テスト", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, ""});
+
+  const auto* first = dict.lookupExact("テスト");
+  ASSERT_NE(first, nullptr);
+  EXPECT_EQ(first->pos, core::PartOfSpeech::Noun);
+
+  const auto* verb = dict.lookupExact("テスト", core::PartOfSpeech::Verb);
+  ASSERT_NE(verb, nullptr);
+  EXPECT_EQ(verb->extended_pos, core::ExtendedPOS::VerbShuushikei);
+
+  EXPECT_EQ(dict.lookupExact("テス"), nullptr);
+  EXPECT_EQ(dict.lookupExact("テスト", core::PartOfSpeech::Adjective), nullptr);
+  EXPECT_EQ(dict.lookupExact(""), nullptr);
+}
+
 TEST(UserDictTest, Clear) {
   UserDictionary dict;
 
@@ -181,6 +199,17 @@ TEST(UserDictTest, LoadFromMemoryWithWhitespace) {
   auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 2);
+}
+
+TEST(UserDictTest, LoadFromMemoryHandlesCrLfAndFinalLineWithoutNewline) {
+  UserDictionary dict;
+  const char* csv_data = "東京,NOUN,0.5\r\nテスト,NOUN,0.5";
+
+  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  ASSERT_TRUE(result.hasValue());
+  EXPECT_EQ(result.value(), 2);
+  EXPECT_NE(dict.lookupExact("東京", core::PartOfSpeech::Noun), nullptr);
+  EXPECT_NE(dict.lookupExact("テスト", core::PartOfSpeech::Noun), nullptr);
 }
 
 TEST(UserDictTest, LoadFromMemoryAcceptsPosAliases) {

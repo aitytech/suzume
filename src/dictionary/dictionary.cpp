@@ -47,17 +47,6 @@ constexpr std::array<ConjTypeAlias, 18> kConjTypeAliases = {{
     {ConjugationType::ProperGiven, "GIVEN", "ProperGiven", "PROPER_GIVEN"},
 }};
 
-const DictionaryEntry* findExactEntry(const std::vector<LookupResult>& results, std::string_view surface,
-                                      core::PartOfSpeech pos) {
-  for (const auto& result : results) {
-    if (result.entry != nullptr && result.entry->surface == surface &&
-        (pos == core::PartOfSpeech::Unknown || result.entry->pos == pos)) {
-      return result.entry;
-    }
-  }
-  return nullptr;
-}
-
 }  // namespace
 
 std::string_view conjTypeToCanonicalString(ConjugationType type) {
@@ -155,21 +144,21 @@ const DictionaryEntry* DictionaryManager::lookupExact(std::string_view surface, 
     return nullptr;
   }
 
-  if (const auto* entry = findExactEntry(core_dict_->lookup(surface, 0), surface, pos)) {
+  if (const auto* entry = core_dict_->lookupExact(surface, pos)) {
     return entry;
   }
   if (core_binary_dict_ && core_binary_dict_->isLoaded()) {
-    if (const auto* entry = findExactEntry(core_binary_dict_->lookup(surface, 0), surface, pos)) {
+    if (const auto* entry = core_binary_dict_->lookupExact(surface, pos)) {
       return entry;
     }
   }
   if (user_binary_dict_ && user_binary_dict_->isLoaded()) {
-    if (const auto* entry = findExactEntry(user_binary_dict_->lookup(surface, 0), surface, pos)) {
+    if (const auto* entry = user_binary_dict_->lookupExact(surface, pos)) {
       return entry;
     }
   }
   for (const auto& user_dict : user_dicts_) {
-    if (const auto* entry = findExactEntry(user_dict->lookup(surface, 0), surface, pos)) {
+    if (const auto* entry = user_dict->lookupExact(surface, pos)) {
       return entry;
     }
   }
@@ -190,6 +179,15 @@ core::Expected<size_t, core::Error> DictionaryManager::loadCoreDictionaryResult(
   }
 
   return core_binary_dict_->loadFromFile(path);
+}
+
+core::Expected<size_t, core::Error> DictionaryManager::loadCoreDictionaryFromMemoryResult(const uint8_t* data,
+                                                                                          size_t size) {
+  if (!core_binary_dict_) {
+    core_binary_dict_ = std::make_unique<BinaryDictionary>();
+  }
+
+  return core_binary_dict_->loadFromMemory(data, size);
 }
 
 bool DictionaryManager::hasCoreBinaryDictionary() const {

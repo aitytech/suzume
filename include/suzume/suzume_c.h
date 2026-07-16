@@ -18,6 +18,10 @@ extern "C" {
 
 #ifdef __EMSCRIPTEN__
 #define SUZUME_EXPORT __attribute__((used))
+#elif defined(_WIN32)
+#define SUZUME_EXPORT __declspec(dllexport)
+#elif defined(__GNUC__)
+#define SUZUME_EXPORT __attribute__((visibility("default")))
 #else
 #define SUZUME_EXPORT
 #endif

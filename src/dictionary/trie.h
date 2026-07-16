@@ -61,6 +61,13 @@ class Trie {
   std::vector<uint32_t> lookup(std::string_view key) const;
 
   /**
+   * @brief Allocation-free exact match lookup
+   * @param key String key
+   * @return Entry IDs owned by the trie, or nullptr if not found
+   */
+  const std::vector<uint32_t>* lookupView(std::string_view key) const;
+
+  /**
    * @brief Prefix match lookup (all prefixes of key)
    * @param text Text to search
    * @param start_pos Start position in text

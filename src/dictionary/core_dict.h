@@ -20,10 +20,10 @@ namespace suzume::dictionary {
  * This improves WASM startup time and memory efficiency compared to
  * the traditional hash-based Trie.
  */
-class CoreDictionary : public IDictionary {
+class CoreDictionary {
  public:
   CoreDictionary();
-  ~CoreDictionary() override = default;
+  ~CoreDictionary() = default;
 
   /**
    * @brief Lookup entries at position
@@ -31,19 +31,25 @@ class CoreDictionary : public IDictionary {
    * @param start_pos Start position in bytes
    * @return Vector of lookup results
    */
-  std::vector<LookupResult> lookup(std::string_view text, size_t start_pos) const override;
+  std::vector<LookupResult> lookup(std::string_view text, size_t start_pos) const;
+
+  /**
+   * @brief Look up the first exact-surface entry, optionally constrained by POS
+   */
+  const DictionaryEntry* lookupExact(std::string_view surface,
+                                     core::PartOfSpeech pos = core::PartOfSpeech::Unknown) const;
 
   /**
    * @brief Get entry by ID
    * @param idx Entry ID
    * @return Entry pointer, or nullptr if not found
    */
-  const DictionaryEntry* getEntry(uint32_t idx) const override;
+  const DictionaryEntry* getEntry(uint32_t idx) const;
 
   /**
    * @brief Get number of entries
    */
-  size_t size() const override { return entries_.size(); }
+  size_t size() const { return entries_.size(); }
 
  private:
   // Entries sorted by surface for Double-Array compatibility

@@ -77,7 +77,18 @@ let cachedModule: WasmModule | null = null;
 
 export async function getModule(): Promise<WasmModule> {
   if (!cachedModule) {
-    cachedModule = (await createModule()) as WasmModule;
+    const module = (await createModule()) as WasmModule & Record<string, unknown>;
+    // C-API tests intentionally exercise functions by their public C names.
+    // Production code calls the exported `_suzume_*` functions directly, so
+    // keep this compatibility adapter in tests rather than shipping cwrap.
+    module.cwrap = (name: string) => {
+      const fn = module[`_${name}`];
+      if (typeof fn !== 'function') {
+        throw new Error(`Missing WASM export: ${name}`);
+      }
+      return fn as (...args: unknown[]) => unknown;
+    };
+    cachedModule = module;
   }
   return cachedModule;
 }

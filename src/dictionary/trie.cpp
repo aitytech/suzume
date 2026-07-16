@@ -26,6 +26,11 @@ void Trie::insert(std::string_view key, uint32_t entry_id) {
 }
 
 std::vector<uint32_t> Trie::lookup(std::string_view key) const {
+  const auto* entry_ids = lookupView(key);
+  return entry_ids != nullptr ? *entry_ids : std::vector<uint32_t>{};
+}
+
+const std::vector<uint32_t>* Trie::lookupView(std::string_view key) const {
   const TrieNode* node = root_.get();
   size_t pos = 0;
 
@@ -33,12 +38,12 @@ std::vector<uint32_t> Trie::lookup(std::string_view key) const {
     char32_t cp = normalize::decodeUtf8(key, pos);
     auto it = node->children.find(cp);
     if (it == node->children.end()) {
-      return {};
+      return nullptr;
     }
     node = it->second.get();
   }
 
-  return node->entry_ids;
+  return node->entry_ids.empty() ? nullptr : &node->entry_ids;
 }
 
 std::vector<std::pair<size_t, std::vector<uint32_t>>> Trie::prefixMatch(std::string_view text, size_t start_pos) const {

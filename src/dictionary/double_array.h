@@ -29,6 +29,14 @@ class DoubleArray {
     size_t length;  // Match length in bytes
   };
 
+  /**
+   * @brief Key and value stored in the trie
+   */
+  struct KeyValue {
+    std::string key;
+    int32_t value;
+  };
+
   DoubleArray();
   ~DoubleArray() = default;
 
@@ -68,6 +76,16 @@ class DoubleArray {
    * @return Vector of matching results (value, length)
    */
   std::vector<Result> commonPrefixSearch(std::string_view text, size_t start = 0, size_t max_results = 0) const;
+
+  /**
+   * @brief Enumerate all stored keys with their values
+   * @param key_values Replaced with the complete key/value list on success
+   * @return true on success, false if the serialized structure is malformed
+   *
+   * The key bytes are reconstructed from XOR transitions. This allows binary
+   * dictionary records to omit their duplicate copy of each surface string.
+   */
+  bool enumerate(std::vector<KeyValue>& key_values) const;
 
   /**
    * @brief Get size of the double-array (number of units)

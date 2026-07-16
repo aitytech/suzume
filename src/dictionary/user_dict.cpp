@@ -1,7 +1,7 @@
 #include "dictionary/user_dict.h"
 
 #include <fstream>
-#include <sstream>
+#include <iterator>
 
 #include "core/types.h"
 
@@ -21,6 +21,15 @@ std::string trimAsciiWhitespace(std::string_view field) {
     return "";
   }
   return std::string(field.substr(field_start, field_end - field_start + 1));
+}
+
+std::string_view trimLineWhitespace(std::string_view line) {
+  const size_t line_start = line.find_first_not_of(" \t\r\n");
+  if (line_start == std::string_view::npos) {
+    return {};
+  }
+  const size_t line_end = line.find_last_not_of(" \t\r\n");
+  return line.substr(line_start, line_end - line_start + 1);
 }
 
 bool isAsciiWhitespace(char chr) {
@@ -60,10 +69,15 @@ ParsedLine parseDelimitedLine(std::string_view line, char delimiter) {
   bool field_has_non_space = false;
 
   if (delimiter != ',') {
-    std::stringstream stream{std::string(line)};
-    std::string item;
-    while (std::getline(stream, item, delimiter)) {
-      result.fields.push_back(trimAsciiWhitespace(item));
+    size_t field_start = 0;
+    while (field_start < line.size()) {
+      const size_t field_end = line.find(delimiter, field_start);
+      if (field_end == std::string_view::npos) {
+        result.fields.push_back(trimAsciiWhitespace(line.substr(field_start)));
+        break;
+      }
+      result.fields.push_back(trimAsciiWhitespace(line.substr(field_start, field_end - field_start)));
+      field_start = field_end + 1;
     }
     return result;
   }
@@ -146,9 +160,7 @@ core::Expected<size_t, core::Error> UserDictionary::loadFromFile(const std::stri
     return core::Error(core::ErrorCode::FileNotFound, "Failed to open dictionary file: " + path);
   }
 
-  std::stringstream buffer;
-  buffer << file.rdbuf();
-  std::string content = buffer.str();
+  std::string content{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
   return loadFromMemory(content.c_str(), content.size());
 }
 
@@ -157,8 +169,7 @@ core::Expected<size_t, core::Error> UserDictionary::loadFromMemory(const char* d
     return core::Error(core::ErrorCode::InvalidInput, "Empty dictionary data");
   }
 
-  std::string_view csv_data(data, size);
-  return parseCSV(csv_data);
+  return parseCSV(std::string_view(data, size));
 }
 
 void UserDictionary::addEntry(const DictionaryEntry& entry) {
@@ -190,6 +201,19 @@ std::vector<LookupResult> UserDictionary::lookup(std::string_view text, size_t s
   return results;
 }
 
+const DictionaryEntry* UserDictionary::lookupExact(std::string_view surface, core::PartOfSpeech pos) const {
+  const auto* entry_ids = trie_.lookupView(surface);
+  if (entry_ids == nullptr) {
+    return nullptr;
+  }
+  for (uint32_t idx : *entry_ids) {
+    if (idx < entries_.size() && (pos == core::PartOfSpeech::Unknown || entries_[idx].pos == pos)) {
+      return &entries_[idx];
+    }
+  }
+  return nullptr;
+}
+
 const DictionaryEntry* UserDictionary::getEntry(uint32_t idx) const {
   if (idx < entries_.size()) {
     return &entries_[idx];
@@ -205,21 +229,19 @@ void UserDictionary::clear() {
 core::Expected<size_t, core::Error> UserDictionary::parseCSV(std::string_view csv_data) {
   std::vector<DictionaryEntry> parsed_entries;
 
-  std::string line;
-  std::string csv_str(csv_data);
-  std::istringstream stream(csv_str);
   size_t line_number = 0;
-
-  while (std::getline(stream, line)) {
+  size_t line_start = 0;
+  while (line_start < csv_data.size()) {
     ++line_number;
 
-    // Trim whitespace
-    size_t start = line.find_first_not_of(" \t\r\n");
-    size_t end = line.find_last_not_of(" \t\r\n");
-    if (start == std::string::npos) {
+    const size_t newline_pos = csv_data.find('\n', line_start);
+    const size_t line_end = newline_pos == std::string_view::npos ? csv_data.size() : newline_pos;
+    std::string_view line = trimLineWhitespace(csv_data.substr(line_start, line_end - line_start));
+    line_start = newline_pos == std::string_view::npos ? csv_data.size() : newline_pos + 1;
+
+    if (line.empty()) {
       continue;
     }
-    line = line.substr(start, end - start + 1);
 
     if (line[0] == '#') {
       continue;
@@ -283,8 +305,11 @@ core::Expected<size_t, core::Error> UserDictionary::parseCSV(std::string_view cs
     parsed_entries.push_back(std::move(entry));
   }
 
-  for (const auto& entry : parsed_entries) {
-    addEntry(entry);
+  entries_.reserve(entries_.size() + parsed_entries.size());
+  for (auto& entry : parsed_entries) {
+    const auto idx = static_cast<uint32_t>(entries_.size());
+    entries_.push_back(std::move(entry));
+    trie_.insert(entries_.back().surface, idx);
   }
 
   return parsed_entries.size();

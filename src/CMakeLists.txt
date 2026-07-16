@@ -36,10 +36,23 @@ target_compile_definitions(suzume PRIVATE
 
 # WASM C API library and executable
 if(BUILD_WASM)
-  add_library(suzume_c STATIC
-    suzume_c.cpp
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  set(EMBEDDED_DICTIONARIES_CPP "${CMAKE_CURRENT_BINARY_DIR}/embedded_dictionaries.cpp")
+  add_custom_command(
+    OUTPUT "${EMBEDDED_DICTIONARIES_CPP}"
+    COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/scripts/generate_embedded_dictionaries.py"
+            --core "${CMAKE_SOURCE_DIR}/data/core.dic"
+            --user "${CMAKE_SOURCE_DIR}/data/user.dic"
+            --output "${EMBEDDED_DICTIONARIES_CPP}"
+    DEPENDS
+      "${CMAKE_SOURCE_DIR}/scripts/generate_embedded_dictionaries.py"
+      "${CMAKE_SOURCE_DIR}/data/core.dic"
+      "${CMAKE_SOURCE_DIR}/data/user.dic"
+    COMMENT "Generating embedded WASM dictionary arrays"
+    VERBATIM
   )
-  target_link_libraries(suzume_c PUBLIC suzume)
+  target_sources(suzume PRIVATE "${EMBEDDED_DICTIONARIES_CPP}")
 
   # WASM executable (produces .js + .wasm)
   add_executable(suzume-wasm
@@ -69,6 +82,9 @@ if(BUILD_SHARED AND NOT BUILD_WASM)
   # loaded by ctypes via @loader_path / $ORIGIN, not a system-installed soname.
   set_target_properties(suzume_shared PROPERTIES
     OUTPUT_NAME suzume
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
+    INTERPROCEDURAL_OPTIMIZATION_RELEASE ON
   )
   target_link_libraries(suzume_shared PRIVATE suzume)
   if(APPLE)
@@ -77,6 +93,9 @@ if(BUILD_SHARED AND NOT BUILD_WASM)
       INSTALL_NAME_DIR "@loader_path"
       BUILD_WITH_INSTALL_NAME_DIR ON
     )
+    target_link_options(suzume_shared PRIVATE "LINKER:-dead_strip")
+  elseif(UNIX)
+    target_link_options(suzume_shared PRIVATE "LINKER:--gc-sections")
   endif()
 endif()
 

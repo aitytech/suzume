@@ -1,6 +1,7 @@
 #include "suzume.h"
 
 #include <cstdlib>
+#include <utility>
 #include <vector>
 
 #ifndef __EMSCRIPTEN__
@@ -13,6 +14,9 @@
 #endif
 #include "dictionary/binary_dict.h"
 #include "dictionary/user_dict.h"
+#ifdef __EMSCRIPTEN__
+#include "embedded_dictionaries.h"
+#endif
 #include "postprocess/postprocessor.h"
 #include "postprocess/tag_generator.h"
 
@@ -20,12 +24,7 @@ namespace suzume {
 
 namespace {
 
-#ifdef __EMSCRIPTEN__
-// WASM: Use embedded dictionary paths directly (Emscripten VFS)
-std::string findDictionary(const std::string& filename) {
-  return "/data/" + filename;
-}
-#else
+#ifndef __EMSCRIPTEN__
 namespace fs = std::filesystem;
 
 /**
@@ -68,7 +67,7 @@ std::string findDictionary(const std::string& filename) {
   }
   return "";
 }
-#endif  // __EMSCRIPTEN__
+#endif
 
 }  // namespace
 
@@ -127,6 +126,13 @@ struct Suzume::Impl {
         postprocessor(&analyzer.dictionaryManager(), postprocessOptionsFor(opts)) {
     // Auto-load core.dic if found (binary format)
     if (!opts.skip_core_dictionary) {
+#ifdef __EMSCRIPTEN__
+      auto result = analyzer.dictionaryManager().loadCoreDictionaryFromMemoryResult(embedded::kCoreDictionary,
+                                                                                    embedded::kCoreDictionarySize);
+      if (!result.hasValue()) {
+        warnDictionaryLoad("embedded core.dic", result.error());
+      }
+#else
       std::string core_path = findDictionary("core.dic");
       if (!core_path.empty()) {
         auto result = analyzer.dictionaryManager().loadCoreDictionaryResult(core_path);
@@ -134,11 +140,19 @@ struct Suzume::Impl {
           warnDictionaryLoad(core_path, result.error());
         }
       }
+#endif
     }
 
     // Auto-load user.dic if found (binary format)
     // Note: user.dic is also loaded as core binary dictionary for now
     if (!opts.skip_user_dictionary) {
+#ifdef __EMSCRIPTEN__
+      auto result = analyzer.dictionaryManager().loadUserBinaryDictionaryFromMemoryResult(
+          embedded::kUserDictionary, embedded::kUserDictionarySize);
+      if (!result.hasValue()) {
+        warnDictionaryLoad("embedded user.dic", result.error());
+      }
+#else
       std::string user_path = findDictionary("user.dic");
       if (!user_path.empty()) {
         auto result = analyzer.dictionaryManager().loadUserBinaryDictionaryResult(user_path);
@@ -146,6 +160,7 @@ struct Suzume::Impl {
           warnDictionaryLoad(user_path, result.error());
         }
       }
+#endif
     }
   }
 
@@ -153,6 +168,17 @@ struct Suzume::Impl {
     options.mode = mode;
     analyzer.setMode(mode);
     postprocessor.setOptions(postprocessOptionsFor(options));
+  }
+
+  std::vector<postprocess::TagEntry> generateTags(std::string_view text,
+                                                  const postprocess::TagGeneratorOptions& tag_options) const {
+    auto result = analyzer.analyze(text);
+    if (!result.hasValue()) {
+      return {};
+    }
+    auto processed = postprocessor.process(std::move(result.value()));
+    postprocess::TagGenerator generator(tag_options);
+    return generator.generate(processed);
   }
 };
 
@@ -206,7 +232,7 @@ core::Expected<size_t, core::Error> Suzume::loadBinaryDictionaryResult(const uin
   return impl_->analyzer.dictionaryManager().loadUserBinaryDictionaryFromMemoryResult(data, size);
 }
 
-std::vector<std::string> Suzume::dictionaryWarnings() const {
+const std::vector<std::string>& Suzume::dictionaryWarnings() const {
   return impl_->dictionary_warnings;
 }
 
@@ -215,33 +241,21 @@ std::vector<core::Morpheme> Suzume::analyze(std::string_view text) const {
   if (!result.hasValue()) {
     return {};
   }
-  return impl_->postprocessor.process(result.value());
+  return impl_->postprocessor.process(std::move(result.value()));
 }
 
 std::vector<core::Morpheme> Suzume::analyzeDebug(std::string_view text, core::Lattice* out_lattice) const {
   auto morphemes = impl_->analyzer.analyzeDebug(text, out_lattice);
-  return impl_->postprocessor.process(morphemes);
+  return impl_->postprocessor.process(std::move(morphemes));
 }
 
 std::vector<postprocess::TagEntry> Suzume::generateTags(std::string_view text) const {
-  auto result = impl_->analyzer.analyze(text);
-  if (!result.hasValue()) {
-    return {};
-  }
-  auto processed = impl_->postprocessor.process(result.value());
-  postprocess::TagGenerator generator(impl_->options.tag_options);
-  return generator.generate(processed);
+  return impl_->generateTags(text, impl_->options.tag_options);
 }
 
 std::vector<postprocess::TagEntry> Suzume::generateTags(std::string_view text,
                                                         const postprocess::TagGeneratorOptions& options) const {
-  auto result = impl_->analyzer.analyze(text);
-  if (!result.hasValue()) {
-    return {};
-  }
-  auto processed = impl_->postprocessor.process(result.value());
-  postprocess::TagGenerator generator(options);
-  return generator.generate(processed);
+  return impl_->generateTags(text, options);
 }
 
 core::AnalysisMode Suzume::mode() const {

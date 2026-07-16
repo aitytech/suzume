@@ -95,43 +95,6 @@ struct LookupResult {
   bool from_user_dict = false;  // True if from user dictionary (Layer 4)
 };
 
-/**
- * @brief Dictionary interface
- */
-class IDictionary {
- public:
-  virtual ~IDictionary() = default;
-
-  // Non-copyable, non-movable
-  IDictionary(const IDictionary&) = delete;
-  IDictionary& operator=(const IDictionary&) = delete;
-  IDictionary(IDictionary&&) = delete;
-  IDictionary& operator=(IDictionary&&) = delete;
-
- protected:
-  IDictionary() = default;
-
-  /**
-   * @brief Lookup entries at position
-   * @param text Text to search
-   * @param start_pos Start position in bytes
-   * @return Vector of lookup results
-   */
-  virtual std::vector<LookupResult> lookup(std::string_view text, size_t start_pos) const = 0;
-
-  /**
-   * @brief Get entry by ID
-   * @param entry_id Entry ID
-   * @return Entry pointer, or nullptr if not found
-   */
-  virtual const DictionaryEntry* getEntry(uint32_t entry_id) const = 0;
-
-  /**
-   * @brief Get number of entries
-   */
-  virtual size_t size() const = 0;
-};
-
 // Forward declarations
 class CoreDictionary;
 class UserDictionary;
@@ -195,6 +158,11 @@ class DictionaryManager {
    * @brief Load core binary dictionary from file with error details
    */
   core::Expected<size_t, core::Error> loadCoreDictionaryResult(const std::string& path);
+
+  /**
+   * @brief Load core binary dictionary from memory
+   */
+  core::Expected<size_t, core::Error> loadCoreDictionaryFromMemoryResult(const uint8_t* data, size_t size);
 
   /**
    * @brief Check if core binary dictionary is loaded

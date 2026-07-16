@@ -17,12 +17,12 @@ namespace suzume::dictionary {
  * Supports loading from file (native) or memory (WASM).
  * Format: surface,pos,cost,lemma (CSV)
  */
-class UserDictionary : public IDictionary {
+class UserDictionary {
  public:
   UserDictionary();
-  ~UserDictionary() override = default;
+  ~UserDictionary() = default;
 
-  // Non-copyable, non-movable (inherits from IDictionary)
+  // Non-copyable, non-movable
   UserDictionary(const UserDictionary&) = delete;
   UserDictionary& operator=(const UserDictionary&) = delete;
   UserDictionary(UserDictionary&&) = delete;
@@ -56,19 +56,25 @@ class UserDictionary : public IDictionary {
    * @param start_pos Start position in bytes
    * @return Vector of lookup results
    */
-  std::vector<LookupResult> lookup(std::string_view text, size_t start_pos) const override;
+  std::vector<LookupResult> lookup(std::string_view text, size_t start_pos) const;
+
+  /**
+   * @brief Look up the first exact-surface entry, optionally constrained by POS
+   */
+  const DictionaryEntry* lookupExact(std::string_view surface,
+                                     core::PartOfSpeech pos = core::PartOfSpeech::Unknown) const;
 
   /**
    * @brief Get entry by ID
    * @param idx Entry ID
    * @return Entry pointer, or nullptr if not found
    */
-  const DictionaryEntry* getEntry(uint32_t idx) const override;
+  const DictionaryEntry* getEntry(uint32_t idx) const;
 
   /**
    * @brief Get number of entries
    */
-  size_t size() const override { return entries_.size(); }
+  size_t size() const { return entries_.size(); }
 
   /**
    * @brief Clear all entries

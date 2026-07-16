@@ -9,7 +9,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <exception>
-#include <memory>
 #include <new>
 #include <optional>
 #include <string>
@@ -50,10 +49,15 @@ void setLastErrorFromException() {
   }
 }
 
-char* copyString(std::string_view str) {
-  auto* result = new char[str.size() + 1];
+constexpr size_t alignUp(size_t value, size_t alignment) {
+  return (value + alignment - 1) & ~(alignment - 1);
+}
+
+char* copyStringToArena(std::string_view str, char*& cursor) {
+  char* result = cursor;
   std::memcpy(result, str.data(), str.size());
   result[str.size()] = '\0';
+  cursor += str.size() + 1;
   return result;
 }
 
@@ -75,19 +79,27 @@ std::optional<suzume::core::AnalysisMode> parseAnalysisMode(int mode) {
 }
 
 suzume_tags_t* makeTagsResult(const std::vector<suzume::postprocess::TagEntry>& tags) {
-  std::unique_ptr<suzume_tags_t, decltype(&suzume_tags_free)> result(new suzume_tags_t(), suzume_tags_free);
-  result->count = tags.size();
-  if (result->count == 0) {
-    return result.release();
+  size_t strings_size = 0;
+  for (const auto& tag : tags) {
+    strings_size += tag.tag.size() + 1;
   }
 
-  result->tags = new char* [result->count] {};
-  result->pos = new const char* [result->count] {};
-  for (size_t idx = 0; idx < result->count; ++idx) {
-    result->tags[idx] = copyString(tags[idx].tag);
-    result->pos[idx] = copyString(suzume::core::posToString(tags[idx].pos));
+  const size_t tags_offset = alignUp(sizeof(suzume_tags_t), alignof(char*));
+  const size_t pos_offset = tags_offset + tags.size() * sizeof(char*);
+  const size_t strings_offset = pos_offset + tags.size() * sizeof(const char*);
+  auto* memory = static_cast<std::byte*>(::operator new(strings_offset + strings_size));
+  auto* result = reinterpret_cast<suzume_tags_t*>(memory);
+  result->count = tags.size();
+  result->tags = tags.empty() ? nullptr : reinterpret_cast<char**>(memory + tags_offset);
+  result->pos = tags.empty() ? nullptr : reinterpret_cast<const char**>(memory + pos_offset);
+
+  char* cursor = reinterpret_cast<char*>(memory + strings_offset);
+  for (size_t idx = 0; idx < tags.size(); ++idx) {
+    result->tags[idx] = copyStringToArena(tags[idx].tag, cursor);
+    // POS names are immutable string literals owned by the core type table.
+    result->pos[idx] = suzume::core::posToString(tags[idx].pos).data();
   }
-  return result.release();
+  return result;
 }
 
 }  // namespace
@@ -212,40 +224,46 @@ SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text)
   try {
     auto morphemes = handle->instance.analyze(text);
 
-    std::unique_ptr<suzume_result_t, decltype(&suzume_result_free)> result(new suzume_result_t(), suzume_result_free);
-    result->count = morphemes.size();
-
-    if (result->count == 0) {
-      result->morphemes = nullptr;
-      return result.release();
+    size_t strings_size = 0;
+    for (const auto& morph : morphemes) {
+      strings_size += morph.surface.size() + 1;
+      strings_size += morph.getLemma().size() + 1;
     }
 
-    result->morphemes = new suzume_morpheme_t[result->count]{};
+    const size_t morphemes_offset = alignUp(sizeof(suzume_result_t), alignof(suzume_morpheme_t));
+    const size_t strings_offset = morphemes_offset + morphemes.size() * sizeof(suzume_morpheme_t);
+    auto* memory = static_cast<std::byte*>(::operator new(strings_offset + strings_size));
+    auto* result = reinterpret_cast<suzume_result_t*>(memory);
+    result->count = morphemes.size();
+    result->morphemes = morphemes.empty() ? nullptr : reinterpret_cast<suzume_morpheme_t*>(memory + morphemes_offset);
+    if (result->morphemes != nullptr) {
+      std::memset(result->morphemes, 0, morphemes.size() * sizeof(suzume_morpheme_t));
+    }
 
-    for (size_t idx = 0; idx < result->count; ++idx) {
+    char* cursor = reinterpret_cast<char*>(memory + strings_offset);
+    for (size_t idx = 0; idx < morphemes.size(); ++idx) {
       const auto& morph = morphemes[idx];
 
-      // Allocate and copy strings
-      result->morphemes[idx].surface = copyString(morph.surface);
+      result->morphemes[idx].surface = copyStringToArena(morph.surface, cursor);
 
       auto pos_str = suzume::core::posToString(morph.pos);
-      result->morphemes[idx].pos = copyString(pos_str);
+      result->morphemes[idx].pos = pos_str.data();
 
       auto lemma = morph.getLemma();
-      result->morphemes[idx].base_form = copyString(lemma);
+      result->morphemes[idx].base_form = copyStringToArena(lemma, cursor);
 
       // Japanese POS
       auto pos_ja_str = suzume::core::posToJapanese(morph.pos);
-      result->morphemes[idx].pos_ja = copyString(pos_ja_str);
+      result->morphemes[idx].pos_ja = pos_ja_str.data();
 
       // Conjugation type and form (for verbs and adjectives)
       if (morph.pos == suzume::core::PartOfSpeech::Verb || morph.pos == suzume::core::PartOfSpeech::Adjective) {
         auto verb_type = suzume::grammar::conjTypeToVerbType(morph.conj_type);
         auto conj_type_str = suzume::grammar::verbTypeToJapanese(verb_type);
-        result->morphemes[idx].conj_type = copyString(conj_type_str);
+        result->morphemes[idx].conj_type = conj_type_str.data();
 
         auto conj_form_str = suzume::grammar::conjFormToJapanese(morph.conj_form);
-        result->morphemes[idx].conj_form = copyString(conj_form_str);
+        result->morphemes[idx].conj_form = conj_form_str.data();
       } else {
         result->morphemes[idx].conj_type = nullptr;
         result->morphemes[idx].conj_form = nullptr;
@@ -253,7 +271,7 @@ SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text)
 
       // Extended POS
       auto epos_str = suzume::core::extendedPosToString(morph.extended_pos);
-      result->morphemes[idx].extended_pos = copyString(epos_str);
+      result->morphemes[idx].extended_pos = epos_str.data();
 
       result->morphemes[idx].start = morph.start;
       result->morphemes[idx].end = morph.end;
@@ -265,7 +283,7 @@ SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text)
       result->morphemes[idx].score = morph.features.score;
     }
 
-    return result.release();
+    return result;
   } catch (...) {
     setLastErrorFromException();
     return nullptr;
@@ -277,27 +295,7 @@ SUZUME_EXPORT void suzume_result_free(suzume_result_t* result) {
     return;
   }
 
-  if (result->morphemes != nullptr) {
-    for (size_t idx = 0; idx < result->count; ++idx) {
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-      delete[] const_cast<char*>(result->morphemes[idx].surface);
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-      delete[] const_cast<char*>(result->morphemes[idx].pos);
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-      delete[] const_cast<char*>(result->morphemes[idx].base_form);
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-      delete[] const_cast<char*>(result->morphemes[idx].pos_ja);
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-      delete[] const_cast<char*>(result->morphemes[idx].conj_type);
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-      delete[] const_cast<char*>(result->morphemes[idx].conj_form);
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-      delete[] const_cast<char*>(result->morphemes[idx].extended_pos);
-    }
-    delete[] result->morphemes;
-  }
-
-  delete result;
+  ::operator delete(result);
 }
 
 SUZUME_EXPORT suzume_tags_t* suzume_generate_tags(suzume_t handle, const char* text) {
@@ -348,22 +346,7 @@ SUZUME_EXPORT void suzume_tags_free(suzume_tags_t* tags) {
     return;
   }
 
-  if (tags->tags != nullptr) {
-    for (size_t idx = 0; idx < tags->count; ++idx) {
-      delete[] tags->tags[idx];
-    }
-    delete[] tags->tags;
-  }
-
-  if (tags->pos != nullptr) {
-    for (size_t idx = 0; idx < tags->count; ++idx) {
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-      delete[] const_cast<char*>(tags->pos[idx]);
-    }
-    delete[] tags->pos;
-  }
-
-  delete tags;
+  ::operator delete(tags);
 }
 
 SUZUME_EXPORT int suzume_load_user_dict(suzume_t handle, const char* data, size_t size) {
@@ -427,7 +410,7 @@ SUZUME_EXPORT const char* suzume_dictionary_warning(suzume_t handle, size_t inde
     setLastError("suzume_dictionary_warning: null handle");
     return nullptr;
   }
-  const auto warnings = handle->instance.dictionaryWarnings();
+  const auto& warnings = handle->instance.dictionaryWarnings();
   if (index >= warnings.size()) {
     setLastError("suzume_dictionary_warning: index out of range");
     return nullptr;
