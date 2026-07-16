@@ -254,7 +254,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       }
     }
 
-    // Try V2 renyokei (連用形) match for MeCab-compatible split
+    // Try a V2 renyokei match so a following auxiliary stays separate.
     // e.g., 申し上げます → 申し上げ + ます (match V2 renyokei "上げ", not full "上げます")
     bool matched_renyokei = false;
     if (!matched_kanji && !matched_reading) {
@@ -807,8 +807,8 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
                     core::CandidateOrigin::Unknown, candidate::kNoOriginConfidence, "compound", compound_epos,
                     "compound");
 
-    // MeCab compatibility: Generate te-form euphonic stem candidate
-    // This enables MeCab-compatible te-form splitting: 話し合って → 話し合っ|て
+    // Generate a te-form euphonic stem candidate so the conjunctive particle
+    // remains separate: 話し合って → 話し合っ|て.
     // Without this, the compound verb te-form (話し合って) would be a single token.
     auto [te_stem, uses_de] =
         generateTeFormStem(best_match.compound_base, "", best_match.v2_verb_type, best_match.v2_base_ending);
@@ -879,8 +879,8 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       }
     }
 
-    // MeCab compatibility: Generate mizenkei stem candidate for passive/causative
-    // This enables MeCab-compatible passive splitting: 読み込まれる → 読み込ま|れる
+    // Generate a mizenkei candidate for a following passive/causative auxiliary:
+    // 読み込まれる → 読み込ま|れる.
     // Without this, the compound verb passive form would be a single token
     // or split as 読み + 込まれる.
     {

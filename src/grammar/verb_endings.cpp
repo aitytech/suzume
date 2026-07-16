@@ -100,6 +100,7 @@ const std::vector<VerbEnding> kIrregularEndings = {
     {"し", "する", VerbType::Suru, conn::kVerbRenyokei, false},
     {"し", "する", VerbType::Suru, conn::kVerbMizenkei, false},  // しない
     {"さ", "する", VerbType::Suru, conn::kVerbMizenkei, false},  // させる/される
+    {"せ", "する", VerbType::Suru, conn::kVerbMizenkei, false},  // せず/せぬ
     // Empty suffix for suru-verb + passive/causative (開催+された → 開催する)
     {"", "する", VerbType::Suru, conn::kVerbMizenkei, false},
     // Empty suffix for suru-verb + してる/してた contraction

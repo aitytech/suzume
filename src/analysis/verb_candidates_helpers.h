@@ -663,7 +663,7 @@ bool isValidIRowIchidanStem(std::string_view stem);
  *
  * Looks for た/て/で/だ/ない/れ, which indicate a complete inflected form (as
  * opposed to a bare renyokei ending like し/み that is nominal, not verbal,
- * evidence). ます is intentionally excluded for MeCab-compatible splits
+ * evidence). ます is intentionally excluded so the politeness auxiliary stays separate
  * (申し上げます -> 申し上げ + ます). Shared by the compound-verb join path and
  * the sokuonbin-prefix stem probe so both treat conjugation evidence alike.
  */

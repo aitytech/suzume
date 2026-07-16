@@ -8,36 +8,36 @@ std::vector<DictionaryEntry> getCompoundParticleEntries() {
       particle("について", EPOS::ParticleCase),  // beat false positive adjective candidates
 
       // Cause/Means (原因・手段)
-      particle("によって", EPOS::ParticleConj),  // beat によっ(verb)+て split
-      particle("により", EPOS::ParticleConj),
+      particle("によって", EPOS::ParticleCase),  // beat によっ(verb)+て split
+      particle("により", EPOS::ParticleCase),
       // Note: による removed - grammatically に+よる (格助詞+動詞連体形)
       // Note: によると removed - MeCab splits as に+よる+と (引用表現)
       // Note: によれば removed - grammatically に+よれ+ば
       // These compound particles are better split for grammatical accuracy
 
       // Place/Situation (場所・状況)
-      particle("において", EPOS::ParticleConj),  // prevent に+おい(verb)+て split
+      particle("において", EPOS::ParticleCase),  // prevent に+おい(verb)+て split
       particle("における", EPOS::ParticleCase),  // prevent に+おける split
       particle("にて", EPOS::ParticleCase),
 
       // Capacity/Viewpoint (資格・観点)
-      particle("として", EPOS::ParticleConj),  // prevent と+し(VERB)+て split
-      particle("にとって", EPOS::ParticleConj),
+      particle("として", EPOS::ParticleCase),  // prevent と+し(VERB)+て split
+      particle("にとって", EPOS::ParticleCase),
       // にとっても removed — MeCab splits as にとって+も
-      particle("に関して", EPOS::ParticleConj),  // MeCab compatible
-      particle("に際して", EPOS::ParticleConj),  // MeCab compatible
-      particle("に対して", EPOS::ParticleConj),
+      particle("に関して", EPOS::ParticleCase),
+      particle("に際して", EPOS::ParticleCase),
+      particle("に対して", EPOS::ParticleCase),
 
       // Duration/Scope (範囲・期間)
-      particle("にわたって", EPOS::ParticleConj),
-      particle("にわたり", EPOS::ParticleConj),
-      particle("にあたって", EPOS::ParticleConj),
-      particle("にあたり", EPOS::ParticleConj),
+      particle("にわたって", EPOS::ParticleCase),
+      particle("にわたり", EPOS::ParticleCase),
+      particle("にあたって", EPOS::ParticleCase),
+      particle("にあたり", EPOS::ParticleCase),
 
       // Topic/Means (話題・手段)
-      particle("をめぐって", EPOS::ParticleConj),
-      particle("をめぐり", EPOS::ParticleConj),
-      particle("をもって", EPOS::ParticleConj),
+      particle("をめぐって", EPOS::ParticleCase),
+      particle("をめぐり", EPOS::ParticleCase),
+      particle("をもって", EPOS::ParticleCase),
   };
 }
 

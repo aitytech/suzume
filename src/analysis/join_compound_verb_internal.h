@@ -39,9 +39,9 @@ struct SubsidiaryVerb {
 // generation over-splits ordinary kanji+verb sequences and creates many false
 // positives. Keep this table synchronized with tokenization tests when adding
 // new V2 verbs.
-// NOTE: 始める, 過ぎる, 終わる/終える are NOT included because they are
-// grammatical/aspectual auxiliaries that should be tokenized separately
-// for MeCab compatibility (e.g., 読み + 始める, not 読み始める)
+// 始める・過ぎる・終わる／終える are aspectual auxiliaries and remain
+// separate search units. 続ける is intentionally retained because productive
+// V1+続ける compounds form the search unit represented by this table.
 inline constexpr SubsidiaryVerb kSubsidiaryVerbs[] = {
     // Godan verbs (五段)
     {"込む", "こむ", "む", V2VerbType::Godan},      // 読み込む, 飛びこむ

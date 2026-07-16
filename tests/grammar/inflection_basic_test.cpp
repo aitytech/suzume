@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 #include "grammar/inflection.h"
 
 namespace suzume::grammar {
@@ -32,6 +34,17 @@ TEST_F(InflectionBasicTest, IchidanVerbTeForm) {
   auto result = inflection_.getBest("食べている");
   EXPECT_EQ(result.base_form, "食べる");
   EXPECT_EQ(result.verb_type, VerbType::Ichidan);
+}
+
+TEST_F(InflectionBasicTest, SuruClassicalNegativeStem) {
+  // Classical 未然形 せ is only licensed by a following negative auxiliary.
+  // Test the complete grammatical form so a bare noun ending in せ does not
+  // acquire a spurious サ変 candidate.
+  const auto candidates = inflection_.analyze("屈せず");
+  const bool has_suru_mizenkei = std::any_of(candidates.begin(), candidates.end(), [](const auto& candidate) {
+    return candidate.base_form == "屈する" && candidate.verb_type == VerbType::Suru;
+  });
+  EXPECT_TRUE(has_suru_mizenkei);
 }
 
 // ===== Passive forms =====

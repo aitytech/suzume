@@ -1,6 +1,9 @@
 #include "suzume.h"
 
 #include <cstdlib>
+
+#include "analysis/analyzer.h"
+#include "dictionary/user_dict.h"
 #ifndef __EMSCRIPTEN__
 #include <filesystem>
 #endif

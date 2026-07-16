@@ -21,6 +21,7 @@ std::vector<DictionaryEntry> getDeterminerEntries() {
       det("あらゆる", ""),
       det("いかなる", ""),
       det("いわゆる", ""),
+      det("およそ", ""),
       det("いろんな", ""),  // colloquial variety determiner (= いろいろな), not an adjective
       det("おかしな", ""),
       det("同じ", ""),      // same - prevent VERB confusion
@@ -39,8 +40,7 @@ std::vector<DictionaryEntry> getDeterminerEntries() {
       det("といった", ""),
       det("っていう", ""),  // colloquial
 
-      // Note: Quotative verb forms (といって, こういって, etc.) removed for MeCab compatibility
-      // MeCab splits as と+いっ+て, こう+いっ+て, etc.
+      // Quotative verb forms are compositional particle/adverb + verb + particle units.
 
       // Determiners with kanji - B51: lowered cost to prioritize over NOUN unknown
       det("大きな", ""),

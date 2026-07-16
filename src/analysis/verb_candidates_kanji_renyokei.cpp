@@ -117,8 +117,8 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
           // Combined forms get optimal_length bonus (-0.5), so we need to be lower
           float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
                                                             verb_opts.confidence_cost_scale_small);
-          // Set has_suffix=true to skip exceeds_dict_length penalty for MeCab compatibility
-          // Ichidan renyokei stems are valid morphological units (論じ, 信じ, etc.)
+          // Ichidan renyokei stems are valid morphological units, so mark the
+          // candidate as suffixed to avoid the generic length penalty.
           // Set lemma to the base form (e.g., 入れ → 入れる, 論じ → 論じる)
           // This is critical for correct lemmatization when the surface is ambiguous
           // (e.g., 入れ could be godan 入る imperative or ichidan 入れる renyoukei)
@@ -535,7 +535,7 @@ void appendGodanPassiveRenyokeiCandidates(const std::vector<char32_t>& codepoint
             }
 
             // Calculate base cost for passive candidates
-            // Add penalty so the MeCab-compatible split path (縛ら+れ) can compete
+            // Add a penalty so the grammatical split path (縛ら+れ) can compete.
             // Without this, the merged form (縛られ) has too low a cost (-0.16)
             // and always beats the split path (縛ら(0.1) + れ(aux))
             float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_confidence,

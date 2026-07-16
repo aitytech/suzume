@@ -576,7 +576,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   addEmphaticVariants(candidates, codepoints);
 
   // Add ku-form candidates for kunai patterns
-  // This enables MeCab-compatible split: しんどくない → しんどく + ない
+  // Preserve the adjective renyokei and negative auxiliary boundary.
   // For each candidate ending with くない, generate a ku-form variant ending with く
   std::vector<UnknownCandidate> ku_form_candidates;
   for (const auto& cand : candidates) {
@@ -608,7 +608,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   }
 
   // Add katt-form candidates for katta patterns (BUG-036)
-  // This enables MeCab-compatible split: よかったです → よかっ + た + です
+  // Preserve adjective stem, tense auxiliary, and polite copula boundaries.
   // For each candidate ending with かった, generate a katt-form variant ending with かっ
   std::vector<UnknownCandidate> katt_form_candidates;
   for (const auto& cand : candidates) {
@@ -631,7 +631,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   }
 
   // Add ke-form candidates for kereba patterns
-  // This enables MeCab-compatible split: よければ → よけれ + ば
+  // Preserve the adjective conditional stem and conjunctive particle boundary.
   // For each candidate ending with ければ, generate a ke-form variant ending with けれ
   std::vector<UnknownCandidate> ke_form_candidates;
   for (const auto& cand : candidates) {
@@ -806,7 +806,7 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   addEmphaticVariants(candidates, codepoints);
 
   // Add katt-form candidates for katta patterns
-  // This enables MeCab-compatible split: エモかった → エモかっ + た
+  // Preserve the adjective stem and tense auxiliary boundary.
   std::vector<UnknownCandidate> katt_form_candidates;
   for (const auto& cand : candidates) {
     if (utf8::endsWith(cand.surface, "かった")) {
@@ -819,7 +819,7 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   }
 
   // Add ku-form candidates for kute patterns (te-form split)
-  // This enables MeCab-compatible split: ウザくて → ウザく + て
+  // Preserve the adjective renyokei and conjunctive particle boundary.
   std::vector<UnknownCandidate> ku_te_candidates;
   for (const auto& cand : candidates) {
     if (utf8::endsWith(cand.surface, "くて")) {
@@ -833,7 +833,7 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   }
 
   // Add ku-form candidates for kunai patterns (negative form split)
-  // This enables MeCab-compatible split: エモくない → エモく + ない
+  // Preserve the adjective renyokei and negative auxiliary boundary.
   std::vector<UnknownCandidate> ku_nai_candidates;
   for (const auto& cand : candidates) {
     if (utf8::endsWith(cand.surface, "くない")) {
@@ -847,7 +847,7 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   }
 
   // Add ke-form candidates for kereba patterns
-  // This enables MeCab-compatible split: エモければ → エモけれ + ば
+  // Preserve the adjective conditional stem and conjunctive particle boundary.
   std::vector<UnknownCandidate> ke_form_candidates;
   for (const auto& cand : candidates) {
     if (utf8::endsWith(cand.surface, "ければ")) {
@@ -860,7 +860,7 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   }
 
   // Add stem candidates for sou patterns (appearance auxiliary)
-  // This enables MeCab-compatible split: キモそう → キモ + そう
+  // Preserve the adjective stem and appearance-auxiliary boundary.
   std::vector<UnknownCandidate> stem_sou_candidates;
   for (const auto& cand : candidates) {
     if (utf8::endsWith(cand.surface, "そう")) {

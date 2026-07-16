@@ -47,6 +47,17 @@ constexpr std::array<ConjTypeAlias, 18> kConjTypeAliases = {{
     {ConjugationType::ProperGiven, "GIVEN", "ProperGiven", "PROPER_GIVEN"},
 }};
 
+const DictionaryEntry* findExactEntry(const std::vector<LookupResult>& results, std::string_view surface,
+                                      core::PartOfSpeech pos) {
+  for (const auto& result : results) {
+    if (result.entry != nullptr && result.entry->surface == surface &&
+        (pos == core::PartOfSpeech::Unknown || result.entry->pos == pos)) {
+      return result.entry;
+    }
+  }
+  return nullptr;
+}
+
 }  // namespace
 
 std::string_view conjTypeToCanonicalString(ConjugationType type) {
@@ -143,11 +154,23 @@ const DictionaryEntry* DictionaryManager::lookupExact(std::string_view surface, 
   if (surface.empty()) {
     return nullptr;
   }
-  auto results = lookup(surface, 0);
-  for (const auto& result : results) {
-    if (result.entry != nullptr && result.entry->surface == surface &&
-        (pos == core::PartOfSpeech::Unknown || result.entry->pos == pos)) {
-      return result.entry;
+
+  if (const auto* entry = findExactEntry(core_dict_->lookup(surface, 0), surface, pos)) {
+    return entry;
+  }
+  if (core_binary_dict_ && core_binary_dict_->isLoaded()) {
+    if (const auto* entry = findExactEntry(core_binary_dict_->lookup(surface, 0), surface, pos)) {
+      return entry;
+    }
+  }
+  if (user_binary_dict_ && user_binary_dict_->isLoaded()) {
+    if (const auto* entry = findExactEntry(user_binary_dict_->lookup(surface, 0), surface, pos)) {
+      return entry;
+    }
+  }
+  for (const auto& user_dict : user_dicts_) {
+    if (const auto* entry = findExactEntry(user_dict->lookup(surface, 0), surface, pos)) {
+      return entry;
     }
   }
   return nullptr;

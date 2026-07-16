@@ -241,8 +241,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     return candidates;
   }
 
-  // Skip kanji + verb renyokei + すぎ pattern for MeCab compatibility
-  // MeCab splits: 書きすぎる → 書き + すぎる, not as single adjective
+  // A kanji verb stem followed by すぎ is a verb-plus-auxiliary construction,
+  // not a single adjective.
   // Pattern: kanji + (き/ぎ/し/ち/に/び/み/り/い) + すぎ...
   std::string hira_part = extractSubstring(codepoints, kanji_end, hiragana_end);
   // C++17 compatible: check if hiragana contains "すぎ" (6 bytes)
@@ -294,7 +294,11 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     bool is_adj_context = false;
     if (adj_end < codepoints.size()) {
       char32_t next = codepoints[adj_end];
-      is_adj_context = (next == U'て' || next == U'な' || next == U'も');
+      // A bare も is ambiguous with the first character of the formal noun
+      // もの (動くもの). Treat it as adjective evidence only when it opens a
+      // negative continuation such as 高くもない.
+      bool is_mo_negative = next == U'も' && adj_end + 1 < codepoints.size() && codepoints[adj_end + 1] == U'な';
+      is_adj_context = (next == U'て' || next == U'な' || is_mo_negative);
     }
     if (is_adj_context) {
       std::string surface = extractSubstring(codepoints, start_pos, adj_end);
@@ -599,7 +603,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   //  2. Hiragana portion must be short (≤5 chars)
   if (kanji_end == start_pos + 2 && kanji_end < codepoints.size()) {
     char32_t first_hira = codepoints[kanji_end];
-    // A period/duration formal-noun suffix (間/分/秒) must not head an
+    // A period/duration formal-noun suffix (間/分/秒/中) must not head an
     // i-adjective compound stem: "3分間続いた" would split as 3分 + 間続い(fake
     // ADJ) instead of 3分間 + 続い(verb), and "長い間続いた" likewise severs 間.
     // Allow only when the second kanji itself forms a genuine i-adjective
@@ -613,7 +617,9 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     char32_t head_char = codepoints[start_pos];
     if (normalize::isDurationSuffixKanji(head_char)) {
       std::string tail_adj = extractSubstring(codepoints, start_pos + 1, kanji_end) + "い";
-      bool tail_is_i_adj = isAdjectiveInDictionary(dict_manager, tail_adj);
+      bool tail_is_dict_adj = isAdjectiveInDictionary(dict_manager, tail_adj);
+      bool tail_is_i_adj = tail_is_dict_adj;
+      float tail_adj_confidence = candidate::kNoOriginConfidence;
       if (!tail_is_i_adj && !(first_hira == U'い' && isVerbOnbinContextAfterI(codepoints, kanji_end + 1)) &&
           !verb_helpers::isNounInDictionary(dict_manager, tail_adj) &&
           !verb_helpers::hasDictionaryEntry(dict_manager, tail_adj, core::PartOfSpeech::Verb)) {
@@ -621,6 +627,20 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
           if (tail_res.verb_type == grammar::VerbType::IAdjective &&
               tail_res.confidence >= candidate::kCompoundAdjConfMin) {
             tail_is_i_adj = true;
+            tail_adj_confidence = std::max(tail_adj_confidence, tail_res.confidence);
+          }
+        }
+      }
+      // For a rule-derived tail, reject the compound reading when the same
+      // second-kanji + okurigana span has stronger evidence as a terminal Godan
+      // verb (中+働く). Dictionary-backed adjectives such as 間近い/分厚い are
+      // authoritative and bypass this ambiguity check.
+      if (tail_is_i_adj && !tail_is_dict_adj) {
+        std::string tail_surface = extractSubstring(codepoints, start_pos + 1, kanji_end + 1);
+        for (const auto& tail_res : inflection.analyze(tail_surface)) {
+          if (grammar::isGodanVerbType(tail_res.verb_type) && tail_res.base_form == tail_surface &&
+              tail_res.confidence > tail_adj_confidence) {
+            tail_is_i_adj = false;
             break;
           }
         }
@@ -652,7 +672,6 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // The 2-kanji penalty drops inflection confidence below the main loop's
         // 0.5 threshold for compound adjectives like 薄暗い, 物悲しく.
         // Use tighter hiragana limits for い/く/か/け (max 2) to prevent
-        // false matches like 一枚ください. し gets more room (max 5) for しかった.
         if (candidates.empty()) {
           size_t hira_limit = (first_hira == U'し') ? kMaxHiraganaLen : 2;
           size_t max_end = std::min(hiragana_end, kanji_end + hira_limit);
@@ -700,7 +719,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   addEmphaticVariants(candidates, codepoints);
 
   // Add ku-form candidates for kunai/kunakatta patterns (negative split)
-  // This enables MeCab-compatible split:
+  // Preserve the adjective renyokei and negative auxiliary boundary:
   //   良くない → 良く + ない
   //   良くなかった → 良く + なかっ + た
   // For each candidate ending with くない/くなかった/くなかっ, generate ku-form variant
@@ -732,7 +751,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   }
 
   // Add ku-form candidates for kute patterns (te-form split)
-  // This enables MeCab-compatible split:
+  // Preserve the adjective renyokei and conjunctive particle boundary:
   //   ウザくて → ウザく + て
   //   美しくて → 美しく + て
   // For each candidate ending with くて, generate ku-form variant
@@ -751,7 +770,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   }
 
   // Add katt-form candidates for katta patterns (BUG-036)
-  // This enables MeCab-compatible split: 美しかったです → 美しかっ + た + です
+  // Preserve adjective stem, tense auxiliary, and polite copula boundaries.
   // For each candidate ending with かった, generate a katt-form variant ending with かっ
   std::vector<UnknownCandidate> katt_form_candidates;
   for (const auto& cand : candidates) {
@@ -778,7 +797,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
                    candidates.end());
 
   // Add ke-form candidates for kereba patterns
-  // This enables MeCab-compatible split: 美しければ → 美しけれ + ば
+  // Preserve the adjective conditional stem and conjunctive particle boundary.
   // For each candidate ending with ければ, generate a ke-form variant ending with けれ
   std::vector<UnknownCandidate> ke_form_candidates;
   for (const auto& cand : candidates) {
@@ -930,7 +949,7 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
       std::string_view kanji_suffix(kanji_seq.data() + kanji_seq.size() - suffix.size(), suffix.size());
       if (kanji_suffix == suffix) {
         // Found a na-adjective pattern like 理性的, 論理的
-        // Higher cost to prefer NOUN + 的(SUFFIX) + な path for MeCab compatibility
+        // Higher cost favors the compositional NOUN + 的(SUFFIX) + な path.
         candidates.push_back(makeNaAdjCandidate(kanji_seq, start_pos, kanji_end, candidate::kNaAdjTekiCost, true, 1.0F,
                                                 "na_adjective_teki"));
         break;  // Use first matching suffix
@@ -939,8 +958,16 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
   }
 
   // Pattern 2: Check for kanji compound + な pattern (e.g., 獰猛な)
-  // Generate ADJ candidate for kanji portion when followed by な
-  if (kanji_end < codepoints.size() && codepoints[kanji_end] == U'な') {
+  // A direct appearance そう also licenses a na-adjective stem when the
+  // open-class lexeme is absent from the dictionary.
+  // A bare な licenses an attributive na-adjective stem, but なら does not:
+  // nouns and na-adjectives both take conditional なら, so generating an
+  // adjective for every unknown kanji compound would destroy that ambiguity.
+  const bool followed_by_na = kanji_end < codepoints.size() && codepoints[kanji_end] == U'な' &&
+                              (kanji_end + 1 >= codepoints.size() || codepoints[kanji_end + 1] != U'ら');
+  const bool followed_by_sou =
+      kanji_end + 1 < codepoints.size() && codepoints[kanji_end] == U'そ' && codepoints[kanji_end + 1] == U'う';
+  if (followed_by_na || followed_by_sou) {
     // Skip if first character is a formal noun (形式名詞)
     // e.g., 時妙な should be 時+妙な, not 時妙(ADJ)+な
     // Formal nouns (時, 事, 所, etc.) are standalone grammatical words
@@ -965,7 +992,7 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
     //   仕方ない → 仕方 + ない (not 仕方(ADJ_NA) + い)
     //   関係なかった → 関係 + なかっ (か triggers naかった past form)
     // Real な-adjectives followed by these forms (静かなく) are not standard Japanese.
-    if (kanji_end + 1 < codepoints.size()) {
+    if (followed_by_na && kanji_end + 1 < codepoints.size()) {
       char32_t after_na = codepoints[kanji_end + 1];
       if (after_na == U'く' || after_na == U'い' || after_na == U'か') {
         return candidates;

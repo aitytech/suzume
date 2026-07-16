@@ -33,10 +33,10 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   float extended_cost = BigramTable::getCost(prev.extended_pos, next.extended_pos);
 
   // Surface-based bonus for VerbRenyokei → すぎ pattern
-  // E.g., 読み+すぎる, 書き+すぎた, 食べ+すぎ (MeCab-compatible split)
+  // E.g., 読み+すぎる, 書き+すぎた, 食べ+すぎ: verb stem plus excessive auxiliary.
   // The default VERB→VERB penalty should not apply to auxiliary verbs
   float surface_bonus = 0.0F;
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::startsWith(next.surface, "すぎ")) {
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxExcessive) {
     surface_bonus = cost::kStrongBonus;
   }
 
@@ -102,6 +102,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   if (prev.pos == core::PartOfSpeech::Verb && prev.fromDictionary() && grammar::isPureHiragana(prev.surface) &&
       prev.surface.size() <= 9 &&  // ≤3 hiragana chars (9 bytes)
       next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
+      !(prev.extended_pos == core::ExtendedPOS::VerbMizenkei && prev.lemma == "する") &&
       !utf8::equalsAny(next.surface, {"ん", "ぬ", "ざる", "ざれ", "ね"})) {
     surface_bonus += cost::kAlmostNever;
   }

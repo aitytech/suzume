@@ -34,7 +34,7 @@ struct ConjSuffix {
 // Full forms with negative (9 suffixes)
 // Pattern: base, ta, tara, te, masu, mashita, nai, nakatta, nakute
 // Note: Te-form entries are kept for inflection analysis but skipped during generation
-// (MeCab-compatible te-form split: VERB renyokei + て(PARTICLE))
+// (te-form boundary: VERB renyokei/onbinkei + て(PARTICLE))
 constexpr ConjSuffix kIchidanFull[] = {
     {"る", conn::kAuxOutBase},   {"た", conn::kAuxOutTa},       {"たら", conn::kAuxOutBase},
     {"て", conn::kAuxOutTe},     {"ます", conn::kAuxOutMasu},   {"ました", conn::kAuxOutTa},
@@ -42,8 +42,7 @@ constexpr ConjSuffix kIchidanFull[] = {
 };
 
 // Te-attachment limited forms (4 suffixes, no negative, no masu)
-// Note: ます/ました forms are intentionally excluded for MeCab compatibility
-// MeCab splits: くれます → くれ(VERB) + ます(AUX), not くれます(AUX)
+// ます/ました forms are excluded so the verb and politeness auxiliary stay separate.
 constexpr ConjSuffix kIchidanTeAttach[] = {
     {"る", conn::kAuxOutBase},
     {"た", conn::kAuxOutTa},
@@ -52,7 +51,7 @@ constexpr ConjSuffix kIchidanTeAttach[] = {
 };
 
 // Progressive いる forms (6 suffixes, no negative)
-// MeCab-compatible: negative is split as い(mizenkei) + ない(AUX)
+// The negative is compositional い(mizenkei) + ない(AUX).
 // E.g., 食べていない → 食べ+て+い+ない, not 食べ+て+いない
 constexpr ConjSuffix kIchidanProgressive[] = {
     {"る", conn::kAuxOutBase}, {"た", conn::kAuxOutTa},     {"たら", conn::kAuxOutBase},
@@ -90,8 +89,8 @@ constexpr ConjSuffix kMasu[] = {
 
 // Generate forms using stem + suffix pattern
 // Note: All entries including te-form are generated for inflection analysis.
-// For MeCab-compatible te-form split, the scoring (connection rules) makes
-// the split path VERB(renyokei/onbinkei) + て(PARTICLE) win over unified te-form.
+// Connection scoring makes the grammatical path
+// VERB(renyokei/onbinkei) + て(PARTICLE) win over a unified te-form.
 template <size_t N>
 std::vector<AuxiliaryEntry> generateWithStem(const AuxiliaryBase& base, const ConjSuffix (&suffixes)[N]) {
   std::string stem = dropLastChar(base.surface);
@@ -203,7 +202,7 @@ void addSpecialPatterns(std::vector<AuxiliaryEntry>& entries) {
   // === Te-form (voiced variants) ===
   // These entries are needed for inflection analysis (matching て/で after onbin stems).
   // For tokenization, the PARTICLE て/で in entries.cpp competes with these AUXILIARY entries.
-  // Connection rules give bonus to the PARTICLE path for MeCab-compatible te-form split.
+  // Connection rules give the conjunctive-particle path a grammatical bonus.
   entries.push_back({"て", "て", "て", kAuxTe, kAuxOutTe, kVerbOnbinkei});
   entries.push_back({"で", "で", "て", kAuxTe, kAuxOutTe, kVerbOnbinkei});
 
@@ -654,7 +653,7 @@ std::vector<AuxiliaryEntry> expandAuxiliaryBase(const AuxiliaryBase& base) {
       (base.left_id == conn::kAuxTemorau || base.left_id == conn::kAuxTekureru || base.left_id == conn::kAuxTeageru);
 
   // Progressive ている uses forms without negative
-  // MeCab-compatible split: い(mizenkei) + ない(AUX) instead of いない(single)
+  // Keep い(mizenkei) + ない(AUX) instead of a single いない token.
   bool is_progressive = (base.left_id == conn::kAuxTeiru);
 
   switch (base.conj_type) {

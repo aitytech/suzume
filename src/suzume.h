@@ -6,11 +6,10 @@
 #include <string_view>
 #include <vector>
 
-#include "analysis/analyzer.h"
+#include "analysis/scorer.h"
 #include "core/lattice.h"
 #include "core/morpheme.h"
 #include "core/types.h"
-#include "dictionary/user_dict.h"
 #include "normalize/normalizer.h"
 #include "postprocess/tag_generator.h"
 

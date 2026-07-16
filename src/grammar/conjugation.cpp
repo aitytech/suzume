@@ -409,7 +409,7 @@ std::vector<Conjugation::DictionarySuffix> Conjugation::getDictionarySuffixes(Ve
     // Mizenkei (for ない split: 書か + ない → 書く)
     suffixes.push_back({a, false, core::ExtendedPOS::VerbMizenkei});
 
-    // 音便形 (サ行以外) - standalone onbin form for MeCab-compatible split
+    // 音便形 (サ行以外) - standalone stem before a tense/conjunctive auxiliary
     // E.g., 書いた → 書い + た, 飲んだ → 飲ん + だ
     // The onbin form needs to be a separate candidate to enable the split
     if (!row.onbin.empty()) {
@@ -424,12 +424,12 @@ std::vector<Conjugation::DictionarySuffix> Conjugation::getDictionarySuffixes(Ve
     // 書かなかった excluded for MeCab compat: split as 書か+なかっ+た
 
     // Conditional
-    // Kateikei (仮定形) standalone, for MeCab-compatible split: 書け + ば.
+    // Kateikei (仮定形) standalone before the conjunctive particle: 書け + ば.
     // Godan e-row form serves as both kateikei and meireikei; emit both
     // ExtendedPOS so the kateikei + ば split path can win over a merged form.
     suffixes.push_back({e, false, core::ExtendedPOS::VerbKateikei});  // Conditional stem: 書け
 
-    // Volitional mizenkei (for MeCab-compatible split: 書こ + う)
+    // Volitional mizenkei before the auxiliary: 書こ + う.
     suffixes.push_back({o, false, core::ExtendedPOS::VerbMizenkei});  // Volitional mizenkei: 書こ
 
     // Imperative (exclude for Ka/Ga to avoid conflict with potential)
@@ -448,7 +448,7 @@ std::vector<Conjugation::DictionarySuffix> Conjugation::getDictionarySuffixes(Ve
     case VerbType::Ichidan:
       // 一段動詞: 食べる → 食べ + suffix
       // Note: ます系 excluded (should split as 食べ + ます)
-      // Note: た/て excluded (should split as 食べ + た/て, MeCab-compatible)
+      // た/て are excluded because they remain separate after 食べ.
       suffixes = {
           {"る", false, core::ExtendedPOS::VerbShuushikei},  // Base: 食べる
           {"", false, core::ExtendedPOS::VerbRenyokei},      // Renyokei: 食べ (for 降り+て → lemma=降りる)
@@ -465,7 +465,7 @@ std::vector<Conjugation::DictionarySuffix> Conjugation::getDictionarySuffixes(Ve
       break;
 
     case VerbType::Suru:
-      // サ変: する (MeCab-compatible: exclude split forms)
+      // サ変: exclude compound forms whose auxiliaries are separate.
       // した → し + た, so exclude. But keep conditional/imperative.
       suffixes = {
           {"する", false, core::ExtendedPOS::VerbShuushikei},  // Base form

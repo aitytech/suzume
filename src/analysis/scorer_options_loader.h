@@ -403,6 +403,7 @@ inline void ScorerOptionsLoader::applyVerbCandidateOptions(VerbCandidateOptions&
   SET_OPT(opts, confidence_standard, json, "confidence_standard");
   SET_OPT(opts, confidence_past_te, json, "confidence_past_te");
   SET_OPT(opts, confidence_ichidan_dict, json, "confidence_ichidan_dict");
+  SET_OPT(opts, confidence_short_godan_base, json, "confidence_short_godan_base");
   SET_OPT(opts, confidence_dict_verb, json, "confidence_dict_verb");
   SET_OPT(opts, confidence_katakana, json, "confidence_katakana");
   SET_OPT(opts, confidence_high, json, "confidence_high");
@@ -644,6 +645,7 @@ inline int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options, bool r
     TRY_ENV("VERB", confidence_standard);
     TRY_ENV("VERB", confidence_past_te);
     TRY_ENV("VERB", confidence_ichidan_dict);
+    TRY_ENV("VERB", confidence_short_godan_base);
     TRY_ENV("VERB", confidence_dict_verb);
     TRY_ENV("VERB", confidence_katakana);
     TRY_ENV("VERB", confidence_high);

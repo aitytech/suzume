@@ -25,6 +25,8 @@ namespace suzume::grammar {
  */
 inline constexpr std::string_view kHumbleHonorificRenyokei[] = {"いたし", "くださ", "いただき"};
 
+inline constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "くださる", "いただく"};
+
 /**
  * @brief Renyokei surfaces of benefactive subsidiary verbs (もらう・あげる)
  *
@@ -51,6 +53,16 @@ inline constexpr std::string_view kModalSubsidiaryRenyokei[] = {"かね"};
 inline bool isHumbleHonorificRenyokei(std::string_view surface) {
   for (const std::string_view entry : kHumbleHonorificRenyokei) {
     if (entry == surface) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Return true for a humble/honorific subsidiary verb lemma. */
+inline bool isHumbleHonorificLemma(std::string_view lemma) {
+  for (const std::string_view entry : kHumbleHonorificLemmas) {
+    if (entry == lemma) {
       return true;
     }
   }

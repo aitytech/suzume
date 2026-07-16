@@ -552,6 +552,19 @@ TEST_F(BinaryDictTest, DictionaryManagerLoadUserBinaryDictionaryFromMemory) {
   EXPECT_TRUE(found);
 }
 
+TEST_F(BinaryDictTest, DictionaryManagerLookupExactChecksSurfaceAndPos) {
+  auto dict_data = buildTestDict("りんご", core::PartOfSpeech::Noun);
+  DictionaryManager manager;
+  ASSERT_TRUE(manager.loadUserBinaryDictionaryFromMemory(dict_data.data(), dict_data.size()));
+
+  const auto* exact = manager.lookupExact("りんご", core::PartOfSpeech::Noun);
+  ASSERT_NE(exact, nullptr);
+  EXPECT_EQ(exact->surface, "りんご");
+  EXPECT_EQ(manager.lookupExact("りん"), nullptr);
+  EXPECT_EQ(manager.lookupExact("りんご", core::PartOfSpeech::Verb), nullptr);
+  EXPECT_EQ(manager.lookupExact(""), nullptr);
+}
+
 TEST_F(BinaryDictTest, DictionaryManagerLoadFromMemoryInvalidData) {
   std::vector<uint8_t> bad_data(10, 0);
 

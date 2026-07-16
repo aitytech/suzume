@@ -168,8 +168,8 @@
           "surface": "お"
         },
         {
-          "lemma": "願い",
-          "pos": "Noun",
+          "lemma": "願う",
+          "pos": "Verb",
           "surface": "願い"
         },
         {
@@ -204,8 +204,8 @@
           "surface": "お"
         },
         {
-          "lemma": "願い",
-          "pos": "Noun",
+          "lemma": "願う",
+          "pos": "Verb",
           "surface": "願い"
         },
         {
@@ -1542,10 +1542,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã¦/ã POS: Suzume treats ã¦ãã as auxiliary chain, MeCab as particle+verb"
-      },
       "description": "Inquiry: 商品がまだ届いていないのですが",
       "expected": [
         {
@@ -1601,51 +1597,6 @@
       ],
       "id": "customer_inquiry",
       "input": "商品がまだ届いていないのですが",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "商品"
-        },
-        {
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "pos": "Adverb",
-          "surface": "まだ"
-        },
-        {
-          "lemma": "届く",
-          "pos": "Verb",
-          "surface": "届い"
-        },
-        {
-          "lemma": "てる",
-          "pos": "Auxiliary",
-          "surface": "て"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "い"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "です"
-        },
-        {
-          "pos": "Particle",
-          "surface": "が"
-        }
-      ],
       "tags": [
         "business",
         "customer"
@@ -1900,8 +1851,8 @@
           "surface": "お"
         },
         {
-          "lemma": "知らせ",
-          "pos": "Noun",
+          "lemma": "知らせる",
+          "pos": "Verb",
           "surface": "知らせ"
         },
         {

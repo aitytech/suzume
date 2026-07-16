@@ -255,7 +255,7 @@ bool isCounterKanji(char32_t cp);
 /**
  * @brief Check if a codepoint is a period/duration formal-noun suffix kanji
  *
- * Closed class of bound formal nouns marking a span/duration ({間, 分, 秒}).
+ * Closed class of bound formal nouns marking a span/duration ({間, 分, 秒, 中}).
  * Distinct from the broader isCounterKanji set: it excludes content-word heads
  * (人, 本, ...) so that a duration suffix bound to a numeral (3時|間, 2週|間) can
  * be prevented from heading a fake i-adjective/nominal compound without

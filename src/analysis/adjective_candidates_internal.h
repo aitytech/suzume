@@ -110,7 +110,8 @@ inline UnknownCandidate makeIAdjStemCandidate(const std::string& surface, size_t
  *        an existing candidate.
  *
  * Spins the renyokei/katt/ke conjugation forms out of a full adjective surface
- * for MeCab-compatible splits (良くない → 良く + ない, 美しかった → 美しかっ + た).
+ * to preserve inflection/auxiliary boundaries (良くない → 良く + ない,
+ * 美しかった → 美しかっ + た).
  * The variant keeps the source lemma/origin/confidence, drops @p char_trim
  * trailing characters (all such tails are 3-byte kana), applies @p cost_bonus on
  * top of the source cost, and carries the connection-form @p epos. Callers keep

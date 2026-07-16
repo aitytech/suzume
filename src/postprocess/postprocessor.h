@@ -66,7 +66,7 @@ class Postprocessor {
    * @brief Convert PREFIX + VERB to PREFIX + NOUN (renyoukei nominalization)
    * e.g., お願い → お(PREFIX) + 願い(NOUN), not 願い(VERB)
    */
-  static std::vector<core::Morpheme> convertPrefixVerbToNoun(const std::vector<core::Morpheme>& morphemes);
+  static void convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphemes);
 
   /**
    * @brief Merge verb renyokei + もの into compound noun

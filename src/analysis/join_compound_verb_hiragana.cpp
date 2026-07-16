@@ -34,9 +34,10 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
     }
     std::string_view v2_reading(v2_verb.reading);
 
-    // For hiragana compound verbs, V1 must be at least 2 characters
-    // Try different V1 lengths (2-4 characters)
-    for (size_t v1_len = 2; v1_len <= 4; ++v1_len) {
+    // Productive hiragana V1 forms need at least two characters. The irregular
+    // サ変 renyokei し is the sole one-character exception (し続ける).
+    const size_t min_v1_len = codepoints[start_pos] == U'し' ? 1 : 2;
+    for (size_t v1_len = min_v1_len; v1_len <= 4; ++v1_len) {
       size_t v2_start = start_pos + v1_len;
       if (v2_start >= codepoints.size()) {
         break;
@@ -146,7 +147,9 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       std::string v1_base;
       bool is_ichidan = (base_ending == 0);
 
-      if (!is_ichidan) {
+      if (v1_len == 1 && last_char == U'し') {
+        v1_base = "する";
+      } else if (!is_ichidan) {
         // Godan: replace last char with base ending
         v1_base =
             std::string(v1_surface.substr(0, v1_surface.size() - core::kJapaneseCharBytes));  // Remove last hiragana

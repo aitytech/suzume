@@ -225,7 +225,7 @@
           "surface": "いい"
         },
         {
-          "lemma": "っす",
+          "lemma": "です",
           "pos": "Auxiliary",
           "surface": "っす"
         }
@@ -1681,6 +1681,60 @@
       ],
       "id": "haomoshirokatttadesu",
       "input": "映画はおもしろかったです"
+    },
+    {
+      "description": "形容動詞語幹と仮定条件の接続を認識する",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "kanaraba_mu",
+      "input": "静かならば進む"
+    },
+    {
+      "description": "形容動詞語幹と様態助動詞を認識する",
+      "expected": [
+        {
+          "lemma": "安全",
+          "pos": "Adjective",
+          "surface": "安全"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Auxiliary",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "場所",
+          "pos": "Noun",
+          "surface": "場所"
+        }
+      ],
+      "id": "souna",
+      "input": "安全そうな場所"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional",

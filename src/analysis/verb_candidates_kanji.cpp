@@ -183,8 +183,8 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
     }
   }
 
-  // Check for kanji verb + verb renyokei + すぎ pattern for MeCab compatibility
-  // MeCab splits: 書きすぎる → 書き + すぎる, not 書きすぎる as single verb
+  // Detect a kanji verb renyokei followed by the excessive auxiliary すぎ;
+  // 書きすぎる is compositional 書き + すぎる, not a single lexical verb.
   // Pattern: kanji + (き/ぎ/し/ち/に/び/み/り/い) + すぎ...
   std::string hira_part = extractSubstring(codepoints, kanji_end, hiragana_end);
   // C++17 compatible: check if hiragana contains "すぎ" (6 bytes)
@@ -269,7 +269,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
     }
 
     // Early return to skip generating full verb forms containing すぎ
-    // The split path (renyokei + すぎ + aux) is preferred for MeCab compatibility
+    // Prefer the grammatical renyokei + すぎ + auxiliary path.
     if (mid_compound_penalty != 0.0F) {
       for (auto& cand : candidates) {
         cand.cost += mid_compound_penalty;

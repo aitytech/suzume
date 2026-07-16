@@ -66,7 +66,7 @@ std::vector<UnknownCandidate> generateCompoundVerbCandidates(const std::vector<c
   size_t kanji2_end = vh::findCharRegionEnd(char_types, hira1_end, 3, normalize::CharType::Kanji);
 
   // Skip compound verb candidates when second verb is aspectual/grammatical
-  // These should be tokenized separately for MeCab compatibility:
+  // These remain separate grammatical/aspectual search units:
   // 終わる/終える, 始める, 続く/続ける, 過ぎる
   // e.g., 読み終わる → 読み + 終わる (not single token)
   if (hira1_end < codepoints.size()) {
@@ -90,7 +90,7 @@ std::vector<UnknownCandidate> generateCompoundVerbCandidates(const std::vector<c
       continue;
     }
 
-    // Skip verb + ます auxiliary patterns for MeCab-compatible split
+    // Keep a verb stem and the politeness auxiliary ます separate.
     // e.g., 申し上げます → 申し上げ + ます
     if (utf8::endsWith(surface, "ます") || utf8::endsWith(surface, "ました") || utf8::endsWith(surface, "ません") ||
         utf8::endsWith(surface, "ましょう")) {
@@ -267,7 +267,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
   // Generate katakana sokuonbin (っ) candidates for ta/te-form splitting
   // E.g., バズった → バズっ (onbin of バズる) + た (auxiliary)
   //       ググった → ググっ (onbin of ググる) + た (auxiliary)
-  // This allows MeCab-compatible splitting for katakana slang verbs
+  // This preserves the onbin stem and tense-auxiliary boundary for katakana verbs.
   {
     // Check if hiragana part starts with っ followed by た/て/だ/で
     if (hira_part.size() >= 6 &&  // っ(3 bytes) + た/て/だ/で(3 bytes) = 6 bytes min
@@ -305,7 +305,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
   // Generate katakana mizenkei (未然形) candidates for negative splitting
   // E.g., ググらない → ググら (mizenkei of ググる) + ない (auxiliary)
   //       バズらせる → バズら (mizenkei of バズる) + せる (auxiliary)
-  // This allows MeCab-compatible splitting for katakana slang verbs
+  // This preserves the mizenkei and causative-auxiliary boundary for katakana verbs.
   {
     // Check if hiragana part starts with ら followed by ない/なく/なかっ/なけれ/せ/され
     if (hira_part.size() >= 6 &&  // ら(3 bytes) + な/せ(3 bytes) = 6 bytes min

@@ -28,10 +28,6 @@
       "input": "解決し得ない"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "Sahen noun + shi + eru should split at shi boundary",
       "expected": [
         {
@@ -51,22 +47,7 @@
         }
       ],
       "id": "kaiketsu_shi_eru",
-      "input": "解決し得る",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "解決"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "pos": "Verb",
-          "surface": "得る"
-        }
-      ]
+      "input": "解決し得る"
     },
     {
       "description": "Sahen noun + shi + eru/enai should split at shi boundary",

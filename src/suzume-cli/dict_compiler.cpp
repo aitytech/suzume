@@ -15,7 +15,7 @@ namespace suzume::cli {
 namespace {
 
 // I-adjective conjugation suffixes for dictionary expansion
-// These are the forms that should be stored in dictionary (MeCab-compatible)
+// Store only forms that are lexical units; compound auxiliary forms stay split.
 // Excludes compound forms that should be split (e.g., くなる → く + なる)
 struct IAdjSuffix {
   const char* suffix;
@@ -24,8 +24,8 @@ struct IAdjSuffix {
 
 const std::vector<IAdjSuffix> kIAdjSuffixes = {
     {"い", core::ExtendedPOS::AdjBasic},  // Base form: 美しい
-    // MeCab compatibility: かった/くなかった are NOT stored as single tokens
-    // They should be split: かった → かっ + た, くなかった → く + なかっ + た
+    // かった/くなかった are not stored as single tokens because their
+    // adjective and auxiliary morphemes remain distinct.
     {"かっ", core::ExtendedPOS::AdjKatt},  // Ta-connection (連用タ接続): 美しかっ+た
     // くない/くなかっ intentionally NOT expanded as single tokens: negatives must
     // split (辛くない → 辛く + ない) per MeCab normalization. The く renyokei form

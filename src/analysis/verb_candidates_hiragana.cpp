@@ -45,6 +45,11 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   // Context-gated irregular 来る mizenkei: こ + ない-family negative
   appendKuruMizenkeiNaiCandidates(codepoints, start_pos, candidates);
 
+  // Context-gated 試行補助動詞 みる after a clear te-form boundary.
+  appendMiruAuxiliaryCandidates(codepoints, start_pos, dict_manager, candidates);
+  // Context-gated 準備補助動詞 おく after a clear te-form boundary.
+  appendOkuAuxiliaryCandidates(codepoints, start_pos, candidates);
+
   // Skip if starting with a small kana (拗音・促音: ゃ/ゅ/ょ/っ/ぁ…). No Japanese
   // word starts with a small kana — it always continues the preceding digraph, so
   // any candidate here would cut through it. E.g., おっしゃい must not spawn a
@@ -105,7 +110,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
 
     // Skip if starting with 「であり」(copula de + aru renyokei)
-    // These should be split as で + あり for MeCab compatibility
+    // The copula で and the verb stem あり are separate grammatical units.
     // E.g., 「であります」→「で」+「あり」+「ます」, not a single verb「でありる」
     if (first_char == U'で' && second_char == U'あ') {
       char32_t third_char = (start_pos + 2 < codepoints.size()) ? codepoints[start_pos + 2] : 0;
@@ -339,10 +344,14 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     // う verbs (あらう, かう, まよう) are much more common than る/つ verbs
     // for pure hiragana stems
     if (!is_dictionary_verb && !all_candidates.empty()) {
-      best = all_candidates[0];
-      for (size_t i = 1; i < all_candidates.size(); ++i) {
-        const auto& cand = all_candidates[i];
+      bool found_verb_candidate = false;
+      for (const auto& cand : all_candidates) {
         if (cand.verb_type == grammar::VerbType::IAdjective) {
+          continue;
+        }
+        if (!found_verb_candidate) {
+          best = cand;
+          found_verb_candidate = true;
           continue;
         }
         // Higher confidence wins
@@ -358,17 +367,24 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       }
     }
 
-    // Filter out 2-char hiragana that don't end with valid verb endings
-    // Valid endings: る (dictionary form), て/で (te-form), た/だ (past)
-    // Also: れ (Ichidan renyokei/meireikei like くれ from くれる)
+    const size_t pre_filter_len = end_pos - start_pos;
+    const bool looks_like_short_godan_base = pre_filter_len == 2 && grammar::isGodanVerbType(best.verb_type) &&
+                                             best.base_form == surface &&
+                                             best.confidence >= verb_opts.confidence_short_godan_base;
+
+    // Filter out 2-char hiragana that don't end with a recognized verb form.
+    // Short Godan base forms are licensed by inflection structure rather than
+    // by the surface-only form detector, which deliberately treats ambiguous
+    // u-row endings conservatively.
+    // Also allow れ (Ichidan renyokei/meireikei like くれ from くれる).
     // This prevents false positives like まじ, ため from being recognized as verbs
-    size_t pre_filter_len = end_pos - start_pos;
     if (pre_filter_len == 2 && surface.size() >= core::kJapaneseCharBytes) {
       // Use string_view directly into surface to avoid dangling reference
       // (surface.substr() returns a temporary std::string)
       std::string_view last_char(surface.data() + surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes);
-      if (last_char != "る" && last_char != "て" && last_char != "で" && last_char != "た" && last_char != "だ" &&
-          last_char != "れ" && last_char != "う") {
+      const core::ExtendedPOS detected_form = core::detectVerbForm(surface);
+      if (detected_form != core::ExtendedPOS::VerbShuushikei && detected_form != core::ExtendedPOS::VerbTeForm &&
+          detected_form != core::ExtendedPOS::VerbTaForm && last_char != "れ" && !looks_like_short_godan_base) {
         continue;  // Skip 2-char hiragana not ending with valid verb suffix
       }
     }
@@ -432,6 +448,13 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
                                                   << ")\n");
         continue;  // Let 未然形 + う (AuxVolitional) split win
       }
+    }
+
+    // A pure-hiragana verb candidate must not absorb the closed appearance
+    // auxiliary and following copula. In なさそうだ, a fabricated verb such as
+    // さそうだ otherwise wins over the grammatical さ + そう + だ path.
+    if (utf8::endsWith(surface, "そうだ")) {
+      continue;
     }
 
     // Filter out verb stems that would form compound particles with て/で
@@ -580,6 +603,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       conf_threshold = verb_opts.confidence_past_te;
     } else if (looks_like_ichidan_dict_form) {
       conf_threshold = verb_opts.confidence_ichidan_dict;
+    } else if (looks_like_short_godan_base) {
+      conf_threshold = verb_opts.confidence_short_godan_base;
     } else {
       conf_threshold = verb_opts.confidence_standard;
     }
@@ -802,9 +827,12 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       // Set lemma from inflection analysis for pure hiragana verbs
       // This is essential for P4 (ひらがな動詞活用展開) to work without dictionary
       // The lemmatizer can't derive lemma accurately for unknown verbs
+      const core::ExtendedPOS explicit_form =
+          looks_like_short_godan_base ? core::ExtendedPOS::VerbShuushikei : core::ExtendedPOS::Unknown;
       candidates.push_back(makeVerbCandidate(
           surface, start_pos, end_pos, base_cost, best.base_form, grammar::verbTypeToConjType(best.verb_type), false,
-          CandidateOrigin::VerbHiragana, best.confidence, grammar::verbTypeToString(best.verb_type).data()));
+          CandidateOrigin::VerbHiragana, best.confidence, grammar::verbTypeToString(best.verb_type).data(),
+          explicit_form, looks_like_short_godan_base ? "short_godan_base" : nullptr));
     }
   next_length:;  // Label for goto from particle-starting verb skip
   }

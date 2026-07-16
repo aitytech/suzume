@@ -131,7 +131,7 @@
           "surface": "を"
         },
         {
-          "lemma": "失る",
+          "lemma": "失う",
           "pos": "Verb",
           "surface": "失っ"
         },
@@ -753,7 +753,7 @@
         },
         {
           "lemma": "ゆく",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "ゆく"
         }
       ],
@@ -1190,10 +1190,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "己: Suzume Noun vs MeCab Pronoun (pos-classification); 反し: Suzume Verb(連用) vs MeCab Noun(nominalized) — Suzume's grammar-first analysis"
-      },
       "description": "時として (sometimes) — L2 dict adverb, should be one token",
       "expected": [
         {
@@ -1283,94 +1279,7 @@
         }
       ],
       "id": "tokitoshite_adverb",
-      "input": "人間の心というものは、時として己の意志に反して動くものである",
-      "suzume_expected": [
-        {
-          "lemma": "人間",
-          "pos": "Noun",
-          "surface": "人間"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "心",
-          "pos": "Noun",
-          "surface": "心"
-        },
-        {
-          "lemma": "という",
-          "pos": "Determiner",
-          "surface": "という"
-        },
-        {
-          "lemma": "もの",
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "時として",
-          "pos": "Adverb",
-          "surface": "時として"
-        },
-        {
-          "lemma": "己",
-          "pos": "Noun",
-          "surface": "己"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "意志",
-          "pos": "Noun",
-          "surface": "意志"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "反す",
-          "pos": "Verb",
-          "surface": "反し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "動く",
-          "pos": "Verb",
-          "surface": "動く"
-        },
-        {
-          "lemma": "もの",
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        }
-      ]
+      "input": "人間の心というものは、時として己の意志に反して動くものである"
     },
     {
       "description": "Emphatic negation: ありはしない splits as あり+は+し+ない",

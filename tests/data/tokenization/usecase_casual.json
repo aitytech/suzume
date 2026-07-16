@@ -384,10 +384,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã§: copula vs particle - context-dependent"
-      },
       "description": "Casual reaction",
       "expected": [
         {
@@ -408,29 +404,14 @@
       ],
       "id": "social_reaction",
       "input": "まじで嬉しい",
-      "suzume_expected": [
-        {
-          "pos": "Adjective",
-          "surface": "まじ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "pos": "Noun",
-          "surface": "嬉しい"
-        }
-      ],
       "tags": [
         "social"
       ]
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã: question particle vs other classification"
+        "category": "lemma-policy",
+        "reason": "疑問の「か」は助詞として解析し、五段可能形のlemmaは検索単位方針に従って基底動詞に正規化する"
       },
       "description": "Question post with で particle",
       "expected": [
@@ -484,23 +465,28 @@
       "input": "これどこで買えるか知ってる人いる？",
       "suzume_expected": [
         {
+          "lemma": "これ",
           "pos": "Pronoun",
           "surface": "これ"
         },
         {
+          "lemma": "どこ",
           "pos": "Pronoun",
           "surface": "どこ"
         },
         {
+          "lemma": "で",
           "pos": "Particle",
           "surface": "で"
         },
         {
+          "lemma": "買う",
           "pos": "Verb",
           "surface": "買える"
         },
         {
-          "pos": "Other",
+          "lemma": "か",
+          "pos": "Particle",
           "surface": "か"
         },
         {
@@ -509,14 +495,17 @@
           "surface": "知っ"
         },
         {
+          "lemma": "てる",
           "pos": "Auxiliary",
           "surface": "てる"
         },
         {
+          "lemma": "人",
           "pos": "Noun",
           "surface": "人"
         },
         {
+          "lemma": "いる",
           "pos": "Verb",
           "surface": "いる"
         }

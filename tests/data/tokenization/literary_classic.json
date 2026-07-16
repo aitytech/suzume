@@ -1969,8 +1969,8 @@
           "surface": "お"
         },
         {
-          "lemma": "越し",
-          "pos": "Noun",
+          "lemma": "越す",
+          "pos": "Verb",
           "surface": "越し"
         },
         {
@@ -2957,8 +2957,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
+        "category": "grammatical-ambiguity",
+        "reason": "「困難」は格助詞「に」の前で名詞としても形容動詞語幹としても成立する。Suzumeは独立した検索単位の裸の語幹をNounへ統一する。"
       },
       "description": "いかなる determiner + 屈せず + べきである",
       "expected": [
@@ -3022,23 +3022,27 @@
       "input": "いかなる困難にも屈せず前進すべきである。",
       "suzume_expected": [
         {
+          "lemma": "いかなる",
           "pos": "Determiner",
           "surface": "いかなる"
         },
         {
+          "lemma": "困難",
           "pos": "Noun",
           "surface": "困難"
         },
         {
+          "lemma": "に",
           "pos": "Particle",
           "surface": "に"
         },
         {
+          "lemma": "も",
           "pos": "Particle",
           "surface": "も"
         },
         {
-          "lemma": "屈せる",
+          "lemma": "屈する",
           "pos": "Verb",
           "surface": "屈せ"
         },
@@ -3048,6 +3052,7 @@
           "surface": "ず"
         },
         {
+          "lemma": "前進",
           "pos": "Noun",
           "surface": "前進"
         },
@@ -3067,6 +3072,7 @@
           "surface": "で"
         },
         {
+          "lemma": "ある",
           "pos": "Verb",
           "surface": "ある"
         }
@@ -3172,10 +3178,6 @@
       "input": "暗澹たる気持ちで帰途に就いた。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "俳句 — 食え+ば + なり",
       "expected": [
         {
@@ -3220,43 +3222,7 @@
         }
       ],
       "id": "eba_ga_runari",
-      "input": "柿食えば鐘が鳴るなり法隆寺",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "柿"
-        },
-        {
-          "lemma": "食う",
-          "pos": "Verb",
-          "surface": "食え"
-        },
-        {
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "pos": "Noun",
-          "surface": "鐘"
-        },
-        {
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "pos": "Verb",
-          "surface": "鳴る"
-        },
-        {
-          "lemma": "なる",
-          "pos": "Verb",
-          "surface": "なり"
-        },
-        {
-          "pos": "Noun",
-          "surface": "法隆寺"
-        }
-      ]
+      "input": "柿食えば鐘が鳴るなり法隆寺"
     },
     {
       "description": "体言止め: susuki swaying in autumn wind, evening field",
@@ -4543,10 +4509,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "文語: およそ POS diff, 得る Aux/Verb diff",
       "expected": [
         {
@@ -4591,42 +4553,7 @@
         }
       ],
       "id": "oyoso_no_shi_ru_rinioite",
-      "input": "およそ人間の想像し得る限りにおいて。",
-      "suzume_expected": [
-        {
-          "pos": "Other",
-          "surface": "およそ"
-        },
-        {
-          "pos": "Noun",
-          "surface": "人間"
-        },
-        {
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "pos": "Noun",
-          "surface": "想像"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "pos": "Verb",
-          "surface": "得る"
-        },
-        {
-          "pos": "Noun",
-          "surface": "限り"
-        },
-        {
-          "pos": "Particle",
-          "surface": "において"
-        }
-      ]
+      "input": "およそ人間の想像し得る限りにおいて。"
     },
     {
       "accepted_diff": {
@@ -4732,10 +4659,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "怒り: Suzume Verb(renyokei nominalized 怒る) vs MeCab Noun; なら: Suzume Verb(なる mizenkei) vs MeCab Auxiliary — Suzume grammar-first analysis"
-      },
       "description": "文語: 怒り/発し POS diff, てはならぬ prohibition",
       "expected": [
         {
@@ -4785,7 +4708,7 @@
         },
         {
           "lemma": "なる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "なら"
         },
         {
@@ -4795,64 +4718,7 @@
         }
       ],
       "id": "rini_sete_wo_shitehanaranu",
-      "input": "怒りに任せて言葉を発してはならぬ。",
-      "suzume_expected": [
-        {
-          "lemma": "怒る",
-          "pos": "Verb",
-          "surface": "怒り"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "任せる",
-          "pos": "Verb",
-          "surface": "任せ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "言葉",
-          "pos": "Noun",
-          "surface": "言葉"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "発す",
-          "pos": "Verb",
-          "surface": "発し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "なる",
-          "pos": "Verb",
-          "surface": "なら"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ぬ"
-        }
-      ]
+      "input": "怒りに任せて言葉を発してはならぬ。"
     },
     {
       "description": "体言止め: moonlight, shadow — short poetic",

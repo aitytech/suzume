@@ -32,8 +32,7 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
       }
     }
 
-    // Fix classical negative auxiliary lemma: ず → ぬ (MeCab compatibility)
-    // The auxiliary ず (classical negative) has lemma ぬ in MeCab
+    // Normalize the classical negative auxiliary ず to its dictionary form ぬ.
     if (morpheme.pos == core::PartOfSpeech::Auxiliary && morpheme.surface == "ず" && morpheme.lemma == "ず") {
       morpheme.lemma = "ぬ";
     }
@@ -149,6 +148,22 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
     if (i + 1 < morphemes.size()) {
       next_surface = morphemes[i + 1].surface;
       next_lemma = morphemes[i + 1].lemma;
+    }
+    // A one-kanji サ変 verb uses せ before the classical negative auxiliary:
+    // 屈せ+ず, 達せ+ぬ. The generic unknown-verb candidate is necessarily
+    // ambiguous with an Ichidan stem and can therefore carry the fabricated
+    // lemma 屈せる. The following closed-class auxiliary supplies the missing
+    // grammatical evidence. Multi-kanji サ変 expressions remain compositional
+    // noun + せ (説明+せ+ず), so this correction is intentionally one-kanji only.
+    if (morpheme.pos == core::PartOfSpeech::Verb && morpheme.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+        morpheme.surface.size() == core::kTwoJapaneseCharBytes && utf8::endsWith(morpheme.surface, "せ") &&
+        i + 1 < morphemes.size() && morphemes[i + 1].extended_pos == core::ExtendedPOS::AuxNegativeNu) {
+      std::string stem(utf8::dropLastChar(morpheme.surface));
+      if (grammar::isAllKanji(stem)) {
+        morpheme.lemma = stem + "する";
+        morpheme.conj_type = dictionary::ConjugationType::Suru;
+        morpheme.extended_pos = core::ExtendedPOS::VerbMizenkei;
+      }
     }
     // Fix onbin lemma using next morpheme context
     // イ音便: 書い+た/て → lemma should be 書く (not 書う)

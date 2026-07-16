@@ -168,10 +168,11 @@ class DictionaryManager {
   /**
    * @brief Look up an exact-surface entry, optionally constrained by POS
    *
-   * Scans lookup(surface, 0) for the first entry whose surface equals @p surface
-   * exactly (so a shorter dictionary prefix does not spuriously match). When
-   * @p pos is PartOfSpeech::Unknown the first exact-surface entry of any POS is
-   * returned; otherwise only an entry with the matching POS is returned.
+   * Checks each dictionary layer in lookup priority order and returns the first
+   * entry whose surface equals @p surface exactly, so a shorter dictionary
+   * prefix does not spuriously match. When @p pos is PartOfSpeech::Unknown the
+   * first exact-surface entry of any POS is returned; otherwise only an entry
+   * with the matching POS is returned.
    *
    * @return the matching entry, or nullptr if none exists
    */

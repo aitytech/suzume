@@ -17,13 +17,13 @@ void setAuxiliaryAndNounCosts(BigramMatrix& t) {
   // Ensures ません → ませ+ん (aux) over ませ+ん (particle の)
   setCell(t, EPOS::AuxTenseMasu, EPOS::AuxNegativeNu, cost::kStrongBonus);
 
-  // AuxTenseMasu → AuxVolitional (ましょ+う) - strong bonus for MeCab-compatible split
+  // AuxTenseMasu → AuxVolitional (ましょ+う) - strong bonus for the volitional boundary
   setCell(t, EPOS::AuxTenseMasu, EPOS::AuxVolitional, cost::kStrongBonus);
 
-  // AuxCopulaDesu → AuxVolitional (でしょ+う) - strong bonus for MeCab-compatible split
+  // AuxCopulaDesu → AuxVolitional (でしょ+う) - strong bonus for the volitional boundary
   setCell(t, EPOS::AuxCopulaDesu, EPOS::AuxVolitional, cost::kStrongBonus);
 
-  // AuxCopulaDa → AuxVolitional (だろ+う) - strong bonus for MeCab-compatible split
+  // AuxCopulaDa → AuxVolitional (だろ+う) - strong bonus for the volitional boundary
   setCell(t, EPOS::AuxCopulaDa, EPOS::AuxVolitional, cost::kStrongBonus);
 
   // AuxCausative → AuxPassive (せ+られ in causative-passive) - strong bonus
@@ -107,10 +107,17 @@ void setAuxiliaryAndNounCosts(BigramMatrix& t) {
   // 走り出したくなかった → 走り出し+たく+なかっ+た (not 走り+出したく+なかっ+た)
   setCell(t, EPOS::AuxDesireTai, EPOS::AuxNegativeNai, cost::kModerateBonus);
 
-  // AuxTenseTa → verb forms - prohibit
-  // Past tense cannot be directly followed by verb forms
-  // Prevents した+いん+だ / した+いんだ from beating し+たい+ん+だ
+  // AuxTenseTa → verb forms - prohibit. A completed predicate cannot take a
+  // second bare verb without a connective boundary. Cover every verb form;
+  // limiting this to onbin/past shapes permits fragments such as た+だく.
+  setCell(t, EPOS::AuxTenseTa, EPOS::VerbShuushikei, cost::kAlmostNever);
+  setCell(t, EPOS::AuxTenseTa, EPOS::VerbRenyokei, cost::kAlmostNever);
+  setCell(t, EPOS::AuxTenseTa, EPOS::VerbMizenkei, cost::kAlmostNever);
   setCell(t, EPOS::AuxTenseTa, EPOS::VerbOnbinkei, cost::kAlmostNever);
+  setCell(t, EPOS::AuxTenseTa, EPOS::VerbTeForm, cost::kAlmostNever);
+  setCell(t, EPOS::AuxTenseTa, EPOS::VerbKateikei, cost::kAlmostNever);
+  setCell(t, EPOS::AuxTenseTa, EPOS::VerbMeireikei, cost::kAlmostNever);
+  setCell(t, EPOS::AuxTenseTa, EPOS::VerbRentaikei, cost::kAlmostNever);
   setCell(t, EPOS::AuxTenseTa, EPOS::VerbTaForm, cost::kAlmostNever);
   setCell(t, EPOS::AuxTenseTa, EPOS::VerbTaraForm, cost::kAlmostNever);
 
@@ -127,9 +134,27 @@ void setAuxiliaryAndNounCosts(BigramMatrix& t) {
   // Contracted ~ておく form + past tense: 見とい+た, 読んどい+た
   setCell(t, EPOS::AuxAspectOku, EPOS::AuxTenseTa, cost::kStrongBonus);
 
-  // AuxAspectIru → AuxTenseMasu (い+ます) - strong bonus for MeCab-compatible split
+  // Both contracted and uncontracted renyokei forms accept polite ます.
+  // The stronger connection resolves their lexical homographs (おき/とき).
+  setCell(t, EPOS::AuxAspectOku, EPOS::AuxTenseMasu, cost::kVeryStrongBonus);
+
+  // The progressive auxiliary conjugates as an Ichidan verb. Its stem い
+  // therefore takes the negative auxiliary directly (覚えて+い+なかった).
+  // This also distinguishes subsidiary い from the independent verb いる.
+  setCell(t, EPOS::AuxAspectIru, EPOS::AuxNegativeNai, cost::kStrongBonus);
+
+  // AuxAspectIru → AuxTenseMasu (い+ます) - strong bonus for aspect plus politeness
   // Ensures 学んで+い+ます uses AuxAspectIru (auxiliary) not VerbRenyokei
   setCell(t, EPOS::AuxAspectIru, EPOS::AuxTenseMasu, cost::kStrongBonus);
+
+  // The trial subsidiary みる conjugates as an Ichidan auxiliary. Its stem
+  // therefore accepts the same independent tense, negation, and desiderative
+  // auxiliaries as a lexical Ichidan renyokei (試してみ+ます/ない/たい).
+  setCell(t, EPOS::AuxAspectMiru, EPOS::AuxTenseMasu, cost::kStrongBonus);
+  setCell(t, EPOS::AuxAspectMiru, EPOS::AuxNegativeNai, cost::kStrongBonus);
+  setCell(t, EPOS::AuxAspectMiru, EPOS::AuxDesireTai, cost::kStrongBonus);
+  setCell(t, EPOS::AuxAspectMiru, EPOS::AuxTenseTa, cost::kModerateBonus);
+  setCell(t, EPOS::AuxAspectMiru, EPOS::AuxVolitional, cost::kModerateBonus);
 
   // AuxAspectIru → AuxPassive (い+られ in potential/passive) - moderate bonus
   // いられる = いる + られる (potential: can stay/be)

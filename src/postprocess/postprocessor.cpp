@@ -4,6 +4,9 @@
 
 #include "core/debug.h"
 #include "core/utf8_constants.h"
+#include "grammar/char_patterns.h"
+#include "grammar/conjugation.h"
+#include "grammar/honorific_verbs.h"
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 
@@ -88,7 +91,7 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
 
   // Convert PREFIX + VERB to PREFIX + NOUN (renyoukei nominalization)
   // e.g., お願い → お(PREFIX) + 願い(NOUN), not 願い(VERB)
-  result = convertPrefixVerbToNoun(result);
+  convertPrefixVerbToNoun(result);
   // Note: this function logs individual changes, so no summary needed
 
   // Merge consecutive numeric expressions (always applied)
@@ -98,7 +101,8 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
     SUZUME_DEBUG_LOG("[POSTPROC] mergeNumericExpressions: " << before_count << " → " << result.size() << "\n");
   }
 
-  // na-adjective + な is intentionally kept separate for MeCab compatibility.
+  // Keep a na-adjective stem and the attributive copula な as separate
+  // grammatical search units.
 
   // Apply lemmatization
   if (options_.lemmatize) {
@@ -311,51 +315,66 @@ std::vector<core::Morpheme> Postprocessor::filterMorphemes(const std::vector<cor
   return result;
 }
 
-std::vector<core::Morpheme> Postprocessor::convertPrefixVerbToNoun(const std::vector<core::Morpheme>& morphemes) {
+void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphemes) {
   if (morphemes.size() < 2) {
-    return morphemes;
+    return;
   }
 
-  std::vector<core::Morpheme> result;
-  result.reserve(morphemes.size());
-
   for (size_t i = 0; i < morphemes.size(); ++i) {
-    core::Morpheme m = morphemes[i];
+    core::Morpheme& morpheme = morphemes[i];
 
     // Check if previous morpheme was PREFIX (お or ご)
     if (i > 0 && morphemes[i - 1].pos == core::PartOfSpeech::Prefix) {
       const std::string& prefix_surface = morphemes[i - 1].surface;
       // Only for honorific prefixes お and ご
       if (utf8::equalsAny(prefix_surface, {"お", "ご", "御"})) {
+        // Restore a nominally homographic stem when a following humble or
+        // honorific subsidiary supplies decisive verbal context:
+        // お+知らせ+いたす, お+使い+いただく. This mirrors the preservation
+        // rule below for stems that already reached the lattice as verbs.
+        if (morpheme.pos == core::PartOfSpeech::Noun && i + 1 < morphemes.size() &&
+            grammar::isHumbleHonorificLemma(morphemes[i + 1].lemma)) {
+          auto codepoints = normalize::toCodepoints(morpheme.surface);
+          if (!codepoints.empty() && grammar::isIRowCodepoint(codepoints.back())) {
+            const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(codepoints.back());
+            const grammar::VerbType verb_type = grammar::verbTypeFromIRowCodepoint(codepoints.back());
+            if (!base_suffix.empty() && verb_type != grammar::VerbType::Unknown) {
+              morpheme.lemma = std::string(utf8::dropLastChar(morpheme.surface)) + std::string(base_suffix);
+              morpheme.conj_type = grammar::verbTypeToConjType(verb_type);
+              morpheme.pos = core::PartOfSpeech::Verb;
+              morpheme.extended_pos = core::ExtendedPOS::VerbRenyokei;
+            }
+          } else if (!codepoints.empty() && grammar::isERowCodepoint(codepoints.back())) {
+            morpheme.lemma = morpheme.surface + "る";
+            morpheme.conj_type = dictionary::ConjugationType::Ichidan;
+            morpheme.pos = core::PartOfSpeech::Verb;
+            morpheme.extended_pos = core::ExtendedPOS::VerbRenyokei;
+          }
+        }
         // Convert VERB to NOUN (renyoukei nominalization)
         // e.g., 願い(VERB) → 願い(NOUN) after お
         // Exception: when followed by causative auxiliary (せ/させ),
         // the verb is part of a causative construction (お聞かせ, お知らせ)
         // and should remain as VERB
-        if (m.pos == core::PartOfSpeech::Verb) {
-          bool followed_by_causative = false;
+        if (morpheme.pos == core::PartOfSpeech::Verb) {
+          bool preserves_verbal_reading = false;
           if (i + 1 < morphemes.size()) {
             const auto& next = morphemes[i + 1];
-            if (next.extended_pos == core::ExtendedPOS::AuxCausative) {
-              followed_by_causative = true;
-            }
+            preserves_verbal_reading =
+                grammar::isHumbleHonorificLemma(next.lemma) || next.extended_pos == core::ExtendedPOS::AuxCausative;
           }
-          if (!followed_by_causative) {
-            m.pos = core::PartOfSpeech::Noun;
-            m.extended_pos = core::ExtendedPOS::Noun;
+          if (!preserves_verbal_reading) {
+            morpheme.pos = core::PartOfSpeech::Noun;
+            morpheme.extended_pos = core::ExtendedPOS::Noun;
             // Keep surface as lemma for nominalized form
-            m.lemma = m.surface;
-            SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Nominalized: " << m.surface << " (VERB → NOUN after " << prefix_surface
-                                                                << ")\n");
+            morpheme.lemma = morpheme.surface;
+            SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Nominalized: " << morpheme.surface << " (VERB → NOUN after "
+                                                                << prefix_surface << ")\n");
           }
         }
       }
     }
-
-    result.push_back(m);
   }
-
-  return result;
 }
 
 std::vector<core::Morpheme> Postprocessor::mergeVerbRenyokeiMono(const std::vector<core::Morpheme>& morphemes) {

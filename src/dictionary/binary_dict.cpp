@@ -6,7 +6,6 @@
 #include <limits>
 #include <unordered_map>
 
-#include "analysis/category_cost.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"

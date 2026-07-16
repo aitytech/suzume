@@ -20,7 +20,6 @@ namespace {
 
 // Cost bonuses imported from candidate_constants.h:
 // candidate::kAlphaKanjiBonus, kAlphaKatakanaBonus
-// candidate::kDigitKanji1Bonus, kDigitKanji2Bonus, kDigitKanji3Penalty
 // candidate::kDictSplitBonus, kSplitBaseCost
 // candidate::kNounVerbSplitBonus, kVerifiedVerbBonus
 

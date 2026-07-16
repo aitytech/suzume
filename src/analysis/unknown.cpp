@@ -165,7 +165,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
     candidates.insert(candidates.end(), adjs.begin(), adjs.end());
 
     // Generate i-adjective STEM candidates (難し, 美し for 難しそう, 美しすぎる)
-    // This enables MeCab-compatible split: 難しそう → 難し(ADJ) + そう(AUX)
+    // This preserves the adjective stem and appearance-auxiliary boundary.
     auto adj_stems = generateAdjectiveStemCandidates(text, codepoints, start_pos, char_types);
     candidates.insert(candidates.end(), adj_stems.begin(), adj_stems.end());
 

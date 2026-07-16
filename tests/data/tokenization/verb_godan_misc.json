@@ -234,10 +234,6 @@
       "input": "行きたくなかった"
     },
     {
-      "accepted_diff": {
-        "category": "compound-verb-boundary",
-        "reason": "前進 boundary fixed. し+続ける not merged (suru renyokei+subsidiary verb compound not yet supported), but 前進+し+続ける is grammatically correct."
-      },
       "description": "Single-kanji + し should not generate godan-sa compound V1 via inflection fallback",
       "expected": [
         {
@@ -252,24 +248,7 @@
         }
       ],
       "id": "suru-renyokei-not-godan-sa",
-      "input": "前進し続ける",
-      "suzume_expected": [
-        {
-          "lemma": "前進",
-          "pos": "Noun",
-          "surface": "前進"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "続ける",
-          "pos": "Verb",
-          "surface": "続ける"
-        }
-      ]
+      "input": "前進し続ける"
     },
     {
       "description": "ことができる is multi-word, not single auxiliary",
@@ -913,10 +892,14 @@
       "input": "かんで"
     },
     {
+      "accepted_diff": {
+        "category": "grammatical-ambiguity",
+        "reason": "ひらがなの撥音便は「む・ぶ・ぬ」が同形になるため、文法的に成立する「よむ」を保持する"
+      },
       "description": "Pure-hiragana godan-ma hatsuonbin: よむ past (よむ/よぶ ambiguous, pick よむ)",
       "expected": [
         {
-          "lemma": "よむ",
+          "lemma": "よぶ",
           "pos": "Verb",
           "surface": "よん"
         },
@@ -927,11 +910,46 @@
         }
       ],
       "id": "yonda",
-      "input": "よんだ"
+      "input": "よんだ",
+      "suzume_expected": [
+        {
+          "lemma": "よむ",
+          "pos": "Verb",
+          "surface": "よん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "grammatical-ambiguity",
+        "reason": "撥音便を動詞語幹と同一検索単位にし、文脈上の語彙候補「ならぶ」を保持する"
+      },
       "description": "Pure-hiragana godan-ba hatsuonbin: ならぶ te-form (MeCab splits as なる mizenkei)",
       "expected": [
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "narande",
+      "input": "ならんで",
+      "suzume_expected": [
         {
           "lemma": "ならぶ",
           "pos": "Verb",
@@ -942,9 +960,7 @@
           "pos": "Particle",
           "surface": "で"
         }
-      ],
-      "id": "narande",
-      "input": "ならんで"
+      ]
     },
     {
       "description": "Pure-hiragana godan-ma hatsuonbin: しずむ te-form",
@@ -1140,6 +1156,146 @@
       ],
       "id": "shimaimasu",
       "input": "しまいます"
+    },
+    {
+      "description": "試行を表す補助動詞が丁寧形へ接続する",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "みる",
+          "pos": "Auxiliary",
+          "surface": "み"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_ndemimashita",
+      "input": "本を読んでみました"
+    },
+    {
+      "description": "二仮名の五段動詞基本形を格助詞後で認識する",
+      "expected": [
+        {
+          "lemma": "声",
+          "pos": "Noun",
+          "surface": "声"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "きく",
+          "pos": "Verb",
+          "surface": "きく"
+        }
+      ],
+      "id": "wokiku",
+      "input": "声をきく"
+    },
+    {
+      "description": "尊敬表現内の連用形を動詞として保持する",
+      "expected": [
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "woo_mikudasai",
+      "input": "説明をお読みください"
+    },
+    {
+      "description": "促音を含む擬態語副詞と助詞を分離する",
+      "expected": [
+        {
+          "lemma": "ゆっくり",
+          "pos": "Adverb",
+          "surface": "ゆっくり"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩く"
+        }
+      ],
+      "id": "yuttkurito_ku",
+      "input": "ゆっくりと歩く"
+    },
+    {
+      "description": "連用形名詞と二仮名の五段動詞を文脈で区別する",
+      "expected": [
+        {
+          "lemma": "香り",
+          "pos": "Noun",
+          "surface": "香り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "かぐ",
+          "pos": "Verb",
+          "surface": "かぐ"
+        }
+      ],
+      "id": "riwokagu",
+      "input": "香りをかぐ"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

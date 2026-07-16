@@ -325,7 +325,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         }
 
         // Skip suru-verb auxiliary patterns (して, した, している, etc.)
-        // For MeCab-compatible split: 勉強して → 勉強 + して
+        // Preserve the noun and suru-verb boundary: 勉強して → 勉強 + して.
         size_t kanji_count = kanji_end - start_pos;
         if (vh::shouldSkipSuruVerbAuxPattern(surface, kanji_count, inflection)) {
           continue;  // Skip - let the split (noun + suru-aux) win
@@ -340,13 +340,13 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         }
 
         // Skip volitional patterns ending with よう (e.g., 食べよう)
-        // For MeCab-compatible split: 食べよう → 食べよ + う
+        // Preserve the volitional stem and auxiliary boundary: 食べよう → 食べよ + う.
         if (surface.size() >= 6 && surface.compare(surface.size() - 6, 6, "よう") == 0) {
           continue;  // Skip - let the split (verb + volitional aux) win
         }
 
         // Skip godan volitional patterns ending with おう (e.g., 行こう, 書こう)
-        // For MeCab-compatible split: 行こう → 行こ + う
+        // Preserve the volitional stem and auxiliary boundary: 行こう → 行こ + う.
         // O-row + う patterns: こう, ごう, そう, とう, のう, ぼう, もう, ろう, おう.
         // This is a DELIBERATE Godan-mizenkei subset, not the full o-row: よう is
         // the ichidan volitional (handled just above), and を/ど/ほ/ぞ never form a
@@ -362,7 +362,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         }
 
         // Skip sokuonbin + auxiliary verb patterns (買っとく, 行っちゃう)
-        // For MeCab-compatible split: 買っとく → 買っ + とく
+        // Preserve the onbin stem and contracted auxiliary boundary: 買っとく → 買っ + とく.
         // Check if suffix after っ is a registered auxiliary verb (とく, ちゃう, ちまう)
         bool skip_sokuonbin_aux = false;
         if (dict_manager && surface.size() >= 9) {  // っ(3) + 2char auxiliary minimum
@@ -394,8 +394,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // Lower cost for higher confidence matches
         float base_cost = candidate::confidenceScaledCost(verb_opts.base_cost_standard, best.confidence,
                                                           verb_opts.confidence_cost_scale);
-        // MeCab compatibility: Suru verbs should split as noun + する
-        // Add penalty for unified suru-verb candidates to prefer split
+        // Suru verbs are compositional noun + する units; penalize the unified candidate.
         // e.g., 勉強する → 勉強 + する (split preferred)
         if (best.verb_type == grammar::VerbType::Suru && best.stem.size() >= core::kTwoJapaneseCharBytes) {
           // Penalize unified suru-verb to prefer noun + する/される/させる split
@@ -463,7 +462,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // Check if base form exists in dictionary - significant bonus for known verbs
         // This helps 行われた (base=行う) beat 行(suffix)+われた split
         // Skip compound adjective patterns (verb renyoukei + にくい/やすい/がたい)
-        // Skip suru-verbs - they should split as noun + する for MeCab compatibility
+        // Skip suru-verbs because noun and する are separate search units.
         bool is_comp_adj = vh::isCompoundAdjectivePattern(surface);
         bool in_dict = vh::isVerbInDictionary(dict_manager, best.base_form);
         bool is_suru = (best.verb_type == grammar::VerbType::Suru);
@@ -520,6 +519,17 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         if (kanji_count >= 2 && !in_dict) {
           base_cost += bigram_cost::kRare;
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +1.0 (two_kanji_non_dict_penalty)\n");
+        }
+        // A multi-kanji stem followed by the classical サ変 terminal す is
+        // compositional for search: 前進+す, 説明+す. The inflection analyzer can
+        // also hypothesize an unregistered GodanSa word spanning the boundary;
+        // apply a small class-level penalty so the independently generated noun
+        // and closed-class す entry win. Registered lexical GodanSa verbs and
+        // single-kanji stems such as 愛す are unaffected.
+        if (!in_dict && kanji_count >= 2 && best.verb_type == grammar::VerbType::GodanSa && best.base_form == surface) {
+          base_cost += bigram_cost::kMinor;
+          SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kMinor
+                                                   << " (multi_kanji_classical_suru_penalty)\n");
         }
         // Penalize ichidan verb candidates with pure single-kanji stem (no hiragana)
         // when base form is not in dict.
@@ -640,7 +650,15 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // Godan-wa verbs ending in い are renyokei (戦い), not onbinkei
         // Godan-ka/ga verbs ending in い are onbinkei (書い, 泳い)
         core::ExtendedPOS verb_epos = core::ExtendedPOS::Unknown;  // Auto-detect
-        if (utf8::endsWith(surface, "い")) {
+        if (grammar::isGodanVerbType(best.verb_type) && best.base_form == surface) {
+          // A complete Godan dictionary form ends in its u-row base suffix.
+          // The surface-only fallback intentionally cannot infer every u-row
+          // ending because short stems are ambiguous, but the inflection result
+          // already supplies that evidence here (立つ, 書く, 一つ-as-a-competing
+          // hypothesis). Marking it as terminal prevents case-particle rules for
+          // true renyokei from spuriously boosting the hypothesis.
+          verb_epos = core::ExtendedPOS::VerbShuushikei;
+        } else if (utf8::endsWith(surface, "い")) {
           // Skip godan readings of known kami-ichidan renyokei stems (率い,
           // 老い, 強い, ...): the godan lemma would be wrong (率く/率う).
           // The ichidan_renyokei path generates the correct 〜いる candidate.
@@ -654,14 +672,14 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
             verb_epos = core::ExtendedPOS::VerbOnbinkei;
           }
         }
-        // Skip if surface is registered as NOUN or ADJECTIVE in dictionary
-        // This prevents nominalized verb forms (思い, 間違い, 戦い, 願い) from
-        // being tokenized as VERB when they are explicitly registered as nouns
-        // Also prevents i-adjectives (美しい, 正しい, 楽しい) from being
-        // misclassified as godan-wa verbs (base 美しう, etc.)
-        // This check applies to godan-wa renyokei forms (ending in い)
-        if (verb_epos == core::ExtendedPOS::VerbRenyokei && vh::isNounOrAdjectiveInDictionary(dict_manager, surface)) {
-          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict NOUN/ADJ, skipping godan-wa renyokei\n");
+        // Skip an unverified bare Godan form when the whole surface is an exact
+        // dictionary noun/adjective. This covers nominalized renyokei (思い,
+        // 戦い) and u-row homographs (向う) without suppressing a verified verb
+        // entry that legitimately shares the surface.
+        if (!in_dict &&
+            (verb_epos == core::ExtendedPOS::VerbRenyokei || verb_epos == core::ExtendedPOS::VerbShuushikei) &&
+            vh::isNounOrAdjectiveInDictionary(dict_manager, surface)) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict NOUN/ADJ, skipping unverified godan form\n");
           continue;  // Skip this candidate, use dictionary entry instead
         }
         // Skip fabricated godan-wa renyokei whose trailing い is really the

@@ -2837,7 +2837,7 @@
         },
         {
           "lemma": "みる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "み"
         },
         {
@@ -3474,8 +3474,8 @@
     },
     {
       "accepted_diff": {
-        "category": "design-diff",
-        "reason": "compound-verb design diff (pre-existing)"
+        "category": "grammatical-ambiguity",
+        "reason": "「困難」は裸の形容動詞語幹をNounへ統一する設計上の曖昧性。「てなお」の「なお」は継続を表す副詞として文法的に妥当で、複合動詞「し続ける」は一検索単位とする。"
       },
       "description": "前進 boundary correct (was splitting as 前+進し続ける)",
       "expected": [
@@ -3574,14 +3574,9 @@
           "surface": "前進"
         },
         {
-          "lemma": "する",
+          "lemma": "し続ける",
           "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "続ける",
-          "pos": "Verb",
-          "surface": "続ける"
+          "surface": "し続ける"
         },
         {
           "lemma": "姿勢",
@@ -3706,8 +3701,8 @@
           "surface": "お"
         },
         {
-          "lemma": "答え",
-          "pos": "Noun",
+          "lemma": "答える",
+          "pos": "Verb",
           "surface": "答え"
         },
         {
@@ -3802,10 +3797,6 @@
       "input": "千変万化する世の中にあって不変のものなど存在しない"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS classification design diff (pre-existing)"
-      },
       "description": "受動態+ほか+否定 — 書き言葉パターン",
       "expected": [
         {
@@ -3870,69 +3861,7 @@
         }
       ],
       "id": "yudane_rareru_hoka",
-      "input": "一切は時の流れに委ねられるほかはなかった",
-      "suzume_expected": [
-        {
-          "lemma": "一切",
-          "pos": "Noun",
-          "surface": "一切"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "時",
-          "pos": "Noun",
-          "surface": "時"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "流れる",
-          "pos": "Verb",
-          "surface": "流れ"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "委ねる",
-          "pos": "Verb",
-          "surface": "委ね"
-        },
-        {
-          "lemma": "られる",
-          "pos": "Auxiliary",
-          "surface": "られる"
-        },
-        {
-          "lemma": "ほか",
-          "pos": "Noun",
-          "surface": "ほか"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "一切は時の流れに委ねられるほかはなかった"
     }
   ],
   "description": "literary_classics tests",

@@ -116,6 +116,7 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       aux("える", "える", EPOS::AuxPotential),  // shuushikei: 看過しえる
       aux("うる", "うる", EPOS::AuxPotential),  // alternative shuushikei: 看過しうる
       aux("得", "得る", EPOS::AuxPotential),    // kanji renyokei: 解決し得ない
+      aux("得る", "得る", EPOS::AuxPotential),  // kanji shuushikei: 解決し得る
 
       // Suru verb stem forms (サ変動詞語幹活用形) - VERB, not AUX
       verb("し", "する", EPOS::VerbRenyokei),
@@ -134,8 +135,7 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       // Deru verb stem form (一段動詞「出る」) - VERB
       // で+たい/ます needs this to split correctly (外にでたい → 外|に|で|たい)
       verb("で", "出る", EPOS::VerbRenyokei),
-      // Suru verb conjugation forms - split for MeCab compatibility
-      // MeCab: 勉強しよう → 勉強|しよ|う, 勉強すれば → 勉強|すれ|ば
+      // Suru conjugation stems are separate search units before their auxiliaries.
       verb("しよ", "する", EPOS::VerbMizenkei),  // volitional base: しよ+う
       verb("すれ", "する", EPOS::VerbKateikei),  // conditional base: すれ+ば
       // Suru imperative: VERB (not AUX) - MeCab treats as 動詞
@@ -277,12 +277,10 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       // Polite imperative - connect after verb renyokei
       aux("なさい", "なさる", EPOS::AuxHonorific),
 
-      // Possibility/Uncertainty - split form for MeCab compatibility
-      // かもしれない → かも + しれ + ない (not かもしれない as single token)
+      // Possibility/uncertainty: かも + しれ + ない.
       // かも particle is already defined above (line 157)
 
-      // Certainty - split form for MeCab compatibility
-      // 間違いない → 間違い + ない (not 間違いない as single token)
+      // Certainty expression: nominal unit followed by ない.
       // These are handled by noun + ない connection
 
       // Note: れる/られる/せる/させる (shuushikei) are registered above with the
@@ -324,8 +322,7 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       verb("おっしゃい", "おっしゃる", EPOS::VerbRenyokei),
 
       // Progressive/Continuous - いる (進行・継続)
-      // MeCab splits て+い+た, て+い+て (not て+いた/て+いて)
-      // い is registered separately for MeCab-compatible splits
+      // Register い separately so aspect and following tense/conjunction remain distinct.
       aux("い", "いる", EPOS::AuxAspectIru),  // renyokei for い+た, い+ます
       aux("いる", "いる", EPOS::AuxAspectIru),
       aux("います", "いる", EPOS::AuxAspectIru),
@@ -336,8 +333,7 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
 
       // Progressive/Continuous - おる (humble/dialectal form of いる)
       // Used in formal polite speech: ております, おります
-      // Note: Only add renyokei forms, not combined forms like おります
-      // to allow MeCab-compatible split: おり+ます
+      // Add renyokei forms separately from following politeness auxiliaries.
       aux("おる", "おる", EPOS::AuxAspectIru),
       aux("おり", "おる", EPOS::AuxAspectIru),  // renyokei for おり+ます
 
@@ -354,6 +350,8 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       // Use verb() to get POS::Verb, but keep AuxExcessive EPOS for bigram rules
       verb("すぎる", "すぎる", EPOS::AuxExcessive),
       verb("すぎ", "すぎる", EPOS::AuxExcessive),  // renyokei for すぎ+た, すぎ+て
+      aux("過ぎる", "過ぎる", EPOS::AuxExcessive),
+      aux("過ぎ", "過ぎる", EPOS::AuxExcessive),
 
       // Adjective-stem suffix verb - がる (ガル接続)
       // Used after adjective stems: 怖がる, 嫌がる, 可愛がる
@@ -367,8 +365,7 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       verb("がろ", "がる", EPOS::AuxGaru),  // ishikei (がろう)
 
       // Completive/Regretful - しまう (完了・遺憾)
-      // MeCab treats しまう as 動詞,非自立 (non-independent verb) → maps to Auxiliary
-      // Use aux() to get POS::Auxiliary for MeCab compatibility
+      // Aspectual しまう is an auxiliary rather than the lexical verb.
       aux("しまう", "しまう", EPOS::AuxAspectShimau),
       aux("しまっ", "しまう", EPOS::AuxAspectShimau),  // te-form/ta-form stem
       aux("しまい", "しまう", EPOS::AuxAspectShimau),  // negative stem

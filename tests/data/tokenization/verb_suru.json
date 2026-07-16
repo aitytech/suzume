@@ -176,10 +176,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "auxiliary verb: context-dependent classification"
-      },
       "description": "準備しておきます - MeCab互換分割",
       "expected": [
         {
@@ -210,30 +206,6 @@
       ],
       "id": "suru_te_okimasu",
       "input": "準備しておきます",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "準備"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "おく",
-          "pos": "Verb",
-          "surface": "おき"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -338,10 +310,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã¿ã: auxiliary vs main verb after ã¦-form"
-      },
       "description": "説明してみる - MeCab互換分割",
       "expected": [
         {
@@ -367,26 +335,6 @@
       ],
       "id": "suru_te_miru",
       "input": "説明してみる",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "説明"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "てる",
-          "pos": "Auxiliary",
-          "surface": "て"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "みる"
-        }
-      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -656,8 +604,8 @@
           "surface": "お"
         },
         {
-          "lemma": "使い",
-          "pos": "Noun",
+          "lemma": "使う",
+          "pos": "Verb",
           "surface": "使い"
         },
         {
@@ -813,8 +761,8 @@
           "surface": "お"
         },
         {
-          "lemma": "立ち",
-          "pos": "Noun",
+          "lemma": "立つ",
+          "pos": "Verb",
           "surface": "立ち"
         },
         {
@@ -825,6 +773,33 @@
       ],
       "id": "o_chikudasai",
       "input": "お立ちください"
+    },
+    {
+      "description": "サ変未然形と打消助動詞を分離する",
+      "expected": [
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "せ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "sezu_mu",
+      "input": "説明せず進む"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

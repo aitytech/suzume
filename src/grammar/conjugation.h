@@ -127,7 +127,7 @@ class Conjugation {
   std::vector<ConjugatedForm> generate(const std::string& base_form, VerbType type) const;
 
   /**
-   * @brief Suffix info for dictionary expansion (MeCab-compatible)
+   * @brief Suffix info for dictionary expansion
    */
   struct DictionarySuffix {
     std::string suffix;              // Suffix to add to stem: った
@@ -136,7 +136,7 @@ class Conjugation {
   };
 
   /**
-   * @brief Generate suffixes for dictionary expansion (MeCab-compatible)
+   * @brief Generate lexical suffixes for dictionary expansion
    *
    * Returns only forms that should NOT be split by MeCab:
    * - Excludes ます系 (should be split as 連用形 + ます)

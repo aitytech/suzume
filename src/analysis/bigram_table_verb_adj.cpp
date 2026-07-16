@@ -62,6 +62,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& t) {
   // Must be strong to beat single_kanji_ichidan_polite VERB path for 得
   setCell(t, EPOS::VerbRenyokei, EPOS::AuxPotential, cost::kStrongBonus);
 
+  // The connective copula joins coordinated/predicative adjectives
+  // (静かで美しい). Without this, the generic copula→noun preference can make
+  // a structurally complete i-adjective lose to an unknown noun homograph.
+  setCell(t, EPOS::AuxCopulaDa, EPOS::AdjBasic, cost::kModerateBonus);
+
   // AuxPotential → AuxNegativeNai (え+ない, 得+ない) - extra strong bonus
   // Literary potential + negation: 看過しえない, 解決し得ない
   // Needs extra strength to overcome base AUX→AUX category penalty (0.3)
@@ -172,7 +177,7 @@ void setVerbAndAdjectiveCosts(BigramMatrix& t) {
   // Adjective Forms → Auxiliaries
   // =========================================================================
 
-  // AdjRenyokei → AuxNegativeNai (美しく+ない) - very strong bonus for MeCab-compatible split
+  // AdjRenyokei → AuxNegativeNai (美しく+ない) - very strong grammatical connection
   // This needs to beat the full-form hiragana adjective bonus (e.g., しんどくない as single token)
   setCell(t, EPOS::AdjRenyokei, EPOS::AuxNegativeNai, cost::kExtremeBonus);
 

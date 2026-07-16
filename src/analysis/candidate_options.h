@@ -32,29 +32,30 @@ struct JoinOptions {
 /// Controls confidence thresholds and base costs for verb candidate scoring
 struct VerbCandidateOptions {
   // Confidence thresholds
-  float confidence_low = 0.4F;            // Filter very low confidence (line 227)
-  float confidence_standard = 0.48F;      // Standard acceptance threshold (lines 412, 441, 446, 573)
-  float confidence_past_te = 0.25F;       // Threshold for past/te forms (line 947)
-  float confidence_ichidan_dict = 0.28F;  // Threshold for ichidan dict forms (line 908, 948)
-  float confidence_dict_verb = 0.35F;     // Threshold for dictionary verbs (line 946)
-  float confidence_katakana = 0.5F;       // Threshold for katakana verbs (line 1172)
-  float confidence_high = 0.7F;           // High confidence for short verbs (line 970)
-  float confidence_very_high = 0.8F;      // Very high for long verbs (line 1038)
+  float confidence_low = 0.4F;                // Filter very low confidence
+  float confidence_standard = 0.48F;          // Standard acceptance threshold
+  float confidence_past_te = 0.25F;           // Threshold for past/te forms
+  float confidence_ichidan_dict = 0.28F;      // Threshold for ichidan dictionary forms
+  float confidence_short_godan_base = 0.28F;  // Threshold for two-kana Godan base forms
+  float confidence_dict_verb = 0.35F;         // Threshold for dictionary verbs
+  float confidence_katakana = 0.5F;           // Threshold for katakana verbs
+  float confidence_high = 0.7F;               // High confidence for short verbs
+  float confidence_very_high = 0.8F;          // Very high for long verbs
 
   // Base costs (lower = more preferred)
-  float base_cost_standard = 0.4F;        // Standard base cost (line 503)
-  float base_cost_high = 0.5F;            // Higher cost for uncertain (line 952)
-  float base_cost_low = 0.3F;             // Low cost for good matches (line 255)
-  float base_cost_verified = 0.1F;        // Very low for verified (line 532, 999)
-  float base_cost_long_verified = 0.05F;  // Minimal for long verified (line 1055)
+  float base_cost_standard = 0.4F;        // Standard base cost
+  float base_cost_high = 0.5F;            // Higher cost for uncertain
+  float base_cost_low = 0.3F;             // Low cost for good matches
+  float base_cost_verified = 0.1F;        // Very low for verified
+  float base_cost_long_verified = 0.05F;  // Minimal for long verified
 
   // Bonuses (negative = preferred)
-  float bonus_ichidan = -0.2F;        // Ichidan verb bonus (line 581)
-  float bonus_long_dict = -0.3F;      // Long dictionary verb bonus (line 1018)
-  float bonus_long_verified = -0.8F;  // Long verified verb bonus (line 1016)
+  float bonus_ichidan = -0.2F;        // Ichidan verb bonus
+  float bonus_long_dict = -0.3F;      // Long dictionary verb bonus
+  float bonus_long_verified = -0.8F;  // Long verified verb bonus
 
   // Penalties (positive = discouraged)
-  float penalty_single_char = 1.5F;  // Single character verb penalty (line 541)
+  float penalty_single_char = 1.5F;  // Single character verb penalty
 
   // Cost scaling factors for confidence
   float confidence_cost_scale = 0.3F;         // (1.0 - confidence) * scale (standard)

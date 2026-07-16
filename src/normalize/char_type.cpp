@@ -383,6 +383,7 @@ bool isDurationSuffixKanji(char32_t code_point) {
     case U'間':
     case U'分':
     case U'秒':
+    case U'中':
       return true;
     default:
       return false;

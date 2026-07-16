@@ -89,12 +89,6 @@ constexpr float kAlphaKanjiBonus = -0.3F;
 // E.g., APIリクエスト
 constexpr float kAlphaKatakanaBonus = -0.3F;
 
-// Digit + Kanji split bonuses
-// E.g., 5分, 3月, 100人
-constexpr float kDigitKanji1Bonus = -0.2F;   // 1-kanji counter
-constexpr float kDigitKanji2Bonus = -0.2F;   // 2-kanji counter
-constexpr float kDigitKanji3Penalty = 0.5F;  // 3+ kanji (rare, likely wrong)
-
 // Dictionary word split bonus
 // Applied when split creates a dictionary-verified word
 constexpr float kDictSplitBonus = -0.5F;
@@ -184,7 +178,8 @@ constexpr float kVerifiedVerbBonus = -0.8F;
 // =============================================================================
 
 // I-adjective conjugation form split bonuses
-// Applied when generating split candidates for MeCab-compatible output.
+// Applied when an inflected adjective and its following auxiliary form
+// separate grammatical search units.
 // E.g., 美味しくない → 美味しく + ない
 
 // く形 split bonus (kanji i-adjectives: 美味しく, 高く)
@@ -303,8 +298,8 @@ constexpr float kConstructedVerbPassiveMinConfidence = 0.6F;
 // Used for stem+そう, stem splits where confidence is high
 constexpr float kAdjStemExtCost = -1.2F;
 
-// Strong penalty to force MeCab-compatible adjective splits
-// Applied to compound adj, く+なる, という, まい patterns
+// Strong penalty that preserves grammatical adjective boundaries.
+// Applied to compound adjectives, く+なる, という, and まい patterns.
 constexpr float kAdjSplitForcePenalty = 2.0F;
 
 // Moderate penalty for uncertain adjective patterns

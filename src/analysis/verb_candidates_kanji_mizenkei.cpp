@@ -220,7 +220,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
         // Generate mizenkei candidates for:
         // 1. Classical べき patterns: 書かれべき, 読まれべき
         // 2. Classical negation ぬ: 揃わぬ, 知らぬ, 行かぬ
-        // 3. Passive patterns: 書かれる, 言われた (MeCab-compatible split)
+        // 3. Passive patterns: 書か+れる, 言わ+れ+た
         bool is_beki_pattern = false;
         bool is_nu_pattern = false;
         bool is_passive_pattern = false;
@@ -261,7 +261,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
         if (next_char == U'な' && mizenkei_end + 1 < codepoints.size() && codepoints[mizenkei_end + 1] == U'い') {
           is_nai_pattern = true;
         }
-        // Check for past negative なかっ pattern (MeCab-compatible split)
+        // Check for the past-negative auxiliary stem なかっ.
         // E.g., 書かなかった → 書か (mizenkei) + なかっ (negative past AUX) + た
         //       行かなかった → 行か (mizenkei) + なかっ + た
         bool is_nakatt_pattern = false;
@@ -269,7 +269,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
             codepoints[mizenkei_end + 2] == U'っ') {
           is_nakatt_pattern = true;
         }
-        // Check for negative adverbial なく pattern (ない's 連用形; MeCab-compatible split)
+        // Check for the negative adverbial なく (ない's 連用形).
         // E.g., 行かなくて → 行か (mizenkei) + なく (negative adj) + て
         //       食べなくなる counterpart is handled elsewhere; here we split the godan
         //       mizenkei so なく does not get absorbed into a spurious verb form.
@@ -277,7 +277,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
         if (next_char == U'な' && mizenkei_end + 1 < codepoints.size() && codepoints[mizenkei_end + 1] == U'く') {
           is_naku_pattern = true;
         }
-        // Check for causative auxiliary せ pattern (MeCab-compatible split)
+        // Check for the causative auxiliary せ.
         // E.g., 聞かせられた → 聞か (mizenkei) + せ (causative AUX) + られ + た
         //       書かせる → 書か (mizenkei) + せる (causative AUX)
         bool is_causative_pattern = false;
@@ -379,7 +379,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                   //   行かん(VERB) should split to 行か + ん
                   // - ない pattern: negative cost (-0.5F) for standard negative
                   //   行かない(VERB) should split to 行か + ない
-                  // - passive pattern: negative cost (-0.5F) for MeCab-compatible split
+                  // - passive pattern: negative cost (-0.5F) for the mizenkei boundary
                   //   言われる(VERB) gets ~0.15, so split (言わ+れる) needs lower cost
                   // - べき pattern: moderate cost (0.2F) for classical obligation
                   float cost = 0.2F;  // default for beki

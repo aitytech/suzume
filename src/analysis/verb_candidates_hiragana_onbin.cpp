@@ -26,6 +26,68 @@
 namespace suzume::analysis::hiragana_verb_detail {
 namespace vh = verb_helpers;
 
+namespace {
+
+bool isClearTeFormBeforeSubsidiary(const std::vector<char32_t>& codepoints, size_t start_pos, bool allow_emphatic_mo) {
+  if (start_pos == 0) {
+    return false;
+  }
+  if (codepoints[start_pos - 1] == core::hiragana::kTe) {
+    return true;
+  }
+  // Emphatic ても/でも keeps the same te-form attachment (思ってもみる,
+  // 読んでもみる). Retain the voiced-onbin guard for で so an ordinary
+  // case-particle sequence such as 外でもみる stays lexical.
+  if (allow_emphatic_mo && codepoints[start_pos - 1] == U'も' && start_pos >= 2) {
+    if (codepoints[start_pos - 2] == core::hiragana::kTe) {
+      return true;
+    }
+    return start_pos >= 3 && codepoints[start_pos - 2] == U'で' &&
+           (codepoints[start_pos - 3] == core::hiragana::kI || codepoints[start_pos - 3] == U'ん');
+  }
+  // A voiced te-form before みる comes from い/ん音便 (泳いでみる,
+  // 読んでみる). Requiring the onbin keeps an ordinary case-particle で in
+  // 外でみる from being reinterpreted as a te-form boundary.
+  return start_pos >= 2 && codepoints[start_pos - 1] == U'で' &&
+         (codepoints[start_pos - 2] == core::hiragana::kI || codepoints[start_pos - 2] == U'ん');
+}
+
+bool grammaticalStemFollowerStartsAt(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos >= codepoints.size()) {
+    return false;
+  }
+  const std::string remaining = extractSubstring(codepoints, start_pos, codepoints.size());
+  for (const auto& result : dict_manager->lookup(remaining, 0)) {
+    if (result.entry == nullptr) {
+      continue;
+    }
+    if (result.entry->pos == core::PartOfSpeech::Auxiliary ||
+        result.entry->extended_pos == core::ExtendedPOS::ParticleConj) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void appendContextualSubsidiaryCandidate(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                         std::string_view lemma, dictionary::ConjugationType conj_type,
+                                         core::ExtendedPOS extended_pos, const char* pattern,
+                                         std::vector<UnknownCandidate>& candidates) {
+  // The candidate is useful only with its ParticleConj connection bonus. A
+  // positive standalone cost prevents a raw character boundary from overriding
+  // a lexical reading when the preceding て/で is not a conjunctive particle.
+  constexpr float kContextualCost = bigram_cost::kMinor;
+  const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+  auto candidate = makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Auxiliary, kContextualCost, true,
+                                 CandidateOrigin::VerbHiragana, extended_pos, pattern);
+  candidate.lemma = lemma;
+  candidate.conj_type = conj_type;
+  candidates.push_back(std::move(candidate));
+}
+
+}  // namespace
+
 void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                       const grammar::Inflection& inflection,
                                       const dictionary::DictionaryManager* dict_manager,
@@ -189,8 +251,63 @@ void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, si
                                          core::ExtendedPOS::VerbMizenkei));
 }
 
+// 試行の補助動詞 みる is a closed-class te-form attachment. Generate its
+// one-stage conjugation forms only after a clear て/で boundary, rather than
+// registering the highly ambiguous single-kana stem み unconditionally.
+// The stem form is emitted only when a dictionary-backed auxiliary or
+// conjunctive particle follows (み+ます/た/て/ない/たい/られ...). The remaining
+// finite Ichidan forms share the same contextual gate.
+void appendMiruAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                   const dictionary::DictionaryManager* dict_manager,
+                                   std::vector<UnknownCandidate>& candidates) {
+  if (start_pos >= codepoints.size() || codepoints[start_pos] != U'み' ||
+      !isClearTeFormBeforeSubsidiary(codepoints, start_pos, true)) {
+    return;
+  }
+
+  if (grammaticalStemFollowerStartsAt(codepoints, start_pos + 1, dict_manager)) {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 1, "みる",
+                                        dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru,
+                                        "hiragana_miru_auxiliary", candidates);
+  }
+
+  if (start_pos + 1 >= codepoints.size()) {
+    return;
+  }
+  // 一段活用の終止・仮定・命令・意志形: みる/みれ/みろ/みよ.
+  const char32_t ending = codepoints[start_pos + 1];
+  if (ending == core::hiragana::kRu || ending == core::hiragana::kRe || ending == U'ろ' ||
+      ending == core::hiragana::kYo) {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "みる",
+                                        dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru,
+                                        "hiragana_miru_auxiliary", candidates);
+  }
+}
+
+// 準備の補助動詞 おく is homographic with the lexical verb and its short
+// conjugation forms are common word fragments. Emit the closed auxiliary
+// paradigm only after a clear te-form boundary instead of registering it
+// globally in L1.
+void appendOkuAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  std::vector<UnknownCandidate>& candidates) {
+  if (start_pos + 1 >= codepoints.size() || codepoints[start_pos] != U'お' ||
+      !isClearTeFormBeforeSubsidiary(codepoints, start_pos, false)) {
+    return;
+  }
+
+  // 五段カ行: 未然おか/おこ, 連用おき, 音便おい, 終止おく, 仮定・命令おけ.
+  const char32_t ending = codepoints[start_pos + 1];
+  if (ending != U'か' && ending != U'き' && ending != U'い' && ending != U'く' && ending != U'け' && ending != U'こ') {
+    return;
+  }
+  appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "おく",
+                                      dictionary::ConjugationType::GodanKa, core::ExtendedPOS::AuxAspectOku,
+                                      "hiragana_oku_auxiliary", candidates);
+}
+
 // 1-char ichidan renyokei before て/た (ねて → ね + て). Requires the base form
-// (stem + る) in the dictionary, except for the auxiliary みる after て/で.
+// (stem + る) in the dictionary. Contextual subsidiary verbs are generated
+// separately with their auxiliary ExtendedPOS.
 void appendIchidanRenyokei1CharCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                           const dictionary::DictionaryManager* dict_manager,
                                           std::vector<UnknownCandidate>& candidates) {
@@ -201,42 +318,18 @@ void appendIchidanRenyokei1CharCandidates(const std::vector<char32_t>& codepoint
     char32_t first_char = codepoints[start_pos];
     // Check for e-row hiragana (ichidan renyokei ending)
     // e-row: ね(ねる), め(める), け(ける), etc.
-    // Special: み(みる) after て/で or ても/でも (common auxiliary "try" verb)
-    // Note: き after て is くる(irregular), not きる - only み is safe here
-    bool is_mi_after_te = false;
-    if (first_char == U'み' && start_pos > 0) {
-      char32_t prev_char = codepoints[start_pos - 1];
-      if (prev_char == U'て' || prev_char == U'で') {
-        is_mi_after_te = true;
-      }
-      // Also check ても/でも pattern: て+も+み or で+も+み
-      // E.g., 思ってもみなかった → て+も+み+なかっ+た
-      if (!is_mi_after_te && prev_char == U'も' && start_pos >= 2) {
-        char32_t prev_prev_char = codepoints[start_pos - 2];
-        if (prev_prev_char == U'て' || prev_prev_char == U'で') {
-          is_mi_after_te = true;
-        }
-      }
-    }
-    if (grammar::isERowCodepoint(first_char) || is_mi_after_te) {
-      // Check if followed by te/ta particle or negative auxiliary (なかっ/ない)
+    if (grammar::isERowCodepoint(first_char)) {
+      // Check if followed by te/ta particle.
       if (start_pos + 1 < codepoints.size()) {
         char32_t next_char = codepoints[start_pos + 1];
-        // Standard te/ta follow-up
         bool is_valid_follow = (next_char == U'て' || next_char == U'た');
-        // For み after て/で (auxiliary みる): also accept ない/なかった follow-up
-        // E.g., てみなかった → て+み+なかっ+た, てみない → て+み+ない
-        if (!is_valid_follow && is_mi_after_te && next_char == U'な') {
-          is_valid_follow = true;
-        }
         if (is_valid_follow) {
           // Construct base form (stem + る)
           std::string stem_surface = extractSubstring(codepoints, start_pos, start_pos + 1);
           std::string base_form = stem_surface + "る";
 
-          // For e-row: require dict check to prevent false positives (め+て, け+て)
-          // For み after て/で: skip dict check (auxiliary みる is common but not in dict)
-          if (is_mi_after_te || vh::isVerbInDictionary(dict_manager, base_form)) {
+          // Require dict check to prevent false positives (め+て, け+て).
+          if (vh::isVerbInDictionary(dict_manager, base_form)) {
             // Strong negative cost to beat particle split
             // Particle path can be as low as -0.2, so we need lower
             constexpr float kCost = candidate::verb_cost::kStandardBonus;
@@ -332,6 +425,12 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     }
     char32_t next_char = codepoints[end_pos];
     bool is_followed_by_te_ta = (next_char == U'て' || next_char == U'た');
+    bool is_followed_by_renyokei_conj = next_char == U'な' && end_pos + 2 < codepoints.size() &&
+                                        codepoints[end_pos + 1] == U'が' && codepoints[end_pos + 2] == U'ら';
+    if (!is_followed_by_renyokei_conj) {
+      is_followed_by_renyokei_conj =
+          next_char == U'つ' && end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'つ';
+    }
     bool is_followed_by_reba = false;
     // Check for a polite ます-family auxiliary (ます / まし / ませ). All three
     // attach only to a verb renyokei, so they license the renyokei reading of a
@@ -349,7 +448,8 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     if (next_char == U'な' && end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'い') {
       is_followed_by_nai = true;
     }
-    if (!is_followed_by_te_ta && !is_followed_by_masu && !is_followed_by_reba && !is_followed_by_nai) {
+    if (!is_followed_by_te_ta && !is_followed_by_masu && !is_followed_by_renyokei_conj && !is_followed_by_reba &&
+        !is_followed_by_nai) {
       continue;
     }
 
@@ -384,7 +484,7 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     std::string chosen_base = base_form;
     dictionary::ConjugationType chosen_conj = dictionary::ConjugationType::Ichidan;
     float chosen_confidence = ichidan_confidence;
-    if (is_followed_by_masu) {
+    if (is_followed_by_masu || is_followed_by_renyokei_conj) {
       grammar::VerbType godan_type = grammar::verbTypeFromIRowCodepoint(stem_end_char);
       if (godan_type != grammar::VerbType::Unknown) {
         std::string godan_base = extractSubstring(codepoints, start_pos, end_pos - 1) +
@@ -405,7 +505,7 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
 
     // Skip causative+passive auxiliary chain patterns
     // E.g., "せられ" should be split as せ(causative) + られ(passive), not single verb
-    // MeCab-compatible split: 聞かせられた → 聞か + せ + られ + た
+    // Preserve the causative, passive, and tense morpheme boundaries.
     if (utf8::endsWith(stem_surface, "せられ")) {
       continue;
     }
@@ -515,7 +615,7 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
   // Generate Godan sokuonbin (っ) candidates for hiragana verbs
   // E.g., しまった → しまっ (onbin of しまう) + た (auxiliary)
   //       なくなった → なくなっ (onbin of なくなる) + た (auxiliary)
-  // This allows MeCab-compatible splitting: しまった → しまっ + た
+  // This separates the verb's onbin stem from the tense auxiliary.
   {
     // Find hiragana extent (all consecutive hiragana from start_pos)
     size_t hira_extent_end = start_pos;
@@ -595,7 +695,7 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
   // E.g., こんだ → こん (onbin of こむ) + だ (auxiliary)
   //       こんで → こん (onbin of こむ) + で (particle)
   //       よんだ → よん (onbin of よむ) + だ (auxiliary)
-  // This allows MeCab-compatible splitting for godan-ma/ba/na verbs
+  // This separates the onbin stem of godan-ma/ba/na verbs from the auxiliary.
   {
     // Find hiragana extent (all consecutive hiragana from start_pos)
     size_t hira_extent_end = start_pos;

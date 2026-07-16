@@ -13,86 +13,8 @@
 
 #include <string_view>
 #include <unordered_set>
-#include <vector>
 
 namespace suzume::normalize {
-
-// =============================================================================
-// Single Character Exceptions
-// =============================================================================
-
-// Single kanji that are valid standalone tokens (counters, temporal nouns, etc.)
-// These should not receive single-character penalties during scoring.
-extern const std::unordered_set<std::string_view> kSingleKanjiExceptions;
-
-// Single hiragana functional words (particles, auxiliaries)
-// These should not receive single-character penalties during scoring.
-extern const std::unordered_set<std::string_view> kSingleHiraganaExceptions;
-
-// =============================================================================
-// Verb Stem Exceptions
-// =============================================================================
-
-// Single-character verb stems that are valid
-// Used when validating たい patterns (e.g., したい, 見たい)
-// These are Ichidan verbs or irregular verbs with single-character stems
-extern const std::unordered_set<char32_t> kValidSingleCharVerbStems;
-
-// =============================================================================
-// Compound Verb Auxiliaries
-// =============================================================================
-
-// First kanji of compound verb auxiliaries
-// Used to detect patterns like 読み+終わる, 食べ+始める
-// Format: UTF-8 string of the first character (3 bytes for kanji)
-extern const std::unordered_set<std::string_view> kCompoundVerbAuxFirstChars;
-
-// Hiragana compound verb auxiliary surfaces
-// For MeCab-compatible splitting: 食べすぎる → 食べ + すぎる
-extern const std::unordered_set<std::string_view> kHiraganaCompoundVerbAux;
-
-// Hiragana compound verb auxiliary prefixes (for conjugated forms)
-// For MeCab-compatible splitting: 食べすぎた → 食べ + すぎ + た
-extern const std::vector<std::string_view> kHiraganaCompoundVerbAuxPrefixes;
-
-// =============================================================================
-// Lookup Functions
-// =============================================================================
-
-// Check if a surface is a valid single-kanji exception
-inline bool isSingleKanjiException(std::string_view surface) {
-  return kSingleKanjiExceptions.find(surface) != kSingleKanjiExceptions.end();
-}
-
-// Check if a surface is a valid single-hiragana exception
-inline bool isSingleHiraganaException(std::string_view surface) {
-  return kSingleHiraganaExceptions.find(surface) != kSingleHiraganaExceptions.end();
-}
-
-// Check if a codepoint is a valid single-character verb stem
-inline bool isValidSingleCharVerbStem(char32_t ch) {
-  return kValidSingleCharVerbStems.find(ch) != kValidSingleCharVerbStems.end();
-}
-
-// Check if first character indicates a compound verb auxiliary
-inline bool isCompoundVerbAuxStart(std::string_view first_char) {
-  return kCompoundVerbAuxFirstChars.find(first_char) != kCompoundVerbAuxFirstChars.end();
-}
-
-// Check if surface is a hiragana compound verb auxiliary
-inline bool isHiraganaCompoundVerbAux(std::string_view surface) {
-  return kHiraganaCompoundVerbAux.find(surface) != kHiraganaCompoundVerbAux.end();
-}
-
-// Check if surface starts with a hiragana compound verb auxiliary prefix
-inline bool startsWithHiraganaCompoundVerbAux(std::string_view surface) {
-  for (const auto& prefix : kHiraganaCompoundVerbAuxPrefixes) {
-    if (surface.size() >= prefix.size() && surface.substr(0, prefix.size()) == prefix) {
-      return true;
-    }
-  }
-  return false;
-}
 
 // =============================================================================
 // Particle/Copula Sets (for verb candidate filtering)

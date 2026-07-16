@@ -155,7 +155,7 @@ bool pronounEndsAt(const dictionary::DictionaryManager* dict_manager, const std:
 }
 
 // Passive mizenkei candidates for pure-hiragana verbs (いわれる → いわ + れる).
-// Splits at the A-row mizenkei before れ for MeCab compatibility.
+// Preserve the boundary between the A-row mizenkei and passive れ.
 void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                      const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,
@@ -177,7 +177,7 @@ void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, si
     }
 
     // Check for passive patterns after れ
-    // All passive patterns split at mizenkei (いわ + れる/れ) for MeCab compatibility
+    // All passive patterns split at the mizenkei (いわ + れる/れ).
     // Loose ま-branch: bare ま (れます, れました, れません, れませんでした) qualifies.
     bool is_passive_pattern = vh::isPassiveAuxContinuation(codepoints, mizenkei_end + 1, /*strict_masu=*/false);
 
@@ -262,8 +262,8 @@ void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, si
     // Otherwise use constructed base form
     std::string lemma = vh::lookupVerbLemma(dict_manager, mizenkei_surface, base_form);
 
-    // Always split at mizenkei (いわ + れる/れ) for MeCab compatibility
-    // MeCab splits: いわれません → いわ + れ + ませ + ん (4 tokens)
+    // Preserve the mizenkei boundary (いわ + れる/れ), including the chain
+    // いわれません → いわ + れ + ませ + ん.
     // Previous strategy of splitting at passive renyokei (いわれ + ません) was incorrect
     size_t split_end = mizenkei_end;
     std::string surface = extractSubstring(codepoints, start_pos, split_end);

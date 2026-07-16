@@ -925,6 +925,28 @@
       ],
       "id": "manakute",
       "input": "読まなくて"
+    },
+    {
+      "description": "準備を表す補助動詞を本動詞から区別する",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Auxiliary",
+          "surface": "おく"
+        }
+      ],
+      "id": "beteoku",
+      "input": "食べておく"
     }
   ],
   "description": "Te-form and ta-form patterns",

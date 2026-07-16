@@ -313,44 +313,42 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
     }
   }
 
-  // Try ABり pattern for 3 chars (e.g., どさり, ばたり, ぐったり, じっくり)
-  // These are onomatopoeia that often end with り and are mistaken for verbs
+  // Try ABり / AっBり patterns (e.g., どさり, ばたり, ぐったり,
+  // じっくり). The same-script run can continue through quotative と (and the
+  // four-character form can precede a hiragana predicate), so recognize the
+  // structural prefix rather than requiring り to end the whole run.
   if (seq_len >= 3 && start_type == normalize::CharType::Hiragana) {
-    // Check if ends with り
-    char32_t last_char = codepoints[start_pos + seq_len - 1];
-    if (last_char == U'り') {
-      // For 3-char patterns like どさり, ばたり
+    if (codepoints[start_pos + 2] == U'り' && (seq_len == 3 || (seq_len > 3 && codepoints[start_pos + 3] == U'と'))) {
+      // Three-character patterns are extended past the run boundary only when
+      // followed by the adverbial marker と, which limits prefix false positives.
       // Skip if first char is a common particle (の, は, が, を, に, で, も, と, へ, か)
       // to avoid false matches like のやり, はしり, がわり
-      if (seq_len == 3) {
-        char32_t first = codepoints[start_pos];
-        if (normalize::isParticleCodepoint(first) || first == U'ら') {
-          // Skip - likely particle + verb stem, not onomatopoeia
-        } else {
-          std::string surface = extractSubstring(codepoints, start_pos, start_pos + 3);
-          if (!surface.empty()) {
-            auto cand = makeCandidate(surface, start_pos, start_pos + 3, core::PartOfSpeech::Adverb, 0.7F, true,
-                                      CandidateOrigin::Onomatopoeia);
-#ifdef SUZUME_DEBUG_INFO
-            cand.confidence = 0.7F;
-            cand.pattern = "ab_ri_pattern";
-#endif
-            candidates.push_back(cand);
-          }
-        }
-      }
-      // For 4-char patterns like ぐったり, じっくり (small tsu + CV + り)
-      else if (seq_len == 4 && isSmallKanaAt(start_pos + 1)) {
-        std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
+      char32_t first = codepoints[start_pos];
+      if (!normalize::isParticleCodepoint(first) && first != U'ら') {
+        std::string surface = extractSubstring(codepoints, start_pos, start_pos + 3);
         if (!surface.empty()) {
-          auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Adverb, 0.2F, true,
+          auto cand = makeCandidate(surface, start_pos, start_pos + 3, core::PartOfSpeech::Adverb, 0.7F, true,
                                     CandidateOrigin::Onomatopoeia);
 #ifdef SUZUME_DEBUG_INFO
-          cand.confidence = 0.8F;
-          cand.pattern = "xtu_cv_ri_pattern";
+          cand.confidence = 0.7F;
+          cand.pattern = "ab_ri_pattern";
 #endif
           candidates.push_back(cand);
         }
+      }
+    }
+
+    // Four-character patterns like ぐったり and じっくり.
+    if (seq_len >= 4 && isSmallKanaAt(start_pos + 1) && codepoints[start_pos + 3] == U'り') {
+      std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Adverb, 0.2F, true,
+                                  CandidateOrigin::Onomatopoeia);
+#ifdef SUZUME_DEBUG_INFO
+        cand.confidence = 0.8F;
+        cand.pattern = "xtu_cv_ri_pattern";
+#endif
+        candidates.push_back(cand);
       }
     }
   }

@@ -43,6 +43,7 @@ std::vector<DictionaryEntry> getPronounEntries() {
       // Archaic/Samurai (武家・古風)
       pronoun("我", ""),
       pronoun("われ", ""),  // 我/吾 classical first-person pronoun
+      pronoun("己", ""),
       pronoun("拙者", ""),
       pronoun("貴殿", ""),
       pronoun("某", ""),
@@ -50,7 +51,7 @@ std::vector<DictionaryEntry> getPronounEntries() {
       pronoun("吾輩", ""),
 
       // Collective pronouns (集合代名詞)
-      // Note: 皆さん is split as 皆+さん for MeCab compatibility
+      // Keep the collective pronoun and honorific suffix as separate search units.
       pronoun("皆", ""),
       pronoun("みんな", ""),
 

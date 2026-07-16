@@ -39,6 +39,33 @@ namespace suzume::analysis::connection_rules {
 float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // Conditional なら is shared by nouns and na-adjectives. Scope the bonus to
+  // this closed-class surface so the generic ParticleConj category does not
+  // accidentally promote te-form splits after arbitrary nouns (決し+て).
+  if (next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"なら"})) {
+    if (prev.extended_pos == core::ExtendedPOS::AdjNaAdj) {
+      bonus += cost::kStrongBonus;
+    } else if (prev.extended_pos == core::ExtendedPOS::Noun) {
+      bonus += cost::kModerateBonus;
+    }
+  }
+
+  // A finite predicate followed by なり is the closed conjunctive-particle
+  // construction expressing immediate succession (鳴る+なり), not the
+  // renyokei of lexical なる.
+  if (prev.extended_pos == core::ExtendedPOS::VerbShuushikei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
+      utf8::equalsAny(next.surface, {"なり"})) {
+    bonus += cost::kStrongBonus;
+  }
+
+  // The object marker cannot directly govern a finite predicate. Keep this
+  // restriction surface-scoped because other ParticleCase homographs also act
+  // as valid quotation or conditional particles after a finite verb (〜る+と).
+  if (prev.extended_pos == core::ExtendedPOS::VerbShuushikei && next.extended_pos == core::ExtendedPOS::ParticleCase &&
+      utf8::equalsAny(next.surface, {"を"})) {
+    bonus += cost::kStrong;
+  }
+
   // VerbRenyokei → AdjBasic bonus for kanji-containing verb + adjective
   // E.g., 尽くし+難い, 食べ+やすい — verb renyoukei + compound adjective
   // Only when verb contains kanji to prevent false splits in hiragana sequences
@@ -46,6 +73,16 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AdjBasic &&
       grammar::containsKanji(prev.surface)) {
     bonus += cost::kExtraStrongBonus;
+  }
+
+  // The uncontracted preparation subsidiary is written after an explicit
+  // connective particle (食べ+て+おく). Its lexical homograph おく must not win
+  // merely because both candidates share the same surface. Contracted とく/どく
+  // instead attaches directly to a verb stem or onbin form and deliberately does
+  // not receive this extra particle-boundary bonus.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::AuxAspectOku &&
+      utf8::startsWith(next.surface, "お")) {
+    bonus += cost::kStrongBonus;
   }
 
   // Penalty for VerbRenyokei + し(conjunction) with kanji verb
@@ -69,13 +106,38 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // E.g., にとって+も, について+は, において+も, として+は
   // Only applies to long compound particles to avoid boosting て+も, し+は
   // Needs to overcome ADV→NOUN bonus advantage in competing paths
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::ParticleTopic &&
-      prev.surface.size() >= core::kThreeJapaneseCharBytes) {
+  if ((prev.extended_pos == core::ExtendedPOS::ParticleConj || prev.extended_pos == core::ExtendedPOS::ParticleCase) &&
+      next.extended_pos == core::ExtendedPOS::ParticleTopic && prev.surface.size() >= core::kThreeJapaneseCharBytes) {
     bonus += sc::kBonusCompoundParticleToTopic;
   }
 
+  // A multi-mora case-particle candidate after an explicit volitional auxiliary
+  // would swallow the quotative と and following verb (書こ+う+として). Keep the
+  // one-mora と connection licensed, but reject compound-particle attachment so
+  // the productive う+と+し+て boundary remains available.
+  if (prev.extended_pos == core::ExtendedPOS::AuxVolitional && next.extended_pos == core::ExtendedPOS::ParticleCase &&
+      next.surface.size() >= core::kTwoJapaneseCharBytes) {
+    bonus += cost::kStrong;
+  }
+
+  // The conjunctive-particle homograph なり cannot follow an i-adjective's
+  // adverbial form. 高くなり is 高く+なり(なる), whereas 鳴るなり uses the
+  // particle after a finite verb.
+  if (prev.extended_pos == core::ExtendedPOS::AdjRenyokei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
+      utf8::equalsAny(next.surface, {"なり"})) {
+    bonus += cost::kStrong;
+  }
+
+  // Pronouns and nouns can form the concessive/adverbial construction
+  // われ+ながら. Prefer that closed-class boundary over a generated verb
+  // homograph such as われ(われる).
+  if (prev.extended_pos == core::ExtendedPOS::Pronoun && next.extended_pos == core::ExtendedPOS::ParticleConj &&
+      utf8::equalsAny(next.surface, {"ながら"})) {
+    bonus += cost::kStrongBonus;
+  }
+
   // Bonus for て → い (Auxiliary) pattern
-  // E.g., して+い+ます, 食べて+い+た (MeCab-compatible: い is auxiliary, not verb)
+  // E.g., して+い+ます, 食べて+い+た (aspectual い is auxiliary, not a lexical verb)
   // The auxiliary い (from いる) should win over verb renyokei い
   if (prev.surface == "て" && prev.extended_pos == core::ExtendedPOS::ParticleConj && next.surface == "い" &&
       next.extended_pos == core::ExtendedPOS::AuxAspectIru) {
@@ -120,7 +182,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   }
 
   // Bonus for て → いただき (humble auxiliary verb) pattern
-  // E.g., 食べて+いただき+ます, して+いただけ+ます (MeCab-compatible split)
+  // E.g., 食べて+いただき+ます, して+いただけ+ます
   // The て→い(AUX)→ただき path incorrectly splits いただき
   // いただく is a humble auxiliary verb that should not be split after て
   if (prev.surface == "て" && prev.extended_pos == core::ExtendedPOS::ParticleConj &&
@@ -212,7 +274,7 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   float bonus{};  // value-init to 0
 
   // Surface-based bonus for VerbRenyokei → た (ichidan/irregular た-form)
-  // E.g., 食べ+た, 来+た (MeCab-compatible split)
+  // E.g., 食べ+た, 来+た: inflected verb stem followed by the tense auxiliary.
   // Must be surface == "た" to distinguish from て (particle)
   // Guard: require kanji or dict origin to prevent false verbs like まし(ましる)
   // from stealing た bonus over AUX_丁寧 path (参加してきました)
@@ -390,9 +452,19 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
 float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
-  // Penalty for single-char case particle → very short pure-hiragana verb pattern
-  // E.g., が+おさ is likely mis-segmentation (should be がお+さん)
-  // Valid patterns usually have longer verbs (3+ chars) or kanji stems
+  // An object marker followed by a continuative verb strongly licenses a
+  // predicate (本を買いに行く, 本を読み始める). This left-context evidence
+  // offsets the general renyokei-before-case-particle nominalization bias while
+  // leaving standalone nominal forms such as 読みを/香りを untouched.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(prev.surface, {"を"}) &&
+      next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.fromDictionary()) {
+    bonus += cost::kExtraStrongBonus;
+  }
+
+  // Penalty for single-char case particle → very short inflected
+  // pure-hiragana verb pattern. Two-kana base forms are deliberately exempt:
+  // object + きく/やく/けす is a basic feature-derived verb boundary.
+  // The risky false splits here are short stems such as が+おさ.
   // Single-char particles: が, を, に, へ, と, で, から, etc.
   // Only penalize very short verbs (2 chars or less) to avoid affecting なくし, etc.
   // Exception: "い" (いる renyokei) has specific bonus rule below for PART_格→い pattern
@@ -400,7 +472,8 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
       prev.surface.size() <= core::kJapaneseCharBytes &&  // Single hiragana char (3 bytes in UTF-8)
       next.pos == core::PartOfSpeech::Verb && !next.fromDictionary() && grammar::isPureHiragana(next.surface) &&
       next.surface.size() <= 6 &&  // 2 chars or less (6 bytes in UTF-8)
-      next.surface != "い") {      // Exclude い - has specific rule
+      next.extended_pos != core::ExtendedPOS::VerbShuushikei &&
+      next.surface != "い") {  // Exclude い - has specific rule
     bonus += cost::kAlmostNever;
   }
 

@@ -1378,10 +1378,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "over-split",
-        "reason": "はし is ambiguous hiragana (箸/橋/端) - は(topic particle)+し(emphatic) is a valid parse without dict"
-      },
       "description": "S3: はし (橋/箸) should be recognized as NOUN, not split as は+し",
       "expected": [
         {
@@ -1402,28 +1398,6 @@
       ],
       "id": "s3_hiragana_noun_hashi",
       "input": "はしがかかる",
-      "suzume_expected": [
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "かかる",
-          "pos": "Verb",
-          "surface": "かかる"
-        }
-      ],
       "tags": [
         "s3_fix",
         "hiragana_noun",
@@ -1458,10 +1432,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã¿ã: auxiliary usage vs main verb - context-dependent"
-      },
       "description": "S3: はな (花/鼻) should be recognized as NOUN",
       "expected": [
         {
@@ -1482,20 +1452,6 @@
       ],
       "id": "s3_hiragana_noun_hana",
       "input": "はなをみる",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "はな"
-        },
-        {
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "みる"
-        }
-      ],
       "tags": [
         "s3_fix",
         "hiragana_noun",
@@ -1952,40 +1908,88 @@
       "input": "こども"
     },
     {
+      "accepted_diff": {
+        "category": "search-unit",
+        "reason": "辞書で確認できるひらがな一般名詞を一つの検索単位として保持する"
+      },
       "description": "Isolated hiragana noun (卵) kept whole; MeCab splits たま/ご, suzume keeps one search unit",
       "expected": [
+        {
+          "lemma": "たま",
+          "pos": "Adverb",
+          "surface": "たま"
+        },
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        }
+      ],
+      "id": "tamago",
+      "input": "たまご",
+      "suzume_expected": [
         {
           "lemma": "たまご",
           "pos": "Noun",
           "surface": "たまご"
         }
-      ],
-      "id": "tamago",
-      "input": "たまご"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "grammatical-ambiguity",
+        "reason": "名詞として登録・解析できる同形ひらがな語は文脈なしでは動詞連用形へ寄せず、名詞の検索単位を保持する"
+      },
       "description": "Isolated hiragana noun (畑) kept whole; particle-topic + past-aux connection is prohibited so は/た/け does not win",
       "expected": [
+        {
+          "lemma": "はたける",
+          "pos": "Verb",
+          "surface": "はたけ"
+        }
+      ],
+      "id": "hatake",
+      "input": "はたけ",
+      "suzume_expected": [
         {
           "lemma": "はたけ",
           "pos": "Noun",
           "surface": "はたけ"
         }
-      ],
-      "id": "hatake",
-      "input": "はたけ"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "search-unit",
+        "reason": "L2で確認できるひらがな一般名詞を一つの検索単位として保持する"
+      },
       "description": "Isolated hiragana noun kept whole; the EOS penalty on bare renyokei き prevents an ひこう+き split (き cannot end a sentence)",
       "expected": [
         {
-          "lemma": "ひこうき",
-          "pos": "Other",
-          "surface": "ひこうき"
+          "lemma": "ひく",
+          "pos": "Verb",
+          "surface": "ひこ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "き",
+          "pos": "Auxiliary",
+          "surface": "き"
         }
       ],
       "id": "hikouki",
-      "input": "ひこうき"
+      "input": "ひこうき",
+      "suzume_expected": [
+        {
+          "lemma": "ひこうき",
+          "pos": "Noun",
+          "surface": "ひこうき"
+        }
+      ]
     },
     {
       "description": "東京かな - auto-generated",
@@ -2185,6 +2189,33 @@
       ],
       "id": "unnamed_9",
       "input": "昨年度"
+    },
+    {
+      "description": "名詞に続く条件助詞ならばを形容動詞や動詞に誤分類しない",
+      "expected": [
+        {
+          "lemma": "学生",
+          "pos": "Noun",
+          "surface": "学生"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かる"
+        }
+      ],
+      "id": "naraba_karu",
+      "input": "学生ならば分かる"
     }
   ],
   "description": "General nouns",

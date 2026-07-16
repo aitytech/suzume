@@ -45,6 +45,11 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
                                       std::vector<UnknownCandidate>& candidates);
 void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                      std::vector<UnknownCandidate>& candidates);
+void appendMiruAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                   const dictionary::DictionaryManager* dict_manager,
+                                   std::vector<UnknownCandidate>& candidates);
+void appendOkuAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  std::vector<UnknownCandidate>& candidates);
 void appendIchidanRenyokei1CharCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                           const dictionary::DictionaryManager* dict_manager,
                                           std::vector<UnknownCandidate>& candidates);

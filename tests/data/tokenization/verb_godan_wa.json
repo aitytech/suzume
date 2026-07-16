@@ -1064,10 +1064,14 @@
       "input": "ならって"
     },
     {
+      "accepted_diff": {
+        "category": "grammatical-ambiguity",
+        "reason": "ひらがなの促音便は複数の原形候補を持つため、文法的に成立する「おもう」を保持する"
+      },
       "description": "Pure-hiragana godan-wa sokuonbin: おもう past (MeCab gives non-word おもる)",
       "expected": [
         {
-          "lemma": "おもう",
+          "lemma": "おもる",
           "pos": "Verb",
           "surface": "おもっ"
         },
@@ -1078,13 +1082,29 @@
         }
       ],
       "id": "omottta",
-      "input": "おもった"
+      "input": "おもった",
+      "suzume_expected": [
+        {
+          "lemma": "おもう",
+          "pos": "Verb",
+          "surface": "おもっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "grammatical-ambiguity",
+        "reason": "ひらがなの促音便は複数の原形候補を持つため、文法的に成立する「すう」を保持する"
+      },
       "description": "Pure-hiragana godan-wa sokuonbin: すう te-form (すう/する ambiguous, pick すう)",
       "expected": [
         {
-          "lemma": "すう",
+          "lemma": "する",
           "pos": "Verb",
           "surface": "すっ"
         },
@@ -1095,7 +1115,19 @@
         }
       ],
       "id": "suttte",
-      "input": "すって"
+      "input": "すって",
+      "suzume_expected": [
+        {
+          "lemma": "すう",
+          "pos": "Verb",
+          "surface": "すっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ]
     },
     {
       "description": "Pure-hiragana godan-wa sokuonbin: まよう te-form",

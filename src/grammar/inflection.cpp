@@ -82,6 +82,16 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
         stem = std::string(remaining.substr(0, remaining.size() - ending.suffix.size()));
       }
 
+      // Classical サ変未然形 せ is licensed by the classical negative
+      // auxiliaries ず/ぬ (屈せず, 屈せぬ), not by modern ない compounds.
+      // Without this guard, 話せなくなる is misread as 話する +
+      // せなくなる and ties the genuine potential form 話す + せる.
+      if (ending.verb_type == VerbType::Suru && ending.suffix == "せ" &&
+          (aux_chain.empty() ||
+           !(utf8::startsWith(aux_chain.back(), "ず") || utf8::startsWith(aux_chain.back(), "ぬ")))) {
+        continue;
+      }
+
       // Stem should be at least 3 bytes (one Japanese character)
       // Exceptions for irregular verbs where the suffix IS the conjugated form:
       // - Suru verb with す/し→する (empty stem is allowed)

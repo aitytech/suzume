@@ -41,6 +41,16 @@ void setParticleAndLexicalCosts(BigramMatrix& t) {
   // ParticleCase → VerbShuushikei (を+食べる) - neutral
   setCell(t, EPOS::ParticleCase, EPOS::VerbShuushikei, cost::kNeutral);
 
+  // A renyokei immediately before a case particle normally functions as a
+  // nominalization (香り+を, 読み+を, 流れ+に). Left context can override this
+  // for purpose constructions such as 本を買いに行く.
+  setCell(t, EPOS::VerbRenyokei, EPOS::ParticleCase, cost::kStrong);
+
+  // A continuative verb immediately before の normally denotes a lexicalized
+  // nominal form (思い+の, 帰り+の), whose search unit is a noun. Finite verbs
+  // remain available for the productive nominalizer construction (食べる+の).
+  setCell(t, EPOS::VerbRenyokei, EPOS::ParticleNo, cost::kStrong);
+
   // ParticleTopic/ParticleCase → Pronoun (は+いつ, は+どこ, に+何, で+誰)
   // Particles naturally precede pronouns in questions and relative clauses
   // は+いつ, も+何, に+どこ are very common patterns
@@ -64,7 +74,7 @@ void setParticleAndLexicalCosts(BigramMatrix& t) {
   // (te-form usually followed by auxiliary, not new verb)
   setCell(t, EPOS::ParticleConj, EPOS::VerbShuushikei, cost::kUncommon);
 
-  // ParticleConj → AuxAspectIru (て+いる) - strong bonus for MeCab-compatible split
+  // ParticleConj → AuxAspectIru (て+いる) - strong bonus for the aspectual construction
   // Allows 食べ+て+いる to beat unified 食べて+いる path
   setCell(t, EPOS::ParticleConj, EPOS::AuxAspectIru, cost::kStrongBonus);
 
@@ -76,6 +86,12 @@ void setParticleAndLexicalCosts(BigramMatrix& t) {
 
   // ParticleConj → AuxAspectMiru (て+みる) - strong bonus
   setCell(t, EPOS::ParticleConj, EPOS::AuxAspectMiru, cost::kStrongBonus);
+
+  // Emphatic も preserves the te-form attachment in 〜てもみる/〜でもみる.
+  // AuxAspectMiru candidates are context-gated during generation, so this does
+  // not license a standalone particle + lexical みる sequence.
+  setCell(t, EPOS::ParticleAdverbial, EPOS::AuxAspectMiru, cost::kVeryStrongBonus);
+  setCell(t, EPOS::ParticleTopic, EPOS::AuxAspectMiru, cost::kVeryStrongBonus);
 
   // ParticleConj → AuxAspectIku (て+いく) - strong bonus
   setCell(t, EPOS::ParticleConj, EPOS::AuxAspectIku, cost::kStrongBonus);
@@ -216,6 +232,9 @@ void setParticleAndLexicalCosts(BigramMatrix& t) {
   // Must beat adverb bonus (-1.0 for 2-char hiragana) to prefer auxiliary
   setCell(t, EPOS::VerbRenyokei, EPOS::AuxAppearanceSou, cost::kVeryStrongBonus);
 
+  // Na-adjective stems take appearance そう directly (静か+そう).
+  setCell(t, EPOS::AdjNaAdj, EPOS::AuxAppearanceSou, cost::kStrongBonus);
+
   // AuxAspectShimau → AuxAppearanceSou (しまい+そう) - strong bonus
   // しまいそう (about to end up doing) is natural; AUX chain must beat ADJ+ADV path
   // Strong bonus needed because そう(ADV) has dict bonus (-0.5) vs そう(AUX) cost (0.4)
@@ -277,8 +296,8 @@ void setParticleAndLexicalCosts(BigramMatrix& t) {
   setCell(t, EPOS::AuxAspectIru, EPOS::AuxConjectureRashii, cost::kModerateBonus);
   setCell(t, EPOS::AuxAspectIru, EPOS::AuxConjectureMitai, cost::kStrongBonus);
 
-  // AuxConjectureMitai → AuxCopulaDa (みたい+な) - strong bonus for MeCab-compatible split
-  // MeCab splits みたいな as みたい + な(連体形 of だ)
+  // AuxConjectureMitai → AuxCopulaDa (みたい+な) - strong bonus because な is
+  // the attributive form of the following copula.
   setCell(t, EPOS::AuxConjectureMitai, EPOS::AuxCopulaDa, cost::kStrongBonus);
 
   // =========================================================================

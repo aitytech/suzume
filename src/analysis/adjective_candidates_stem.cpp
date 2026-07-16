@@ -370,7 +370,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       }
 
       // Low cost to compete with VERB path and single-token conjugated forms
-      // Dictionary adjectives get strong bonus to prefer MeCab-compatible split
+      // Dictionary adjectives get a strong bonus for the stem + auxiliary path.
       // (美味しそう → 美味し + そう)
       // Need stronger negative cost like garu-connection pattern
       float cost =

@@ -1784,10 +1784,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "design-difference",
-        "reason": "Suzume intentional design difference from MeCab normalization"
-      },
       "description": "Explanation style - Current suzume treats compound verb 読み込む differently",
       "expected": [
         {
@@ -1883,98 +1879,6 @@
       ],
       "id": "long_explanation",
       "input": "この問題が発生する原因は、設定ファイルが正しく読み込まれていないことです",
-      "suzume_expected": [
-        {
-          "lemma": "この",
-          "pos": "Determiner",
-          "surface": "この"
-        },
-        {
-          "lemma": "問題",
-          "pos": "Noun",
-          "surface": "問題"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "発生",
-          "pos": "Noun",
-          "surface": "発生"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        },
-        {
-          "lemma": "原因",
-          "pos": "Noun",
-          "surface": "原因"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "設定",
-          "pos": "Noun",
-          "surface": "設定"
-        },
-        {
-          "lemma": "ファイル",
-          "pos": "Noun",
-          "surface": "ファイル"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "正しい",
-          "pos": "Adjective",
-          "surface": "正しく"
-        },
-        {
-          "lemma": "読み込む",
-          "pos": "Verb",
-          "surface": "読み込ま"
-        },
-        {
-          "lemma": "れる",
-          "pos": "Auxiliary",
-          "surface": "れ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "い"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        },
-        {
-          "lemma": "こと",
-          "pos": "Noun",
-          "surface": "こと"
-        },
-        {
-          "lemma": "です",
-          "pos": "Auxiliary",
-          "surface": "です"
-        }
-      ],
       "tags": [
         "long"
       ]

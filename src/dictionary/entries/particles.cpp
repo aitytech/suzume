@@ -43,6 +43,7 @@ std::vector<DictionaryEntry> getParticleEntries() {
       particle("し", EPOS::ParticleConj),    // 列挙・理由 (接続助詞)
       particle("たり", EPOS::ParticleConj),  // 並立助詞 (食べたり飲んだり)
       particle("だり", EPOS::ParticleConj),  // 並立助詞 (voiced: 飲んだり)
+      particle("なり", EPOS::ParticleConj),  // 動作直後: 鳴るなり
       particle("や", EPOS::ParticleConj),    // 並立助詞 (AやB)
 
       // Quotation particles (引用助詞)

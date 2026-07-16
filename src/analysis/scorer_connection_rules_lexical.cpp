@@ -135,15 +135,13 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kAlmostNever;                                        // Strongly discourage
   }
 
-  // Penalty for て/で (ParticleConj) → single-char VerbRenyokei (い)
-  // Progressive pattern: 食べて+い+ます should use い(AuxAspectIru), not い(VerbRenyokei)
-  // This ensures て+いる patterns use the auxiliary form
+  // Penalty for て/で (ParticleConj) → a single-character lexical verb stem.
+  // Subsidiary verbs after a te-form must use their aspect-specific ExtendedPOS
+  // (い→AuxAspectIru, み→AuxAspectMiru), not a fabricated lexical verb.
   // Exception: たり/だり → し is valid (食べたり+し+てる)
-  // Exception: み (みる auxiliary = "try") after て is valid (食べて+み+たい)
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       next.surface.size() <= 3 &&  // Single hiragana (3 bytes)
-      grammar::isPureHiragana(next.surface) && prev.surface != "たり" && prev.surface != "だり" &&
-      next.surface != "み") {
+      grammar::isPureHiragana(next.surface) && prev.surface != "たり" && prev.surface != "だり") {
     bonus += cost::kAlmostNever;  // Strongly discourage
   }
 
@@ -154,6 +152,14 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
 // renyokei (いたし/いただき), and い/た/だ auxiliary attachment rules.
 float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
+
+  // みたい immediately after a connective て/で is not the conjecture
+  // auxiliary: 〜てみたい consists of the trial subsidiary み + desiderative
+  // たい. This applies whether the competing connective edge was classified as a
+  // particle or as a contracted aspect auxiliary.
+  if (utf8::equalsAny(prev.surface, {"て", "で"}) && next.extended_pos == core::ExtendedPOS::AuxConjectureMitai) {
+    bonus += cost::kAlmostNever;
+  }
 
   // Progressive で+い+ます should use the auxiliary い, not the standalone verb いる.
   // The preceding で can be tagged as either a conjunction particle or a te-form
@@ -322,7 +328,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   }
 
   // Surface-based bonus for AdjStem → すぎ pattern
-  // E.g., 高+すぎる, 美味し+すぎた (MeCab-compatible split)
+  // E.g., 高+すぎる, 美味し+すぎた: adjective stem plus excessive auxiliary.
   // AdjStem→Verb has prohibitive penalty to prevent な+い splits
   // But AdjStem+すぎ is valid grammar (i-adjective stem + すぎる)
   // Exclude VerbTeForm (すぎて) - should split as すぎ+て
@@ -366,6 +372,16 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       grammar::isPureHiragana(next.surface) && next.surface.size() <= 3) {  // Single hiragana (3 bytes)
     bonus += cost::kRare;
+  }
+
+  // The surface か also marks an indefinite phrase (誰か来る, 何かいる).
+  // If a verb actually follows, the edge is internal and therefore cannot be
+  // sentence-final. Cancel the generic final-particle-to-verb penalty for this
+  // homograph while retaining it for genuine final particles よ/ね/な/わ.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && utf8::equalsAny(prev.surface, {"か"}) &&
+      next.pos == core::PartOfSpeech::Verb && next.fromDictionary() &&
+      next.extended_pos != core::ExtendedPOS::VerbMizenkei) {
+    bonus += cost::kVeryStrongBonus;
   }
 
   // Penalty for pure-hiragana Conjunction → bare single-hiragana non-particle
