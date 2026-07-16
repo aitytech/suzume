@@ -280,7 +280,7 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
     _KANJI_HIRA_MERGES = {"微": {"笑み"}}
 
     merged = []
-    for curr in result:
+    for index, curr in enumerate(result):
         surface = curr.get("surface", "")
         # Suzume design: tokenizer use case prefers X+suffix as a single search
         # unit. These suffixes are not treated as token boundaries; X+SUFFIX
@@ -291,6 +291,23 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
         # Suzume design: 御 is a productive prefix that always splits off
         # (御 + 尽力, 御 + 挨拶, 御 + 協力). Skip kanji-merge after 御 prefix tokens.
         prev_is_go_prefix = merged and merged[-1].get("surface", "") == "御" and merged[-1].get("pos", "") == "接頭詞"
+        # A non-independent noun followed by an attributive na-adjective is a
+        # grammatical boundary (時 + 不思議 + な), not a kanji compound. MeCab
+        # tags the adjective stem as a noun, so the generic kanji merge would
+        # otherwise erase that boundary before POS normalization.
+        next_is_attributive_na = (
+            index + 1 < len(result)
+            and result[index + 1].get("surface", "") == "な"
+            and result[index + 1].get("pos", "") == "助動詞"
+        )
+        formal_noun_na_adjective_boundary = (
+            merged
+            and merged[-1].get("pos", "") == "名詞"
+            and merged[-1].get("pos_sub1", "") == "非自立"
+            and curr.get("pos", "") == "名詞"
+            and curr.get("pos_sub1", "") == "形容動詞語幹"
+            and next_is_attributive_na
+        )
         if merged and (
             (
                 regex.match(r"^[\p{Han}]+$", surface)
@@ -303,6 +320,7 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
                 # must not fold into a preceding noun/prefix (徒歩|五分, 約|二時間).
                 and curr.get("pos_sub1", "") != "数"
                 and not prev_is_go_prefix
+                and not formal_noun_na_adjective_boundary
             )
             or (
                 merged[-1].get("surface", "") in _KANJI_HIRA_MERGES

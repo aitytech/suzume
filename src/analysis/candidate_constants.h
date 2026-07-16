@@ -169,6 +169,12 @@ constexpr float kNounVerbSplitBonus = -1.0F;
 // when nothing better spans the bracket, never shattering (た|ば|こ).
 constexpr float kPostParticleNounPenalty = 0.4F;
 
+// Formal-noun + na-adjective boundary (時+妙な, 事+不思議な).
+// A one-kanji formal noun is a grammatical boundary before an attributive
+// na-adjective. Without this penalty, the generic unknown-kanji generator
+// can fuse both kanji into a fabricated noun and bypass that boundary.
+constexpr float kFormalNounNaAdjectiveBoundaryPenalty = 0.5F;
+
 // Verified verb in split bonus
 // Applied when verb component is verified in dictionary
 constexpr float kVerifiedVerbBonus = -0.8F;

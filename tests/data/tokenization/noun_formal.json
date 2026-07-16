@@ -327,6 +327,53 @@
       ],
       "id": "sonnafuuni",
       "input": "そんなふうに"
+    },
+    {
+      "description": "Keep a formal noun separate from a following na-adjective",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "時",
+          "pos": "Noun",
+          "surface": "時"
+        },
+        {
+          "lemma": "不思議",
+          "pos": "Adjective",
+          "surface": "不思議"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "音",
+          "pos": "Noun",
+          "surface": "音"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "formal_noun_na_adjective_boundary",
+      "input": "この時不思議な音がした。"
     }
   ],
   "description": "Formal nouns (こと、もの、ところ)",

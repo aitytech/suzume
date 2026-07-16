@@ -93,6 +93,24 @@ bool isImpossibleHiraganaStart(char32_t code_point) {
   return kana::isSmallKanaCodepoint(code_point) || code_point == U'ん' || code_point == U'を' || code_point == U'が';
 }
 
+// A one-kanji formal noun followed by an attributive na-adjective is a word
+// boundary (この時妙なもの, その事不思議な結末). The whole kanji run determines
+// this boundary so that shorter fabricated prefixes such as 時不 do not evade it.
+bool hasFormalNounNaAdjectiveBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                      normalize::CharType start_type) {
+  if (start_type != normalize::CharType::Kanji || kanji_end <= start_pos + 1 || kanji_end >= codepoints.size() ||
+      codepoints[kanji_end] != U'な') {
+    return false;
+  }
+  if (kanji_end + 1 < codepoints.size() && codepoints[kanji_end + 1] == U'ら') {
+    return false;
+  }
+
+  std::string first_char;
+  normalize::encodeUtf8(codepoints[start_pos], first_char);
+  return normalize::isFormalNounSurface(first_char);
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
@@ -245,6 +263,8 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
   }
 
   // Generate candidates for different lengths
+  const bool has_formal_noun_na_adjective_boundary =
+      hasFormalNounNaAdjectiveBoundary(codepoints, start_pos, end_pos, start_type);
   for (size_t len = 1; len <= end_pos - start_pos; ++len) {
     size_t candidate_end = start_pos + len;
     std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
@@ -254,6 +274,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
       // Use NOUN POS instead of OTHER to avoid exceeds_dict_length penalty
       core::PartOfSpeech pos = started_with_particle ? core::PartOfSpeech::Noun : getPosForType(start_type);
       float cost = getCostForType(start_type, len);
+
+      if (has_formal_noun_na_adjective_boundary && len >= 2) {
+        cost += candidate::kFormalNounNaAdjectiveBoundaryPenalty;
+      }
 
       // Penalize kanji sequences ending with honorific/title suffixes (様, 氏)
       // to encourage NOUN + SUFFIX separation (e.g., 客様 → 客 + 様, 田中様 → 田中 + 様)
