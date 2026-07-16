@@ -1735,6 +1735,50 @@
       ],
       "id": "souna",
       "input": "安全そうな場所"
+    },
+    {
+      "description": "i-adjective before plain copula だ stays ADJ (not VERB/NOUN)",
+      "expected": [
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ida",
+      "input": "良いだ。"
+    },
+    {
+      "description": "i-adjective before plain copula だ after が stays ADJ (not NOUN)",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "korega_ida",
+      "input": "これが良いだ。"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional",
