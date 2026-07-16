@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "analysis/scorer.h"
+#include "analysis/tokenizer_utils.h"
 #include "core/lattice.h"
 #include "dictionary/dictionary.h"
 #include "grammar/inflection.h"
@@ -61,14 +62,14 @@ inline float periodSuffixSplitBonus(const std::vector<char32_t>& codepoints, siz
  *
  * @param lattice Lattice to add candidates to
  * @param text Original text
- * @param codepoints Unicode codepoints
  * @param start_pos Starting position in codepoints
  * @param char_types Character types for each position
  * @param scorer Scorer for POS priors
  */
 void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
-                              size_t start_pos, const std::vector<normalize::CharType>& char_types,
-                              const Scorer& scorer, const dictionary::DictionaryManager& dict_manager);
+                              const ByteOffsets& byte_offsets, size_t start_pos,
+                              const std::vector<normalize::CharType>& char_types, const Scorer& scorer,
+                              const dictionary::DictionaryManager& dict_manager);
 
 /**
  * @brief Add compound noun split candidates
@@ -87,7 +88,7 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
  * @param char_types Character types for each position
  * @param dict_manager Dictionary manager for lookups
  */
-void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
+void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, const ByteOffsets& byte_offsets,
                                 size_t start_pos, const std::vector<normalize::CharType>& char_types,
                                 const dictionary::DictionaryManager& dict_manager, const Scorer& scorer);
 
@@ -109,7 +110,8 @@ void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, c
  * @param dict_manager Dictionary manager for lookups
  */
 void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
-                                size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                const ByteOffsets& byte_offsets, size_t start_pos,
+                                const std::vector<normalize::CharType>& char_types,
                                 const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
                                 const grammar::Inflection& inflection);
 

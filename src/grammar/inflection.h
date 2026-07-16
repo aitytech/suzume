@@ -18,7 +18,6 @@
 
 #include "auxiliaries.h"
 #include "conjugation.h"
-#include "conjugator.h"
 #include "connection.h"
 
 namespace suzume::grammar {
@@ -67,6 +66,8 @@ class Inflection {
   InflectionCandidate getBest(std::string_view surface) const;
 
  private:
+  static constexpr size_t kMaxCacheEntries = 4096;
+
   // Try matching auxiliary at end of surface
   std::vector<std::pair<const AuxiliaryEntry*, size_t>> matchAuxiliaries(std::string_view surface) const;
 
@@ -79,6 +80,9 @@ class Inflection {
                                                  uint16_t required_conn) const;
 
   // Cache for analyze() results (mutable for const methods)
+  // Bounded for long-lived browser analyzers. References returned by analyze()
+  // remain valid until the next whole-cache rollover, matching the previous
+  // rollover semantics without retaining tens of thousands of string graphs.
   // Note: single-threaded only. Add synchronization if multi-threading is needed.
   mutable std::unordered_map<std::string, std::vector<InflectionCandidate>> cache_;
 };

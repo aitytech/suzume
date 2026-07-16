@@ -6,6 +6,7 @@
 #ifndef SUZUME_ANALYSIS_TOKENIZER_UTILS_H_
 #define SUZUME_ANALYSIS_TOKENIZER_UTILS_H_
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -14,6 +15,8 @@
 #include "normalize/char_type.h"
 
 namespace suzume::analysis {
+
+using ByteOffsets = std::vector<size_t>;
 
 /**
  * @brief Find end position of consecutive characters of a given type
@@ -41,16 +44,22 @@ inline size_t findCharRegionEnd(const std::vector<normalize::CharType>& char_typ
 }
 
 /**
- * @brief Convert character position to byte position in UTF-8 text
- *
- * Given a sequence of Unicode codepoints and a character position,
- * calculate the corresponding byte position in the UTF-8 encoded string.
+ * @brief Build UTF-8 byte offsets for every character boundary
  *
  * @param codepoints Vector of Unicode codepoints
- * @param char_pos Character position (0-indexed)
- * @return Byte position in UTF-8 encoded string
+ * @return Prefix offsets with codepoints.size() + 1 entries
  */
-size_t charPosToBytePos(const std::vector<char32_t>& codepoints, size_t char_pos);
+ByteOffsets buildByteOffsets(const std::vector<char32_t>& codepoints);
+
+/**
+ * @brief Look up a character boundary's UTF-8 byte offset
+ *
+ * Positions beyond the available boundaries safely resolve to the final byte
+ * offset, matching the former scanning helper's clamping behavior.
+ */
+inline size_t byteOffsetAt(const ByteOffsets& byte_offsets, size_t char_pos) {
+  return byte_offsets.empty() ? 0 : byte_offsets[std::min(char_pos, byte_offsets.size() - 1)];
+}
 
 /**
  * @brief Advance a character position until its byte offset reaches a target

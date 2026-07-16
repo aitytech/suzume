@@ -6,9 +6,8 @@
 #ifndef SUZUME_GRAMMAR_VERB_ENDINGS_H_
 #define SUZUME_GRAMMAR_VERB_ENDINGS_H_
 
+#include <cstddef>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 #include "conjugation.h"
 #include "connection.h"
@@ -25,32 +24,30 @@ struct VerbEnding {
   std::string suffix;       ///< Ending suffix to match (e.g., "い", "き", "")
   std::string base_suffix;  ///< Base form suffix to restore (e.g., "く", "る")
   VerbType verb_type;       ///< Verb conjugation type
-  uint16_t provides_conn;   ///< Connection ID this stem provides
   bool is_onbin;            ///< True if this is euphonic (音便) form
 };
 
-/**
- * @brief Get all verb ending patterns for reverse lookup
- * @return Reference to static vector containing all verb endings
- *
- * Patterns are organized by verb type:
- * - Godan verbs: 9 rows (Ka, Ga, Sa, Ta, Ma, Ba, Na, Wa, Ra)
- * - Ichidan verbs
- * - Suru verbs (サ変)
- * - Kuru verbs (カ変)
- * - I-adjectives (い形容詞)
- *
- * Total: 100+ patterns covering all major conjugation forms
- */
-const std::vector<VerbEnding>& getVerbEndings();
+class VerbEndingRange {
+ public:
+  constexpr VerbEndingRange(const VerbEnding* data, size_t size) : data_(data), size_(size) {}
+
+  const VerbEnding* begin() const { return data_; }
+  const VerbEnding* end() const { return data_ + size_; }
+  size_t size() const { return size_; }
+  bool empty() const { return size_ == 0; }
+
+ private:
+  const VerbEnding* data_;
+  size_t size_;
+};
 
 /**
  * @brief Get verb endings grouped by provides_conn value for efficient lookup
- * @return Reference to static map from connection ID to matching verb endings
+ * @return Non-owning range of matching verb endings
  *
  * Avoids scanning all ~120 endings when only a specific connection type is needed.
  */
-const std::unordered_map<uint16_t, std::vector<VerbEnding>>& getVerbEndingsByConn();
+VerbEndingRange getVerbEndingsByConn(uint16_t provides_conn);
 
 }  // namespace suzume::grammar
 

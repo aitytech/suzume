@@ -31,7 +31,6 @@ using verb_helpers::isVerbInDictionary;
 
 using adj_detail::makeIAdjCandidate;
 using adj_detail::makeIAdjStemCandidate;
-using adj_detail::makeTrimmedAdjVariant;
 
 std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                               const std::vector<normalize::CharType>& char_types,

@@ -10,8 +10,8 @@ namespace suzume::analysis {
 using namespace compound_verb_detail;
 
 void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                   const std::vector<char32_t>& codepoints, size_t start_pos,
-                                   const std::vector<normalize::CharType>& char_types,
+                                   const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                   size_t start_pos, const std::vector<normalize::CharType>& char_types,
                                    const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
                                    const grammar::Inflection& inflection) {
   if (start_pos >= char_types.size()) {
@@ -108,7 +108,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   bool dict_compound_v1 = false;
   std::string dict_compound_v1_lemma;
   {
-    size_t probe_byte = charPosToBytePos(codepoints, start_pos);
+    size_t probe_byte = byteOffsetAt(byte_offsets, start_pos);
     size_t best_len = 0;
     for (const auto& res : dict_manager.lookup(text, probe_byte)) {
       if (res.entry == nullptr || res.entry->pos != core::PartOfSpeech::Verb || res.length < 3 ||
@@ -169,8 +169,8 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
           char_types[k2_end + 1] == CharType::Kanji) {
         char32_t base2 = godanRenyokeiBaseCp(codepoints[k2_end]);
         if (base2 != 0) {
-          size_t k2_start_byte = charPosToBytePos(codepoints, k2_start);
-          size_t k2_end_byte = charPosToBytePos(codepoints, k2_end);
+          size_t k2_start_byte = byteOffsetAt(byte_offsets, k2_start);
+          size_t k2_end_byte = byteOffsetAt(byte_offsets, k2_end);
           std::string embedded2(text.substr(k2_start_byte, k2_end_byte - k2_start_byte));
           embedded2 += normalize::utf8::encode({base2});
           if (dict_manager.lookupExact(embedded2, core::PartOfSpeech::Verb) != nullptr) {
@@ -190,8 +190,8 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   }
 
   // Get byte positions
-  size_t start_byte = charPosToBytePos(codepoints, start_pos);
-  size_t v2_start_byte = charPosToBytePos(codepoints, v2_start);
+  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  size_t v2_start_byte = byteOffsetAt(byte_offsets, v2_start);
 
   // Inflection analyzer for V2 detection (shared instance from Tokenizer)
 
@@ -302,7 +302,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         // Case 1: Hiragana V2 inflected forms (e.g., きった from きる, かった from かう)
         // Try different lengths for V2 inflected form (shortest match first)
         for (size_t v2_end = v2_start + 2; v2_end <= v2_hiragana_end; ++v2_end) {
-          size_t v2_end_byte = charPosToBytePos(codepoints, v2_end);
+          size_t v2_end_byte = byteOffsetAt(byte_offsets, v2_end);
           std::string v2_text(text.substr(v2_start_byte, v2_end_byte - v2_start_byte));
 
           // Use analyze() to get all candidates, not just the best one.
@@ -367,7 +367,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
 
                   // Try inflection on kanji+hiragana portion (shortest match first)
                   for (size_t v2_end = hira_start + 1; v2_end <= hira_end; ++v2_end) {
-                    size_t v2_end_byte = charPosToBytePos(codepoints, v2_end);
+                    size_t v2_end_byte = byteOffsetAt(byte_offsets, v2_end);
                     std::string v2_text(text.substr(v2_start_byte, v2_end_byte - v2_start_byte));
 
                     // Use analyze() to search all candidates for matching base form
@@ -438,7 +438,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
 
     // Build the V1 base form for verification
     std::string v1_base;
-    size_t v1_end_byte = is_ichidan ? v2_start_byte : charPosToBytePos(codepoints, kanji_end);
+    size_t v1_end_byte = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end);
     // Check if V1 base form is in dictionary
     bool v1_verified = dict_compound_v1;
     bool v1_dict_verified = dict_compound_v1;  // tracks dict verification for cost calculation
@@ -512,7 +512,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       // as a whole, but an embedded dictionary verb combined with a verified
       // V2 is strong evidence that the V1 is a real verb rather than a noun.
       if (!v1_verified && is_ichidan && kanji_count >= 2) {
-        size_t v1_second_char_byte = charPosToBytePos(codepoints, start_pos + 1);
+        size_t v1_second_char_byte = byteOffsetAt(byte_offsets, start_pos + 1);
         std::string embedded_base(text.substr(v1_second_char_byte, v1_end_byte - v1_second_char_byte));
         embedded_base += "る";
         if (dict_manager.lookupExact(embedded_base, core::PartOfSpeech::Verb) != nullptr) {
@@ -547,7 +547,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       // Check if V1 renyokei is known as a non-verb (noun, adjective, etc.)
       // If so, don't form compound verb. E.g., 好き is ADJ, not verb renyokei of 好く.
       if (use_inflection_fallback) {
-        size_t v1_renyokei_end = is_ichidan ? v2_start_byte : charPosToBytePos(codepoints, kanji_end + 1);
+        size_t v1_renyokei_end = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end + 1);
         std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
         if (verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, v1_renyokei)) {
           // V1 renyokei is a known non-verb word, don't form compound
@@ -557,7 +557,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
 
       if (use_inflection_fallback) {
         // Get V1 renyokei form for inflection analysis
-        size_t v1_renyokei_end = is_ichidan ? v2_start_byte : charPosToBytePos(codepoints, kanji_end + 1);
+        size_t v1_renyokei_end = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end + 1);
         std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
 
         auto infl_result = inflection.getBest(v1_renyokei);
@@ -623,7 +623,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // Build compound verb base form (V1 renyokei + V2 base form)
     // e.g., 走り + 出す = 走り出す, 走り + だす = 走り出す
     std::string compound_base;
-    size_t v1_renyokei_end = is_ichidan ? v2_start_byte : charPosToBytePos(codepoints, kanji_end + 1);
+    size_t v1_renyokei_end = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end + 1);
     compound_base = std::string(text.substr(start_byte, v1_renyokei_end - start_byte));
     // Use the pre-defined base_form for V2 (always in kanji form for consistency)
     compound_base += v2_verb.surface;

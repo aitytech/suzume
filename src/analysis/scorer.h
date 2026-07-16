@@ -5,7 +5,6 @@
 #include <limits>
 
 #include "analysis/candidate_options.h"
-#include "analysis/interfaces.h"
 #include "core/lattice.h"
 #include "core/types.h"
 #include "grammar/inflection_scorer.h"
@@ -71,12 +70,12 @@ struct ScorerOptions {
 /**
  * @brief Scoring calculator for morphological analysis
  */
-class Scorer : public IScorer {
+class Scorer {
  public:
   explicit Scorer(const ScorerOptions& options = {});
-  ~Scorer() override = default;
+  ~Scorer() = default;
 
-  // Non-copyable, non-movable (inherits from IScorer)
+  // Non-copyable, non-movable
   Scorer(const Scorer&) = delete;
   Scorer& operator=(const Scorer&) = delete;
   Scorer(Scorer&&) = delete;
@@ -87,7 +86,7 @@ class Scorer : public IScorer {
    * @param edge Lattice edge
    * @return Word cost
    */
-  float wordCost(const core::LatticeEdge& edge) const override;
+  float wordCost(const core::LatticeEdge& edge) const;
 
   /**
    * @brief Calculate connection cost
@@ -95,7 +94,7 @@ class Scorer : public IScorer {
    * @param next Next edge
    * @return Connection cost
    */
-  float connectionCost(const core::LatticeEdge& prev, const core::LatticeEdge& next) const override;
+  float connectionCost(const core::LatticeEdge& prev, const core::LatticeEdge& next) const;
 
   /**
    * @brief Get POS prior

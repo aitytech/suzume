@@ -10,12 +10,14 @@
 
 namespace suzume::analysis {
 
-size_t charPosToBytePos(const std::vector<char32_t>& codepoints, size_t char_pos) {
-  size_t byte_pos = 0;
-  for (size_t idx = 0; idx < char_pos && idx < codepoints.size(); ++idx) {
-    byte_pos += core::utf8ByteLength(codepoints[idx]);
+ByteOffsets buildByteOffsets(const std::vector<char32_t>& codepoints) {
+  ByteOffsets byte_offsets;
+  byte_offsets.reserve(codepoints.size() + 1);
+  byte_offsets.push_back(0);
+  for (char32_t codepoint : codepoints) {
+    byte_offsets.push_back(byte_offsets.back() + core::utf8ByteLength(codepoint));
   }
-  return byte_pos;
+  return byte_offsets;
 }
 
 size_t advanceCharsToBytePos(const std::vector<char32_t>& codepoints, size_t start_char, size_t start_byte,

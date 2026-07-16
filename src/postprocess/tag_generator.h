@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 #include "core/morpheme.h"
@@ -57,13 +56,6 @@ class TagGenerator {
    * @return Vector of tag entries with POS information
    */
   std::vector<TagEntry> generate(const std::vector<core::Morpheme>& morphemes) const;
-
-  /**
-   * @brief Generate tags from text using analyzer
-   * @param text Input text
-   * @return Vector of tag entries with POS information
-   */
-  static std::vector<TagEntry> generateFromText(std::string_view text);
 
  private:
   TagGeneratorOptions options_;

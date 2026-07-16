@@ -16,11 +16,6 @@
 #include "lattice.h"
 #include "morpheme.h"
 
-// Forward declaration for scorer interface
-namespace suzume::analysis {
-class IScorer;
-}  // namespace suzume::analysis
-
 namespace suzume::core {
 
 inline constexpr size_t kNumExtendedPosTypes = static_cast<size_t>(ExtendedPOS::Count_);

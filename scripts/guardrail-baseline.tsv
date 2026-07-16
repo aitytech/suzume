@@ -1,5 +1,6 @@
 # file	surface_cmp	score_literals
 src/analysis/adjective_candidates_hiragana.cpp	0	3
+src/analysis/adjective_candidates_internal.cpp	0	0
 src/analysis/adjective_candidates_kanji.cpp	0	7
 src/analysis/adjective_candidates_stem.cpp	0	6
 src/analysis/analyzer.cpp	0	0
@@ -13,7 +14,7 @@ src/analysis/join_noun.cpp	0	18
 src/analysis/join_te_aux.cpp	0	2
 src/analysis/scorer.cpp	0	170
 src/analysis/scorer_connection_cost.cpp	51	4
-src/analysis/scorer_connection_rules_lexical.cpp	27	0
+src/analysis/scorer_connection_rules_lexical.cpp	26	0
 src/analysis/scorer_connection_rules_verb.cpp	40	0
 src/analysis/scorer_word_cost.cpp	5	1
 src/analysis/split_candidates.cpp	1	7

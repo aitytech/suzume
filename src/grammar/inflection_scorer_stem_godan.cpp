@@ -101,7 +101,7 @@ float scoreStemAndIchidan(float base, const InflectionScoreContext& context) {
         // - Single-char い (from いる - to exist/be) P5-3
         // - 用い (用いる - to use), 率い (率いる - to lead), 報い (報いる - to repay) P5-2
         bool is_valid_i_stem = (stem == "い" ||  // P5-3: いる
-                                isInArray(stem, inflection::kValidKanjiIStemExceptions));
+                                inflection::isValidKanjiIStemException(stem));
         if (!is_valid_i_stem) {
           base -= inflection::kPenaltyIchidanOnbinMarkerStemInvalid;
           logConfidenceAdjustment(-inflection::kPenaltyIchidanOnbinMarkerStemInvalid,
@@ -249,7 +249,7 @@ float scoreStemAndIchidan(float base, const InflectionScoreContext& context) {
       // ends in い, which resembles GodanKa い-onbin (率いた looks like 率く), but
       // the correct lemma is the いる form. The same exception set guards the
       // onbin-marker path above, so both paths agree via one source of truth.
-      if (looks_godan && !isInArray(stem, inflection::kValidKanjiIStemExceptions)) {
+      if (looks_godan && !inflection::isValidKanjiIStemException(stem)) {
         // Stem matches Godan conjugation pattern for this context
         float pen = GET_OPT(penalty_ichidan_looks_godan, inflection::kPenaltyIchidanLooksGodan);
         base -= pen;
@@ -281,7 +281,7 @@ float scoreStemAndIchidan(float base, const InflectionScoreContext& context) {
       // the lemmatizer resolves 率い → 率いる rather than a spurious godan lemma.
       // Apply strong penalty when stem ends with kanji + い in renyokei context
       if (required_conn == conn::kVerbRenyokei && stem_len >= core::kTwoJapaneseCharBytes &&
-          !isInArray(stem, inflection::kValidKanjiIStemExceptions)) {
+          !inflection::isValidKanjiIStemException(stem)) {
         std::string_view last3 = utf8::lastChar(stem);  // Last 3 bytes = い
         std::string_view prev3 =
             stem.substr(stem_len - core::kTwoJapaneseCharBytes, core::kJapaneseCharBytes);  // Previous char
@@ -362,7 +362,7 @@ float scoreStemAndIchidan(float base, const InflectionScoreContext& context) {
     bool first_is_kanji = kana::isKanjiCodepoint(first_cp);
     bool is_i_row = kana::isIRowCodepoint(second_cp);
     // Exception: specific known kanji + い stems are valid
-    bool is_known_kanji_i_stem = isInArray(stem, inflection::kValidKanjiIStemExceptions);
+    bool is_known_kanji_i_stem = inflection::isValidKanjiIStemException(stem);
     if (first_is_kanji && is_i_row && !is_known_kanji_i_stem) {
       float pen = GET_OPT(penalty_ichidan_kanji_hiragana_stem, inflection::kPenaltyIchidanKanjiHiraganaStem);
       base -= pen;

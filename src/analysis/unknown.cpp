@@ -41,6 +41,87 @@ void appendCandidates(std::vector<suzume::analysis::UnknownCandidate>& destinati
 
 namespace suzume::analysis {
 
+UnknownCandidate makeVerbCandidate(const std::string& surface, size_t start, size_t end, float cost,
+                                   const std::string& lemma, dictionary::ConjugationType conj_type, bool has_suffix,
+                                   [[maybe_unused]] CandidateOrigin origin, [[maybe_unused]] float confidence,
+                                   [[maybe_unused]] const char* pattern, core::ExtendedPOS extended_pos,
+                                   [[maybe_unused]] const char* epos_source) {
+  UnknownCandidate candidate;
+  candidate.surface = surface;
+  candidate.start = start;
+  candidate.end = end;
+  candidate.pos = core::PartOfSpeech::Verb;
+  candidate.extended_pos =
+      extended_pos != core::ExtendedPOS::Unknown ? extended_pos : core::detectVerbForm(surface, {});
+  candidate.cost = cost;
+  candidate.lemma = lemma;
+  candidate.conj_type = conj_type;
+  candidate.has_suffix = has_suffix;
+#ifdef SUZUME_DEBUG_INFO
+  candidate.origin = origin;
+  candidate.confidence = confidence;
+  if (pattern != nullptr) {
+    candidate.pattern = pattern;
+  }
+  if (epos_source != nullptr) {
+    candidate.epos_source = epos_source;
+  } else if (extended_pos != core::ExtendedPOS::Unknown) {
+    candidate.epos_source = "verb_cand_explicit";
+  } else {
+    candidate.epos_source = "verb_cand_auto";
+  }
+#endif
+  return candidate;
+}
+
+UnknownCandidate makeNounCandidate(const std::string& surface, size_t start, size_t end, float cost, bool has_suffix,
+                                   [[maybe_unused]] CandidateOrigin origin, core::ExtendedPOS extended_pos,
+                                   [[maybe_unused]] const char* epos_source) {
+  UnknownCandidate candidate;
+  candidate.surface = surface;
+  candidate.start = start;
+  candidate.end = end;
+  candidate.pos = core::PartOfSpeech::Noun;
+  candidate.extended_pos = extended_pos != core::ExtendedPOS::Unknown ? extended_pos : core::ExtendedPOS::Noun;
+  candidate.cost = cost;
+  candidate.has_suffix = has_suffix;
+#ifdef SUZUME_DEBUG_INFO
+  candidate.origin = origin;
+  if (epos_source != nullptr) {
+    candidate.epos_source = epos_source;
+  } else if (extended_pos != core::ExtendedPOS::Unknown) {
+    candidate.epos_source = "noun_cand_explicit";
+  } else {
+    candidate.epos_source = "noun_cand_default";
+  }
+#endif
+  return candidate;
+}
+
+UnknownCandidate makeCandidate(const std::string& surface, size_t start, size_t end, core::PartOfSpeech pos, float cost,
+                               bool has_suffix, [[maybe_unused]] CandidateOrigin origin, core::ExtendedPOS extended_pos,
+                               [[maybe_unused]] const char* epos_source) {
+  UnknownCandidate candidate;
+  candidate.surface = surface;
+  candidate.start = start;
+  candidate.end = end;
+  candidate.pos = pos;
+  candidate.extended_pos = extended_pos != core::ExtendedPOS::Unknown ? extended_pos : core::posToExtendedPos(pos);
+  candidate.cost = cost;
+  candidate.has_suffix = has_suffix;
+#ifdef SUZUME_DEBUG_INFO
+  candidate.origin = origin;
+  if (epos_source != nullptr) {
+    candidate.epos_source = epos_source;
+  } else if (extended_pos != core::ExtendedPOS::Unknown) {
+    candidate.epos_source = "make_cand_explicit";
+  } else {
+    candidate.epos_source = "make_cand_default";
+  }
+#endif
+  return candidate;
+}
+
 UnknownWordGenerator::UnknownWordGenerator(const UnknownOptions& options,
                                            const dictionary::DictionaryManager* dict_manager)
     : options_(options), dict_manager_(dict_manager) {}

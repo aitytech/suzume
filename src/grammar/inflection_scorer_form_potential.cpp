@@ -400,7 +400,7 @@ float scorePotentialAndSuru(float base, const InflectionScoreContext& context) {
     // These should be parsed as noun + particle, not verb conjugation.
     // Exception: kanji + い kami-ichidan verbs (率いた, 報いた, 老いた) are real
     // te/ta-forms of 率いる/報いる/老いる, guarded by the shared exception set.
-    if (last == "い" && !isInArray(stem, inflection::kValidKanjiIStemExceptions)) {
+    if (last == "い" && !inflection::isValidKanjiIStemException(stem)) {
       base -= inflection::kPenaltyTeFormNaAdjective;
       logConfidenceAdjustment(-inflection::kPenaltyTeFormNaAdjective, "te_form_na_adjective");
     }

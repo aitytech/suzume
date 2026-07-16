@@ -41,7 +41,7 @@ class Postprocessor {
    * @param morphemes Input morphemes
    * @return Processed morphemes
    */
-  std::vector<core::Morpheme> process(const std::vector<core::Morpheme>& morphemes) const;
+  std::vector<core::Morpheme> process(std::vector<core::Morpheme> morphemes) const;
 
   /**
    * @brief Update post-processing options while keeping dictionary-aware lemmatization.
@@ -55,12 +55,12 @@ class Postprocessor {
   /**
    * @brief Merge consecutive nouns
    */
-  static std::vector<core::Morpheme> mergeNounCompounds(const std::vector<core::Morpheme>& morphemes);
+  static std::vector<core::Morpheme> mergeNounCompounds(std::vector<core::Morpheme> morphemes);
 
   /**
    * @brief Merge consecutive numeric expressions (e.g., 3億 + 5000万円 → 3億5000万円)
    */
-  static std::vector<core::Morpheme> mergeNumericExpressions(const std::vector<core::Morpheme>& morphemes);
+  static std::vector<core::Morpheme> mergeNumericExpressions(std::vector<core::Morpheme> morphemes);
 
   /**
    * @brief Convert PREFIX + VERB to PREFIX + NOUN (renyoukei nominalization)
@@ -72,25 +72,25 @@ class Postprocessor {
    * @brief Merge verb renyokei + もの into compound noun
    * e.g., 食べ + もの → 食べもの, 飲み + もの → 飲みもの
    */
-  static std::vector<core::Morpheme> mergeVerbRenyokeiMono(const std::vector<core::Morpheme>& morphemes);
+  static std::vector<core::Morpheme> mergeVerbRenyokeiMono(std::vector<core::Morpheme> morphemes);
 
   /**
    * @brief Merge a lexicalized 副詞 mis-split into a non-word サ変/接尾辞 + particle
    * e.g., 決し(非語 決す)+て → 決して, 大し(非語 大す)+て → 大して, ちゃん(接尾辞)+と → ちゃんと
    */
-  static std::vector<core::Morpheme> mergeLexicalizedAdverbs(const std::vector<core::Morpheme>& morphemes);
+  static std::vector<core::Morpheme> mergeLexicalizedAdverbs(std::vector<core::Morpheme> morphemes);
 
   /**
    * @brief Merge prolonged sound mark (ー) with preceding token
    * e.g., あの + ー → あのー, すごー + ーー → すごー
    * Also merges consecutive ーs into one.
    */
-  static std::vector<core::Morpheme> mergeProlongedSoundMark(const std::vector<core::Morpheme>& morphemes);
+  static std::vector<core::Morpheme> mergeProlongedSoundMark(std::vector<core::Morpheme> morphemes);
 
   /**
    * @brief Remove unwanted morphemes
    */
-  std::vector<core::Morpheme> filterMorphemes(const std::vector<core::Morpheme>& morphemes) const;
+  std::vector<core::Morpheme> filterMorphemes(std::vector<core::Morpheme> morphemes) const;
 };
 
 }  // namespace suzume::postprocess

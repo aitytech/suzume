@@ -58,46 +58,47 @@ Tokenizer::Tokenizer(const dictionary::DictionaryManager& dict_manager, const Sc
 core::Lattice Tokenizer::buildLattice(std::string_view text, const std::vector<char32_t>& codepoints,
                                       const std::vector<normalize::CharType>& char_types) const {
   core::Lattice lattice(codepoints.size());
+  const ByteOffsets byte_offsets = buildByteOffsets(codepoints);
 
   // Process each position
   for (size_t pos = 0; pos < codepoints.size(); ++pos) {
     // These run at every position
-    addDictionaryCandidates(lattice, text, codepoints, pos);
-    addUnknownCandidates(lattice, text, codepoints, pos, char_types);
+    addDictionaryCandidates(lattice, text, codepoints, byte_offsets, pos);
+    addUnknownCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
     if (mode_ != core::AnalysisMode::Split) {
-      addMixedScriptCandidates(lattice, text, codepoints, pos, char_types);
+      addMixedScriptCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
     }
 
     // CharType-based dispatch: skip generators that can't match at this position
     auto ct = char_types[pos];
     if (ct == normalize::CharType::Kanji) {
-      addCompoundSplitCandidates(lattice, text, codepoints, pos, char_types);
-      addNounVerbSplitCandidates(lattice, text, codepoints, pos, char_types);
+      addCompoundSplitCandidates(lattice, text, byte_offsets, pos, char_types);
+      addNounVerbSplitCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
       if (mode_ != core::AnalysisMode::Split) {
-        addCompoundVerbJoinCandidates(lattice, text, codepoints, pos, char_types);
-        addPrefixNounJoinCandidates(lattice, text, codepoints, pos, char_types);
-        addTaruAdjectiveJoinCandidates(lattice, text, codepoints, pos, char_types);
-        addVerbSuffixNounJoinCandidates(lattice, text, codepoints, pos, char_types);
+        addCompoundVerbJoinCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
+        addPrefixNounJoinCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
+        addTaruAdjectiveJoinCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
+        addVerbSuffixNounJoinCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
       }
     } else if (ct == normalize::CharType::Hiragana) {
       if (mode_ != core::AnalysisMode::Split) {
-        addHiraganaCompoundVerbJoinCandidates(lattice, text, codepoints, pos, char_types);
-        addVerbSuffixNounJoinCandidates(lattice, text, codepoints, pos, char_types);
+        addHiraganaCompoundVerbJoinCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
+        addVerbSuffixNounJoinCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
       }
-      addTeFormAuxiliaryCandidates(lattice, text, codepoints, pos, char_types);
+      addTeFormAuxiliaryCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
     }
 
-    SUZUME_DEBUG_LOG("[LATTICE] pos=" << pos << " candidates=" << lattice.edgesAt(pos).size() << "\n");
+    SUZUME_DEBUG_LOG("[LATTICE] pos=" << pos << " candidates=" << lattice.edgeIdsAt(pos).size() << "\n");
   }
 
   // Fallback: ensure every position has at least one edge
   // This prevents the lattice from becoming invalid when no candidates are generated
   // (e.g., positions starting with small kana like っ, ゃ, ゅ, ょ)
   for (size_t pos = 0; pos < codepoints.size(); ++pos) {
-    if (lattice.edgesAt(pos).empty()) {
+    if (lattice.edgeIdsAt(pos).empty()) {
       // Generate a single-character fallback candidate with high penalty
-      size_t byte_start = charPosToBytePos(codepoints, pos);
-      size_t byte_end = charPosToBytePos(codepoints, pos + 1);
+      size_t byte_start = byteOffsetAt(byte_offsets, pos);
+      size_t byte_end = byteOffsetAt(byte_offsets, pos + 1);
       std::string surface(text.substr(byte_start, byte_end - byte_start));
 
       lattice.addEdge(surface, static_cast<uint32_t>(pos), static_cast<uint32_t>(pos + 1), core::PartOfSpeech::Other,
@@ -109,9 +110,10 @@ core::Lattice Tokenizer::buildLattice(std::string_view text, const std::vector<c
 }
 
 void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view text,
-                                        const std::vector<char32_t>& codepoints, size_t start_pos) const {
+                                        const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                        size_t start_pos) const {
   // Convert to byte position for dictionary lookup
-  size_t byte_pos = charPosToBytePos(codepoints, start_pos);
+  size_t byte_pos = byteOffsetAt(byte_offsets, start_pos);
 
   // Lookup in dictionary
   auto results = dict_manager_.lookup(text, byte_pos);
@@ -215,10 +217,10 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 }
 
 void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view text,
-                                     const std::vector<char32_t>& codepoints, size_t start_pos,
-                                     const std::vector<normalize::CharType>& char_types) const {
+                                     const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                     size_t start_pos, const std::vector<normalize::CharType>& char_types) const {
   // Check for dictionary entries at this position to penalize longer unknown words
-  size_t byte_pos = charPosToBytePos(codepoints, start_pos);
+  size_t byte_pos = byteOffsetAt(byte_offsets, start_pos);
   auto dict_results = dict_manager_.lookup(text, byte_pos);
 
   size_t max_dict_length = 0;
@@ -429,7 +431,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
           bool found_overlap = false;
           for (size_t back = 1; back <= kMaxLookback && back <= start_pos && !found_overlap; ++back) {
             size_t prev_pos = start_pos - back;
-            size_t prev_byte = charPosToBytePos(codepoints, prev_pos);
+            size_t prev_byte = byteOffsetAt(byte_offsets, prev_pos);
             auto prev_results = dict_manager_.lookup(text, prev_byte);
             for (const auto& result : prev_results) {
               if (result.entry != nullptr && result.length >= 2 && result.length > back &&
@@ -527,8 +529,8 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       }
 
       if (hiragana_start < candidate.end) {
-        size_t suffix_byte_start = charPosToBytePos(codepoints, hiragana_start);
-        size_t suffix_byte_end = charPosToBytePos(codepoints, candidate.end);
+        size_t suffix_byte_start = byteOffsetAt(byte_offsets, hiragana_start);
+        size_t suffix_byte_end = byteOffsetAt(byte_offsets, candidate.end);
         std::string_view hiragana_suffix = text.substr(suffix_byte_start, suffix_byte_end - suffix_byte_start);
 
         // Don't penalize verb conjugation endings
@@ -540,7 +542,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
         // - Known verb conjugation ending (te-form, renyoukei)
         // - Candidate has has_suffix flag (mizenkei for ぬ/れべき patterns)
         if (!is_verb_ending && !candidate.has_suffix) {
-          size_t suffix_byte_pos = charPosToBytePos(codepoints, hiragana_start);
+          size_t suffix_byte_pos = byteOffsetAt(byte_offsets, hiragana_start);
           auto suffix_results = dict_manager_.lookup(text, suffix_byte_pos);
 
           for (const auto& result : suffix_results) {
@@ -584,60 +586,70 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
 }
 
 void Tokenizer::addMixedScriptCandidates(core::Lattice& lattice, std::string_view text,
-                                         const std::vector<char32_t>& codepoints, size_t start_pos,
-                                         const std::vector<normalize::CharType>& char_types) const {
-  analysis::addMixedScriptCandidates(lattice, text, codepoints, start_pos, char_types, scorer_, dict_manager_);
+                                         const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                         size_t start_pos, const std::vector<normalize::CharType>& char_types) const {
+  analysis::addMixedScriptCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types, scorer_,
+                                     dict_manager_);
 }
 
 void Tokenizer::addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text,
-                                           const std::vector<char32_t>& codepoints, size_t start_pos,
+                                           const ByteOffsets& byte_offsets, size_t start_pos,
                                            const std::vector<normalize::CharType>& char_types) const {
-  analysis::addCompoundSplitCandidates(lattice, text, codepoints, start_pos, char_types, dict_manager_, scorer_);
+  analysis::addCompoundSplitCandidates(lattice, text, byte_offsets, start_pos, char_types, dict_manager_, scorer_);
 }
 
 void Tokenizer::addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text,
-                                           const std::vector<char32_t>& codepoints, size_t start_pos,
-                                           const std::vector<normalize::CharType>& char_types) const {
-  analysis::addNounVerbSplitCandidates(lattice, text, codepoints, start_pos, char_types, dict_manager_, scorer_,
-                                       inflection_);
+                                           const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                           size_t start_pos, const std::vector<normalize::CharType>& char_types) const {
+  analysis::addNounVerbSplitCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types, dict_manager_,
+                                       scorer_, inflection_);
 }
 
 void Tokenizer::addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                              const std::vector<char32_t>& codepoints, size_t start_pos,
+                                              const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                              size_t start_pos,
                                               const std::vector<normalize::CharType>& char_types) const {
-  analysis::addCompoundVerbJoinCandidates(lattice, text, codepoints, start_pos, char_types, dict_manager_, scorer_,
-                                          inflection_);
+  analysis::addCompoundVerbJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types, dict_manager_,
+                                          scorer_, inflection_);
 }
 
 void Tokenizer::addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                                      const std::vector<char32_t>& codepoints, size_t start_pos,
+                                                      const std::vector<char32_t>& codepoints,
+                                                      const ByteOffsets& byte_offsets, size_t start_pos,
                                                       const std::vector<normalize::CharType>& char_types) const {
-  analysis::addHiraganaCompoundVerbJoinCandidates(lattice, text, codepoints, start_pos, char_types, dict_manager_,
-                                                  scorer_, inflection_);
+  analysis::addHiraganaCompoundVerbJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types,
+                                                  dict_manager_, scorer_, inflection_);
 }
 
 void Tokenizer::addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                            const std::vector<char32_t>& codepoints, size_t start_pos,
+                                            const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                            size_t start_pos,
                                             const std::vector<normalize::CharType>& char_types) const {
-  analysis::addPrefixNounJoinCandidates(lattice, text, codepoints, start_pos, char_types, dict_manager_, scorer_);
+  analysis::addPrefixNounJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types, dict_manager_,
+                                        scorer_);
 }
 
 void Tokenizer::addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
-                                             const std::vector<char32_t>& codepoints, size_t start_pos,
+                                             const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                             size_t start_pos,
                                              const std::vector<normalize::CharType>& char_types) const {
-  analysis::addTeFormAuxiliaryCandidates(lattice, text, codepoints, start_pos, char_types, scorer_, inflection_);
+  analysis::addTeFormAuxiliaryCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types, scorer_,
+                                         inflection_);
 }
 
 void Tokenizer::addTaruAdjectiveJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                               const std::vector<char32_t>& codepoints, size_t start_pos,
+                                               const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                               size_t start_pos,
                                                const std::vector<normalize::CharType>& char_types) const {
-  analysis::addTaruAdjectiveJoinCandidates(lattice, text, codepoints, start_pos, char_types, scorer_);
+  analysis::addTaruAdjectiveJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types, scorer_);
 }
 
 void Tokenizer::addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                                const std::vector<char32_t>& codepoints, size_t start_pos,
+                                                const std::vector<char32_t>& codepoints,
+                                                const ByteOffsets& byte_offsets, size_t start_pos,
                                                 const std::vector<normalize::CharType>& char_types) const {
-  analysis::addVerbSuffixNounJoinCandidates(lattice, text, codepoints, start_pos, char_types, dict_manager_, scorer_);
+  analysis::addVerbSuffixNounJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types,
+                                            dict_manager_, scorer_);
 }
 
 }  // namespace suzume::analysis

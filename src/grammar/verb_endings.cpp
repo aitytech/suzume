@@ -8,7 +8,11 @@
 
 #include "verb_endings.h"
 
+#include <algorithm>
+#include <array>
+#include <iterator>
 #include <utility>
+#include <vector>
 
 namespace suzume::grammar {
 
@@ -31,9 +35,14 @@ constexpr VerbType kGodanTypeOrder[] = {
     VerbType::GodanNa, VerbType::GodanRa, VerbType::GodanTa, VerbType::GodanWa,
 };
 
+struct TaggedVerbEnding {
+  VerbEnding ending;
+  uint16_t provides_conn;
+};
+
 // Generate all Godan verb endings from Conjugation::getGodanRow()
-std::vector<VerbEnding> generateGodanEndings() {
-  std::vector<VerbEnding> endings;
+std::vector<TaggedVerbEnding> generateGodanEndings() {
+  std::vector<TaggedVerbEnding> endings;
   endings.reserve(80);  // Approx 9 types * 9 forms
 
   for (VerbType type : kGodanTypeOrder) {
@@ -50,42 +59,50 @@ std::vector<VerbEnding> generateGodanEndings() {
     const std::string& o_row = vowels.o;
 
     // Onbinkei (音便形): explicit onbin (い/っ/ん) or, for サ行, the い段 form.
-    endings.push_back({onbinFormOf(row), base, type, conn::kVerbOnbinkei, true});
+    endings.push_back({{onbinFormOf(row), base, type, true}, conn::kVerbOnbinkei});
 
     // Special case: GodanKa also has っ-onbin for いく (irregular)
     if (type == VerbType::GodanKa) {
-      endings.push_back({"っ", base, type, conn::kVerbOnbinkei, true});
+      endings.push_back({{"っ", base, type, true}, conn::kVerbOnbinkei});
     }
 
     // Renyokei (連用形)
-    endings.push_back({i_row, base, type, conn::kVerbRenyokei, false});
+    endings.push_back({{i_row, base, type, false}, conn::kVerbRenyokei});
 
     // Mizenkei (未然形)
-    endings.push_back({a_row, base, type, conn::kVerbMizenkei, false});
+    endings.push_back({{a_row, base, type, false}, conn::kVerbMizenkei});
 
     // Potential (可能形) - skip for GodanRa (conflicts with Ichidan stems)
     if (type != VerbType::GodanRa) {
-      endings.push_back({e_row, base, type, conn::kVerbPotential, false});
+      endings.push_back({{e_row, base, type, false}, conn::kVerbPotential});
     }
 
     // Kateikei (仮定形)
-    endings.push_back({e_row, base, type, conn::kVerbKatei, false});
+    endings.push_back({{e_row, base, type, false}, conn::kVerbKatei});
 
     // Meireikei (命令形)
-    endings.push_back({e_row, base, type, conn::kVerbMeireikei, false});
+    endings.push_back({{e_row, base, type, false}, conn::kVerbMeireikei});
 
     // Volitional (意志形)
-    endings.push_back({o_row, base, type, conn::kVerbVolitional, false});
+    endings.push_back({{o_row, base, type, false}, conn::kVerbVolitional});
 
     // Base/dictionary form (終止形)
-    endings.push_back({base, base, type, conn::kVerbBase, false});
+    endings.push_back({{base, base, type, false}, conn::kVerbBase});
   }
 
   return endings;
 }
 
 // Manually defined irregular verb patterns
-const std::vector<VerbEnding> kIrregularEndings = {
+struct VerbEndingSpec {
+  const char* suffix;
+  const char* base_suffix;
+  VerbType verb_type;
+  uint16_t provides_conn;
+  bool is_onbin;
+};
+
+constexpr VerbEndingSpec kIrregularEndings[] = {
     // 一段 (食べる)
     {"", "る", VerbType::Ichidan, conn::kVerbOnbinkei, true},
     {"", "る", VerbType::Ichidan, conn::kVerbRenyokei, false},
@@ -125,38 +142,60 @@ const std::vector<VerbEnding> kIrregularEndings = {
     {"", "い", VerbType::IAdjective, conn::kIAdjStem, false},
 };
 
-}  // namespace
+constexpr size_t kEndingGroupCount = conn::kVerbMeireikei - conn::kVerbBase + 1;
 
-const std::vector<VerbEnding>& getVerbEndings() {
-  // Lazy initialization: generate Godan patterns and combine with irregulars
-  static const std::vector<VerbEnding> kEndings = []() {
-    std::vector<VerbEnding> all;
+struct VerbEndingGroup {
+  size_t offset;
+  size_t size;
+};
 
-    // Add generated Godan endings
-    auto godan = generateGodanEndings();
-    all.reserve(godan.size() + kIrregularEndings.size());
-    for (auto& ending : godan) {
-      all.push_back(std::move(ending));
+struct VerbEndingTable {
+  std::vector<VerbEnding> endings;
+  std::array<VerbEndingGroup, kEndingGroupCount> groups;
+};
+
+VerbEndingTable buildVerbEndingTable() {
+  std::vector<TaggedVerbEnding> tagged = generateGodanEndings();
+  tagged.reserve(tagged.size() + std::size(kIrregularEndings));
+  for (const auto& spec : kIrregularEndings) {
+    tagged.push_back({{spec.suffix, spec.base_suffix, spec.verb_type, spec.is_onbin}, spec.provides_conn});
+  }
+
+  // Preserve the old scan order inside each connection group while laying all
+  // entries out in one contiguous allocation.
+  std::stable_sort(tagged.begin(), tagged.end(), [](const TaggedVerbEnding& lhs, const TaggedVerbEnding& rhs) {
+    return lhs.provides_conn < rhs.provides_conn;
+  });
+
+  VerbEndingTable table;
+  table.endings.reserve(tagged.size());
+  size_t tagged_index = 0;
+  for (size_t group_index = 0; group_index < kEndingGroupCount; ++group_index) {
+    const uint16_t provides_conn = static_cast<uint16_t>(conn::kVerbBase + group_index);
+    const size_t offset = table.endings.size();
+    while (tagged_index < tagged.size() && tagged[tagged_index].provides_conn == provides_conn) {
+      table.endings.push_back(std::move(tagged[tagged_index].ending));
+      ++tagged_index;
     }
-
-    // Add irregular verb endings
-    all.insert(all.end(), kIrregularEndings.begin(), kIrregularEndings.end());
-
-    return all;
-  }();
-
-  return kEndings;
+    table.groups[group_index] = {offset, table.endings.size() - offset};
+  }
+  return table;
 }
 
-const std::unordered_map<uint16_t, std::vector<VerbEnding>>& getVerbEndingsByConn() {
-  static const auto kGrouped = []() {
-    std::unordered_map<uint16_t, std::vector<VerbEnding>> grouped;
-    for (const auto& ending : getVerbEndings()) {
-      grouped[ending.provides_conn].push_back(ending);
-    }
-    return grouped;
-  }();
-  return kGrouped;
+const VerbEndingTable& verbEndingTable() {
+  static const VerbEndingTable kTable = buildVerbEndingTable();
+  return kTable;
+}
+
+}  // namespace
+
+VerbEndingRange getVerbEndingsByConn(uint16_t provides_conn) {
+  const auto& table = verbEndingTable();
+  if (provides_conn < conn::kVerbBase || provides_conn > conn::kVerbMeireikei) {
+    return {table.endings.data(), 0};
+  }
+  const auto& group = table.groups[provides_conn - conn::kVerbBase];
+  return {table.endings.data() + group.offset, group.size};
 }
 
 }  // namespace suzume::grammar

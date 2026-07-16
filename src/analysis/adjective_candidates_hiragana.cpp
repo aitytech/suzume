@@ -32,7 +32,6 @@ using verb_helpers::isVerbInDictionary;
 
 using adj_detail::makeIAdjCandidate;
 using adj_detail::makeIAdjStemCandidate;
-using adj_detail::makeTrimmedAdjVariant;
 
 namespace {
 
@@ -576,78 +575,16 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   // Add emphatic variants (まずい → まずいっ, etc.)
   addEmphaticVariants(candidates, codepoints);
 
-  // Add ku-form candidates for kunai patterns
-  // Preserve the adjective renyokei and negative auxiliary boundary.
-  // For each candidate ending with くない, generate a ku-form variant ending with く
-  std::vector<UnknownCandidate> ku_form_candidates;
-  for (const auto& cand : candidates) {
-    // Check if surface ends with くない
-    if (utf8::endsWith(cand.surface, "くない")) {
-      // Generate ku-form variant: しんどくない → しんどく
-      ku_form_candidates.push_back(makeTrimmedAdjVariant(cand, 2, candidate::kAdjKuSplitBonusWeak,
-                                                         core::ExtendedPOS::AdjRenyokei, "i_adjective_hira_ku"));
-    }
-    // Also check for くなかった pattern (negative past)
-    // E.g., 良くなかった → 良く + なかった
-    else if (utf8::endsWith(cand.surface, "くなかった")) {
-      // Generate ku-form variant: 良くなかった → 良く
-      ku_form_candidates.push_back(makeTrimmedAdjVariant(cand, 4, candidate::kAdjKuSplitBonusWeak,
-                                                         core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_nakatta"));
-    }
-    // Also check for くなかっ pattern (negative past before た)
-    // E.g., 良くなかっ → 良く + なかっ
-    else if (utf8::endsWith(cand.surface, "くなかっ")) {
-      // Generate ku-form variant: 良くなかっ → 良く
-      ku_form_candidates.push_back(makeTrimmedAdjVariant(cand, 3, candidate::kAdjKuSplitBonusWeak,
-                                                         core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_nakatt"));
-    }
-  }
-
-  // Add all ku-form candidates
-  for (auto& var : ku_form_candidates) {
-    candidates.push_back(std::move(var));
-  }
-
-  // Add katt-form candidates for katta patterns (BUG-036)
-  // Preserve adjective stem, tense auxiliary, and polite copula boundaries.
-  // For each candidate ending with かった, generate a katt-form variant ending with かっ
-  std::vector<UnknownCandidate> katt_form_candidates;
-  for (const auto& cand : candidates) {
-    // Check if surface ends with かった (i-adjective past form)
-    if (utf8::endsWith(cand.surface, "かった")) {
-      // Skip んかった pattern - this is contracted negative (ん) + past (かった)
-      // e.g., くだらんかった = くだら+ん+かっ+た, NOT くだ+らんかっ+た
-      if (utf8::endsWith(cand.surface, "んかった")) {
-        continue;
-      }
-      // Generate katt-form variant: よかった → よかっ (連用タ接続; AdjKatt→AuxTenseTa)
-      katt_form_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKattSplitBonus,
-                                                           core::ExtendedPOS::AdjKatt, "i_adjective_hira_katt"));
-    }
-  }
-
-  // Add all katt-form candidates
-  for (auto& var : katt_form_candidates) {
-    candidates.push_back(std::move(var));
-  }
-
-  // Add ke-form candidates for kereba patterns
-  // Preserve the adjective conditional stem and conjunctive particle boundary.
-  // For each candidate ending with ければ, generate a ke-form variant ending with けれ
-  std::vector<UnknownCandidate> ke_form_candidates;
-  for (const auto& cand : candidates) {
-    // Check if surface ends with ければ (i-adjective conditional form)
-    if (utf8::endsWith(cand.surface, "ければ")) {
-      // Generate ke-form variant: よければ → よけれ (仮定形; AdjKeForm→ParticleConj)
-      ke_form_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKeSplitBonus,
-                                                         core::ExtendedPOS::AdjKeForm, "i_adjective_hira_kere"));
-    }
-  }
-
-  // Add all ke-form candidates
-  for (auto& var : ke_form_candidates) {
-    candidates.push_back(std::move(var));
-  }
+  // Preserve adjective/auxiliary boundaries. The contracted んかった guard is
+  // intentionally specific to this pure-hiragana path.
+  static constexpr std::array<adj_detail::TrimmedAdjVariantRule, 5> kHiraganaTrimRules = {{
+      {"くない", 2, candidate::kAdjKuSplitBonusWeak, core::ExtendedPOS::AdjRenyokei, 0, "i_adjective_hira_ku"},
+      {"くなかった", 4, candidate::kAdjKuSplitBonusWeak, core::ExtendedPOS::AdjRenyokei, 0, "i_adjective_ku_nakatta"},
+      {"くなかっ", 3, candidate::kAdjKuSplitBonusWeak, core::ExtendedPOS::AdjRenyokei, 0, "i_adjective_ku_nakatt"},
+      {"かった", 1, candidate::kAdjKattSplitBonus, core::ExtendedPOS::AdjKatt, 1, "i_adjective_hira_katt", true},
+      {"ければ", 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm, 2, "i_adjective_hira_kere"},
+  }};
+  adj_detail::appendTrimmedAdjVariants(candidates, kHiraganaTrimRules.data(), kHiraganaTrimRules.size());
 
   // Add stem candidates for pure hiragana adjective + auxiliary patterns
   // This handles patterns like おいしそう → おいし (stem) + そう (aux)
@@ -806,77 +743,18 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   // Add emphatic variants (エグい → エグいっ, etc.)
   addEmphaticVariants(candidates, codepoints);
 
-  // Add katt-form candidates for katta patterns
-  // Preserve the adjective stem and tense auxiliary boundary.
-  std::vector<UnknownCandidate> katt_form_candidates;
-  for (const auto& cand : candidates) {
-    if (utf8::endsWith(cand.surface, "かった")) {
-      katt_form_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKattSplitBonus,
-                                                           core::ExtendedPOS::AdjKatt, "i_adjective_kata_katt"));
-    }
-  }
-  for (auto& var : katt_form_candidates) {
-    candidates.push_back(std::move(var));
-  }
-
-  // Add ku-form candidates for kute patterns (te-form split)
-  // Preserve the adjective renyokei and conjunctive particle boundary.
-  std::vector<UnknownCandidate> ku_te_candidates;
-  for (const auto& cand : candidates) {
-    if (utf8::endsWith(cand.surface, "くて")) {
-      // AdjRenyokei→ParticleConj
-      ku_te_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKuSplitBonus,
-                                                       core::ExtendedPOS::AdjRenyokei, "i_adjective_kata_ku_te"));
-    }
-  }
-  for (auto& var : ku_te_candidates) {
-    candidates.push_back(std::move(var));
-  }
-
-  // Add ku-form candidates for kunai patterns (negative form split)
-  // Preserve the adjective renyokei and negative auxiliary boundary.
-  std::vector<UnknownCandidate> ku_nai_candidates;
-  for (const auto& cand : candidates) {
-    if (utf8::endsWith(cand.surface, "くない")) {
-      // AdjRenyokei→AuxNegativeNai
-      ku_nai_candidates.push_back(makeTrimmedAdjVariant(cand, 2, candidate::kAdjKuSplitBonusWeak,
-                                                        core::ExtendedPOS::AdjRenyokei, "i_adjective_kata_ku_nai"));
-    }
-  }
-  for (auto& var : ku_nai_candidates) {
-    candidates.push_back(std::move(var));
-  }
-
-  // Add ke-form candidates for kereba patterns
-  // Preserve the adjective conditional stem and conjunctive particle boundary.
-  std::vector<UnknownCandidate> ke_form_candidates;
-  for (const auto& cand : candidates) {
-    if (utf8::endsWith(cand.surface, "ければ")) {
-      ke_form_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKeSplitBonus,
-                                                         core::ExtendedPOS::AdjKeForm, "i_adjective_kata_kere"));
-    }
-  }
-  for (auto& var : ke_form_candidates) {
-    candidates.push_back(std::move(var));
-  }
-
-  // Add stem candidates for sou patterns (appearance auxiliary)
-  // Preserve the adjective stem and appearance-auxiliary boundary.
-  std::vector<UnknownCandidate> stem_sou_candidates;
-  for (const auto& cand : candidates) {
-    if (utf8::endsWith(cand.surface, "そう")) {
-      // Skip if trimming そう would leave an empty stem.
-      if (cand.surface.size() <= core::kTwoJapaneseCharBytes) {
-        continue;
-      }
-      // Trim そう (2 chars) → AdjStem for the AdjStem→AuxAppearanceSou bigram.
-      stem_sou_candidates.push_back(makeTrimmedAdjVariant(cand, 2, candidate::kAdjStemSplitBonus,
-                                                          core::ExtendedPOS::AdjStem, "i_adjective_kata_stem_sou"));
-    }
-  }
-  for (auto& var : stem_sou_candidates) {
-    candidates.push_back(std::move(var));
-  }
+  // Preserve katakana adjective connection boundaries. Unlike the hiragana
+  // path, negative-past spans historically only derive the intermediate かっ
+  // form here; keep that route-specific behavior.
+  static constexpr std::array<adj_detail::TrimmedAdjVariantRule, 5> kKatakanaTrimRules = {{
+      {"かった", 1, candidate::kAdjKattSplitBonus, core::ExtendedPOS::AdjKatt, 0, "i_adjective_kata_katt"},
+      {"くて", 1, candidate::kAdjKuSplitBonus, core::ExtendedPOS::AdjRenyokei, 1, "i_adjective_kata_ku_te"},
+      {"くない", 2, candidate::kAdjKuSplitBonusWeak, core::ExtendedPOS::AdjRenyokei, 2, "i_adjective_kata_ku_nai"},
+      {"ければ", 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm, 3, "i_adjective_kata_kere"},
+      {"そう", 2, candidate::kAdjStemSplitBonus, core::ExtendedPOS::AdjStem, 4, "i_adjective_kata_stem_sou", false,
+       true},
+  }};
+  adj_detail::appendTrimmedAdjVariants(candidates, kKatakanaTrimRules.data(), kKatakanaTrimRules.size());
 
   // Sort by cost
   verb_helpers::sortCandidatesByCost(candidates);

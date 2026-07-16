@@ -6,20 +6,31 @@
 #include "auxiliary_generator.h"
 
 #include <algorithm>
+#include <iterator>
+#include <string_view>
 #include <utility>
 
+#include "conjugation.h"
+#include "connection.h"
 #include "core/utf8_constants.h"
 
 namespace suzume::grammar {
 
 namespace {
 
+struct AuxiliaryBase {
+  std::string_view surface;
+  VerbType conj_type;
+  uint16_t category_id;
+  uint16_t required_conn;
+};
+
 // UTF-8 helper: drop last character (assumes valid UTF-8 hiragana)
-std::string dropLastChar(const std::string& s) {
-  if (s.size() >= core::kJapaneseCharBytes) {
-    return s.substr(0, s.size() - core::kJapaneseCharBytes);
+std::string dropLastChar(std::string_view text) {
+  if (text.size() >= core::kJapaneseCharBytes) {
+    return std::string(text.substr(0, text.size() - core::kJapaneseCharBytes));
   }
-  return s;
+  return std::string(text);
 }
 
 // Conjugation suffix with output connection ID
@@ -60,7 +71,7 @@ constexpr ConjSuffix kIchidanProgressive[] = {
 };
 
 // Godan suffix tables (Wa/Ka/Sa/Ra and the いく 促音便 irregular) are derived at
-// startup from Conjugation::getGodanRow() — see deriveGodanSuffixes() below — so
+// startup from Conjugation::getGodanRow() — see appendGodanWithStem() below — so
 // the per-row phonology (onbin surface, 濁点 on た, い段/あ段 kana) lives only in
 // getGodanRows() instead of being hand-copied into six parallel tables here.
 
@@ -92,38 +103,27 @@ constexpr ConjSuffix kMasu[] = {
 // Note: All entries including te-form are generated for inflection analysis.
 // Connection scoring makes the grammatical path
 // VERB(renyokei/onbinkei) + て(PARTICLE) win over a unified te-form.
-template <size_t N>
-std::vector<AuxiliaryEntry> generateWithStem(const AuxiliaryBase& base, const ConjSuffix (&suffixes)[N]) {
-  std::string stem = dropLastChar(base.surface);
-  std::string reading_stem = dropLastChar(base.reading);
-
-  std::vector<AuxiliaryEntry> result;
-  result.reserve(N);
+template <size_t Size>
+void appendWithStem(const AuxiliaryBase& base, const ConjSuffix (&suffixes)[Size],
+                    std::vector<AuxiliaryEntry>& result) {
+  const std::string stem = dropLastChar(base.surface);
+  result.reserve(result.size() + Size);
   for (const auto& suf : suffixes) {
-    result.push_back(
-        {stem + suf.suffix, reading_stem + suf.suffix, base.surface, base.left_id, suf.right_id, base.required_conn});
+    result.push_back({stem + suf.suffix, suf.right_id, base.required_conn});
   }
-  return result;
 }
 
-// A godan suffix derived from a GodanRow. Mirrors ConjSuffix but built at runtime.
-struct DerivedSuffix {
-  std::string suffix;
-  uint16_t right_id;
-};
-
-// Derive a godan base's suffixes from its GodanRow, in the fixed order the hand-
-// written tables used: base, ta, tara, te, [masu, mashita, nai, nakatta, nakute].
-// The right_id column is uniform across all godan rows, so it derives too.
+// Append a godan base's suffixes in the fixed order the handwritten tables
+// used: base, ta, tara, te, [masu, mashita, nai, nakatta, nakute].
 // @param te_attach_only  Benefactive bases stop after te (no masu/negative), the
 //                        old kGodanWaTeAttach subset.
 // @param force_sokuonbin いく-type 促音便 irregular: onbin becomes っ (った/って);
 //                        ます系 and 未然形 still follow the regular row.
-std::vector<DerivedSuffix> deriveGodanSuffixes(VerbType type, bool te_attach_only, bool force_sokuonbin) {
-  std::vector<DerivedSuffix> forms;
-  const Conjugation::GodanRow* row_ptr = Conjugation::getGodanRow(type);
+void appendGodanWithStem(const AuxiliaryBase& base, bool te_attach_only, bool force_sokuonbin,
+                         std::vector<AuxiliaryEntry>& result) {
+  const Conjugation::GodanRow* row_ptr = Conjugation::getGodanRow(base.conj_type);
   if (row_ptr == nullptr) {
-    return forms;
+    return;
   }
   Conjugation::GodanRow row = *row_ptr;
   if (force_sokuonbin) {
@@ -133,539 +133,529 @@ std::vector<DerivedSuffix> deriveGodanSuffixes(VerbType type, bool te_attach_onl
   const std::string onbin = onbinFormOf(row);
   const std::string ta_kana = row.voiced_ta ? "だ" : "た";
   const std::string te_kana = row.voiced_ta ? "で" : "て";
+  const std::string stem = dropLastChar(base.surface);
 
-  forms.push_back({vowels.base, conn::kAuxOutBase});
-  forms.push_back({onbin + ta_kana, conn::kAuxOutTa});
-  forms.push_back({onbin + ta_kana + "ら", conn::kAuxOutBase});
-  forms.push_back({onbin + te_kana, conn::kAuxOutTe});
+  result.reserve(result.size() + (te_attach_only ? 4 : 9));
+  result.push_back({stem + vowels.base, conn::kAuxOutBase, base.required_conn});
+  result.push_back({stem + onbin + ta_kana, conn::kAuxOutTa, base.required_conn});
+  result.push_back({stem + onbin + ta_kana + "ら", conn::kAuxOutBase, base.required_conn});
+  result.push_back({stem + onbin + te_kana, conn::kAuxOutTe, base.required_conn});
   if (te_attach_only) {
-    return forms;
+    return;
   }
-  forms.push_back({vowels.i + "ます", conn::kAuxOutMasu});
-  forms.push_back({vowels.i + "ました", conn::kAuxOutTa});
-  forms.push_back({vowels.a + "ない", conn::kAuxOutBase});
-  forms.push_back({vowels.a + "なかった", conn::kAuxOutTa});
-  forms.push_back({vowels.a + "なくて", conn::kAuxOutTe});
-  return forms;
-}
-
-// Godan counterpart of generateWithStem(), fed by deriveGodanSuffixes().
-std::vector<AuxiliaryEntry> generateGodanWithStem(const AuxiliaryBase& base, bool te_attach_only,
-                                                  bool force_sokuonbin) {
-  std::string stem = dropLastChar(base.surface);
-  std::string reading_stem = dropLastChar(base.reading);
-  const auto suffixes = deriveGodanSuffixes(base.conj_type, te_attach_only, force_sokuonbin);
-  std::vector<AuxiliaryEntry> result;
-  result.reserve(suffixes.size());
-  for (const auto& suf : suffixes) {
-    result.push_back(
-        {stem + suf.suffix, reading_stem + suf.suffix, base.surface, base.left_id, suf.right_id, base.required_conn});
-  }
-  return result;
+  result.push_back({stem + vowels.i + "ます", conn::kAuxOutMasu, base.required_conn});
+  result.push_back({stem + vowels.i + "ました", conn::kAuxOutTa, base.required_conn});
+  result.push_back({stem + vowels.a + "ない", conn::kAuxOutBase, base.required_conn});
+  result.push_back({stem + vowels.a + "なかった", conn::kAuxOutTa, base.required_conn});
+  result.push_back({stem + vowels.a + "なくて", conn::kAuxOutTe, base.required_conn});
 }
 
 // Generate forms using full forms (no stem, for irregular verbs)
-template <size_t N>
-std::vector<AuxiliaryEntry> generateFullForms(const AuxiliaryBase& base, const ConjSuffix (&forms)[N]) {
-  std::vector<AuxiliaryEntry> result;
-  result.reserve(N);
+template <size_t Size>
+void appendFullForms(const AuxiliaryBase& base, const ConjSuffix (&forms)[Size], std::vector<AuxiliaryEntry>& result) {
+  result.reserve(result.size() + Size);
   for (const auto& form : forms) {
-    result.push_back({form.suffix, form.suffix, base.surface, base.left_id, form.right_id, base.required_conn});
+    result.push_back({form.suffix, form.right_id, base.required_conn});
   }
-  return result;
 }
 
 // Generate Masu forms (special: fixed lemma "ます")
-std::vector<AuxiliaryEntry> generateMasuForms(const AuxiliaryBase& base) {
-  std::vector<AuxiliaryEntry> result;
-  result.reserve(std::size(kMasu));
+void appendMasuForms(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>& result) {
+  result.reserve(result.size() + std::size(kMasu));
   for (const auto& form : kMasu) {
-    result.push_back({form.suffix, form.suffix, "ます", base.left_id, form.right_id, base.required_conn});
+    result.push_back({form.suffix, form.right_id, base.required_conn});
   }
-  return result;
 }
 
 // No conjugation - single form only
-std::vector<AuxiliaryEntry> generateNoConjForms(const AuxiliaryBase& base) {
-  return {{base.surface, base.reading, base.surface, base.left_id, conn::kAuxOutBase, base.required_conn}};
+void appendNoConjForm(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>& result) {
+  result.push_back({std::string(base.surface), conn::kAuxOutBase, base.required_conn});
 }
 
 // Add special patterns that cannot be auto-generated
+struct SpecialPattern {
+  const char* surface;
+  uint16_t right_id;
+  uint16_t required_conn;
+};
+
 void addSpecialPatterns(std::vector<AuxiliaryEntry>& entries) {
   using namespace conn;
+  static constexpr SpecialPattern kPatterns[] = {
 
-  // === Past/Conditional た系 (voiced variants) ===
-  entries.push_back({"た", "た", "た", kAuxTa, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"だ", "だ", "た", kAuxTa, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"たら", "たら", "たら", kAuxTa, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"だら", "だら", "たら", kAuxTa, kAuxOutBase, kVerbOnbinkei});
+      // === Past/Conditional た系 (voiced variants) ===
+      {"た", kAuxOutTa, kVerbOnbinkei},
+      {"だ", kAuxOutTa, kVerbOnbinkei},
+      {"たら", kAuxOutBase, kVerbOnbinkei},
+      {"だら", kAuxOutBase, kVerbOnbinkei},
 
-  // === Te-form (voiced variants) ===
-  // These entries are needed for inflection analysis (matching て/で after onbin stems).
-  // For tokenization, the PARTICLE て/で in entries.cpp competes with these AUXILIARY entries.
-  // Connection rules give the conjunctive-particle path a grammatical bonus.
-  entries.push_back({"て", "て", "て", kAuxTe, kAuxOutTe, kVerbOnbinkei});
-  entries.push_back({"で", "で", "て", kAuxTe, kAuxOutTe, kVerbOnbinkei});
+      // === Te-form (voiced variants) ===
+      // These entries are needed for inflection analysis (matching て/で after onbin stems).
+      // For tokenization, the PARTICLE て/で in entries.cpp competes with these AUXILIARY entries.
+      // Connection rules give the conjunctive-particle path a grammatical bonus.
+      {"て", kAuxOutTe, kVerbOnbinkei},
+      {"で", kAuxOutTe, kVerbOnbinkei},
 
-  // === Tari form ===
-  entries.push_back({"たり", "たり", "たり", kAuxTa, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"だり", "だり", "たり", kAuxTa, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"たりする", "たりする", "たり", kAuxTa, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"だりする", "だりする", "たり", kAuxTa, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"たりした", "たりした", "たり", kAuxTa, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"だりした", "だりした", "たり", kAuxTa, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"たりして", "たりして", "たり", kAuxTa, kAuxOutTe, kVerbOnbinkei});
-  entries.push_back({"だりして", "だりして", "たり", kAuxTa, kAuxOutTe, kVerbOnbinkei});
+      // === Tari form ===
+      {"たり", kAuxOutBase, kVerbOnbinkei},
+      {"だり", kAuxOutBase, kVerbOnbinkei},
+      {"たりする", kAuxOutBase, kVerbOnbinkei},
+      {"だりする", kAuxOutBase, kVerbOnbinkei},
+      {"たりした", kAuxOutTa, kVerbOnbinkei},
+      {"だりした", kAuxOutTa, kVerbOnbinkei},
+      {"たりして", kAuxOutTe, kVerbOnbinkei},
+      {"だりして", kAuxOutTe, kVerbOnbinkei},
 
-  // === Conditional ば ===
-  entries.push_back({"ば", "ば", "ば", kAuxNai, kAuxOutBase, kVerbKatei});
+      // === Conditional ば ===
+      {"ば", kAuxOutBase, kVerbKatei},
 
-  // === Classical negation ず (古語否定) - connects to mizenkei ===
-  // 尽きず, せず, 知らず etc.
-  entries.push_back({"ず", "ず", "ず", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"ずに", "ずに", "ず", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"ずとも", "ずとも", "ず", kAuxNai, kAuxOutBase, kVerbMizenkei});
+      // === Classical negation ず (古語否定) - connects to mizenkei ===
+      // 尽きず, せず, 知らず etc.
+      {"ず", kAuxOutBase, kVerbMizenkei},
+      {"ずに", kAuxOutBase, kVerbMizenkei},
+      {"ずとも", kAuxOutBase, kVerbMizenkei},
 
-  // === Classical negation ぬ (文語否定 連体形) - connects to mizenkei ===
-  // 消えぬ炎, 揃わぬ意見, 知れぬ心 etc.
-  entries.push_back({"ぬ", "ぬ", "ぬ", kAuxNai, kAuxOutBase, kVerbMizenkei});
+      // === Classical negation ぬ (文語否定 連体形) - connects to mizenkei ===
+      // 消えぬ炎, 揃わぬ意見, 知れぬ心 etc.
+      {"ぬ", kAuxOutBase, kVerbMizenkei},
 
-  // === Volitional ===
-  entries.push_back({"う", "う", "う", kAuxNai, kAuxOutBase, kVerbVolitional});
-  entries.push_back({"よう", "よう", "よう", kAuxNai, kAuxOutBase, kVerbVolitional});
+      // === Volitional ===
+      {"う", kAuxOutBase, kVerbVolitional},
+      {"よう", kAuxOutBase, kVerbVolitional},
 
-  // === Negative conjecture まい (打消推量) ===
-  // まい attaches to:
-  // - Godan 終止形: 行くまい, 書くまい, 言うまい
-  // - Ichidan 未然形: 食べまい, 見まい, 出来まい (でき + まい)
-  // - Kuru 未然形: こまい
-  // - Suru 未然形: しまい
-  entries.push_back({"まい", "まい", "まい", kAuxNai, kAuxOutBase, kVerbBase});
-  entries.push_back({"まい", "まい", "まい", kAuxNai, kAuxOutBase, kVerbMizenkei});
+      // === Negative conjecture まい (打消推量) ===
+      // まい attaches to:
+      // - Godan 終止形: 行くまい, 書くまい, 言うまい
+      // - Ichidan 未然形: 食べまい, 見まい, 出来まい (でき + まい)
+      // - Kuru 未然形: こまい
+      // - Suru 未然形: しまい
+      {"まい", kAuxOutBase, kVerbBase},
+      {"まい", kAuxOutBase, kVerbMizenkei},
 
-  // Removed: Volitional + とする (うとする, ようとする, etc.)
-  // These are multi-word constructions (volitional + quotative と + する) that
-  // should be split as う+と+する, not absorbed as single auxiliary suffixes.
-  // See also: DoesNotGenerateMultiWordConstructions test.
+      // Removed: Volitional + とする (うとする, ようとする, etc.)
+      // These are multi-word constructions (volitional + quotative と + する) that
+      // should be split as う+と+する, not absorbed as single auxiliary suffixes.
+      // See also: DoesNotGenerateMultiWordConstructions test.
 
-  // === Renyokei compounds ===
-  entries.push_back({"ながら", "ながら", "ながら", kAuxRenyokei, kAuxOutBase, kVerbRenyokei});
+      // === Renyokei compounds ===
+      {"ながら", kAuxOutBase, kVerbRenyokei},
 
-  // === Sou form (appearance) ===
-  entries.push_back({"そう", "そう", "そう", kAuxSou, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"そうだ", "そうだ", "そう", kAuxSou, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"そうだった", "そうだった", "そう", kAuxSou, kAuxOutTa, kVerbRenyokei});
-  entries.push_back({"そうです", "そうです", "そう", kAuxSou, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"そうでした", "そうでした", "そう", kAuxSou, kAuxOutTa, kVerbRenyokei});
+      // === Sou form (appearance) ===
+      {"そう", kAuxOutBase, kVerbRenyokei},
+      {"そうだ", kAuxOutBase, kVerbRenyokei},
+      {"そうだった", kAuxOutTa, kVerbRenyokei},
+      {"そうです", kAuxOutBase, kVerbRenyokei},
+      {"そうでした", kAuxOutTa, kVerbRenyokei},
 
-  // === Potential stem endings ===
-  entries.push_back({"る", "る", "る", kAuxReru, kAuxOutBase, kVerbPotential});
-  entries.push_back({"た", "た", "る", kAuxReru, kAuxOutTa, kVerbPotential});
-  entries.push_back({"て", "て", "る", kAuxReru, kAuxOutTe, kVerbPotential});
-  entries.push_back({"ない", "ない", "る", kAuxReru, kAuxOutBase, kVerbPotential});
-  entries.push_back({"なかった", "なかった", "る", kAuxReru, kAuxOutTa, kVerbPotential});
-  entries.push_back({"ます", "ます", "る", kAuxReru, kAuxOutMasu, kVerbPotential});
-  entries.push_back({"ました", "ました", "る", kAuxReru, kAuxOutTa, kVerbPotential});
-  entries.push_back({"ません", "ません", "る", kAuxReru, kAuxOutBase, kVerbPotential});
-  entries.push_back({"ませんでした", "ませんでした", "る", kAuxReru, kAuxOutTa, kVerbPotential});
+      // === Potential stem endings ===
+      {"る", kAuxOutBase, kVerbPotential},
+      {"た", kAuxOutTa, kVerbPotential},
+      {"て", kAuxOutTe, kVerbPotential},
+      {"ない", kAuxOutBase, kVerbPotential},
+      {"なかった", kAuxOutTa, kVerbPotential},
+      {"ます", kAuxOutMasu, kVerbPotential},
+      {"ました", kAuxOutTa, kVerbPotential},
+      {"ません", kAuxOutBase, kVerbPotential},
+      {"ませんでした", kAuxOutTa, kVerbPotential},
 
-  // === Contracted negative (ん) ===
-  // Colloquial contraction: ない → ん (e.g., 書かない → 書かん, わからない → わからん)
-  entries.push_back({"ん", "ん", "ない", kAuxNai, kAuxOutBase, kVerbMizenkei});
+      // === Contracted negative (ん) ===
+      // Colloquial contraction: ない → ん (e.g., 書かない → 書かん, わからない → わからん)
+      {"ん", kAuxOutBase, kVerbMizenkei},
 
-  // === Negative te-form ===
-  entries.push_back({"ないで", "ないで", "ないで", kAuxNai, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"ないでいる", "ないでいる", "ないで", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"ないでいた", "ないでいた", "ないで", kAuxNai, kAuxOutTa, kVerbMizenkei});
+      // === Negative te-form ===
+      {"ないで", kAuxOutTe, kVerbMizenkei},
+      {"ないでいる", kAuxOutBase, kVerbMizenkei},
+      {"ないでいた", kAuxOutTa, kVerbMizenkei},
 
-  // === Obligation patterns ===
-  entries.push_back({"ないといけない", "ないといけない", "ないといけない", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"なければならない", "なければならない", "なければならない", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"なくてはいけない", "なくてはいけない", "なくてはいけない", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"なきゃいけない", "なきゃいけない", "なきゃいけない", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"なくちゃ", "なくちゃ", "なくちゃ", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  // Note: bare なきゃ/なけりゃ (colloquial contractions of なければ) are NOT
-  // auxiliary suffixes here. They are standalone dictionary auxiliaries
-  // (entries.cpp: AuxNegativeNai), so verbs split as mizenkei + なきゃ,
-  // mirroring the なければ → mizenkei + なけれ + ば split. Registering them
-  // here would fuse kanji-stem godan verbs into a single token (書かなきゃ).
+      // === Obligation patterns ===
+      {"ないといけない", kAuxOutBase, kVerbMizenkei},
+      {"なければならない", kAuxOutBase, kVerbMizenkei},
+      {"なくてはいけない", kAuxOutBase, kVerbMizenkei},
+      {"なきゃいけない", kAuxOutBase, kVerbMizenkei},
+      {"なくちゃ", kAuxOutBase, kVerbMizenkei},
+      // Note: bare なきゃ/なけりゃ (colloquial contractions of なければ) are NOT
+      // auxiliary suffixes here. They are standalone dictionary auxiliaries
+      // (entries.cpp: AuxNegativeNai), so verbs split as mizenkei + なきゃ,
+      // mirroring the なければ → mizenkei + なけれ + ば split. Registering them
+      // here would fuse kanji-stem godan verbs into a single token (書かなきゃ).
 
-  // === I-adjective endings (stem attachments) ===
-  entries.push_back({"い", "い", "い", kAuxNai, kAuxOutBase, kIAdjStem});
-  entries.push_back({"かった", "かった", "い", kAuxNai, kAuxOutTa, kIAdjStem});
-  entries.push_back({"くない", "くない", "い", kAuxNai, kAuxOutBase, kIAdjStem});
-  entries.push_back({"くなかった", "くなかった", "い", kAuxNai, kAuxOutTa, kIAdjStem});
-  entries.push_back({"くて", "くて", "い", kAuxNai, kAuxOutTe, kIAdjStem});
-  entries.push_back({"ければ", "ければ", "い", kAuxNai, kAuxOutBase, kIAdjStem});
-  entries.push_back({"く", "く", "い", kAuxNai, kAuxOutBase, kIAdjStem});
-  entries.push_back({"かったら", "かったら", "い", kAuxNai, kAuxOutBase, kIAdjStem});
-  entries.push_back({"くなる", "くなる", "い", kAuxNai, kAuxOutBase, kIAdjStem});
-  entries.push_back({"くなった", "くなった", "い", kAuxNai, kAuxOutTa, kIAdjStem});
-  entries.push_back({"くなって", "くなって", "い", kAuxNai, kAuxOutTe, kIAdjStem});
-  entries.push_back({"さ", "さ", "い", kAuxNai, kAuxOutBase, kIAdjStem});
-  entries.push_back({"そう", "そう", "い", kAuxNai, kAuxOutBase, kIAdjStem});
-  entries.push_back({"そうだ", "そうだ", "い", kAuxNai, kAuxOutBase, kIAdjStem});
-  entries.push_back({"そうな", "そうな", "い", kAuxNai, kAuxOutBase, kIAdjStem});
-  entries.push_back({"そうに", "そうに", "い", kAuxNai, kAuxOutBase, kIAdjStem});
+      // === I-adjective endings (stem attachments) ===
+      {"い", kAuxOutBase, kIAdjStem},
+      {"かった", kAuxOutTa, kIAdjStem},
+      {"くない", kAuxOutBase, kIAdjStem},
+      {"くなかった", kAuxOutTa, kIAdjStem},
+      {"くて", kAuxOutTe, kIAdjStem},
+      {"ければ", kAuxOutBase, kIAdjStem},
+      {"く", kAuxOutBase, kIAdjStem},
+      {"かったら", kAuxOutBase, kIAdjStem},
+      {"くなる", kAuxOutBase, kIAdjStem},
+      {"くなった", kAuxOutTa, kIAdjStem},
+      {"くなって", kAuxOutTe, kIAdjStem},
+      {"さ", kAuxOutBase, kIAdjStem},
+      {"そう", kAuxOutBase, kIAdjStem},
+      {"そうだ", kAuxOutBase, kIAdjStem},
+      {"そうな", kAuxOutBase, kIAdjStem},
+      {"そうに", kAuxOutBase, kIAdjStem},
 
-  // === I-adjective + すぎる (from stem) ===
-  entries.push_back({"すぎる", "すぎる", "い", kAuxRenyokei, kAuxOutBase, kIAdjStem});
-  entries.push_back({"すぎた", "すぎた", "い", kAuxRenyokei, kAuxOutTa, kIAdjStem});
-  entries.push_back({"すぎて", "すぎて", "い", kAuxRenyokei, kAuxOutTe, kIAdjStem});
-  entries.push_back({"すぎます", "すぎます", "い", kAuxRenyokei, kAuxOutMasu, kIAdjStem});
+      // === I-adjective + すぎる (from stem) ===
+      {"すぎる", kAuxOutBase, kIAdjStem},
+      {"すぎた", kAuxOutTa, kIAdjStem},
+      {"すぎて", kAuxOutTe, kIAdjStem},
+      {"すぎます", kAuxOutMasu, kIAdjStem},
 
-  // === Causative-passive (させられる, せられる, される) ===
-  entries.push_back({"させられる", "させられる", "させられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"させられた", "させられた", "させられる", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"させられて", "させられて", "させられる", kAuxSeru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"させられない", "させられない", "させられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"させられます", "させられます", "させられる", kAuxSeru, kAuxOutMasu, kVerbMizenkei});
+      // === Causative-passive (させられる, せられる, される) ===
+      {"させられる", kAuxOutBase, kVerbMizenkei},
+      {"させられた", kAuxOutTa, kVerbMizenkei},
+      {"させられて", kAuxOutTe, kVerbMizenkei},
+      {"させられない", kAuxOutBase, kVerbMizenkei},
+      {"させられます", kAuxOutMasu, kVerbMizenkei},
+      {"せられる", kAuxOutBase, kVerbMizenkei},
+      {"せられた", kAuxOutTa, kVerbMizenkei},
+      {"せられて", kAuxOutTe, kVerbMizenkei},
+      {"せられない", kAuxOutBase, kVerbMizenkei},
+      {"せられます", kAuxOutMasu, kVerbMizenkei},
+      {"される", kAuxOutBase, kVerbMizenkei},
+      {"された", kAuxOutTa, kVerbMizenkei},
+      {"されて", kAuxOutTe, kVerbMizenkei},
+      {"されない", kAuxOutBase, kVerbMizenkei},
+      {"されます", kAuxOutMasu, kVerbMizenkei},
+      // Classical べき pattern for Suru passive (装飾されべき → 装飾 + されべき)
+      {"されべき", kAuxOutBase, kVerbMizenkei},
 
-  entries.push_back({"せられる", "せられる", "せられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"せられた", "せられた", "せられる", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"せられて", "せられて", "せられる", kAuxSeru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"せられない", "せられない", "せられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"せられます", "せられます", "せられる", kAuxSeru, kAuxOutMasu, kVerbMizenkei});
+      // === なくなる patterns ===
+      {"なくなる", kAuxOutBase, kVerbMizenkei},
+      {"なくなった", kAuxOutTa, kVerbMizenkei},
+      {"なくなって", kAuxOutTe, kVerbMizenkei},
+      {"なくなってしまう", kAuxOutBase, kVerbMizenkei},
+      {"なくなってしまった", kAuxOutTa, kVerbMizenkei},
 
-  entries.push_back({"される", "される", "される", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"された", "された", "される", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"されて", "されて", "される", kAuxSeru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"されない", "されない", "される", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"されます", "されます", "される", kAuxSeru, kAuxOutMasu, kVerbMizenkei});
-  // Classical べき pattern for Suru passive (装飾されべき → 装飾 + されべき)
-  entries.push_back({"されべき", "されべき", "される", kAuxSeru, kAuxOutBase, kVerbMizenkei});
+      // === Potential + なくなる ===
+      {"なくなる", kAuxOutBase, kVerbPotential},
+      {"なくなった", kAuxOutTa, kVerbPotential},
+      {"なくなって", kAuxOutTe, kVerbPotential},
 
-  // === なくなる patterns ===
-  entries.push_back({"なくなる", "なくなる", "なくなる", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"なくなった", "なくなった", "なくなる", kAuxNai, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"なくなって", "なくなって", "なくなる", kAuxNai, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"なくなってしまう", "なくなってしまう", "なくなる", kAuxNai, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"なくなってしまった", "なくなってしまった", "なくなる", kAuxNai, kAuxOutTa, kVerbMizenkei});
+      // === Passive + なくなる ===
+      {"れなくなる", kAuxOutBase, kVerbMizenkei},
+      {"れなくなった", kAuxOutTa, kVerbMizenkei},
+      {"られなくなる", kAuxOutBase, kVerbMizenkei},
+      {"られなくなった", kAuxOutTa, kVerbMizenkei},
 
-  // === Potential + なくなる ===
-  entries.push_back({"なくなる", "なくなる", "なくなる", kAuxNai, kAuxOutBase, kVerbPotential});
-  entries.push_back({"なくなった", "なくなった", "なくなる", kAuxNai, kAuxOutTa, kVerbPotential});
-  entries.push_back({"なくなって", "なくなって", "なくなる", kAuxNai, kAuxOutTe, kVerbPotential});
+      // === Passive + たい (desiderative) ===
+      // E.g., 食べられたい (want to be eaten/able to eat), 見られたい (want to be seen)
+      {"られたい", kAuxOutBase, kVerbMizenkei},
+      {"られたかった", kAuxOutTa, kVerbMizenkei},
+      {"られたくて", kAuxOutTe, kVerbMizenkei},
+      {"られたくない", kAuxOutBase, kVerbMizenkei},
+      {"られたくなかった", kAuxOutTa, kVerbMizenkei},
+      // Godan passive + たい (e.g., 読まれたい, 書かれたい)
+      {"れたい", kAuxOutBase, kVerbMizenkei},
+      {"れたかった", kAuxOutTa, kVerbMizenkei},
+      {"れたくて", kAuxOutTe, kVerbMizenkei},
+      {"れたくない", kAuxOutBase, kVerbMizenkei},
+      {"れたくなかった", kAuxOutTa, kVerbMizenkei},
+      // Passive + べき (classical obligation: 書かれべき, 読まれべき)
+      {"れべき", kAuxOutBase, kVerbMizenkei},
+      {"られべき", kAuxOutBase, kVerbMizenkei},
 
-  // === Passive + なくなる ===
-  entries.push_back({"れなくなる", "れなくなる", "れる", kAuxReru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"れなくなった", "れなくなった", "れる", kAuxReru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"られなくなる", "られなくなる", "られる", kAuxReru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"られなくなった", "られなくなった", "られる", kAuxReru, kAuxOutTa, kVerbMizenkei});
+      // === Colloquial てしまう contractions ===
+      // Note: Connect to both kVerbOnbinkei (for Godan) and kVerbRenyokei (for Ichidan)
+      // because ちゃう replaces てしまう, and て connects to onbin for Godan but renyokei for Ichidan
+      // Godan: 書いちゃった = 書い (onbin) + ちゃった
+      // Ichidan: 食べちゃった = 食べ (renyokei) + ちゃった
+      {"ちゃう", kAuxOutBase, kVerbOnbinkei},
+      {"ちゃった", kAuxOutTa, kVerbOnbinkei},
+      {"ちゃって", kAuxOutTe, kVerbOnbinkei},
+      {"じゃう", kAuxOutBase, kVerbOnbinkei},
+      {"じゃった", kAuxOutTa, kVerbOnbinkei},
+      {"じゃって", kAuxOutTe, kVerbOnbinkei},
+      // Renyokei versions for Ichidan verbs (ちゃう only, not じゃう)
+      // じゃう is for Godan voiced onbin (読んで→読んじゃ), not Ichidan
+      // Ichidan uses unvoiced て (食べて→食べちゃ)
+      {"ちゃう", kAuxOutBase, kVerbRenyokei},
+      {"ちゃった", kAuxOutTa, kVerbRenyokei},
+      {"ちゃって", kAuxOutTe, kVerbRenyokei},
 
-  // === Passive + たい (desiderative) ===
-  // E.g., 食べられたい (want to be eaten/able to eat), 見られたい (want to be seen)
-  entries.push_back({"られたい", "られたい", "られる", kAuxReru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"られたかった", "られたかった", "られる", kAuxReru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"られたくて", "られたくて", "られる", kAuxReru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"られたくない", "られたくない", "られる", kAuxReru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"られたくなかった", "られたくなかった", "られる", kAuxReru, kAuxOutTa, kVerbMizenkei});
-  // Godan passive + たい (e.g., 読まれたい, 書かれたい)
-  entries.push_back({"れたい", "れたい", "れる", kAuxReru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"れたかった", "れたかった", "れる", kAuxReru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"れたくて", "れたくて", "れる", kAuxReru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"れたくない", "れたくない", "れる", kAuxReru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"れたくなかった", "れたくなかった", "れる", kAuxReru, kAuxOutTa, kVerbMizenkei});
-  // Passive + べき (classical obligation: 書かれべき, 読まれべき)
-  entries.push_back({"れべき", "れべき", "れる", kAuxReru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"られべき", "られべき", "られる", kAuxReru, kAuxOutBase, kVerbMizenkei});
+      // === Colloquial ておく contraction ===
+      // Godan onbin: やっとく, 書いとく - connects to 音便形
+      {"とく", kAuxOutBase, kVerbOnbinkei},
+      {"といた", kAuxOutTa, kVerbOnbinkei},
+      {"といて", kAuxOutTe, kVerbOnbinkei},
+      // Ichidan renyokei: 見とく, 食べとく - connects to 連用形
+      {"とく", kAuxOutBase, kVerbRenyokei},
+      {"といた", kAuxOutTa, kVerbRenyokei},
+      {"といて", kAuxOutTe, kVerbRenyokei},
+      // Voiced onbin: 読んどく, 飲んどく, 死んどく - で→ど contraction
+      // Pattern is: 読ん (onbin stem) + どく (voiced contraction)
+      // Same structure as でる/でた for ている contraction
+      {"どく", kAuxOutBase, kVerbOnbinkei},
+      {"どいた", kAuxOutTa, kVerbOnbinkei},
+      {"どいて", kAuxOutTe, kVerbOnbinkei},
 
-  // === Colloquial てしまう contractions ===
-  // Note: Connect to both kVerbOnbinkei (for Godan) and kVerbRenyokei (for Ichidan)
-  // because ちゃう replaces てしまう, and て connects to onbin for Godan but renyokei for Ichidan
-  // Godan: 書いちゃった = 書い (onbin) + ちゃった
-  // Ichidan: 食べちゃった = 食べ (renyokei) + ちゃった
-  entries.push_back({"ちゃう", "ちゃう", "しまう", kAuxTeshimau, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"ちゃった", "ちゃった", "しまう", kAuxTeshimau, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"ちゃって", "ちゃって", "しまう", kAuxTeshimau, kAuxOutTe, kVerbOnbinkei});
-  entries.push_back({"じゃう", "じゃう", "しまう", kAuxTeshimau, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"じゃった", "じゃった", "しまう", kAuxTeshimau, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"じゃって", "じゃって", "しまう", kAuxTeshimau, kAuxOutTe, kVerbOnbinkei});
-  // Renyokei versions for Ichidan verbs (ちゃう only, not じゃう)
-  // じゃう is for Godan voiced onbin (読んで→読んじゃ), not Ichidan
-  // Ichidan uses unvoiced て (食べて→食べちゃ)
-  entries.push_back({"ちゃう", "ちゃう", "しまう", kAuxTeshimau, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"ちゃった", "ちゃった", "しまう", kAuxTeshimau, kAuxOutTa, kVerbRenyokei});
-  entries.push_back({"ちゃって", "ちゃって", "しまう", kAuxTeshimau, kAuxOutTe, kVerbRenyokei});
+      // === Colloquial ている contraction (てる) ===
+      // してる, 食べてる, 見てる - contracts ている to てる
+      // These connect after te-form verbs (kAuxOutTe)
+      {"てる", kAuxOutBase, kAuxOutTe},
+      {"てた", kAuxOutTa, kAuxOutTe},
+      {"てて", kAuxOutTe, kAuxOutTe},
+      {"てない", kAuxOutBase, kAuxOutTe},
+      {"てなかった", kAuxOutTa, kAuxOutTe},
+      // Ichidan renyokei versions: 見てた = 見(renyokei) + てた
+      // The て is part of the contracted aux, not a separate particle
+      {"てる", kAuxOutBase, kVerbRenyokei},
+      {"てた", kAuxOutTa, kVerbRenyokei},
+      {"てない", kAuxOutBase, kVerbRenyokei},
+      // でる/でた for voiced te-form (読んでる, 遊んでた)
+      {"でる", kAuxOutBase, kAuxOutTe},
+      {"でた", kAuxOutTa, kAuxOutTe},
+      {"でて", kAuxOutTe, kAuxOutTe},
+      {"でない", kAuxOutBase, kAuxOutTe},
+      {"でなかった", kAuxOutTa, kAuxOutTe},
+      // Godan onbin versions: 読んでた = 読ん(onbin) + でた (voiced sokuonbin)
+      {"でる", kAuxOutBase, kVerbOnbinkei},
+      {"でた", kAuxOutTa, kVerbOnbinkei},
+      {"でない", kAuxOutBase, kVerbOnbinkei},
+      // Godan sokuonbin versions: 知ってる = 知っ(sokuonbin stem) + てる
+      // For GodanRa (知る→知っ), GodanTa (持つ→持っ), GodanWa (買う→買っ)
+      // Note: aux is "てる" not "ってる" so that stem remains "知っ" ending with っ
+      {"てる", kAuxOutBase, kVerbOnbinkei},
+      {"てた", kAuxOutTa, kVerbOnbinkei},
+      {"てない", kAuxOutBase, kVerbOnbinkei},
+      {"てなかった", kAuxOutTa, kVerbOnbinkei},
 
-  // === Colloquial ておく contraction ===
-  // Godan onbin: やっとく, 書いとく - connects to 音便形
-  entries.push_back({"とく", "とく", "おく", kAuxTeoku, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"といた", "といた", "おく", kAuxTeoku, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"といて", "といて", "おく", kAuxTeoku, kAuxOutTe, kVerbOnbinkei});
-  // Ichidan renyokei: 見とく, 食べとく - connects to 連用形
-  entries.push_back({"とく", "とく", "おく", kAuxTeoku, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"といた", "といた", "おく", kAuxTeoku, kAuxOutTa, kVerbRenyokei});
-  entries.push_back({"といて", "といて", "おく", kAuxTeoku, kAuxOutTe, kVerbRenyokei});
-  // Voiced onbin: 読んどく, 飲んどく, 死んどく - で→ど contraction
-  // Pattern is: 読ん (onbin stem) + どく (voiced contraction)
-  // Same structure as でる/でた for ている contraction
-  entries.push_back({"どく", "どく", "おく", kAuxTeoku, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"どいた", "どいた", "おく", kAuxTeoku, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"どいて", "どいて", "おく", kAuxTeoku, kAuxOutTe, kVerbOnbinkei});
+      // === Suru-verb specific ている contractions ===
+      // してる = し + ている contraction, full patterns for suru-verbs
+      // Note: These use empty stem (stem="") for suru-verb matching
+      {"してる", kAuxOutBase, kVerbOnbinkei},
+      {"してた", kAuxOutTa, kVerbOnbinkei},
+      {"してない", kAuxOutBase, kVerbOnbinkei},
+      {"してなかった", kAuxOutTa, kVerbOnbinkei},
 
-  // === Colloquial ている contraction (てる) ===
-  // してる, 食べてる, 見てる - contracts ている to てる
-  // These connect after te-form verbs (kAuxOutTe)
-  entries.push_back({"てる", "てる", "いる", kAuxTeiru, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"てた", "てた", "いる", kAuxTeiru, kAuxOutTa, kAuxOutTe});
-  entries.push_back({"てて", "てて", "いる", kAuxTeiru, kAuxOutTe, kAuxOutTe});
-  entries.push_back({"てない", "てない", "いる", kAuxTeiru, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"てなかった", "てなかった", "いる", kAuxTeiru, kAuxOutTa, kAuxOutTe});
-  // Ichidan renyokei versions: 見てた = 見(renyokei) + てた
-  // The て is part of the contracted aux, not a separate particle
-  entries.push_back({"てる", "てる", "いる", kAuxTeiru, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"てた", "てた", "いる", kAuxTeiru, kAuxOutTa, kVerbRenyokei});
-  entries.push_back({"てない", "てない", "いる", kAuxTeiru, kAuxOutBase, kVerbRenyokei});
-  // でる/でた for voiced te-form (読んでる, 遊んでた)
-  entries.push_back({"でる", "でる", "いる", kAuxTeiru, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"でた", "でた", "いる", kAuxTeiru, kAuxOutTa, kAuxOutTe});
-  entries.push_back({"でて", "でて", "いる", kAuxTeiru, kAuxOutTe, kAuxOutTe});
-  entries.push_back({"でない", "でない", "いる", kAuxTeiru, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"でなかった", "でなかった", "いる", kAuxTeiru, kAuxOutTa, kAuxOutTe});
-  // Godan onbin versions: 読んでた = 読ん(onbin) + でた (voiced sokuonbin)
-  entries.push_back({"でる", "でる", "いる", kAuxTeiru, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"でた", "でた", "いる", kAuxTeiru, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"でない", "でない", "いる", kAuxTeiru, kAuxOutBase, kVerbOnbinkei});
-  // Godan sokuonbin versions: 知ってる = 知っ(sokuonbin stem) + てる
-  // For GodanRa (知る→知っ), GodanTa (持つ→持っ), GodanWa (買う→買っ)
-  // Note: aux is "てる" not "ってる" so that stem remains "知っ" ending with っ
-  entries.push_back({"てる", "てる", "いる", kAuxTeiru, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"てた", "てた", "いる", kAuxTeiru, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"てない", "てない", "いる", kAuxTeiru, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"てなかった", "てなかった", "いる", kAuxTeiru, kAuxOutTa, kVerbOnbinkei});
+      // === Polite forms ===
+      {"おる", kAuxOutBase, kAuxOutTe},
+      {"おった", kAuxOutTa, kAuxOutTe},
+      {"おります", kAuxOutMasu, kAuxOutTe},
+      {"おりました", kAuxOutTa, kAuxOutTe},
 
-  // === Suru-verb specific ている contractions ===
-  // してる = し + ている contraction, full patterns for suru-verbs
-  // Note: These use empty stem (stem="") for suru-verb matching
-  entries.push_back({"してる", "してる", "いる", kAuxTeiru, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"してた", "してた", "いる", kAuxTeiru, kAuxOutTa, kVerbOnbinkei});
-  entries.push_back({"してない", "してない", "いる", kAuxTeiru, kAuxOutBase, kVerbOnbinkei});
-  entries.push_back({"してなかった", "してなかった", "いる", kAuxTeiru, kAuxOutTa, kVerbOnbinkei});
+      // === ていただく ===
+      {"いただく", kAuxOutBase, kAuxOutTe},
+      {"いただいた", kAuxOutTa, kAuxOutTe},
+      {"いただいて", kAuxOutTe, kAuxOutTe},
+      {"いただきます", kAuxOutMasu, kAuxOutTe},
+      {"いただきました", kAuxOutTa, kAuxOutTe},
+      {"いただける", kAuxOutBase, kAuxOutTe},
+      {"いただけます", kAuxOutMasu, kAuxOutTe},
 
-  // === Polite forms ===
-  entries.push_back({"おる", "おる", "おる", kAuxTeiru, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"おった", "おった", "おる", kAuxTeiru, kAuxOutTa, kAuxOutTe});
-  entries.push_back({"おります", "おります", "おる", kAuxTeiru, kAuxOutMasu, kAuxOutTe});
-  entries.push_back({"おりました", "おりました", "おる", kAuxTeiru, kAuxOutTa, kAuxOutTe});
+      // === てくださる ===
+      {"くださる", kAuxOutBase, kAuxOutTe},
+      {"くださった", kAuxOutTa, kAuxOutTe},
+      {"くださって", kAuxOutTe, kAuxOutTe},
+      {"ください", kAuxOutBase, kAuxOutTe},
+      {"下さい", kAuxOutBase, kAuxOutTe},
+      {"くださいます", kAuxOutMasu, kAuxOutTe},
 
-  // === ていただく ===
-  entries.push_back({"いただく", "いただく", "いただく", kAuxTemorau, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"いただいた", "いただいた", "いただく", kAuxTemorau, kAuxOutTa, kAuxOutTe});
-  entries.push_back({"いただいて", "いただいて", "いただく", kAuxTemorau, kAuxOutTe, kAuxOutTe});
-  entries.push_back({"いただきます", "いただきます", "いただく", kAuxTemorau, kAuxOutMasu, kAuxOutTe});
-  entries.push_back({"いただきました", "いただきました", "いただく", kAuxTemorau, kAuxOutTa, kAuxOutTe});
-  entries.push_back({"いただける", "いただける", "いただく", kAuxTemorau, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"いただけます", "いただけます", "いただく", kAuxTemorau, kAuxOutMasu, kAuxOutTe});
+      // === てほしい ===
+      {"ほしい", kAuxOutBase, kAuxOutTe},
+      {"ほしかった", kAuxOutTa, kAuxOutTe},
+      {"ほしくない", kAuxOutBase, kAuxOutTe},
 
-  // === てくださる ===
-  entries.push_back({"くださる", "くださる", "くださる", kAuxTekureru, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"くださった", "くださった", "くださる", kAuxTekureru, kAuxOutTa, kAuxOutTe});
-  entries.push_back({"くださって", "くださって", "くださる", kAuxTekureru, kAuxOutTe, kAuxOutTe});
-  entries.push_back({"ください", "ください", "くださる", kAuxTekureru, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"下さい", "下さい", "下さる", kAuxTekureru, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"くださいます", "くださいます", "くださる", kAuxTekureru, kAuxOutMasu, kAuxOutTe});
+      // === てある ===
+      {"ある", kAuxOutBase, kAuxOutTe},
+      {"あった", kAuxOutTa, kAuxOutTe},
+      {"あります", kAuxOutMasu, kAuxOutTe},
 
-  // === てほしい ===
-  entries.push_back({"ほしい", "ほしい", "ほしい", kAuxTai, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"ほしかった", "ほしかった", "ほしい", kAuxTai, kAuxOutTa, kAuxOutTe});
-  entries.push_back({"ほしくない", "ほしくない", "ほしい", kAuxTai, kAuxOutBase, kAuxOutTe});
+      // === Complex たい patterns ===
+      {"たくなる", kAuxOutBase, kVerbRenyokei},
+      {"たくなった", kAuxOutTa, kVerbRenyokei},
+      {"たくなって", kAuxOutTe, kVerbRenyokei},
+      {"たくなります", kAuxOutMasu, kVerbRenyokei},
+      // たい + くなる + てくる compounds
+      {"たくなってきた", kAuxOutTa, kVerbRenyokei},
+      {"たくなってきて", kAuxOutTe, kVerbRenyokei},
+      {"たくなってくる", kAuxOutBase, kVerbRenyokei},
+      {"たくなってきます", kAuxOutMasu, kVerbRenyokei},
 
-  // === てある ===
-  entries.push_back({"ある", "ある", "ある", kAuxTeiru, kAuxOutBase, kAuxOutTe});
-  entries.push_back({"あった", "あった", "ある", kAuxTeiru, kAuxOutTa, kAuxOutTe});
-  entries.push_back({"あります", "あります", "ある", kAuxTeiru, kAuxOutMasu, kAuxOutTe});
+      // Removed: ことができる/ことができた/ことができない — multi-word constructions
+      // (こと+が+でき+る), not conjugation suffixes. Causes false verb absorption
+      // (e.g., 忘れることができなかった → single VERB token).
 
-  // === Complex たい patterns ===
-  entries.push_back({"たくなる", "たくなる", "たい", kAuxTai, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"たくなった", "たくなった", "たい", kAuxTai, kAuxOutTa, kVerbRenyokei});
-  entries.push_back({"たくなって", "たくなって", "たい", kAuxTai, kAuxOutTe, kVerbRenyokei});
-  entries.push_back({"たくなります", "たくなります", "たい", kAuxTai, kAuxOutMasu, kVerbRenyokei});
-  // たい + くなる + てくる compounds
-  entries.push_back({"たくなってきた", "たくなってきた", "たい", kAuxTai, kAuxOutTa, kVerbRenyokei});
-  entries.push_back({"たくなってきて", "たくなってきて", "たい", kAuxTai, kAuxOutTe, kVerbRenyokei});
-  entries.push_back({"たくなってくる", "たくなってくる", "たい", kAuxTai, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"たくなってきます", "たくなってきます", "たい", kAuxTai, kAuxOutMasu, kVerbRenyokei});
+      // === ようになる ===
+      {"ようになる", kAuxOutBase, kAuxOutBase},
+      {"ようになった", kAuxOutTa, kAuxOutBase},
+      {"ようになって", kAuxOutTe, kAuxOutBase},
 
-  // Removed: ことができる/ことができた/ことができない — multi-word constructions
-  // (こと+が+でき+る), not conjugation suffixes. Causes false verb absorption
-  // (e.g., 忘れることができなかった → single VERB token).
+      // === Explanatory のだ/んだ ===
+      // Removed: のだ/んだ/のです/んです are discourse-level constructions,
+      // not conjugation suffixes. Including them extends verb candidate surfaces
+      // (e.g., 窺うのだ as single verb), preventing proper tokenization.
+      // Verb base forms are still detected from shorter substrings.
 
-  // === ようになる ===
-  entries.push_back({"ようになる", "ようになる", "ようになる", kAuxNai, kAuxOutBase, kAuxOutBase});
-  entries.push_back({"ようになった", "ようになった", "ようになる", kAuxNai, kAuxOutTa, kAuxOutBase});
-  entries.push_back({"ようになって", "ようになって", "ようになる", kAuxNai, kAuxOutTe, kAuxOutBase});
+      // Removed: はいけない, はならない, もいい, もいいですか — multi-word constructions
+      // (V-て+は+いけない etc.), not conjugation suffixes. Causes false verb absorption.
 
-  // === Explanatory のだ/んだ ===
-  // Removed: のだ/んだ/のです/んです are discourse-level constructions,
-  // not conjugation suffixes. Including them extends verb candidate surfaces
-  // (e.g., 窺うのだ as single verb), preventing proper tokenization.
-  // Verb base forms are still detected from shorter substrings.
+      // === べき patterns ===
+      // Note: べきだ/べきだった/べきではない/べきです removed — MeCab splits as
+      // べき+だ, べき+だっ+た, etc. The L1 entry for べき (AuxVolitional) handles
+      // the independent token. Compound suffix chains caused false merging
+      // (e.g., 聞くべきだ → single VERB token instead of 聞く+べき+だ).
 
-  // Removed: はいけない, はならない, もいい, もいいですか — multi-word constructions
-  // (V-て+は+いけない etc.), not conjugation suffixes. Causes false verb absorption.
+      // Removed: ところだ/ばかりだ/っぱなし/ざるを得ない/ずにはいられない/
+      // わけにはいかない/うとしている/ようとしている/ようになっている — all are
+      // multi-word constructions (formal noun+copula, particle chains, etc.) that
+      // should be split into individual tokens, not absorbed as auxiliary suffixes.
 
-  // === べき patterns ===
-  // Note: べきだ/べきだった/べきではない/べきです removed — MeCab splits as
-  // べき+だ, べき+だっ+た, etc. The L1 entry for べき (AuxVolitional) handles
-  // the independent token. Compound suffix chains caused false merging
-  // (e.g., 聞くべきだ → single VERB token instead of 聞く+べき+だ).
+      // === Causative-passive + たい (させられ) ===
+      {"させられたい", kAuxOutBase, kVerbMizenkei},
+      {"させられたかった", kAuxOutTa, kVerbMizenkei},
+      {"させられたくて", kAuxOutTe, kVerbMizenkei},
+      {"させられたくない", kAuxOutBase, kVerbMizenkei},
+      {"させられたくなかった", kAuxOutTa, kVerbMizenkei},
+      {"させられなくて", kAuxOutTe, kVerbMizenkei},
+      {"させられなくなる", kAuxOutBase, kVerbMizenkei},
+      {"させられなくなった", kAuxOutTa, kVerbMizenkei},
+      {"させられなくなって", kAuxOutTe, kVerbMizenkei},
 
-  // Removed: ところだ/ばかりだ/っぱなし/ざるを得ない/ずにはいられない/
-  // わけにはいかない/うとしている/ようとしている/ようになっている — all are
-  // multi-word constructions (formal noun+copula, particle chains, etc.) that
-  // should be split into individual tokens, not absorbed as auxiliary suffixes.
+      // === Causative-passive + たい (せられ) ===
+      {"せられたい", kAuxOutBase, kVerbMizenkei},
+      {"せられたかった", kAuxOutTa, kVerbMizenkei},
+      {"せられたくて", kAuxOutTe, kVerbMizenkei},
+      {"せられたくない", kAuxOutBase, kVerbMizenkei},
+      {"せられたくなかった", kAuxOutTa, kVerbMizenkei},
+      {"せられなくて", kAuxOutTe, kVerbMizenkei},
+      {"せられなくなる", kAuxOutBase, kVerbMizenkei},
+      {"せられなくなった", kAuxOutTa, kVerbMizenkei},
+      {"せられなくなって", kAuxOutTe, kVerbMizenkei},
+      {"せられました", kAuxOutTa, kVerbMizenkei},
+      {"せられません", kAuxOutBase, kVerbMizenkei},
 
-  // === Causative-passive + たい (させられ) ===
-  entries.push_back({"させられたい", "させられたい", "させられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"させられたかった", "させられたかった", "させられる", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"させられたくて", "させられたくて", "させられる", kAuxSeru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"させられたくない", "させられたくない", "させられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"させられたくなかった", "させられたくなかった", "させられる", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"させられなくて", "させられなくて", "させられる", kAuxSeru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"させられなくなる", "させられなくなる", "させられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"させられなくなった", "させられなくなった", "させられる", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"させられなくなって", "させられなくなって", "させられる", kAuxSeru, kAuxOutTe, kVerbMizenkei});
+      // === される extended forms ===
+      {"されなかった", kAuxOutTa, kVerbMizenkei},
+      {"されなくて", kAuxOutTe, kVerbMizenkei},
+      {"されました", kAuxOutTa, kVerbMizenkei},
+      {"されません", kAuxOutBase, kVerbMizenkei},
 
-  // === Causative-passive + たい (せられ) ===
-  entries.push_back({"せられたい", "せられたい", "せられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"せられたかった", "せられたかった", "せられる", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"せられたくて", "せられたくて", "せられる", kAuxSeru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"せられたくない", "せられたくない", "せられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"せられたくなかった", "せられたくなかった", "せられる", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"せられなくて", "せられなくて", "せられる", kAuxSeru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"せられなくなる", "せられなくなる", "せられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"せられなくなった", "せられなくなった", "せられる", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"せられなくなって", "せられなくなって", "せられる", kAuxSeru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"せられました", "せられました", "せられる", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"せられません", "せられません", "せられる", kAuxSeru, kAuxOutBase, kVerbMizenkei});
+      // === Passive + なくなって ===
+      {"れなくなって", kAuxOutTe, kVerbMizenkei},
+      {"られなくなって", kAuxOutTe, kVerbMizenkei},
+      {"られなくなってしまう", kAuxOutBase, kVerbMizenkei},
+      {"られなくなってしまった", kAuxOutTa, kVerbMizenkei},
 
-  // === される extended forms ===
-  entries.push_back({"されなかった", "されなかった", "される", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"されなくて", "されなくて", "される", kAuxSeru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"されました", "されました", "される", kAuxSeru, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"されません", "されません", "される", kAuxSeru, kAuxOutBase, kVerbMizenkei});
+      // === Obligation patterns (past forms) ===
+      {"ないといけなかった", kAuxOutTa, kVerbMizenkei},
+      {"なければならなかった", kAuxOutTa, kVerbMizenkei},
+      {"なくてはいけなかった", kAuxOutTa, kVerbMizenkei},
+      {"なきゃならない", kAuxOutBase, kVerbMizenkei},
 
-  // === Passive + なくなって ===
-  entries.push_back({"れなくなって", "れなくなって", "れる", kAuxReru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"られなくなって", "られなくなって", "られる", kAuxReru, kAuxOutTe, kVerbMizenkei});
-  entries.push_back({"られなくなってしまう", "られなくなってしまう", "られる", kAuxReru, kAuxOutBase, kVerbMizenkei});
-  entries.push_back({"られなくなってしまった", "られなくなってしまった", "られる", kAuxReru, kAuxOutTa, kVerbMizenkei});
+      // Removed: はいけなかった, はだめだ, はならなかった, べきではなかった,
+      // もかまわない, もかまわなかった, ばかりなのに, っぱなしにする,
+      // ざるを得ません, ずにはいられなかった
+      // (extended forms of removed multi-word constructions above)
 
-  // === Obligation patterns (past forms) ===
-  entries.push_back({"ないといけなかった", "ないといけなかった", "ないといけない", kAuxNai, kAuxOutTa, kVerbMizenkei});
-  entries.push_back(
-      {"なければならなかった", "なければならなかった", "なければならない", kAuxNai, kAuxOutTa, kVerbMizenkei});
-  entries.push_back(
-      {"なくてはいけなかった", "なくてはいけなかった", "なくてはいけない", kAuxNai, kAuxOutTa, kVerbMizenkei});
-  entries.push_back({"なきゃならない", "なきゃならない", "なきゃならない", kAuxNai, kAuxOutBase, kVerbMizenkei});
+      // === てみる conditional ===
+      {"みれば", kAuxOutBase, kAuxOutTe},
 
-  // Removed: はいけなかった, はだめだ, はならなかった, べきではなかった,
-  // もかまわない, もかまわなかった, ばかりなのに, っぱなしにする,
-  // ざるを得ません, ずにはいられなかった
-  // (extended forms of removed multi-word constructions above)
+      // === Explanatory んだ variants (removed) ===
+      // んだもの/んだもん removed along with のだ/んだ entries above.
 
-  // === てみる conditional ===
-  entries.push_back({"みれば", "みれば", "みる", kAuxTemiru, kAuxOutBase, kAuxOutTe});
+      // === Polite request forms ===
+      {"いただけますか", kAuxOutMasu, kAuxOutTe},
+      {"くださいました", kAuxOutTa, kAuxOutTe},
+      {"おりまして", kAuxOutTe, kAuxOutTe},
 
-  // === Explanatory んだ variants (removed) ===
-  // んだもの/んだもん removed along with のだ/んだ entries above.
+      // Removed: ことができて/ことができなかった — multi-word constructions
+      // (see ことができる removal above).
 
-  // === Polite request forms ===
-  entries.push_back({"いただけますか", "いただけますか", "いただく", kAuxTemorau, kAuxOutMasu, kAuxOutTe});
-  entries.push_back({"くださいました", "くださいました", "くださる", kAuxTekureru, kAuxOutTa, kAuxOutTe});
-  entries.push_back({"おりまして", "おりまして", "おる", kAuxTeiru, kAuxOutTe, kAuxOutTe});
+      // ばかりなのに removed (multi-word construction)
 
-  // Removed: ことができて/ことができなかった — multi-word constructions
-  // (see ことができる removal above).
+      // っぱなしにする removed (multi-word construction)
 
-  // ばかりなのに removed (multi-word construction)
+      // ざるを得ません removed (multi-word construction)
 
-  // っぱなしにする removed (multi-word construction)
+      // ずにはいられなかった removed (multi-word construction)
 
-  // ざるを得ません removed (multi-word construction)
+      // === ている extended for compound verbs ===
+      {"すぎている", kAuxOutBase, kVerbRenyokei},
+      {"かけている", kAuxOutBase, kVerbRenyokei},
+      {"続けている", kAuxOutBase, kVerbRenyokei},
+      {"直している", kAuxOutBase, kVerbRenyokei},
 
-  // ずにはいられなかった removed (multi-word construction)
+      // Note: ていく forms いった/いって/いったら are generated from the いく
+      // AuxiliaryBase via the irregular 促音便 table (kGodanKaIkuIrregular), so they
+      // are intentionally not duplicated here.
 
-  // === ている extended for compound verbs ===
-  entries.push_back({"すぎている", "すぎている", "すぎる", kAuxRenyokei, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"かけている", "かけている", "かける", kAuxRenyokei, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"続けている", "つづけている", "続ける", kAuxRenyokei, kAuxOutBase, kVerbRenyokei});
-  entries.push_back({"直している", "なおしている", "直す", kAuxRenyokei, kAuxOutBase, kVerbRenyokei});
+      // === Imperative forms for te-form compounds ===
+      // てこい (持ってこい, やってこい) - kuru imperative after te-form
+      {"こい", kAuxOutBase, kAuxOutTe},
+  };
 
-  // Note: ていく forms いった/いって/いったら are generated from the いく
-  // AuxiliaryBase via the irregular 促音便 table (kGodanKaIkuIrregular), so they
-  // are intentionally not duplicated here.
-
-  // === Imperative forms for te-form compounds ===
-  // てこい (持ってこい, やってこい) - kuru imperative after te-form
-  entries.push_back({"こい", "こい", "くる", kAuxTekuru, kAuxOutBase, kAuxOutTe});
+  entries.reserve(entries.size() + std::size(kPatterns));
+  for (const auto& pattern : kPatterns) {
+    entries.push_back({pattern.surface, pattern.right_id, pattern.required_conn});
+  }
 }
 
-}  // namespace
-
-const std::vector<AuxiliaryBase>& getAuxiliaryBases() {
+const auto& auxiliaryBases() {
   using namespace conn;
-
-  static const std::vector<AuxiliaryBase> kBases = {
+  static constexpr AuxiliaryBase kBases[] = {
       // === Te-form attachments (て形接続) ===
-      {"いる", "いる", VerbType::Ichidan, kAuxTeiru, kAuxOutTe},
-      {"しまう", "しまう", VerbType::GodanWa, kAuxTeshimau, kAuxOutTe},
-      {"おく", "おく", VerbType::GodanKa, kAuxTeoku, kAuxOutTe},
-      {"くる", "くる", VerbType::Kuru, kAuxTekuru, kAuxOutTe},
-      {"いく", "いく", VerbType::GodanKa, kAuxTeiku, kAuxOutTe},
-      {"みる", "みる", VerbType::Ichidan, kAuxTemiru, kAuxOutTe},
-      {"もらう", "もらう", VerbType::GodanWa, kAuxTemorau, kAuxOutTe},
-      {"くれる", "くれる", VerbType::Ichidan, kAuxTekureru, kAuxOutTe},
-      {"あげる", "あげる", VerbType::Ichidan, kAuxTeageru, kAuxOutTe},
+      {"いる", VerbType::Ichidan, kAuxTeiru, kAuxOutTe},
+      {"しまう", VerbType::GodanWa, kAuxTeshimau, kAuxOutTe},
+      {"おく", VerbType::GodanKa, kAuxTeoku, kAuxOutTe},
+      {"くる", VerbType::Kuru, kAuxTekuru, kAuxOutTe},
+      {"いく", VerbType::GodanKa, kAuxTeiku, kAuxOutTe},
+      {"みる", VerbType::Ichidan, kAuxTemiru, kAuxOutTe},
+      {"もらう", VerbType::GodanWa, kAuxTemorau, kAuxOutTe},
+      {"くれる", VerbType::Ichidan, kAuxTekureru, kAuxOutTe},
+      {"あげる", VerbType::Ichidan, kAuxTeageru, kAuxOutTe},
 
       // === Mizenkei attachments (未然形接続) ===
-      {"ない", "ない", VerbType::IAdjective, kAuxNai, kVerbMizenkei},
-      {"れる", "れる", VerbType::Ichidan, kAuxReru, kVerbMizenkei},
-      {"られる", "られる", VerbType::Ichidan, kAuxReru, kVerbMizenkei},
-      {"せる", "せる", VerbType::Ichidan, kAuxSeru, kVerbMizenkei},
-      {"させる", "させる", VerbType::Ichidan, kAuxSeru, kVerbMizenkei},
+      {"ない", VerbType::IAdjective, kAuxNai, kVerbMizenkei},
+      {"れる", VerbType::Ichidan, kAuxReru, kVerbMizenkei},
+      {"られる", VerbType::Ichidan, kAuxReru, kVerbMizenkei},
+      {"せる", VerbType::Ichidan, kAuxSeru, kVerbMizenkei},
+      {"させる", VerbType::Ichidan, kAuxSeru, kVerbMizenkei},
 
       // === Renyokei attachments (連用形接続) ===
-      {"ます", "ます", VerbType::Unknown, kAuxMasu, kVerbRenyokei},  // Special
-      {"たい", "たい", VerbType::IAdjective, kAuxTai, kVerbRenyokei},
-      {"やすい", "やすい", VerbType::IAdjective, kAuxRenyokei, kVerbRenyokei},
-      {"にくい", "にくい", VerbType::IAdjective, kAuxRenyokei, kVerbRenyokei},
-      {"すぎる", "すぎる", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
-      {"かける", "かける", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
-      {"出す", "だす", VerbType::GodanSa, kAuxRenyokei, kVerbRenyokei},
-      {"終わる", "おわる", VerbType::GodanRa, kAuxRenyokei, kVerbRenyokei},
-      {"終える", "おえる", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
-      {"続ける", "つづける", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
-      {"直す", "なおす", VerbType::GodanSa, kAuxRenyokei, kVerbRenyokei},
+      {"ます", VerbType::Unknown, kAuxMasu, kVerbRenyokei},  // Special
+      {"たい", VerbType::IAdjective, kAuxTai, kVerbRenyokei},
+      {"やすい", VerbType::IAdjective, kAuxRenyokei, kVerbRenyokei},
+      {"にくい", VerbType::IAdjective, kAuxRenyokei, kVerbRenyokei},
+      {"すぎる", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
+      {"かける", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
+      {"出す", VerbType::GodanSa, kAuxRenyokei, kVerbRenyokei},
+      {"終わる", VerbType::GodanRa, kAuxRenyokei, kVerbRenyokei},
+      {"終える", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
+      {"続ける", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
+      {"直す", VerbType::GodanSa, kAuxRenyokei, kVerbRenyokei},
 
       // === Base form attachments (終止形接続) ===
       // らしい: conjecture auxiliary (食べるらしい, 食べないらしい)
-      {"らしい", "らしい", VerbType::IAdjective, kAuxRenyokei, kAuxOutBase},
+      {"らしい", VerbType::IAdjective, kAuxRenyokei, kAuxOutBase},
   };
-
   return kBases;
 }
 
-std::vector<AuxiliaryEntry> expandAuxiliaryBase(const AuxiliaryBase& base) {
+void appendAuxiliaryBase(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>& result) {
   // Benefactive te-attachments (てくれる, てもらう, てあげる) use limited forms
   // to avoid over-matching like 待ってくれない → 待つ (wrong)
-  bool is_benefactive =
-      (base.left_id == conn::kAuxTemorau || base.left_id == conn::kAuxTekureru || base.left_id == conn::kAuxTeageru);
+  const bool is_benefactive = base.category_id == conn::kAuxTemorau || base.category_id == conn::kAuxTekureru ||
+                              base.category_id == conn::kAuxTeageru;
 
   // Progressive ている uses forms without negative
   // Keep い(mizenkei) + ない(AUX) instead of a single いない token.
-  bool is_progressive = (base.left_id == conn::kAuxTeiru);
+  const bool is_progressive = base.category_id == conn::kAuxTeiru;
 
   switch (base.conj_type) {
     case VerbType::Ichidan:
       if (is_benefactive) {
-        return generateWithStem(base, kIchidanTeAttach);
+        appendWithStem(base, kIchidanTeAttach, result);
+        return;
       }
       if (is_progressive) {
-        return generateWithStem(base, kIchidanProgressive);
+        appendWithStem(base, kIchidanProgressive, result);
+        return;
       }
-      return generateWithStem(base, kIchidanFull);
+      appendWithStem(base, kIchidanFull, result);
+      return;
     case VerbType::GodanWa:
     case VerbType::GodanKa:
     case VerbType::GodanSa:
@@ -673,31 +663,35 @@ std::vector<AuxiliaryEntry> expandAuxiliaryBase(const AuxiliaryBase& base) {
       // Benefactive bases (てもらう) stop after te; いく (ていく) is 促音便 irregular
       // (いった/いって). Only もらう(Wa) is a benefactive godan base and only いく(Ka)
       // carries kAuxTeiku, so the shared call reproduces the old per-type tables.
-      return generateGodanWithStem(base, is_benefactive, base.left_id == conn::kAuxTeiku);
+      appendGodanWithStem(base, is_benefactive, base.category_id == conn::kAuxTeiku, result);
+      return;
     case VerbType::Kuru:
-      return generateFullForms(base, kKuruFull);
+      appendFullForms(base, kKuruFull, result);
+      return;
     case VerbType::IAdjective:
-      return generateWithStem(base, kIAdjective);
+      appendWithStem(base, kIAdjective, result);
+      return;
     case VerbType::Unknown:
       if (base.surface == "ます") {
-        return generateMasuForms(base);
+        appendMasuForms(base, result);
+        return;
       }
-      return generateNoConjForms(base);
+      appendNoConjForm(base, result);
+      return;
     default:
-      return generateNoConjForms(base);
+      appendNoConjForm(base, result);
+      return;
   }
 }
+
+}  // namespace
 
 std::vector<AuxiliaryEntry> generateAllAuxiliaries() {
   std::vector<AuxiliaryEntry> result;
 
   // Expand all base definitions
-  for (const auto& base : getAuxiliaryBases()) {
-    auto expanded = expandAuxiliaryBase(base);
-    result.reserve(result.size() + expanded.size());
-    for (auto& entry : expanded) {
-      result.push_back(std::move(entry));
-    }
+  for (const auto& base : auxiliaryBases()) {
+    appendAuxiliaryBase(base, result);
   }
 
   // Add special patterns that cannot be auto-generated

@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <charconv>
 
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
@@ -70,46 +69,80 @@ bool isFullwidthDigit(char32_t codepoint) {
   return codepoint >= 0xFF10 && codepoint <= 0xFF19;
 }
 
-// Parse integer digits only (no decimal points), return end position
-size_t parseInteger(std::string_view text, size_t pos, std::string& digits) {
-  digits.clear();
+struct IntegerScan {
+  size_t end;
+  size_t digit_count;
+  int value;
+
+  bool empty() const { return digit_count == 0; }
+};
+
+// Scan integer digits without allocating. Value is retained for the first two
+// digits, which is sufficient for the bounded time fields below.
+IntegerScan scanInteger(std::string_view text, size_t pos) {
   size_t idx = pos;
+  size_t digit_count = 0;
+  int value = 0;
   while (idx < text.size()) {
     char chr = text[idx];
+    int digit = 0;
     if (isAsciiDigit(chr)) {
-      digits += chr;
+      digit = chr - '0';
       ++idx;
     } else {
-      // Check for full-width digits
       size_t byte_pos = idx;
       char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
       if (isFullwidthDigit(codepoint)) {
-        digits += static_cast<char>('0' + (codepoint - 0xFF10));
+        digit = static_cast<int>(codepoint - 0xFF10);
         idx = byte_pos;
       } else {
         break;
       }
     }
+    if (digit_count < 2) {
+      value = value * 10 + digit;
+    }
+    ++digit_count;
+  }
+  return {idx, digit_count, value};
+}
+
+// Address-number output historically normalizes full-width digits to ASCII.
+// Keep the owning form only for that caller.
+size_t parseIntegerText(std::string_view text, size_t pos, std::string& digits) {
+  digits.clear();
+  size_t idx = pos;
+  while (idx < text.size()) {
+    const char chr = text[idx];
+    if (isAsciiDigit(chr)) {
+      digits += chr;
+      ++idx;
+      continue;
+    }
+    size_t byte_pos = idx;
+    const char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
+    if (!isFullwidthDigit(codepoint)) {
+      break;
+    }
+    digits += static_cast<char>('0' + (codepoint - 0xFF10));
+    idx = byte_pos;
   }
   return idx;
 }
 
 // Parse digits at position (including decimals), return end position
-size_t parseDigits(std::string_view text, size_t pos, std::string& digits) {
-  digits.clear();
+size_t scanDigits(std::string_view text, size_t pos) {
   size_t idx = pos;
   bool seen_comma = false;
   size_t digits_since_comma = 0;
   while (idx < text.size()) {
     char chr = text[idx];
     if (isAsciiDigit(chr)) {
-      digits += chr;
       ++idx;
       ++digits_since_comma;
     } else if (chr == '.') {
       // Check if followed by digit (decimal point)
       if (idx + 1 < text.size() && isAsciiDigit(text[idx + 1])) {
-        digits += chr;
         ++idx;
         digits_since_comma = 0;
       } else {
@@ -132,7 +165,6 @@ size_t parseDigits(std::string_view text, size_t pos, std::string& digits) {
       size_t byte_pos = idx;
       char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
       if (isFullwidthDigit(codepoint)) {
-        digits += static_cast<char>('0' + (codepoint - 0xFF10));
         idx = byte_pos;
         ++digits_since_comma;
       } else {
@@ -206,10 +238,10 @@ bool PreTokenizer::tryMatchUrl(std::string_view text, size_t pos, PreToken& toke
 
 bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& token) const {
   // Match patterns: YYYY年MM月DD日, YYYY年MM月, YYYY年, YYYY年度 (fiscal year)
-  std::string year_str;
-  size_t idx = parseInteger(text, pos, year_str);
+  const IntegerScan year = scanInteger(text, pos);
+  size_t idx = year.end;
 
-  if (year_str.empty() || year_str.size() < 1 || year_str.size() > 4) {
+  if (year.empty() || year.digit_count > 4) {
     return false;
   }
 
@@ -227,11 +259,11 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
   size_t year_end = idx;  // Position right after "年", before any month match
 
   // Try to match month
-  std::string month_str;
-  size_t month_end = parseInteger(text, idx, month_str);
+  const IntegerScan month = scanInteger(text, idx);
+  size_t month_end = month.end;
 
   bool matched_month = false;
-  if (!month_str.empty() && month_str.size() <= 2) {
+  if (!month.empty() && month.digit_count <= 2) {
     byte_pos = month_end;
     if (byte_pos < text.size()) {
       codepoint = normalize::decodeUtf8(text, byte_pos);
@@ -240,10 +272,10 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
         matched_month = true;
 
         // Try to match day
-        std::string day_str;
-        size_t day_end = parseInteger(text, idx, day_str);
+        const IntegerScan day = scanInteger(text, idx);
+        size_t day_end = day.end;
 
-        if (!day_str.empty() && day_str.size() <= 2) {
+        if (!day.empty() && day.digit_count <= 2) {
           byte_pos = day_end;
           if (byte_pos < text.size()) {
             codepoint = normalize::decodeUtf8(text, byte_pos);
@@ -290,10 +322,9 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
 
 bool PreTokenizer::tryMatchCurrency(std::string_view text, size_t pos, PreToken& token) const {
   // Match patterns: 数字+[万億兆]?円
-  std::string num_str;
-  size_t idx = parseDigits(text, pos, num_str);
+  size_t idx = scanDigits(text, pos);
 
-  if (num_str.empty()) {
+  if (idx == pos) {
     return false;
   }
 
@@ -330,10 +361,9 @@ bool PreTokenizer::tryMatchCurrency(std::string_view text, size_t pos, PreToken&
 
 bool PreTokenizer::tryMatchStorage(std::string_view text, size_t pos, PreToken& token) const {
   // Match patterns: 数字[KMGT]?B
-  std::string num_str;
-  size_t idx = parseDigits(text, pos, num_str);
+  size_t idx = scanDigits(text, pos);
 
-  if (num_str.empty()) {
+  if (idx == pos) {
     return false;
   }
 
@@ -381,10 +411,10 @@ bool PreTokenizer::tryMatchVersion(std::string_view text, size_t pos, PreToken& 
     ++idx;
   }
 
-  // First number (use parseInteger to avoid consuming decimal points)
-  std::string num_str;
-  size_t num_end = parseInteger(text, idx, num_str);
-  if (num_str.empty()) {
+  // First number (integer-only scan avoids consuming decimal points)
+  IntegerScan number = scanInteger(text, idx);
+  size_t num_end = number.end;
+  if (number.empty()) {
     return false;
   }
   idx = num_end;
@@ -395,8 +425,9 @@ bool PreTokenizer::tryMatchVersion(std::string_view text, size_t pos, PreToken& 
   }
   ++idx;
 
-  num_end = parseInteger(text, idx, num_str);
-  if (num_str.empty()) {
+  number = scanInteger(text, idx);
+  num_end = number.end;
+  if (number.empty()) {
     return false;
   }
   idx = num_end;
@@ -404,8 +435,9 @@ bool PreTokenizer::tryMatchVersion(std::string_view text, size_t pos, PreToken& 
   // Additional .number segments
   while (idx < text.size() && text[idx] == '.') {
     size_t next = idx + 1;
-    num_end = parseInteger(text, next, num_str);
-    if (num_str.empty()) {
+    number = scanInteger(text, next);
+    num_end = number.end;
+    if (number.empty()) {
       break;
     }
     idx = num_end;
@@ -421,10 +453,9 @@ bool PreTokenizer::tryMatchVersion(std::string_view text, size_t pos, PreToken& 
 
 bool PreTokenizer::tryMatchPercentage(std::string_view text, size_t pos, PreToken& token) const {
   // Match patterns: 数字%
-  std::string num_str;
-  size_t idx = parseDigits(text, pos, num_str);
+  size_t idx = scanDigits(text, pos);
 
-  if (num_str.empty()) {
+  if (idx == pos) {
     return false;
   }
 
@@ -458,7 +489,7 @@ bool PreTokenizer::tryMatchAddressNumber(std::string_view text, size_t pos, PreT
   // Match address number patterns: 1-2-3, 1-2-3-4 etc.
   // Pattern: digit(s) + (hyphen + digit(s))+
   std::string num_str;
-  size_t idx = parseInteger(text, pos, num_str);
+  size_t idx = parseIntegerText(text, pos, num_str);
 
   if (num_str.empty()) {
     return false;
@@ -474,7 +505,7 @@ bool PreTokenizer::tryMatchAddressNumber(std::string_view text, size_t pos, PreT
 
     // Parse the next number
     std::string next_num;
-    size_t next_end = parseInteger(text, idx, next_num);
+    size_t next_end = parseIntegerText(text, idx, next_num);
     if (next_num.empty()) {
       // No number after hyphen, revert
       idx = hyphen_pos;
@@ -579,17 +610,15 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
     // This requires looking back at UTF-8 boundary
   }
 
-  std::string hour_str;
-  size_t idx = parseInteger(text, pos, hour_str);
+  const IntegerScan hour = scanInteger(text, pos);
+  size_t idx = hour.end;
 
-  if (hour_str.empty() || hour_str.size() > 2) {
+  if (hour.empty() || hour.digit_count > 2) {
     return false;
   }
 
   // Validate hour (0-23 or 1-24)
-  int hour = 0;
-  if (std::from_chars(hour_str.data(), hour_str.data() + hour_str.size(), hour).ec != std::errc() || hour < 0 ||
-      hour > 24) {
+  if (hour.value > 24) {
     return false;
   }
 
@@ -606,13 +635,11 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
   idx = byte_pos;
 
   // Try to match minutes
-  std::string min_str;
-  size_t min_end = parseInteger(text, idx, min_str);
+  const IntegerScan minute = scanInteger(text, idx);
+  size_t min_end = minute.end;
 
-  if (!min_str.empty() && min_str.size() <= 2) {
-    int minute = 0;
-    if (std::from_chars(min_str.data(), min_str.data() + min_str.size(), minute).ec == std::errc() && minute >= 0 &&
-        minute <= 59) {
+  if (!minute.empty() && minute.digit_count <= 2) {
+    if (minute.value <= 59) {
       byte_pos = min_end;
       if (byte_pos < text.size()) {
         codepoint = normalize::decodeUtf8(text, byte_pos);
@@ -620,13 +647,11 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
           idx = byte_pos;
 
           // Try to match seconds
-          std::string sec_str;
-          size_t sec_end = parseInteger(text, idx, sec_str);
+          const IntegerScan second = scanInteger(text, idx);
+          size_t sec_end = second.end;
 
-          if (!sec_str.empty() && sec_str.size() <= 2) {
-            int second = 0;
-            if (std::from_chars(sec_str.data(), sec_str.data() + sec_str.size(), second).ec == std::errc() &&
-                second >= 0 && second <= 59) {
+          if (!second.empty() && second.digit_count <= 2) {
+            if (second.value <= 59) {
               byte_pos = sec_end;
               if (byte_pos < text.size()) {
                 codepoint = normalize::decodeUtf8(text, byte_pos);

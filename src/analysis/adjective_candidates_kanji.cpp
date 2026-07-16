@@ -4,6 +4,7 @@
  */
 
 #include <algorithm>
+#include <array>
 
 #include "adjective_candidates.h"
 #include "adjective_candidates_internal.h"
@@ -28,7 +29,6 @@ using verb_helpers::isAdjectiveInDictionary;
 using verb_helpers::isVerbInDictionary;
 
 using adj_detail::makeIAdjCandidate;
-using adj_detail::makeTrimmedAdjVariant;
 
 namespace {
 
@@ -718,74 +718,19 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   // Add emphatic variants (すごい → すごいっっ, etc.)
   addEmphaticVariants(candidates, codepoints);
 
-  // Add ku-form candidates for kunai/kunakatta patterns (negative split)
-  // Preserve the adjective renyokei and negative auxiliary boundary:
-  //   良くない → 良く + ない
-  //   良くなかった → 良く + なかっ + た
-  // For each candidate ending with くない/くなかった/くなかっ, generate ku-form variant
-  std::vector<UnknownCandidate> ku_neg_candidates;
-  for (const auto& cand : candidates) {
-    // Check if surface ends with くない (negative form)
-    if (utf8::endsWith(cand.surface, "くない")) {
-      // Generate ku-form variant: 良くない → 良く
-      ku_neg_candidates.push_back(makeTrimmedAdjVariant(cand, 2, candidate::kAdjKuSplitBonus,
-                                                        core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_nai"));
-    }
-    // Check if surface ends with くなかった (negative past full form)
-    else if (utf8::endsWith(cand.surface, "くなかった")) {
-      // Generate ku-form variant: 良くなかった → 良く
-      ku_neg_candidates.push_back(makeTrimmedAdjVariant(cand, 4, candidate::kAdjKuSplitBonus,
-                                                        core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_nakatta"));
-    }
-    // Check if surface ends with くなかっ (negative past before た)
-    else if (utf8::endsWith(cand.surface, "くなかっ")) {
-      // Generate ku-form variant: 良くなかっ → 良く
-      ku_neg_candidates.push_back(makeTrimmedAdjVariant(cand, 3, candidate::kAdjKuSplitBonus,
-                                                        core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_nakatt"));
-    }
-  }
-
-  // Add all ku-negative-form candidates
-  for (auto& var : ku_neg_candidates) {
-    candidates.push_back(std::move(var));
-  }
-
-  // Add ku-form candidates for kute patterns (te-form split)
-  // Preserve the adjective renyokei and conjunctive particle boundary:
-  //   ウザくて → ウザく + て
-  //   美しくて → 美しく + て
-  // For each candidate ending with くて, generate ku-form variant
-  std::vector<UnknownCandidate> ku_te_candidates;
-  for (const auto& cand : candidates) {
-    // Check if surface ends with くて (te-form)
-    if (utf8::endsWith(cand.surface, "くて")) {
-      // Generate ku-form variant: ウザくて → ウザく
-      ku_te_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKuSplitBonus,
-                                                       core::ExtendedPOS::AdjRenyokei, "i_adjective_ku_te"));
-    }
-  }
-  // Add all ku-te-form candidates
-  for (auto& var : ku_te_candidates) {
-    candidates.push_back(std::move(var));
-  }
-
-  // Add katt-form candidates for katta patterns (BUG-036)
-  // Preserve adjective stem, tense auxiliary, and polite copula boundaries.
-  // For each candidate ending with かった, generate a katt-form variant ending with かっ
-  std::vector<UnknownCandidate> katt_form_candidates;
-  for (const auto& cand : candidates) {
-    // Check if surface ends with かった (i-adjective past form)
-    if (utf8::endsWith(cand.surface, "かった")) {
-      // Generate katt-form variant: 美しかった → 美しかっ (連用タ接続; AdjKatt→AuxTenseTa)
-      katt_form_candidates.push_back(makeTrimmedAdjVariant(cand, 1, candidate::kAdjKattSplitBonus,
-                                                           core::ExtendedPOS::AdjKatt, "i_adjective_katt"));
-    }
-  }
-
-  // Add all katt-form candidates
-  for (auto& var : katt_form_candidates) {
-    candidates.push_back(std::move(var));
-  }
+  // Preserve inflection and auxiliary/particle boundaries. Rules remain
+  // path-local because the kanji path uses stronger negative splitting and a
+  // dictionary-backed ければ disambiguation.
+  static constexpr std::array<adj_detail::TrimmedAdjVariantRule, 6> kTrimRules = {{
+      {"くない", 2, candidate::kAdjKuSplitBonus, core::ExtendedPOS::AdjRenyokei, 0, "i_adjective_ku_nai"},
+      {"くなかった", 4, candidate::kAdjKuSplitBonus, core::ExtendedPOS::AdjRenyokei, 0, "i_adjective_ku_nakatta"},
+      {"くなかっ", 3, candidate::kAdjKuSplitBonus, core::ExtendedPOS::AdjRenyokei, 0, "i_adjective_ku_nakatt"},
+      {"くて", 1, candidate::kAdjKuSplitBonus, core::ExtendedPOS::AdjRenyokei, 1, "i_adjective_ku_te"},
+      {"かった", 1, candidate::kAdjKattSplitBonus, core::ExtendedPOS::AdjKatt, 2, "i_adjective_katt"},
+      {"ければ", 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm, 3, "i_adjective_kere", false, false,
+       true},
+  }};
+  adj_detail::appendTrimmedAdjVariants(candidates, kTrimRules.data(), kTrimRules.size(), dict_manager);
 
   // The past た is always a separate auxiliary: an i-adjective past never stands
   // as one かった token (難しかっ|た, 良くなかっ|た). Every span ending in かった
@@ -795,33 +740,6 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
                                   [](const UnknownCandidate& cand) { return utf8::endsWith(cand.surface, "かった"); }),
                    candidates.end());
-
-  // Add ke-form candidates for kereba patterns
-  // Preserve the adjective conditional stem and conjunctive particle boundary.
-  // For each candidate ending with ければ, generate a ke-form variant ending with けれ
-  std::vector<UnknownCandidate> ke_form_candidates;
-  for (const auto& cand : candidates) {
-    // Check if surface ends with ければ (i-adjective conditional form)
-    if (utf8::endsWith(cand.surface, "ければ")) {
-      // Generate ke-form variant: 美しければ → 美しけれ (仮定形; AdjKeForm→ParticleConj)
-      auto ke_cand =
-          makeTrimmedAdjVariant(cand, 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm, "i_adjective_kere");
-      // Disambiguate 〜ければ against the homographic ichidan verb 仮定形
-      // (高ければ=高い vs 受ければ=受ける). For an all-kanji stem, inflection alone
-      // produces a plausible fake ichidan (高ける). When the i-adjective base is a
-      // known dictionary adjective, this is decisively the adjective 仮定形, so make
-      // the ke-form win over the fake ichidan renyokei/kateikei verb candidates.
-      if (dict_manager != nullptr && isAdjectiveInDictionary(dict_manager, cand.lemma)) {
-        ke_cand.cost = candidate::verb_cost::kStrongBonus;  // -0.8, beats fake verb paths
-      }
-      ke_form_candidates.push_back(ke_cand);
-    }
-  }
-
-  // Add all ke-form candidates
-  for (auto& var : ke_form_candidates) {
-    candidates.push_back(std::move(var));
-  }
 
   // Add mizenkei (かろ) candidates for the conjectural pattern: stem + かろ + う
   // (高かろう, 美しかろう). Shared with the pure-hiragana generator.

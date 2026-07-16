@@ -264,12 +264,6 @@ TEST(TagGeneratorTest, ExcludeLowInfoWords) {
   }
 }
 
-TEST(TagGeneratorTest, GenerateFromTextReturnsEmpty) {
-  // generateFromText is not implemented (returns empty)
-  auto tags = TagGenerator::generateFromText("東京駅");
-  EXPECT_TRUE(tags.empty());
-}
-
 TEST(TagGeneratorTest, EmptyLemmaFallsBackToSurface) {
   TagGeneratorOptions options;
   options.use_lemma = true;

@@ -64,7 +64,8 @@ constexpr size_t kMaxNounLenForPrefix = 6;
 }  // namespace
 
 void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
-                                 size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                 const ByteOffsets& byte_offsets, size_t start_pos,
+                                 const std::vector<normalize::CharType>& char_types,
                                  const dictionary::DictionaryManager& dict_manager, const Scorer& scorer) {
   if (start_pos >= codepoints.size()) {
     return;
@@ -111,7 +112,7 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   }
 
   // Check dictionary for compound nouns
-  size_t noun_start_byte = charPosToBytePos(codepoints, noun_start);
+  size_t noun_start_byte = byteOffsetAt(byte_offsets, noun_start);
   auto noun_results = dict_manager.lookup(text, noun_start_byte);
   bool noun_in_dict = false;
   size_t dict_noun_end = noun_end;
@@ -139,7 +140,7 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   }
 
   // Check if the combined form is already in dictionary
-  size_t start_byte = charPosToBytePos(codepoints, start_pos);
+  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
   auto combined_results = dict_manager.lookup(text, start_byte);
 
   for (const auto& result : combined_results) {
@@ -149,7 +150,7 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   }
 
   // Generate joined candidate
-  size_t end_byte = charPosToBytePos(codepoints, noun_end);
+  size_t end_byte = byteOffsetAt(byte_offsets, noun_end);
   std::string surface(text.substr(start_byte, end_byte - start_byte));
 
   float base_cost = scorer.posPrior(core::PartOfSpeech::Noun);
@@ -183,8 +184,8 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
 }
 
 void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                     const std::vector<char32_t>& codepoints, size_t start_pos,
-                                     const std::vector<normalize::CharType>& char_types,
+                                     const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                     size_t start_pos, const std::vector<normalize::CharType>& char_types,
                                      [[maybe_unused]] const dictionary::DictionaryManager& dict_manager,
                                      const Scorer& scorer) {
   if (start_pos >= codepoints.size()) {
@@ -212,8 +213,8 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
       return;
     }
     size_t end_pos = start_pos + 3;
-    size_t start_byte = charPosToBytePos(codepoints, start_pos);
-    size_t end_byte = charPosToBytePos(codepoints, end_pos);
+    size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+    size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
     std::string surface(text.substr(start_byte, end_byte - start_byte));
     float base_cost = scorer.posPrior(core::PartOfSpeech::Noun);
     constexpr float kCompoundNounBonus = -1.0F;
@@ -329,8 +330,8 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
 
   // Build the compound noun surface
   size_t end_pos = hiragana_end + 1;  // Include suffix
-  size_t start_byte = charPosToBytePos(codepoints, start_pos);
-  size_t end_byte = charPosToBytePos(codepoints, end_pos);
+  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
 
   std::string surface(text.substr(start_byte, end_byte - start_byte));
 

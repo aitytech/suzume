@@ -7,13 +7,59 @@
 #define SUZUME_ANALYSIS_ADJECTIVE_CANDIDATES_INTERNAL_H_
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <initializer_list>
 #include <string>
+#include <string_view>
+#include <vector>
 
 #include "core/utf8_constants.h"
 #include "unknown.h"
 
+namespace suzume::dictionary {
+class DictionaryManager;
+}
+
 namespace suzume::analysis::adj_detail {
+
+/**
+ * @brief Rule for preserving a boundary inside an analyzed adjective span.
+ *
+ * Rules stay path-local because kanji, hiragana, and katakana candidates use
+ * different costs and lexical guards for otherwise identical suffix shapes.
+ */
+struct TrimmedAdjVariantRule {
+  constexpr TrimmedAdjVariantRule(std::string_view suffix_value, size_t char_trim_value, float cost_bonus_value,
+                                  core::ExtendedPOS epos_value, uint8_t group_value,
+                                  [[maybe_unused]] const char* pattern_value,
+                                  bool reject_contracted_n_past_value = false, bool require_nonempty_stem_value = false,
+                                  bool prefer_dictionary_lemma_value = false)
+      : suffix(suffix_value),
+        char_trim(char_trim_value),
+        cost_bonus(cost_bonus_value),
+        epos(epos_value),
+        group(group_value),
+        reject_contracted_n_past(reject_contracted_n_past_value),
+        require_nonempty_stem(require_nonempty_stem_value),
+        prefer_dictionary_lemma(prefer_dictionary_lemma_value) {
+#ifdef SUZUME_DEBUG_INFO
+    pattern = pattern_value;
+#endif
+  }
+
+  std::string_view suffix;
+  size_t char_trim;
+  float cost_bonus;
+  core::ExtendedPOS epos;
+  uint8_t group;
+  bool reject_contracted_n_past = false;
+  bool require_nonempty_stem = false;
+  bool prefer_dictionary_lemma = false;
+#ifdef SUZUME_DEBUG_INFO
+  const char* pattern = nullptr;
+#endif
+};
 
 /**
  * @brief First confidence at or above a threshold for one inflection type.
@@ -136,6 +182,16 @@ inline UnknownCandidate makeTrimmedAdjVariant(const UnknownCandidate& cand, size
 #endif
   return var;
 }
+
+/**
+ * @brief Append table-driven connection-form variants without temporary vectors.
+ *
+ * Rule groups are evaluated outermost to retain the historical candidate ordering.
+ * Only candidates present on entry are inspected, so derived variants are never
+ * recursively reprocessed.
+ */
+void appendTrimmedAdjVariants(std::vector<UnknownCandidate>& candidates, const TrimmedAdjVariantRule* rules,
+                              size_t rule_count, const dictionary::DictionaryManager* dict_manager = nullptr);
 
 }  // namespace suzume::analysis::adj_detail
 

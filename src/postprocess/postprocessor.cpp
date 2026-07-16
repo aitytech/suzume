@@ -1,6 +1,7 @@
 #include "postprocess/postprocessor.h"
 
 #include <algorithm>
+#include <utility>
 
 #include "core/debug.h"
 #include "core/utf8_constants.h"
@@ -82,8 +83,7 @@ Postprocessor::Postprocessor(const PostprocessOptions& options) : options_(optio
 Postprocessor::Postprocessor(const dictionary::DictionaryManager* dict_manager, const PostprocessOptions& options)
     : options_(options), lemmatizer_(dict_manager) {}
 
-std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morpheme>& morphemes) const {
-  std::vector<core::Morpheme> result = morphemes;
+std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> result) const {
   [[maybe_unused]] size_t before_count = 0;
 
   // NOUN + SUFFIX merging is intentionally NOT applied: tokens stay separate as
@@ -96,7 +96,7 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
 
   // Merge consecutive numeric expressions (always applied)
   before_count = result.size();
-  result = mergeNumericExpressions(result);
+  result = mergeNumericExpressions(std::move(result));
   if (result.size() != before_count) {
     SUZUME_DEBUG_LOG("[POSTPROC] mergeNumericExpressions: " << before_count << " → " << result.size() << "\n");
   }
@@ -201,14 +201,14 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
   // Merge verb renyokei + もの → compound noun (食べもの, 飲みもの, etc.)
   // Must run after lemmatize so conj_form is set
   before_count = result.size();
-  result = mergeVerbRenyokeiMono(result);
+  result = mergeVerbRenyokeiMono(std::move(result));
   if (result.size() != before_count) {
     SUZUME_DEBUG_LOG("[POSTPROC] mergeVerbRenyokeiMono: " << before_count << " → " << result.size() << "\n");
   }
 
   // Merge lexicalized 副詞 that the lattice mis-split (決して, 大して, ちゃんと)
   before_count = result.size();
-  result = mergeLexicalizedAdverbs(result);
+  result = mergeLexicalizedAdverbs(std::move(result));
   if (result.size() != before_count) {
     SUZUME_DEBUG_LOG("[POSTPROC] mergeLexicalizedAdverbs: " << before_count << " → " << result.size() << "\n");
   }
@@ -216,7 +216,7 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
   // Merge noun compounds
   if (options_.merge_noun_compounds) {
     before_count = result.size();
-    result = mergeNounCompounds(result);
+    result = mergeNounCompounds(std::move(result));
     if (result.size() != before_count) {
       SUZUME_DEBUG_LOG("[POSTPROC] mergeNounCompounds: " << before_count << " → " << result.size() << "\n");
     }
@@ -224,18 +224,18 @@ std::vector<core::Morpheme> Postprocessor::process(const std::vector<core::Morph
 
   // Merge prolonged sound mark (ー) with preceding token
   before_count = result.size();
-  result = mergeProlongedSoundMark(result);
+  result = mergeProlongedSoundMark(std::move(result));
   if (result.size() != before_count) {
     SUZUME_DEBUG_LOG("[POSTPROC] mergeProlongedSoundMark: " << before_count << " → " << result.size() << "\n");
   }
 
   // Filter unwanted morphemes
-  result = filterMorphemes(result);
+  result = filterMorphemes(std::move(result));
 
   return result;
 }
 
-std::vector<core::Morpheme> Postprocessor::mergeNounCompounds(const std::vector<core::Morpheme>& morphemes) {
+std::vector<core::Morpheme> Postprocessor::mergeNounCompounds(std::vector<core::Morpheme> morphemes) {
   if (morphemes.empty()) {
     return morphemes;
   }
@@ -286,7 +286,7 @@ std::vector<core::Morpheme> Postprocessor::mergeNounCompounds(const std::vector<
       result.push_back(merged);
       idx = merge_end;
     } else {
-      result.push_back(current);
+      result.push_back(std::move(morphemes[idx]));
       ++idx;
     }
   }
@@ -294,11 +294,11 @@ std::vector<core::Morpheme> Postprocessor::mergeNounCompounds(const std::vector<
   return result;
 }
 
-std::vector<core::Morpheme> Postprocessor::filterMorphemes(const std::vector<core::Morpheme>& morphemes) const {
+std::vector<core::Morpheme> Postprocessor::filterMorphemes(std::vector<core::Morpheme> morphemes) const {
   std::vector<core::Morpheme> result;
   result.reserve(morphemes.size());
 
-  for (const auto& morpheme : morphemes) {
+  for (auto& morpheme : morphemes) {
     // Skip symbols if option is set
     if (options_.remove_symbols && morpheme.pos == core::PartOfSpeech::Symbol) {
       continue;
@@ -309,7 +309,7 @@ std::vector<core::Morpheme> Postprocessor::filterMorphemes(const std::vector<cor
       continue;
     }
 
-    result.push_back(morpheme);
+    result.push_back(std::move(morpheme));
   }
 
   return result;
@@ -377,7 +377,7 @@ void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphem
   }
 }
 
-std::vector<core::Morpheme> Postprocessor::mergeVerbRenyokeiMono(const std::vector<core::Morpheme>& morphemes) {
+std::vector<core::Morpheme> Postprocessor::mergeVerbRenyokeiMono(std::vector<core::Morpheme> morphemes) {
   if (morphemes.size() < 2) {
     return morphemes;
   }
@@ -404,13 +404,13 @@ std::vector<core::Morpheme> Postprocessor::mergeVerbRenyokeiMono(const std::vect
       ++i;  // skip もの
       continue;
     }
-    result.push_back(morphemes[i]);
+    result.push_back(std::move(morphemes[i]));
   }
 
   return result;
 }
 
-std::vector<core::Morpheme> Postprocessor::mergeLexicalizedAdverbs(const std::vector<core::Morpheme>& morphemes) {
+std::vector<core::Morpheme> Postprocessor::mergeLexicalizedAdverbs(std::vector<core::Morpheme> morphemes) {
   if (morphemes.size() < 2) {
     return morphemes;
   }
@@ -453,7 +453,7 @@ std::vector<core::Morpheme> Postprocessor::mergeLexicalizedAdverbs(const std::ve
         continue;
       }
     }
-    result.push_back(morphemes[i]);
+    result.push_back(std::move(morphemes[i]));
   }
 
   return result;
@@ -531,7 +531,7 @@ bool endsWithContinuableUnit(const std::string& surface) {
 
 }  // namespace
 
-std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(const std::vector<core::Morpheme>& morphemes) {
+std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<core::Morpheme> morphemes) {
   if (morphemes.empty()) {
     return morphemes;
   }
@@ -648,14 +648,14 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(const std::ve
       }
     }
 
-    result.push_back(current);
+    result.push_back(std::move(morphemes[idx]));
     ++idx;
   }
 
   return result;
 }
 
-std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(const std::vector<core::Morpheme>& morphemes) {
+std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(std::vector<core::Morpheme> morphemes) {
   if (morphemes.size() < 2) {
     return morphemes;
   }
@@ -707,7 +707,7 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(const std::ve
         }
       }
     }
-    result.push_back(morphemes[i]);
+    result.push_back(std::move(morphemes[i]));
   }
 
   return result;

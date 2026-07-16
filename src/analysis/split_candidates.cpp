@@ -46,8 +46,9 @@ constexpr size_t kMaxVerbHiraganaLen = 8;
 }  // namespace
 
 void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
-                              size_t start_pos, const std::vector<normalize::CharType>& char_types,
-                              const Scorer& scorer, const dictionary::DictionaryManager& dict_manager) {
+                              const ByteOffsets& byte_offsets, size_t start_pos,
+                              const std::vector<normalize::CharType>& char_types, const Scorer& scorer,
+                              const dictionary::DictionaryManager& dict_manager) {
   using CharType = normalize::CharType;
 
   if (start_pos >= char_types.size()) {
@@ -98,7 +99,7 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
   // Find the maximum extent of the second segment
   size_t max_end = findCharRegionEnd(char_types, first_end, max_second_len, second_type);
 
-  size_t start_byte = charPosToBytePos(codepoints, start_pos);
+  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
   float base_cost = scorer.posPrior(core::PartOfSpeech::Noun);
   uint8_t flags = core::LatticeEdge::kIsUnknown;
 
@@ -107,7 +108,7 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
     // This allows Viterbi to choose the best segmentation
     for (size_t kanji_len = 1; kanji_len <= max_end - first_end; ++kanji_len) {
       size_t candidate_end = first_end + kanji_len;
-      size_t end_byte = charPosToBytePos(codepoints, candidate_end);
+      size_t end_byte = byteOffsetAt(byte_offsets, candidate_end);
       std::string surface(text.substr(start_byte, end_byte - start_byte));
 
       // Count how many leading kanji are counter/unit kanji
@@ -139,7 +140,7 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
         }
       } else {
         // Counter prefix + non-counter kanji: allow only if the kanji run is a dict entry (2次元).
-        size_t kanji_start_byte = charPosToBytePos(codepoints, first_end);
+        size_t kanji_start_byte = byteOffsetAt(byte_offsets, first_end);
         std::string kanji_part(text.substr(kanji_start_byte, end_byte - kanji_start_byte));
         bool found_exact = dict_manager.lookupExact(kanji_part) != nullptr;
         if (!found_exact) {
@@ -157,7 +158,7 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
     }
   } else {
     // For alphabet+kanji/katakana, generate single candidate (original behavior)
-    size_t end_byte = charPosToBytePos(codepoints, max_end);
+    size_t end_byte = byteOffsetAt(byte_offsets, max_end);
     std::string surface(text.substr(start_byte, end_byte - start_byte));
     float final_cost = base_cost + base_bonus;
     SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_MIX] \"" << surface << "\": alpha+"
@@ -168,7 +169,7 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
   }
 }
 
-void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
+void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, const ByteOffsets& byte_offsets,
                                 size_t start_pos, const std::vector<normalize::CharType>& char_types,
                                 const dictionary::DictionaryManager& dict_manager, const Scorer& scorer) {
   using CharType = normalize::CharType;
@@ -193,7 +194,7 @@ void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, c
   }
 
   // Get byte positions
-  size_t start_byte = charPosToBytePos(codepoints, start_pos);
+  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
 
   // The first-part lookup depends only on start_byte, so it is loop-invariant;
   // hoist it out and filter by result.length per split point below.
@@ -202,7 +203,7 @@ void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, c
   // Try different split points
   for (size_t split_point = 2; split_point < kanji_len; ++split_point) {
     size_t first_end = start_pos + split_point;
-    size_t first_end_byte = charPosToBytePos(codepoints, first_end);
+    size_t first_end_byte = byteOffsetAt(byte_offsets, first_end);
 
     // Check if the first part matches a dictionary entry
     bool first_in_dict = false;
@@ -258,7 +259,8 @@ void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, c
 }
 
 void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
-                                size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                const ByteOffsets& byte_offsets, size_t start_pos,
+                                const std::vector<normalize::CharType>& char_types,
                                 const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
                                 const grammar::Inflection& inflection) {
   using CharType = normalize::CharType;
@@ -295,12 +297,12 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
 
   // Use inflection analysis to check if verb part looks conjugated
 
-  size_t start_byte = charPosToBytePos(codepoints, start_pos);
+  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
 
   // Try different noun lengths
   for (size_t noun_len = 1; noun_len < kanji_end - start_pos; ++noun_len) {
     size_t verb_start = start_pos + noun_len;
-    size_t verb_start_byte = charPosToBytePos(codepoints, verb_start);
+    size_t verb_start_byte = byteOffsetAt(byte_offsets, verb_start);
 
     // Check if noun part is in dictionary as NOUN
     // Only consider actual NOUN entries, not ADV/VERB/etc.
@@ -348,7 +350,7 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
 
     for (size_t hira_len = 1; hira_len <= max_try_len; ++hira_len) {
       size_t verb_end = kanji_end + hira_len;
-      size_t verb_end_byte = charPosToBytePos(codepoints, verb_end);
+      size_t verb_end_byte = byteOffsetAt(byte_offsets, verb_end);
 
       // Extract the potential verb part
       std::string verb_part(text.substr(verb_start_byte, verb_end_byte - verb_start_byte));
@@ -382,7 +384,7 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
         // Skip split if noun + first kanji of verb forms a known compound
         // e.g., 上+手く should not split because 上手 is a dictionary word
         if (verb_start < kanji_end) {
-          size_t compound_end_byte = charPosToBytePos(codepoints, verb_start + 1);
+          size_t compound_end_byte = byteOffsetAt(byte_offsets, verb_start + 1);
           std::string compound(text.substr(start_byte, compound_end_byte - start_byte));
           bool compound_in_dict = dict_manager.lookupExact(compound) != nullptr;
           if (compound_in_dict) {

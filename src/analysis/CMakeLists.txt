@@ -2,6 +2,7 @@
 
 add_library(suzume_analysis STATIC
   adjective_candidates_hiragana.cpp
+  adjective_candidates_internal.cpp
   adjective_candidates_kanji.cpp
   adjective_candidates_stem.cpp
   analyzer.cpp

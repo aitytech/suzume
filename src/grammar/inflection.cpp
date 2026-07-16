@@ -40,10 +40,9 @@ std::vector<std::pair<const AuxiliaryEntry*, size_t>> Inflection::matchAuxiliari
       size_t start = surface.size() - aux.surface.size();
       if (surface.substr(start) == aux.surface) {
         matches.emplace_back(&aux, aux.surface.size());
-        SUZUME_DEBUG_LOG_TRACE("  [AUX MATCH] \"" << surface << "\" ends with \"" << aux.surface
-                                                  << "\" (lemma=" << aux.lemma << ", left_id=0x" << std::hex
-                                                  << aux.left_id << ", right_id=0x" << aux.right_id << ", requires=0x"
-                                                  << aux.required_conn << std::dec << ")\n");
+        SUZUME_DEBUG_LOG_TRACE("  [AUX MATCH] \"" << surface << "\" ends with \"" << aux.surface << "\" (right_id=0x"
+                                                  << std::hex << aux.right_id << ", requires=0x" << aux.required_conn
+                                                  << std::dec << ")\n");
       }
     }
   }
@@ -56,12 +55,10 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
                                                            uint16_t required_conn) const {
   std::vector<InflectionCandidate> candidates;
   candidates.reserve(16);  // Typical max candidates
-  const auto& endings_by_conn = getVerbEndingsByConn();
-  auto iter = endings_by_conn.find(required_conn);
-  if (iter == endings_by_conn.end()) {
+  const VerbEndingRange endings = getVerbEndingsByConn(required_conn);
+  if (endings.empty()) {
     return candidates;
   }
-  const auto& endings = iter->second;
 
   for (const auto& ending : endings) {
     // Check if remaining ends with this verb ending
@@ -502,7 +499,7 @@ const std::vector<InflectionCandidate>& Inflection::analyze(std::string_view sur
   }
 
   // Evict cache if it grows too large (avoid unbounded memory growth)
-  if (cache_.size() > 50000) {
+  if (cache_.size() >= kMaxCacheEntries) {
     cache_.clear();
   }
 

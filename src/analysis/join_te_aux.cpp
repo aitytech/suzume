@@ -49,9 +49,9 @@ const TeFormAuxiliary kTeFormAuxiliaries[] = {
 }  // namespace
 
 void addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
-                                  const std::vector<char32_t>& codepoints, size_t start_pos,
-                                  const std::vector<normalize::CharType>& char_types, const Scorer& scorer,
-                                  const grammar::Inflection& inflection) {
+                                  const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                  size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                  const Scorer& scorer, const grammar::Inflection& inflection) {
   if (start_pos >= codepoints.size()) {
     return;
   }
@@ -95,8 +95,8 @@ void addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
   }
 
   // Get byte positions
-  size_t te_byte = charPosToBytePos(codepoints, start_pos);
-  size_t aux_start_byte = charPosToBytePos(codepoints, aux_start);
+  size_t te_byte = byteOffsetAt(byte_offsets, start_pos);
+  size_t aux_start_byte = byteOffsetAt(byte_offsets, aux_start);
 
   // Find the extent of hiragana following て/で
   size_t hiragana_end = findCharRegionEnd(char_types, aux_start, 10, CharType::Hiragana);
@@ -118,7 +118,7 @@ void addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
 
     // Try different lengths after the stem
     for (size_t aux_end = aux_start + stem_char_len; aux_end <= hiragana_end && aux_end <= aux_start + 8; ++aux_end) {
-      size_t aux_end_byte = charPosToBytePos(codepoints, aux_end);
+      size_t aux_end_byte = byteOffsetAt(byte_offsets, aux_end);
       std::string aux_surface(text.substr(aux_start_byte, aux_end_byte - aux_start_byte));
 
       auto best = inflection.getBest(aux_surface);
@@ -152,8 +152,9 @@ void addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
 }
 
 void addTaruAdjectiveJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                    const std::vector<char32_t>& codepoints, size_t start_pos,
-                                    const std::vector<normalize::CharType>& char_types, const Scorer& scorer) {
+                                    const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                    size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                    const Scorer& scorer) {
   if (start_pos >= codepoints.size()) {
     return;
   }
@@ -192,14 +193,14 @@ void addTaruAdjectiveJoinCandidates(core::Lattice& lattice, std::string_view tex
   }
 
   // Build the surface: X然と
-  size_t start_byte = charPosToBytePos(codepoints, start_pos);
+  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
   size_t end_pos = kanji_end + 1;  // Include と
-  size_t end_byte = charPosToBytePos(codepoints, end_pos);
+  size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
 
   std::string surface(text.substr(start_byte, end_byte - start_byte));
 
   // X然 without と is the lemma
-  size_t zen_end_byte = charPosToBytePos(codepoints, kanji_end);
+  size_t zen_end_byte = byteOffsetAt(byte_offsets, kanji_end);
   std::string lemma(text.substr(start_byte, zen_end_byte - start_byte));
 
   // Calculate cost with bonus for this pattern

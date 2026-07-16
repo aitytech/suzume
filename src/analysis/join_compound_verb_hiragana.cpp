@@ -10,8 +10,8 @@ namespace suzume::analysis {
 using namespace compound_verb_detail;
 
 void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                           const std::vector<char32_t>& codepoints, size_t start_pos,
-                                           const std::vector<normalize::CharType>& char_types,
+                                           const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                           size_t start_pos, const std::vector<normalize::CharType>& char_types,
                                            const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
                                            const grammar::Inflection& inflection) {
   if (start_pos >= char_types.size()) {
@@ -24,7 +24,7 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
   }
 
   // Get byte position for start
-  size_t start_byte = charPosToBytePos(codepoints, start_pos);
+  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
 
   // For each V2 subsidiary verb, check if it appears after a potential V1
   for (const auto& v2_verb : kSubsidiaryVerbs) {
@@ -55,7 +55,7 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
         continue;
       }
 
-      size_t v2_start_byte = charPosToBytePos(codepoints, v2_start);
+      size_t v2_start_byte = byteOffsetAt(byte_offsets, v2_start);
 
       // Check if V2 reading (hiragana) or surface (kanji) matches at v2_start
       std::string_view v2_surface(v2_verb.surface);

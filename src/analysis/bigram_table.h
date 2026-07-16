@@ -17,6 +17,7 @@
 // =============================================================================
 
 #include <array>
+#include <cstdint>
 
 #include "core/types.h"
 
@@ -42,11 +43,14 @@ class BigramTable {
   static float getCost(core::ExtendedPOS prev, core::ExtendedPOS next);
 
  private:
-  // The actual kSize x kSize bigram table (kSize = ExtendedPOS::Count_)
-  static const std::array<std::array<float, kSize>, kSize> table_;
+  // Costs come from a small fixed palette. Storing an 8-bit palette index
+  // instead of the same float values in every cell cuts the dense table to a
+  // quarter of its former size while preserving O(1) lookup.
+  using EncodedTable = std::array<std::array<uint8_t, kSize>, kSize>;
+  static const EncodedTable table_;
 
   // Initialize table with grammatical connection costs
-  static std::array<std::array<float, kSize>, kSize> initTable();
+  static EncodedTable initTable();
 };
 
 // =============================================================================

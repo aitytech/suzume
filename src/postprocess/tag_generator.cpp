@@ -1,5 +1,8 @@
 #include "postprocess/tag_generator.h"
 
+#include <algorithm>
+#include <utility>
+
 #include "grammar/char_patterns.h"
 #include "normalize/utf8.h"
 
@@ -87,7 +90,6 @@ std::string TagGenerator::getTagString(const core::Morpheme& morpheme) const {
 
 std::vector<TagEntry> TagGenerator::generate(const std::vector<core::Morpheme>& morphemes) const {
   std::vector<TagEntry> tags;
-  std::unordered_set<std::string> seen;
 
   for (const auto& morpheme : morphemes) {
     if (!shouldInclude(morpheme)) {
@@ -102,14 +104,12 @@ std::vector<TagEntry> TagGenerator::generate(const std::vector<core::Morpheme>& 
     }
 
     // Check for duplicates
-    if (options_.remove_duplicates) {
-      if (seen.find(tag) != seen.end()) {
-        continue;
-      }
-      seen.insert(tag);
+    if (options_.remove_duplicates &&
+        std::any_of(tags.begin(), tags.end(), [&tag](const TagEntry& entry) { return entry.tag == tag; })) {
+      continue;
     }
 
-    tags.push_back({tag, morpheme.pos});
+    tags.push_back({std::move(tag), morpheme.pos});
 
     // Check max tags
     if (options_.max_tags > 0 && tags.size() >= options_.max_tags) {
@@ -118,12 +118,6 @@ std::vector<TagEntry> TagGenerator::generate(const std::vector<core::Morpheme>& 
   }
 
   return tags;
-}
-
-std::vector<TagEntry> TagGenerator::generateFromText(std::string_view /*text*/) {
-  // This would require access to Analyzer
-  // For now, return empty - caller should use Analyzer + generate()
-  return {};
 }
 
 }  // namespace suzume::postprocess

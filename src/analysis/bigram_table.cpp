@@ -8,13 +8,13 @@ float BigramTable::getCost(core::ExtendedPOS prev, core::ExtendedPOS next) {
   if (prev_idx >= kSize || next_idx >= kSize) {
     return 0.0F;
   }
-  return table_[prev_idx][next_idx];
+  return bigram_rules::decodeCost(table_[prev_idx][next_idx]);
 }
 
-std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTable::initTable() {
+BigramTable::EncodedTable BigramTable::initTable() {
   bigram_rules::BigramMatrix table{};
   for (auto& row : table) {
-    row.fill(bigram_cost::kNeutral);
+    row.fill(bigram_rules::encodeCost(bigram_cost::kNeutral));
   }
 
   bigram_rules::setVerbAndAdjectiveCosts(table);
@@ -23,7 +23,6 @@ std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTabl
   return table;
 }
 
-const std::array<std::array<float, BigramTable::kSize>, BigramTable::kSize> BigramTable::table_ =
-    BigramTable::initTable();
+const BigramTable::EncodedTable BigramTable::table_ = BigramTable::initTable();
 
 }  // namespace suzume::analysis

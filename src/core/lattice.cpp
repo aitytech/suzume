@@ -138,8 +138,8 @@ bool Lattice::isValid() const {
     size_t pos = que.front();
     que.pop();
 
-    const auto& edges = edgesAt(pos);
-    for (const auto& edge : edges) {
+    for (uint32_t edge_id : edgeIdsAt(pos)) {
+      const auto& edge = getEdge(edge_id);
       if (edge.end <= text_length_ && !reachable[edge.end]) {
         reachable[edge.end] = true;
         que.push(edge.end);

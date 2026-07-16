@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "analysis/scorer.h"
+#include "analysis/tokenizer_utils.h"
 #include "analysis/unknown.h"
 #include "core/lattice.h"
 #include "dictionary/dictionary.h"
@@ -42,13 +43,14 @@ class Tokenizer {
    * @brief Add dictionary candidates at position
    */
   void addDictionaryCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
-                               size_t start_pos) const;
+                               const ByteOffsets& byte_offsets, size_t start_pos) const;
 
   /**
    * @brief Add unknown word candidates at position
    */
   void addUnknownCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
-                            size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
+                            const ByteOffsets& byte_offsets, size_t start_pos,
+                            const std::vector<normalize::CharType>& char_types) const;
 
   /**
    * @brief Add mixed script joining candidates
@@ -62,7 +64,8 @@ class Tokenizer {
    *   "3月" → merged as single noun with bonus
    */
   void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
-                                size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
+                                const ByteOffsets& byte_offsets, size_t start_pos,
+                                const std::vector<normalize::CharType>& char_types) const;
 
   /**
    * @brief Add compound noun split candidates
@@ -74,9 +77,8 @@ class Tokenizer {
    *   "人工知能" → ["人工知能", "人工" + "知能"]
    *   "人工知能研究所" → ["人工知能" + "研究所", ...]
    */
-  void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text,
-                                  const std::vector<char32_t>& codepoints, size_t start_pos,
-                                  const std::vector<normalize::CharType>& char_types) const;
+  void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, const ByteOffsets& byte_offsets,
+                                  size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
 
   /**
    * @brief Add noun+verb split candidates at kanji boundaries
@@ -89,8 +91,8 @@ class Tokenizer {
    *   "日本語話す" → ["日本語" + "話す"] (noun + verb)
    */
   void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text,
-                                  const std::vector<char32_t>& codepoints, size_t start_pos,
-                                  const std::vector<normalize::CharType>& char_types) const;
+                                  const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                  size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
 
   /**
    * @brief Add compound verb join candidates
@@ -105,8 +107,8 @@ class Tokenizer {
    *   "書き出す" → compound verb (書く + 出す)
    */
   void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                     const std::vector<char32_t>& codepoints, size_t start_pos,
-                                     const std::vector<normalize::CharType>& char_types) const;
+                                     const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                     size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
 
   /**
    * @brief Add hiragana compound verb join candidates
@@ -118,7 +120,8 @@ class Tokenizer {
    *   "やりなおしたい" → やりなおし + たい
    */
   void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                             const std::vector<char32_t>& codepoints, size_t start_pos,
+                                             const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                             size_t start_pos,
                                              const std::vector<normalize::CharType>& char_types) const;
 
   /**
@@ -134,8 +137,8 @@ class Tokenizer {
    *   "未経験" → merged as single noun (未 + 経験)
    */
   void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                   const std::vector<char32_t>& codepoints, size_t start_pos,
-                                   const std::vector<normalize::CharType>& char_types) const;
+                                   const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                   size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
 
   /**
    * @brief Add te-form + auxiliary verb split candidates
@@ -149,8 +152,8 @@ class Tokenizer {
    *   "書いておく" → ["書いて" + "おく"]
    */
   void addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
-                                    const std::vector<char32_t>& codepoints, size_t start_pos,
-                                    const std::vector<normalize::CharType>& char_types) const;
+                                    const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                    size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
 
   /**
    * @brief Add taru-adjective adverb join candidates (X然と pattern)
@@ -162,8 +165,8 @@ class Tokenizer {
    *   "平然と" → single adverb (not 平然 + と)
    */
   void addTaruAdjectiveJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                      const std::vector<char32_t>& codepoints, size_t start_pos,
-                                      const std::vector<normalize::CharType>& char_types) const;
+                                      const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                      size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
 
   /**
    * @brief Add verb renyokei + suffix noun join candidates (V連用形 + 物/方/所)
@@ -173,8 +176,8 @@ class Tokenizer {
    *   "読み方" → compound noun (読む + 方)
    */
   void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
-                                       const std::vector<char32_t>& codepoints, size_t start_pos,
-                                       const std::vector<normalize::CharType>& char_types) const;
+                                       const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                       size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
 };
 
 }  // namespace suzume::analysis
