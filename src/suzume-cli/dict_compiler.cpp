@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <tuple>
+#include <utility>
 
 #include "cli_common.h"
 #include "core/utf8_constants.h"
@@ -386,8 +387,11 @@ core::Expected<size_t, core::Error> DictCompiler::compileMultiple(const std::vec
                                               "Failed to parse " + tsv_path + ": " + parse_result.error().message));
     }
 
-    const auto& entries = parse_result.value();
-    all_entries.insert(all_entries.end(), entries.begin(), entries.end());
+    auto entries = std::move(parse_result.value());
+    all_entries.reserve(all_entries.size() + entries.size());
+    for (auto& entry : entries) {
+      all_entries.push_back(std::move(entry));
+    }
 
     if (verbose_) {
       printInfo("Parsed " + std::to_string(entries.size()) + " entries from " + tsv_path);

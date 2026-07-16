@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <utility>
 
 #include "adjective_candidates.h"
 #include "analysis/scorer_constants.h"
@@ -25,6 +26,18 @@
 #include "suffix_candidates.h"
 #include "tokenizer_utils.h"
 #include "verb_candidates.h"
+
+namespace {
+
+void appendCandidates(std::vector<suzume::analysis::UnknownCandidate>& destination,
+                      std::vector<suzume::analysis::UnknownCandidate>&& source) {
+  destination.reserve(destination.size() + source.size());
+  for (auto& candidate : source) {
+    destination.push_back(std::move(candidate));
+  }
+}
+
+}  // namespace
 
 namespace suzume::analysis {
 
@@ -146,107 +159,87 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
   // Also handles katakana patterns (ニャーニャー, ワンワン, etc.)
   if (char_types[start_pos] == normalize::CharType::Hiragana ||
       char_types[start_pos] == normalize::CharType::Katakana) {
-    auto onomatopoeia = generateOnomatopoeiaCandidates(codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), onomatopoeia.begin(), onomatopoeia.end());
+    appendCandidates(candidates, generateOnomatopoeiaCandidates(codepoints, start_pos, char_types));
   }
 
   // Generate verb candidates (kanji + hiragana conjugation endings)
   if (char_types[start_pos] == normalize::CharType::Kanji) {
-    auto verbs = generateVerbCandidates(text, codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), verbs.begin(), verbs.end());
+    appendCandidates(candidates, generateVerbCandidates(text, codepoints, start_pos, char_types));
 
     // Generate compound verb candidates (kanji + hiragana + kanji + hiragana)
     // e.g., 恐れ入ります, 差し上げます, 申し上げます
-    auto compound_verbs = generateCompoundVerbCandidates(text, codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), compound_verbs.begin(), compound_verbs.end());
+    appendCandidates(candidates, generateCompoundVerbCandidates(text, codepoints, start_pos, char_types));
 
     // Generate i-adjective candidates (kanji + hiragana conjugation endings)
-    auto adjs = generateAdjectiveCandidates(text, codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), adjs.begin(), adjs.end());
+    appendCandidates(candidates, generateAdjectiveCandidates(text, codepoints, start_pos, char_types));
 
     // Generate i-adjective STEM candidates (難し, 美し for 難しそう, 美しすぎる)
     // This preserves the adjective stem and appearance-auxiliary boundary.
-    auto adj_stems = generateAdjectiveStemCandidates(text, codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), adj_stems.begin(), adj_stems.end());
+    appendCandidates(candidates, generateAdjectiveStemCandidates(text, codepoints, start_pos, char_types));
 
     // Generate na-adjective candidates (〜的 patterns)
-    auto na_adjs = generateNaAdjectiveCandidates(text, codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), na_adjs.begin(), na_adjs.end());
+    appendCandidates(candidates, generateNaAdjectiveCandidates(text, codepoints, start_pos, char_types));
 
     // Generate nominalized noun candidates (kanji + short hiragana)
     // e.g., 手助け, 片付け, 引き上げ
-    auto nom_nouns = generateNominalizedNounCandidates(text, codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), nom_nouns.begin(), nom_nouns.end());
+    appendCandidates(candidates, generateNominalizedNounCandidates(text, codepoints, start_pos, char_types));
 
     // Generate kanji + hiragana compound noun candidates
     // e.g., 玉ねぎ, 水たまり
     // Pass dict_manager to skip compounds when hiragana portion is a known word
-    auto compound_nouns = generateKanjiHiraganaCompoundCandidates(codepoints, start_pos, char_types, dict_manager_);
-    candidates.insert(candidates.end(), compound_nouns.begin(), compound_nouns.end());
+    appendCandidates(candidates,
+                     generateKanjiHiraganaCompoundCandidates(codepoints, start_pos, char_types, dict_manager_));
 
     // Generate counter candidates for numeral + つ patterns
     // e.g., 一つ, 二つ, ..., 九つ (closed class)
-    auto counters = generateCounterCandidates(codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), counters.begin(), counters.end());
+    appendCandidates(candidates, generateCounterCandidates(codepoints, start_pos, char_types));
 
     // Generate prefix + single kanji compound candidates
     // e.g., 今日, 今週, 本日, 全国 (prefix-like compounds)
-    auto prefix_compounds = generatePrefixCompoundCandidates(codepoints, start_pos, char_types, inflection_);
-    candidates.insert(candidates.end(), prefix_compounds.begin(), prefix_compounds.end());
+    appendCandidates(candidates, generatePrefixCompoundCandidates(codepoints, start_pos, char_types, inflection_));
 
     // Generate temporal-noun boundary split candidates (現在|担当者, 昨日|会議)
-    auto temporal_boundary_candidates = generateTemporalNounBoundaryCandidates(codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), temporal_boundary_candidates.begin(), temporal_boundary_candidates.end());
+    appendCandidates(candidates, generateTemporalNounBoundaryCandidates(codepoints, start_pos, char_types));
   }
 
   // Generate hiragana verb candidates (pure hiragana verbs like いく, くる)
   if (char_types[start_pos] == normalize::CharType::Hiragana) {
-    auto hiragana_verbs = generateHiraganaVerbCandidates(text, codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), hiragana_verbs.begin(), hiragana_verbs.end());
+    appendCandidates(candidates, generateHiraganaVerbCandidates(text, codepoints, start_pos, char_types));
 
     // Generate hiragana i-adjective candidates (まずい, おいしい, etc.)
-    auto hiragana_adjs = generateHiraganaAdjectiveCandidates(text, codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), hiragana_adjs.begin(), hiragana_adjs.end());
+    appendCandidates(candidates, generateHiraganaAdjectiveCandidates(text, codepoints, start_pos, char_types));
 
     // Generate productive suffix candidates (ありがち, 忘れっぽい, etc.)
-    auto productive_suffix = generateProductiveSuffixCandidates(codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), productive_suffix.begin(), productive_suffix.end());
+    appendCandidates(candidates, generateProductiveSuffixCandidates(codepoints, start_pos, char_types));
   }
 
   // Generate katakana verb/adjective candidates (slang: バズる, エモい, etc.)
   if (char_types[start_pos] == normalize::CharType::Katakana) {
-    auto kata_verbs = generateKatakanaVerbCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
-                                                     options_.verb_candidate_options);
-    candidates.insert(candidates.end(), kata_verbs.begin(), kata_verbs.end());
+    appendCandidates(candidates, generateKatakanaVerbCandidates(codepoints, start_pos, char_types, inflection_,
+                                                                dict_manager_, options_.verb_candidate_options));
 
-    auto kata_adjs = generateKatakanaAdjectiveCandidates(codepoints, start_pos, char_types, inflection_);
-    candidates.insert(candidates.end(), kata_adjs.begin(), kata_adjs.end());
+    appendCandidates(candidates, generateKatakanaAdjectiveCandidates(codepoints, start_pos, char_types, inflection_));
   }
 
   // Generate counter candidates for digit + つ patterns (e.g., 3つ, 10個)
   if (char_types[start_pos] == normalize::CharType::Digit) {
-    auto counters = generateCounterCandidates(codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), counters.begin(), counters.end());
+    appendCandidates(candidates, generateCounterCandidates(codepoints, start_pos, char_types));
   }
 
   // Generate by same type
-  auto same_type = generateBySameType(text, codepoints, start_pos, char_types);
-  candidates.insert(candidates.end(), same_type.begin(), same_type.end());
+  appendCandidates(candidates, generateBySameType(text, codepoints, start_pos, char_types));
 
   // Generate alphanumeric sequences
-  auto alphanum = generateAlphanumeric(text, codepoints, start_pos, char_types);
-  candidates.insert(candidates.end(), alphanum.begin(), alphanum.end());
+  appendCandidates(candidates, generateAlphanumeric(text, codepoints, start_pos, char_types));
 
   // Generate with suffix separation for kanji
   if (options_.separate_suffix && char_types[start_pos] == normalize::CharType::Kanji) {
-    auto suffix = generateWithSuffix(text, codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), suffix.begin(), suffix.end());
+    appendCandidates(candidates, generateWithSuffix(text, codepoints, start_pos, char_types));
   }
 
   // Generate character speech candidates (キャラ語尾)
   if (options_.enable_character_speech) {
-    auto char_speech = generateCharacterSpeechCandidates(text, codepoints, start_pos, char_types);
-    candidates.insert(candidates.end(), char_speech.begin(), char_speech.end());
+    appendCandidates(candidates, generateCharacterSpeechCandidates(text, codepoints, start_pos, char_types));
   }
 
   return candidates;

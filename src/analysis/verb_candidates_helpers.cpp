@@ -367,7 +367,7 @@ bool isReduplicatedShiiAdjectiveHead(const std::vector<char32_t>& codepoints, si
   return onset == U'い' || onset == U'く' || onset == U'か' || onset == U'け';
 }
 
-const std::vector<std::pair<grammar::VerbType, std::string_view>>& getGodanTypesByOnbin(std::string_view onbin) {
+grammar::GodanOnbinRange getGodanTypesByOnbin(std::string_view onbin) {
   return grammar::Conjugation::getGodanTypesByOnbin(onbin);
 }
 

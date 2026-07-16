@@ -56,8 +56,8 @@ inline UnknownCandidate makeSuffixCandidateNoLemma(const std::string& surface, s
   return cand;
 }
 
-const std::vector<SuffixEntry>& getSuffixEntries() {
-  static const std::vector<SuffixEntry> kSuffixes = {
+const std::array<SuffixEntry, 19>& getSuffixEntries() {
+  static constexpr std::array<SuffixEntry, 19> kSuffixes = {{
       {"化する", core::PartOfSpeech::Verb},
       // Tokenizer use case: keep X+SUFFIX as one search unit. The following
       // suffixes are merged via kanji-merge normalization, not split here:
@@ -92,12 +92,12 @@ const std::vector<SuffixEntry>& getSuffixEntries() {
       {"省", core::PartOfSpeech::Suffix},
       {"院", core::PartOfSpeech::Suffix},
       {"所", core::PartOfSpeech::Suffix},
-  };
+  }};
   return kSuffixes;
 }
 
-const std::vector<std::string_view>& getNaAdjSuffixes() {
-  static const std::vector<std::string_view> kNaAdjSuffixes = {
+const std::array<std::string_view, 1>& getNaAdjSuffixes() {
+  static constexpr std::array<std::string_view, 1> kNaAdjSuffixes = {
       "的",  // 理性的, 論理的, etc.
   };
   return kNaAdjSuffixes;
@@ -188,8 +188,8 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
 }
 
 // Administrative suffix codepoints for intermediate boundary detection
-const std::vector<char32_t>& getAdminSuffixCodepoints() {
-  static const std::vector<char32_t> kAdminSuffixes = {U'県', U'都', U'府', U'道', U'市', U'区', U'町', U'村'};
+const std::array<char32_t, 8>& getAdminSuffixCodepoints() {
+  static constexpr std::array<char32_t, 8> kAdminSuffixes = {U'県', U'都', U'府', U'道', U'市', U'区', U'町', U'村'};
   return kAdminSuffixes;
 }
 
@@ -228,15 +228,12 @@ std::vector<UnknownCandidate> generateAdminBoundaryCandidates(const std::vector<
 std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                  const std::vector<normalize::CharType>& char_types,
                                                  const UnknownOptions& options) {
-  std::vector<UnknownCandidate> candidates;
-
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return {};
   }
 
   // First, generate candidates for administrative boundaries
-  auto admin_candidates = generateAdminBoundaryCandidates(codepoints, start_pos, char_types);
-  candidates.insert(candidates.end(), admin_candidates.begin(), admin_candidates.end());
+  std::vector<UnknownCandidate> candidates = generateAdminBoundaryCandidates(codepoints, start_pos, char_types);
 
   // Find kanji sequence
   size_t end_pos = start_pos;

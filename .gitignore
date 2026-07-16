@@ -24,9 +24,12 @@ _deps/
 *.bak
 .DS_Store
 
-# Claude Code configuration
+# Local agent configuration
 .claude/
 CLAUDE.md
+.agents/
+.codex/
+AGENTS.md
 .serena/
 
 # Design documents (internal)

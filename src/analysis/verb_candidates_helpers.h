@@ -408,7 +408,7 @@ bool isReduplicatedShiiAdjectiveHead(const std::vector<char32_t>& codepoints, si
  * @param onbin Onbin pattern to match ("い", "っ", "ん", or "")
  * @return Reference to a shared immutable table of (VerbType, base_suffix) pairs
  */
-const std::vector<std::pair<grammar::VerbType, std::string_view>>& getGodanTypesByOnbin(std::string_view onbin);
+grammar::GodanOnbinRange getGodanTypesByOnbin(std::string_view onbin);
 
 /**
  * @brief Result of matching an onbin stem against the dictionary's godan verbs.

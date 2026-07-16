@@ -68,8 +68,7 @@ struct OnbinInflMatch {
   std::string base_form;
 };
 OnbinInflMatch bestOnbinInflMatch(const grammar::Inflection& inflection, const std::string& full_surface,
-                                  const std::string& kanji_stem,
-                                  const std::vector<std::pair<grammar::VerbType, std::string_view>>& onbin_types) {
+                                  const std::string& kanji_stem, grammar::GodanOnbinRange onbin_types) {
   OnbinInflMatch match;
   float best_conf = 0.0F;
   for (const auto& result : inflection.analyze(full_surface)) {

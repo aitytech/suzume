@@ -8,17 +8,17 @@
 
 #include "verb_endings.h"
 
+#include <utility>
+
 namespace suzume::grammar {
 
 namespace {
 
 // Fixed Godan-type iteration order for deterministic ending generation.
 //
-// Conjugation::getGodanRows() returns an unordered_map whose iteration order is
-// implementation-defined, which makes tie-breaking between candidates that share
-// an onbin form (立っ → 立つ/立る/立う, 軋ん → 軋む/軋ぶ/軋ぬ) differ across standard
-// libraries. Iterating in this explicit order instead yields identical candidate
-// ordering on every platform (cross-binding output contract).
+// Keep the reverse-lookup preference explicit: it differs from the canonical
+// table's verb-type order for shared onbin forms and is part of the cross-binding
+// output contract.
 //
 // The order is chosen to agree with Conjugation::getGodanTypesByOnbin()'s declared
 // onbin preference, so that when no dictionary entry breaks the tie the same lemma
@@ -134,7 +134,10 @@ const std::vector<VerbEnding>& getVerbEndings() {
 
     // Add generated Godan endings
     auto godan = generateGodanEndings();
-    all.insert(all.end(), godan.begin(), godan.end());
+    all.reserve(godan.size() + kIrregularEndings.size());
+    for (auto& ending : godan) {
+      all.push_back(std::move(ending));
+    }
 
     // Add irregular verb endings
     all.insert(all.end(), kIrregularEndings.begin(), kIrregularEndings.end());

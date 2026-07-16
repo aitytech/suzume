@@ -11,9 +11,11 @@
 #ifndef SUZUME_GRAMMAR_CONJUGATION_H_
 #define SUZUME_GRAMMAR_CONJUGATION_H_
 
+#include <array>
+#include <cstddef>
 #include <string>
 #include <string_view>
-#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "core/types.h"
@@ -39,6 +41,25 @@ enum class VerbType : uint8_t {
   Suru,        // サ変: する
   Kuru,        // カ変: 来る
   IAdjective,  // い形容詞: 高い
+};
+
+using GodanOnbinEntry = std::pair<VerbType, std::string_view>;
+
+/**
+ * @brief Non-owning view over a fixed Godan onbin candidate table.
+ */
+class GodanOnbinRange {
+ public:
+  constexpr GodanOnbinRange(const GodanOnbinEntry* data, size_t size) : data_(data), size_(size) {}
+
+  constexpr const GodanOnbinEntry* begin() const { return data_; }
+  constexpr const GodanOnbinEntry* end() const { return data_ + size_; }
+  constexpr size_t size() const { return size_; }
+  constexpr bool empty() const { return size_ == 0; }
+
+ private:
+  const GodanOnbinEntry* data_;
+  size_t size_;
 };
 
 /**
@@ -81,14 +102,17 @@ class Conjugation {
    * Used for reverse inflection analysis and verb ending generation.
    */
   struct GodanRow {
-    char32_t base_vowel;  // 終止形母音: く, ぐ, す, etc.
-    char32_t a_row;       // あ段 (未然形): か, が, さ, etc.
-    char32_t i_row;       // い段 (連用形): き, ぎ, し, etc.
-    char32_t e_row;       // え段 (仮定/命令形): け, げ, せ, etc.
-    char32_t o_row;       // お段 (意志形): こ, ご, そ, etc.
-    std::string onbin;    // 音便形: い, っ, ん, "" (empty for サ行)
-    bool voiced_ta;       // た→だ: true for が/な/ば/ま行
+    char32_t base_vowel;     // 終止形母音: く, ぐ, す, etc.
+    char32_t a_row;          // あ段 (未然形): か, が, さ, etc.
+    char32_t i_row;          // い段 (連用形): き, ぎ, し, etc.
+    char32_t e_row;          // え段 (仮定/命令形): け, げ, せ, etc.
+    char32_t o_row;          // お段 (意志形): こ, ご, そ, etc.
+    std::string_view onbin;  // 音便形: い, っ, ん, "" (empty for サ行)
+    bool voiced_ta;          // た→だ: true for が/な/ば/ま行
   };
+
+  using GodanEntry = std::pair<VerbType, GodanRow>;
+  static constexpr size_t kGodanRowCount = 9;
 
   /**
    * @brief Get Godan row data for a specific verb type
@@ -98,10 +122,10 @@ class Conjugation {
   static const GodanRow* getGodanRow(VerbType type);
 
   /**
-   * @brief Get all Godan rows as a map
-   * @return Const reference to VerbType -> GodanRow map
+   * @brief Get all Godan rows in deterministic verb-type order
+   * @return Const reference to the fixed VerbType/GodanRow table
    */
-  static const std::unordered_map<VerbType, GodanRow>& getGodanRows();
+  static const std::array<GodanEntry, kGodanRowCount>& getGodanRows();
 
   /**
    * @brief Get Godan verb types that use a specific onbin pattern.
@@ -113,10 +137,9 @@ class Conjugation {
    * - "" (none) -> GodanSa
    *
    * @param onbin Onbin pattern to match ("い", "っ", "ん", or "")
-   * @return Vector of (VerbType, base suffix) pairs in deterministic preference order.
-   *         Returns a reference to a shared immutable table (no per-call allocation).
+   * @return Non-owning range of (VerbType, base suffix) pairs in deterministic preference order.
    */
-  static const std::vector<std::pair<VerbType, std::string_view>>& getGodanTypesByOnbin(std::string_view onbin);
+  static GodanOnbinRange getGodanTypesByOnbin(std::string_view onbin);
 
   /**
    * @brief Generate all conjugated forms for a verb

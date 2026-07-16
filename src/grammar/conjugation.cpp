@@ -27,8 +27,7 @@ ConjugatedForm makeForm(const std::string& surface, const std::string& base_form
 
 Conjugation::Conjugation() = default;
 
-const std::unordered_map<VerbType, Conjugation::GodanRow>& Conjugation::getGodanRows() {
-  // Static initialization: thread-safe in C++11+
+const std::array<Conjugation::GodanEntry, Conjugation::kGodanRowCount>& Conjugation::getGodanRows() {
   // 五段動詞の各行の活用パターン
   // base_vowel: 終止形語尾 (く, ぐ, す...)
   // a_row: 未然形 (か, が, さ...)
@@ -37,7 +36,7 @@ const std::unordered_map<VerbType, Conjugation::GodanRow>& Conjugation::getGodan
   // o_row: 意志形 (こ, ご, そ...)
   // onbin: 音便形 (い, っ, ん, "" for さ行)
   // voiced_ta: 連用形+た が だ になるか
-  static const std::unordered_map<VerbType, GodanRow> kGodanRows = {
+  static constexpr std::array<GodanEntry, kGodanRowCount> kGodanRows = {{
       {VerbType::GodanKa, {U'く', U'か', U'き', U'け', U'こ', "い", false}},
       {VerbType::GodanGa, {U'ぐ', U'が', U'ぎ', U'げ', U'ご', "い", true}},
       {VerbType::GodanSa, {U'す', U'さ', U'し', U'せ', U'そ', "", false}},
@@ -47,41 +46,40 @@ const std::unordered_map<VerbType, Conjugation::GodanRow>& Conjugation::getGodan
       {VerbType::GodanMa, {U'む', U'ま', U'み', U'め', U'も', "ん", true}},
       {VerbType::GodanRa, {U'る', U'ら', U'り', U'れ', U'ろ', "っ", false}},
       {VerbType::GodanWa, {U'う', U'わ', U'い', U'え', U'お', "っ", false}},
-  };
+  }};
   return kGodanRows;
 }
 
 const Conjugation::GodanRow* Conjugation::getGodanRow(VerbType type) {
-  const auto& rows = getGodanRows();
-  auto it = rows.find(type);
-  return it != rows.end() ? &it->second : nullptr;
+  for (const auto& [row_type, row] : getGodanRows()) {
+    if (row_type == type) {
+      return &row;
+    }
+  }
+  return nullptr;
 }
 
-const std::vector<std::pair<VerbType, std::string_view>>& Conjugation::getGodanTypesByOnbin(std::string_view onbin) {
-  // The onbin→godan-type maps are compile-time constant; hold them in function-local
-  // statics so hot-path callers get a reference instead of a freshly allocated vector.
-  static const std::vector<std::pair<VerbType, std::string_view>> kIOnbin = {{VerbType::GodanKa, "く"},
-                                                                             {VerbType::GodanGa, "ぐ"}};
+GodanOnbinRange Conjugation::getGodanTypesByOnbin(std::string_view onbin) {
+  static constexpr std::array<GodanOnbinEntry, 2> kIOnbin = {{{VerbType::GodanKa, "く"}, {VerbType::GodanGa, "ぐ"}}};
   // 行く has irregular 促音便 (行っ), while normal GodanKa uses イ音便.
-  static const std::vector<std::pair<VerbType, std::string_view>> kSokuonbin = {
-      {VerbType::GodanKa, "く"}, {VerbType::GodanRa, "る"}, {VerbType::GodanTa, "つ"}, {VerbType::GodanWa, "う"}};
-  static const std::vector<std::pair<VerbType, std::string_view>> kHatsuonbin = {
-      {VerbType::GodanMa, "む"}, {VerbType::GodanBa, "ぶ"}, {VerbType::GodanNa, "ぬ"}};
-  static const std::vector<std::pair<VerbType, std::string_view>> kSaOnbin = {{VerbType::GodanSa, "す"}};
-  static const std::vector<std::pair<VerbType, std::string_view>> kEmpty = {};
+  static constexpr std::array<GodanOnbinEntry, 4> kSokuonbin = {
+      {{VerbType::GodanKa, "く"}, {VerbType::GodanRa, "る"}, {VerbType::GodanTa, "つ"}, {VerbType::GodanWa, "う"}}};
+  static constexpr std::array<GodanOnbinEntry, 3> kHatsuonbin = {
+      {{VerbType::GodanMa, "む"}, {VerbType::GodanBa, "ぶ"}, {VerbType::GodanNa, "ぬ"}}};
+  static constexpr std::array<GodanOnbinEntry, 1> kSaOnbin = {{{VerbType::GodanSa, "す"}}};
   if (onbin == "い") {
-    return kIOnbin;
+    return {kIOnbin.data(), kIOnbin.size()};
   }
   if (onbin == "っ") {
-    return kSokuonbin;
+    return {kSokuonbin.data(), kSokuonbin.size()};
   }
   if (onbin == "ん") {
-    return kHatsuonbin;
+    return {kHatsuonbin.data(), kHatsuonbin.size()};
   }
   if (onbin.empty()) {
-    return kSaOnbin;
+    return {kSaOnbin.data(), kSaOnbin.size()};
   }
-  return kEmpty;
+  return {kIOnbin.data(), 0};
 }
 
 GodanVowels encodeGodanVowels(const Conjugation::GodanRow& row) {
@@ -92,7 +90,7 @@ GodanVowels encodeGodanVowels(const Conjugation::GodanRow& row) {
 std::string onbinFormOf(const Conjugation::GodanRow& row) {
   // サ行 has no real onbin; its 連用形 (い段) doubles as the onbinkei form
   // (話し + た). Every other row has an explicit onbin surface (い/っ/ん).
-  return row.onbin.empty() ? encodeUtf8(row.i_row) : row.onbin;
+  return row.onbin.empty() ? encodeUtf8(row.i_row) : std::string(row.onbin);
 }
 
 bool isGodanVerbType(VerbType type) {
@@ -220,6 +218,7 @@ std::vector<ConjugatedForm> Conjugation::generateGodan(const std::string& stem, 
   }
 
   const auto& row = *row_ptr;
+  const std::string onbin(row.onbin);
   std::string ta = row.voiced_ta ? "だ" : "た";
   std::string te = row.voiced_ta ? "で" : "て";
 
@@ -254,19 +253,19 @@ std::vector<ConjugatedForm> Conjugation::generateGodan(const std::string& stem, 
   forms.push_back(makeForm(stem + e, base_form, stem, type, ""));
 
   // 音便形 + た/て系 (サ行以外)
-  if (!row.onbin.empty()) {
-    forms.push_back(makeForm(stem + row.onbin + ta, base_form, stem, type, ta));
-    forms.push_back(makeForm(stem + row.onbin + te, base_form, stem, type, te));
-    forms.push_back(makeForm(stem + row.onbin + ta + "ら", base_form, stem, type, ta + "ら"));
+  if (!onbin.empty()) {
+    forms.push_back(makeForm(stem + onbin + ta, base_form, stem, type, ta));
+    forms.push_back(makeForm(stem + onbin + te, base_form, stem, type, te));
+    forms.push_back(makeForm(stem + onbin + ta + "ら", base_form, stem, type, ta + "ら"));
 
     // て形 + 補助動詞
-    forms.push_back(makeForm(stem + row.onbin + te + "いる", base_form, stem, type, te + "いる"));
-    forms.push_back(makeForm(stem + row.onbin + te + "いた", base_form, stem, type, te + "いた"));
-    forms.push_back(makeForm(stem + row.onbin + te + "います", base_form, stem, type, te + "います"));
-    forms.push_back(makeForm(stem + row.onbin + te + "いました", base_form, stem, type, te + "いました"));
-    forms.push_back(makeForm(stem + row.onbin + te + "おく", base_form, stem, type, te + "おく"));
-    forms.push_back(makeForm(stem + row.onbin + te + "ある", base_form, stem, type, te + "ある"));
-    forms.push_back(makeForm(stem + row.onbin + te + "しまう", base_form, stem, type, te + "しまう"));
+    forms.push_back(makeForm(stem + onbin + te + "いる", base_form, stem, type, te + "いる"));
+    forms.push_back(makeForm(stem + onbin + te + "いた", base_form, stem, type, te + "いた"));
+    forms.push_back(makeForm(stem + onbin + te + "います", base_form, stem, type, te + "います"));
+    forms.push_back(makeForm(stem + onbin + te + "いました", base_form, stem, type, te + "いました"));
+    forms.push_back(makeForm(stem + onbin + te + "おく", base_form, stem, type, te + "おく"));
+    forms.push_back(makeForm(stem + onbin + te + "ある", base_form, stem, type, te + "ある"));
+    forms.push_back(makeForm(stem + onbin + te + "しまう", base_form, stem, type, te + "しまう"));
   } else {
     // サ行 (音便なし)
     forms.push_back(makeForm(stem + i + "た", base_form, stem, type, "た"));
@@ -413,7 +412,8 @@ std::vector<Conjugation::DictionarySuffix> Conjugation::getDictionarySuffixes(Ve
     // E.g., 書いた → 書い + た, 飲んだ → 飲ん + だ
     // The onbin form needs to be a separate candidate to enable the split
     if (!row.onbin.empty()) {
-      suffixes.push_back({row.onbin, false, core::ExtendedPOS::VerbOnbinkei});  // Onbin: 書い, 飲ん, あっ, etc.
+      suffixes.push_back(
+          {std::string(row.onbin), false, core::ExtendedPOS::VerbOnbinkei});  // Onbin: 書い, 飲ん, あっ, etc.
     }
     // Note: onbin + た/て/たら is handled by split path (connection rules)
 

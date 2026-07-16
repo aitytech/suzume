@@ -6,6 +6,7 @@
 #ifndef SUZUME_ANALYSIS_SUFFIX_CANDIDATES_H_
 #define SUZUME_ANALYSIS_SUFFIX_CANDIDATES_H_
 
+#include <array>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -37,12 +38,12 @@ struct SuffixEntry {
 /**
  * @brief Get list of kanji compound suffixes
  */
-const std::vector<SuffixEntry>& getSuffixEntries();
+const std::array<SuffixEntry, 19>& getSuffixEntries();
 
 /**
  * @brief Get list of na-adjective forming suffixes (的, etc.)
  */
-const std::vector<std::string_view>& getNaAdjSuffixes();
+const std::array<std::string_view, 1>& getNaAdjSuffixes();
 
 /**
  * @brief Generate candidates with suffix separation

@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <regex>
+#include <utility>
 
 #include "cli_common.h"
 #include "dict_compiler.h"
@@ -232,7 +233,10 @@ std::vector<std::string> expandGlobs(const std::vector<std::string>& paths) {
   std::vector<std::string> result;
   for (const auto& path : paths) {
     auto expanded = expandGlob(path);
-    result.insert(result.end(), expanded.begin(), expanded.end());
+    result.reserve(result.size() + expanded.size());
+    for (auto& match : expanded) {
+      result.push_back(std::move(match));
+    }
   }
   return result;
 }

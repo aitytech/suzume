@@ -4,6 +4,7 @@
  */
 
 #include <algorithm>
+#include <array>
 
 #include "adjective_candidates.h"
 #include "adjective_candidates_internal.h"
@@ -652,7 +653,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   // This handles patterns like おいしそう → おいし (stem) + そう (aux)
   // Similar to the kanji adjective stem logic at lines 1673-1785
   // Check for しそう, しすぎ patterns (adjective stem + auxiliary)
-  static const std::vector<std::string_view> kHiraStemAuxPatterns = {
+  static constexpr std::array<std::string_view, 6> kHiraStemAuxPatterns = {
       "しそう",    // appearance: おいしそう
       "しそうだ",  // appearance + copula
       "しそうな",  // attributive

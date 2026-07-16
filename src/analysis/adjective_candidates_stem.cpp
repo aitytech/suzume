@@ -4,6 +4,7 @@
  */
 
 #include <algorithm>
+#include <array>
 
 #include "adjective_candidates.h"
 #include "adjective_candidates_internal.h"
@@ -80,7 +81,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
   // - 高がる → 高 (ADJ stem) + がる (VERB)
   // - 高さ → 高 (ADJ stem) + さ (NOUN/SUFFIX)
   // - 高そう → 高 (ADJ stem) + そう (AUX)
-  static const std::vector<std::string_view> kIAdjGaruPatterns = {
+  static constexpr std::array<std::string_view, 7> kIAdjGaruPatterns = {
       "すぎ",  // excessive: 高すぎる, 高すぎ, 高すぎて
       "がる",  // emotional verb: 高がる, 怖がる
       "がり",  // nominalized: 怖がり
@@ -250,7 +251,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
   // If kanji + hiragana_prefix + い is a dict adjective, generate stem candidate.
   if (hiragana_part.size() >= 6) {  // Need at least 2 hiragana chars (prefix + pattern)
     // Garu patterns to look for within hiragana_part
-    static const std::vector<std::string_view> kExtGaruPatterns = {
+    static constexpr std::array<std::string_view, 8> kExtGaruPatterns = {
         "すぎ", "がる", "がり", "がっ", "がれ", "がろ", "そう", "さ",
     };
 
@@ -286,7 +287,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
   // The stem ends with し, and is followed by そう/すぎる/etc.
   // E.g., 難しそう → 難し (stem) + そう
   // E.g., 美しすぎる → 美し (stem) + すぎる
-  static const std::vector<std::string_view> kAdjStemAuxPatterns = {
+  static constexpr std::array<std::string_view, 14> kAdjStemAuxPatterns = {
       "しそう",    // appearance: 難しそう, 美しそう
       "しそうだ",  // appearance + copula
       "しそうな",  // attributive

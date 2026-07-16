@@ -7,6 +7,7 @@
  */
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 
 #include "adjective_candidates.h"
@@ -135,7 +136,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandi
       // Skip generating AUX for common particle surfaces
       // These should be handled by the particle dictionary entries, not as auxiliaries
       // This prevents だけ from being generated as AUX (which gets VerbOnbinkei → AuxTenseTa bonus)
-      static const std::vector<std::string_view> kParticleSurfaces = {
+      static constexpr std::array<std::string_view, 13> kParticleSurfaces = {
           "だけ", "ばかり", "ほど", "くらい", "ぐらい", "など", "なんて",
           "しか", "まで",   "より", "から",   "かも",   "でも",
       };

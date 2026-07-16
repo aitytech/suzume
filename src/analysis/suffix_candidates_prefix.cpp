@@ -3,8 +3,6 @@
  * @brief Suffix-based unknown word candidate generation
  */
 
-#include <unordered_set>
-
 #include "candidate_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
@@ -26,45 +24,23 @@ namespace suzume::analysis {
 // Prefix + Single Kanji Compound Candidates (接頭的複合語)
 // =============================================================================
 
-namespace {
-
-// Prefix-like kanji that can form compounds with single kanji
-// These are kanji that commonly appear at the start of temporal compounds
-// Note: 本 excluded - too many non-prefix uses (本当, 本人, 本社, etc.)
-// Note: 全/各/両/諸 excluded - require more context to determine compound boundary
-const std::unordered_set<char32_t>& getPrefixLikeKanji() {
-  static const std::unordered_set<char32_t> kPrefixKanji = {
-      U'今',  // 今日, 今週, 今月, 今年, 今朝, 今晩, 今夜
-      U'来',  // 来日, 来週, 来月, 来年
-      U'先',  // 先日, 先週, 先月, 先年
-      U'昨',  // 昨日, 昨年
-      U'翌',  // 翌日, 翌週, 翌月, 翌年
-      U'毎',  // 毎日, 毎週, 毎月, 毎年
-  };
-  return kPrefixKanji;
-}
-
-// Interrogative kanji that should NOT form compounds
-// These act as strong anchors in the dictionary
-const std::unordered_set<char32_t>& getInterrogativeKanji() {
-  static const std::unordered_set<char32_t> kInterrogatives = {
-      U'何',  // 何 (なに/なん) - what
-      U'誰',  // 誰 (だれ) - who
-      U'幾',  // 幾 (いく) - how many (幾つ, 幾日)
-  };
-  return kInterrogatives;
-}
-
-}  // namespace
-
 bool isPrefixLikeKanji(char32_t cp) {
-  const auto& prefix_kanji = getPrefixLikeKanji();
-  return prefix_kanji.find(cp) != prefix_kanji.end();
+  // 本, 全, 各, 両, 諸 are excluded because they require additional context.
+  switch (cp) {
+    case U'今':  // 今日, 今週, 今月, 今年, 今朝, 今晩, 今夜
+    case U'来':  // 来日, 来週, 来月, 来年
+    case U'先':  // 先日, 先週, 先月, 先年
+    case U'昨':  // 昨日, 昨年
+    case U'翌':  // 翌日, 翌週, 翌月, 翌年
+    case U'毎':  // 毎日, 毎週, 毎月, 毎年
+      return true;
+    default:
+      return false;
+  }
 }
 
 bool isInterrogativeKanji(char32_t cp) {
-  const auto& interrogatives = getInterrogativeKanji();
-  return interrogatives.find(cp) != interrogatives.end();
+  return cp == U'何' || cp == U'誰' || cp == U'幾';
 }
 
 std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints,
@@ -85,8 +61,7 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
 
   // Check if first character is a prefix-like kanji
   char32_t first_char = codepoints[start_pos];
-  const auto& prefix_kanji = getPrefixLikeKanji();
-  if (prefix_kanji.find(first_char) == prefix_kanji.end()) {
+  if (!isPrefixLikeKanji(first_char)) {
     return candidates;
   }
 
@@ -109,8 +84,7 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
   // Skip if second character is an interrogative (何, 誰, etc.)
   // These act as anchors and should not form compounds with prefix
   char32_t second_char = codepoints[start_pos + 1];
-  const auto& interrogatives = getInterrogativeKanji();
-  if (interrogatives.find(second_char) != interrogatives.end()) {
+  if (isInterrogativeKanji(second_char)) {
     return candidates;  // Don't generate compound, let dictionary anchor win
   }
 

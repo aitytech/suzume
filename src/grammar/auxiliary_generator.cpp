@@ -6,6 +6,7 @@
 #include "auxiliary_generator.h"
 
 #include <algorithm>
+#include <utility>
 
 #include "core/utf8_constants.h"
 
@@ -693,7 +694,10 @@ std::vector<AuxiliaryEntry> generateAllAuxiliaries() {
   // Expand all base definitions
   for (const auto& base : getAuxiliaryBases()) {
     auto expanded = expandAuxiliaryBase(base);
-    result.insert(result.end(), expanded.begin(), expanded.end());
+    result.reserve(result.size() + expanded.size());
+    for (auto& entry : expanded) {
+      result.push_back(std::move(entry));
+    }
   }
 
   // Add special patterns that cannot be auto-generated
