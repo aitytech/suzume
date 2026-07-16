@@ -61,7 +61,15 @@ jobs:
       - run: yarn lint
       - run: yarn build
       - run: yarn test
-      - run: npm publish --access public --provenance
+      - name: Publish to npm (skip if the version is already published)
+        run: |
+          PKG=$(node -p "require('./package.json').name")
+          VER=$(node -p "require('./package.json').version")
+          if npm view "$PKG@$VER" version >/dev/null 2>&1; then
+            echo "$PKG@$VER already published, skipping."
+          else
+            npm publish --access public --provenance
+          fi
 
   build-wheels:
     needs: verify-version
@@ -71,7 +79,8 @@ jobs:
         include:
           - os: ubuntu-latest
           - os: macos-14   # arm64
-          - os: macos-13   # x86_64
+          # macOS x86_64 omitted: hosted Intel macOS runners are no longer
+          # reliably provisioned, so the leg queues indefinitely.
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
