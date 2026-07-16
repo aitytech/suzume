@@ -217,29 +217,19 @@ std::vector<core::Morpheme> Analyzer::analyzeWithPretokenizer(std::string_view t
   size_t current_byte = 0;
   size_t current_char = 0;
 
-  // Create a combined view of all items sorted by start position
-  struct Item {
-    size_t start;
-    size_t end;
-    bool is_pretoken;
-    size_t index;
-  };
-  std::vector<Item> items;
+  // process() appends each collection in source order, so merge the two sorted
+  // sequences directly instead of allocating and sorting a combined list.
+  size_t token_idx = 0;
+  size_t span_idx = 0;
+  while (token_idx < pretoken_result.tokens.size() || span_idx < pretoken_result.spans.size()) {
+    const bool is_pretoken = span_idx == pretoken_result.spans.size() ||
+                             (token_idx < pretoken_result.tokens.size() &&
+                              pretoken_result.tokens[token_idx].start < pretoken_result.spans[span_idx].start);
+    const size_t item_start =
+        is_pretoken ? pretoken_result.tokens[token_idx].start : pretoken_result.spans[span_idx].start;
 
-  for (size_t idx = 0; idx < pretoken_result.tokens.size(); ++idx) {
-    const auto& tok = pretoken_result.tokens[idx];
-    items.push_back({tok.start, tok.end, true, idx});
-  }
-  for (size_t idx = 0; idx < pretoken_result.spans.size(); ++idx) {
-    const auto& span = pretoken_result.spans[idx];
-    items.push_back({span.start, span.end, false, idx});
-  }
-
-  std::sort(items.begin(), items.end(), [](const Item& lhs, const Item& rhs) { return lhs.start < rhs.start; });
-
-  for (const auto& item : items) {
     // Calculate character offset at this byte position
-    while (current_byte < item.start && current_byte < text.size()) {
+    while (current_byte < item_start && current_byte < text.size()) {
       if ((static_cast<unsigned char>(text[current_byte]) & 0xC0) != 0x80) {
         ++current_char;
       }
@@ -247,9 +237,9 @@ std::vector<core::Morpheme> Analyzer::analyzeWithPretokenizer(std::string_view t
     }
     size_t char_offset = base_char_offset + current_char;
 
-    if (item.is_pretoken) {
+    if (is_pretoken) {
       // Convert pretoken to morpheme
-      const auto& tok = pretoken_result.tokens[item.index];
+      const auto& tok = pretoken_result.tokens[token_idx++];
       core::Morpheme morpheme;
       morpheme.surface = tok.surface;
       morpheme.pos = tok.pos;
@@ -274,7 +264,7 @@ std::vector<core::Morpheme> Analyzer::analyzeWithPretokenizer(std::string_view t
       result.push_back(std::move(morpheme));
     } else {
       // Analyze span
-      const auto& span = pretoken_result.spans[item.index];
+      const auto& span = pretoken_result.spans[span_idx++];
       std::string_view span_text = text.substr(span.start, span.end - span.start);
       auto span_morphemes = analyzeSpan(span_text, char_offset);
 
