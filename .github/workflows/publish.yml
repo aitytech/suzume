@@ -90,7 +90,11 @@ jobs:
   publish-pypi:
     needs: build-wheels
     runs-on: ubuntu-latest
-    environment: pypi
+    environment:
+      name: pypi
+      url: https://pypi.org/p/suzume
+    permissions:
+      id-token: write
     steps:
       - uses: actions/download-artifact@v5
         with:
@@ -101,6 +105,9 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
+          # Tolerate re-runs of the tag workflow after a partial failure:
+          # wheels already on PyPI are skipped instead of failing the job.
+          skip-existing: true
 
   github-release:
     needs: [publish-npm, publish-pypi]
