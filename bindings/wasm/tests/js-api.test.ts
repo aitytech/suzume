@@ -148,25 +148,6 @@ describe('JS API: struct layout compatibility', () => {
     expect(heapU8.buffer).toBe(heapU32.buffer);
   });
 
-  it('create_with_options struct layout: 3 ints at 12 bytes', () => {
-    const createWithOptions = module.cwrap('suzume_create_with_options', 'number', ['number']) as (
-      optionsPtr: number,
-    ) => number;
-    const destroy = module.cwrap('suzume_destroy', null, ['number']) as (h: number) => void;
-
-    const optionsPtr = module._malloc(12);
-    // Layout: preserve_vu(int), preserve_case(int), preserve_symbols(int)
-    module.HEAPU32[optionsPtr >> 2] = 1;
-    module.HEAPU32[(optionsPtr >> 2) + 1] = 1;
-    module.HEAPU32[(optionsPtr >> 2) + 2] = 0;
-
-    const h = createWithOptions(optionsPtr);
-    module._free(optionsPtr);
-
-    expect(h).toBeGreaterThan(0);
-    destroy(h);
-  });
-
   it('create_with_extended_options accepts split mode', () => {
     const initOptions = module.cwrap('suzume_init_extended_options', null, ['number']) as (
       optionsPtr: number,
@@ -183,7 +164,7 @@ describe('JS API: struct layout compatibility', () => {
 
     const optionsPtr = module._malloc(EXTENDED_OPTIONS_LAYOUT.size);
     initOptions(optionsPtr);
-    module.HEAPU32[(optionsPtr + EXTENDED_OPTIONS_LAYOUT.mode) >> 2] = 2;
+    new Uint8Array(module.HEAPU32.buffer)[optionsPtr + EXTENDED_OPTIONS_LAYOUT.mode] = 2;
 
     const h = createWithOptions(optionsPtr);
     module._free(optionsPtr);
@@ -252,9 +233,9 @@ describe('JS API: struct layout compatibility', () => {
     expect(offsetofTagOptions(9)).toBe(TAG_OPTIONS_LAYOUT.removeDuplicates);
 
     expect(sizeofExtendedOptions()).toBe(EXTENDED_OPTIONS_LAYOUT.size);
-    expect(offsetofExtendedOptions(0)).toBe(EXTENDED_OPTIONS_LAYOUT.structSize);
-    expect(offsetofExtendedOptions(4)).toBe(EXTENDED_OPTIONS_LAYOUT.mode);
-    expect(offsetofExtendedOptions(6)).toBe(EXTENDED_OPTIONS_LAYOUT.mergeCompounds);
+    expect(offsetofExtendedOptions(0)).toBe(EXTENDED_OPTIONS_LAYOUT.preserveVu);
+    expect(offsetofExtendedOptions(3)).toBe(EXTENDED_OPTIONS_LAYOUT.mode);
+    expect(offsetofExtendedOptions(5)).toBe(EXTENDED_OPTIONS_LAYOUT.mergeCompounds);
   });
 
   it('last_error reports invalid C API calls', () => {
@@ -268,7 +249,7 @@ describe('JS API: struct layout compatibility', () => {
     expect(module.UTF8ToString(lastError())).toContain('null handle');
   });
 
-  it('tag_options struct layout: 5 fields at 20 bytes', () => {
+  it('tag_options struct layout accepts initialized fields', () => {
     const generateTagsWithOptions = module.cwrap('suzume_generate_tags_with_options', 'number', [
       'number',
       'number',
@@ -279,13 +260,17 @@ describe('JS API: struct layout compatibility', () => {
     const textPtr = allocString(module, '東京タワー');
     const optionsPtr = module._malloc(TAG_OPTIONS_LAYOUT.size);
 
-    // Layout: pos_filter(uint8→uint32), exclude_basic(int), use_lemma(int),
-    //         min_length(size_t), max_tags(size_t)
-    module.HEAPU32[(optionsPtr + TAG_OPTIONS_LAYOUT.posFilter) >> 2] = 0;
-    module.HEAPU32[(optionsPtr + TAG_OPTIONS_LAYOUT.excludeBasic) >> 2] = 0;
-    module.HEAPU32[(optionsPtr + TAG_OPTIONS_LAYOUT.useLemma) >> 2] = 1;
+    const heapU8 = new Uint8Array(module.HEAPU32.buffer);
+    heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.posFilter] = 0;
+    heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.excludeBasic] = 0;
+    heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.useLemma] = 1;
     module.HEAPU32[(optionsPtr + TAG_OPTIONS_LAYOUT.minLength) >> 2] = 1;
     module.HEAPU32[(optionsPtr + TAG_OPTIONS_LAYOUT.maxTags) >> 2] = 0;
+    heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.excludeParticles] = 1;
+    heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.excludeAuxiliaries] = 1;
+    heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.excludeFormalNouns] = 1;
+    heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.excludeLowInfo] = 1;
+    heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.removeDuplicates] = 1;
 
     const tagsPtr = generateTagsWithOptions(handle, textPtr, optionsPtr);
     module._free(textPtr);
@@ -337,7 +322,11 @@ describe('JS API: error reporting', () => {
   });
 
   it('create forwards extended JS options', async () => {
-    const suzume = await Suzume.create({ mode: 'split', lemmatize: true, mergeCompounds: false });
+    const suzume = await Suzume.create({
+      mode: 'split',
+      lemmatize: true,
+      mergeCompounds: false,
+    });
 
     try {
       const morphemes = suzume.analyze('API開発');

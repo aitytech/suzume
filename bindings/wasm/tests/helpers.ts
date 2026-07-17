@@ -47,29 +47,27 @@ export const TAGS_LAYOUT = {
 } as const;
 
 export const TAG_OPTIONS_LAYOUT = {
-  // Total struct size; includes the trailing uint32_t `size` field (offset 40).
-  size: 44,
+  size: 20,
   posFilter: 0,
-  excludeBasic: 4,
-  useLemma: 8,
-  minLength: 12,
-  maxTags: 16,
-  excludeParticles: 20,
-  excludeAuxiliaries: 24,
-  excludeFormalNouns: 28,
-  excludeLowInfo: 32,
-  removeDuplicates: 36,
+  excludeBasic: 1,
+  useLemma: 2,
+  minLength: 4,
+  maxTags: 8,
+  excludeParticles: 12,
+  excludeAuxiliaries: 13,
+  excludeFormalNouns: 14,
+  excludeLowInfo: 15,
+  removeDuplicates: 16,
 } as const;
 
 export const EXTENDED_OPTIONS_LAYOUT = {
-  size: 28,
-  structSize: 0,
-  preserveVu: 4,
-  preserveCase: 8,
-  preserveSymbols: 12,
-  mode: 16,
-  lemmatize: 20,
-  mergeCompounds: 24,
+  size: 6,
+  preserveVu: 0,
+  preserveCase: 1,
+  preserveSymbols: 2,
+  mode: 3,
+  lemmatize: 4,
+  mergeCompounds: 5,
 } as const;
 
 // Shared module instance (loaded once across all test files)

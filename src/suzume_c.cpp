@@ -61,10 +61,6 @@ char* copyStringToArena(std::string_view str, char*& cursor) {
   return result;
 }
 
-bool hasExtendedOptionField(const suzume_extended_options_t* options, size_t field_end) {
-  return options != nullptr && options->size >= field_end;
-}
-
 std::optional<suzume::core::AnalysisMode> parseAnalysisMode(int mode) {
   switch (mode) {
     case 1:
@@ -116,27 +112,10 @@ SUZUME_EXPORT suzume_t suzume_create(void) {
   }
 }
 
-SUZUME_EXPORT suzume_t suzume_create_with_options(const suzume_options_t* options) {
-  clearLastError();
-  try {
-    suzume::SuzumeOptions opts;
-    if (options != nullptr) {
-      opts.normalize_options.preserve_vu = (options->preserve_vu != 0);
-      opts.normalize_options.preserve_case = (options->preserve_case != 0);
-      opts.remove_symbols = (options->preserve_symbols == 0);
-    }
-    return new SuzumeHandle(opts);
-  } catch (...) {
-    setLastErrorFromException();
-    return nullptr;
-  }
-}
-
 SUZUME_EXPORT void suzume_init_extended_options(suzume_extended_options_t* options) {
   if (options == nullptr) {
     return;
   }
-  options->size = sizeof(suzume_extended_options_t);
   options->preserve_vu = 1;
   options->preserve_case = 1;
   options->preserve_symbols = 0;
@@ -159,7 +138,6 @@ SUZUME_EXPORT void suzume_init_tag_options(suzume_tag_options_t* options) {
   options->exclude_formal_nouns = 1;
   options->exclude_low_info = 1;
   options->remove_duplicates = 1;
-  options->size = sizeof(suzume_tag_options_t);
 }
 
 SUZUME_EXPORT suzume_t suzume_create_with_extended_options(const suzume_extended_options_t* options) {
@@ -167,34 +145,17 @@ SUZUME_EXPORT suzume_t suzume_create_with_extended_options(const suzume_extended
   try {
     suzume::SuzumeOptions opts;
     if (options != nullptr) {
-      if (hasExtendedOptionField(options,
-                                 offsetof(suzume_extended_options_t, preserve_vu) + sizeof(options->preserve_vu))) {
-        opts.normalize_options.preserve_vu = (options->preserve_vu != 0);
+      opts.normalize_options.preserve_vu = (options->preserve_vu != 0);
+      opts.normalize_options.preserve_case = (options->preserve_case != 0);
+      opts.remove_symbols = (options->preserve_symbols == 0);
+      auto mode = parseAnalysisMode(options->mode);
+      if (!mode.has_value()) {
+        setLastError("suzume_create_with_extended_options: invalid mode");
+        return nullptr;
       }
-      if (hasExtendedOptionField(options,
-                                 offsetof(suzume_extended_options_t, preserve_case) + sizeof(options->preserve_case))) {
-        opts.normalize_options.preserve_case = (options->preserve_case != 0);
-      }
-      if (hasExtendedOptionField(
-              options, offsetof(suzume_extended_options_t, preserve_symbols) + sizeof(options->preserve_symbols))) {
-        opts.remove_symbols = (options->preserve_symbols == 0);
-      }
-      if (hasExtendedOptionField(options, offsetof(suzume_extended_options_t, mode) + sizeof(options->mode))) {
-        auto mode = parseAnalysisMode(options->mode);
-        if (!mode.has_value()) {
-          setLastError("suzume_create_with_extended_options: invalid mode");
-          return nullptr;
-        }
-        opts.mode = *mode;
-      }
-      if (hasExtendedOptionField(options,
-                                 offsetof(suzume_extended_options_t, lemmatize) + sizeof(options->lemmatize))) {
-        opts.lemmatize = (options->lemmatize != 0);
-      }
-      if (hasExtendedOptionField(
-              options, offsetof(suzume_extended_options_t, merge_compounds) + sizeof(options->merge_compounds))) {
-        opts.merge_compounds = (options->merge_compounds != 0);
-      }
+      opts.mode = *mode;
+      opts.lemmatize = (options->lemmatize != 0);
+      opts.merge_compounds = (options->merge_compounds != 0);
     }
     return new SuzumeHandle(opts);
   } catch (...) {
@@ -441,10 +402,6 @@ SUZUME_EXPORT size_t suzume_sizeof_extended_options(void) {
   return sizeof(suzume_extended_options_t);
 }
 
-SUZUME_EXPORT size_t suzume_sizeof_options(void) {
-  return sizeof(suzume_options_t);
-}
-
 SUZUME_EXPORT size_t suzume_offsetof_result(uint32_t field) {
   switch (field) {
     case 0:
@@ -528,8 +485,6 @@ SUZUME_EXPORT size_t suzume_offsetof_tag_options(uint32_t field) {
       return offsetof(suzume_tag_options_t, exclude_low_info);
     case 9:
       return offsetof(suzume_tag_options_t, remove_duplicates);
-    case 10:
-      return offsetof(suzume_tag_options_t, size);
     default:
       return static_cast<size_t>(-1);
   }
@@ -538,32 +493,17 @@ SUZUME_EXPORT size_t suzume_offsetof_tag_options(uint32_t field) {
 SUZUME_EXPORT size_t suzume_offsetof_extended_options(uint32_t field) {
   switch (field) {
     case 0:
-      return offsetof(suzume_extended_options_t, size);
-    case 1:
       return offsetof(suzume_extended_options_t, preserve_vu);
-    case 2:
-      return offsetof(suzume_extended_options_t, preserve_case);
-    case 3:
-      return offsetof(suzume_extended_options_t, preserve_symbols);
-    case 4:
-      return offsetof(suzume_extended_options_t, mode);
-    case 5:
-      return offsetof(suzume_extended_options_t, lemmatize);
-    case 6:
-      return offsetof(suzume_extended_options_t, merge_compounds);
-    default:
-      return static_cast<size_t>(-1);
-  }
-}
-
-SUZUME_EXPORT size_t suzume_offsetof_options(uint32_t field) {
-  switch (field) {
-    case 0:
-      return offsetof(suzume_options_t, preserve_vu);
     case 1:
-      return offsetof(suzume_options_t, preserve_case);
+      return offsetof(suzume_extended_options_t, preserve_case);
     case 2:
-      return offsetof(suzume_options_t, preserve_symbols);
+      return offsetof(suzume_extended_options_t, preserve_symbols);
+    case 3:
+      return offsetof(suzume_extended_options_t, mode);
+    case 4:
+      return offsetof(suzume_extended_options_t, lemmatize);
+    case 5:
+      return offsetof(suzume_extended_options_t, merge_compounds);
     default:
       return static_cast<size_t>(-1);
   }

@@ -187,11 +187,9 @@ interface CLayouts {
     excludeFormalNouns: number;
     excludeLowInfo: number;
     removeDuplicates: number;
-    structSize: number;
   };
   extendedOptions: {
     size: number;
-    structSize: number;
     preserveVu: number;
     preserveCase: number;
     preserveSymbols: number;
@@ -308,17 +306,15 @@ export class Suzume {
         excludeFormalNouns: offsetofTagOptions(7),
         excludeLowInfo: offsetofTagOptions(8),
         removeDuplicates: offsetofTagOptions(9),
-        structSize: offsetofTagOptions(10),
       },
       extendedOptions: {
         size: sizeofExtendedOptions(),
-        structSize: offsetofExtendedOptions(0),
-        preserveVu: offsetofExtendedOptions(1),
-        preserveCase: offsetofExtendedOptions(2),
-        preserveSymbols: offsetofExtendedOptions(3),
-        mode: offsetofExtendedOptions(4),
-        lemmatize: offsetofExtendedOptions(5),
-        mergeCompounds: offsetofExtendedOptions(6),
+        preserveVu: offsetofExtendedOptions(0),
+        preserveCase: offsetofExtendedOptions(1),
+        preserveSymbols: offsetofExtendedOptions(2),
+        mode: offsetofExtendedOptions(3),
+        lemmatize: offsetofExtendedOptions(4),
+        mergeCompounds: offsetofExtendedOptions(5),
       },
     };
   }
@@ -358,10 +354,7 @@ export class Suzume {
       const optionsPtr = module._malloc(OPTIONS_SIZE);
 
       try {
-        const heap = module.HEAPU32;
-        // Zero the whole struct first so any field the C ABI may append later
-        // defaults to zero instead of reading back uninitialized malloc bytes.
-        new Uint8Array(heap.buffer).fill(0, optionsPtr, optionsPtr + OPTIONS_SIZE);
+        const heap = new Uint8Array(module.HEAPU32.buffer);
         const modeMap: Record<NonNullable<SuzumeOptions['mode']>, number> = {
           normal: 0,
           search: 1,
@@ -372,16 +365,15 @@ export class Suzume {
         if (modeValue === undefined) {
           throw new Error(`Invalid Suzume mode: ${String(options.mode)}`);
         }
-        heap[(optionsPtr + layout.structSize) >> 2] = OPTIONS_SIZE;
         // preserve_vu: default true
-        heap[(optionsPtr + layout.preserveVu) >> 2] = options.preserveVu !== false ? 1 : 0;
+        heap[optionsPtr + layout.preserveVu] = options.preserveVu !== false ? 1 : 0;
         // preserve_case: default true
-        heap[(optionsPtr + layout.preserveCase) >> 2] = options.preserveCase !== false ? 1 : 0;
+        heap[optionsPtr + layout.preserveCase] = options.preserveCase !== false ? 1 : 0;
         // preserve_symbols: default false
-        heap[(optionsPtr + layout.preserveSymbols) >> 2] = options.preserveSymbols === true ? 1 : 0;
-        heap[(optionsPtr + layout.mode) >> 2] = modeValue;
-        heap[(optionsPtr + layout.lemmatize) >> 2] = options.lemmatize !== false ? 1 : 0;
-        heap[(optionsPtr + layout.mergeCompounds) >> 2] = options.mergeCompounds === true ? 1 : 0;
+        heap[optionsPtr + layout.preserveSymbols] = options.preserveSymbols === true ? 1 : 0;
+        heap[optionsPtr + layout.mode] = modeValue;
+        heap[optionsPtr + layout.lemmatize] = options.lemmatize !== false ? 1 : 0;
+        heap[optionsPtr + layout.mergeCompounds] = options.mergeCompounds === true ? 1 : 0;
 
         handle = module._suzume_create_with_extended_options(optionsPtr);
       } finally {
@@ -443,7 +435,12 @@ export class Suzume {
         // Build pos_filter bitmask
         let posFilter = 0;
         if (options.pos) {
-          const posMap: Record<string, number> = { noun: 1, verb: 2, adjective: 4, adverb: 8 };
+          const posMap: Record<string, number> = {
+            noun: 1,
+            verb: 2,
+            adjective: 4,
+            adverb: 8,
+          };
           for (const pos of options.pos) {
             posFilter |= posMap[pos] ?? 0;
           }
@@ -457,25 +454,17 @@ export class Suzume {
           const layout = this.layouts.tagOptions;
 
           heapU8[optionsPtr + layout.posFilter] = posFilter & 0xff;
-          heapU32[(optionsPtr + layout.excludeBasic) >> 2] = options.excludeBasic ? 1 : 0;
-          heapU32[(optionsPtr + layout.useLemma) >> 2] = options.useLemma !== false ? 1 : 0;
+          heapU8[optionsPtr + layout.excludeBasic] = options.excludeBasic ? 1 : 0;
+          heapU8[optionsPtr + layout.useLemma] = options.useLemma !== false ? 1 : 0;
           heapU32[(optionsPtr + layout.minLength) >> 2] = options.minLength ?? 2;
           heapU32[(optionsPtr + layout.maxTags) >> 2] = options.maxTags ?? 0;
-          heapU32[(optionsPtr + layout.excludeParticles) >> 2] =
-            options.excludeParticles !== false ? 1 : 0;
-          heapU32[(optionsPtr + layout.excludeAuxiliaries) >> 2] =
+          heapU8[optionsPtr + layout.excludeParticles] = options.excludeParticles !== false ? 1 : 0;
+          heapU8[optionsPtr + layout.excludeAuxiliaries] =
             options.excludeAuxiliaries !== false ? 1 : 0;
-          heapU32[(optionsPtr + layout.excludeFormalNouns) >> 2] =
+          heapU8[optionsPtr + layout.excludeFormalNouns] =
             options.excludeFormalNouns !== false ? 1 : 0;
-          heapU32[(optionsPtr + layout.excludeLowInfo) >> 2] =
-            options.excludeLowInfo !== false ? 1 : 0;
-          heapU32[(optionsPtr + layout.removeDuplicates) >> 2] =
-            options.removeDuplicates !== false ? 1 : 0;
-          // Forward-compat marker: the malloc'd buffer is uninitialized, so set
-          // the trailing size field to the full struct size the way the native
-          // header documents (mirrors the extended-options path above).
-          heapU32[(optionsPtr + layout.structSize) >> 2] = layout.size;
-
+          heapU8[optionsPtr + layout.excludeLowInfo] = options.excludeLowInfo !== false ? 1 : 0;
+          heapU8[optionsPtr + layout.removeDuplicates] = options.removeDuplicates !== false ? 1 : 0;
           return this.consumeTags(this._generateTagsWithOptions(this.handle, textPtr, optionsPtr));
         } finally {
           this.module._free(optionsPtr);

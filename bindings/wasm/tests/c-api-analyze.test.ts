@@ -202,7 +202,7 @@ describe('C API: analyze', () => {
   });
 });
 
-describe('C API: create_with_options', () => {
+describe('C API: create_with_extended_options', () => {
   let module: WasmModule;
 
   beforeAll(async () => {
@@ -210,9 +210,12 @@ describe('C API: create_with_options', () => {
   });
 
   it('should preserve emoji when preserveSymbols is enabled', () => {
-    const createWithOptions = module.cwrap('suzume_create_with_options', 'number', ['number']) as (
+    const initOptions = module.cwrap('suzume_init_extended_options', null, ['number']) as (
       optionsPtr: number,
-    ) => number;
+    ) => void;
+    const createWithOptions = module.cwrap('suzume_create_with_extended_options', 'number', [
+      'number',
+    ]) as (optionsPtr: number) => number;
     const analyze = module.cwrap('suzume_analyze', 'number', ['number', 'number']) as (
       h: number,
       t: number,
@@ -220,10 +223,9 @@ describe('C API: create_with_options', () => {
     const resultFree = module.cwrap('suzume_result_free', null, ['number']) as (r: number) => void;
     const destroy = module.cwrap('suzume_destroy', null, ['number']) as (h: number) => void;
 
-    const optionsPtr = module._malloc(12);
-    module.HEAPU32[optionsPtr >> 2] = 1; // preserve_vu
-    module.HEAPU32[(optionsPtr >> 2) + 1] = 1; // preserve_case
-    module.HEAPU32[(optionsPtr >> 2) + 2] = 1; // preserve_symbols
+    const optionsPtr = module._malloc(6);
+    initOptions(optionsPtr);
+    new Uint8Array(module.HEAPU32.buffer)[optionsPtr + 2] = 1; // preserve_symbols
     const h = createWithOptions(optionsPtr);
     module._free(optionsPtr);
     expect(h).toBeGreaterThan(0);

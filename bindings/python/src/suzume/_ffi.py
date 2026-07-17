@@ -59,32 +59,27 @@ class SuzumeTags(ctypes.Structure):
 
 class SuzumeExtendedOptions(ctypes.Structure):
     _fields_ = [
-        ("size", ctypes.c_uint32),
-        ("preserve_vu", ctypes.c_int),
-        ("preserve_case", ctypes.c_int),
-        ("preserve_symbols", ctypes.c_int),
-        ("mode", ctypes.c_int),
-        ("lemmatize", ctypes.c_int),
-        ("merge_compounds", ctypes.c_int),
+        ("preserve_vu", ctypes.c_uint8),
+        ("preserve_case", ctypes.c_uint8),
+        ("preserve_symbols", ctypes.c_uint8),
+        ("mode", ctypes.c_uint8),
+        ("lemmatize", ctypes.c_uint8),
+        ("merge_compounds", ctypes.c_uint8),
     ]
 
 
 class SuzumeTagOptions(ctypes.Structure):
     _fields_ = [
         ("pos_filter", ctypes.c_uint8),
-        ("exclude_basic", ctypes.c_int),
-        ("use_lemma", ctypes.c_int),
+        ("exclude_basic", ctypes.c_uint8),
+        ("use_lemma", ctypes.c_uint8),
         ("min_length", ctypes.c_size_t),
         ("max_tags", ctypes.c_size_t),
-        ("exclude_particles", ctypes.c_int),
-        ("exclude_auxiliaries", ctypes.c_int),
-        ("exclude_formal_nouns", ctypes.c_int),
-        ("exclude_low_info", ctypes.c_int),
-        ("remove_duplicates", ctypes.c_int),
-        # Trailing forward-compat marker: callers set it to sizeof(struct) so a
-        # future field appended after it is read only when size covers it. Kept
-        # last to preserve the offsets of the pre-existing fields.
-        ("size", ctypes.c_uint32),
+        ("exclude_particles", ctypes.c_uint8),
+        ("exclude_auxiliaries", ctypes.c_uint8),
+        ("exclude_formal_nouns", ctypes.c_uint8),
+        ("exclude_low_info", ctypes.c_uint8),
+        ("remove_duplicates", ctypes.c_uint8),
     ]
 
 
@@ -105,8 +100,8 @@ def _find_library() -> str:
 
     Search order:
         1. ``SUZUME_LIB_PATH`` environment variable (explicit override).
-        2. Package-adjacent copy (the layout inside a built wheel).
-        3. ``build/lib`` under the project root (editable/source checkouts).
+        2. Fresh build under the project root (editable/source checkouts).
+        3. Package-adjacent copy (the layout inside a built wheel).
         4. The system library path.
     """
     env_path = os.environ.get("SUZUME_LIB_PATH")
@@ -116,16 +111,17 @@ def _find_library() -> str:
     pkg_dir = Path(__file__).parent
     lib_name = _lib_filename()
 
+    # Source checkout: bindings/python/src/suzume/_ffi.py -> project root is 4 up.
+    project_root = pkg_dir.parents[3]
+    if (project_root / "CMakeLists.txt").exists():
+        for build_dir in ("build-python", "build-shared", "build"):
+            build_path = project_root / build_dir / "lib" / lib_name
+            if build_path.exists():
+                return str(build_path)
+
     candidate = pkg_dir / lib_name
     if candidate.exists():
         return str(candidate)
-
-    # Source checkout: bindings/python/src/suzume/_ffi.py -> project root is 4 up.
-    project_root = pkg_dir.parents[3]
-    for build_dir in ("build-python", "build-shared", "build"):
-        build_path = project_root / build_dir / "lib" / lib_name
-        if build_path.exists():
-            return str(build_path)
 
     found = ctypes.util.find_library("suzume")
     if found:

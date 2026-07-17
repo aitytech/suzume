@@ -76,7 +76,6 @@ TEST(SuzumeCApiTest, InitExtendedOptionsPreservesDefaultTrueFields) {
   suzume_extended_options_t options{};
   suzume_init_extended_options(&options);
 
-  EXPECT_EQ(options.size, sizeof(options));
   EXPECT_EQ(options.preserve_vu, 1);
   EXPECT_EQ(options.preserve_case, 1);
   EXPECT_EQ(options.preserve_symbols, 0);
@@ -185,9 +184,9 @@ TEST(SuzumeCApiTest, LayoutFunctionsMatchNativeStructs) {
   EXPECT_EQ(suzume_offsetof_tag_options(4), offsetof(suzume_tag_options_t, max_tags));
   EXPECT_EQ(suzume_offsetof_tag_options(5), offsetof(suzume_tag_options_t, exclude_particles));
   EXPECT_EQ(suzume_offsetof_tag_options(9), offsetof(suzume_tag_options_t, remove_duplicates));
-  EXPECT_EQ(suzume_offsetof_extended_options(0), offsetof(suzume_extended_options_t, size));
-  EXPECT_EQ(suzume_offsetof_extended_options(4), offsetof(suzume_extended_options_t, mode));
-  EXPECT_EQ(suzume_offsetof_extended_options(6), offsetof(suzume_extended_options_t, merge_compounds));
+  EXPECT_EQ(suzume_offsetof_extended_options(0), offsetof(suzume_extended_options_t, preserve_vu));
+  EXPECT_EQ(suzume_offsetof_extended_options(3), offsetof(suzume_extended_options_t, mode));
+  EXPECT_EQ(suzume_offsetof_extended_options(5), offsetof(suzume_extended_options_t, merge_compounds));
   EXPECT_EQ(suzume_offsetof_result(99), static_cast<size_t>(-1));
   EXPECT_EQ(suzume_offsetof_extended_options(99), static_cast<size_t>(-1));
 }

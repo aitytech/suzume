@@ -103,20 +103,17 @@ describe('C API: generate_tags', () => {
       const ptr = module._malloc(TAG_OPTIONS_LAYOUT.size);
       const heapU8 = new Uint8Array(module.HEAPU32.buffer);
       heapU8[ptr + TAG_OPTIONS_LAYOUT.posFilter] = (opts.posFilter ?? 0) & 0xff;
-      module.HEAPU32[(ptr + TAG_OPTIONS_LAYOUT.excludeBasic) >> 2] = opts.excludeBasic ? 1 : 0;
-      module.HEAPU32[(ptr + TAG_OPTIONS_LAYOUT.useLemma) >> 2] = opts.useLemma !== false ? 1 : 0;
+      heapU8[ptr + TAG_OPTIONS_LAYOUT.excludeBasic] = opts.excludeBasic ? 1 : 0;
+      heapU8[ptr + TAG_OPTIONS_LAYOUT.useLemma] = opts.useLemma !== false ? 1 : 0;
       module.HEAPU32[(ptr + TAG_OPTIONS_LAYOUT.minLength) >> 2] = opts.minLength ?? 2;
       module.HEAPU32[(ptr + TAG_OPTIONS_LAYOUT.maxTags) >> 2] = opts.maxTags ?? 0;
-      module.HEAPU32[(ptr + TAG_OPTIONS_LAYOUT.excludeParticles) >> 2] =
-        opts.excludeParticles !== false ? 1 : 0;
-      module.HEAPU32[(ptr + TAG_OPTIONS_LAYOUT.excludeAuxiliaries) >> 2] =
+      heapU8[ptr + TAG_OPTIONS_LAYOUT.excludeParticles] = opts.excludeParticles !== false ? 1 : 0;
+      heapU8[ptr + TAG_OPTIONS_LAYOUT.excludeAuxiliaries] =
         opts.excludeAuxiliaries !== false ? 1 : 0;
-      module.HEAPU32[(ptr + TAG_OPTIONS_LAYOUT.excludeFormalNouns) >> 2] =
+      heapU8[ptr + TAG_OPTIONS_LAYOUT.excludeFormalNouns] =
         opts.excludeFormalNouns !== false ? 1 : 0;
-      module.HEAPU32[(ptr + TAG_OPTIONS_LAYOUT.excludeLowInfo) >> 2] =
-        opts.excludeLowInfo !== false ? 1 : 0;
-      module.HEAPU32[(ptr + TAG_OPTIONS_LAYOUT.removeDuplicates) >> 2] =
-        opts.removeDuplicates !== false ? 1 : 0;
+      heapU8[ptr + TAG_OPTIONS_LAYOUT.excludeLowInfo] = opts.excludeLowInfo !== false ? 1 : 0;
+      heapU8[ptr + TAG_OPTIONS_LAYOUT.removeDuplicates] = opts.removeDuplicates !== false ? 1 : 0;
       return ptr;
     }
 

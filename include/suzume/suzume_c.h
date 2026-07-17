@@ -75,34 +75,18 @@ typedef struct {
 } suzume_tags_t;
 
 /**
- * @brief Analysis options structure.
- *
- * This basic form exposes normalization toggles and symbol handling only.
- * Use suzume_create_with_extended_options() with suzume_extended_options_t
- * for analysis mode, lemmatization, and compound merging.
- */
-typedef struct {
-  int preserve_vu;      /**< Preserve ヴ (don't normalize to ビ etc.) */
-  int preserve_case;    /**< Preserve case (don't lowercase ASCII) */
-  int preserve_symbols; /**< Preserve symbols/emoji (don't remove from output) */
-} suzume_options_t;
-
-/**
  * @brief Extended analysis options structure.
  *
- * Set size to sizeof(suzume_extended_options_t). Unknown future fields are ignored
- * when size is smaller than the field offset. Use
- * suzume_init_extended_options() before overriding individual fields so default
- * true values such as preserve_case and lemmatize are preserved.
+ * Use suzume_init_extended_options() before overriding individual fields so
+ * default true values such as preserve_case and lemmatize are preserved.
  */
 typedef struct {
-  uint32_t size;        /**< Structure size for forward/backward compatibility */
-  int preserve_vu;      /**< Preserve ヴ (don't normalize to ビ etc.) */
-  int preserve_case;    /**< Preserve case (don't lowercase ASCII) */
-  int preserve_symbols; /**< Preserve symbols/emoji (don't remove from output) */
-  int mode;             /**< 0=normal, 1=search, 2=split */
-  int lemmatize;        /**< Apply lemmatization */
-  int merge_compounds;  /**< Merge consecutive noun compounds */
+  uint8_t preserve_vu;      /**< Preserve ヴ (don't normalize to ビ etc.) */
+  uint8_t preserve_case;    /**< Preserve case (don't lowercase ASCII) */
+  uint8_t preserve_symbols; /**< Preserve symbols/emoji (don't remove from output) */
+  uint8_t mode;             /**< 0=normal, 1=search, 2=split */
+  uint8_t lemmatize;        /**< Apply lemmatization */
+  uint8_t merge_compounds;  /**< Merge consecutive noun compounds */
 } suzume_extended_options_t;
 
 // --- Lifecycle functions ---
@@ -114,13 +98,6 @@ typedef struct {
  *       calls; see suzume_t.
  */
 SUZUME_EXPORT suzume_t suzume_create(void);
-
-/**
- * @brief Create a new Suzume instance with options
- * @param options Pointer to options structure
- * @return Handle to Suzume instance, or NULL on failure
- */
-SUZUME_EXPORT suzume_t suzume_create_with_options(const suzume_options_t* options);
 
 /**
  * @brief Initialize extended options with Suzume defaults
@@ -177,25 +154,20 @@ SUZUME_EXPORT suzume_tags_t* suzume_generate_tags(suzume_t handle, const char* t
 /**
  * @brief Tag generation options.
  *
- * Set size to sizeof(suzume_tag_options_t), or call suzume_init_tag_options()
- * to populate size together with the documented defaults. The fields listed
- * before size are always read; fields appended in future versions are read
- * only when size covers them, so structs from callers compiled against an
- * older layout stay valid. size trails the pre-existing fields (instead of
- * leading as in suzume_extended_options_t) to keep their offsets stable.
+ * Call suzume_init_tag_options() to populate the documented defaults before
+ * overriding individual fields.
  */
 typedef struct {
-  uint8_t pos_filter;       /**< POS bitmask: 1=noun, 2=verb, 4=adjective, 8=adverb (0=all) */
-  int exclude_basic;        /**< Exclude basic words (hiragana-only lemma) */
-  int use_lemma;            /**< Use lemma instead of surface (default: 1) */
-  size_t min_length;        /**< Minimum tag length in characters (default: 2) */
-  size_t max_tags;          /**< Maximum number of tags (0=unlimited) */
-  int exclude_particles;    /**< Exclude particles (default: 1) */
-  int exclude_auxiliaries;  /**< Exclude auxiliaries (default: 1) */
-  int exclude_formal_nouns; /**< Exclude formal nouns (default: 1) */
-  int exclude_low_info;     /**< Exclude low information words (default: 1) */
-  int remove_duplicates;    /**< Remove duplicate tags (default: 1) */
-  uint32_t size;            /**< Structure size for forward compatibility */
+  uint8_t pos_filter;           /**< POS bitmask: 1=noun, 2=verb, 4=adjective, 8=adverb (0=all) */
+  uint8_t exclude_basic;        /**< Exclude basic words (hiragana-only lemma) */
+  uint8_t use_lemma;            /**< Use lemma instead of surface (default: 1) */
+  size_t min_length;            /**< Minimum tag length in characters (default: 2) */
+  size_t max_tags;              /**< Maximum number of tags (0=unlimited) */
+  uint8_t exclude_particles;    /**< Exclude particles (default: 1) */
+  uint8_t exclude_auxiliaries;  /**< Exclude auxiliaries (default: 1) */
+  uint8_t exclude_formal_nouns; /**< Exclude formal nouns (default: 1) */
+  uint8_t exclude_low_info;     /**< Exclude low information words (default: 1) */
+  uint8_t remove_duplicates;    /**< Remove duplicate tags (default: 1) */
 } suzume_tag_options_t;
 
 /**
@@ -301,11 +273,6 @@ SUZUME_EXPORT size_t suzume_sizeof_tag_options(void);
 SUZUME_EXPORT size_t suzume_sizeof_extended_options(void);
 
 /**
- * @brief Get sizeof(suzume_options_t)
- */
-SUZUME_EXPORT size_t suzume_sizeof_options(void);
-
-/**
  * @brief Get byte offset of field in suzume_result_t
  * @param field 0=morphemes, 1=count
  */
@@ -331,23 +298,16 @@ SUZUME_EXPORT size_t suzume_offsetof_tags(uint32_t field);
  * @param field 0=pos_filter, 1=exclude_basic, 2=use_lemma,
  *              3=min_length, 4=max_tags, 5=exclude_particles,
  *              6=exclude_auxiliaries, 7=exclude_formal_nouns,
- *              8=exclude_low_info, 9=remove_duplicates, 10=size
+ *              8=exclude_low_info, 9=remove_duplicates
  */
 SUZUME_EXPORT size_t suzume_offsetof_tag_options(uint32_t field);
 
 /**
  * @brief Get byte offset of field in suzume_extended_options_t
- * @param field 0=size, 1=preserve_vu, 2=preserve_case,
- *              3=preserve_symbols, 4=mode, 5=lemmatize,
- *              6=merge_compounds
+ * @param field 0=preserve_vu, 1=preserve_case, 2=preserve_symbols,
+ *              3=mode, 4=lemmatize, 5=merge_compounds
  */
 SUZUME_EXPORT size_t suzume_offsetof_extended_options(uint32_t field);
-
-/**
- * @brief Get byte offset of field in suzume_options_t
- * @param field 0=preserve_vu, 1=preserve_case, 2=preserve_symbols
- */
-SUZUME_EXPORT size_t suzume_offsetof_options(uint32_t field);
 
 /**
  * @brief Allocate memory (for WASM interop)
