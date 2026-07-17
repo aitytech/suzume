@@ -9,6 +9,8 @@ part-of-speech tagging). This package is a thin [ctypes](https://docs.python.org
 binding over the native suzume C++ core; the compiled library and dictionaries
 are bundled in the wheel, so there is nothing else to install.
 
+Full documentation: [suzume.libraz.net/docs/python](https://suzume.libraz.net/docs/python).
+
 ## Installation
 
 ```bash

@@ -13,11 +13,11 @@ WebAssemblyでブラウザ上で動作する軽量な日本語トークナイザ
 
 ## 概要
 
-Suzumeは、従来の辞書ベースの形態素解析器が使う大規模辞書（20〜50MB超）の代わりに、文字パターン・接続規則・小規模辞書で日本語テキストをトークン化します。WASMビルドはgzip圧縮で約424KBです。
+Suzumeは、従来の辞書ベースの形態素解析器が使う大規模辞書（20〜50MB超）の代わりに、文字パターン・接続規則・小規模辞書で日本語テキストをトークン化します。WASMビルドはgzip圧縮で約140KBです。
 
 | | 従来の形態素解析器 | Suzume |
 |---|---|---|
-| **バンドルサイズ** | 20〜50MB超（辞書） | 450KB未満（gzip） |
+| **バンドルサイズ** | 20〜50MB超（辞書） | 150KB未満（gzip） |
 | **ブラウザ対応** | 限定的または非対応 | 対応（WASM） |
 | **サーバー必須** | 通常は必要 | 不要 |
 | **品詞タグ** | あり | あり |
@@ -57,7 +57,8 @@ pip install suzume
 ```
 
 C / C++（ネイティブライブラリ。組み込み可能）— ソースからビルドしてインストールします。
-下記の [C / C++（ネイティブ・組み込み対応）](#c--cネイティブ組み込み対応) を参照してください。
+下記の [C / C++（ネイティブ・組み込み対応）](#c--cネイティブ組み込み対応) と
+[C / C++ ガイド](https://suzume.libraz.net/ja/docs/cpp) を参照してください。
 
 ## クイックスタート
 
@@ -75,15 +76,15 @@ for (const t of tokens) {
 
 // タグ抽出（{ tag, pos } オブジェクトの配列を返す）
 const tags = suzume.generateTags('東京スカイツリーに行きました')
-// → [{ tag: '東京', pos: 'noun' }, { tag: 'スカイツリー', pos: 'noun' }, { tag: '行く', pos: 'verb' }]
+// → [{ tag: '東京', pos: 'NOUN' }, { tag: 'スカイツリー', pos: 'NOUN' }, { tag: '行く', pos: 'VERB' }]
 
 // 名詞のみ
 suzume.generateTags('美味しいラーメンを食べた', { pos: ['noun'] })
-// → [{ tag: 'ラーメン', pos: 'noun' }]
+// → [{ tag: 'ラーメン', pos: 'NOUN' }]
 
 // 基本語除外（する、ある、いい などひらがなのみの原形を除外）
 suzume.generateTags('今日はいい天気ですね', { excludeBasic: true })
-// → [{ tag: '今日', pos: 'noun' }, { tag: '天気', pos: 'noun' }]
+// → [{ tag: '今日', pos: 'NOUN' }, { tag: '天気', pos: 'NOUN' }]
 ```
 
 ### Python
@@ -115,62 +116,31 @@ Python APIの詳細は [bindings/python/README.md](bindings/python/README.md) �
 
 ### C / C++（ネイティブ・組み込み対応）
 
-ライブラリ・ヘッダ・CMake パッケージ設定・pkg-config ファイルをインストールします
-（C++17、CMake 3.15+ が必要）:
+ライブラリ・ヘッダ・CMake / pkg-config 連携をインストールします（C++17、CMake 3.15+ が必要）:
 
 ```bash
 make install                 # /usr/local へ（PREFIX=/opt/suzume で変更可）
 ```
 
-C++ — C ABI をラップするヘッダオンリーの RAII ラッパ（`suzume/suzume.hpp`）:
-
 ```cpp
-#include "suzume/suzume.hpp"
+#include "suzume/suzume.hpp"                 // C ABI をラップするヘッダオンリー RAII ラッパ
 
 suzume::Tokenizer tokenizer;
-for (const suzume::Morpheme& m : tokenizer.analyze("東京に行きました")) {
-    std::cout << m.surface << '\t' << m.lemma << '\t' << m.pos << '\n';
-}
-
 auto tags = tokenizer.generateTags("東京スカイツリーに行きました");
 ```
 
-C — 安定した C ABI（`suzume/suzume_c.h`）:
-
-```c
-#include "suzume/suzume_c.h"
-
-suzume_t h = suzume_create();
-suzume_result_t* r = suzume_analyze(h, "東京に行きました");
-for (size_t i = 0; i < r->count; i++)
-    printf("%s\t%s\n", r->morphemes[i].surface, r->morphemes[i].base_form);
-suzume_result_free(r);
-suzume_destroy(h);
-```
-
-CMake からは `find_package` で利用します:
-
-```cmake
-find_package(suzume CONFIG REQUIRED)
-target_link_libraries(myapp PRIVATE suzume::suzume)          # 静的・自己完結
-# target_link_libraries(myapp PRIVATE suzume::suzume_shared) # 共有（インストール時）
-```
-
-pkg-config も利用できます: `pkg-config --cflags --libs suzume`。動作するサンプルは
-[`examples/`](examples/) にあります。
-
-**組み込み / ファイルシステムなし。** `-DSUZUME_EMBED_DICT=ON`（または `make embedded`）
-で辞書をバイナリに埋め込みます。この構成ではファイルシステムにも環境変数にもアクセスせず、
-自己完結した静的アーカイブとしてリンクできます。コアは `Expected<T, Error>` ベースで
-（通常動作で例外を投げず）、`-fno-exceptions -fno-rtti` でもコンパイルできます。対象は
-C++ ランタイムとヒープを持つ環境（hosted-embedded / RTOS）で、ベアメタルの freestanding は
-対象外です。埋め込まない場合、コンパイル済み辞書は `<prefix>/share/suzume` にインストールされ、
-実行時に自動的に検出されます。
+安定した C ABI（`suzume/suzume_c.h`）、`find_package(suzume)` / pkg-config でのリンク、
+ファイルシステム不要の組み込みビルド（`-DSUZUME_EMBED_DICT=ON`）は
+[C / C++ ガイド](https://suzume.libraz.net/ja/docs/cpp) と
+[ネイティブビルド](https://suzume.libraz.net/ja/docs/native-build) を参照してください。
+動作するサンプルは [`examples/`](examples/) にあります。
 
 ## ドキュメント
 
 - [はじめる](https://suzume.libraz.net/ja/docs/getting-started) — インストールと基本的な使い方
 - [API リファレンス](https://suzume.libraz.net/ja/docs/api) — APIドキュメント
+- [Python バインディング](https://suzume.libraz.net/ja/docs/python) — Python API
+- [C / C++ ライブラリ](https://suzume.libraz.net/ja/docs/cpp) — ネイティブリンクと組み込み
 - [ユーザー辞書](https://suzume.libraz.net/ja/docs/user-dictionary) — カスタム単語の追加
 - [仕組み](https://suzume.libraz.net/ja/docs/how-it-works) — 技術的な解説
 - [トークン化の違い](https://suzume.libraz.net/ja/docs/mecab-comparison) — 従来の辞書ベース解析器との違い

@@ -13,11 +13,11 @@ A lightweight Japanese tokenizer that runs in the browser via WebAssembly. Uses 
 
 ## Overview
 
-Suzume tokenizes Japanese text using character patterns, connection rules, and a small dictionary, rather than the large dictionaries (20-50MB+) used by traditional dictionary-based morphological analyzers. The WASM build is around 424KB gzipped.
+Suzume tokenizes Japanese text using character patterns, connection rules, and a small dictionary, rather than the large dictionaries (20-50MB+) used by traditional dictionary-based morphological analyzers. The WASM build is around 140KB gzipped.
 
 | | Traditional Analyzers | Suzume |
 |---|---|---|
-| **Bundle Size** | 20-50MB+ (dictionary) | <450KB gzipped |
+| **Bundle Size** | 20-50MB+ (dictionary) | <150KB gzipped |
 | **Browser Support** | Limited or none | Supported (WASM) |
 | **Server Required** | Usually yes | No |
 | **POS Tagging** | Yes | Yes |
@@ -57,7 +57,8 @@ pip install suzume
 ```
 
 C / C++ (native library, embeddable) — build and install from source; see
-[C / C++ (native, embeddable)](#c--c-native-embeddable) below.
+[C / C++ (native, embeddable)](#c--c-native-embeddable) below and the
+[C / C++ guide](https://suzume.libraz.net/docs/cpp).
 
 ## Quick Start
 
@@ -115,63 +116,31 @@ See [bindings/python/README.md](bindings/python/README.md) for the full Python A
 
 ### C / C++ (native, embeddable)
 
-Install the library, headers, CMake package config, and pkg-config file
-(requires C++17, CMake 3.15+):
+Install the library, headers, and CMake/pkg-config integration (C++17, CMake 3.15+):
 
 ```bash
 make install                 # into /usr/local (override with PREFIX=/opt/suzume)
 ```
 
-C++ — a header-only RAII wrapper (`suzume/suzume.hpp`) over the C ABI:
-
 ```cpp
-#include "suzume/suzume.hpp"
+#include "suzume/suzume.hpp"                 // header-only RAII wrapper over the C ABI
 
 suzume::Tokenizer tokenizer;
-for (const suzume::Morpheme& m : tokenizer.analyze("東京に行きました")) {
-    std::cout << m.surface << '\t' << m.lemma << '\t' << m.pos << '\n';
-}
-
 auto tags = tokenizer.generateTags("東京スカイツリーに行きました");
 ```
 
-C — the stable C ABI (`suzume/suzume_c.h`):
-
-```c
-#include "suzume/suzume_c.h"
-
-suzume_t h = suzume_create();
-suzume_result_t* r = suzume_analyze(h, "東京に行きました");
-for (size_t i = 0; i < r->count; i++)
-    printf("%s\t%s\n", r->morphemes[i].surface, r->morphemes[i].base_form);
-suzume_result_free(r);
-suzume_destroy(h);
-```
-
-Consume it from CMake via `find_package`:
-
-```cmake
-find_package(suzume CONFIG REQUIRED)
-target_link_libraries(myapp PRIVATE suzume::suzume)          # static, self-contained
-# target_link_libraries(myapp PRIVATE suzume::suzume_shared) # shared, when installed
-```
-
-or via pkg-config: `pkg-config --cflags --libs suzume`. Runnable examples are in
+The stable C ABI (`suzume/suzume_c.h`), `find_package(suzume)` / pkg-config linking,
+and an optional no-filesystem embedded build (`-DSUZUME_EMBED_DICT=ON`) are covered in
+the [C / C++ guide](https://suzume.libraz.net/docs/cpp) and
+[Native Build](https://suzume.libraz.net/docs/native-build). Runnable programs are in
 [`examples/`](examples/).
-
-**Embedded / no-filesystem.** Configure with `-DSUZUME_EMBED_DICT=ON` (or
-`make embedded`) to bake the dictionaries into the binary — the library then
-touches neither the filesystem nor environment variables, and links as a
-self-contained static archive. The core is `Expected<T, Error>` based (no
-exceptions in normal operation) and compiles under `-fno-exceptions -fno-rtti`.
-Targets need a C++ runtime and heap (hosted-embedded / RTOS), not bare-metal
-freestanding. Without embedding, the compiled dictionaries are installed to
-`<prefix>/share/suzume` and found automatically at runtime.
 
 ## Documentation
 
 - [Getting Started](https://suzume.libraz.net/docs/getting-started) — Installation and basic usage
 - [API Reference](https://suzume.libraz.net/docs/api) — API documentation
+- [Python Bindings](https://suzume.libraz.net/docs/python) — Python API
+- [C / C++ Library](https://suzume.libraz.net/docs/cpp) — Native linking and embedding
 - [User Dictionary](https://suzume.libraz.net/docs/user-dictionary) — Adding custom words
 - [How It Works](https://suzume.libraz.net/docs/how-it-works) — Technical details
 - [Tokenization Differences](https://suzume.libraz.net/docs/mecab-comparison) — How Suzume differs from dictionary-based analyzers
