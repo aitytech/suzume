@@ -43,8 +43,24 @@ inline float decodeCost(uint8_t index) {
   return index < kCostPalette.size() ? kCostPalette[index] : bigram_cost::kNeutral;
 }
 
-inline void setCell(BigramMatrix& table, core::ExtendedPOS prev, core::ExtendedPOS next, float value) {
-  table[static_cast<size_t>(prev)][static_cast<size_t>(next)] = encodeCost(value);
+// Three encoded bytes replace hundreds of individually emitted table stores.
+// Rules are expanded into the same dense matrix once at startup, preserving
+// the hot getCost() lookup path while saving ~1.7 KB raw / ~0.3 KB gzip.
+struct BigramRule {
+  constexpr BigramRule(core::ExtendedPOS prev_value, core::ExtendedPOS next_value, float cost_value)
+      : prev(static_cast<uint8_t>(prev_value)), next(static_cast<uint8_t>(next_value)), cost(encodeCost(cost_value)) {}
+
+  uint8_t prev;
+  uint8_t next;
+  uint8_t cost;
+};
+static_assert(sizeof(BigramRule) == 3);
+
+template <size_t RuleCount>
+inline void applyRules(BigramMatrix& table, const BigramRule (&rules)[RuleCount]) {
+  for (const BigramRule& rule : rules) {
+    table[rule.prev][rule.next] = rule.cost;
+  }
 }
 
 void setVerbAndAdjectiveCosts(BigramMatrix& table);

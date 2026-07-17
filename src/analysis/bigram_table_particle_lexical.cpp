@@ -5,541 +5,544 @@ namespace suzume::analysis::bigram_rules {
 using EPOS = core::ExtendedPOS;
 namespace cost = bigram_cost;
 
-void setParticleAndLexicalCosts(BigramMatrix& t) {
-  // =========================================================================
-  // Particle → Various (Particles can connect to many things)
-  // =========================================================================
-
-  // ParticleAdverbial → ParticleCase (だけ+で, ばかり+に, ほど+に) - very strong bonus
-  // Without this, PART_副→VERB_連用 bonus makes で(出る) beat で(格助詞) after だけ
-  // Needs to overcome: base bigram diff (0.5-0.2=0.3) + VERB_連用 bonus (-0.8)
-  setCell(t, EPOS::ParticleAdverbial, EPOS::ParticleCase, cost::kVeryStrongBonus);
-
-  // ParticleAdverbial → ParticleNo (など+の, まで+の, ばかり+の)
-  // Very strong bonus: adverbial particle + の is extremely natural.
-  // Needs to overcome DET→NOUN bonus (-2.5) when competing with な+どの path.
-  setCell(t, EPOS::ParticleAdverbial, EPOS::ParticleNo, cost::kVeryStrongBonus);
-
-  // ParticleAdverbial → VerbRenyokei (かも+しれ in かもしれない, など+あり, でも+あり)
-  // - strong bonus. Favors かも+しれ+ない over か+もし+れない and keeps a real
-  //   verb renyokei after a subsidiary particle. A single-mora renyokei after
-  //   this particle is a false over-split (し+かね misread as しか+ね←寝る) and
-  //   is penalized by surface length in scorer_connection_cost.cpp.
-  setCell(t, EPOS::ParticleAdverbial, EPOS::VerbRenyokei, cost::kStrongBonus);
-
-  // ParticleAdverbial → VerbShuushikei (でも+行く) - strong bonus
-  // This favors でも+行く over で+も+行く
-  setCell(t, EPOS::ParticleAdverbial, EPOS::VerbShuushikei, cost::kStrongBonus);
-
-  // ParticleCase → Adverb (か+もし) - moderate penalty
-  // This discourages splitting かもしれない as か+もし+れない
-  setCell(t, EPOS::ParticleCase, EPOS::Adverb, cost::kRare);
-
-  // ParticleCase → Noun (が+学生) - neutral
-  setCell(t, EPOS::ParticleCase, EPOS::Noun, cost::kNeutral);
-
-  // ParticleCase → VerbShuushikei (を+食べる) - neutral
-  setCell(t, EPOS::ParticleCase, EPOS::VerbShuushikei, cost::kNeutral);
-
-  // A renyokei immediately before a case particle normally functions as a
-  // nominalization (香り+を, 読み+を, 流れ+に). Left context can override this
-  // for purpose constructions such as 本を買いに行く.
-  setCell(t, EPOS::VerbRenyokei, EPOS::ParticleCase, cost::kStrong);
-
-  // A continuative verb immediately before の normally denotes a lexicalized
-  // nominal form (思い+の, 帰り+の), whose search unit is a noun. Finite verbs
-  // remain available for the productive nominalizer construction (食べる+の).
-  setCell(t, EPOS::VerbRenyokei, EPOS::ParticleNo, cost::kStrong);
-
-  // ParticleTopic/ParticleCase → Pronoun (は+いつ, は+どこ, に+何, で+誰)
-  // Particles naturally precede pronouns in questions and relative clauses
-  // は+いつ, も+何, に+どこ are very common patterns
-  setCell(t, EPOS::ParticleTopic, EPOS::Pronoun, cost::kModerateBonus);
-  setCell(t, EPOS::ParticleCase, EPOS::Pronoun, cost::kMinorBonus);
-
-  // ParticleTopic → VerbShuushikei (は+食べる) - neutral
-  setCell(t, EPOS::ParticleTopic, EPOS::VerbShuushikei, cost::kNeutral);
-
-  // ParticleTopic → VerbRenyokei (は+あり in はありますか) - minor bonus
-  // Helps は+あり+ます beat はあり+ます (particle-starting verb)
-  // Note: ParticleCase → VerbRenyokei is intentionally not added to avoid
-  // breaking という patterns (と is ParticleCase, いう is VerbRenyokei)
-  setCell(t, EPOS::ParticleTopic, EPOS::VerbRenyokei, cost::kMinorBonus);
-
-  // ParticleTopic → AdjBasic (は+良い, も+美しい) - minor bonus
-  // Common pattern: 係助詞 followed by i-adjective
-  setCell(t, EPOS::ParticleTopic, EPOS::AdjBasic, cost::kMinorBonus);
-
-  // ParticleConj → VerbShuushikei (て+食べる for compound verbs) - minor penalty
-  // (te-form usually followed by auxiliary, not new verb)
-  setCell(t, EPOS::ParticleConj, EPOS::VerbShuushikei, cost::kUncommon);
-
-  // ParticleConj → AuxAspectIru (て+いる) - strong bonus for the aspectual construction
-  // Allows 食べ+て+いる to beat unified 食べて+いる path
-  setCell(t, EPOS::ParticleConj, EPOS::AuxAspectIru, cost::kStrongBonus);
-
-  // ParticleConj → AuxAspectShimau (て+しまう) - strong bonus
-  setCell(t, EPOS::ParticleConj, EPOS::AuxAspectShimau, cost::kStrongBonus);
-
-  // ParticleConj → AuxAspectOku (て+おく) - strong bonus
-  setCell(t, EPOS::ParticleConj, EPOS::AuxAspectOku, cost::kStrongBonus);
-
-  // ParticleConj → AuxAspectMiru (て+みる) - strong bonus
-  setCell(t, EPOS::ParticleConj, EPOS::AuxAspectMiru, cost::kStrongBonus);
-
-  // Emphatic も preserves the te-form attachment in 〜てもみる/〜でもみる.
-  // AuxAspectMiru candidates are context-gated during generation, so this does
-  // not license a standalone particle + lexical みる sequence.
-  setCell(t, EPOS::ParticleAdverbial, EPOS::AuxAspectMiru, cost::kVeryStrongBonus);
-  setCell(t, EPOS::ParticleTopic, EPOS::AuxAspectMiru, cost::kVeryStrongBonus);
-
-  // ParticleConj → AuxAspectIku (て+いく) - strong bonus
-  setCell(t, EPOS::ParticleConj, EPOS::AuxAspectIku, cost::kStrongBonus);
-
-  // ParticleConj → AuxAspectKuru (て+くる) - strong bonus
-  setCell(t, EPOS::ParticleConj, EPOS::AuxAspectKuru, cost::kStrongBonus);
-
-  // =========================================================================
-  // Penalties: Invalid or Rare Connections
-  // =========================================================================
-
-  // Suffix → Adverb (さ+そう) - strong penalty
-  // Prevents なさそう → な + さ(SUFFIX) + そう(ADV) over correct な + さ + そう(AUX)
-  // Suffix + Adverb is grammatically unusual; そう after さ is AuxAppearance
-  setCell(t, EPOS::Suffix, EPOS::Adverb, cost::kVeryRare);
-
-  // AuxVolitional → ParticleCase (う+と quotative) - minor bonus
-  // Volitional + と is common (書こうと思う, 食べようとする)
-  // Keep bonus small to avoid changing よう POS in 次のように (NounFormal vs AuxVolitional)
-  setCell(t, EPOS::AuxVolitional, EPOS::ParticleCase, cost::kMinorBonus);
-
-  // AuxVolitional → ParticleConj (う+として) - strong penalty
-  // Volitional form (う/よう) is not followed by conjunctive particles (として, ながら)
-  // 書こうとしている should split as 書こ+う+と+し+て+いる, not 書こ+う+として+いる
-  setCell(t, EPOS::AuxVolitional, EPOS::ParticleConj, cost::kStrong);
-
-  // AuxAspectOku → AuxVolitional (とい+う) - strong penalty
-  // Prevents とい+う from beating という (quotative determiner)
-  // とい (contracted ておく form) + う (volitional) is grammatically invalid
-  setCell(t, EPOS::AuxAspectOku, EPOS::AuxVolitional, cost::kVeryRare);
-
-  // AuxAspectOku → ParticleQuote (とい+って) - strong penalty
-  // Prevents とい+って from beating と+いっ+て (と言って)
-  // とい (contracted ておく form) + って (quote particle) is unlikely in this context
-  setCell(t, EPOS::AuxAspectOku, EPOS::ParticleQuote, cost::kVeryRare);
-
-  // VerbShuushikei → AuxTenseMasu (食べる+ます) - prohibitive
-  // (ます attaches to renyokei, not shuushikei)
-  setCell(t, EPOS::VerbShuushikei, EPOS::AuxTenseMasu, cost::kAlmostNever);
-
-  // VerbShuushikei → AuxDesireTai (食べる+たい) - prohibitive
-  setCell(t, EPOS::VerbShuushikei, EPOS::AuxDesireTai, cost::kAlmostNever);
-
-  // VerbShuushikei → AuxTenseTa (食べる+た) - prohibitive
-  setCell(t, EPOS::VerbShuushikei, EPOS::AuxTenseTa, cost::kAlmostNever);
-
-  // AuxTenseTa → AuxTenseTa (た+た) - prohibitive
-  setCell(t, EPOS::AuxTenseTa, EPOS::AuxTenseTa, cost::kAlmostNever);
-
-  // AuxTenseTa → AuxTenseMasu (た+ます) - prohibitive
-  setCell(t, EPOS::AuxTenseTa, EPOS::AuxTenseMasu, cost::kAlmostNever);
-
-  // AuxTenseTa → AuxNegative (た+ない/ん) - prohibitive
-  // Past tense cannot be followed by negation; correct order is negation→past
-  setCell(t, EPOS::AuxTenseTa, EPOS::AuxNegativeNai, cost::kAlmostNever);
-  setCell(t, EPOS::AuxTenseTa, EPOS::AuxNegativeNu, cost::kAlmostNever);
-
-  // AuxTenseTa → AuxAspectKuru (た+き) - prohibitive
-  // Prevents いただき → い+た+だ+き (きた split creates standalone き entry)
-  setCell(t, EPOS::AuxTenseTa, EPOS::AuxAspectKuru, cost::kAlmostNever);
-
-  // AuxTenseTa → AuxGaru (た+がる) - strong penalty
-  // Desiderative がる attaches to renyokei/stem (食べ+たがる, 怖+がる), never to
-  // past た. Prevents 食べたがる → 食べ+た+がる over 食べ+たがる (願望 auxiliary).
-  setCell(t, EPOS::AuxTenseTa, EPOS::AuxGaru, cost::kStrong);
-
-  // AuxCopulaDa → AuxAspectKuru (だ+き) - prohibitive
-  // Prevents いただき → い+た+だ+き
-  setCell(t, EPOS::AuxCopulaDa, EPOS::AuxAspectKuru, cost::kAlmostNever);
-
-  // ParticleNo → AuxTenseTa (ん/の+た) - prohibitive
-  // Nominalizer の/ん is followed by copula (のだ/のです), not past tense
-  setCell(t, EPOS::ParticleNo, EPOS::AuxTenseTa, cost::kAlmostNever);
-
-  // ParticleFinal → VerbShuushikei (ね+食べる) - strong penalty
-  // (sentence-final particles rarely continue to verbs)
-  setCell(t, EPOS::ParticleFinal, EPOS::VerbShuushikei, cost::kVeryRare);
-
-  // ParticleFinal → VerbOnbinkei (な+いん) - prohibit
-  // (prevents ないんだ → な+いん+だ over ない+ん+だ)
-  setCell(t, EPOS::ParticleFinal, EPOS::VerbOnbinkei, cost::kAlmostNever);
-
-  // ParticleFinal → VerbMizenkei (な+さ) - strong penalty
-  // (prevents なさそう → な(終助詞)+さ(未然)+そう over な(形容詞)+さ(接尾辞)+そう)
-  setCell(t, EPOS::ParticleFinal, EPOS::VerbMizenkei, cost::kVeryRare);
-
-  // AuxCopulaDa → VerbOnbinkei (な+いん) - prohibit
-  // (prevents ないんだ → な+いん+だ over ない+ん+だ)
-  setCell(t, EPOS::AuxCopulaDa, EPOS::VerbOnbinkei, cost::kAlmostNever);
-
-  // AuxCopulaDa → VerbMizenkei (だ+くさ) - strong penalty
-  // Copula followed by verb mizenkei is grammatically unusual
-  // Prevents 盛りだくさん → 盛り+だ+くさ+ん over dictionary entry
-  setCell(t, EPOS::AuxCopulaDa, EPOS::VerbMizenkei, cost::kVeryRare);
-
-  // AuxCopulaDa → VerbRenyokei/VerbShuushikei - penalty for copula + general verb
-  // E.g., 公園で遊ぶ should be NOUN+PART_格+VERB, not NOUN+AUX_断定+VERB
-  // Copula 「で」 rarely followed by general verbs (usually followed by ある/ない/ございます)
-  // This helps PART_格(で)+VERB win over AUX_断定(で)+VERB
-  setCell(t, EPOS::AuxCopulaDa, EPOS::VerbRenyokei, cost::kMinor);
-  setCell(t, EPOS::AuxCopulaDa, EPOS::VerbShuushikei, cost::kMinor);
-
-  // ParticleFinal → ParticleFinal (よ+ね) - minor bonus (common pattern)
-  setCell(t, EPOS::ParticleFinal, EPOS::ParticleFinal, cost::kMinorBonus);
-
-  // ParticleFinal → ParticleNo (か+の) - moderate bonus (indefinite pronoun pattern)
-  // いくつかの, 何かの, 誰かの, どれかの - か functions as indefinite marker, not sentence-ender
-  setCell(t, EPOS::ParticleFinal, EPOS::ParticleNo, cost::kModerateBonus);
-
-  // =========================================================================
-  // Copula → Negation (ではない pattern)
-  // =========================================================================
-
-  // AuxCopulaDa (で form) → ParticleTopic (で+は/も in ではない/でもない)
-  // Moderate bonus to promote 彼女|で|も|ない over 彼女|でも|ない
-  setCell(t, EPOS::AuxCopulaDa, EPOS::ParticleTopic, cost::kModerateBonus);
-
-  // AuxCopulaDa → AuxNegativeNai (じゃ+ない, で+ない) - moderate bonus
-  setCell(t, EPOS::AuxCopulaDa, EPOS::AuxNegativeNai, cost::kModerateBonus);
-
-  // AuxCopulaDa → AuxGozaru (で+ございます) - strong bonus
-  // Must beat the で(出る連用形)+ございます verb-candidate reading
-  setCell(t, EPOS::AuxCopulaDa, EPOS::AuxGozaru, cost::kStrongBonus);
-
-  // AuxGozaru → AuxTenseMasu (ござい+ます) - strong bonus to prevent verb candidate win
-  // Without this, verb_candidates generates "ございる" which beats dictionary "ござる"
-  setCell(t, EPOS::AuxGozaru, EPOS::AuxTenseMasu, cost::kStrongBonus);
-
-  // AuxCopulaDa → AuxCopulaDa (で+ある/あれ) - strong bonus for である pattern
-  // MeCab splits である as で(だ連用形) + ある(助動詞), not で(出る連用形) + ある
-  setCell(t, EPOS::AuxCopulaDa, EPOS::AuxCopulaDa, cost::kStrongBonus);
-
-  // =========================================================================
-  // Appearance/Conjecture connections
-  // =========================================================================
-
-  // VerbRenyokei → AuxAppearanceSou (食べ+そう) - very strong bonus
-  // Must beat adverb bonus (-1.0 for 2-char hiragana) to prefer auxiliary
-  setCell(t, EPOS::VerbRenyokei, EPOS::AuxAppearanceSou, cost::kVeryStrongBonus);
-
-  // Na-adjective stems take appearance そう directly (静か+そう).
-  setCell(t, EPOS::AdjNaAdj, EPOS::AuxAppearanceSou, cost::kStrongBonus);
-
-  // AuxAspectShimau → AuxAppearanceSou (しまい+そう) - strong bonus
-  // しまいそう (about to end up doing) is natural; AUX chain must beat ADJ+ADV path
-  // Strong bonus needed because そう(ADV) has dict bonus (-0.5) vs そう(AUX) cost (0.4)
-  setCell(t, EPOS::AuxAspectShimau, EPOS::AuxAppearanceSou, cost::kStrongBonus);
-
-  // Other → AuxAppearanceSou - penalty (様態そう shouldn't appear at BOS)
-  // At sentence start, そう should be demonstrative na-adjective, not appearance aux
-  setCell(t, EPOS::Other, EPOS::AuxAppearanceSou, cost::kMinor);
-
-  // Other → AuxAspectIku - penalty (いく as aspect aux shouldn't appear at BOS)
-  // At sentence start, いく should be verb (行く) or part of pronoun (いくつ)
-  // AuxAspectIku is only valid after て-form (食べていく, 走っていく)
-  setCell(t, EPOS::Other, EPOS::AuxAspectIku, cost::kRare);
-
-  // Particle → AuxAppearanceSou - penalty (様態そう shouldn't follow particles)
-  // E.g., そうかもしれません: そう is demonstrative, not appearance auxiliary
-  setCell(t, EPOS::ParticleCase, EPOS::AuxAppearanceSou, cost::kMinor);
-  setCell(t, EPOS::ParticleTopic, EPOS::AuxAppearanceSou, cost::kMinor);
-  setCell(t, EPOS::ParticleAdverbial, EPOS::AuxAppearanceSou, cost::kMinor);
-  setCell(t, EPOS::ParticleQuote, EPOS::AuxAppearanceSou, cost::kMinor);
-
-  // AdjBasic → AuxConjectureRashii (美しい+らしい) - strong bonus
-  setCell(t, EPOS::AdjBasic, EPOS::AuxConjectureRashii, cost::kStrongBonus);
-
-  // VerbShuushikei → AuxConjectureRashii (食べる+らしい) - moderate bonus
-  setCell(t, EPOS::VerbShuushikei, EPOS::AuxConjectureRashii, cost::kModerateBonus);
-
-  // VerbShuushikei → AuxAppearanceSou (食べる+そう hearsay) - strong bonus
-  // Hearsay そう (伝聞) attaches to 終止形: 食べる+そうだ, する+そうです
-  // Different from appearance そう (様態) which attaches to 連用形: 食べ+そう, し+そう
-  setCell(t, EPOS::VerbShuushikei, EPOS::AuxAppearanceSou, cost::kStrongBonus);
-
-  // VerbShuushikei → AuxConjectureMitai (食べる+みたい) - strong bonus
-  setCell(t, EPOS::VerbShuushikei, EPOS::AuxConjectureMitai, cost::kStrongBonus);
-
-  // VerbShuushikei → AuxVolitional (食べる+べき) - strong bonus for obligation
-  setCell(t, EPOS::VerbShuushikei, EPOS::AuxVolitional, cost::kStrongBonus);
-
-  // AdjBasic → AuxConjectureMitai (美しい+みたい) - moderate bonus
-  setCell(t, EPOS::AdjBasic, EPOS::AuxConjectureMitai, cost::kModerateBonus);
-
-  // Noun → AuxConjectureMitai (学生+みたい) - moderate bonus
-  setCell(t, EPOS::Noun, EPOS::AuxConjectureMitai, cost::kModerateBonus);
-
-  // Noun → AuxConjectureRashii (春+らしい) - strong bonus
-  setCell(t, EPOS::Noun, EPOS::AuxConjectureRashii, cost::kStrongBonus);
-
-  // AuxConjectureRashii → AuxNegativeNai (子供らしく+ない) - extreme bonus, mirroring
-  // AdjRenyokei → AuxNegativeNai. らしく is the 連用形 of the auxiliary らしい and the
-  // only AuxConjectureRashii form that precedes ない, so this negation split (子供 +
-  // らしく + ない) is favored the same way as a genuine adjective's く-form + ない.
-  // Genuine derived adjectives (素晴らしい) stay merged via their dict-inflected 連用形.
-  setCell(t, EPOS::AuxConjectureRashii, EPOS::AuxNegativeNai, cost::kExtremeBonus);
-
-  // AuxAspectIru → AuxConjectureRashii/Mitai (ている+らしい/みたい) - mirror the
-  // VerbShuushikei rows above so the aspectual reading of the 補助動詞 いる is not
-  // undercut at the following conjecture aux. Without these, the Aux→Aux base cost
-  // cancels いる's aspect bonus and the main-verb いる reading wrongly wins.
-  setCell(t, EPOS::AuxAspectIru, EPOS::AuxConjectureRashii, cost::kModerateBonus);
-  setCell(t, EPOS::AuxAspectIru, EPOS::AuxConjectureMitai, cost::kStrongBonus);
-
-  // AuxConjectureMitai → AuxCopulaDa (みたい+な) - strong bonus because な is
-  // the attributive form of the following copula.
-  setCell(t, EPOS::AuxConjectureMitai, EPOS::AuxCopulaDa, cost::kStrongBonus);
-
-  // =========================================================================
-  // Prohibited/Penalized Connections (Grammatically Invalid or Unlikely)
-  // =========================================================================
-
-  // Note: VerbRenyokei → VerbRenyokei is NOT explicitly bonused because
-  // a bonus breaks compound verbs (抱きしめて→抱き+しめ+て).
-  // Legitimate patterns like 食べ+すぎる are handled by compound verb path.
-  // Honorific patterns (待ち+いただけ) are handled by penalizing false
-  // godan-wa candidates in verb_candidates_kanji.cpp.
-
-  // VerbTaForm → VerbMizenkei (盛りだ+くさ) - strong penalty
-  // Two verbs in sequence without auxiliary/particle is grammatically unusual
-  // Prevents 盛りだくさん → 盛りだ+くさ+ん over dictionary entry
-  setCell(t, EPOS::VerbTaForm, EPOS::VerbMizenkei, cost::kVeryRare);
-
-  // VerbRenyokei → VerbMizenkei (盛り+だくさ) - strong penalty
-  // Renyokei followed by mizenkei is grammatically unusual
-  // Legitimate patterns like 食べ+すぎ use Renyokei→Renyokei (すぎ is renyokei)
-  setCell(t, EPOS::VerbRenyokei, EPOS::VerbMizenkei, cost::kVeryRare);
-
-  // VerbRenyokei → VerbOnbinkei (突き+刺さっ) - minor penalty
-  // Verb renyokei directly followed by another verb in onbin form only occurs
-  // in compound verbs (突き刺さる, 走り出す). When the compound is in the
-  // dictionary, the merged token should be preferred over the split path.
-  // Surface-based bonus in scorer.cpp adds extra penalty for kanji verbs.
-  setCell(t, EPOS::VerbRenyokei, EPOS::VerbOnbinkei, cost::kNegligible);
-
-  // AdjBasic → VerbMizenkei (盛りだく+さ) - strong penalty
-  // Adjective 終止形 followed by verb 未然形 is grammatically unusual
-  // Prevents 盛りだくさん → 盛りだく+さ+ん over dictionary entry
-  setCell(t, EPOS::AdjBasic, EPOS::VerbMizenkei, cost::kVeryRare);
-
-  // AdjBasic → AuxTenseTa (対応い+た) - severe penalty
-  // An i-adjective 終止形 directly followed by past た is grammatically
-  // impossible: the adjectival past is 連用形かっ + た (高かっ+た), which
-  // travels the separate ADJ_かっ → AUX_過去 edge. Killing this edge removes
-  // fabricated i-adjective paths such as 対応い+た+しか+ね for 対応いたしかねます.
-  setCell(t, EPOS::AdjBasic, EPOS::AuxTenseTa, cost::kSevere);
-
-  // AdjStem → AuxConjectureMitai: unnatural (美し+みたい should be 美しい+みたい)
-  setCell(t, EPOS::AdjStem, EPOS::AuxConjectureMitai, cost::kAlmostNever);
-
-  // AdjStem → AuxConjectureRashii: unnatural (美し+らしい should be 美しい+らしい)
-  setCell(t, EPOS::AdjStem, EPOS::AuxConjectureRashii, cost::kAlmostNever);
-
-  // AdjStem → AdjBasic: prohibit (好+みらしい should be 好み+らしい)
-  // Adjective stems don't connect to unrelated i-adjective endings
-  setCell(t, EPOS::AdjStem, EPOS::AdjBasic, cost::kAlmostNever);
-
-  // AdjStem → Verb/Aux: prohibit (な+い should not split ない as な(AdjStem)+い)
-  // な(AdjStem of ない) should only connect to さ(nominalization) or そう(appearance)
-  // Also prevents 高+すぎた winning over 高+すぎ+た
-  setCell(t, EPOS::AdjStem, EPOS::VerbRenyokei, cost::kAlmostNever);
-  setCell(t, EPOS::AdjStem, EPOS::VerbShuushikei, cost::kAlmostNever);
-  setCell(t, EPOS::AdjStem, EPOS::VerbMizenkei, cost::kAlmostNever);
-  setCell(t, EPOS::AdjStem, EPOS::VerbTaForm, cost::kAlmostNever);
-  setCell(t, EPOS::AdjStem, EPOS::VerbTaraForm, cost::kAlmostNever);
-  setCell(t, EPOS::AdjStem, EPOS::AuxAspectIru, cost::kAlmostNever);    // な+い(いる)
-  setCell(t, EPOS::AdjNaAdj, EPOS::AuxAspectIru, cost::kAlmostNever);   // 性的+い(いる)
-  setCell(t, EPOS::AdjStem, EPOS::AuxNegativeNai, cost::kAlmostNever);  // な+ない
-  setCell(t, EPOS::AdjStem, EPOS::Other, cost::kAlmostNever);           // な+い(OTHER)
-
-  // Note: Particle → AdjStem is allowed for patterns like やる気がなさそう (が+な+さ+そう)
-
-  // =========================================================================
-  // Particle → Particle penalties (unnatural adjacent particle chains)
-  // =========================================================================
-  // These particle combinations never occur adjacent in valid Japanese.
-  // Penalizing them helps hiragana words (はし, もも, かし) compete against
-  // false particle-chain interpretations (は+し, も+も, か+し).
-
-  // PART_係 → PART_接続 (は+し, も+て): topic particle directly followed by
-  // conjunctive particle is grammatically invalid (need content between them)
-  setCell(t, EPOS::ParticleTopic, EPOS::ParticleConj, cost::kRare);
-
-  // PART_係 → PART_格 (は+が, は+を, も+に): topic+case markers never stack
-  // adjacent on the same phrase (は...が with content between is fine)
-  setCell(t, EPOS::ParticleTopic, EPOS::ParticleCase, cost::kRare);
-
-  // PART_係 → PART_係 (は+も, も+は): double topic marking never adjacent
-  setCell(t, EPOS::ParticleTopic, EPOS::ParticleTopic, cost::kVeryRare);
-
-  // PART_格 → PART_格 (が+を, を+に, に+で): case particles never stack
-  setCell(t, EPOS::ParticleCase, EPOS::ParticleCase, cost::kVeryRare);
-
-  // Note: PART_格 → PART_係 (に+は, で+は, と+は) is valid Japanese,
-  // so we intentionally do NOT penalize ParticleCase → ParticleTopic.
-
-  // Note: PART_接続 → PART_係 bonus is NOT set here because short particles
-  // like て, し also have PART_接続 and would incorrectly bond with は, も.
-  // Instead, compound particle (≥3 chars) + topic particle bonus is handled
-  // in scorer.cpp with surface length check.
-
-  // =========================================================================
-  // Particle → Other penalties (prevents over-segmentation of hiragana words)
-  // =========================================================================
-  // Patterns like も+ちろん, と+にかく are not valid Japanese morphology
-  // Single-char particles followed by unknown hiragana are usually misanalyses
-
-  // ParticleTopic → Other: penalty (も+ちろん is invalid)
-  setCell(t, EPOS::ParticleTopic, EPOS::Other, cost::kRare);
-
-  // ParticleCase → Other: penalty (と+にかく, に+かく are invalid)
-  setCell(t, EPOS::ParticleCase, EPOS::Other, cost::kRare);
-
-  // ParticleFinal → Other: penalty (ね+random, よ+random are invalid)
-  setCell(t, EPOS::ParticleFinal, EPOS::Other, cost::kRare);
-
-  // ParticleConj → Other: minor penalty (て+random at sentence start is unlikely)
-  // Less penalty than others because て+noun/verb is valid in some contexts
-  setCell(t, EPOS::ParticleConj, EPOS::Other, cost::kUncommon);
-
-  // =========================================================================
-  // Conjunction → Auxiliary penalties
-  // =========================================================================
-  // Conjunctions like でも/だって typically don't directly precede auxiliaries
-  // 彼女でもない should be 彼女|で|も|ない (copula+particle) not 彼女|でも(CONJ)|ない
-
-  // Conjunction → AuxNegativeNai: strong penalty (でも+ない is invalid as CONJ+AUX)
-  setCell(t, EPOS::Conjunction, EPOS::AuxNegativeNai, cost::kVeryRare);
-
-  // Conjunction → ParticleFinal: moderate penalty (でも+な is invalid)
-  // Conjunctions don't typically connect to final particles mid-sentence
-  setCell(t, EPOS::Conjunction, EPOS::ParticleFinal, cost::kRare);
-
-  // Conjunction → VerbShuushikei/VerbRenyokei: strong bonus (でも+行く)
-  // This favors でも+行く as single CONJ+VERB over で+も+行く
-  // Note: PART_副 path is preferred but Viterbi may prune it,
-  // so CONJ path serves as fallback for demo+verb patterns
-  setCell(t, EPOS::Conjunction, EPOS::VerbShuushikei, cost::kStrongBonus);
-  setCell(t, EPOS::Conjunction, EPOS::VerbRenyokei, cost::kStrongBonus);
-
-  // Conjunction → Adjective: strong bonus (でも高い, それでも安い)
-  // Adjectives after conjunctions are natural; without this, VERB candidates win
-  setCell(t, EPOS::Conjunction, EPOS::AdjBasic, cost::kStrongBonus);
-  setCell(t, EPOS::Conjunction, EPOS::AdjStem, cost::kStrongBonus);
-  setCell(t, EPOS::Conjunction, EPOS::AdjRenyokei, cost::kStrongBonus);
-
-  // =========================================================================
-  // Interjection connections
-  // =========================================================================
-
-  // Adverb → Interjection (いったい+何だ) - strong bonus
-  // いったい何だ should tokenize as いったい + 何だ, not いったい + 何 + だ
-  setCell(t, EPOS::Adverb, EPOS::Interjection, cost::kStrongBonus);
-
-  // Interjection → AuxGozaru (おはよう+ござい+ます) - strong bonus
-  // Greetings like おはようございます need this to prefer dict AuxGozaru over verb candidate
-  setCell(t, EPOS::Interjection, EPOS::AuxGozaru, cost::kStrongBonus);
-
-  // Adverb → ParticleTopic (少し+は, もっと+は, ちょっと+は) - minor bonus
-  // Adverb + は/も is a natural pattern; default penalty causes ADV to lose to NOUN
-  setCell(t, EPOS::Adverb, EPOS::ParticleTopic, cost::kMinorBonus);
-
-  // Adverb → Noun (俄然+注目) - moderate bonus
-  // Adverb modifying noun is natural and should beat kanji compound analysis
-  setCell(t, EPOS::Adverb, EPOS::Noun, cost::kModerateBonus);
-
-  // Adverb → Adjective (とても+面白い, 非常に+難しい) - strong bonus
-  // Adverbs very commonly modify adjectives; should prefer ADJ over NOUN
-  setCell(t, EPOS::Adverb, EPOS::AdjBasic, cost::kStrongBonus);
-  setCell(t, EPOS::Adverb, EPOS::AdjRenyokei, cost::kStrongBonus);
-  setCell(t, EPOS::Adverb, EPOS::AdjNaAdj, cost::kStrongBonus);
-  setCell(t, EPOS::Adverb, EPOS::AdjKatt, cost::kStrongBonus);
-
-  // Adverb → AdjStem (さすが+な) - strong penalty
-  // Prevents さすが(ADV)+な(AdjStem of ない); should be ADV+な(AuxCopulaDa連体形)
-  setCell(t, EPOS::Adverb, EPOS::AdjStem, cost::kVeryRare);
-
-  // Adverb → Verb (たまたま+見つけ, すぐ+食べ) - moderate bonus
-  // Adverb modifying verb is natural; prefer dictionary compound over split
-  setCell(t, EPOS::Adverb, EPOS::VerbRenyokei, cost::kModerateBonus);
-  setCell(t, EPOS::Adverb, EPOS::VerbShuushikei, cost::kModerateBonus);
-  setCell(t, EPOS::Adverb, EPOS::VerbTaForm, cost::kModerateBonus);
-
-  // Prefix → Noun (お+待ち, ご+確認) - strong bonus
-  // Honorific prefix + noun is very common and should beat combined forms
-  setCell(t, EPOS::Prefix, EPOS::Noun, cost::kStrongBonus);
-
-  // Prefix → VerbRenyokei (お+待ち as verb renyokei) - strong bonus
-  // お待ち can be verb renyokei (待つ) as well as noun
-  setCell(t, EPOS::Prefix, EPOS::VerbRenyokei, cost::kStrongBonus);
-
-  // =========================================================================
-  // Particle → Interjection penalties
-  // =========================================================================
-  // In running text (not dialogue), particles are never followed by interjections.
-  // Interjections appear at sentence boundaries, not after case/topic particles.
-  // E.g., にはいつ → に+は+いつ, not に+はい(INTJ)+つ
-  setCell(t, EPOS::ParticleCase, EPOS::Interjection, cost::kAlmostNever);
-  setCell(t, EPOS::ParticleTopic, EPOS::Interjection, cost::kAlmostNever);
-  setCell(t, EPOS::ParticleNo, EPOS::Interjection, cost::kAlmostNever);
-  setCell(t, EPOS::ParticleAdverbial, EPOS::Interjection, cost::kAlmostNever);
-  setCell(t, EPOS::ParticleConj, EPOS::Interjection, cost::kAlmostNever);
-  setCell(t, EPOS::ParticleQuote, EPOS::Interjection, cost::kAlmostNever);
-  setCell(t, EPOS::ParticleFinal, EPOS::Interjection, cost::kAlmostNever);
-
-  // =========================================================================
-  // Classical assertion/past なり/けり (文語断定・過去)
-  // =========================================================================
-  // AuxClassicalNari → AuxClassicalKeri (なり+けり: 春なりけり) - extreme bonus
-  // なり alone competes with the VerbRenyokei(なる) reading and the character-speech
-  // copula reading (でナリ系), so this chain-specific bonus is what makes the
-  // classical parse win once けり is present; without a following けり, なり still
-  // loses to those readings (see individual word tests for それなり/大人なり/etc.).
-  // Needs to be extreme (not just very-strong) to also beat the single-kanji-noun
-  // fallback penalty that makes the whole thing collapse into one unsplit
-  // kanji_hira_compound NOUN token (e.g. 春 with no dictionary entry of its own).
-  setCell(t, EPOS::AuxClassicalNari, EPOS::AuxClassicalKeri, cost::kExtremeBonus);
-
-  // 連体形 なる (壮大なる計画): a na-adjective stem + なる is the classical adnominal 断定, not
-  // the verb 成る. Only the left context (AdjNaAdj→なる) is rewarded: a right-context なる→Noun
-  // bonus would misfire on the 終助詞 なり (鳴るなり法隆寺), and 〜になる/〜となる keep the verb
-  // reading because a particle, not a na-adjective stem, precedes なる.
-  setCell(t, EPOS::AdjNaAdj, EPOS::AuxClassicalNari, cost::kStrongBonus);
-
-  // Classical タリ活用 連体形 たる (堂々たる, 確固たる, 暗澹たる). It is adnominal, so it
-  // MUST be followed by a nominal (…たる態度) or the special particle や (…たるや). Keying
-  // the bonus on this RIGHT-hand context — not on the preceding noun — is what separates
-  // the auxiliary from a single-kanji-stem verb: sentence-final 当たる/隔たる have nothing
-  // after たる, so they keep the verb reading, while 堂々たる態度 gets the boost. (A
-  // left-side Noun→たる bonus cannot make this distinction: the single-kanji verb reading
-  // 当たる is itself heavily penalized, so any left bonus wrongly flips it to 当|たる.)
-  // A Suffix→たる bonus IS safe (a single-kanji verb stem is a Noun, never a Suffix) and
-  // keeps the nominalizer さ as a Suffix in 美しさ+たる (…さたるや).
-  setCell(t, EPOS::Suffix, EPOS::AuxClassicalTari, cost::kStrongBonus);
-  setCell(t, EPOS::AuxClassicalTari, EPOS::Noun, cost::kStrongBonus);
-  setCell(t, EPOS::AuxClassicalTari, EPOS::ParticleBinding, cost::kStrongBonus);
-  setCell(t, EPOS::AuxClassicalTari, EPOS::ParticleCase, cost::kStrongBonus);
-
-  // AuxClassicalBeshi (当為べし 連体形 べき). べし attaches to the 連体形 of ラ変-type words,
-  // so たる+べき joins (来たるべき, 然るべき); as a 連体形 it must precede a nominal, hence
-  // べき→Noun/NounFormal (来たるべき日, やるべきこと). The 終止形→べき and 受身→べき cells
-  // migrate the former AuxVolitional bonuses (食べるべき, 書かれるべき) now that べき is its
-  // own EPOS; the original AuxVolitional cells stay in place for genuine う/よう volitional paths.
-  setCell(t, EPOS::AuxClassicalTari, EPOS::AuxClassicalBeshi, cost::kStrongBonus);
-  setCell(t, EPOS::AuxClassicalBeshi, EPOS::Noun, cost::kModerateBonus);
-  setCell(t, EPOS::AuxClassicalBeshi, EPOS::NounFormal, cost::kModerateBonus);
-  setCell(t, EPOS::VerbShuushikei, EPOS::AuxClassicalBeshi, cost::kStrongBonus);
-  setCell(t, EPOS::AuxPassive, EPOS::AuxClassicalBeshi, cost::kStrongBonus);
+void setParticleAndLexicalCosts(BigramMatrix& table) {
+  static constexpr BigramRule kRules[] = {
+      // =========================================================================
+      // Particle → Various (Particles can connect to many things)
+      // =========================================================================
+
+      // ParticleAdverbial → ParticleCase (だけ+で, ばかり+に, ほど+に) - very strong bonus
+      // Without this, PART_副→VERB_連用 bonus makes で(出る) beat で(格助詞) after だけ
+      // Needs to overcome: base bigram diff (0.5-0.2=0.3) + VERB_連用 bonus (-0.8)
+      {EPOS::ParticleAdverbial, EPOS::ParticleCase, cost::kVeryStrongBonus},
+
+      // ParticleAdverbial → ParticleNo (など+の, まで+の, ばかり+の)
+      // Very strong bonus: adverbial particle + の is extremely natural.
+      // Needs to overcome DET→NOUN bonus (-2.5) when competing with な+どの path.
+      {EPOS::ParticleAdverbial, EPOS::ParticleNo, cost::kVeryStrongBonus},
+
+      // ParticleAdverbial → VerbRenyokei (かも+しれ in かもしれない, など+あり, でも+あり)
+      // - strong bonus. Favors かも+しれ+ない over か+もし+れない and keeps a real
+      //   verb renyokei after a subsidiary particle. A single-mora renyokei after
+      //   this particle is a false over-split (し+かね misread as しか+ね←寝る) and
+      //   is penalized by surface length in scorer_connection_cost.cpp.
+      {EPOS::ParticleAdverbial, EPOS::VerbRenyokei, cost::kStrongBonus},
+
+      // ParticleAdverbial → VerbShuushikei (でも+行く) - strong bonus
+      // This favors でも+行く over で+も+行く
+      {EPOS::ParticleAdverbial, EPOS::VerbShuushikei, cost::kStrongBonus},
+
+      // ParticleCase → Adverb (か+もし) - moderate penalty
+      // This discourages splitting かもしれない as か+もし+れない
+      {EPOS::ParticleCase, EPOS::Adverb, cost::kRare},
+
+      // ParticleCase → Noun (が+学生) - neutral
+      {EPOS::ParticleCase, EPOS::Noun, cost::kNeutral},
+
+      // ParticleCase → VerbShuushikei (を+食べる) - neutral
+      {EPOS::ParticleCase, EPOS::VerbShuushikei, cost::kNeutral},
+
+      // A renyokei immediately before a case particle normally functions as a
+      // nominalization (香り+を, 読み+を, 流れ+に). Left context can override this
+      // for purpose constructions such as 本を買いに行く.
+      {EPOS::VerbRenyokei, EPOS::ParticleCase, cost::kStrong},
+
+      // A continuative verb immediately before の normally denotes a lexicalized
+      // nominal form (思い+の, 帰り+の), whose search unit is a noun. Finite verbs
+      // remain available for the productive nominalizer construction (食べる+の).
+      {EPOS::VerbRenyokei, EPOS::ParticleNo, cost::kStrong},
+
+      // ParticleTopic/ParticleCase → Pronoun (は+いつ, は+どこ, に+何, で+誰)
+      // Particles naturally precede pronouns in questions and relative clauses
+      // は+いつ, も+何, に+どこ are very common patterns
+      {EPOS::ParticleTopic, EPOS::Pronoun, cost::kModerateBonus},
+      {EPOS::ParticleCase, EPOS::Pronoun, cost::kMinorBonus},
+
+      // ParticleTopic → VerbShuushikei (は+食べる) - neutral
+      {EPOS::ParticleTopic, EPOS::VerbShuushikei, cost::kNeutral},
+
+      // ParticleTopic → VerbRenyokei (は+あり in はありますか) - minor bonus
+      // Helps は+あり+ます beat はあり+ます (particle-starting verb)
+      // Note: ParticleCase → VerbRenyokei is intentionally not added to avoid
+      // breaking という patterns (と is ParticleCase, いう is VerbRenyokei)
+      {EPOS::ParticleTopic, EPOS::VerbRenyokei, cost::kMinorBonus},
+
+      // ParticleTopic → AdjBasic (は+良い, も+美しい) - minor bonus
+      // Common pattern: 係助詞 followed by i-adjective
+      {EPOS::ParticleTopic, EPOS::AdjBasic, cost::kMinorBonus},
+
+      // ParticleConj → VerbShuushikei (て+食べる for compound verbs) - minor penalty
+      // (te-form usually followed by auxiliary, not new verb)
+      {EPOS::ParticleConj, EPOS::VerbShuushikei, cost::kUncommon},
+
+      // ParticleConj → AuxAspectIru (て+いる) - strong bonus for the aspectual construction
+      // Allows 食べ+て+いる to beat unified 食べて+いる path
+      {EPOS::ParticleConj, EPOS::AuxAspectIru, cost::kStrongBonus},
+
+      // ParticleConj → AuxAspectShimau (て+しまう) - strong bonus
+      {EPOS::ParticleConj, EPOS::AuxAspectShimau, cost::kStrongBonus},
+
+      // ParticleConj → AuxAspectOku (て+おく) - strong bonus
+      {EPOS::ParticleConj, EPOS::AuxAspectOku, cost::kStrongBonus},
+
+      // ParticleConj → AuxAspectMiru (て+みる) - strong bonus
+      {EPOS::ParticleConj, EPOS::AuxAspectMiru, cost::kStrongBonus},
+
+      // Emphatic も preserves the te-form attachment in 〜てもみる/〜でもみる.
+      // AuxAspectMiru candidates are context-gated during generation, so this does
+      // not license a standalone particle + lexical みる sequence.
+      {EPOS::ParticleAdverbial, EPOS::AuxAspectMiru, cost::kVeryStrongBonus},
+      {EPOS::ParticleTopic, EPOS::AuxAspectMiru, cost::kVeryStrongBonus},
+
+      // ParticleConj → AuxAspectIku (て+いく) - strong bonus
+      {EPOS::ParticleConj, EPOS::AuxAspectIku, cost::kStrongBonus},
+
+      // ParticleConj → AuxAspectKuru (て+くる) - strong bonus
+      {EPOS::ParticleConj, EPOS::AuxAspectKuru, cost::kStrongBonus},
+
+      // =========================================================================
+      // Penalties: Invalid or Rare Connections
+      // =========================================================================
+
+      // Suffix → Adverb (さ+そう) - strong penalty
+      // Prevents なさそう → な + さ(SUFFIX) + そう(ADV) over correct な + さ + そう(AUX)
+      // Suffix + Adverb is grammatically unusual; そう after さ is AuxAppearance
+      {EPOS::Suffix, EPOS::Adverb, cost::kVeryRare},
+
+      // AuxVolitional → ParticleCase (う+と quotative) - minor bonus
+      // Volitional + と is common (書こうと思う, 食べようとする)
+      // Keep bonus small to avoid changing よう POS in 次のように (NounFormal vs AuxVolitional)
+      {EPOS::AuxVolitional, EPOS::ParticleCase, cost::kMinorBonus},
+
+      // AuxVolitional → ParticleConj (う+として) - strong penalty
+      // Volitional form (う/よう) is not followed by conjunctive particles (として, ながら)
+      // 書こうとしている should split as 書こ+う+と+し+て+いる, not 書こ+う+として+いる
+      {EPOS::AuxVolitional, EPOS::ParticleConj, cost::kStrong},
+
+      // AuxAspectOku → AuxVolitional (とい+う) - strong penalty
+      // Prevents とい+う from beating という (quotative determiner)
+      // とい (contracted ておく form) + う (volitional) is grammatically invalid
+      {EPOS::AuxAspectOku, EPOS::AuxVolitional, cost::kVeryRare},
+
+      // AuxAspectOku → ParticleQuote (とい+って) - strong penalty
+      // Prevents とい+って from beating と+いっ+て (と言って)
+      // とい (contracted ておく form) + って (quote particle) is unlikely in this context
+      {EPOS::AuxAspectOku, EPOS::ParticleQuote, cost::kVeryRare},
+
+      // VerbShuushikei → AuxTenseMasu (食べる+ます) - prohibitive
+      // (ます attaches to renyokei, not shuushikei)
+      {EPOS::VerbShuushikei, EPOS::AuxTenseMasu, cost::kAlmostNever},
+
+      // VerbShuushikei → AuxDesireTai (食べる+たい) - prohibitive
+      {EPOS::VerbShuushikei, EPOS::AuxDesireTai, cost::kAlmostNever},
+
+      // VerbShuushikei → AuxTenseTa (食べる+た) - prohibitive
+      {EPOS::VerbShuushikei, EPOS::AuxTenseTa, cost::kAlmostNever},
+
+      // AuxTenseTa → AuxTenseTa (た+た) - prohibitive
+      {EPOS::AuxTenseTa, EPOS::AuxTenseTa, cost::kAlmostNever},
+
+      // AuxTenseTa → AuxTenseMasu (た+ます) - prohibitive
+      {EPOS::AuxTenseTa, EPOS::AuxTenseMasu, cost::kAlmostNever},
+
+      // AuxTenseTa → AuxNegative (た+ない/ん) - prohibitive
+      // Past tense cannot be followed by negation; correct order is negation→past
+      {EPOS::AuxTenseTa, EPOS::AuxNegativeNai, cost::kAlmostNever},
+      {EPOS::AuxTenseTa, EPOS::AuxNegativeNu, cost::kAlmostNever},
+
+      // AuxTenseTa → AuxAspectKuru (た+き) - prohibitive
+      // Prevents いただき → い+た+だ+き (きた split creates standalone き entry)
+      {EPOS::AuxTenseTa, EPOS::AuxAspectKuru, cost::kAlmostNever},
+
+      // AuxTenseTa → AuxGaru (た+がる) - strong penalty
+      // Desiderative がる attaches to renyokei/stem (食べ+たがる, 怖+がる), never to
+      // past た. Prevents 食べたがる → 食べ+た+がる over 食べ+たがる (願望 auxiliary).
+      {EPOS::AuxTenseTa, EPOS::AuxGaru, cost::kStrong},
+
+      // AuxCopulaDa → AuxAspectKuru (だ+き) - prohibitive
+      // Prevents いただき → い+た+だ+き
+      {EPOS::AuxCopulaDa, EPOS::AuxAspectKuru, cost::kAlmostNever},
+
+      // ParticleNo → AuxTenseTa (ん/の+た) - prohibitive
+      // Nominalizer の/ん is followed by copula (のだ/のです), not past tense
+      {EPOS::ParticleNo, EPOS::AuxTenseTa, cost::kAlmostNever},
+
+      // ParticleFinal → VerbShuushikei (ね+食べる) - strong penalty
+      // (sentence-final particles rarely continue to verbs)
+      {EPOS::ParticleFinal, EPOS::VerbShuushikei, cost::kVeryRare},
+
+      // ParticleFinal → VerbOnbinkei (な+いん) - prohibit
+      // (prevents ないんだ → な+いん+だ over ない+ん+だ)
+      {EPOS::ParticleFinal, EPOS::VerbOnbinkei, cost::kAlmostNever},
+
+      // ParticleFinal → VerbMizenkei (な+さ) - strong penalty
+      // (prevents なさそう → な(終助詞)+さ(未然)+そう over な(形容詞)+さ(接尾辞)+そう)
+      {EPOS::ParticleFinal, EPOS::VerbMizenkei, cost::kVeryRare},
+
+      // AuxCopulaDa → VerbOnbinkei (な+いん) - prohibit
+      // (prevents ないんだ → な+いん+だ over ない+ん+だ)
+      {EPOS::AuxCopulaDa, EPOS::VerbOnbinkei, cost::kAlmostNever},
+
+      // AuxCopulaDa → VerbMizenkei (だ+くさ) - strong penalty
+      // Copula followed by verb mizenkei is grammatically unusual
+      // Prevents 盛りだくさん → 盛り+だ+くさ+ん over dictionary entry
+      {EPOS::AuxCopulaDa, EPOS::VerbMizenkei, cost::kVeryRare},
+
+      // AuxCopulaDa → VerbRenyokei/VerbShuushikei - penalty for copula + general verb
+      // E.g., 公園で遊ぶ should be NOUN+PART_格+VERB, not NOUN+AUX_断定+VERB
+      // Copula 「で」 rarely followed by general verbs (usually followed by ある/ない/ございます)
+      // This helps PART_格(で)+VERB win over AUX_断定(で)+VERB
+      {EPOS::AuxCopulaDa, EPOS::VerbRenyokei, cost::kMinor},
+      {EPOS::AuxCopulaDa, EPOS::VerbShuushikei, cost::kMinor},
+
+      // ParticleFinal → ParticleFinal (よ+ね) - minor bonus (common pattern)
+      {EPOS::ParticleFinal, EPOS::ParticleFinal, cost::kMinorBonus},
+
+      // ParticleFinal → ParticleNo (か+の) - moderate bonus (indefinite pronoun pattern)
+      // いくつかの, 何かの, 誰かの, どれかの - か functions as indefinite marker, not sentence-ender
+      {EPOS::ParticleFinal, EPOS::ParticleNo, cost::kModerateBonus},
+
+      // =========================================================================
+      // Copula → Negation (ではない pattern)
+      // =========================================================================
+
+      // AuxCopulaDa (で form) → ParticleTopic (で+は/も in ではない/でもない)
+      // Moderate bonus to promote 彼女|で|も|ない over 彼女|でも|ない
+      {EPOS::AuxCopulaDa, EPOS::ParticleTopic, cost::kModerateBonus},
+
+      // AuxCopulaDa → AuxNegativeNai (じゃ+ない, で+ない) - moderate bonus
+      {EPOS::AuxCopulaDa, EPOS::AuxNegativeNai, cost::kModerateBonus},
+
+      // AuxCopulaDa → AuxGozaru (で+ございます) - strong bonus
+      // Must beat the で(出る連用形)+ございます verb-candidate reading
+      {EPOS::AuxCopulaDa, EPOS::AuxGozaru, cost::kStrongBonus},
+
+      // AuxGozaru → AuxTenseMasu (ござい+ます) - strong bonus to prevent verb candidate win
+      // Without this, verb_candidates generates "ございる" which beats dictionary "ござる"
+      {EPOS::AuxGozaru, EPOS::AuxTenseMasu, cost::kStrongBonus},
+
+      // AuxCopulaDa → AuxCopulaDa (で+ある/あれ) - strong bonus for である pattern
+      // MeCab splits である as で(だ連用形) + ある(助動詞), not で(出る連用形) + ある
+      {EPOS::AuxCopulaDa, EPOS::AuxCopulaDa, cost::kStrongBonus},
+
+      // =========================================================================
+      // Appearance/Conjecture connections
+      // =========================================================================
+
+      // VerbRenyokei → AuxAppearanceSou (食べ+そう) - very strong bonus
+      // Must beat adverb bonus (-1.0 for 2-char hiragana) to prefer auxiliary
+      {EPOS::VerbRenyokei, EPOS::AuxAppearanceSou, cost::kVeryStrongBonus},
+
+      // Na-adjective stems take appearance そう directly (静か+そう).
+      {EPOS::AdjNaAdj, EPOS::AuxAppearanceSou, cost::kStrongBonus},
+
+      // AuxAspectShimau → AuxAppearanceSou (しまい+そう) - strong bonus
+      // しまいそう (about to end up doing) is natural; AUX chain must beat ADJ+ADV path
+      // Strong bonus needed because そう(ADV) has dict bonus (-0.5) vs そう(AUX) cost (0.4)
+      {EPOS::AuxAspectShimau, EPOS::AuxAppearanceSou, cost::kStrongBonus},
+
+      // Other → AuxAppearanceSou - penalty (様態そう shouldn't appear at BOS)
+      // At sentence start, そう should be demonstrative na-adjective, not appearance aux
+      {EPOS::Other, EPOS::AuxAppearanceSou, cost::kMinor},
+
+      // Other → AuxAspectIku - penalty (いく as aspect aux shouldn't appear at BOS)
+      // At sentence start, いく should be verb (行く) or part of pronoun (いくつ)
+      // AuxAspectIku is only valid after て-form (食べていく, 走っていく)
+      {EPOS::Other, EPOS::AuxAspectIku, cost::kRare},
+
+      // Particle → AuxAppearanceSou - penalty (様態そう shouldn't follow particles)
+      // E.g., そうかもしれません: そう is demonstrative, not appearance auxiliary
+      {EPOS::ParticleCase, EPOS::AuxAppearanceSou, cost::kMinor},
+      {EPOS::ParticleTopic, EPOS::AuxAppearanceSou, cost::kMinor},
+      {EPOS::ParticleAdverbial, EPOS::AuxAppearanceSou, cost::kMinor},
+      {EPOS::ParticleQuote, EPOS::AuxAppearanceSou, cost::kMinor},
+
+      // AdjBasic → AuxConjectureRashii (美しい+らしい) - strong bonus
+      {EPOS::AdjBasic, EPOS::AuxConjectureRashii, cost::kStrongBonus},
+
+      // VerbShuushikei → AuxConjectureRashii (食べる+らしい) - moderate bonus
+      {EPOS::VerbShuushikei, EPOS::AuxConjectureRashii, cost::kModerateBonus},
+
+      // VerbShuushikei → AuxAppearanceSou (食べる+そう hearsay) - strong bonus
+      // Hearsay そう (伝聞) attaches to 終止形: 食べる+そうだ, する+そうです
+      // Different from appearance そう (様態) which attaches to 連用形: 食べ+そう, し+そう
+      {EPOS::VerbShuushikei, EPOS::AuxAppearanceSou, cost::kStrongBonus},
+
+      // VerbShuushikei → AuxConjectureMitai (食べる+みたい) - strong bonus
+      {EPOS::VerbShuushikei, EPOS::AuxConjectureMitai, cost::kStrongBonus},
+
+      // VerbShuushikei → AuxVolitional (食べる+べき) - strong bonus for obligation
+      {EPOS::VerbShuushikei, EPOS::AuxVolitional, cost::kStrongBonus},
+
+      // AdjBasic → AuxConjectureMitai (美しい+みたい) - moderate bonus
+      {EPOS::AdjBasic, EPOS::AuxConjectureMitai, cost::kModerateBonus},
+
+      // Noun → AuxConjectureMitai (学生+みたい) - moderate bonus
+      {EPOS::Noun, EPOS::AuxConjectureMitai, cost::kModerateBonus},
+
+      // Noun → AuxConjectureRashii (春+らしい) - strong bonus
+      {EPOS::Noun, EPOS::AuxConjectureRashii, cost::kStrongBonus},
+
+      // AuxConjectureRashii → AuxNegativeNai (子供らしく+ない) - extreme bonus, mirroring
+      // AdjRenyokei → AuxNegativeNai. らしく is the 連用形 of the auxiliary らしい and the
+      // only AuxConjectureRashii form that precedes ない, so this negation split (子供 +
+      // らしく + ない) is favored the same way as a genuine adjective's く-form + ない.
+      // Genuine derived adjectives (素晴らしい) stay merged via their dict-inflected 連用形.
+      {EPOS::AuxConjectureRashii, EPOS::AuxNegativeNai, cost::kExtremeBonus},
+
+      // AuxAspectIru → AuxConjectureRashii/Mitai (ている+らしい/みたい) - mirror the
+      // VerbShuushikei rows above so the aspectual reading of the 補助動詞 いる is not
+      // undercut at the following conjecture aux. Without these, the Aux→Aux base cost
+      // cancels いる's aspect bonus and the main-verb いる reading wrongly wins.
+      {EPOS::AuxAspectIru, EPOS::AuxConjectureRashii, cost::kModerateBonus},
+      {EPOS::AuxAspectIru, EPOS::AuxConjectureMitai, cost::kStrongBonus},
+
+      // AuxConjectureMitai → AuxCopulaDa (みたい+な) - strong bonus because な is
+      // the attributive form of the following copula.
+      {EPOS::AuxConjectureMitai, EPOS::AuxCopulaDa, cost::kStrongBonus},
+
+      // =========================================================================
+      // Prohibited/Penalized Connections (Grammatically Invalid or Unlikely)
+      // =========================================================================
+
+      // Note: VerbRenyokei → VerbRenyokei is NOT explicitly bonused because
+      // a bonus breaks compound verbs (抱きしめて→抱き+しめ+て).
+      // Legitimate patterns like 食べ+すぎる are handled by compound verb path.
+      // Honorific patterns (待ち+いただけ) are handled by penalizing false
+      // godan-wa candidates in verb_candidates_kanji.cpp.
+
+      // VerbTaForm → VerbMizenkei (盛りだ+くさ) - strong penalty
+      // Two verbs in sequence without auxiliary/particle is grammatically unusual
+      // Prevents 盛りだくさん → 盛りだ+くさ+ん over dictionary entry
+      {EPOS::VerbTaForm, EPOS::VerbMizenkei, cost::kVeryRare},
+
+      // VerbRenyokei → VerbMizenkei (盛り+だくさ) - strong penalty
+      // Renyokei followed by mizenkei is grammatically unusual
+      // Legitimate patterns like 食べ+すぎ use Renyokei→Renyokei (すぎ is renyokei)
+      {EPOS::VerbRenyokei, EPOS::VerbMizenkei, cost::kVeryRare},
+
+      // VerbRenyokei → VerbOnbinkei (突き+刺さっ) - minor penalty
+      // Verb renyokei directly followed by another verb in onbin form only occurs
+      // in compound verbs (突き刺さる, 走り出す). When the compound is in the
+      // dictionary, the merged token should be preferred over the split path.
+      // Surface-based bonus in scorer.cpp adds extra penalty for kanji verbs.
+      {EPOS::VerbRenyokei, EPOS::VerbOnbinkei, cost::kNegligible},
+
+      // AdjBasic → VerbMizenkei (盛りだく+さ) - strong penalty
+      // Adjective 終止形 followed by verb 未然形 is grammatically unusual
+      // Prevents 盛りだくさん → 盛りだく+さ+ん over dictionary entry
+      {EPOS::AdjBasic, EPOS::VerbMizenkei, cost::kVeryRare},
+
+      // AdjBasic → AuxTenseTa (対応い+た) - severe penalty
+      // An i-adjective 終止形 directly followed by past た is grammatically
+      // impossible: the adjectival past is 連用形かっ + た (高かっ+た), which
+      // travels the separate ADJ_かっ → AUX_過去 edge. Killing this edge removes
+      // fabricated i-adjective paths such as 対応い+た+しか+ね for 対応いたしかねます.
+      {EPOS::AdjBasic, EPOS::AuxTenseTa, cost::kSevere},
+
+      // AdjStem → AuxConjectureMitai: unnatural (美し+みたい should be 美しい+みたい)
+      {EPOS::AdjStem, EPOS::AuxConjectureMitai, cost::kAlmostNever},
+
+      // AdjStem → AuxConjectureRashii: unnatural (美し+らしい should be 美しい+らしい)
+      {EPOS::AdjStem, EPOS::AuxConjectureRashii, cost::kAlmostNever},
+
+      // AdjStem → AdjBasic: prohibit (好+みらしい should be 好み+らしい)
+      // Adjective stems don't connect to unrelated i-adjective endings
+      {EPOS::AdjStem, EPOS::AdjBasic, cost::kAlmostNever},
+
+      // AdjStem → Verb/Aux: prohibit (な+い should not split ない as な(AdjStem)+い)
+      // な(AdjStem of ない) should only connect to さ(nominalization) or そう(appearance)
+      // Also prevents 高+すぎた winning over 高+すぎ+た
+      {EPOS::AdjStem, EPOS::VerbRenyokei, cost::kAlmostNever},
+      {EPOS::AdjStem, EPOS::VerbShuushikei, cost::kAlmostNever},
+      {EPOS::AdjStem, EPOS::VerbMizenkei, cost::kAlmostNever},
+      {EPOS::AdjStem, EPOS::VerbTaForm, cost::kAlmostNever},
+      {EPOS::AdjStem, EPOS::VerbTaraForm, cost::kAlmostNever},
+      {EPOS::AdjStem, EPOS::AuxAspectIru, cost::kAlmostNever},    // な+い(いる)
+      {EPOS::AdjNaAdj, EPOS::AuxAspectIru, cost::kAlmostNever},   // 性的+い(いる)
+      {EPOS::AdjStem, EPOS::AuxNegativeNai, cost::kAlmostNever},  // な+ない
+      {EPOS::AdjStem, EPOS::Other, cost::kAlmostNever},           // な+い(OTHER)
+
+      // Note: Particle → AdjStem is allowed for patterns like やる気がなさそう (が+な+さ+そう)
+
+      // =========================================================================
+      // Particle → Particle penalties (unnatural adjacent particle chains)
+      // =========================================================================
+      // These particle combinations never occur adjacent in valid Japanese.
+      // Penalizing them helps hiragana words (はし, もも, かし) compete against
+      // false particle-chain interpretations (は+し, も+も, か+し).
+
+      // PART_係 → PART_接続 (は+し, も+て): topic particle directly followed by
+      // conjunctive particle is grammatically invalid (need content between them)
+      {EPOS::ParticleTopic, EPOS::ParticleConj, cost::kRare},
+
+      // PART_係 → PART_格 (は+が, は+を, も+に): topic+case markers never stack
+      // adjacent on the same phrase (は...が with content between is fine)
+      {EPOS::ParticleTopic, EPOS::ParticleCase, cost::kRare},
+
+      // PART_係 → PART_係 (は+も, も+は): double topic marking never adjacent
+      {EPOS::ParticleTopic, EPOS::ParticleTopic, cost::kVeryRare},
+
+      // PART_格 → PART_格 (が+を, を+に, に+で): case particles never stack
+      {EPOS::ParticleCase, EPOS::ParticleCase, cost::kVeryRare},
+
+      // Note: PART_格 → PART_係 (に+は, で+は, と+は) is valid Japanese,
+      // so we intentionally do NOT penalize ParticleCase → ParticleTopic.
+
+      // Note: PART_接続 → PART_係 bonus is NOT set here because short particles
+      // like て, し also have PART_接続 and would incorrectly bond with は, も.
+      // Instead, compound particle (≥3 chars) + topic particle bonus is handled
+      // in scorer.cpp with surface length check.
+
+      // =========================================================================
+      // Particle → Other penalties (prevents over-segmentation of hiragana words)
+      // =========================================================================
+      // Patterns like も+ちろん, と+にかく are not valid Japanese morphology
+      // Single-char particles followed by unknown hiragana are usually misanalyses
+
+      // ParticleTopic → Other: penalty (も+ちろん is invalid)
+      {EPOS::ParticleTopic, EPOS::Other, cost::kRare},
+
+      // ParticleCase → Other: penalty (と+にかく, に+かく are invalid)
+      {EPOS::ParticleCase, EPOS::Other, cost::kRare},
+
+      // ParticleFinal → Other: penalty (ね+random, よ+random are invalid)
+      {EPOS::ParticleFinal, EPOS::Other, cost::kRare},
+
+      // ParticleConj → Other: minor penalty (て+random at sentence start is unlikely)
+      // Less penalty than others because て+noun/verb is valid in some contexts
+      {EPOS::ParticleConj, EPOS::Other, cost::kUncommon},
+
+      // =========================================================================
+      // Conjunction → Auxiliary penalties
+      // =========================================================================
+      // Conjunctions like でも/だって typically don't directly precede auxiliaries
+      // 彼女でもない should be 彼女|で|も|ない (copula+particle) not 彼女|でも(CONJ)|ない
+
+      // Conjunction → AuxNegativeNai: strong penalty (でも+ない is invalid as CONJ+AUX)
+      {EPOS::Conjunction, EPOS::AuxNegativeNai, cost::kVeryRare},
+
+      // Conjunction → ParticleFinal: moderate penalty (でも+な is invalid)
+      // Conjunctions don't typically connect to final particles mid-sentence
+      {EPOS::Conjunction, EPOS::ParticleFinal, cost::kRare},
+
+      // Conjunction → VerbShuushikei/VerbRenyokei: strong bonus (でも+行く)
+      // This favors でも+行く as single CONJ+VERB over で+も+行く
+      // Note: PART_副 path is preferred but Viterbi may prune it,
+      // so CONJ path serves as fallback for demo+verb patterns
+      {EPOS::Conjunction, EPOS::VerbShuushikei, cost::kStrongBonus},
+      {EPOS::Conjunction, EPOS::VerbRenyokei, cost::kStrongBonus},
+
+      // Conjunction → Adjective: strong bonus (でも高い, それでも安い)
+      // Adjectives after conjunctions are natural; without this, VERB candidates win
+      {EPOS::Conjunction, EPOS::AdjBasic, cost::kStrongBonus},
+      {EPOS::Conjunction, EPOS::AdjStem, cost::kStrongBonus},
+      {EPOS::Conjunction, EPOS::AdjRenyokei, cost::kStrongBonus},
+
+      // =========================================================================
+      // Interjection connections
+      // =========================================================================
+
+      // Adverb → Interjection (いったい+何だ) - strong bonus
+      // いったい何だ should tokenize as いったい + 何だ, not いったい + 何 + だ
+      {EPOS::Adverb, EPOS::Interjection, cost::kStrongBonus},
+
+      // Interjection → AuxGozaru (おはよう+ござい+ます) - strong bonus
+      // Greetings like おはようございます need this to prefer dict AuxGozaru over verb candidate
+      {EPOS::Interjection, EPOS::AuxGozaru, cost::kStrongBonus},
+
+      // Adverb → ParticleTopic (少し+は, もっと+は, ちょっと+は) - minor bonus
+      // Adverb + は/も is a natural pattern; default penalty causes ADV to lose to NOUN
+      {EPOS::Adverb, EPOS::ParticleTopic, cost::kMinorBonus},
+
+      // Adverb → Noun (俄然+注目) - moderate bonus
+      // Adverb modifying noun is natural and should beat kanji compound analysis
+      {EPOS::Adverb, EPOS::Noun, cost::kModerateBonus},
+
+      // Adverb → Adjective (とても+面白い, 非常に+難しい) - strong bonus
+      // Adverbs very commonly modify adjectives; should prefer ADJ over NOUN
+      {EPOS::Adverb, EPOS::AdjBasic, cost::kStrongBonus},
+      {EPOS::Adverb, EPOS::AdjRenyokei, cost::kStrongBonus},
+      {EPOS::Adverb, EPOS::AdjNaAdj, cost::kStrongBonus},
+      {EPOS::Adverb, EPOS::AdjKatt, cost::kStrongBonus},
+
+      // Adverb → AdjStem (さすが+な) - strong penalty
+      // Prevents さすが(ADV)+な(AdjStem of ない); should be ADV+な(AuxCopulaDa連体形)
+      {EPOS::Adverb, EPOS::AdjStem, cost::kVeryRare},
+
+      // Adverb → Verb (たまたま+見つけ, すぐ+食べ) - moderate bonus
+      // Adverb modifying verb is natural; prefer dictionary compound over split
+      {EPOS::Adverb, EPOS::VerbRenyokei, cost::kModerateBonus},
+      {EPOS::Adverb, EPOS::VerbShuushikei, cost::kModerateBonus},
+      {EPOS::Adverb, EPOS::VerbTaForm, cost::kModerateBonus},
+
+      // Prefix → Noun (お+待ち, ご+確認) - strong bonus
+      // Honorific prefix + noun is very common and should beat combined forms
+      {EPOS::Prefix, EPOS::Noun, cost::kStrongBonus},
+
+      // Prefix → VerbRenyokei (お+待ち as verb renyokei) - strong bonus
+      // お待ち can be verb renyokei (待つ) as well as noun
+      {EPOS::Prefix, EPOS::VerbRenyokei, cost::kStrongBonus},
+
+      // =========================================================================
+      // Particle → Interjection penalties
+      // =========================================================================
+      // In running text (not dialogue), particles are never followed by interjections.
+      // Interjections appear at sentence boundaries, not after case/topic particles.
+      // E.g., にはいつ → に+は+いつ, not に+はい(INTJ)+つ
+      {EPOS::ParticleCase, EPOS::Interjection, cost::kAlmostNever},
+      {EPOS::ParticleTopic, EPOS::Interjection, cost::kAlmostNever},
+      {EPOS::ParticleNo, EPOS::Interjection, cost::kAlmostNever},
+      {EPOS::ParticleAdverbial, EPOS::Interjection, cost::kAlmostNever},
+      {EPOS::ParticleConj, EPOS::Interjection, cost::kAlmostNever},
+      {EPOS::ParticleQuote, EPOS::Interjection, cost::kAlmostNever},
+      {EPOS::ParticleFinal, EPOS::Interjection, cost::kAlmostNever},
+
+      // =========================================================================
+      // Classical assertion/past なり/けり (文語断定・過去)
+      // =========================================================================
+      // AuxClassicalNari → AuxClassicalKeri (なり+けり: 春なりけり) - extreme bonus
+      // なり alone competes with the VerbRenyokei(なる) reading and the character-speech
+      // copula reading (でナリ系), so this chain-specific bonus is what makes the
+      // classical parse win once けり is present; without a following けり, なり still
+      // loses to those readings (see individual word tests for それなり/大人なり/etc.).
+      // Needs to be extreme (not just very-strong) to also beat the single-kanji-noun
+      // fallback penalty that makes the whole thing collapse into one unsplit
+      // kanji_hira_compound NOUN token (e.g. 春 with no dictionary entry of its own).
+      {EPOS::AuxClassicalNari, EPOS::AuxClassicalKeri, cost::kExtremeBonus},
+
+      // 連体形 なる (壮大なる計画): a na-adjective stem + なる is the classical adnominal 断定, not
+      // the verb 成る. Only the left context (AdjNaAdj→なる) is rewarded: a right-context なる→Noun
+      // bonus would misfire on the 終助詞 なり (鳴るなり法隆寺), and 〜になる/〜となる keep the verb
+      // reading because a particle, not a na-adjective stem, precedes なる.
+      {EPOS::AdjNaAdj, EPOS::AuxClassicalNari, cost::kStrongBonus},
+
+      // Classical タリ活用 連体形 たる (堂々たる, 確固たる, 暗澹たる). It is adnominal, so it
+      // MUST be followed by a nominal (…たる態度) or the special particle や (…たるや). Keying
+      // the bonus on this RIGHT-hand context — not on the preceding noun — is what separates
+      // the auxiliary from a single-kanji-stem verb: sentence-final 当たる/隔たる have nothing
+      // after たる, so they keep the verb reading, while 堂々たる態度 gets the boost. (A
+      // left-side Noun→たる bonus cannot make this distinction: the single-kanji verb reading
+      // 当たる is itself heavily penalized, so any left bonus wrongly flips it to 当|たる.)
+      // A Suffix→たる bonus IS safe (a single-kanji verb stem is a Noun, never a Suffix) and
+      // keeps the nominalizer さ as a Suffix in 美しさ+たる (…さたるや).
+      {EPOS::Suffix, EPOS::AuxClassicalTari, cost::kStrongBonus},
+      {EPOS::AuxClassicalTari, EPOS::Noun, cost::kStrongBonus},
+      {EPOS::AuxClassicalTari, EPOS::ParticleBinding, cost::kStrongBonus},
+      {EPOS::AuxClassicalTari, EPOS::ParticleCase, cost::kStrongBonus},
+
+      // AuxClassicalBeshi (当為べし 連体形 べき). べし attaches to the 連体形 of ラ変-type words,
+      // so たる+べき joins (来たるべき, 然るべき); as a 連体形 it must precede a nominal, hence
+      // べき→Noun/NounFormal (来たるべき日, やるべきこと). The 終止形→べき and 受身→べき cells
+      // migrate the former AuxVolitional bonuses (食べるべき, 書かれるべき) now that べき is its
+      // own EPOS; the original AuxVolitional cells stay in place for genuine う/よう volitional paths.
+      {EPOS::AuxClassicalTari, EPOS::AuxClassicalBeshi, cost::kStrongBonus},
+      {EPOS::AuxClassicalBeshi, EPOS::Noun, cost::kModerateBonus},
+      {EPOS::AuxClassicalBeshi, EPOS::NounFormal, cost::kModerateBonus},
+      {EPOS::VerbShuushikei, EPOS::AuxClassicalBeshi, cost::kStrongBonus},
+      {EPOS::AuxPassive, EPOS::AuxClassicalBeshi, cost::kStrongBonus},
+  };
+  applyRules(table, kRules);
 }
 
 }  // namespace suzume::analysis::bigram_rules
