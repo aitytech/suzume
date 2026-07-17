@@ -10,7 +10,7 @@ endif()
 # Version is the single source of truth here and is mirrored into every binding
 # manifest (bindings/wasm/package.json, bindings/python/pyproject.toml). Keep them
 # in lockstep; scripts/check_version_mirror.sh gates drift.
-project(suzume VERSION 0.9.5 LANGUAGES CXX)
+project(suzume VERSION 0.9.6 LANGUAGES CXX)
 
 # Use C++17 standard
 set(CMAKE_CXX_STANDARD 17)
@@ -155,14 +155,26 @@ if(BUILD_WASM)
   # Size-first WASM optimization. Compared with compiling the analysis layer
   # at -Os, full -Oz saves about 38 KB raw / 10 KB gzip but makes the measured
   # analysis benchmark about 11% slower. This trade-off is intentional.
-  add_compile_options(-Oz -flto)
+  # Disabling C++ exceptions/RTTI saves another ~3.8 KB raw / 1.9 KB gzip.
+  # Allocation failure therefore aborts the WASM module instead of becoming a
+  # recoverable C API error; this was already the effective browser behavior.
+  # -fno-threadsafe-statics was also measured here but changed neither the raw
+  # nor gzip artifact size, so it is intentionally omitted.
+  add_compile_options(-Oz -flto -fno-exceptions -fno-rtti)
   add_link_options(-Oz -flto)
 
   # Emscripten link options
+  # The TypeScript wrapper only supplies locateFile to the generated module;
+  # accepting Emscripten's full Module option surface retained ~1.9 KB of JS.
+  # Keep suzume_init_extended_options exported even though the high-level
+  # wrapper initializes the struct itself: the supported low-level cwrap API
+  # and its layout tests call this initializer directly.
   add_link_options(
     -sWASM=1
     -sMODULARIZE=1
     -sEXPORT_ES6=1
+    "-sINCOMING_MODULE_JS_API=['locateFile']"
+    "-sENVIRONMENT=['web','worker','node']"
     "-sEXPORTED_FUNCTIONS=['_malloc','_free','_suzume_create','_suzume_init_extended_options','_suzume_create_with_extended_options','_suzume_destroy','_suzume_analyze','_suzume_result_free','_suzume_generate_tags','_suzume_generate_tags_with_options','_suzume_tags_free','_suzume_load_user_dict','_suzume_load_binary_dict','_suzume_version','_suzume_last_error','_suzume_dictionary_warning_count','_suzume_dictionary_warning']"
     "-sEXPORTED_RUNTIME_METHODS=['UTF8ToString','stringToUTF8','lengthBytesUTF8','HEAPU32']"
     -sALLOW_MEMORY_GROWTH=1

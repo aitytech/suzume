@@ -42,8 +42,8 @@ void setLastError(std::string_view message) {
   last_error = message;
 }
 
-void setLastErrorFromException() {
 #if defined(__cpp_exceptions) && __cpp_exceptions
+void setLastErrorFromException() {
   try {
     throw;
   } catch (const std::exception& err) {
@@ -51,10 +51,8 @@ void setLastErrorFromException() {
   } catch (...) {
     setLastError("Unknown C API error");
   }
-#else
-  setLastError("Unknown C API error");
-#endif
 }
+#endif
 
 // Exception firewall for the C ABI. With exceptions enabled every entry point
 // turns an unexpected C++ exception into a last-error string plus an error
@@ -335,8 +333,7 @@ SUZUME_EXPORT int suzume_load_binary_dict(suzume_t handle, const uint8_t* data, 
 }
 
 SUZUME_EXPORT const char* suzume_version(void) {
-  static std::string version_str = suzume::Suzume::version();
-  return version_str.c_str();
+  return SUZUME_VERSION;
 }
 
 SUZUME_EXPORT const char* suzume_last_error(void) {

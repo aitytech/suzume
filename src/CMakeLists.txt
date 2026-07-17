@@ -91,12 +91,32 @@ set_target_properties(suzume PROPERTIES LINKER_LANGUAGE CXX)
 
 # WASM executable (produces .js + .wasm)
 if(BUILD_WASM)
+  get_filename_component(EMSCRIPTEN_ROOT "${CMAKE_CXX_COMPILER}" DIRECTORY)
+  set(WASM_OPT "${EMSCRIPTEN_ROOT}/binaryen/bin/wasm-opt")
+  if(NOT EXISTS "${WASM_OPT}")
+    unset(WASM_OPT)
+    find_program(WASM_OPT wasm-opt REQUIRED)
+  endif()
+
   add_executable(suzume-wasm suzume_c.cpp)
   target_link_libraries(suzume-wasm PRIVATE suzume)
+  target_compile_definitions(suzume-wasm PRIVATE ${SUZUME_PRIVATE_DEFS})
 
   # Copy output to dist directory (keep original names for JS compatibility)
   add_custom_command(TARGET suzume-wasm POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${WASM_OUTPUT_DIR}"
+    # Emscripten has already optimized the module, but one final Binaryen -Oz
+    # pass still removes about 0.2 KB raw / 0.1 KB gzip. It adds roughly one
+    # second to the WASM build and has no runtime lookup-path cost. Do not run
+    # it repeatedly: a second pass only saved tens of raw bytes in measurement
+    # and made gzip results unstable by changing function order.
+    COMMAND "${WASM_OPT}"
+      "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.wasm"
+      -Oz --enable-bulk-memory --enable-nontrapping-float-to-int
+      -o "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.optimized.wasm"
+    COMMAND ${CMAKE_COMMAND} -E rename
+      "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.optimized.wasm"
+      "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.wasm"
     COMMAND ${CMAKE_COMMAND} -E copy
       "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.js"
       "${WASM_OUTPUT_DIR}/suzume.js"

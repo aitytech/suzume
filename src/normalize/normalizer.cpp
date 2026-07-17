@@ -45,6 +45,10 @@ char32_t halfwidthKatakanaToFullwidth(char32_t codepoint) {
   if (codepoint >= 0xFF66 && codepoint <= 0xFF9F) {
     // Simplified mapping (main characters only)
     // Real implementation would need complete mapping table
+    // Keep char32_t even though all current targets are in the BMP. A uint16_t
+    // table experiment saved about 83 raw WASM bytes but increased final gzip
+    // by about 99 bytes due to the changed data encoding, so the narrower type
+    // is counterproductive for the distribution metric.
     static const char32_t kMapping[] = {
         0x30F2,                                  // ｦ -> ヲ
         0x30A1, 0x30A3, 0x30A5, 0x30A7, 0x30A9,  // ｧｨｩｪｫ -> ァィゥェォ

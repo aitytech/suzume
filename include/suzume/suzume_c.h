@@ -29,7 +29,9 @@ extern "C" {
  *   - Consuming the shared library ........ (neither)       -> import
  */
 #if defined(__EMSCRIPTEN__)
-#define SUZUME_EXPORT __attribute__((used))
+// CMake's EXPORTED_FUNCTIONS is the WASM API allowlist. Marking every C entry
+// point as used would retain helpers that the JS binding never calls.
+#define SUZUME_EXPORT
 #elif defined(SUZUME_STATIC)
 #define SUZUME_EXPORT
 #elif defined(_WIN32)
