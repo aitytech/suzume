@@ -51,8 +51,13 @@ size_t compactRecordOffset(const std::vector<uint8_t>& data) {
 
 size_t compactStringOffset(const std::vector<uint8_t>& data) {
   const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
+  const size_t record_offset = compactRecordOffset(data);
   size_t record_size = 0;
   switch (header->flags & BinaryDictHeader::kEntryEncodingMask) {
+    case BinaryDictHeader::kRecordPaletteEntries: {
+      const size_t record_count = data[record_offset];
+      return record_offset + 1 + record_count * sizeof(uint16_t) + header->entry_count;
+    }
     case BinaryDictHeader::kGrammarOnlyEntries:
       record_size = 1;
       break;
@@ -63,7 +68,7 @@ size_t compactStringOffset(const std::vector<uint8_t>& data) {
       record_size = kWideCompactEntrySize;
       break;
   }
-  return compactRecordOffset(data) + header->entry_count * record_size;
+  return record_offset + header->entry_count * record_size;
 }
 
 uint16_t packedLemmaReference(const std::vector<uint8_t>& data, size_t entry_index) {
@@ -163,6 +168,32 @@ TEST_F(BinaryDictTest, CompactFormatStoresOnlyDifferingLemma) {
   EXPECT_EQ(result.value().size() - compactStringOffset(result.value()), entry.lemma.size() + 1);
 }
 
+TEST_F(BinaryDictTest, UsesRecordPaletteForRepeatedPackedEntries) {
+  BinaryDictWriter writer;
+  for (size_t idx = 0; idx < 8; ++idx) {
+    writer.addEntry(
+        {"surface" + std::to_string(idx), core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "base"});
+  }
+
+  auto build_result = writer.build();
+  ASSERT_TRUE(build_result.hasValue());
+  const auto& data = build_result.value();
+  const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
+  EXPECT_EQ(header->flags & BinaryDictHeader::kEntryEncodingMask, BinaryDictHeader::kRecordPaletteEntries);
+
+  BinaryDictionary dict;
+  ASSERT_TRUE(dict.loadFromMemory(data.data(), data.size()).hasValue());
+  ASSERT_NE(dict.lookupExact("surface3"), nullptr);
+  EXPECT_EQ(dict.lookupExact("surface3")->lemma, "base");
+
+  auto invalid_index = data;
+  const size_t palette_offset = compactRecordOffset(invalid_index);
+  const size_t record_count = invalid_index[palette_offset];
+  const size_t first_entry_offset = palette_offset + 1 + record_count * sizeof(uint16_t);
+  invalid_index[first_entry_offset] = static_cast<uint8_t>(record_count);
+  EXPECT_FALSE(dict.loadFromMemory(invalid_index.data(), invalid_index.size()).hasValue());
+}
+
 TEST_F(BinaryDictTest, UsesRelativeLemmaReferencesForwardBackwardAndSelf) {
   BinaryDictionary dict;
   {
@@ -223,7 +254,8 @@ TEST_F(BinaryDictTest, FallsBackWhenRelativeLemmaDeltaIsOutOfRange) {
   ASSERT_TRUE(build_result.hasValue());
   const auto& data = build_result.value();
   const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
-  EXPECT_EQ(header->flags, BinaryDictHeader::kPackedEntries);
+  EXPECT_EQ(header->flags & BinaryDictHeader::kRelativeLemmaRefs, 0);
+  EXPECT_EQ(header->flags & BinaryDictHeader::kEntryEncodingMask, BinaryDictHeader::kRecordPaletteEntries);
   EXPECT_LT(compactStringOffset(data), data.size());
 
   BinaryDictionary dict;

@@ -28,22 +28,32 @@ struct BinaryDictHeader {
   uint16_t reserved;      // Must be zero
 
   static constexpr uint32_t kMagic = 0x444D5A53;  // "SZMD"
-  static constexpr uint8_t kVersion = 2;
+  // v3 added the record palette. This pre-1.0 format deliberately has no v2
+  // compatibility decoder, avoiding a permanently retained WASM code path.
+  static constexpr uint8_t kVersion = 3;
   static constexpr uint8_t kEntryEncodingMask = 0x03;
-  static constexpr uint8_t kGrammarOnlyEntries = 0x01;  // 1 byte/entry, no differing lemmas
-  static constexpr uint8_t kPackedEntries = 0x02;       // 2 bytes/entry, 11-bit lemma + 5-bit grammar
-  static constexpr uint8_t kWideEntries = 0x03;         // 3 bytes/entry, 16-bit lemma + 8-bit grammar
-  static constexpr uint8_t kRelativeLemmaRefs = 0x04;   // Lemmas are signed deltas into the surface table
+  static constexpr uint8_t kRecordPaletteEntries = 0x00;  // 1-byte indexes into packed records
+  static constexpr uint8_t kGrammarOnlyEntries = 0x01;    // 1 byte/entry, no differing lemmas
+  static constexpr uint8_t kPackedEntries = 0x02;         // 2 bytes/entry, 11-bit lemma + 5-bit grammar
+  static constexpr uint8_t kWideEntries = 0x03;           // 3 bytes/entry, 16-bit lemma + 8-bit grammar
+  static constexpr uint8_t kRelativeLemmaRefs = 0x04;     // Lemmas are signed deltas into the surface table
   static constexpr uint8_t kKnownFlags = kEntryEncodingMask | kRelativeLemmaRefs;
 };
 static_assert(sizeof(BinaryDictHeader) == 16);
 
 /**
  * The format stores front-coded sorted UTF-8 surfaces, a POS/ExtendedPOS palette, an
- * adaptive one-, two-, or three-byte entry array, and an optional length-prefixed,
- * deduplicated lemma table. When every lemma is also a nearby surface, packed
- * entries store a signed surface-index delta instead. The runtime DoubleArray is
- * rebuilt while loading.
+ * adaptive entry array, and an optional length-prefixed, deduplicated lemma table.
+ * Repeated packed records use a byte-indexed palette. When every lemma is also a
+ * nearby surface, packed entries store a signed surface-index delta instead. The
+ * runtime DoubleArray is rebuilt while loading.
+ *
+ * Surface and lemma bytes intentionally remain UTF-8: the trie and validation
+ * paths consume UTF-8 directly, while a Japanese-specific legacy/custom encoding
+ * would need another decoder and would complicate ASCII, symbols, and supplementary
+ * characters. Likewise, do not deflate/Huffman-wrap the embedded dictionaries for
+ * a gzip-distributed build without measuring the whole artifact; experiments cut
+ * raw data but increased final gzip because of decoder code and double compression.
  */
 inline constexpr size_t kWideCompactEntrySize = 3;
 

@@ -69,6 +69,10 @@ struct CompactEntry {
   uint8_t grammar_index;
 };
 
+uint16_t packEntry(const CompactEntry& entry) {
+  return entry.lemma_reference | static_cast<uint16_t>(entry.grammar_index << 11U);
+}
+
 static_assert(sizeof(GrammarPair) == 2, "Compact grammar palette entries must remain two bytes");
 
 template <typename T>
@@ -262,7 +266,9 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
   const bool uses_relative_lemmas = (header.flags & BinaryDictHeader::kRelativeLemmaRefs) != 0;
   if (entry_count == 0 || surface_size == 0 || surface_size > size - surface_offset ||
       (header.flags & ~BinaryDictHeader::kKnownFlags) != 0 ||
-      (uses_relative_lemmas && entry_encoding != BinaryDictHeader::kPackedEntries) || header.reserved != 0) {
+      (uses_relative_lemmas && entry_encoding != BinaryDictHeader::kPackedEntries &&
+       entry_encoding != BinaryDictHeader::kRecordPaletteEntries) ||
+      header.reserved != 0) {
     return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid dictionary header"));
   }
   size_t entry_table_offset = surface_offset + surface_size;
@@ -287,7 +293,24 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
     grammar_palette.push_back(pair);
   }
   entry_table_offset += palette_bytes;
+  const uint8_t* record_palette = nullptr;
+  size_t record_palette_size = 0;
   switch (entry_encoding) {
+    case BinaryDictHeader::kRecordPaletteEntries: {
+      if (entry_table_offset >= size) {
+        return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Missing dictionary record palette"));
+      }
+      const size_t record_count = data[entry_table_offset++];
+      const size_t record_bytes = record_count * sizeof(uint16_t);
+      if (record_count == 0 || record_bytes > size - entry_table_offset) {
+        return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid dictionary record palette"));
+      }
+      record_palette = data + entry_table_offset;
+      record_palette_size = record_count;
+      entry_table_offset += record_bytes;
+      entry_record_size = 1;
+      break;
+    }
     case BinaryDictHeader::kGrammarOnlyEntries:
       entry_record_size = 1;
       break;
@@ -304,7 +327,6 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
   if (entry_count > (std::numeric_limits<size_t>::max() / entry_record_size)) {
     return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Dictionary entry table too large"));
   }
-
   const size_t entry_table_size = entry_count * entry_record_size;
   if (entry_table_size > size - entry_table_offset) {
     return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid dictionary entry table"));
@@ -350,6 +372,16 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
     uint16_t lemma_reference = 0;
     uint8_t grammar_idx = 0;
     switch (entry_encoding) {
+      case BinaryDictHeader::kRecordPaletteEntries: {
+        const uint8_t record_idx = data[entry_pos];
+        if (record_idx >= record_palette_size) {
+          return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid record palette index"));
+        }
+        const uint16_t packed = readPod<uint16_t>(record_palette, record_idx * sizeof(uint16_t));
+        lemma_reference = packed & kPackedLemmaMask;
+        grammar_idx = static_cast<uint8_t>(packed >> 11U);
+        break;
+      }
       case BinaryDictHeader::kGrammarOnlyEntries:
         grammar_idx = data[entry_pos];
         break;
@@ -592,6 +624,12 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
   std::vector<uint8_t> entry_data;
   size_t compact_entry_size = kWideCompactEntrySize;
   uint8_t output_flags = BinaryDictHeader::kWideEntries;
+  // Keep grammar-only entries as their dense byte array even when one grammar
+  // index dominates. A default-plus-sparse-exceptions experiment reduced
+  // user.dic by 2,682 raw bytes, but most original bytes are zero and Binaryen
+  // already represents those runs efficiently. The extra decoder and non-zero
+  // exception indexes made the final WASM gzip larger, so file size alone is a
+  // misleading selection criterion here.
   if (lemma_indices.empty()) {
     output_flags = BinaryDictHeader::kGrammarOnlyEntries;
     compact_entry_size = 1;
@@ -602,24 +640,64 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
     output_flags = BinaryDictHeader::kPackedEntries;
     compact_entry_size = 2;
   }
+
+  std::vector<uint16_t> record_palette;
+  std::unordered_map<uint16_t, uint8_t> record_indices;
+  // Packed core records are mostly non-zero and repeat heavily, unlike the
+  // grammar-only zero runs above. A byte-indexed palette reduced core.dic by
+  // 5,148 bytes and still reduced the complete WASM after decoder cost.
+  if ((output_flags & BinaryDictHeader::kEntryEncodingMask) == BinaryDictHeader::kPackedEntries) {
+    for (const auto& entry : compact_entries) {
+      const uint16_t packed = packEntry(entry);
+      if (record_indices.find(packed) == record_indices.end()) {
+        if (record_palette.size() >= std::numeric_limits<uint8_t>::max()) {
+          record_palette.clear();
+          break;
+        }
+        const uint8_t record_idx = static_cast<uint8_t>(record_palette.size());
+        record_indices.emplace(packed, record_idx);
+        record_palette.push_back(packed);
+      }
+    }
+    if (!record_palette.empty() && 1 + record_palette.size() * sizeof(uint16_t) + compact_entries.size() <
+                                       compact_entries.size() * sizeof(uint16_t)) {
+      output_flags = static_cast<uint8_t>((output_flags & ~BinaryDictHeader::kEntryEncodingMask) |
+                                          BinaryDictHeader::kRecordPaletteEntries);
+      compact_entry_size = 1;
+    } else {
+      record_palette.clear();
+    }
+  }
+
   entry_data.reserve(1 + grammar_palette.size() * sizeof(GrammarPair) + compact_entries.size() * compact_entry_size);
   entry_data.push_back(static_cast<uint8_t>(grammar_palette.size()));
   for (const auto& pair : grammar_palette) {
     entry_data.push_back(pair.pos);
     entry_data.push_back(pair.extended_pos);
   }
-  for (const auto& entry : compact_entries) {
-    const uint8_t entry_encoding = output_flags & BinaryDictHeader::kEntryEncodingMask;
-    if (entry_encoding == BinaryDictHeader::kGrammarOnlyEntries) {
-      entry_data.push_back(entry.grammar_index);
-    } else if (entry_encoding == BinaryDictHeader::kPackedEntries) {
-      const uint16_t packed = entry.lemma_reference | static_cast<uint16_t>(entry.grammar_index << 11U);
+  if (!record_palette.empty()) {
+    entry_data.push_back(static_cast<uint8_t>(record_palette.size()));
+    for (uint16_t packed : record_palette) {
       entry_data.push_back(static_cast<uint8_t>(packed & 0xFFU));
       entry_data.push_back(static_cast<uint8_t>(packed >> 8U));
-    } else {
-      entry_data.push_back(static_cast<uint8_t>(entry.lemma_reference & 0xFFU));
-      entry_data.push_back(static_cast<uint8_t>(entry.lemma_reference >> 8U));
-      entry_data.push_back(entry.grammar_index);
+    }
+    for (const auto& entry : compact_entries) {
+      entry_data.push_back(record_indices.at(packEntry(entry)));
+    }
+  } else {
+    const uint8_t entry_encoding = output_flags & BinaryDictHeader::kEntryEncodingMask;
+    for (const auto& entry : compact_entries) {
+      if (entry_encoding == BinaryDictHeader::kGrammarOnlyEntries) {
+        entry_data.push_back(entry.grammar_index);
+      } else if (entry_encoding == BinaryDictHeader::kPackedEntries) {
+        const uint16_t packed = packEntry(entry);
+        entry_data.push_back(static_cast<uint8_t>(packed & 0xFFU));
+        entry_data.push_back(static_cast<uint8_t>(packed >> 8U));
+      } else {
+        entry_data.push_back(static_cast<uint8_t>(entry.lemma_reference & 0xFFU));
+        entry_data.push_back(static_cast<uint8_t>(entry.lemma_reference >> 8U));
+        entry_data.push_back(entry.grammar_index);
+      }
     }
   }
 

@@ -75,6 +75,7 @@ set(TEST_SOURCES
 
 # Create test executable
 add_executable(suzume_test ${TEST_SOURCES})
+target_compile_definitions(suzume_test PRIVATE SUZUME_VERSION="${PROJECT_VERSION}")
 
 # Include directories
 target_include_directories(suzume_test PRIVATE
