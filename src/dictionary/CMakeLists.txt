@@ -1,6 +1,6 @@
 # Dictionary module CMakeLists.txt
 
-add_library(suzume_dictionary STATIC
+add_library(suzume_dictionary OBJECT
   dictionary.cpp
   core_dict.cpp
   user_dict.cpp

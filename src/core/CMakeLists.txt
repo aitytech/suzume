@@ -1,6 +1,6 @@
 # Core module CMakeLists.txt
 
-add_library(suzume_core STATIC
+add_library(suzume_core OBJECT
   types.cpp
   error.cpp
   lattice.cpp

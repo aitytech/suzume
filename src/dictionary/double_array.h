@@ -146,6 +146,9 @@ class DoubleArray {
     std::vector<Unit> units;
     std::vector<bool> used;
     size_t next_check_pos = 0;
+    // Set when a capacity overflow aborts the build; propagated in place of an
+    // exception so the core compiles under -fno-exceptions.
+    bool failed = false;
 
     void resize(size_t new_size);
     size_t findBase(const std::vector<uint8_t>& children);

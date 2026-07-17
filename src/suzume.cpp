@@ -4,17 +4,24 @@
 #include <utility>
 #include <vector>
 
-#ifndef __EMSCRIPTEN__
+// The embedded-dictionary path carries the compiled dictionaries in the binary
+// and touches neither the filesystem nor environment variables. It is taken for
+// WASM and for native builds configured with -DSUZUME_EMBED_DICT=ON.
+#if defined(__EMSCRIPTEN__) || defined(SUZUME_EMBED_DICT)
+#define SUZUME_USE_EMBEDDED_DICT 1
+#endif
+
+#ifndef SUZUME_USE_EMBEDDED_DICT
 #include <filesystem>
 #endif
 
 #include "analysis/analyzer.h"
-#ifndef __EMSCRIPTEN__
+#ifndef SUZUME_USE_EMBEDDED_DICT
 #include "analysis/scorer_options_loader.h"
 #endif
 #include "dictionary/binary_dict.h"
 #include "dictionary/user_dict.h"
-#ifdef __EMSCRIPTEN__
+#ifdef SUZUME_USE_EMBEDDED_DICT
 #include "embedded_dictionaries.h"
 #endif
 #include "postprocess/postprocessor.h"
@@ -24,7 +31,7 @@ namespace suzume {
 
 namespace {
 
-#ifndef __EMSCRIPTEN__
+#ifndef SUZUME_USE_EMBEDDED_DICT
 namespace fs = std::filesystem;
 
 /**
@@ -41,14 +48,29 @@ std::vector<fs::path> getDictSearchPaths() {
   // 2. Current directory ./data/
   paths.emplace_back("./data");
 
-  // 3. User directory ~/.suzume/
+  // 3. Per-user directory.
+#ifdef _WIN32
+  if (const char* profile = std::getenv("USERPROFILE")) {
+    paths.emplace_back(fs::path(profile) / ".suzume");
+  }
+#else
   if (const char* home = std::getenv("HOME")) {
     paths.emplace_back(fs::path(home) / ".suzume");
   }
+#endif
 
-  // 4. System directories
+  // 4. System / install directories.
+#ifdef SUZUME_DATA_INSTALL_DIR
+  paths.emplace_back(SUZUME_DATA_INSTALL_DIR);
+#endif
+#ifdef _WIN32
+  if (const char* program_data = std::getenv("ProgramData")) {
+    paths.emplace_back(fs::path(program_data) / "suzume");
+  }
+#else
   paths.emplace_back("/usr/local/share/suzume");
   paths.emplace_back("/usr/share/suzume");
+#endif
 
   return paths;
 }
@@ -80,7 +102,7 @@ struct Suzume::Impl {
 
   static analysis::ScorerOptions loadScorerConfig(const SuzumeOptions& opts) {
     analysis::ScorerOptions scorer_opts = opts.scorer_options;
-#ifndef __EMSCRIPTEN__
+#ifndef SUZUME_USE_EMBEDDED_DICT
     // Load from environment variables (SUZUME_SCORER_CONFIG and SUZUME_SCORER_*)
     auto result = analysis::ScorerOptionsLoader::loadFromEnv(scorer_opts, opts.report_scorer_config);
 
@@ -113,7 +135,7 @@ struct Suzume::Impl {
   void warnDictionaryLoad(const std::string& path, const core::Error& error) {
     std::string message = "Failed to auto-load dictionary " + path + ": " + error.message;
     dictionary_warnings.push_back(message);
-#ifndef __EMSCRIPTEN__
+#ifndef SUZUME_USE_EMBEDDED_DICT
     if (options.report_scorer_config) {
       std::cerr << "[dictionary] " << message << "\n";
     }
@@ -126,7 +148,7 @@ struct Suzume::Impl {
         postprocessor(&analyzer.dictionaryManager(), postprocessOptionsFor(opts)) {
     // Auto-load core.dic if found (binary format)
     if (!opts.skip_core_dictionary) {
-#ifdef __EMSCRIPTEN__
+#ifdef SUZUME_USE_EMBEDDED_DICT
       auto result = analyzer.dictionaryManager().loadCoreDictionaryFromMemoryResult(embedded::kCoreDictionary,
                                                                                     embedded::kCoreDictionarySize);
       if (!result.hasValue()) {
@@ -146,7 +168,7 @@ struct Suzume::Impl {
     // Auto-load user.dic if found (binary format)
     // Note: user.dic is also loaded as core binary dictionary for now
     if (!opts.skip_user_dictionary) {
-#ifdef __EMSCRIPTEN__
+#ifdef SUZUME_USE_EMBEDDED_DICT
       auto result = analyzer.dictionaryManager().loadUserBinaryDictionaryFromMemoryResult(
           embedded::kUserDictionary, embedded::kUserDictionarySize);
       if (!result.hasValue()) {

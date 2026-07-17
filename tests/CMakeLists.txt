@@ -86,13 +86,6 @@ target_include_directories(suzume_test PRIVATE
 # Link libraries
 target_link_libraries(suzume_test PRIVATE
   suzume
-  suzume_core
-  suzume_normalize
-  suzume_dictionary
-  suzume_grammar
-  suzume_pretokenizer
-  suzume_analysis
-  suzume_postprocess
   GTest::gtest_main
 )
 

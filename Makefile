@@ -3,7 +3,8 @@
 
 .PHONY: help build test clean rebuild format format-check configure \
         wasm wasm-dict wasm-test wasm-clean wasm-rebuild dict \
-        python-build python-test python-wheel version-check
+        python-build python-test python-wheel version-check \
+        install examples embedded consumer-smoke
 
 # Build directories
 BUILD_DIR := build
@@ -28,6 +29,12 @@ help:
 	@echo "  make format-check - Check formatting across all languages"
 	@echo "  make configure    - Configure CMake"
 	@echo "  make version-check - Verify version is consistent across binding manifests"
+	@echo ""
+	@echo "C/C++ integration targets:"
+	@echo "  make install      - Install libs + headers + find_package/pkg-config (PREFIX=/usr/local)"
+	@echo "  make examples     - Build the in-tree C and C++ examples"
+	@echo "  make embedded     - Build the embedded (no-filesystem, dict baked-in) static library"
+	@echo "  make consumer-smoke - Install to a temp prefix and build examples via find_package"
 	@echo ""
 	@echo "Python binding targets:"
 	@echo "  make python-build - Build the shared C-ABI library (libsuzume)"
@@ -84,11 +91,57 @@ clean:
 # Rebuild from scratch
 rebuild: clean build
 
+# ============================================
+# C/C++ integration targets
+# ============================================
+
+# Install prefix for `make install` (override: make PREFIX=/opt/suzume install)
+PREFIX ?= /usr/local
+
+# Build the shared + static libraries, headers, CMake package config, pkg-config,
+# and dictionaries, then install them under $(PREFIX) for find_package / pkg-config.
+install:
+	@echo "Configuring install build (shared + static) ..."
+	cmake -B build-install -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED=ON -DBUILD_TESTING=OFF \
+		-DCMAKE_INSTALL_PREFIX=$(PREFIX) $(CMAKE_OPTIONS)
+	cmake --build build-install --parallel
+	cmake --build build-install --target build-dict
+	cmake --install build-install
+	@echo "Installed suzume under $(PREFIX)"
+
+# Build the in-tree C and C++ examples.
+examples: dict
+	cmake -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=Release -DSUZUME_BUILD_EXAMPLES=ON $(CMAKE_OPTIONS)
+	cmake --build $(BUILD_DIR) --target suzume_example_c suzume_example_cpp --parallel
+	@echo "Examples built: $(BUILD_DIR)/bin/suzume_example_{c,cpp}"
+
+# Build the embedded (no-filesystem) configuration: dictionaries baked in, static
+# library, no CLI/tests. Useful for hosted-embedded / RTOS targets.
+embedded:
+	cmake -B build-embedded -DCMAKE_BUILD_TYPE=Release -DSUZUME_EMBED_DICT=ON \
+		-DBUILD_TESTING=OFF -DSUZUME_INSTALL=OFF $(CMAKE_OPTIONS)
+	cmake --build build-embedded --target suzume --parallel
+	@echo "Embedded static library built: build-embedded/lib/"
+
+# Packaging smoke test: install (static) to a temp prefix, then build + run the
+# C/C++ examples against it via find_package. Mirrors the CI consumer-smoke job.
+consumer-smoke:
+	rm -rf build-smoke /tmp/suzume-smoke-prefix build-smoke-consumer
+	cmake -B build-smoke -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+		-DCMAKE_INSTALL_PREFIX=/tmp/suzume-smoke-prefix
+	cmake --build build-smoke --parallel
+	cmake --build build-smoke --target build-dict
+	cmake --install build-smoke
+	cmake -S examples/consumer -B build-smoke-consumer -DCMAKE_PREFIX_PATH=/tmp/suzume-smoke-prefix
+	cmake --build build-smoke-consumer
+	ctest --test-dir build-smoke-consumer --output-on-failure
+	@echo "Consumer smoke test passed."
+
 # Auto-fix formatting/lint across every language in the repo:
 # C++ core (clang-format), MCP server (ruff), WASM binding (biome), Python binding (ruff).
 format:
 	@echo "Formatting C++ (clang-format)..."
-	@find src include tests examples -type f \( -name "*.cpp" -o -name "*.h" \) | xargs $(CLANG_FORMAT) -i
+	@find src include tests examples -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \) | xargs $(CLANG_FORMAT) -i
 	@echo "Formatting MCP server (ruff)..."
 	cd scripts/mcp && uv run ruff format . && uv run ruff check --fix .
 	@echo "Formatting WASM binding (biome)..."
@@ -100,7 +153,7 @@ format:
 # Check-only counterpart for CI (same language fan-out, no writes).
 format-check:
 	@echo "Checking C++ formatting (clang-format)..."
-	@find src include tests examples -type f \( -name "*.cpp" -o -name "*.h" \) | xargs $(CLANG_FORMAT) --dry-run --Werror
+	@find src include tests examples -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \) | xargs $(CLANG_FORMAT) --dry-run --Werror
 	@echo "Checking MCP server formatting (ruff)..."
 	cd scripts/mcp && uv run ruff format --check . && uv run ruff check .
 	@echo "Checking WASM binding formatting (biome)..."
@@ -117,7 +170,7 @@ format-check:
 python-build:
 	@echo "Building shared library for Python binding..."
 	cmake -B build-shared -DBUILD_SHARED=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release \
-		-DENABLE_DEBUG_INFO=OFF -DENABLE_DEBUG_LOG=OFF
+		-DENABLE_DEBUG_INFO=OFF -DENABLE_DEBUG_LOG=OFF -DSUZUME_LIB_SOVERSION=OFF
 	cmake --build build-shared --target suzume_shared --parallel
 	@echo "Shared library built: build-shared/lib/"
 

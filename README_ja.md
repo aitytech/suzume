@@ -56,6 +56,9 @@ Python（共有ライブラリ同梱のネイティブ実装。追加依存な�
 pip install suzume
 ```
 
+C / C++（ネイティブライブラリ。組み込み可能）— ソースからビルドしてインストールします。
+下記の [C / C++（ネイティブ・組み込み対応）](#c--cネイティブ組み込み対応) を参照してください。
+
 ## クイックスタート
 
 ### JavaScript / TypeScript
@@ -110,25 +113,59 @@ Python APIの詳細は [bindings/python/README.md](bindings/python/README.md) �
 </script>
 ```
 
-### C++
+### C / C++（ネイティブ・組み込み対応）
 
-```cpp
-#include "suzume.h"
-
-suzume::Suzume tokenizer;
-auto tokens = tokenizer.analyze("東京に行きました");
-
-for (const auto& t : tokens) {
-    std::cout << t.surface << "\t" << t.lemma << std::endl;
-}
-```
-
-ソースからビルド（C++17、CMake 3.15+が必要）:
+ライブラリ・ヘッダ・CMake パッケージ設定・pkg-config ファイルをインストールします
+（C++17、CMake 3.15+ が必要）:
 
 ```bash
-make          # ビルド
-make test     # テスト実行
+make install                 # /usr/local へ（PREFIX=/opt/suzume で変更可）
 ```
+
+C++ — C ABI をラップするヘッダオンリーの RAII ラッパ（`suzume/suzume.hpp`）:
+
+```cpp
+#include "suzume/suzume.hpp"
+
+suzume::Tokenizer tokenizer;
+for (const suzume::Morpheme& m : tokenizer.analyze("東京に行きました")) {
+    std::cout << m.surface << '\t' << m.lemma << '\t' << m.pos << '\n';
+}
+
+auto tags = tokenizer.generateTags("東京スカイツリーに行きました");
+```
+
+C — 安定した C ABI（`suzume/suzume_c.h`）:
+
+```c
+#include "suzume/suzume_c.h"
+
+suzume_t h = suzume_create();
+suzume_result_t* r = suzume_analyze(h, "東京に行きました");
+for (size_t i = 0; i < r->count; i++)
+    printf("%s\t%s\n", r->morphemes[i].surface, r->morphemes[i].base_form);
+suzume_result_free(r);
+suzume_destroy(h);
+```
+
+CMake からは `find_package` で利用します:
+
+```cmake
+find_package(suzume CONFIG REQUIRED)
+target_link_libraries(myapp PRIVATE suzume::suzume)          # 静的・自己完結
+# target_link_libraries(myapp PRIVATE suzume::suzume_shared) # 共有（インストール時）
+```
+
+pkg-config も利用できます: `pkg-config --cflags --libs suzume`。動作するサンプルは
+[`examples/`](examples/) にあります。
+
+**組み込み / ファイルシステムなし。** `-DSUZUME_EMBED_DICT=ON`（または `make embedded`）
+で辞書をバイナリに埋め込みます。この構成ではファイルシステムにも環境変数にもアクセスせず、
+自己完結した静的アーカイブとしてリンクできます。コアは `Expected<T, Error>` ベースで
+（通常動作で例外を投げず）、`-fno-exceptions -fno-rtti` でもコンパイルできます。対象は
+C++ ランタイムとヒープを持つ環境（hosted-embedded / RTOS）で、ベアメタルの freestanding は
+対象外です。埋め込まない場合、コンパイル済み辞書は `<prefix>/share/suzume` にインストールされ、
+実行時に自動的に検出されます。
 
 ## ドキュメント
 

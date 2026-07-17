@@ -24,7 +24,7 @@ staged=$(git diff --cached --name-only --diff-filter=ACM)
 status=0
 
 # --- C++ core (clang-format, scoped to staged files) ---
-cpp=$(printf '%s\n' "$staged" | grep -E '^(src|include|tests|examples)/.*\.(cpp|h)$')
+cpp=$(printf '%s\n' "$staged" | grep -E '^(src|include|tests|examples)/.*\.(cpp|h|hpp|c)$')
 if [ -n "$cpp" ] && command -v clang-format >/dev/null 2>&1; then
     if ! printf '%s\n' "$cpp" | xargs clang-format --dry-run --Werror; then
         echo "[pre-commit] C++ formatting issues (clang-format)."

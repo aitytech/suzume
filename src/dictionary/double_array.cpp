@@ -85,13 +85,21 @@ bool DoubleArray::buildInternal(const std::vector<std::string>& keys, const std:
     }
   }
 
+  // The try/catch guards against std::bad_alloc from the growing build buffers;
+  // it is compiled only when exceptions are enabled so the core also builds with
+  // -fno-exceptions (where an allocation failure terminates, as is standard).
+#if defined(__cpp_exceptions) && __cpp_exceptions
   try {
+#endif
     BuildState state;
     state.resize(kInitialSize);
     state.used[0] = true;
 
     // Build recursively starting from root.
     buildRecursive(state, keys, values, 0, keys.size(), 0, 0);
+    if (state.failed) {
+      return false;
+    }
 
     size_t last_used = 0;
     for (size_t idx = state.units.size(); idx > 0; --idx) {
@@ -106,9 +114,11 @@ bool DoubleArray::buildInternal(const std::vector<std::string>& keys, const std:
     // non-binding capacity reduction.
     std::vector<Unit> compact(state.units.begin(), state.units.begin() + last_used);
     units_.swap(compact);
+#if defined(__cpp_exceptions) && __cpp_exceptions
   } catch (const std::exception&) {
     return false;
   }
+#endif
 
   return true;
 }
@@ -130,7 +140,7 @@ bool DoubleArray::build(const std::vector<std::string>& keys, const std::vector<
 void DoubleArray::buildRecursive(BuildState& state, const std::vector<std::string>& keys,
                                  const std::vector<int32_t>* values, size_t begin, size_t end, size_t depth,
                                  size_t parent_pos) {
-  if (begin >= end) {
+  if (begin >= end || state.failed) {
     return;
   }
 
@@ -171,7 +181,8 @@ void DoubleArray::buildRecursive(BuildState& state, const std::vector<std::strin
   // Labels replace the old parent/check word, so each parent must have a
   // globally unique base. Reserve this base before descending into children.
   if (base_val > Unit::kPayloadMask) {
-    throw std::length_error("Double-array base exceeds packed unit capacity");
+    state.failed = true;
+    return;
   }
   state.next_check_pos = base_val + 1;
 

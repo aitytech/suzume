@@ -1,6 +1,6 @@
 # Postprocess module CMakeLists.txt
 
-add_library(suzume_postprocess STATIC
+add_library(suzume_postprocess OBJECT
   lemmatizer.cpp
   lemmatizer_batch.cpp
   lemmatizer_conj_form.cpp

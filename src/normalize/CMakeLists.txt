@@ -1,6 +1,6 @@
 # Normalize module CMakeLists.txt
 
-add_library(suzume_normalize STATIC
+add_library(suzume_normalize OBJECT
   normalizer.cpp
   char_type.cpp
   exceptions.cpp

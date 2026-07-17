@@ -56,6 +56,9 @@ Python (native, via a bundled shared library — no other dependencies):
 pip install suzume
 ```
 
+C / C++ (native library, embeddable) — build and install from source; see
+[C / C++ (native, embeddable)](#c--c-native-embeddable) below.
+
 ## Quick Start
 
 ### JavaScript / TypeScript
@@ -110,25 +113,60 @@ See [bindings/python/README.md](bindings/python/README.md) for the full Python A
 </script>
 ```
 
-### C++
+### C / C++ (native, embeddable)
 
-```cpp
-#include "suzume.h"
-
-suzume::Suzume tokenizer;
-auto tokens = tokenizer.analyze("東京に行きました");
-
-for (const auto& t : tokens) {
-    std::cout << t.surface << "\t" << t.lemma << std::endl;
-}
-```
-
-Build from source (requires C++17, CMake 3.15+):
+Install the library, headers, CMake package config, and pkg-config file
+(requires C++17, CMake 3.15+):
 
 ```bash
-make          # Build
-make test     # Run tests
+make install                 # into /usr/local (override with PREFIX=/opt/suzume)
 ```
+
+C++ — a header-only RAII wrapper (`suzume/suzume.hpp`) over the C ABI:
+
+```cpp
+#include "suzume/suzume.hpp"
+
+suzume::Tokenizer tokenizer;
+for (const suzume::Morpheme& m : tokenizer.analyze("東京に行きました")) {
+    std::cout << m.surface << '\t' << m.lemma << '\t' << m.pos << '\n';
+}
+
+auto tags = tokenizer.generateTags("東京スカイツリーに行きました");
+```
+
+C — the stable C ABI (`suzume/suzume_c.h`):
+
+```c
+#include "suzume/suzume_c.h"
+
+suzume_t h = suzume_create();
+suzume_result_t* r = suzume_analyze(h, "東京に行きました");
+for (size_t i = 0; i < r->count; i++)
+    printf("%s\t%s\n", r->morphemes[i].surface, r->morphemes[i].base_form);
+suzume_result_free(r);
+suzume_destroy(h);
+```
+
+Consume it from CMake via `find_package`:
+
+```cmake
+find_package(suzume CONFIG REQUIRED)
+target_link_libraries(myapp PRIVATE suzume::suzume)          # static, self-contained
+# target_link_libraries(myapp PRIVATE suzume::suzume_shared) # shared, when installed
+```
+
+or via pkg-config: `pkg-config --cflags --libs suzume`. Runnable examples are in
+[`examples/`](examples/).
+
+**Embedded / no-filesystem.** Configure with `-DSUZUME_EMBED_DICT=ON` (or
+`make embedded`) to bake the dictionaries into the binary — the library then
+touches neither the filesystem nor environment variables, and links as a
+self-contained static archive. The core is `Expected<T, Error>` based (no
+exceptions in normal operation) and compiles under `-fno-exceptions -fno-rtti`.
+Targets need a C++ runtime and heap (hosted-embedded / RTOS), not bare-metal
+freestanding. Without embedding, the compiled dictionaries are installed to
+`<prefix>/share/suzume` and found automatically at runtime.
 
 ## Documentation
 

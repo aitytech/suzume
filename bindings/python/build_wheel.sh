@@ -11,7 +11,7 @@ BUILD_DIR="$PROJECT_ROOT/build-python"
 
 echo "=== Building suzume shared library + CLI (Release) ==="
 cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED=ON -DBUILD_TESTING=OFF \
-    -DENABLE_DEBUG_INFO=OFF -DENABLE_DEBUG_LOG=OFF "$PROJECT_ROOT"
+    -DENABLE_DEBUG_INFO=OFF -DENABLE_DEBUG_LOG=OFF -DSUZUME_LIB_SOVERSION=OFF "$PROJECT_ROOT"
 cmake --build "$BUILD_DIR" --target suzume_shared suzume-cli --parallel
 
 echo "=== Compiling dictionaries ==="

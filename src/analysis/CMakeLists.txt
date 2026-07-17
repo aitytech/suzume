@@ -1,6 +1,6 @@
 # Analysis module CMakeLists.txt
 
-add_library(suzume_analysis STATIC
+add_library(suzume_analysis OBJECT
   adjective_candidates_hiragana.cpp
   adjective_candidates_internal.cpp
   adjective_candidates_kanji.cpp

@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+# Suzume has no external runtime dependencies (no threads, ICU, or Boost in the
+# core), so no find_dependency() calls are required here.
+
+include("${CMAKE_CURRENT_LIST_DIR}/suzumeTargets.cmake")
+
+check_required_components(suzume)

@@ -21,6 +21,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(BUILD_TESTING "Build tests" ON)
 option(BUILD_WASM "Build for WebAssembly" OFF)
 option(BUILD_SHARED "Build the shared C-ABI library (libsuzume) for ctypes bindings" OFF)
+option(SUZUME_EMBED_DICT "Embed the compiled dictionaries into the library (no filesystem access at runtime)" OFF)
+option(SUZUME_LIB_SOVERSION "Attach VERSION/SOVERSION to the shared library (off for the flat wheel build)" ON)
+option(SUZUME_INSTALL "Generate install/export rules (find_package, pkg-config)" ON)
+option(SUZUME_BUILD_EXAMPLES "Build the C/C++ integration examples" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
 
 # The shared C-ABI library links the static core objects, so they must be PIC.
@@ -132,6 +136,9 @@ endif()
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Standard install layout (CMAKE_INSTALL_LIBDIR / INCLUDEDIR / DATADIR / BINDIR).
+include(GNUInstallDirs)
+
 # Source directories
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
@@ -218,3 +225,79 @@ endforeach()
 add_custom_command(TARGET validate-dict POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E echo "All dictionaries validated successfully"
 )
+
+# ---------------------------------------------------------------------------
+# Install & export: find_package(suzume) + pkg-config
+# ---------------------------------------------------------------------------
+if(SUZUME_INSTALL AND NOT BUILD_WASM)
+  include(CMakePackageConfigHelpers)
+
+  set(SUZUME_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/suzume")
+
+  # The static library is always installed; the shared library when it is built.
+  set(SUZUME_INSTALL_TARGETS suzume)
+  if(TARGET suzume_shared)
+    list(APPEND SUZUME_INSTALL_TARGETS suzume_shared)
+  endif()
+
+  install(TARGETS ${SUZUME_INSTALL_TARGETS}
+    EXPORT suzumeTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
+
+  # Public headers: C ABI (suzume_c.h) and the header-only C++ wrapper (suzume.hpp).
+  install(DIRECTORY ${INCLUDE_DIR}/suzume
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+  )
+
+  # Exported targets: suzume::suzume (static) and, when built, suzume::suzume_shared.
+  install(EXPORT suzumeTargets
+    NAMESPACE suzume::
+    FILE suzumeTargets.cmake
+    DESTINATION ${SUZUME_INSTALL_CMAKEDIR}
+  )
+
+  configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/SuzumeConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/SuzumeConfig.cmake
+    INSTALL_DESTINATION ${SUZUME_INSTALL_CMAKEDIR}
+  )
+  write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/SuzumeConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+  )
+  install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/SuzumeConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/SuzumeConfigVersion.cmake
+    DESTINATION ${SUZUME_INSTALL_CMAKEDIR}
+  )
+
+  # pkg-config for Autotools/Meson consumers.
+  configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/suzume.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/suzume.pc
+    @ONLY
+  )
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/suzume.pc
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+  )
+
+  # Ship the compiled dictionaries for non-embedded builds so the runtime search
+  # path (<prefix>/share/suzume) resolves them with no extra configuration.
+  if(NOT SUZUME_EMBED_DICT)
+    install(FILES
+      ${DICT_DATA_DIR}/core.dic
+      ${DICT_DATA_DIR}/user.dic
+      DESTINATION ${CMAKE_INSTALL_DATADIR}/suzume
+    )
+  endif()
+endif()
+
+# C/C++ integration examples (built against the in-tree targets).
+if(SUZUME_BUILD_EXAMPLES AND NOT BUILD_WASM)
+  add_subdirectory(examples)
+endif()

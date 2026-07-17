@@ -16,12 +16,34 @@
 extern "C" {
 #endif
 
-#ifdef __EMSCRIPTEN__
+/*
+ * Symbol visibility control.
+ *
+ * The build system defines SUZUME_EXPORTS while compiling the suzume library
+ * itself, and the exported CMake targets propagate SUZUME_STATIC to consumers
+ * that link the static archive. Consumers of the shared library define neither,
+ * so they resolve to the import side (dllimport on Windows).
+ *
+ *   - Building the library (shared) ....... SUZUME_EXPORTS  -> export
+ *   - Consuming the static library ........ SUZUME_STATIC   -> no decoration
+ *   - Consuming the shared library ........ (neither)       -> import
+ */
+#if defined(__EMSCRIPTEN__)
 #define SUZUME_EXPORT __attribute__((used))
+#elif defined(SUZUME_STATIC)
+#define SUZUME_EXPORT
 #elif defined(_WIN32)
+#if defined(SUZUME_EXPORTS)
 #define SUZUME_EXPORT __declspec(dllexport)
+#else
+#define SUZUME_EXPORT __declspec(dllimport)
+#endif
 #elif defined(__GNUC__)
+#if defined(SUZUME_EXPORTS)
 #define SUZUME_EXPORT __attribute__((visibility("default")))
+#else
+#define SUZUME_EXPORT
+#endif
 #else
 #define SUZUME_EXPORT
 #endif

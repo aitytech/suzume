@@ -1,6 +1,6 @@
 # Grammar module CMakeLists.txt
 
-add_library(suzume_grammar STATIC
+add_library(suzume_grammar OBJECT
   auxiliaries.cpp
   auxiliary_generator.cpp
   char_patterns.cpp

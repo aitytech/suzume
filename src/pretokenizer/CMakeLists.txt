@@ -1,5 +1,5 @@
 # PreTokenizer library
-add_library(suzume_pretokenizer STATIC
+add_library(suzume_pretokenizer OBJECT
     pretokenizer.cpp
 )
 

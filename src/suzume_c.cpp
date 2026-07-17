@@ -40,6 +40,7 @@ void setLastError(std::string_view message) {
 }
 
 void setLastErrorFromException() {
+#if defined(__cpp_exceptions) && __cpp_exceptions
   try {
     throw;
   } catch (const std::exception& err) {
@@ -47,7 +48,26 @@ void setLastErrorFromException() {
   } catch (...) {
     setLastError("Unknown C API error");
   }
+#else
+  setLastError("Unknown C API error");
+#endif
 }
+
+// Exception firewall for the C ABI. With exceptions enabled every entry point
+// turns an unexpected C++ exception into a last-error string plus an error
+// return; with -fno-exceptions the guards compile away — nothing in the core
+// throws, and an allocation failure terminates as is standard for such builds.
+#if defined(__cpp_exceptions) && __cpp_exceptions
+#define SUZUME_C_TRY try
+#define SUZUME_C_CATCH(fallback) \
+  catch (...) {                  \
+    setLastErrorFromException(); \
+    fallback;                    \
+  }
+#else
+#define SUZUME_C_TRY
+#define SUZUME_C_CATCH(fallback)
+#endif
 
 constexpr size_t alignUp(size_t value, size_t alignment) {
   return (value + alignment - 1) & ~(alignment - 1);
@@ -104,12 +124,10 @@ extern "C" {
 
 SUZUME_EXPORT suzume_t suzume_create(void) {
   clearLastError();
-  try {
+  SUZUME_C_TRY {
     return new SuzumeHandle();
-  } catch (...) {
-    setLastErrorFromException();
-    return nullptr;
   }
+  SUZUME_C_CATCH(return nullptr)
 }
 
 SUZUME_EXPORT void suzume_init_extended_options(suzume_extended_options_t* options) {
@@ -142,7 +160,7 @@ SUZUME_EXPORT void suzume_init_tag_options(suzume_tag_options_t* options) {
 
 SUZUME_EXPORT suzume_t suzume_create_with_extended_options(const suzume_extended_options_t* options) {
   clearLastError();
-  try {
+  SUZUME_C_TRY {
     suzume::SuzumeOptions opts;
     if (options != nullptr) {
       opts.normalize_options.preserve_vu = (options->preserve_vu != 0);
@@ -158,10 +176,8 @@ SUZUME_EXPORT suzume_t suzume_create_with_extended_options(const suzume_extended
       opts.merge_compounds = (options->merge_compounds != 0);
     }
     return new SuzumeHandle(opts);
-  } catch (...) {
-    setLastErrorFromException();
-    return nullptr;
   }
+  SUZUME_C_CATCH(return nullptr)
 }
 
 SUZUME_EXPORT void suzume_destroy(suzume_t handle) {
@@ -182,7 +198,7 @@ SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text)
   }
 
   clearLastError();
-  try {
+  SUZUME_C_TRY {
     auto morphemes = handle->instance.analyze(text);
 
     size_t strings_size = 0;
@@ -245,10 +261,8 @@ SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text)
     }
 
     return result;
-  } catch (...) {
-    setLastErrorFromException();
-    return nullptr;
   }
+  SUZUME_C_CATCH(return nullptr)
 }
 
 SUZUME_EXPORT void suzume_result_free(suzume_result_t* result) {
@@ -266,12 +280,10 @@ SUZUME_EXPORT suzume_tags_t* suzume_generate_tags(suzume_t handle, const char* t
   }
 
   clearLastError();
-  try {
+  SUZUME_C_TRY {
     return makeTagsResult(handle->instance.generateTags(text));
-  } catch (...) {
-    setLastErrorFromException();
-    return nullptr;
   }
+  SUZUME_C_CATCH(return nullptr)
 }
 
 SUZUME_EXPORT suzume_tags_t* suzume_generate_tags_with_options(suzume_t handle, const char* text,
@@ -282,7 +294,7 @@ SUZUME_EXPORT suzume_tags_t* suzume_generate_tags_with_options(suzume_t handle, 
   }
 
   clearLastError();
-  try {
+  SUZUME_C_TRY {
     suzume::postprocess::TagGeneratorOptions tag_opts;
     tag_opts.pos_filter = options->pos_filter;
     tag_opts.exclude_basic = (options->exclude_basic != 0);
@@ -296,10 +308,8 @@ SUZUME_EXPORT suzume_tags_t* suzume_generate_tags_with_options(suzume_t handle, 
     tag_opts.remove_duplicates = (options->remove_duplicates != 0);
 
     return makeTagsResult(handle->instance.generateTags(text, tag_opts));
-  } catch (...) {
-    setLastErrorFromException();
-    return nullptr;
   }
+  SUZUME_C_CATCH(return nullptr)
 }
 
 SUZUME_EXPORT void suzume_tags_free(suzume_tags_t* tags) {
@@ -317,17 +327,15 @@ SUZUME_EXPORT int suzume_load_user_dict(suzume_t handle, const char* data, size_
   }
 
   clearLastError();
-  try {
+  SUZUME_C_TRY {
     auto result = handle->instance.loadUserDictionaryFromMemoryResult(data, size);
     if (result.hasValue()) {
       return 1;
     }
     setLastError(result.error().message);
     return 0;
-  } catch (...) {
-    setLastErrorFromException();
-    return 0;
   }
+  SUZUME_C_CATCH(return 0)
 }
 
 SUZUME_EXPORT int suzume_load_binary_dict(suzume_t handle, const uint8_t* data, size_t size) {
@@ -337,17 +345,15 @@ SUZUME_EXPORT int suzume_load_binary_dict(suzume_t handle, const uint8_t* data, 
   }
 
   clearLastError();
-  try {
+  SUZUME_C_TRY {
     auto result = handle->instance.loadBinaryDictionaryResult(data, size);
     if (result.hasValue()) {
       return 1;
     }
     setLastError(result.error().message);
     return 0;
-  } catch (...) {
-    setLastErrorFromException();
-    return 0;
   }
+  SUZUME_C_CATCH(return 0)
 }
 
 SUZUME_EXPORT const char* suzume_version(void) {
