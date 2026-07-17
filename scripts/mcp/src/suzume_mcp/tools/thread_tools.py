@@ -180,6 +180,7 @@ def _process_lines(
     limit: int,
     progress: dict,
     verbose: bool = False,
+    record_issues: bool = True,
 ) -> tuple[list[dict], int, int, int, int]:
     """Process a range of lines and return results.
 
@@ -242,7 +243,8 @@ def _process_lines(
                 "diff_type": result.get("diff_type", "unknown"),
             }
             issues.append(issue)
-            _append_issue(current_line, line, result)
+            if record_issues:
+                _append_issue(current_line, line, result)
 
     return issues, processed, problems, skipped, max_line
 
@@ -285,6 +287,7 @@ async def thread_scan(
     count: int = 100,
     from_line: int = 0,
     input_file: str = "",
+    dry_run: bool = False,
 ) -> str:
     """Batch scan thread names for surface differences (compact output).
 
@@ -292,12 +295,15 @@ async def thread_scan(
         count: Number of lines to process.
         from_line: Start from specific line number (0 = continue from last).
         input_file: Path to thread names file. Defaults to backup/thread_names.txt.
+        dry_run: Inspect lines without writing issue JSON or updating progress.
     """
     filepath = Path(input_file) if input_file else DEFAULT_FILE
     if not filepath.exists():
         return _json_result({"status": "error", "message": f"Input file not found: {filepath}"})
 
     progress = _load_progress(str(filepath))
+    if dry_run:
+        progress = progress.copy()
     start = from_line if from_line > 0 else progress["last_checked"] + 1
 
     all_lines = filepath.read_text(encoding="utf-8").splitlines()
@@ -307,6 +313,7 @@ async def thread_scan(
         count,
         progress,
         verbose=False,
+        record_issues=not dry_run,
     )
 
     # Build issue list for JSON (only problems)
@@ -333,7 +340,7 @@ async def thread_scan(
                 }
             )
 
-    if max_line > 0:
+    if max_line > 0 and not dry_run:
         progress["last_checked"] = max_line
         _save_progress(progress)
 
@@ -347,6 +354,7 @@ async def thread_scan(
         "issues": json_issues,
         "diff_types": type_counts,
         "total_problems": progress["problems_found"],
+        "dry_run": dry_run,
     }
 
     return _json_result(result)
@@ -357,6 +365,7 @@ async def thread_next(
     count: int = 20,
     from_line: int = 0,
     input_file: str = "",
+    dry_run: bool = False,
 ) -> str:
     """Process next N lines interactively, showing problem details with diff classification.
 
@@ -364,12 +373,15 @@ async def thread_next(
         count: Number of lines to process.
         from_line: Start from specific line number (0 = continue from last).
         input_file: Path to thread names file. Defaults to backup/thread_names.txt.
+        dry_run: Inspect lines without writing issue JSON or updating progress.
     """
     filepath = Path(input_file) if input_file else DEFAULT_FILE
     if not filepath.exists():
         return _json_result({"status": "error", "message": f"Input file not found: {filepath}"})
 
     progress = _load_progress(str(filepath))
+    if dry_run:
+        progress = progress.copy()
     start = from_line if from_line > 0 else progress["last_checked"] + 1
 
     all_lines = filepath.read_text(encoding="utf-8").splitlines()
@@ -379,6 +391,7 @@ async def thread_next(
         count,
         progress,
         verbose=True,
+        record_issues=not dry_run,
     )
 
     # Build results list for JSON (all entries including matches)
@@ -415,7 +428,7 @@ async def thread_next(
                 }
             )
 
-    if max_line > 0:
+    if max_line > 0 and not dry_run:
         progress["last_checked"] = max_line
         _save_progress(progress)
 
@@ -429,6 +442,7 @@ async def thread_next(
         "results": results,
         "diff_types": type_counts,
         "total_problems": progress["problems_found"],
+        "dry_run": dry_run,
     }
 
     return _json_result(result)

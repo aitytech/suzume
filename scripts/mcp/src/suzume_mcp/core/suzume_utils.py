@@ -20,12 +20,16 @@ from .postprocessors import (
     postprocess_ikaga,
     postprocess_indefinite_ka,
     postprocess_iru_aux,
+    postprocess_itadakeru_aux,
     postprocess_mecab_tokens,
     postprocess_miru_aux,
+    postprocess_monono_conjunction,
     postprocess_n_kuruwa,
     postprocess_na_adj_noun,
     postprocess_nai_context,
     postprocess_nara_verb,
+    postprocess_quantity_bound_suffix,
+    postprocess_shimau_aux,
     postprocess_short_hiragana_onbin,
     postprocess_sou,
     postprocess_sou_aux,
@@ -33,6 +37,7 @@ from .postprocessors import (
     postprocess_tagaru_aux,
     postprocess_taihen,
     postprocess_tsuke_noun,
+    postprocess_tsurete_particle,
     postprocess_you_noun,
     preprocess_for_mecab,
 )
@@ -103,7 +108,14 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     postprocess_demo(tokens)
     postprocess_ii(tokens)
     postprocess_iru_aux(tokens)
+    postprocess_itadakeru_aux(tokens)
     postprocess_miru_aux(tokens)
+    postprocess_monono_conjunction(tokens)
+    postprocess_shimau_aux(tokens)
+    if postprocess_quantity_bound_suffix(tokens) and applied_rule is None:
+        applied_rule = "quantity-bound-suffix"
+    if postprocess_tsurete_particle(tokens) and applied_rule is None:
+        applied_rule = "tsurete-particle"
     if postprocess_tagaru_aux(tokens) and applied_rule is None:
         applied_rule = "tagaru-search-unit"
     if postprocess_fuu_formal_noun(tokens) and applied_rule is None:

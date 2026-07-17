@@ -3,8 +3,10 @@
 import regex
 
 from .constants import (
+    COUNTER_UNITS,
     EMPHATIC_SOKUON,
     INTERROGATIVES,
+    QUANTITY_BOUND_SUFFIXES,
     SLANG_ADJ_STEMS,
     SLANG_VERB_STEMS,
     UNUSUAL_NAMES,
@@ -232,6 +234,75 @@ def postprocess_miru_aux(tokens: list[dict]) -> None:
         token["lemma"] = "みる"
 
 
+def postprocess_shimau_aux(tokens: list[dict]) -> None:
+    """Classify the completive 仕舞う paradigm after a te-form as Auxiliary."""
+    shimau_forms = frozenset({"仕舞う", "仕舞わ", "仕舞い", "仕舞っ", "仕舞え", "仕舞お"})
+    for idx in range(1, len(tokens)):
+        token = tokens[idx]
+        if token.get("surface") not in shimau_forms:
+            continue
+        if tokens[idx - 1].get("surface") not in ("て", "で"):
+            continue
+        token["pos"] = "Auxiliary"
+        token["lemma"] = "しまう"
+
+
+def postprocess_quantity_bound_suffix(tokens: list[dict]) -> bool:
+    """Split a numeral+counter phrase from its closed-class bound suffix."""
+    counter_pattern = "|".join(regex.escape(unit) for unit in sorted(COUNTER_UNITS, key=len, reverse=True))
+    suffix_pattern = "|".join(regex.escape(suffix) for suffix in QUANTITY_BOUND_SUFFIXES)
+    quantity_only_pattern = regex.compile(rf"^[0-9０-９〇零一二三四五六七八九十百千万億兆]+(?:{counter_pattern})$")
+    quantity_pattern = regex.compile(
+        rf"^(?P<quantity>[0-9０-９〇零一二三四五六七八九十百千万億兆]+(?:{counter_pattern}))"
+        rf"(?P<suffix>{suffix_pattern})$"
+    )
+    changed = False
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        # MeCab sometimes already supplies the quantity and suffix as separate
+        # tokens but tags the homographic suffix as a verb stem (二本|立て).
+        # The preceding quantity fixes the closed-class suffix reading.
+        if (
+            index > 0
+            and token.get("surface") in QUANTITY_BOUND_SUFFIXES
+            and quantity_only_pattern.fullmatch(tokens[index - 1].get("surface", ""))
+        ):
+            token["pos"] = "Suffix"
+            token["lemma"] = token["surface"]
+            changed = True
+            index += 1
+            continue
+        match = quantity_pattern.fullmatch(token.get("surface", ""))
+        if match is None:
+            index += 1
+            continue
+        quantity = match.group("quantity")
+        suffix = match.group("suffix")
+        tokens[index : index + 1] = [
+            {"surface": quantity, "pos": "Noun", "lemma": quantity},
+            {"surface": suffix, "pos": "Suffix", "lemma": suffix},
+        ]
+        changed = True
+        index += 2
+    return changed
+
+
+def postprocess_tsurete_particle(tokens: list[dict]) -> bool:
+    """Keep the grammatical compound particle につれて as one search unit."""
+    changed = False
+    index = 0
+    while index + 2 < len(tokens):
+        surfaces = [tokens[index + offset].get("surface") for offset in range(3)]
+        if surfaces != ["に", "つれ", "て"]:
+            index += 1
+            continue
+        tokens[index : index + 3] = [{"surface": "につれて", "pos": "Particle", "lemma": "につれて"}]
+        changed = True
+        index += 1
+    return changed
+
+
 def postprocess_tagaru_aux(tokens: list[dict]) -> bool:
     """Keep the desiderative-observation auxiliary たがる as one search unit."""
     tagaru_forms = frozenset({"がら", "がり", "がる", "がれ", "がろ", "がっ"})
@@ -415,8 +486,18 @@ def postprocess_honorific_request(tokens: list[dict]) -> bool:
 
 
 def postprocess_de_particle(tokens: list[dict]) -> None:
-    """Keep the upstream copula/particle distinction for で unchanged."""
-    pass
+    """Normalize copular で before a binding particle."""
+    binding_surfaces = frozenset({"こそ", "さえ", "すら", "しか"})
+    for idx in range(1, len(tokens) - 1):
+        token = tokens[idx]
+        if token.get("surface") != "で" or token.get("pos") != "Particle":
+            continue
+        if tokens[idx + 1].get("surface") not in binding_surfaces:
+            continue
+        if tokens[idx - 1].get("pos") not in ("Noun", "Pronoun", "Adjective"):
+            continue
+        token["pos"] = "Auxiliary"
+        token["lemma"] = "だ"
 
 
 def postprocess_na_adj_noun(tokens: list[dict]) -> None:
@@ -513,10 +594,34 @@ def postprocess_gozai_verb(tokens: list[dict]) -> None:
 
 
 def postprocess_you_noun(tokens: list[dict]) -> None:
-    """Fix よう: Noun -> Auxiliary (Suzume treats よう as Auxiliary consistently)."""
-    for t in tokens:
-        if t.get("surface") == "よう" and t.get("pos") == "Noun":
+    """Normalize よう according to its grammatical context."""
+    for idx, t in enumerate(tokens):
+        if t.get("surface") != "よう":
+            continue
+        if idx > 0 and tokens[idx - 1].get("pos") == "Verb" and t.get("pos") == "Suffix":
+            t["pos"] = "Noun"
+        elif t.get("pos") == "Noun":
             t["pos"] = "Auxiliary"
+
+
+def postprocess_itadakeru_aux(tokens: list[dict]) -> None:
+    """Treat potential いただける as a humble subsidiary verb after a predicate."""
+    for idx, token in enumerate(tokens):
+        if token.get("surface") != "いただける" or token.get("pos") != "Verb" or idx == 0:
+            continue
+        previous_pos = tokens[idx - 1].get("pos")
+        if previous_pos in ("Verb", "Particle") or (
+            previous_pos == "Noun" and idx > 1 and tokens[idx - 2].get("pos") == "Prefix"
+        ):
+            token["pos"] = "Auxiliary"
+
+
+def postprocess_monono_conjunction(tokens: list[dict]) -> None:
+    """Normalize concessive ものの after a past auxiliary to Conjunction."""
+    for idx, token in enumerate(tokens):
+        if token.get("surface") == "ものの" and token.get("pos") == "Particle" and idx > 0:
+            if tokens[idx - 1].get("pos") == "Auxiliary":
+                token["pos"] = "Conjunction"
 
 
 def postprocess_sou_aux(tokens: list[dict]) -> None:

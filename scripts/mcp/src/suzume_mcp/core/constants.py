@@ -82,6 +82,10 @@ COUNTER_UNITS: list[str] = [
     "カ月",
 ]
 
+# Closed-class construction/composition suffixes that remain independent search
+# units after a numeral+counter phrase (二階|建て, 二本|立て).
+QUANTITY_BOUND_SUFFIXES: frozenset[str] = frozenset({"建て", "立て"})
+
 # Slang adjective stems -> standard replacement for MeCab preprocessing
 SLANG_ADJ_STEMS: dict[str, str] = {
     "エモ": "赤",
@@ -422,6 +426,7 @@ EMPHATIC_SOKUON: dict[str, str] = {
 # Adverb overrides (words MeCab misclassifies)
 ADVERB_OVERRIDES: set[str] = {
     "いずれ",
+    "いつか",
     "しどろもどろ",
     "その後",
     "なるほど",

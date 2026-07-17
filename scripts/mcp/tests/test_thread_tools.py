@@ -251,6 +251,27 @@ class TestThreadNext:
         assert result["processed"] == 3
         assert result["skipped"] == 1  # "hello" is ascii-only
 
+    def test_dry_run_does_not_write_progress_or_bugs(self, tmp_path, monkeypatch):
+        test_file = tmp_path / "thread_names.txt"
+        test_file.write_text("テスト文\n", encoding="utf-8")
+        progress_file = tmp_path / ".progress"
+        original_progress = f"file={test_file}\nlast_checked=0\nproblems_found=7\n"
+        progress_file.write_text(original_progress, encoding="utf-8")
+        bugs_dir = tmp_path / "bugs"
+        monkeypatch.setattr("suzume_mcp.tools.thread_tools.PROGRESS_FILE", progress_file)
+        monkeypatch.setattr("suzume_mcp.tools.thread_tools.BUGS_DIR", bugs_dir)
+        monkeypatch.setattr(
+            "suzume_mcp.tools.thread_tools._compare_surfaces",
+            lambda text: {"match": False, "expected": "テスト 文", "suzume": "テスト文", "diff_type": "under-split"},
+        )
+
+        result = parse_json(run(thread_next(count=1, input_file=str(test_file), dry_run=True)))
+
+        assert result["dry_run"] is True
+        assert result["problems"] == 1
+        assert progress_file.read_text(encoding="utf-8") == original_progress
+        assert not bugs_dir.exists()
+
 
 class TestThreadScan:
     def test_file_not_found(self):
@@ -268,6 +289,27 @@ class TestThreadScan:
 
         result = parse_json(run(thread_scan(count=10, input_file=str(test_file))))
         assert result["processed"] == 2
+
+    def test_dry_run_does_not_write_progress_or_bugs(self, tmp_path, monkeypatch):
+        test_file = tmp_path / "thread_names.txt"
+        test_file.write_text("テスト文\n", encoding="utf-8")
+        progress_file = tmp_path / ".progress"
+        original_progress = f"file={test_file}\nlast_checked=0\nproblems_found=7\n"
+        progress_file.write_text(original_progress, encoding="utf-8")
+        bugs_dir = tmp_path / "bugs"
+        monkeypatch.setattr("suzume_mcp.tools.thread_tools.PROGRESS_FILE", progress_file)
+        monkeypatch.setattr("suzume_mcp.tools.thread_tools.BUGS_DIR", bugs_dir)
+        monkeypatch.setattr(
+            "suzume_mcp.tools.thread_tools._compare_surfaces",
+            lambda text: {"match": False, "expected": "テスト 文", "suzume": "テスト文", "diff_type": "under-split"},
+        )
+
+        result = parse_json(run(thread_scan(count=1, input_file=str(test_file), dry_run=True)))
+
+        assert result["dry_run"] is True
+        assert result["problems"] == 1
+        assert progress_file.read_text(encoding="utf-8") == original_progress
+        assert not bugs_dir.exists()
 
 
 class TestThreadResetProgress:

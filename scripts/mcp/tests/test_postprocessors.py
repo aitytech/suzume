@@ -12,15 +12,20 @@ from suzume_mcp.core.postprocessors import (
     postprocess_ikaga,
     postprocess_indefinite_ka,
     postprocess_iru_aux,
+    postprocess_itadakeru_aux,
     postprocess_miru_aux,
     postprocess_na_adj_noun,
     postprocess_nara_verb,
+    postprocess_quantity_bound_suffix,
+    postprocess_shimau_aux,
     postprocess_short_hiragana_onbin,
     postprocess_sou,
     postprocess_subsidiary_yuku,
     postprocess_tagaru_aux,
     postprocess_te,
     postprocess_tsuke_noun,
+    postprocess_tsurete_particle,
+    postprocess_you_noun,
     preprocess_for_mecab,
 )
 
@@ -93,6 +98,18 @@ class TestPostprocessDemo:
         assert tokens[0]["pos"] == "Conjunction"
 
 
+class TestPostprocessDeParticleNoop:
+    def test_copula_before_binding_particle(self):
+        tokens = [_tok("本", "Noun"), _tok("で", "Particle"), _tok("しか", "Particle")]
+        postprocess_de_particle(tokens)
+        assert tokens[1] == _tok("で", "Auxiliary", lemma="だ")
+
+    def test_case_particle_without_binding_particle(self):
+        tokens = [_tok("本", "Noun"), _tok("で", "Particle"), _tok("学ぶ", "Verb")]
+        postprocess_de_particle(tokens)
+        assert tokens[1] == _tok("で", "Particle")
+
+
 class TestPostprocessIi:
     def test_ii_adjective(self):
         tokens = [_tok("いい", "Verb", lemma="いう")]
@@ -136,6 +153,51 @@ class TestPostprocessMiruAux:
         tokens = [_tok("花", "Noun"), _tok("を", "Particle"), _tok("みる", "Verb")]
         postprocess_miru_aux(tokens)
         assert tokens[2]["pos"] == "Verb"
+
+
+class TestPostprocessShimauAux:
+    def test_kanji_shimau_after_te(self):
+        tokens = [_tok("て", "Particle"), _tok("仕舞っ", "Verb", lemma="仕舞う"), _tok("た", "Auxiliary")]
+        postprocess_shimau_aux(tokens)
+        assert tokens[1] == _tok("仕舞っ", "Auxiliary", lemma="しまう")
+
+    def test_kanji_shimau_standalone(self):
+        tokens = [_tok("物", "Noun"), _tok("を", "Particle"), _tok("仕舞う", "Verb")]
+        postprocess_shimau_aux(tokens)
+        assert tokens[2] == _tok("仕舞う", "Verb")
+
+
+class TestPostprocessQuantityBoundSuffix:
+    def test_quantity_counter_is_split_from_bound_suffix(self):
+        tokens = [_tok("二階建て", "Noun"), _tok("三本立て", "Noun")]
+        assert postprocess_quantity_bound_suffix(tokens)
+        assert [(token["surface"], token["pos"]) for token in tokens] == [
+            ("二階", "Noun"),
+            ("建て", "Suffix"),
+            ("三本", "Noun"),
+            ("立て", "Suffix"),
+        ]
+
+    def test_non_quantity_verb_is_not_split(self):
+        tokens = [_tok("建てる", "Verb")]
+        assert not postprocess_quantity_bound_suffix(tokens)
+        assert tokens == [_tok("建てる", "Verb")]
+
+    def test_separate_homographic_verb_stem_becomes_suffix(self):
+        tokens = [_tok("二本", "Noun"), _tok("立て", "Verb", lemma="立てる")]
+        assert postprocess_quantity_bound_suffix(tokens)
+        assert tokens[1] == _tok("立て", "Suffix")
+
+
+class TestPostprocessTsureteParticle:
+    def test_hiragana_compound_particle(self):
+        tokens = [_tok("年", "Noun"), _tok("に", "Particle"), _tok("つれ", "Verb"), _tok("て", "Particle")]
+        assert postprocess_tsurete_particle(tokens)
+        assert tokens == [_tok("年", "Noun"), _tok("につれて", "Particle")]
+
+    def test_kanji_verb_is_not_compound_particle(self):
+        tokens = [_tok("年", "Noun"), _tok("に", "Particle"), _tok("連れ", "Verb"), _tok("て", "Particle")]
+        assert not postprocess_tsurete_particle(tokens)
 
 
 class TestPostprocessNaraVerb:
@@ -283,6 +345,20 @@ class TestPostprocessTsukeNoun:
         tokens = [_tok("付け", "Suffix")]
         postprocess_tsuke_noun(tokens)
         assert tokens[0]["pos"] == "Noun"
+
+
+class TestPostprocessYouNoun:
+    def test_renyokei_you_is_formal_noun(self):
+        tokens = [_tok("読み", "Verb", lemma="読む"), _tok("よう", "Suffix")]
+        postprocess_you_noun(tokens)
+        assert tokens[1]["pos"] == "Noun"
+
+
+class TestPostprocessItadakeruAux:
+    def test_after_te_particle_is_auxiliary(self):
+        tokens = [_tok("て", "Particle"), _tok("いただける", "Verb")]
+        postprocess_itadakeru_aux(tokens)
+        assert tokens[1]["pos"] == "Auxiliary"
 
 
 class TestPostprocessCopulaNeg:
