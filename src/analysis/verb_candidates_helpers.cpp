@@ -5,7 +5,7 @@
 
 #include "verb_candidates_helpers.h"
 
-#include <algorithm>
+#include <utility>
 
 #include "analysis/candidate_constants.h"
 #include "analysis/scorer_constants.h"
@@ -156,8 +156,18 @@ bool isVerifiedVerbBase(const dictionary::DictionaryManager* dict_manager, const
 // =============================================================================
 
 void sortCandidatesByCost(std::vector<UnknownCandidate>& candidates) {
-  std::sort(candidates.begin(), candidates.end(),
-            [](const UnknownCandidate& lhs, const UnknownCandidate& rhs) { return lhs.cost < rhs.cost; });
+  // Candidate lists are small and already close to generation order. A stable
+  // insertion sort avoids pulling the generic introsort implementation into
+  // WASM while keeping equal-cost candidates deterministic.
+  for (size_t idx = 1; idx < candidates.size(); ++idx) {
+    UnknownCandidate candidate = std::move(candidates[idx]);
+    size_t insert_at = idx;
+    while (insert_at > 0 && candidates[insert_at - 1].cost > candidate.cost) {
+      candidates[insert_at] = std::move(candidates[insert_at - 1]);
+      --insert_at;
+    }
+    candidates[insert_at] = std::move(candidate);
+  }
 }
 
 // =============================================================================

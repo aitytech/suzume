@@ -5,7 +5,6 @@
 
 #include "auxiliary_generator.h"
 
-#include <algorithm>
 #include <iterator>
 #include <string_view>
 #include <utility>
@@ -684,6 +683,37 @@ void appendAuxiliaryBase(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>&
   }
 }
 
+std::vector<AuxiliaryEntry> orderBySurfaceLength(std::vector<AuxiliaryEntry> entries) {
+  size_t max_length = 0;
+  for (const auto& entry : entries) {
+    if (entry.surface.size() > max_length) {
+      max_length = entry.surface.size();
+    }
+  }
+
+  // Counting-sort by byte length. UTF-8 suffix matching also uses byte length,
+  // so no character decoding is needed. Equal-length entries retain generation
+  // order, making their ordering deterministic.
+  std::vector<size_t> offsets(max_length + 1);
+  for (const auto& entry : entries) {
+    ++offsets[entry.surface.size()];
+  }
+  size_t offset = 0;
+  for (size_t length = max_length + 1; length > 0;) {
+    --length;
+    const size_t count = offsets[length];
+    offsets[length] = offset;
+    offset += count;
+  }
+
+  std::vector<AuxiliaryEntry> ordered(entries.size());
+  for (auto& entry : entries) {
+    const size_t length = entry.surface.size();
+    ordered[offsets[length]++] = std::move(entry);
+  }
+  return ordered;
+}
+
 }  // namespace
 
 std::vector<AuxiliaryEntry> generateAllAuxiliaries() {
@@ -697,12 +727,7 @@ std::vector<AuxiliaryEntry> generateAllAuxiliaries() {
   // Add special patterns that cannot be auto-generated
   addSpecialPatterns(result);
 
-  // Sort by surface length (longest first) for greedy matching
-  std::sort(result.begin(), result.end(), [](const AuxiliaryEntry& lhs, const AuxiliaryEntry& rhs) {
-    return lhs.surface.size() > rhs.surface.size();
-  });
-
-  return result;
+  return orderBySurfaceLength(std::move(result));
 }
 
 }  // namespace suzume::grammar

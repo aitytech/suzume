@@ -6,6 +6,7 @@
 #include "inflection.h"
 
 #include <algorithm>
+#include <utility>
 
 #include "char_patterns.h"
 #include "core/debug.h"
@@ -26,6 +27,18 @@ inline bool isVoicedAux(std::string_view aux) {
 // Check if auxiliary starts with unvoiced te-form (て/た)
 inline bool isUnvoicedAux(std::string_view aux) {
   return utf8::startsWith(aux, "て") || utf8::startsWith(aux, "た");
+}
+
+void stableSortByConfidence(std::vector<InflectionCandidate>& candidates) {
+  for (size_t idx = 1; idx < candidates.size(); ++idx) {
+    InflectionCandidate candidate = std::move(candidates[idx]);
+    size_t insert_at = idx;
+    while (insert_at > 0 && candidates[insert_at - 1].confidence < candidate.confidence) {
+      candidates[insert_at] = std::move(candidates[insert_at - 1]);
+      --insert_at;
+    }
+    candidates[insert_at] = std::move(candidate);
+  }
 }
 
 }  // namespace
@@ -466,11 +479,8 @@ const std::vector<InflectionCandidate>& Inflection::analyze(std::string_view sur
   // 2. Auxiliary chain matching for compound patterns
 
   // Sort by confidence (descending)
-  // Use stable_sort to preserve the original order for candidates with equal
-  // confidence. This ensures consistent behavior regardless of pattern count.
-  std::stable_sort(
-      candidates.begin(), candidates.end(),
-      [](const InflectionCandidate& lhs, const InflectionCandidate& rhs) { return lhs.confidence > rhs.confidence; });
+  // Preserve the original order for candidates with equal confidence.
+  stableSortByConfidence(candidates);
 
   // Remove duplicates (same base_form and verb_type)
   auto dup_end = std::unique(candidates.begin(), candidates.end(),

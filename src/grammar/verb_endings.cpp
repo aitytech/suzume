@@ -8,7 +8,6 @@
 
 #include "verb_endings.h"
 
-#include <algorithm>
 #include <array>
 #include <iterator>
 #include <utility>
@@ -161,21 +160,18 @@ VerbEndingTable buildVerbEndingTable() {
     tagged.push_back({{spec.suffix, spec.base_suffix, spec.verb_type, spec.is_onbin}, spec.provides_conn});
   }
 
-  // Preserve the old scan order inside each connection group while laying all
-  // entries out in one contiguous allocation.
-  std::stable_sort(tagged.begin(), tagged.end(), [](const TaggedVerbEnding& lhs, const TaggedVerbEnding& rhs) {
-    return lhs.provides_conn < rhs.provides_conn;
-  });
-
   VerbEndingTable table;
   table.endings.reserve(tagged.size());
-  size_t tagged_index = 0;
+  // There are only nine connection groups. Scanning the small initialization
+  // table once per group is cheaper in code size than instantiating stable_sort,
+  // and preserves the original order within every group.
   for (size_t group_index = 0; group_index < kEndingGroupCount; ++group_index) {
     const uint16_t provides_conn = static_cast<uint16_t>(conn::kVerbBase + group_index);
     const size_t offset = table.endings.size();
-    while (tagged_index < tagged.size() && tagged[tagged_index].provides_conn == provides_conn) {
-      table.endings.push_back(std::move(tagged[tagged_index].ending));
-      ++tagged_index;
+    for (auto& item : tagged) {
+      if (item.provides_conn == provides_conn) {
+        table.endings.push_back(std::move(item.ending));
+      }
     }
     table.groups[group_index] = {offset, table.endings.size() - offset};
   }

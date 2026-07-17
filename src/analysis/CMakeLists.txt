@@ -56,3 +56,8 @@ target_link_libraries(suzume_analysis
     suzume_grammar
     suzume_pretokenizer
 )
+
+# Keep the analysis hot path speed-oriented while the rest of WASM uses -Oz.
+if(BUILD_WASM)
+  target_compile_options(suzume_analysis PRIVATE -Os)
+endif()
