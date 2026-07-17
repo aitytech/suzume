@@ -11,6 +11,19 @@ def get_test_data_dir(project_root: Path) -> Path:
     return project_root / "tests" / "data" / "tokenization"
 
 
+def normalize_test_file_name(file: str) -> str:
+    """Return a safe test-file basename, without one or more .json suffixes."""
+    name = file.strip()
+    if not name or Path(name).name != name:
+        raise ValueError("Test file must be a non-empty filename, not a path")
+
+    while name.lower().endswith(".json"):
+        name = name[:-5]
+    if not name:
+        raise ValueError("Test file basename cannot be empty")
+    return name
+
+
 def get_test_files(project_root: Path) -> list[Path]:
     """Get all test JSON files sorted by name."""
     test_dir = get_test_data_dir(project_root)

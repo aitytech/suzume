@@ -12,6 +12,7 @@ from ..core.test_file_utils import (
     generate_id,
     get_test_data_dir,
     load_json,
+    normalize_test_file_name,
     save_json,
 )
 from ..server import PROJECT_ROOT, mcp
@@ -70,11 +71,16 @@ async def test_add(
         return _json_error(str(exc))
     test_id = case_id or generate_id(input_text)
 
-    path = get_test_data_dir(PROJECT_ROOT) / f"{file}.json"
+    try:
+        file_name = normalize_test_file_name(file)
+    except ValueError as exc:
+        return _json_error(str(exc))
+
+    path = get_test_data_dir(PROJECT_ROOT) / f"{file_name}.json"
     if path.exists():
         data = load_json(path)
     else:
-        data = {"version": "1.0", "description": f"{file} tests", "cases": []}
+        data = {"version": "1.0", "description": f"{file_name} tests", "cases": []}
 
     cases_key = "cases" if "cases" in data else "test_cases"
     data.setdefault(cases_key, [])
@@ -101,7 +107,7 @@ async def test_add(
     return _json_result(
         {
             "status": "ok",
-            "file": file,
+            "file": file_name,
             "input": input_text,
             "id": test_id,
             "source": source,
@@ -229,6 +235,11 @@ async def test_batch_add(
         apply: If True, actually add. Default is dry-run preview.
         use_suzume: If True, use Suzume output for expected.
     """
+    try:
+        file_name = normalize_test_file_name(file)
+    except ValueError as exc:
+        return _json_error(str(exc))
+
     to_add = []
     skipped = []
 
@@ -288,18 +299,18 @@ async def test_batch_add(
         ]
         return _json_result(
             {
-                "file": file,
+                "file": file_name,
                 "to_add": to_add_out,
                 "skipped": skipped,
                 "applied": False,
             }
         )
 
-    path = get_test_data_dir(PROJECT_ROOT) / f"{file}.json"
+    path = get_test_data_dir(PROJECT_ROOT) / f"{file_name}.json"
     if path.exists():
         data = load_json(path)
     else:
-        data = {"version": "1.0", "description": f"{file} tests", "cases": []}
+        data = {"version": "1.0", "description": f"{file_name} tests", "cases": []}
 
     cases_key = "cases" if "cases" in data else "test_cases"
     data.setdefault(cases_key, [])
@@ -328,7 +339,7 @@ async def test_batch_add(
     ]
     return _json_result(
         {
-            "file": file,
+            "file": file_name,
             "to_add": to_add_out,
             "skipped": skipped,
             "applied": True,

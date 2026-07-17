@@ -9,6 +9,7 @@ from suzume_mcp.core.test_file_utils import (
     get_failures_from_test_output,
     get_test_files,
     load_json,
+    normalize_test_file_name,
     save_json,
 )
 
@@ -34,6 +35,19 @@ def test_generate_id_kanji():
     # Kanji should become underscores
     result = generate_id("日本語")
     assert "_" in result or result.isascii()
+
+
+def test_normalize_test_file_name_strips_repeated_suffixes():
+    assert normalize_test_file_name("basic.json.json") == "basic"
+
+
+def test_normalize_test_file_name_rejects_path():
+    try:
+        normalize_test_file_name("nested/basic.json")
+    except ValueError as exc:
+        assert "not a path" in str(exc)
+    else:
+        raise AssertionError("Expected invalid test filename to be rejected")
 
 
 def test_load_save_json(tmp_path):
