@@ -201,7 +201,6 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("たい", "たい", EPOS::AuxDesireTai),
       aux("たく", "たい", EPOS::AuxDesireTai),
       aux("たかっ", "たい", EPOS::AuxDesireTai),
-      adj("たければ", "たい", EPOS::AuxDesireTai),
       // たがる (3rd-person desiderative): conjugates like a godan-ra verb
       aux("たがる", "たがる", EPOS::AuxDesireTai),  // 終止/連体
       aux("たがら", "たがる", EPOS::AuxDesireTai),  // 未然 (+ない)
@@ -209,7 +208,7 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("たがり", "たがる", EPOS::AuxDesireTai),  // 連用 (+ます)
       aux("たがっ", "たがる", EPOS::AuxDesireTai),  // 連用促音便 (+た/て)
       aux("たがれ", "たがる", EPOS::AuxDesireTai),  // 仮定 (+ば)
-
+      adj("たければ", "たい", EPOS::AuxDesireTai),
       // Irregular i-adjective よい/いい (形容詞・アウオ段)
       // MeCab: よければ → よけれ(仮定形) + ば, よかった → よかっ(連用タ接続) + た
       // いい is colloquial form of よい, shares conjugated forms (よかった, よければ, etc.)

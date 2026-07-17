@@ -25,6 +25,7 @@ std::string lemmatizeContractedVerbWithDictionary(std::string_view surface,
                                                   const dictionary::DictionaryManager* dict_manager);
 std::string lemmatizeSuruPassiveWithDictionary(std::string_view surface,
                                                const dictionary::DictionaryManager* dict_manager);
+std::string lemmatizeVerbFallback(std::string_view surface);
 
 }  // namespace suzume::postprocess::lemmatizer_detail
 

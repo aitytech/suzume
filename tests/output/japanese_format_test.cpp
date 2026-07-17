@@ -14,6 +14,7 @@
 #include "dictionary/user_dict.h"
 #include "grammar/conjugation.h"
 #include "postprocess/lemmatizer.h"
+#include "postprocess/lemmatizer_internal.h"
 #include "suzume.h"
 
 namespace suzume::output::test {
@@ -176,6 +177,64 @@ TEST(LemmatizerTest, DictionarySuruPassiveReturnsSuruLemma) {
   morpheme.surface = "確認されて";
   morpheme.lemma = "確認されて";
   EXPECT_EQ(lemmatizer.lemmatize(morpheme), "確認する");
+}
+
+TEST(LemmatizerTest, FallbackGodanMizenRulesUseCanonicalRows) {
+  using postprocess::lemmatizer_detail::lemmatizeVerbFallback;
+
+  EXPECT_EQ(lemmatizeVerbFallback("書かれている"), "書く");
+  EXPECT_EQ(lemmatizeVerbFallback("泳がれました"), "泳ぐ");
+  EXPECT_EQ(lemmatizeVerbFallback("話されて"), "話す");
+  EXPECT_EQ(lemmatizeVerbFallback("待たせる"), "待つ");
+  EXPECT_EQ(lemmatizeVerbFallback("読ませた"), "読む");
+  EXPECT_EQ(lemmatizeVerbFallback("買わない"), "買う");
+  EXPECT_EQ(lemmatizeVerbFallback("買える"), "買う");
+  EXPECT_EQ(lemmatizeVerbFallback("書ける"), "書く");
+  EXPECT_EQ(lemmatizeVerbFallback("泳げる"), "泳ぐ");
+  EXPECT_EQ(lemmatizeVerbFallback("話せる"), "話す");
+  EXPECT_EQ(lemmatizeVerbFallback("死ねる"), "死ぬ");
+  EXPECT_EQ(lemmatizeVerbFallback("遊べる"), "遊ぶ");
+  EXPECT_EQ(lemmatizeVerbFallback("読める"), "読む");
+  EXPECT_EQ(lemmatizeVerbFallback("取れる"), "取る");
+}
+
+TEST(LemmatizerTest, HatsuonbinFallbackUsesCanonicalOnbinRows) {
+  dictionary::DictionaryManager dict_manager;
+  auto user_dict = std::make_shared<dictionary::UserDictionary>();
+  user_dict->addEntry({"学ぶ", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "学ぶ"});
+  user_dict->addEntry({"死ぬ", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "死ぬ"});
+  dict_manager.addUserDictionary(user_dict);
+
+  using postprocess::lemmatizer_detail::fixHatsuonbin;
+  EXPECT_EQ(fixHatsuonbin("学", &dict_manager), "学ぶ");
+  EXPECT_EQ(fixHatsuonbin("死", &dict_manager), "死ぬ");
+  EXPECT_EQ(fixHatsuonbin("読", nullptr), "読む");
+}
+
+TEST(LemmatizerTest, PotentialVerbFallbackUsesCanonicalARows) {
+  core::Morpheme morpheme;
+  morpheme.pos = core::PartOfSpeech::Verb;
+
+  for (std::string_view surface :
+       {"買われる", "書かれる", "泳がれる", "話される", "待たれる", "死なれる", "読まれる", "遊ばれる", "取られる"}) {
+    morpheme.surface = surface;
+    EXPECT_EQ(postprocess::lemmatizer_detail::fixPotentialVerb(morpheme), surface);
+  }
+
+  morpheme.surface = "書ける";
+  EXPECT_TRUE(postprocess::lemmatizer_detail::fixPotentialVerb(morpheme).empty());
+}
+
+TEST(LemmatizerTest, IchidanRenyokeiFallbackUsesCanonicalIRows) {
+  using postprocess::lemmatizer_detail::fixIchidanRenyokeiBeforeTe;
+  EXPECT_EQ(fixIchidanRenyokeiBeforeTe("借り", "借る", "て", nullptr), "借りる");
+  EXPECT_EQ(fixIchidanRenyokeiBeforeTe("過ぎ", "過ぐ", "た", nullptr), "過ぎる");
+
+  dictionary::DictionaryManager dict_manager;
+  auto user_dict = std::make_shared<dictionary::UserDictionary>();
+  user_dict->addEntry({"走る", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "走る"});
+  dict_manager.addUserDictionary(user_dict);
+  EXPECT_TRUE(fixIchidanRenyokeiBeforeTe("走り", "走る", "て", &dict_manager).empty());
 }
 
 // =============================================================================

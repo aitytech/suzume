@@ -1,10 +1,7 @@
-#include <algorithm>
-
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
 #include "grammar/inflection_scorer_constants.h"
-#include "normalize/char_type.h"
 #include "normalize/utf8.h"
 #include "postprocess/lemmatizer.h"
 #include "postprocess/lemmatizer_internal.h"
@@ -12,81 +9,38 @@
 namespace suzume::postprocess {
 namespace lemmatizer_detail {
 
-// Potential verb (可能動詞) endings: godan stem + れる
-// E.g., 書ける (かける), 泊まれる (とまれる), 読める (よめる)
+// Potential verb (可能動詞) ending: godan a-row stem + れる
+// E.g., 泊まれる (とまれる)
 // Single token 〜れる verbs are treated as potential (ichidan), not passive.
 // Passive forms are split (読ま+れる), so single token 〜れる is likely potential.
-constexpr std::string_view kPotentialVerbEndings[] = {"われる", "かれる", "がれる", "される", "たれる",
-                                                      "なれる", "まれる", "ばれる", "られる"};
-
-// Check if surface ends with any potential verb ending
 bool endsWithPotentialVerbSuffix(std::string_view surface) {
-  for (const auto& ending : kPotentialVerbEndings) {
-    if (surface.size() >= ending.size() && surface.substr(surface.size() - ending.size()) == ending) {
-      return true;
-    }
+  if (surface.size() < core::kThreeJapaneseCharBytes || !utf8::endsWith(surface, "れる")) {
+    return false;
   }
-  return false;
+  const std::string_view a_row = utf8::lastChar(utf8::dropLast2Chars(surface));
+  return !grammar::godanBaseSuffixFromARow(utf8::decodeFirstChar(a_row)).empty();
 }
 
 // Verb endings and their base forms
 struct VerbEnding {
   std::string_view suffix;
+  // Empty only for canonical Godan row reversal; fixed rules store their base.
   std::string_view base;
 };
 
-// =============================================================================
-// Godan verb conjugation base mapping
-// Each entry maps a consonant row (未然形語尾) to its dictionary form ending
-// =============================================================================
-// clang-format off
-
-// Godan consonant → dictionary form mapping
-// Format: {consonant, base} where consonant is 未然形 and base is 終止形
-#define GODAN_ROWS \
-  X("わ", "う") X("か", "く") X("が", "ぐ") X("さ", "す") X("た", "つ") \
-  X("な", "ぬ") X("ま", "む") X("ば", "ぶ") X("ら", "る")
-
-// Generate passive forms for all godan rows: C + suffix → base
-// Passive: 未然形 + れる (e.g., 買わ + れる → 買う)
-#define PASSIVE(suffix) \
-  X("わ" suffix, "う") X("か" suffix, "く") X("が" suffix, "ぐ") \
-  X("さ" suffix, "す") X("た" suffix, "つ") X("な" suffix, "ぬ") \
-  X("ま" suffix, "む") X("ば" suffix, "ぶ") X("ら" suffix, "る")
-
-// Generate causative forms for all godan rows: C + suffix → base
-// Causative: 未然形 + せる (e.g., 書か + せる → 書く)
-#define CAUSATIVE(suffix) \
-  X("わ" suffix, "う") X("か" suffix, "く") X("が" suffix, "ぐ") \
-  X("さ" suffix, "す") X("た" suffix, "つ") X("な" suffix, "ぬ") \
-  X("ま" suffix, "む") X("ば" suffix, "ぶ") X("ら" suffix, "る")
-
-// Generate causative-passive forms (no さ row - される is ambiguous with passive)
-#define CAUSATIVE_PASSIVE(suffix) \
-  X("わ" suffix, "う") X("か" suffix, "く") X("が" suffix, "ぐ") \
-  X("た" suffix, "つ") X("な" suffix, "ぬ") \
-  X("ま" suffix, "む") X("ば" suffix, "ぶ") X("ら" suffix, "る")
-
-// Generate negative forms: C + ない → base
-#define NEGATIVE(suffix) \
-  X("わ" suffix, "う") X("か" suffix, "く") X("が" suffix, "ぐ") \
-  X("さ" suffix, "す") X("た" suffix, "つ") X("な" suffix, "ぬ") \
-  X("ま" suffix, "む") X("ば" suffix, "ぶ") X("ら" suffix, "る")
-
-// X macro helper for VerbEnding generation
-#define X(suffix, base) {suffix, base},
+constexpr float kUnverifiedLemmaConfidenceThreshold = 0.5F;
 
 // Common verb conjugation endings (simplified)
 // NOTE: Order matters - longer patterns should come first
 const VerbEnding kVerbEndings[] = {
     // Polite humble forms with おります (longest first)
-    {"しております", "する"},  // している polite humble
-    {"しておりました", "する"},  // していた polite humble
-    {"いたしております", "いたす"},  // している super polite
+    {"しております", "する"},          // している polite humble
+    {"しておりました", "する"},        // していた polite humble
+    {"いたしております", "いたす"},    // している super polite
     {"いたしておりました", "いたす"},  // していた super polite
-    {"ております", "おる"},  // ている polite humble
-    {"ておりました", "おる"},  // ていた polite humble
-    {"おります", "おる"},  // いる polite humble
+    {"ております", "おる"},            // ている polite humble
+    {"ておりました", "おる"},          // ていた polite humble
+    {"おります", "おる"},              // いる polite humble
 
     // Suru-verb te-form + subsidiary verbs (longest first)
     // These are compound patterns where [noun]して[subsidiary] → [noun]する
@@ -157,9 +111,9 @@ const VerbEnding kVerbEndings[] = {
 
     // Colloquial とく/どく contractions (ておく → とく)
     // Ichidan: stem + とく → stem + る
-    {"とく", "る"},      // 見とく → 見る, 食べとく → 食べる
-    {"といた", "る"},    // 見といた → 見る
-    {"といて", "る"},    // 見といて → 見る
+    {"とく", "る"},    // 見とく → 見る, 食べとく → 食べる
+    {"といた", "る"},  // 見といた → 見る
+    {"といて", "る"},  // 見といて → 見る
     // Godan onbinkei: stem + んどく → stem + む/ぶ/ぬ
     {"んどく", "む"},    // 読んどく → 読む
     {"んどいた", "む"},  // 読んどいた → 読む
@@ -175,17 +129,17 @@ const VerbEnding kVerbEndings[] = {
 
     // Colloquial てる/でる contractions (ている → てる)
     // Godan sokuon: stem + ってる → stem + う/つ/る
-    {"ってる", "う"},    // 買ってる → 買う, 待ってる → 待つ
-    {"ってた", "う"},    // 買ってた → 買う
+    {"ってる", "う"},  // 買ってる → 買う, 待ってる → 待つ
+    {"ってた", "う"},  // 買ってた → 買う
     // Godan i-row: stem + いてる → stem + く
-    {"いてる", "く"},    // 書いてる → 書く
-    {"いてた", "く"},    // 書いてた → 書く
+    {"いてる", "く"},  // 書いてる → 書く
+    {"いてた", "く"},  // 書いてた → 書く
     // Godan n-row: stem + んでる → stem + む/ぶ/ぬ
-    {"んでる", "む"},    // 読んでる → 読む
-    {"んでた", "む"},    // 読んでた → 読む
+    {"んでる", "む"},  // 読んでる → 読む
+    {"んでた", "む"},  // 読んでた → 読む
     // Ichidan: stem + てる → stem + る
-    {"てる", "る"},      // 見てる → 見る, 食べてる → 食べる
-    {"てた", "る"},      // 見てた → 見る
+    {"てる", "る"},  // 見てる → 見る, 食べてる → 食べる
+    {"てた", "る"},  // 見てた → 見る
 
     // Volitional form (意志形)
     // Ichidan: stem + よう → stem + る
@@ -235,30 +189,24 @@ const VerbEnding kVerbEndings[] = {
     {"ていった", "る"},
 
     // =========================================================================
-    // Passive forms (受身形) - generated via PASSIVE macro
+    // Passive forms (受身形): 五段未然形 + suffix.
     // Pattern: 未然形 + れる/れた/れて/れない/れます/れました/れている
     // =========================================================================
-    PASSIVE("れている")   // Progressive (longest first)
-    PASSIVE("れました")   // Polite past
-    PASSIVE("れない")     // Negative
-    PASSIVE("れます")     // Polite
-    PASSIVE("れる")       // Dictionary
-    PASSIVE("れた")       // Past
-    PASSIVE("れて")       // Te-form
+    {"れている", ""},  // Progressive (longest first)
+    {"れました", ""},  // Polite past
+    {"れない", ""},    // Negative
+    {"れます", ""},    // Polite
+    {"れる", ""},      // Dictionary
+    {"れた", ""},      // Past
+    {"れて", ""},      // Te-form
 
     // =========================================================================
-    // Causative forms (使役形) - generated via CAUSATIVE macro
+    // Causative forms (使役形): 五段未然形 + suffix.
     // Pattern: 未然形 + せる/せた/せて
     // =========================================================================
-    CAUSATIVE("せる")     // Dictionary
-    CAUSATIVE("せた")     // Past
-    CAUSATIVE("せて")     // Te-form
-
-    // =========================================================================
-    // Causative-passive forms (使役受身形)
-    // Pattern: 未然形 + される (note: さ row excluded - ambiguous with passive)
-    // =========================================================================
-    CAUSATIVE_PASSIVE("された")
+    {"せる", ""},  // Dictionary
+    {"せた", ""},  // Past
+    {"せて", ""},  // Te-form
 
     // Godan verbs (onbin forms)
     {"った", "う"},
@@ -290,34 +238,17 @@ const VerbEnding kVerbEndings[] = {
     {"します", "する"},
     {"ます", "る"},
 
-    // Nai-form - generated via NEGATIVE macro
-    NEGATIVE("ない")
+    // Nai-form: 五段未然形 + ない
+    {"ない", ""},
     {"ない", "る"},  // Ichidan fallback
 
-    // Potential
-    {"える", "う"},
-    {"ける", "く"},
-    {"せる", "す"},
-    {"てる", "つ"},
-    {"ねる", "ぬ"},
-    {"べる", "ぶ"},
-    {"める", "む"},
-    {"れる", "る"},
-    {"げる", "ぐ"},
+    // Potential: 五段え段 + る
+    {"る", ""},
 
     // Passive/Causative (ichidan)
     {"られる", "る"},
     {"させる", "する"},
 };
-
-// Cleanup macros
-#undef X
-#undef GODAN_ROWS
-#undef PASSIVE
-#undef CAUSATIVE
-#undef CAUSATIVE_PASSIVE
-#undef NEGATIVE
-// clang-format on
 
 // Adjective endings
 const VerbEnding kAdjectiveEndings[] = {
@@ -326,20 +257,66 @@ const VerbEnding kAdjectiveEndings[] = {
 };
 
 struct ContractedVerbEnding {
+  enum class Onbin : uint8_t {
+    None,
+    I,
+    Sokuon,
+    Hatsuon,
+  };
+
   std::string_view suffix;
-  std::string_view onbin;
+  Onbin onbin;
 };
 
+constexpr std::string_view kOnbinSurfaces[] = {"", "い", "っ", "ん"};
+
+using Onbin = ContractedVerbEnding::Onbin;
 const ContractedVerbEnding kContractedVerbEndings[] = {
-    {"ってしまった", "っ"}, {"いてしまった", "い"}, {"んでしまった", "ん"}, {"してしまった", ""}, {"っておいた", "っ"},
-    {"いておいた", "い"},   {"んでおいた", "ん"},   {"しておいた", ""},     {"ってみた", "っ"},   {"いてみた", "い"},
-    {"んでみた", "ん"},     {"してみた", ""},       {"ってきた", "っ"},     {"いてきた", "い"},   {"んできた", "ん"},
-    {"してきた", ""},       {"っていった", "っ"},   {"いていった", "い"},   {"んでいった", "ん"}, {"していった", ""},
-    {"っとく", "っ"},       {"っといた", "っ"},     {"っといて", "っ"},     {"いとく", "い"},     {"いといた", "い"},
-    {"いといて", "い"},     {"んどく", "ん"},       {"んどいた", "ん"},     {"んどいて", "ん"},   {"ってる", "っ"},
-    {"ってた", "っ"},       {"いてる", "い"},       {"いてた", "い"},       {"んでる", "ん"},     {"んでた", "ん"},
-    {"った", "っ"},         {"って", "っ"},         {"いた", "い"},         {"いて", "い"},       {"いだ", "い"},
-    {"いで", "い"},         {"んだ", "ん"},         {"んで", "ん"},         {"した", ""},         {"して", ""},
+    {"ってしまった", Onbin::Sokuon},
+    {"いてしまった", Onbin::I},
+    {"んでしまった", Onbin::Hatsuon},
+    {"してしまった", Onbin::None},
+    {"っておいた", Onbin::Sokuon},
+    {"いておいた", Onbin::I},
+    {"んでおいた", Onbin::Hatsuon},
+    {"しておいた", Onbin::None},
+    {"ってみた", Onbin::Sokuon},
+    {"いてみた", Onbin::I},
+    {"んでみた", Onbin::Hatsuon},
+    {"してみた", Onbin::None},
+    {"ってきた", Onbin::Sokuon},
+    {"いてきた", Onbin::I},
+    {"んできた", Onbin::Hatsuon},
+    {"してきた", Onbin::None},
+    {"っていった", Onbin::Sokuon},
+    {"いていった", Onbin::I},
+    {"んでいった", Onbin::Hatsuon},
+    {"していった", Onbin::None},
+    {"っとく", Onbin::Sokuon},
+    {"っといた", Onbin::Sokuon},
+    {"っといて", Onbin::Sokuon},
+    {"いとく", Onbin::I},
+    {"いといた", Onbin::I},
+    {"いといて", Onbin::I},
+    {"んどく", Onbin::Hatsuon},
+    {"んどいた", Onbin::Hatsuon},
+    {"んどいて", Onbin::Hatsuon},
+    {"ってる", Onbin::Sokuon},
+    {"ってた", Onbin::Sokuon},
+    {"いてる", Onbin::I},
+    {"いてた", Onbin::I},
+    {"んでる", Onbin::Hatsuon},
+    {"んでた", Onbin::Hatsuon},
+    {"った", Onbin::Sokuon},
+    {"って", Onbin::Sokuon},
+    {"いた", Onbin::I},
+    {"いて", Onbin::I},
+    {"いだ", Onbin::I},
+    {"いで", Onbin::I},
+    {"んだ", Onbin::Hatsuon},
+    {"んで", Onbin::Hatsuon},
+    {"した", Onbin::None},
+    {"して", Onbin::None},
 };
 
 const std::string_view kSuruPassiveEndings[] = {
@@ -458,37 +435,40 @@ std::string fixIchidanRenyokeiBeforeTe(std::string_view surface, std::string_vie
     return "";
   }
   // い-row kana → う-row kana of the same gyo (し/い/じ excluded, see above).
-  struct RowMapping {
-    std::string_view i_row;
-    std::string_view u_row;
-  };
-  static constexpr RowMapping kIRowToURow[] = {
-      {"き", "く"}, {"ぎ", "ぐ"}, {"ち", "つ"}, {"ぢ", "づ"}, {"に", "ぬ"},
-      {"ひ", "ふ"}, {"び", "ぶ"}, {"ぴ", "ぷ"}, {"み", "む"}, {"り", "る"},
-  };
-  std::string_view tail = utf8::lastChar(surface);
-  for (const auto& mapping : kIRowToURow) {
-    if (tail != mapping.i_row) {
-      continue;
-    }
-    std::string godan_base = std::string(utf8::dropLastChar(surface)) + std::string(mapping.u_row);
-    if (lemma == godan_base) {
-      // A dictionary-confirmed godan base is not the fabricated reading this
-      // correction targets (走り+て, 読み+て). The remaining ambiguous cases
-      // are genuine ichidan renyokei (借り+て, 過ぎ+て).
-      if (hasExactVerbEntry(dict_manager, godan_base)) {
-        return "";
-      }
-      return std::string(surface) + "る";
-    }
-    break;
+  const std::string_view tail = utf8::lastChar(surface);
+  if (utf8::equalsAny(tail, {"し", "い", "じ"})) {
+    return "";
   }
-  return "";
+  std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(utf8::decodeFirstChar(tail));
+  // These historical rows are outside the modern Godan table but remain valid
+  // for this fallback's same-row ambiguity check.
+  if (tail == "ぢ") {
+    godan_ending = "づ";
+  } else if (tail == "ひ") {
+    godan_ending = "ふ";
+  } else if (tail == "ぴ") {
+    godan_ending = "ぷ";
+  }
+  if (godan_ending.empty()) {
+    return "";
+  }
+
+  std::string godan_base = std::string(utf8::dropLastChar(surface)) + std::string(godan_ending);
+  if (lemma != godan_base) {
+    return "";
+  }
+  // A dictionary-confirmed godan base is not the fabricated reading this
+  // correction targets (走り+て, 読み+て). The remaining ambiguous cases
+  // are genuine ichidan renyokei (借り+て, 過ぎ+て).
+  if (hasExactVerbEntry(dict_manager, godan_base)) {
+    return "";
+  }
+  return std::string(surface) + "る";
 }
 
-// Potential verb (可能動詞): single-token 〜れる keeps lemma = surface.
-// e.g., 書ける, 泊まれる, 読める. Passive forms are split (読ま+れる), so a single
-// 〜れる token is treated as potential (ichidan), whose lemma is the surface itself.
+// Potential verb (可能動詞): single-token 五段あ段+れる keeps lemma = surface.
+// Passive forms are split (読ま+れる), so a single 〜れる token is treated as
+// potential (ichidan), whose lemma is the surface itself.
 std::string fixPotentialVerb(const core::Morpheme& morpheme) {
   if (morpheme.pos == core::PartOfSpeech::Verb && endsWithPotentialVerbSuffix(morpheme.surface)) {
     return morpheme.surface;
@@ -512,15 +492,16 @@ std::string fixTariAdverb(std::string_view surface) {
 }
 
 // 撥音便 godan base from a stem whose original onbin form ended in ん.
-// Tries stem + む/ぶ/ぬ against the dictionary; falls back to む (most common
-// 撥音便) when the stem is all kanji. Returns empty if nothing applies.
+// Tries the canonical ん音便 rows against the dictionary; falls back to む
+// (most common 撥音便) when the stem is all kanji. Returns empty if nothing applies.
 // e.g., 読ん → 読む, 学ん → 学ぶ, 死ん → 死ぬ.
 std::string fixHatsuonbin(std::string_view stem, const dictionary::DictionaryManager* dict_manager) {
   if (stem.empty()) {
     return "";
   }
   if (dict_manager != nullptr) {
-    for (std::string_view ending : {"む", "ぶ", "ぬ"}) {
+    for (const auto& [verb_type, ending] : grammar::Conjugation::getGodanTypesByOnbin("ん")) {
+      (void)verb_type;
       std::string base = std::string(stem) + std::string(ending);
       auto results = dict_manager->lookup(base, 0);
       for (const auto& result : results) {
@@ -537,19 +518,41 @@ std::string fixHatsuonbin(std::string_view stem, const dictionary::DictionaryMan
   return "";
 }
 
+std::string lemmatizeGodanEnding(std::string_view surface, const VerbEnding& ending) {
+  const std::string_view stem = surface.substr(0, surface.size() - ending.suffix.size());
+  const char32_t row_codepoint = utf8::decodeFirstChar(utf8::lastChar(stem));
+  const std::string_view base = ending.suffix == "る" ? grammar::godanBaseSuffixFromERow(row_codepoint)
+                                                      : grammar::godanBaseSuffixFromARow(row_codepoint);
+  if (base.empty()) {
+    return "";
+  }
+  return std::string(utf8::dropLastChar(stem)) + std::string(base);
+}
+
+std::string lemmatizeVerbFallback(std::string_view surface) {
+  for (const auto& ending : kVerbEndings) {
+    if (!utf8::endsWith(surface, ending.suffix)) {
+      continue;
+    }
+    if (ending.base.empty()) {
+      if (std::string result = lemmatizeGodanEnding(surface, ending); !result.empty()) {
+        return result;
+      }
+      continue;
+    }
+    std::string result(surface.substr(0, surface.size() - ending.suffix.size()));
+    result += ending.base;
+    return result;
+  }
+  return std::string(surface);
+}
+
 }  // namespace lemmatizer_detail
 
 using namespace lemmatizer_detail;
 
 std::string Lemmatizer::lemmatizeVerb(std::string_view surface) {
-  for (const auto& ending : kVerbEndings) {
-    if (utf8::endsWith(surface, ending.suffix)) {
-      std::string result(surface.substr(0, surface.size() - ending.suffix.size()));
-      result += ending.base;
-      return result;
-    }
-  }
-  return std::string(surface);
+  return lemmatizeVerbFallback(surface);
 }
 
 std::string Lemmatizer::lemmatizeAdjective(std::string_view surface) {
@@ -680,21 +683,22 @@ std::string Lemmatizer::lemmatizeByGrammar(std::string_view surface, core::PartO
   }
 
   // If dictionary is available, try to find a verified candidate
-  // For dictionary-verified candidates, use lower confidence threshold (0.3F)
+  // For dictionary-verified candidates, accept confidence above the scorer floor.
   // Dictionary verification compensates for confidence penalties from heuristics
   // (e.g., all-kanji i-adjective stems like 面白 get penalized but are valid)
   if (dict_manager_ != nullptr) {
     for (const auto& candidate : *candidates) {
-      if (candidate.confidence > 0.3F && verifyCandidateWithDictionary(candidate)) {
+      if (candidate.confidence > grammar::inflection::kConfidenceFloor && verifyCandidateWithDictionary(candidate)) {
         return candidate.base_form;
       }
     }
   }
 
   // Fall back to the best candidate if no dictionary match found
-  // Use >= 0.5F threshold since inflection_scorer caps minimum at 0.5F
+  // Use the ordinary unverified threshold since inflection scoring caps common
+  // candidates at this level.
   const auto& best = candidates->front();
-  if (!best.base_form.empty() && best.confidence >= 0.5F) {
+  if (!best.base_form.empty() && best.confidence >= kUnverifiedLemmaConfidenceThreshold) {
     return best.base_form;
   }
 
@@ -715,7 +719,8 @@ std::string lemmatizeContractedVerbWithDictionary(std::string_view surface,
     }
 
     std::string stem(surface.substr(0, surface.size() - ending.suffix.size()));
-    for (const auto& [verb_type, base_suffix] : grammar::Conjugation::getGodanTypesByOnbin(ending.onbin)) {
+    const std::string_view onbin = kOnbinSurfaces[static_cast<size_t>(ending.onbin)];
+    for (const auto& [verb_type, base_suffix] : grammar::Conjugation::getGodanTypesByOnbin(onbin)) {
       (void)verb_type;
       std::string base_form = stem + std::string(base_suffix);
       if (hasExactVerbEntry(dict_manager, base_form)) {
