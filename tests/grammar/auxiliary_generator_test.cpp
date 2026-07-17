@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <set>
 #include <string>
 #include <vector>
@@ -14,19 +15,56 @@
 namespace suzume::grammar {
 namespace {
 
+uint64_t hashGeneratedEntries(const std::vector<AuxiliaryEntry>& entries) {
+  constexpr uint64_t kOffsetBasis = 14695981039346656037ULL;
+  constexpr uint64_t kPrime = 1099511628211ULL;
+  uint64_t hash = kOffsetBasis;
+  auto appendByte = [&hash](uint8_t byte) {
+    hash ^= byte;
+    hash *= kPrime;
+  };
+  auto appendString = [&appendByte](const std::string& value) {
+    for (unsigned char byte : value) {
+      appendByte(byte);
+    }
+    appendByte(0);
+  };
+  auto appendUint16 = [&appendByte](uint16_t value) {
+    appendByte(static_cast<uint8_t>(value));
+    appendByte(static_cast<uint8_t>(value >> 8));
+  };
+
+  for (const auto& entry : entries) {
+    appendString(entry.surface);
+    appendUint16(entry.right_id);
+    appendUint16(entry.required_conn);
+  }
+  return hash;
+}
+
 class AuxiliaryGeneratorTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    auto entries = generateAllAuxiliaries();
-    for (const auto& entry : entries) {
+    generated_entries_ = generateAllAuxiliaries();
+    for (const auto& entry : generated_entries_) {
       generated_surfaces_.insert(entry.surface);
     }
   }
 
   bool hasSurface(const std::string& surface) const { return generated_surfaces_.count(surface) > 0; }
 
+  std::vector<AuxiliaryEntry> generated_entries_;
   std::set<std::string> generated_surfaces_;
 };
+
+// The generator's order is part of inflection matching: entries are checked in
+// descending surface length and equal-length entries retain generation order.
+// Hash the complete ordered (surface, right_id, required_conn) sequence so a
+// data compaction cannot accidentally drop or reorder a duplicate surface.
+TEST_F(AuxiliaryGeneratorTest, PreservesOrderedEntryContract) {
+  EXPECT_EQ(generated_entries_.size(), 426U);
+  EXPECT_EQ(hashGeneratedEntries(generated_entries_), 5616919045693076472ULL);
+}
 
 // Verify generator produces expected number of unique surfaces
 TEST_F(AuxiliaryGeneratorTest, GeneratesExpectedCount) {
