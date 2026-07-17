@@ -205,7 +205,6 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 
     const std::string_view lemma =
         is_godan_potential ? std::string_view(result.entry->surface) : std::string_view(result.entry->lemma);
-
     lattice.addEdge(result.entry->surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
                     result.entry->pos, cost, flags, lemma, dictionary::ConjugationType::None,
                     core::CandidateOrigin::Dictionary, 1.0F, {}, result.entry->extended_pos, "dict");
@@ -604,15 +603,12 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       flags |= static_cast<uint8_t>(core::EdgeFlags::LemmaVerified);
     }
 
-#ifdef SUZUME_DEBUG_INFO
     lattice.addEdge(surface_str, static_cast<uint32_t>(candidate.start), static_cast<uint32_t>(candidate.end),
                     candidate.pos, adjusted_cost, flags, candidate.lemma, candidate.conj_type, candidate.origin,
+#ifdef SUZUME_DEBUG_INFO
                     candidate.confidence, candidate.pattern, candidate.extended_pos, candidate.epos_source);
 #else
-    lattice.addEdge(surface_str, static_cast<uint32_t>(candidate.start), static_cast<uint32_t>(candidate.end),
-                    candidate.pos, adjusted_cost, flags, candidate.lemma, candidate.conj_type,
-                    core::CandidateOrigin::Unknown, 0.0F, {},  // debug params
-                    candidate.extended_pos);
+                    0.0F, {}, candidate.extended_pos);
 #endif
   }
 }

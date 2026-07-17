@@ -8,7 +8,7 @@ Lattice::Lattice(size_t text_length) : text_length_(text_length), edge_indices_b
 
 size_t Lattice::addEdge(std::string_view surface, uint32_t start, uint32_t end, PartOfSpeech pos, float cost,
                         uint8_t flags, std::string_view lemma, dictionary::ConjugationType conj_type,
-                        [[maybe_unused]] CandidateOrigin origin, [[maybe_unused]] float origin_confidence,
+                        CandidateOrigin origin, [[maybe_unused]] float origin_confidence,
                         [[maybe_unused]] std::string_view origin_detail, ExtendedPOS extended_pos,
                         [[maybe_unused]] std::string_view epos_source) {
   if (start >= end || end > text_length_ || !isValidPartOfSpeech(pos) || !isValidExtendedPos(extended_pos) ||
@@ -77,8 +77,8 @@ size_t Lattice::addEdge(std::string_view surface, uint32_t start, uint32_t end, 
   edge.flags = static_cast<EdgeFlags>(flags);
   edge.lemma = stored_lemma;
   edge.conj_type = conj_type;
-#ifdef SUZUME_DEBUG_INFO
   edge.origin = origin;
+#ifdef SUZUME_DEBUG_INFO
   edge.origin_confidence = origin_confidence;
   edge.origin_detail = stored_origin_detail;
   // Use provided epos_source if available, otherwise use auto-detected source

@@ -49,10 +49,11 @@ struct LatticeEdge {
   EdgeFlags flags{EdgeFlags::None};                                          // Flags
   std::string_view lemma;                                                    // Lemma (optional)
   dictionary::ConjugationType conj_type{dictionary::ConjugationType::None};  // Conjugation type
+  // Candidate provenance used by scoring rules. This compact enum is retained
+  // in release and WASM builds so their tokenization matches debug builds.
+  CandidateOrigin origin{CandidateOrigin::Unknown};
 
 #ifdef SUZUME_DEBUG_INFO
-  // Debug: candidate origin tracking (excluded from release/WASM builds)
-  CandidateOrigin origin{CandidateOrigin::Unknown};
   float origin_confidence{0.0F};   // Inflection confidence (for debug)
   std::string_view origin_detail;  // Pattern detail (e.g., "ichidan_te_form")
   std::string_view epos_source;    // Where ExtendedPOS was set (e.g., "binary_dict", "l1_dict")
@@ -110,7 +111,7 @@ class Lattice {
    * @param flags Flags
    * @param lemma Lemma (optional)
    * @param conj_type Conjugation type (optional)
-   * @param origin Candidate origin for debug (optional)
+   * @param origin Candidate origin for scoring and debug output (optional)
    * @param origin_confidence Origin confidence for debug (optional)
    * @param origin_detail Origin detail pattern for debug (optional)
    * @param extended_pos Extended POS for bigram (optional, defaults from pos)

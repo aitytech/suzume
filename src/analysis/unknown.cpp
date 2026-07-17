@@ -66,7 +66,7 @@ namespace suzume::analysis {
 
 UnknownCandidate makeVerbCandidate(const std::string& surface, size_t start, size_t end, float cost,
                                    const std::string& lemma, dictionary::ConjugationType conj_type, bool has_suffix,
-                                   [[maybe_unused]] CandidateOrigin origin, [[maybe_unused]] float confidence,
+                                   CandidateOrigin origin, [[maybe_unused]] float confidence,
                                    [[maybe_unused]] const char* pattern, core::ExtendedPOS extended_pos,
                                    [[maybe_unused]] const char* epos_source) {
   UnknownCandidate candidate;
@@ -80,8 +80,8 @@ UnknownCandidate makeVerbCandidate(const std::string& surface, size_t start, siz
   candidate.lemma = lemma;
   candidate.conj_type = conj_type;
   candidate.has_suffix = has_suffix;
-#ifdef SUZUME_DEBUG_INFO
   candidate.origin = origin;
+#ifdef SUZUME_DEBUG_INFO
   candidate.confidence = confidence;
   if (pattern != nullptr) {
     candidate.pattern = pattern;
@@ -98,7 +98,7 @@ UnknownCandidate makeVerbCandidate(const std::string& surface, size_t start, siz
 }
 
 UnknownCandidate makeNounCandidate(const std::string& surface, size_t start, size_t end, float cost, bool has_suffix,
-                                   [[maybe_unused]] CandidateOrigin origin, core::ExtendedPOS extended_pos,
+                                   CandidateOrigin origin, core::ExtendedPOS extended_pos,
                                    [[maybe_unused]] const char* epos_source) {
   UnknownCandidate candidate;
   candidate.surface = surface;
@@ -108,8 +108,8 @@ UnknownCandidate makeNounCandidate(const std::string& surface, size_t start, siz
   candidate.extended_pos = extended_pos != core::ExtendedPOS::Unknown ? extended_pos : core::ExtendedPOS::Noun;
   candidate.cost = cost;
   candidate.has_suffix = has_suffix;
-#ifdef SUZUME_DEBUG_INFO
   candidate.origin = origin;
+#ifdef SUZUME_DEBUG_INFO
   if (epos_source != nullptr) {
     candidate.epos_source = epos_source;
   } else if (extended_pos != core::ExtendedPOS::Unknown) {
@@ -122,7 +122,7 @@ UnknownCandidate makeNounCandidate(const std::string& surface, size_t start, siz
 }
 
 UnknownCandidate makeCandidate(const std::string& surface, size_t start, size_t end, core::PartOfSpeech pos, float cost,
-                               bool has_suffix, [[maybe_unused]] CandidateOrigin origin, core::ExtendedPOS extended_pos,
+                               bool has_suffix, CandidateOrigin origin, core::ExtendedPOS extended_pos,
                                [[maybe_unused]] const char* epos_source) {
   UnknownCandidate candidate;
   candidate.surface = surface;
@@ -132,8 +132,8 @@ UnknownCandidate makeCandidate(const std::string& surface, size_t start, size_t 
   candidate.extended_pos = extended_pos != core::ExtendedPOS::Unknown ? extended_pos : core::posToExtendedPos(pos);
   candidate.cost = cost;
   candidate.has_suffix = has_suffix;
-#ifdef SUZUME_DEBUG_INFO
   candidate.origin = origin;
+#ifdef SUZUME_DEBUG_INFO
   if (epos_source != nullptr) {
     candidate.epos_source = epos_source;
   } else if (extended_pos != core::ExtendedPOS::Unknown) {

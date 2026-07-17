@@ -18,6 +18,9 @@ DEFAULT_FILE = SKILL_DIR / "thread_names.txt"
 _BUGS_DIRS = {
     "thread": PROJECT_ROOT / ".claude" / "skills" / "thread-quality-check" / "bugs",
     "literary": PROJECT_ROOT / ".claude" / "skills" / "literary-quality-check" / "bugs",
+    # defect-sweep has no "-quality-check" suffix, so it needs an explicit mapping
+    # (the fallback below would otherwise resolve to "defect-sweep-quality-check").
+    "defect": PROJECT_ROOT / ".claude" / "skills" / "defect-sweep" / "bugs",
 }
 
 
@@ -514,7 +517,7 @@ async def thread_report_bug(
         line_num: Optional line number in thread_names.txt.
         diff_type: Optional diff type (over-split, under-split, boundary).
         pattern: Optional pattern label for grouping (e.g. sokuonbin, compound-verb).
-        source: Bug storage source - "thread" or "literary" (default: "thread").
+        source: Bug storage source - "thread", "literary", or "defect" (default: "thread").
     """
     bd = _bugs_dir(source)
     bd.mkdir(parents=True, exist_ok=True)
@@ -566,7 +569,7 @@ async def thread_bugs_list(limit: int = 50, diff_type: str = "", pattern: str = 
         limit: Max number of bugs to show.
         diff_type: Filter by diff type (e.g. "over-split"). Empty shows all.
         pattern: Filter by pattern label (e.g. "sokuonbin"). Empty shows all.
-        source: Bug storage source - "thread" or "literary" (default: "thread").
+        source: Bug storage source - "thread", "literary", or "defect" (default: "thread").
     """
     bugs = _list_bugs(_bugs_dir(source))
     if not bugs:
@@ -625,7 +628,7 @@ async def thread_bugs_clear(source: str = "thread") -> str:
     """Clear all reported bugs (delete bugs/ directory).
 
     Args:
-        source: Bug storage source - "thread" or "literary" (default: "thread").
+        source: Bug storage source - "thread", "literary", or "defect" (default: "thread").
     """
     bd = _bugs_dir(source)
     if bd.exists():
@@ -643,7 +646,7 @@ async def thread_bugs_sweep(source: str = "thread") -> str:
     expected, the bug file is deleted automatically.
 
     Args:
-        source: Bug storage source - "thread" or "literary" (default: "thread").
+        source: Bug storage source - "thread", "literary", or "defect" (default: "thread").
     """
     bd = _bugs_dir(source)
     if not bd.exists():

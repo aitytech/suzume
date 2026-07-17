@@ -56,10 +56,11 @@ struct UnknownCandidate {
   bool lemma_verified{false};  // Lemma (base form) attested as a dictionary verb at generation time
   std::string lemma;           // Base form (for verbs/adjectives)
   dictionary::ConjugationType conj_type{dictionary::ConjugationType::None};
+  // Retained outside debug builds because connection scoring uses selected
+  // generated-candidate origins.
+  CandidateOrigin origin{CandidateOrigin::Unknown};
 
 #ifdef SUZUME_DEBUG_INFO
-  // Debug: candidate origin tracking (excluded from release/WASM builds)
-  CandidateOrigin origin{CandidateOrigin::Unknown};
   float confidence{0.0F};   // Inflection analysis confidence (for verbs/adj)
   std::string pattern;      // Pattern detail (e.g., "ichidan_te_form")
   std::string epos_source;  // Where ExtendedPOS was set (e.g., "verb_cand_kanji")
@@ -79,15 +80,14 @@ struct UnknownCandidate {
  * @param lemma Base form (dictionary form)
  * @param conj_type Conjugation type
  * @param has_suffix Whether candidate expects suffix
- * @param origin Candidate origin (debug only)
+ * @param origin Candidate origin (used by connection scoring)
  * @param confidence Inflection confidence (debug only)
  * @param pattern Pattern name (debug only)
  * @param extended_pos Extended POS for bigram (optional)
  */
 UnknownCandidate makeVerbCandidate(const std::string& surface, size_t start, size_t end, float cost,
                                    const std::string& lemma, dictionary::ConjugationType conj_type,
-                                   bool has_suffix = false,
-                                   [[maybe_unused]] CandidateOrigin origin = CandidateOrigin::Unknown,
+                                   bool has_suffix = false, CandidateOrigin origin = CandidateOrigin::Unknown,
                                    [[maybe_unused]] float confidence = 0.0F,
                                    [[maybe_unused]] const char* pattern = nullptr,
                                    core::ExtendedPOS extended_pos = core::ExtendedPOS::Unknown,
@@ -100,12 +100,11 @@ UnknownCandidate makeVerbCandidate(const std::string& surface, size_t start, siz
  * @param end End position (character index)
  * @param cost Candidate cost
  * @param has_suffix Whether candidate expects suffix
- * @param origin Candidate origin (debug only)
+ * @param origin Candidate origin (used by connection scoring)
  * @param extended_pos Extended POS for bigram (optional)
  */
 UnknownCandidate makeNounCandidate(const std::string& surface, size_t start, size_t end, float cost,
-                                   bool has_suffix = false,
-                                   [[maybe_unused]] CandidateOrigin origin = CandidateOrigin::Unknown,
+                                   bool has_suffix = false, CandidateOrigin origin = CandidateOrigin::Unknown,
                                    core::ExtendedPOS extended_pos = core::ExtendedPOS::Unknown,
                                    [[maybe_unused]] const char* epos_source = nullptr);
 
@@ -117,12 +116,11 @@ UnknownCandidate makeNounCandidate(const std::string& surface, size_t start, siz
  * @param pos Part of speech
  * @param cost Candidate cost
  * @param has_suffix Whether candidate expects suffix
- * @param origin Candidate origin (debug only)
+ * @param origin Candidate origin (used by connection scoring)
  * @param extended_pos Extended POS for bigram (optional)
  */
 UnknownCandidate makeCandidate(const std::string& surface, size_t start, size_t end, core::PartOfSpeech pos, float cost,
-                               bool has_suffix = false,
-                               [[maybe_unused]] CandidateOrigin origin = CandidateOrigin::Unknown,
+                               bool has_suffix = false, CandidateOrigin origin = CandidateOrigin::Unknown,
                                core::ExtendedPOS extended_pos = core::ExtendedPOS::Unknown,
                                [[maybe_unused]] const char* epos_source = nullptr);
 

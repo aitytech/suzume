@@ -15,9 +15,6 @@
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 
-#ifdef SUZUME_DEBUG_INFO
-using suzume::core::CandidateOrigin;
-#endif
 namespace cost = suzume::analysis::bigram_cost;
 namespace sc = suzume::analysis::scorer;
 
