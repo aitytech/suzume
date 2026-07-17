@@ -1,4 +1,13 @@
 import createModule from '../dist/suzume.js';
+import {
+  conjugationFormJapanese,
+  conjugationTypeJapanese,
+  extendedPosLabel,
+  MORPHEME_FLAG,
+  posEnglish,
+  posJapanese,
+} from '../js/abi_labels.js';
+import { C_LAYOUTS } from '../js/abi_layout.js';
 
 export interface WasmModule {
   cwrap: (
@@ -14,61 +23,11 @@ export interface WasmModule {
   HEAPU32: Uint32Array;
 }
 
-export const RESULT_LAYOUT = {
-  size: 8,
-  morphemes: 0,
-  count: 4,
-} as const;
-
-export const MORPHEME_LAYOUT = {
-  size: 60,
-  surface: 0,
-  pos: 4,
-  baseForm: 8,
-  posJa: 12,
-  conjType: 16,
-  conjForm: 20,
-  extendedPos: 24,
-  start: 28,
-  end: 32,
-  isUserDict: 36,
-  isFormalNoun: 40,
-  isLowInfo: 44,
-  isUnknown: 48,
-  isFromDictionary: 52,
-  score: 56,
-} as const;
-
-export const TAGS_LAYOUT = {
-  size: 12,
-  tags: 0,
-  pos: 4,
-  count: 8,
-} as const;
-
-export const TAG_OPTIONS_LAYOUT = {
-  size: 20,
-  posFilter: 0,
-  excludeBasic: 1,
-  useLemma: 2,
-  minLength: 4,
-  maxTags: 8,
-  excludeParticles: 12,
-  excludeAuxiliaries: 13,
-  excludeFormalNouns: 14,
-  excludeLowInfo: 15,
-  removeDuplicates: 16,
-} as const;
-
-export const EXTENDED_OPTIONS_LAYOUT = {
-  size: 6,
-  preserveVu: 0,
-  preserveCase: 1,
-  preserveSymbols: 2,
-  mode: 3,
-  lemmatize: 4,
-  mergeCompounds: 5,
-} as const;
+export const RESULT_LAYOUT = C_LAYOUTS.result;
+export const MORPHEME_LAYOUT = C_LAYOUTS.morpheme;
+export const TAGS_LAYOUT = C_LAYOUTS.tags;
+export const TAG_OPTIONS_LAYOUT = C_LAYOUTS.tagOptions;
+export const EXTENDED_OPTIONS_LAYOUT = C_LAYOUTS.extendedOptions;
 
 // Shared module instance (loaded once across all test files)
 let cachedModule: WasmModule | null = null;
@@ -117,6 +76,7 @@ export interface ParsedMorpheme {
 }
 
 export function parseMorphemes(module: WasmModule, resultPtr: number): ParsedMorpheme[] {
+  const heapU8 = new Uint8Array(module.HEAPU32.buffer);
   const heapF32 = new Float32Array(module.HEAPU32.buffer);
   const morphemesPtr = module.HEAPU32[(resultPtr + RESULT_LAYOUT.morphemes) >> 2];
   const count = module.HEAPU32[(resultPtr + RESULT_LAYOUT.count) >> 2];
@@ -125,41 +85,44 @@ export function parseMorphemes(module: WasmModule, resultPtr: number): ParsedMor
   for (let i = 0; i < count; i++) {
     const morphPtr = morphemesPtr + i * MORPHEME_LAYOUT.size;
     const surfacePtr = module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.surface) >> 2];
-    const posPtr = module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.pos) >> 2];
     const baseFormPtr = module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.baseForm) >> 2];
-    const posJaPtr = module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.posJa) >> 2];
-    const conjTypePtr = module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.conjType) >> 2];
-    const conjFormPtr = module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.conjForm) >> 2];
-    const extendedPosPtr = module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.extendedPos) >> 2];
+    const posCode = heapU8[morphPtr + MORPHEME_LAYOUT.pos];
+    const flags = heapU8[morphPtr + MORPHEME_LAYOUT.flags];
+    const conjugates = posCode === 2 || posCode === 3;
 
     morphemes.push({
       surface: module.UTF8ToString(surfacePtr),
-      pos: module.UTF8ToString(posPtr),
+      pos: posEnglish(posCode),
       baseForm: module.UTF8ToString(baseFormPtr),
-      posJa: module.UTF8ToString(posJaPtr),
-      conjType: conjTypePtr !== 0 ? module.UTF8ToString(conjTypePtr) : null,
-      conjForm: conjFormPtr !== 0 ? module.UTF8ToString(conjFormPtr) : null,
-      extendedPos: module.UTF8ToString(extendedPosPtr),
+      posJa: posJapanese(posCode),
+      conjType: conjugates
+        ? conjugationTypeJapanese(heapU8[morphPtr + MORPHEME_LAYOUT.conjugationType])
+        : null,
+      conjForm: conjugates
+        ? conjugationFormJapanese(heapU8[morphPtr + MORPHEME_LAYOUT.conjugationForm])
+        : null,
+      extendedPos: extendedPosLabel(heapU8[morphPtr + MORPHEME_LAYOUT.extendedPos]),
       start: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.start) >> 2],
       end: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.end) >> 2],
-      isUserDict: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.isUserDict) >> 2] !== 0,
-      isFormalNoun: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.isFormalNoun) >> 2] !== 0,
-      isLowInfo: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.isLowInfo) >> 2] !== 0,
-      isUnknown: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.isUnknown) >> 2] !== 0,
-      isFromDictionary: module.HEAPU32[(morphPtr + MORPHEME_LAYOUT.isFromDictionary) >> 2] !== 0,
+      isUserDict: (flags & MORPHEME_FLAG.userDict) !== 0,
+      isFormalNoun: (flags & MORPHEME_FLAG.formalNoun) !== 0,
+      isLowInfo: (flags & MORPHEME_FLAG.lowInfo) !== 0,
+      isUnknown: (flags & MORPHEME_FLAG.unknown) !== 0,
+      isFromDictionary: (flags & MORPHEME_FLAG.fromDictionary) !== 0,
       score: heapF32[(morphPtr + MORPHEME_LAYOUT.score) >> 2],
     });
   }
   return morphemes;
 }
 
-// suzume_tags_t layout: { char** tags; const char** pos; size_t count; }
+// suzume_tags_t layout: { char** tags; uint8_t* pos; size_t count; }
 export interface ParsedTag {
   tag: string;
   pos: string;
 }
 
 export function parseTags(module: WasmModule, tagsPtr: number): ParsedTag[] {
+  const heapU8 = new Uint8Array(module.HEAPU32.buffer);
   const tagsArrayPtr = module.HEAPU32[(tagsPtr + TAGS_LAYOUT.tags) >> 2];
   const posArrayPtr = module.HEAPU32[(tagsPtr + TAGS_LAYOUT.pos) >> 2];
   const count = module.HEAPU32[(tagsPtr + TAGS_LAYOUT.count) >> 2];
@@ -167,10 +130,9 @@ export function parseTags(module: WasmModule, tagsPtr: number): ParsedTag[] {
 
   for (let i = 0; i < count; i++) {
     const tagStrPtr = module.HEAPU32[(tagsArrayPtr >> 2) + i];
-    const posStrPtr = module.HEAPU32[(posArrayPtr >> 2) + i];
     tags.push({
       tag: module.UTF8ToString(tagStrPtr),
-      pos: module.UTF8ToString(posStrPtr),
+      pos: posEnglish(heapU8[posArrayPtr + i]),
     });
   }
   return tags;

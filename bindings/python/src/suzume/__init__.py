@@ -23,6 +23,18 @@ from ._ffi import (
     SuzumeTagOptions,
     load_library,
 )
+from ._labels import (
+    FLAG_FORMAL_NOUN,
+    FLAG_FROM_DICTIONARY,
+    FLAG_LOW_INFO,
+    FLAG_UNKNOWN,
+    FLAG_USER_DICT,
+    conjugation_form,
+    conjugation_type,
+    extended_pos,
+    pos_english,
+    pos_japanese,
+)
 
 __all__ = [
     "Suzume",
@@ -109,15 +121,6 @@ def _decode(value: bytes | None) -> str:
     return value.decode("utf-8") if value else ""
 
 
-def _decode_optional(value: bytes | None) -> str | None:
-    """Decode a native string, mapping the empty string to ``None``.
-
-    A non-conjugating word yields an empty native conjugation field; expose that
-    as ``None`` rather than ``""`` to match the WASM binding's null semantics.
-    """
-    return value.decode("utf-8") if value else None
-
-
 def version() -> str:
     """Return the native library version string."""
     return _decode(_lib.suzume_version())
@@ -197,22 +200,23 @@ class Suzume:
             out: list[Morpheme] = []
             for idx in range(data.count):
                 m = data.morphemes[idx]
+                conjugates = m.pos in (2, 3)
                 out.append(
                     Morpheme(
                         surface=_decode(m.surface),
-                        pos=_decode(m.pos),
+                        pos=pos_english(m.pos),
                         base_form=_decode(m.base_form),
-                        pos_ja=_decode(m.pos_ja),
-                        conj_type=_decode_optional(m.conj_type),
-                        conj_form=_decode_optional(m.conj_form),
-                        extended_pos=_decode(m.extended_pos),
+                        pos_ja=pos_japanese(m.pos),
+                        conj_type=conjugation_type(m.conjugation_type) if conjugates else None,
+                        conj_form=conjugation_form(m.conjugation_form) if conjugates else None,
+                        extended_pos=extended_pos(m.extended_pos),
                         start=int(m.start),
                         end=int(m.end),
-                        is_user_dict=bool(m.is_user_dict),
-                        is_formal_noun=bool(m.is_formal_noun),
-                        is_low_info=bool(m.is_low_info),
-                        is_unknown=bool(m.is_unknown),
-                        is_from_dictionary=bool(m.is_from_dictionary),
+                        is_user_dict=bool(m.flags & FLAG_USER_DICT),
+                        is_formal_noun=bool(m.flags & FLAG_FORMAL_NOUN),
+                        is_low_info=bool(m.flags & FLAG_LOW_INFO),
+                        is_unknown=bool(m.flags & FLAG_UNKNOWN),
+                        is_from_dictionary=bool(m.flags & FLAG_FROM_DICTIONARY),
                         score=float(m.score),
                     )
                 )
@@ -264,7 +268,7 @@ class Suzume:
             data = result.contents
             out: list[Tag] = []
             for idx in range(data.count):
-                out.append(Tag(tag=_decode(data.tags[idx]), pos=_decode(data.pos[idx])))
+                out.append(Tag(tag=_decode(data.tags[idx]), pos=pos_english(data.pos[idx])))
             return out
         finally:
             _lib.suzume_tags_free(result)

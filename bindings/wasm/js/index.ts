@@ -11,6 +11,16 @@
  * ```
  */
 
+import {
+  conjugationFormJapanese,
+  conjugationTypeJapanese,
+  extendedPosLabel,
+  MORPHEME_FLAG,
+  posEnglish,
+  posJapanese,
+} from './abi_labels.js';
+import { C_LAYOUTS } from './abi_layout.js';
+
 // Types for Emscripten module
 interface EmscriptenModule {
   UTF8ToString: (ptr: number) => string;
@@ -37,16 +47,6 @@ interface EmscriptenModule {
   _suzume_last_error: () => number;
   _suzume_dictionary_warning_count: (handle: number) => number;
   _suzume_dictionary_warning: (handle: number, index: number) => number;
-  _suzume_sizeof_result: () => number;
-  _suzume_sizeof_morpheme: () => number;
-  _suzume_sizeof_tags: () => number;
-  _suzume_sizeof_tag_options: () => number;
-  _suzume_sizeof_extended_options: () => number;
-  _suzume_offsetof_result: (field: number) => number;
-  _suzume_offsetof_morpheme: (field: number) => number;
-  _suzume_offsetof_tags: (field: number) => number;
-  _suzume_offsetof_tag_options: (field: number) => number;
-  _suzume_offsetof_extended_options: (field: number) => number;
 }
 
 /**
@@ -145,60 +145,6 @@ interface CleanupRef {
   handle: number;
 }
 
-interface CLayouts {
-  result: {
-    size: number;
-    morphemes: number;
-    count: number;
-  };
-  morpheme: {
-    size: number;
-    surface: number;
-    pos: number;
-    baseForm: number;
-    posJa: number;
-    conjType: number;
-    conjForm: number;
-    extendedPos: number;
-    start: number;
-    end: number;
-    isUserDict: number;
-    isFormalNoun: number;
-    isLowInfo: number;
-    isUnknown: number;
-    isFromDictionary: number;
-    score: number;
-  };
-  tags: {
-    size: number;
-    tags: number;
-    pos: number;
-    count: number;
-  };
-  tagOptions: {
-    size: number;
-    posFilter: number;
-    excludeBasic: number;
-    useLemma: number;
-    minLength: number;
-    maxTags: number;
-    excludeParticles: number;
-    excludeAuxiliaries: number;
-    excludeFormalNouns: number;
-    excludeLowInfo: number;
-    removeDuplicates: number;
-  };
-  extendedOptions: {
-    size: number;
-    preserveVu: number;
-    preserveCase: number;
-    preserveSymbols: number;
-    mode: number;
-    lemmatize: number;
-    mergeCompounds: number;
-  };
-}
-
 const registry = new FinalizationRegistry((ref: CleanupRef) => {
   if (ref.handle !== 0) {
     ref.module._suzume_destroy(ref.handle);
@@ -229,10 +175,10 @@ export class Suzume {
   private _lastError: () => number;
   private _dictionaryWarningCount: (handle: number) => number;
   private _dictionaryWarning: (handle: number, index: number) => number;
-  private layouts: CLayouts;
+  private layouts = C_LAYOUTS;
   private unregisterToken = {};
 
-  private constructor(module: EmscriptenModule, handle: number, layouts?: CLayouts) {
+  private constructor(module: EmscriptenModule, handle: number) {
     this.module = module;
     this.handle = handle;
     this.cleanupRef = { module, handle };
@@ -249,74 +195,6 @@ export class Suzume {
     this._lastError = module._suzume_last_error;
     this._dictionaryWarningCount = module._suzume_dictionary_warning_count;
     this._dictionaryWarning = module._suzume_dictionary_warning;
-    this.layouts = layouts ?? Suzume.loadCLayouts(module);
-  }
-
-  private static loadCLayouts(module: EmscriptenModule): CLayouts {
-    const sizeofResult = module._suzume_sizeof_result;
-    const sizeofMorpheme = module._suzume_sizeof_morpheme;
-    const sizeofTags = module._suzume_sizeof_tags;
-    const sizeofTagOptions = module._suzume_sizeof_tag_options;
-    const sizeofExtendedOptions = module._suzume_sizeof_extended_options;
-    const offsetofResult = module._suzume_offsetof_result;
-    const offsetofMorpheme = module._suzume_offsetof_morpheme;
-    const offsetofTags = module._suzume_offsetof_tags;
-    const offsetofTagOptions = module._suzume_offsetof_tag_options;
-    const offsetofExtendedOptions = module._suzume_offsetof_extended_options;
-
-    return {
-      result: {
-        size: sizeofResult(),
-        morphemes: offsetofResult(0),
-        count: offsetofResult(1),
-      },
-      morpheme: {
-        size: sizeofMorpheme(),
-        surface: offsetofMorpheme(0),
-        pos: offsetofMorpheme(1),
-        baseForm: offsetofMorpheme(2),
-        posJa: offsetofMorpheme(3),
-        conjType: offsetofMorpheme(4),
-        conjForm: offsetofMorpheme(5),
-        extendedPos: offsetofMorpheme(6),
-        start: offsetofMorpheme(7),
-        end: offsetofMorpheme(8),
-        isUserDict: offsetofMorpheme(9),
-        isFormalNoun: offsetofMorpheme(10),
-        isLowInfo: offsetofMorpheme(11),
-        isUnknown: offsetofMorpheme(12),
-        isFromDictionary: offsetofMorpheme(13),
-        score: offsetofMorpheme(14),
-      },
-      tags: {
-        size: sizeofTags(),
-        tags: offsetofTags(0),
-        pos: offsetofTags(1),
-        count: offsetofTags(2),
-      },
-      tagOptions: {
-        size: sizeofTagOptions(),
-        posFilter: offsetofTagOptions(0),
-        excludeBasic: offsetofTagOptions(1),
-        useLemma: offsetofTagOptions(2),
-        minLength: offsetofTagOptions(3),
-        maxTags: offsetofTagOptions(4),
-        excludeParticles: offsetofTagOptions(5),
-        excludeAuxiliaries: offsetofTagOptions(6),
-        excludeFormalNouns: offsetofTagOptions(7),
-        excludeLowInfo: offsetofTagOptions(8),
-        removeDuplicates: offsetofTagOptions(9),
-      },
-      extendedOptions: {
-        size: sizeofExtendedOptions(),
-        preserveVu: offsetofExtendedOptions(0),
-        preserveCase: offsetofExtendedOptions(1),
-        preserveSymbols: offsetofExtendedOptions(2),
-        mode: offsetofExtendedOptions(3),
-        lemmatize: offsetofExtendedOptions(4),
-        mergeCompounds: offsetofExtendedOptions(5),
-      },
-    };
   }
 
   /**
@@ -335,7 +213,6 @@ export class Suzume {
       moduleOptions.locateFile = (path: string) => (path.endsWith('.wasm') ? wasmPath : path);
     }
     const module: EmscriptenModule = await createModule.default(moduleOptions);
-    const layouts = Suzume.loadCLayouts(module);
 
     let handle: number;
 
@@ -349,7 +226,7 @@ export class Suzume {
         options.mergeCompounds !== undefined)
     ) {
       // Create with options
-      const layout = layouts.extendedOptions;
+      const layout = C_LAYOUTS.extendedOptions;
       const OPTIONS_SIZE = layout.size;
       const optionsPtr = module._malloc(OPTIONS_SIZE);
 
@@ -393,7 +270,7 @@ export class Suzume {
       );
     }
 
-    return new Suzume(module, handle, layouts);
+    return new Suzume(module, handle);
   }
 
   /**
@@ -614,6 +491,7 @@ export class Suzume {
   // Parse suzume_result_t structure from WASM memory
   private parseResult(resultPtr: number): Morpheme[] {
     const HEAPU32 = this.module.HEAPU32;
+    const HEAPU8 = new Uint8Array(HEAPU32.buffer);
     const HEAPF32 = new Float32Array(HEAPU32.buffer);
     const resultLayout = this.layouts.result;
     const morphemeLayout = this.layouts.morpheme;
@@ -626,30 +504,32 @@ export class Suzume {
     for (let idx = 0; idx < count; idx++) {
       const morphPtr = morphemesPtr + idx * morphemeLayout.size;
       const surfacePtr = HEAPU32[(morphPtr + morphemeLayout.surface) >> 2];
-      const posPtr = HEAPU32[(morphPtr + morphemeLayout.pos) >> 2];
       const baseFormPtr = HEAPU32[(morphPtr + morphemeLayout.baseForm) >> 2];
-      const posJaPtr = HEAPU32[(morphPtr + morphemeLayout.posJa) >> 2];
-      const conjTypePtr = HEAPU32[(morphPtr + morphemeLayout.conjType) >> 2];
-      const conjFormPtr = HEAPU32[(morphPtr + morphemeLayout.conjForm) >> 2];
-      const extendedPosPtr = HEAPU32[(morphPtr + morphemeLayout.extendedPos) >> 2];
       const start = HEAPU32[(morphPtr + morphemeLayout.start) >> 2];
       const end = HEAPU32[(morphPtr + morphemeLayout.end) >> 2];
+      const posCode = HEAPU8[morphPtr + morphemeLayout.pos];
+      const flags = HEAPU8[morphPtr + morphemeLayout.flags];
+      const conjugates = posCode === 2 || posCode === 3;
 
       morphemes.push({
         surface: this.module.UTF8ToString(surfacePtr),
-        pos: this.module.UTF8ToString(posPtr),
+        pos: posEnglish(posCode),
         baseForm: this.module.UTF8ToString(baseFormPtr),
-        posJa: this.module.UTF8ToString(posJaPtr),
-        conjType: conjTypePtr !== 0 ? this.module.UTF8ToString(conjTypePtr) : null,
-        conjForm: conjFormPtr !== 0 ? this.module.UTF8ToString(conjFormPtr) : null,
-        extendedPos: this.module.UTF8ToString(extendedPosPtr),
+        posJa: posJapanese(posCode),
+        conjType: conjugates
+          ? conjugationTypeJapanese(HEAPU8[morphPtr + morphemeLayout.conjugationType])
+          : null,
+        conjForm: conjugates
+          ? conjugationFormJapanese(HEAPU8[morphPtr + morphemeLayout.conjugationForm])
+          : null,
+        extendedPos: extendedPosLabel(HEAPU8[morphPtr + morphemeLayout.extendedPos]),
         start,
         end,
-        isUserDict: HEAPU32[(morphPtr + morphemeLayout.isUserDict) >> 2] !== 0,
-        isFormalNoun: HEAPU32[(morphPtr + morphemeLayout.isFormalNoun) >> 2] !== 0,
-        isLowInfo: HEAPU32[(morphPtr + morphemeLayout.isLowInfo) >> 2] !== 0,
-        isUnknown: HEAPU32[(morphPtr + morphemeLayout.isUnknown) >> 2] !== 0,
-        isFromDictionary: HEAPU32[(morphPtr + morphemeLayout.isFromDictionary) >> 2] !== 0,
+        isUserDict: (flags & MORPHEME_FLAG.userDict) !== 0,
+        isFormalNoun: (flags & MORPHEME_FLAG.formalNoun) !== 0,
+        isLowInfo: (flags & MORPHEME_FLAG.lowInfo) !== 0,
+        isUnknown: (flags & MORPHEME_FLAG.unknown) !== 0,
+        isFromDictionary: (flags & MORPHEME_FLAG.fromDictionary) !== 0,
         score: HEAPF32[(morphPtr + morphemeLayout.score) >> 2],
       });
     }
@@ -660,6 +540,7 @@ export class Suzume {
   // Parse suzume_tags_t structure from WASM memory
   private parseTags(tagsPtr: number): Tag[] {
     const HEAPU32 = this.module.HEAPU32;
+    const HEAPU8 = new Uint8Array(HEAPU32.buffer);
     const layout = this.layouts.tags;
 
     const tagsArrayPtr = HEAPU32[(tagsPtr + layout.tags) >> 2];
@@ -670,10 +551,9 @@ export class Suzume {
 
     for (let idx = 0; idx < count; idx++) {
       const tagPtr = HEAPU32[(tagsArrayPtr >> 2) + idx];
-      const posPtr = HEAPU32[(posArrayPtr >> 2) + idx];
       tags.push({
         tag: this.module.UTF8ToString(tagPtr),
-        pos: this.module.UTF8ToString(posPtr),
+        pos: posEnglish(HEAPU8[posArrayPtr + idx]),
       });
     }
 

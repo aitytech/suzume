@@ -8,6 +8,12 @@
 
 #include "suzume/suzume_c.h"
 
+static const char* pos_name(suzume_pos_t pos) {
+  static const char* const names[] = {"OTHER", "NOUN", "VERB",   "ADJ",    "ADV",  "PARTICLE", "AUX",  "CONJ",
+                                      "DET",   "PRON", "PREFIX", "SUFFIX", "INTJ", "SYMBOL",   "OTHER"};
+  return pos < sizeof(names) / sizeof(names[0]) ? names[pos] : "OTHER";
+}
+
 int main(int argc, char** argv) {
   const char* text = argc > 1 ? argv[1] : "東京都に住んでいます";
 
@@ -27,7 +33,7 @@ int main(int argc, char** argv) {
   printf("suzume %s: %zu morpheme(s)\n", suzume_version(), result->count);
   for (size_t idx = 0; idx < result->count; ++idx) {
     const suzume_morpheme_t* morph = &result->morphemes[idx];
-    printf("  %s\t%s\t%s\n", morph->surface, morph->pos, morph->base_form);
+    printf("  %s\t%s\t%s\n", morph->surface, pos_name(morph->pos), morph->base_form);
   }
 
   suzume_result_free(result);

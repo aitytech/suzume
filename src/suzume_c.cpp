@@ -14,7 +14,6 @@
 #include <string>
 #include <string_view>
 
-#include "grammar/conjugation.h"
 #include "normalize/utf8.h"
 #include "postprocess/tag_generator.h"
 #include "suzume.h"
@@ -28,6 +27,10 @@ struct SuzumeHandle {
 };
 
 namespace {
+
+static_assert(static_cast<uint8_t>(suzume::core::PartOfSpeech::Count_) == 15);
+static_assert(static_cast<uint8_t>(suzume::core::ExtendedPOS::Count_) == 73);
+static_assert(static_cast<uint8_t>(suzume::dictionary::ConjugationType::ProperGiven) == 17);
 
 thread_local std::string last_error;
 
@@ -102,18 +105,17 @@ suzume_tags_t* makeTagsResult(const std::vector<suzume::postprocess::TagEntry>& 
 
   const size_t tags_offset = alignUp(sizeof(suzume_tags_t), alignof(char*));
   const size_t pos_offset = tags_offset + tags.size() * sizeof(char*);
-  const size_t strings_offset = pos_offset + tags.size() * sizeof(const char*);
+  const size_t strings_offset = pos_offset + tags.size() * sizeof(suzume_pos_t);
   auto* memory = static_cast<std::byte*>(::operator new(strings_offset + strings_size));
   auto* result = reinterpret_cast<suzume_tags_t*>(memory);
   result->count = tags.size();
   result->tags = tags.empty() ? nullptr : reinterpret_cast<char**>(memory + tags_offset);
-  result->pos = tags.empty() ? nullptr : reinterpret_cast<const char**>(memory + pos_offset);
+  result->pos = tags.empty() ? nullptr : reinterpret_cast<suzume_pos_t*>(memory + pos_offset);
 
   char* cursor = reinterpret_cast<char*>(memory + strings_offset);
   for (size_t idx = 0; idx < tags.size(); ++idx) {
     result->tags[idx] = copyStringToArena(tags[idx].tag, cursor);
-    // POS names are immutable string literals owned by the core type table.
-    result->pos[idx] = suzume::core::posToString(tags[idx].pos).data();
+    result->pos[idx] = static_cast<suzume_pos_t>(tags[idx].pos);
   }
   return result;
 }
@@ -213,51 +215,27 @@ SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text)
     auto* result = reinterpret_cast<suzume_result_t*>(memory);
     result->count = morphemes.size();
     result->morphemes = morphemes.empty() ? nullptr : reinterpret_cast<suzume_morpheme_t*>(memory + morphemes_offset);
-    if (result->morphemes != nullptr) {
-      std::memset(result->morphemes, 0, morphemes.size() * sizeof(suzume_morpheme_t));
-    }
-
     char* cursor = reinterpret_cast<char*>(memory + strings_offset);
     for (size_t idx = 0; idx < morphemes.size(); ++idx) {
       const auto& morph = morphemes[idx];
 
       result->morphemes[idx].surface = copyStringToArena(morph.surface, cursor);
 
-      auto pos_str = suzume::core::posToString(morph.pos);
-      result->morphemes[idx].pos = pos_str.data();
-
       auto lemma = morph.getLemma();
       result->morphemes[idx].base_form = copyStringToArena(lemma, cursor);
-
-      // Japanese POS
-      auto pos_ja_str = suzume::core::posToJapanese(morph.pos);
-      result->morphemes[idx].pos_ja = pos_ja_str.data();
-
-      // Conjugation type and form (for verbs and adjectives)
-      if (morph.pos == suzume::core::PartOfSpeech::Verb || morph.pos == suzume::core::PartOfSpeech::Adjective) {
-        auto verb_type = suzume::grammar::conjTypeToVerbType(morph.conj_type);
-        auto conj_type_str = suzume::grammar::verbTypeToJapanese(verb_type);
-        result->morphemes[idx].conj_type = conj_type_str.empty() ? nullptr : conj_type_str.data();
-
-        auto conj_form_str = suzume::grammar::conjFormToJapanese(morph.conj_form);
-        result->morphemes[idx].conj_form = conj_form_str.empty() ? nullptr : conj_form_str.data();
-      } else {
-        result->morphemes[idx].conj_type = nullptr;
-        result->morphemes[idx].conj_form = nullptr;
-      }
-
-      // Extended POS
-      auto epos_str = suzume::core::extendedPosToString(morph.extended_pos);
-      result->morphemes[idx].extended_pos = epos_str.data();
-
-      result->morphemes[idx].start = morph.start;
-      result->morphemes[idx].end = morph.end;
-      result->morphemes[idx].is_user_dict = morph.features.is_user_dict ? 1 : 0;
-      result->morphemes[idx].is_formal_noun = morph.features.is_formal_noun ? 1 : 0;
-      result->morphemes[idx].is_low_info = morph.features.is_low_info ? 1 : 0;
-      result->morphemes[idx].is_unknown = morph.is_unknown ? 1 : 0;
-      result->morphemes[idx].is_from_dictionary = morph.is_from_dictionary ? 1 : 0;
+      result->morphemes[idx].start = static_cast<uint32_t>(morph.start);
+      result->morphemes[idx].end = static_cast<uint32_t>(morph.end);
       result->morphemes[idx].score = morph.features.score;
+      result->morphemes[idx].pos = static_cast<suzume_pos_t>(morph.pos);
+      result->morphemes[idx].extended_pos = static_cast<suzume_extended_pos_t>(morph.extended_pos);
+      result->morphemes[idx].conjugation_type = static_cast<suzume_conjugation_type_t>(morph.conj_type);
+      result->morphemes[idx].conjugation_form = static_cast<suzume_conjugation_form_t>(morph.conj_form);
+      result->morphemes[idx].flags =
+          static_cast<uint8_t>((morph.features.is_user_dict ? SUZUME_MORPHEME_USER_DICT : 0U) |
+                               (morph.features.is_formal_noun ? SUZUME_MORPHEME_FORMAL_NOUN : 0U) |
+                               (morph.features.is_low_info ? SUZUME_MORPHEME_LOW_INFO : 0U) |
+                               (morph.is_unknown ? SUZUME_MORPHEME_UNKNOWN : 0U) |
+                               (morph.is_from_dictionary ? SUZUME_MORPHEME_FROM_DICTIONARY : 0U));
     }
 
     return result;
@@ -388,6 +366,7 @@ SUZUME_EXPORT const char* suzume_dictionary_warning(suzume_t handle, size_t inde
   return warning.c_str();
 }
 
+#ifndef __EMSCRIPTEN__
 SUZUME_EXPORT size_t suzume_sizeof_result(void) {
   return sizeof(suzume_result_t);
 }
@@ -424,33 +403,23 @@ SUZUME_EXPORT size_t suzume_offsetof_morpheme(uint32_t field) {
     case 0:
       return offsetof(suzume_morpheme_t, surface);
     case 1:
-      return offsetof(suzume_morpheme_t, pos);
-    case 2:
       return offsetof(suzume_morpheme_t, base_form);
+    case 2:
+      return offsetof(suzume_morpheme_t, start);
     case 3:
-      return offsetof(suzume_morpheme_t, pos_ja);
+      return offsetof(suzume_morpheme_t, end);
     case 4:
-      return offsetof(suzume_morpheme_t, conj_type);
+      return offsetof(suzume_morpheme_t, score);
     case 5:
-      return offsetof(suzume_morpheme_t, conj_form);
+      return offsetof(suzume_morpheme_t, pos);
     case 6:
       return offsetof(suzume_morpheme_t, extended_pos);
     case 7:
-      return offsetof(suzume_morpheme_t, start);
+      return offsetof(suzume_morpheme_t, conjugation_type);
     case 8:
-      return offsetof(suzume_morpheme_t, end);
+      return offsetof(suzume_morpheme_t, conjugation_form);
     case 9:
-      return offsetof(suzume_morpheme_t, is_user_dict);
-    case 10:
-      return offsetof(suzume_morpheme_t, is_formal_noun);
-    case 11:
-      return offsetof(suzume_morpheme_t, is_low_info);
-    case 12:
-      return offsetof(suzume_morpheme_t, is_unknown);
-    case 13:
-      return offsetof(suzume_morpheme_t, is_from_dictionary);
-    case 14:
-      return offsetof(suzume_morpheme_t, score);
+      return offsetof(suzume_morpheme_t, flags);
     default:
       return static_cast<size_t>(-1);
   }
@@ -522,5 +491,43 @@ SUZUME_EXPORT void* suzume_malloc(size_t size) {
 SUZUME_EXPORT void suzume_free(void* ptr) {
   std::free(ptr);
 }
+#else
+static_assert(sizeof(suzume_result_t) == 8);
+static_assert(offsetof(suzume_result_t, morphemes) == 0);
+static_assert(offsetof(suzume_result_t, count) == 4);
+static_assert(sizeof(suzume_morpheme_t) == 28);
+static_assert(offsetof(suzume_morpheme_t, surface) == 0);
+static_assert(offsetof(suzume_morpheme_t, base_form) == 4);
+static_assert(offsetof(suzume_morpheme_t, start) == 8);
+static_assert(offsetof(suzume_morpheme_t, end) == 12);
+static_assert(offsetof(suzume_morpheme_t, score) == 16);
+static_assert(offsetof(suzume_morpheme_t, pos) == 20);
+static_assert(offsetof(suzume_morpheme_t, extended_pos) == 21);
+static_assert(offsetof(suzume_morpheme_t, conjugation_type) == 22);
+static_assert(offsetof(suzume_morpheme_t, conjugation_form) == 23);
+static_assert(offsetof(suzume_morpheme_t, flags) == 24);
+static_assert(sizeof(suzume_tags_t) == 12);
+static_assert(offsetof(suzume_tags_t, tags) == 0);
+static_assert(offsetof(suzume_tags_t, pos) == 4);
+static_assert(offsetof(suzume_tags_t, count) == 8);
+static_assert(sizeof(suzume_tag_options_t) == 20);
+static_assert(offsetof(suzume_tag_options_t, pos_filter) == 0);
+static_assert(offsetof(suzume_tag_options_t, exclude_basic) == 1);
+static_assert(offsetof(suzume_tag_options_t, use_lemma) == 2);
+static_assert(offsetof(suzume_tag_options_t, min_length) == 4);
+static_assert(offsetof(suzume_tag_options_t, max_tags) == 8);
+static_assert(offsetof(suzume_tag_options_t, exclude_particles) == 12);
+static_assert(offsetof(suzume_tag_options_t, exclude_auxiliaries) == 13);
+static_assert(offsetof(suzume_tag_options_t, exclude_formal_nouns) == 14);
+static_assert(offsetof(suzume_tag_options_t, exclude_low_info) == 15);
+static_assert(offsetof(suzume_tag_options_t, remove_duplicates) == 16);
+static_assert(sizeof(suzume_extended_options_t) == 6);
+static_assert(offsetof(suzume_extended_options_t, preserve_vu) == 0);
+static_assert(offsetof(suzume_extended_options_t, preserve_case) == 1);
+static_assert(offsetof(suzume_extended_options_t, preserve_symbols) == 2);
+static_assert(offsetof(suzume_extended_options_t, mode) == 3);
+static_assert(offsetof(suzume_extended_options_t, lemmatize) == 4);
+static_assert(offsetof(suzume_extended_options_t, merge_compounds) == 5);
+#endif
 
 }  // extern "C"

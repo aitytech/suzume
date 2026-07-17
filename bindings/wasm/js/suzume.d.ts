@@ -34,16 +34,6 @@ interface EmscriptenModule {
   _suzume_last_error: () => number;
   _suzume_dictionary_warning_count: (handle: number) => number;
   _suzume_dictionary_warning: (handle: number, index: number) => number;
-  _suzume_sizeof_result: () => number;
-  _suzume_sizeof_morpheme: () => number;
-  _suzume_sizeof_tags: () => number;
-  _suzume_sizeof_tag_options: () => number;
-  _suzume_sizeof_extended_options: () => number;
-  _suzume_offsetof_result: (field: number) => number;
-  _suzume_offsetof_morpheme: (field: number) => number;
-  _suzume_offsetof_tags: (field: number) => number;
-  _suzume_offsetof_tag_options: (field: number) => number;
-  _suzume_offsetof_extended_options: (field: number) => number;
 }
 
 declare function createModule(options?: EmscriptenModuleOptions): Promise<EmscriptenModule>;

@@ -25,20 +25,15 @@ from pathlib import Path
 class SuzumeMorpheme(ctypes.Structure):
     _fields_ = [
         ("surface", ctypes.c_char_p),
-        ("pos", ctypes.c_char_p),
         ("base_form", ctypes.c_char_p),
-        ("pos_ja", ctypes.c_char_p),
-        ("conj_type", ctypes.c_char_p),
-        ("conj_form", ctypes.c_char_p),
-        ("extended_pos", ctypes.c_char_p),
-        ("start", ctypes.c_size_t),
-        ("end", ctypes.c_size_t),
-        ("is_user_dict", ctypes.c_int),
-        ("is_formal_noun", ctypes.c_int),
-        ("is_low_info", ctypes.c_int),
-        ("is_unknown", ctypes.c_int),
-        ("is_from_dictionary", ctypes.c_int),
+        ("start", ctypes.c_uint32),
+        ("end", ctypes.c_uint32),
         ("score", ctypes.c_float),
+        ("pos", ctypes.c_uint8),
+        ("extended_pos", ctypes.c_uint8),
+        ("conjugation_type", ctypes.c_uint8),
+        ("conjugation_form", ctypes.c_uint8),
+        ("flags", ctypes.c_uint8),
     ]
 
 
@@ -52,7 +47,7 @@ class SuzumeResult(ctypes.Structure):
 class SuzumeTags(ctypes.Structure):
     _fields_ = [
         ("tags", ctypes.POINTER(ctypes.c_char_p)),
-        ("pos", ctypes.POINTER(ctypes.c_char_p)),
+        ("pos", ctypes.POINTER(ctypes.c_uint8)),
         ("count", ctypes.c_size_t),
     ]
 

@@ -58,25 +58,54 @@ extern "C" {
  */
 typedef struct SuzumeHandle* suzume_t;
 
+/** Stable numeric part-of-speech codes used by result structures. */
+typedef uint8_t suzume_pos_t;
+
+enum {
+  SUZUME_POS_UNKNOWN = 0,
+  SUZUME_POS_NOUN = 1,
+  SUZUME_POS_VERB = 2,
+  SUZUME_POS_ADJECTIVE = 3,
+  SUZUME_POS_ADVERB = 4,
+  SUZUME_POS_PARTICLE = 5,
+  SUZUME_POS_AUXILIARY = 6,
+  SUZUME_POS_CONJUNCTION = 7,
+  SUZUME_POS_DETERMINER = 8,
+  SUZUME_POS_PRONOUN = 9,
+  SUZUME_POS_PREFIX = 10,
+  SUZUME_POS_SUFFIX = 11,
+  SUZUME_POS_INTERJECTION = 12,
+  SUZUME_POS_SYMBOL = 13,
+  SUZUME_POS_OTHER = 14,
+};
+
+/** Stable numeric ExtendedPOS, conjugation-type, and conjugation-form codes. */
+typedef uint8_t suzume_extended_pos_t;
+typedef uint8_t suzume_conjugation_type_t;
+typedef uint8_t suzume_conjugation_form_t;
+
+enum {
+  SUZUME_MORPHEME_USER_DICT = 1U << 0U,
+  SUZUME_MORPHEME_FORMAL_NOUN = 1U << 1U,
+  SUZUME_MORPHEME_LOW_INFO = 1U << 2U,
+  SUZUME_MORPHEME_UNKNOWN = 1U << 3U,
+  SUZUME_MORPHEME_FROM_DICTIONARY = 1U << 4U,
+};
+
 /**
  * @brief Morpheme data structure
  */
 typedef struct {
-  const char* surface;      /**< Surface form (UTF-8) */
-  const char* pos;          /**< Part of speech (English) */
-  const char* base_form;    /**< Base/dictionary form */
-  const char* pos_ja;       /**< Part of speech (Japanese) */
-  const char* conj_type;    /**< Conjugation type (Japanese) */
-  const char* conj_form;    /**< Conjugation form (Japanese) */
-  const char* extended_pos; /**< Stable extended POS code (e.g. "VERB_連用") */
-  size_t start;             /**< Start character offset in normalized text */
-  size_t end;               /**< End character offset in normalized text */
-  int is_user_dict;         /**< Non-zero if from user dictionary */
-  int is_formal_noun;       /**< Non-zero if formal noun */
-  int is_low_info;          /**< Non-zero if low information word */
-  int is_unknown;           /**< Non-zero if unknown word */
-  int is_from_dictionary;   /**< Non-zero if from dictionary */
-  float score;              /**< Candidate score/cost */
+  const char* surface;                        /**< Surface form (UTF-8) */
+  const char* base_form;                      /**< Base/dictionary form */
+  uint32_t start;                             /**< Start character offset in normalized text */
+  uint32_t end;                               /**< End character offset in normalized text */
+  float score;                                /**< Candidate score/cost */
+  suzume_pos_t pos;                           /**< Part-of-speech code */
+  suzume_extended_pos_t extended_pos;         /**< ExtendedPOS code */
+  suzume_conjugation_type_t conjugation_type; /**< Conjugation type code; 0 means none */
+  suzume_conjugation_form_t conjugation_form; /**< Conjugation form code */
+  uint8_t flags;                              /**< Bitwise SUZUME_MORPHEME_* flags */
 } suzume_morpheme_t;
 
 /**
@@ -91,9 +120,9 @@ typedef struct {
  * @brief Tag generation result structure
  */
 typedef struct {
-  char** tags;      /**< Array of tag strings */
-  const char** pos; /**< Array of POS strings (English, e.g. "NOUN", "VERB") */
-  size_t count;     /**< Number of tags */
+  char** tags;       /**< Array of tag strings */
+  suzume_pos_t* pos; /**< Array of numeric POS codes */
+  size_t count;      /**< Number of tags */
 } suzume_tags_t;
 
 /**
@@ -269,6 +298,7 @@ SUZUME_EXPORT size_t suzume_dictionary_warning_count(suzume_t handle);
  */
 SUZUME_EXPORT const char* suzume_dictionary_warning(suzume_t handle, size_t index);
 
+#ifndef __EMSCRIPTEN__
 /**
  * @brief Get sizeof(suzume_result_t)
  */
@@ -302,10 +332,9 @@ SUZUME_EXPORT size_t suzume_offsetof_result(uint32_t field);
 
 /**
  * @brief Get byte offset of field in suzume_morpheme_t
- * @param field 0=surface, 1=pos, 2=base_form, 3=pos_ja,
- *              4=conj_type, 5=conj_form, 6=extended_pos,
- *              7=start, 8=end, 9=is_user_dict, 10=is_formal_noun,
- *              11=is_low_info, 12=is_unknown, 13=is_from_dictionary, 14=score
+ * @param field 0=surface, 1=base_form, 2=start, 3=end, 4=score,
+ *              5=pos, 6=extended_pos, 7=conjugation_type,
+ *              8=conjugation_form, 9=flags
  */
 SUZUME_EXPORT size_t suzume_offsetof_morpheme(uint32_t field);
 
@@ -344,6 +373,7 @@ SUZUME_EXPORT void* suzume_malloc(size_t size);
  * @note Passing NULL is allowed and has no effect.
  */
 SUZUME_EXPORT void suzume_free(void* ptr);
+#endif
 
 #ifdef __cplusplus
 }

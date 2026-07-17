@@ -15,10 +15,8 @@ import {
   allocString,
   EXTENDED_OPTIONS_LAYOUT,
   getModule,
-  MORPHEME_LAYOUT,
   parseMorphemes,
   parseTags,
-  RESULT_LAYOUT,
   TAG_OPTIONS_LAYOUT,
   TAGS_LAYOUT,
   type WasmModule,
@@ -121,17 +119,15 @@ describe('JS API: struct layout compatibility', () => {
     expect(posArrayPtr).toBeGreaterThan(0);
     expect(count).toBeGreaterThanOrEqual(0);
 
-    // Both arrays should have valid string pointers
+    // Tags are string pointers; POS values are compact one-byte enum codes.
     if (count > 0) {
       const firstTagPtr = module.HEAPU32[tagsArrayPtr >> 2];
-      const firstPosPtr = module.HEAPU32[posArrayPtr >> 2];
+      const firstPos = new Uint8Array(module.HEAPU32.buffer)[posArrayPtr];
       expect(firstTagPtr).toBeGreaterThan(0);
-      expect(firstPosPtr).toBeGreaterThan(0);
+      expect(firstPos).toBeGreaterThan(0);
 
       const tagStr = module.UTF8ToString(firstTagPtr);
-      const posStr = module.UTF8ToString(firstPosPtr);
       expect(tagStr.length).toBeGreaterThan(0);
-      expect(posStr.length).toBeGreaterThan(0);
     }
 
     tagsFree(tagsPtr);
@@ -180,62 +176,6 @@ describe('JS API: struct layout compatibility', () => {
     } finally {
       destroy(h);
     }
-  });
-
-  it('exported C layout functions match JS parser constants', () => {
-    const sizeofResult = module.cwrap('suzume_sizeof_result', 'number', []) as () => number;
-    const sizeofMorpheme = module.cwrap('suzume_sizeof_morpheme', 'number', []) as () => number;
-    const sizeofTags = module.cwrap('suzume_sizeof_tags', 'number', []) as () => number;
-    const sizeofTagOptions = module.cwrap(
-      'suzume_sizeof_tag_options',
-      'number',
-      [],
-    ) as () => number;
-    const sizeofExtendedOptions = module.cwrap(
-      'suzume_sizeof_extended_options',
-      'number',
-      [],
-    ) as () => number;
-    const offsetofResult = module.cwrap('suzume_offsetof_result', 'number', ['number']) as (
-      field: number,
-    ) => number;
-    const offsetofMorpheme = module.cwrap('suzume_offsetof_morpheme', 'number', ['number']) as (
-      field: number,
-    ) => number;
-    const offsetofTags = module.cwrap('suzume_offsetof_tags', 'number', ['number']) as (
-      field: number,
-    ) => number;
-    const offsetofTagOptions = module.cwrap('suzume_offsetof_tag_options', 'number', [
-      'number',
-    ]) as (field: number) => number;
-    const offsetofExtendedOptions = module.cwrap('suzume_offsetof_extended_options', 'number', [
-      'number',
-    ]) as (field: number) => number;
-
-    expect(sizeofResult()).toBe(RESULT_LAYOUT.size);
-    expect(offsetofResult(0)).toBe(RESULT_LAYOUT.morphemes);
-    expect(offsetofResult(1)).toBe(RESULT_LAYOUT.count);
-
-    expect(sizeofMorpheme()).toBe(MORPHEME_LAYOUT.size);
-    expect(offsetofMorpheme(0)).toBe(MORPHEME_LAYOUT.surface);
-    expect(offsetofMorpheme(6)).toBe(MORPHEME_LAYOUT.extendedPos);
-    expect(offsetofMorpheme(7)).toBe(MORPHEME_LAYOUT.start);
-    expect(offsetofMorpheme(14)).toBe(MORPHEME_LAYOUT.score);
-
-    expect(sizeofTags()).toBe(TAGS_LAYOUT.size);
-    expect(offsetofTags(0)).toBe(TAGS_LAYOUT.tags);
-    expect(offsetofTags(2)).toBe(TAGS_LAYOUT.count);
-
-    expect(sizeofTagOptions()).toBe(TAG_OPTIONS_LAYOUT.size);
-    expect(offsetofTagOptions(0)).toBe(TAG_OPTIONS_LAYOUT.posFilter);
-    expect(offsetofTagOptions(4)).toBe(TAG_OPTIONS_LAYOUT.maxTags);
-    expect(offsetofTagOptions(5)).toBe(TAG_OPTIONS_LAYOUT.excludeParticles);
-    expect(offsetofTagOptions(9)).toBe(TAG_OPTIONS_LAYOUT.removeDuplicates);
-
-    expect(sizeofExtendedOptions()).toBe(EXTENDED_OPTIONS_LAYOUT.size);
-    expect(offsetofExtendedOptions(0)).toBe(EXTENDED_OPTIONS_LAYOUT.preserveVu);
-    expect(offsetofExtendedOptions(3)).toBe(EXTENDED_OPTIONS_LAYOUT.mode);
-    expect(offsetofExtendedOptions(5)).toBe(EXTENDED_OPTIONS_LAYOUT.mergeCompounds);
   });
 
   it('last_error reports invalid C API calls', () => {

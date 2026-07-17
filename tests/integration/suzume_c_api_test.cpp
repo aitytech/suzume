@@ -109,25 +109,22 @@ TEST(SuzumeCApiTest, AnalyzeReturnsOffsetsAndDiagnosticFields) {
   EXPECT_EQ(morpheme.start, 0u);
   EXPECT_GE(morpheme.end, morpheme.start + 1u);
   EXPECT_GE(morpheme.score, 0.0F);
-  EXPECT_TRUE(morpheme.is_from_dictionary == 0 || morpheme.is_from_dictionary == 1);
-  EXPECT_TRUE(morpheme.is_user_dict == 0 || morpheme.is_user_dict == 1);
-  EXPECT_TRUE(morpheme.is_formal_noun == 0 || morpheme.is_formal_noun == 1);
-  EXPECT_TRUE(morpheme.is_low_info == 0 || morpheme.is_low_info == 1);
-  EXPECT_TRUE(morpheme.is_unknown == 0 || morpheme.is_unknown == 1);
+  EXPECT_EQ(morpheme.flags & ~0x1FU, 0U);
 
   suzume_result_free(result);
   suzume_destroy(handle);
 }
 
-TEST(SuzumeCApiTest, EmptyConjugationMetadataIsReturnedAsNull) {
+TEST(SuzumeCApiTest, ConjugationMetadataUsesCompactCodes) {
   suzume_t handle = suzume_create();
   ASSERT_NE(handle, nullptr);
 
   suzume_result_t* result = suzume_analyze(handle, "美しく");
   ASSERT_NE(result, nullptr);
   ASSERT_GT(result->count, 0u);
-  EXPECT_EQ(result->morphemes[0].conj_type, nullptr);
-  EXPECT_STREQ(result->morphemes[0].conj_form, "連用形");
+  EXPECT_EQ(result->morphemes[0].pos, SUZUME_POS_ADJECTIVE);
+  EXPECT_EQ(result->morphemes[0].conjugation_type, 0U);
+  EXPECT_EQ(result->morphemes[0].conjugation_form, 2U);
 
   suzume_result_free(result);
   suzume_destroy(handle);
@@ -192,8 +189,9 @@ TEST(SuzumeCApiTest, LayoutFunctionsMatchNativeStructs) {
   EXPECT_EQ(suzume_offsetof_result(0), offsetof(suzume_result_t, morphemes));
   EXPECT_EQ(suzume_offsetof_result(1), offsetof(suzume_result_t, count));
   EXPECT_EQ(suzume_offsetof_morpheme(6), offsetof(suzume_morpheme_t, extended_pos));
-  EXPECT_EQ(suzume_offsetof_morpheme(7), offsetof(suzume_morpheme_t, start));
-  EXPECT_EQ(suzume_offsetof_morpheme(14), offsetof(suzume_morpheme_t, score));
+  EXPECT_EQ(suzume_offsetof_morpheme(2), offsetof(suzume_morpheme_t, start));
+  EXPECT_EQ(suzume_offsetof_morpheme(4), offsetof(suzume_morpheme_t, score));
+  EXPECT_EQ(suzume_offsetof_morpheme(9), offsetof(suzume_morpheme_t, flags));
   EXPECT_EQ(suzume_offsetof_tags(2), offsetof(suzume_tags_t, count));
   EXPECT_EQ(suzume_offsetof_tag_options(4), offsetof(suzume_tag_options_t, max_tags));
   EXPECT_EQ(suzume_offsetof_tag_options(5), offsetof(suzume_tag_options_t, exclude_particles));
