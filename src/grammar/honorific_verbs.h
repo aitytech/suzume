@@ -25,7 +25,7 @@ namespace suzume::grammar {
  */
 inline constexpr std::string_view kHumbleHonorificRenyokei[] = {"いたし", "くださ", "いただき"};
 
-inline constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "くださる", "いただく"};
+inline constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "くださる", "いただく", "なさる"};
 
 /**
  * @brief Renyokei surfaces of benefactive subsidiary verbs (もらう・あげる)

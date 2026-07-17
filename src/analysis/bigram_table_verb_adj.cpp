@@ -17,8 +17,9 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbRenyokei → AuxDesireTai (食べ+たい) - strong bonus
       {EPOS::VerbRenyokei, EPOS::AuxDesireTai, cost::kStrongBonus},
 
-      // VerbRenyokei → AuxHonorific (書き+なさい) - strong bonus for polite imperative
-      {EPOS::VerbRenyokei, EPOS::AuxHonorific, cost::kStrongBonus},
+      // VerbRenyokei → AuxHonorific (書き+なさい, お読み+なさる) - the
+      // subsidiary reading must outrank a homographic lexical honorific verb.
+      {EPOS::VerbRenyokei, EPOS::AuxHonorific, cost::kDoubleVeryStrongBonus},
 
       // VerbMizenkei → AuxNegativeNai (食べ+ない for ichidan) - moderate bonus
       {EPOS::VerbMizenkei, EPOS::AuxNegativeNai, cost::kModerateBonus},
@@ -83,6 +84,15 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbMizenkei → AuxVolitional (食べ+よう) - moderate bonus
       {EPOS::VerbMizenkei, EPOS::AuxVolitional, cost::kModerateBonus},
 
+      // Predicates introduce quotative determiners: 読む+という,
+      // 読んだ+という, 読む+っていう.
+      // The contracted っていう competes with a spurious っ+て+い+う
+      // auxiliary chain, so this grammatical clause boundary needs to be
+      // decisive for every terminal predicate.
+      {EPOS::VerbShuushikei, EPOS::DeterminerQuotative, cost::kDoubleVeryStrongBonus},
+      {EPOS::VerbTaForm, EPOS::DeterminerQuotative, cost::kDoubleVeryStrongBonus},
+      {EPOS::VerbTeForm, EPOS::DeterminerQuotative, cost::kDoubleVeryStrongBonus},
+
       // VerbMizenkei → Conjunction: very rare
       // Mizenkei connects to ない/せる/れる/よう, never to conjunctions
       // Prevents さ(mizenkei)+まして(CONJ) over さまし(renyokei)+て
@@ -129,6 +139,12 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbTeForm → AuxAspectKuru (食べて+くる) - moderate bonus
       {EPOS::VerbTeForm, EPOS::AuxAspectKuru, cost::kModerateBonus},
 
+      // VerbRenyokei → AuxInability (読み+かねる, 言い+かねます).
+      {EPOS::VerbRenyokei, EPOS::AuxInability, cost::kVeryStrongBonus},
+
+      // VerbRenyokei → AuxAspectHajimeru (読み+はじめる, 食べ+はじめる).
+      {EPOS::VerbRenyokei, EPOS::AuxAspectHajimeru, cost::kVeryStrongBonus},
+
       // VerbRenyokei → AuxAspectOku (食べ+とく contraction of 食べておく) - strong bonus
       // This handles contracted forms where ておく → とく
       {EPOS::VerbRenyokei, EPOS::AuxAspectOku, cost::kStrongBonus},
@@ -164,8 +180,13 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // This helps beat the split path 滅び+れ+ば+いい where れ is misanalyzed as passive
       {EPOS::VerbKateikei, EPOS::AdjBasic, cost::kStrongBonus},
 
-      // VerbOnbinkei → ParticleConj (書い+て, 読ん+で) - strong bonus for te-form split
-      {EPOS::VerbOnbinkei, EPOS::ParticleConj, cost::kStrongBonus},
+      // VerbOnbinkei → ParticleConj (書い+て, 読ん+で) - the voiced te-form
+      // must stay intact even before a following topic particle (読ん+で+は).
+      // The strong preference for a parallel たり/だり chain is gated by
+      // dictionary attestation or a kanji stem in the scorer. A neutral base
+      // keeps an unknown hiragana fragment from defeating a complete mimetic
+      // adverb such as AっBり.
+      {EPOS::VerbOnbinkei, EPOS::ParticleConj, cost::kNeutral},
 
       // VerbRenyokei → ParticleConj (食べ+て, 見+て) - moderate bonus for ichidan te-form split
       // Reduced from kStrongBonus to prevent す+ば splitting すばらしい
@@ -189,12 +210,23 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // This is a very common Japanese pattern (美しくなる, 大きくなる, etc.)
       {EPOS::AdjRenyokei, EPOS::VerbRenyokei, cost::kStrongBonus},
 
+      // An adverbial adjective can also precede する in its mizenkei before
+      // passive or causative inflection (余儀なく+さ+れる).
+      {EPOS::AdjRenyokei, EPOS::VerbMizenkei, cost::kVeryStrongBonus},
+
+      // The same adverbial-adjective construction commonly takes a terminal
+      // verb (美しく+なる, 読まれなく+なる), not only its renyokei form.
+      {EPOS::AdjRenyokei, EPOS::VerbShuushikei, cost::kVeryStrongBonus},
+
       // AdjRenyokei → VerbOnbinkei (深く+突き刺さっ, 美しく+咲い) - moderate bonus
       // Adverb form of adjective directly modifying verb in onbin (past/te) form
       {EPOS::AdjRenyokei, EPOS::VerbOnbinkei, cost::kModerateBonus},
 
       // AdjKatt → AuxTenseTa (美しかっ+た) - strong bonus
       {EPOS::AdjKatt, EPOS::AuxTenseTa, cost::kStrongBonus},
+
+      // I-adjective past stem → coordinate particle (高かっ+たりする).
+      {EPOS::AdjKatt, EPOS::ParticleConj, cost::kStrongBonus},
 
       // AdjKeForm → ParticleConj (美しけれ+ば) - strong bonus for conditional splitting
       {EPOS::AdjKeForm, EPOS::ParticleConj, cost::kStrongBonus},
@@ -218,6 +250,15 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // Without this, long unknown NOUN candidates (一番美しい) beat split paths
       {EPOS::AdjBasic, EPOS::Noun, cost::kModerateBonus},
       {EPOS::AdjBasic, EPOS::NounFormal, cost::kModerateBonus},
+
+      // Verb terminal → formal noun (読む+たび, 書く+こと, 見る+たび).
+      // Formal nouns are productive clause nominalizers, so favor this
+      // grammatical boundary over an unknown noun that absorbs the ending.
+      {EPOS::VerbShuushikei, EPOS::NounFormal, cost::kVeryStrongBonus},
+
+      // Verb renyokei → formal noun (読み+よう, 書き+方). This productive
+      // construction must outrank the homographic volitional 〜よう path.
+      {EPOS::VerbRenyokei, EPOS::NounFormal, cost::kVeryStrongBonus},
 
       // AdjBasic → ParticleNo (少ない+の, 美味しい+の, いいの) - moderate bonus
       // Without this, NOUN+ない(AUX)+の path beats adjective+の path because

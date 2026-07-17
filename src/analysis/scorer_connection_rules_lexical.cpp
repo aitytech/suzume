@@ -26,8 +26,50 @@ namespace sc = suzume::analysis::scorer;
 
 namespace suzume::analysis::connection_rules {
 
+namespace {
+
+bool isGodanRenyokeiOfLemma(std::string_view surface, std::string_view lemma) {
+  const auto codepoints = normalize::toCodepoints(surface);
+  if (codepoints.empty()) {
+    return false;
+  }
+
+  const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(codepoints.back());
+  if (base_suffix.empty()) {
+    return false;
+  }
+
+  const std::string_view surface_last = utf8::lastChar(surface);
+  const std::string_view lemma_last = utf8::lastChar(lemma);
+  return lemma_last == base_suffix &&
+         surface.substr(0, surface.size() - surface_last.size()) == lemma.substr(0, lemma.size() - lemma_last.size());
+}
+
+}  // namespace
+
 float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
+
+  // A bare noun followed by the adverbial negative なく is the formal
+  // "without [noun]" construction (資金なくして). Prefer it over the
+  // transitive verb なくす, whose object requires a case-marked noun (物を
+  // なくして). The lemma gate keeps ordinary adjective renyokei attachments
+  // untouched.
+  if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::AdjRenyokei &&
+      next.lemma == "ない") {
+    bonus += cost::kVeryStrongBonus;
+  }
+
+  // ところで is a discourse conjunction only at a clause boundary. After a
+  // formal noun or a past/copular auxiliary it is the compositional
+  // ところ+で construction (読んだところで, 本のところで), so reject the
+  // fused conjunction candidate in that grammatical environment.
+  if (next.extended_pos == core::ExtendedPOS::Conjunction && utf8::equalsAny(next.surface, {"ところで"}) &&
+      (prev.extended_pos == core::ExtendedPOS::NounFormal || prev.extended_pos == core::ExtendedPOS::AuxTenseTa ||
+       prev.extended_pos == core::ExtendedPOS::AuxCopulaDa || prev.extended_pos == core::ExtendedPOS::VerbTaForm ||
+       prev.extended_pos == core::ExtendedPOS::ParticleNo)) {
+    bonus += cost::kProhibitive;
+  }
 
   // Penalty for SUFFIX(さ) + VERB starting with せ/させ pattern
   // E.g., 勉強 + さ(SUFFIX) + せられてい is wrong; should be 勉強 + さ(VERB_未然) + せ(AUX_使役)
@@ -153,6 +195,24 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
 float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // The continuative construction V連用形+つつ+ある uses the existential verb,
+  // not the homographic copula or determiner. The same finite verb remains
+  // correct before an attributive noun (読みつつある本).
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"つつ"}) &&
+      next.extended_pos == core::ExtendedPOS::VerbShuushikei && next.lemma == "ある") {
+    bonus += cost::kVeryStrongBonus;
+  }
+
+  // A dictionary-backed godan renyokei of the progressive subsidiary after
+  // connective て/で should beat a homographic unknown lexical verb. Restrict
+  // this to a true renyokei (e.g. おり from おる) so fused inflected forms such
+  // as います and いない retain their grammatical internal split.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"て", "で"}) &&
+      next.extended_pos == core::ExtendedPOS::AuxAspectIru && next.fromDictionary() &&
+      isGodanRenyokeiOfLemma(next.surface, next.lemma)) {
+    bonus += cost::kVeryStrongBonus;
+  }
+
   // みたい immediately after a connective て/で is not the conjecture
   // auxiliary: 〜てみたい consists of the trial subsidiary み + desiderative
   // たい. This applies whether the competing connective edge was classified as a
@@ -184,9 +244,42 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
     bonus += cost::kAlmostNever;
   }
 
+  // The regional ておる/でおる contractions retain Godan-ra inflection, so
+  // their conditional form attaches to a conjunctive particle (食べ+とれ+ば).
+  // Keep this lemma-scoped to avoid broadly favoring a finite progressive
+  // before compound conjunction candidates such as のに.
+  const bool is_dialectal_oru_contraction = utf8::equalsAny(prev.lemma, {"とる", "どる"});
+  if ((prev.extended_pos == core::ExtendedPOS::AuxAspectIru || prev.extended_pos == core::ExtendedPOS::VerbKateikei) &&
+      is_dialectal_oru_contraction && next.extended_pos == core::ExtendedPOS::ParticleConj) {
+    bonus += cost::kStrongBonus;
+  }
+
+  // The negative dialectal contraction uses the mizenkei plus ん
+  // (食べ+とら+ん). Prefer the negative auxiliary over the homographic
+  // nominalizer only for the contracted おる paradigm.
+  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && is_dialectal_oru_contraction &&
+      next.extended_pos == core::ExtendedPOS::AuxNegativeNu) {
+    bonus += cost::kVeryStrongBonus;
+  }
+
   // Dialectal/character-speech やで is particle + particle in the regression
   // corpus, not copula で.
   if (prev.surface == "や" && next.surface == "で" && next.extended_pos == core::ExtendedPOS::AuxCopulaDa) {
+    bonus += cost::kAlmostNever;
+  }
+
+  // である is the formal copula sequence. A case/conjunctive で followed by
+  // the determiner ある is not a grammatical alternative, so preserve the
+  // copula candidate before formal nouns such as 以上 and 場合.
+  if (utf8::equalsAny(prev.surface, {"で"}) && utf8::equalsAny(next.surface, {"ある"}) &&
+      next.extended_pos == core::ExtendedPOS::Determiner) {
+    bonus += cost::kAlmostNever;
+  }
+
+  // In the copular negative でなく, なく is the adverbial adjective form of
+  // ない. Keep the auxiliary reading for verbal 〜なく separate.
+  if (utf8::equalsAny(prev.surface, {"で"}) && utf8::equalsAny(next.surface, {"なく"}) &&
+      next.extended_pos == core::ExtendedPOS::AuxNegativeNai) {
     bonus += cost::kAlmostNever;
   }
 
@@ -227,6 +320,18 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // would otherwise receive.
   if (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface.size() == core::kJapaneseCharBytes &&
+      normalize::classifyChar(utf8::decodeFirstChar(next.surface)) == normalize::CharType::Hiragana) {
+    bonus += cost::kStrong;
+  }
+
+  // A final particle followed immediately by a one-mora hiragana renyokei
+  // is likewise an implausible no-boundary split. It fabricates chains such
+  // as 扱い+か+ね+た from an adjective/question fragment, instead of preserving
+  // the preceding verb-renyokei plus its subsidiary. Real sentence-final
+  // questions end here; a following lexical verb begins a new clause and is
+  // normally separated by punctuation or has a multi-mora stem.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      next.surface.size() == core::kJapaneseCharBytes &&
       normalize::classifyChar(utf8::decodeFirstChar(next.surface)) == normalize::CharType::Hiragana) {
     bonus += cost::kStrong;
   }
@@ -284,6 +389,23 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
 float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // A generated renyokei ending in ず is a fused classical-negative path.
+  // Before an independent finite predicate, the productive analysis is
+  // mizenkei + ず + predicate (種類を問わ|ず|進む), not a fabricated verb
+  // connection. Dictionary words retain their lexical reading.
+  if (!prev.fromDictionary() && prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      utf8::endsWith(prev.surface, "ず") && next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
+    bonus += cost::kAlmostNever;
+  }
+
+  // A dictionary noun that carries a particle-like extended POS is a surface
+  // homograph, not a grammatical binding particle. Do not let it replace the
+  // topic-particle boundary in nominal predicates such as 本|は|ない.
+  if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Noun &&
+      next.extended_pos == core::ExtendedPOS::ParticleBinding) {
+    bonus += cost::kStrong;
+  }
+
   // Bonus for AuxNegativeNu(ん) → VerbOnbinkei(かっ) pattern
   // くだらん+かっ+た = contracted negative past (くだらなかった)
   // Without this, the adjective path (分からんかっ+た) beats the verb path
@@ -294,6 +416,24 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
     bonus += sc::kBonusContractedNegPast;  // -3.45
   }
 
+  // A generated verb-onbin candidate whose reconstructed lemma ends in ぬ
+  // is a contracted negative (読まん, 書かん), not a lexical onbin form.
+  // Before connective で, keep the productive mizenkei + ん + でも chain.
+  if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && utf8::endsWith(prev.lemma, "ぬ") &&
+      utf8::startsWith(next.surface, "で") &&
+      (next.extended_pos == core::ExtendedPOS::ParticleConj ||
+       next.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+       next.extended_pos == core::ExtendedPOS::Conjunction)) {
+    bonus += cost::kStrong;
+  }
+
+  // んで is the connective copula after the contracted negative (読まんで),
+  // followed by a binding particle in んでも. Prefer that auxiliary reading
+  // over the homographic connective particle.
+  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNu && next.extended_pos == core::ExtendedPOS::AuxCopulaDa) {
+    bonus += sc::kBonusDoubleVeryStrong;
+  }
+
   // Penalty for VerbOnbinkei(ん) → Verb(でる) pattern
   // After ん音便, でる is almost always the contracted ている, not the verb 出る
   // E.g., 並んでる = 並んでいる (progressive), やんでる = 病んでいる
@@ -301,6 +441,13 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && utf8::endsWith(prev.surface, "ん") &&
       next.pos == core::PartOfSpeech::Verb && next.surface == "でる") {
     bonus += cost::kStrong;
+  }
+
+  // The voiced progressive contraction follows an n-onbin: 読んでる,
+  // 飲んでる. Outside this environment でる retains its lexical-verb reading.
+  if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && utf8::endsWith(prev.surface, "ん") &&
+      next.extended_pos == core::ExtendedPOS::AuxAspectIru && next.surface == "でる") {
+    bonus += cost::kStrongBonus;
   }
 
   // Bonus for NOUN → できる(VERB) pattern
@@ -356,10 +503,19 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
     bonus += sc::kBonusDoubleVeryStrong;
   }
 
-  // Penalty for AuxCopulaDa(な) → ParticleFinal(ったら) pattern
-  // な is attributive form of copula — cannot be followed by ったら particle
-  // Valid: だ+ね, だ+よ. Invalid: な+ったら (should be なっ+たら from なる)
-  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && prev.surface == "な" &&
+  // A sokuonbin copula followed by たら uses the hypothetical form of the
+  // past auxiliary: 静か+だっ+たら. The homographic conjunctive particle
+  // cannot attach directly to the copula's だっ form.
+  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && utf8::endsWith(prev.surface, "っ") &&
+      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"たら"})) {
+    bonus += cost::kMinor;
+  }
+
+  // Penalty for AuxCopulaDa(だ/な) → ParticleFinal(ったら) pattern.
+  // The final particle is valid after a noun (あなた+ったら), but after the
+  // copula these surfaces belong to a different inflectional boundary:
+  // だっ+たら (copula conditional) or なっ+たら (なる conditional).
+  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && utf8::equalsAny(prev.surface, {"だ", "な"}) &&
       next.extended_pos == core::ExtendedPOS::ParticleFinal && utf8::startsWith(next.surface, "った")) {
     bonus += cost::kRare;
   }
@@ -414,6 +570,87 @@ float computeBarePotentialRenyokeiPenalty(const core::LatticeEdge& prev, const c
     penalty += cost::kSevere;
   }
   return penalty;
+}
+
+float computeCopulaConditionalBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  // The literary concessive/conditional construction であれ(ば) is the
+  // continuative copula followed by the hypothetical form of ある. Favor this
+  // grammatical chain over the homographic case-particle + pronoun sequence.
+  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && next.extended_pos == core::ExtendedPOS::VerbKateikei &&
+      utf8::equalsAny(next.surface, {"あれ"}) && utf8::equalsAny(next.lemma, {"ある"})) {
+    return cost::kStrongBonus;
+  }
+  // A copula cannot directly take an unrelated lexical hypothetical form.
+  // This also keeps the known で+あれ+ば chain split rather than selecting a
+  // fabricated one-token verb candidate for あれば.
+  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && next.extended_pos == core::ExtendedPOS::VerbKateikei) {
+    return cost::kStrong;
+  }
+  // In であれ, the hypothetical ある can coordinate another nominal
+  // predicate (本であれ水であれ) or introduce the following predicate
+  // (本であれ読む). These continuations distinguish it from the pronoun あれ.
+  if (prev.extended_pos == core::ExtendedPOS::VerbKateikei && prev.lemma == "ある" &&
+      (next.pos == core::PartOfSpeech::Noun || next.extended_pos == core::ExtendedPOS::VerbShuushikei)) {
+    return cost::kStrongBonus;
+  }
+  return {};
+}
+
+float computePastConditionalVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  // The sahen renyokei takes the past conditional directly in 〜としたら.
+  // This is a true inflectional chain, unlike a general renyokei followed by
+  // a past auxiliary, and keeps たら as AUX rather than a conjunction.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.lemma == "する" &&
+      next.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(next.surface, {"たら"})) {
+    return cost::kVeryStrongBonus;
+  }
+
+  // The conditional forms of the past auxiliary introduce a following main
+  // predicate (読ん+たら+進む, 読ま+せ+ん+でし+たら+進む). They are unlike a
+  // completed-past た, which must not be followed by a bare verb.
+  if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(prev.surface, {"たら", "だら"}) &&
+      next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
+    return cost::kDoubleVeryStrongBonus;
+  }
+  return {};
+}
+
+float computeExistentialAruNominalPredicateBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  // A bare noun can directly predicate the existential verb in literary and
+  // fixed constructions (本あってこそ, 本あれば, 本ある限り). This is distinct
+  // from the copular である sequence, whose preceding morpheme is auxiliary.
+  if (prev.extended_pos == core::ExtendedPOS::Noun && next.pos == core::PartOfSpeech::Verb && next.fromDictionary() &&
+      next.lemma == "ある") {
+    // The generic noun-to-short-verb guards intentionally resist an unmarked
+    // object+verb split. A dictionary-backed existential form is the
+    // grammatical exception, so cancel those guards only for this paradigm.
+    return cost::kDoubleVeryStrongBonus + cost::kStrongBonus;
+  }
+  return {};
+}
+
+float computeCompletionAuxiliaryBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  // A lexical renyokei can take the completion subsidiary 終わる in its
+  // irrealis form before negation (読み+終わら+ない). This is distinct from
+  // an arbitrary renyokei-to-verb sequence, which remains discouraged.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
+      utf8::equalsAny(next.lemma, {"終わる"})) {
+    return cost::kDoubleVeryStrongBonus;
+  }
+  return {};
+}
+
+float computeAdjectiveTePredicatePenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  // An i-adjective candidate ending in て/で cannot directly govern a new
+  // lexical predicate. The final mora is the connective particle and must be
+  // separated (嬉しく|て|なら|ない, 高く|て|なる). Auxiliary continuations are
+  // represented by their own extended POS and are intentionally unaffected.
+  if (prev.extended_pos == core::ExtendedPOS::AdjRenyokei &&
+      (utf8::endsWith(prev.surface, "て") || utf8::endsWith(prev.surface, "で")) &&
+      (next.extended_pos == core::ExtendedPOS::VerbMizenkei || next.extended_pos == core::ExtendedPOS::ParticleConj)) {
+    return cost::kAlmostNever;
+  }
+  return {};
 }
 
 }  // namespace suzume::analysis::connection_rules

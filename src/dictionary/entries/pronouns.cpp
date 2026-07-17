@@ -131,6 +131,22 @@ EntrySpecRange getPronounEntries() {
       // Temporal adverbs - common, prevent misclassification
       adv("まだ", ""),
 
+      // Fixed temporal and frequency adverbs. These are closed lexical
+      // function words, not productive pronoun-plus-particle sequences.
+      adv("いつか", ""),
+      adv("まもなく", ""),
+      adv("ときどき", ""),
+
+      // Fixed degree and discourse adverbs. Their surface endings otherwise
+      // attract unrelated verb, particle, and auxiliary candidates.
+      adv("いっそう", ""),
+      adv("最も", ""),
+      adv("あらためて", ""),
+      adv("とくに", ""),
+      adv("まったく", ""),
+      adv("きわめて", ""),
+      adj("余儀なく", "余儀ない", EPOS::AdjRenyokei),
+
       // Compound adverb (改めて = anew/once more) - 動詞「改める」連用形+て の語彙化
       // MeCab: 改めて → 改めて(副詞)
       adv("改めて", ""),

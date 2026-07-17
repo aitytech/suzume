@@ -51,6 +51,10 @@ constexpr EntrySpec det(const char* s, const char* lemma = "") {
   return {s, POS::Determiner, EPOS::Determiner, lemma};
 }
 
+constexpr EntrySpec quotative_det(const char* s, const char* lemma = "") {
+  return {s, POS::Determiner, EPOS::DeterminerQuotative, lemma};
+}
+
 // Formal noun helper: creates FORMAL_NOUN entry (形式名詞)
 // Usage: formal_noun("こと")
 constexpr EntrySpec formal_noun(const char* s, const char* lemma = "") {
@@ -73,6 +77,11 @@ constexpr EntrySpec adv(const char* s, const char* lemma = "") {
 // Usage: suffix("さん")
 constexpr EntrySpec suffix(const char* s, const char* lemma = "") {
   return {s, POS::Suffix, EPOS::Suffix, lemma};
+}
+
+// Recent-completion suffix helper: creates a suffix with its own connection class.
+constexpr EntrySpec suffix_recent_completion(const char* s, const char* lemma = "") {
+  return {s, POS::Suffix, EPOS::SuffixRecentCompletion, lemma};
 }
 
 // Prefix helper: creates PREFIX entry

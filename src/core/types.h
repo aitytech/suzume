@@ -98,12 +98,13 @@ enum class ExtendedPOS : uint8_t {
   AuxPotential,  // 可能: れる、られる (context-dependent)
 
   // Aspect auxiliaries
-  AuxAspectIru,     // 継続: いる、い、おる
-  AuxAspectShimau,  // 完了: しまう、ちゃう、じゃう
-  AuxAspectOku,     // 準備: おく、とく (contraction)
-  AuxAspectMiru,    // 試行: みる
-  AuxAspectIku,     // 進行方向: いく
-  AuxAspectKuru,    // 接近: くる
+  AuxAspectIru,       // 継続: いる、い、おる
+  AuxAspectShimau,    // 完了: しまう、ちゃう、じゃう
+  AuxAspectOku,       // 準備: おく、とく (contraction)
+  AuxAspectMiru,      // 試行: みる
+  AuxAspectIku,       // 進行方向: いく
+  AuxAspectKuru,      // 接近: くる
+  AuxAspectHajimeru,  // 開始: はじめる
 
   // Appearance/Conjecture auxiliaries
   AuxAppearanceSou,     // 様態: そう (after renyokei/stem)
@@ -172,10 +173,14 @@ enum class ExtendedPOS : uint8_t {
 
   AuxNegativeMai,  // 打消推量: まい (attaches to 終止形, unlike ぬ/ん which take 未然形)
 
-  AuxClassicalNari,   // 文語断定: なり (春なり = it is spring)
-  AuxClassicalKeri,   // 文語過去/詠嘆: けり (なりけり)
-  AuxClassicalTari,   // 文語断定タリ活用連体形: たる (堂々たる, 確固たる)
-  AuxClassicalBeshi,  // 文語当為べし連体形: べき (来たるべき, 読むべき)
+  AuxClassicalNari,        // 文語断定: なり (春なり = it is spring)
+  AuxClassicalKeri,        // 文語過去/詠嘆: けり (なりけり)
+  AuxClassicalTari,        // 文語断定タリ活用連体形: たる (堂々たる, 確固たる)
+  AuxClassicalBeshi,       // 文語当為べし連体形: べき (来たるべき, 読むべき)
+  AuxInability,            // 不可能・躊躇: かねる
+  AuxBenefactive,          // 授受: あげる（〜てあげる）
+  SuffixRecentCompletion,  // 完成直後: たて
+  DeterminerQuotative,     // 引用連体: という、っていう
 
   // Count marker (for array sizing)
   Count_  // Total number of categories
@@ -211,25 +216,27 @@ enum class AnalysisMode : uint8_t {
  */
 enum class CandidateOrigin : uint8_t {
   Unknown = 0,
-  Dictionary,             // 辞書からの直接候補
-  VerbKanji,              // 漢字+ひらがな動詞 (食べる)
-  VerbHiragana,           // ひらがな動詞 (いく, できる)
-  VerbKatakana,           // カタカナ動詞 (バズる)
-  VerbCompound,           // 複合動詞 (恐れ入る)
-  AdjectiveI,             // イ形容詞 (美しい)
-  AdjectiveIHiragana,     // ひらがなイ形容詞 (まずい)
-  AdjectiveNa,            // ナ形容詞・的形容詞 (理性的)
-  NominalizedNoun,        // 連用形転成名詞 (手助け)
-  SuffixPattern,          // 接尾辞パターン (〜化, 〜性)
-  SameType,               // 同一文字種 (漢字列, カタカナ列)
-  Alphanumeric,           // 英数字
-  Onomatopoeia,           // オノマトペ (わくわく)
-  CharacterSpeech,        // キャラ語尾 (ナリ, ござる)
-  Split,                  // 分割候補 (NOUN+VERB)
-  Join,                   // 結合候補 (複合動詞結合)
-  KanjiHiraganaCompound,  // 漢字+ひらがな複合名詞 (玉ねぎ)
-  Counter,                // 数量詞パターン (一つ〜九つ)
-  PrefixCompound,         // 接頭的複合語 (今日, 本日, 全国)
+  Dictionary,                    // 辞書からの直接候補
+  VerbKanji,                     // 漢字+ひらがな動詞 (食べる)
+  VerbHiragana,                  // ひらがな動詞 (いく, できる)
+  VerbHiraganaPassiveRenyokei,   // ひらがな一段連用形 + られる
+  VerbHiraganaNegativeRenyokei,  // ひらがな連用形 + ない
+  VerbKatakana,                  // カタカナ動詞 (バズる)
+  VerbCompound,                  // 複合動詞 (恐れ入る)
+  AdjectiveI,                    // イ形容詞 (美しい)
+  AdjectiveIHiragana,            // ひらがなイ形容詞 (まずい)
+  AdjectiveNa,                   // ナ形容詞・的形容詞 (理性的)
+  NominalizedNoun,               // 連用形転成名詞 (手助け)
+  SuffixPattern,                 // 接尾辞パターン (〜化, 〜性)
+  SameType,                      // 同一文字種 (漢字列, カタカナ列)
+  Alphanumeric,                  // 英数字
+  Onomatopoeia,                  // オノマトペ (わくわく)
+  CharacterSpeech,               // キャラ語尾 (ナリ, ござる)
+  Split,                         // 分割候補 (NOUN+VERB)
+  Join,                          // 結合候補 (複合動詞結合)
+  KanjiHiraganaCompound,         // 漢字+ひらがな複合名詞 (玉ねぎ)
+  Counter,                       // 数量詞パターン (一つ〜九つ)
+  PrefixCompound,                // 接頭的複合語 (今日, 本日, 全国)
 };
 
 /**
@@ -327,7 +334,8 @@ inline bool isAdjectiveForm(ExtendedPOS epos) {
  */
 inline bool isAuxiliaryType(ExtendedPOS epos) {
   // (AuxNegativeMai sits outside the contiguous range; see ExtendedPOS comment)
-  return (epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai;
+  return (epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai ||
+         epos == ExtendedPOS::AuxInability || epos == ExtendedPOS::AuxBenefactive;
 }
 
 /**

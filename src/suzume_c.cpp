@@ -29,7 +29,7 @@ struct SuzumeHandle {
 namespace {
 
 static_assert(static_cast<uint8_t>(suzume::core::PartOfSpeech::Count_) == 15);
-static_assert(static_cast<uint8_t>(suzume::core::ExtendedPOS::Count_) == 73);
+static_assert(static_cast<uint8_t>(suzume::core::ExtendedPOS::Count_) == 78);
 static_assert(static_cast<uint8_t>(suzume::dictionary::ConjugationType::ProperGiven) == 17);
 
 thread_local std::string last_error;

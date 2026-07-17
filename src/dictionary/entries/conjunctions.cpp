@@ -23,8 +23,8 @@ EntrySpecRange getConjunctionEntries() {
       conj("しかも", ""), conj("そのうえ", ""),
 
       // Alternative (選択)
-      conj("或いは", ""), conj("若しくは", ""), conj("または", ""), conj("それとも", ""), conj("あるいは", "或いは"),
-      conj("もしくは", "若しくは"),
+      conj("或いは", ""), conj("又は", ""), conj("若しくは", ""), conj("または", ""), conj("それとも", ""),
+      conj("あるいは", "或いは"), conj("もしくは", ""),
 
       // Explanation/Supplement (説明・補足)
       conj("即ち", ""), conj("すなわち", ""), conj("例えば", ""), conj("但し", ""), conj("ただし", ""), conj("尚", ""),
@@ -49,8 +49,17 @@ EntrySpecRange getConjunctionEntries() {
       // are function adverbs kept in L1 to beat the spurious verb decompositions. Kanji-initial
       // 決して is intentionally NOT registered here: it would swallow the 決 of 解決して
       // (解決|し|て → 解|決して); its 決し(非語 VERB)+て over-split needs a candidate-side fix.
+      adv("もとより", ""),  // 追加・強調: 本はもとより水を読む
       adv("めったに", ""),  // 滅多に〜ない - prevent めった(非語 VERB める)+に split
       adv("どうぞ", ""),    // 陳述副詞 - prevent どう(ADJ)+ぞ split
+      adv("あえて", ""),    // 意図的選択: あえ(非語一段動詞)+て を防ぐ
+      adv("あくまで", ""),  // 限定・強調: あく(動詞)+まで を防ぐ
+      adv("いたって", ""),  // 程度: いたっ(動詞音便)+て を防ぐ
+      adv("すこぶる", ""),  // 程度: す+こぶる の非語分解を防ぐ
+      adv("おおいに", ""),  // 程度: おお+い+に の分解を防ぐ
+      adv("つとめて", ""),  // 努力: つ+とめ+て の非語分解を防ぐ
+      adv("ひいては", ""),  // 帰結・拡張: ひい+て+は を防ぐ
+      adv("かえって", ""),  // 逆接・予想外: かえっ(動詞音便)+て を防ぐ
   };
   return makeEntrySpecRange(kEntries);
 }

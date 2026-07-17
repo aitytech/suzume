@@ -147,22 +147,23 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         }
       }
     }
-    // Try multi-char hiragana ichidan renyokei: kanji + 2 hiragana ending in e-row
-    // Handles verbs like 聞こえる where stem is 聞こえ (2 hiragana chars after kanji)
-    // The first hiragana (こ) is not e-row/i-row so single-char path misses it
-    // Only try kanji_end+2 with strict validation to avoid false positives
+    // Try multi-char hiragana ichidan renyokei: kanji + 2 hiragana ending in e/i-row.
+    // This covers stems such as 聞こえ and 踏まえ. The first hiragana alone is
+    // not a sufficient signal, so require an actual ichidan continuation after
+    // the stem before generating an unknown-word candidate.
     if (hiragana_end >= kanji_end + 2) {
       char32_t first_hira = codepoints[kanji_end];
       char32_t second_hira = codepoints[kanji_end + 1];
-      // Only enter if first hira is o-row (こ, そ, と, の, etc.) — the only
-      // row that produces valid multi-char ichidan stems (e.g., 聞こえる).
-      // Other rows are either:
-      // - e-row/i-row: handled by single-char path above
-      // - u-row: kanji+u-row = complete godan verb (行く, 書く)
-      // - a-row: godan mizenkei + passive/causative (壊され, 揉まれ)
-      bool first_is_o_row = grammar::isORowCodepoint(first_hira);
-      if (first_is_o_row && (grammar::isERowCodepoint(second_hira) || grammar::isIRowCodepoint(second_hira))) {
-        size_t renyokei_end = kanji_end + 2;
+      size_t renyokei_end = kanji_end + 2;
+      bool first_is_single_stem_ending = grammar::isERowCodepoint(first_hira) || grammar::isIRowCodepoint(first_hira);
+      bool has_ichidan_continuation = renyokei_end < codepoints.size() &&
+                                      (codepoints[renyokei_end] == U'る' || codepoints[renyokei_end] == U'て' ||
+                                       codepoints[renyokei_end] == U'た' || codepoints[renyokei_end] == U'ま' ||
+                                       codepoints[renyokei_end] == U'な' ||
+                                       (codepoints[renyokei_end] == U'れ' && renyokei_end + 1 < codepoints.size() &&
+                                        codepoints[renyokei_end + 1] == U'ば'));
+      if (!first_is_single_stem_ending && has_ichidan_continuation &&
+          (grammar::isERowCodepoint(second_hira) || grammar::isIRowCodepoint(second_hira))) {
         std::string surface = extractSubstring(codepoints, start_pos, renyokei_end);
         const auto& all_cands = inflection.analyze(surface);
         vh::VerbClassBests bests = vh::bestByVerbClass(all_cands);
@@ -175,15 +176,52 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         constexpr float kMultiCharIchidanThreshold = 0.45F;
         // Skip surfaces ending in ない — almost always adjective (少ない) or negative suffix
         bool ends_in_nai = (second_hira == U'い' && first_hira == U'な');
-        if (!prefer_suru && !prefer_godan && !ends_in_nai && ichidan_cand.confidence > kMultiCharIchidanThreshold) {
+        // A-row + せ/れ before an auxiliary continuation is a Godan voice
+        // stem (読ま+せる, 読ま+れる). Keep a genuinely lexicalized Ichidan
+        // verb such as 泳がせる, but do not generate an unverified long
+        // Ichidan candidate that absorbs a causative or passive chain.
+        bool is_unverified_godan_voice = grammar::isARowCodepoint(first_hira) &&
+                                         (second_hira == U'せ' || second_hira == U'れ') &&
+                                         !vh::isVerbInDictionary(dict_manager, ichidan_cand.base_form);
+        if (!prefer_suru && !prefer_godan && !ends_in_nai && !is_unverified_godan_voice &&
+            ichidan_cand.confidence > kMultiCharIchidanThreshold) {
           bool surface_is_dict_entry = vh::isNounOrAdjectiveInDictionary(dict_manager, surface);
-          if (!surface_is_dict_entry) {
+          bool base_is_dict_verb = vh::isVerbInDictionary(dict_manager, ichidan_cand.base_form);
+          // A non-dictionary multi-kana stem must not absorb a closed-class
+          // focus particle: 本+さえ and 水+すら are nominal phrases, not
+          // renyokei of fabricated verbs. Dictionary-verified verbs remain
+          // available for genuine lexical surfaces that happen to end alike.
+          // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+          bool absorbs_focus_particle =
+              !base_is_dict_verb && vh::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, renyokei_end);
+          if (!surface_is_dict_entry && !absorbs_focus_particle) {
             float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
                                                               verb_opts.confidence_cost_scale_small);
             candidates.push_back(makeVerbCandidate(surface, start_pos, renyokei_end, base_cost, ichidan_cand.base_form,
                                                    grammar::verbTypeToConjType(ichidan_cand.verb_type), true,
                                                    CandidateOrigin::VerbKanji, ichidan_cand.confidence,
                                                    "ichidan_renyokei_multi"));
+
+            if (codepoints[renyokei_end] == U'れ' && renyokei_end + 1 < codepoints.size() &&
+                codepoints[renyokei_end + 1] == U'ば') {
+              std::string kateikei_surface = extractSubstring(codepoints, start_pos, renyokei_end + 1);
+              float kateikei_confidence = vh::getIchidanConfidence(inflection.analyze(kateikei_surface),
+                                                                   candidate::verb_cost::kIchidanKateikeiMinConfidence);
+              if (kateikei_confidence >= candidate::verb_cost::kIchidanKateikeiMinConfidence) {
+                candidates.push_back(makeVerbCandidate(
+                    kateikei_surface, start_pos, renyokei_end + 1, candidate::verb_cost::kStrongBonus, surface + "る",
+                    dictionary::ConjugationType::Ichidan, true, CandidateOrigin::VerbKanji, kateikei_confidence,
+                    "ichidan_kateikei_multi", core::ExtendedPOS::VerbKateikei));
+              }
+            }
+
+            if (codepoints[renyokei_end] == U'る') {
+              candidates.push_back(
+                  makeVerbCandidate(extractSubstring(codepoints, start_pos, renyokei_end + 1), start_pos,
+                                    renyokei_end + 1, base_cost + candidate::verb_cost::kWeakPenalty,
+                                    ichidan_cand.base_form, grammar::verbTypeToConjType(ichidan_cand.verb_type), true,
+                                    CandidateOrigin::VerbKanji, ichidan_cand.confidence, "ichidan_shuushikei_multi"));
+            }
           }
         }
       }
@@ -237,6 +275,16 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
       size_t hira_chars = renyokei_end - kanji_end;
       if (kanji_chars <= 1 && dict_manager != nullptr) {
         if (!vh::isVerbInDictionary(dict_manager, best_sa.base_form)) {
+          // A one-mora case particle followed by し and the て/た form is a
+          // productive noun + particle + する construction, not an unknown
+          // GodanSa verb. This covers short-noun contexts such as 本+として
+          // and 本+とした without suppressing real stems such as 話し or 尽くし.
+          if (hira_chars == 2 && renyokei_end < codepoints.size() &&
+              (codepoints[renyokei_end] == U'て' || codepoints[renyokei_end] == U'た') &&
+              vh::hasParticleDictionaryEntry(dict_manager, extractSubstring(codepoints, kanji_end, kanji_end + 1))) {
+            SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" godan_sa case-particle+する pattern\n");
+            continue;
+          }
           if (hira_chars <= 1) {
             // Single kanji + 1 hiragana (呈し, 訴え, 課し etc.).
             // Many one-kanji 漢語サ変動詞 stems exist; the verb candidate must
@@ -341,15 +389,10 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
         }
       }
 
-      // Try Ichidan verb volitional stem pattern: renyokei + よ + う
-      // Ichidan volitional is formed as: stem + よう
-      // MeCab splits as: stem+よ (動詞,未然ウ接続) + う (助動詞)
-      // E.g., 食べる → 食べよう → 食べよ + う
-      //       始める → 始めよう → 始めよ + う
-      // Generate volitional stem candidate (renyokei + よ) when followed by う
-      // Check pattern: renyokei + よ + う
-      if (renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end] == U'よ' &&
-          codepoints[renyokei_end + 1] == U'う') {
+      // Ichidan verbs form both the volitional stem (食べよ+う) and
+      // the literary imperative (食べよ) from renyokei + よ.
+      if (renyokei_end < codepoints.size() && codepoints[renyokei_end] == U'よ') {
+        const bool is_volitional = renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end + 1] == U'う';
         // Skip suru-verb pattern: 漢字 + し + よう
         // Suru-verbs (勉強しよう, 説明しよう) should be split as: 漢字|しよ|う
         // Check if renyokei ends with し preceded by kanji
@@ -367,7 +410,8 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
         }
 
         if (!is_suru_pattern) {
-          // E.g., 食べ + よ + う → 食べよ is volitional stem
+          // E.g., 食べ + よ + う → 食べよ is volitional stem;
+          //       食べ + よ → 食べよ is the literary imperative.
           size_t volitional_end = renyokei_end + 1;  // renyokei + よ
           std::string surface = extractSubstring(codepoints, start_pos, volitional_end);
           std::string renyokei_surface = extractSubstring(codepoints, start_pos, renyokei_end);
@@ -396,16 +440,18 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
           float ichidan_confidence = vh::getIchidanConfidence(all_candidates, min_confidence);
 
           if (ichidan_confidence >= min_confidence) {
-            // Negative cost to beat the split path 語幹+よう
+            // Negative cost to beat the renyokei + final-particle path.
             constexpr float kVolitionalCost = candidate::verb_cost::kStrongBonus;
             SUZUME_DEBUG_VERBOSE_BLOCK {
-              SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " ichidan_volitional lemma=" << base_form
-                                  << " conf=" << ichidan_confidence << " cost=" << kVolitionalCost << "\n";
+              SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface
+                                  << (is_volitional ? " ichidan_volitional lemma=" : " ichidan_imperative lemma=")
+                                  << base_form << " conf=" << ichidan_confidence << " cost=" << kVolitionalCost << "\n";
             }
-            candidates.push_back(makeVerbCandidate(surface, start_pos, volitional_end, kVolitionalCost, base_form,
-                                                   dictionary::ConjugationType::Ichidan, true,
-                                                   CandidateOrigin::VerbKanji, ichidan_confidence, "ichidan_volitional",
-                                                   core::ExtendedPOS::VerbMizenkei));
+            candidates.push_back(
+                makeVerbCandidate(surface, start_pos, volitional_end, kVolitionalCost, base_form,
+                                  dictionary::ConjugationType::Ichidan, true, CandidateOrigin::VerbKanji,
+                                  ichidan_confidence, is_volitional ? "ichidan_volitional" : "ichidan_imperative",
+                                  is_volitional ? core::ExtendedPOS::VerbMizenkei : core::ExtendedPOS::VerbMeireikei));
           }
         }
       }

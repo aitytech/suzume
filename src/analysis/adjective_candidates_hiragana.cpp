@@ -261,6 +261,27 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
     return candidates;
   }
 
+  // A closed-class particle immediately followed by a registered auxiliary
+  // inflection is a grammatical boundary, not an i-adjective stem. This keeps
+  // など+いない (and the same particle+auxiliary shape) from becoming a
+  // fabricated adjective candidate.
+  if (dict_manager != nullptr) {
+    constexpr size_t kMaxParticleChars = 4;
+    size_t max_particle_end = std::min(max_hiragana_end, start_pos + kMaxParticleChars);
+    for (size_t particle_end = start_pos + 1; particle_end <= max_particle_end; ++particle_end) {
+      std::string particle_surface = extractSubstring(codepoints, start_pos, particle_end);
+      if (dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle) == nullptr) {
+        continue;
+      }
+      for (size_t aux_end = max_hiragana_end; aux_end > particle_end; --aux_end) {
+        std::string aux_surface = extractSubstring(codepoints, particle_end, aux_end);
+        if (dict_manager->lookupExact(aux_surface, core::PartOfSpeech::Auxiliary) != nullptr) {
+          return candidates;
+        }
+      }
+    }
+  }
+
   // Add mizenkei (かろ) conjectural candidates (うれしかろう, よかろう) up front, before
   // the particle-boundary early-returns below: よ / な heads are treated as particle
   // starts and would otherwise skip the かろ generation. The inflection analyzer does
@@ -432,6 +453,22 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
                                    : starts_with_particle ? candidate::kHiraAdjConfParticle
                                                           : candidate::kHiraAdjConfMin;
       if (cand.confidence >= confidence_threshold && cand.verb_type == grammar::VerbType::IAdjective) {
+        // 様態 そう is a separate auxiliary, never an inflectional ending of
+        // an i-adjective. This mirrors the kanji-adjective guard and keeps
+        // derived forms split (ほし + そう + だ, やす + そう + だ).
+        {
+          std::string_view base_sv(cand.base_form);
+          std::string_view surf_sv(surface);
+          if (utf8::endsWith(base_sv, "い")) {
+            std::string_view stem_sv = base_sv.substr(0, base_sv.size() - core::kJapaneseCharBytes);
+            if (surf_sv.size() > stem_sv.size() && utf8::startsWith(surf_sv, stem_sv) &&
+                utf8::startsWith(surf_sv.substr(stem_sv.size()), scorer::kSuffixSou)) {
+              SUZUME_DEBUG_LOG_VERBOSE("[HIRA_ADJ_SKIP] \"" << surface
+                                                            << "\" spans 様態そう, stem path handles split\n");
+              continue;
+            }
+          }
+        }
         // For particle-starting sequences, require stem length >= 2 characters
         // This prevents に+そうな from being recognized as にい (invalid)
         if (starts_with_particle && normalize::utf8Length(cand.stem) < 2) {

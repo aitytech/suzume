@@ -93,6 +93,7 @@ constexpr char32_t kO = U'お';  // お (0x304A) - prefix marker
 // Volitional auxiliary よう/う
 constexpr char32_t kYo = U'よ';  // よ (0x3088)
 constexpr char32_t kU = U'う';   // う (0x3046)
+constexpr char32_t kN = U'ん';   // ん (0x3093)
 
 // Causative auxiliary させる
 constexpr char32_t kSa = U'さ';  // さ (0x3055)

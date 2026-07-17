@@ -36,9 +36,9 @@ EntrySpecRange getDeterminerEntries() {
 
       // Quotative determiners (引用連体詞) - prevents incorrect split like 病+とい+う
       // Lower cost to beat と(PARTICLE,-0.4)+いった(VERB,-0.034)+conn(0.2)=-0.232
-      det("という", ""),
-      det("といった", ""),
-      det("っていう", ""),  // colloquial
+      quotative_det("という", ""),
+      quotative_det("といった", ""),
+      quotative_det("っていう", ""),  // colloquial
 
       // Quotative verb forms are compositional particle/adverb + verb + particle units.
 

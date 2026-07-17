@@ -80,6 +80,13 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
 
   const auto& opts = scorer.splitOpts();
   if (first_type == CharType::Alphabet) {
+    // A letter run immediately after a number is an ASCII unit (1kg, 5cm,
+    // 20MB), not the head of an alpha+kanji compound. Keeping this boundary
+    // lets the preceding alphanumeric candidate remain the quantity token and
+    // prevents kg未満 from swallowing the following Japanese predicate.
+    if (start_pos > 0 && char_types[start_pos - 1] == CharType::Digit) {
+      return;
+    }
     if (second_type == CharType::Kanji) {
       base_bonus = opts.alpha_kanji_bonus;
     } else if (second_type == CharType::Katakana) {

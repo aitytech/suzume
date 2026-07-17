@@ -46,7 +46,8 @@ bool isObjectCounterKanji(char32_t code_point) {
 }  // namespace
 
 std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                        const std::vector<normalize::CharType>& char_types) {
+                                                        const std::vector<normalize::CharType>& char_types,
+                                                        const dictionary::DictionaryManager* dict_manager) {
   std::vector<UnknownCandidate> candidates;
 
   // Need at least 2 characters (numeral + counter suffix)
@@ -349,6 +350,34 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
   // Must have at least one character after numerals
   if (numeral_end >= codepoints.size()) {
     return candidates;
+  }
+
+  // A numeral+counter preceding a registered suffix is compositional even when
+  // the suffix starts with kanji (二階|建て, 二本|立て).  Consult the suffix
+  // lexicon rather than enumerating suffix spellings here, so every closed-class
+  // suffix can share the same quantity boundary rule.
+  if (dict_manager != nullptr && normalize::isCounterKanji(codepoints[numeral_end])) {
+    size_t counter_end = numeral_end + 1;
+    std::string suffix_text = extractSubstring(codepoints, counter_end, codepoints.size());
+    bool suffix_follows = false;
+    for (const auto& result : dict_manager->lookup(suffix_text, 0)) {
+      if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Suffix) {
+        suffix_follows = true;
+        break;
+      }
+    }
+    if (suffix_follows) {
+      std::string surface = extractSubstring(codepoints, start_pos, counter_end);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, counter_end, core::PartOfSpeech::Noun,
+                                  candidate::kCounterNounSplitBonus, false, CandidateOrigin::Counter);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "counter_registered_suffix_split";
+#endif
+        candidates.push_back(cand);
+      }
+    }
   }
 
   // Check for counter suffix (つ for native counters)

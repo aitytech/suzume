@@ -357,6 +357,19 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
         }
 
         if (hira2_end > sokuon_pos + 1) {
+          // A registered adjective beginning at the sokuon is a productive
+          // suffix boundary (e.g. noun + っぽ + さ). Do not fabricate a
+          // single compound noun across it; the dictionary candidates retain
+          // the suffix inflection and any following nominalizer.
+          std::string suffix_portion = extractSubstring(codepoints, sokuon_pos, hira2_end);
+          if (dict_manager != nullptr) {
+            for (const auto& entry : dict_manager->lookup(suffix_portion, 0)) {
+              if (entry.entry != nullptr && entry.entry->pos == core::PartOfSpeech::Adjective) {
+                return candidates;
+              }
+            }
+          }
+
           std::string surface = extractSubstring(codepoints, start_pos, hira2_end);
           if (!surface.empty()) {
             auto cand = makeCandidate(surface, start_pos, hira2_end, core::PartOfSpeech::Noun, 1.0F, false,

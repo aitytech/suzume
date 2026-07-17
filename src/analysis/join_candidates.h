@@ -99,6 +99,17 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
                                  const dictionary::DictionaryManager& dict_manager, const Scorer& scorer);
 
 /**
+ * @brief Add pronoun + plural-suffix join candidates
+ *
+ * Combines a dictionary-backed pronoun with the closed plural suffix ら into
+ * one pronoun search unit, e.g. これら and 彼ら.
+ */
+void addPronounPluralJoinCandidates(core::Lattice& lattice, std::string_view text,
+                                    const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                    size_t start_pos, const dictionary::DictionaryManager& dict_manager,
+                                    const Scorer& scorer);
+
+/**
  * @brief Add te-form + auxiliary verb split candidates
  *
  * Detects patterns where a verb in te-form is followed by auxiliary verbs
@@ -167,7 +178,8 @@ void addTaruAdjectiveJoinCandidates(core::Lattice& lattice, std::string_view tex
 void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
                                      const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                      size_t start_pos, const std::vector<normalize::CharType>& char_types,
-                                     const dictionary::DictionaryManager& dict_manager, const Scorer& scorer);
+                                     const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
+                                     const grammar::Inflection& inflection);
 
 }  // namespace suzume::analysis
 

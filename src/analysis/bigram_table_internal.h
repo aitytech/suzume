@@ -9,8 +9,9 @@ using BigramMatrix = std::array<std::array<uint8_t, BigramTable::kSize>, BigramT
 
 // Every value used by the grammatical rule tables. Keep this list compact:
 // the dense matrix stores only an index into it.
-inline constexpr std::array<float, 18> kCostPalette = {
+inline constexpr std::array<float, 19> kCostPalette = {
     -2.5F,
+    bigram_cost::kDoubleVeryStrongBonus,
     bigram_cost::kExtremeBonus,
     bigram_cost::kVeryStrongBonus,
     bigram_cost::kExtraStrongBonus,

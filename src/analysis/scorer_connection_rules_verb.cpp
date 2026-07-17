@@ -58,12 +58,50 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kStrongBonus;
   }
 
+  // とともに is a closed compound particle covering both accompaniment
+  // (家族とともに) and concurrent-predicate (読むとともに書く) constructions.
+  // Its component と + ともに path is otherwise favored by the frequent adverb
+  // candidate, so keep the grammatical compound boundary intact.
+  if (next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"とともに"})) {
+    bonus += cost::kDoubleVeryStrongBonus;
+  }
+
   // The object marker cannot directly govern a finite predicate. Keep this
   // restriction surface-scoped because other ParticleCase homographs also act
   // as valid quotation or conditional particles after a finite verb (〜る+と).
   if (prev.extended_pos == core::ExtendedPOS::VerbShuushikei && next.extended_pos == core::ExtendedPOS::ParticleCase &&
       utf8::equalsAny(next.surface, {"を"})) {
     bonus += cost::kStrong;
+  }
+
+  // A predicate-final に can introduce a continuative form only when that
+  // form was generated with a following negative auxiliary (読むに+たえ+ない).
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(prev.surface, {"に"}) &&
+      next.origin == core::CandidateOrigin::VerbHiraganaNegativeRenyokei) {
+    bonus += cost::kDoubleVeryStrongBonus;
+  }
+
+  if (prev.origin == core::CandidateOrigin::VerbHiraganaNegativeRenyokei &&
+      next.extended_pos == core::ExtendedPOS::AuxNegativeNai) {
+    bonus += cost::kStrongBonus;
+  }
+
+  // The quotative particle followed by 言う's hypothetical form is the
+  // productive concessive/conditional construction と+いえ(ども/ば). Preserve
+  // this boundary over a generated verb that absorbs the noun and quotation.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase &&
+      grammar::isSingleHiragana(prev.surface, core::hiragana::kTo) &&
+      next.extended_pos == core::ExtendedPOS::VerbKateikei && next.lemma == "いう") {
+    bonus += cost::kVeryStrongBonus;
+  }
+
+  // A continuative verb followed by に can express a purpose construction
+  // (読みに行く) or the honorific お+連用形+に+なる construction. The generic
+  // VerbRenyokei→ParticleCase cost favors nominal readings for object markers;
+  // restore this distinct grammatical boundary without changing を/で/etc.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::ParticleCase &&
+      utf8::equalsAny(next.surface, {"に"})) {
+    bonus += cost::kVeryStrongBonus;
   }
 
   // VerbRenyokei → AdjBasic bonus for kanji-containing verb + adjective
@@ -111,6 +149,14 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += sc::kBonusCompoundParticleToTopic;
   }
 
+  // An attributive compound case particle ending in る modifies the following
+  // noun (に関する問題, に対する答え, における資料). Prefer that grammatical
+  // boundary over an unrelated Ichidan renyokei candidate at the noun's start.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.extended_pos == core::ExtendedPOS::Noun &&
+      prev.surface.size() >= core::kThreeJapaneseCharBytes && utf8::endsWith(prev.surface, "る")) {
+    bonus += cost::kVeryStrongBonus;
+  }
+
   // A multi-mora case-particle candidate after an explicit volitional auxiliary
   // would swallow the quotative と and following verb (書こ+う+として). Keep the
   // one-mora と connection licensed, but reject compound-particle attachment so
@@ -118,6 +164,25 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::AuxVolitional && next.extended_pos == core::ExtendedPOS::ParticleCase &&
       next.surface.size() >= core::kTwoJapaneseCharBytes) {
     bonus += cost::kStrong;
+  }
+
+  // A volitional auxiliary followed by the quotative particle is the productive
+  // intent construction (食べよう+とする). Keep it ahead of the homographic
+  // renyokei + formal-noun よう path, whose case-particle continuations are
+  // instead が/に (読みようがない, 書きようによって).
+  if (prev.extended_pos == core::ExtendedPOS::AuxVolitional && next.extended_pos == core::ExtendedPOS::ParticleCase &&
+      grammar::isSingleHiragana(next.surface, core::hiragana::kTo)) {
+    bonus += cost::kVeryStrongBonus;
+  }
+
+  // The one-mora literary volitional ん is selected only in the quotative
+  // construction ～んとする. Elsewhere the homographic contracted negative
+  // remains the productive modern analysis (読まん、食べん).
+  if (prev.extended_pos == core::ExtendedPOS::AuxVolitional &&
+      grammar::isSingleHiragana(prev.surface, core::hiragana::kN) &&
+      !(next.extended_pos == core::ExtendedPOS::ParticleCase &&
+        grammar::isSingleHiragana(next.surface, core::hiragana::kTo))) {
+    bonus += cost::kSevere;
   }
 
   // The conjunctive-particle homograph なり cannot follow an i-adjective's
@@ -162,6 +227,24 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kStrongBonus;
   }
 
+  // A kanji godan-wa renyokei may head a productive compound predicate
+  // (沿い+進む, 担い+進む). Its conjugation type distinguishes it from
+  // other i-ending renyokei forms and from the competing unknown i-adjective.
+  // Require a dictionary-verified following verb so ordinary kanji compounds
+  // are not promoted as predicate chains.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::VerbShuushikei &&
+      grammar::containsKanji(prev.surface) && prev.conj_type == dictionary::ConjugationType::GodanWa &&
+      next.lemmaVerified()) {
+    bonus += cost::kStrongBonus;
+    if (normalize::utf8Length(prev.surface) >= 3) {
+      // Multi-kanji stems incur the general unregistered-renyokei penalty.
+      // In this verified compound-predicate environment that penalty would
+      // otherwise let an unrelated i-adjective candidate win.
+      bonus += cost::kStrongBonus;
+      bonus += cost::kMinorBonus;
+    }
+  }
+
   return bonus;
 }
 
@@ -169,6 +252,47 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
 // causative/mizenkei/imperative (させ, さ, せよ/しろ) rules.
 float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
+
+  // A quotative と can introduce the continuative stem of an Ichidan verb
+  // immediately before passive/potential られる (本と+み+られる). This
+  // origin is emitted only by the productive Ichidan-plus-passive candidate
+  // generator, so it does not weaken the protected と+いう determiner path.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase &&
+      grammar::isSingleHiragana(prev.surface, core::hiragana::kTo) &&
+      next.origin == core::CandidateOrigin::VerbHiraganaPassiveRenyokei) {
+    bonus += cost::kDoubleVeryStrongBonus + cost::kVeryStrongBonus;
+  }
+
+  // The same generated stem must connect to passive られる rather than be
+  // treated as a standalone verb after the quotation.
+  if (prev.origin == core::CandidateOrigin::VerbHiraganaPassiveRenyokei &&
+      next.extended_pos == core::ExtendedPOS::AuxPassive) {
+    bonus += cost::kDoubleVeryStrongBonus + cost::kVeryStrongBonus;
+  }
+
+  // A verb mizenkei connects to inflectional auxiliaries (ない, れる, せる,
+  // よう), not directly to an adjective. Without this grammatical guard,
+  // passive + desire chains can fabricate an i-adjective spanning both
+  // auxiliaries: 行か+れたく instead of 行か+れ+たく.
+  if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && next.pos == core::PartOfSpeech::Adjective) {
+    bonus += cost::kAlmostNever;
+  }
+
+  // A causative auxiliary may be followed by another auxiliary (notably the
+  // passive in 書か+せ+られる), but it does not connect directly to a lexical
+  // verb. Penalize the homographic unknown-verb path without naming a surface.
+  if (prev.extended_pos == core::ExtendedPOS::AuxCausative && next.pos == core::PartOfSpeech::Verb &&
+      !grammar::isHumbleHonorificLemma(next.lemma)) {
+    bonus += cost::kRare;
+  }
+
+  // The conditional form of a causative auxiliary attaches directly to ば:
+  // 読ま+せれ+ば, 食べ+させれ+ば. Prefer the inflected auxiliary over a
+  // spurious causative-plus-passive chain (せ+れ+ば).
+  if (prev.extended_pos == core::ExtendedPOS::AuxCausative && utf8::endsWith(prev.surface, "れ") &&
+      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::endsWith(next.surface, "ば")) {
+    bonus += cost::kVeryStrongBonus;
+  }
 
   // Penalty for VerbRenyokei → れ (AuxPassive) pattern
   // The passive auxiliary れる attaches to godan 未然形 (VerbMizenkei), never to
@@ -181,12 +305,16 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
     bonus += cost::kRare;  // Cancel the -0.8 bonus
   }
 
-  // Bonus for て → いただき (humble auxiliary verb) pattern
-  // E.g., 食べて+いただき+ます, して+いただけ+ます
-  // The て→い(AUX)→ただき path incorrectly splits いただき
-  // いただく is a humble auxiliary verb that should not be split after て
-  if (prev.surface == "て" && prev.extended_pos == core::ExtendedPOS::ParticleConj &&
-      utf8::startsWith(next.surface, "いただ") && next.pos == core::PartOfSpeech::Verb) {
+  // A humble/honorific subsidiary may follow a connective particle, another
+  // verb's renyokei/onbinkei, or a verbal noun. Favor its dictionary-confirmed
+  // lemma over paths that split the subsidiary into short homographs. This
+  // covers both ordinary te-form attachment and honorific-prefix constructions.
+  const bool can_precede_humble_subsidiary =
+      prev.pos == core::PartOfSpeech::Particle || prev.extended_pos == core::ExtendedPOS::VerbRenyokei ||
+      prev.extended_pos == core::ExtendedPOS::VerbOnbinkei || prev.extended_pos == core::ExtendedPOS::AuxCausative ||
+      prev.pos == core::PartOfSpeech::Noun;
+  if (can_precede_humble_subsidiary && next.pos == core::PartOfSpeech::Verb &&
+      grammar::isHumbleHonorificLemma(next.lemma)) {
     bonus += cost::kVeryStrongBonus;
   }
 
@@ -287,10 +415,11 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   // Bonus for VerbRenyokei/VerbOnbinkei → たり/だり (parallel listing particle)
   // E.g., 食べ+たり+する, 飲ん+だり+食べ+たり+する
   // Without this, た(AuxTenseTa) wins over たり(ParticleConj) due to strong た bonus
-  // Exclude pure hiragana onbin forms (ぴっ, ばっ) which are onomatopoeia, not verbs
+  // Accept dictionary-backed hiragana forms too (なっ+たり), while excluding
+  // unknown pure-hiragana sound-symbolic forms (まっ+たり).
   if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
       (next.surface == "たり" || next.surface == "だり") && next.extended_pos == core::ExtendedPOS::ParticleConj &&
-      grammar::containsKanji(prev.surface)) {
+      (grammar::containsKanji(prev.surface) || prev.fromDictionary())) {
     bonus += cost::kVeryStrongBonus;
   }
 
@@ -344,11 +473,11 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   // (つか of つく) or a u-row shuushikei (す of する) never takes the volitional う
   // — yet the spurious split would otherwise beat the real godan-wa verb
   // (つかう/使う, あらう/洗う, すう/吸う). Penalize so the whole-verb reading wins.
-  // A single-mora AuxVolitional surface is necessarily bare う (the ichidan form
-  // is the 2-mora よう), so the byte-length gate identifies it without a surface
-  // string compare.
-  if (next.extended_pos == core::ExtendedPOS::AuxVolitional && next.surface.size() == core::kJapaneseCharBytes &&
-      prev.pos == core::PartOfSpeech::Verb && !grammar::endsWithORow(prev.surface)) {
+  // This applies only to the bare う surface. The literary volitional ん is
+  // likewise one mora, but follows an a-row irrealis stem in 読まんとする.
+  if (next.extended_pos == core::ExtendedPOS::AuxVolitional &&
+      grammar::isSingleHiragana(next.surface, core::hiragana::kU) && prev.pos == core::PartOfSpeech::Verb &&
+      !grammar::endsWithORow(prev.surface)) {
     bonus += cost::kSevere;
   }
 
@@ -379,6 +508,43 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && prev.surface == "ば" &&
       next.pos == core::PartOfSpeech::Verb && utf8::equalsAny(next.surface, {"なら", "なり", "なる", "なれ", "なっ"})) {
     bonus += cost::kStrongBonus;
+  }
+
+  // Contracted obligation chains retain their grammatical boundaries:
+  // mizenkei + なく + ちゃ + いけ + ない, and
+  // mizenkei + なきゃ/なけりゃ + なら + ない.
+  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai && utf8::equalsAny(prev.surface, {"なく"}) &&
+      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"ちゃ"})) {
+    bonus += cost::kStrongBonus;
+  }
+
+  // The change-of-state construction 〜なくなる retains なく as a negative
+  // auxiliary; elsewhere before a connective, the competing adjective form
+  // remains appropriate (読まれなくて困る).
+  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai && utf8::equalsAny(prev.surface, {"なく"}) &&
+      next.extended_pos == core::ExtendedPOS::VerbShuushikei && utf8::equalsAny(next.surface, {"なる"})) {
+    bonus += cost::kExtremeBonus + cost::kMinorBonus;
+  }
+
+  // The case particle まで attaches directly to a terminal predicate
+  // (食べるまで, 調べるまで). Keep this boundary before the particle's
+  // leading mora can be absorbed into an unknown nominal candidate.
+  if (prev.extended_pos == core::ExtendedPOS::VerbShuushikei && next.extended_pos == core::ExtendedPOS::ParticleCase &&
+      utf8::equalsAny(next.surface, {"まで"})) {
+    bonus += cost::kVeryStrongBonus;
+  }
+  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai && utf8::equalsAny(prev.surface, {"なきゃ", "なけりゃ"}) &&
+      next.extended_pos == core::ExtendedPOS::VerbMizenkei && utf8::equalsAny(next.surface, {"なら"})) {
+    bonus += cost::kStrongBonus;
+  }
+  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai && utf8::equalsAny(prev.surface, {"なきゃ", "なけりゃ"}) &&
+      next.extended_pos == core::ExtendedPOS::AuxPotential && utf8::equalsAny(next.surface, {"いけ"})) {
+    bonus += cost::kVeryStrongBonus;
+  }
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"ちゃ"}) &&
+      ((next.extended_pos == core::ExtendedPOS::AuxPotential && utf8::equalsAny(next.surface, {"いけ"})) ||
+       (next.extended_pos == core::ExtendedPOS::VerbMizenkei && utf8::equalsAny(next.surface, {"なら"})))) {
+    bonus += cost::kVeryStrongBonus;
   }
 
   // Bonus for VERB_未然 → AUX_否定古(ず/ずに/ね) connection
@@ -595,10 +761,12 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
     bonus += cost::kVeryRare;
   }
 
-  // Penalty for SYMBOL → PARTICLE pattern (furigana in parentheses)
-  // E.g., 東京（とうきょう） should not split と+う+きょう
-  // Particles don't normally follow opening parentheses directly
-  if (prev.pos == core::PartOfSpeech::Symbol && next.pos == core::PartOfSpeech::Particle) {
+  // Penalty for opening bracket → PARTICLE pattern (furigana in parentheses).
+  // E.g., 東京（とうきょう） should not split と+う+きょう. Punctuation
+  // and closing brackets are clause boundaries and may legitimately be
+  // followed by a particle, so they must not receive this penalty.
+  if (prev.pos == core::PartOfSpeech::Symbol && next.pos == core::PartOfSpeech::Particle &&
+      normalize::isOpeningBracket(utf8::decodeFirstChar(prev.surface))) {
     bonus += cost::kAlmostNever;
   }
 

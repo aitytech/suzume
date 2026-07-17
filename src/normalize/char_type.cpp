@@ -26,6 +26,13 @@ CharType classifyChar(char32_t codepoint) {
     return CharType::Kanji;
   }
 
+  // Ideographic closing mark (〆) - treat as Kanji so it remains part of
+  // lexical compounds such as 〆切. Unicode assigns U+3006 the Ideographic
+  // property even though it lives in the CJK Symbols block.
+  if (codepoint == 0x3006) {
+    return CharType::Kanji;
+  }
+
   // Ideographic number zero (〇) - treat as Kanji so it joins numeral runs
   // (二〇二五年, 一〇〇). U+3007 lives in the CJK Symbols block, so it must be
   // caught before the symbol range below or it is dropped as a symbol.
@@ -342,6 +349,7 @@ bool isCounterKanji(char32_t cp) {
     case U'面':
     case U'問':
     case U'章':
+    case U'条':
     case U'棟':
     case U'戸':
     case U'席':

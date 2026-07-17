@@ -76,6 +76,121 @@ bool isNominalForcingParticle(const core::Morpheme& next) {
                                                       next.extended_pos == core::ExtendedPOS::ParticleTopic);
 }
 
+// The appearance construction is ambiguous at the lattice level: 形容詞語幹+
+// そう can use either the appearance auxiliary or the na-adjectival そう
+// candidate. A predicative copula resolves it as the latter (高そうだ,
+// 静かそうです), whereas attributive な and adverbial に keep the auxiliary
+// analysis. These are the finite and continuative onsets of the two copulas;
+// な is deliberately excluded because it is the attributive form.
+bool isPredicativeCopula(const core::Morpheme& morpheme) {
+  if (morpheme.extended_pos != core::ExtendedPOS::AuxCopulaDa &&
+      morpheme.extended_pos != core::ExtendedPOS::AuxCopulaDesu) {
+    return false;
+  }
+  return morpheme.surface == "だ" || morpheme.surface == "だっ" || morpheme.surface == "です" ||
+         morpheme.surface == "でし";
+}
+
+void resolveAppearanceSouPredicate(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
+    auto& sou = result[idx];
+    auto& predicate = result[idx - 1];
+    const auto& copula = result[idx + 1];
+    if (sou.surface != "そう" || !isPredicativeCopula(copula)) {
+      continue;
+    }
+
+    if (predicate.pos == core::PartOfSpeech::Adjective && sou.extended_pos == core::ExtendedPOS::AuxAppearanceSou) {
+      sou.pos = core::PartOfSpeech::Adjective;
+      sou.extended_pos = core::ExtendedPOS::AdjNaAdj;
+      sou.lemma = "そう";
+      sou.conj_type = dictionary::ConjugationType::None;
+      sou.conj_form = grammar::ConjForm::Base;
+      continue;
+    }
+  }
+}
+
+void resolveProgressiveContractionNominalizer(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
+    auto& contraction = result[idx];
+    const auto& connective = result[idx - 1];
+    const auto& continuation = result[idx + 1];
+    if (contraction.surface != "ん" || contraction.extended_pos != core::ExtendedPOS::AuxNegativeNu ||
+        connective.extended_pos != core::ExtendedPOS::ParticleConj ||
+        !utf8::equalsAny(connective.surface, {"て", "で"}) ||
+        (continuation.extended_pos != core::ExtendedPOS::ParticleNo &&
+         continuation.extended_pos != core::ExtendedPOS::AuxCopulaDa)) {
+      continue;
+    }
+    contraction.pos = core::PartOfSpeech::Particle;
+    contraction.extended_pos = core::ExtendedPOS::ParticleNo;
+    contraction.lemma = "の";
+    contraction.conj_type = dictionary::ConjugationType::None;
+    contraction.conj_form = grammar::ConjForm::Base;
+  }
+}
+
+// In the predicative pattern XにYない, a regular noun Y takes the independent
+// negative adjective (本に相違ない), not the verbal negative auxiliary. Keep
+// renyokei-derived and specially classified nouns out of this rule: their
+// auxiliary analyses remain available for expressions such as 間違いない.
+void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    auto& negative = result[idx];
+    const auto& predicate = result[idx - 1];
+    if (negative.surface != "ない" || predicate.pos != core::PartOfSpeech::Noun) {
+      continue;
+    }
+
+    // A noun must not inherit the binding-particle category. When a legacy
+    // dictionary entry does so, restore the negative auxiliary reading that
+    // belongs to the nominalized predicate (間違い+ない).
+    if (predicate.extended_pos == core::ExtendedPOS::ParticleBinding &&
+        negative.extended_pos == core::ExtendedPOS::AdjBasic) {
+      negative.pos = core::PartOfSpeech::Auxiliary;
+      negative.extended_pos = core::ExtendedPOS::AuxNegativeNai;
+      negative.lemma = "ない";
+      continue;
+    }
+
+    if (idx < 2 || negative.extended_pos != core::ExtendedPOS::AuxNegativeNai ||
+        predicate.extended_pos != core::ExtendedPOS::Noun) {
+      continue;
+    }
+    const auto& marker = result[idx - 2];
+    if (marker.extended_pos != core::ExtendedPOS::ParticleCase || marker.surface != "に") {
+      continue;
+    }
+    negative.pos = core::PartOfSpeech::Adjective;
+    negative.extended_pos = core::ExtendedPOS::AdjBasic;
+    negative.lemma = "ない";
+    negative.conj_type = dictionary::ConjugationType::IAdjective;
+    negative.conj_form = grammar::ConjForm::Base;
+  }
+}
+
+// A formal noun followed by では is marked by the case particle で plus the
+// topic particle は (ところではない, ことではない). The copular candidate is
+// reserved for predicative continuations such as ところである.
+void resolveFormalNounCaseDe(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
+    auto& de = result[idx];
+    const auto& formal_noun = result[idx - 1];
+    const auto& topic = result[idx + 1];
+    if (de.surface != "で" || de.extended_pos != core::ExtendedPOS::AuxCopulaDa ||
+        formal_noun.extended_pos != core::ExtendedPOS::NounFormal ||
+        topic.extended_pos != core::ExtendedPOS::ParticleTopic) {
+      continue;
+    }
+    de.pos = core::PartOfSpeech::Particle;
+    de.extended_pos = core::ExtendedPOS::ParticleCase;
+    de.lemma = "で";
+    de.conj_type = dictionary::ConjugationType::None;
+    de.conj_form = grammar::ConjForm::Base;
+  }
+}
+
 }  // namespace
 
 Postprocessor::Postprocessor(const PostprocessOptions& options) : options_(options), lemmatizer_() {}
@@ -109,6 +224,11 @@ std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> r
     lemmatizer_.lemmatizeAll(result);
     SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] lemmatize: applied\n");
   }
+
+  resolveAppearanceSouPredicate(result);
+  resolveProgressiveContractionNominalizer(result);
+  resolveNominalPredicateNai(result);
+  resolveFormalNounCaseDe(result);
 
   for (size_t i = 0; i + 1 < result.size(); ++i) {
     if (result[i].surface == "付け" && result[i].pos == core::PartOfSpeech::Verb && result[i + 1].surface == "で" &&
@@ -542,6 +662,35 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<c
   size_t idx = 0;
   while (idx < morphemes.size()) {
     const auto& current = morphemes[idx];
+
+    // Pattern 0: Ordinal prefix + numeric expression (第 + 3回 → 第3回).
+    // The prefix scopes the complete quantity, including an optional ordinal
+    // suffix (第3回目), so retain it as one search unit.
+    if (current.pos == core::PartOfSpeech::Noun && utf8::equalsAny(current.surface, {"第"}) &&
+        idx + 1 < morphemes.size()) {
+      const auto& next = morphemes[idx + 1];
+      if (next.pos == core::PartOfSpeech::Noun && isNumericExpression(next.surface)) {
+        core::Morpheme merged = current;
+        merged.surface += next.surface;
+        merged.lemma = merged.surface;
+        merged.end = next.end;
+        merged.end_pos = next.end_pos;
+        size_t merge_end = idx + 2;
+
+        if (merge_end < morphemes.size() && morphemes[merge_end].pos == core::PartOfSpeech::Noun &&
+            utf8::equalsAny(morphemes[merge_end].surface, {"目"})) {
+          merged.surface += morphemes[merge_end].surface;
+          merged.lemma = merged.surface;
+          merged.end = morphemes[merge_end].end;
+          merged.end_pos = morphemes[merge_end].end_pos;
+          ++merge_end;
+        }
+
+        result.push_back(merged);
+        idx = merge_end;
+        continue;
+      }
+    }
 
     // Pattern 1: Merge large numbers (3億 + 5000万円)
     if (current.pos == core::PartOfSpeech::Noun && isNumericExpression(current.surface) &&

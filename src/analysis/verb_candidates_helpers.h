@@ -149,8 +149,9 @@ bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manage
  *
  * True when the span [start_pos, end_pos) ends in a dictionary-registered
  * particle of @p particle_pos, optionally followed by the negative
- * ない / なかっ / なかった. Detects candidates fabricated by absorbing
- * [word] + particle (+ negative) into a single token: the 副助詞 しか ends in
+ * ない / なかっ / なかった or the copula inflection だ / だっ. Detects
+ * candidates fabricated by absorbing [word] + particle (+ auxiliary) into a
+ * single token: the 副助詞 しか ends in
  * the a-row mora か, which coincides with the godan-ka mizenkei/onbin ending,
  * so a non-word verb conjugation can absorb noun + しか(…ない) (水しかない read
  * as a form of the non-word 水しく). The particle must be 2+ codepoints so the
@@ -166,9 +167,10 @@ bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager
  *
  * Convenience wrapper over endsWithParticleTailOfPos covering both focus
  * particle classes: 副助詞 (しか, だけ, ばかり, ...) and 係助詞 (さえ, こそ,
- * すら, ...). Both attach after a noun and may be followed by ない, so a
- * candidate spanning [word] + focus particle (+ negative) is never a single
- * word (お金さえない = お金 + さえ + ない, never a form of the non-word 金さう).
+ * すら, ...). Both attach after a noun and may be followed by an auxiliary,
+ * so a candidate spanning [word] + focus particle (+ auxiliary) is never a
+ * single word (お金さえない = お金 + さえ + ない, never a form of the non-word
+ * 金さう).
  */
 bool endsWithFocusParticleTail(const dictionary::DictionaryManager* dict_manager,
                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);

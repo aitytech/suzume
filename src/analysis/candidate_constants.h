@@ -57,6 +57,14 @@ constexpr float kHighOriginConfidence = 0.9F;
 // E.g., 読み+終わる, 書き+始める
 constexpr float kCompoundVerbBonus = -0.8F;
 
+// A compound whose final one-kanji Godan stem is dictionary-verified carries
+// stronger evidence than a generic compound-verb proposal.
+constexpr float kVerifiedTailCompoundVerbBonus = -1.4F;
+
+// Minimum inflection confidence when a particle boundary is checked against a
+// following verified verb or auxiliary form.
+constexpr float kParticleVerbBoundaryMinConfidence = 0.5F;
+
 // Verified Ichidan verb bonus
 // Applied when join creates a valid ichidan verb pattern
 constexpr float kVerifiedV1Bonus = -0.3F;
@@ -221,6 +229,9 @@ constexpr float kSingleKanjiKuCost = 0.52F;  // 甘く, 辛く renyokei
 // (kanji/katakana paths and しそう stem validation)
 constexpr float kIAdjConfMin = 0.5F;
 
+// Initial confidence for a candidate that has not yet been validated.
+constexpr float kNoConfidence = 0.0F;
+
 // Debug confidence recorded on the generated 未然形 (かろ) conjectural candidate
 constexpr float kIAdjKaroConfidence = 0.8F;
 
@@ -294,6 +305,8 @@ constexpr float kImperativeFinalBonus = -0.8F;
 constexpr float kConstructedVerbMinConfidence = 0.5F;
 // Stricter bar for WA-row passive base forms, which match spuriously more often.
 constexpr float kConstructedVerbPassiveMinConfidence = 0.6F;
+// Minimum evidence for a rule-derived Ichidan conditional stem (…れ + ば).
+constexpr float kIchidanKateikeiMinConfidence = 0.3F;
 }  // namespace verb_cost
 
 // =============================================================================

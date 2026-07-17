@@ -101,9 +101,45 @@ void appendIchidanStemRareCandidates(const std::vector<char32_t>& codepoints, si
 // Covers polite ます / negative ない, た/て, colloquial contractions,
 // られる, volitional, and causative auxiliary attachments.
 void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
-                                        size_t hiragana_end, std::vector<UnknownCandidate>& candidates) {
+                                        size_t hiragana_end, const dictionary::DictionaryManager* dict_manager,
+                                        std::vector<UnknownCandidate>& candidates) {
+  // A one-kanji Ichidan renyokei may be followed directly by a kanji-leading
+  // closed-class auxiliary (見+損なう, 見+得る). Normal hiragana logic cannot
+  // emit the stem here because the adjacent kanji extends the initial run.
+  const size_t single_kanji_end = start_pos + 1;
+  if (single_kanji_end < codepoints.size() && vh::isSingleKanjiIchidan(codepoints[start_pos]) &&
+      normalize::isKanjiCodepoint(codepoints[single_kanji_end])) {
+    constexpr size_t kMaxKanjiLeadingAuxLength = 4;
+    const size_t max_end = std::min(codepoints.size(), single_kanji_end + kMaxKanjiLeadingAuxLength);
+    for (size_t aux_end = single_kanji_end + 1; aux_end <= max_end; ++aux_end) {
+      const std::string auxiliary_surface = extractSubstring(codepoints, single_kanji_end, aux_end);
+      if (!vh::hasDictionaryEntry(dict_manager, auxiliary_surface, core::PartOfSpeech::Auxiliary)) {
+        continue;
+      }
+      const std::string surface = extractSubstring(codepoints, start_pos, single_kanji_end);
+      candidates.push_back(makeVerbCandidate(surface, start_pos, single_kanji_end, candidate::verb_cost::kStandardBonus,
+                                             surface + "る", dictionary::ConjugationType::Ichidan, true,
+                                             CandidateOrigin::VerbKanji, candidate::kHighOriginConfidence,
+                                             "single_kanji_ichidan_kanji_aux", core::ExtendedPOS::VerbRenyokei));
+      break;
+    }
+  }
+
   if (kanji_end == start_pos + 1 && hiragana_end > kanji_end) {
     char32_t kanji_char = codepoints[start_pos];
+
+    // The literary volitional ん (a euphonic form of む) attaches to the
+    // irrealis stem of 来る: 来んとする. Kanji 来 keeps the same written stem
+    // across its irregular forms, so emit that stem explicitly rather than
+    // treating 来ん as a spurious onbin form.
+    if (kanji_char == U'来' && codepoints[kanji_end] == U'ん' && kanji_end + 1 < codepoints.size() &&
+        codepoints[kanji_end + 1] == U'と') {
+      const std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
+      candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end, candidate::verb_cost::kStandardBonus,
+                                             "来る", dictionary::ConjugationType::Kuru, true,
+                                             CandidateOrigin::VerbKanji, candidate::kHighOriginConfidence,
+                                             "kuru_literary_volitional_n", core::ExtendedPOS::VerbMizenkei));
+    }
 
     if (vh::isSingleKanjiIchidan(kanji_char)) {
       // Check if followed by a polite ます-family auxiliary or negative auxiliary.
@@ -122,8 +158,11 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
       // Classical negative auxiliary ず/ざる/ざれ also attaches to the ichidan
       // mizenkei (= bare stem): 見ざるを得ない → 見 + ざる, 見ずに → 見 + ずに.
       bool is_classical_negative_aux = (h1 == kZu) || (h1 == kZa && (h2 == kRu || h2 == kRe));
+      // The literary volitional ん is distinct from the contracted negative
+      // when the quotative particle follows (見んとする, 寝んとする).
+      bool is_literary_volitional_n = (h1 == U'ん' && h2 == kTo);
 
-      if (is_polite_aux || is_negative_aux || is_classical_negative_aux) {
+      if (is_polite_aux || is_negative_aux || is_classical_negative_aux || is_literary_volitional_n) {
         std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
         std::string base_form = surface + "る";
         constexpr float kCost = candidate::verb_cost::kStandardBonus;  // Strong bonus to beat NOUN candidate
@@ -131,9 +170,11 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
           SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " single_kanji_ichidan_polite lemma=" << base_form
                               << " cost=" << kCost << "\n";
         }
-        candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end, kCost, base_form,
-                                               grammar::verbTypeToConjType(grammar::VerbType::Ichidan), true,
-                                               CandidateOrigin::VerbKanji, 0.9F, "single_kanji_ichidan_polite"));
+        candidates.push_back(makeVerbCandidate(
+            surface, start_pos, kanji_end, kCost, base_form, grammar::verbTypeToConjType(grammar::VerbType::Ichidan),
+            true, CandidateOrigin::VerbKanji, 0.9F,
+            is_literary_volitional_n ? "single_kanji_ichidan_literary_volitional" : "single_kanji_ichidan_polite",
+            is_literary_volitional_n ? core::ExtendedPOS::VerbMizenkei : core::ExtendedPOS::Unknown));
       }
 
       // Also handle た and て patterns for single-kanji Ichidan verbs
@@ -174,6 +215,21 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
                                                CandidateOrigin::VerbKanji, 0.9F, "single_kanji_ichidan_colloquial"));
       }
 
+      // The failure subsidiary そびれる attaches directly to the bare
+      // renyokei of single-kanji ichidan verbs (見そびれる, 寝そびれる).
+      // License that stem only for the closed auxiliary onset, so ordinary
+      // noun-plus-hiragana sequences are unaffected.
+      bool is_sobireru_aux =
+          h1 == U'そ' && h2 == U'び' && kanji_end + 2 < codepoints.size() && codepoints[kanji_end + 2] == U'れ';
+      if (is_sobireru_aux) {
+        std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
+        std::string base_form = surface + "る";
+        constexpr float kCost = candidate::verb_cost::kStrongBonus;
+        candidates.push_back(makeVerbCandidate(
+            surface, start_pos, kanji_end, kCost, base_form, grammar::verbTypeToConjType(grammar::VerbType::Ichidan),
+            true, CandidateOrigin::VerbKanji, candidate::kHighOriginConfidence, "single_kanji_ichidan_sobireru"));
+      }
+
       // Handle られる pattern for single-kanji Ichidan verbs
       // E.g., 見られる → 見(VERB) + られる(AUX), 寝られる → 寝(VERB) + られる(AUX)
       // MeCab splits these as: 見+られる (passive/potential form)
@@ -193,23 +249,25 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
                                                CandidateOrigin::VerbKanji, 0.9F, "single_kanji_ichidan_rareru"));
       }
 
-      // Handle volitional pattern for single-kanji Ichidan verbs
-      // E.g., 見よう → 見よ (volitional stem) + う (aux)
-      // MeCab splits as: 見よ (動詞,未然ウ接続) + う (助動詞)
-      bool is_volitional_aux = (h1 == kYo && h2 == kU);
-      if (is_volitional_aux) {
-        // Generate 漢字+よ as volitional stem
+      // Handle both volitional and literary-imperative forms for single-kanji
+      // Ichidan verbs: 見よ+う and 見よ.
+      bool has_yo_form = (h1 == kYo);
+      if (has_yo_form) {
+        const bool is_volitional = (h2 == kU);
         std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
         std::string base_form = extractSubstring(codepoints, start_pos, kanji_end) + "る";
         constexpr float kCost = candidate::verb_cost::kStrongBonus;  // Strong bonus to beat compound interpretation
         SUZUME_DEBUG_VERBOSE_BLOCK {
-          SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " single_kanji_ichidan_volitional lemma=" << base_form
-                              << " cost=" << kCost << "\n";
+          SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface
+                              << (is_volitional ? " single_kanji_ichidan_volitional lemma="
+                                                : " single_kanji_ichidan_imperative lemma=")
+                              << base_form << " cost=" << kCost << "\n";
         }
-        candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end + 1, kCost, base_form,
-                                               grammar::verbTypeToConjType(grammar::VerbType::Ichidan), true,
-                                               CandidateOrigin::VerbKanji, 0.9F, "single_kanji_ichidan_volitional",
-                                               core::ExtendedPOS::VerbMizenkei));
+        candidates.push_back(makeVerbCandidate(
+            surface, start_pos, kanji_end + 1, kCost, base_form,
+            grammar::verbTypeToConjType(grammar::VerbType::Ichidan), true, CandidateOrigin::VerbKanji, 0.9F,
+            is_volitional ? "single_kanji_ichidan_volitional" : "single_kanji_ichidan_imperative",
+            is_volitional ? core::ExtendedPOS::VerbMizenkei : core::ExtendedPOS::VerbMeireikei));
       }
 
       // Handle causative させ/させる/させられ pattern for single-kanji Ichidan verbs

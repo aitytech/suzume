@@ -45,7 +45,8 @@ void appendIchidanStemRareCandidates(const std::vector<char32_t>& codepoints, si
                                      const dictionary::DictionaryManager* dict_manager,
                                      std::vector<UnknownCandidate>& candidates);
 void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
-                                        size_t hiragana_end, std::vector<UnknownCandidate>& candidates);
+                                        size_t hiragana_end, const dictionary::DictionaryManager* dict_manager,
+                                        std::vector<UnknownCandidate>& candidates);
 void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                        size_t hiragana_end, const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
@@ -60,6 +61,9 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
                                 const dictionary::DictionaryManager* dict_manager, bool sokuonbin_stem_verified,
                                 const std::string& sokuonbin_lemma, grammar::VerbType sokuonbin_verb_type,
                                 std::vector<UnknownCandidate>& candidates);
+void appendVerifiedTailGodanTaCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                                 size_t kanji_end, const dictionary::DictionaryManager* dict_manager,
+                                                 std::vector<UnknownCandidate>& candidates);
 
 }  // namespace suzume::analysis::kanji_verb_detail
 

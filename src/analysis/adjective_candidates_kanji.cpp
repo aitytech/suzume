@@ -241,6 +241,31 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     return candidates;
   }
 
+  // The derivational suffix め attaches to an i-adjective stem and yields a
+  // degree-modified na-adjective (大きめだ, 長めな). Verify the reconstructed
+  // stem + い as an adjective so ordinary nouns such as 初め are not admitted.
+  for (size_t stem_end = kanji_end; stem_end < hiragana_end; ++stem_end) {
+    if (codepoints[stem_end] != U'め' || stem_end + 1 >= codepoints.size() ||
+        (codepoints[stem_end + 1] != U'な' && codepoints[stem_end + 1] != U'だ')) {
+      continue;
+    }
+    std::string adjective_base = extractSubstring(codepoints, start_pos, stem_end) + "い";
+    float adjective_confidence = candidate::kNoConfidence;
+    for (const auto& result : inflection.analyze(adjective_base)) {
+      if (result.verb_type == grammar::VerbType::IAdjective) {
+        adjective_confidence = std::max(adjective_confidence, result.confidence);
+      }
+    }
+    bool is_dictionary_adjective = isAdjectiveInDictionary(dict_manager, adjective_base);
+    if (is_dictionary_adjective || adjective_confidence >= candidate::kIAdjConfMin) {
+      size_t suffix_end = stem_end + 1;
+      std::string surface = extractSubstring(codepoints, start_pos, suffix_end);
+      candidates.push_back(makeNaAdjCandidate(surface, start_pos, suffix_end, candidate::kNaAdjStemCost, true,
+                                              adjective_confidence, "i_adjective_degree_me"));
+      break;
+    }
+  }
+
   // A kanji verb stem followed by すぎ is a verb-plus-auxiliary construction,
   // not a single adjective.
   // Pattern: kanji + (き/ぎ/し/ち/に/び/み/り/い) + すぎ...
@@ -345,12 +370,13 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
       SUZUME_DEBUG_LOG_VERBOSE("[ADJ_NAI] dict-confirmed nai-adj: \"" << surface << "\"\n");
     }
 
-    // A 2+ consecutive-kanji stem directly followed by exactly ない is a noun plus the
-    // adjective/auxiliary ない (問題+ない, 関係+ない, 心配+ない), never a single
-    // i-adjective — a genuine i-adjective stem is never a multi-kanji noun. Suppress the
-    // fused candidate so the 名詞|ない split path wins (as 仕方ない already does).
-    // Dictionary-confirmed 2-kanji nai-adjectives (味気ない etc.) keep their fused form.
-    if (hiragana_part == "ない" && (kanji_end - start_pos) >= 2 && !isAdjectiveInDictionary(dict_manager, surface)) {
+    // A 2+ consecutive-kanji stem directly followed by exactly ない or its
+    // adverbial form なく is a noun plus ない (問題+ない, 資金+なくして),
+    // never a newly constructed i-adjective. Suppress the fused candidate so
+    // the noun and negative-adjective path wins. Dictionary-confirmed
+    // multi-kanji nai-adjectives (味気ない etc.) keep their fused form.
+    bool is_bare_nai_form = hiragana_part == "ない" || hiragana_part == "なく";
+    if (is_bare_nai_form && (kanji_end - start_pos) >= 2 && !isAdjectiveInDictionary(dict_manager, surface)) {
       continue;
     }
 
@@ -814,38 +840,20 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
 
   size_t kanji_len = kanji_end - start_pos;
 
-  // Pattern 0: Kanji(1) + やか/らか/か + な patterns (e.g., 華やかな, 豊かな, 静かな)
-  // These are common na-adjective patterns with kanji stem + hiragana suffix
+  // Pattern 0: Kanji(1) + やか/らか + na-adjective inflection. These productive
+  // derivatives can be followed by either attributive な or a copula form
+  // (e.g., 華やかな, 安らかだった).
   if (kanji_len == 1 && kanji_end < char_types.size() && char_types[kanji_end] == normalize::CharType::Hiragana) {
-    // Check for やか/らか/か patterns
-    size_t hira_end = findCharRegionEnd(char_types, kanji_end, 4, normalize::CharType::Hiragana);
-
-    std::string full_surface = extractSubstring(codepoints, start_pos, hira_end);
-    size_t hira_len = hira_end - kanji_end;
-
-    // Check if ends with な (na-adjective conjugation)
-    bool ends_with_na = (hira_end > kanji_end && codepoints[hira_end - 1] == U'な');
-
-    if (ends_with_na && hira_len >= 2) {
-      // Extract stem (without な)
-      std::string stem = extractSubstring(codepoints, start_pos, hira_end - 1);
-      size_t stem_hira_len = hira_len - 1;
-
-      // Check for やか/らか patterns (productive OOV derivation).
-      // Bare single-か na-adjectives (静か/豊か/厳か等) are a closed lexical class served
-      // by L2, NOT emitted here: the bare-か branch also fired on the 終助詞 かな after a
-      // noun (東京かな → 東|京か|な, 犬かな → 犬|か|な broke likewise).
-      bool is_yaka_pattern = false;
-      if (stem_hira_len >= 2) {
-        std::string stem_suffix = extractSubstring(codepoints, kanji_end, hira_end - 1);
-        is_yaka_pattern = utf8::equalsAny(stem_suffix, {"やか", "らか"});
-      }
-
-      if (is_yaka_pattern) {
-        // Stem without な, low cost for common pattern
-        candidates.push_back(makeNaAdjCandidate(stem, start_pos, hira_end - 1, candidate::kNaAdjYakaCost, true, 0.9F,
-                                                "na_adj_yaka_raka"));
-        return candidates;  // Return early for clear pattern match
+    size_t stem_end = kanji_end + 2;
+    if (stem_end < codepoints.size()) {
+      std::string stem_suffix = extractSubstring(codepoints, kanji_end, stem_end);
+      bool is_yaka_pattern = utf8::equalsAny(stem_suffix, {"やか", "らか"});
+      bool has_na_adj_continuation = codepoints[stem_end] == U'な' || codepoints[stem_end] == U'だ';
+      if (is_yaka_pattern && has_na_adj_continuation) {
+        std::string stem = extractSubstring(codepoints, start_pos, stem_end);
+        candidates.push_back(
+            makeNaAdjCandidate(stem, start_pos, stem_end, candidate::kNaAdjYakaCost, true, 0.9F, "na_adj_yaka_raka"));
+        return candidates;
       }
     }
   }

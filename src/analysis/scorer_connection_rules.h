@@ -14,7 +14,12 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
 float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+float computeCopulaConditionalBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+float computePastConditionalVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+float computeExistentialAruNominalPredicateBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+float computeCompletionAuxiliaryBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeBarePotentialRenyokeiPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+float computeAdjectiveTePredicatePenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 
 }  // namespace suzume::analysis::connection_rules
 

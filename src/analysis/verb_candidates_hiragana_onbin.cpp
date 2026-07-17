@@ -72,14 +72,10 @@ bool grammaticalStemFollowerStartsAt(const std::vector<char32_t>& codepoints, si
 
 void appendContextualSubsidiaryCandidate(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                          std::string_view lemma, dictionary::ConjugationType conj_type,
-                                         core::ExtendedPOS extended_pos, const char* pattern,
+                                         core::ExtendedPOS extended_pos, const char* pattern, float candidate_cost,
                                          std::vector<UnknownCandidate>& candidates) {
-  // The candidate is useful only with its ParticleConj connection bonus. A
-  // positive standalone cost prevents a raw character boundary from overriding
-  // a lexical reading when the preceding て/で is not a conjunctive particle.
-  constexpr float kContextualCost = bigram_cost::kMinor;
   const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
-  auto candidate = makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Auxiliary, kContextualCost, true,
+  auto candidate = makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Auxiliary, candidate_cost, true,
                                  CandidateOrigin::VerbHiragana, extended_pos, pattern);
   candidate.lemma = lemma;
   candidate.conj_type = conj_type;
@@ -214,26 +210,120 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
 }
 
 // Irregular 来る (カ変) mizenkei こ before a ない-family negative (こない,
-// こなかった, こなくて, こなければ, こなきゃ). The surface こ is far too
-// frequent as a word fragment for an unconditional dictionary entry (こと,
-// これ, きのこ, ...), but こ immediately followed by the negative auxiliary is
-// unambiguously 来る + negation, so the candidate is generated only under that
-// gate. The reading is chosen from the preceding context, mirroring MeCab:
-//   - after て: directional auxiliary てくる (出て + こ + ない) → Auxiliary / AuxAspectKuru
-//   - otherwise: main verb 来る (誰も + こ + ない, こない)        → Verb / VerbMizenkei
-// Emitting a single context-appropriate reading avoids relying on an
-// AuxAspectKuru→ない bigram, which would also mis-flip other てくる auxiliaries
-// (くれ, etc.) sharing that ExtendedPOS.
+// こなかった, こなくて, こなければ, こなきゃ), or before the passive/potential
+// auxiliary (てこられる, でこられない). Its volitional stem こよ is likewise
+// emitted only in the directional auxiliary context (読んでこよう). The short
+// surfaces are far too frequent as unconditional dictionary entries (こと,
+// これ, きのこ, ...), so each candidate requires its following inflection.
+// The reading is chosen from the preceding context:
+//   - after a clear て/で form: directional auxiliary てくる → Auxiliary / AuxAspectKuru
+//   - otherwise: main verb 来る before negation → Verb / VerbMizenkei
+// Emitting a single context-appropriate reading avoids relying on a broad
+// AuxAspectKuru connection rule that could mis-flip other subsidiary verbs.
+void appendKkoNegativeConjectureCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                           std::vector<UnknownCandidate>& candidates) {
+  // The colloquial negative-conjecture construction V連用形+っ+こ+ない
+  // (読みっこない, 食べっこなかった) has two one-mora dependent elements.
+  // Generate the first only when the following こ and a ない-family ending
+  // prove this construction; a standalone っ must never become a token.
+  if (start_pos == 0 || start_pos + 2 >= codepoints.size() || codepoints[start_pos] != U'っ' ||
+      codepoints[start_pos + 1] != U'こ' || !vh::naiNegativeFollowsAt(codepoints, start_pos + 2)) {
+    return;
+  }
+
+  std::string surface = extractSubstring(codepoints, start_pos, start_pos + 1);
+  auto candidate = makeCandidate(surface, start_pos, start_pos + 1, core::PartOfSpeech::Auxiliary,
+                                 candidate::verb_cost::kStrongBonus, true, CandidateOrigin::VerbHiragana,
+                                 core::ExtendedPOS::AuxNegativeMai, "hiragana_kko_negative_conjecture");
+  candidate.lemma = "く";
+  candidates.push_back(std::move(candidate));
+}
+
+void appendSuruInabilityCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                   std::vector<UnknownCandidate>& candidates) {
+  // The inability subsidiary かねる productively follows the sahen
+  // renyokei し (確認し|かねない, 対応し|かねます). In this exact
+  // grammatical environment, make the closed-class する stem competitive
+  // with the homographic binding particle しか.
+  if (start_pos + 2 >= codepoints.size() || codepoints[start_pos] != U'し' || codepoints[start_pos + 1] != U'か' ||
+      codepoints[start_pos + 2] != U'ね') {
+    return;
+  }
+
+  std::string surface = extractSubstring(codepoints, start_pos, start_pos + 1);
+  auto suru_candidate =
+      makeCandidate(surface, start_pos, start_pos + 1, core::PartOfSpeech::Verb, candidate::kNounVerbSplitBonus, true,
+                    CandidateOrigin::VerbHiragana, core::ExtendedPOS::VerbRenyokei, "hiragana_suru_inability");
+  suru_candidate.lemma = "する";
+  suru_candidate.conj_type = dictionary::ConjugationType::Suru;
+  candidates.push_back(std::move(suru_candidate));
+}
+
+void appendEruObligationCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                   std::vector<UnknownCandidate>& candidates) {
+  // In the fixed obligation construction 〜ざるをえない, え is the lexical
+  // verb 得る in renyokei, not the potential auxiliary. The following
+  // negative or polite-negative inflection identifies this reading.
+  const bool negative_follows =
+      start_pos + 1 < codepoints.size() && vh::naiNegativeFollowsAt(codepoints, start_pos + 1);
+  const bool polite_negative_follows =
+      start_pos + 2 < codepoints.size() && codepoints[start_pos + 1] == U'ま' && codepoints[start_pos + 2] == U'せ';
+  if (start_pos < 3 || codepoints[start_pos] != U'え' || codepoints[start_pos - 1] != U'を' ||
+      codepoints[start_pos - 2] != U'る' || codepoints[start_pos - 3] != U'ざ' ||
+      (!negative_follows && !polite_negative_follows)) {
+    return;
+  }
+
+  std::string surface = extractSubstring(codepoints, start_pos, start_pos + 1);
+  auto eru_candidate = makeCandidate(
+      surface, start_pos, start_pos + 1, core::PartOfSpeech::Verb,
+      candidate::kVerifiedTailCompoundVerbBonus + candidate::kVerifiedV1Bonus + candidate::verb_cost::kStrongBonus,
+      true, CandidateOrigin::VerbHiragana, core::ExtendedPOS::VerbRenyokei, "hiragana_eru_obligation");
+  eru_candidate.lemma = "える";
+  eru_candidate.conj_type = dictionary::ConjugationType::Ichidan;
+  candidates.push_back(std::move(eru_candidate));
+}
+
 void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                      std::vector<UnknownCandidate>& candidates) {
-  if (codepoints[start_pos] != U'こ' || !vh::naiNegativeFollowsAt(codepoints, start_pos + 1)) {
+  // The conditional stem くれ is distinct from benefactive くれる when it
+  // is followed immediately by ば after a clear te-form (読んでくれ+ば).
+  // The benefactive conditional is くれれ+ば, so this context uniquely marks
+  // the directional auxiliary 来る.
+  if (start_pos + 2 < codepoints.size() && codepoints[start_pos] == U'く' && codepoints[start_pos + 1] == U'れ' &&
+      codepoints[start_pos + 2] == U'ば' && isClearTeFormBeforeSubsidiary(codepoints, start_pos, false)) {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "くる", dictionary::ConjugationType::Kuru,
+                                        core::ExtendedPOS::AuxAspectKuru, "hiragana_kuru_conditional",
+                                        candidate::verb_cost::kStrongBonus, candidates);
+    return;
+  }
+  if (codepoints[start_pos] != U'こ') {
+    return;
+  }
+  const bool negative_follows = vh::naiNegativeFollowsAt(codepoints, start_pos + 1);
+  const bool passive_follows = start_pos + 2 < codepoints.size() && codepoints[start_pos + 1] == U'ら' &&
+                               codepoints[start_pos + 2] == U'れ' &&
+                               isClearTeFormBeforeSubsidiary(codepoints, start_pos, false);
+  const bool volitional_follows =
+      start_pos + 2 < codepoints.size() && codepoints[start_pos + 1] == U'よ' && codepoints[start_pos + 2] == U'う';
+  if (!negative_follows && !passive_follows && !volitional_follows) {
+    return;
+  }
+  constexpr float kCost = candidate::verb_cost::kStandardBonus;
+  const bool is_kko_negative = start_pos > 0 && codepoints[start_pos - 1] == U'っ';
+  const bool subsidiary = isClearTeFormBeforeSubsidiary(codepoints, start_pos, false) || is_kko_negative;
+  if (volitional_follows) {
+    if (!subsidiary) {
+      return;
+    }
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "くる", dictionary::ConjugationType::Kuru,
+                                        core::ExtendedPOS::AuxAspectKuru, "hiragana_kuru_volitional", kCost,
+                                        candidates);
     return;
   }
   const std::string surface = extractSubstring(codepoints, start_pos, start_pos + 1);
-  constexpr float kCost = candidate::verb_cost::kStandardBonus;
-  const bool subsidiary = start_pos > 0 && codepoints[start_pos - 1] == U'て';
   SUZUME_DEBUG_VERBOSE_BLOCK {
-    SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " hiragana_kuru_mizenkei_nai lemma=くる cost=" << kCost
+    SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " hiragana_kuru_mizenkei lemma=くる cost=" << kCost
                         << " subsidiary=" << subsidiary << "\n";
   }
   if (subsidiary) {
@@ -245,10 +335,72 @@ void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, si
     candidates.push_back(std::move(aux_cand));
     return;
   }
+  // A passive/potential continuation is only admitted after a te-form, where
+  // it is the directional subsidiary construction; standalone こられる remains
+  // available as a lexical verb candidate.
+  if (passive_follows) {
+    return;
+  }
   candidates.push_back(makeVerbCandidate(surface, start_pos, start_pos + 1, kCost, "くる",
                                          dictionary::ConjugationType::Kuru, true, CandidateOrigin::VerbHiragana,
                                          candidate::kHighOriginConfidence, "hiragana_kuru_mizenkei_nai",
                                          core::ExtendedPOS::VerbMizenkei));
+}
+
+// The directional subsidiary いく shares its いけ/いけれ spelling with the
+// independent potential verb いける. After a clear te-form, however, negative
+// conditional, and volitional continuations identify the subsidiary paradigm
+// (読んでいけない, 読んでいければ, 読んでいこう). Keep the short forms
+// contextual so standalone lexical uses retain their verb analysis.
+void appendIkuAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  std::vector<UnknownCandidate>& candidates) {
+  if (start_pos + 1 >= codepoints.size() || codepoints[start_pos] != core::hiragana::kI ||
+      (codepoints[start_pos + 1] != U'け' && codepoints[start_pos + 1] != U'こ') ||
+      !isClearTeFormBeforeSubsidiary(codepoints, start_pos, false)) {
+    return;
+  }
+
+  if (start_pos + 3 < codepoints.size() && codepoints[start_pos + 2] == U'れ' && codepoints[start_pos + 3] == U'ば') {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 3, "いける",
+                                        dictionary::ConjugationType::GodanKa, core::ExtendedPOS::AuxAspectIku,
+                                        "hiragana_iku_auxiliary", candidate::verb_cost::kStrongBonus, candidates);
+    return;
+  }
+
+  if (start_pos + 2 < codepoints.size() && codepoints[start_pos + 1] == U'こ' && codepoints[start_pos + 2] == U'う') {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "いく",
+                                        dictionary::ConjugationType::GodanKa, core::ExtendedPOS::AuxAspectIku,
+                                        "hiragana_iku_auxiliary", candidate::verb_cost::kStrongBonus, candidates);
+    return;
+  }
+
+  if (vh::naiNegativeFollowsAt(codepoints, start_pos + 2)) {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "いける",
+                                        dictionary::ConjugationType::GodanKa, core::ExtendedPOS::AuxAspectIku,
+                                        "hiragana_iku_auxiliary", candidate::verb_cost::kStrongBonus, candidates);
+  }
+}
+
+// 授受の補助動詞 やる has the same irrealis and renyokei stems as the
+// independent verb. A clear te-form boundary makes the benefactive reading
+// productive before negative and desiderative auxiliaries.
+void appendYaruBenefactiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     std::vector<UnknownCandidate>& candidates) {
+  if (start_pos + 1 >= codepoints.size() || codepoints[start_pos] != U'や' ||
+      !isClearTeFormBeforeSubsidiary(codepoints, start_pos, false)) {
+    return;
+  }
+  if (codepoints[start_pos + 1] == U'ら' && vh::naiNegativeFollowsAt(codepoints, start_pos + 2)) {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "やる",
+                                        dictionary::ConjugationType::GodanRa, core::ExtendedPOS::AuxBenefactive,
+                                        "hiragana_yaru_benefactive", candidate::verb_cost::kStrongBonus, candidates);
+  }
+  if (codepoints[start_pos + 1] != U'り') {
+    return;
+  }
+  appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "やる",
+                                      dictionary::ConjugationType::GodanRa, core::ExtendedPOS::AuxBenefactive,
+                                      "hiragana_yaru_benefactive", candidate::verb_cost::kStrongBonus, candidates);
 }
 
 // 試行の補助動詞 みる is a closed-class te-form attachment. Generate its
@@ -265,10 +417,14 @@ void appendMiruAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size
     return;
   }
 
-  if (grammaticalStemFollowerStartsAt(codepoints, start_pos + 1, dict_manager)) {
+  // The ichidan volitional is みよ+う, not the renyokei boundary み+よう.
+  // Leave that form to the two-kana candidate below so the general stem rule
+  // cannot create the spurious latter analysis.
+  const bool is_volitional_stem = start_pos + 1 < codepoints.size() && codepoints[start_pos + 1] == core::hiragana::kYo;
+  if (!is_volitional_stem && grammaticalStemFollowerStartsAt(codepoints, start_pos + 1, dict_manager)) {
     appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 1, "みる",
                                         dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru,
-                                        "hiragana_miru_auxiliary", candidates);
+                                        "hiragana_miru_auxiliary", bigram_cost::kMinor, candidates);
   }
 
   if (start_pos + 1 >= codepoints.size()) {
@@ -280,8 +436,56 @@ void appendMiruAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size
       ending == core::hiragana::kYo) {
     appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "みる",
                                         dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru,
-                                        "hiragana_miru_auxiliary", candidates);
+                                        "hiragana_miru_auxiliary", bigram_cost::kMinor, candidates);
   }
+}
+
+// 見せる is a closed subsidiary verb after a te-form (読んでみせる). Its
+// two-kana stem is unambiguous only in that context, so generate the Ichidan
+// paradigm there instead of registering a broad hiragana dictionary entry.
+void appendMiseruAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     const dictionary::DictionaryManager* dict_manager,
+                                     std::vector<UnknownCandidate>& candidates) {
+  if (start_pos + 1 >= codepoints.size() || codepoints[start_pos] != U'み' || codepoints[start_pos + 1] != U'せ' ||
+      !isClearTeFormBeforeSubsidiary(codepoints, start_pos, true)) {
+    return;
+  }
+  // 見せる likewise inflects to みせよ+う rather than みせ+よう.
+  const bool is_volitional_stem = start_pos + 2 < codepoints.size() && codepoints[start_pos + 2] == core::hiragana::kYo;
+  if (!is_volitional_stem && grammaticalStemFollowerStartsAt(codepoints, start_pos + 2, dict_manager)) {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "みせる",
+                                        dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru,
+                                        "hiragana_miseru_auxiliary", bigram_cost::kMinor, candidates);
+  }
+  if (start_pos + 2 >= codepoints.size()) {
+    return;
+  }
+  const char32_t ending = codepoints[start_pos + 2];
+  if (ending == core::hiragana::kRu || ending == core::hiragana::kRe || ending == U'ろ' ||
+      ending == core::hiragana::kYo) {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 3, "みせる",
+                                        dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru,
+                                        "hiragana_miseru_auxiliary", bigram_cost::kMinor, candidates);
+  }
+}
+
+// The benefactive auxiliary あげる has the ichidan stem あげ before the
+// potential/passive auxiliary (〜てあげられる). Emit it only after a clear
+// te-form and only when the following token is grammatical, preserving the
+// ordinary lexical verb reading elsewhere.
+void appendAgeruBenefactiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                      const dictionary::DictionaryManager* dict_manager,
+                                      std::vector<UnknownCandidate>& candidates) {
+  if (start_pos + 2 >= codepoints.size() || codepoints[start_pos] != U'あ' || codepoints[start_pos + 1] != U'げ' ||
+      codepoints[start_pos + 2] != U'ら' || !isClearTeFormBeforeSubsidiary(codepoints, start_pos, true)) {
+    return;
+  }
+  if (!grammaticalStemFollowerStartsAt(codepoints, start_pos + 2, dict_manager)) {
+    return;
+  }
+  appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "あげる",
+                                      dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxBenefactive,
+                                      "hiragana_ageru_benefactive", bigram_cost::kMinor, candidates);
 }
 
 // 準備の補助動詞 おく is homographic with the lexical verb and its short
@@ -302,7 +506,7 @@ void appendOkuAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size_
   }
   appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "おく",
                                       dictionary::ConjugationType::GodanKa, core::ExtendedPOS::AuxAspectOku,
-                                      "hiragana_oku_auxiliary", candidates);
+                                      "hiragana_oku_auxiliary", bigram_cost::kMinor, candidates);
 }
 
 // 1-char ichidan renyokei before て/た (ねて → ね + て). Requires the base form
@@ -586,8 +790,12 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
                           << " conf=" << chosen_confidence << (is_dict_verb ? " [dict]" : "") << " cost=" << cost
                           << "\n";
     }
+    const std::string following = extractSubstring(codepoints, end_pos, std::min(end_pos + 2, codepoints.size()));
+    const bool is_negative_continuation = utf8::startsWith(following, "ない") || utf8::startsWith(following, "なか");
+    const core::CandidateOrigin origin =
+        is_negative_continuation ? CandidateOrigin::VerbHiraganaNegativeRenyokei : CandidateOrigin::VerbHiragana;
     candidates.push_back(makeVerbCandidate(stem_surface, start_pos, end_pos, cost, chosen_base, chosen_conj, true,
-                                           CandidateOrigin::VerbHiragana, chosen_confidence, "hiragana_renyokei"));
+                                           origin, chosen_confidence, "hiragana_renyokei"));
 
     // Also generate kateikei stem if followed by れば
     // E.g., できれば → できれ (kateikei of できる) + ば

@@ -104,17 +104,20 @@ constexpr std::array<float, static_cast<size_t>(ExtendedPOS::Count_)> kCategoryC
   table[static_cast<size_t>(ExtendedPOS::AuxVolitional)] = 0.3F;  // う/よう
 
   // Voice
-  table[static_cast<size_t>(ExtendedPOS::AuxPassive)] = 0.3F;    // れる/られる
-  table[static_cast<size_t>(ExtendedPOS::AuxCausative)] = 0.3F;  // せる/させる
-  table[static_cast<size_t>(ExtendedPOS::AuxPotential)] = 0.3F;  // れる/られる
+  table[static_cast<size_t>(ExtendedPOS::AuxPassive)] = 0.3F;      // れる/られる
+  table[static_cast<size_t>(ExtendedPOS::AuxCausative)] = 0.3F;    // せる/させる
+  table[static_cast<size_t>(ExtendedPOS::AuxPotential)] = 0.3F;    // れる/られる
+  table[static_cast<size_t>(ExtendedPOS::AuxInability)] = 0.3F;    // かねる
+  table[static_cast<size_t>(ExtendedPOS::AuxBenefactive)] = 0.3F;  // あげる
 
   // Aspect
-  table[static_cast<size_t>(ExtendedPOS::AuxAspectIru)] = 0.3F;     // いる
-  table[static_cast<size_t>(ExtendedPOS::AuxAspectShimau)] = 0.3F;  // しまう
-  table[static_cast<size_t>(ExtendedPOS::AuxAspectOku)] = 0.3F;     // おく
-  table[static_cast<size_t>(ExtendedPOS::AuxAspectMiru)] = 0.3F;    // みる
-  table[static_cast<size_t>(ExtendedPOS::AuxAspectIku)] = 0.3F;     // いく
-  table[static_cast<size_t>(ExtendedPOS::AuxAspectKuru)] = 0.3F;    // くる
+  table[static_cast<size_t>(ExtendedPOS::AuxAspectIru)] = 0.3F;       // いる
+  table[static_cast<size_t>(ExtendedPOS::AuxAspectShimau)] = 0.3F;    // しまう
+  table[static_cast<size_t>(ExtendedPOS::AuxAspectOku)] = 0.3F;       // おく
+  table[static_cast<size_t>(ExtendedPOS::AuxAspectMiru)] = 0.3F;      // みる
+  table[static_cast<size_t>(ExtendedPOS::AuxAspectIku)] = 0.3F;       // いく
+  table[static_cast<size_t>(ExtendedPOS::AuxAspectKuru)] = 0.3F;      // くる
+  table[static_cast<size_t>(ExtendedPOS::AuxAspectHajimeru)] = 0.3F;  // はじめる
 
   // Appearance/Conjecture
   table[static_cast<size_t>(ExtendedPOS::AuxAppearanceSou)] = 0.4F;     // そう

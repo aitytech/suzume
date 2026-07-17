@@ -119,6 +119,14 @@ float computeSpuriousVerbPenalty(const core::LatticeEdge& edge) {
                                                                      : sc::kPenaltyHatsuonbinLong;
   }
 
+  // An unverified kanji 音便 candidate is not reliable enough to absorb a
+  // nominal prefix. Genuine forms retain their dictionary-verified lemma and
+  // therefore remain exempt (読んだ, 閉まった).
+  if (!edge.lemmaVerified() && edge.pos == core::PartOfSpeech::Verb &&
+      edge.extended_pos == core::ExtendedPOS::VerbOnbinkei && grammar::containsKanji(edge.surface)) {
+    penalty += sc::kPenaltySpuriousKanjiOnbin;
+  }
+
   // Penalty for pure-hiragana verb forms containing "さん" pattern
   // E.g., "おさんで" as te-form of "おさむ" is likely name+さん+で misanalysis
   // E.g., "さんで" as te-form of "さむ" is likely さん+で misanalysis

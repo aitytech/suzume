@@ -434,8 +434,26 @@ std::string fixSpecialRaRowLemma(std::string_view lemma, const dictionary::Dicti
 // renyokei (stem + う-row kana of the same gyo); any other lemma source (a
 // dictionary lemma, an already-correct ichidan base) is left untouched. The
 // POS/ExtendedPOS (Verb 連用形) guard stays at the call site.
-std::string fixIchidanRenyokeiBeforeTe(std::string_view surface, std::string_view lemma,
-                                       std::string_view next_surface) {
+std::string fixGodanRenyokeiBeforeLiteraryTe(std::string_view surface, std::string_view lemma,
+                                             std::string_view next_surface,
+                                             const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || next_surface != "て" || lemma != std::string(surface) + "る") {
+    return "";
+  }
+  const auto codepoints = normalize::toCodepoints(surface);
+  if (codepoints.empty()) {
+    return "";
+  }
+  const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(codepoints.back());
+  if (godan_ending.empty()) {
+    return "";
+  }
+  std::string candidate = std::string(utf8::dropLastChar(surface)) + std::string(godan_ending);
+  return hasExactVerbEntry(dict_manager, candidate) ? candidate : "";
+}
+
+std::string fixIchidanRenyokeiBeforeTe(std::string_view surface, std::string_view lemma, std::string_view next_surface,
+                                       const dictionary::DictionaryManager* dict_manager) {
   if (!utf8::equalsAny(next_surface, {"て", "た"}) || surface.size() < core::kJapaneseCharBytes) {
     return "";
   }
@@ -455,6 +473,12 @@ std::string fixIchidanRenyokeiBeforeTe(std::string_view surface, std::string_vie
     }
     std::string godan_base = std::string(utf8::dropLastChar(surface)) + std::string(mapping.u_row);
     if (lemma == godan_base) {
+      // A dictionary-confirmed godan base is not the fabricated reading this
+      // correction targets (走り+て, 読み+て). The remaining ambiguous cases
+      // are genuine ichidan renyokei (借り+て, 過ぎ+て).
+      if (hasExactVerbEntry(dict_manager, godan_base)) {
+        return "";
+      }
       return std::string(surface) + "る";
     }
     break;

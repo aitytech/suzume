@@ -206,6 +206,29 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                                        size_t hiragana_end, const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
                                        std::vector<UnknownCandidate>& candidates) {
+  // A godan potential verb inflects as Ichidan. In the negative adverbial
+  // pattern 読めなく/書けなく, its e-row stem must therefore be available as
+  // the mizenkei of 読める/書ける, rather than only as the conditional form of
+  // 読む/書く. Validate the underlying godan verb so ordinary Ichidan stems
+  // such as 食べなく do not acquire a fabricated potential reading.
+  if (kanji_end - start_pos == 1 && kanji_end + 2 < hiragana_end && grammar::isERowCodepoint(codepoints[kanji_end]) &&
+      codepoints[kanji_end + 1] == U'な' && codepoints[kanji_end + 2] == U'く') {
+    const std::string_view base_suffix = grammar::godanBaseSuffixFromERow(codepoints[kanji_end]);
+    if (!base_suffix.empty()) {
+      const std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
+      const std::string base_form = kanji_stem + std::string(base_suffix);
+      if (vh::isVerifiedVerbBase(dict_manager, inflection, base_form,
+                                 candidate::verb_cost::kConstructedVerbMinConfidence, true)) {
+        const std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
+        const std::string potential_lemma = surface + "る";
+        candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end + 1, candidate::verb_cost::kWeakPenalty,
+                                               potential_lemma, dictionary::ConjugationType::Ichidan, true,
+                                               CandidateOrigin::VerbKanji, candidate::kHighOriginConfidence,
+                                               "godan_potential_negative", core::ExtendedPOS::VerbMizenkei));
+      }
+    }
+  }
+
   // Generate Godan mizenkei stem candidates for auxiliary separation
   // E.g., 書か (from 書く), 読ま (from 読む), 話さ (from 話す)
   // These connect to passive (れる), causative (せる), negative (ない)
@@ -453,6 +476,14 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
           if (!base_suffix.empty()) {
             std::string stem = extractSubstring(codepoints, start_pos, scan_pos);
             std::string base_form = stem + std::string(base_suffix);
+            std::string surface = extractSubstring(codepoints, start_pos, multi_miz_end);
+            // An internal te-form followed by a subsidiary/aspect verb is a
+            // grammatical boundary, not the irrealis of one lexical verb
+            // (描いていかない → 描い + て + いか + ない).
+            // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+            if (vh::embedsTeFormAuxiliary(surface)) {
+              continue;
+            }
             // Verify this is a valid verb
             bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form,
                                                         candidate::verb_cost::kConstructedVerbMinConfidence, true);
@@ -470,7 +501,6 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
               is_valid_verb = false;
             }
             if (is_valid_verb) {
-              std::string surface = extractSubstring(codepoints, start_pos, multi_miz_end);
               constexpr float kCost = candidate::verb_cost::kStandardBonus;  // Same as other negative patterns
               const char* pattern = is_nakatt_pattern ? "multi_mizenkei_nakatt"
                                     : is_n_pattern    ? "multi_mizenkei_n"

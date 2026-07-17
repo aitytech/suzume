@@ -140,6 +140,11 @@ class Tokenizer {
                                    const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                    size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
 
+  /** Add dictionary-backed pronoun + plural-suffix join candidates. */
+  void addPronounPluralJoinCandidates(core::Lattice& lattice, std::string_view text,
+                                      const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                      size_t start_pos) const;
+
   /**
    * @brief Add te-form + auxiliary verb split candidates
    *

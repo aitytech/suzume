@@ -66,6 +66,9 @@ core::Lattice Tokenizer::buildLattice(std::string_view text, const std::vector<c
     addDictionaryCandidates(lattice, text, codepoints, byte_offsets, pos);
     addUnknownCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
     if (mode_ != core::AnalysisMode::Split) {
+      addPronounPluralJoinCandidates(lattice, text, codepoints, byte_offsets, pos);
+    }
+    if (mode_ != core::AnalysisMode::Split) {
       addMixedScriptCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
     }
 
@@ -118,8 +121,22 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
   // Lookup in dictionary
   auto results = dict_manager_.lookup(text, byte_pos);
 
+  size_t longest_conjunction = 0;
+  for (const auto& result : results) {
+    if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Conjunction) {
+      longest_conjunction = std::max(longest_conjunction, result.length);
+    }
+  }
+
   for (const auto& result : results) {
     if (result.entry == nullptr) {
+      continue;
+    }
+
+    // Prefer the maximal closed-class conjunction at this position: 又は,
+    // not 又+は. Shorter prefixes remain available when no longer conjunction
+    // matches the input.
+    if (result.entry->pos == core::PartOfSpeech::Conjunction && result.length < longest_conjunction) {
       continue;
     }
 
@@ -169,25 +186,28 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       }
     }
 
-    // A godan potential (読める) is a derived form of its base verb, so lemmatize it to the base
-    // (読める→読む): it is generated from the base paradigm with lemma = the base verb (読む),
-    // i.e. a VerbShuushikei ending in an え-row kana + る whose lemma differs from its surface.
-    // The boost lets that dict form beat the independent-ichidan reading. Excluded: independent
+    // A single-token godan potential (読める) is analyzed as an independent ichidan verb, so its
+    // lemma is its surface. The boost lets that dict form beat an unrelated ichidan reading. Excluded: independent
     // ichidan verbs (割れる==割れる have lemma == surface, and 自他 pairs like 切れる are registered
     // as ICHIDAN so no potential form is generated); られる passive/potential (来られる); and
     // irregular L1 forms whose lemma differs for other reasons (す→する) that do not end え-row + る.
-    if (result.entry->pos == core::PartOfSpeech::Verb &&
+    const bool is_godan_potential =
+        result.entry->pos == core::PartOfSpeech::Verb &&
         result.entry->extended_pos == core::ExtendedPOS::VerbShuushikei &&
         std::string_view(result.entry->lemma) != std::string_view(result.entry->surface) &&
         utf8::endsWith(result.entry->surface, "る") && !utf8::endsWith(result.entry->surface, "られる") &&
-        grammar::endsWithERow(std::string_view(result.entry->surface)
-                                  .substr(0, result.entry->surface.size() - core::kJapaneseCharBytes))) {
+        grammar::endsWithERow(
+            std::string_view(result.entry->surface).substr(0, result.entry->surface.size() - core::kJapaneseCharBytes));
+    if (is_godan_potential) {
       cost += candidate::verb_cost::kImperativeFinalBonus;
       flags |= core::LatticeEdge::kHasCustomCost;
     }
 
+    const std::string_view lemma =
+        is_godan_potential ? std::string_view(result.entry->surface) : std::string_view(result.entry->lemma);
+
     lattice.addEdge(result.entry->surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
-                    result.entry->pos, cost, flags, result.entry->lemma, dictionary::ConjugationType::None,
+                    result.entry->pos, cost, flags, lemma, dictionary::ConjugationType::None,
                     core::CandidateOrigin::Dictionary, 1.0F, {}, result.entry->extended_pos, "dict");
 
     // Extend verbs, auxiliaries, and adjectives with colloquial emphasis
@@ -234,6 +254,18 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
   auto candidates = unknown_gen_.generate(text, codepoints, start_pos, char_types);
 
   for (const auto& candidate : candidates) {
+    bool is_conjunction_prefix = false;
+    for (const auto& result : dict_results) {
+      if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Conjunction &&
+          candidate.end - candidate.start <= result.length) {
+        is_conjunction_prefix = true;
+        break;
+      }
+    }
+    if (is_conjunction_prefix) {
+      continue;
+    }
+
     uint8_t flags = core::LatticeEdge::kIsUnknown;
     float adjusted_cost = candidate.cost;
 
@@ -629,6 +661,12 @@ void Tokenizer::addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_
                                         scorer_);
 }
 
+void Tokenizer::addPronounPluralJoinCandidates(core::Lattice& lattice, std::string_view text,
+                                               const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                               size_t start_pos) const {
+  analysis::addPronounPluralJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, dict_manager_, scorer_);
+}
+
 void Tokenizer::addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
                                              const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                              size_t start_pos,
@@ -649,7 +687,7 @@ void Tokenizer::addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::str
                                                 const ByteOffsets& byte_offsets, size_t start_pos,
                                                 const std::vector<normalize::CharType>& char_types) const {
   analysis::addVerbSuffixNounJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types,
-                                            dict_manager_, scorer_);
+                                            dict_manager_, scorer_, inflection_);
 }
 
 }  // namespace suzume::analysis

@@ -22,8 +22,8 @@ EntrySpecRange getParticleEntries() {
       particle("こそ", EPOS::ParticleBinding),
       particle("さえ", EPOS::ParticleBinding),
       particle("すら", EPOS::ParticleBinding),
+      particle("しか", EPOS::ParticleBinding),
       particle("でも", EPOS::ParticleAdverbial),
-      particle("しか", EPOS::ParticleAdverbial),
 
       // Conjunctive particles (接続助詞)
       particle("て", EPOS::ParticleConj),  // low cost for te-form split
@@ -31,11 +31,19 @@ EntrySpecRange getParticleEntries() {
       particle("ば", EPOS::ParticleConj),
       particle("たら", EPOS::ParticleConj),
       particle("なら", EPOS::ParticleConj),
+      // Contracted conditional ちゃ (= ては): なく+ちゃ+いけない.
+      particle("ちゃ", EPOS::ParticleConj),
       // Note: ら removed - たら handles conditional, ら suffix is in L2 as SUFFIX
       particle("ながら", EPOS::ParticleConj),
       particle("つつ", EPOS::ParticleConj),  // 反復・並行の接続助詞 (連用形接続): 重ね+つつ, 増加し+つつ+ある
+      particle("とともに", EPOS::ParticleConj),  // 並行・同時: 読むとともに書く
+      particle("とも", EPOS::ParticleConj),      // 譲歩: 読まずとも, 食べずとも
+      particle("ど", EPOS::ParticleConj),        // 文語的譲歩: といえど
+      particle("ども", EPOS::ParticleConj),      // 譲歩: といえども, いかに…ども
       particle("のに", EPOS::ParticleConj),
       particle("ので", EPOS::ParticleConj),
+      // Causal premise: 書いたからには, 高いからには.
+      particle("からには", EPOS::ParticleConj),
       particle("けれど", EPOS::ParticleConj),
       particle("けど", EPOS::ParticleConj),
       particle("けども", EPOS::ParticleConj),
@@ -68,6 +76,7 @@ EntrySpecRange getParticleEntries() {
       particle("かも", EPOS::ParticleAdverbial),  // prevent か+も split in かもしれない
       particle("ばかり", EPOS::ParticleAdverbial),
       particle("だけ", EPOS::ParticleAdverbial),
+      particle("のみ", EPOS::ParticleAdverbial),
       particle("ほど", EPOS::ParticleAdverbial),
       particle("くらい", EPOS::ParticleAdverbial),
       particle("ぐらい", EPOS::ParticleAdverbial),
@@ -77,6 +86,7 @@ EntrySpecRange getParticleEntries() {
       particle("ずつ", EPOS::ParticleAdverbial),  // distributive 副助詞 - prevent ず(打消)+つ split after a quantity
       particle("ってば", EPOS::ParticleFinal),
       particle("ったら", EPOS::ParticleFinal),
+
   };
   return makeEntrySpecRange(kEntries);
 }

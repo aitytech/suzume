@@ -42,6 +42,55 @@ SokuonbinBase resolveSokuonbinBase(const dictionary::DictionaryManager* dict_man
   return {stem + "る", grammar::VerbType::GodanRa};
 }
 
+void appendVerifiedTailGodanTaCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                                 size_t kanji_end, const dictionary::DictionaryManager* dict_manager,
+                                                 std::vector<UnknownCandidate>& candidates) {
+  // A non-nominal kanji prefix can productively compound with a known one-kanji
+  // GodanTa verb (先立つ, 先立ち, 先立って). The verified tail fixes the conjugation
+  // class, while rejecting a dictionary noun prefix preserves object+verb paths
+  // such as 本|立つ.
+  if (dict_manager == nullptr || kanji_end != start_pos + 2 || kanji_end >= codepoints.size()) {
+    return;
+  }
+  std::string prefix = extractSubstring(codepoints, start_pos, start_pos + 1);
+  if (vh::isNounInDictionary(dict_manager, prefix)) {
+    return;
+  }
+  std::string stem = extractSubstring(codepoints, start_pos, kanji_end);
+  std::string tail_base = extractSubstring(codepoints, kanji_end - 1, kanji_end) + "つ";
+  if (!vh::isVerbInDictionary(dict_manager, tail_base)) {
+    return;
+  }
+
+  char32_t ending = codepoints[kanji_end];
+  size_t end_pos = kanji_end;
+  core::ExtendedPOS extended_pos = core::ExtendedPOS::Unknown;
+  const char* pattern = nullptr;
+  if (ending == U'つ') {
+    end_pos = kanji_end + 1;
+    extended_pos = core::ExtendedPOS::VerbShuushikei;
+    pattern = "tail_godan_ta_shuushikei";
+  } else if (ending == U'ち') {
+    end_pos = kanji_end + 1;
+    extended_pos = core::ExtendedPOS::VerbRenyokei;
+    pattern = "tail_godan_ta_renyokei";
+  } else if (ending == U'っ' && kanji_end + 1 < codepoints.size() &&
+             (codepoints[kanji_end + 1] == U'て' || codepoints[kanji_end + 1] == U'た')) {
+    end_pos = kanji_end + 1;
+    extended_pos = core::ExtendedPOS::VerbOnbinkei;
+    pattern = "tail_godan_ta_sokuonbin";
+  }
+  if (pattern == nullptr) {
+    return;
+  }
+  std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+  std::string base_form = stem + "つ";
+  candidates.push_back(makeVerbCandidate(surface, start_pos, end_pos, candidate::kVerifiedTailCompoundVerbBonus,
+                                         base_form, grammar::verbTypeToConjType(grammar::VerbType::GodanTa), true,
+                                         CandidateOrigin::VerbKanji, candidate::kHighOriginConfidence, pattern,
+                                         extended_pos));
+}
+
 // Fallback verification for a 促音便 base when it is not in the dictionary:
 // only for single-char stems, accept a GodanRa inflection analysis of
 // onbin_surface + た with confidence ≥ 0.3.

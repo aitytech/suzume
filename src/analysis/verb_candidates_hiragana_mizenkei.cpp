@@ -348,9 +348,9 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
       SUZUME_DEBUG_STREAM << "[VERB_CAND] " << stem << " hiragana_ichidan_rareru lemma=" << lemma << " cost=" << kCost
                           << "\n";
     }
-    candidates.push_back(makeVerbCandidate(stem, start_pos, stem_end, kCost, lemma,
-                                           dictionary::ConjugationType::Ichidan, true, CandidateOrigin::VerbHiragana,
-                                           0.9F, "hiragana_ichidan_rareru"));
+    candidates.push_back(
+        makeVerbCandidate(stem, start_pos, stem_end, kCost, lemma, dictionary::ConjugationType::Ichidan, true,
+                          CandidateOrigin::VerbHiraganaPassiveRenyokei, 0.9F, "hiragana_ichidan_rareru"));
     break;  // Only generate one ichidan rareru candidate per starting position
   }
 }

@@ -132,7 +132,8 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
  * @return Vector of candidates
  */
 std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                        const std::vector<normalize::CharType>& char_types);
+                                                        const std::vector<normalize::CharType>& char_types,
+                                                        const dictionary::DictionaryManager* dict_manager = nullptr);
 
 /**
  * @brief Generate prefix + single kanji compound candidates

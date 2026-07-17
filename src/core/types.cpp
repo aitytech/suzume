@@ -159,6 +159,10 @@ const char* originToString(CandidateOrigin origin) {
       return "verb_kanji";
     case CandidateOrigin::VerbHiragana:
       return "verb_hira";
+    case CandidateOrigin::VerbHiraganaPassiveRenyokei:
+      return "verb_hira_passive_renyo";
+    case CandidateOrigin::VerbHiraganaNegativeRenyokei:
+      return "verb_hira_negative_renyo";
     case CandidateOrigin::VerbKatakana:
       return "verb_kata";
     case CandidateOrigin::VerbCompound:
@@ -276,6 +280,14 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
       return "AUX_使役";
     case ExtendedPOS::AuxPotential:
       return "AUX_可能";
+    case ExtendedPOS::AuxInability:
+      return "AUX_不可能";
+    case ExtendedPOS::AuxBenefactive:
+      return "AUX_授受";
+    case ExtendedPOS::SuffixRecentCompletion:
+      return "SUFFIX_直後";
+    case ExtendedPOS::DeterminerQuotative:
+      return "DET_引用";
 
     // Auxiliaries - Aspect
     case ExtendedPOS::AuxAspectIru:
@@ -290,6 +302,8 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
       return "AUX_進行";
     case ExtendedPOS::AuxAspectKuru:
       return "AUX_接近";
+    case ExtendedPOS::AuxAspectHajimeru:
+      return "AUX_開始";
 
     // Auxiliaries - Appearance/Conjecture
     case ExtendedPOS::AuxAppearanceSou:
@@ -402,7 +416,8 @@ PartOfSpeech extendedPosToPos(ExtendedPOS epos) {
   // sit outside the contiguous range; see ExtendedPOS comment)
   if ((epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai ||
       epos == ExtendedPOS::AuxClassicalNari || epos == ExtendedPOS::AuxClassicalKeri ||
-      epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalBeshi) {
+      epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalBeshi ||
+      epos == ExtendedPOS::AuxInability || epos == ExtendedPOS::AuxBenefactive) {
     return PartOfSpeech::Auxiliary;
   }
   // Particle types -> Particle
@@ -426,10 +441,12 @@ PartOfSpeech extendedPosToPos(ExtendedPOS epos) {
     case ExtendedPOS::Conjunction:
       return PartOfSpeech::Conjunction;
     case ExtendedPOS::Determiner:
+    case ExtendedPOS::DeterminerQuotative:
       return PartOfSpeech::Determiner;
     case ExtendedPOS::Prefix:
       return PartOfSpeech::Prefix;
     case ExtendedPOS::Suffix:
+    case ExtendedPOS::SuffixRecentCompletion:
       return PartOfSpeech::Suffix;
     case ExtendedPOS::Symbol:
       return PartOfSpeech::Symbol;

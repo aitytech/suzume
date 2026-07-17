@@ -66,6 +66,11 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   surface_bonus += connection_rules::computeProgressiveHonorificBonus(prev, next);
 
   surface_bonus += connection_rules::computeSugiFinalParticleBonus(prev, next);
+  surface_bonus += connection_rules::computeCopulaConditionalBonus(prev, next);
+  surface_bonus += connection_rules::computePastConditionalVerbBonus(prev, next);
+  surface_bonus += connection_rules::computeExistentialAruNominalPredicateBonus(prev, next);
+  surface_bonus += connection_rules::computeCompletionAuxiliaryBonus(prev, next);
+  surface_bonus += connection_rules::computeAdjectiveTePredicatePenalty(prev, next);
 
   surface_bonus += connection_rules::computeBarePotentialRenyokeiPenalty(prev, next);
 
@@ -261,17 +266,6 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && prev.surface == "し" && next.surface == "て" &&
       (next.extended_pos == core::ExtendedPOS::ParticleConj || next.extended_pos == core::ExtendedPOS::AuxAspectIru)) {
     surface_bonus += cost::kStrong;
-  }
-
-  // Penalty for ADJ_連用(なく) → VERB_連用(し) pattern
-  // E.g., なくした should be なくし+た, not なく+し+た
-  // "なくす" (to lose) is a distinct verb from "なく+する" (to make not exist)
-  // The AdjRenyokei→VerbRenyokei bonus (-0.8) for 美しく+なり pattern
-  // incorrectly applies to なく+し, causing over-split of なくす verb
-  // This penalty cancels the bonus specifically for ない形容詞 + する pattern
-  if (prev.extended_pos == core::ExtendedPOS::AdjRenyokei && prev.surface == "なく" &&
-      next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface == "し") {
-    surface_bonus += cost::kRare;  // Cancel the -0.8 bonus
   }
 
   // Penalty for short hiragana VERB_連用 → し/き (single-char verb renyokei)
@@ -501,16 +495,29 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   }
 
   // Penalty for non-て/で particle/verb before い/いる auxiliary (AuxAspectIru)
-  // AuxAspectIru (い/いる) requires て-form as prerequisite: V連用+て+いる
-  // VERB_連用+い directly (し+い) or PART_接続(し)+い are grammatically invalid
-  // Note: て/で themselves also have AuxAspectIru EPOS, so exclude them as next
+  // AuxAspectIru (い/いる) requires て-form as prerequisite: V連用+て+いる.
+  // The contracted terminal てる and the dialectal ておる/でおる contractions
+  // are productive exceptions: they attach directly to a continuative verb
+  // (食べ+てる, 見+てる, 食べ+とる, 読ん+どる).
+  // VERB_連用+い directly (し+い) or PART_接続(し)+い are grammatically invalid.
+  // Note: て/で themselves also have AuxAspectIru EPOS, so exclude them as next.
   // Fixes: 一番美+し+い → 一番+美しい (wrongly split adjective 美しい)
-  if (next.extended_pos == core::ExtendedPOS::AuxAspectIru && next.surface != "て" && next.surface != "で") {
+  const bool is_dialectal_oru_contraction = utf8::equalsAny(next.lemma, {"とる", "どる"});
+  if (next.extended_pos == core::ExtendedPOS::AuxAspectIru && !utf8::equalsAny(next.surface, {"て", "で", "てる"}) &&
+      !is_dialectal_oru_contraction) {
     if (prev.extended_pos == core::ExtendedPOS::ParticleConj && prev.surface != "て" && prev.surface != "で") {
       surface_bonus += cost::kAlmostNever;
     } else if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.surface != "て" && prev.surface != "で") {
       surface_bonus += cost::kAlmostNever;
     }
+  }
+
+  // The regional contractions of ておる / でおる attach directly to a
+  // continuative or onbin form. Their lemma identifies the closed auxiliary
+  // class without promoting an unrelated lexical verb ending in とる/どる.
+  if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
+      next.extended_pos == core::ExtendedPOS::AuxAspectIru && is_dialectal_oru_contraction) {
+    surface_bonus += cost::kExtremeBonus;
   }
 
   // Bonus for Noun → dict i-adjective (AdjBasic)

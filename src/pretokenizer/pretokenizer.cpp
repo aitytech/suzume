@@ -54,6 +54,14 @@ bool absorbsPeriodKan(std::string_view text, size_t pos_after_kan) {
   return !normalize::isIntervalCompoundSecondKanji(next_cp);
 }
 
+// Keep a duration counter in the analyzer when the closed-class interval
+// suffix follows it. This preserves the noun→suffix boundary in 1時間おき,
+// which an atomic time pretoken would otherwise hide.
+bool hasIntervalSuffix(std::string_view text, size_t pos) {
+  constexpr std::string_view kIntervalSuffix{"おき"};
+  return text.substr(pos).compare(0, kIntervalSuffix.size(), kIntervalSuffix) == 0;
+}
+
 // Check if byte is ASCII alpha
 bool isAsciiAlpha(char chr) {
   return (chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z');
@@ -105,6 +113,13 @@ IntegerScan scanInteger(std::string_view text, size_t pos) {
     ++digit_count;
   }
   return {idx, digit_count, value};
+}
+
+// Month and place counters have five conventional prefix spellings. Treating
+// the spelling variation as one orthographic class keeps the numeric counter
+// atomic without adding entries for individual surface forms.
+bool isMonthPlaceCounterPrefix(char32_t codepoint) {
+  return codepoint == U'か' || codepoint == U'ヶ' || codepoint == U'ヵ' || codepoint == U'ケ' || codepoint == U'箇';
 }
 
 // Address-number output historically normalizes full-width digits to ASCII.
@@ -318,6 +333,34 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
   }
 
   return false;
+}
+
+bool PreTokenizer::tryMatchCounter(std::string_view text, size_t pos, PreToken& token) const {
+  const IntegerScan number = scanInteger(text, pos);
+  if (number.empty()) {
+    return false;
+  }
+
+  size_t idx = number.end;
+  if (idx >= text.size()) {
+    return false;
+  }
+  const char32_t prefix = normalize::decodeUtf8(text, idx);
+  if (!isMonthPlaceCounterPrefix(prefix) || idx >= text.size()) {
+    return false;
+  }
+
+  const char32_t unit = normalize::decodeUtf8(text, idx);
+  if (unit != U'月' && unit != U'所') {
+    return false;
+  }
+
+  token.surface = std::string(text.substr(pos, idx - pos));
+  token.start = pos;
+  token.end = idx;
+  token.type = PreTokenType::Counter;
+  token.pos = core::PartOfSpeech::Noun;
+  return true;
 }
 
 bool PreTokenizer::tryMatchCurrency(std::string_view text, size_t pos, PreToken& token) const {
@@ -678,6 +721,9 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
   }
 
   if (idx > pos) {
+    if (hasIntervalSuffix(text, idx)) {
+      return false;
+    }
     token.surface = std::string(text.substr(pos, idx - pos));
     token.start = pos;
     token.end = idx;
@@ -888,8 +934,8 @@ PreTokenResult PreTokenizer::process(std::string_view text) const {
     // Note: Percentage must come before Version to avoid "3.14%" being parsed as version
     // Note: Date must come before Time (日付 includes 日 which looks like time suffix)
     if (tryMatchUrl(text, pos, token) || tryMatchEmail(text, pos, token) || tryMatchHashtag(text, pos, token) ||
-        tryMatchMention(text, pos, token) || tryMatchDate(text, pos, token) || tryMatchTime(text, pos, token) ||
-        tryMatchCurrency(text, pos, token) || tryMatchStorage(text, pos, token) ||
+        tryMatchMention(text, pos, token) || tryMatchDate(text, pos, token) || tryMatchCounter(text, pos, token) ||
+        tryMatchTime(text, pos, token) || tryMatchCurrency(text, pos, token) || tryMatchStorage(text, pos, token) ||
         tryMatchPercentage(text, pos, token) || tryMatchAddressNumber(text, pos, token) ||
         tryMatchVersion(text, pos, token) || tryMatchAsciiWithDots(text, pos, token)) {
       // Add span before this token if any

@@ -13,7 +13,11 @@ bool hasExactVerbEntry(const dictionary::DictionaryManager* dict_manager, std::s
 std::string fixSuruClassical(std::string_view lemma);
 std::string fixShiru(std::string_view lemma);
 std::string fixSpecialRaRowLemma(std::string_view lemma, const dictionary::DictionaryManager* dict_manager);
-std::string fixIchidanRenyokeiBeforeTe(std::string_view surface, std::string_view lemma, std::string_view next_surface);
+std::string fixGodanRenyokeiBeforeLiteraryTe(std::string_view surface, std::string_view lemma,
+                                             std::string_view next_surface,
+                                             const dictionary::DictionaryManager* dict_manager);
+std::string fixIchidanRenyokeiBeforeTe(std::string_view surface, std::string_view lemma, std::string_view next_surface,
+                                       const dictionary::DictionaryManager* dict_manager);
 std::string fixPotentialVerb(const core::Morpheme& morpheme);
 std::string fixTariAdverb(std::string_view surface);
 std::string fixHatsuonbin(std::string_view stem, const dictionary::DictionaryManager* dict_manager);

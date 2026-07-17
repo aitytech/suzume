@@ -96,7 +96,9 @@ bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager
   if (dict_manager == nullptr || end_pos <= start_pos || end_pos > codepoints.size()) {
     return false;
   }
-  // Strip a trailing negative auxiliary (ない / なかっ / なかった).
+  // Strip a trailing inflecting auxiliary. A focus particle can precede a
+  // negative (本だけない) or a copula (本だけだ / 本だけだった); neither
+  // sequence belongs inside a fabricated lexical candidate.
   size_t tail_end = end_pos;
   size_t total_len = end_pos - start_pos;
   if (total_len >= 4 && codepoints[end_pos - 4] == U'な' && codepoints[end_pos - 3] == U'か' &&
@@ -107,6 +109,12 @@ bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager
     tail_end = end_pos - 3;
   } else if (total_len >= 2 && codepoints[end_pos - 2] == U'な' && codepoints[end_pos - 1] == U'い') {
     tail_end = end_pos - 2;
+  }
+  total_len = tail_end - start_pos;
+  if (total_len >= 2 && codepoints[tail_end - 2] == U'だ' && codepoints[tail_end - 1] == U'っ') {
+    tail_end -= 2;
+  } else if (total_len >= 1 && codepoints[tail_end - 1] == U'だ') {
+    --tail_end;
   }
   // Probe particle suffixes of 2+ codepoints, keeping a non-empty prefix.
   for (size_t particle_len = 2; start_pos + particle_len < tail_end; ++particle_len) {
@@ -398,6 +406,16 @@ bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType ver
     return true;
   }
 
+  // Sahen predicates are search-tokenized as a nominal stem plus the する
+  // mizenkei and passive auxiliary: 勉強+さ+れる. Retaining a unified
+  // 勉強される candidate hides that grammatical chain.
+  if (verb_type == grammar::VerbType::Suru) {
+    return utf8::endsWith(surface, "される") || utf8::endsWith(surface, "された") ||
+           utf8::endsWith(surface, "されて") || utf8::endsWith(surface, "されない") ||
+           utf8::endsWith(surface, "されます") || utf8::endsWith(surface, "されたい") ||
+           utf8::endsWith(surface, "されたく");
+  }
+
   // Only apply remaining checks to Godan verbs
   if (!grammar::isGodanVerbType(verb_type)) {
     return false;
@@ -442,6 +460,17 @@ bool shouldSkipCausativeAuxPattern(std::string_view surface, grammar::VerbType v
   // Godan causative: せる, せた, せて
   if (grammar::isGodanVerbType(verb_type)) {
     return utf8::endsWith(surface, "せる") || utf8::endsWith(surface, "せた") || utf8::endsWith(surface, "せて");
+  }
+
+  // An unverified Ichidan candidate ending in A-row + せ is the stem of a
+  // Godan causative (読ま+せ, 書か+せ), not an independent verb. Dictionary
+  // candidates remain available for lexicalized derivatives such as 泳がせる.
+  if (verb_type == grammar::VerbType::Ichidan) {
+    const auto codepoints = normalize::utf8::decode(surface);
+    if (codepoints.size() >= 2 && grammar::isARowCodepoint(codepoints[codepoints.size() - 2]) &&
+        codepoints.back() == U'せ') {
+      return true;
+    }
   }
 
   // Causative-passive patterns for all verb types (including Ichidan)

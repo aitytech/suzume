@@ -48,6 +48,7 @@ inline constexpr SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"出す", "だす", "す", V2VerbType::Godan},      // 呼び出す, 走りだす
     {"続く", "つづく", "く", V2VerbType::Godan},    // 引き続く
     {"返す", "かえす", "す", V2VerbType::Godan},    // 繰り返す, 繰りかえす
+    {"戻す", "もどす", "す", V2VerbType::Godan},    // 取り戻す, 取りもどす
     {"返る", "かえる", "る", V2VerbType::Godan},    // 振り返る, 振りかえる
     {"変わる", "かわる", "る", V2VerbType::Godan},  // 移り変わる, 生まれ変わる
     {"替わる", "かわる", "る", V2VerbType::Godan},  // 入れ替わる, 切り替わる
@@ -174,6 +175,32 @@ inline std::string generateMizenkei(std::string_view surface, std::string_view r
   std::string result(base.substr(0, base.size() - 3));
   result += a_row;
   return result;
+}
+
+// Generate a Godan potential form (戻す→戻せる) from the dictionary form.
+// The V2 allowlist controls which lexical verbs participate; this merely shares
+// their ordinary Godan conjugation across all of those entries.
+inline std::string generateGodanPotential(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
+  if (verb_type != V2VerbType::Godan) {
+    return "";
+  }
+
+  std::string_view base = reading.empty() ? surface : reading;
+  if (base.size() < core::kJapaneseCharBytes) {
+    return "";
+  }
+
+  char32_t last_cp = utf8::decodeLastChar(base);
+  for (const auto& [row_verb_type, row] : grammar::Conjugation::getGodanRows()) {
+    (void)row_verb_type;
+    if (row.base_vowel == last_cp) {
+      std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
+      result += normalize::utf8::encode({row.e_row});
+      result += "る";
+      return result;
+    }
+  }
+  return "";
 }
 
 // Te-form euphonic form type for Godan verbs

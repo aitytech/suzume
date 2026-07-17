@@ -19,11 +19,26 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Ensures ません → ませ+ん (aux) over ませ+ん (particle の)
       {EPOS::AuxTenseMasu, EPOS::AuxNegativeNu, cost::kStrongBonus},
 
+      // The negative ending after the polite auxiliary is always the
+      // auxiliary ん, never the nominalizer (読み+ませ+ん+か).
+      {EPOS::AuxTenseMasu, EPOS::ParticleNo, cost::kAlmostNever},
+
       // AuxTenseMasu → AuxVolitional (ましょ+う) - strong bonus for the volitional boundary
       {EPOS::AuxTenseMasu, EPOS::AuxVolitional, cost::kStrongBonus},
 
+      // Past predicate → concessive conjunction (読んだものの進まない).
+      {EPOS::AuxTenseTa, EPOS::Conjunction, cost::kDoubleVeryStrongBonus},
+
+      // AuxTenseMasu → ParticleConj (まし+て, ますれ+ば) - very strong bonus for the
+      // formal conditional of the polite auxiliary.
+      {EPOS::AuxTenseMasu, EPOS::ParticleConj, cost::kVeryStrongBonus},
+
       // AuxCopulaDesu → AuxVolitional (でしょ+う) - strong bonus for the volitional boundary
       {EPOS::AuxCopulaDesu, EPOS::AuxVolitional, cost::kStrongBonus},
+
+      // AuxCopulaDesu → AuxTenseTa (でし+た/たら) - strong bonus for the
+      // past and conditional forms of the polite copula.
+      {EPOS::AuxCopulaDesu, EPOS::AuxTenseTa, cost::kStrongBonus},
 
       // AuxCopulaDa → AuxVolitional (だろ+う) - strong bonus for the volitional boundary
       {EPOS::AuxCopulaDa, EPOS::AuxVolitional, cost::kStrongBonus},
@@ -39,6 +54,17 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // bonus on the せ=する reading wins asymmetrically only when ない follows.
       {EPOS::AuxCausative, EPOS::AuxNegativeNai, cost::kModerateBonus},
 
+      // Potential humble auxiliary: いただけ+ない.
+      {EPOS::AuxHonorific, EPOS::AuxNegativeNai, cost::kVeryStrongBonus},
+
+      // AuxCausative → AuxTenseMasu (せ+ます, させ+ます) - strong bonus.
+      {EPOS::AuxCausative, EPOS::AuxTenseMasu, cost::kStrongBonus},
+
+      // Honorific subsidiary inflection continues into polite and past
+      // auxiliaries (なさい+ます, なさっ+た) rather than a lexical verb path.
+      {EPOS::AuxHonorific, EPOS::AuxTenseMasu, cost::kStrongBonus},
+      {EPOS::AuxHonorific, EPOS::AuxTenseTa, cost::kStrongBonus},
+
       // AuxPassive → AuxTenseMasu (れ+ます in passive polite) - strong bonus
       // Ensures 言われます → 言わ+れ+ます over 言われ+ます
       {EPOS::AuxPassive, EPOS::AuxTenseMasu, cost::kStrongBonus},
@@ -46,6 +72,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // AuxPassive → AuxNegativeNai (れ+ない in passive negative) - strong bonus
       // Ensures 言われない → 言わ+れ+ない over 言われ+ない
       {EPOS::AuxPassive, EPOS::AuxNegativeNai, cost::kStrongBonus},
+
+      // An adverbial ない can follow a passive predicate before a connective
+      // (読ま+れ+なく+て). It competes with the auxiliary reading, which stays
+      // available before an independent change-of-state verb.
+      {EPOS::AuxPassive, EPOS::AdjRenyokei, cost::kVeryStrongBonus},
 
       // AuxPassive → AuxTenseTa (れ+た in passive past) - strong bonus
       // Ensures 言われた → 言わ+れ+た over 言われ+た
@@ -68,6 +99,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
 
       // AuxNegativeNai → AuxVolitional (なかろ+う) - strong bonus
       {EPOS::AuxNegativeNai, EPOS::AuxVolitional, cost::kStrongBonus},
+
+      // Negative predicates commonly take a formal noun (ない+つもり/わけ/はず).
+      // Prefer that productive boundary over an unrelated hiragana adverb that
+      // happens to begin at the final い of ない.
+      {EPOS::AuxNegativeNai, EPOS::NounFormal, cost::kStrongBonus},
 
       // AuxNegativeNu → AuxTenseTa (んかっ+た for contracted negative past)
       // Ensures くだらんかった → くだら+ん+かっ+た over くだ+らんかっ+た
@@ -93,6 +129,14 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // AuxNegativeNu → ParticleTopic (ずに+は for ずにはいられない) - strong bonus
       // Ensures ずには → ずに+は(topic) over ずに+はいられ(verb)
       {EPOS::AuxNegativeNu, EPOS::ParticleTopic, cost::kStrongBonus},
+
+      // Classical negative predicates can be case-marked (ざる+を+得ない,
+      // ぬ+を+知らない). Preserve the case-particle boundary over an unknown
+      // fallback for the one-mora particle.
+      {EPOS::AuxNegativeNu, EPOS::ParticleCase, cost::kStrongBonus},
+
+      // Classical negative → concessive particle (読ま+ず+とも).
+      {EPOS::AuxNegativeNu, EPOS::ParticleConj, cost::kStrongBonus},
 
       // ParticleNo → AuxCopulaDa (ん+だ for んだ) - strong bonus
       // Ensures んだ → ん+だ over ん+だ(VERB)
@@ -123,6 +167,10 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::AuxTenseTa, EPOS::VerbTaForm, cost::kAlmostNever},
       {EPOS::AuxTenseTa, EPOS::VerbTaraForm, cost::kAlmostNever},
 
+      // A completed predicate can be followed by the quotative attributive
+      // determiner: 読んだ+という, 書いた+っていう.
+      {EPOS::AuxTenseTa, EPOS::DeterminerQuotative, cost::kDoubleVeryStrongBonus},
+
       // ParticleTopic → AuxTenseTa - prohibit
       // The past auxiliary attaches to a verb/adjective renyokei, never to a topic
       // particle, so は+た is not a real boundary. Prevents an isolated hiragana noun
@@ -135,6 +183,31 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // AuxAspectOku → AuxTenseTa (とい+た, どい+た) - strong bonus
       // Contracted ~ておく form + past tense: 見とい+た, 読んどい+た
       {EPOS::AuxAspectOku, EPOS::AuxTenseTa, cost::kStrongBonus},
+
+      // The completive subsidiary しまう conjugates as a Godan-wa auxiliary.
+      // Its written variants share this grammar: 仕舞っ+た, 仕舞わ+ない,
+      // 仕舞い+ます, 仕舞え+ば, and 仕舞お+う.
+      {EPOS::AuxAspectShimau, EPOS::AuxTenseTa, cost::kVeryStrongBonus},
+      {EPOS::AuxAspectShimau, EPOS::AuxNegativeNai, cost::kStrongBonus},
+      {EPOS::AuxAspectShimau, EPOS::AuxTenseMasu, cost::kStrongBonus},
+      {EPOS::AuxAspectShimau, EPOS::AuxDesireTai, cost::kStrongBonus},
+      {EPOS::AuxAspectShimau, EPOS::AuxVolitional, cost::kModerateBonus},
+      {EPOS::AuxAspectShimau, EPOS::ParticleConj, cost::kVeryStrongBonus},
+
+      // Directional いく likewise inflects before the negative and conditional
+      // continuations (読んでいけない, 読んでいければ). These paths are
+      // available only through context-gated auxiliary candidates, so the
+      // inflection connections do not license a bare lexical いける reading.
+      {EPOS::AuxAspectIku, EPOS::AuxNegativeNai, cost::kDoubleVeryStrongBonus},
+      {EPOS::AuxAspectIku, EPOS::ParticleConj, cost::kStrongBonus},
+      {EPOS::AuxAspectIku, EPOS::AuxVolitional, cost::kStrongBonus},
+      {EPOS::AuxAspectKuru, EPOS::AuxVolitional, cost::kStrongBonus},
+
+      // Colloquial negative conjecture V連用形+っ+こ+ない. Both one-mora
+      // candidates are context-gated, so these connections cannot affect
+      // ordinary uses of くる or the negative-conjecture auxiliary まい.
+      {EPOS::AuxNegativeMai, EPOS::AuxAspectKuru, cost::kStrongBonus},
+      {EPOS::AuxAspectKuru, EPOS::AuxNegativeNai, cost::kStrongBonus},
 
       // Both contracted and uncontracted renyokei forms accept polite ます.
       // The stronger connection resolves their lexical homographs (おき/とき).
@@ -149,14 +222,48 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Ensures 学んで+い+ます uses AuxAspectIru (auxiliary) not VerbRenyokei
       {EPOS::AuxAspectIru, EPOS::AuxTenseMasu, cost::kStrongBonus},
 
+      // The terminal progressive also introduces a quotation: 食べている+という.
+      {EPOS::AuxAspectIru, EPOS::DeterminerQuotative, cost::kDoubleVeryStrongBonus},
+
+      // A terminal progressive predicate can be nominalized before a following
+      // particle (食べてる+の+に). Prefer that boundary over a fused lexical
+      // verb reading of the preceding progressive form.
+      {EPOS::AuxAspectIru, EPOS::ParticleNo, cost::kStrongBonus},
+
       // The trial subsidiary みる conjugates as an Ichidan auxiliary. Its stem
       // therefore accepts the same independent tense, negation, and desiderative
       // auxiliaries as a lexical Ichidan renyokei (試してみ+ます/ない/たい).
       {EPOS::AuxAspectMiru, EPOS::AuxTenseMasu, cost::kStrongBonus},
       {EPOS::AuxAspectMiru, EPOS::AuxNegativeNai, cost::kStrongBonus},
-      {EPOS::AuxAspectMiru, EPOS::AuxDesireTai, cost::kStrongBonus},
+      {EPOS::AuxAspectMiru, EPOS::AuxDesireTai, cost::kVeryStrongBonus},
       {EPOS::AuxAspectMiru, EPOS::AuxTenseTa, cost::kModerateBonus},
       {EPOS::AuxAspectMiru, EPOS::AuxVolitional, cost::kModerateBonus},
+      {EPOS::AuxAspectMiru, EPOS::ParticleConj, cost::kStrongBonus},
+
+      // The preparative subsidiary おく and benefactive やる both take the
+      // desiderative auxiliary directly in 〜ておきたい / 〜てやりたい.
+      {EPOS::AuxAspectOku, EPOS::AuxDesireTai, cost::kVeryStrongBonus},
+      {EPOS::AuxBenefactive, EPOS::AuxDesireTai, cost::kVeryStrongBonus},
+
+      // The inability subsidiary かねる conjugates like an Ichidan auxiliary:
+      // 読み+かね+ます/ない, 読み+かねる+た.
+      {EPOS::AuxInability, EPOS::AuxTenseMasu, cost::kStrongBonus},
+      {EPOS::AuxInability, EPOS::AuxNegativeNai, cost::kStrongBonus},
+      {EPOS::AuxInability, EPOS::AuxTenseTa, cost::kModerateBonus},
+      {EPOS::AuxInability, EPOS::AuxVolitional, cost::kModerateBonus},
+
+      // A binding particle such as しか cannot govern the classical negative
+      // auxiliary (しか+ね). The modern construction しか+ない is unaffected.
+      {EPOS::ParticleBinding, EPOS::AuxNegativeNu, cost::kAlmostNever},
+
+      // The benefactive subsidiary あげる takes the potential/passive
+      // auxiliary directly in 〜てあげ+られる.
+      {EPOS::AuxBenefactive, EPOS::AuxPotential, cost::kStrongBonus},
+      {EPOS::AuxBenefactive, EPOS::AuxPassive, cost::kStrongBonus},
+
+      // Benefactive subsidiaries retain their dependent reading before
+      // negation (読んで+もらえ+ない, 食べて+あげ+ない).
+      {EPOS::AuxBenefactive, EPOS::AuxNegativeNai, cost::kVeryStrongBonus},
 
       // AuxAspectIru → AuxPassive (い+られ in potential/passive) - moderate bonus
       // いられる = いる + られる (potential: can stay/be)
@@ -192,10 +299,16 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Without this, PART_準体→AUX_断定 bonus makes の+で(AUX) path win
       {EPOS::AuxCopulaDa, EPOS::ParticleConj, cost::kStrongBonus},
 
+      // A copula can be followed by a binding particle: でこそ, でさえ,
+      // ですら, でしか. This preserves the nominal-predicate boundary over
+      // the unrelated polite-copula plus final-particle path (でし+か).
+      {EPOS::AuxCopulaDa, EPOS::ParticleBinding, cost::kVeryStrongBonus},
+
       // AuxTenseTa → Noun/Pronoun (食べた+人, 来た+彼) - moderate bonus for past+noun
       // POS-level AUX→NOUN=0.5 penalty is too harsh for this natural connection
       {EPOS::AuxTenseTa, EPOS::Noun, cost::kModerateBonus},
       {EPOS::AuxTenseTa, EPOS::Pronoun, cost::kModerateBonus},
+      {EPOS::AuxTenseTa, EPOS::NounFormal, cost::kStrongBonus},
 
       // AuxTenseTa → ParticleFinal (た+ね/よ) - minor bonus
       {EPOS::AuxTenseTa, EPOS::ParticleFinal, cost::kMinorBonus},
@@ -220,33 +333,58 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Helps サイズ+は+あり win over サイズ+はあり (particle-starting verb)
       {EPOS::Noun, EPOS::ParticleTopic, cost::kMinorBonus},
 
+      // Nominal coordination (本+及び+水, 本+又は+水) must preserve both
+      // noun boundaries instead of letting an unknown noun absorb the linker.
+      {EPOS::Noun, EPOS::Conjunction, cost::kDoubleVeryStrongBonus},
+
+      // A coordinating conjunction normally introduces the other nominal arm.
+      {EPOS::Conjunction, EPOS::Noun, cost::kStrongBonus},
+
       // Noun → ParticleAdverbial (そん+だけ, あん+だけ) - strong bonus
       // Ensures そんだけ → そん+だけ over そん+だ+け
       {EPOS::Noun, EPOS::ParticleAdverbial, cost::kStrongBonus},
 
-      // Noun → ParticleBinding (時間+さえ, 水+すら) - strong bonus
+      // Noun → ParticleBinding (時間+さえ, 水+すら) - very strong bonus
       // Binding particles attach to nouns just like adverbial ones; without this
       // 時間さえ loses to 時間+さ(する未然, suru-passive surface bonus)+え and
-      // 水すら is absorbed into a fabricated verb blob
-      {EPOS::Noun, EPOS::ParticleBinding, cost::kStrongBonus},
+      // 水すら is absorbed into a fabricated verb blob. The stronger preference
+      // also preserves the boundary before an existence-negative ない.
+      {EPOS::Noun, EPOS::ParticleBinding, cost::kVeryStrongBonus},
 
-      // ParticleBinding → AdjBasic (さえ+ない, すら+ない) - moderate bonus
+      // Case particle → binding particle (に+すら, で+さえ). A focus
+      // particle can scope over a case-marked phrase, so favor the two
+      // grammatical particles over an unknown noun that absorbs both.
+      {EPOS::ParticleCase, EPOS::ParticleBinding, cost::kStrongBonus},
+
+      // ParticleBinding → AdjBasic (さえ+ない, すら+ない) - strong bonus
       // Existence-negation ない after a binding particle (時間さえない);
       // mirrors NounFormal→AdjBasic. Without this the fragment path
       // さ(する未然)+え(AUX可能)+ない outruns さえ+ない via the AUX chain bonus
-      {EPOS::ParticleBinding, EPOS::AdjBasic, cost::kModerateBonus},
+      {EPOS::ParticleBinding, EPOS::AdjBasic, cost::kStrongBonus},
+
+      // The same focus construction permits an adverbial negative adjective
+      // (にすら+なく), not a fabricated noun followed by なく.
+      {EPOS::ParticleBinding, EPOS::AdjRenyokei, cost::kStrongBonus},
 
       // Noun → AdjNaAdj (一番+獰猛, とても+大切) - strong bonus
       // Prevents long kanji noun from absorbing na-adjective stem
       // (e.g., 一番獰猛+な → 一番+獰猛+な)
       {EPOS::Noun, EPOS::AdjNaAdj, cost::kStrongBonus},
 
-      // NounFormal → ParticleConj (こと+が) - neutral
-      {EPOS::NounFormal, EPOS::ParticleCase, cost::kNeutral},
+      // Formal noun → case particle (読みよう+がない, こと+がある).
+      {EPOS::NounFormal, EPOS::ParticleCase, cost::kModerateBonus},
 
-      // NounFormal → AuxCopulaDa (はず+だ, つもり+だ, ところ+だ) - moderate bonus
+      // Formal nouns can be topicalized (はず+は, わけ+は, こと+は).
+      {EPOS::NounFormal, EPOS::ParticleTopic, cost::kModerateBonus},
+
+      // Formal noun → binding particle (こと+さえ, わけ+すら).
+      // This is the same nominal attachment as Noun→ParticleBinding and keeps
+      // a following existence-negative from being read as さ(する未然)+え(可能).
+      {EPOS::NounFormal, EPOS::ParticleBinding, cost::kVeryStrongBonus},
+
+      // NounFormal → AuxCopulaDa (はず+だ, つもり+だ, ところ+だ) - very strong bonus
       // Ensures formal noun + だ split over verb candidate (e.g., はずだ as VERB)
-      {EPOS::NounFormal, EPOS::AuxCopulaDa, cost::kModerateBonus},
+      {EPOS::NounFormal, EPOS::AuxCopulaDa, cost::kVeryStrongBonus},
 
       // NounFormal → AuxCopulaDesu (はず+です, つもり+です) - strong bonus
       // Ensures はずです → はず+です over はず+で+す
@@ -266,6 +404,19 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // NounFormal → ParticleAdverbial (こと+だけ, はず+だけ) - strong bonus
       // Prevents ことだけ → こと+だ+け split
       {EPOS::NounFormal, EPOS::ParticleAdverbial, cost::kStrongBonus},
+
+      // The nominalizer の introduces a formal noun (本+の+はず,
+      // 目的+の+ため). Prefer the grammatical nominal boundary over the
+      // topic-particle plus classical-negative split of the formal noun.
+      {EPOS::ParticleNo, EPOS::NounFormal, cost::kStrongBonus},
+
+      // The progressive auxiliary may be followed by a temporal formal noun:
+      // 読んでいるあいだ, 書いているうち.
+      {EPOS::AuxAspectIru, EPOS::NounFormal, cost::kVeryStrongBonus},
+
+      // Quotation particles introduce a nominalized proposition (って+こと,
+      // と+いう+もの). Prefer that boundary over a fabricated onbin + て path.
+      {EPOS::ParticleQuote, EPOS::NounFormal, cost::kVeryStrongBonus},
 
       // =========================================================================
       // Pronoun → Particles
@@ -303,6 +454,13 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Use same bonus as DET→NOUN so the の+は split path can compete
       {EPOS::Determiner, EPOS::ParticleNo, kDeterminerNounBonus},
 
+      // Quotative determiners have the same attributive distribution as
+      // ordinary determiners (ということ, っていう話).
+      {EPOS::DeterminerQuotative, EPOS::Noun, kDeterminerNounBonus},
+      {EPOS::DeterminerQuotative, EPOS::NounFormal, kDeterminerNounBonus},
+      {EPOS::DeterminerQuotative, EPOS::NounProper, kDeterminerNounBonus},
+      {EPOS::DeterminerQuotative, EPOS::ParticleNo, kDeterminerNounBonus},
+
       // Determiner → Adjective (その+薄暗い+部屋, この+大きい+建物)
       // Determiners modify adjective+noun combinations in Japanese
       // Uses same bonus as DET→NOUN to allow adjective path to compete
@@ -327,6 +485,16 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Needs kSevere to outweigh the DET→NounFormal bonus (-2.5 for かの→よう).
       {EPOS::AuxTenseTa, EPOS::Determiner, cost::kSevere},
 
+      // A finite verb cannot directly take a determiner. This preserves the
+      // particle sequence in clause-final similatives such as ある+か+の+よう
+      // instead of selecting the unrelated determiner かの.
+      {EPOS::VerbShuushikei, EPOS::Determiner, cost::kSevere},
+
+      // The formal copula である also cannot directly take a determiner.
+      // In であるかのよう, retain the intervening final and nominalizing
+      // particles rather than joining them as かの.
+      {EPOS::AuxCopulaDa, EPOS::Determiner, cost::kSevere},
+
       // Pronoun → Determiner (pronoun does not directly take a determiner)
       // Prevents over-greedy match of L1 DET like かの in `いくつ+か+の` (e.g., いくつかの限界).
       // The correct parse is いくつ(pronoun) + か(particle) + の(particle).
@@ -344,8 +512,10 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Noun → Copula/Negative
       // =========================================================================
 
-      // Noun → AuxCopulaDa (学生+だ) - moderate bonus
-      {EPOS::Noun, EPOS::AuxCopulaDa, cost::kModerateBonus},
+      // Noun → AuxCopulaDa (学生+だ、本+だよ) - a nominal predicate is a
+      // fundamental boundary. It must outrank an unknown compound noun that
+      // absorbs a casual copula ending.
+      {EPOS::Noun, EPOS::AuxCopulaDa, cost::kExtraStrongBonus},
 
       // Noun → AuxCopulaDesu (学生+です) - moderate bonus
       {EPOS::Noun, EPOS::AuxCopulaDesu, cost::kModerateBonus},
@@ -353,6 +523,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Noun → AuxNegativeNai (間違い+ない, 違い+ない) - moderate bonus
       // For idiomatic patterns meaning "certain" or "no doubt"
       {EPOS::Noun, EPOS::AuxNegativeNai, cost::kModerateBonus},
+
+      // A noun cannot take the contracted negative auxiliary ん directly.
+      // A nominal ん must arise as ParticleNo after its predicate boundary,
+      // while 読んだ starts from a verb onbin candidate rather than 読+ん+だ.
+      {EPOS::Noun, EPOS::AuxNegativeNu, cost::kAlmostNever},
 
       // Noun → AuxCausative (色褪+せる) - strong penalty
       // Causative auxiliary only follows verb mizenkei, never nouns
@@ -394,13 +569,33 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Without this, AUX_断定→PART_係(-0.5) makes も path win over もの
       {EPOS::AuxCopulaDa, EPOS::NounFormal, cost::kStrongBonus},
 
+      // The attributive copula precedes the nominalizer in な+の+か.
+      {EPOS::AuxCopulaDa, EPOS::ParticleNo, cost::kStrongBonus},
+
       // AdjStem → Suffix (な+さ in なさそう) - strong bonus for nominalization
       // This favors な(ADJ stem of ない) + さ(nominalization suffix) over さ(する mizenkei)
       {EPOS::AdjStem, EPOS::Suffix, cost::kStrongBonus},
 
-      // VerbRenyokei → Suffix (遅れ+がち, 忘れ+がち) - strong bonus
+      // The conjecture auxiliary らしい nominalizes through its stem:
+      // 本らしさ → 本 + らし + さ.
+      {EPOS::AuxConjectureRashii, EPOS::Suffix, cost::kVeryStrongBonus},
+
+      // The attributive form of らしい modifies a following noun:
+      // 本らしい本 → 本 + らしい + 本.
+      {EPOS::AuxConjectureRashii, EPOS::Noun, cost::kMinorBonus},
+
+      // Na-adjective stem → suffix (豊か+さ, 静か+さ) nominalizes the
+      // adjective; the homographic さ cannot be the suru irrealis here.
+      {EPOS::AdjNaAdj, EPOS::Suffix, cost::kVeryStrongBonus},
+
+      // VerbRenyokei → Suffix (遅れ+がち, 疲れ+気味) - very strong bonus
       // This favors verb renyokei + suffix pattern over merged tokens
-      {EPOS::VerbRenyokei, EPOS::Suffix, cost::kStrongBonus},
+      {EPOS::VerbRenyokei, EPOS::Suffix, cost::kVeryStrongBonus},
+
+      // VerbRenyokei → recent-completion suffix (焼き+たて, 作り+たて).
+      // This productive suffix competes directly with the past た + connective
+      // て chain, so it needs a stronger lexicalized grammatical connection.
+      {EPOS::VerbRenyokei, EPOS::SuffixRecentCompletion, cost::kDoubleVeryStrongBonus},
   };
   applyRules(table, kRules);
 }  // namespace suzume::analysis::bigram_rules

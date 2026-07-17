@@ -159,6 +159,14 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
         v1_base = std::string(v1_surface) + "る";
       }
 
+      // A closed-class particle is never the first verb in a compound. This
+      // must be checked before the inflection fallback: particle surfaces can
+      // otherwise receive a mechanically plausible unknown Godan reading
+      // (しか+い → しかい) and swallow a following auxiliary.
+      if (dict_manager.lookupExact(v1_surface, core::PartOfSpeech::Particle) != nullptr) {
+        continue;
+      }
+
       // Verify V1 is in dictionary as a verb
       bool v1_verified = dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr;
 

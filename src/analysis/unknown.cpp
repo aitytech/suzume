@@ -37,6 +37,29 @@ void appendCandidates(std::vector<suzume::analysis::UnknownCandidate>& destinati
   }
 }
 
+// A closed-class conjunction is a hard lexical boundary.  Unknown candidates
+// may not consume its first character (本又|は, 本若しく|は), even when their
+// own surface stops before the conjunction's final character.
+bool spansConjunctionStart(const suzume::analysis::UnknownCandidate& candidate, const std::vector<char32_t>& codepoints,
+                           const suzume::dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || candidate.end <= candidate.start + 1) {
+    return false;
+  }
+
+  constexpr size_t kConjunctionWindowChars = 8;
+  for (size_t boundary = candidate.start; boundary < candidate.end; ++boundary) {
+    size_t window_end = std::min(codepoints.size(), boundary + kConjunctionWindowChars);
+    for (size_t conjunction_end = boundary + 1; conjunction_end <= window_end; ++conjunction_end) {
+      std::string conjunction = suzume::analysis::extractSubstring(codepoints, boundary, conjunction_end);
+      if (dict_manager->lookupExact(conjunction, suzume::core::PartOfSpeech::Conjunction) != nullptr &&
+          (boundary > candidate.start || conjunction_end > candidate.end)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 namespace suzume::analysis {
@@ -273,7 +296,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
     // Generate counter candidates for numeral + つ patterns
     // e.g., 一つ, 二つ, ..., 九つ (closed class)
-    appendCandidates(candidates, generateCounterCandidates(codepoints, start_pos, char_types));
+    appendCandidates(candidates, generateCounterCandidates(codepoints, start_pos, char_types, dict_manager_));
 
     // Generate prefix + single kanji compound candidates
     // e.g., 今日, 今週, 本日, 全国 (prefix-like compounds)
@@ -304,7 +327,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
   // Generate counter candidates for digit + つ patterns (e.g., 3つ, 10個)
   if (char_types[start_pos] == normalize::CharType::Digit) {
-    appendCandidates(candidates, generateCounterCandidates(codepoints, start_pos, char_types));
+    appendCandidates(candidates, generateCounterCandidates(codepoints, start_pos, char_types, dict_manager_));
   }
 
   // Generate by same type
@@ -322,6 +345,12 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
   if (options_.enable_character_speech) {
     appendCandidates(candidates, generateCharacterSpeechCandidates(text, codepoints, start_pos, char_types));
   }
+
+  candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
+                                  [&](const UnknownCandidate& candidate) {
+                                    return spansConjunctionStart(candidate, codepoints, dict_manager_);
+                                  }),
+                   candidates.end());
 
   return candidates;
 }

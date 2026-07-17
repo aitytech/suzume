@@ -183,7 +183,13 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         bool is_i_row_ichidan = cand.verb_type == grammar::VerbType::Ichidan && vh::isValidIRowIchidanStem(cand.stem);
         float conf_threshold = (is_i_row_ichidan || sokuonbin_stem_verified) ? verb_opts.confidence_ichidan_dict
                                                                              : verb_opts.confidence_standard;
-        if (cand.stem == expected_stem && cand.confidence > conf_threshold &&
+        bool is_multi_kanji_godan_wa_renyokei = cand.verb_type == grammar::VerbType::GodanWa &&
+                                                utf8::endsWith(surface, "い") &&
+                                                normalize::utf8Length(cand.stem) >= 2 && end_pos < codepoints.size() &&
+                                                normalize::isKanjiCodepoint(codepoints[end_pos]);
+        if (cand.stem == expected_stem &&
+            (cand.confidence > conf_threshold ||
+             (is_multi_kanji_godan_wa_renyokei && cand.confidence >= verb_opts.confidence_ichidan_dict)) &&
             cand.verb_type != grammar::VerbType::IAdjective) {
           // Check whether this candidate's base form exists in the dictionary as a
           // verb. The lookup is by surface, so disambiguation among っ-onbin types
@@ -219,6 +225,28 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
       // but not single-kanji + い patterns (人い → 人 + いる)
       bool proceed_is_i_row_ichidan =
           best.verb_type == grammar::VerbType::Ichidan && vh::isValidIRowIchidanStem(best.stem);
+      // A multi-kanji godan-wa renyokei ending in い can be the first half of
+      // a productive compound predicate (背負い進む). The inflection scorer
+      // conservatively lowers its confidence because the same shape is often
+      // an i-adjective. Admit the candidate at the dictionary threshold when
+      // a kanji continuation follows; connection scoring will retain it only
+      // before a verified verb.
+      bool is_multi_kanji_godan_wa_renyokei = best.verb_type == grammar::VerbType::GodanWa &&
+                                              utf8::endsWith(surface, "い") && normalize::utf8Length(best.stem) >= 2 &&
+                                              end_pos < codepoints.size() &&
+                                              normalize::isKanjiCodepoint(codepoints[end_pos]);
+
+      // A case particle followed by する in its て/た form is a productive
+      // nominal construction. Do not reinterpret a short noun plus that
+      // closed-class sequence as an unregistered GodanSa verb (本+と+し+た,
+      // 紙+に+し+て). Registered lexical verbs remain available.
+      bool is_unregistered_godan_sa =
+          best.verb_type == grammar::VerbType::GodanSa && !vh::isVerbInDictionary(dict_manager, best.base_form);
+      if (is_unregistered_godan_sa && stem_end == kanji_end + 1 && (best.suffix == "して" || best.suffix == "した") &&
+          vh::hasParticleDictionaryEntry(dict_manager, normalize::encodeUtf8(codepoints[stem_end - 1]))) {
+        SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" godan_sa case-particle+する pattern\n");
+        continue;
+      }
 
       // Skip fake ichidan candidates with stem ending in さ (a-row)
       // These are typically suru-verb causative/passive patterns:
@@ -237,10 +265,11 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
       }
       // Dictionary-verified candidates use lower threshold (0.3)
       // This allows hiragana verbs like いわれる (conf=0.33) to be recognized
-      float proceed_threshold = is_dict_verified ? verb_opts.confidence_ichidan_dict
-                                                 : (proceed_is_i_row_ichidan ? verb_opts.confidence_ichidan_dict
-                                                                             : verb_opts.confidence_standard);
-      if (best.confidence > proceed_threshold) {
+      float proceed_threshold = (is_dict_verified || proceed_is_i_row_ichidan || is_multi_kanji_godan_wa_renyokei)
+                                    ? verb_opts.confidence_ichidan_dict
+                                    : verb_opts.confidence_standard;
+      if (best.confidence > proceed_threshold ||
+          (is_multi_kanji_godan_wa_renyokei && best.confidence >= proceed_threshold)) {
         if (surface == "付け" && end_pos < codepoints.size() && codepoints[end_pos] == U'で') {
           continue;  // 付けで is formal noun + particle, not 付ける renyokei.
         }
@@ -337,6 +366,14 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
         if (vh::embedsTeFormAuxiliary(surface)) {
           continue;  // Skip - let the split (verb te-form + subsidiary verb) win
+        }
+
+        // Coordinate particles たり/だり close a past predicate and must not
+        // be absorbed by a fabricated unknown verb (紙だったりする,
+        // 高かったりする). Their preceding predicate is handled by the
+        // dedicated copula/adjective/verb candidate paths.
+        if (utf8::containsAny(surface, {"たり", "だり"})) {
+          continue;
         }
 
         // Skip volitional patterns ending with よう (e.g., 食べよう)
@@ -516,7 +553,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // in any dictionary is likewise noun+verb over-merge or a suru-compound
         // (全部食べちゃった misparsed with 全部食 as a fake verb stem); real 2-kanji
         // verbs are dict entries, so they are unaffected by widening the range.
-        if (kanji_count >= 2 && !in_dict) {
+        if (kanji_count >= 2 && !in_dict && !is_multi_kanji_godan_wa_renyokei) {
           base_cost += bigram_cost::kRare;
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +1.0 (two_kanji_non_dict_penalty)\n");
         }
@@ -645,7 +682,8 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // genuine verb even though its multi-kanji stem is absent from the
         // dictionary; exempt it from the exceeds_dict_length penalty so its
         // renyokei competes with the noun split before the ます auxiliary.
-        bool has_suffix = in_dict || recognized_ichidan || recognized_godan || sokuonbin_stem_verified;
+        bool has_suffix = in_dict || recognized_ichidan || recognized_godan || sokuonbin_stem_verified ||
+                          is_multi_kanji_godan_wa_renyokei;
         // Determine extended_pos based on verb type and surface ending
         // Godan-wa verbs ending in い are renyokei (戦い), not onbinkei
         // Godan-ka/ga verbs ending in い are onbinkei (書い, 泳い)
@@ -774,11 +812,15 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // The lemmatizer will use stem-matching logic to pick the correct base form.
         // Exception: sokuonbin compounds carry the lemma built from the embedded verb
         // base, which the surface-based lemmatizer cannot recover past the onbin.
-        const char* forced_lemma = sokuonbin_stem_verified ? sokuonbin_lemma.c_str() : "";
-        candidates.push_back(makeVerbCandidate(surface, start_pos, end_pos, base_cost, forced_lemma,
-                                               grammar::verbTypeToConjType(best.verb_type), has_suffix,
-                                               CandidateOrigin::VerbKanji, best.confidence,
-                                               grammar::verbTypeToString(best.verb_type).data(), verb_epos));
+        const char* forced_lemma = sokuonbin_stem_verified
+                                       ? sokuonbin_lemma.c_str()
+                                       : (is_multi_kanji_godan_wa_renyokei ? best.base_form.c_str() : "");
+        auto verb_candidate =
+            makeVerbCandidate(surface, start_pos, end_pos, base_cost, forced_lemma,
+                              grammar::verbTypeToConjType(best.verb_type), has_suffix, CandidateOrigin::VerbKanji,
+                              best.confidence, grammar::verbTypeToString(best.verb_type).data(), verb_epos);
+        verb_candidate.lemma_verified = in_dict;
+        candidates.push_back(std::move(verb_candidate));
         // Don't break - try other stem lengths too
       }
     }

@@ -31,6 +31,82 @@ namespace suzume::analysis {
 namespace vh = verb_helpers;
 using namespace hiragana_verb_detail;
 
+namespace {
+
+bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
+                                        const std::vector<normalize::CharType>& char_types,
+                                        const grammar::Inflection& inflection,
+                                        const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || hiragana_end <= start_pos + 1) {
+    return false;
+  }
+  size_t probe_end = hiragana_end;
+  while (probe_end < char_types.size() && probe_end - start_pos < 12 &&
+         char_types[probe_end] == normalize::CharType::Hiragana) {
+    ++probe_end;
+  }
+  constexpr size_t kMaxParticleChars = 4;
+  size_t max_particle_end = std::min(probe_end, start_pos + kMaxParticleChars);
+  for (size_t particle_end = start_pos + 1; particle_end <= max_particle_end; ++particle_end) {
+    std::string particle_surface = extractSubstring(codepoints, start_pos, particle_end);
+    if (dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle) == nullptr) {
+      continue;
+    }
+    SUZUME_DEBUG_LOG_VERBOSE("[VERB_PARTICLE] \"" << particle_surface << "\" at pos=" << start_pos << "\n");
+    size_t verb_start = particle_end;
+    for (size_t verb_end = probe_end; verb_end > verb_start + 1; --verb_end) {
+      std::string verb_surface = extractSubstring(codepoints, verb_start, verb_end);
+      if (dict_manager->lookupExact(verb_surface, core::PartOfSpeech::Auxiliary) != nullptr) {
+        SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << particle_surface << "+" << verb_surface
+                                                  << " particle_then_auxiliary\n");
+        return true;
+      }
+      for (const auto& candidate : inflection.analyze(verb_surface)) {
+        bool is_verified_verb =
+            vh::isVerbInDictionary(dict_manager, candidate.base_form) ||
+            vh::hasDictionaryEntry(dict_manager, candidate.base_form, core::PartOfSpeech::Auxiliary);
+        // A connective て/で unambiguously ends the preceding predicate. When
+        // its remainder inflects to a dictionary verb, do not fabricate a
+        // larger hiragana verb across that boundary (嬉しく|て|なら|ない).
+        // Other particle boundaries retain the confidence gate because their
+        // surface forms can also begin lexical verbs.
+        bool is_connective = particle_surface == "て" || particle_surface == "で";
+        if (is_verified_verb &&
+            (is_connective || candidate.confidence >= candidate::kParticleVerbBoundaryMinConfidence)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0) {
+    return false;
+  }
+  constexpr size_t kParticleLookback = 4;
+  constexpr size_t kParticleProbe = 5;
+  size_t first_start = start_pos > kParticleLookback ? start_pos - kParticleLookback : 0;
+  size_t probe_end = std::min(codepoints.size(), start_pos + kParticleProbe);
+  for (size_t particle_start = first_start; particle_start < start_pos; ++particle_start) {
+    std::string probe = extractSubstring(codepoints, particle_start, probe_end);
+    for (const auto& match : dict_manager->lookup(probe, 0)) {
+      if (match.entry == nullptr || match.entry->pos != core::PartOfSpeech::Particle) {
+        continue;
+      }
+      size_t particle_end = particle_start + normalize::utf8Length(match.entry->surface);
+      if (particle_end > start_pos) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
 std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                              const std::vector<normalize::CharType>& char_types,
                                                              const grammar::Inflection& inflection,
@@ -42,11 +118,27 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     return candidates;
   }
 
+  if (startsInsideDictionaryParticle(codepoints, start_pos, dict_manager)) {
+    SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " inside_dictionary_particle\n");
+    return candidates;
+  }
+
   // Context-gated irregular 来る mizenkei: こ + ない-family negative
+  appendKkoNegativeConjectureCandidates(codepoints, start_pos, candidates);
+  appendSuruInabilityCandidates(codepoints, start_pos, candidates);
+  appendEruObligationCandidates(codepoints, start_pos, candidates);
   appendKuruMizenkeiNaiCandidates(codepoints, start_pos, candidates);
+
+  // Context-gated directional いく inflections after a clear te-form.
+  appendIkuAuxiliaryCandidates(codepoints, start_pos, candidates);
+
+  // Context-gated benefactive やる irrealis before negation.
+  appendYaruBenefactiveCandidates(codepoints, start_pos, candidates);
 
   // Context-gated 試行補助動詞 みる after a clear te-form boundary.
   appendMiruAuxiliaryCandidates(codepoints, start_pos, dict_manager, candidates);
+  appendMiseruAuxiliaryCandidates(codepoints, start_pos, dict_manager, candidates);
+  appendAgeruBenefactiveCandidates(codepoints, start_pos, dict_manager, candidates);
   // Context-gated 準備補助動詞 おく after a clear te-form boundary.
   appendOkuAuxiliaryCandidates(codepoints, start_pos, candidates);
 
@@ -278,6 +370,14 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   if (hiragana_end <= start_pos + 1) {
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " too_short (need >=2 hiragana, got "
                                                 << (hiragana_end - start_pos) << ")\n");
+    return candidates;
+  }
+
+  // A closed-class particle followed by a dictionary-verified verb inflection
+  // is a grammatical boundary, never the stem of an unknown hiragana verb.
+  // This preserves て+さえ+いれ+ば and analogous binding-particle sequences.
+  if (startsWithParticleThenVerifiedVerb(codepoints, start_pos, hiragana_end, char_types, inflection, dict_manager)) {
+    SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " particle_then_verified_verb\n");
     return candidates;
   }
 

@@ -31,6 +31,89 @@ namespace suzume::analysis {
 namespace vh = verb_helpers;
 using namespace kanji_verb_detail;
 
+namespace {
+
+bool hasNiSugiNegativeTail(const std::vector<char32_t>& codepoints, size_t pos) {
+  return pos + 3 < codepoints.size() && codepoints[pos] == U'に' && codepoints[pos + 1] == U'す' &&
+         codepoints[pos + 2] == U'ぎ' && vh::naiNegativeFollowsAt(codepoints, pos + 3);
+}
+
+bool isVerifiedFiniteVerb(const dictionary::DictionaryManager* dict_manager, const grammar::Inflection& inflection,
+                          const grammar::InflectionCandidate& candidate) {
+  if (vh::isVerbInDictionary(dict_manager, candidate.base_form)) {
+    return true;
+  }
+  if (candidate.verb_type == grammar::VerbType::Ichidan) {
+    return vh::isVerifiedVerbBase(dict_manager, inflection, candidate.base_form,
+                                  candidate::verb_cost::kConstructedVerbMinConfidence, false);
+  }
+  return grammar::isGodanVerbType(candidate.verb_type) &&
+         vh::isVerifiedVerbBase(dict_manager, inflection, candidate.base_form,
+                                candidate::verb_cost::kConstructedVerbMinConfidence, true);
+}
+
+void appendNiSugiPredicateCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
+                                     const grammar::Inflection& inflection,
+                                     const dictionary::DictionaryManager* dict_manager,
+                                     std::vector<UnknownCandidate>& candidates) {
+  // The limiting construction V終止形+に+すぎない keeps the finite predicate
+  // intact (見るにすぎない, 遅れるにすぎない). It is distinct from the
+  // excessive construction V連用形+すぎる, so recognize its particle-delimited
+  // tail before the latter's renyokei-specific path is considered.
+  for (size_t tail_pos = start_pos + 1; tail_pos < hiragana_end; ++tail_pos) {
+    if (!hasNiSugiNegativeTail(codepoints, tail_pos)) {
+      continue;
+    }
+    const std::string surface = extractSubstring(codepoints, start_pos, tail_pos);
+    for (const auto& inflected : inflection.analyze(surface)) {
+      if (inflected.base_form != surface || inflected.verb_type == grammar::VerbType::IAdjective ||
+          !isVerifiedFiniteVerb(dict_manager, inflection, inflected)) {
+        continue;
+      }
+      candidates.push_back(makeVerbCandidate(surface, start_pos, tail_pos, candidate::verb_cost::kStrongBonus,
+                                             inflected.base_form, grammar::verbTypeToConjType(inflected.verb_type),
+                                             true, CandidateOrigin::VerbKanji, inflected.confidence, "finite_ni_sugi",
+                                             core::ExtendedPOS::VerbShuushikei));
+      return;
+    }
+  }
+}
+
+void appendNiLimitedIchidanCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
+                                      const grammar::Inflection& inflection,
+                                      std::vector<UnknownCandidate>& candidates) {
+  // In the limiting predicate Nに+V連用形+ない, a dictionary-verified
+  // Ichidan renyokei must remain available over a homographic Godan reading
+  // (本に過ぎない). The preceding case particle and following negative make
+  // this a grammatical construction rather than a surface-specific exception.
+  if (start_pos == 0 || codepoints[start_pos - 1] != U'に') {
+    return;
+  }
+  for (size_t end_pos = start_pos + 1; end_pos < hiragana_end; ++end_pos) {
+    if (!vh::naiNegativeFollowsAt(codepoints, end_pos)) {
+      continue;
+    }
+    const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+    // The bare renyokei can be ambiguous (過ぎ → 過ぐ), while its negative
+    // continuation supplies the reliable Ichidan evidence (過ぎない → 過ぎる).
+    // Analyze that full inflected form, then emit only its stem as the token.
+    const std::string negative_surface = extractSubstring(codepoints, start_pos, hiragana_end);
+    for (const auto& inflected : inflection.analyze(negative_surface)) {
+      if (inflected.stem != surface || inflected.verb_type != grammar::VerbType::Ichidan ||
+          inflected.confidence < candidate::verb_cost::kConstructedVerbMinConfidence) {
+        continue;
+      }
+      candidates.push_back(makeVerbCandidate(surface, start_pos, end_pos, candidate::verb_cost::kStrongBonus,
+                                             inflected.base_form, dictionary::ConjugationType::Ichidan, true,
+                                             CandidateOrigin::VerbKanji, inflected.confidence, "ni_limited_ichidan",
+                                             core::ExtendedPOS::VerbRenyokei));
+      return;
+    }
+  }
+}
+
+}  // namespace
+
 std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                      const std::vector<normalize::CharType>& char_types,
                                                      const grammar::Inflection& inflection,
@@ -190,10 +273,13 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   // C++17 compatible: check if hiragana contains "すぎ" (6 bytes)
   bool is_sugi_pattern = (hira_part.find("すぎ") != std::string::npos);
 
+  appendNiSugiPredicateCandidates(codepoints, start_pos, hiragana_end, inflection, dict_manager, candidates);
+  appendNiLimitedIchidanCandidates(codepoints, start_pos, hiragana_end, inflection, candidates);
+
   // Generate verb renyokei candidates when followed by すぎ
   // E.g., 書きすぎた → 書き (renyokei of 書く) + すぎ + た (Godan)
   //       食べすぎた → 食べ (renyokei of 食べる) + すぎ + た (Ichidan)
-  if (is_sugi_pattern && kanji_end < hiragana_end) {
+  if (is_sugi_pattern && candidates.empty() && kanji_end < hiragana_end) {
     char32_t first_hira = codepoints[kanji_end];
 
     // Pattern 1: Godan verb renyokei (kanji + I-row hiragana + すぎ)
@@ -303,9 +389,6 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   appendIchidanKateikeiVolitionalCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager,
                                             candidates);
 
-  // Try Causative verb renyokei pattern: kanji + ら + せ
-  appendCausativeRenyokeiCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, verb_opts, candidates);
-
   // Try Godan passive renyokei pattern: kanji + a-row + れ
   appendGodanPassiveRenyokeiCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager,
                                        verb_opts, candidates);
@@ -321,12 +404,13 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   appendIchidanStemRareCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager, candidates);
 
   // Generate single-kanji Ichidan verb candidates for auxiliary patterns
-  appendSingleKanjiIchidanCandidates(codepoints, start_pos, kanji_end, hiragana_end, candidates);
+  appendSingleKanjiIchidanCandidates(codepoints, start_pos, kanji_end, hiragana_end, dict_manager, candidates);
 
   appendKanjiMizenkeiStemCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager,
                                     candidates);
   appendKanjiOnbinCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager,
                              sokuonbin_stem_verified, sokuonbin_lemma, sokuonbin_verb_type, candidates);
+  appendVerifiedTailGodanTaCompoundCandidates(codepoints, start_pos, kanji_end, dict_manager, candidates);
 
   // Add emphatic variants (来た → 来たっ, etc.)
   vh::addEmphaticVariants(candidates, codepoints);

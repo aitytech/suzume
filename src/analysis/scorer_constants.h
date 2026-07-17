@@ -89,6 +89,12 @@ constexpr float kBonusShortHiraganaVerb = -0.3F;
 // E.g., 学生み (学生みる doesn't exist) - false positive
 constexpr float kPenaltySpuriousVerbRenyokei = scale::kStrong;
 
+// A kanji-containing 音便 candidate without a dictionary-verified lemma is
+// especially prone to absorbing a preceding noun (本あっ from 本+あっ). Unlike
+// ordinary kanji stems, an 音便 surface leaves too little evidence to license
+// this fallback without lexical support.
+constexpr float kPenaltySpuriousKanjiOnbin = scale::kSevere;
+
 // Penalty for short/long pure-hiragana hatsuonbin verb forms
 constexpr float kPenaltyHatsuonbinShort = scale::kRare;   // 2-4 chars
 constexpr float kPenaltyHatsuonbinLong = scale::kSevere;  // 5+ chars

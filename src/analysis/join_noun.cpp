@@ -58,6 +58,19 @@ constexpr size_t kNumPrefixes = sizeof(kProductivePrefixes) / sizeof(kProductive
 // Maximum noun length for prefix joining
 constexpr size_t kMaxNounLenForPrefix = 6;
 
+// A productive prefix compound is a na-adjective when its base is an
+// adjective, or when the following copula/appearance form supplies that
+// predicate evidence. Keep the noun candidate as well for nominal uses.
+bool hasNaAdjectiveContinuation(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos >= codepoints.size()) {
+    return false;
+  }
+  if (codepoints[pos] == U'だ' || codepoints[pos] == U'で' || codepoints[pos] == U'な') {
+    return true;
+  }
+  return pos + 1 < codepoints.size() && codepoints[pos] == U'そ' && codepoints[pos + 1] == U'う';
+}
+
 // Cost bonus imported from candidate_constants.h:
 // candidate::kVerifiedNounBonus
 
@@ -115,10 +128,22 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   size_t noun_start_byte = byteOffsetAt(byte_offsets, noun_start);
   auto noun_results = dict_manager.lookup(text, noun_start_byte);
   bool noun_in_dict = false;
+  bool adjective_in_dict = false;
   size_t dict_noun_end = noun_end;
 
   for (const auto& result : noun_results) {
-    if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun) {
+    if (result.entry == nullptr) {
+      continue;
+    }
+    if (result.entry->extended_pos == core::ExtendedPOS::AdjNaAdj) {
+      if (result.length >= noun_end - noun_start) {
+        adjective_in_dict = true;
+      }
+      if (result.length > dict_noun_end - noun_start) {
+        dict_noun_end = noun_start + result.length;
+      }
+    }
+    if (result.entry->pos == core::PartOfSpeech::Noun) {
       if (result.length > dict_noun_end - noun_start) {
         dict_noun_end = noun_start + result.length;
         noun_in_dict = true;
@@ -133,7 +158,7 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   } else {
     // Skip single-kanji noun when followed by hiragana (likely verb pattern)
     if (noun_end - noun_start == 1 && noun_end < codepoints.size()) {
-      if (char_types[noun_end] == CharType::Hiragana) {
+      if (char_types[noun_end] == CharType::Hiragana && !hasNaAdjectiveContinuation(codepoints, noun_end)) {
         return;
       }
     }
@@ -181,13 +206,48 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
 
   lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(noun_end), core::PartOfSpeech::Noun,
                   final_cost, flags, "");
+
+  if (adjective_in_dict || hasNaAdjectiveContinuation(codepoints, noun_end)) {
+    float adjective_cost = scorer.posPrior(core::PartOfSpeech::Adjective) + matched_prefix->bonus;
+    lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(noun_end),
+                    core::PartOfSpeech::Adjective, adjective_cost, flags, surface, dictionary::ConjugationType::None,
+                    core::CandidateOrigin::PrefixCompound, candidate::kNoOriginConfidence, "prefix_na_adjective",
+                    core::ExtendedPOS::AdjNaAdj);
+  }
+}
+
+void addPronounPluralJoinCandidates(core::Lattice& lattice, std::string_view text,
+                                    const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                    size_t start_pos, const dictionary::DictionaryManager& dict_manager,
+                                    const Scorer& scorer) {
+  if (start_pos >= codepoints.size()) {
+    return;
+  }
+
+  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  for (const auto& result : dict_manager.lookup(text, start_byte)) {
+    if (result.entry == nullptr || result.entry->pos != core::PartOfSpeech::Pronoun) {
+      continue;
+    }
+    const size_t suffix_pos = start_pos + result.length;
+    if (suffix_pos >= codepoints.size() || codepoints[suffix_pos] != U'ら') {
+      continue;
+    }
+
+    const size_t end_pos = suffix_pos + 1;
+    const size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
+    std::string surface(text.substr(start_byte, end_byte - start_byte));
+    const float cost = scorer.posPrior(core::PartOfSpeech::Pronoun) + candidate::kVerifiedNounBonus;
+    lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
+                    core::PartOfSpeech::Pronoun, cost, core::LatticeEdge::kFromDictionary, surface);
+  }
 }
 
 void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
                                      const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                      size_t start_pos, const std::vector<normalize::CharType>& char_types,
                                      [[maybe_unused]] const dictionary::DictionaryManager& dict_manager,
-                                     const Scorer& scorer) {
+                                     const Scorer& scorer, [[maybe_unused]] const grammar::Inflection& inflection) {
   if (start_pos >= codepoints.size()) {
     return;
   }
@@ -307,7 +367,7 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     }
   }
 
-  // Check for suffix kanji: 物, 方, 所
+  // Check for suffix kanji: 物, 方, 所, 手, 場
   if (hiragana_end >= codepoints.size()) {
     return;
   }
@@ -317,8 +377,10 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
   bool is_kata_suffix = (suffix_char == U'方');
   bool is_tokoro_suffix = (suffix_char == U'所');
   bool is_me_suffix = (suffix_char == U'目');  // 割れ目, 切れ目, 裂け目
+  bool is_te_suffix = (suffix_char == U'手');  // 読み手, 書き手, 受け手
+  bool is_ba_suffix = (suffix_char == U'場');  // 売り場, 買い場
 
-  if (!is_mono_suffix && !is_kata_suffix && !is_tokoro_suffix && !is_me_suffix) {
+  if (!is_mono_suffix && !is_kata_suffix && !is_tokoro_suffix && !is_me_suffix && !is_te_suffix && !is_ba_suffix) {
     return;
   }
 
@@ -326,6 +388,37 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
   // Exception: single kanji + suffix is allowed for some patterns
   if (hiragana_end == kanji_end && kanji_end - start_pos < 2) {
     return;  // Too short without hiragana
+  }
+
+  // 手 and 場 form productive deverbal nouns only after a dictionary-backed
+  // continuative verb form. Verify the reconstructed terminal form before
+  // adding the joined search unit, so a coincidental kanji+hira sequence (for
+  // example an adjective stem) cannot be absorbed merely because it is
+  // followed by either suffix.
+  if (is_te_suffix || is_ba_suffix) {
+    if (hiragana_end == kanji_end) {
+      return;
+    }
+    const std::string renyokei = extractSubstring(codepoints, start_pos, hiragana_end);
+    const char32_t final_kana = codepoints[hiragana_end - 1];
+    const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(final_kana);
+    if (!godan_ending.empty()) {
+      const std::string base_form =
+          renyokei.substr(0, renyokei.size() - core::kJapaneseCharBytes) + std::string(godan_ending);
+      if (dict_manager.lookupExact(base_form, core::PartOfSpeech::Verb) == nullptr) {
+        return;
+      }
+    } else {
+      // A kanji+e-row surface can be either an Ichidan continuative form
+      // (受け→受ける) or an i-adjective conditional fragment (高け→高い).
+      // The latter cannot form a deverbal 手/場 compound, so reject it when
+      // the reconstructed i-adjective is attested; otherwise retain the
+      // productive Ichidan reading.
+      const std::string adjective_base = renyokei.substr(0, renyokei.size() - core::kJapaneseCharBytes) + "い";
+      if (verb_helpers::isAdjectiveInDictionary(&dict_manager, adjective_base)) {
+        return;
+      }
+    }
   }
 
   // Build the compound noun surface

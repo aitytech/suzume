@@ -191,8 +191,13 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
     // Fix ichidan renyokei misread as a godan base using next morpheme context
     // 連用形+て/た: 借り+て → lemma 借りる (not godan-ra 借る), 過ぎ+て → 過ぎる (not godan-ga 過ぐ)
     if (morpheme.pos == core::PartOfSpeech::Verb && morpheme.extended_pos == core::ExtendedPOS::VerbRenyokei) {
-      if (std::string ichidan = fixIchidanRenyokeiBeforeTe(morpheme.surface, morpheme.lemma, next_surface);
-          !ichidan.empty()) {
+      if (std::string godan =
+              fixGodanRenyokeiBeforeLiteraryTe(morpheme.surface, morpheme.lemma, next_surface, dict_manager_);
+          !godan.empty()) {
+        morpheme.lemma = godan;
+      } else if (std::string ichidan =
+                     fixIchidanRenyokeiBeforeTe(morpheme.surface, morpheme.lemma, next_surface, dict_manager_);
+                 !ichidan.empty()) {
         morpheme.lemma = ichidan;
       }
     }

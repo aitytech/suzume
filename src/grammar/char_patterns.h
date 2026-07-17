@@ -202,6 +202,11 @@ bool endsWithARow(std::string_view stem);
 bool endsWithORow(std::string_view stem);
 
 /**
+ * @brief Check whether text is exactly one specified hiragana codepoint
+ */
+bool isSingleHiragana(std::string_view text, char32_t codepoint);
+
+/**
  * @brief Get the vowel row character for any hiragana character
  * @param ch Unicode codepoint to check
  * @return The vowel (あ/い/う/え/お) for the character's row, or ch if not hiragana
