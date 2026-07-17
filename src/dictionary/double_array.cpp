@@ -1,7 +1,6 @@
 #include "dictionary/double_array.h"
 
 #include <algorithm>
-#include <limits>
 #include <stdexcept>
 
 namespace suzume::dictionary {
@@ -19,14 +18,8 @@ inline uint8_t toByte(char chr) {
 
 // BuildState implementation
 void DoubleArray::BuildState::resize(size_t new_size) {
-  size_t old_size = units.size();
   units.resize(new_size);
   used.resize(new_size, false);
-
-  for (size_t idx = old_size; idx < new_size; ++idx) {
-    units[idx].base_or_value = 0;
-    units[idx].check = 0;
-  }
 }
 
 size_t DoubleArray::BuildState::findBase(const std::vector<uint8_t>& children) {
@@ -65,7 +58,7 @@ bool DoubleArray::build(const std::vector<std::string>& keys, const std::vector<
   }
 
   for (int32_t value : values) {
-    if (value < 0) {
+    if (value < 0 || static_cast<uint32_t>(value) > Unit::kPayloadMask) {
       return false;
     }
   }
@@ -73,7 +66,7 @@ bool DoubleArray::build(const std::vector<std::string>& keys, const std::vector<
 }
 
 bool DoubleArray::build(const std::vector<std::string>& keys) {
-  if (keys.size() > static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
+  if (keys.size() > static_cast<size_t>(Unit::kPayloadMask) + 1U) {
     return false;
   }
   return buildInternal(keys, nullptr);
@@ -85,47 +78,48 @@ bool DoubleArray::buildInternal(const std::vector<std::string>& keys, const std:
     return true;
   }
 
-  // Verify keys are sorted and unique
-  for (size_t idx = 1; idx < keys.size(); ++idx) {
-    if (keys[idx] <= keys[idx - 1]) {
+  // Empty keys and embedded NUL bytes conflict with the terminal label.
+  for (size_t idx = 0; idx < keys.size(); ++idx) {
+    if (keys[idx].empty() || keys[idx].find('\0') != std::string::npos || (idx > 0 && keys[idx] <= keys[idx - 1])) {
       return false;
     }
   }
-  // Initialize build state
-  BuildState state;
-  state.resize(kInitialSize);
-  state.used[0] = true;
 
-  // Build recursively starting from root
   try {
+    BuildState state;
+    state.resize(kInitialSize);
+    state.used[0] = true;
+
+    // Build recursively starting from root.
     buildRecursive(state, keys, values, 0, keys.size(), 0, 0);
-  } catch (const std::exception&) {
-    clear();
-    return false;
-  }
 
-  // Transfer result
-  units_ = std::move(state.units);
-
-  // Shrink to fit
-  size_t last_used = 0;
-  for (size_t idx = units_.size(); idx > 0; --idx) {
-    if (units_[idx - 1].check != 0 || units_[idx - 1].base_or_value != 0) {
-      last_used = idx;
-      break;
+    size_t last_used = 0;
+    for (size_t idx = state.units.size(); idx > 0; --idx) {
+      if (state.units[idx - 1].data != 0) {
+        last_used = idx;
+        break;
+      }
     }
-  }
-  if (last_used > 0) {
-    units_.resize(last_used);
+
+    // Construct an exact-size result before replacing the current trie. This
+    // keeps build transactional and does not depend on shrink_to_fit's
+    // non-binding capacity reduction.
+    std::vector<Unit> compact(state.units.begin(), state.units.begin() + last_used);
+    units_.swap(compact);
+  } catch (const std::exception&) {
+    return false;
   }
 
   return true;
 }
 
 bool DoubleArray::build(const std::vector<std::string>& keys, const std::vector<uint32_t>& values) {
+  if (keys.size() != values.size()) {
+    return false;
+  }
   std::vector<int32_t> signed_values(values.size());
   for (size_t idx = 0; idx < values.size(); ++idx) {
-    if (values[idx] > static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) {
+    if (values[idx] > Unit::kPayloadMask) {
       return false;
     }
     signed_values[idx] = static_cast<int32_t>(values[idx]);
@@ -174,6 +168,13 @@ void DoubleArray::buildRecursive(BuildState& state, const std::vector<std::strin
   // Find base value for all children
   size_t base_val = state.findBase(children);
 
+  // Labels replace the old parent/check word, so each parent must have a
+  // globally unique base. Reserve this base before descending into children.
+  if (base_val > Unit::kPayloadMask) {
+    throw std::length_error("Double-array base exceeds packed unit capacity");
+  }
+  state.next_check_pos = base_val + 1;
+
   // Ensure array is large enough
   size_t max_pos = base_val;
   for (uint8_t child : children) {
@@ -192,11 +193,7 @@ void DoubleArray::buildRecursive(BuildState& state, const std::vector<std::strin
     if (child_pos >= state.units.size()) {
       state.resize(child_pos + kBlockSize);
     }
-    // Store parent_pos + 1 so that an unused cell (check == 0) is never mistaken
-    // for a child of the root (parent_pos == 0). Lookups compare against
-    // node_pos + 1 to match. Reserving 0 as the "no parent" sentinel is the only
-    // way to disambiguate empty cells from root children in this XOR layout.
-    state.units[child_pos].check = static_cast<uint32_t>(parent_pos + 1);
+    state.units[child_pos].setLabel(chr);
     state.used[child_pos] = true;
   }
 
@@ -207,7 +204,8 @@ void DoubleArray::buildRecursive(BuildState& state, const std::vector<std::strin
   if (leaf_end > leaf_begin) {
     size_t leaf_pos = base_val ^ 0;  // XOR with null
     const int32_t value = values == nullptr ? static_cast<int32_t>(leaf_begin) : (*values)[leaf_begin];
-    state.units[leaf_pos].setLeaf(value);
+    state.units[parent_pos].setHasLeaf();
+    state.units[leaf_pos].setValue(value);
     ++child_idx;
   }
 
@@ -228,26 +226,16 @@ void DoubleArray::buildRecursive(BuildState& state, const std::vector<std::strin
 
     range_begin = range_end;
   }
-
-  // Update next_check_pos for efficiency
-  if (base_val >= state.next_check_pos) {
-    state.next_check_pos = base_val + 1;
-  }
 }
 
 bool DoubleArray::tryLeaf(size_t node_pos, int32_t& out_value) const {
+  if (!units_[node_pos].hasLeaf()) {
+    return false;
+  }
   size_t base_val = units_[node_pos].base();
   size_t leaf_pos = base_val ^ 0;  // XOR with null terminator
 
   if (leaf_pos >= units_.size()) {
-    return false;
-  }
-
-  if (units_[leaf_pos].check != node_pos + 1) {  // +1: 0 is the "no parent" sentinel
-    return false;
-  }
-
-  if (!units_[leaf_pos].hasLeaf()) {
     return false;
   }
 
@@ -256,6 +244,9 @@ bool DoubleArray::tryLeaf(size_t node_pos, int32_t& out_value) const {
 }
 
 bool DoubleArray::transition(size_t node_pos, uint8_t chr, size_t& next_pos) const {
+  if (chr == 0) {
+    return false;
+  }
   size_t base_val = units_[node_pos].base();
   size_t child_pos = base_val ^ chr;
 
@@ -263,7 +254,7 @@ bool DoubleArray::transition(size_t node_pos, uint8_t chr, size_t& next_pos) con
     return false;
   }
 
-  if (units_[child_pos].check != node_pos + 1) {  // +1: 0 is the "no parent" sentinel
+  if (units_[child_pos].label() != chr) {
     return false;
   }
 
@@ -337,11 +328,11 @@ std::vector<DoubleArray::Result> DoubleArray::commonPrefixSearch(std::string_vie
 }
 
 void DoubleArray::clear() {
-  units_.clear();
+  std::vector<Unit>().swap(units_);
 }
 
 size_t DoubleArray::memoryUsage() const {
-  return units_.size() * sizeof(Unit);
+  return units_.capacity() * sizeof(Unit);
 }
 
 }  // namespace suzume::dictionary

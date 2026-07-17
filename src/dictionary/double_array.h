@@ -98,23 +98,24 @@ class DoubleArray {
   /**
    * @brief Double-array unit (packed 32-bit)
    *
-   * For internal nodes:
-   *   - Bits 0-30: base (offset to children)
-   *   - Bit 31: 0 (not a leaf)
-   *
-   * For leaf nodes:
-   *   - Bits 0-30: value
-   *   - Bit 31: 1 (leaf)
+   * Bits 0-7 store the incoming byte label and bits 8-30 store the absolute
+   * child base. Bit 31 records whether an internal node has a terminal child. The
+   * terminal cell stores value+1 in bits 8-31. In the XOR layout, validating a
+   * transition's label replaces a separate 32-bit parent/check field.
    */
   struct Unit {
-    uint32_t base_or_value;  // base for internal, value for leaf
-    uint32_t check;          // parent position ^ label
+    static constexpr uint32_t kPayloadMask = 0x007FFFFF;
 
-    bool hasLeaf() const { return (base_or_value >> 31) != 0; }
-    uint32_t base() const { return base_or_value & 0x7FFFFFFF; }
-    int32_t value() const { return static_cast<int32_t>(base_or_value & 0x7FFFFFFF); }
-    void setBase(uint32_t base_val) { base_or_value = base_val & 0x7FFFFFFF; }
-    void setLeaf(int32_t val) { base_or_value = (static_cast<uint32_t>(val) & 0x7FFFFFFF) | 0x80000000; }
+    uint32_t data = 0;
+
+    bool hasLeaf() const { return (data >> 31U) != 0; }
+    uint8_t label() const { return static_cast<uint8_t>(data); }
+    uint32_t base() const { return (data >> 8U) & kPayloadMask; }
+    int32_t value() const { return static_cast<int32_t>((data >> 8U) - 1U); }
+    void setLabel(uint8_t label_val) { data = (data & 0xFFFFFF00U) | label_val; }
+    void setBase(uint32_t base_val) { data = (data & 0x800000FFU) | (base_val << 8U); }
+    void setHasLeaf() { data |= 0x80000000U; }
+    void setValue(int32_t val) { data = (static_cast<uint32_t>(val) + 1U) << 8U; }
   };
 
   std::vector<Unit> units_;
@@ -125,7 +126,7 @@ class DoubleArray {
    * @param out_value Set to the leaf value when a leaf is present
    * @return true if the node has a leaf child, false otherwise
    *
-   * @note `check == node_pos + 1`; zero is reserved for an empty unit.
+   * @note A null-label child is always a leaf in the serialized trie.
    */
   bool tryLeaf(size_t node_pos, int32_t& out_value) const;
 
@@ -136,7 +137,7 @@ class DoubleArray {
    * @param next_pos Set to the child position when the transition exists
    * @return true if a valid child exists, false otherwise
    *
-   * @note `check == node_pos + 1`; zero is reserved for an empty unit.
+   * @note The XOR child position is validated by its stored byte label.
    */
   bool transition(size_t node_pos, uint8_t chr, size_t& next_pos) const;
 

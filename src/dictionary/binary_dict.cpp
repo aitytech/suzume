@@ -15,6 +15,9 @@ namespace {
 
 constexpr size_t kInlineFrontLength = 15;
 constexpr size_t kMaxSerializedSurfaceLength = std::numeric_limits<uint8_t>::max();
+constexpr uint16_t kPackedLemmaMask = 0x07FFU;
+constexpr int64_t kMinPackedLemmaDelta = -1024;
+constexpr int64_t kMaxPackedLemmaDelta = 1023;
 
 uint8_t posToUint8(core::PartOfSpeech pos) {
   return static_cast<uint8_t>(pos);
@@ -43,13 +46,26 @@ bool isValidExtendedPos(uint8_t val) {
   return core::isValidExtendedPos(static_cast<core::ExtendedPOS>(val));
 }
 
+bool encodeRelativeLemmaReference(size_t entry_index, size_t lemma_index, uint16_t& reference) {
+  const int64_t delta = static_cast<int64_t>(lemma_index) - static_cast<int64_t>(entry_index);
+  if (delta < kMinPackedLemmaDelta || delta > kMaxPackedLemmaDelta) {
+    return false;
+  }
+  reference = delta < 0 ? static_cast<uint16_t>((-delta * 2) - 1) : static_cast<uint16_t>(delta * 2);
+  return true;
+}
+
+int32_t decodeRelativeLemmaReference(uint16_t reference) {
+  return static_cast<int32_t>(reference >> 1U) ^ -static_cast<int32_t>(reference & 1U);
+}
+
 struct GrammarPair {
   uint8_t pos;
   uint8_t extended_pos;
 };
 
 struct CompactEntry {
-  uint16_t lemma_index;
+  uint16_t lemma_reference;
   uint8_t grammar_index;
 };
 
@@ -242,8 +258,11 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
   }
   const size_t surface_offset = sizeof(BinaryDictHeader);
   const size_t surface_size = header.surface_size;
+  const uint8_t entry_encoding = header.flags & BinaryDictHeader::kEntryEncodingMask;
+  const bool uses_relative_lemmas = (header.flags & BinaryDictHeader::kRelativeLemmaRefs) != 0;
   if (entry_count == 0 || surface_size == 0 || surface_size > size - surface_offset ||
-      (header.flags & ~BinaryDictHeader::kEntryEncodingMask) != 0 || header.reserved != 0) {
+      (header.flags & ~BinaryDictHeader::kKnownFlags) != 0 ||
+      (uses_relative_lemmas && entry_encoding != BinaryDictHeader::kPackedEntries) || header.reserved != 0) {
     return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid dictionary header"));
   }
   size_t entry_table_offset = surface_offset + surface_size;
@@ -268,7 +287,7 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
     grammar_palette.push_back(pair);
   }
   entry_table_offset += palette_bytes;
-  switch (header.flags & BinaryDictHeader::kEntryEncodingMask) {
+  switch (entry_encoding) {
     case BinaryDictHeader::kGrammarOnlyEntries:
       entry_record_size = 1;
       break;
@@ -300,18 +319,26 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
     return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Failed to build dictionary trie"));
   }
 
-  // Load entries
+  // Relative references consume the entire tail; other encodings use it as a
+  // length-prefixed lemma pool.
   std::vector<std::string_view> compact_lemmas;
-  size_t lemma_offset = string_offset;
-  while (lemma_offset < size) {
-    const size_t lemma_length = data[lemma_offset++];
-    if (lemma_length == 0 || lemma_length > size - lemma_offset) {
-      return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid compact lemma table"));
+  if (uses_relative_lemmas) {
+    if (string_offset != size) {
+      return core::makeUnexpected(
+          core::Error(core::ErrorCode::InvalidInput, "Relative lemma dictionary has trailing data"));
     }
-    compact_lemmas.emplace_back(reinterpret_cast<const char*>(data + lemma_offset), lemma_length);
-    lemma_offset += lemma_length;
-    if (compact_lemmas.size() > std::numeric_limits<uint16_t>::max()) {
-      return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Compact lemma table is too large"));
+  } else {
+    size_t lemma_offset = string_offset;
+    while (lemma_offset < size) {
+      const size_t lemma_length = data[lemma_offset++];
+      if (lemma_length == 0 || lemma_length > size - lemma_offset) {
+        return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid compact lemma table"));
+      }
+      compact_lemmas.emplace_back(reinterpret_cast<const char*>(data + lemma_offset), lemma_length);
+      lemma_offset += lemma_length;
+      if (compact_lemmas.size() > std::numeric_limits<uint16_t>::max()) {
+        return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Compact lemma table is too large"));
+      }
     }
   }
 
@@ -320,22 +347,22 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
 
   for (uint32_t idx = 0; idx < header.entry_count; ++idx) {
     const size_t entry_pos = entry_table_offset + idx * entry_record_size;
-    uint16_t lemma_index = 0;
+    uint16_t lemma_reference = 0;
     uint8_t grammar_idx = 0;
-    switch (header.flags & BinaryDictHeader::kEntryEncodingMask) {
+    switch (entry_encoding) {
       case BinaryDictHeader::kGrammarOnlyEntries:
         grammar_idx = data[entry_pos];
         break;
       case BinaryDictHeader::kPackedEntries: {
         const uint16_t packed = static_cast<uint16_t>(data[entry_pos]) |
                                 static_cast<uint16_t>(static_cast<uint16_t>(data[entry_pos + 1]) << 8U);
-        lemma_index = packed & 0x07FFU;
+        lemma_reference = packed & kPackedLemmaMask;
         grammar_idx = static_cast<uint8_t>(packed >> 11U);
         break;
       }
       case BinaryDictHeader::kWideEntries:
-        lemma_index = static_cast<uint16_t>(data[entry_pos]) |
-                      static_cast<uint16_t>(static_cast<uint16_t>(data[entry_pos + 1]) << 8U);
+        lemma_reference = static_cast<uint16_t>(data[entry_pos]) |
+                          static_cast<uint16_t>(static_cast<uint16_t>(data[entry_pos + 1]) << 8U);
         grammar_idx = data[entry_pos + 2];
         break;
       default:
@@ -349,29 +376,37 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
     const uint8_t extended_pos = grammar_palette[grammar_idx].extended_pos;
 
     DictionaryEntry entry;
-    entry.surface = std::move(trie_surfaces[idx]);
     entry.pos = uint8ToPos(pos);
 
-    if (lemma_index > 0) {
-      if (lemma_index > compact_lemmas.size()) {
+    if (uses_relative_lemmas) {
+      const int64_t lemma_target = static_cast<int64_t>(idx) + decodeRelativeLemmaReference(lemma_reference);
+      if (lemma_target < 0 || lemma_target >= static_cast<int64_t>(entry_count)) {
+        return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid relative lemma reference"));
+      }
+      entry.lemma = trie_surfaces[static_cast<size_t>(lemma_target)];
+    } else if (lemma_reference > 0) {
+      if (lemma_reference > compact_lemmas.size()) {
         return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid compact lemma index"));
       }
-      entry.lemma = compact_lemmas[lemma_index - 1];
+      entry.lemma = compact_lemmas[lemma_reference - 1];
     } else {
-      entry.lemma = entry.surface;
+      entry.lemma = trie_surfaces[idx];
     }
 
     entry.extended_pos = uint8ToExtendedPos(extended_pos);
 
+    entries.push_back(std::move(entry));
+  }
+
+  for (size_t idx = 0; idx < entry_count; ++idx) {
+    entries[idx].surface = std::move(trie_surfaces[idx]);
     // Debug: log entries with Unknown extended_pos (indicates missing category mapping)
-    // These entries get high cost (2.0) which may cause unexpected tokenization
-    // At trace level (SUZUME_DEBUG=3) to avoid flooding output at lower levels
-    if (entry.extended_pos == core::ExtendedPOS::Unknown) {
-      SUZUME_DEBUG_LOG_TRACE("[DICT_LOAD] WARNING: \"" << entry.surface << "\" pos=" << core::posToString(entry.pos)
+    // These entries get high cost (2.0) which may cause unexpected tokenization.
+    if (entries[idx].extended_pos == core::ExtendedPOS::Unknown) {
+      SUZUME_DEBUG_LOG_TRACE("[DICT_LOAD] WARNING: \"" << entries[idx].surface
+                                                       << "\" pos=" << core::posToString(entries[idx].pos)
                                                        << " has epos=UNKNOWN (cost=2.0)\n");
     }
-
-    entries.push_back(std::move(entry));
   }
 
   return entries.size();
@@ -445,8 +480,8 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
   std::sort(entries_.begin(), entries_.end(),
             [](const DictionaryEntry& lhs, const DictionaryEntry& rhs) { return lhs.surface < rhs.surface; });
 
-  // Entries use a 16-bit deduplicated lemma index and an 8-bit index into a
-  // per-file POS/ExtendedPOS palette. The final record width is selected after
+  // Entries use a lemma reference and an index into a per-file
+  // POS/ExtendedPOS palette. The final representation is selected after
   // collecting both palettes.
   std::vector<char> compact_lemma_table;
   std::unordered_map<std::string, uint16_t> lemma_indices;
@@ -486,17 +521,17 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
           core::Error(core::ErrorCode::InvalidInput, "Dictionary entry has invalid extended POS"));
     }
 
-    uint16_t lemma_index = 0;
+    uint16_t lemma_reference = 0;
     if (!ent.lemma.empty() && ent.lemma != ent.surface) {
       auto lemma_iter = lemma_indices.find(ent.lemma);
       if (lemma_iter != lemma_indices.end()) {
-        lemma_index = lemma_iter->second;
+        lemma_reference = lemma_iter->second;
       } else if (lemma_indices.size() >= std::numeric_limits<uint16_t>::max()) {
         return core::makeUnexpected(
             core::Error(core::ErrorCode::InvalidInput, "Dictionary has too many distinct lemma strings"));
       } else {
-        lemma_index = static_cast<uint16_t>(lemma_indices.size() + 1);
-        lemma_indices.emplace(ent.lemma, lemma_index);
+        lemma_reference = static_cast<uint16_t>(lemma_indices.size() + 1);
+        lemma_indices.emplace(ent.lemma, lemma_reference);
         compact_lemma_table.push_back(static_cast<char>(ent.lemma.size()));
         compact_lemma_table.insert(compact_lemma_table.end(), ent.lemma.begin(), ent.lemma.end());
       }
@@ -518,7 +553,40 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
       grammar_palette.push_back({pos, extended_pos});
     }
 
-    compact_entries.push_back({lemma_index, grammar_index});
+    compact_entries.push_back({lemma_reference, grammar_index});
+  }
+
+  // If every differing lemma is also a nearby surface, encode its signed
+  // surface-index delta directly in the packed entry. This removes the lemma
+  // string pool and makes the small deltas substantially more compressible.
+  bool uses_relative_lemmas = !lemma_indices.empty() && grammar_palette.size() <= 32;
+  std::vector<uint16_t> relative_lemma_references;
+  if (uses_relative_lemmas) {
+    relative_lemma_references.resize(entries_.size());
+    for (size_t idx = 0; idx < entries_.size(); ++idx) {
+      const auto& entry = entries_[idx];
+      if (entry.lemma.empty() || entry.lemma == entry.surface) {
+        continue;
+      }
+      const std::string_view lemma = entry.lemma;
+      const auto lemma_iter = std::lower_bound(entries_.begin(), entries_.end(), lemma,
+                                               [](const DictionaryEntry& candidate, std::string_view value) {
+                                                 return std::string_view(candidate.surface) < value;
+                                               });
+      uint16_t reference = 0;
+      if (lemma_iter == entries_.end() || lemma_iter->surface != lemma ||
+          !encodeRelativeLemmaReference(idx, static_cast<size_t>(lemma_iter - entries_.begin()), reference)) {
+        uses_relative_lemmas = false;
+        break;
+      }
+      relative_lemma_references[idx] = reference;
+    }
+  }
+  if (uses_relative_lemmas) {
+    for (size_t idx = 0; idx < compact_entries.size(); ++idx) {
+      compact_entries[idx].lemma_reference = relative_lemma_references[idx];
+    }
+    compact_lemma_table.clear();
   }
 
   std::vector<uint8_t> entry_data;
@@ -527,6 +595,9 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
   if (lemma_indices.empty()) {
     output_flags = BinaryDictHeader::kGrammarOnlyEntries;
     compact_entry_size = 1;
+  } else if (uses_relative_lemmas) {
+    output_flags = BinaryDictHeader::kPackedEntries | BinaryDictHeader::kRelativeLemmaRefs;
+    compact_entry_size = 2;
   } else if (lemma_indices.size() <= 0x07FFU && grammar_palette.size() <= 32) {
     output_flags = BinaryDictHeader::kPackedEntries;
     compact_entry_size = 2;
@@ -538,15 +609,16 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
     entry_data.push_back(pair.extended_pos);
   }
   for (const auto& entry : compact_entries) {
-    if (output_flags == BinaryDictHeader::kGrammarOnlyEntries) {
+    const uint8_t entry_encoding = output_flags & BinaryDictHeader::kEntryEncodingMask;
+    if (entry_encoding == BinaryDictHeader::kGrammarOnlyEntries) {
       entry_data.push_back(entry.grammar_index);
-    } else if (output_flags == BinaryDictHeader::kPackedEntries) {
-      const uint16_t packed = entry.lemma_index | static_cast<uint16_t>(entry.grammar_index << 11U);
+    } else if (entry_encoding == BinaryDictHeader::kPackedEntries) {
+      const uint16_t packed = entry.lemma_reference | static_cast<uint16_t>(entry.grammar_index << 11U);
       entry_data.push_back(static_cast<uint8_t>(packed & 0xFFU));
       entry_data.push_back(static_cast<uint8_t>(packed >> 8U));
     } else {
-      entry_data.push_back(static_cast<uint8_t>(entry.lemma_index & 0xFFU));
-      entry_data.push_back(static_cast<uint8_t>(entry.lemma_index >> 8U));
+      entry_data.push_back(static_cast<uint8_t>(entry.lemma_reference & 0xFFU));
+      entry_data.push_back(static_cast<uint8_t>(entry.lemma_reference >> 8U));
       entry_data.push_back(entry.grammar_index);
     }
   }

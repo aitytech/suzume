@@ -66,6 +66,22 @@ size_t compactStringOffset(const std::vector<uint8_t>& data) {
   return compactRecordOffset(data) + header->entry_count * record_size;
 }
 
+uint16_t packedLemmaReference(const std::vector<uint8_t>& data, size_t entry_index) {
+  const size_t offset = compactRecordOffset(data) + entry_index * 2;
+  const uint16_t packed =
+      static_cast<uint16_t>(data[offset]) | static_cast<uint16_t>(static_cast<uint16_t>(data[offset + 1]) << 8U);
+  return packed & 0x07FFU;
+}
+
+void setPackedLemmaReference(std::vector<uint8_t>& data, size_t entry_index, uint16_t reference) {
+  const size_t offset = compactRecordOffset(data) + entry_index * 2;
+  uint16_t packed =
+      static_cast<uint16_t>(data[offset]) | static_cast<uint16_t>(static_cast<uint16_t>(data[offset + 1]) << 8U);
+  packed = static_cast<uint16_t>((packed & 0xF800U) | (reference & 0x07FFU));
+  data[offset] = static_cast<uint8_t>(packed & 0xFFU);
+  data[offset + 1] = static_cast<uint8_t>(packed >> 8U);
+}
+
 TEST_F(BinaryDictTest, WriteAndLoadEmpty) {
   BinaryDictWriter writer;
 
@@ -145,6 +161,75 @@ TEST_F(BinaryDictTest, CompactFormatStoresOnlyDifferingLemma) {
   EXPECT_EQ(header->flags, BinaryDictHeader::kPackedEntries);
   EXPECT_EQ(compactStringOffset(result.value()) - (sizeof(BinaryDictHeader) + header->surface_size), 1 + 2 + 2);
   EXPECT_EQ(result.value().size() - compactStringOffset(result.value()), entry.lemma.size() + 1);
+}
+
+TEST_F(BinaryDictTest, UsesRelativeLemmaReferencesForwardBackwardAndSelf) {
+  BinaryDictionary dict;
+  {
+    BinaryDictWriter writer;
+    writer.addEntry({"a-form", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "root"});
+    writer.addEntry({"root", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "root"});
+    writer.addEntry({"z-form", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "root"});
+
+    auto build_result = writer.build();
+    ASSERT_TRUE(build_result.hasValue());
+    const auto& data = build_result.value();
+    const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
+    EXPECT_EQ(header->flags, BinaryDictHeader::kPackedEntries | BinaryDictHeader::kRelativeLemmaRefs);
+    EXPECT_EQ(compactStringOffset(data), data.size());
+    EXPECT_EQ(packedLemmaReference(data, 0), 2u);  // +1
+    EXPECT_EQ(packedLemmaReference(data, 1), 0u);  // self
+    EXPECT_EQ(packedLemmaReference(data, 2), 1u);  // -1
+    ASSERT_TRUE(dict.loadFromMemory(data.data(), data.size()).hasValue());
+  }
+
+  ASSERT_NE(dict.lookupExact("a-form"), nullptr);
+  ASSERT_NE(dict.lookupExact("root"), nullptr);
+  ASSERT_NE(dict.lookupExact("z-form"), nullptr);
+  EXPECT_EQ(dict.lookupExact("a-form")->lemma, "root");
+  EXPECT_EQ(dict.lookupExact("root")->lemma, "root");
+  EXPECT_EQ(dict.lookupExact("z-form")->lemma, "root");
+}
+
+TEST_F(BinaryDictTest, RelativeLemmaReferencesSupportUtf8Surfaces) {
+  BinaryDictWriter writer;
+  writer.addEntry({"食べ", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "食べる"});
+  writer.addEntry({"食べる", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "食べる"});
+  writer.addEntry({"食べれ", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbMizenkei, "食べる"});
+
+  auto build_result = writer.build();
+  ASSERT_TRUE(build_result.hasValue());
+  const auto& data = build_result.value();
+  const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
+  EXPECT_NE(header->flags & BinaryDictHeader::kRelativeLemmaRefs, 0);
+
+  BinaryDictionary dict;
+  ASSERT_TRUE(dict.loadFromMemory(data.data(), data.size()).hasValue());
+  ASSERT_NE(dict.lookupExact("食べ"), nullptr);
+  ASSERT_NE(dict.lookupExact("食べれ"), nullptr);
+  EXPECT_EQ(dict.lookupExact("食べ")->lemma, "食べる");
+  EXPECT_EQ(dict.lookupExact("食べれ")->lemma, "食べる");
+}
+
+TEST_F(BinaryDictTest, FallsBackWhenRelativeLemmaDeltaIsOutOfRange) {
+  BinaryDictWriter writer;
+  for (size_t idx = 0; idx <= 1024; ++idx) {
+    char surface[16];
+    std::snprintf(surface, sizeof(surface), "key%04zu", idx);
+    writer.addEntry({surface, core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, idx == 0 ? "key1024" : surface});
+  }
+
+  auto build_result = writer.build();
+  ASSERT_TRUE(build_result.hasValue());
+  const auto& data = build_result.value();
+  const auto* header = reinterpret_cast<const BinaryDictHeader*>(data.data());
+  EXPECT_EQ(header->flags, BinaryDictHeader::kPackedEntries);
+  EXPECT_LT(compactStringOffset(data), data.size());
+
+  BinaryDictionary dict;
+  ASSERT_TRUE(dict.loadFromMemory(data.data(), data.size()).hasValue());
+  ASSERT_NE(dict.lookupExact("key0000"), nullptr);
+  EXPECT_EQ(dict.lookupExact("key0000")->lemma, "key1024");
 }
 
 TEST_F(BinaryDictTest, UsesWideCompactEntriesForLargeGrammarPalette) {
@@ -382,6 +467,42 @@ TEST_F(BinaryDictTest, LoadRejectsOutOfRangeStringReference) {
   BinaryDictionary dict;
   auto result = dict.loadFromMemory(data.data(), data.size());
   EXPECT_FALSE(result.hasValue());
+}
+
+TEST_F(BinaryDictTest, LoadRejectsOutOfRangeRelativeLemmaReference) {
+  BinaryDictWriter writer;
+  writer.addEntry({"a-form", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "root"});
+  writer.addEntry({"root", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "root"});
+  auto build_result = writer.build();
+  ASSERT_TRUE(build_result.hasValue());
+
+  auto data = std::move(build_result.value());
+  setPackedLemmaReference(data, 0, 1);  // -1 from the first entry.
+  BinaryDictionary dict;
+  auto result = dict.loadFromMemory(data.data(), data.size());
+  EXPECT_FALSE(result.hasValue());
+  EXPECT_NE(result.error().message.find("relative lemma reference"), std::string::npos);
+}
+
+TEST_F(BinaryDictTest, LoadRejectsInvalidRelativeLemmaFlagsAndTrailingData) {
+  auto invalid_encoding = buildTestDict("test", core::PartOfSpeech::Noun);
+  auto* invalid_header = reinterpret_cast<BinaryDictHeader*>(invalid_encoding.data());
+  invalid_header->flags |= BinaryDictHeader::kRelativeLemmaRefs;
+  BinaryDictionary dict;
+  EXPECT_FALSE(dict.loadFromMemory(invalid_encoding.data(), invalid_encoding.size()).hasValue());
+
+  auto unknown_flag = buildTestDict("test", core::PartOfSpeech::Noun);
+  reinterpret_cast<BinaryDictHeader*>(unknown_flag.data())->flags |= 0x80U;
+  EXPECT_FALSE(dict.loadFromMemory(unknown_flag.data(), unknown_flag.size()).hasValue());
+
+  BinaryDictWriter writer;
+  writer.addEntry({"a-form", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "root"});
+  writer.addEntry({"root", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "root"});
+  auto build_result = writer.build();
+  ASSERT_TRUE(build_result.hasValue());
+  auto trailing_data = std::move(build_result.value());
+  trailing_data.push_back(1);
+  EXPECT_FALSE(dict.loadFromMemory(trailing_data.data(), trailing_data.size()).hasValue());
 }
 
 TEST_F(BinaryDictTest, LoadRejectsInvalidPosValue) {

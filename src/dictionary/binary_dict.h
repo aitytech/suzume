@@ -28,18 +28,22 @@ struct BinaryDictHeader {
   uint16_t reserved;      // Must be zero
 
   static constexpr uint32_t kMagic = 0x444D5A53;  // "SZMD"
-  static constexpr uint8_t kVersion = 1;
+  static constexpr uint8_t kVersion = 2;
   static constexpr uint8_t kEntryEncodingMask = 0x03;
   static constexpr uint8_t kGrammarOnlyEntries = 0x01;  // 1 byte/entry, no differing lemmas
   static constexpr uint8_t kPackedEntries = 0x02;       // 2 bytes/entry, 11-bit lemma + 5-bit grammar
   static constexpr uint8_t kWideEntries = 0x03;         // 3 bytes/entry, 16-bit lemma + 8-bit grammar
+  static constexpr uint8_t kRelativeLemmaRefs = 0x04;   // Lemmas are signed deltas into the surface table
+  static constexpr uint8_t kKnownFlags = kEntryEncodingMask | kRelativeLemmaRefs;
 };
 static_assert(sizeof(BinaryDictHeader) == 16);
 
 /**
  * The format stores front-coded sorted UTF-8 surfaces, a POS/ExtendedPOS palette, an
- * adaptive one-, two-, or three-byte entry array, and a length-prefixed,
- * deduplicated lemma table. The runtime DoubleArray is rebuilt while loading.
+ * adaptive one-, two-, or three-byte entry array, and an optional length-prefixed,
+ * deduplicated lemma table. When every lemma is also a nearby surface, packed
+ * entries store a signed surface-index delta instead. The runtime DoubleArray is
+ * rebuilt while loading.
  */
 inline constexpr size_t kWideCompactEntrySize = 3;
 

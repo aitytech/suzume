@@ -90,6 +90,23 @@ TEST_F(DoubleArrayTest, BuildRejectsUintValueOutsideSignedResultRange) {
   EXPECT_TRUE(trie_.empty());
 }
 
+TEST_F(DoubleArrayTest, PackedValueBoundary) {
+  std::vector<std::string> keys = {"a"};
+  EXPECT_TRUE(trie_.build(keys, std::vector<uint32_t>{0x007FFFFFU}));
+  EXPECT_EQ(trie_.exactMatch("a"), 0x007FFFFF);
+
+  EXPECT_FALSE(trie_.build(keys, std::vector<uint32_t>{0x00800000U}));
+  EXPECT_EQ(trie_.exactMatch("a"), 0x007FFFFF);
+}
+
+TEST_F(DoubleArrayTest, BuildRejectsEmptyAndNulKeysWithoutReplacingTrie) {
+  ASSERT_TRUE(trie_.build(std::vector<std::string>{"valid"}));
+
+  EXPECT_FALSE(trie_.build(std::vector<std::string>{""}));
+  EXPECT_FALSE(trie_.build(std::vector<std::string>{std::string("a\0b", 3)}));
+  EXPECT_EQ(trie_.exactMatch("valid"), 0);
+}
+
 TEST_F(DoubleArrayTest, CommonPrefixSearchBasic) {
   std::vector<std::string> keys = {"a", "ab", "abc", "abcd"};
   std::vector<uint32_t> values = {1, 2, 3, 4};
@@ -184,9 +201,8 @@ TEST_F(DoubleArrayTest, JapaneseText) {
 }
 
 // Regression: a byte that is not a child of the root must never be accepted as a
-// transition. Before the parent+1 check sentinel, an empty cell (check == 0) was
-// indistinguishable from a genuine child of the root (parent_pos == 0), so a
-// lookup whose first byte's XOR slot landed on an empty cell false-matched.
+// transition. A zero-initialized cell has label zero, so all nonzero bytes must
+// be backed by a cell carrying that exact incoming label.
 TEST_F(DoubleArrayTest, RootTransitionRejectsEmptyCells) {
   // Sparse first bytes force wide bases and interior empty cells.
   std::vector<std::string> keys = {std::string("\x01z", 2),
@@ -221,6 +237,21 @@ TEST_F(DoubleArrayTest, RootTransitionRejectsEmptyCells) {
             3);
 }
 
+// Regression: label-only transition validation requires every parent base to
+// be unique. Reusing a base let a missing edge borrow the same-label child of a
+// different parent and falsely return a registered value.
+TEST_F(DoubleArrayTest, MissingDeepTransitionDoesNotMatchAnotherParent) {
+  const std::vector<std::string> keys = {"aaaa", "aabc", "aac", "accb", "babc", "bacb", "bacc", "bbb",
+                                         "bcaa", "bcbc", "ca",  "cac",  "cbca", "cbcb", "cccc"};
+  ASSERT_TRUE(trie_.build(keys));
+
+  EXPECT_EQ(trie_.exactMatch("acb"), -1);
+  EXPECT_TRUE(trie_.commonPrefixSearch("acb").empty());
+  for (size_t idx = 0; idx < keys.size(); ++idx) {
+    EXPECT_EQ(trie_.exactMatch(keys[idx]), static_cast<int32_t>(idx));
+  }
+}
+
 TEST_F(DoubleArrayTest, Clear) {
   std::vector<std::string> keys = {"a", "b"};
   std::vector<uint32_t> values = {1, 2};
@@ -230,6 +261,7 @@ TEST_F(DoubleArrayTest, Clear) {
 
   trie_.clear();
   EXPECT_TRUE(trie_.empty());
+  EXPECT_EQ(trie_.memoryUsage(), 0u);
   EXPECT_EQ(trie_.exactMatch("a"), -1);
 }
 
@@ -242,8 +274,8 @@ TEST_F(DoubleArrayTest, MemoryUsage) {
   size_t usage = trie_.memoryUsage();
   EXPECT_GT(usage, 0u);
   // Memory usage should be related to the number of nodes
-  // Each node uses 2 * sizeof(int32_t) = 8 bytes
-  EXPECT_EQ(usage % 8, 0u);
+  // Each node is one packed 32-bit unit.
+  EXPECT_EQ(usage % sizeof(uint32_t), 0u);
 }
 
 }  // namespace
