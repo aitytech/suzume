@@ -18,9 +18,7 @@
 // For vocabulary, use Layer 2 (core.dic) or Layer 3 (user.dic).
 // =============================================================================
 
-#include <vector>
-
-#include "dictionary/dictionary.h"
+#include "dictionary/entries/entry_spec.h"
 
 namespace suzume::dictionary::entries {
 
@@ -30,9 +28,9 @@ namespace suzume::dictionary::entries {
  * Determiners (連体詞) are words that modify nouns and cannot
  * be conjugated. They always appear before nouns.
  *
- * @return Vector of dictionary entries for determiners
+ * @return Non-owning range of static determiner entry specifications
  */
-std::vector<DictionaryEntry> getDeterminerEntries();
+EntrySpecRange getDeterminerEntries();
 
 }  // namespace suzume::dictionary::entries
 

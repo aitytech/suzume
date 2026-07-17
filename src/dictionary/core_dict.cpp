@@ -1,8 +1,7 @@
 #include "dictionary/core_dict.h"
 
-#include <algorithm>
-#include <iterator>
 #include <string>
+#include <string_view>
 #include <vector>
 
 // v0.8: Only closed class entries (function words)
@@ -20,6 +19,37 @@
 #include "normalize/utf8.h"
 
 namespace suzume::dictionary {
+
+namespace {
+
+void stableSortEntrySpecs(std::vector<entries::EntrySpec>& entry_specs) {
+  std::vector<entries::EntrySpec> buffer(entry_specs.size());
+  for (size_t width = 1; width < entry_specs.size(); width *= 2) {
+    for (size_t left = 0; left < entry_specs.size(); left += width * 2) {
+      const size_t middle = left + width < entry_specs.size() ? left + width : entry_specs.size();
+      const size_t right = middle + width < entry_specs.size() ? middle + width : entry_specs.size();
+      size_t lhs = left;
+      size_t rhs = middle;
+      size_t output = left;
+      while (lhs < middle && rhs < right) {
+        if (std::string_view(entry_specs[rhs].surface) < std::string_view(entry_specs[lhs].surface)) {
+          buffer[output++] = entry_specs[rhs++];
+        } else {
+          buffer[output++] = entry_specs[lhs++];
+        }
+      }
+      while (lhs < middle) {
+        buffer[output++] = entry_specs[lhs++];
+      }
+      while (rhs < right) {
+        buffer[output++] = entry_specs[rhs++];
+      }
+    }
+    entry_specs.swap(buffer);
+  }
+}
+
+}  // namespace
 
 CoreDictionary::CoreDictionary() {
   initializeEntries();
@@ -44,28 +74,35 @@ void CoreDictionary::initializeEntries() {
   auto formal_nouns = entries::getFormalNounEntries();
   auto interjections = entries::getInterjectionEntries();
 
-  // Reserve space
-  entries_.reserve(particles.size() + compound_particles.size() + auxiliaries.size() + conjunctions.size() +
-                   determiners.size() + pronouns.size() + formal_nouns.size() + interjections.size());
+  const size_t entry_count = particles.size() + compound_particles.size() + auxiliaries.size() + conjunctions.size() +
+                             determiners.size() + pronouns.size() + formal_nouns.size() + interjections.size();
 
-  // Collect entries (trie built after sorting)
-  auto addEntries = [this](std::vector<DictionaryEntry>& source) {
-    entries_.insert(entries_.end(), std::make_move_iterator(source.begin()), std::make_move_iterator(source.end()));
+  // Sort the trivial source records before constructing owned strings. This
+  // keeps all materialization in one loop and makes the stable-sort
+  // instantiation much smaller than sorting DictionaryEntry objects.
+  std::vector<entries::EntrySpec> entry_specs;
+  entry_specs.reserve(entry_count);
+  auto addSpecs = [&entry_specs](entries::EntrySpecRange source) {
+    entry_specs.insert(entry_specs.end(), source.begin(), source.end());
   };
 
-  addEntries(particles);
-  addEntries(compound_particles);
-  addEntries(auxiliaries);
-  addEntries(conjunctions);
-  addEntries(determiners);
-  addEntries(pronouns);
-  addEntries(formal_nouns);
-  addEntries(interjections);
+  addSpecs(particles);
+  addSpecs(compound_particles);
+  addSpecs(auxiliaries);
+  addSpecs(conjunctions);
+  addSpecs(determiners);
+  addSpecs(pronouns);
+  addSpecs(formal_nouns);
+  addSpecs(interjections);
 
-  // Sort entries by surface for Double-Array compatibility
-  // Use stable_sort to preserve relative order of entries with same surface
-  std::stable_sort(entries_.begin(), entries_.end(),
-                   [](const DictionaryEntry& lhs, const DictionaryEntry& rhs) { return lhs.surface < rhs.surface; });
+  // Sort entries by surface for Double-Array compatibility while preserving
+  // the registration order of duplicate surfaces.
+  stableSortEntrySpecs(entry_specs);
+
+  entries_.reserve(entry_count);
+  for (const auto& entry : entry_specs) {
+    entries_.push_back({entry.surface, entry.pos, entry.extended_pos, entry.lemma});
+  }
 
   // Build Double-Array trie
   buildTrie();
@@ -76,34 +113,17 @@ void CoreDictionary::buildTrie() {
     return;
   }
 
-  // Build unique keys with first occurrence index
+  // Build unique keys with first occurrence index. Entries are already sorted,
+  // so a comparison with the previous item is sufficient.
   std::vector<std::string> keys;
   std::vector<int32_t> values;
-
-  // Entries are sorted by surface, so extract unique keys
-  // Store the first index for each surface - lookup() will collect all
-  // consecutive entries with the same surface
-  std::string prev_surface;
-  size_t first_idx = 0;
-
+  keys.reserve(entries_.size());
+  values.reserve(entries_.size());
   for (size_t idx = 0; idx < entries_.size(); ++idx) {
-    const auto& entry = entries_[idx];
-    if (entry.surface != prev_surface) {
-      // New surface - save previous first if exists
-      if (!prev_surface.empty()) {
-        keys.push_back(prev_surface);
-        values.push_back(static_cast<int32_t>(first_idx));
-      }
-      // Start tracking new surface
-      prev_surface = entry.surface;
-      first_idx = idx;
+    if (idx == 0 || entries_[idx].surface != entries_[idx - 1].surface) {
+      keys.push_back(entries_[idx].surface);
+      values.push_back(static_cast<int32_t>(idx));
     }
-    // For same surface, first_idx stays unchanged (first occurrence)
-  }
-  // Don't forget the last surface
-  if (!prev_surface.empty()) {
-    keys.push_back(prev_surface);
-    values.push_back(static_cast<int32_t>(first_idx));
   }
 
   // Build the Double-Array trie

@@ -23,9 +23,7 @@
 // DO NOT add nouns here. For vocabulary, use Layer 2 or Layer 3.
 // =============================================================================
 
-#include <vector>
-
-#include "dictionary/dictionary.h"
+#include "dictionary/entries/entry_spec.h"
 
 namespace suzume::dictionary::entries {
 
@@ -35,9 +33,9 @@ namespace suzume::dictionary::entries {
  * Pronouns (代名詞) are words that substitute for nouns.
  * They typically have low information value for tag generation.
  *
- * @return Vector of dictionary entries for pronouns
+ * @return Non-owning range of static pronoun entry specifications
  */
-std::vector<DictionaryEntry> getPronounEntries();
+EntrySpecRange getPronounEntries();
 
 }  // namespace suzume::dictionary::entries
 

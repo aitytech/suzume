@@ -2,8 +2,8 @@
 
 namespace suzume::dictionary::entries {
 
-std::vector<DictionaryEntry> getCompoundParticleEntries() {
-  return {
+EntrySpecRange getCompoundParticleEntries() {
+  static constexpr EntrySpec kEntries[] = {
       // Relation (関連)
       particle("について", EPOS::ParticleCase),  // beat false positive adjective candidates
 
@@ -39,6 +39,7 @@ std::vector<DictionaryEntry> getCompoundParticleEntries() {
       particle("をめぐり", EPOS::ParticleCase),
       particle("をもって", EPOS::ParticleCase),
   };
+  return makeEntrySpecRange(kEntries);
 }
 
 }  // namespace suzume::dictionary::entries

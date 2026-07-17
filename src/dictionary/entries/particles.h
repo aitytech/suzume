@@ -20,17 +20,15 @@
 // For vocabulary, use Layer 2 (core.dic) or Layer 3 (user.dic).
 // =============================================================================
 
-#include <vector>
-
-#include "dictionary/dictionary.h"
+#include "dictionary/entries/entry_spec.h"
 
 namespace suzume::dictionary::entries {
 
 /**
  * @brief Get particle entries for core dictionary
- * @return Vector of dictionary entries for particles
+ * @return Non-owning range of static particle entry specifications
  */
-std::vector<DictionaryEntry> getParticleEntries();
+EntrySpecRange getParticleEntries();
 
 }  // namespace suzume::dictionary::entries
 

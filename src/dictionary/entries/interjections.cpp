@@ -2,8 +2,8 @@
 
 namespace suzume::dictionary::entries {
 
-std::vector<DictionaryEntry> getInterjectionEntries() {
-  return {
+EntrySpecRange getInterjectionEntries() {
+  static constexpr EntrySpec kEntries[] = {
       // Common interjections (exclamations)
       intj("えっ"),    // Surprise
       intj("ええ"),    // Affirmation/Surprise
@@ -36,6 +36,7 @@ std::vector<DictionaryEntry> getInterjectionEntries() {
       intj("あの"),    // Hesitation (also determiner)
       intj("その"),    // Hesitation (rare, also determiner)
   };
+  return makeEntrySpecRange(kEntries);
 }
 
 }  // namespace suzume::dictionary::entries

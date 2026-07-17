@@ -26,17 +26,15 @@
 // For vocabulary, use Layer 2 (core.dic) or Layer 3 (user.dic).
 // =============================================================================
 
-#include <vector>
-
-#include "dictionary/dictionary.h"
+#include "dictionary/entries/entry_spec.h"
 
 namespace suzume::dictionary::entries {
 
 /**
  * @brief Get conjunction entries for core dictionary
- * @return Vector of dictionary entries for conjunctions
+ * @return Non-owning range of static conjunction entry specifications
  */
-std::vector<DictionaryEntry> getConjunctionEntries();
+EntrySpecRange getConjunctionEntries();
 
 }  // namespace suzume::dictionary::entries
 #endif  // SUZUME_DICTIONARY_ENTRIES_CONJUNCTIONS_H_

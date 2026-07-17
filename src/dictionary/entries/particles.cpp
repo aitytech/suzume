@@ -3,8 +3,8 @@
 namespace suzume::dictionary::entries {
 
 // =============================================================================
-std::vector<DictionaryEntry> getParticleEntries() {
-  return {
+EntrySpecRange getParticleEntries() {
+  static constexpr EntrySpec kEntries[] = {
       // Case particles (格助詞)
       particle("が", EPOS::ParticleCase),
       particle("を", EPOS::ParticleCase),
@@ -78,6 +78,7 @@ std::vector<DictionaryEntry> getParticleEntries() {
       particle("ってば", EPOS::ParticleFinal),
       particle("ったら", EPOS::ParticleFinal),
   };
+  return makeEntrySpecRange(kEntries);
 }
 
 }  // namespace suzume::dictionary::entries

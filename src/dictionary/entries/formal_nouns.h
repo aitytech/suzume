@@ -23,9 +23,7 @@
 // For vocabulary, use Layer 2 (core.dic) or Layer 3 (user.dic).
 // =============================================================================
 
-#include <vector>
-
-#include "dictionary/dictionary.h"
+#include "dictionary/entries/entry_spec.h"
 
 namespace suzume::dictionary::entries {
 
@@ -35,9 +33,9 @@ namespace suzume::dictionary::entries {
  * Formal nouns are function words that look like nouns but have
  * grammatical functions. They are typically excluded from tags.
  *
- * @return Vector of dictionary entries for formal nouns
+ * @return Non-owning range of static formal noun entry specifications
  */
-std::vector<DictionaryEntry> getFormalNounEntries();
+EntrySpecRange getFormalNounEntries();
 
 }  // namespace suzume::dictionary::entries
 

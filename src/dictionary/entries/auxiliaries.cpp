@@ -2,8 +2,8 @@
 
 namespace suzume::dictionary::entries {
 
-std::vector<DictionaryEntry> getAuxiliaryEntries() {
-  return {
+EntrySpecRange getAuxiliaryEntries() {
+  static constexpr EntrySpec kEntries[] = {
       // Copula/Assertion - だ (断定)
       aux("だ", "だ", EPOS::AuxCopulaDa),
       aux("だっ", "だ", EPOS::AuxCopulaDa),  // 連用タ接続形
@@ -493,6 +493,7 @@ std::vector<DictionaryEntry> getAuxiliaryEntries() {
       aux("デス", "です", EPOS::Unknown),
       aux("マス", "ます", EPOS::Unknown),
   };
+  return makeEntrySpecRange(kEntries);
 }
 
 }  // namespace suzume::dictionary::entries

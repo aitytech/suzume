@@ -22,17 +22,15 @@
 // For vocabulary, use Layer 2 (core.dic) or Layer 3 (user.dic).
 // =============================================================================
 
-#include <vector>
-
-#include "dictionary/dictionary.h"
+#include "dictionary/entries/entry_spec.h"
 
 namespace suzume::dictionary::entries {
 
 /**
  * @brief Get auxiliary verb entries for core dictionary
- * @return Vector of dictionary entries for auxiliary verbs
+ * @return Non-owning range of static auxiliary verb entry specifications
  */
-std::vector<DictionaryEntry> getAuxiliaryEntries();
+EntrySpecRange getAuxiliaryEntries();
 
 }  // namespace suzume::dictionary::entries
 #endif  // SUZUME_DICTIONARY_ENTRIES_AUXILIARIES_H_

@@ -18,9 +18,7 @@
 // For vocabulary, use Layer 2 (core.dic) or Layer 3 (user.dic).
 // =============================================================================
 
-#include <vector>
-
-#include "dictionary/dictionary.h"
+#include "dictionary/entries/entry_spec.h"
 
 namespace suzume::dictionary::entries {
 
@@ -30,9 +28,9 @@ namespace suzume::dictionary::entries {
  * Interjections are standalone emotional expressions that don't
  * connect grammatically to other words.
  *
- * @return Vector of dictionary entries for interjections
+ * @return Non-owning range of static interjection entry specifications
  */
-std::vector<DictionaryEntry> getInterjectionEntries();
+EntrySpecRange getInterjectionEntries();
 
 }  // namespace suzume::dictionary::entries
 

@@ -2,8 +2,8 @@
 
 namespace suzume::dictionary::entries {
 
-std::vector<DictionaryEntry> getPronounEntries() {
-  return {
+EntrySpecRange getPronounEntries() {
+  static constexpr EntrySpec kEntries[] = {
       // First person (一人称) - kanji with reading
       // Note: 私/俺 have lower cost to encourage splits (第一私は → 第一+私+は)
       // But 僕 keeps higher cost due to compounds like 下僕
@@ -135,6 +135,7 @@ std::vector<DictionaryEntry> getPronounEntries() {
       // MeCab: 改めて → 改めて(副詞)
       adv("改めて", ""),
   };
+  return makeEntrySpecRange(kEntries);
 }
 
 }  // namespace suzume::dictionary::entries

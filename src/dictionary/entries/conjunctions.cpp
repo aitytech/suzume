@@ -2,8 +2,8 @@
 
 namespace suzume::dictionary::entries {
 
-std::vector<DictionaryEntry> getConjunctionEntries() {
-  return {
+EntrySpecRange getConjunctionEntries() {
+  static constexpr EntrySpec kEntries[] = {
       // Sequential (順接)
       conj("従って", ""), conj("故に", ""), conj("ゆえに", ""), conj("そして", ""), conj("そうして", ""),
       conj("それから", ""), conj("それで", ""), conj("だから", ""), conj("そのため", ""), conj("したがって", "従って"),
@@ -52,6 +52,7 @@ std::vector<DictionaryEntry> getConjunctionEntries() {
       adv("めったに", ""),  // 滅多に〜ない - prevent めった(非語 VERB める)+に split
       adv("どうぞ", ""),    // 陳述副詞 - prevent どう(ADJ)+ぞ split
   };
+  return makeEntrySpecRange(kEntries);
 }
 
 }  // namespace suzume::dictionary::entries

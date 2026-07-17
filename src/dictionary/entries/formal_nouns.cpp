@@ -2,8 +2,8 @@
 
 namespace suzume::dictionary::entries {
 
-std::vector<DictionaryEntry> getFormalNounEntries() {
-  return {
+EntrySpecRange getFormalNounEntries() {
+  static constexpr EntrySpec kEntries[] = {
       // Formal nouns (形式名詞) - hiragana form is canonical in modern Japanese
       // こと/もの are grammatical function words, hiragana is preferred
       formal_noun("事", "こと"),
@@ -43,6 +43,7 @@ std::vector<DictionaryEntry> getFormalNounEntries() {
       // B35: Idiom component (eaves bracket - used in うだつが上がらない)
       formal_noun("うだつ", "うだつ"),
   };
+  return makeEntrySpecRange(kEntries);
 }
 
 }  // namespace suzume::dictionary::entries

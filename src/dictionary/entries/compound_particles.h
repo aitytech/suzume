@@ -18,9 +18,7 @@
 // For vocabulary, use Layer 2 (core.dic) or Layer 3 (user.dic).
 // =============================================================================
 
-#include <vector>
-
-#include "dictionary/dictionary.h"
+#include "dictionary/entries/entry_spec.h"
 
 namespace suzume::dictionary::entries {
 
@@ -31,9 +29,9 @@ namespace suzume::dictionary::entries {
  * They typically derive from particle + verb/noun combinations but are
  * now grammaticalized as single units.
  *
- * @return Vector of dictionary entries for compound particles
+ * @return Non-owning range of static compound particle entry specifications
  */
-std::vector<DictionaryEntry> getCompoundParticleEntries();
+EntrySpecRange getCompoundParticleEntries();
 
 }  // namespace suzume::dictionary::entries
 

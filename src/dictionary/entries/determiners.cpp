@@ -2,8 +2,8 @@
 
 namespace suzume::dictionary::entries {
 
-std::vector<DictionaryEntry> getDeterminerEntries() {
-  return {
+EntrySpecRange getDeterminerEntries() {
+  static constexpr EntrySpec kEntries[] = {
       // Demonstrative determiners (指示連体詞) - この/その/あの/どの
       det("この", ""),
       det("その", ""),
@@ -60,6 +60,7 @@ std::vector<DictionaryEntry> getDeterminerEntries() {
       // Same pattern as かかる above.
       det("かの", ""),
   };
+  return makeEntrySpecRange(kEntries);
 }
 
 }  // namespace suzume::dictionary::entries
