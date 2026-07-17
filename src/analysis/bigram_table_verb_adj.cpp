@@ -237,7 +237,7 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // AdjBasic → AuxCopulaDesu (美しい+です) - moderate bonus
       {EPOS::AdjBasic, EPOS::AuxCopulaDesu, cost::kModerateBonus},
 
-      // AdjBasic → ParticleFinal (美しい+ね, エロい+よ) - moderate bonus
+      // AdjBasic → ParticleFinal (美しい+ね, 楽しい+よ) - moderate bonus
       // Adjective + sentence-final particle is a very common pattern
       {EPOS::AdjBasic, EPOS::ParticleFinal, cost::kModerateBonus},
 

@@ -65,6 +65,12 @@ constexpr float kVerifiedTailCompoundVerbBonus = -1.4F;
 // following verified verb or auxiliary form.
 constexpr float kParticleVerbBoundaryMinConfidence = 0.5F;
 
+// A particle-prefixed verb candidate is rejected when its remainder is a
+// sufficiently credible verb form. Four-character surfaces need a relaxed
+// threshold because one-character stems receive inflection penalties.
+constexpr float kParticlePrefixedVerbRemainderMinConfidenceLong = 0.5F;
+constexpr float kParticlePrefixedVerbRemainderMinConfidenceShort = 0.3F;
+
 // Verified Ichidan verb bonus
 // Applied when join creates a valid ichidan verb pattern
 constexpr float kVerifiedV1Bonus = -0.3F;

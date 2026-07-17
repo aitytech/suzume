@@ -69,8 +69,8 @@ TEST(IsTrivialEntryTest, SingleCharEntries) {
 
 // Mixed kanji+katakana: non-trivial (kept)
 TEST(IsTrivialEntryTest, MixedKanjiKatakana) {
-  EXPECT_FALSE(isTrivialEntry("二次エロ"));
-  EXPECT_FALSE(isTrivialEntry("東京タワー"));
+  EXPECT_FALSE(isTrivialEntry("二次データ"));
+  EXPECT_FALSE(isTrivialEntry("東京データ"));
 }
 
 // Mixed kanji+hiragana: non-trivial (kept)

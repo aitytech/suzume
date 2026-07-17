@@ -723,7 +723,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         // remainders with 1-char stems like なる→なら+ぬ the score is hit by
         // godan_ra_single_hiragana (-0.3) so confidence sits around 0.37 even
         // for genuinely valid forms. The 5+ char path keeps the stricter 0.5.
-        float min_conf = (len_check >= 5) ? 0.5F : 0.3F;
+        float min_conf = (len_check >= 5) ? candidate::kParticlePrefixedVerbRemainderMinConfidenceLong
+                                          : candidate::kParticlePrefixedVerbRemainderMinConfidenceShort;
         for (const auto& rem_cand : remainder_cands) {
           if (rem_cand.verb_type != grammar::VerbType::IAdjective && rem_cand.verb_type != grammar::VerbType::Unknown &&
               rem_cand.confidence >= min_conf) {

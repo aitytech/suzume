@@ -204,6 +204,28 @@ struct GodanVowels {
 };
 
 /**
+ * @brief Canonical stem surfaces for the irregular カ変 verb.
+ *
+ * Kana and kanji spellings use different visible stems while sharing the same
+ * inflection slots. Both the full-form generator and stem generator consume
+ * this record to keep their output in sync.
+ */
+struct KuruStemForms {
+  std::string base;
+  std::string mizenkei;
+  std::string renyokei;
+  std::string onbinkei;
+  std::string kateikei;
+  std::string ishikei;
+  std::string meireikei;
+};
+
+/**
+ * @brief Return the canonical カ変 stem surfaces for a base form.
+ */
+KuruStemForms getKuruStemForms(const std::string& base_form);
+
+/**
  * @brief Encode a Godan row's vowel codepoints into UTF-8 strings.
  * @param row Godan row data
  * @return GodanVowels with base/a/i/e/o surfaces

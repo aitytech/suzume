@@ -415,7 +415,7 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::AdjStem, EPOS::VerbTaForm, cost::kAlmostNever},
       {EPOS::AdjStem, EPOS::VerbTaraForm, cost::kAlmostNever},
       {EPOS::AdjStem, EPOS::AuxAspectIru, cost::kAlmostNever},    // な+い(いる)
-      {EPOS::AdjNaAdj, EPOS::AuxAspectIru, cost::kAlmostNever},   // 性的+い(いる)
+      {EPOS::AdjNaAdj, EPOS::AuxAspectIru, cost::kAlmostNever},   // 理性的+い(いる)
       {EPOS::AdjStem, EPOS::AuxNegativeNai, cost::kAlmostNever},  // な+ない
       {EPOS::AdjStem, EPOS::Other, cost::kAlmostNever},           // な+い(OTHER)
 

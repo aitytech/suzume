@@ -102,12 +102,12 @@ constexpr ConjSuffix kMasu[] = {
 // Note: All entries including te-form are generated for inflection analysis.
 // Connection scoring makes the grammatical path
 // VERB(renyokei/onbinkei) + て(PARTICLE) win over a unified te-form.
-template <size_t Size>
-void appendWithStem(const AuxiliaryBase& base, const ConjSuffix (&suffixes)[Size],
+void appendWithStem(const AuxiliaryBase& base, const ConjSuffix* suffixes, size_t suffix_count,
                     std::vector<AuxiliaryEntry>& result) {
   const std::string stem = dropLastChar(base.surface);
-  result.reserve(result.size() + Size);
-  for (const auto& suf : suffixes) {
+  result.reserve(result.size() + suffix_count);
+  for (size_t suffix_index = 0; suffix_index < suffix_count; ++suffix_index) {
+    const ConjSuffix& suf = suffixes[suffix_index];
     result.push_back({stem + suf.suffix, suf.right_id, base.required_conn});
   }
 }
@@ -150,18 +150,11 @@ void appendGodanWithStem(const AuxiliaryBase& base, bool te_attach_only, bool fo
 }
 
 // Generate forms using full forms (no stem, for irregular verbs)
-template <size_t Size>
-void appendFullForms(const AuxiliaryBase& base, const ConjSuffix (&forms)[Size], std::vector<AuxiliaryEntry>& result) {
-  result.reserve(result.size() + Size);
-  for (const auto& form : forms) {
-    result.push_back({form.suffix, form.right_id, base.required_conn});
-  }
-}
-
-// Generate Masu forms (special: fixed lemma "ます")
-void appendMasuForms(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>& result) {
-  result.reserve(result.size() + std::size(kMasu));
-  for (const auto& form : kMasu) {
+void appendFullForms(const AuxiliaryBase& base, const ConjSuffix* forms, size_t form_count,
+                     std::vector<AuxiliaryEntry>& result) {
+  result.reserve(result.size() + form_count);
+  for (size_t form_index = 0; form_index < form_count; ++form_index) {
+    const ConjSuffix& form = forms[form_index];
     result.push_back({form.suffix, form.right_id, base.required_conn});
   }
 }
@@ -646,14 +639,14 @@ void appendAuxiliaryBase(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>&
   switch (base.conj_type) {
     case VerbType::Ichidan:
       if (is_benefactive) {
-        appendWithStem(base, kIchidanTeAttach, result);
+        appendWithStem(base, kIchidanTeAttach, std::size(kIchidanTeAttach), result);
         return;
       }
       if (is_progressive) {
-        appendWithStem(base, kIchidanProgressive, result);
+        appendWithStem(base, kIchidanProgressive, std::size(kIchidanProgressive), result);
         return;
       }
-      appendWithStem(base, kIchidanFull, result);
+      appendWithStem(base, kIchidanFull, std::size(kIchidanFull), result);
       return;
     case VerbType::GodanWa:
     case VerbType::GodanKa:
@@ -665,14 +658,14 @@ void appendAuxiliaryBase(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>&
       appendGodanWithStem(base, is_benefactive, base.category_id == conn::kAuxTeiku, result);
       return;
     case VerbType::Kuru:
-      appendFullForms(base, kKuruFull, result);
+      appendFullForms(base, kKuruFull, std::size(kKuruFull), result);
       return;
     case VerbType::IAdjective:
-      appendWithStem(base, kIAdjective, result);
+      appendWithStem(base, kIAdjective, std::size(kIAdjective), result);
       return;
     case VerbType::Unknown:
       if (base.surface == "ます") {
-        appendMasuForms(base, result);
+        appendFullForms(base, kMasu, std::size(kMasu), result);
         return;
       }
       appendNoConjForm(base, result);

@@ -87,6 +87,14 @@ GodanVowels encodeGodanVowels(const Conjugation::GodanRow& row) {
           encodeUtf8(row.o_row)};
 }
 
+KuruStemForms getKuruStemForms(const std::string& base_form) {
+  const bool kanji = base_form == "来る";
+  if (kanji) {
+    return {base_form, "来", "来", "来", "来れ", "来よ", "来い"};
+  }
+  return {base_form, "こ", "き", "き", "くれ", "こよ", "こい"};
+}
+
 std::string onbinFormOf(const Conjugation::GodanRow& row) {
   // サ行 has no real onbin; its 連用形 (い段) doubles as the onbinkei form
   // (話し + た). Every other row has an explicit onbin surface (い/っ/ん).
@@ -339,28 +347,23 @@ std::vector<ConjugatedForm> Conjugation::generateSuru(const std::string& stem, c
 std::vector<ConjugatedForm> Conjugation::generateKuru(const std::string& stem, const std::string& base_form) {
   std::vector<ConjugatedForm> forms;
   VerbType type = VerbType::Kuru;
+  const KuruStemForms kuru = getKuruStemForms(base_form);
 
-  // 来る is special: 語幹が変化する (来→こ/き)
-  const bool kanji = base_form == "来る";
-  const auto kuru_surface = [kanji](std::string_view kanji_suffix, std::string_view kana_form) {
-    return kanji ? std::string("来") + std::string(kanji_suffix) : std::string(kana_form);
-  };
-
-  forms.push_back(makeForm(base_form, base_form, stem, type, ""));
-  forms.push_back(makeForm(kuru_surface("ない", "こない"), base_form, stem, type, "こない"));
-  forms.push_back(makeForm(kuru_surface("なかった", "こなかった"), base_form, stem, type, "こなかった"));
-  forms.push_back(makeForm(kuru_surface("ます", "きます"), base_form, stem, type, "きます"));
-  forms.push_back(makeForm(kuru_surface("ました", "きました"), base_form, stem, type, "きました"));
-  forms.push_back(makeForm(kuru_surface("ません", "きません"), base_form, stem, type, "きません"));
-  forms.push_back(makeForm(kuru_surface("た", "きた"), base_form, stem, type, "きた"));
-  forms.push_back(makeForm(kuru_surface("て", "きて"), base_form, stem, type, "きて"));
-  forms.push_back(makeForm(kuru_surface("ている", "きている"), base_form, stem, type, "きている"));
-  forms.push_back(makeForm(kuru_surface("ています", "きています"), base_form, stem, type, "きています"));
-  forms.push_back(makeForm(kuru_surface("れば", "くれば"), base_form, stem, type, "くれば"));
-  forms.push_back(makeForm(kuru_surface("よ", "こよ"), base_form, stem, type, "こよ"));  // Volitional mizenkei
-  forms.push_back(makeForm(kuru_surface("い", "こい"), base_form, stem, type, "こい"));
-  forms.push_back(makeForm(kuru_surface("られる", "こられる"), base_form, stem, type, "こられる"));
-  forms.push_back(makeForm(kuru_surface("させる", "こさせる"), base_form, stem, type, "こさせる"));
+  forms.push_back(makeForm(kuru.base, base_form, stem, type, ""));
+  forms.push_back(makeForm(kuru.mizenkei + "ない", base_form, stem, type, "こない"));
+  forms.push_back(makeForm(kuru.mizenkei + "なかった", base_form, stem, type, "こなかった"));
+  forms.push_back(makeForm(kuru.renyokei + "ます", base_form, stem, type, "きます"));
+  forms.push_back(makeForm(kuru.renyokei + "ました", base_form, stem, type, "きました"));
+  forms.push_back(makeForm(kuru.renyokei + "ません", base_form, stem, type, "きません"));
+  forms.push_back(makeForm(kuru.onbinkei + "た", base_form, stem, type, "きた"));
+  forms.push_back(makeForm(kuru.onbinkei + "て", base_form, stem, type, "きて"));
+  forms.push_back(makeForm(kuru.onbinkei + "ている", base_form, stem, type, "きている"));
+  forms.push_back(makeForm(kuru.onbinkei + "ています", base_form, stem, type, "きています"));
+  forms.push_back(makeForm(kuru.kateikei + "ば", base_form, stem, type, "くれば"));
+  forms.push_back(makeForm(kuru.ishikei, base_form, stem, type, "こよ"));
+  forms.push_back(makeForm(kuru.meireikei, base_form, stem, type, "こい"));
+  forms.push_back(makeForm(kuru.mizenkei + "られる", base_form, stem, type, "こられる"));
+  forms.push_back(makeForm(kuru.mizenkei + "させる", base_form, stem, type, "こさせる"));
 
   return forms;
 }

@@ -304,8 +304,6 @@ TEST_F(ConjugatorTest, SuruWithPrefix) {
 // ============================================================================
 
 TEST_F(ConjugatorTest, KuruStems) {
-  // getStem("くる", Kuru) removes last char る, stem = "く"
-  // generateKuruStems prepends stem to each suffix
   auto forms = conjugator_.generateStems("くる", VerbType::Kuru);
   ASSERT_EQ(forms.size(), 5u);
 
@@ -316,19 +314,19 @@ TEST_F(ConjugatorTest, KuruStems) {
 
   auto* renyokei = findByRightId(forms, conn::kVerbRenyokei);
   ASSERT_NE(renyokei, nullptr);
-  EXPECT_EQ(renyokei->surface, "くき");
+  EXPECT_EQ(renyokei->surface, "き");
 
   auto* onbinkei = findByRightId(forms, conn::kVerbOnbinkei);
   ASSERT_NE(onbinkei, nullptr);
-  EXPECT_EQ(onbinkei->surface, "くき");
+  EXPECT_EQ(onbinkei->surface, "き");
 
   auto* mizenkei = findByRightId(forms, conn::kVerbMizenkei);
   ASSERT_NE(mizenkei, nullptr);
-  EXPECT_EQ(mizenkei->surface, "くこ");
+  EXPECT_EQ(mizenkei->surface, "こ");
 
   auto* meireikei = findByRightId(forms, conn::kVerbMeireikei);
   ASSERT_NE(meireikei, nullptr);
-  EXPECT_EQ(meireikei->surface, "くい");
+  EXPECT_EQ(meireikei->surface, "こい");
 }
 
 TEST_F(ConjugatorTest, KuruKanjiBaseSuffixUsesDisplayBase) {
@@ -338,6 +336,19 @@ TEST_F(ConjugatorTest, KuruKanjiBaseSuffixUsesDisplayBase) {
   for (const auto& form : forms) {
     EXPECT_EQ(form.base_suffix, "来る");
   }
+
+  auto* renyokei = findByRightId(forms, conn::kVerbRenyokei);
+  auto* onbinkei = findByRightId(forms, conn::kVerbOnbinkei);
+  auto* mizenkei = findByRightId(forms, conn::kVerbMizenkei);
+  auto* meireikei = findByRightId(forms, conn::kVerbMeireikei);
+  ASSERT_NE(renyokei, nullptr);
+  ASSERT_NE(onbinkei, nullptr);
+  ASSERT_NE(mizenkei, nullptr);
+  ASSERT_NE(meireikei, nullptr);
+  EXPECT_EQ(renyokei->surface, "来");
+  EXPECT_EQ(onbinkei->surface, "来");
+  EXPECT_EQ(mizenkei->surface, "来");
+  EXPECT_EQ(meireikei->surface, "来い");
 }
 
 // ============================================================================

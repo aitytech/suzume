@@ -32,7 +32,7 @@ std::vector<StemForm> Conjugator::generateStems(const std::string& base_form, Ve
       return generateSuruStems(stem, base_form);
 
     case VerbType::Kuru:
-      return generateKuruStems(stem, base_form);
+      return generateKuruStems(base_form);
 
     default:
       return {};
@@ -98,16 +98,16 @@ std::vector<StemForm> Conjugator::generateSuruStems(const std::string& stem, con
   return forms;
 }
 
-std::vector<StemForm> Conjugator::generateKuruStems(const std::string& stem, const std::string& base_form) const {
+std::vector<StemForm> Conjugator::generateKuruStems(const std::string& base_form) const {
   std::vector<StemForm> forms;
   VerbType type = VerbType::Kuru;
+  const KuruStemForms kuru = getKuruStemForms(base_form);
 
-  // 来る: き (連用形), こ (未然形), こい (命令形)
-  forms.push_back({base_form, type, base_form, conn::kVerbBase});
-  forms.push_back({stem + "き", type, base_form, conn::kVerbRenyokei});
-  forms.push_back({stem + "き", type, base_form, conn::kVerbOnbinkei});
-  forms.push_back({stem + "こ", type, base_form, conn::kVerbMizenkei});
-  forms.push_back({stem + "い", type, base_form, conn::kVerbMeireikei});
+  forms.push_back({kuru.base, type, base_form, conn::kVerbBase});
+  forms.push_back({kuru.renyokei, type, base_form, conn::kVerbRenyokei});
+  forms.push_back({kuru.onbinkei, type, base_form, conn::kVerbOnbinkei});
+  forms.push_back({kuru.mizenkei, type, base_form, conn::kVerbMizenkei});
+  forms.push_back({kuru.meireikei, type, base_form, conn::kVerbMeireikei});
 
   return forms;
 }
