@@ -83,7 +83,7 @@ export interface Morpheme {
   conjType: string | null;
   /** Conjugation form (Japanese, e.g., "連用形", "終止形") - null for non-conjugating words */
   conjForm: string | null;
-  /** Extended POS subcategory (English, e.g., "VerbRenyokei", "AuxTenseTa") */
+  /** Stable extended POS code (e.g., "VERB_連用", "AUX_過去") */
   extendedPos: string;
   /** Start character offset in normalized text */
   start: number;

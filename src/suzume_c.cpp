@@ -237,10 +237,10 @@ SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text)
       if (morph.pos == suzume::core::PartOfSpeech::Verb || morph.pos == suzume::core::PartOfSpeech::Adjective) {
         auto verb_type = suzume::grammar::conjTypeToVerbType(morph.conj_type);
         auto conj_type_str = suzume::grammar::verbTypeToJapanese(verb_type);
-        result->morphemes[idx].conj_type = conj_type_str.data();
+        result->morphemes[idx].conj_type = conj_type_str.empty() ? nullptr : conj_type_str.data();
 
         auto conj_form_str = suzume::grammar::conjFormToJapanese(morph.conj_form);
-        result->morphemes[idx].conj_form = conj_form_str.data();
+        result->morphemes[idx].conj_form = conj_form_str.empty() ? nullptr : conj_form_str.data();
       } else {
         result->morphemes[idx].conj_type = nullptr;
         result->morphemes[idx].conj_form = nullptr;

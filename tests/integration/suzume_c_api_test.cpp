@@ -119,6 +119,20 @@ TEST(SuzumeCApiTest, AnalyzeReturnsOffsetsAndDiagnosticFields) {
   suzume_destroy(handle);
 }
 
+TEST(SuzumeCApiTest, EmptyConjugationMetadataIsReturnedAsNull) {
+  suzume_t handle = suzume_create();
+  ASSERT_NE(handle, nullptr);
+
+  suzume_result_t* result = suzume_analyze(handle, "美しく");
+  ASSERT_NE(result, nullptr);
+  ASSERT_GT(result->count, 0u);
+  EXPECT_EQ(result->morphemes[0].conj_type, nullptr);
+  EXPECT_STREQ(result->morphemes[0].conj_form, "連用形");
+
+  suzume_result_free(result);
+  suzume_destroy(handle);
+}
+
 TEST(SuzumeCApiTest, TagOptionsExposeAllGeneratorFilters) {
   suzume_t handle = suzume_create();
   ASSERT_NE(handle, nullptr);

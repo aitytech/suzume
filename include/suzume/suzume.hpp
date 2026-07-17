@@ -48,7 +48,7 @@ struct Morpheme {
   std::string pos_ja;        ///< Part of speech (Japanese).
   std::string conj_type;     ///< Conjugation type (Japanese); empty when N/A.
   std::string conj_form;     ///< Conjugation form (Japanese); empty when N/A.
-  std::string extended_pos;  ///< Extended POS (English, e.g. "VerbRenyokei").
+  std::string extended_pos;  ///< Stable extended POS code (e.g. "VERB_連用").
   std::size_t start = 0;     ///< Start character offset in normalized text.
   std::size_t end = 0;       ///< End character offset in normalized text.
   bool is_user_dict = false;

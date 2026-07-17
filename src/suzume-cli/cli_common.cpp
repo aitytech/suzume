@@ -521,8 +521,8 @@ Options:
   -h, --help             Show this help
 
 Output Formats:
-  morpheme               surface TAB pos TAB lemma (default)
-  tags                   Tags only, one per line
+  morpheme               surface TAB pos TAB lemma TAB start TAB end (default)
+  tags                   tag TAB pos, one per line
   json                   JSON format
   tsv                    TSV with all fields (surface, pos, lemma, start, end)
   chasen                 ChaSen-like format (Japanese POS, conjugation info)

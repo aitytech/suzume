@@ -68,7 +68,7 @@ typedef struct {
   const char* pos_ja;       /**< Part of speech (Japanese) */
   const char* conj_type;    /**< Conjugation type (Japanese) */
   const char* conj_form;    /**< Conjugation form (Japanese) */
-  const char* extended_pos; /**< Extended POS (English, e.g. "VerbRenyokei") */
+  const char* extended_pos; /**< Stable extended POS code (e.g. "VERB_連用") */
   size_t start;             /**< Start character offset in normalized text */
   size_t end;               /**< End character offset in normalized text */
   int is_user_dict;         /**< Non-zero if from user dictionary */
