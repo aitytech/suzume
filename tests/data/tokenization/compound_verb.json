@@ -52,6 +52,180 @@
           "surface": "座る"
         }
       ]
+    },
+    {
+      "description": "五段終止形後の副助詞だけと存在動詞音便形を複合動詞候補へ融合しない",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        }
+      ],
+      "id": "godan_dake_atte_particle_boundary",
+      "input": "読むだけあって良い。書くだけあって良い。食べるだけあって良い。"
+    },
+    {
+      "description": "読みかける。書きかける。食べかける。読みなおす。書きかえす。食べだす。読みつづける。書きあう。読みかけた。読みなおしている。書きかえない。食べだした。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "読みかける",
+          "pos": "Verb",
+          "surface": "読みかける"
+        },
+        {
+          "lemma": "書きかける",
+          "pos": "Verb",
+          "surface": "書きかける"
+        },
+        {
+          "lemma": "食べかける",
+          "pos": "Verb",
+          "surface": "食べかける"
+        },
+        {
+          "lemma": "読みなおす",
+          "pos": "Verb",
+          "surface": "読みなおす"
+        },
+        {
+          "lemma": "書きかえす",
+          "pos": "Verb",
+          "surface": "書きかえす"
+        },
+        {
+          "lemma": "食べだす",
+          "pos": "Verb",
+          "surface": "食べだす"
+        },
+        {
+          "lemma": "読みつづける",
+          "pos": "Verb",
+          "surface": "読みつづける"
+        },
+        {
+          "lemma": "書きあう",
+          "pos": "Verb",
+          "surface": "書きあう"
+        },
+        {
+          "lemma": "読みかける",
+          "pos": "Verb",
+          "surface": "読みかけ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "読みなおす",
+          "pos": "Verb",
+          "surface": "読みなおし"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        },
+        {
+          "lemma": "書きかえる",
+          "pos": "Verb",
+          "surface": "書きかえ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "食べだす",
+          "pos": "Verb",
+          "surface": "食べだし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "mikakeru_kikakeru_bekakeru_minaosu_kikaesu_bedasu_mitsudukeru_kiau_mikaketa_minaoshiteiru_kikaenai_bedashita",
+      "input": "読みかける。書きかける。食べかける。読みなおす。書きかえす。食べだす。読みつづける。書きあう。読みかけた。読みなおしている。書きかえない。食べだした。"
     }
   ],
   "description": "compound_verb tests",

@@ -683,6 +683,300 @@
       ],
       "id": "kono_monai",
       "input": "この本もない"
+    },
+    {
+      "description": "子供っぽさがある - regression test",
+      "expected": [
+        {
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "っぽい",
+          "pos": "Adjective",
+          "surface": "っぽ"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "ttposagaaru",
+      "input": "子供っぽさがある"
+    },
+    {
+      "description": "男っぽさがある - regression test",
+      "expected": [
+        {
+          "lemma": "男",
+          "pos": "Noun",
+          "surface": "男"
+        },
+        {
+          "lemma": "っぽい",
+          "pos": "Adjective",
+          "surface": "っぽ"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "ttposagaaru_1",
+      "input": "男っぽさがある"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-design",
+        "reason": "接尾辞形容詞の語幹を生産的に分割し、検索単位を保持するため"
+      },
+      "description": "安っぽさがある - regression test",
+      "expected": [
+        {
+          "lemma": "安っぽい",
+          "pos": "Adjective",
+          "surface": "安っぽ"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "ttposagaaru_2",
+      "input": "安っぽさがある",
+      "suzume_expected": [
+        {
+          "lemma": "安",
+          "pos": "Noun",
+          "surface": "安"
+        },
+        {
+          "lemma": "っぽい",
+          "pos": "Adjective",
+          "surface": "っぽ"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ]
+    },
+    {
+      "description": "Split the i-adjective renyokei and connective particle before naranai.",
+      "expected": [
+        {
+          "lemma": "嬉しい",
+          "pos": "Adjective",
+          "surface": "嬉しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "悲しい",
+          "pos": "Adjective",
+          "surface": "悲しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "寂しい",
+          "pos": "Adjective",
+          "surface": "寂しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "恋しい",
+          "pos": "Adjective",
+          "surface": "恋しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "懐かしい",
+          "pos": "Adjective",
+          "surface": "懐かしく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "楽しい",
+          "pos": "Adjective",
+          "surface": "楽しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "欲しい",
+          "pos": "Adjective",
+          "surface": "欲しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "寂しい",
+          "pos": "Adjective",
+          "surface": "寂しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "emotive_adjective_te_naranai_boundary",
+      "input": "嬉しくてならない。悲しくてならない。寂しくてならない。恋しくてならない。懐かしくてならない。楽しくてならない。欲しくてならない。寂しくてならなかった。"
     }
   ],
   "description": "adjective tests",

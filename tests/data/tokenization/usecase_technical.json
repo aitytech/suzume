@@ -1448,10 +1448,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "Direct speech quotation - MeCab互換分割",
       "expected": [
         {
@@ -1492,37 +1488,6 @@
       ],
       "id": "quotation_direct_speech",
       "input": "彼は「明日行く」と言った",
-      "suzume_expected": [
-        {
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "pos": "Noun",
-          "surface": "明日"
-        },
-        {
-          "pos": "Verb",
-          "surface": "行く"
-        },
-        {
-          "pos": "Other",
-          "surface": "と"
-        },
-        {
-          "lemma": "言う",
-          "pos": "Verb",
-          "surface": "言っ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
       "tags": [
         "quotation"
       ]
@@ -1618,10 +1583,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "Naming expression",
       "expected": [
         {
@@ -1652,28 +1613,6 @@
       ],
       "id": "quotation_naming",
       "input": "これを「成功」と呼ぶ",
-      "suzume_expected": [
-        {
-          "pos": "Pronoun",
-          "surface": "これ"
-        },
-        {
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "pos": "Noun",
-          "surface": "成功"
-        },
-        {
-          "pos": "Other",
-          "surface": "と"
-        },
-        {
-          "pos": "Verb",
-          "surface": "呼ぶ"
-        }
-      ],
       "tags": [
         "quotation"
       ]

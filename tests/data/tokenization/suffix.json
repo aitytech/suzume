@@ -634,6 +634,411 @@
       ],
       "id": "kujiwo_ttta",
       "input": "宝くじを買った"
+    },
+    {
+      "description": "焼きたて - auto-generated",
+      "expected": [
+        {
+          "lemma": "焼く",
+          "pos": "Verb",
+          "surface": "焼き"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ],
+      "id": "yakitate",
+      "input": "焼きたて"
+    },
+    {
+      "description": "できたて - auto-generated",
+      "expected": [
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ],
+      "id": "dekitate",
+      "input": "できたて"
+    },
+    {
+      "description": "作りたて - auto-generated",
+      "expected": [
+        {
+          "lemma": "作る",
+          "pos": "Verb",
+          "surface": "作り"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ],
+      "id": "tsukuritate",
+      "input": "作りたて"
+    },
+    {
+      "description": "書きたて - auto-generated",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ],
+      "id": "kakitate",
+      "input": "書きたて"
+    },
+    {
+      "description": "読みたて - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ],
+      "id": "yomitate",
+      "input": "読みたて"
+    },
+    {
+      "description": "炊きたて - auto-generated",
+      "expected": [
+        {
+          "lemma": "炊く",
+          "pos": "Verb",
+          "surface": "炊き"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ],
+      "id": "takitate",
+      "input": "炊きたて"
+    },
+    {
+      "description": "入れたて - auto-generated",
+      "expected": [
+        {
+          "lemma": "入れる",
+          "pos": "Verb",
+          "surface": "入れ"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ],
+      "id": "iretate",
+      "input": "入れたて"
+    },
+    {
+      "description": "買いたて - auto-generated",
+      "expected": [
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買い"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ],
+      "id": "kaitate",
+      "input": "買いたて"
+    },
+    {
+      "description": "生まれたて - auto-generated",
+      "expected": [
+        {
+          "lemma": "生まれる",
+          "pos": "Verb",
+          "surface": "生まれ"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ],
+      "id": "umaretate",
+      "input": "生まれたて"
+    },
+    {
+      "description": "税抜き - auto-generated",
+      "expected": [
+        {
+          "lemma": "税",
+          "pos": "Noun",
+          "surface": "税"
+        },
+        {
+          "lemma": "抜き",
+          "pos": "Suffix",
+          "surface": "抜き"
+        }
+      ],
+      "id": "zeinuki",
+      "input": "税抜き"
+    },
+    {
+      "description": "水抜き - auto-generated",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "抜き",
+          "pos": "Suffix",
+          "surface": "抜き"
+        }
+      ],
+      "id": "mizinuki",
+      "input": "水抜き"
+    },
+    {
+      "description": "中抜き - auto-generated",
+      "expected": [
+        {
+          "lemma": "中",
+          "pos": "Noun",
+          "surface": "中"
+        },
+        {
+          "lemma": "抜き",
+          "pos": "Suffix",
+          "surface": "抜き"
+        }
+      ],
+      "id": "nakanuki",
+      "input": "中抜き"
+    },
+    {
+      "description": "力抜き - auto-generated",
+      "expected": [
+        {
+          "lemma": "力",
+          "pos": "Noun",
+          "surface": "力"
+        },
+        {
+          "lemma": "抜き",
+          "pos": "Suffix",
+          "surface": "抜き"
+        }
+      ],
+      "id": "chikaranuki",
+      "input": "力抜き"
+    },
+    {
+      "description": "税ぬき - auto-generated",
+      "expected": [
+        {
+          "lemma": "税",
+          "pos": "Noun",
+          "surface": "税"
+        },
+        {
+          "lemma": "ぬき",
+          "pos": "Suffix",
+          "surface": "ぬき"
+        }
+      ],
+      "id": "zeinuki_hira",
+      "input": "税ぬき"
+    },
+    {
+      "description": "水ぬき - auto-generated",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "ぬき",
+          "pos": "Suffix",
+          "surface": "ぬき"
+        }
+      ],
+      "id": "mizinuki_hira",
+      "input": "水ぬき"
+    },
+    {
+      "description": "白ずくめ - auto-generated",
+      "expected": [
+        {
+          "lemma": "白",
+          "pos": "Noun",
+          "surface": "白"
+        },
+        {
+          "lemma": "ずくめ",
+          "pos": "Suffix",
+          "surface": "ずくめ"
+        }
+      ],
+      "id": "shirozukume",
+      "input": "白ずくめ"
+    },
+    {
+      "description": "黒ずくめ - auto-generated",
+      "expected": [
+        {
+          "lemma": "黒",
+          "pos": "Noun",
+          "surface": "黒"
+        },
+        {
+          "lemma": "ずくめ",
+          "pos": "Suffix",
+          "surface": "ずくめ"
+        }
+      ],
+      "id": "kurozukume",
+      "input": "黒ずくめ"
+    },
+    {
+      "description": "傷ずくめ - auto-generated",
+      "expected": [
+        {
+          "lemma": "傷",
+          "pos": "Noun",
+          "surface": "傷"
+        },
+        {
+          "lemma": "ずくめ",
+          "pos": "Suffix",
+          "surface": "ずくめ"
+        }
+      ],
+      "id": "kizuzukume",
+      "input": "傷ずくめ"
+    },
+    {
+      "description": "欠点ずくめ - auto-generated",
+      "expected": [
+        {
+          "lemma": "欠点",
+          "pos": "Noun",
+          "surface": "欠点"
+        },
+        {
+          "lemma": "ずくめ",
+          "pos": "Suffix",
+          "surface": "ずくめ"
+        }
+      ],
+      "id": "kettanzukume",
+      "input": "欠点ずくめ"
+    },
+    {
+      "description": "Preserve the tendency suffix and copular-negative boundaries.",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "tendency_suffix_gachi_copular_negative",
+      "input": "読みがちではない。書きがちではない。食べがちではない。"
     }
   ],
   "description": "Suffixes (さん、的、化)",

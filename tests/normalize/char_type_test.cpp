@@ -51,6 +51,11 @@ TEST(CharTypeTest, ClassifyIterationMark) {
   EXPECT_EQ(classifyChar(0x3005), CharType::Kanji);
 }
 
+TEST(CharTypeTest, ClassifyIdeographicClosingMark) {
+  // U+3006 (〆) has the Ideographic property despite being in the symbols block.
+  EXPECT_EQ(classifyChar(0x3006), CharType::Kanji);
+}
+
 TEST(CharTypeTest, ClassifyCJKUnifiedIdeographs) {
   EXPECT_EQ(classifyChar(U'漢'), CharType::Kanji);
   EXPECT_EQ(classifyChar(U'字'), CharType::Kanji);

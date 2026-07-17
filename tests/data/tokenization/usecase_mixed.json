@@ -1261,10 +1261,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "Japanese quotes",
       "expected": [
         {
@@ -1290,25 +1286,6 @@
       ],
       "id": "symbol_japanese_quotes",
       "input": "「こんにちは」と言った",
-      "suzume_expected": [
-        {
-          "pos": "Interjection",
-          "surface": "こんにちは"
-        },
-        {
-          "pos": "Other",
-          "surface": "と"
-        },
-        {
-          "lemma": "言う",
-          "pos": "Verb",
-          "surface": "言っ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
       "tags": [
         "symbol"
       ]

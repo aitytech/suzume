@@ -1296,6 +1296,1419 @@
       ],
       "id": "riwokagu",
       "input": "香りをかぐ"
+    },
+    {
+      "description": "五段動詞の未然形に続く受身・願望・否定助動詞を分離する",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "たい",
+          "pos": "Auxiliary",
+          "surface": "たく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "passive_desire_negative_chain",
+      "input": "行かれたくない"
+    },
+    {
+      "description": "書かれれば - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "karereba",
+      "input": "書かれれば"
+    },
+    {
+      "description": "食べられれば - regression test",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "berarereba",
+      "input": "食べられれば"
+    },
+    {
+      "description": "終えられれば - regression test",
+      "expected": [
+        {
+          "lemma": "終える",
+          "pos": "Verb",
+          "surface": "終え"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "erarereba",
+      "input": "終えられれば"
+    },
+    {
+      "description": "書かせられれば - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "kaserarereba",
+      "input": "書かせられれば"
+    },
+    {
+      "description": "本、と言う - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        }
+      ],
+      "id": "to_u",
+      "input": "本、と言う"
+    },
+    {
+      "description": "本、を読む - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "wo_mu",
+      "input": "本、を読む"
+    },
+    {
+      "description": "本、がある - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "gaaru",
+      "input": "本、がある"
+    },
+    {
+      "description": "本、まで読む - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "made_mu",
+      "input": "本、まで読む"
+    },
+    {
+      "description": "本」と言う - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        }
+      ],
+      "id": "to_u_1",
+      "input": "本」と言う"
+    },
+    {
+      "description": "お待ちいただいております - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待ち"
+        },
+        {
+          "lemma": "いただく",
+          "pos": "Verb",
+          "surface": "いただい"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "おる",
+          "pos": "Auxiliary",
+          "surface": "おり"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "o_chiitadaiteorimasu",
+      "input": "お待ちいただいております"
+    },
+    {
+      "description": "お読みいただいております - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "いただく",
+          "pos": "Verb",
+          "surface": "いただい"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "おる",
+          "pos": "Auxiliary",
+          "surface": "おり"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "o_miitadaiteorimasu",
+      "input": "お読みいただいております"
+    },
+    {
+      "description": "ご利用いただいております - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "利用",
+          "pos": "Noun",
+          "surface": "利用"
+        },
+        {
+          "lemma": "いただく",
+          "pos": "Verb",
+          "surface": "いただい"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "おる",
+          "pos": "Auxiliary",
+          "surface": "おり"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "go_itadaiteorimasu",
+      "input": "ご利用いただいております"
+    },
+    {
+      "description": "水をいただく - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "いただく",
+          "pos": "Verb",
+          "surface": "いただく"
+        }
+      ],
+      "id": "woitadaku",
+      "input": "水をいただく"
+    },
+    {
+      "description": "読みづらい - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "づらい",
+          "pos": "Adjective",
+          "surface": "づらい"
+        }
+      ],
+      "id": "midurai",
+      "input": "読みづらい"
+    },
+    {
+      "description": "書きづらい - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "づらい",
+          "pos": "Adjective",
+          "surface": "づらい"
+        }
+      ],
+      "id": "kidurai",
+      "input": "書きづらい"
+    },
+    {
+      "description": "話しづらい - regression test",
+      "expected": [
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "づらい",
+          "pos": "Adjective",
+          "surface": "づらい"
+        }
+      ],
+      "id": "shidurai",
+      "input": "話しづらい"
+    },
+    {
+      "description": "読みかねる - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かねる"
+        }
+      ],
+      "id": "mikaneru",
+      "input": "読みかねる"
+    },
+    {
+      "description": "言いかねる - regression test",
+      "expected": [
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言い"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かねる"
+        }
+      ],
+      "id": "ikaneru",
+      "input": "言いかねる"
+    },
+    {
+      "description": "扱いかねる - regression test",
+      "expected": [
+        {
+          "lemma": "扱う",
+          "pos": "Verb",
+          "surface": "扱い"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かねる"
+        }
+      ],
+      "id": "ikaneru_1",
+      "input": "扱いかねる"
+    },
+    {
+      "description": "決めかねる - regression test",
+      "expected": [
+        {
+          "lemma": "決める",
+          "pos": "Verb",
+          "surface": "決め"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かねる"
+        }
+      ],
+      "id": "mekaneru",
+      "input": "決めかねる"
+    },
+    {
+      "description": "待ちかねる - regression test",
+      "expected": [
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待ち"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かねる"
+        }
+      ],
+      "id": "chikaneru",
+      "input": "待ちかねる"
+    },
+    {
+      "description": "これらを読む - regression test",
+      "expected": [
+        {
+          "lemma": "これら",
+          "pos": "Pronoun",
+          "surface": "これら"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "korerawo_mu",
+      "input": "これらを読む"
+    },
+    {
+      "description": "それらを使う - regression test",
+      "expected": [
+        {
+          "lemma": "それら",
+          "pos": "Pronoun",
+          "surface": "それら"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "sorerawo_u",
+      "input": "それらを使う"
+    },
+    {
+      "description": "読んでみせる - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "みせる",
+          "pos": "Auxiliary",
+          "surface": "みせる"
+        }
+      ],
+      "id": "ndemiseru",
+      "input": "読んでみせる"
+    },
+    {
+      "description": "書いてみせる - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "みせる",
+          "pos": "Auxiliary",
+          "surface": "みせる"
+        }
+      ],
+      "id": "itemiseru",
+      "input": "書いてみせる"
+    },
+    {
+      "description": "やってみせる - regression test",
+      "expected": [
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "みせる",
+          "pos": "Auxiliary",
+          "surface": "みせる"
+        }
+      ],
+      "id": "yatttemiseru",
+      "input": "やってみせる"
+    },
+    {
+      "description": "読んでみよう - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "みる",
+          "pos": "Auxiliary",
+          "surface": "みよ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "ndemiyou",
+      "input": "読んでみよう"
+    },
+    {
+      "description": "読んでみればよい - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "みる",
+          "pos": "Auxiliary",
+          "surface": "みれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "ndemirebayoi",
+      "input": "読んでみればよい"
+    },
+    {
+      "description": "読んであげられる - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "あげる",
+          "pos": "Auxiliary",
+          "surface": "あげ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "ndeagerareru",
+      "input": "読んであげられる"
+    },
+    {
+      "description": "書いてあげられる - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "あげる",
+          "pos": "Auxiliary",
+          "surface": "あげ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "iteagerareru",
+      "input": "書いてあげられる"
+    },
+    {
+      "description": "教えてあげられる - regression test",
+      "expected": [
+        {
+          "lemma": "教える",
+          "pos": "Verb",
+          "surface": "教え"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "あげる",
+          "pos": "Auxiliary",
+          "surface": "あげ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "eteagerareru",
+      "input": "教えてあげられる"
+    },
+    {
+      "description": "見せてあげられる - regression test",
+      "expected": [
+        {
+          "lemma": "見せる",
+          "pos": "Verb",
+          "surface": "見せ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "あげる",
+          "pos": "Auxiliary",
+          "surface": "あげ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "seteagerareru",
+      "input": "見せてあげられる"
+    },
+    {
+      "description": "行かないつもりだ - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "つもり",
+          "pos": "Noun",
+          "surface": "つもり"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kanaitsumorida",
+      "input": "行かないつもりだ"
+    },
+    {
+      "description": "食べないつもりだ - regression test",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "つもり",
+          "pos": "Noun",
+          "surface": "つもり"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "benaitsumorida",
+      "input": "食べないつもりだ"
+    },
+    {
+      "description": "見ないつもりだ - regression test",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "つもり",
+          "pos": "Noun",
+          "surface": "つもり"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "naitsumorida",
+      "input": "見ないつもりだ"
+    },
+    {
+      "description": "読むのなら急ぐ - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "急ぐ",
+          "pos": "Verb",
+          "surface": "急ぐ"
+        }
+      ],
+      "id": "munonara_gu",
+      "input": "読むのなら急ぐ"
+    },
+    {
+      "description": "書くのなら待つ - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "kunonara_tsu",
+      "input": "書くのなら待つ"
+    },
+    {
+      "description": "高いのなら買う - regression test",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "inonara_u",
+      "input": "高いのなら買う"
+    },
+    {
+      "description": "静かなのなら使う - regression test",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "kananonara_u",
+      "input": "静かなのなら使う"
+    },
+    {
+      "description": "本なのなら置く - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "置く",
+          "pos": "Verb",
+          "surface": "置く"
+        }
+      ],
+      "id": "nanonara_ku",
+      "input": "本なのなら置く"
+    },
+    {
+      "description": "行ったきり帰らない - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "きり",
+          "pos": "Noun",
+          "surface": "きり"
+        },
+        {
+          "lemma": "帰る",
+          "pos": "Verb",
+          "surface": "帰ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "tttakiri_ranai",
+      "input": "行ったきり帰らない"
+    },
+    {
+      "description": "読んだきり忘れた - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "きり",
+          "pos": "Noun",
+          "surface": "きり"
+        },
+        {
+          "lemma": "忘れる",
+          "pos": "Verb",
+          "surface": "忘れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ndakiri_reta",
+      "input": "読んだきり忘れた"
+    },
+    {
+      "description": "買ったきり使わない - regression test",
+      "expected": [
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "きり",
+          "pos": "Noun",
+          "surface": "きり"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "tttakiri_wanai",
+      "input": "買ったきり使わない"
+    },
+    {
+      "description": "見たきり話さない - regression test",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "きり",
+          "pos": "Noun",
+          "surface": "きり"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話さ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "takiri_sanai",
+      "input": "見たきり話さない"
+    },
+    {
+      "description": "お読みになる - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "読み",
+          "pos": "Noun",
+          "surface": "読み"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "o_mininaru",
+      "input": "お読みになる"
+    },
+    {
+      "description": "お書きになる - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "書き",
+          "pos": "Noun",
+          "surface": "書き"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "o_kininaru",
+      "input": "お書きになる"
+    },
+    {
+      "description": "お帰りになる - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "帰り",
+          "pos": "Noun",
+          "surface": "帰り"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "o_rininaru",
+      "input": "お帰りになる"
+    },
+    {
+      "description": "お話しになる - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "話し",
+          "pos": "Noun",
+          "surface": "話し"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "o_shininaru",
+      "input": "お話しになる"
+    },
+    {
+      "description": "お使いになる - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "使い",
+          "pos": "Noun",
+          "surface": "使い"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "o_ininaru",
+      "input": "お使いになる"
+    },
+    {
+      "description": "読めなくはない - regression test",
+      "expected": [
+        {
+          "lemma": "読める",
+          "pos": "Verb",
+          "surface": "読め"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "menakuhanai",
+      "input": "読めなくはない"
+    },
+    {
+      "description": "書けなくはない - regression test",
+      "expected": [
+        {
+          "lemma": "書ける",
+          "pos": "Verb",
+          "surface": "書け"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "kenakuhanai",
+      "input": "書けなくはない"
+    },
+    {
+      "description": "食べられなくはない - regression test",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "berarenakuhanai",
+      "input": "食べられなくはない"
+    },
+    {
+      "description": "godan_potential_terminal_lemma",
+      "expected": [
+        {
+          "lemma": "読める",
+          "pos": "Verb",
+          "surface": "読める"
+        },
+        {
+          "lemma": "書ける",
+          "pos": "Verb",
+          "surface": "書ける"
+        },
+        {
+          "lemma": "読める",
+          "pos": "Verb",
+          "surface": "読める"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        },
+        {
+          "lemma": "書ける",
+          "pos": "Verb",
+          "surface": "書ける"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "meru_keru_merurashii_kerurashii_berareruyouninaru",
+      "input": "読める、書ける、読めるらしい、書けるらしい。食べられるようになる。"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

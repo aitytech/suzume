@@ -162,6 +162,93 @@
       ],
       "id": "kadakara_ru",
       "input": "静かだから寝る"
+    },
+    {
+      "description": "読むとともに書く。書くとともに読む。食べるとともに飲む。家族とともに出かける。成長とともに変化する。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "とともに",
+          "pos": "Particle",
+          "surface": "とともに"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "とともに",
+          "pos": "Particle",
+          "surface": "とともに"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "とともに",
+          "pos": "Particle",
+          "surface": "とともに"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        },
+        {
+          "lemma": "家族",
+          "pos": "Noun",
+          "surface": "家族"
+        },
+        {
+          "lemma": "とともに",
+          "pos": "Particle",
+          "surface": "とともに"
+        },
+        {
+          "lemma": "出かける",
+          "pos": "Verb",
+          "surface": "出かける"
+        },
+        {
+          "lemma": "成長",
+          "pos": "Noun",
+          "surface": "成長"
+        },
+        {
+          "lemma": "とともに",
+          "pos": "Particle",
+          "surface": "とともに"
+        },
+        {
+          "lemma": "変化",
+          "pos": "Noun",
+          "surface": "変化"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "mutotomoni_ku_kutotomoni_mu_berutotomoni_mu_totomoni_kakeru_totomoni_suru",
+      "input": "読むとともに書く。書くとともに読む。食べるとともに飲む。家族とともに出かける。成長とともに変化する。"
     }
   ],
   "description": "particle_conj tests",

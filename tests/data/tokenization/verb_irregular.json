@@ -110,10 +110,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "dict-pos-change",
-        "reason": "おる added to L2 dict as GODAN_RA verb; おり is now dict-backed VerbRenyokei (Verb) not Auxiliary"
-      },
       "description": "いたしております - humble suru verb unified",
       "expected": [
         {
@@ -139,38 +135,12 @@
       ],
       "id": "suru_itashite",
       "input": "いたしております",
-      "suzume_expected": [
-        {
-          "lemma": "いたす",
-          "pos": "Verb",
-          "surface": "いたし"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "おる",
-          "pos": "Verb",
-          "surface": "おり"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
       "tags": [
         "basic",
         "suru"
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "おる added to L2 dict as GODAN_RA verb. おり is now VerbRenyokei (dict-backed) instead of Auxiliary. Verb POS is grammatically correct — MeCab's Auxiliary is for grammaticalized ておる pattern."
-      },
       "description": "検討いたしております - suru noun + compound auxiliary verb",
       "expected": [
         {
@@ -201,33 +171,6 @@
       ],
       "id": "suru_kentou",
       "input": "検討いたしております",
-      "suzume_expected": [
-        {
-          "lemma": "検討",
-          "pos": "Noun",
-          "surface": "検討"
-        },
-        {
-          "lemma": "いたす",
-          "pos": "Verb",
-          "surface": "いたし"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "おる",
-          "pos": "Verb",
-          "surface": "おり"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
       "tags": [
         "basic",
         "suru"
@@ -321,7 +264,7 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "kanji-merge produces 積極的 NOUN; MeCab pos_sub1=形容動詞語幹 maps to Adjective. POS-only diff acceptable for tokenizer use case."
+        "reason": "漢字複合語を検索単位で保持するためのPOS差を維持する。"
       },
       "description": "積極的に参加する (participate proactively) - MeCab互換分割",
       "expected": [
@@ -812,7 +755,7 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "Dict NOUN æã blocks ichidan verb candidate generation"
+        "reason": "辞書由来名詞と一段動詞候補のPOS差を既知制約として維持する。"
       },
       "description": "B24: 感じる verbs should have correct lemma, not 感じする",
       "expected": [
@@ -831,10 +774,12 @@
       "input": "感じて",
       "suzume_expected": [
         {
+          "lemma": "感じ",
           "pos": "Noun",
           "surface": "感じ"
         },
         {
+          "lemma": "て",
           "pos": "Particle",
           "surface": "て"
         }
@@ -863,7 +808,7 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "Dict NOUN æã blocks ichidan verb candidate generation"
+        "reason": "辞書由来名詞と一段動詞候補のPOS差を既知制約として維持する。"
       },
       "description": "感じた past form - MeCab-compatible split",
       "expected": [
@@ -882,10 +827,12 @@
       "input": "感じた",
       "suzume_expected": [
         {
+          "lemma": "感じ",
           "pos": "Noun",
           "surface": "感じ"
         },
         {
+          "lemma": "た",
           "pos": "Auxiliary",
           "surface": "た"
         }
@@ -966,7 +913,7 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "ãªã: adjective vs auxiliary after nominalized verb"
+        "reason": "名詞化動詞後の否定語に関するPOS差を維持する。"
       },
       "description": "B25: 仕方ない should be NOUN + AUX, not VERB (仕方する)",
       "expected": [
@@ -985,10 +932,12 @@
       "input": "仕方ない",
       "suzume_expected": [
         {
+          "lemma": "仕方",
           "pos": "Noun",
           "surface": "仕方"
         },
         {
+          "lemma": "ない",
           "pos": "Adjective",
           "surface": "ない"
         }
@@ -1788,10 +1737,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "と: quotation particle vs other - context-dependent"
-      },
       "description": "「こんにちは」と言った (said 'hello') - current output without brackets",
       "expected": [
         {
@@ -1817,25 +1762,6 @@
       ],
       "id": "symbol_brackets",
       "input": "「こんにちは」と言った",
-      "suzume_expected": [
-        {
-          "pos": "Interjection",
-          "surface": "こんにちは"
-        },
-        {
-          "pos": "Other",
-          "surface": "と"
-        },
-        {
-          "lemma": "言う",
-          "pos": "Verb",
-          "surface": "言っ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
       "tags": [
         "grammar",
         "symbol"
@@ -1896,7 +1822,7 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "auxiliary/negative: context-dependent classification"
+        "reason": "否定補助動詞の文脈依存POS差を維持する。"
       },
       "description": "勉強しなくて - negative te-form (MeCab-style split)",
       "expected": [
@@ -1925,6 +1851,7 @@
       "input": "勉強しなくて",
       "suzume_expected": [
         {
+          "lemma": "勉強",
           "pos": "Noun",
           "surface": "勉強"
         },
@@ -1939,6 +1866,7 @@
           "surface": "なく"
         },
         {
+          "lemma": "て",
           "pos": "Particle",
           "surface": "て"
         }
@@ -2104,7 +2032,7 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "じゃっ lemma だ vs じゃう: contracted じゃう lemmatization limitation; segmentation is correct"
+        "reason": "縮約形のlemma差を既知制約として維持する。"
       },
       "description": "全部飲んじゃった - auto-generated",
       "expected": [
@@ -2202,6 +2130,204 @@
       ],
       "id": "shichi_ttta",
       "input": "勉強しちゃった"
+    },
+    {
+      "description": "運動させる - auto-generated",
+      "expected": [
+        {
+          "lemma": "運動",
+          "pos": "Noun",
+          "surface": "運動"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "sahen_causative_exercise",
+      "input": "運動させる"
+    },
+    {
+      "description": "作業させる - auto-generated",
+      "expected": [
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "sahen_causative_task",
+      "input": "作業させる"
+    },
+    {
+      "description": "準備させる - auto-generated",
+      "expected": [
+        {
+          "lemma": "準備",
+          "pos": "Noun",
+          "surface": "準備"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "sahen_causative_prepare",
+      "input": "準備させる"
+    },
+    {
+      "description": "確認させる - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "sahen_causative_confirm",
+      "input": "確認させる"
+    },
+    {
+      "description": "勉強される - auto-generated",
+      "expected": [
+        {
+          "lemma": "勉強",
+          "pos": "Noun",
+          "surface": "勉強"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れる"
+        }
+      ],
+      "id": "sahen_passive_study",
+      "input": "勉強される"
+    },
+    {
+      "description": "運動される - auto-generated",
+      "expected": [
+        {
+          "lemma": "運動",
+          "pos": "Noun",
+          "surface": "運動"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れる"
+        }
+      ],
+      "id": "sahen_passive_exercise",
+      "input": "運動される"
+    },
+    {
+      "description": "作業される - auto-generated",
+      "expected": [
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れる"
+        }
+      ],
+      "id": "sahen_passive_task",
+      "input": "作業される"
+    },
+    {
+      "description": "準備される - auto-generated",
+      "expected": [
+        {
+          "lemma": "準備",
+          "pos": "Noun",
+          "surface": "準備"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れる"
+        }
+      ],
+      "id": "sahen_passive_prepare",
+      "input": "準備される"
+    },
+    {
+      "description": "確認される - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れる"
+        }
+      ],
+      "id": "sahen_passive_confirm",
+      "input": "確認される"
     }
   ],
   "description": "Irregular verbs (する、くる)",

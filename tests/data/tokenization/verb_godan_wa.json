@@ -1196,6 +1196,669 @@
       ],
       "id": "utattte",
       "input": "うたって"
+    },
+    {
+      "description": "道に沿い進む - regression test",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "沿う",
+          "pos": "Verb",
+          "surface": "沿い"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "ni_i_mu",
+      "input": "道に沿い進む"
+    },
+    {
+      "description": "役目を担い進む - regression test",
+      "expected": [
+        {
+          "lemma": "役目",
+          "pos": "Noun",
+          "surface": "役目"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "担う",
+          "pos": "Verb",
+          "surface": "担い"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "wo_i_mu",
+      "input": "役目を担い進む"
+    },
+    {
+      "description": "知識を補い進む - regression test",
+      "expected": [
+        {
+          "lemma": "知識",
+          "pos": "Noun",
+          "surface": "知識"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "補う",
+          "pos": "Verb",
+          "surface": "補い"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "wo_i_mu_1",
+      "input": "知識を補い進む"
+    },
+    {
+      "description": "荷物を背負い進む - regression test",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "背負う",
+          "pos": "Verb",
+          "surface": "背負い"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "wo_i_mu_2",
+      "input": "荷物を背負い進む"
+    },
+    {
+      "description": "読んで仕舞う、書いて仕舞った、食べて仕舞って、読んで仕舞えば、書いて仕舞わない、食べて仕舞います、読んで仕舞おう、書いて仕舞いたい - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "仕舞う"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "仕舞っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "仕舞っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "仕舞え"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "仕舞わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "仕舞い"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "仕舞お"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "仕舞い"
+        },
+        {
+          "lemma": "たい",
+          "pos": "Auxiliary",
+          "surface": "たい"
+        }
+      ],
+      "id": "kanji_completive_auxiliary_paradigm",
+      "input": "読んで仕舞う、書いて仕舞った、食べて仕舞って、読んで仕舞えば、書いて仕舞わない、食べて仕舞います、読んで仕舞おう、書いて仕舞いたい"
+    },
+    {
+      "description": "先立つ、先立ち確認する、先立って確認する、計画に先立って確認する、開始に先立ち確認する - auto-generated",
+      "expected": [
+        {
+          "lemma": "先立つ",
+          "pos": "Verb",
+          "surface": "先立つ"
+        },
+        {
+          "lemma": "先立つ",
+          "pos": "Verb",
+          "surface": "先立ち"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "先立つ",
+          "pos": "Verb",
+          "surface": "先立っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "計画",
+          "pos": "Noun",
+          "surface": "計画"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "先立つ",
+          "pos": "Verb",
+          "surface": "先立っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "開始",
+          "pos": "Noun",
+          "surface": "開始"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "先立つ",
+          "pos": "Verb",
+          "surface": "先立ち"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "two_kanji_godan_ta_compound",
+      "input": "先立つ、先立ち確認する、先立って確認する、計画に先立って確認する、開始に先立ち確認する"
+    },
+    {
+      "description": "取り戻す、取り戻した、取り戻して、取り戻せる、取り戻さない、取り出す、取り替える - auto-generated",
+      "expected": [
+        {
+          "lemma": "取り戻す",
+          "pos": "Verb",
+          "surface": "取り戻す"
+        },
+        {
+          "lemma": "取り戻す",
+          "pos": "Verb",
+          "surface": "取り戻し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "取り戻す",
+          "pos": "Verb",
+          "surface": "取り戻し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "取り戻せる",
+          "pos": "Verb",
+          "surface": "取り戻せる"
+        },
+        {
+          "lemma": "取り戻す",
+          "pos": "Verb",
+          "surface": "取り戻さ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "取り出す",
+          "pos": "Verb",
+          "surface": "取り出す"
+        },
+        {
+          "lemma": "取り替える",
+          "pos": "Verb",
+          "surface": "取り替える"
+        }
+      ],
+      "id": "compound_verb_torimodosu",
+      "input": "取り戻す、取り戻した、取り戻して、取り戻せる、取り戻さない、取り出す、取り替える"
+    },
+    {
+      "description": "聞き取れない、読み取れない、受け取れない、聞き取れなかった、読み取れなかった、受け取れなかった、聞き取れなければ、読み取れなければ、受け取れなければ - auto-generated",
+      "expected": [
+        {
+          "lemma": "聞き取れる",
+          "pos": "Verb",
+          "surface": "聞き取れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "読み取れる",
+          "pos": "Verb",
+          "surface": "読み取れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "受け取れる",
+          "pos": "Verb",
+          "surface": "受け取れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "聞き取れる",
+          "pos": "Verb",
+          "surface": "聞き取れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "読み取れる",
+          "pos": "Verb",
+          "surface": "読み取れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "受け取れる",
+          "pos": "Verb",
+          "surface": "受け取れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "聞き取れる",
+          "pos": "Verb",
+          "surface": "聞き取れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "読み取れる",
+          "pos": "Verb",
+          "surface": "読み取れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "受け取れる",
+          "pos": "Verb",
+          "surface": "受け取れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "compound_godan_ra_potential_negative",
+      "input": "聞き取れない、読み取れない、受け取れない、聞き取れなかった、読み取れなかった、受け取れなかった、聞き取れなければ、読み取れなければ、受け取れなければ"
+    },
+    {
+      "description": "読みようがない、書きようがない、食べようがない、読みようによって変わる、書きようによって変わる - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "によって",
+          "pos": "Particle",
+          "surface": "によって"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わる"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "によって",
+          "pos": "Particle",
+          "surface": "によって"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わる"
+        }
+      ],
+      "id": "renyokei_formal_noun_you",
+      "input": "読みようがない、書きようがない、食べようがない、読みようによって変わる、書きようによって変わる"
     }
   ],
   "description": "Godan Wa-row verbs (五段ワ行動詞) - verbs ending in う",

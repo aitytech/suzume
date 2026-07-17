@@ -1640,6 +1640,204 @@
       ],
       "id": "waretemiruto",
       "input": "言われてみると"
+    },
+    {
+      "description": "条件を踏まえる - regression test",
+      "expected": [
+        {
+          "lemma": "条件",
+          "pos": "Noun",
+          "surface": "条件"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏まえる",
+          "pos": "Verb",
+          "surface": "踏まえる"
+        }
+      ],
+      "id": "wo_maeru",
+      "input": "条件を踏まえる"
+    },
+    {
+      "description": "条件を踏まえて検討する - regression test",
+      "expected": [
+        {
+          "lemma": "条件",
+          "pos": "Noun",
+          "surface": "条件"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏まえる",
+          "pos": "Verb",
+          "surface": "踏まえ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "検討",
+          "pos": "Noun",
+          "surface": "検討"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "wo_maete_suru",
+      "input": "条件を踏まえて検討する"
+    },
+    {
+      "description": "条件を踏まえれば理解できる - regression test",
+      "expected": [
+        {
+          "lemma": "条件",
+          "pos": "Noun",
+          "surface": "条件"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏まえる",
+          "pos": "Verb",
+          "surface": "踏まえれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "理解",
+          "pos": "Noun",
+          "surface": "理解"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        }
+      ],
+      "id": "wo_maereba_dekiru",
+      "input": "条件を踏まえれば理解できる"
+    },
+    {
+      "description": "状況を踏まえた - regression test",
+      "expected": [
+        {
+          "lemma": "状況",
+          "pos": "Noun",
+          "surface": "状況"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏まえる",
+          "pos": "Verb",
+          "surface": "踏まえ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_maeta",
+      "input": "状況を踏まえた"
+    },
+    {
+      "description": "食べよ - regression test",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べよ"
+        }
+      ],
+      "id": "beyo",
+      "input": "食べよ"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-design",
+        "reason": "一段動詞「見る」の文語命令形として文法的に解析するため"
+      },
+      "description": "見よ - regression test",
+      "expected": [
+        {
+          "lemma": "見よい",
+          "pos": "Adjective",
+          "surface": "見よ"
+        }
+      ],
+      "id": "yo",
+      "input": "見よ",
+      "suzume_expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見よ"
+        }
+      ]
+    },
+    {
+      "description": "着よ - regression test",
+      "expected": [
+        {
+          "lemma": "着る",
+          "pos": "Verb",
+          "surface": "着よ"
+        }
+      ],
+      "id": "yo_1",
+      "input": "着よ"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-design",
+        "reason": "一段動詞の文語命令形を一語の活用形として保持するため"
+      },
+      "description": "調べよ - regression test",
+      "expected": [
+        {
+          "lemma": "調べ",
+          "pos": "Noun",
+          "surface": "調べ"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "beyo_1",
+      "input": "調べよ",
+      "suzume_expected": [
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べよ"
+        }
+      ]
     }
   ],
   "description": "Ichidan verbs (一段動詞)",

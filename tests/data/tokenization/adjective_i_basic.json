@@ -1779,6 +1779,468 @@
       ],
       "id": "korega_ida",
       "input": "これが良いだ。"
+    },
+    {
+      "description": "長いあいだ待つ - regression test",
+      "expected": [
+        {
+          "lemma": "長い",
+          "pos": "Adjective",
+          "surface": "長い"
+        },
+        {
+          "lemma": "あいだ",
+          "pos": "Noun",
+          "surface": "あいだ"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "iaida_tsu",
+      "input": "長いあいだ待つ"
+    },
+    {
+      "description": "短いあいだ待つ - regression test",
+      "expected": [
+        {
+          "lemma": "短い",
+          "pos": "Adjective",
+          "surface": "短い"
+        },
+        {
+          "lemma": "あいだ",
+          "pos": "Noun",
+          "surface": "あいだ"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "iaida_tsu_1",
+      "input": "短いあいだ待つ"
+    },
+    {
+      "description": "深いあいだ眠る - regression test",
+      "expected": [
+        {
+          "lemma": "深い",
+          "pos": "Adjective",
+          "surface": "深い"
+        },
+        {
+          "lemma": "あいだ",
+          "pos": "Noun",
+          "surface": "あいだ"
+        },
+        {
+          "lemma": "眠る",
+          "pos": "Verb",
+          "surface": "眠る"
+        }
+      ],
+      "id": "iaida_ru",
+      "input": "深いあいだ眠る"
+    },
+    {
+      "description": "古いあいだ使う - regression test",
+      "expected": [
+        {
+          "lemma": "古い",
+          "pos": "Adjective",
+          "surface": "古い"
+        },
+        {
+          "lemma": "あいだ",
+          "pos": "Noun",
+          "surface": "あいだ"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "iaida_u",
+      "input": "古いあいだ使う"
+    },
+    {
+      "description": "大きめだった - regression test",
+      "expected": [
+        {
+          "lemma": "大きめ",
+          "pos": "Adjective",
+          "surface": "大きめ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kimedattta",
+      "input": "大きめだった"
+    },
+    {
+      "description": "小さめだった - regression test",
+      "expected": [
+        {
+          "lemma": "小さめ",
+          "pos": "Adjective",
+          "surface": "小さめ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "samedattta",
+      "input": "小さめだった"
+    },
+    {
+      "description": "長めだった - regression test",
+      "expected": [
+        {
+          "lemma": "長め",
+          "pos": "Adjective",
+          "surface": "長め"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "medattta",
+      "input": "長めだった"
+    },
+    {
+      "description": "短めだった - regression test",
+      "expected": [
+        {
+          "lemma": "短め",
+          "pos": "Adjective",
+          "surface": "短め"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "medattta_1",
+      "input": "短めだった"
+    },
+    {
+      "description": "読むことなしに進む、書くことなしに進む、食べることなしに進む、本なしに読む、水なしに飲む - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なし"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なし"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なし"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なし"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なし"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        }
+      ],
+      "id": "literary_negative_nashi",
+      "input": "読むことなしに進む、書くことなしに進む、食べることなしに進む、本なしに読む、水なしに飲む"
+    },
+    {
+      "description": "い形容詞後の副助詞だけと断定否定",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "安い",
+          "pos": "Adjective",
+          "surface": "安い"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "新しい",
+          "pos": "Adjective",
+          "surface": "新しい"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "i_adjective_dake_dehanai",
+      "input": "高いだけではない、安いだけではない、新しいだけではない"
+    },
+    {
+      "description": "名詞接尾辞らしいの連体形と名詞化語幹を分割する",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Particle",
+          "surface": "さ"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Particle",
+          "surface": "さ"
+        },
+        {
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Particle",
+          "surface": "さ"
+        }
+      ],
+      "id": "rashii_rashii_rashisa_rashisa_rashisa",
+      "input": "本らしい本。水らしい水。本らしさ。水らしさ。子供らしさ。"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional",

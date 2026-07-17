@@ -294,6 +294,253 @@
       ],
       "id": "kunarisugita",
       "input": "高くなりすぎた"
+    },
+    {
+      "description": "高くなくて - auto-generated",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "takaku_nakute",
+      "input": "高くなくて"
+    },
+    {
+      "description": "低くなくて - auto-generated",
+      "expected": [
+        {
+          "lemma": "低い",
+          "pos": "Adjective",
+          "surface": "低く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "hikuku_nakute",
+      "input": "低くなくて"
+    },
+    {
+      "description": "安くなくて - auto-generated",
+      "expected": [
+        {
+          "lemma": "安い",
+          "pos": "Adjective",
+          "surface": "安く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "yasuku_nakute",
+      "input": "安くなくて"
+    },
+    {
+      "description": "遠くなくて - auto-generated",
+      "expected": [
+        {
+          "lemma": "遠い",
+          "pos": "Adjective",
+          "surface": "遠く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "tooku_nakute",
+      "input": "遠くなくて"
+    },
+    {
+      "description": "近くなくて - auto-generated",
+      "expected": [
+        {
+          "lemma": "近い",
+          "pos": "Adjective",
+          "surface": "近く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "chikaku_nakute",
+      "input": "近くなくて"
+    },
+    {
+      "description": "長くなくて - auto-generated",
+      "expected": [
+        {
+          "lemma": "長い",
+          "pos": "Adjective",
+          "surface": "長く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "nagaku_nakute",
+      "input": "長くなくて"
+    },
+    {
+      "description": "広くなくても - auto-generated",
+      "expected": [
+        {
+          "lemma": "広い",
+          "pos": "Adjective",
+          "surface": "広く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        }
+      ],
+      "id": "hiroku_nakutemo",
+      "input": "広くなくても"
+    },
+    {
+      "description": "大きくなくて - auto-generated",
+      "expected": [
+        {
+          "lemma": "大きい",
+          "pos": "Adjective",
+          "surface": "大きく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "ookiku_nakute",
+      "input": "大きくなくて"
+    },
+    {
+      "description": "美しくなくて - auto-generated",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "utsukushiku_nakute",
+      "input": "美しくなくて"
+    },
+    {
+      "description": "高くなかった - auto-generated",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "takaku_nakatta",
+      "input": "高くなかった"
+    },
+    {
+      "description": "高くなければ - auto-generated",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "takaku_nakereba",
+      "input": "高くなければ"
     }
   ],
   "description": "I-adjectives ku-forms (連用形) - adverbial, negative, te-form, ku-naru patterns",

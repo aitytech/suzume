@@ -203,6 +203,313 @@
           "surface": "だ"
         }
       ]
+    },
+    {
+      "description": "1日おき - regression test",
+      "expected": [
+        {
+          "lemma": "1日",
+          "pos": "Noun",
+          "surface": "1日"
+        },
+        {
+          "lemma": "おき",
+          "pos": "Suffix",
+          "surface": "おき"
+        }
+      ],
+      "id": "1_oki",
+      "input": "1日おき"
+    },
+    {
+      "description": "2日おき - regression test",
+      "expected": [
+        {
+          "lemma": "2日",
+          "pos": "Noun",
+          "surface": "2日"
+        },
+        {
+          "lemma": "おき",
+          "pos": "Suffix",
+          "surface": "おき"
+        }
+      ],
+      "id": "2_oki",
+      "input": "2日おき"
+    },
+    {
+      "description": "一日おき - regression test",
+      "expected": [
+        {
+          "lemma": "一日",
+          "pos": "Noun",
+          "surface": "一日"
+        },
+        {
+          "lemma": "おき",
+          "pos": "Suffix",
+          "surface": "おき"
+        }
+      ],
+      "id": "oki",
+      "input": "一日おき"
+    },
+    {
+      "description": "1時間おき - regression test",
+      "expected": [
+        {
+          "lemma": "1時間",
+          "pos": "Noun",
+          "surface": "1時間"
+        },
+        {
+          "lemma": "おき",
+          "pos": "Suffix",
+          "surface": "おき"
+        }
+      ],
+      "id": "1_oki_1",
+      "input": "1時間おき"
+    },
+    {
+      "description": "週おき - regression test",
+      "expected": [
+        {
+          "lemma": "週",
+          "pos": "Noun",
+          "surface": "週"
+        },
+        {
+          "lemma": "おき",
+          "pos": "Suffix",
+          "surface": "おき"
+        }
+      ],
+      "id": "oki_1",
+      "input": "週おき"
+    },
+    {
+      "description": "月おき - regression test",
+      "expected": [
+        {
+          "lemma": "月",
+          "pos": "Noun",
+          "surface": "月"
+        },
+        {
+          "lemma": "おき",
+          "pos": "Suffix",
+          "surface": "おき"
+        }
+      ],
+      "id": "oki_2",
+      "input": "月おき"
+    },
+    {
+      "description": "1日おきに配る - regression test",
+      "expected": [
+        {
+          "lemma": "1日",
+          "pos": "Noun",
+          "surface": "1日"
+        },
+        {
+          "lemma": "おき",
+          "pos": "Suffix",
+          "surface": "おき"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "配る",
+          "pos": "Verb",
+          "surface": "配る"
+        }
+      ],
+      "id": "1_okini_ru",
+      "input": "1日おきに配る"
+    },
+    {
+      "description": "1時間おきに配る - regression test",
+      "expected": [
+        {
+          "lemma": "1時間",
+          "pos": "Noun",
+          "surface": "1時間"
+        },
+        {
+          "lemma": "おき",
+          "pos": "Suffix",
+          "surface": "おき"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "配る",
+          "pos": "Verb",
+          "surface": "配る"
+        }
+      ],
+      "id": "1_okini_ru_1",
+      "input": "1時間おきに配る"
+    },
+    {
+      "description": "週おきに集まる - regression test",
+      "expected": [
+        {
+          "lemma": "週",
+          "pos": "Noun",
+          "surface": "週"
+        },
+        {
+          "lemma": "おき",
+          "pos": "Suffix",
+          "surface": "おき"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "集まる",
+          "pos": "Verb",
+          "surface": "集まる"
+        }
+      ],
+      "id": "okini_maru",
+      "input": "週おきに集まる"
+    },
+    {
+      "description": "それゆえ本を読む。これゆえ本を読む。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "ゆえ",
+          "pos": "Suffix",
+          "surface": "ゆえ"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "ゆえ",
+          "pos": "Suffix",
+          "surface": "ゆえ"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "soreyue_wo_mu_koreyue_wo_mu",
+      "input": "それゆえ本を読む。これゆえ本を読む。"
+    },
+    {
+      "description": "連用形に続く様子接尾辞ぶりを分割する",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "ぶり",
+          "pos": "Suffix",
+          "surface": "ぶり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "ぶり",
+          "pos": "Suffix",
+          "surface": "ぶり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ぶり",
+          "pos": "Suffix",
+          "surface": "ぶり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "miburiwo_ru_kiburiwo_ru_beburiwo_ru",
+      "input": "読みぶりを見る。書きぶりを見る。食べぶりを見る。"
     }
   ],
   "description": "suffix_general tests",

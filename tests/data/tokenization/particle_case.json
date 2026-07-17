@@ -232,6 +232,557 @@
         "particle",
         "case"
       ]
+    },
+    {
+      "description": "本として - auto-generated",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "として",
+          "pos": "Particle",
+          "surface": "として"
+        }
+      ],
+      "id": "short_noun_toshite_book",
+      "input": "本として"
+    },
+    {
+      "description": "紙として - auto-generated",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "として",
+          "pos": "Particle",
+          "surface": "として"
+        }
+      ],
+      "id": "short_noun_toshite_paper",
+      "input": "紙として"
+    },
+    {
+      "description": "車として - auto-generated",
+      "expected": [
+        {
+          "lemma": "車",
+          "pos": "Noun",
+          "surface": "車"
+        },
+        {
+          "lemma": "として",
+          "pos": "Particle",
+          "surface": "として"
+        }
+      ],
+      "id": "short_noun_toshite_vehicle",
+      "input": "車として"
+    },
+    {
+      "description": "木として - auto-generated",
+      "expected": [
+        {
+          "lemma": "木",
+          "pos": "Noun",
+          "surface": "木"
+        },
+        {
+          "lemma": "として",
+          "pos": "Particle",
+          "surface": "として"
+        }
+      ],
+      "id": "short_noun_toshite_tree",
+      "input": "木として"
+    },
+    {
+      "description": "山として - auto-generated",
+      "expected": [
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "として",
+          "pos": "Particle",
+          "surface": "として"
+        }
+      ],
+      "id": "short_noun_toshite_mountain",
+      "input": "山として"
+    },
+    {
+      "description": "火として - auto-generated",
+      "expected": [
+        {
+          "lemma": "火",
+          "pos": "Noun",
+          "surface": "火"
+        },
+        {
+          "lemma": "として",
+          "pos": "Particle",
+          "surface": "として"
+        }
+      ],
+      "id": "short_noun_toshite_fire",
+      "input": "火として"
+    },
+    {
+      "description": "本とした - auto-generated",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "short_noun_toshita_book",
+      "input": "本とした"
+    },
+    {
+      "description": "紙とした - auto-generated",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "short_noun_toshita_paper",
+      "input": "紙とした"
+    },
+    {
+      "description": "車とした - auto-generated",
+      "expected": [
+        {
+          "lemma": "車",
+          "pos": "Noun",
+          "surface": "車"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "short_noun_toshita_vehicle",
+      "input": "車とした"
+    },
+    {
+      "description": "本を通じて学ぶ、資料を通じて学ぶ、経験を通じて知る、本を通して学ぶ、本に関する問題、本に対する答え、をめぐって、に際して - auto-generated",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を通じて",
+          "pos": "Particle",
+          "surface": "を通じて"
+        },
+        {
+          "lemma": "学ぶ",
+          "pos": "Verb",
+          "surface": "学ぶ"
+        },
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を通じて",
+          "pos": "Particle",
+          "surface": "を通じて"
+        },
+        {
+          "lemma": "学ぶ",
+          "pos": "Verb",
+          "surface": "学ぶ"
+        },
+        {
+          "lemma": "経験",
+          "pos": "Noun",
+          "surface": "経験"
+        },
+        {
+          "lemma": "を通じて",
+          "pos": "Particle",
+          "surface": "を通じて"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知る"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を通して",
+          "pos": "Particle",
+          "surface": "を通して"
+        },
+        {
+          "lemma": "学ぶ",
+          "pos": "Verb",
+          "surface": "学ぶ"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "に関する",
+          "pos": "Particle",
+          "surface": "に関する"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "に対する",
+          "pos": "Particle",
+          "surface": "に対する"
+        },
+        {
+          "lemma": "答え",
+          "pos": "Noun",
+          "surface": "答え"
+        },
+        {
+          "lemma": "をめぐって",
+          "pos": "Particle",
+          "surface": "をめぐって"
+        },
+        {
+          "lemma": "に際して",
+          "pos": "Particle",
+          "surface": "に際して"
+        }
+      ],
+      "id": "compound_case_particle_mediation_and_attributive",
+      "input": "本を通じて学ぶ、資料を通じて学ぶ、経験を通じて知る、本を通して学ぶ、本に関する問題、本に対する答え、をめぐって、に際して"
+    },
+    {
+      "description": "年につれて変わる、時間につれて変わる、増加につれて変わる、人口の増加につれて変わる、年に連れて歩く - auto-generated",
+      "expected": [
+        {
+          "lemma": "年",
+          "pos": "Noun",
+          "surface": "年"
+        },
+        {
+          "lemma": "につれて",
+          "pos": "Particle",
+          "surface": "につれて"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わる"
+        },
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "につれて",
+          "pos": "Particle",
+          "surface": "につれて"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わる"
+        },
+        {
+          "lemma": "増加",
+          "pos": "Noun",
+          "surface": "増加"
+        },
+        {
+          "lemma": "につれて",
+          "pos": "Particle",
+          "surface": "につれて"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わる"
+        },
+        {
+          "lemma": "人口",
+          "pos": "Noun",
+          "surface": "人口"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "増加",
+          "pos": "Noun",
+          "surface": "増加"
+        },
+        {
+          "lemma": "につれて",
+          "pos": "Particle",
+          "surface": "につれて"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わる"
+        },
+        {
+          "lemma": "年",
+          "pos": "Noun",
+          "surface": "年"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "連れる",
+          "pos": "Verb",
+          "surface": "連れ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩く"
+        }
+      ],
+      "id": "tsurete_compound_particle",
+      "input": "年につれて変わる、時間につれて変わる、増加につれて変わる、人口の増加につれて変わる、年に連れて歩く"
+    },
+    {
+      "description": "食べるまでもない、調べるまでもない、考えるまでもない、述べるまでもない、食べるまでに進む - auto-generated",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "考える",
+          "pos": "Verb",
+          "surface": "考える"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "述べる",
+          "pos": "Verb",
+          "surface": "述べる"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "terminal_verb_made_boundary",
+      "input": "食べるまでもない、調べるまでもない、考えるまでもない、述べるまでもない、食べるまでに進む"
+    },
+    {
+      "description": "複合格助詞にかけての範囲表現",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "にかけて",
+          "pos": "Particle",
+          "surface": "にかけて"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "にかけて",
+          "pos": "Particle",
+          "surface": "にかけて"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "にかけて",
+          "pos": "Particle",
+          "surface": "にかけて"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "compound_particle_nikakete",
+      "input": "本にかけて進む、水にかけて進む、紙にかけて進む"
     }
   ],
   "description": "Case particles (が、を、に、で)",

@@ -83,6 +83,27 @@ TEST_F(PreTokenizerNumberTest, MatchDate_DoesNotAcceptDecimalYear) {
   }
 }
 
+TEST_F(PreTokenizerNumberTest, MatchCounter_MonthAndPlaceSpellings) {
+  constexpr std::string_view kCounters[] = {
+      "1か月", "12か月", "1ヶ月", "12ヶ月", "1ヵ月", "12ヵ月", "1ケ月", "1箇月", "1か所", "12か所", "1ヶ所", "1箇所",
+  };
+
+  for (std::string_view counter : kCounters) {
+    auto result = pretokenizer_.process(counter);
+    ASSERT_EQ(result.tokens.size(), 1) << counter;
+    EXPECT_EQ(result.tokens[0].surface, counter);
+    EXPECT_EQ(result.tokens[0].type, PreTokenType::Counter);
+  }
+}
+
+TEST_F(PreTokenizerNumberTest, MatchCounter_LeavesFollowingSuffixInSpan) {
+  auto result = pretokenizer_.process("3か月後");
+  ASSERT_EQ(result.tokens.size(), 1);
+  EXPECT_EQ(result.tokens[0].surface, "3か月");
+  EXPECT_EQ(result.tokens[0].type, PreTokenType::Counter);
+  ASSERT_EQ(result.spans.size(), 1);
+}
+
 // ===== Currency tests =====
 
 TEST_F(PreTokenizerNumberTest, MatchCurrency_Basic) {

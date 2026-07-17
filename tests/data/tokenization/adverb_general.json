@@ -1549,6 +1549,892 @@
       ],
       "id": "omedetou_gozaimasu",
       "input": "おめでとうございます"
+    },
+    {
+      "description": "必ずしも読まない - auto-generated",
+      "expected": [
+        {
+          "lemma": "必ずしも",
+          "pos": "Adverb",
+          "surface": "必ずしも"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "polarity_adverb_yomanai",
+      "input": "必ずしも読まない"
+    },
+    {
+      "description": "必ずしも書かない - auto-generated",
+      "expected": [
+        {
+          "lemma": "必ずしも",
+          "pos": "Adverb",
+          "surface": "必ずしも"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "polarity_adverb_kakanai",
+      "input": "必ずしも書かない"
+    },
+    {
+      "description": "必ずしも食べない - auto-generated",
+      "expected": [
+        {
+          "lemma": "必ずしも",
+          "pos": "Adverb",
+          "surface": "必ずしも"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "polarity_adverb_tabenai",
+      "input": "必ずしも食べない"
+    },
+    {
+      "description": "必ずしも良いとは限らない - auto-generated",
+      "expected": [
+        {
+          "lemma": "必ずしも",
+          "pos": "Adverb",
+          "surface": "必ずしも"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "限る",
+          "pos": "Verb",
+          "surface": "限ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "polarity_adverb_clause",
+      "input": "必ずしも良いとは限らない"
+    },
+    {
+      "description": "いつか読む、いつか書く、いつか食べる、いつか読んだ、いつかは読む、いつかの本、まもなく読む、ときどき読む、いっそう読む、最も読む、あらためて読む、とくに読む、まったく読む、きわめて読む - auto-generated",
+      "expected": [
+        {
+          "lemma": "いつか",
+          "pos": "Adverb",
+          "surface": "いつか"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "いつか",
+          "pos": "Adverb",
+          "surface": "いつか"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "いつか",
+          "pos": "Adverb",
+          "surface": "いつか"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "いつか",
+          "pos": "Adverb",
+          "surface": "いつか"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "いつか",
+          "pos": "Adverb",
+          "surface": "いつか"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "いつか",
+          "pos": "Adverb",
+          "surface": "いつか"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "まもなく",
+          "pos": "Adverb",
+          "surface": "まもなく"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "ときどき",
+          "pos": "Adverb",
+          "surface": "ときどき"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "いっそう",
+          "pos": "Adverb",
+          "surface": "いっそう"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "最も",
+          "pos": "Adverb",
+          "surface": "最も"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "あらためて",
+          "pos": "Adverb",
+          "surface": "あらためて"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "とくに",
+          "pos": "Adverb",
+          "surface": "とくに"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "まったく",
+          "pos": "Adverb",
+          "surface": "まったく"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "きわめて",
+          "pos": "Adverb",
+          "surface": "きわめて"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "fixed_adverb_boundaries",
+      "input": "いつか読む、いつか書く、いつか食べる、いつか読んだ、いつかは読む、いつかの本、まもなく読む、ときどき読む、いっそう読む、最も読む、あらためて読む、とくに読む、まったく読む、きわめて読む"
+    },
+    {
+      "description": "意図的選択を表す副詞あえてを一段動詞連用形と接続助詞に分解しない",
+      "expected": [
+        {
+          "lemma": "あえて",
+          "pos": "Adverb",
+          "surface": "あえて"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "あえて",
+          "pos": "Adverb",
+          "surface": "あえて"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ま"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "あえて",
+          "pos": "Adverb",
+          "surface": "あえて"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "aete_intentional_adverb",
+      "input": "あえて本を読まない。あえて水を飲まない。あえて紙を使わない。"
+    },
+    {
+      "description": "限定と強調を表す副詞あくまでを動詞と格助詞へ分解しない",
+      "expected": [
+        {
+          "lemma": "あくまで",
+          "pos": "Adverb",
+          "surface": "あくまで"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "あくまで",
+          "pos": "Adverb",
+          "surface": "あくまで"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        },
+        {
+          "lemma": "あくまで",
+          "pos": "Adverb",
+          "surface": "あくまで"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "akumade_emphatic_adverb",
+      "input": "あくまで本を読む。あくまで水を飲む。あくまで紙を使う。"
+    },
+    {
+      "description": "程度副詞いたってを動詞音便形と接続助詞へ分解しない",
+      "expected": [
+        {
+          "lemma": "いたって",
+          "pos": "Adverb",
+          "surface": "いたって"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        },
+        {
+          "lemma": "いたって",
+          "pos": "Adverb",
+          "surface": "いたって"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        },
+        {
+          "lemma": "いたって",
+          "pos": "Adverb",
+          "surface": "いたって"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        }
+      ],
+      "id": "itatte_degree_adverb",
+      "input": "いたって本が多い。いたって水が多い。いたって紙が多い。"
+    },
+    {
+      "description": "書き言葉の程度副詞群を自立語と助詞列へ分解しない",
+      "expected": [
+        {
+          "lemma": "すこぶる",
+          "pos": "Adverb",
+          "surface": "すこぶる"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        },
+        {
+          "lemma": "すこぶる",
+          "pos": "Adverb",
+          "surface": "すこぶる"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        },
+        {
+          "lemma": "おおいに",
+          "pos": "Adverb",
+          "surface": "おおいに"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "おおいに",
+          "pos": "Adverb",
+          "surface": "おおいに"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        },
+        {
+          "lemma": "つとめて",
+          "pos": "Adverb",
+          "surface": "つとめて"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "つとめて",
+          "pos": "Adverb",
+          "surface": "つとめて"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        }
+      ],
+      "id": "formal_degree_adverbs",
+      "input": "すこぶる本が多い。すこぶる水が多い。おおいに本を読む。おおいに紙を使う。つとめて本を読む。つとめて水を飲む。"
+    },
+    {
+      "description": "接続副詞ひいてはを動詞連用形と助詞列へ分解しない",
+      "expected": [
+        {
+          "lemma": "ひいては",
+          "pos": "Adverb",
+          "surface": "ひいては"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "ひいては",
+          "pos": "Adverb",
+          "surface": "ひいては"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        },
+        {
+          "lemma": "ひいては",
+          "pos": "Adverb",
+          "surface": "ひいては"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "hiitewa_connective_adverb",
+      "input": "ひいては本を読む。ひいては水を飲む。ひいては紙を使う。"
+    },
+    {
+      "description": "副詞かえってを動詞音便形と接続助詞へ分解しない",
+      "expected": [
+        {
+          "lemma": "かえって",
+          "pos": "Adverb",
+          "surface": "かえって"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        },
+        {
+          "lemma": "かえって",
+          "pos": "Adverb",
+          "surface": "かえって"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        },
+        {
+          "lemma": "かえって",
+          "pos": "Adverb",
+          "surface": "かえって"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        }
+      ],
+      "id": "kaette_adversative_adverb",
+      "input": "かえって本が多い。かえって水が多い。かえって紙が多い。"
+    },
+    {
+      "description": "Mimetic A-small-tsu-B-ri forms remain complete adverb tokens before nouns and verbs.",
+      "expected": [
+        {
+          "lemma": "まったり",
+          "pos": "Adverb",
+          "surface": "まったり"
+        },
+        {
+          "lemma": "配信",
+          "pos": "Noun",
+          "surface": "配信"
+        },
+        {
+          "lemma": "ゆったり",
+          "pos": "Adverb",
+          "surface": "ゆったり"
+        },
+        {
+          "lemma": "配信",
+          "pos": "Noun",
+          "surface": "配信"
+        },
+        {
+          "lemma": "ぐったり",
+          "pos": "Adverb",
+          "surface": "ぐったり"
+        },
+        {
+          "lemma": "休む",
+          "pos": "Verb",
+          "surface": "休む"
+        },
+        {
+          "lemma": "じっくり",
+          "pos": "Adverb",
+          "surface": "じっくり"
+        },
+        {
+          "lemma": "考える",
+          "pos": "Verb",
+          "surface": "考える"
+        }
+      ],
+      "id": "mimetic_sokuon_ri_adverb_boundary",
+      "input": "まったり配信。ゆったり配信。ぐったり休む。じっくり考える。"
+    },
+    {
+      "description": "本はもとより水を読む。水はもとより紙を書く。紙はもとより本を包む。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "もとより",
+          "pos": "Adverb",
+          "surface": "もとより"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "もとより",
+          "pos": "Adverb",
+          "surface": "もとより"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "もとより",
+          "pos": "Adverb",
+          "surface": "もとより"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "包む",
+          "pos": "Verb",
+          "surface": "包む"
+        }
+      ],
+      "id": "hamotoyori_wo_mu_hamotoyori_wo_ku_hamotoyori_wo_mu",
+      "input": "本はもとより水を読む。水はもとより紙を書く。紙はもとより本を包む。"
     }
   ],
   "description": "General adverbs",

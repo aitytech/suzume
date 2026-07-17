@@ -2216,6 +2216,446 @@
       ],
       "id": "naraba_karu",
       "input": "学生ならば分かる"
+    },
+    {
+      "description": "表意文字の〆を記号除去せず漢字複合名詞として保持する",
+      "expected": [
+        {
+          "lemma": "〆切",
+          "pos": "Noun",
+          "surface": "〆切"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "ideographic_closing_mark_compound",
+      "input": "〆切まで待つ"
+    },
+    {
+      "description": "資金なくして - regression test",
+      "expected": [
+        {
+          "lemma": "資金",
+          "pos": "Noun",
+          "surface": "資金"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "nakushite",
+      "input": "資金なくして"
+    },
+    {
+      "description": "協力なくして - regression test",
+      "expected": [
+        {
+          "lemma": "協力",
+          "pos": "Noun",
+          "surface": "協力"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "nakushite_1",
+      "input": "協力なくして"
+    },
+    {
+      "description": "理由なくして - regression test",
+      "expected": [
+        {
+          "lemma": "理由",
+          "pos": "Noun",
+          "surface": "理由"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "nakushite_2",
+      "input": "理由なくして"
+    },
+    {
+      "description": "準備なくして - regression test",
+      "expected": [
+        {
+          "lemma": "準備",
+          "pos": "Noun",
+          "surface": "準備"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "nakushite_3",
+      "input": "準備なくして"
+    },
+    {
+      "description": "読み手 - regression test",
+      "expected": [
+        {
+          "lemma": "読み手",
+          "pos": "Noun",
+          "surface": "読み手"
+        }
+      ],
+      "id": "mi",
+      "input": "読み手"
+    },
+    {
+      "description": "書き手 - regression test",
+      "expected": [
+        {
+          "lemma": "書き手",
+          "pos": "Noun",
+          "surface": "書き手"
+        }
+      ],
+      "id": "ki",
+      "input": "書き手"
+    },
+    {
+      "description": "受け手 - regression test",
+      "expected": [
+        {
+          "lemma": "受け手",
+          "pos": "Noun",
+          "surface": "受け手"
+        }
+      ],
+      "id": "ke",
+      "input": "受け手"
+    },
+    {
+      "description": "買い手 - regression test",
+      "expected": [
+        {
+          "lemma": "買い手",
+          "pos": "Noun",
+          "surface": "買い手"
+        }
+      ],
+      "id": "i",
+      "input": "買い手"
+    },
+    {
+      "description": "売り場 - regression test",
+      "expected": [
+        {
+          "lemma": "売り場",
+          "pos": "Noun",
+          "surface": "売り場"
+        }
+      ],
+      "id": "ri",
+      "input": "売り場"
+    },
+    {
+      "description": "1kg未満だ - regression test",
+      "expected": [
+        {
+          "lemma": "1kg",
+          "pos": "Noun",
+          "surface": "1kg"
+        },
+        {
+          "lemma": "未満",
+          "pos": "Suffix",
+          "surface": "未満"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "1kg_da",
+      "input": "1kg未満だ"
+    },
+    {
+      "description": "5cm以上だ - regression test",
+      "expected": [
+        {
+          "lemma": "5cm",
+          "pos": "Noun",
+          "surface": "5cm"
+        },
+        {
+          "lemma": "以上",
+          "pos": "Noun",
+          "surface": "以上"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "5cm_da",
+      "input": "5cm以上だ"
+    },
+    {
+      "description": "風邪気味の人 - regression test",
+      "expected": [
+        {
+          "lemma": "風邪",
+          "pos": "Noun",
+          "surface": "風邪"
+        },
+        {
+          "lemma": "気味",
+          "pos": "Suffix",
+          "surface": "気味"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        }
+      ],
+      "id": "no",
+      "input": "風邪気味の人"
+    },
+    {
+      "description": "疲れ気味だった - regression test",
+      "expected": [
+        {
+          "lemma": "疲れ",
+          "pos": "Noun",
+          "surface": "疲れ"
+        },
+        {
+          "lemma": "気味",
+          "pos": "Suffix",
+          "surface": "気味"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "re_dattta",
+      "input": "疲れ気味だった"
+    },
+    {
+      "description": "遅れ気味だ - regression test",
+      "expected": [
+        {
+          "lemma": "遅れ",
+          "pos": "Noun",
+          "surface": "遅れ"
+        },
+        {
+          "lemma": "気味",
+          "pos": "Suffix",
+          "surface": "気味"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "re_da",
+      "input": "遅れ気味だ"
+    },
+    {
+      "description": "初心者向けの本 - regression test",
+      "expected": [
+        {
+          "lemma": "初心者",
+          "pos": "Noun",
+          "surface": "初心者"
+        },
+        {
+          "lemma": "向け",
+          "pos": "Suffix",
+          "surface": "向け"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        }
+      ],
+      "id": "keno",
+      "input": "初心者向けの本"
+    },
+    {
+      "description": "家庭向けの製品 - regression test",
+      "expected": [
+        {
+          "lemma": "家庭",
+          "pos": "Noun",
+          "surface": "家庭"
+        },
+        {
+          "lemma": "向け",
+          "pos": "Suffix",
+          "surface": "向け"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "製品",
+          "pos": "Noun",
+          "surface": "製品"
+        }
+      ],
+      "id": "keno_1",
+      "input": "家庭向けの製品"
+    },
+    {
+      "description": "子供向けだ - regression test",
+      "expected": [
+        {
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "向け",
+          "pos": "Suffix",
+          "surface": "向け"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "keda",
+      "input": "子供向けだ"
+    },
+    {
+      "description": "豊かさを守る - regression test",
+      "expected": [
+        {
+          "lemma": "豊か",
+          "pos": "Adjective",
+          "surface": "豊か"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "守る",
+          "pos": "Verb",
+          "surface": "守る"
+        }
+      ],
+      "id": "kasawo_ru",
+      "input": "豊かさを守る"
+    },
+    {
+      "description": "静かさを感じる - regression test",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じる"
+        }
+      ],
+      "id": "kasawo_jiru",
+      "input": "静かさを感じる"
     }
   ],
   "description": "General nouns",

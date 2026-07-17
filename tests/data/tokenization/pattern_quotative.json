@@ -299,6 +299,179 @@
         "quotative",
         "colloquial"
       ]
+    },
+    {
+      "description": "読むという - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        }
+      ],
+      "id": "predicate_quotative_terminal",
+      "input": "読むという"
+    },
+    {
+      "description": "書くという - auto-generated",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        }
+      ],
+      "id": "predicate_quotative_godan",
+      "input": "書くという"
+    },
+    {
+      "description": "食べるという - auto-generated",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        }
+      ],
+      "id": "predicate_quotative_ichidan",
+      "input": "食べるという"
+    },
+    {
+      "description": "読んだという - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        }
+      ],
+      "id": "predicate_quotative_past_onbin",
+      "input": "読んだという"
+    },
+    {
+      "description": "書いたという - auto-generated",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        }
+      ],
+      "id": "predicate_quotative_past",
+      "input": "書いたという"
+    },
+    {
+      "description": "食べているという - auto-generated",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        }
+      ],
+      "id": "predicate_quotative_progressive",
+      "input": "食べているという"
+    },
+    {
+      "description": "読むっていう - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "っていう",
+          "pos": "Determiner",
+          "surface": "っていう"
+        }
+      ],
+      "id": "predicate_quotative_colloquial_terminal",
+      "input": "読むっていう"
+    },
+    {
+      "description": "書くっていう - auto-generated",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "っていう",
+          "pos": "Determiner",
+          "surface": "っていう"
+        }
+      ],
+      "id": "predicate_quotative_colloquial_godan",
+      "input": "書くっていう"
+    },
+    {
+      "description": "食べるっていう - auto-generated",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "っていう",
+          "pos": "Determiner",
+          "surface": "っていう"
+        }
+      ],
+      "id": "predicate_quotative_colloquial_ichidan",
+      "input": "食べるっていう"
     }
   ],
   "description": "Quotative patterns (という, といって, etc.)",

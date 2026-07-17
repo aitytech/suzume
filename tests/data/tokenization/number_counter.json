@@ -723,6 +723,266 @@
       ],
       "id": "niita_2",
       "input": "何年間海外にいた"
+    },
+    {
+      "description": "第1回 - regression test",
+      "expected": [
+        {
+          "lemma": "第1回",
+          "pos": "Noun",
+          "surface": "第1回"
+        }
+      ],
+      "id": "1",
+      "input": "第1回"
+    },
+    {
+      "description": "第10回 - regression test",
+      "expected": [
+        {
+          "lemma": "第10回",
+          "pos": "Noun",
+          "surface": "第10回"
+        }
+      ],
+      "id": "10",
+      "input": "第10回"
+    },
+    {
+      "description": "第100回 - regression test",
+      "expected": [
+        {
+          "lemma": "第100回",
+          "pos": "Noun",
+          "surface": "第100回"
+        }
+      ],
+      "id": "100",
+      "input": "第100回"
+    },
+    {
+      "description": "第1章 - regression test",
+      "expected": [
+        {
+          "lemma": "第1章",
+          "pos": "Noun",
+          "surface": "第1章"
+        }
+      ],
+      "id": "1_1",
+      "input": "第1章"
+    },
+    {
+      "description": "第2部 - regression test",
+      "expected": [
+        {
+          "lemma": "第2部",
+          "pos": "Noun",
+          "surface": "第2部"
+        }
+      ],
+      "id": "2",
+      "input": "第2部"
+    },
+    {
+      "description": "第3条 - regression test",
+      "expected": [
+        {
+          "lemma": "第3条",
+          "pos": "Noun",
+          "surface": "第3条"
+        }
+      ],
+      "id": "3",
+      "input": "第3条"
+    },
+    {
+      "description": "第3回目 - regression test",
+      "expected": [
+        {
+          "lemma": "第3回目",
+          "pos": "Noun",
+          "surface": "第3回目"
+        }
+      ],
+      "id": "3_1",
+      "input": "第3回目"
+    },
+    {
+      "description": "第１２回 - regression test",
+      "expected": [
+        {
+          "lemma": "第12回",
+          "pos": "Noun",
+          "surface": "第12回"
+        }
+      ],
+      "id": "unnamed_1",
+      "input": "第１２回"
+    },
+    {
+      "description": "1か月、12か月、1ヶ月、12ヶ月、1ヵ月、12ヵ月、1ケ月、1箇月、1か所、12か所、1ヶ所、1箇所、3か月後、3ヶ月後 - auto-generated",
+      "expected": [
+        {
+          "lemma": "1か月",
+          "pos": "Noun",
+          "surface": "1か月"
+        },
+        {
+          "lemma": "12か月",
+          "pos": "Noun",
+          "surface": "12か月"
+        },
+        {
+          "lemma": "1ヶ月",
+          "pos": "Noun",
+          "surface": "1ヶ月"
+        },
+        {
+          "lemma": "12ヶ月",
+          "pos": "Noun",
+          "surface": "12ヶ月"
+        },
+        {
+          "lemma": "1ヵ月",
+          "pos": "Noun",
+          "surface": "1ヵ月"
+        },
+        {
+          "lemma": "12ヵ月",
+          "pos": "Noun",
+          "surface": "12ヵ月"
+        },
+        {
+          "lemma": "1ケ月",
+          "pos": "Noun",
+          "surface": "1ケ月"
+        },
+        {
+          "lemma": "1箇月",
+          "pos": "Noun",
+          "surface": "1箇月"
+        },
+        {
+          "lemma": "1か所",
+          "pos": "Noun",
+          "surface": "1か所"
+        },
+        {
+          "lemma": "12か所",
+          "pos": "Noun",
+          "surface": "12か所"
+        },
+        {
+          "lemma": "1ヶ所",
+          "pos": "Noun",
+          "surface": "1ヶ所"
+        },
+        {
+          "lemma": "1箇所",
+          "pos": "Noun",
+          "surface": "1箇所"
+        },
+        {
+          "lemma": "3か月",
+          "pos": "Noun",
+          "surface": "3か月"
+        },
+        {
+          "lemma": "後",
+          "pos": "Suffix",
+          "surface": "後"
+        },
+        {
+          "lemma": "3ヶ月",
+          "pos": "Noun",
+          "surface": "3ヶ月"
+        },
+        {
+          "lemma": "後",
+          "pos": "Suffix",
+          "surface": "後"
+        }
+      ],
+      "id": "month_place_counter_spelling_variants",
+      "input": "1か月、12か月、1ヶ月、12ヶ月、1ヵ月、12ヵ月、1ケ月、1箇月、1か所、12か所、1ヶ所、1箇所、3か月後、3ヶ月後"
+    },
+    {
+      "description": "二階建て、三階建て、四階建て、二階建ての家、二本立て、三本立て - auto-generated",
+      "expected": [
+        {
+          "lemma": "二階",
+          "pos": "Noun",
+          "surface": "二階"
+        },
+        {
+          "lemma": "建て",
+          "pos": "Suffix",
+          "surface": "建て"
+        },
+        {
+          "lemma": "三階",
+          "pos": "Noun",
+          "surface": "三階"
+        },
+        {
+          "lemma": "建て",
+          "pos": "Suffix",
+          "surface": "建て"
+        },
+        {
+          "lemma": "四階",
+          "pos": "Noun",
+          "surface": "四階"
+        },
+        {
+          "lemma": "建て",
+          "pos": "Suffix",
+          "surface": "建て"
+        },
+        {
+          "lemma": "二階",
+          "pos": "Noun",
+          "surface": "二階"
+        },
+        {
+          "lemma": "建て",
+          "pos": "Suffix",
+          "surface": "建て"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "家",
+          "pos": "Noun",
+          "surface": "家"
+        },
+        {
+          "lemma": "二本",
+          "pos": "Noun",
+          "surface": "二本"
+        },
+        {
+          "lemma": "立て",
+          "pos": "Suffix",
+          "surface": "立て"
+        },
+        {
+          "lemma": "三本",
+          "pos": "Noun",
+          "surface": "三本"
+        },
+        {
+          "lemma": "立て",
+          "pos": "Suffix",
+          "surface": "立て"
+        }
+      ],
+      "id": "quantity_bound_suffixes",
+      "input": "二階建て、三階建て、四階建て、二階建ての家、二本立て、三本立て"
     }
   ],
   "description": "number_counter tests",
