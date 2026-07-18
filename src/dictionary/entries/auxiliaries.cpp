@@ -168,13 +168,6 @@ EntrySpecRange getAuxiliaryEntries() {
       // renyokei and keeps the past auxiliary as a separate token.
       aux("あぐね", "あぐねる", EPOS::AuxInability),
       aux("あぐねる", "あぐねる", EPOS::AuxInability),
-      // Failure subsidiary - 損なう. Its Godan forms attach after a verb
-      // renyokei: 読み損なう, 読み損なった, 食べ損なわない.
-      aux("損ない", "損なう", EPOS::AuxInability),
-      aux("損なう", "損なう", EPOS::AuxInability),
-      aux("損なっ", "損なう", EPOS::AuxInability),
-      aux("損なわ", "損なう", EPOS::AuxInability),
-      aux("損なえ", "損なう", EPOS::AuxInability),
       // Hiragana spelling of the same closed-class failure auxiliary.
       aux("そこない", "そこなう", EPOS::AuxInability),
       aux("そこなう", "そこなう", EPOS::AuxInability),
@@ -420,6 +413,9 @@ EntrySpecRange getAuxiliaryEntries() {
       adj("やすい", "やすい", EPOS::AdjBasic),
       adj("やすく", "やすい", EPOS::AdjRenyokei),
       adj("やすかっ", "やすい", EPOS::AdjKatt),
+      adj("がたい", "がたい", EPOS::AdjBasic),
+      adj("がたく", "がたい", EPOS::AdjRenyokei),
+      adj("がたかっ", "がたい", EPOS::AdjKatt),
       // Stem form (語幹/ガル接続) for さ-nominalization, mirroring よ/な stems:
       // MeCab: 使いやすさ → 使い + やす(語幹) + さ. Only やす needs this — にく already
       // has a NOUN reading (肉/にく) in the dictionary that carries 読みにくさ, whereas
