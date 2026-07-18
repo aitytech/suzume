@@ -424,6 +424,13 @@ void addEmphaticVariants(std::vector<UnknownCandidate>& candidates, const std::v
       emphatic_cand.surface += emphatic.suffix;
       emphatic_cand.end = emphatic.end;
       emphatic_cand.cost += emphaticCostAdjustment(emphatic);
+      // A run of emphasis marks is itself a searchable colloquial form.
+      // Keep modest elongation normalized (すごーい, やばいいい), but preserve
+      // longer runs such as すごーーい and すごいいいい as their own lemma.
+      if (cand.pos == core::PartOfSpeech::Adjective &&
+          (emphatic.standard_char_count >= 2 || emphatic.repeated_vowel_count >= 3)) {
+        emphatic_cand.lemma = emphatic_cand.surface;
+      }
 #ifdef SUZUME_DEBUG_INFO
       emphatic_cand.pattern += "_emphatic";
 #endif

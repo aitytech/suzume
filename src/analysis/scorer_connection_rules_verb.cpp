@@ -36,6 +36,15 @@ namespace suzume::analysis::connection_rules {
 float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // A dictionary-attested euphonic verb form followed by the connective
+  // particle is the productive te-form boundary (読ん+で, 書い+て).  Keep
+  // this lexical gate so unknown hiragana fragments remain conservative.
+  if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && prev.lemmaVerified() &&
+      prev.origin != core::CandidateOrigin::VerbCompound && prev.origin != core::CandidateOrigin::Join &&
+      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"て", "で"})) {
+    bonus += cost::kVeryStrongBonus;
+  }
+
   // A compound verb or dictionary-verified humble auxiliary onbin stem takes
   // the conjunctive て (使いきっ+て+しまう, いただい+ている).  The lexical
   // gate keeps the general onbin rule conservative for mimetic fragments.
@@ -350,6 +359,15 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // passive + desire chains can fabricate an i-adjective spanning both
   // auxiliaries: 行か+れたく instead of 行か+れ+たく.
   if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && next.pos == core::PartOfSpeech::Adjective) {
+    bonus += cost::kAlmostNever;
+  }
+
+  // The classical causative す attaches to an a-row irrealis stem
+  // (いら+し+て). A non-a-row homograph cannot supply that inflectional
+  // context, so it must not create a fabricated voice chain such as
+  // かも+し+れ+ない.
+  if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && next.extended_pos == core::ExtendedPOS::AuxCausative &&
+      grammar::isClassicalCausativeAuxiliaryLemma(next.lemma) && !grammar::endsWithARow(prev.surface)) {
     bonus += cost::kAlmostNever;
   }
 

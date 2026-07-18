@@ -287,7 +287,7 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // A terminal progressive predicate can be nominalized before a following
       // particle (食べてる+の+に). Prefer that boundary over a fused lexical
       // verb reading of the preceding progressive form.
-      {EPOS::AuxAspectIru, EPOS::ParticleNo, cost::kDoubleVeryStrongBonus},
+      {EPOS::AuxAspectIru, EPOS::ParticleNo, cost::kStrongBonus},
 
       // The trial subsidiary みる conjugates as an Ichidan auxiliary. Its stem
       // therefore accepts the same independent tense, negation, and desiderative

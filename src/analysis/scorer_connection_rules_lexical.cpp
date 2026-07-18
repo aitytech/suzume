@@ -386,6 +386,17 @@ float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::Latti
   return cost::kNeutral;
 }
 
+float computeCompoundNominalizationBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  // A verified compound in renyokei can be nominalized by の (書きかけの紙,
+  // 書きたての文). Its single-word candidate must remain available against a
+  // competing decomposition into a verb stem and suffix.
+  if (prev.origin == core::CandidateOrigin::VerbCompound && prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      next.extended_pos == core::ExtendedPOS::ParticleNo) {
+    return cost::kTripleVeryStrongBonus + cost::kModerateBonus;
+  }
+  return cost::kNeutral;
+}
+
 // Progressive/contracted て, dialectal やで, 付け-で formal noun, honorific
 // renyokei (いたし/いただき), and い/た/だ auxiliary attachment rules.
 float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
@@ -397,6 +408,14 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"つつ"}) &&
       next.extended_pos == core::ExtendedPOS::VerbShuushikei && next.lemma == "ある") {
     bonus += cost::kVeryStrongBonus;
+  }
+
+  // A conjunctive particle cannot host the contracted negative auxiliary.
+  // This preserves the productive hatsuonbin verb path (つつん+で) while
+  // leaving classical negative ず after a conjunction (のみなら+ず) intact.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
+      grammar::isContractedNegativeAuxiliaryLemma(next.lemma)) {
+    bonus += cost::kAlmostNever;
   }
 
   // A nominal phrase followed by の+ある uses the existential verb in
@@ -454,6 +473,24 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
       (next.pos == core::PartOfSpeech::Particle || next.pos == core::PartOfSpeech::Noun ||
        next.pos == core::PartOfSpeech::Pronoun || next.pos == core::PartOfSpeech::Determiner ||
        next.pos == core::PartOfSpeech::Adverb || next.pos == core::PartOfSpeech::Conjunction)) {
+    bonus += cost::kAlmostNever;
+  }
+
+  // The colloquial progressive contraction permits the nominalizer directly
+  // after its contracted て/で form (食べ+て+ん+の, 読ん+で+ん+の). This is
+  // distinct from an independent progressive auxiliary such as いる or い,
+  // whose nominalization must not absorb a following clause boundary.
+  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && grammar::isContractedProgressiveSurface(prev.surface) &&
+      next.extended_pos == core::ExtendedPOS::ParticleNo) {
+    bonus += cost::kDoubleVeryStrongBonus;
+  }
+
+  // The ん in a contracted progressive (〜てんだ) is the nominalizer の, not
+  // the negative auxiliary. Exclude only that impossible immediate auxiliary
+  // attachment, leaving genuine negative forms after mizenkei untouched.
+  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && grammar::isContractedProgressiveSurface(prev.surface) &&
+      next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
+      grammar::isContractedNegativeAuxiliaryLemma(next.lemma)) {
     bonus += cost::kAlmostNever;
   }
 

@@ -995,6 +995,16 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     }
     float final_cost = base_cost + opts.compound_verb_bonus + v1_bonus;
 
+    // A compound whose complete lemma is attested in the dictionary is a
+    // lexical search unit.  Prefer it over a coincidental noun + する or
+    // verb + verb decomposition, while leaving productive, unregistered
+    // compounds to their ordinary compositional scoring.
+    const bool compound_lemma_verified =
+        dict_manager.lookupExact(best_match.compound_base, core::PartOfSpeech::Verb) != nullptr;
+    if (compound_lemma_verified) {
+      final_cost += bigram_cost::kStrongBonus;
+    }
+
     // Penalty for compound verbs that absorb auxiliary suffixes (た/て/れる/etc.)
     // When includes_aux is true, the compound has absorbed an inflectional suffix
     // that should split off (e.g., 語り継がれる → 語り継が|れる).
@@ -1005,6 +1015,9 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     }
 
     uint8_t flags = core::LatticeEdge::kFromDictionary;
+    if (compound_lemma_verified) {
+      flags |= core::LatticeEdge::kLemmaVerified;
+    }
 
     // Compound_base preserves the V2's input orthography. Potential forms are
     // lexical terminal forms in the public token contract, so retain their
@@ -1035,8 +1048,22 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     core::ExtendedPOS compound_epos = renyokei_multichar ? core::ExtendedPOS::VerbRenyokei : core::ExtendedPOS::Unknown;
     lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
                     core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, compound_conj_type,
-                    core::CandidateOrigin::Unknown, candidate::kNoOriginConfidence, "compound", compound_epos,
+                    core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "compound", compound_epos,
                     "compound");
+
+    // An ichidan V2 forms its conditional from the compound renyokei plus
+    // れば.  Keep that inflectional boundary available for every lexical or
+    // productive compound (言い換えれ+ば, 組み合わせれ+ば) instead of
+    // reinterpreting れ as a passive auxiliary.
+    if (best_match.v2_verb_type == V2VerbType::Ichidan && best_match.renyokei_form &&
+        compound_end_pos + 1 < codepoints.size() && codepoints[compound_end_pos] == U'れ' &&
+        codepoints[compound_end_pos + 1] == U'ば') {
+      const std::string kateikei_surface = compound_surface + "れ";
+      lattice.addEdge(kateikei_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos + 1),
+                      core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, compound_conj_type,
+                      core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "compound_kateikei",
+                      core::ExtendedPOS::VerbKateikei, "compound_kateikei");
+    }
 
     // Generate a te-form euphonic stem candidate so the conjunctive particle
     // remains separate: 話し合って → 話し合っ|て.

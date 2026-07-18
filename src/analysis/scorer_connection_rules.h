@@ -13,6 +13,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
 float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+float computeCompoundNominalizationBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeCopulaConditionalBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);

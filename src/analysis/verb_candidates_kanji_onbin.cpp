@@ -361,10 +361,12 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
             SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << " kanji_sokuonbin lemma=" << matched_base_form
                                 << " cost=" << sokuonbin_cost << (matched_via_dict ? " (dict)" : " (infl)") << "\n";
           }
-          candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, kanji_end + 1, sokuonbin_cost,
-                                                 matched_base_form, grammar::verbTypeToConjType(matched_verb_type),
-                                                 true, CandidateOrigin::VerbKanji, 0.9F, "kanji_sokuonbin",
-                                                 core::ExtendedPOS::VerbOnbinkei));
+          auto candidate =
+              makeVerbCandidate(onbin_surface, start_pos, kanji_end + 1, sokuonbin_cost, matched_base_form,
+                                grammar::verbTypeToConjType(matched_verb_type), true, CandidateOrigin::VerbKanji, 0.9F,
+                                "kanji_sokuonbin", core::ExtendedPOS::VerbOnbinkei);
+          candidate.lemma_verified = matched_via_dict;
+          candidates.push_back(std::move(candidate));
         }
       }
     }

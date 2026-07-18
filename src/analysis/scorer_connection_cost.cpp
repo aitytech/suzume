@@ -65,6 +65,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
 
   surface_bonus += connection_rules::computeParticleQuoteBonus(prev, next);
 
+  surface_bonus += connection_rules::computeCompoundNominalizationBonus(prev, next);
+
   surface_bonus += connection_rules::computeProgressiveHonorificBonus(prev, next);
 
   surface_bonus += connection_rules::computeSugiFinalParticleBonus(prev, next);

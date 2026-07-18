@@ -130,8 +130,8 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Allows 食べ+て+いる to beat unified 食べて+いる path
       {EPOS::ParticleConj, EPOS::AuxAspectIru, cost::kStrongBonus},
 
-      // ParticleConj → AuxAspectShimau (て+しまう) - strong bonus
-      {EPOS::ParticleConj, EPOS::AuxAspectShimau, cost::kStrongBonus},
+      // ParticleConj → AuxAspectShimau (て+しまう) - very strong bonus
+      {EPOS::ParticleConj, EPOS::AuxAspectShimau, cost::kVeryStrongBonus},
 
       // ParticleConj → AuxAspectOku (て+おく) - strong bonus
       {EPOS::ParticleConj, EPOS::AuxAspectOku, cost::kStrongBonus},

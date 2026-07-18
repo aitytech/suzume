@@ -193,6 +193,15 @@ float computeSpuriousVerbPenalty(const core::LatticeEdge& edge) {
   return penalty;
 }
 
+/// A completion auxiliary requires a preceding predicate and cannot begin a sentence.
+float computeStandaloneAuxiliaryPenalty(const core::LatticeEdge& edge) {
+  if (edge.start == 0 && edge.pos == core::PartOfSpeech::Auxiliary &&
+      edge.extended_pos == core::ExtendedPOS::AuxAspectShimau) {
+    return cost::kVeryRare;
+  }
+  return cost::kNeutral;
+}
+
 /// Penalties for spurious verb candidates identified by their inflected endings (そう/てき/まし/てい/te/ta).
 float computeVerbEndingPenalty(const core::LatticeEdge& edge) {
   float penalty{};
@@ -529,6 +538,9 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
 
   // Penalties for spurious non-dictionary verb renyokei/stem candidates.
   cost += computeSpuriousVerbPenalty(edge);
+
+  // A completion auxiliary must attach to a preceding predicate.
+  cost += computeStandaloneAuxiliaryPenalty(edge);
 
   // Penalties for spurious verb candidates identified by their inflected endings (そう/てき/まし/てい/te/ta).
   cost += computeVerbEndingPenalty(edge);

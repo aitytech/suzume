@@ -409,9 +409,15 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
           emphatic_epos = core::ExtendedPOS::VerbOnbinkei;
         }
 
-        lattice.addEdge(result.entry->surface + emphatic.suffix, static_cast<uint32_t>(start_pos),
-                        static_cast<uint32_t>(emphatic.end), result.entry->pos,
-                        cost + verb_helpers::emphaticCostAdjustment(emphatic), flags, result.entry->lemma,
+        const std::string emphatic_surface = result.entry->surface + emphatic.suffix;
+        const bool preserves_emphatic_surface =
+            result.entry->pos == core::PartOfSpeech::Auxiliary ||
+            (result.entry->pos == core::PartOfSpeech::Adjective &&
+             (emphatic.standard_char_count >= 2 || emphatic.repeated_vowel_count >= 3));
+        const std::string_view emphatic_lemma =
+            preserves_emphatic_surface ? std::string_view(emphatic_surface) : std::string_view(result.entry->lemma);
+        lattice.addEdge(emphatic_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(emphatic.end),
+                        result.entry->pos, cost + verb_helpers::emphaticCostAdjustment(emphatic), flags, emphatic_lemma,
                         dictionary::ConjugationType::None, core::CandidateOrigin::Dictionary, 1.0F, {}, emphatic_epos,
                         "dict_emphatic");
       }
