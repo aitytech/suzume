@@ -211,6 +211,50 @@ bool endsWithFocusParticleTail(const dictionary::DictionaryManager* dict_manager
          endsWithParticleTailOfPos(dict_manager, codepoints, start_pos, end_pos, core::ExtendedPOS::ParticleBinding);
 }
 
+bool hasAuxiliaryNegativeBoundary(const dictionary::DictionaryManager* dict_manager,
+                                  const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 2 || end_pos > codepoints.size()) {
+    return false;
+  }
+  auto has_exact_epos = [&](size_t span_start, size_t span_end, core::ExtendedPOS epos) {
+    const auto* entry = dict_manager->lookupExact(extractSubstring(codepoints, span_start, span_end));
+    return entry != nullptr && entry->extended_pos == epos;
+  };
+  for (size_t boundary = start_pos + 1; boundary + 1 < end_pos; ++boundary) {
+    const std::string prefix = extractSubstring(codepoints, start_pos, boundary);
+    const auto* prefix_entry = dict_manager->lookupExact(prefix);
+    const bool is_closed_class_prefix =
+        prefix_entry != nullptr && (prefix_entry->pos == core::PartOfSpeech::Auxiliary ||
+                                    prefix_entry->extended_pos == core::ExtendedPOS::AuxExcessive);
+    if (!is_closed_class_prefix) {
+      continue;
+    }
+    for (size_t negative_end = boundary + 1; negative_end <= end_pos; ++negative_end) {
+      if (!has_exact_epos(boundary, negative_end, core::ExtendedPOS::AuxNegativeNai)) {
+        continue;
+      }
+      if (negative_end == end_pos || has_exact_epos(negative_end, end_pos, core::ExtendedPOS::AuxTenseTa)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool formalNounFollowsAt(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                         size_t pos) {
+  if (dict_manager == nullptr || pos >= codepoints.size()) {
+    return false;
+  }
+  const std::string remaining = extractSubstring(codepoints, pos, codepoints.size());
+  for (const auto& result : dict_manager->lookup(remaining, 0)) {
+    if (result.entry != nullptr && result.entry->extended_pos == core::ExtendedPOS::NounFormal) {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::string lookupVerbLemma(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
                             std::string_view fallback) {
   if (dict_manager != nullptr) {
@@ -550,11 +594,14 @@ bool shouldSkipCausativeAuxPattern(std::string_view surface, grammar::VerbType v
     }
   }
 
-  // Causative-passive patterns for all verb types (including Ichidan)
-  // E.g., 聞かせられた → 聞か + せ + られ + た.
-  // These look like Ichidan verbs but contain causative+passive auxiliary chain
+  // Causative-passive and passive-causative patterns for all verb types
+  // (including Ichidan). These look like Ichidan verbs but contain a voice
+  // auxiliary chain, so retain each auxiliary boundary.
+  // E.g., 聞かせられた → 聞か + せ + られ + た;
+  //       書かれさせる → 書か + れ + させる.
   if (utf8::endsWith(surface, "せられる") || utf8::endsWith(surface, "せられた") ||
-      utf8::endsWith(surface, "せられて") || utf8::endsWith(surface, "せられない")) {
+      utf8::endsWith(surface, "せられて") || utf8::endsWith(surface, "せられない") ||
+      utf8::containsAny(surface, {"れさせ", "られさせ"})) {
     return true;
   }
   return false;
@@ -641,6 +688,10 @@ bool containsTeFormAuxPattern(std::string_view surface) {
 
 bool containsCausativeAuxPattern(std::string_view surface) {
   return utf8::containsAny(surface, scorer::kCausativeAuxPenaltyPatterns);
+}
+
+bool containsPassiveCausativeAuxPattern(std::string_view surface) {
+  return utf8::containsAny(surface, {"れさせ", "られさせ"});
 }
 
 VerbClassBests bestByVerbClass(const std::vector<grammar::InflectionCandidate>& candidates) {

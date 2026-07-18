@@ -485,15 +485,6 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     // Note: Common adverbs/onomatopoeia (ぴったり, はっきり, etc.) are filtered
     // by the dictionary lookup below - they are registered as Adverb in L1 dictionary.
 
-    // Filter out old kana forms (ゐ=wi, ゑ=we) that look like verbs
-    // ゐる is old kana for いる (auxiliary), not a standalone verb
-    if (surface.size() >= core::kJapaneseCharBytes) {
-      std::string_view first_char_view(surface.data(), core::kJapaneseCharBytes);
-      if (first_char_view == "ゐ" || first_char_view == "ゑ") {
-        continue;  // Skip old kana patterns
-      }
-    }
-
     // Filter out words that exist in dictionary as non-verb entries
     // e.g., あなた (pronoun), わたし (pronoun) should not be verb candidates
     if (vh::hasNonVerbDictionaryEntry(dict_manager, surface)) {

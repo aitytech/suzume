@@ -476,10 +476,16 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
                 SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << " extended_sokuonbin lemma=" << potential_base
                                     << (in_dict ? " [dict]" : " [infl]") << " cost=" << kExtendedSokuonbinCost << "\n";
               }
-              candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kExtendedSokuonbinCost,
-                                                     potential_base, grammar::verbTypeToConjType(onbin_verb_type), true,
-                                                     CandidateOrigin::VerbKanji, 0.9F, "extended_sokuonbin",
-                                                     core::ExtendedPOS::VerbOnbinkei));
+              auto candidate =
+                  makeVerbCandidate(onbin_surface, start_pos, onbin_end, kExtendedSokuonbinCost, potential_base,
+                                    grammar::verbTypeToConjType(onbin_verb_type), true, CandidateOrigin::VerbKanji,
+                                    0.9F, "extended_sokuonbin", core::ExtendedPOS::VerbOnbinkei);
+              // A single-kanji stem with one hiragana mora before っ has an
+              // unambiguous productive Godan reconstruction when the
+              // inflection analyzer agrees.  Keep that evidence so the
+              // generic kanji-onbin false-positive guard does not erase it.
+              candidate.lemma_verified = in_dict || (infl_verified && kanji_end == start_pos + 1);
+              candidates.push_back(std::move(candidate));
             }
           }  // end else (not copula だ pattern)
         }  // end else (not quotative って pattern)

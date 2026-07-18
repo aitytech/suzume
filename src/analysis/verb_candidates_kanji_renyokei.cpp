@@ -622,8 +622,12 @@ void appendGodanPassiveRenyokeiCandidates(const std::vector<char32_t>& codepoint
                                                               verb_opts.confidence_cost_scale_small) +
                               bigram_cost::kMinor;
 
-            // Skip renyokei candidate for べき patterns
-            if (!is_beki_pattern) {
+            // A passive stem before a causative remains split as mizenkei +
+            // passive + causative (書か+れ+させる); it is not a lexical
+            // renyokei followed directly by させる. Preserve the same rule as
+            // the existing classical べき boundary.
+            const bool is_passive_causative_chain = vh::causativeSaseFollowsAt(codepoints, renyokei_end);
+            if (!is_beki_pattern && !is_passive_causative_chain) {
               candidates.push_back(makeVerbCandidate(
                   surface, start_pos, renyokei_end, base_cost, base_lemma, dictionary::ConjugationType::Ichidan, false,
                   CandidateOrigin::VerbKanji, ichidan_confidence, "godan_passive_renyokei"));

@@ -422,9 +422,16 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   // Verified lexical verb forms remain available for genuine homographs.
   candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
                                   [&](const UnknownCandidate& cand) {
+                                    const bool has_auxiliary_continuation =
+                                        cand.end < codepoints.size() &&
+                                        (codepoints[cand.end] == U'た' || codepoints[cand.end] == U'て');
+                                    const bool has_passive_auxiliary_continuation = cand.end + 1 < codepoints.size() &&
+                                                                                    codepoints[cand.end] == U'ら' &&
+                                                                                    codepoints[cand.end + 1] == U'れ';
                                     return cand.pos == core::PartOfSpeech::Verb && !cand.lemma_verified &&
                                            ((cand.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-                                             grammar::endsWithRenyokeiMarker(cand.surface)) ||
+                                             grammar::endsWithRenyokeiMarker(cand.surface) &&
+                                             !has_auxiliary_continuation && !has_passive_auxiliary_continuation) ||
                                             (cand.extended_pos == core::ExtendedPOS::VerbShuushikei &&
                                              cand.surface.compare(cand.lemma) == 0)) &&
                                            vh::hasNonVerbDictionaryEntry(dict_manager, cand.surface);

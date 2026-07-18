@@ -189,6 +189,17 @@ bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager
 bool endsWithFocusParticleTail(const dictionary::DictionaryManager* dict_manager,
                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);
 
+// True when a fabricated verb candidate starts with an exact auxiliary entry
+// and absorbs that auxiliary's negative inflection (過ぎない → 過ぎ + ない).
+// The check is POS-based: lexical verbs with the same surface are unaffected.
+bool hasAuxiliaryNegativeBoundary(const dictionary::DictionaryManager* dict_manager,
+                                  const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);
+
+// True when a dictionary formal noun starts at @p pos. This lets candidate
+// generation preserve the boundary after a predicate's inflecting auxiliary.
+bool formalNounFollowsAt(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                         size_t pos);
+
 /**
  * @brief Look up a verb's lemma from the dictionary
  *
@@ -320,12 +331,14 @@ float emphaticCostAdjustment(const EmphaticSuffixMatch& match);
  * (てもらう/てくれ/てあげ/てほしい) likewise split (助けてもらう → 助け+て+もらう).
  * Continuation 〜ている/ておく is intentionally NOT matched here: it would also
  * catch verbs whose renyokei ends in て (慌て+ている, 捨て+ておく) and strand the
- * stem.
+ * stem. The completed-state construction 〜てある is different: it is always a
+ * te-form followed by the existential subsidiary, including after such stems.
  */
 inline bool embedsTeFormAuxiliary(std::string_view surface) {
   static constexpr std::string_view kPatterns[] = {
       "ていく", "ていっ", "ていけ", "ていか",                // 〜ていく directional aspect
       "てもら", "てくれ", "てあげ", "てほしい", "てくださ",  // benefactive / request
+      "てある", "である",                                    // completed-state existential
   };
   for (const std::string_view pat : kPatterns) {
     if (surface.find(pat) != std::string_view::npos) {
@@ -506,6 +519,10 @@ bool containsTeFormAuxPattern(std::string_view surface);
  * Unlike shouldSkipCausativeAuxPattern, this uses contains() not endsWith()
  */
 bool containsCausativeAuxPattern(std::string_view surface);
+
+// A passive followed by a causative is always an auxiliary chain (書かれさせる),
+// unlike an ordinary lexical compound that merely ends in せる.
+bool containsPassiveCausativeAuxPattern(std::string_view surface);
 
 // =============================================================================
 // Inflection Analysis Helpers

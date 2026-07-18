@@ -8,7 +8,7 @@ namespace suzume::analysis::hiragana_verb_detail {
 
 // Guard (fabricated closed-class absorption family, tail class): true when the
 // hiragana run [start_pos, end_pos) is a verb prefix followed by a 副助詞
-// (しか/とか), so the run is verb + particle rather than a single fabricated
+// (しか/さえ/すら), so the run is verb + particle rather than a single fabricated
 // 未然形 (やるしか → や|る|しか, never a form of the non-word 〜しく). Declared
 // here so the guard can be exercised directly by characterization tests; see the
 // guard-family note in verb_candidates_helpers.h.

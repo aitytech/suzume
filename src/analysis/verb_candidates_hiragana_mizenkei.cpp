@@ -109,11 +109,11 @@ bool hasLeadingParticleVerbBoundary(const dictionary::DictionaryManager* dict_ma
   return false;
 }
 
-// True when an unverified hiragana mizenkei surface is really [verb] + [adverbial
-// particle] rather than a single verb. しか is a 副助詞 and there is no godan verb
+// True when an unverified hiragana mizenkei surface is really [verb] + [binding
+// particle] rather than a single verb. しか is a 係助詞 and there is no godan verb
 // 〜しく, so みるしか / やるしか must split as verb + しか, never be fabricated as the
 // 未然形 of the non-word 〜しく (which would then absorb しか and connect cheaply to
-// ない). The suffix is matched against ParticleAdverbial only (しか/とか) so that
+// ない). The suffix is matched against ParticleBinding only (しか/さえ/すら) so that
 // case/final particles that legitimately follow a real mizenkei are never swept
 // up. A single-mora prefix (る in るしか) is a bare verb-ending fragment, never a
 // word, so the whole candidate is garbage; a longer prefix must itself be a verb.
@@ -131,7 +131,7 @@ bool endsWithParticleAfterVerb(const dictionary::DictionaryManager* dict_manager
     size_t split = start_pos + prefix_len;
     std::string suffix = extractSubstring(codepoints, split, end_pos);
     const dictionary::DictionaryEntry* suffix_entry = dict_manager->lookupExact(suffix);
-    if (suffix_entry == nullptr || suffix_entry->extended_pos != core::ExtendedPOS::ParticleAdverbial) {
+    if (suffix_entry == nullptr || suffix_entry->extended_pos != core::ExtendedPOS::ParticleBinding) {
       continue;
     }
     if (prefix_len == 1) {
@@ -332,6 +332,19 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
       continue;
 
     std::string stem = extractSubstring(codepoints, start_pos, stem_end);
+
+    // A hiragana tail starting immediately after kanji can otherwise turn a
+    // preceding ichidan stem plus causative into a fabricated verb
+    // (食+べさせ+られる). The causative させ is a closed auxiliary here, so
+    // leave the kanji-aware stem candidate to retain 食べ+させ+られる. Other
+    // kanji-adjacent hiragana verbs (夜かけて, 添付いたしました) remain
+    // available to the ordinary candidate generators.
+    const bool is_kanji_tail_causative =
+        start_pos > 0 && normalize::classifyChar(codepoints[start_pos - 1]) == normalize::CharType::Kanji &&
+        utf8::endsWith(stem, "させ");
+    if (is_kanji_tail_causative) {
+      continue;
+    }
 
     // Skip stems containing て or で - these are te-form + subsidiary verb patterns
     // E.g., しておられた → stem=してお is actually して(te-form)+おる(subsidiary), not ichidan しておる

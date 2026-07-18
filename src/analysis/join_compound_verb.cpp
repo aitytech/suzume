@@ -42,6 +42,69 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   // Get the hiragana character (potential 連用形 ending)
   char32_t renyokei_char = codepoints[kanji_end];
 
+  // A voice auxiliary followed by the continuative subsidiary remains a
+  // grammatical tail rather than a lexical V1+V2 compound. Keep the tail as
+  // one search unit so 使わ+れ続ける, 見+られ続ける, and 聞かさ+れ続ける do
+  // not collapse into a fabricated whole verb. The gate distinguishes this
+  // from lexical 〜れ続ける verbs such as 汚れ続ける: only a preceding
+  // mizenkei (a-row) or the ichidan passive られ licenses it.
+  for (size_t passive_pos = kanji_end; passive_pos + 3 < codepoints.size(); ++passive_pos) {
+    if (codepoints[passive_pos] != U'れ' || codepoints[passive_pos + 1] != U'続' ||
+        codepoints[passive_pos + 2] != U'け') {
+      continue;
+    }
+    const char32_t tail_ending = codepoints[passive_pos + 3];
+    if (tail_ending != U'る' && tail_ending != U'た' && tail_ending != U'て') {
+      continue;
+    }
+
+    size_t tail_start = passive_pos;
+    const bool follows_godan_mizenkei =
+        passive_pos > kanji_end && grammar::isARowCodepoint(codepoints[passive_pos - 1]);
+    const bool follows_ichidan_passive = passive_pos == kanji_end + 1 && codepoints[kanji_end] == U'ら';
+    if (!follows_godan_mizenkei && !follows_ichidan_passive) {
+      continue;
+    }
+    if (follows_ichidan_passive) {
+      tail_start = kanji_end;
+    }
+
+    // A Godan causative mizenkei (聞かさ from 聞く) can itself precede
+    // passive-continuative れ続ける. Derive that stem only when the underlying
+    // pre-causative verb is dictionary-confirmed, avoiding a free-form
+    // kanji+hira guess while preserving the productive voice chain.
+    if (follows_godan_mizenkei && codepoints[passive_pos - 1] == U'さ' && passive_pos >= start_pos + 2) {
+      const char32_t underlying_a_row = codepoints[passive_pos - 2];
+      const std::string_view underlying_suffix = grammar::godanBaseSuffixFromARow(underlying_a_row);
+      if (!underlying_suffix.empty()) {
+        const std::string underlying_base =
+            extractSubstring(codepoints, start_pos, passive_pos - 2) + std::string(underlying_suffix);
+        if (dict_manager.lookupExact(underlying_base, core::PartOfSpeech::Verb) != nullptr) {
+          const std::string causative_stem = extractSubstring(codepoints, start_pos, passive_pos);
+          const std::string causative_lemma = extractSubstring(codepoints, start_pos, passive_pos - 1) + "す";
+          lattice.addEdge(causative_stem, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(passive_pos),
+                          core::PartOfSpeech::Verb, candidate::verb_cost::kStandardBonus, 0, causative_lemma,
+                          dictionary::ConjugationType::GodanSa, core::CandidateOrigin::VerbCompound,
+                          candidate::kNoOriginConfidence, "causative_mizenkei_before_passive_continuative",
+                          core::ExtendedPOS::VerbMizenkei, "causative_mizenkei_before_passive_continuative");
+        }
+      }
+    }
+
+    // The terminal form remains a single auxiliary-like search unit.  In
+    // past and te forms, expose the renyokei and let the regular た/て
+    // auxiliary candidate supply the inflectional boundary.
+    const size_t tail_end = passive_pos + (tail_ending == U'る' ? 4 : 3);
+    const std::string tail_surface = extractSubstring(codepoints, tail_start, tail_end);
+    const std::string tail_lemma = tail_ending == U'る' ? tail_surface : tail_surface + "る";
+    lattice.addEdge(tail_surface, static_cast<uint32_t>(tail_start), static_cast<uint32_t>(tail_end),
+                    core::PartOfSpeech::Verb, candidate::kVerifiedTailCompoundVerbBonus, 0, tail_lemma,
+                    dictionary::ConjugationType::Ichidan, core::CandidateOrigin::VerbCompound,
+                    candidate::kNoOriginConfidence, "passive_continuative_tail", core::ExtendedPOS::AuxPassive,
+                    "passive_continuative_tail");
+    return;
+  }
+
   // Check if it's a valid 連用形 ending
   char32_t base_ending = godanRenyokeiBaseCp(renyokei_char);
 
@@ -197,6 +260,20 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
 
   if (v2_start >= codepoints.size()) {
     return;
+  }
+
+  // A compound verb joins two verbal components directly. If a closed-class
+  // particle occurs between the prospective V1 and V2 boundaries, the span is
+  // compositional instead (読む+だけ+あって), not a compound verb.
+  for (size_t particle_start = start_pos; particle_start < v2_start; ++particle_start) {
+    const std::string particle_probe = extractSubstring(codepoints, particle_start, v2_start);
+    for (const auto& match : dict_manager.lookup(particle_probe, 0)) {
+      if (match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Particle &&
+          normalize::utf8Length(match.entry->surface) > 1 &&
+          particle_start + normalize::utf8Length(match.entry->surface) <= v2_start) {
+        return;
+      }
+    }
   }
 
   // Get byte positions
@@ -637,7 +714,18 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
             enclosing_entry != nullptr && enclosing_entry->extended_pos == core::ExtendedPOS::NounFormal;
       }
       if (use_inflection_fallback && is_ichidan && kanji_count == 1) {
-        if (starts_inside_formal_noun) {
+        // A non-dictionary kanji+で stem is overwhelmingly a nominal copula
+        // (本であった, 事実である), not an open-class ichidan verb before
+        // the hiragana spelling of the V2 合う.  Dictionary-verified verbs
+        // such as 撫でる have already bypassed this fallback above, so this
+        // guard preserves real lexical compounds while preventing a copular
+        // predicate from being fabricated as *本であう.
+        // Likewise, ん is a Godan hatsuonbin marker, never an Ichidan
+        // renyokei. A following compound V2 must not turn 読んで+あげられる
+        // into the fabricated lexical verb 読んであげる.
+        if (renyokei_char == U'で' || renyokei_char == U'ん') {
+          use_inflection_fallback = false;
+        } else if (starts_inside_formal_noun) {
           use_inflection_fallback = false;
         } else {
           v1_verified = true;
@@ -826,6 +914,14 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
 
     // Build the compound verb surface
     std::string compound_surface(text.substr(start_byte, compound_end_byte - start_byte));
+
+    // Causative endings are auxiliary chains, not V2 compound verbs. This
+    // also covers a passive followed by causative (書か+れ+させる), where the
+    // permissive V2 matcher could otherwise reinterpret させる as a lexical
+    // continuation and erase the voice boundary.
+    if (verb_helpers::containsPassiveCausativeAuxPattern(compound_surface)) {
+      return;
+    }
 
     // Skip if compound surface is registered as NOUN in dictionary,
     // UNLESS followed by an auxiliary suffix (た/て/で/ない) which indicates verb usage.

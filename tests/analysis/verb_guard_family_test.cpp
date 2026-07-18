@@ -5,8 +5,8 @@
  *
  * These pin the decision boundaries of the guards that stop verb/adjective
  * candidate generators from fabricating a non-dictionary conjugation that
- * swallows an adjacent closed-class morpheme — a 副助詞 (しか), a 係助詞 (さえ/
- * すら), or a te-form + 補助動詞 みる. A failure here means a guard's boundary
+ * swallows an adjacent closed-class morpheme — a 係助詞 (しか/さえ/すら), or a
+ * te-form + 補助動詞 みる. A failure here means a guard's boundary
  * moved; verify the tokenization of the named example before adjusting an
  * expectation rather than relaxing the test to the new output.
  */
@@ -36,7 +36,7 @@ std::vector<char32_t> cps(std::string_view text) {
 // Tail guards (T): the run ends in [word] + particle (+ negative)
 // =============================================================================
 
-TEST(VerbGuardFamilyTail, FocusParticleTailDetectsAdverbialShika) {
+TEST(VerbGuardFamilyTail, FocusParticleTailDetectsBindingShika) {
   dictionary::DictionaryManager dict;
   // 副助詞 しか after a host, with and without the trailing negative ない.
   auto bare = cps("水しか");
@@ -55,10 +55,10 @@ TEST(VerbGuardFamilyTail, FocusParticleTailDetectsBindingSaeAndSura) {
 
 TEST(VerbGuardFamilyTail, ParticleClassIsDiscriminated) {
   dictionary::DictionaryManager dict;
-  // しか is 副助詞 (Adverbial); すら is 係助詞 (Binding). Each matches only its class.
+  // しか and すら are 係助詞 (Binding). Each must not be mistaken for a 副助詞.
   auto shika = cps("水しかない");
-  EXPECT_TRUE(verb_helpers::endsWithParticleTailOfPos(&dict, shika, 0, shika.size(), ExtendedPOS::ParticleAdverbial));
-  EXPECT_FALSE(verb_helpers::endsWithParticleTailOfPos(&dict, shika, 0, shika.size(), ExtendedPOS::ParticleBinding));
+  EXPECT_TRUE(verb_helpers::endsWithParticleTailOfPos(&dict, shika, 0, shika.size(), ExtendedPOS::ParticleBinding));
+  EXPECT_FALSE(verb_helpers::endsWithParticleTailOfPos(&dict, shika, 0, shika.size(), ExtendedPOS::ParticleAdverbial));
   auto sura = cps("水すらない");
   EXPECT_TRUE(verb_helpers::endsWithParticleTailOfPos(&dict, sura, 0, sura.size(), ExtendedPOS::ParticleBinding));
   EXPECT_FALSE(verb_helpers::endsWithParticleTailOfPos(&dict, sura, 0, sura.size(), ExtendedPOS::ParticleAdverbial));
@@ -72,7 +72,7 @@ TEST(VerbGuardFamilyTail, GenuineGodanMizenkeiIsNotSwept) {
   EXPECT_FALSE(verb_helpers::endsWithFocusParticleTail(&dict, iku, 0, iku.size()));
 }
 
-TEST(VerbGuardFamilyTail, VerbPrefixBeforeAdverbialParticleSplits) {
+TEST(VerbGuardFamilyTail, VerbPrefixBeforeBindingParticleSplits) {
   dictionary::DictionaryManager dict;
   grammar::Inflection infl;
   // Single-mora prefix (る) is a bare verb-ending fragment, never a word, so the

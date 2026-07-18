@@ -124,6 +124,13 @@ std::vector<UnknownCandidate> generateCompoundVerbCandidates(const std::vector<c
         continue;
       }
 
+      // A causative or voice-chain ending is an auxiliary sequence, not a
+      // lexical compound verb. Apply the same guard used by the kanji
+      // inflection generator so 書かれさせる keeps 書か+れ+させる.
+      if (verb_helpers::shouldSkipCausativeAuxPattern(surface, infl_cand.verb_type)) {
+        continue;
+      }
+
       // Check if base form exists in dictionary as a verb
       if (verb_helpers::isVerbInDictionary(dict_manager, infl_cand.base_form)) {
         // v0.8: conj_type removed - just verify verb exists in dictionary

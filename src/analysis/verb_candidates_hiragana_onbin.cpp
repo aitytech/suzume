@@ -73,10 +73,11 @@ bool grammaticalStemFollowerStartsAt(const std::vector<char32_t>& codepoints, si
 void appendContextualSubsidiaryCandidate(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                          std::string_view lemma, dictionary::ConjugationType conj_type,
                                          core::ExtendedPOS extended_pos, const char* pattern, float candidate_cost,
-                                         std::vector<UnknownCandidate>& candidates) {
+                                         std::vector<UnknownCandidate>& candidates,
+                                         core::PartOfSpeech pos = core::PartOfSpeech::Auxiliary) {
   const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
-  auto candidate = makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Auxiliary, candidate_cost, true,
-                                 CandidateOrigin::VerbHiragana, extended_pos, pattern);
+  auto candidate = makeCandidate(surface, start_pos, end_pos, pos, candidate_cost, true, CandidateOrigin::VerbHiragana,
+                                 extended_pos, pattern);
   candidate.lemma = lemma;
   candidate.conj_type = conj_type;
   candidates.push_back(std::move(candidate));
@@ -265,7 +266,8 @@ void appendEruObligationCandidates(const std::vector<char32_t>& codepoints, size
   // verb 得る in renyokei, not the potential auxiliary. The following
   // negative or polite-negative inflection identifies this reading.
   const bool negative_follows =
-      start_pos + 1 < codepoints.size() && vh::naiNegativeFollowsAt(codepoints, start_pos + 1);
+      start_pos + 1 < codepoints.size() &&
+      (vh::naiNegativeFollowsAt(codepoints, start_pos + 1) || codepoints[start_pos + 1] == U'ず');
   const bool polite_negative_follows =
       start_pos + 2 < codepoints.size() && codepoints[start_pos + 1] == U'ま' && codepoints[start_pos + 2] == U'せ';
   if (start_pos < 3 || codepoints[start_pos] != U'え' || codepoints[start_pos - 1] != U'を' ||
@@ -485,7 +487,8 @@ void appendAgeruBenefactiveCandidates(const std::vector<char32_t>& codepoints, s
   }
   appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "あげる",
                                       dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxBenefactive,
-                                      "hiragana_ageru_benefactive", bigram_cost::kMinor, candidates);
+                                      "hiragana_ageru_benefactive", bigram_cost::kMinor, candidates,
+                                      core::PartOfSpeech::Verb);
 }
 
 // 準備の補助動詞 おく is homographic with the lexical verb and its short

@@ -34,17 +34,20 @@ void appendIchidanStemRareCandidates(const std::vector<char32_t>& codepoints, si
   bool has_rare_suffix = false;
   size_t stem_end = 0;
 
-  // Pattern 1: Kanji + E/I row hiragana + られ+X (e.g., 信じ+られべき, 認め+られた)
-  if (kanji_end < hiragana_end) {
-    char32_t first_hira = codepoints[kanji_end];
-    if (grammar::isERowCodepoint(first_hira) || grammar::isIRowCodepoint(first_hira)) {
-      size_t ichidan_stem_end = kanji_end + 1;
-      // Check for られ pattern (at least 2 chars)
-      if (ichidan_stem_end + 1 < codepoints.size() && codepoints[ichidan_stem_end] == U'ら' &&
-          codepoints[ichidan_stem_end + 1] == U'れ') {
-        has_rare_suffix = true;
-        stem_end = ichidan_stem_end;
-      }
+  // Pattern 1: Kanji + Ichidan stem + られ+X (信じ+られべき,
+  // 認め+られた, 知らせ+られた).  The stem can have more than one
+  // okurigana character, so find the passive onset and validate the
+  // constructed lemma below instead of assuming that the first kana is the
+  // final E/I-row character.
+  for (size_t suffix_start = kanji_end + 1; suffix_start + 1 < hiragana_end; ++suffix_start) {
+    if (codepoints[suffix_start] != U'ら' || codepoints[suffix_start + 1] != U'れ') {
+      continue;
+    }
+    const char32_t stem_last = codepoints[suffix_start - 1];
+    if (grammar::isERowCodepoint(stem_last) || grammar::isIRowCodepoint(stem_last)) {
+      has_rare_suffix = true;
+      stem_end = suffix_start;
+      break;
     }
   }
 
@@ -67,6 +70,15 @@ void appendIchidanStemRareCandidates(const std::vector<char32_t>& codepoints, si
     // Construct base form: stem + る (e.g., 信じ → 信じる, 見 → 見る)
     std::string base_form = surface + "る";
 
+    // A multi-kana stem before られ can also be a Godan causative
+    // (聞か+せ+られた). Require lexical evidence for that wider stem so the
+    // productive causative analysis stays available, while lexical stems such
+    // as 知らせ remain valid Ichidan candidates through their dictionary noun
+    // or verb entry.
+    const bool has_multiple_okurigana = stem_end > kanji_end + 1;
+    const bool has_lexical_stem_evidence =
+        vh::isVerbInDictionary(dict_manager, base_form) || vh::hasNonVerbDictionaryEntry(dict_manager, surface);
+
     // Verify the base form exists in dictionary or is valid Ichidan verb
     bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
     if (!is_valid_verb) {
@@ -82,7 +94,7 @@ void appendIchidanStemRareCandidates(const std::vector<char32_t>& codepoints, si
       }
     }
 
-    if (is_valid_verb) {
+    if (is_valid_verb && (!has_multiple_okurigana || has_lexical_stem_evidence)) {
       // Negative cost to beat single-verb inflection path (which gets optimal_length -0.5 bonus)
       constexpr float kCost = candidate::verb_cost::kStandardBonus;
       SUZUME_DEBUG_VERBOSE_BLOCK {

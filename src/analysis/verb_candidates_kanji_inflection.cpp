@@ -407,24 +407,28 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
           }
         }
 
-        // Skip sokuonbin + auxiliary verb patterns (買っとく, 行っちゃう)
-        // Preserve the onbin stem and contracted auxiliary boundary: 買っとく → 買っ + とく.
-        // Check if suffix after っ is a registered auxiliary verb (とく, ちゃう, ちまう)
+        // Skip onbin + auxiliary verb patterns (買っとく, 読んどく, 行っちゃう).
+        // Preserve the onbin stem and contracted auxiliary boundary: 買っとく → 買っ + とく,
+        // 読んどく → 読ん + どく. Check whether the suffix after a sokuon or
+        // hatsuonbin is a registered aspect auxiliary.
         bool skip_sokuonbin_aux = false;
         if (dict_manager && surface.size() >= 9) {  // っ(3) + 2char auxiliary minimum
-          // Find っ position and check if suffix is auxiliary verb in dictionary
+          // Find an onbin position and check the following auxiliary in the dictionary.
           auto surface_cps = normalize::utf8::decode(surface);
           for (size_t i = 1; i < surface_cps.size() && !skip_sokuonbin_aux; ++i) {
-            if (surface_cps[i] == U'っ' && i + 1 < surface_cps.size()) {
-              // Get suffix after っ
+            if ((surface_cps[i] == U'っ' || surface_cps[i] == U'ん') && i + 1 < surface_cps.size()) {
+              // Get the suffix after the onbin.
               std::vector<char32_t> suffix_cps(surface_cps.begin() + i + 1, surface_cps.end());
               std::string suffix = normalize::utf8::encode(suffix_cps);
-              // Check if suffix is an auxiliary verb (AuxAspectOku: とく, AuxAspectShimau: ちゃう/ちまう)
+              // A nasal contraction licenses only the preparatory とく/どく.
+              // Completion forms retain their verb-class-dependent analyses
+              // after ん, while both aspect auxiliaries are valid after っ.
               auto results = dict_manager->lookup(suffix, 0);
               for (const auto& r : results) {
-                if (r.entry && r.entry->surface == suffix &&
-                    (r.entry->extended_pos == core::ExtendedPOS::AuxAspectOku ||
-                     r.entry->extended_pos == core::ExtendedPOS::AuxAspectShimau)) {
+                const bool is_preparatory = r.entry && r.entry->extended_pos == core::ExtendedPOS::AuxAspectOku;
+                const bool is_sokuon_completion =
+                    r.entry && surface_cps[i] == U'っ' && r.entry->extended_pos == core::ExtendedPOS::AuxAspectShimau;
+                if (r.entry && r.entry->surface == suffix && (is_preparatory || is_sokuon_completion)) {
                   SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << surface << "\" sokuonbin+aux (" << suffix << ")\n");
                   skip_sokuonbin_aux = true;
                   break;
@@ -522,6 +526,28 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
         if (!in_dict && vh::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, end_pos)) {
           SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" fabricated verb absorbing focus particle\n");
+          continue;
+        }
+        // A closed-class auxiliary may inflect with the same kana as an open
+        // class verb. Do not let an unverified whole-span hypothesis swallow
+        // its negative form: 過ぎなかった → 過ぎ + なかっ + た.
+        if (!in_dict && vh::hasAuxiliaryNegativeBoundary(dict_manager, codepoints, start_pos, end_pos)) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" fabricated verb absorbing auxiliary negative\n");
+          continue;
+        }
+        // An inflected past predicate stays decomposed before a formal noun.
+        // The lexical stem and the past auxiliary are independently available
+        // (読ん+だ+ついで, 悟っ+た+時); retain that grammatical boundary unless
+        // the whole surface is itself a dictionary verb.
+        const bool is_dictionary_surface = vh::hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Verb);
+        const dictionary::DictionaryEntry* past_entry = (dict_manager != nullptr && !best.morphemes.empty())
+                                                            ? dict_manager->lookupExact(best.morphemes.back())
+                                                            : nullptr;
+        const bool ends_with_past_aux = past_entry != nullptr && past_entry->pos == core::PartOfSpeech::Auxiliary &&
+                                        past_entry->extended_pos == core::ExtendedPOS::AuxTenseTa;
+        if (!is_dictionary_surface && ends_with_past_aux &&
+            vh::formalNounFollowsAt(dict_manager, codepoints, end_pos)) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" past auxiliary before formal noun\n");
           continue;
         }
         // Reject a fabricated conjugation that spans a te-form + the subsidiary
