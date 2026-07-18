@@ -479,15 +479,16 @@ bool isTemporalAdverbialNounPair(char32_t first, char32_t second) {
     return true;
   }
   // Closed residual set of 副詞可能 temporal nouns.
-  static constexpr std::array<std::array<char32_t, 2>, 9> kAdverbialTemporalNouns = {{{U'現', U'在'},
-                                                                                      {U'明', U'日'},
-                                                                                      {U'本', U'日'},
-                                                                                      {U'当', U'時'},
-                                                                                      {U'従', U'来'},
-                                                                                      {U'最', U'近'},
-                                                                                      {U'将', U'来'},
-                                                                                      {U'今', U'後'},
-                                                                                      {U'過', U'去'}}};
+  static constexpr std::array<std::array<char32_t, 2>, 10> kAdverbialTemporalNouns = {{{U'現', U'在'},
+                                                                                       {U'明', U'日'},
+                                                                                       {U'本', U'日'},
+                                                                                       {U'当', U'時'},
+                                                                                       {U'従', U'来'},
+                                                                                       {U'最', U'近'},
+                                                                                       {U'将', U'来'},
+                                                                                       {U'今', U'後'},
+                                                                                       {U'過', U'去'},
+                                                                                       {U'朝', U'晩'}}};
   for (const auto& pair : kAdverbialTemporalNouns) {
     if (pair[0] == first && pair[1] == second) {
       return true;

@@ -450,11 +450,6 @@ void addSpecialPatterns(std::vector<AuxiliaryEntry>& entries) {
       {"ほしかった", kAuxOutTa, kAuxOutTe},
       {"ほしくない", kAuxOutBase, kAuxOutTe},
 
-      // === てある ===
-      {"ある", kAuxOutBase, kAuxOutTe},
-      {"あった", kAuxOutTa, kAuxOutTe},
-      {"あります", kAuxOutMasu, kAuxOutTe},
-
       // === Complex たい patterns ===
       {"たくなる", kAuxOutBase, kVerbRenyokei},
       {"たくなった", kAuxOutTa, kVerbRenyokei},

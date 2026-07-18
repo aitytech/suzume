@@ -134,6 +134,72 @@ bool isPureHiragana(std::string_view stem) {
   return allCharsMatch(stem, kana::isHiraganaCodepoint);
 }
 
+bool isQuotativeSuruTeCompoundParticle(std::string_view surface) {
+  return surface == "として";
+}
+
+bool isHonorificPrefix(std::string_view surface) {
+  return surface == "お" || surface == "ご";
+}
+
+bool isParallelTogetherAdverb(std::string_view surface) {
+  return surface == "ともに";
+}
+
+bool endsWithTemporalNounSuffix(std::string_view surface) {
+  return utf8::endsWith(surface, "時");
+}
+
+bool startsClassicalDesiderativeSequence(std::string_view surface) {
+  return utf8::startsWith(surface, "まほしき");
+}
+
+bool isClassicalDesiderativeMarker(std::string_view surface) {
+  return surface == "ま";
+}
+
+bool startsClassicalHonorificSequence(std::string_view surface) {
+  return utf8::startsWith(surface, "まふ");
+}
+
+bool startsClassicalHonorificAuxiliaryChain(std::string_view surface) {
+  return utf8::startsWith(surface, "たまふ");
+}
+
+bool isClassicalHonorificComponent(std::string_view surface) {
+  return surface == "ま" || surface == "ふ";
+}
+
+bool isClassicalFuruTerminal(std::string_view surface) {
+  return surface == "ふ";
+}
+
+bool startsClassicalAraNLimit(std::string_view surface) {
+  return utf8::startsWith(surface, "あらん限り");
+}
+
+bool startsCopularTopicAru(std::string_view surface) {
+  return utf8::startsWith(surface, "ではある");
+}
+
+bool startsSentenceParticleKanaQuote(std::string_view surface) {
+  return utf8::startsWith(surface, "かなと");
+}
+
+std::string_view longFinalParticleBeforeQuote(std::string_view surface) {
+  constexpr std::string_view kParticles[] = {"なあ", "ねえ"};
+  for (const auto particle : kParticles) {
+    if (utf8::startsWith(surface, std::string(particle) + "と")) {
+      return particle;
+    }
+  }
+  return {};
+}
+
+bool startsContractedNjaNegative(std::string_view surface) {
+  return utf8::startsWith(surface, "んじゃない");
+}
+
 bool isPureKatakana(std::string_view stem) {
   return allCharsMatch(stem, kana::isKatakanaCodepoint);
 }

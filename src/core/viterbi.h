@@ -30,11 +30,13 @@ inline constexpr float kBosAspectKuruPenalty = 3.0F;     // くる aspect (き) 
 inline constexpr float kBosTensePenalty = 2.0F;          // た/だ needs a preceding verb/adj stem
 inline constexpr float kBosFinalParticlePenalty = 2.0F;  // Sentence-final particle cannot lead
 inline constexpr float kBosTopicParticlePenalty = 1.0F;  // 係助詞 は/も cannot lead a sentence
+inline constexpr float kBosHonorificAuxPenalty = 0.3F;   // Honorific auxiliary needs a preceding renyokei
 
 // EOS (end-of-sentence) cost adjustments, symmetric to the BOS set above. A
 // morpheme that cannot naturally END a sentence is penalized, so an isolated
 // hiragana word is not carved into a stem plus a dangling auxiliary/aspect.
 inline constexpr float kEosAspectKuruPenalty = 3.0F;  // き (来 aspect) needs a following stem (ひこうき → ひこう+き)
+inline constexpr float kEosListingParticlePenalty = 2.0F;  // たり listing particle needs a parallel predicate
 
 // Per-transition tie-break: slightly prefer fewer, longer morphemes.
 inline constexpr float kTransitionCost = 0.001F;
@@ -184,6 +186,9 @@ class Viterbi {
         if (edge.end == text_len && edge.extended_pos == ExtendedPOS::AuxAspectKuru && edge.end - pos == 1) {
           eos_cost += kEosAspectKuruPenalty;
         }
+        if (edge.end == text_len && edge.extended_pos == ExtendedPOS::ParticleConj && edge.surface == "たり") {
+          eos_cost += kEosListingParticlePenalty;
+        }
 
         // Find the cheapest predecessor for this edge across all retained
         // states at this position.
@@ -224,6 +229,9 @@ class Viterbi {
               }
               if (edge.extended_pos == ExtendedPOS::AuxTenseTa) {
                 conn_cost += kBosTensePenalty;
+              }
+              if (edge.extended_pos == ExtendedPOS::AuxHonorific) {
+                conn_cost += kBosHonorificAuxPenalty;
               }
               if (edge.extended_pos == ExtendedPOS::ParticleFinal) {
                 conn_cost += kBosFinalParticlePenalty;

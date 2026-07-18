@@ -1,5 +1,6 @@
 #include "normalizer.h"
 
+#include "char_type.h"
 #include "unicode_tables.h"
 #include "utf8.h"
 
@@ -308,6 +309,25 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
     }
 
     codepoint = normalized_cp;
+
+    // Repeated prolonged marks before a kanji token are noise-like separator
+    // elongation, not the in-word emphasis used in すごーーい. Retain one
+    // mark for the preceding token and collapse only the redundant marks in
+    // this boundary context (長いーー音 → 長いー音).
+    if (codepoint == 0x30FC) {
+      size_t repeated_end = pos;
+      while (repeated_end < text.size()) {
+        size_t mark_pos = repeated_end;
+        if (decodeUtf8(text, mark_pos) != 0x30FC) {
+          break;
+        }
+        repeated_end = mark_pos;
+      }
+      size_t following_pos = repeated_end;
+      if (repeated_end > pos && following_pos < text.size() && isKanjiCodepoint(decodeUtf8(text, following_pos))) {
+        pos = repeated_end;
+      }
+    }
 
     // Handle vu-series normalization (ヴァ→バ, etc.) - skip if preserve_vu
     if (!options_.preserve_vu && (codepoint == kKatakanaVu || codepoint == kHiraganaVu)) {

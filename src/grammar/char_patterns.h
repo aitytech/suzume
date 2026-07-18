@@ -85,6 +85,107 @@ bool containsKatakana(std::string_view stem);
 bool isPureHiragana(std::string_view stem);
 
 /**
+ * @brief Whether a compound particle is the quotative + suru te-form sequence
+ * @param surface Dictionary particle surface
+ * @return True for the closed grammatical particle として
+ */
+bool isQuotativeSuruTeCompoundParticle(std::string_view surface);
+
+/**
+ * @brief Whether a prefix is the productive honorific prefix お or ご
+ * @param surface Prefix surface
+ * @return True for an honorific prefix
+ */
+bool isHonorificPrefix(std::string_view surface);
+
+/**
+ * @brief Whether an adverb is the standalone component of とともに
+ * @param surface Candidate adverb surface
+ * @return True for the parallel adverb ともに
+ */
+bool isParallelTogetherAdverb(std::string_view surface);
+
+/**
+ * @brief Whether a noun surface ends with the productive temporal suffix 時
+ * @param surface Noun surface
+ * @return True when the surface ends with 時
+ */
+bool endsWithTemporalNounSuffix(std::string_view surface);
+
+/**
+ * @brief Whether text begins the classical desiderative まほしき sequence
+ * @param surface Text at a prospective auxiliary boundary
+ * @return True when the sequence begins with まほしき
+ */
+bool startsClassicalDesiderativeSequence(std::string_view surface);
+
+/**
+ * @brief Whether an auxiliary surface is the classical desiderative marker
+ * @param surface Dictionary auxiliary surface
+ * @return True for the marker ま in まほしき
+ */
+bool isClassicalDesiderativeMarker(std::string_view surface);
+
+/**
+ * @brief Whether text begins the classical honorific まふ sequence
+ * @param surface Text at a prospective auxiliary boundary
+ * @return True when the sequence begins with まふ
+ */
+bool startsClassicalHonorificSequence(std::string_view surface);
+
+/**
+ * @brief Whether text begins the split classical honorific auxiliary chain
+ * @param surface Text after a prospective verb stem
+ * @return True when the text begins with たまふ
+ */
+bool startsClassicalHonorificAuxiliaryChain(std::string_view surface);
+
+/**
+ * @brief Whether an auxiliary surface is a component of classical まふ
+ * @param surface Dictionary auxiliary surface
+ * @return True for either ま or ふ
+ */
+bool isClassicalHonorificComponent(std::string_view surface);
+
+/**
+ * @brief Whether a surface is the terminal component of a classical ふる form
+ * @param surface Candidate verb surface
+ * @return True for the one-mora terminal component ふ
+ */
+bool isClassicalFuruTerminal(std::string_view surface);
+
+/** @brief Whether text begins the classical existential-conjectural construction あらん限り */
+bool startsClassicalAraNLimit(std::string_view surface);
+
+/**
+ * @brief Whether text begins the formal copular-topic predicate ではある
+ * @param surface Text at a prospective topic-particle boundary
+ * @return True when the sequence begins with ではある
+ */
+bool startsCopularTopicAru(std::string_view surface);
+
+/**
+ * @brief Whether text begins a quoted sentence-particle sequence かなと
+ * @param surface Text at a prospective sentence-particle boundary
+ * @return True when the sequence begins with かなと
+ */
+bool startsSentenceParticleKanaQuote(std::string_view surface);
+
+/**
+ * @brief Find a long final particle immediately followed by quote particle と
+ * @param surface Text at a prospective sentence-particle boundary
+ * @return Long final-particle surface, or empty when absent
+ */
+std::string_view longFinalParticleBeforeQuote(std::string_view surface);
+
+/**
+ * @brief Whether text begins the contracted explanatory negative んじゃない
+ * @param surface Text at a prospective auxiliary boundary
+ * @return True when the sequence begins with んじゃない
+ */
+bool startsContractedNjaNegative(std::string_view surface);
+
+/**
  * @brief Check if stem consists entirely of katakana characters
  * @param stem The stem to check
  * @return True if all characters are katakana (カタカナ)

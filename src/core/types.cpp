@@ -264,6 +264,8 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
       return "AUX_文語過去";
     case ExtendedPOS::AuxClassicalTari:
       return "AUX_文語断定連体";
+    case ExtendedPOS::AuxClassicalPerfect:
+      return "AUX_文語完了";
     case ExtendedPOS::AuxClassicalBeshi:
       return "AUX_文語当為";
 
@@ -312,6 +314,8 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
       return "AUX_推定";
     case ExtendedPOS::AuxConjectureMitai:
       return "AUX_みたい";
+    case ExtendedPOS::AuxSimilitudeYou:
+      return "AUX_よう";
 
     // Auxiliaries - Copula
     case ExtendedPOS::AuxCopulaDa:
@@ -412,12 +416,13 @@ PartOfSpeech extendedPosToPos(ExtendedPOS epos) {
     return PartOfSpeech::Verb;
   }
   // Auxiliary types -> Auxiliary
-  // (AuxNegativeMai, AuxClassicalNari, AuxClassicalKeri, AuxClassicalTari, AuxClassicalBeshi
+  // (AuxNegativeMai, AuxClassicalNari, AuxClassicalKeri, AuxClassicalTari, AuxClassicalPerfect, AuxClassicalBeshi
   // sit outside the contiguous range; see ExtendedPOS comment)
   if ((epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai ||
       epos == ExtendedPOS::AuxClassicalNari || epos == ExtendedPOS::AuxClassicalKeri ||
-      epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalBeshi ||
-      epos == ExtendedPOS::AuxInability || epos == ExtendedPOS::AuxBenefactive) {
+      epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalPerfect ||
+      epos == ExtendedPOS::AuxClassicalBeshi || epos == ExtendedPOS::AuxInability ||
+      epos == ExtendedPOS::AuxBenefactive || epos == ExtendedPOS::AuxSimilitudeYou) {
     return PartOfSpeech::Auxiliary;
   }
   // Particle types -> Particle
