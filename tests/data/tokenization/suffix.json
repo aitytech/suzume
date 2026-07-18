@@ -1488,6 +1488,48 @@
       ],
       "id": "suffix_productive_renyokei_ppoi",
       "input": "忘れっぽい"
+    },
+    {
+      "description": "忘れがたい経験。理解しがたい内容。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "忘れる",
+          "pos": "Verb",
+          "surface": "忘れ"
+        },
+        {
+          "lemma": "がたい",
+          "pos": "Adjective",
+          "surface": "がたい"
+        },
+        {
+          "lemma": "経験",
+          "pos": "Noun",
+          "surface": "経験"
+        },
+        {
+          "lemma": "理解",
+          "pos": "Noun",
+          "surface": "理解"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "がたい",
+          "pos": "Adjective",
+          "surface": "がたい"
+        },
+        {
+          "lemma": "内容",
+          "pos": "Noun",
+          "surface": "内容"
+        }
+      ],
+      "id": "regatai_shigatai",
+      "input": "忘れがたい経験。理解しがたい内容。"
     }
   ],
   "description": "Suffixes (さん、的、化)",

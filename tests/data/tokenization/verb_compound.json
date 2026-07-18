@@ -2995,6 +2995,58 @@
       ],
       "id": "verb_passive_continuative_godan_past_boundary",
       "input": "使われ続けた"
+    },
+    {
+      "description": "書きかけの紙。書きたての文。読みかけの本。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "書きかける",
+          "pos": "Verb",
+          "surface": "書きかけ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "書きたてる",
+          "pos": "Verb",
+          "surface": "書きたて"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "文",
+          "pos": "Noun",
+          "surface": "文"
+        },
+        {
+          "lemma": "読みかける",
+          "pos": "Verb",
+          "surface": "読みかけ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        }
+      ],
+      "id": "kikakeno_kitateno_mikakeno",
+      "input": "書きかけの紙。書きたての文。読みかけの本。"
     }
   ],
   "description": "Compound verbs",
