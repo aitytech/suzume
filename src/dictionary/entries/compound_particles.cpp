@@ -10,7 +10,9 @@ EntrySpecRange getCompoundParticleEntries() {
       // Cause/Means (原因・手段)
       particle("によって", EPOS::ParticleCase),  // beat によっ(verb)+て split
       particle("により", EPOS::ParticleCase),
+      particle("につき", EPOS::ParticleCase),    // formal reason/topic marker in notices
       particle("につれて", EPOS::ParticleCase),  // beat に+つれ(verb)+て split
+      particle("に従って", EPOS::ParticleCase),  // formal compliance/sequence marker
       particle("にかけて", EPOS::ParticleCase),  // beat にか(noun)+けて(verb) split
       // Note: による removed - grammatically に+よる (格助詞+動詞連体形)
       // Note: によると removed - MeCab splits as に+よる+と (引用表現)

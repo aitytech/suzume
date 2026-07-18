@@ -37,6 +37,7 @@ EntrySpecRange getParticleEntries() {
       particle("ながら", EPOS::ParticleConj),
       particle("つつ", EPOS::ParticleConj),  // 反復・並行の接続助詞 (連用形接続): 重ね+つつ, 増加し+つつ+ある
       particle("とともに", EPOS::ParticleConj),  // 並行・同時: 読むとともに書く
+      particle("と共に", EPOS::ParticleConj),    // 漢字交じり表記
       particle("とも", EPOS::ParticleConj),      // 譲歩: 読まずとも, 食べずとも
       particle("ど", EPOS::ParticleConj),        // 文語的譲歩: といえど
       particle("ども", EPOS::ParticleConj),      // 譲歩: といえども, いかに…ども
@@ -48,6 +49,7 @@ EntrySpecRange getParticleEntries() {
       particle("けど", EPOS::ParticleConj),
       particle("けども", EPOS::ParticleConj),
       particle("けれども", EPOS::ParticleConj),
+      particle("ものの", EPOS::ParticleConj),
       particle("し", EPOS::ParticleConj),    // 列挙・理由 (接続助詞)
       particle("たり", EPOS::ParticleConj),  // 並立助詞 (食べたり飲んだり)
       particle("だり", EPOS::ParticleConj),  // 並立助詞 (voiced: 飲んだり)
@@ -61,8 +63,11 @@ EntrySpecRange getParticleEntries() {
       particle("か", EPOS::ParticleFinal),
       particle("け", EPOS::ParticleFinal),  // colloquial variant (こんだけ → こん+だ+け)
       particle("な", EPOS::ParticleFinal),
+      particle("なあ", EPOS::ParticleFinal),
       particle("ね", EPOS::ParticleFinal),
+      particle("ねえ", EPOS::ParticleFinal),
       particle("よ", EPOS::ParticleFinal),
+      particle("さ", EPOS::ParticleFinal),
       particle("わ", EPOS::ParticleFinal),
       particle("ぞ", EPOS::ParticleFinal),
       particle("ぜ", EPOS::ParticleFinal),
@@ -71,9 +76,11 @@ EntrySpecRange getParticleEntries() {
       particle("じゃん", EPOS::ParticleFinal),
       particle("っけ", EPOS::ParticleFinal),
       particle("かしら", EPOS::ParticleFinal),
+      particle("だい", EPOS::ParticleFinal),
 
       // Adverbial particles (副助詞)
       particle("かも", EPOS::ParticleAdverbial),  // prevent か+も split in かもしれない
+      particle("なんか", EPOS::ParticleAdverbial),
       particle("ばかり", EPOS::ParticleAdverbial),
       particle("だけ", EPOS::ParticleAdverbial),
       particle("のみ", EPOS::ParticleAdverbial),
@@ -83,6 +90,10 @@ EntrySpecRange getParticleEntries() {
       particle("など", EPOS::ParticleAdverbial),
       particle("とか", EPOS::ParticleAdverbial),  // 並立 (AとかBとか)
       particle("なんて", EPOS::ParticleAdverbial),
+      particle("だって", EPOS::ParticleAdverbial),
+      particle("おろか", EPOS::ParticleAdverbial),  // 強調・追加: 基本はおろか応用も
+      particle("しも", EPOS::ParticleAdverbial),    // 強調・限定: 誰しも、必ずしも
+      particle("きり", EPOS::ParticleAdverbial),    // 限定: 一度きり、これきり
       particle("ずつ", EPOS::ParticleAdverbial),  // distributive 副助詞 - prevent ず(打消)+つ split after a quantity
       particle("ってば", EPOS::ParticleFinal),
       particle("ったら", EPOS::ParticleFinal),

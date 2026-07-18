@@ -55,6 +55,9 @@ EntrySpecRange getPronounEntries() {
       pronoun("皆", ""),
       pronoun("みんな", ""),
 
+      // Distributive pronoun (分配代名詞)
+      pronoun("各々", ""),
+
       // Demonstrative - proximal (近称)
       pronoun("これ", ""),
       pronoun("ここ", ""),
@@ -70,6 +73,9 @@ EntrySpecRange getPronounEntries() {
       pronoun("それ", ""),
       pronoun("そこ", ""),
       pronoun("そちら", ""),
+      // Fixed medial locative compound (そこかしこ): retain its two
+      // demonstrative search units rather than splitting かしこ internally.
+      pronoun("かしこ", ""),
 
       // Demonstrative - distal (遠称)
       pronoun("あれ", ""),
@@ -83,58 +89,73 @@ EntrySpecRange getPronounEntries() {
       pronoun("どいつ", ""),
 
       // Demonstrative - interrogative (不定称)
-      pronoun("どれ", ""),
-      pronoun("どこ", ""),
-      pronoun("どちら", ""),
+      pronoun_interrogative("どれ", ""),
+      pronoun_interrogative("どこ", ""),
+      pronoun_interrogative("どちら", ""),
 
       // Indefinite (不定代名詞) - kanji with reading
       // Low cost to act as strong anchors against prefix compounds (今何 → 今+何)
       // Cost -1.5 to beat: 今(1.4) + 何(-1.9) + conn(0.5) = 0.0 < 今何(0.5)
-      pronoun("誰", ""),
-      pronoun("何", ""),
+      pronoun_interrogative("誰", ""),
+      pronoun_interrogative("何", ""),
       // Hiragana interrogatives (だれ=誰, なに=何): closed class, mirror the
       // kanji forms so 誰か/何か boundaries resolve in pure-hiragana text
-      pronoun("だれ", ""),
-      pronoun("なに", ""),
+      pronoun_interrogative("だれ", ""),
+      pronoun_interrogative("なに", ""),
 
       // Interrogatives (疑問詞)
-      pronoun("いつ", ""),
-      pronoun("いくつ", ""),
-      pronoun("いくら", ""),
+      pronoun_interrogative("いつ", ""),
+      pronoun_interrogative("いくつ", ""),
+      pronoun_interrogative("いくら", ""),
       // どう/いかが can take だ/です (どうですか, いかがですか)
       // Register as both adverb and na-adjective for correct copula connection
       adv("どう", ""),
       na_adj("どう", "どう"),
       adv("いかが", ""),
       na_adj("いかが", "いかが"),
+      na_adj("さまざま", "さまざま"),
+      na_adj("同じ", "同じ"),
       // Note: どうして needs very low cost to prevent split when followed by verb
       // The te-form bonus makes どう+して+VERB cheaper than どうして+VERB
       adv("どうして", ""),
       adv("なぜ", ""),
 
       // Classical/literary adverbs (古語・文語副詞)
-      adv("かく", ""),      // 斯く - classical demonstrative adverb (=こう/such)
-      adv("なんと", ""),    // exclamatory adverb (感嘆副詞)
-      adv("なんとか", ""),  // indefinite adverb (somehow/one way or another)
+      adv("かく", ""),        // 斯く - classical demonstrative adverb (=こう/such)
+      adv("なんと", ""),      // exclamatory adverb (感嘆副詞)
+      adv("なんとか", ""),    // indefinite adverb (somehow/one way or another)
+      adv("悪しからず", ""),  // fixed formal acknowledgment phrase
+      adv("何とか", ""),      // kanji-mixed spelling of なんとか
+      adv("何とも", ""),      // degree/evaluative adverb (何とも言えない)
+      adv("なんとも", ""),    // hiragana orthography
 
       // Degree adverbs (程度副詞) - very common, prevent misparse
       // とても could be split as と+て+も without this entry
       adv("とても", ""),
       adv("かなり", ""),
+      adv("多少なりとも", ""),
+      adv("たいそう", ""),
+      adv("たいして", ""),
+      adv("しいて", ""),
+      adv("さほど", ""),
+      adv("たいへん", ""),
       adv("すごく", ""),
       adv("ちょっと", ""),
       adv("もっと", ""),
       adv("ずっと", ""),
       adv("やっと", ""),
       adv("きっと", ""),
+      adv("必ず", ""),
       adv("ちょうど", ""),
       // Temporal adverbs - common, prevent misclassification
       adv("まだ", ""),
+      adv("まだしも", ""),
 
       // Fixed temporal and frequency adverbs. These are closed lexical
       // function words, not productive pronoun-plus-particle sequences.
       adv("いつか", ""),
       adv("まもなく", ""),
+      adj("間もなく", "間もない", EPOS::AdjRenyokei),
       adv("ときどき", ""),
 
       // Fixed degree and discourse adverbs. Their surface endings otherwise
@@ -144,7 +165,59 @@ EntrySpecRange getPronounEntries() {
       adv("あらためて", ""),
       adv("とくに", ""),
       adv("まったく", ""),
+      adv("全く", ""),
+      adv("概して", ""),
+      adv("あらかた", ""),
+      adv("あらまし", ""),
       adv("きわめて", ""),
+      // Additional fixed adverbial function words. These are closed lexical
+      // expressions; treating them as a unit prevents unrelated inflectional
+      // fragments from winning in hiragana or mixed-script input.
+      adv("全然", ""),
+      adv("むしろ", ""),
+      adv("いったん", ""),
+      adv("いまだに", ""),
+      adv("未だに", ""),
+      adv("どうしても", ""),
+      adv("できるだけ", ""),
+      adv("ひとまず", ""),
+      adv("ことごとく", ""),
+      adv("おおむね", ""),
+      adv("せいぜい", ""),
+      adv("とうてい", ""),
+      adv("いかに", ""),
+      adv("いかで", ""),
+      adv("あまつさえ", ""),
+      adv("たかだか", ""),
+      adv("わずか", ""),
+      adj("やむを得ない", "やむを得ない", EPOS::AdjBasic),
+      adj("ろくでもない", "ろくでもない", EPOS::AdjBasic),
+      adv("おおよそ", ""),
+      adv("概ね", ""),
+      adv("今さら", ""),
+      adv("一応", ""),
+      adv("一切", ""),
+      adv("一切合切", ""),
+      adv("以上", ""),
+      adv("何一つ", ""),
+      // Fixed adverbs with productive-looking endings. They form a closed
+      // lexical class, while their internal moras otherwise attract prefix,
+      // particle, or formal-noun candidates.
+      adv("おのずから", ""),
+      adv("おもむろに", ""),
+      adv("ことさら", ""),
+      adv("およそ", ""),
+      adv("もっぱら", ""),
+      adv("ひとしお", ""),
+      adv("ひとたび", ""),
+      adv("なにとぞ", ""),
+      adv("ぜひとも", ""),
+      adv("何もかも", ""),
+      adv("何より", ""),
+      adv("取りあえず", ""),
+      adv("予め", ""),
+      adv("予てから", ""),
+      adv("ひとしきり", ""),
       adj("余儀なく", "余儀ない", EPOS::AdjRenyokei),
 
       // Compound adverb (改めて = anew/once more) - 動詞「改める」連用形+て の語彙化

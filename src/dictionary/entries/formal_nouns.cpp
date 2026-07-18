@@ -18,10 +18,21 @@ EntrySpecRange getFormalNounEntries() {
       formal_noun("どころ", ""),
       formal_noun("時", ""),
       formal_noun("内", ""),
+      // Bound temporal/spatial suffix after a nominal stem (期間内、期限内).
+      // Keep the formal-noun entry above for standalone uses as well.
+      suffix("内", ""),
+      // Temporal endpoint formal noun (年度末、学期末). Short lexical compounds
+      // such as 月末 retain their whole-word candidate.
+      formal_noun("末", ""),
       formal_noun("あいだ", ""),
       formal_noun("うち", ""),
+      formal_noun("途中", ""),
       formal_noun("たび", ""),
-      formal_noun("きり", ""),
+      // Temporal reference-point formal nouns (開始以来、開始以降).
+      formal_noun("以来", ""),
+      formal_noun("以降", ""),
+      // Approximate temporal point (中旬ごろ、夕方ごろに).
+      formal_noun("ごろ", ""),
       formal_noun("通り", ""),
       formal_noun("とおり", ""),
       formal_noun("限り", ""),
@@ -48,7 +59,12 @@ EntrySpecRange getFormalNounEntries() {
       // Registered so the u-ending verb candidate path does not fabricate a
       // ふう/VERB reading now that 2-char う stems are admitted.
       formal_noun("ふう", ""),
+      // Literary formal noun in conditional expressions (いかんにかかわらず,
+      // 結果いかんで).
+      formal_noun("いかん", ""),
       formal_noun("わけ", ""),
+      formal_noun("すべ", ""),
+      formal_noun("よし", ""),
       // Causal formal noun followed by a copula (読むゆえだ, 本のゆえだ).
       // The demonstrative-bound suffix reading remains available separately.
       formal_noun("ゆえ", ""),
@@ -66,14 +82,22 @@ EntrySpecRange getFormalNounEntries() {
       // Formal noun expressing a risk after an attributive clause
       // (遅れるおそれがある, 欠けるおそれはない).
       formal_noun("おそれ", ""),
+      // Benefactive formal noun following the honorific prefix: お+かげで.
+      // The independent lexical noun is open-class, while this constructional
+      // use has a stable formal-noun distribution.
+      formal_noun("かげ", ""),
       formal_noun("はず", "はず"),
       // Formal noun for conditional cases (読む場合、必要な場合).
       formal_noun("場合", ""),
+      // Fixed degree expression (ある程度は理解できる).
+      adv("ある程度", ""),
       formal_noun("つもり", ""),
       // Formal noun for an incidental accompanying action (書いたついでに).
       formal_noun("ついで", ""),
       // Formal noun for a simultaneous/parallel action (読むかたわら書く).
       formal_noun("かたわら", ""),
+      // Formal noun for a feigned action or state (知らないふりをする).
+      formal_noun("ふり", ""),
       // Temporal formal noun after a past clause (読んだとたん書く).
       formal_noun("とたん", ""),
       // Temporal formal noun after a past clause (書いたそばから読む).
@@ -94,6 +118,10 @@ EntrySpecRange getFormalNounEntries() {
       formal_noun("しかた", ""),
       formal_noun("ありきたり", "ありきたり"),  // Low cost to prevent あり+き+たり split, na-adjective stem
       formal_noun("たたずまい", "たたずまい"),  // noun, not suru-verb
+      // Bound suffix in the negative-completion construction (見+ず+じまい).
+      suffix("じまい", "じまい"),
+      // Exclusivity suffix attached to a nominal predicate (地域+ならでは+の).
+      suffix("ならでは", "ならでは"),
       // NOTE: 〜がち forms are split as V連用形 + がち (suffix) by the split path, not merged.
       // B35: Idiom component (eaves bracket - used in うだつが上がらない)
       formal_noun("うだつ", "うだつ"),

@@ -21,11 +21,15 @@ EntrySpecRange getDeterminerEntries() {
       det("あらゆる", ""),
       det("いかなる", ""),
       det("いわゆる", ""),
-      det("およそ", ""),
+      det("あまりの", ""),  // excessive-degree determiner (あまりの暑さ)
+      det("ほんの", ""),    // small-degree determiner (ほんの少し)
       det("いろんな", ""),  // colloquial variety determiner (= いろいろな), not an adjective
       det("おかしな", ""),
       det("同じ", ""),      // same - prevent VERB confusion
+      det("単なる", ""),    // fixed attributive determiner, not a finite verb
       det("たいした", ""),  // 大した - prevent 願望たい+し+た split (たいした問題)
+      det("大した", ""),    // kanji spelling of the fixed evaluative determiner
+      det("何らかの", ""),  // indefinite determiner (何らかの方法)
 
       // Demonstrative manner determiners (指示様態連体詞)
       // Lower cost to compete with X + いう (VERB cost 0.3) splits
@@ -59,6 +63,9 @@ EntrySpecRange getDeterminerEntries() {
       // Without L1, over-splits to か(unknown)+の(particle).
       // Same pattern as かかる above.
       det("かの", ""),
+
+      // Fixed literary determiner (大いなる希望).
+      det("大いなる", ""),
   };
   return makeEntrySpecRange(kEntries);
 }

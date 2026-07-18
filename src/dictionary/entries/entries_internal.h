@@ -96,6 +96,12 @@ constexpr EntrySpec pronoun(const char* s, const char* lemma = "") {
   return {s, POS::Pronoun, EPOS::Pronoun, lemma};
 }
 
+// Interrogative pronoun helper: creates a PRONOUN entry with its own
+// connection class (何、誰、どこ、いつ).
+constexpr EntrySpec pronoun_interrogative(const char* s, const char* lemma = "") {
+  return {s, POS::Pronoun, EPOS::PronounInterrogative, lemma};
+}
+
 // Interjection helper: creates INTERJECTION entry
 // Usage: intj("えっ")
 constexpr EntrySpec intj(const char* s, const char* lemma = "") {

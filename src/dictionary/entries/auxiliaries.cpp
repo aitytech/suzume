@@ -54,11 +54,13 @@ EntrySpecRange getAuxiliaryEntries() {
       // Contracted negative-conjunctive form. Keep its displayed lemma as ず
       // because the tokenizer emits ずに as one auxiliary token.
       aux("ずに", "ず", EPOS::AuxNegativeNu),
-      aux("ざる", "ぬ", EPOS::AuxNegativeNu),     // 連体形 (せざるを得ない)
-      aux("ざれ", "ぬ", EPOS::AuxNegativeNu),     // 已然形 (あらざれば)
-      aux("ね", "ぬ", EPOS::AuxNegativeNu),       // 已然形 (行かねば, 死なねば, せねば)
-      aux("ごとく", "ごとし", EPOS::Adverb),      // 如く (比況連用形)
-      aux("ごとき", "ごとし", EPOS::Determiner),  // 如き (比況連体形)
+      aux("ざる", "ぬ", EPOS::AuxNegativeNu),           // 連体形 (せざるを得ない)
+      aux("ざり", "ぬ", EPOS::AuxNegativeNu),           // 連用形 (行かざりけり)
+      aux("ざれ", "ぬ", EPOS::AuxNegativeNu),           // 已然形 (あらざれば)
+      aux("ね", "ぬ", EPOS::AuxNegativeNu),             // 已然形 (行かねば, 死なねば, せねば)
+      aux("ごとし", "ごとし", EPOS::AuxSimilitudeYou),  // 如し (比況終止形)
+      aux("ごとく", "ごとし", EPOS::Adverb),            // 如く (比況連用形)
+      aux("ごとき", "ごとし", EPOS::Determiner),        // 如き (比況連体形)
       // じゃない: removed - split as じゃ(AuxCopulaDa) + ない(AuxNegativeNai)
       aux("ん", "ん", EPOS::AuxNegativeNu),
 
@@ -68,10 +70,14 @@ EntrySpecRange getAuxiliaryEntries() {
       // AuxClassicalNari category cost, winning only via the AdjNaAdj/Noun→なる→Noun bigram bonus.
       aux("なる", "なり", EPOS::AuxClassicalNari),
       aux("けり", "けり", EPOS::AuxClassicalKeri),  // 過去・詠嘆 (なりけり)
+      aux("けむ", "けむ", EPOS::AuxVolitional),     // 過去推量 (行きけむ)
+      aux("らむ", "らむ", EPOS::AuxVolitional),     // 現在推量 (行くらむ)
       // Classical タリ活用 連体形 たる (堂々たる, 確固たる). Only 連体形 is registered:
       // 終止 たり / 未然 たら / 已然命令 たれ collide with the parallel particle たり,
       // the conditional たら, and imperative forms, so they are intentionally omitted.
       aux("たる", "たり", EPOS::AuxClassicalTari),
+      aux("たり", "たり", EPOS::AuxClassicalPerfect),  // 完了 (行きたり)
+      aux("り", "り", EPOS::AuxClassicalPerfect),      // 存続 (行けり)
 
       // Past/Completion - た (過去・完了)
       aux("た", "た", EPOS::AuxTenseTa),
@@ -82,6 +88,7 @@ EntrySpecRange getAuxiliaryEntries() {
       // Conjecture/Volitional (推量・意志) - う/よう
       aux("う", "う", EPOS::AuxVolitional),
       aux("よう", "よう", EPOS::AuxVolitional),
+      aux("む", "む", EPOS::AuxVolitional),  // Classical volitional/conjectural
       // 文語の意志助動詞「む」の撥音便。否定の「ん」と同形だが、
       // 読まんとする のように引用の と が後続する文脈で区別する。
       aux("ん", "ん", EPOS::AuxVolitional),
@@ -90,11 +97,14 @@ EntrySpecRange getAuxiliaryEntries() {
 
       // Negative conjecture (否定推量): attaches to 終止形 (godan) / 未然形 (ichidan)
       aux("まい", "まい", EPOS::AuxNegativeMai),
+      aux("じ", "じ", EPOS::AuxNegativeMai),        // 文語打消意志: 行かじ、あらじ
+      aux("まじき", "まじ", EPOS::AuxNegativeMai),  // 文語打消推量の連体形
 
       // Conjecture - らしい (推定)
       aux("らしい", "らしい", EPOS::AuxConjectureRashii),
       aux("らしく", "らしい", EPOS::AuxConjectureRashii),
       aux("らしかっ", "らしい", EPOS::AuxConjectureRashii),
+      aux("らしから", "らしい", EPOS::AuxConjectureRashii),
       // Nominalizing stem: 本らしさ → 本 + らし + さ. It remains a form
       // of the conjecture auxiliary rather than an independent adjective.
       aux("らし", "らしい", EPOS::AuxConjectureRashii),
@@ -159,6 +169,12 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("損なっ", "損なう", EPOS::AuxInability),
       aux("損なわ", "損なう", EPOS::AuxInability),
       aux("損なえ", "損なう", EPOS::AuxInability),
+      // Hiragana spelling of the same closed-class failure auxiliary.
+      aux("そこない", "そこなう", EPOS::AuxInability),
+      aux("そこなう", "そこなう", EPOS::AuxInability),
+      aux("そこなっ", "そこなう", EPOS::AuxInability),
+      aux("そこなわ", "そこなう", EPOS::AuxInability),
+      aux("そこなえ", "そこなう", EPOS::AuxInability),
 
       // Suru verb stem forms (サ変動詞語幹活用形) - VERB, not AUX
       verb("し", "する", EPOS::VerbRenyokei),
@@ -170,9 +186,22 @@ EntrySpecRange getAuxiliaryEntries() {
       verb("さ", "する", EPOS::VerbMizenkei),
       verb("せ", "する", EPOS::VerbMizenkei),  // 認識せざるを得ない
 
+      // The existential verb いる has an archaic ra-row mizenkei (いら),
+      // used productively before negation and the classical causative す.
+      verb("いら", "いる", EPOS::VerbMizenkei),
+
+      // Classical conditional stem in しかれども.  It retains its verbal
+      // analysis before the concessive particle rather than lexicalizing as a
+      // conjunction.
+      verb("しかれ", "しかる", EPOS::VerbKateikei),
+
       // Kuru verb stem form (カ変動詞語幹活用形) - VERB, not AUX
       // MeCab: 来た → 来(連用形) + た(過去)
       verb("来", "来る", EPOS::VerbRenyokei),
+      // カ変未然形: 来ら+れる (可能・受身).
+      verb("来ら", "来る", EPOS::VerbMizenkei),
+      // カ変使役の接続形: 来さ+せる/せられる.
+      verb("来さ", "来る", EPOS::VerbMizenkei),
 
       // Deru verb stem form (一段動詞「出る」) - VERB
       // で+たい/ます needs this to split correctly (外にでたい → 外|に|で|たい)
@@ -191,6 +220,8 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("せれ", "せる", EPOS::AuxCausative),
       aux("せろ", "せる", EPOS::AuxCausative),  // imperative
       aux("せよ", "せる", EPOS::AuxCausative),  // imperative (literary)
+      aux("し", "す", EPOS::AuxCausative),      // continuative: いらし+て
+      aux("す", "す", EPOS::AuxCausative),      // terminal: いらす
       aux("させ", "させる", EPOS::AuxCausative),
       aux("させる", "させる", EPOS::AuxCausative),
       aux("させれ", "させる", EPOS::AuxCausative),
@@ -209,6 +240,16 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("たがっ", "たがる", EPOS::AuxDesireTai),  // 連用促音便 (+た/て)
       aux("たがれ", "たがる", EPOS::AuxDesireTai),  // 仮定 (+ば)
       adj("たければ", "たい", EPOS::AuxDesireTai),
+      // Classical desiderative まほし: verb renyokei + ま + ほしき.
+      aux("ま", "まほし", EPOS::AuxDesireTai),
+      adj("ほしき", "ほしい", EPOS::AdjBasic),
+      // Classical honorific subsidiary たまふ: verb renyokei + た + ま + ふ.
+      aux("ま", "たまふ", EPOS::AuxHonorific),
+      aux("ふ", "たまふ", EPOS::AuxHonorific),
+      // Classical terminal component after a kanji stem (候+ふ, 思+ふ).
+      // It is context-gated by the tokenizer so it cannot become a free
+      // one-mora lexical verb.
+      verb("ふ", "ふる", EPOS::VerbShuushikei),
       // Irregular i-adjective よい/いい (形容詞・アウオ段)
       // MeCab: よければ → よけれ(仮定形) + ば, よかった → よかっ(連用タ接続) + た
       // いい is colloquial form of よい, shares conjugated forms (よかった, よければ, etc.)
@@ -268,6 +309,14 @@ EntrySpecRange getAuxiliaryEntries() {
       // MeCab: 高さ → 高(語幹) + さ(名詞), なさそう → な + さ + そう
       suffix("さ", "さ"),
 
+      // Appearance suffix げ (悲しげ, 不安げ). It attaches productively to
+      // i-adjective stems and nominal bases, retaining the suffix boundary.
+      suffix("げ", "げ"),
+
+      // Productive viewpoint/evaluation suffix (重要視, 問題視).  It remains
+      // separate from the preceding noun and the following サ変 verb.
+      suffix("視", "視"),
+
       // Construction/composition suffixes after a quantified counter
       // (二階建て, 二本立て). They retain a Suffix candidate alongside the
       // homographic verb stems, and contextual scoring selects the grammar.
@@ -299,13 +348,12 @@ EntrySpecRange getAuxiliaryEntries() {
 
       // Quantitative bound suffixes: 1kg未満, 5cm以上.
       suffix("未満", "未満"),
+      suffix("間", "間"),
 
       // Note: 的 was previously L1 SUFFIX, but Suzume's tokenizer use case
       // prefers X+的 as one search unit (論理的, 科学的, 経済的). Merging is
       // handled by kanji-merge normalization. 的+な (na-adj formation) still
       // splits as 論理的(NOUN) + な(AuxCopula) without a 的 SUFFIX node.
-
-      // NOTE: 中 suffix removed - MeCab treats 世界中/一日中 as single NOUN
 
       // Inclusive suffix ごと (皮ごと, 頭ごと)
       // MeCab: 皮ごと → 皮 + ごと (noun + suffix)
@@ -350,6 +398,9 @@ EntrySpecRange getAuxiliaryEntries() {
       // Recent-completion suffix たて (焼きたて, 作りたて)
       // MeCab: 焼きたて → 焼き + たて (verb renyokei + suffix)
       suffix_recent_completion("たて", "たて"),
+
+      // Completion-state suffix (確認済み, 承認済み).
+      suffix_recent_completion("済み", "済み"),
 
       // Adjective suffixes - connect after verb renyokei (V連用形接続)
       // MeCab: 使いにくい → 使い + にくい, 読みやすい → 読み + やすい
@@ -418,11 +469,12 @@ EntrySpecRange getAuxiliaryEntries() {
       // Used in: いただきます, 食べていただく
       // Must be registered to prevent い+た+だき split
       verb("いただき", "いただく", EPOS::VerbRenyokei),
-      // Potential form of the humble receiving auxiliary. These are closed
-      // subsidiary forms after a te-form, not independent lexical verbs.
-      aux("いただけ", "いただける", EPOS::AuxHonorific),
-      aux("いただける", "いただける", EPOS::AuxHonorific),
-      aux("いただけれ", "いただける", EPOS::AuxHonorific),
+      verb("いただい", "いただく", EPOS::VerbOnbinkei),
+      // Potential form of the humble receiving verb. This remains a dependent
+      // verb in the token stream, including after an honorific renyokei.
+      verb("いただけ", "いただける", EPOS::VerbKateikei),
+      verb("いただける", "いただける", EPOS::VerbShuushikei),
+      verb("いただけれ", "いただける", EPOS::VerbKateikei),
 
       // Potential form of the receiving benefactive. After a te-form this
       // remains a closed subsidiary paradigm, including もらえ+ない.
@@ -435,7 +487,6 @@ EntrySpecRange getAuxiliaryEntries() {
       // Uses VerbRenyokei to allow connection to ます (くださいました)
       verb("ください", "くださる", EPOS::VerbRenyokei),
       verb("下さい", "下さる", EPOS::VerbRenyokei),
-      verb("くださいませ", "くださる", EPOS::VerbShuushikei),
 
       // Special ra-row godan verbs (五段ラ行特殊) with い-form renyokei
       // These honorific/humble verbs use い instead of り for renyokei:
@@ -479,9 +530,12 @@ EntrySpecRange getAuxiliaryEntries() {
 
       // Benefactive auxiliary - くれる (giving, receiving benefit)
       // Used in subsidiary verb patterns: してくれる, 買ってくれた
-      // Note: MeCab treats くれる as 動詞,非自立 (dependent verb)
-      aux("くれる", "くれる", EPOS::AuxAspectKuru),
-      aux("くれ", "くれる", EPOS::AuxAspectKuru),  // renyokei for くれ+ます
+      // くれる is a dependent verb in benefactive constructions.
+      verb("くれる", "くれる", EPOS::VerbShuushikei),
+      verb("くれ", "くれる", EPOS::VerbRenyokei),
+
+      // Humble continuative まいる after a te-form is a subsidiary auxiliary.
+      aux("まいり", "まいる", EPOS::AuxHonorific),
 
       // Excessive degree subsidiary verb - すぎる (過度)
       // Used after adjective/verb stems: 高すぎる, 食べすぎる
@@ -576,6 +630,9 @@ EntrySpecRange getAuxiliaryEntries() {
       verb("ゆき", "ゆく", EPOS::VerbRenyokei),
       verb("ゆか", "ゆく", EPOS::VerbMizenkei),
       verb("ゆけ", "ゆく", EPOS::VerbMeireikei),
+      // Classical honorific おはす.  The independent verbal component keeps
+      // the productive prefix boundary お + はす.
+      verb("はす", "はする", EPOS::VerbShuushikei),
       aux("くる", "くる", EPOS::AuxAspectKuru),
       // MeCab compat: split き+た/て/ます separately
       aux("き", "くる", EPOS::AuxAspectKuru),
@@ -646,6 +703,8 @@ EntrySpecRange getAuxiliaryEntries() {
       // Elderly/Archaic (老人・古風)
       aux("じゃ", "だ", EPOS::AuxCopulaDa),
       aux("じゃあ", "だ", EPOS::AuxCopulaDa),
+      // Contracted explanatory/copular negative: んじゃ+ない.
+      aux("んじゃ", "んだ", EPOS::AuxCopulaDa),
       aux("のじゃ", "のだ", EPOS::Unknown),
       aux("じゃろ", "だろ", EPOS::AuxCopulaDa),
 
