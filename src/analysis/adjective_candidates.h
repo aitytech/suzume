@@ -134,6 +134,18 @@ void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t st
                               const dictionary::DictionaryManager* dict_manager,
                               std::vector<UnknownCandidate>& candidates);
 
+/**
+ * @brief Append i-adjective classical negative-stem candidates (stem + から + ず)
+ *
+ * The classical negative form 高からず / 美しからず has a verb-like から
+ * surface.  A candidate is emitted only when the reconstructed modern base
+ * (stem + い) is a decisive i-adjective and classical negative ず follows.
+ */
+void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
+                                size_t scan_end, const grammar::Inflection& inflection,
+                                const dictionary::DictionaryManager* dict_manager,
+                                std::vector<UnknownCandidate>& candidates);
+
 }  // namespace suzume::analysis
 
 #endif  // SUZUME_ANALYSIS_ADJECTIVE_CANDIDATES_H_

@@ -250,8 +250,8 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
   // If kanji + hiragana_prefix + い is a dict adjective, generate stem candidate.
   if (hiragana_part.size() >= 6) {  // Need at least 2 hiragana chars (prefix + pattern)
     // Garu patterns to look for within hiragana_part
-    static constexpr std::array<std::string_view, 8> kExtGaruPatterns = {
-        "すぎ", "がる", "がり", "がっ", "がれ", "がろ", "そう", "さ",
+    static constexpr std::array<std::string_view, 9> kExtGaruPatterns = {
+        "すぎ", "がる", "がり", "がっ", "がれ", "がろ", "そう", "さ", "げ",
     };
 
     for (const auto& pattern : kExtGaruPatterns) {
@@ -453,6 +453,19 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
   return candidates;
 }
 
+bool isModernIAdjective(const std::string& lemma, const grammar::Inflection& inflection,
+                        const dictionary::DictionaryManager* dict_manager) {
+  if (isAdjectiveInDictionary(dict_manager, lemma)) {
+    return true;
+  }
+  for (const auto& cand : inflection.analyze(lemma)) {
+    if (cand.verb_type == grammar::VerbType::IAdjective && cand.confidence >= candidate::kHiraAdjConfMin) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
                               size_t scan_end, const grammar::Inflection& inflection,
                               const dictionary::DictionaryManager* dict_manager,
@@ -479,16 +492,7 @@ void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t st
     // Decisive lexical signal: the reconstructed base is a dictionary adjective,
     // or the inflection analyzer recognizes it as an i-adjective. This rejects the
     // verb-volitional homograph (分かろう → 分か+い is not an adjective).
-    bool is_adjective = isAdjectiveInDictionary(dict_manager, lemma);
-    if (!is_adjective) {
-      for (const auto& cand : inflection.analyze(lemma)) {
-        if (cand.verb_type == grammar::VerbType::IAdjective && cand.confidence >= candidate::kHiraAdjConfMin) {
-          is_adjective = true;
-          break;
-        }
-      }
-    }
-    if (!is_adjective) {
+    if (!isModernIAdjective(lemma, inflection, dict_manager)) {
       continue;
     }
     UnknownCandidate miz_cand;
@@ -506,6 +510,37 @@ void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t st
     miz_cand.origin = CandidateOrigin::AdjectiveI;
     miz_cand.confidence = candidate::kIAdjKaroConfidence;
     miz_cand.pattern = "i_adjective_karo";
+#endif
+    candidates.push_back(std::move(miz_cand));
+  }
+}
+
+void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
+                                size_t scan_end, const grammar::Inflection& inflection,
+                                const dictionary::DictionaryManager* dict_manager,
+                                std::vector<UnknownCandidate>& candidates) {
+  for (size_t kara_pos = scan_start; kara_pos + 2 < scan_end; ++kara_pos) {
+    if (kara_pos <= start_pos || codepoints[kara_pos] != U'か' || codepoints[kara_pos + 1] != U'ら' ||
+        codepoints[kara_pos + 2] != U'ず') {
+      continue;
+    }
+    std::string lemma = extractSubstring(codepoints, start_pos, kara_pos) + "い";
+    if (!isModernIAdjective(lemma, inflection, dict_manager)) {
+      continue;
+    }
+    UnknownCandidate miz_cand;
+    miz_cand.surface = extractSubstring(codepoints, start_pos, kara_pos + 2);
+    miz_cand.start = start_pos;
+    miz_cand.end = kara_pos + 2;
+    miz_cand.pos = core::PartOfSpeech::Adjective;
+    miz_cand.lemma = lemma;
+    miz_cand.cost = candidate::verb_cost::kStrongBonus;
+    miz_cand.has_suffix = true;
+    miz_cand.extended_pos = core::ExtendedPOS::AdjMizenkei;
+#ifdef SUZUME_DEBUG_INFO
+    miz_cand.origin = CandidateOrigin::AdjectiveI;
+    miz_cand.confidence = candidate::kIAdjKaroConfidence;
+    miz_cand.pattern = "i_adjective_kara_zu";
 #endif
     candidates.push_back(std::move(miz_cand));
   }

@@ -334,6 +334,18 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     }
   }
 
+  // A one-kanji stem followed by るい/るく is a productive i-adjective
+  // shape (明るい, 明るく). The inflection engine can prefer a homographic
+  // godan analysis here, so retain the adjective candidate independently.
+  if (kanji_end == start_pos + 1 && kanji_end + 1 < codepoints.size() && codepoints[kanji_end] == U'る' &&
+      (codepoints[kanji_end + 1] == U'い' || codepoints[kanji_end + 1] == U'く')) {
+    size_t adj_end = kanji_end + 2;
+    std::string surface = extractSubstring(codepoints, start_pos, adj_end);
+    std::string lemma = extractSubstring(codepoints, start_pos, kanji_end) + "るい";
+    candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, lemma, candidate::kSingleKanjiICost,
+                                           CandidateOrigin::AdjectiveI, candidate::kIAdjConfMin, "single_kanji_rui"));
+  }
+
   // Try different ending lengths
   for (size_t end_pos = hiragana_end; end_pos > kanji_end; --end_pos) {
     std::string surface = extractSubstring(codepoints, start_pos, end_pos);
@@ -562,6 +574,21 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
             }
           }
         }
+        // A dictionary-verified sokuonbin verb followed by た is not an
+        // i-adjective past.  Inflection can otherwise fabricate an adjective
+        // base solely from the shared かった ending (見つかっ+た → 見つい),
+        // even though the preceding っ is already a productive verb form.
+        // The dictionary gate preserves genuine open-class adjectives while
+        // rejecting this structural homograph for every verified verb.
+        if (!isAdjectiveInDictionary(dict_manager, cand.base_form) && utf8::endsWith(surface, "かった") &&
+            surface.size() > core::kJapaneseCharBytes) {
+          std::string sokuonbin_surface = surface.substr(0, surface.size() - core::kJapaneseCharBytes);
+          if (isVerbInDictionary(dict_manager, sokuonbin_surface)) {
+            SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface
+                                                     << "\" has dictionary sokuonbin verb, skipping fake adjective\n");
+            continue;
+          }
+        }
         // Skip subsidiary-verb ゆく/いく compounds misread as i-adjectives.
         // Verb 連用形 + ゆく (散りゆく, 消えゆく) ends in く, so inflection
         // hypothesizes a fake i-adjective base (散りゆい). When the base is
@@ -770,6 +797,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   // Add mizenkei (かろ) candidates for the conjectural pattern: stem + かろ + う
   // (高かろう, 美しかろう). Shared with the pure-hiragana generator.
   appendIAdjKaroCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager, candidates);
+  appendIAdjKaraZuCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager, candidates);
 
   // Add classical attributive (文語連体形) き candidates: stem + き + 体言
   // I-adjective 連体形 in classical Japanese: 美しい → 美しき(花), 古い → 古き(良き時代)
@@ -841,14 +869,15 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
   size_t kanji_len = kanji_end - start_pos;
 
   // Pattern 0: Kanji(1) + やか/らか + na-adjective inflection. These productive
-  // derivatives can be followed by either attributive な or a copula form
-  // (e.g., 華やかな, 安らかだった).
+  // derivatives can be followed by attributive な, adverbial に, or a copula
+  // form (e.g., 華やかな, 明らかになる, 安らかだった).
   if (kanji_len == 1 && kanji_end < char_types.size() && char_types[kanji_end] == normalize::CharType::Hiragana) {
     size_t stem_end = kanji_end + 2;
     if (stem_end < codepoints.size()) {
       std::string stem_suffix = extractSubstring(codepoints, kanji_end, stem_end);
       bool is_yaka_pattern = utf8::equalsAny(stem_suffix, {"やか", "らか"});
-      bool has_na_adj_continuation = codepoints[stem_end] == U'な' || codepoints[stem_end] == U'だ';
+      bool has_na_adj_continuation =
+          codepoints[stem_end] == U'な' || codepoints[stem_end] == U'に' || codepoints[stem_end] == U'だ';
       if (is_yaka_pattern && has_na_adj_continuation) {
         std::string stem = extractSubstring(codepoints, start_pos, stem_end);
         candidates.push_back(
@@ -858,8 +887,12 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
     }
   }
 
-  // Need at least 2 kanji for other patterns
-  if (kanji_len < 2) {
+  // Most productive patterns need at least two kanji.  A single-kanji stem
+  // is also useful immediately before だ: the competing noun analysis stays
+  // available, and the surrounding connection rules resolve the ambiguity.
+  const bool single_kanji_before_copula =
+      kanji_len == 1 && kanji_end < codepoints.size() && codepoints[kanji_end] == U'だ';
+  if (kanji_len < 2 && !single_kanji_before_copula) {
     return candidates;
   }
 
@@ -883,9 +916,9 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
     }
   }
 
-  // Pattern 2: Check for kanji compound + な pattern (e.g., 獰猛な)
-  // A direct appearance そう also licenses a na-adjective stem when the
-  // open-class lexeme is absent from the dictionary.
+  // Pattern 2: Check for kanji compound + na-adjective continuation (e.g., 獰猛な, 変だ).
+  // A direct appearance of そう or the copula だ also licenses a na-adjective
+  // stem when the open-class lexeme is absent from the dictionary.
   // A bare な licenses an attributive na-adjective stem, but なら does not:
   // nouns and na-adjectives both take conditional なら, so generating an
   // adjective for every unknown kanji compound would destroy that ambiguity.
@@ -893,7 +926,8 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
                               (kanji_end + 1 >= codepoints.size() || codepoints[kanji_end + 1] != U'ら');
   const bool followed_by_sou =
       kanji_end + 1 < codepoints.size() && codepoints[kanji_end] == U'そ' && codepoints[kanji_end + 1] == U'う';
-  if (followed_by_na || followed_by_sou) {
+  const bool followed_by_copula_da = kanji_end < codepoints.size() && codepoints[kanji_end] == U'だ';
+  if (followed_by_na || followed_by_sou || followed_by_copula_da) {
     // Skip if first character is a formal noun (形式名詞)
     // e.g., 時妙な should be 時+妙な, not 時妙(ADJ)+な
     // Formal nouns (時, 事, 所, etc.) are standalone grammatical words
@@ -927,8 +961,10 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
 
     // Found kanji compound + な - potential na-adjective stem
     // Cost similar to dictionary na-adjectives but with small penalty for unknown
-    candidates.push_back(makeNaAdjCandidate(kanji_seq, start_pos, kanji_end, candidate::kNaAdjStemCost, true, 0.8F,
-                                            "na_adjective_stem"));
+    const float stem_cost =
+        single_kanji_before_copula ? candidate::kNaAdjSingleKanjiCopulaCost : candidate::kNaAdjStemCost;
+    candidates.push_back(
+        makeNaAdjCandidate(kanji_seq, start_pos, kanji_end, stem_cost, true, 0.8F, "na_adjective_stem"));
   }
 
   return candidates;

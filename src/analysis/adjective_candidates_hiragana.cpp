@@ -288,6 +288,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   // not emit this form, and it is gated on a decisive i-adjective base to reject the
   // verb-volitional homograph (わかろう).
   appendIAdjKaroCandidates(codepoints, start_pos, start_pos, max_hiragana_end, inflection, dict_manager, candidates);
+  appendIAdjKaraZuCandidates(codepoints, start_pos, start_pos, max_hiragana_end, inflection, dict_manager, candidates);
 
   // STEP 2: Determine the hiragana_end for candidate generation
   // If first char is a particle, we only allow the full sequence if it's a valid adjective
@@ -614,12 +615,13 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
 
   // Preserve adjective/auxiliary boundaries. The contracted んかった guard is
   // intentionally specific to this pure-hiragana path.
-  static constexpr std::array<adj_detail::TrimmedAdjVariantRule, 5> kHiraganaTrimRules = {{
+  static constexpr std::array<adj_detail::TrimmedAdjVariantRule, 6> kHiraganaTrimRules = {{
       {"くない", 2, candidate::kAdjKuSplitBonusWeak, core::ExtendedPOS::AdjRenyokei, 0, "i_adjective_hira_ku"},
       {"くなかった", 4, candidate::kAdjKuSplitBonusWeak, core::ExtendedPOS::AdjRenyokei, 0, "i_adjective_ku_nakatta"},
       {"くなかっ", 3, candidate::kAdjKuSplitBonusWeak, core::ExtendedPOS::AdjRenyokei, 0, "i_adjective_ku_nakatt"},
-      {"かった", 1, candidate::kAdjKattSplitBonus, core::ExtendedPOS::AdjKatt, 1, "i_adjective_hira_katt", true},
-      {"ければ", 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm, 2, "i_adjective_hira_kere"},
+      {"くて", 1, candidate::kAdjKuSplitBonus, core::ExtendedPOS::AdjRenyokei, 1, "i_adjective_hira_ku_te"},
+      {"かった", 1, candidate::kAdjKattSplitBonus, core::ExtendedPOS::AdjKatt, 2, "i_adjective_hira_katt", true},
+      {"ければ", 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm, 3, "i_adjective_hira_kere"},
   }};
   adj_detail::appendTrimmedAdjVariants(candidates, kHiraganaTrimRules.data(), kHiraganaTrimRules.size());
 
