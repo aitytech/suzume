@@ -44,14 +44,22 @@ TEST_F(PreTokenizerNumberTest, MatchDate_WithSuffix) {
 }
 
 TEST_F(PreTokenizerNumberTest, MatchDate_MonthDay) {
-  // Note: Current implementation may require year prefix for date detection
-  // "12月23日" without year might not be detected
-  // This test verifies it doesn't crash
   auto result = pretokenizer_.process("12月23日");
-  // If no date token found, verify it's in spans for later analysis
-  if (result.tokens.empty()) {
-    EXPECT_FALSE(result.spans.empty());
-  }
+  ASSERT_EQ(result.tokens.size(), 1);
+  EXPECT_EQ(result.tokens[0].surface, "12月23日");
+  EXPECT_EQ(result.tokens[0].type, PreTokenType::Date);
+}
+
+TEST_F(PreTokenizerNumberTest, MatchDate_MonthDayRejectsInvalidMonth) {
+  auto result = pretokenizer_.process("13月1日");
+  EXPECT_TRUE(result.tokens.empty());
+}
+
+TEST_F(PreTokenizerNumberTest, MatchTime_DurationWithMinutes) {
+  auto result = pretokenizer_.process("1時間15分");
+  ASSERT_EQ(result.tokens.size(), 1);
+  EXPECT_EQ(result.tokens[0].surface, "1時間15分");
+  EXPECT_EQ(result.tokens[0].type, PreTokenType::Time);
 }
 
 TEST_F(PreTokenizerNumberTest, MatchDate_MultipleInText) {
