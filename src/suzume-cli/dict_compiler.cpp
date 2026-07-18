@@ -32,7 +32,9 @@ const std::vector<IAdjSuffix> kIAdjSuffixes = {
     // split (辛くない → 辛く + ない) per MeCab normalization. The く renyokei form
     // below + the ない auxiliary produce the split; storing くない whole would make
     // dict adjectives under-split (regression against Adjective_general/kunai).
-    {"くて", core::ExtendedPOS::AdjRenyokei},    // Te-form: 美しくて
+    // くて is compositional: 美しく(連用形) + て(接続助詞). Keeping the
+    // merged span in the compiled dictionary makes registered adjectives
+    // under-split in contexts where the following connection favors it.
     {"ければ", core::ExtendedPOS::AdjKeForm},    // Conditional: 美しければ
     {"く", core::ExtendedPOS::AdjRenyokei},      // Adverbial/Renyokei: 美しく
     {"かったら", core::ExtendedPOS::AdjKeForm},  // Conditional past: 美しかったら

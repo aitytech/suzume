@@ -75,6 +75,12 @@ class Postprocessor {
   static std::vector<core::Morpheme> mergeVerbRenyokeiMono(std::vector<core::Morpheme> morphemes);
 
   /**
+   * @brief Merge a nominal stem with the bound temporal formal noun 途中
+   * e.g., 作業 + 途中 → 作業途中, 移動 + 途中 → 移動途中
+   */
+  static std::vector<core::Morpheme> mergeNounTemporalFormal(std::vector<core::Morpheme> morphemes);
+
+  /**
    * @brief Merge a lexicalized 副詞 mis-split into a non-word サ変/接尾辞 + particle
    * e.g., 決し(非語 決す)+て → 決して, 大し(非語 大す)+て → 大して, ちゃん(接尾辞)+と → ちゃんと
    */

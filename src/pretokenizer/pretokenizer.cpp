@@ -252,11 +252,41 @@ bool PreTokenizer::tryMatchUrl(std::string_view text, size_t pos, PreToken& toke
 }
 
 bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& token) const {
-  // Match patterns: YYYY年MM月DD日, YYYY年MM月, YYYY年, YYYY年度 (fiscal year)
+  // Match patterns: MM月DD日, YYYY年MM月DD日, YYYY年MM月, YYYY年, YYYY年度 (fiscal year)
+  if (pos > 0 && isAsciiDigit(text[pos - 1])) {
+    return false;
+  }
+
   const IntegerScan year = scanInteger(text, pos);
   size_t idx = year.end;
 
-  if (year.empty() || year.digit_count > 4) {
+  if (year.empty()) {
+    return false;
+  }
+
+  // A month and day without a year is still an atomic calendar date. Check it
+  // before requiring 年 so 7月18日 does not become two adjacent date tokens.
+  if (year.digit_count <= 2 && year.value >= 1 && year.value <= 12 && idx < text.size()) {
+    size_t byte_pos = idx;
+    char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
+    if (codepoint == U'月') {
+      const IntegerScan day = scanInteger(text, byte_pos);
+      if (!day.empty() && day.digit_count <= 2 && day.value >= 1 && day.value <= 31 && day.end < text.size()) {
+        byte_pos = day.end;
+        codepoint = normalize::decodeUtf8(text, byte_pos);
+        if (codepoint == U'日') {
+          token.surface = std::string(text.substr(pos, byte_pos - pos));
+          token.start = pos;
+          token.end = byte_pos;
+          token.type = PreTokenType::Date;
+          token.pos = core::PartOfSpeech::Noun;
+          return true;
+        }
+      }
+    }
+  }
+
+  if (year.digit_count > 4) {
     return false;
   }
 
@@ -676,6 +706,16 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
     return false;
   }
   idx = byte_pos;
+
+  // A duration starts with 時間 rather than 時. Consume 間 before scanning
+  // its optional minute/second fields so 1時間15分 remains one quantity.
+  size_t duration_pos = idx;
+  if (duration_pos < text.size()) {
+    char32_t duration_marker = normalize::decodeUtf8(text, duration_pos);
+    if (duration_marker == U'間') {
+      idx = duration_pos;
+    }
+  }
 
   // Try to match minutes
   const IntegerScan minute = scanInteger(text, idx);

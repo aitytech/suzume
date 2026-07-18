@@ -26,7 +26,7 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
 
     // Fix classical suru-verb lemma: 漢字2文字以上+す → 漢字+する (確認す → 確認する)
     // The verb_candidates sometimes returns classical form that needs conversion
-    if (morpheme.pos == core::PartOfSpeech::Verb) {
+    if (morpheme.pos == core::PartOfSpeech::Verb && morpheme.conj_type != dictionary::ConjugationType::GodanSa) {
       if (std::string suru = fixSuruClassical(morpheme.lemma); !suru.empty()) {
         morpheme.lemma = suru;
       }
@@ -148,6 +148,14 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
     if (i + 1 < morphemes.size()) {
       next_surface = morphemes[i + 1].surface;
       next_lemma = morphemes[i + 1].lemma;
+    }
+    // An e-row form before polite ます is a potential verb, not a godan
+    // conditional. The potential remains one verb token (書けます, なれます),
+    // so recover its ichidan dictionary form from the visible stem.
+    if (morpheme.pos == core::PartOfSpeech::Verb && morpheme.extended_pos == core::ExtendedPOS::VerbKateikei &&
+        next_surface == "ます" &&
+        utf8::endsWithAny(morpheme.surface, {"え", "け", "げ", "せ", "て", "ね", "べ", "め", "れ"})) {
+      morpheme.lemma = morpheme.surface + "る";
     }
     // A one-kanji サ変 verb uses せ before the classical negative auxiliary:
     // 屈せ+ず, 達せ+ぬ. The generic unknown-verb candidate is necessarily
