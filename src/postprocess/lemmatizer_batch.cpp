@@ -214,16 +214,23 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
     // Apply when preceded by the て particle (〜ていく construction: 出て+いっ+た),
     // a motion particle (に/へ), or adjective renyokei (〜く)
     // Do NOT apply after quotative markers (と/そう/こう etc.) where いっ = 言う
-    if (morpheme.pos == core::PartOfSpeech::Verb && utf8::endsWith(morpheme.surface, "いっ") &&
-        morpheme.lemma.size() >= core::kTwoJapaneseCharBytes && utf8::endsWith(morpheme.lemma, "いう") &&
-        utf8::equalsAny(next_surface, {"た", "て", "たら", "ちゃ"}) && i > 0) {
-      bool has_te_particle = morphemes[i - 1].surface == "て";
-      bool has_motion_particle = utf8::equalsAny(morphemes[i - 1].surface, {"に", "へ"});
-      bool has_adj_renyokei =
-          morphemes[i - 1].pos == core::PartOfSpeech::Adjective && utf8::endsWith(morphemes[i - 1].surface, "く");
-      if (has_te_particle || has_motion_particle || has_adj_renyokei) {
-        std::string stem = morpheme.lemma.substr(0, morpheme.lemma.size() - core::kTwoJapaneseCharBytes);
-        morpheme.lemma = stem + "いく";
+    const bool is_sentence_initial_iku = i == 0 && morpheme.surface == "行っ";
+    if (morpheme.pos == core::PartOfSpeech::Verb &&
+        (utf8::endsWith(morpheme.surface, "いっ") || is_sentence_initial_iku) &&
+        morpheme.lemma.size() >= core::kTwoJapaneseCharBytes &&
+        (utf8::endsWith(morpheme.lemma, "いう") || is_sentence_initial_iku) &&
+        utf8::equalsAny(next_surface, {"た", "て", "たら", "ちゃ"})) {
+      const bool has_te_particle = i > 0 && morphemes[i - 1].surface == "て";
+      const bool has_motion_particle = i > 0 && utf8::equalsAny(morphemes[i - 1].surface, {"に", "へ"});
+      const bool has_adj_renyokei = i > 0 && morphemes[i - 1].pos == core::PartOfSpeech::Adjective &&
+                                    utf8::endsWith(morphemes[i - 1].surface, "く");
+      if (has_te_particle || has_motion_particle || has_adj_renyokei || is_sentence_initial_iku) {
+        if (is_sentence_initial_iku) {
+          morpheme.lemma = "行く";
+        } else {
+          std::string stem = morpheme.lemma.substr(0, morpheme.lemma.size() - core::kTwoJapaneseCharBytes);
+          morpheme.lemma = stem + "いく";
+        }
       }
     }
     // Fix 仮定形 lemma: verb + ば → godan conditional, not ichidan potential
