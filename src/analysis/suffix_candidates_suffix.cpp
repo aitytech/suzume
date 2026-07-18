@@ -3,6 +3,8 @@
  * @brief Suffix-based unknown word candidate generation
  */
 
+#include <array>
+
 #include "candidate_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
@@ -56,14 +58,15 @@ inline UnknownCandidate makeSuffixCandidateNoLemma(const std::string& surface, s
   return cand;
 }
 
-const std::array<SuffixEntry, 19>& getSuffixEntries() {
-  static constexpr std::array<SuffixEntry, 19> kSuffixes = {{
-      {"化する", core::PartOfSpeech::Verb},
+const std::array<SuffixEntry, 22>& getSuffixEntries() {
+  static constexpr std::array<SuffixEntry, 22> kSuffixes = {{
+      {"化する", core::PartOfSpeech::Verb, false},
       // Tokenizer use case: keep X+SUFFIX as one search unit. The following
       // suffixes are merged via kanji-merge normalization, not split here:
-      //   家/力/化/法/論/員/式/感/的 (productive but one search unit)
-      // {"化", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (国際化, 自動化)
-      {"性", core::PartOfSpeech::Suffix},
+      //   家/力/法/論/員/式/感/的 (productive but one search unit)
+      {"化", core::PartOfSpeech::Suffix, true},   // 国際化, 自動化
+      {"視", core::PartOfSpeech::Suffix, false},  // 重要視, 問題視
+      {"性", core::PartOfSpeech::Suffix, true},
       // {"率", core::PartOfSpeech::Suffix},  // Removed: causes over-segmentation (降水確率→降水確+率)
       // {"法", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (解決法, 民法)
       // {"論", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (進化論, 理論)
@@ -73,25 +76,26 @@ const std::array<SuffixEntry, 19>& getSuffixEntries() {
       // {"式", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (計算式, 結婚式)
       // {"感", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (達成感, 違和感)
       // {"力", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (説得力, 影響力)
-      {"度", core::PartOfSpeech::Suffix},
-      {"方", core::PartOfSpeech::Suffix},  // 歩き方, やり方 (V連用形+方)
-      {"中", core::PartOfSpeech::Suffix},  // 一日中, 今日中 (N+中) - MeCab treats as suffix
+      {"度", core::PartOfSpeech::Suffix, true},
+      {"方", core::PartOfSpeech::Suffix, false},  // 歩き方, やり方 (V連用形+方)
+      {"中", core::PartOfSpeech::Suffix, false},  // 一日中, 今日中 (N+中) - MeCab treats as suffix
+      {"末", core::PartOfSpeech::Suffix, false},  // 年度末, 学期末
       // N中 compounds (今日中, 世界中, 一日中) are handled as compound nouns
       // Administrative suffixes (行政接尾辞)
-      {"県", core::PartOfSpeech::Suffix},
-      {"都", core::PartOfSpeech::Suffix},
-      {"府", core::PartOfSpeech::Suffix},
-      {"道", core::PartOfSpeech::Suffix},
-      {"市", core::PartOfSpeech::Suffix},
-      {"区", core::PartOfSpeech::Suffix},
-      {"町", core::PartOfSpeech::Suffix},
-      {"村", core::PartOfSpeech::Suffix},
-      {"庁", core::PartOfSpeech::Suffix},
-      {"署", core::PartOfSpeech::Suffix},
-      {"局", core::PartOfSpeech::Suffix},
-      {"省", core::PartOfSpeech::Suffix},
-      {"院", core::PartOfSpeech::Suffix},
-      {"所", core::PartOfSpeech::Suffix},
+      {"県", core::PartOfSpeech::Suffix, false},
+      {"都", core::PartOfSpeech::Suffix, false},
+      {"府", core::PartOfSpeech::Suffix, false},
+      {"道", core::PartOfSpeech::Suffix, false},
+      {"市", core::PartOfSpeech::Suffix, false},
+      {"区", core::PartOfSpeech::Suffix, false},
+      {"町", core::PartOfSpeech::Suffix, false},
+      {"村", core::PartOfSpeech::Suffix, false},
+      {"庁", core::PartOfSpeech::Suffix, false},
+      {"署", core::PartOfSpeech::Suffix, false},
+      {"局", core::PartOfSpeech::Suffix, false},
+      {"省", core::PartOfSpeech::Suffix, false},
+      {"院", core::PartOfSpeech::Suffix, false},
+      {"所", core::PartOfSpeech::Suffix, false},
   }};
   return kSuffixes;
 }
@@ -187,6 +191,62 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
   return candidates;
 }
 
+std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
+    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types) {
+  std::vector<UnknownCandidate> candidates;
+
+  if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
+    return candidates;
+  }
+
+  size_t base_end = start_pos;
+  while (base_end < char_types.size() && char_types[base_end] == normalize::CharType::Kanji) {
+    ++base_end;
+  }
+  if (base_end == start_pos) {
+    return candidates;
+  }
+
+  struct GodanKaForm {
+    std::string_view inflection;
+    core::ExtendedPOS extended_pos;
+  };
+  static constexpr std::array<GodanKaForm, 6> kGodanKaForms = {{
+      {"く", core::ExtendedPOS::VerbShuushikei},
+      {"か", core::ExtendedPOS::VerbMizenkei},
+      {"き", core::ExtendedPOS::VerbRenyokei},
+      {"い", core::ExtendedPOS::VerbOnbinkei},
+      {"け", core::ExtendedPOS::VerbKateikei},
+      {"こ", core::ExtendedPOS::VerbMizenkei},
+  }};
+  static constexpr std::array<std::string_view, 2> kNominalSuffixVerbStems = {"め", "づ"};
+
+  for (const auto& suffix_stem : kNominalSuffixVerbStems) {
+    for (const auto& form : kGodanKaForms) {
+      constexpr size_t kSuffixVerbFormLength = 2;
+      const size_t candidate_end = base_end + kSuffixVerbFormLength;
+      const std::string form_surface = std::string(suffix_stem) + std::string(form.inflection);
+      if (candidate_end > codepoints.size() || extractSubstring(codepoints, base_end, candidate_end) != form_surface) {
+        continue;
+      }
+
+      const std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
+      const std::string lemma = extractSubstring(codepoints, start_pos, base_end) + std::string(suffix_stem) + "く";
+      auto candidate =
+          makeVerbCandidate(surface, start_pos, candidate_end, candidate::kProductiveSuffixVerbCost, lemma,
+                            dictionary::ConjugationType::GodanKa, true, CandidateOrigin::SuffixPattern,
+                            candidate::kDictionaryOriginConfidence, "nominal_godan_ka_suffix", form.extended_pos);
+      // The productive suffix fixes both the lemma and Godan-ka inflection, so
+      // this is not an unconstrained kanji onbin candidate.
+      candidate.lemma_verified = true;
+      candidates.push_back(std::move(candidate));
+      return candidates;
+    }
+  }
+
+  return candidates;
+}
+
 // Administrative suffix codepoints for intermediate boundary detection
 const std::array<char32_t, 8>& getAdminSuffixCodepoints() {
   static constexpr std::array<char32_t, 8> kAdminSuffixes = {U'県', U'都', U'府', U'道', U'市', U'区', U'町', U'村'};
@@ -250,7 +310,7 @@ std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& co
   const auto& suffixes = getSuffixEntries();
 
   // Check for suffixes
-  for (const auto& [suffix, suffix_pos] : suffixes) {
+  for (const auto& [suffix, suffix_pos, forms_derived_compound] : suffixes) {
     if (kanji_seq.size() > suffix.size() &&
         kanji_seq.compare(kanji_seq.size() - suffix.size(), suffix.size(), suffix) == 0) {
       // Calculate stem length in codepoints
@@ -300,7 +360,8 @@ std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& co
         whole.start = start_pos;
         whole.end = end_pos;
         whole.pos = core::PartOfSpeech::Noun;
-        whole.cost = 1.2F;
+        whole.cost =
+            forms_derived_compound ? candidate::kDerivedSuffixCompoundNounCost : candidate::kSuffixWholeCandidateCost;
         whole.has_suffix = true;
 #ifdef SUZUME_DEBUG_INFO
         whole.origin = CandidateOrigin::SuffixPattern;

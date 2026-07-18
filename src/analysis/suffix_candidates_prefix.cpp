@@ -158,7 +158,10 @@ std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
     }
   }
 
-  if (!normalize::isTemporalAdverbialNounPair(codepoints[start_pos], codepoints[start_pos + 1])) {
+  const bool has_temporal_reference_suffix =
+      codepoints[start_pos + 2] == U'以' && (codepoints[start_pos + 3] == U'来' || codepoints[start_pos + 3] == U'降');
+  if (!normalize::isTemporalAdverbialNounPair(codepoints[start_pos], codepoints[start_pos + 1]) &&
+      !has_temporal_reference_suffix) {
     return candidates;
   }
 
@@ -169,9 +172,10 @@ std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
     return candidates;
   }
 
-  std::string surface = extractSubstring(codepoints, start_pos, start_pos + 2);
+  const size_t candidate_end = has_temporal_reference_suffix ? start_pos + 4 : start_pos + 2;
+  std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
   if (!surface.empty()) {
-    auto cand = makeCandidate(surface, start_pos, start_pos + 2, core::PartOfSpeech::Noun,
+    auto cand = makeCandidate(surface, start_pos, candidate_end, core::PartOfSpeech::Noun,
                               candidate::kTemporalNounBoundarySplitBonus, false, CandidateOrigin::PrefixCompound);
 #ifdef SUZUME_DEBUG_INFO
     cand.confidence = candidate::kHighOriginConfidence;

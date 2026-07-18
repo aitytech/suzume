@@ -58,9 +58,9 @@ constexpr size_t kNumPrefixes = sizeof(kProductivePrefixes) / sizeof(kProductive
 // Maximum noun length for prefix joining
 constexpr size_t kMaxNounLenForPrefix = 6;
 
-// A productive prefix compound is a na-adjective when its base is an
-// adjective, or when the following copula/appearance form supplies that
-// predicate evidence. Keep the noun candidate as well for nominal uses.
+// A productive prefix compound can be a na-adjective only when its base has
+// an adjective entry. A following copula alone is not sufficient evidence:
+// ordinary nouns such as 最中 also occur before だ.
 bool hasNaAdjectiveContinuation(const std::vector<char32_t>& codepoints, size_t pos) {
   if (pos >= codepoints.size()) {
     return false;
@@ -207,7 +207,12 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(noun_end), core::PartOfSpeech::Noun,
                   final_cost, flags, "");
 
-  if (adjective_in_dict || hasNaAdjectiveContinuation(codepoints, noun_end)) {
+  // Capability compounds ending in 可能 are nominal expressions (再利用可能、
+  // 使用可能). Their following な is the attributive copula, not evidence that
+  // the whole productive prefix compound should be reclassified as an
+  // adjective.
+  bool is_nominal_capability_compound = utf8::endsWith(surface, "可能");
+  if (!is_nominal_capability_compound && adjective_in_dict) {
     float adjective_cost = scorer.posPrior(core::PartOfSpeech::Adjective) + matched_prefix->bonus;
     lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(noun_end),
                     core::PartOfSpeech::Adjective, adjective_cost, flags, surface, dictionary::ConjugationType::None,

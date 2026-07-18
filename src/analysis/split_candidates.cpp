@@ -388,6 +388,22 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
       if ((noun_in_dict && looks_like_verb) || base_in_dict) {
         std::string noun_surface(text.substr(start_byte, verb_start_byte - start_byte));
 
+        // An ideographic iteration mark closes its reduplicated unit.  Do not
+        // fabricate a noun+verb split whose noun side crosses that boundary
+        // (月々支+払う): the regular 月々 candidate and the verb beginning at
+        // 支 already express the grammatical segmentation.  Full repeated
+        // compounds remain available through the ordinary same-type path.
+        bool extends_past_iteration_mark = false;
+        for (size_t index = start_pos; index + 1 < verb_start; ++index) {
+          if (normalize::isIterationMark(codepoints[index])) {
+            extends_past_iteration_mark = true;
+            break;
+          }
+        }
+        if (extends_past_iteration_mark) {
+          continue;
+        }
+
         // Skip split if noun + first kanji of verb forms a known compound
         // e.g., 上+手く should not split because 上手 is a dictionary word
         if (verb_start < kanji_end) {

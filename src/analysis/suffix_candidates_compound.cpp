@@ -54,10 +54,28 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
   bool is_nominalization_ending =
       (first_hiragana == U'け' || first_hiragana == U'げ' || first_hiragana == U'せ' || first_hiragana == U'い' ||
        first_hiragana == U'り' || first_hiragana == U'ち' || first_hiragana == U'き' || first_hiragana == U'ぎ' ||
-       first_hiragana == U'し' || first_hiragana == U'み' || first_hiragana == U'び' || first_hiragana == U'え' ||
-       first_hiragana == U'れ' || first_hiragana == U'め');
+       first_hiragana == U'し' || first_hiragana == U'ま' || first_hiragana == U'み' || first_hiragana == U'び' ||
+       first_hiragana == U'え' || first_hiragana == U'れ' || first_hiragana == U'め');
 
   if (!is_nominalization_ending) {
+    return candidates;
+  }
+
+  // Do not turn the first mora of a dictionary particle into a nominalized
+  // noun. The particle candidate owns the whole span (最後|まで, not 最後ま|で).
+  bool begins_particle = false;
+  if (dict_manager != nullptr) {
+    size_t probe_end = std::min(codepoints.size(), kanji_end + static_cast<size_t>(4));
+    std::string particle_probe = extractSubstring(codepoints, kanji_end, probe_end);
+    for (const auto& match : dict_manager->lookup(particle_probe, 0)) {
+      if (match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Particle &&
+          normalize::utf8Length(match.entry->surface) > 1) {
+        begins_particle = true;
+        break;
+      }
+    }
+  }
+  if (begins_particle) {
     return candidates;
   }
 
@@ -139,7 +157,11 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       if (!trailing_shi_is_suru) {
         std::string surface = extractSubstring(codepoints, start_pos, hiragana_end + 1);
         if (!surface.empty()) {
-          auto cand = makeCandidate(surface, start_pos, hiragana_end + 1, core::PartOfSpeech::Noun, 0.8F, false,
+          float nom2_cost = 0.8F;
+          if (hiragana_end + 1 < char_types.size() && normalize::isParticleCodepoint(codepoints[hiragana_end + 1])) {
+            nom2_cost += candidate::kNominalizedNounParticleBonus;
+          }
+          auto cand = makeCandidate(surface, start_pos, hiragana_end + 1, core::PartOfSpeech::Noun, nom2_cost, false,
                                     CandidateOrigin::NominalizedNoun);
 #ifdef SUZUME_DEBUG_INFO
           cand.confidence = 0.8F;
@@ -188,6 +210,12 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       float nom1_cost = 1.2F;
       if (kanji_count >= 3) {
         nom1_cost += static_cast<float>(kanji_count - 2) * 0.5F;
+      }
+      // A following particle makes the renyokei a nominalized search unit:
+      // 答えは, 始まりは, 決まりを.  Prefer that productive noun reading over
+      // a finite-verb candidate whose continuation is grammatically absent.
+      if (kanji_end + 1 < char_types.size() && normalize::isParticleCodepoint(codepoints[kanji_end + 1])) {
+        nom1_cost += candidate::kNominalizedNounParticleBonus;
       }
       // Deverbal compound noun bonus (連用形転成名詞の複合):
       // [N kanji]+[V kanji]+[godan renyokei hiragana] where the trailing
@@ -284,6 +312,14 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
 
   size_t hiragana_len = hiragana_end - kanji_end;
   char32_t first_hira = codepoints[kanji_end];
+
+  // A kanji numeral followed by つ is already a complete native counter
+  // (一つ, 二つ). Do not extend it into an invented kanji-hiragana compound
+  // when another hiragana word follows (一つ|ひとつ), because the counter
+  // generator emits the natural boundary separately.
+  if (normalize::isNumeralCodepoint(codepoints[start_pos]) && first_hira == U'つ') {
+    return candidates;
+  }
 
   // Handle sokuon (っ) pattern FIRST, before the hiragana_len check
   // Pattern: 漢字 + っ + (漢字 or 平仮名) - e.g., 横っ面, 取っ手, 引っ込む

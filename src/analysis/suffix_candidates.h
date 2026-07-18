@@ -33,12 +33,15 @@ struct UnknownOptions;
 struct SuffixEntry {
   std::string_view suffix;
   core::PartOfSpeech pos;
+  // Derivational suffixes create a lexical compound noun (新制度, 安全性).
+  // Relational suffixes such as 末 retain their compositional boundary.
+  bool forms_derived_compound;
 };
 
 /**
  * @brief Get list of kanji compound suffixes
  */
-const std::array<SuffixEntry, 19>& getSuffixEntries();
+const std::array<SuffixEntry, 22>& getSuffixEntries();
 
 /**
  * @brief Get list of na-adjective forming suffixes (的, etc.)
@@ -116,6 +119,15 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
 std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vector<char32_t>& codepoints,
                                                                  size_t start_pos,
                                                                  const std::vector<normalize::CharType>& char_types);
+
+/**
+ * @brief Generate productive suffix-verb candidates from nominal bases.
+ *
+ * Detects the Godan-ka suffix verb めく and its inflections:
+ *   - 春めく、謎めいた、色めいて
+ */
+std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
+    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types);
 
 /**
  * @brief Generate counter candidates for numeral + つ patterns

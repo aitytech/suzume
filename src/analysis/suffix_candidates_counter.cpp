@@ -55,6 +55,158 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     return candidates;
   }
 
+  // Repeated numeral-counter units are distributive quantity expressions
+  // (一人一人, 一日一日). Keep two identical units as one search unit rather
+  // than allowing each discounted counter candidate to split the expression.
+  if (normalize::isNumeralCodepoint(codepoints[start_pos])) {
+    size_t numeral_end = start_pos;
+    while (numeral_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[numeral_end])) {
+      ++numeral_end;
+    }
+    if (numeral_end < codepoints.size() && normalize::isCounterKanji(codepoints[numeral_end])) {
+      size_t unit_end = numeral_end + 1;
+      size_t unit_length = unit_end - start_pos;
+      bool is_repeated_unit = unit_end + unit_length <= codepoints.size();
+      for (size_t offset = 0; is_repeated_unit && offset < unit_length; ++offset) {
+        is_repeated_unit = codepoints[start_pos + offset] == codepoints[unit_end + offset];
+      }
+      if (is_repeated_unit) {
+        size_t repeated_end = unit_end + unit_length;
+        std::string surface = extractSubstring(codepoints, start_pos, repeated_end);
+        if (!surface.empty()) {
+          auto cand = makeCandidate(surface, start_pos, repeated_end, core::PartOfSpeech::Noun,
+                                    candidate::kNumeralCounterMergeBonus, false, CandidateOrigin::Counter,
+                                    core::ExtendedPOS::NounNumber);
+          cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+          cand.pattern = "repeated_numeral_counter";
+#endif
+          candidates.push_back(cand);
+        }
+      }
+    }
+  }
+
+  // Ordinal compounds start with 第 followed by a numeral sequence. A single
+  // trailing noun character forms a lexicalized ordinal noun (第一歩), whereas
+  // 次 followed by a kanji noun run is compositional (第二|次計画). Generate
+  // both boundaries from structure rather than treating individual ordinals as
+  // dictionary exceptions.
+  if (codepoints[start_pos] == U'第' && normalize::isNumeralCodepoint(codepoints[start_pos + 1])) {
+    size_t ordinal_end = start_pos + 1;
+    bool ordinal_has_digit = false;
+    while (ordinal_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[ordinal_end])) {
+      ordinal_has_digit = ordinal_has_digit ||
+                          (ordinal_end < char_types.size() && char_types[ordinal_end] == normalize::CharType::Digit);
+      ++ordinal_end;
+    }
+    if (ordinal_end < char_types.size() && char_types[ordinal_end] == normalize::CharType::Kanji) {
+      size_t tail_end = ordinal_end;
+      while (tail_end < char_types.size() && char_types[tail_end] == normalize::CharType::Kanji) {
+        ++tail_end;
+      }
+      size_t tail_len = tail_end - ordinal_end;
+      if (tail_len == 1 && ordinal_has_digit && normalize::isCounterKanji(codepoints[ordinal_end])) {
+        std::string ordinal_surface = extractSubstring(codepoints, start_pos, ordinal_end);
+        std::string counter_surface = extractSubstring(codepoints, ordinal_end, tail_end);
+        if (!ordinal_surface.empty()) {
+          auto ordinal = makeCandidate(ordinal_surface, start_pos, ordinal_end, core::PartOfSpeech::Noun,
+                                       candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter,
+                                       core::ExtendedPOS::NounNumber);
+          ordinal.lemma = ordinal_surface;
+#ifdef SUZUME_DEBUG_INFO
+          ordinal.pattern = "ordinal_digit_counter_prefix";
+#endif
+          candidates.push_back(ordinal);
+        }
+        if (!counter_surface.empty()) {
+          auto counter = makeCandidate(counter_surface, ordinal_end, tail_end, core::PartOfSpeech::Suffix,
+                                       candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter);
+          counter.lemma = counter_surface;
+#ifdef SUZUME_DEBUG_INFO
+          counter.pattern = "ordinal_digit_counter_suffix";
+#endif
+          candidates.push_back(counter);
+        }
+      } else if (tail_len == 1 && codepoints[ordinal_end] != U'次') {
+        std::string surface = extractSubstring(codepoints, start_pos, tail_end);
+        if (!surface.empty()) {
+          auto cand = makeCandidate(surface, start_pos, tail_end, core::PartOfSpeech::Noun,
+                                    candidate::kOrdinalSingleNounMergeBonus, false, CandidateOrigin::Counter);
+          cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+          cand.pattern = "ordinal_single_noun_merge";
+#endif
+          candidates.push_back(cand);
+        }
+      } else if (tail_len >= 2 && codepoints[ordinal_end] == U'次') {
+        std::string ordinal_surface = extractSubstring(codepoints, start_pos, ordinal_end);
+        std::string tail_surface = extractSubstring(codepoints, ordinal_end, tail_end);
+        if (!ordinal_surface.empty()) {
+          auto ordinal = makeCandidate(ordinal_surface, start_pos, ordinal_end, core::PartOfSpeech::Noun,
+                                       candidate::kOrdinalSequentialSplitBonus, false, CandidateOrigin::Counter,
+                                       core::ExtendedPOS::NounNumber);
+          ordinal.lemma = ordinal_surface;
+#ifdef SUZUME_DEBUG_INFO
+          ordinal.pattern = "ordinal_sequential_prefix";
+#endif
+          candidates.push_back(ordinal);
+        }
+        if (!tail_surface.empty()) {
+          auto tail = makeCandidate(tail_surface, ordinal_end, tail_end, core::PartOfSpeech::Suffix,
+                                    candidate::kOrdinalSequentialSplitBonus, false, CandidateOrigin::Counter);
+          tail.lemma = tail_surface;
+#ifdef SUZUME_DEBUG_INFO
+          tail.pattern = "ordinal_sequential_tail";
+#endif
+          candidates.push_back(tail);
+        }
+      }
+    }
+  }
+
+  // Month counters admit all three common kana spellings between a numeral and
+  // 月 (一か月, 一ヶ月, 一ケ月). Keep the complete duration together before
+  // any following comparison expression.
+  if (normalize::isNumeralCodepoint(codepoints[start_pos])) {
+    size_t numeral_end = start_pos;
+    while (numeral_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[numeral_end])) {
+      ++numeral_end;
+    }
+    // 時間 is a lexicalized duration unit. The regular counter scan recognizes
+    // 時 first, so retain a competing numeral+時+間 candidate for kanji
+    // numerals as well as digit-based pretokenized durations.
+    if (numeral_end + 1 < codepoints.size() && codepoints[numeral_end] == U'時' &&
+        codepoints[numeral_end + 1] == U'間') {
+      std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 2);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, numeral_end + 2, core::PartOfSpeech::Noun,
+                                  candidate::kNumeralKanaMonthMergeBonus, false, CandidateOrigin::Counter,
+                                  core::ExtendedPOS::NounNumber);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "numeral_jikan_duration_merge";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+    if (numeral_end + 1 < codepoints.size() &&
+        (codepoints[numeral_end] == U'か' || codepoints[numeral_end] == U'ヶ' || codepoints[numeral_end] == U'ケ') &&
+        codepoints[numeral_end + 1] == U'月') {
+      std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 2);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, numeral_end + 2, core::PartOfSpeech::Noun,
+                                  candidate::kNumeralKanaMonthMergeBonus, false, CandidateOrigin::Counter,
+                                  core::ExtendedPOS::NounNumber);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "numeral_kana_month_merge";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+  }
+
   // Quantified time + relational suffix: split 後/前 off a numeral/quantity run that
   // ends in a temporal counter (三日|後, 十年|前, 数日|後, 半年|前). The whole run is
   // otherwise emitted as one kanji_seq token; the left counter token already exists
@@ -130,6 +282,47 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
 #endif
           candidates.push_back(half_cand);
         }
+      }
+    }
+  }
+
+  // A numeral followed by one or more temporal-unit kanji is a complete
+  // quantity before a hiragana word (一昼夜+かけて, 二時間+待つ). Emit the
+  // quantity boundary so an unknown verb candidate cannot absorb the final
+  // temporal kanji as its apparent stem.
+  {
+    size_t scan = start_pos;
+    bool has_quantity = false;
+    if (normalize::isQuantityPrefixKanji(codepoints[scan])) {
+      ++scan;
+      has_quantity = true;
+    }
+    while (scan < codepoints.size() && normalize::isNumeralCodepoint(codepoints[scan])) {
+      ++scan;
+      has_quantity = true;
+    }
+    size_t unit_start = scan;
+    while (scan < codepoints.size()) {
+      if (normalize::isTemporalCounterKanji(codepoints[scan])) {
+        ++scan;
+      } else if (codepoints[scan] == U'昼' && scan + 1 < codepoints.size() && codepoints[scan + 1] == U'夜') {
+        // 昼夜 is one cyclic temporal unit only as a pair (一昼夜).
+        scan += 2;
+      } else {
+        break;
+      }
+    }
+    bool followed_by_hiragana = scan < char_types.size() && char_types[scan] == normalize::CharType::Hiragana;
+    if (has_quantity && scan > unit_start && followed_by_hiragana) {
+      std::string surface = extractSubstring(codepoints, start_pos, scan);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun, candidate::kCounterNounSplitBonus,
+                                  false, CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "temporal_quantity_hiragana_split";
+#endif
+        candidates.push_back(cand);
       }
     }
   }
@@ -210,14 +403,14 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     }
   }
 
-  // Quantity + object counter + independent kanji noun: a numeral+counter phrase
-  // followed by exactly two more kanji is compositional (三名|参加, 二台|故障,
-  // 五冊|注文) — the counter phrase is a search-unit boundary. The whole run is
+  // Quantity + object/temporal counter + independent kanji noun: a numeral+counter
+  // phrase followed by exactly two more kanji is compositional (三名|参加, 二台|故障,
+  // 一度|確認) — the counter phrase is a search-unit boundary. The whole run is
   // otherwise emitted as one kanji_seq token that beats the split on total cost,
   // so a discounted duplicate of the counter phrase lets the split path win.
   // Structural gates keep lexical wholes intact:
-  //   - discrete-object counters only (isObjectCounterKanji above); measure/rank
-  //     counters head lexical compounds and never fire here
+  //   - discrete-object and temporal counters only; measure/rank counters head
+  //     lexical compounds and never fire here
   //   - exactly two trailing kanji ending the run: one trailing kanji is a
   //     lexical suffix compound (一人前, 一年生, 二階建て), three or more a
   //     longer lexical term (三人称単数, 二世帯住宅)
@@ -234,7 +427,8 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
       ++scan;
       has_quantity = true;
     }
-    if (has_quantity && scan < codepoints.size() && isObjectCounterKanji(codepoints[scan])) {
+    if (has_quantity && scan < codepoints.size() &&
+        (isObjectCounterKanji(codepoints[scan]) || normalize::isTemporalCounterKanji(codepoints[scan]))) {
       size_t counter_end = scan + 1;
       bool trailing_two_kanji = counter_end + 1 < char_types.size() &&
                                 char_types[counter_end] == normalize::CharType::Kanji &&
@@ -352,6 +546,68 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     return candidates;
   }
 
+  // A numeral+counter phrase before the independent comparison expression
+  // 以上 is a compositional boundary (百倍|以上, 三名|以上).  The counter
+  // candidate exists already, but discount this instance so a long unknown
+  // kanji run cannot absorb the comparison term and a following predicate.
+  if (numeral_end + 2 < codepoints.size() && normalize::isCounterKanji(codepoints[numeral_end]) &&
+      codepoints[numeral_end + 1] == U'以' && codepoints[numeral_end + 2] == U'上') {
+    std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 1);
+    if (!surface.empty()) {
+      auto cand = makeCandidate(surface, start_pos, numeral_end + 1, core::PartOfSpeech::Noun,
+                                candidate::kCounterComparisonSplitBonus, false, CandidateOrigin::Counter,
+                                core::ExtendedPOS::NounNumber);
+      cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+      cand.pattern = "counter_comparison_split";
+#endif
+      candidates.push_back(cand);
+    }
+  }
+
+  // Approximate count: numeral + 数 + counter (十数件, 百数名).  数 binds
+  // directly to the following counter, while the leading cardinal remains a
+  // separate search unit.  Requiring a counter after 数 excludes ordinary
+  // lexical compounds beginning with 数.
+  if (numeral_end + 1 < codepoints.size() && codepoints[numeral_end] == U'数' &&
+      normalize::isCounterKanji(codepoints[numeral_end + 1])) {
+    std::string surface = extractSubstring(codepoints, start_pos, numeral_end);
+    if (!surface.empty()) {
+      auto cand = makeCandidate(surface, start_pos, numeral_end, core::PartOfSpeech::Noun,
+                                candidate::kApproximateNumeralSplitBonus, false, CandidateOrigin::Counter,
+                                core::ExtendedPOS::NounNumber);
+      cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+      cand.pattern = "approximate_numeral_before_su_counter";
+#endif
+      candidates.push_back(cand);
+    }
+  }
+
+  // Fraction: numeral + 分 + の + numeral (三分の一, 十分の三).  The
+  // denominator marker requires both numeric sides, so duration phrases such
+  // as 一分の休憩 never enter this branch.  Keep the complete fraction as one
+  // quantity search unit, including when a following counter is present
+  // (三分の一秒).
+  if (numeral_end + 2 < codepoints.size() && codepoints[numeral_end] == U'分' && codepoints[numeral_end + 1] == U'の' &&
+      normalize::isNumeralCodepoint(codepoints[numeral_end + 2])) {
+    size_t denominator_end = numeral_end + 2;
+    while (denominator_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[denominator_end])) {
+      ++denominator_end;
+    }
+    std::string surface = extractSubstring(codepoints, start_pos, denominator_end);
+    if (!surface.empty()) {
+      auto cand =
+          makeCandidate(surface, start_pos, denominator_end, core::PartOfSpeech::Noun, candidate::kFractionMergeCost,
+                        false, CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
+      cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+      cand.pattern = "fraction_numerator_bun_no_denominator";
+#endif
+      candidates.push_back(cand);
+    }
+  }
+
   // A numeral+counter preceding a registered suffix is compositional even when
   // the suffix starts with kanji (二階|建て, 二本|立て).  Consult the suffix
   // lexicon rather than enumerating suffix spellings here, so every closed-class
@@ -413,6 +669,34 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
       cand.pattern = "numeral_kanji_counter";
 #endif
       candidates.push_back(cand);
+    }
+  }
+
+  // A quantity followed by a kanji サ変名詞 keeps its counter boundary
+  // (一回|実施する, 三名|確認する).  The ordinary lone-counter branch above
+  // deliberately avoids a following kanji because lexical compounds such as
+  // 一回戦 must remain available; requiring the complete nominal+する
+  // predicate distinguishes the productive quantity construction.
+  if (numeral_end < char_types.size() && normalize::isCounterKanji(codepoints[numeral_end])) {
+    size_t predicate_start = numeral_end + 1;
+    while (predicate_start < char_types.size() && char_types[predicate_start] == normalize::CharType::Kanji) {
+      ++predicate_start;
+    }
+    const bool has_kanji_suru_predicate =
+        predicate_start > numeral_end + 1 && predicate_start + 1 < codepoints.size() &&
+        codepoints[predicate_start] == U'す' && codepoints[predicate_start + 1] == U'る';
+    if (has_kanji_suru_predicate) {
+      std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 1);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, numeral_end + 1, core::PartOfSpeech::Noun,
+                                  candidate::kCounterNounSplitBonus, false, CandidateOrigin::Counter,
+                                  core::ExtendedPOS::NounNumber);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "counter_suru_predicate_split";
+#endif
+        candidates.push_back(cand);
+      }
     }
   }
 
