@@ -84,6 +84,11 @@ constexpr EntrySpec suffix_recent_completion(const char* s, const char* lemma = 
   return {s, POS::Suffix, EPOS::SuffixRecentCompletion, lemma};
 }
 
+// Tendency suffix helper: creates a verb-continuative suffix with its own connection class.
+constexpr EntrySpec suffix_tendency(const char* s, const char* lemma = "") {
+  return {s, POS::Suffix, EPOS::SuffixTendency, lemma};
+}
+
 // Prefix helper: creates PREFIX entry
 // Usage: prefix("お"), prefix("ご")
 constexpr EntrySpec prefix(const char* s, const char* lemma = "") {

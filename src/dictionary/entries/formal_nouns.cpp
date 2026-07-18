@@ -55,6 +55,7 @@ EntrySpecRange getFormalNounEntries() {
       formal_noun("くせ", ""),
       // Formal noun for substitution or contrast (読むかわりに, 本のかわりに).
       formal_noun("かわり", ""),
+      formal_noun("代わり", ""),
       // 風 (manner/style): bound formal noun (こんなふうに, そういうふうに).
       // Registered so the u-ending verb candidate path does not fabricate a
       // ふう/VERB reading now that 2-char う stems are admitted.

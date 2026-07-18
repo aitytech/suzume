@@ -13,7 +13,7 @@
 # --- Suffixes (接尾辞) ---
 ヶ月	SUFFIX
 ヶ所	SUFFIX
-がち	SUFFIX
+#DISABLED# がち	SUFFIX
 っ子	SUFFIX
 度	SUFFIX
 

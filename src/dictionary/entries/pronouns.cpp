@@ -81,6 +81,9 @@ EntrySpecRange getPronounEntries() {
       pronoun("あれ", ""),
       pronoun("あそこ", ""),
       pronoun("あちら", ""),
+      // Fixed demonstrative collection: keep the closed expression as one
+      // search unit instead of two independent demonstratives.
+      pronoun("あれこれ", ""),
 
       // Demonstrative - person reference (こそあど+いつ)
       pronoun("こいつ", ""),
@@ -92,6 +95,7 @@ EntrySpecRange getPronounEntries() {
       pronoun_interrogative("どれ", ""),
       pronoun_interrogative("どこ", ""),
       pronoun_interrogative("どちら", ""),
+      pronoun_interrogative("どなた", ""),
 
       // Indefinite (不定代名詞) - kanji with reading
       // Low cost to act as strong anchors against prefix compounds (今何 → 今+何)
@@ -102,6 +106,8 @@ EntrySpecRange getPronounEntries() {
       // kanji forms so 誰か/何か boundaries resolve in pure-hiragana text
       pronoun_interrogative("だれ", ""),
       pronoun_interrogative("なに", ""),
+      // Closed indefinite pronoun, not an interrogative plus final particle.
+      pronoun_interrogative("何かしら", ""),
 
       // Interrogatives (疑問詞)
       pronoun_interrogative("いつ", ""),
@@ -155,7 +161,6 @@ EntrySpecRange getPronounEntries() {
       // function words, not productive pronoun-plus-particle sequences.
       adv("いつか", ""),
       adv("まもなく", ""),
-      adj("間もなく", "間もない", EPOS::AdjRenyokei),
       adv("ときどき", ""),
 
       // Fixed degree and discourse adverbs. Their surface endings otherwise
@@ -187,9 +192,11 @@ EntrySpecRange getPronounEntries() {
       adv("とうてい", ""),
       adv("いかに", ""),
       adv("いかで", ""),
+      adv("いかほど", ""),
       adv("あまつさえ", ""),
       adv("たかだか", ""),
       adv("わずか", ""),
+      adv("何しろ", ""),
       adj("やむを得ない", "やむを得ない", EPOS::AdjBasic),
       adj("ろくでもない", "ろくでもない", EPOS::AdjBasic),
       adv("おおよそ", ""),

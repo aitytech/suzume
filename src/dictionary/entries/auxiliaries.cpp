@@ -27,6 +27,12 @@ EntrySpecRange getAuxiliaryEntries() {
       verb("あっ", "ある", EPOS::VerbOnbinkei),
       verb("あれ", "ある", EPOS::VerbKateikei),
 
+      // 文語尊敬「あらせる」。存在を表す「ある」の一般的な使役ではなく、
+      // 尊敬表現としてのみ用いる閉じた文法語彙であり、受身・尊敬形
+      // あらせ+られるの語幹を保持する。
+      verb("あらせる", "あらせる", EPOS::VerbShuushikei),
+      verb("あらせ", "あらせる", EPOS::VerbMizenkei),
+
       // Polite (丁寧) - ます
       aux("ます", "ます", EPOS::AuxTenseMasu),
       aux("まし", "ます", EPOS::AuxTenseMasu),    // renyoukei
@@ -344,11 +350,15 @@ EntrySpecRange getAuxiliaryEntries() {
       suffix("ゆえ", "ゆえ"),
 
       // Tendency suffix after a verb renyokei (読みがち, 食べがち).
-      suffix("がち", "がち"),
+      suffix_tendency("がち", "がち"),
 
       // Quantitative bound suffixes: 1kg未満, 5cm以上.
       suffix("未満", "未満"),
       suffix("間", "間"),
+      // Productive nominal suffixes keep their search boundary before a
+      // following copula or case particle (終了+後、記録+用).
+      suffix("後", "後"),
+      suffix("用", "用"),
 
       // Note: 的 was previously L1 SUFFIX, but Suzume's tokenizer use case
       // prefers X+的 as one search unit (論理的, 科学的, 経済的). Merging is
@@ -446,6 +456,7 @@ EntrySpecRange getAuxiliaryEntries() {
 
       // Possibility/uncertainty: かも + しれ + ない.
       // かも particle is already defined above (line 157)
+      verb("しれ", "しれる", EPOS::VerbRenyokei),
 
       // Certainty expression: nominal unit followed by ない.
       // These are handled by noun + ない connection
@@ -544,8 +555,8 @@ EntrySpecRange getAuxiliaryEntries() {
       // Use verb() to get POS::Verb, but keep AuxExcessive EPOS for bigram rules
       verb("すぎる", "すぎる", EPOS::AuxExcessive),
       verb("すぎ", "すぎる", EPOS::AuxExcessive),  // renyokei for すぎ+た, すぎ+て
-      aux("過ぎる", "過ぎる", EPOS::AuxExcessive),
-      aux("過ぎ", "過ぎる", EPOS::AuxExcessive),
+      verb("過ぎる", "過ぎる", EPOS::AuxExcessive),
+      verb("過ぎ", "過ぎる", EPOS::AuxExcessive),
 
       // Inceptive subsidiary verb: 読みはじめる, 食べはじめる.
       aux("はじめる", "はじめる", EPOS::AuxAspectHajimeru),
