@@ -138,8 +138,24 @@ bool isQuotativeSuruTeCompoundParticle(std::string_view surface) {
   return surface == "として";
 }
 
+bool isSuruRenyokeiSurface(std::string_view surface) {
+  return surface == "し";
+}
+
 bool isHonorificPrefix(std::string_view surface) {
   return surface == "お" || surface == "ご";
+}
+
+bool isAttributiveCopulaNa(std::string_view surface) {
+  return surface == "な";
+}
+
+bool isIndependentNegativeAdjective(std::string_view surface) {
+  return surface == "ない";
+}
+
+bool endsWithNegativeNai(std::string_view surface) {
+  return utf8::endsWith(surface, "ない");
 }
 
 bool isParallelTogetherAdverb(std::string_view surface) {
@@ -180,6 +196,10 @@ bool startsClassicalAraNLimit(std::string_view surface) {
 
 bool startsCopularTopicAru(std::string_view surface) {
   return utf8::startsWith(surface, "ではある");
+}
+
+bool isCausalParticleBeforeTopic(std::string_view particle_surface, std::string_view following_surface) {
+  return particle_surface == "ので" && utf8::startsWith(following_surface, "は");
 }
 
 bool startsSentenceParticleKanaQuote(std::string_view surface) {
@@ -355,6 +375,13 @@ VerbType verbTypeFromIRowCodepoint(char32_t i_row_cp) {
   return lookupGodanType(i_row_cp, GodanColumn::I);
 }
 
+VerbType verbTypeFromBaseCodepoint(char32_t base_cp) {
+  const VerbType verb_type = lookupGodanType(base_cp, GodanColumn::Base);
+  // Dictionary-form る is ambiguous between GodanRa and Ichidan, and the
+  // dictionary entry intentionally carries no conjugation type. Do not guess.
+  return verb_type == VerbType::GodanRa ? VerbType::Unknown : verb_type;
+}
+
 bool isMixedHiraganaKanji(std::string_view stem) {
   bool has_hiragana = false;
   bool has_kanji = false;
@@ -375,6 +402,10 @@ bool isMixedHiraganaKanji(std::string_view stem) {
     }
   }
   return false;
+}
+
+bool isRenyokeiNominalizingSuffix(std::string_view suffix) {
+  return suffix == "気味";
 }
 
 }  // namespace suzume::grammar

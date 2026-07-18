@@ -227,6 +227,11 @@ bool isOpeningBracket(char32_t ch) {
          ch == U'《' || ch == U'［' || ch == U'[' || ch == U'｛' || ch == U'{';
 }
 
+bool isClosingBracket(char32_t ch) {
+  return ch == U')' || ch == U'）' || ch == U'」' || ch == U'』' || ch == U'】' || ch == U'〕' || ch == U'〉' ||
+         ch == U'》' || ch == U'］' || ch == U']' || ch == U'｝' || ch == U'}';
+}
+
 bool isProlongedSoundMark(char32_t ch) {
   // U+30FC: Katakana-Hiragana Prolonged Sound Mark (ー)
   // Used in both katakana and colloquial hiragana (すごーい, やばーい)
@@ -343,6 +348,7 @@ bool isCounterKanji(char32_t cp) {
     case U'組':
     case U'曲':
     case U'巻':
+    case U'版':
     case U'畳':
     case U'割':
     case U'部':

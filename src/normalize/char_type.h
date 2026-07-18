@@ -123,6 +123,11 @@ bool isExtendedParticle(char32_t ch);
 bool isOpeningBracket(char32_t ch);
 
 /**
+ * @brief Check if character is a closing bracket / parenthesis.
+ */
+bool isClosingBracket(char32_t ch);
+
+/**
  * @brief Check if character is the prolonged sound mark (長音符)
  *
  * The prolonged sound mark (ー, U+30FC) is used to extend vowel sounds.

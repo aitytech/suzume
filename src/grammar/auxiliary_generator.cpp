@@ -585,6 +585,7 @@ const auto& auxiliaryBases() {
   static constexpr AuxiliaryBase kBases[] = {
       // === Te-form attachments (て形接続) ===
       {"いる", VerbType::Ichidan, kAuxTeiru, kAuxOutTe},
+      {"ある", VerbType::GodanRa, kAuxTearu, kAuxOutTe},
       {"しまう", VerbType::GodanWa, kAuxTeshimau, kAuxOutTe},
       {"おく", VerbType::GodanKa, kAuxTeoku, kAuxOutTe},
       {"くる", VerbType::Kuru, kAuxTekuru, kAuxOutTe},

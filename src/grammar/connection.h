@@ -62,6 +62,7 @@ constexpr uint16_t kAuxSeru = 0x020F;      // せる/させる (requires 未然�
 constexpr uint16_t kAuxRenyokei = 0x0210;  // 連用形 compounds (すぎる, etc.)
 constexpr uint16_t kAuxSou = 0x0211;       // そう (looks like, requires 連用形)
 constexpr uint16_t kAuxCopula = 0x0212;    // だ/です/である (requires noun/na-adj)
+constexpr uint16_t kAuxTearu = 0x0213;     // ある (requires て形)
 
 // === Auxiliary outputs - what they provide (0x03xx) ===
 constexpr uint16_t kAuxOutBase = 0x0300;  // Auxiliary in base form

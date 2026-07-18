@@ -92,11 +92,27 @@ bool isPureHiragana(std::string_view stem);
 bool isQuotativeSuruTeCompoundParticle(std::string_view surface);
 
 /**
+ * @brief Whether a surface is the renyokei form of the irregular verb する
+ * @param surface Candidate surface
+ * @return True for し
+ */
+bool isSuruRenyokeiSurface(std::string_view surface);
+
+/**
  * @brief Whether a prefix is the productive honorific prefix お or ご
  * @param surface Prefix surface
  * @return True for an honorific prefix
  */
 bool isHonorificPrefix(std::string_view surface);
+
+/** @brief Whether a surface is the attributive form な of the copula だ */
+bool isAttributiveCopulaNa(std::string_view surface);
+
+/** @brief Whether a surface is the independent negative adjective ない */
+bool isIndependentNegativeAdjective(std::string_view surface);
+
+/** @brief Whether a surface ends in the complete negative form ない */
+bool endsWithNegativeNai(std::string_view surface);
 
 /**
  * @brief Whether an adverb is the standalone component of とともに
@@ -163,6 +179,14 @@ bool startsClassicalAraNLimit(std::string_view surface);
  * @return True when the sequence begins with ではある
  */
 bool startsCopularTopicAru(std::string_view surface);
+
+/**
+ * @brief Whether a conjunctive-particle candidate is the causal ので before は
+ * @param particle_surface Candidate particle surface
+ * @param following_surface Text immediately after the candidate
+ * @return True for the contrastive nominal construction のでは
+ */
+bool isCausalParticleBeforeTopic(std::string_view particle_surface, std::string_view following_surface);
 
 /**
  * @brief Whether text begins a quoted sentence-particle sequence かなと
@@ -401,6 +425,17 @@ std::string_view godanBaseSuffixFromERow(char32_t e_row_cp);
 VerbType verbTypeFromIRowCodepoint(char32_t i_row_cp);
 
 /**
+ * @brief Get the Godan verb type from its dictionary-form ending.
+ *
+ * The ending uniquely identifies every Godan row except る, which is shared
+ * with Ichidan verbs. Callers must leave an ambiguous る ending unresolved.
+ *
+ * @param base_cp Dictionary-form final codepoint (く, す, む, etc.)
+ * @return Corresponding Godan type, or Unknown for non-Godan/ambiguous endings
+ */
+VerbType verbTypeFromBaseCodepoint(char32_t base_cp);
+
+/**
  * @brief Check if stem contains both hiragana and kanji characters
  * @param stem The stem to check
  * @return True if at least one hiragana and one kanji character are present
@@ -408,6 +443,14 @@ VerbType verbTypeFromIRowCodepoint(char32_t i_row_cp);
  * Used to identify idiomatic mixed-script nouns (なし崩し, みじん切り, お茶).
  */
 bool isMixedHiraganaKanji(std::string_view stem);
+
+/**
+ * @brief Check whether a suffix nominalizes a preceding continuative stem.
+ *
+ * Unlike tendency and manner suffixes, this closed suffix forms a nominal
+ * predicate from the stem (疲れ気味だ).
+ */
+bool isRenyokeiNominalizingSuffix(std::string_view suffix);
 
 }  // namespace suzume::grammar
 

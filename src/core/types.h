@@ -181,6 +181,7 @@ enum class ExtendedPOS : uint8_t {
   AuxInability,            // 不可能・躊躇: かねる
   AuxBenefactive,          // 授受: あげる（〜てあげる）
   SuffixRecentCompletion,  // 完成直後: たて
+  SuffixTendency,          // 傾向: がち
   DeterminerQuotative,     // 引用連体: という、っていう
   AuxSimilitudeYou,        // 比況・様態: よう（読むようだ、次のように）
 
