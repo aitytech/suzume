@@ -154,10 +154,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "reading in parentheses: noun vs other classification"
-      },
       "description": "東京（とうきょう） - reading kept as single token, symbols filtered",
       "expected": [
         {
@@ -173,16 +169,6 @@
       ],
       "id": "symbol_parentheses",
       "input": "東京（とうきょう）",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "東京"
-        },
-        {
-          "pos": "Other",
-          "surface": "とうきょう"
-        }
-      ],
       "tags": [
         "grammar",
         "symbol"
@@ -238,10 +224,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "design-difference",
-        "reason": "Suzume intentional design difference from MeCab normalization"
-      },
       "description": "第一回 (first time) - 第一 is adverb, 回 is counter suffix",
       "expected": [
         {
@@ -257,13 +239,6 @@
       ],
       "id": "numeric_ordinal",
       "input": "第一回",
-      "suzume_expected": [
-        {
-          "lemma": "第一回",
-          "pos": "Noun",
-          "surface": "第一回"
-        }
-      ],
       "tags": [
         "grammar",
         "numeric"
@@ -440,10 +415,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "B31: 何でもあり should be noun idiom",
       "expected": [
         {
@@ -479,30 +450,6 @@
       ],
       "id": "nandemoari_noun",
       "input": "何でもありだな",
-      "suzume_expected": [
-        {
-          "pos": "Pronoun",
-          "surface": "何"
-        },
-        {
-          "pos": "Particle",
-          "surface": "でも"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あり"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "だ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        }
-      ],
       "tags": [
         "noun",
         "idiom"
@@ -775,10 +722,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "的 standalone is Suffix in MeCab but Suzume produces Noun (L1 SUFFIX entry removed for X+的 merge support)."
-      },
       "description": "なし崩し should be single NOUN",
       "expected": [
         {
@@ -794,18 +737,6 @@
       ],
       "id": "nashikuzushi_noun",
       "input": "なし崩し的",
-      "suzume_expected": [
-        {
-          "lemma": "なし崩し",
-          "pos": "Noun",
-          "surface": "なし崩し"
-        },
-        {
-          "lemma": "的",
-          "pos": "Noun",
-          "surface": "的"
-        }
-      ],
       "tags": [
         "noun",
         "L2"
@@ -1908,10 +1839,6 @@
       "input": "こども"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "辞書で確認できるひらがな一般名詞を一つの検索単位として保持する"
-      },
       "description": "Isolated hiragana noun (卵) kept whole; MeCab splits たま/ご, suzume keeps one search unit",
       "expected": [
         {
@@ -1926,20 +1853,9 @@
         }
       ],
       "id": "tamago",
-      "input": "たまご",
-      "suzume_expected": [
-        {
-          "lemma": "たまご",
-          "pos": "Noun",
-          "surface": "たまご"
-        }
-      ]
+      "input": "たまご"
     },
     {
-      "accepted_diff": {
-        "category": "grammatical-ambiguity",
-        "reason": "名詞として登録・解析できる同形ひらがな語は文脈なしでは動詞連用形へ寄せず、名詞の検索単位を保持する"
-      },
       "description": "Isolated hiragana noun (畑) kept whole; particle-topic + past-aux connection is prohibited so は/た/け does not win",
       "expected": [
         {
@@ -1949,20 +1865,9 @@
         }
       ],
       "id": "hatake",
-      "input": "はたけ",
-      "suzume_expected": [
-        {
-          "lemma": "はたけ",
-          "pos": "Noun",
-          "surface": "はたけ"
-        }
-      ]
+      "input": "はたけ"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "L2で確認できるひらがな一般名詞を一つの検索単位として保持する"
-      },
       "description": "Isolated hiragana noun kept whole; the EOS penalty on bare renyokei き prevents an ひこう+き split (き cannot end a sentence)",
       "expected": [
         {
@@ -1982,14 +1887,7 @@
         }
       ],
       "id": "hikouki",
-      "input": "ひこうき",
-      "suzume_expected": [
-        {
-          "lemma": "ひこうき",
-          "pos": "Noun",
-          "surface": "ひこうき"
-        }
-      ]
+      "input": "ひこうき"
     },
     {
       "description": "東京かな - auto-generated",
@@ -2656,6 +2554,719 @@
       ],
       "id": "kasawo_jiru",
       "input": "静かさを感じる"
+    },
+    {
+      "description": "一人ひとり確認する - auto-generated",
+      "expected": [
+        {
+          "lemma": "一人ひとり",
+          "pos": "Noun",
+          "surface": "一人ひとり"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "hitorihitori_kakunin_suru",
+      "input": "一人ひとり確認する"
+    },
+    {
+      "description": "一人ひとりに配る - auto-generated",
+      "expected": [
+        {
+          "lemma": "一人ひとり",
+          "pos": "Noun",
+          "surface": "一人ひとり"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "配る",
+          "pos": "Verb",
+          "surface": "配る"
+        }
+      ],
+      "id": "hitorihitori_ni_kubaru",
+      "input": "一人ひとりに配る"
+    },
+    {
+      "description": "一つひとつ調べる - auto-generated",
+      "expected": [
+        {
+          "lemma": "一つ",
+          "pos": "Noun",
+          "surface": "一つ"
+        },
+        {
+          "lemma": "ひとつ",
+          "pos": "Noun",
+          "surface": "ひとつ"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "hitotsuhitotsu_shiraberu",
+      "input": "一つひとつ調べる"
+    },
+    {
+      "description": "一つずつ確認する - auto-generated",
+      "expected": [
+        {
+          "lemma": "一つ",
+          "pos": "Noun",
+          "surface": "一つ"
+        },
+        {
+          "lemma": "ずつ",
+          "pos": "Particle",
+          "surface": "ずつ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "hitotsuzutsu_kakunin_suru",
+      "input": "一つずつ確認する"
+    },
+    {
+      "description": "Compound noun before conjectural auxiliary",
+      "expected": [
+        {
+          "lemma": "本物",
+          "pos": "Noun",
+          "surface": "本物"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "honmono_rashii_hanashi",
+      "input": "本物らしい話"
+    },
+    {
+      "description": "Compound noun before genitive particle",
+      "expected": [
+        {
+          "lemma": "本物",
+          "pos": "Noun",
+          "surface": "本物"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        }
+      ],
+      "id": "honmono_no_shiryo",
+      "input": "本物の資料"
+    },
+    {
+      "description": "Temporal noun before suru noun",
+      "expected": [
+        {
+          "lemma": "以後",
+          "pos": "Noun",
+          "surface": "以後"
+        },
+        {
+          "lemma": "注意",
+          "pos": "Noun",
+          "surface": "注意"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "igo_chuui_suru",
+      "input": "以後注意する"
+    },
+    {
+      "description": "Temporal noun before past suru noun",
+      "expected": [
+        {
+          "lemma": "以後",
+          "pos": "Noun",
+          "surface": "以後"
+        },
+        {
+          "lemma": "注意",
+          "pos": "Noun",
+          "surface": "注意"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "igo_chuui_shita",
+      "input": "以後注意した"
+    },
+    {
+      "description": "Temporal noun boundary before object particle",
+      "expected": [
+        {
+          "lemma": "途中",
+          "pos": "Noun",
+          "surface": "途中"
+        },
+        {
+          "lemma": "経過",
+          "pos": "Noun",
+          "surface": "経過"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "tochukeika_kakunin_suru",
+      "input": "途中経過を確認する"
+    },
+    {
+      "description": "Temporal noun boundary before subject particle",
+      "expected": [
+        {
+          "lemma": "途中",
+          "pos": "Noun",
+          "surface": "途中"
+        },
+        {
+          "lemma": "経過",
+          "pos": "Noun",
+          "surface": "経過"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "tochukeika_ga_juyouda",
+      "input": "途中経過が重要だ"
+    },
+    {
+      "description": "Productive nominalizer before potential verb",
+      "expected": [
+        {
+          "lemma": "簡単化",
+          "pos": "Adjective",
+          "surface": "簡単化"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        }
+      ],
+      "id": "kantanka_dekiru",
+      "input": "簡単化できる"
+    },
+    {
+      "description": "Productive nominalizer before potential verb",
+      "expected": [
+        {
+          "lemma": "簡単化",
+          "pos": "Adjective",
+          "surface": "簡単化"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kantanka_dekita",
+      "input": "簡単化できた"
+    },
+    {
+      "description": "Productive evaluation suffix before suru",
+      "expected": [
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "視",
+          "pos": "Suffix",
+          "surface": "視"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "juyoshi_shita",
+      "input": "重要視した"
+    },
+    {
+      "description": "Productive evaluation suffix before suru",
+      "expected": [
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "視",
+          "pos": "Suffix",
+          "surface": "視"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "juyoshi_suru",
+      "input": "重要視する"
+    },
+    {
+      "description": "Productive evaluation suffix before suru",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "視",
+          "pos": "Suffix",
+          "surface": "視"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "mondaishi_suru",
+      "input": "問題視する"
+    },
+    {
+      "description": "活用形を含む複合名詞を優先する",
+      "expected": [
+        {
+          "lemma": "見た目",
+          "pos": "Noun",
+          "surface": "見た目"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "mitame_niha_kantan_da",
+      "input": "見た目には簡単だ"
+    },
+    {
+      "description": "活用形を含む複合名詞の格助詞後続",
+      "expected": [
+        {
+          "lemma": "見た目",
+          "pos": "Noun",
+          "surface": "見た目"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        }
+      ],
+      "id": "mitame_ga_yoi",
+      "input": "見た目が良い"
+    },
+    {
+      "description": "混在表記の複合名詞を優先する",
+      "expected": [
+        {
+          "lemma": "行く末",
+          "pos": "Noun",
+          "surface": "行く末"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "案じる",
+          "pos": "Verb",
+          "surface": "案じる"
+        }
+      ],
+      "id": "ikue_wo_anjiru",
+      "input": "行く末を案じる"
+    },
+    {
+      "description": "混在表記の複合名詞の格助詞後続",
+      "expected": [
+        {
+          "lemma": "行く末",
+          "pos": "Noun",
+          "surface": "行く末"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "不安",
+          "pos": "Noun",
+          "surface": "不安"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ikue_ga_fuan_da",
+      "input": "行く末が不安だ"
+    },
+    {
+      "description": "程度を表す固定副詞ある程度を一語で解析する",
+      "expected": [
+        {
+          "lemma": "ある程度",
+          "pos": "Adverb",
+          "surface": "ある程度"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "理解",
+          "pos": "Noun",
+          "surface": "理解"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        }
+      ],
+      "id": "aruteido_wa_rikai_dekiru",
+      "input": "ある程度は理解できる"
+    },
+    {
+      "description": "化派生サ変名詞とするの過去形を分割する",
+      "expected": [
+        {
+          "lemma": "簡略化",
+          "pos": "Noun",
+          "surface": "簡略化"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "手順",
+          "pos": "Noun",
+          "surface": "手順"
+        }
+      ],
+      "id": "kanryakuka_shita_tejun",
+      "input": "簡略化した手順"
+    },
+    {
+      "description": "複合名詞の後の可能動詞を分割する",
+      "expected": [
+        {
+          "lemma": "勉強",
+          "pos": "Noun",
+          "surface": "勉強"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        },
+        {
+          "lemma": "環境",
+          "pos": "Noun",
+          "surface": "環境"
+        }
+      ],
+      "id": "benkyou_dekiru_kankyou",
+      "input": "勉強できる環境"
+    },
+    {
+      "description": "二重反復の四字複合語を保持する",
+      "expected": [
+        {
+          "lemma": "津々浦々",
+          "pos": "Noun",
+          "surface": "津々浦々"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "巡る",
+          "pos": "Verb",
+          "surface": "巡る"
+        }
+      ],
+      "id": "tsutsu_urayado_o_meguru",
+      "input": "津々浦々を巡る"
+    },
+    {
+      "description": "可能終わりの接頭辞複合を名詞として保持する",
+      "expected": [
+        {
+          "lemma": "再利用可能",
+          "pos": "Noun",
+          "surface": "再利用可能"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "資源",
+          "pos": "Noun",
+          "surface": "資源"
+        }
+      ],
+      "id": "sairiyou_kanou_na_shigen",
+      "input": "再利用可能な資源"
+    },
+    {
+      "description": "Nominalizer plus existential verb in attributive form",
+      "expected": [
+        {
+          "lemma": "互換性",
+          "pos": "Noun",
+          "surface": "互換性"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "形式",
+          "pos": "Noun",
+          "surface": "形式"
+        }
+      ],
+      "id": "gokansei_no_aru_keishiki",
+      "input": "互換性のある形式"
+    },
+    {
+      "description": "月々支払う - auto-generated",
+      "expected": [
+        {
+          "lemma": "月々",
+          "pos": "Noun",
+          "surface": "月々"
+        },
+        {
+          "lemma": "支払う",
+          "pos": "Verb",
+          "surface": "支払う"
+        }
+      ],
+      "id": "u",
+      "input": "月々支払う"
+    },
+    {
+      "description": "固定強調副助詞",
+      "expected": [
+        {
+          "lemma": "基本",
+          "pos": "Noun",
+          "surface": "基本"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "おろか",
+          "pos": "Particle",
+          "surface": "おろか"
+        },
+        {
+          "lemma": "応用",
+          "pos": "Noun",
+          "surface": "応用"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "oroka_fixed_emphatic_particle",
+      "input": "基本はおろか応用も必要だ"
+    },
+    {
+      "description": "名詞「相違」と否定形「なく」の境界を維持する",
+      "expected": [
+        {
+          "lemma": "相違",
+          "pos": "Noun",
+          "surface": "相違"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "soi_naku_noun_negative_boundary",
+      "input": "相違なく進む"
+    },
+    {
+      "description": "一般名詞がコピュラに先行しても未検証ナ形容詞へ変わらない",
+      "expected": [
+        {
+          "lemma": "最中",
+          "pos": "Noun",
+          "surface": "最中"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "noun_saichu_copular_predicate",
+      "input": "最中だった"
     }
   ],
   "description": "General nouns",

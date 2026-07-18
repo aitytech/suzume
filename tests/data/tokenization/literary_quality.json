@@ -490,10 +490,6 @@
       "input": "幾度となく繰り返される議論に辟易していた"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "suzume classifies なけれ as auxiliary (ない 仮定形) and 困難 as noun (na-adjective stem); accepted POS-limitation vs MeCab"
-      },
       "description": "literary-volitional-n-split normalization (乗り越え+ん)",
       "expected": [
         {
@@ -568,79 +564,7 @@
         }
       ],
       "id": "ikanaru_womo_ri_entosuru_ganakerebanaranai",
-      "input": "いかなる困難をも乗り越えんとする気概がなければならない",
-      "suzume_expected": [
-        {
-          "lemma": "いかなる",
-          "pos": "Determiner",
-          "surface": "いかなる"
-        },
-        {
-          "lemma": "困難",
-          "pos": "Noun",
-          "surface": "困難"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "乗り越える",
-          "pos": "Verb",
-          "surface": "乗り越え"
-        },
-        {
-          "lemma": "ん",
-          "pos": "Auxiliary",
-          "surface": "ん"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        },
-        {
-          "lemma": "気概",
-          "pos": "Noun",
-          "surface": "気概"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なけれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "なる",
-          "pos": "Verb",
-          "surface": "なら"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "いかなる困難をも乗り越えんとする気概がなければならない"
     },
     {
       "description": "移り変わり compound verb fix",
@@ -700,10 +624,6 @@
       "input": "世の中の移り変わりは誠に目まぐるしいものである"
     },
     {
-      "accepted_diff": {
-        "category": "over-split",
-        "reason": "夕暮れ時: Suzume splits 夕暮れ+時 (noun+suffix), MeCab merges as single token"
-      },
       "description": "夕暮れ+時 split (suzume正), 折しも L2 dict, 染まり+ゆく compound verb",
       "expected": [
         {
@@ -758,64 +678,7 @@
         }
       ],
       "id": "shimo_re_kuno_ga_ni_mariyuku",
-      "input": "折しも夕暮れ時、遠くの山々が紫に染まりゆく",
-      "suzume_expected": [
-        {
-          "lemma": "折しも",
-          "pos": "Adverb",
-          "surface": "折しも"
-        },
-        {
-          "lemma": "夕暮れ",
-          "pos": "Noun",
-          "surface": "夕暮れ"
-        },
-        {
-          "lemma": "時",
-          "pos": "Noun",
-          "surface": "時"
-        },
-        {
-          "lemma": "遠く",
-          "pos": "Verb",
-          "surface": "遠く"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "山々",
-          "pos": "Noun",
-          "surface": "山々"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "紫",
-          "pos": "Noun",
-          "surface": "紫"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "染まる",
-          "pos": "Verb",
-          "surface": "染まり"
-        },
-        {
-          "lemma": "ゆく",
-          "pos": "Verb",
-          "surface": "ゆく"
-        }
-      ]
+      "input": "折しも夕暮れ時、遠くの山々が紫に染まりゆく"
     },
     {
       "description": "サ変動詞 し=Verb POS fix (解決する連用形)",
@@ -957,10 +820,6 @@
       "input": "彼はその薄暗い部屋の片隅に腰を下ろした"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ずに lemma: Suzume uses ぬ (classical base form), MeCab uses ず"
-      },
       "description": "Compound adjective 物悲しく (melancholy) — 2-kanji stem + しく should be one token",
       "expected": [
         {
@@ -1075,119 +934,7 @@
         }
       ],
       "id": "monoganashiku_compound_adj",
-      "input": "雨に濡れた石畳の上を、傘も差さずに歩く女の後ろ姿が、妙に物悲しく見えた",
-      "suzume_expected": [
-        {
-          "lemma": "雨",
-          "pos": "Noun",
-          "surface": "雨"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "濡れる",
-          "pos": "Verb",
-          "surface": "濡れ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "石畳",
-          "pos": "Noun",
-          "surface": "石畳"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "上",
-          "pos": "Noun",
-          "surface": "上"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "傘",
-          "pos": "Noun",
-          "surface": "傘"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "差す",
-          "pos": "Verb",
-          "surface": "差さ"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ずに"
-        },
-        {
-          "lemma": "歩く",
-          "pos": "Verb",
-          "surface": "歩く"
-        },
-        {
-          "lemma": "女",
-          "pos": "Noun",
-          "surface": "女"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "後ろ姿",
-          "pos": "Noun",
-          "surface": "後ろ姿"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "妙",
-          "pos": "Adjective",
-          "surface": "妙"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "物悲しい",
-          "pos": "Adjective",
-          "surface": "物悲しく"
-        },
-        {
-          "lemma": "見える",
-          "pos": "Verb",
-          "surface": "見え"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "雨に濡れた石畳の上を、傘も差さずに歩く女の後ろ姿が、妙に物悲しく見えた"
     },
     {
       "description": "時として (sometimes) — L2 dict adverb, should be one token",
@@ -1590,6 +1337,43 @@
       ],
       "id": "saredomo_no_ha_ruginaimonodeattta",
       "input": "されども彼の決意は揺るぎないものであった"
+    },
+    {
+      "description": "文語副詞の送り仮名境界を保持する",
+      "expected": [
+        {
+          "lemma": "予てから",
+          "pos": "Adverb",
+          "surface": "予てから"
+        },
+        {
+          "lemma": "予定",
+          "pos": "Noun",
+          "surface": "予定"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kanete_kara_yotei_shiteita",
+      "input": "予てから予定していた"
     }
   ],
   "description": "literary_quality tests",

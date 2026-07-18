@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "description": "代名詞に後接する強調助詞だってを保持する",
+      "expected": [
+        {
+          "lemma": "何",
+          "pos": "Pronoun",
+          "surface": "何"
+        },
+        {
+          "lemma": "だって",
+          "pos": "Particle",
+          "surface": "だって"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        }
+      ],
+      "id": "nan_dattemo_dekiru",
+      "input": "何だってできる"
+    },
+    {
+      "description": "口語疑問の連体詞と終助詞を保持する",
+      "expected": [
+        {
+          "lemma": "どういう",
+          "pos": "Determiner",
+          "surface": "どういう"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "だい",
+          "pos": "Particle",
+          "surface": "だい"
+        }
+      ],
+      "id": "douiu_koto_dai",
+      "input": "どういうことだい"
+    }
+  ],
+  "description": "colloquial tests",
+  "version": "1.0"
+}

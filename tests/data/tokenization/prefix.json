@@ -206,10 +206,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "åæ°: na-adj stem - noun vs adjective without copula"
-      },
       "description": "Honorific お + 元気",
       "expected": [
         {
@@ -225,16 +221,6 @@
       ],
       "id": "o_healthy",
       "input": "お元気",
-      "suzume_expected": [
-        {
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "pos": "Noun",
-          "surface": "元気"
-        }
-      ],
       "tags": [
         "prefix",
         "o"
@@ -283,10 +269,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "boundary",
-        "reason": "Surface diff: Suzume splits お+客+様 (no user dict), MeCab merges お客様"
-      },
       "description": "Honorific お + 客 + 様",
       "expected": [
         {
@@ -297,23 +279,6 @@
       ],
       "id": "o_customer_sama",
       "input": "お客様",
-      "suzume_expected": [
-        {
-          "surface": "お",
-          "pos": "Prefix",
-          "lemma": "お"
-        },
-        {
-          "surface": "客",
-          "pos": "Noun",
-          "lemma": "客"
-        },
-        {
-          "surface": "様",
-          "pos": "Noun",
-          "lemma": "様"
-        }
-      ],
       "tags": [
         "prefix",
         "o"
@@ -530,10 +495,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã+noun: prefix attachment - context-dependent"
-      },
       "description": "Honorific お + 預かり (nominalized verb)",
       "expected": [
         {
@@ -549,16 +510,6 @@
       ],
       "id": "o_custody",
       "input": "お預かり",
-      "suzume_expected": [
-        {
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "pos": "Noun",
-          "surface": "預かり"
-        }
-      ],
       "tags": [
         "prefix",
         "o"
@@ -691,10 +642,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã+noun: prefix attachment - context-dependent"
-      },
       "description": "Honorific お + 引き取り",
       "expected": [
         {
@@ -710,16 +657,6 @@
       ],
       "id": "o_pickup",
       "input": "お引き取り",
-      "suzume_expected": [
-        {
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "pos": "Noun",
-          "surface": "引き取り"
-        }
-      ],
       "tags": [
         "prefix",
         "o"
@@ -1228,10 +1165,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã: standalone prefix vs interjection"
-      },
       "description": "Just prefix お alone",
       "expected": [
         {
@@ -1242,12 +1175,6 @@
       ],
       "id": "edge_only_prefix",
       "input": "お",
-      "suzume_expected": [
-        {
-          "pos": "Prefix",
-          "surface": "お"
-        }
-      ],
       "tags": [
         "prefix",
         "edge"

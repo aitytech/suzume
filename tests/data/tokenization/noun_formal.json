@@ -127,10 +127,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation: surfaces match, POS classification differs from MeCab"
-      },
       "description": "はずがない - formal noun hazu + negative",
       "expected": [
         {
@@ -151,23 +147,6 @@
       ],
       "id": "formal_noun_hazu_ganai",
       "input": "はずがない",
-      "suzume_expected": [
-        {
-          "lemma": "はず",
-          "pos": "Noun",
-          "surface": "はず"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        }
-      ],
       "tags": [
         "formal_noun"
       ]
@@ -1071,7 +1050,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
@@ -1108,7 +1087,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
@@ -1145,7 +1124,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
@@ -1296,7 +1275,7 @@
       "expected": [
         {
           "lemma": "本",
-          "pos": "Noun",
+          "pos": "Prefix",
           "surface": "本"
         },
         {
@@ -1305,8 +1284,8 @@
           "surface": "わけ"
         },
         {
-          "lemma": "で",
-          "pos": "Particle",
+          "lemma": "だ",
+          "pos": "Auxiliary",
           "surface": "で"
         },
         {
@@ -1316,7 +1295,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1330,8 +1309,8 @@
           "surface": "わけ"
         },
         {
-          "lemma": "で",
-          "pos": "Particle",
+          "lemma": "だ",
+          "pos": "Auxiliary",
           "surface": "で"
         },
         {
@@ -1341,7 +1320,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1355,8 +1334,8 @@
           "surface": "わけ"
         },
         {
-          "lemma": "で",
-          "pos": "Particle",
+          "lemma": "だ",
+          "pos": "Auxiliary",
           "surface": "で"
         },
         {
@@ -1366,7 +1345,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1380,8 +1359,8 @@
           "surface": "わけ"
         },
         {
-          "lemma": "で",
-          "pos": "Particle",
+          "lemma": "だ",
+          "pos": "Auxiliary",
           "surface": "で"
         },
         {
@@ -1391,7 +1370,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1405,8 +1384,8 @@
           "surface": "わけ"
         },
         {
-          "lemma": "で",
-          "pos": "Particle",
+          "lemma": "だ",
+          "pos": "Auxiliary",
           "surface": "で"
         },
         {
@@ -1416,7 +1395,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1435,8 +1414,8 @@
           "surface": "わけ"
         },
         {
-          "lemma": "で",
-          "pos": "Particle",
+          "lemma": "だ",
+          "pos": "Auxiliary",
           "surface": "で"
         },
         {
@@ -1446,7 +1425,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
@@ -2508,8 +2487,8 @@
           "surface": "ところ"
         },
         {
-          "lemma": "で",
-          "pos": "Particle",
+          "lemma": "だ",
+          "pos": "Auxiliary",
           "surface": "で"
         },
         {
@@ -2519,7 +2498,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -2533,8 +2512,8 @@
           "surface": "ところ"
         },
         {
-          "lemma": "で",
-          "pos": "Particle",
+          "lemma": "だ",
+          "pos": "Auxiliary",
           "surface": "で"
         },
         {
@@ -2544,7 +2523,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -2558,8 +2537,8 @@
           "surface": "ところ"
         },
         {
-          "lemma": "で",
-          "pos": "Particle",
+          "lemma": "だ",
+          "pos": "Auxiliary",
           "surface": "で"
         },
         {
@@ -2569,7 +2548,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -2727,6 +2706,460 @@
       ],
       "id": "ndaageku_ku_itaageku_mu_betaageku_mu_etaageku_meru",
       "input": "読んだあげく書く。書いたあげく読む。食べたあげく飲む。終えたあげく始める。"
+    },
+    {
+      "description": "答えは正しい - regression test",
+      "expected": [
+        {
+          "lemma": "答え",
+          "pos": "Noun",
+          "surface": "答え"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しい"
+        }
+      ],
+      "id": "eha_shii",
+      "input": "答えは正しい"
+    },
+    {
+      "description": "集まりがある - regression test",
+      "expected": [
+        {
+          "lemma": "集まり",
+          "pos": "Noun",
+          "surface": "集まり"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "marigaaru",
+      "input": "集まりがある"
+    },
+    {
+      "description": "決まりを守る - regression test",
+      "expected": [
+        {
+          "lemma": "決まり",
+          "pos": "Noun",
+          "surface": "決まり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "守る",
+          "pos": "Verb",
+          "surface": "守る"
+        }
+      ],
+      "id": "mariwo_ru",
+      "input": "決まりを守る"
+    },
+    {
+      "description": "はずではない - regression test",
+      "expected": [
+        {
+          "lemma": "はず",
+          "pos": "Noun",
+          "surface": "はず"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "hazudehanai",
+      "input": "はずではない"
+    },
+    {
+      "description": "わけではない - regression test",
+      "expected": [
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wakedehanai",
+      "input": "わけではない"
+    },
+    {
+      "description": "本ではない - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "dehanai",
+      "input": "本ではない"
+    },
+    {
+      "description": "地域ならではの文化 - regression test",
+      "expected": [
+        {
+          "lemma": "地域",
+          "pos": "Noun",
+          "surface": "地域"
+        },
+        {
+          "lemma": "ならでは",
+          "pos": "Suffix",
+          "surface": "ならでは"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "文化",
+          "pos": "Noun",
+          "surface": "文化"
+        }
+      ],
+      "id": "naradehano",
+      "input": "地域ならではの文化"
+    },
+    {
+      "description": "この方法ならではの特徴 - regression test",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "ならでは",
+          "pos": "Suffix",
+          "surface": "ならでは"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "特徴",
+          "pos": "Noun",
+          "surface": "特徴"
+        }
+      ],
+      "id": "kono_naradehano",
+      "input": "この方法ならではの特徴"
+    },
+    {
+      "description": "Similitude you after an attributive na-adjective is auxiliary",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kanayouda",
+      "input": "静かなようだ"
+    },
+    {
+      "description": "Similitude you after a finite verb is auxiliary",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "wo_muyouda",
+      "input": "本を読むようだ"
+    },
+    {
+      "description": "Purpose/change construction classifies you as auxiliary",
+      "expected": [
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "dekiruyouninaru",
+      "input": "できるようになる"
+    },
+    {
+      "description": "Similitude you after a genitive phrase is auxiliary",
+      "expected": [
+        {
+          "lemma": "次",
+          "pos": "Noun",
+          "surface": "次"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "noyouda",
+      "input": "次のようだ"
+    },
+    {
+      "description": "Attributive similitude you is auxiliary",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        }
+      ],
+      "id": "konoyouna",
+      "input": "このような方法"
+    },
+    {
+      "description": "Purpose construction classifies you as auxiliary",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "muyounisuru",
+      "input": "読むようにする"
+    },
+    {
+      "description": "Renyokei-derived formal noun you remains a noun",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "miyouganai",
+      "input": "読みようがない"
+    },
+    {
+      "description": "形式名詞すべを動詞終止形から分割する",
+      "expected": [
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知る"
+        },
+        {
+          "lemma": "すべ",
+          "pos": "Noun",
+          "surface": "すべ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shiru_sube_ga_nai",
+      "input": "知るすべがない"
+    },
+    {
+      "description": "否定知識構文の形式名詞よしを保持する",
+      "expected": [
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知る"
+        },
+        {
+          "lemma": "よし",
+          "pos": "Noun",
+          "surface": "よし"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shiru_yoshi_mo_nai",
+      "input": "知るよしもない"
     }
   ],
   "description": "Formal nouns (こと、もの、ところ)",

@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "description": "年なしの月日を一つの日付として分割",
+      "expected": [
+        {
+          "lemma": "7月18日",
+          "pos": "Noun",
+          "surface": "7月18日"
+        },
+        {
+          "lemma": "現在",
+          "pos": "Noun",
+          "surface": "現在"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "状況",
+          "pos": "Noun",
+          "surface": "状況"
+        }
+      ],
+      "id": "month_day_without_year",
+      "input": "7月18日現在の状況"
+    }
+  ],
+  "description": "date tests",
+  "version": "1.0"
+}

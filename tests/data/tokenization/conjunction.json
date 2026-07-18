@@ -15,7 +15,7 @@
         },
         {
           "lemma": "ものの",
-          "pos": "Conjunction",
+          "pos": "Particle",
           "surface": "ものの"
         },
         {
@@ -40,7 +40,7 @@
         },
         {
           "lemma": "ものの",
-          "pos": "Conjunction",
+          "pos": "Particle",
           "surface": "ものの"
         },
         {
@@ -65,7 +65,7 @@
         },
         {
           "lemma": "ものの",
-          "pos": "Conjunction",
+          "pos": "Particle",
           "surface": "ものの"
         },
         {
@@ -375,6 +375,510 @@
       ],
       "id": "concessive_towa_ie_main_clause_boundary",
       "input": "本とはいえ読む。水とはいえ書く。紙とはいえ包む。"
+    },
+    {
+      "description": "ましてや来ない - regression test",
+      "expected": [
+        {
+          "lemma": "ましてや",
+          "pos": "Conjunction",
+          "surface": "ましてや"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "mashiteya_nai",
+      "input": "ましてや来ない"
+    },
+    {
+      "description": "それなのに続ける - regression test",
+      "expected": [
+        {
+          "lemma": "それなのに",
+          "pos": "Conjunction",
+          "surface": "それなのに"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続ける"
+        }
+      ],
+      "id": "sorenanoni_keru",
+      "input": "それなのに続ける"
+    },
+    {
+      "description": "ところが雨だ - regression test",
+      "expected": [
+        {
+          "lemma": "ところが",
+          "pos": "Conjunction",
+          "surface": "ところが"
+        },
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "tokoroga_da",
+      "input": "ところが雨だ"
+    },
+    {
+      "description": "ところで話す - regression test",
+      "expected": [
+        {
+          "lemma": "ところで",
+          "pos": "Conjunction",
+          "surface": "ところで"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話す"
+        }
+      ],
+      "id": "tokorode_su",
+      "input": "ところで話す"
+    },
+    {
+      "description": "それどころか重要だ - regression test",
+      "expected": [
+        {
+          "lemma": "それどころか",
+          "pos": "Conjunction",
+          "surface": "それどころか"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "soredokoroka_da",
+      "input": "それどころか重要だ"
+    },
+    {
+      "description": "逆接導入後の仮定形「いえ」と後続動詞の境界",
+      "expected": [
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いえ"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続ける"
+        }
+      ],
+      "id": "tohaie_keru",
+      "input": "とはいえ続ける"
+    },
+    {
+      "description": "逆接導入後の仮定形と形容詞",
+      "expected": [
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いえ"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "tohaie_shii",
+      "input": "とはいえ難しい"
+    },
+    {
+      "description": "逆接導入後の仮定形と一般動詞",
+      "expected": [
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いえ"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "tohaie_mu",
+      "input": "とはいえ進む"
+    },
+    {
+      "description": "先行副詞を伴う逆接導入と後続動詞",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いえ"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続ける"
+        }
+      ],
+      "id": "soutohaie_keru",
+      "input": "そうとはいえ続ける"
+    },
+    {
+      "description": "係助詞文脈外のひらがな複合動詞の対照",
+      "expected": [
+        {
+          "lemma": "たべ続ける",
+          "pos": "Verb",
+          "surface": "たべ続ける"
+        }
+      ],
+      "id": "tabe_keru",
+      "input": "たべ続ける"
+    },
+    {
+      "description": "譲歩表現を検索単位へ分割する",
+      "expected": [
+        {
+          "lemma": "いずれ",
+          "pos": "Adverb",
+          "surface": "いずれ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "せよ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "izure_ni_seyo_kakunin_suru",
+      "input": "いずれにせよ確認する"
+    },
+    {
+      "description": "選択接続詞ないしはを一語で解析する",
+      "expected": [
+        {
+          "lemma": "ないしは",
+          "pos": "Conjunction",
+          "surface": "ないしは"
+        },
+        {
+          "lemma": "延期",
+          "pos": "Noun",
+          "surface": "延期"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "naishiha_enki_suru",
+      "input": "ないしは延期する"
+    },
+    {
+      "description": "接続詞かつのひらがなlemmaを保持する",
+      "expected": [
+        {
+          "lemma": "かつ",
+          "pos": "Conjunction",
+          "surface": "かつ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "katsu_kakunin_suru",
+      "input": "かつ確認する"
+    },
+    {
+      "description": "談話接続詞なおを副詞と区別する",
+      "expected": [
+        {
+          "lemma": "なお",
+          "pos": "Conjunction",
+          "surface": "なお"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "nao_kakunin_ga_hitsuyou_da",
+      "input": "なお確認が必要だ"
+    },
+    {
+      "description": "譲歩的な話題転換接続詞ともあれを一語で解析する",
+      "expected": [
+        {
+          "lemma": "ともあれ",
+          "pos": "Conjunction",
+          "surface": "ともあれ"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始める"
+        }
+      ],
+      "id": "tomoare_concessive_conjunction",
+      "input": "ともあれ始める"
+    },
+    {
+      "description": "話題を保留する慣用連用形さておきを一語で解析する",
+      "expected": [
+        {
+          "lemma": "さておく",
+          "pos": "Verb",
+          "surface": "さておき"
+        },
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sateoki_fixed_renyokei",
+      "input": "さておき説明する"
+    },
+    {
+      "description": "対比接続語「一方」の品詞を接続詞として維持する",
+      "expected": [
+        {
+          "lemma": "一方",
+          "pos": "Conjunction",
+          "surface": "一方"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ippou_contrastive_conjunction_pos",
+      "input": "一方で進める"
+    },
+    {
+      "description": "談話接続語「なお」を接続詞として解析する",
+      "expected": [
+        {
+          "lemma": "なお",
+          "pos": "Conjunction",
+          "surface": "なお"
+        },
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nao_discourse_conjunction_pos",
+      "input": "なお説明する"
+    },
+    {
+      "description": "ひらがな表記の接続詞は入力表記をlemmaとして保持する",
+      "expected": [
+        {
+          "lemma": "したがって",
+          "pos": "Conjunction",
+          "surface": "したがって"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "conjunction_shitagatte_surface_lemma",
+      "input": "したがって進む"
+    },
+    {
+      "description": "そうすると結果が変わる - auto-generated",
+      "expected": [
+        {
+          "lemma": "そうすると",
+          "pos": "Conjunction",
+          "surface": "そうすると"
+        },
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わる"
+        }
+      ],
+      "id": "sousuruto_ga_waru",
+      "input": "そうすると結果が変わる"
+    },
+    {
+      "description": "とすれば簡単だ - regression test",
+      "expected": [
+        {
+          "lemma": "とすれば",
+          "pos": "Conjunction",
+          "surface": "とすれば"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "tosureba_da",
+      "input": "とすれば簡単だ"
+    },
+    {
+      "description": "とすれば問題ない - regression test",
+      "expected": [
+        {
+          "lemma": "とすれば",
+          "pos": "Conjunction",
+          "surface": "とすれば"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "tosureba_nai",
+      "input": "とすれば問題ない"
     }
   ],
   "description": "conjunction tests",

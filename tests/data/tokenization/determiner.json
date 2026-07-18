@@ -1,0 +1,109 @@
+{
+  "cases": [
+    {
+      "description": "程度を強調する連体表現あまりのを一語で解析する",
+      "expected": [
+        {
+          "lemma": "あまりの",
+          "pos": "Determiner",
+          "surface": "あまりの"
+        },
+        {
+          "lemma": "暑い",
+          "pos": "Adjective",
+          "surface": "暑"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "驚く",
+          "pos": "Verb",
+          "surface": "驚く"
+        }
+      ],
+      "id": "amarino_degree_determiner",
+      "input": "あまりの暑さに驚く"
+    },
+    {
+      "description": "大した問題ではない - auto-generated",
+      "expected": [
+        {
+          "lemma": "大した",
+          "pos": "Determiner",
+          "surface": "大した"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shita_dehanai",
+      "input": "大した問題ではない"
+    },
+    {
+      "description": "単なる誤解だ - auto-generated",
+      "expected": [
+        {
+          "lemma": "単なる",
+          "pos": "Determiner",
+          "surface": "単なる"
+        },
+        {
+          "lemma": "誤解",
+          "pos": "Noun",
+          "surface": "誤解"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "naru_da",
+      "input": "単なる誤解だ"
+    },
+    {
+      "description": "大いなる希望 - auto-generated",
+      "expected": [
+        {
+          "lemma": "大いなる",
+          "pos": "Determiner",
+          "surface": "大いなる"
+        },
+        {
+          "lemma": "希望",
+          "pos": "Noun",
+          "surface": "希望"
+        }
+      ],
+      "id": "inaru",
+      "input": "大いなる希望"
+    }
+  ],
+  "description": "determiner tests",
+  "version": "1.0"
+}

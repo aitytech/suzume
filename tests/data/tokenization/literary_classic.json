@@ -170,8 +170,8 @@
           "surface": "お"
         },
         {
-          "lemma": "読み",
-          "pos": "Noun",
+          "lemma": "読む",
+          "pos": "Verb",
           "surface": "読み"
         },
         {
@@ -717,10 +717,6 @@
       "input": "吾輩は猫である。名前はまだ無い。"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma diff: 事 lemma こと(MeCab) vs 事(Suzume)"
-      },
       "description": "芥川・羅生門冒頭風",
       "expected": [
         {
@@ -765,49 +761,7 @@
         }
       ],
       "id": "aru_no_no_dearu",
-      "input": "ある日の暮方の事である。",
-      "suzume_expected": [
-        {
-          "lemma": "ある",
-          "pos": "Determiner",
-          "surface": "ある"
-        },
-        {
-          "lemma": "日",
-          "pos": "Noun",
-          "surface": "日"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "暮方",
-          "pos": "Noun",
-          "surface": "暮方"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "こと",
-          "pos": "Noun",
-          "surface": "事"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        }
-      ]
+      "input": "ある日の暮方の事である。"
     },
     {
       "description": "漱石・草枕風 - 生まれて ichidan + 長い複文",
@@ -1507,10 +1461,6 @@
       "input": "彼の功績は枚挙に暇がないほどである。"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma/POS diff: よう/で"
-      },
       "description": "文語副詞あたかも+かのような",
       "expected": [
         {
@@ -1580,74 +1530,7 @@
         }
       ],
       "id": "atakamo_kara_metakanoyouna_chideattta",
-      "input": "あたかも夢から覚めたかのような心持ちであった。",
-      "suzume_expected": [
-        {
-          "lemma": "あたかも",
-          "pos": "Adverb",
-          "surface": "あたかも"
-        },
-        {
-          "lemma": "夢",
-          "pos": "Noun",
-          "surface": "夢"
-        },
-        {
-          "lemma": "から",
-          "pos": "Particle",
-          "surface": "から"
-        },
-        {
-          "lemma": "覚める",
-          "pos": "Verb",
-          "surface": "覚め"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "よう",
-          "pos": "Noun",
-          "surface": "よう"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "心持ち",
-          "pos": "Noun",
-          "surface": "心持ち"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "あたかも夢から覚めたかのような心持ちであった。"
     },
     {
       "description": "体言止め - na形容詞+であった",
@@ -1744,10 +1627,6 @@
       "input": "月が煌々と照らす夜道を一人歩いた。"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma diff: taru-adj lemma difference"
-      },
       "description": "漢語+として副詞 - kango-toshite-split正規化",
       "expected": [
         {
@@ -1817,74 +1696,7 @@
         }
       ],
       "id": "ha_toshite_wo_eyoutoshinakattta",
-      "input": "彼は依然として態度を変えようとしなかった。",
-      "suzume_expected": [
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "依然",
-          "pos": "Adverb",
-          "surface": "依然と"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "態度",
-          "pos": "Noun",
-          "surface": "態度"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "変える",
-          "pos": "Verb",
-          "surface": "変えよ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "彼は依然として態度を変えようとしなかった。"
     },
     {
       "description": "sahen verb + ざる classical negative split",
@@ -2883,10 +2695,6 @@
       "input": "喜怒哀楽を表に出さぬ人物であった。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS limitation"
-      },
       "description": "なかろう split (negative volitional)",
       "expected": [
         {
@@ -2921,45 +2729,9 @@
         }
       ],
       "id": "soudehanakarouka",
-      "input": "そうではなかろうか。",
-      "suzume_expected": [
-        {
-          "lemma": "そう",
-          "pos": "Adjective",
-          "surface": "そう"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかろ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ]
+      "input": "そうではなかろうか。"
     },
     {
-      "accepted_diff": {
-        "category": "grammatical-ambiguity",
-        "reason": "「困難」は格助詞「に」の前で名詞としても形容動詞語幹としても成立する。Suzumeは独立した検索単位の裸の語幹をNounへ統一する。"
-      },
       "description": "いかなる determiner + 屈せず + べきである",
       "expected": [
         {
@@ -3019,64 +2791,7 @@
         }
       ],
       "id": "ikanaru_nimo_sezu_subekidearu",
-      "input": "いかなる困難にも屈せず前進すべきである。",
-      "suzume_expected": [
-        {
-          "lemma": "いかなる",
-          "pos": "Determiner",
-          "surface": "いかなる"
-        },
-        {
-          "lemma": "困難",
-          "pos": "Noun",
-          "surface": "困難"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "屈する",
-          "pos": "Verb",
-          "surface": "屈せ"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ず"
-        },
-        {
-          "lemma": "前進",
-          "pos": "Noun",
-          "surface": "前進"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "す"
-        },
-        {
-          "lemma": "べし",
-          "pos": "Auxiliary",
-          "surface": "べき"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        }
-      ]
+      "input": "いかなる困難にも屈せず前進すべきである。"
     },
     {
       "description": "ビジネス敬語多重化",
@@ -3585,10 +3300,6 @@
       "input": "涙ながらに語る彼女の姿は、誰の心をも打った。"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "文語: あたかも + かのような simile pattern",
       "expected": [
         {
@@ -3658,80 +3369,9 @@
         }
       ],
       "id": "atakamo_kara_metakanoyouna_deattta",
-      "input": "あたかも夢から覚めたかのような心地であった。",
-      "suzume_expected": [
-        {
-          "lemma": "あたかも",
-          "pos": "Adverb",
-          "surface": "あたかも"
-        },
-        {
-          "lemma": "夢",
-          "pos": "Noun",
-          "surface": "夢"
-        },
-        {
-          "lemma": "から",
-          "pos": "Particle",
-          "surface": "から"
-        },
-        {
-          "lemma": "覚める",
-          "pos": "Verb",
-          "surface": "覚め"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "よう",
-          "pos": "Noun",
-          "surface": "よう"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "心地",
-          "pos": "Noun",
-          "surface": "心地"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "あたかも夢から覚めたかのような心地であった。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "文語: 遠く as adj renyokei, POS diff Noun/Verb",
       "expected": [
         {
@@ -3776,43 +3416,7 @@
         }
       ],
       "id": "eba_kuhe_tamonoda",
-      "input": "思えば遠くへ来たものだ。",
-      "suzume_expected": [
-        {
-          "lemma": "思う",
-          "pos": "Verb",
-          "surface": "思え"
-        },
-        {
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "pos": "Verb",
-          "surface": "遠く"
-        },
-        {
-          "pos": "Particle",
-          "surface": "へ"
-        },
-        {
-          "lemma": "来る",
-          "pos": "Verb",
-          "surface": "来"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ]
+      "input": "思えば遠くへ来たものだ。"
     },
     {
       "description": "使役受身: 行か+さ+れ+た causative-passive chain",
@@ -4001,10 +3605,6 @@
       "input": "古来より伝わる風習を守り続けてきた村がある。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "使役+てやる: やり POS diff (Verb vs Aux)",
       "expected": [
         {
@@ -4059,58 +3659,9 @@
         }
       ],
       "id": "tachini_wo_maseteyaritai",
-      "input": "子供たちに本を読ませてやりたい。",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "子供"
-        },
-        {
-          "pos": "Suffix",
-          "surface": "たち"
-        },
-        {
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ま"
-        },
-        {
-          "lemma": "せる",
-          "pos": "Auxiliary",
-          "surface": "せ"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "やる",
-          "pos": "Verb",
-          "surface": "やり"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "たい"
-        }
-      ]
+      "input": "子供たちに本を読ませてやりたい。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "体言止め: 困難 Noun(suzume) vs Adj(mecab) before を",
       "expected": [
         {
@@ -4175,59 +3726,7 @@
         }
       ],
       "id": "no_wo_ri_etekita_tachino",
-      "input": "幾多の困難を乗り越えてきた先人たちの知恵。",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "幾多"
-        },
-        {
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "pos": "Noun",
-          "surface": "困難"
-        },
-        {
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "乗り越える",
-          "pos": "Verb",
-          "surface": "乗り越え"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "き"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "pos": "Noun",
-          "surface": "先人"
-        },
-        {
-          "pos": "Suffix",
-          "surface": "たち"
-        },
-        {
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "pos": "Noun",
-          "surface": "知恵"
-        }
-      ]
+      "input": "幾多の困難を乗り越えてきた先人たちの知恵。"
     },
     {
       "description": "論説調: 講じる+べき+である formal pattern",
@@ -4393,49 +3892,14 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
       "id": "jite_sarerumonodehanai",
-      "input": "断じて許されるものではない。",
-      "suzume_expected": [
-        {
-          "pos": "Adverb",
-          "surface": "断じて"
-        },
-        {
-          "pos": "Verb",
-          "surface": "許さ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "れる"
-        },
-        {
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "pos": "Adjective",
-          "surface": "ない"
-        }
-      ]
+      "input": "断じて許されるものではない。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "論説: がたい POS diff (Adj vs Other)",
       "expected": [
         {
@@ -4475,38 +3939,7 @@
         }
       ],
       "id": "nagara_sono_ha_ke_regatai",
-      "input": "遺憾ながら、その提案は受け入れがたい。",
-      "suzume_expected": [
-        {
-          "pos": "Adjective",
-          "surface": "遺憾"
-        },
-        {
-          "pos": "Particle",
-          "surface": "ながら"
-        },
-        {
-          "pos": "Determiner",
-          "surface": "その"
-        },
-        {
-          "pos": "Noun",
-          "surface": "提案"
-        },
-        {
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "受け入れる",
-          "pos": "Verb",
-          "surface": "受け入れ"
-        },
-        {
-          "pos": "Other",
-          "surface": "がたい"
-        }
-      ]
+      "input": "遺憾ながら、その提案は受け入れがたい。"
     },
     {
       "description": "文語: およそ POS diff, 得る Aux/Verb diff",
@@ -4556,10 +3989,6 @@
       "input": "およそ人間の想像し得る限りにおいて。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "美し(adj-stem as noun) and がたい(compound adj suffix) POS limitations; たる/さ now correct"
-      },
       "description": "文語: たるや pattern, がたい suffix, POS diffs",
       "expected": [
         {
@@ -4609,54 +4038,7 @@
         }
       ],
       "id": "sono_shisataruya_ni_kushigatai",
-      "input": "その美しさたるや、筆舌に尽くしがたい。",
-      "suzume_expected": [
-        {
-          "lemma": "その",
-          "pos": "Determiner",
-          "surface": "その"
-        },
-        {
-          "lemma": "美し",
-          "pos": "Noun",
-          "surface": "美し"
-        },
-        {
-          "lemma": "さ",
-          "pos": "Suffix",
-          "surface": "さ"
-        },
-        {
-          "lemma": "たり",
-          "pos": "Auxiliary",
-          "surface": "たる"
-        },
-        {
-          "lemma": "や",
-          "pos": "Particle",
-          "surface": "や"
-        },
-        {
-          "lemma": "筆舌",
-          "pos": "Noun",
-          "surface": "筆舌"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "尽くす",
-          "pos": "Verb",
-          "surface": "尽くし"
-        },
-        {
-          "lemma": "がたい",
-          "pos": "Other",
-          "surface": "がたい"
-        }
-      ]
+      "input": "その美しさたるや、筆舌に尽くしがたい。"
     },
     {
       "description": "文語: 怒り/発し POS diff, てはならぬ prohibition",
@@ -4847,10 +4229,6 @@
       "input": "恥の多い生涯を送ってきました。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "芥川風: ような simile, と clause connector. POS diff よう(Noun/Aux)",
       "expected": [
         {
@@ -4930,77 +4308,9 @@
         }
       ],
       "id": "no_ga_waruto_ha_ruyouna_de_ttta",
-      "input": "老婆の話が終わると、下人は嘲るような声で言った。",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "老婆"
-        },
-        {
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "pos": "Noun",
-          "surface": "話"
-        },
-        {
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "pos": "Verb",
-          "surface": "終わる"
-        },
-        {
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "pos": "Noun",
-          "surface": "下人"
-        },
-        {
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "pos": "Verb",
-          "surface": "嘲る"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "よう"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "pos": "Noun",
-          "surface": "声"
-        },
-        {
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "言う",
-          "pos": "Verb",
-          "surface": "言っ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "老婆の話が終わると、下人は嘲るような声で言った。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "太宰: て POS diff (Particle/Aux)",
       "expected": [
         {
@@ -5020,23 +4330,7 @@
         }
       ],
       "id": "maretesumimasen",
-      "input": "生まれてすみません。",
-      "suzume_expected": [
-        {
-          "lemma": "生まれる",
-          "pos": "Verb",
-          "surface": "生まれ"
-        },
-        {
-          "lemma": "てる",
-          "pos": "Auxiliary",
-          "surface": "て"
-        },
-        {
-          "pos": "Interjection",
-          "surface": "すみません"
-        }
-      ]
+      "input": "生まれてすみません。"
     },
     {
       "description": "四字熟語: 異口同音 as single kanji compound",
@@ -5086,10 +4380,6 @@
       "input": "異口同音に賛成の声が上がった。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation: surfaces match, POS classification differs from MeCab"
-      },
       "description": "がたい suffix POS diff (Adj/Other)",
       "expected": [
         {
@@ -5149,64 +4439,7 @@
         }
       ],
       "id": "no_ha_shigataimonodeattta",
-      "input": "彼の行動は理解しがたいものであった。",
-      "suzume_expected": [
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "行動",
-          "pos": "Noun",
-          "surface": "行動"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "理解",
-          "pos": "Noun",
-          "surface": "理解"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "がたい",
-          "pos": "Other",
-          "surface": "がたい"
-        },
-        {
-          "lemma": "もの",
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "彼の行動は理解しがたいものであった。"
     },
     {
       "description": "四字熟語+まさに: boundary test for hiragana adverb after は",
@@ -5286,6 +4519,327 @@
       ],
       "id": "tarubeki_ni_eru",
       "input": "来たるべき日に備える"
+    },
+    {
+      "description": "文語否定連用形と過去助動詞を分割する",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "ikazarikeri",
+      "input": "行かざりけり"
+    },
+    {
+      "description": "過去推量助動詞を一語として解析する",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行き"
+        },
+        {
+          "lemma": "けむ",
+          "pos": "Auxiliary",
+          "surface": "けむ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "ikikemu_to_omou",
+      "input": "行きけむと思う"
+    },
+    {
+      "description": "現在推量助動詞らむを終止形から分割する",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "らむ",
+          "pos": "Auxiliary",
+          "surface": "らむ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "ikuramu_to_omou",
+      "input": "行くらむと思う"
+    },
+    {
+      "description": "文語完了助動詞たりを連用形から分割する",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行き"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たり"
+        }
+      ],
+      "id": "ikitari",
+      "input": "行きたり"
+    },
+    {
+      "description": "文語存続助動詞りを已然形から分割する",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行け"
+        },
+        {
+          "lemma": "り",
+          "pos": "Auxiliary",
+          "surface": "り"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "ikeri_to_kiku",
+      "input": "行けりと聞く"
+    },
+    {
+      "description": "Literary interrogative adverb いかで remains whole before a verb",
+      "expected": [
+        {
+          "lemma": "いかで",
+          "pos": "Adverb",
+          "surface": "いかで"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知る"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        }
+      ],
+      "id": "ikade_literary_adverb",
+      "input": "いかで知るべき"
+    },
+    {
+      "description": "Classical desiderative まほしき splits into a verb stem, auxiliary, and attributive adjective",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "まほし",
+          "pos": "Auxiliary",
+          "surface": "ま"
+        },
+        {
+          "lemma": "ほしい",
+          "pos": "Adjective",
+          "surface": "ほしき"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        }
+      ],
+      "id": "mahoshiki_classical_desiderative",
+      "input": "見まほしきもの"
+    },
+    {
+      "description": "Classical honorific auxiliary たまふ splits into the inflectional components た, ま, and ふ",
+      "expected": [
+        {
+          "lemma": "知らせる",
+          "pos": "Verb",
+          "surface": "知らせ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "たまふ",
+          "pos": "Auxiliary",
+          "surface": "ま"
+        },
+        {
+          "lemma": "たまふ",
+          "pos": "Auxiliary",
+          "surface": "ふ"
+        }
+      ],
+      "id": "tamafu_classical_honorific_auxiliary",
+      "input": "知らせたまふ"
+    },
+    {
+      "description": "Classical honorific verb retains verbal POS after prefix",
+      "expected": [
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "はする",
+          "pos": "Verb",
+          "surface": "はす"
+        }
+      ],
+      "id": "ohasu_classical_honorific_verb",
+      "input": "人おはす"
+    },
+    {
+      "description": "Classical terminal verb component retains POS and lemma",
+      "expected": [
+        {
+          "lemma": "かく",
+          "pos": "Adverb",
+          "surface": "かく"
+        },
+        {
+          "lemma": "候",
+          "pos": "Noun",
+          "surface": "候"
+        },
+        {
+          "lemma": "ふる",
+          "pos": "Verb",
+          "surface": "ふ"
+        }
+      ],
+      "id": "sourou_classical_terminal_verb",
+      "input": "かく候ふ"
+    },
+    {
+      "description": "Classical adversative conjunction retains inflectional stem boundary",
+      "expected": [
+        {
+          "lemma": "しかる",
+          "pos": "Verb",
+          "surface": "しかれ"
+        },
+        {
+          "lemma": "ども",
+          "pos": "Particle",
+          "surface": "ども"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続ける"
+        }
+      ],
+      "id": "shikaredomo_classical_adversative",
+      "input": "しかれども続ける"
+    },
+    {
+      "description": "あらん限り努力する - auto-generated",
+      "expected": [
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あら"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        },
+        {
+          "lemma": "限り",
+          "pos": "Noun",
+          "surface": "限り"
+        },
+        {
+          "lemma": "努力",
+          "pos": "Noun",
+          "surface": "努力"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "aran_ri_suru",
+      "input": "あらん限り努力する"
+    },
+    {
+      "description": "文語否定助動詞「ぬ」と形式名詞「まま」の境界を維持する",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "まま",
+          "pos": "Noun",
+          "surface": "まま"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "ikanu_mama_classical_negative_boundary",
+      "input": "行かぬまま進む"
     }
   ],
   "description": "literary_classic tests",

@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "description": "名詞複合の後の格助詞にを分割する",
+      "expected": [
+        {
+          "lemma": "事実",
+          "pos": "Noun",
+          "surface": "事実"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "基づく",
+          "pos": "Verb",
+          "surface": "基づく"
+        },
+        {
+          "lemma": "判断",
+          "pos": "Noun",
+          "surface": "判断"
+        }
+      ],
+      "id": "jijitsu_ni_motozuku",
+      "input": "事実に基づく判断"
+    }
+  ],
+  "description": "noun_particle tests",
+  "version": "1.0"
+}

@@ -112,10 +112,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "character speech: ã§ copula and ããã classification"
-      },
       "description": "Samurai pronoun 拙者 - MeCab shows 拙者 as NOUN not PRON",
       "expected": [
         {
@@ -146,28 +142,6 @@
       ],
       "id": "pronoun_sessha",
       "input": "拙者は侍でござる",
-      "suzume_expected": [
-        {
-          "pos": "Pronoun",
-          "surface": "拙者"
-        },
-        {
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "pos": "Noun",
-          "surface": "侍"
-        },
-        {
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "pos": "Verb",
-          "surface": "ござる"
-        }
-      ],
       "tags": [
         "character_speech",
         "samurai",
@@ -549,6 +523,305 @@
       ],
       "id": "darekairu",
       "input": "だれかいる"
+    },
+    {
+      "description": "Distributive pronoun before suru noun",
+      "expected": [
+        {
+          "lemma": "各々",
+          "pos": "Noun",
+          "surface": "各々"
+        },
+        {
+          "lemma": "判断",
+          "pos": "Noun",
+          "surface": "判断"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "onoonyudan_suru",
+      "input": "各々判断する"
+    },
+    {
+      "description": "Distributive pronoun before past suru noun",
+      "expected": [
+        {
+          "lemma": "各々",
+          "pos": "Noun",
+          "surface": "各々"
+        },
+        {
+          "lemma": "判断",
+          "pos": "Noun",
+          "surface": "判断"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "onoonyudan_shita",
+      "input": "各々判断した"
+    },
+    {
+      "description": "Pronoun plus adjectival rashii",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        },
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        }
+      ],
+      "id": "sorerashii_setsumei",
+      "input": "それらしい説明"
+    },
+    {
+      "description": "Personal pronoun plus adjectival rashii",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        },
+        {
+          "lemma": "態度",
+          "pos": "Noun",
+          "surface": "態度"
+        }
+      ],
+      "id": "karerashii_taido",
+      "input": "彼らしい態度"
+    },
+    {
+      "description": "総括副詞と動詞連用形を分割する",
+      "expected": [
+        {
+          "lemma": "何もかも",
+          "pos": "Adverb",
+          "surface": "何もかも"
+        },
+        {
+          "lemma": "忘れる",
+          "pos": "Verb",
+          "surface": "忘れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nanimokamo_wasureta",
+      "input": "何もかも忘れた"
+    },
+    {
+      "description": "疑問代名詞の品詞とlemmaを保持する",
+      "expected": [
+        {
+          "lemma": "どれ",
+          "pos": "Pronoun",
+          "surface": "どれ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ぶ"
+        }
+      ],
+      "id": "dore_wo_erabu",
+      "input": "どれを選ぶ"
+    },
+    {
+      "description": "疑問代名詞誰を一般名詞と区別する",
+      "expected": [
+        {
+          "lemma": "誰",
+          "pos": "Pronoun",
+          "surface": "誰"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来る"
+        }
+      ],
+      "id": "dare_ga_kuru",
+      "input": "誰が来る"
+    },
+    {
+      "description": "疑問代名詞なにと比較助詞よりの境界を保持する",
+      "expected": [
+        {
+          "lemma": "なに",
+          "pos": "Pronoun",
+          "surface": "なに"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "大切",
+          "pos": "Adjective",
+          "surface": "大切"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "naniyori_pronoun_comparison",
+      "input": "なにより大切だ"
+    },
+    {
+      "description": "敬語の疑問代名詞「どなた」を代名詞として解析する",
+      "expected": [
+        {
+          "lemma": "どなた",
+          "pos": "Pronoun",
+          "surface": "どなた"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "donata_honorific_interrogative_pronoun",
+      "input": "どなたですか"
+    },
+    {
+      "description": "場所指示語「そこかしこ」の後半を代名詞として解析する",
+      "expected": [
+        {
+          "lemma": "そこ",
+          "pos": "Pronoun",
+          "surface": "そこ"
+        },
+        {
+          "lemma": "かしこ",
+          "pos": "Pronoun",
+          "surface": "かしこ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "sokokashiko_medial_locative_demonstrative",
+      "input": "そこかしこにある"
+    },
+    {
+      "description": "どれほどのことか - regression test",
+      "expected": [
+        {
+          "lemma": "どれほど",
+          "pos": "Adverb",
+          "surface": "どれほど"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "dorehodonokotoka",
+      "input": "どれほどのことか"
+    },
+    {
+      "description": "どれほどの差があるか - regression test",
+      "expected": [
+        {
+          "lemma": "どれほど",
+          "pos": "Adverb",
+          "surface": "どれほど"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "差",
+          "pos": "Noun",
+          "surface": "差"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "dorehodono_gaaruka",
+      "input": "どれほどの差があるか"
     }
   ],
   "description": "Pronouns",

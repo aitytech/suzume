@@ -1,0 +1,246 @@
+{
+  "cases": [
+    {
+      "description": "文語完了たりの後に過去助動詞けりが続く",
+      "expected": [
+        {
+          "lemma": "語る",
+          "pos": "Verb",
+          "surface": "語り"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "classical_tari_keri_perfect_past_chain",
+      "input": "語りたりけり"
+    },
+    {
+      "description": "文語比況助動詞ごとしを補助動詞として解析する",
+      "expected": [
+        {
+          "lemma": "鳥",
+          "pos": "Noun",
+          "surface": "鳥"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ごとし",
+          "pos": "Auxiliary",
+          "surface": "ごとし"
+        }
+      ],
+      "id": "classical_gotoshi_similitude_auxiliary",
+      "input": "鳥のごとし"
+    },
+    {
+      "description": "行かじ - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "じ",
+          "pos": "Auxiliary",
+          "surface": "じ"
+        }
+      ],
+      "id": "kaji",
+      "input": "行かじ"
+    },
+    {
+      "description": "あらじ - regression test",
+      "expected": [
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あら"
+        },
+        {
+          "lemma": "じ",
+          "pos": "Auxiliary",
+          "surface": "じ"
+        }
+      ],
+      "id": "araji",
+      "input": "あらじ"
+    },
+    {
+      "description": "そうであれ続ける - regression test",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あれ"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続ける"
+        }
+      ],
+      "id": "soudeare_keru",
+      "input": "そうであれ続ける"
+    },
+    {
+      "description": "何であれ続行する - regression test",
+      "expected": [
+        {
+          "lemma": "何",
+          "pos": "Pronoun",
+          "surface": "何"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あれ"
+        },
+        {
+          "lemma": "続行",
+          "pos": "Noun",
+          "surface": "続行"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "deare_suru",
+      "input": "何であれ続行する"
+    },
+    {
+      "description": "そうならぬように - regression test",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        }
+      ],
+      "id": "sounaranuyouni",
+      "input": "そうならぬように"
+    },
+    {
+      "description": "問題にならぬ - regression test",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "ninaranu",
+      "input": "問題にならぬ"
+    },
+    {
+      "description": "行くまじき行為 - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "まじ",
+          "pos": "Auxiliary",
+          "surface": "まじき"
+        },
+        {
+          "lemma": "行為",
+          "pos": "Noun",
+          "surface": "行為"
+        }
+      ],
+      "id": "kumajiki",
+      "input": "行くまじき行為"
+    },
+    {
+      "description": "許すまじき行動 - regression test",
+      "expected": [
+        {
+          "lemma": "許す",
+          "pos": "Verb",
+          "surface": "許す"
+        },
+        {
+          "lemma": "まじ",
+          "pos": "Auxiliary",
+          "surface": "まじき"
+        },
+        {
+          "lemma": "行動",
+          "pos": "Noun",
+          "surface": "行動"
+        }
+      ],
+      "id": "sumajiki",
+      "input": "許すまじき行動"
+    }
+  ],
+  "description": "auxiliary_classical tests",
+  "version": "1.0"
+}

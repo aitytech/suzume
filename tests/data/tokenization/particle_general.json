@@ -1,0 +1,197 @@
+{
+  "cases": [
+    {
+      "description": "格助詞までの内部で名詞化しない",
+      "expected": [
+        {
+          "lemma": "最後",
+          "pos": "Noun",
+          "surface": "最後"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "諦める",
+          "pos": "Verb",
+          "surface": "諦め"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "saigo_made_akiramenai",
+      "input": "最後まで諦めない"
+    },
+    {
+      "description": "複合助詞の内部から複合動詞を生成しない",
+      "expected": [
+        {
+          "lemma": "最初",
+          "pos": "Noun",
+          "surface": "最初"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "やり直す",
+          "pos": "Verb",
+          "surface": "やり直す"
+        }
+      ],
+      "id": "saisho_kara_yarinaosu",
+      "input": "最初からやり直す"
+    },
+    {
+      "description": "Quoted final particle pair retains particle POS and lemma",
+      "expected": [
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "な",
+          "pos": "Particle",
+          "surface": "な"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "kana_quoted_final_particle_pair",
+      "input": "かなと思う"
+    },
+    {
+      "description": "Quoted interrogative final particle retains its lexical boundary",
+      "expected": [
+        {
+          "lemma": "かしら",
+          "pos": "Particle",
+          "surface": "かしら"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "kashira_quoted_final_particle",
+      "input": "かしらと思う"
+    },
+    {
+      "description": "Quoted long final particle retains its boundary",
+      "expected": [
+        {
+          "lemma": "なあ",
+          "pos": "Particle",
+          "surface": "なあ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "naa_quoted_final_particle",
+      "input": "なあと思う"
+    },
+    {
+      "description": "Quoted vocative final particle retains its boundary",
+      "expected": [
+        {
+          "lemma": "ねえ",
+          "pos": "Particle",
+          "surface": "ねえ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "呼ぶ",
+          "pos": "Verb",
+          "surface": "呼ぶ"
+        }
+      ],
+      "id": "nee_quoted_final_particle",
+      "input": "ねえと呼ぶ"
+    },
+    {
+      "description": "Colloquial adverbial particle retains its lexical boundary",
+      "expected": [
+        {
+          "lemma": "なんか",
+          "pos": "Other",
+          "surface": "なんか"
+        },
+        {
+          "lemma": "変",
+          "pos": "Adjective",
+          "surface": "変"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "nanka_colloquial_adverbial_particle",
+      "input": "なんか変だ"
+    },
+    {
+      "description": "一度きりの機会 - auto-generated",
+      "expected": [
+        {
+          "lemma": "一度",
+          "pos": "Noun",
+          "surface": "一度"
+        },
+        {
+          "lemma": "きり",
+          "pos": "Particle",
+          "surface": "きり"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "機会",
+          "pos": "Noun",
+          "surface": "機会"
+        }
+      ],
+      "id": "kirino",
+      "input": "一度きりの機会"
+    }
+  ],
+  "description": "particle_general tests",
+  "version": "1.0"
+}

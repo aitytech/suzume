@@ -153,10 +153,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "お嬢様 split as お+嬢+様 without user dict"
-      },
       "description": "Ojou-sama speech ですわ",
       "expected": [
         {
@@ -177,28 +173,6 @@
       ],
       "id": "character_desuwa",
       "input": "お嬢様ですわ",
-      "suzume_expected": [
-        {
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "pos": "Noun",
-          "surface": "嬢"
-        },
-        {
-          "pos": "Noun",
-          "surface": "様"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "です"
-        },
-        {
-          "pos": "Particle",
-          "surface": "わ"
-        }
-      ],
       "tags": [
         "character_speech",
         "ojousama"
@@ -628,10 +602,6 @@
       "input": "でございます"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "そう POS Adjective vs Adverb: pre-existing 様態そう ambiguity; segmentation is correct"
-      },
       "description": "そうでございます - auto-generated",
       "expected": [
         {
@@ -656,35 +626,9 @@
         }
       ],
       "id": "soudegozaimasu",
-      "input": "そうでございます",
-      "suzume_expected": [
-        {
-          "lemma": "そう",
-          "pos": "Adjective",
-          "surface": "そう"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ござる",
-          "pos": "Auxiliary",
-          "surface": "ござい"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ]
+      "input": "そうでございます"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "で locative-Particle vs copula-Auxiliary ambiguity after a noun; segmentation is correct"
-      },
       "description": "ここでございます - auto-generated",
       "expected": [
         {
@@ -709,35 +653,9 @@
         }
       ],
       "id": "kokodegozaimasu",
-      "input": "ここでございます",
-      "suzume_expected": [
-        {
-          "lemma": "ここ",
-          "pos": "Pronoun",
-          "surface": "ここ"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "ござる",
-          "pos": "Verb",
-          "surface": "ござい"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ]
+      "input": "ここでございます"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "かね (かねる 補助動詞) POS Verb vs Auxiliary is the known 非自立-verb→Auxiliary deferred class; surface segmentation is correct"
-      },
       "description": "Humble いたし + modal subsidiary かね stays segmented (no fake i-adjective)",
       "expected": [
         {
@@ -762,35 +680,9 @@
         }
       ],
       "id": "itashikanemasu",
-      "input": "対応いたしかねます",
-      "suzume_expected": [
-        {
-          "lemma": "対応",
-          "pos": "Noun",
-          "surface": "対応"
-        },
-        {
-          "lemma": "いたす",
-          "pos": "Verb",
-          "surface": "いたし"
-        },
-        {
-          "lemma": "かねる",
-          "pos": "Verb",
-          "surface": "かね"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ]
+      "input": "対応いたしかねます"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "かね (かねる 補助動詞) POS Verb vs Auxiliary is the known 非自立-verb→Auxiliary deferred class; surface segmentation is correct"
-      },
       "description": "サ変 し + modal subsidiary かね (not しか+ね)",
       "expected": [
         {
@@ -815,29 +707,7 @@
         }
       ],
       "id": "shikanemasu",
-      "input": "賛成しかねます",
-      "suzume_expected": [
-        {
-          "lemma": "賛成",
-          "pos": "Noun",
-          "surface": "賛成"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "かねる",
-          "pos": "Verb",
-          "surface": "かね"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ]
+      "input": "賛成しかねます"
     },
     {
       "description": "ご確認いただけますれば幸甚です - regression test",
@@ -1015,9 +885,14 @@
       "description": "読まれまして - auto-generated",
       "expected": [
         {
-          "lemma": "読まれる",
+          "lemma": "読む",
           "pos": "Verb",
-          "surface": "読まれ"
+          "surface": "読ま"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
         },
         {
           "lemma": "ます",
@@ -1037,9 +912,14 @@
       "description": "書かれまして - auto-generated",
       "expected": [
         {
-          "lemma": "書かれる",
+          "lemma": "書く",
           "pos": "Verb",
-          "surface": "書かれ"
+          "surface": "書か"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
         },
         {
           "lemma": "ます",
@@ -1344,6 +1224,60 @@
       ],
       "id": "mimasenka_kimasenka_bemasenka_mimasen_kimasen_bemasen_mimasendeshita_kimasendeshita_bemasendeshita",
       "input": "読みませんか、書きませんか、食べませんか。読みません、書きません、食べません。読みませんでした、書きませんでした、食べませんでした。"
+    },
+    {
+      "description": "Polite existential followed by conjectural copula",
+      "expected": [
+        {
+          "lemma": "ござる",
+          "pos": "Verb",
+          "surface": "ござい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "でしょ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "gozaimasu_deshouka",
+      "input": "ございますでしょうか"
+    },
+    {
+      "description": "受益補助動詞いただくの音便形を接続助詞と分割する",
+      "expected": [
+        {
+          "lemma": "いただく",
+          "pos": "Verb",
+          "surface": "いただい"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "itadaiteiru_humble_onbin",
+      "input": "いただいている"
     }
   ],
   "description": "Politeness auxiliaries (ます、です)",

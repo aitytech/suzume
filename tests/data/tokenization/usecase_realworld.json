@@ -1310,10 +1310,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "で in では: Suzume=copula(だ), MeCab=Particle. Both valid; Suzume's interpretation is acceptable"
-      },
       "description": "Academic paper style",
       "expected": [
         {
@@ -1359,48 +1355,6 @@
       ],
       "id": "complex_academic_paper",
       "input": "本研究では新しい手法を提案する",
-      "suzume_expected": [
-        {
-          "lemma": "本研究",
-          "pos": "Noun",
-          "surface": "本研究"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "新しい",
-          "pos": "Adjective",
-          "surface": "新しい"
-        },
-        {
-          "lemma": "手法",
-          "pos": "Noun",
-          "surface": "手法"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "提案",
-          "pos": "Noun",
-          "surface": "提案"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
       "tags": [
         "complex",
         "academic"

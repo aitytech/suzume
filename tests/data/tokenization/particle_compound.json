@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "description": "指示に従って行う - regression test",
+      "expected": [
+        {
+          "lemma": "指示",
+          "pos": "Noun",
+          "surface": "指示"
+        },
+        {
+          "lemma": "に従って",
+          "pos": "Particle",
+          "surface": "に従って"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "ni_ttte_u",
+      "input": "指示に従って行う"
+    },
+    {
+      "description": "規則に従って進める - regression test",
+      "expected": [
+        {
+          "lemma": "規則",
+          "pos": "Noun",
+          "surface": "規則"
+        },
+        {
+          "lemma": "に従って",
+          "pos": "Particle",
+          "surface": "に従って"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_ttte_meru",
+      "input": "規則に従って進める"
+    }
+  ],
+  "description": "particle_compound tests",
+  "version": "1.0"
+}

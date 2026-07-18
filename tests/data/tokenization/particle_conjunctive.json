@@ -43,10 +43,6 @@
       "input": "議論を重ねつつ結論を出す"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ある (progressive 補助動詞) POS Auxiliary vs Verb is the known 非自立-verb deferred class; the つつ surface split is correct"
-      },
       "description": "サ変 し + つつ + ある progressive (increase in progress)",
       "expected": [
         {
@@ -81,39 +77,7 @@
         }
       ],
       "id": "ha_shitsutsuaru",
-      "input": "人口は増加しつつある",
-      "suzume_expected": [
-        {
-          "lemma": "人口",
-          "pos": "Noun",
-          "surface": "人口"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "増加",
-          "pos": "Noun",
-          "surface": "増加"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "つつ",
-          "pos": "Particle",
-          "surface": "つつ"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Auxiliary",
-          "surface": "ある"
-        }
-      ]
+      "input": "人口は増加しつつある"
     },
     {
       "description": "鼻音便テ形の後に主題助詞が続く条件表現",
@@ -135,7 +99,7 @@
         },
         {
           "lemma": "いける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いけ"
         },
         {
@@ -160,7 +124,7 @@
         },
         {
           "lemma": "いける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いけ"
         },
         {
@@ -185,7 +149,7 @@
         },
         {
           "lemma": "いける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いけ"
         },
         {
@@ -210,7 +174,7 @@
         },
         {
           "lemma": "いける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いけ"
         },
         {
@@ -712,6 +676,77 @@
       ],
       "id": "concessive_toiedo_quotative_potential",
       "input": "本といえども読む、水といえども読む、紙といえども読む、本といえども書く、高いといえども読む、静かといえども読む。本といえど読む。"
+    },
+    {
+      "description": "副詞後の引用助詞と係助詞を分割する",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "言える",
+          "pos": "Verb",
+          "surface": "言える"
+        }
+      ],
+      "id": "sou_to_mo_ieru",
+      "input": "そうとも言える"
+    },
+    {
+      "description": "逆接のもののを接続助詞として解析する",
+      "expected": [
+        {
+          "lemma": "ものの",
+          "pos": "Particle",
+          "surface": "ものの"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "particle_monono_concessive",
+      "input": "ものの難しい"
+    },
+    {
+      "description": "副詞そうに続くならばを接続助詞列として解析する",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "particle_sou_naraba_conditional_sequence",
+      "input": "そうならば進む"
     }
   ],
   "description": "particle_conjunctive tests",

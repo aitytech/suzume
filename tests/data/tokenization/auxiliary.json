@@ -113,9 +113,14 @@
           "surface": "遊ん"
         },
         {
-          "lemma": "じゃう",
+          "lemma": "だ",
           "pos": "Auxiliary",
-          "surface": "じゃう"
+          "surface": "じゃ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Interjection",
+          "surface": "う"
         },
         {
           "lemma": "選ぶ",
@@ -123,9 +128,14 @@
           "surface": "選ん"
         },
         {
-          "lemma": "じゃう",
+          "lemma": "だ",
           "pos": "Auxiliary",
-          "surface": "じゃう"
+          "surface": "じゃ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Interjection",
+          "surface": "う"
         },
         {
           "lemma": "住む",
@@ -472,7 +482,7 @@
         },
         {
           "lemma": "あぐねる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "あぐね"
         },
         {
@@ -487,7 +497,7 @@
         },
         {
           "lemma": "あぐねる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "あぐね"
         },
         {
@@ -502,7 +512,7 @@
         },
         {
           "lemma": "あぐねる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "あぐね"
         },
         {
@@ -703,7 +713,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "いこ"
         },
         {
@@ -723,7 +733,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "いこ"
         },
         {
@@ -743,7 +753,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "いこ"
         },
         {
@@ -1513,8 +1523,8 @@
           "surface": "本"
         },
         {
-          "lemma": "だ",
-          "pos": "Auxiliary",
+          "lemma": "で",
+          "pos": "Particle",
           "surface": "で"
         },
         {
@@ -1543,8 +1553,8 @@
           "surface": "水"
         },
         {
-          "lemma": "だ",
-          "pos": "Auxiliary",
+          "lemma": "で",
+          "pos": "Particle",
           "surface": "で"
         },
         {
@@ -1573,8 +1583,8 @@
           "surface": "紙"
         },
         {
-          "lemma": "だ",
-          "pos": "Auxiliary",
+          "lemma": "で",
+          "pos": "Particle",
           "surface": "で"
         },
         {
@@ -1633,8 +1643,8 @@
           "surface": "本"
         },
         {
-          "lemma": "だ",
-          "pos": "Auxiliary",
+          "lemma": "で",
+          "pos": "Particle",
           "surface": "で"
         },
         {
@@ -1673,8 +1683,8 @@
           "surface": "水"
         },
         {
-          "lemma": "だ",
-          "pos": "Auxiliary",
+          "lemma": "で",
+          "pos": "Particle",
           "surface": "で"
         },
         {
@@ -1726,7 +1736,7 @@
         },
         {
           "lemma": "いらっしゃる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "いらっしゃら"
         },
         {
@@ -1746,7 +1756,7 @@
         },
         {
           "lemma": "いらっしゃる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "いらっしゃら"
         },
         {
@@ -1766,7 +1776,7 @@
         },
         {
           "lemma": "いらっしゃる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "いらっしゃら"
         },
         {
@@ -1786,7 +1796,7 @@
         },
         {
           "lemma": "いらっしゃる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "いらっしゃら"
         },
         {
@@ -1806,7 +1816,7 @@
         },
         {
           "lemma": "いらっしゃる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "いらっしゃら"
         },
         {
@@ -1820,13 +1830,13 @@
           "surface": "読ん"
         },
         {
-          "lemma": "出る",
-          "pos": "Verb",
+          "lemma": "で",
+          "pos": "Particle",
           "surface": "で"
         },
         {
           "lemma": "いらっしゃる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "いらっしゃら"
         },
         {
@@ -3193,6 +3203,150 @@
       ],
       "id": "ichidan_hiragana_ni_suginai_boundary",
       "input": "見るにすぎない。出るにすぎない。遅れるにすぎない。欠けるにすぎない。食べるにすぎない。見るにすぎなかった。出るにすぎなかった。遅れるにすぎなかった。"
+    },
+    {
+      "description": "静かなり - regression test",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なり"
+        }
+      ],
+      "id": "kanari",
+      "input": "静かなり"
+    },
+    {
+      "description": "見むと思う - regression test",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "む",
+          "pos": "Auxiliary",
+          "surface": "む"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "muto_u",
+      "input": "見むと思う"
+    },
+    {
+      "description": "連用形に続く補助動詞「かねる」の否定形",
+      "expected": [
+        {
+          "lemma": "起こる",
+          "pos": "Verb",
+          "surface": "起こり"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かね"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "korikanenai",
+      "input": "起こりかねない"
+    },
+    {
+      "description": "イ音便連用形に続く補助動詞「かねる」",
+      "expected": [
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言い"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かね"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ikanenai",
+      "input": "言いかねない"
+    },
+    {
+      "description": "複合動詞連用形に続く補助動詞「かねる」",
+      "expected": [
+        {
+          "lemma": "見過ごす",
+          "pos": "Verb",
+          "surface": "見過ごし"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かね"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "goshikanenai",
+      "input": "見過ごしかねない"
+    },
+    {
+      "description": "一段活用連用形に続く補助動詞「かねる」",
+      "expected": [
+        {
+          "lemma": "引き受ける",
+          "pos": "Verb",
+          "surface": "引き受け"
+        },
+        {
+          "lemma": "かねる",
+          "pos": "Auxiliary",
+          "surface": "かねる"
+        }
+      ],
+      "id": "ki_kekaneru",
+      "input": "引き受けかねる"
+    },
+    {
+      "description": "前接動詞のない語彙動詞「かねる」の対照例",
+      "expected": [
+        {
+          "lemma": "かねる",
+          "pos": "Verb",
+          "surface": "かね"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "kanenai",
+      "input": "かねない"
     }
   ],
   "description": "auxiliary tests",

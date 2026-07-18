@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "description": "口語否定を含む慣用複合を一単位にする",
+      "expected": [
+        {
+          "lemma": "知らん顔",
+          "pos": "Noun",
+          "surface": "知らん顔"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "shirankao_wo_suru",
+      "input": "知らん顔をする"
+    }
+  ],
+  "description": "fixed_phrase tests",
+  "version": "1.0"
+}

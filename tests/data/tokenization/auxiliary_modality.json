@@ -1,10 +1,6 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "BOS penalty changes old kana ã interpretation"
-      },
       "description": "ゐる - old kana",
       "expected": [
         {
@@ -15,12 +11,6 @@
       ],
       "id": "special_old_kana",
       "input": "ゐる",
-      "suzume_expected": [
-        {
-          "pos": "Other",
-          "surface": "ゐる"
-        }
-      ],
       "tags": [
         "basic",
         "special-char"
@@ -136,10 +126,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "ããã: dialect lemma ãã vs ã ã"
-      },
       "description": "Elderly speech じゃろう",
       "expected": [
         {
@@ -160,21 +146,6 @@
       ],
       "id": "character_jarou",
       "input": "そうじゃろう",
-      "suzume_expected": [
-        {
-          "pos": "Adjective",
-          "surface": "そう"
-        },
-        {
-          "lemma": "だろ",
-          "pos": "Auxiliary",
-          "surface": "じゃろ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "う"
-        }
-      ],
       "tags": [
         "character_speech",
         "elderly"
@@ -940,10 +911,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã¦: particle vs auxiliary - context-dependent"
-      },
       "description": "Colloquial ておく contraction といて with ichidan verb (見といて) - MeCab: とく conjugated",
       "expected": [
         {
@@ -964,22 +931,6 @@
       ],
       "id": "aux_toku_ichidan_te",
       "input": "見といて",
-      "suzume_expected": [
-        {
-          "lemma": "見る",
-          "pos": "Verb",
-          "surface": "見"
-        },
-        {
-          "lemma": "とく",
-          "pos": "Auxiliary",
-          "surface": "とい"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "て"
-        }
-      ],
       "tags": [
         "auxiliary",
         "colloquial",
@@ -1149,10 +1100,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "ã§: lemma ã§ã vs åºã (hiragana vs kanji)"
-      },
       "description": "でたい - MeCab-compatible split: で(VERB でる) + たい(AUX)",
       "expected": [
         {
@@ -1168,17 +1115,6 @@
       ],
       "id": "hiragana_verb_detai",
       "input": "でたい",
-      "suzume_expected": [
-        {
-          "lemma": "でる",
-          "pos": "Verb",
-          "surface": "で"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "たい"
-        }
-      ],
       "tags": [
         "hiragana_verb",
         "desiderative"
@@ -1288,10 +1224,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ãªã: adjective vs auxiliary - context-dependent"
-      },
       "description": "ないんだ should split into 2 tokens",
       "expected": [
         {
@@ -1312,21 +1244,6 @@
       ],
       "id": "nai_nda_split",
       "input": "ないんだ",
-      "suzume_expected": [
-        {
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "ん"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
       "tags": [
         "auxiliary",
         "nda"

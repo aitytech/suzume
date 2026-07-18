@@ -38,10 +38,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Archaic kuruwa-kotoba: ã treated as particle ã® instead of auxiliary"
-      },
       "description": "Kuruwa-kotoba ありんす",
       "expected": [
         {
@@ -72,31 +68,6 @@
       ],
       "id": "kuruwa_arinsu",
       "input": "ここにありんす",
-      "suzume_expected": [
-        {
-          "pos": "Pronoun",
-          "surface": "ここ"
-        },
-        {
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あり"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "ん"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "す"
-        }
-      ],
       "tags": [
         "character_speech",
         "kuruwa"
@@ -144,10 +115,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "character speech: ã§ copula and ã²ã½ ending classification"
-      },
       "description": "Squid character でゲソ",
       "expected": [
         {
@@ -178,29 +145,6 @@
       ],
       "id": "character_geso",
       "input": "吾輩は猫でゲソ",
-      "suzume_expected": [
-        {
-          "pos": "Pronoun",
-          "surface": "吾輩"
-        },
-        {
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "pos": "Noun",
-          "surface": "猫"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "pos": "Particle",
-          "surface": "ゲソ"
-        }
-      ],
       "tags": [
         "character_speech",
         "squid"
@@ -1107,10 +1051,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "金がない should be split as 金 + が + ない",
       "expected": [
         {
@@ -1131,20 +1071,6 @@
       ],
       "id": "particle_filter_kane_ga_nai",
       "input": "金がない",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "金"
-        },
-        {
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "pos": "Adjective",
-          "surface": "ない"
-        }
-      ],
       "tags": [
         "particle",
         "filter"
@@ -2097,6 +2023,488 @@
       ],
       "id": "case_particle_sura_negative",
       "input": "本にすらない、水にすらない、紙にすらない、本にすらなく、水にすらなく、本すらない、本にすらある"
+    },
+    {
+      "description": "比較表現「にもまして」の格助詞・係助詞境界",
+      "expected": [
+        {
+          "lemma": "以前",
+          "pos": "Noun",
+          "surface": "以前"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "まして",
+          "pos": "Conjunction",
+          "surface": "まして"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "nimomashite_da",
+      "input": "以前にもまして重要だ"
+    },
+    {
+      "description": "代名詞に続く比較表現「にもまして」",
+      "expected": [
+        {
+          "lemma": "誰",
+          "pos": "Pronoun",
+          "surface": "誰"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "まして",
+          "pos": "Conjunction",
+          "surface": "まして"
+        },
+        {
+          "lemma": "優れる",
+          "pos": "Verb",
+          "surface": "優れる"
+        }
+      ],
+      "id": "nimomashite_reru",
+      "input": "誰にもまして優れる"
+    },
+    {
+      "description": "疑問代名詞に続く比較表現「にもまして」",
+      "expected": [
+        {
+          "lemma": "何",
+          "pos": "Pronoun",
+          "surface": "何"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "まして",
+          "pos": "Conjunction",
+          "surface": "まして"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "nimomashite_da_2",
+      "input": "何にもまして必要だ"
+    },
+    {
+      "description": "動詞表記「にも増して」の一般化対照",
+      "expected": [
+        {
+          "lemma": "以前",
+          "pos": "Noun",
+          "surface": "以前"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "増す",
+          "pos": "Verb",
+          "surface": "増し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "nimo_shite_da",
+      "input": "以前にも増して重要だ"
+    },
+    {
+      "description": "通常の格助詞「に」＋係助詞「も」の対照",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nimo_shita",
+      "input": "彼にも話した"
+    },
+    {
+      "description": "誰しも知っている - auto-generated",
+      "expected": [
+        {
+          "lemma": "誰",
+          "pos": "Pronoun",
+          "surface": "誰"
+        },
+        {
+          "lemma": "しも",
+          "pos": "Particle",
+          "surface": "しも"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "dareshimo_shitteiru",
+      "input": "誰しも知っている"
+    },
+    {
+      "description": "誰しもが認める - auto-generated",
+      "expected": [
+        {
+          "lemma": "誰",
+          "pos": "Pronoun",
+          "surface": "誰"
+        },
+        {
+          "lemma": "しも",
+          "pos": "Particle",
+          "surface": "しも"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "認める",
+          "pos": "Verb",
+          "surface": "認める"
+        }
+      ],
+      "id": "dareshimoga_mitomeru",
+      "input": "誰しもが認める"
+    },
+    {
+      "description": "しも - auto-generated",
+      "expected": [
+        {
+          "lemma": "しも",
+          "pos": "Particle",
+          "surface": "しも"
+        }
+      ],
+      "id": "shimo_standalone",
+      "input": "しも"
+    },
+    {
+      "description": "どこまでも続く - auto-generated",
+      "expected": [
+        {
+          "lemma": "どこ",
+          "pos": "Pronoun",
+          "surface": "どこ"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続く"
+        }
+      ],
+      "id": "dokomademo_tsuzuku",
+      "input": "どこまでも続く"
+    },
+    {
+      "description": "どこまでも広がる - auto-generated",
+      "expected": [
+        {
+          "lemma": "どこ",
+          "pos": "Pronoun",
+          "surface": "どこ"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "広がる",
+          "pos": "Verb",
+          "surface": "広がる"
+        }
+      ],
+      "id": "dokomademo_hirogaru",
+      "input": "どこまでも広がる"
+    },
+    {
+      "description": "これよりも重要だ - auto-generated",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "koreyorimo_juyouda",
+      "input": "これよりも重要だ"
+    },
+    {
+      "description": "ここからも見える - auto-generated",
+      "expected": [
+        {
+          "lemma": "ここ",
+          "pos": "Pronoun",
+          "surface": "ここ"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "見える",
+          "pos": "Verb",
+          "surface": "見える"
+        }
+      ],
+      "id": "kokokaramo_mieru",
+      "input": "ここからも見える"
+    },
+    {
+      "description": "方向助詞へとを検索単位に分割する",
+      "expected": [
+        {
+          "lemma": "次",
+          "pos": "Noun",
+          "surface": "次"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "次",
+          "pos": "Noun",
+          "surface": "次"
+        },
+        {
+          "lemma": "へ",
+          "pos": "Particle",
+          "surface": "へ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "tsugi_kara_tsugi_e_to_susumu",
+      "input": "次から次へと進む"
+    },
+    {
+      "description": "代名詞に続く限定助詞「だけ」を一語として解析する",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "守る",
+          "pos": "Verb",
+          "surface": "守る"
+        }
+      ],
+      "id": "kore_dake_wa_focus_particle_boundary",
+      "input": "これだけは守る"
+    },
+    {
+      "description": "上限表現の形容詞連用形「多く」と副助詞「とも」を分割する",
+      "expected": [
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多く"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        },
+        {
+          "lemma": "三つ",
+          "pos": "Noun",
+          "surface": "三つ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ooku_tomo_upper_bound_particle_boundary",
+      "input": "多くとも三つだ"
+    },
+    {
+      "description": "程度表現を連体詞・名詞・限定助詞の検索単位で分割する",
+      "expected": [
+        {
+          "lemma": "ほんの",
+          "pos": "Determiner",
+          "surface": "ほんの"
+        },
+        {
+          "lemma": "少し",
+          "pos": "Noun",
+          "surface": "少し"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "残る",
+          "pos": "Verb",
+          "surface": "残る"
+        }
+      ],
+      "id": "honno_sukoshi_dake_degree_boundaries",
+      "input": "ほんの少しだけ残る"
     }
   ],
   "description": "Binding and adverbial particles (は、も、だけ)",

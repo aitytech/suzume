@@ -1,0 +1,126 @@
+{
+  "cases": [
+    {
+      "description": "Inferential auxiliary retains auxiliary POS",
+      "expected": [
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "rashii_conjecture_auxiliary_pos",
+      "input": "らしいと聞く"
+    },
+    {
+      "description": "Classical negative form of inferential auxiliary retains boundary",
+      "expected": [
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしから"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "rashikaranu_conjecture_negative",
+      "input": "らしからぬ話"
+    },
+    {
+      "description": "Obligation auxiliary and copula retain boundary",
+      "expected": [
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "bekida_obligation_copula_boundary",
+      "input": "べきだと思う"
+    },
+    {
+      "description": "Formal copular topic retains rhetorical auxiliary boundary",
+      "expected": [
+        {
+          "lemma": "では",
+          "pos": "Conjunction",
+          "surface": "では"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "まい",
+          "pos": "Auxiliary",
+          "surface": "まい"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "dewaaru_rhetorical_boundary",
+      "input": "ではあるまいか"
+    },
+    {
+      "description": "Colloquial explanatory negative contraction retains auxiliary boundaries",
+      "expected": [
+        {
+          "lemma": "んじゃ",
+          "pos": "Conjunction",
+          "surface": "んじゃ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "njanai_colloquial_contraction",
+      "input": "んじゃないか"
+    }
+  ],
+  "description": "auxiliary_general tests",
+  "version": "1.0"
+}

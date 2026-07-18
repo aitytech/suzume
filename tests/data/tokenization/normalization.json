@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "description": "漢字語前の連続長音を一つに正規化する",
+      "expected": [
+        {
+          "lemma": "長い",
+          "pos": "Adjective",
+          "surface": "長いー"
+        },
+        {
+          "lemma": "音",
+          "pos": "Noun",
+          "surface": "音"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "入力",
+          "pos": "Noun",
+          "surface": "入力"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nagai_choon_on_wo_nyuuryoku_suru",
+      "input": "長いーー音を入力する"
+    }
+  ],
+  "description": "normalization tests",
+  "version": "1.0"
+}

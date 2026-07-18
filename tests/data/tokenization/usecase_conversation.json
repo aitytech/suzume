@@ -35,10 +35,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "è¡ã: auxiliary vs verb in question pattern"
-      },
       "expected": [
         {
           "lemma": "駅",
@@ -83,42 +79,6 @@
       ],
       "id": "conv_directions",
       "input": "駅までどうやって行きますか",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "駅"
-        },
-        {
-          "pos": "Particle",
-          "surface": "まで"
-        },
-        {
-          "pos": "Adjective",
-          "surface": "どう"
-        },
-        {
-          "lemma": "やる",
-          "pos": "Verb",
-          "surface": "やっ"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "行く",
-          "pos": "Verb",
-          "surface": "行き"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "ます"
-        },
-        {
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ],
       "tags": [
         "conversation"
       ]
@@ -483,10 +443,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã©ã: adverb vs adjective before copula"
-      },
       "expected": [
         {
           "lemma": "3時",
@@ -521,32 +477,6 @@
       ],
       "id": "sched_suggestion",
       "input": "3時ごろはどうですか",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "3時"
-        },
-        {
-          "pos": "Other",
-          "surface": "ごろ"
-        },
-        {
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "pos": "Adjective",
-          "surface": "どう"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "です"
-        },
-        {
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ],
       "tags": [
         "schedule"
       ]
@@ -904,10 +834,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "expected": [
         {
           "lemma": "他",
@@ -947,43 +873,6 @@
       ],
       "id": "shop_color",
       "input": "他の色はありますか",
-      "suzume_expected": [
-        {
-          "lemma": "ほか",
-          "pos": "Noun",
-          "surface": "他"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "色",
-          "pos": "Noun",
-          "surface": "色"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あり"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ],
       "tags": [
         "shopping"
       ]
@@ -1144,10 +1033,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "design-difference",
-        "reason": "Suzume intentional design difference from MeCab normalization"
-      },
       "expected": [
         {
           "lemma": "東京",
@@ -1182,43 +1067,6 @@
       ],
       "id": "travel_platform",
       "input": "東京行きは何番線ですか",
-      "suzume_expected": [
-        {
-          "lemma": "東京",
-          "pos": "Noun",
-          "surface": "東京"
-        },
-        {
-          "lemma": "行く",
-          "pos": "Verb",
-          "surface": "行き"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "何",
-          "pos": "Pronoun",
-          "surface": "何"
-        },
-        {
-          "lemma": "番線",
-          "pos": "Noun",
-          "surface": "番線"
-        },
-        {
-          "lemma": "です",
-          "pos": "Auxiliary",
-          "surface": "です"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ],
       "tags": [
         "travel"
       ]

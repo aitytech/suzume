@@ -1,10 +1,6 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "design-difference",
-        "reason": "Suzume intentional design difference from MeCab normalization"
-      },
       "description": "AuxNeg→ParticleConj bonus: ない+のに should not split as ない+の+に",
       "expected": [
         {
@@ -34,40 +30,9 @@
         }
       ],
       "id": "nai_noni_kore",
-      "input": "ないのにこれはおかしい",
-      "suzume_expected": [
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "のに",
-          "pos": "Particle",
-          "surface": "のに"
-        },
-        {
-          "lemma": "これ",
-          "pos": "Pronoun",
-          "surface": "これ"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "おかしい",
-          "pos": "Adjective",
-          "surface": "おかしい"
-        }
-      ]
+      "input": "ないのにこれはおかしい"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "様態そう is grammar-first tagged Auxiliary (documented intentional divergence from MeCab's Adjective). Surface split 危な|そう|だ|から is correct."
-      },
       "description": "危なそうだから逃げた - auto-generated",
       "expected": [
         {
@@ -102,39 +67,7 @@
         }
       ],
       "id": "nasoudakara_geta",
-      "input": "危なそうだから逃げた",
-      "suzume_expected": [
-        {
-          "lemma": "危ない",
-          "pos": "Adjective",
-          "surface": "危な"
-        },
-        {
-          "lemma": "そう",
-          "pos": "Auxiliary",
-          "surface": "そう"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        },
-        {
-          "lemma": "から",
-          "pos": "Particle",
-          "surface": "から"
-        },
-        {
-          "lemma": "逃げる",
-          "pos": "Verb",
-          "surface": "逃げ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "危なそうだから逃げた"
     },
     {
       "description": "静かだから寝る - auto-generated",
@@ -249,6 +182,205 @@
       ],
       "id": "mutotomoni_ku_kutotomoni_mu_berutotomoni_mu_totomoni_kakeru_totomoni_suru",
       "input": "読むとともに書く。書くとともに読む。食べるとともに飲む。家族とともに出かける。成長とともに変化する。"
+    },
+    {
+      "description": "引用動詞「いう」と比較助詞「より」の境界",
+      "expected": [
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "toiuyori_da",
+      "input": "というより簡単だ"
+    },
+    {
+      "description": "引用比較表現とナ形容詞述語",
+      "expected": [
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "toiuyori_da_2",
+      "input": "というより必要だ"
+    },
+    {
+      "description": "引用比較表現とイ形容詞述語",
+      "expected": [
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "toiuyori_shii",
+      "input": "というより難しい"
+    },
+    {
+      "description": "先行名詞を伴う引用比較表現",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "友人",
+          "pos": "Noun",
+          "surface": "友人"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "toiuyori_da_3",
+      "input": "彼というより友人だ"
+    },
+    {
+      "description": "係助詞を伴う引用比較表現",
+      "expected": [
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "toiuyorimo_da",
+      "input": "というよりも必要だ"
+    },
+    {
+      "description": "引用連体詞としての「という」の対照",
+      "expected": [
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        }
+      ],
+      "id": "toiu",
+      "input": "という本"
+    },
+    {
+      "description": "母音開始制約後も保持する四拍擬態副詞の対照",
+      "expected": [
+        {
+          "lemma": "あっさり",
+          "pos": "Adverb",
+          "surface": "あっさり"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "attsari_mu",
+      "input": "あっさり進む"
     }
   ],
   "description": "particle_conj tests",

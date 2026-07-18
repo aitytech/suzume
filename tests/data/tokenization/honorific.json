@@ -1,0 +1,355 @@
+{
+  "cases": [
+    {
+      "description": "尊敬構文の動詞音便を保持する",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "o_yomi_ni_natte_kudasai",
+      "input": "お読みになってください"
+    },
+    {
+      "description": "可能形の尊敬構文のlemmaを復元する",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "利用",
+          "pos": "Noun",
+          "surface": "利用"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なれる",
+          "pos": "Verb",
+          "surface": "なれ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "go_riyou_ni_naremasu",
+      "input": "ご利用になれます"
+    },
+    {
+      "description": "受益敬語の可能形を依存動詞として分類する",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "使い",
+          "pos": "Noun",
+          "surface": "使い"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Verb",
+          "surface": "いただけ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "o_tsukai_itadakemasu",
+      "input": "お使いいただけます"
+    },
+    {
+      "description": "謙譲継続補助動詞を分類する",
+      "expected": [
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "まいる",
+          "pos": "Auxiliary",
+          "surface": "まいり"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "taiou_shite_mairimasu",
+      "input": "対応してまいります"
+    },
+    {
+      "description": "受益動詞を依存動詞として分類する",
+      "expected": [
+        {
+          "lemma": "見せる",
+          "pos": "Verb",
+          "surface": "見せ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くれる",
+          "pos": "Verb",
+          "surface": "くれ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "misete_kurenakatta",
+      "input": "見せてくれなかった"
+    },
+    {
+      "description": "受益補助動詞と丁寧助動詞を接続する",
+      "expected": [
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞か"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "もらえる",
+          "pos": "Auxiliary",
+          "surface": "もらえ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "kikasete_moraemasu_ka",
+      "input": "聞かせてもらえますか"
+    },
+    {
+      "description": "依頼表現のくださいと丁寧助動詞ませを分割する",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ませ"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "kakunin_shite_kudasaimasen_ka",
+      "input": "確認してくださいませんか"
+    },
+    {
+      "description": "Archaic existential mizenkei with causative and polite request",
+      "expected": [
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "いら"
+        },
+        {
+          "lemma": "す",
+          "pos": "Auxiliary",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "irashite_kudasai_classical_causative",
+      "input": "いらしてください"
+    },
+    {
+      "description": "Honorific compound verb with a verified godan base",
+      "expected": [
+        {
+          "lemma": "召し上がる",
+          "pos": "Verb",
+          "surface": "召し上がる"
+        }
+      ],
+      "id": "meshiagaru_honorific_compound",
+      "input": "召し上がる"
+    },
+    {
+      "description": "敬語依頼句のおきに補助動詞おくのlemmaを付与する",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "承知",
+          "pos": "Noun",
+          "surface": "承知"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Verb",
+          "surface": "おき"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "go_shouchi_oki_auxiliary_lemma",
+      "input": "ご承知おきください"
+    },
+    {
+      "description": "敬語複合動詞召し上がりを一語の連用形として解析する",
+      "expected": [
+        {
+          "lemma": "召し上がる",
+          "pos": "Verb",
+          "surface": "召し上がり"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "meshiagari_honorific_renyokei",
+      "input": "召し上がりください"
+    },
+    {
+      "description": "尊敬構文のお聞きを動詞連用形として解析する",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞き"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "o_kiki_ni_naru_honorific_renyokei",
+      "input": "お聞きになる"
+    }
+  ],
+  "description": "honorific tests",
+  "version": "1.0"
+}

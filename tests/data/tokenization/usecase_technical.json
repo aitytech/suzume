@@ -88,10 +88,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "design-difference",
-        "reason": "Suzume intentional design difference from MeCab normalization"
-      },
       "description": "Code review comment - MeCab互換分割",
       "expected": [
         {
@@ -147,68 +143,12 @@
       ],
       "id": "tech_doc_code_review",
       "input": "この関数は複雑すぎるので分割してください",
-      "suzume_expected": [
-        {
-          "lemma": "この",
-          "pos": "Determiner",
-          "surface": "この"
-        },
-        {
-          "lemma": "関数",
-          "pos": "Noun",
-          "surface": "関数"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "複雑",
-          "pos": "Noun",
-          "surface": "複雑"
-        },
-        {
-          "lemma": "すぎる",
-          "pos": "Verb",
-          "surface": "すぎる"
-        },
-        {
-          "lemma": "ので",
-          "pos": "Particle",
-          "surface": "ので"
-        },
-        {
-          "lemma": "分割",
-          "pos": "Noun",
-          "surface": "分割"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くださる",
-          "pos": "Verb",
-          "surface": "ください"
-        }
-      ],
       "tags": [
         "technical",
         "documentation"
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "Documentation specification style",
       "expected": [
         {
@@ -254,41 +194,6 @@
       ],
       "id": "tech_doc_documentation_spec",
       "input": "戻り値は成功時に0を返す",
-      "suzume_expected": [
-        {
-          "lemma": "戻る",
-          "pos": "Verb",
-          "surface": "戻り"
-        },
-        {
-          "pos": "Noun",
-          "surface": "値"
-        },
-        {
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "pos": "Noun",
-          "surface": "成功時"
-        },
-        {
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "pos": "Noun",
-          "surface": "0"
-        },
-        {
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "pos": "Verb",
-          "surface": "返す"
-        }
-      ],
       "tags": [
         "technical",
         "documentation"
@@ -458,10 +363,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "Configuration instruction - MeCab互換分割",
       "expected": [
         {
@@ -512,45 +413,6 @@
       ],
       "id": "tech_doc_configuration",
       "input": "設定ファイルを編集する必要があります",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "設定"
-        },
-        {
-          "pos": "Noun",
-          "surface": "ファイル"
-        },
-        {
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "pos": "Noun",
-          "surface": "編集"
-        },
-        {
-          "pos": "Verb",
-          "surface": "する"
-        },
-        {
-          "pos": "Noun",
-          "surface": "必要"
-        },
-        {
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あり"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
       "tags": [
         "technical",
         "documentation"
@@ -1873,10 +1735,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "Medical consultation",
       "expected": [
         {
@@ -1942,68 +1800,6 @@
       ],
       "id": "medical_consultation",
       "input": "症状が続くようでしたら医師に相談してください",
-      "suzume_expected": [
-        {
-          "lemma": "症状",
-          "pos": "Noun",
-          "surface": "症状"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "続く",
-          "pos": "Verb",
-          "surface": "続く"
-        },
-        {
-          "lemma": "よう",
-          "pos": "Noun",
-          "surface": "よう"
-        },
-        {
-          "lemma": "です",
-          "pos": "Auxiliary",
-          "surface": "でし"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "たら"
-        },
-        {
-          "lemma": "医師",
-          "pos": "Noun",
-          "surface": "医師"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "相談",
-          "pos": "Noun",
-          "surface": "相談"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くださる",
-          "pos": "Verb",
-          "surface": "ください"
-        }
-      ],
       "tags": [
         "medical"
       ]

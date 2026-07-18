@@ -69,10 +69,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ない: adjective vs auxiliary - context-dependent"
-      },
       "description": "ないんだ - ない + んだ should not split as な + いん + だ",
       "expected": [
         {
@@ -93,21 +89,6 @@
       ],
       "id": "contracted_neg_nainda",
       "input": "ないんだ",
-      "suzume_expected": [
-        {
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "ん"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
       "tags": [
         "contraction",
         "auxiliary",
@@ -293,10 +274,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ãã« lemma: ã¬ is grammatically correct (ã is renyokei of ã¬)"
-      },
       "description": "食べずに帰った - auto-generated",
       "expected": [
         {
@@ -321,34 +298,9 @@
         }
       ],
       "id": "bezuni_ttta",
-      "input": "食べずに帰った",
-      "suzume_expected": [
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ずに"
-        },
-        {
-          "lemma": "帰る",
-          "pos": "Verb",
-          "surface": "帰っ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "食べずに帰った"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ãã« lemma: ã¬ is grammatically correct"
-      },
       "description": "話さずに聞く - auto-generated",
       "expected": [
         {
@@ -368,29 +320,9 @@
         }
       ],
       "id": "sazuni_ku",
-      "input": "話さずに聞く",
-      "suzume_expected": [
-        {
-          "lemma": "話す",
-          "pos": "Verb",
-          "surface": "話さ"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ずに"
-        },
-        {
-          "pos": "Verb",
-          "surface": "聞く"
-        }
-      ]
+      "input": "話さずに聞く"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ãã« lemma: ã¬ is grammatically correct"
-      },
       "description": "考えずに - auto-generated",
       "expected": [
         {
@@ -405,25 +337,9 @@
         }
       ],
       "id": "ezuni",
-      "input": "考えずに",
-      "suzume_expected": [
-        {
-          "lemma": "考える",
-          "pos": "Verb",
-          "surface": "考え"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ずに"
-        }
-      ]
+      "input": "考えずに"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ãã« lemma: ã¬ is grammatically correct"
-      },
       "description": "帰らずに済む - auto-generated",
       "expected": [
         {
@@ -443,23 +359,7 @@
         }
       ],
       "id": "razuni_mu",
-      "input": "帰らずに済む",
-      "suzume_expected": [
-        {
-          "lemma": "帰る",
-          "pos": "Verb",
-          "surface": "帰ら"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ずに"
-        },
-        {
-          "pos": "Verb",
-          "surface": "済む"
-        }
-      ]
+      "input": "帰らずに済む"
     },
     {
       "description": "めちゃ楽しい - auto-generated",

@@ -1,0 +1,92 @@
+{
+  "cases": [
+    {
+      "description": "名詞に付く内を接尾辞として扱う",
+      "expected": [
+        {
+          "lemma": "期間",
+          "pos": "Noun",
+          "surface": "期間"
+        },
+        {
+          "lemma": "内",
+          "pos": "Suffix",
+          "surface": "内"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "完了",
+          "pos": "Noun",
+          "surface": "完了"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kikan_nai_temporal_suffix",
+      "input": "期間内に完了する"
+    },
+    {
+      "description": "時点近似のごろを名詞として付与",
+      "expected": [
+        {
+          "lemma": "中旬",
+          "pos": "Noun",
+          "surface": "中旬"
+        },
+        {
+          "lemma": "ごろ",
+          "pos": "Noun",
+          "surface": "ごろ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "届く",
+          "pos": "Verb",
+          "surface": "届く"
+        }
+      ],
+      "id": "goro_approximation_noun",
+      "input": "中旬ごろに届く"
+    },
+    {
+      "description": "年度と終端形式名詞末の境界",
+      "expected": [
+        {
+          "lemma": "年度",
+          "pos": "Noun",
+          "surface": "年度"
+        },
+        {
+          "lemma": "末",
+          "pos": "Noun",
+          "surface": "末"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "処理",
+          "pos": "Noun",
+          "surface": "処理"
+        }
+      ],
+      "id": "nendomatsu_endpoint_formal_noun",
+      "input": "年度末の処理"
+    }
+  ],
+  "description": "noun_suffix tests",
+  "version": "1.0"
+}

@@ -43,6 +43,28 @@
       ],
       "id": "taberu_nda",
       "input": "食べるんだ"
+    },
+    {
+      "description": "何でもいい - regression test",
+      "expected": [
+        {
+          "lemma": "何",
+          "pos": "Pronoun",
+          "surface": "何"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "demoii",
+      "input": "何でもいい"
     }
   ],
   "description": "pattern_auxiliary tests",

@@ -25,7 +25,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -50,7 +50,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -75,7 +75,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
@@ -999,7 +999,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Noun",
+          "pos": "Auxiliary",
           "surface": "よう"
         },
         {
@@ -1034,7 +1034,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Noun",
+          "pos": "Auxiliary",
           "surface": "よう"
         },
         {
@@ -1069,7 +1069,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Noun",
+          "pos": "Auxiliary",
           "surface": "よう"
         },
         {
@@ -1217,9 +1217,14 @@
           "surface": "遅れる"
         },
         {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
         },
         {
           "lemma": "が",
@@ -1237,9 +1242,14 @@
           "surface": "欠ける"
         },
         {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
         },
         {
           "lemma": "が",
@@ -1257,9 +1267,14 @@
           "surface": "起きる"
         },
         {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
         },
         {
           "lemma": "が",
@@ -1277,9 +1292,14 @@
           "surface": "見える"
         },
         {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
         },
         {
           "lemma": "が",
@@ -1297,9 +1317,14 @@
           "surface": "遅れる"
         },
         {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
         },
         {
           "lemma": "は",
@@ -1317,9 +1342,14 @@
           "surface": "欠ける"
         },
         {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
         },
         {
           "lemma": "は",
@@ -1355,7 +1385,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1375,7 +1405,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1395,7 +1425,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1415,7 +1445,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1435,7 +1465,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
@@ -1874,6 +1904,220 @@
       ],
       "id": "ndeiruaidani_ku_iteiruaidani_mu_beteiruaidani_mu_iteiruuchini_mu_beteiruuchini_mu",
       "input": "読んでいるあいだに書く。書いているあいだに読む。食べているあいだに飲む。書いているうちに読む。食べているうちに飲む。"
+    },
+    {
+      "description": "同じではない - regression test",
+      "expected": [
+        {
+          "lemma": "同じ",
+          "pos": "Determiner",
+          "surface": "同じ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "jidehanai",
+      "input": "同じではない"
+    },
+    {
+      "description": "古語否定と形式名詞ふりを分割する",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "ふり",
+          "pos": "Noun",
+          "surface": "ふり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "minu_furi_wo_suru",
+      "input": "見ぬふりをする"
+    },
+    {
+      "description": "名詞に続く因果表現の形式名詞ゆえを分割する",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "ゆえ",
+          "pos": "Suffix",
+          "surface": "ゆえ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "遅れる",
+          "pos": "Verb",
+          "surface": "遅れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "yue_causal_formal_noun",
+      "input": "雨ゆえに遅れた"
+    },
+    {
+      "description": "恩恵原因表現を接頭辞おと形式名詞かげに分割する",
+      "expected": [
+        {
+          "lemma": "努力",
+          "pos": "Noun",
+          "surface": "努力"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "かげ",
+          "pos": "Noun",
+          "surface": "かげ"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "成功",
+          "pos": "Noun",
+          "surface": "成功"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "okage_honorific_formal_noun",
+      "input": "努力のおかげで成功した"
+    },
+    {
+      "description": "文語的な形式名詞いかんを条件表現で解析する",
+      "expected": [
+        {
+          "lemma": "いかん",
+          "pos": "Noun",
+          "surface": "いかん"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "かかわる",
+          "pos": "Verb",
+          "surface": "かかわら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "ikan_literary_formal_noun",
+      "input": "いかんにかかわらず進む"
+    },
+    {
+      "description": "名詞に続く形式名詞「途中」を複合期間語として統合する",
+      "expected": [
+        {
+          "lemma": "作業途中",
+          "pos": "Noun",
+          "surface": "作業途中"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "止める",
+          "pos": "Verb",
+          "surface": "止める"
+        }
+      ],
+      "id": "sagyo_tochu_bound_temporal_compound",
+      "input": "作業途中で止める"
+    },
+    {
+      "description": "代替を表す「代わり」を名詞として解析する",
+      "expected": [
+        {
+          "lemma": "代わり",
+          "pos": "Noun",
+          "surface": "代わり"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "kawari_replacement_noun_pos",
+      "input": "代わりに使う"
     }
   ],
   "description": "formal_noun tests",

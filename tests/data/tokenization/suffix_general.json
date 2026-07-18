@@ -132,10 +132,6 @@
       "input": "彼は遅刻しがちだが今日は元気だ"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "大事 形状詞 POS Noun vs Adjective is a pre-existing na-adjectival-noun limitation; the やすさ surface is correct"
-      },
       "description": "補助形容詞やすい語幹 + さ nominalizer (not や+す+さ)",
       "expected": [
         {
@@ -170,39 +166,7 @@
         }
       ],
       "id": "iyasusaga_da",
-      "input": "使いやすさが大事だ",
-      "suzume_expected": [
-        {
-          "lemma": "使う",
-          "pos": "Verb",
-          "surface": "使い"
-        },
-        {
-          "lemma": "やすい",
-          "pos": "Adjective",
-          "surface": "やす"
-        },
-        {
-          "lemma": "さ",
-          "pos": "Suffix",
-          "surface": "さ"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "大事",
-          "pos": "Noun",
-          "surface": "大事"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ]
+      "input": "使いやすさが大事だ"
     },
     {
       "description": "1日おき - regression test",
@@ -510,6 +474,28 @@
       ],
       "id": "miburiwo_ru_kiburiwo_ru_beburiwo_ru",
       "input": "読みぶりを見る。書きぶりを見る。食べぶりを見る。"
+    },
+    {
+      "description": "サ変連用形とやすいの接続を保持する",
+      "expected": [
+        {
+          "lemma": "検索",
+          "pos": "Noun",
+          "surface": "検索"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "やすい",
+          "pos": "Adjective",
+          "surface": "やすい"
+        }
+      ],
+      "id": "kensaku_shiyasui",
+      "input": "検索しやすい"
     }
   ],
   "description": "suffix_general tests",

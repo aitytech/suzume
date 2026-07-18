@@ -105,10 +105,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-policy",
-        "reason": "Potential verb 行ける lemmatizes to its base verb 行く (search-unit policy); MeCab keeps 行ける"
-      },
       "description": "Wonder particle かな",
       "expected": [
         {
@@ -129,23 +125,6 @@
       ],
       "id": "sentence_ending_kana",
       "input": "行けるかな",
-      "suzume_expected": [
-        {
-          "lemma": "行く",
-          "pos": "Verb",
-          "surface": "行ける"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        },
-        {
-          "lemma": "な",
-          "pos": "Particle",
-          "surface": "な"
-        }
-      ],
       "tags": [
         "particle",
         "sentence_ending"
@@ -325,6 +304,62 @@
       ],
       "id": "koredeiinokana",
       "input": "これでいいのかな"
+    },
+    {
+      "description": "終助詞さをサ変未然形と区別する",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Particle",
+          "surface": "さ"
+        }
+      ],
+      "id": "sentence_ending_sa",
+      "input": "行くさ"
+    },
+    {
+      "description": "副詞に続く終助詞ねを保持する",
+      "expected": [
+        {
+          "lemma": "まさか",
+          "pos": "Adverb",
+          "surface": "まさか"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "masaka_ne",
+      "input": "まさかね"
+    },
+    {
+      "description": "Stacked sentence-ending particles ぜ and よ",
+      "expected": [
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やる"
+        },
+        {
+          "lemma": "ぜ",
+          "pos": "Particle",
+          "surface": "ぜ"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "sentence_ending_ze_yo",
+      "input": "やるぜよ"
     }
   ],
   "description": "Sentence-ending particles (ね、よ、な)",

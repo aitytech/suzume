@@ -888,10 +888,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "URL-like mixed content",
       "expected": [
         {
@@ -927,35 +923,6 @@
       ],
       "id": "number_url_like",
       "input": "example.comで登録してください",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "example.com"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "pos": "Noun",
-          "surface": "登録"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くださる",
-          "pos": "Verb",
-          "surface": "ください"
-        }
-      ],
       "tags": [
         "number_special"
       ]

@@ -17,10 +17,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "lemma/POS normalization differences"
-      },
       "description": "あ - single hiragana",
       "expected": [
         {
@@ -31,12 +27,6 @@
       ],
       "id": "edge_single_hiragana",
       "input": "あ",
-      "suzume_expected": [
-        {
-          "pos": "Other",
-          "surface": "あ"
-        }
-      ],
       "tags": [
         "basic",
         "edge-case"
@@ -190,10 +180,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "あるいは should be CONJ, not ADJ+は split - MeCab uses かも as single particle",
       "expected": [
         {
@@ -214,23 +200,6 @@
       ],
       "id": "conj_aruiha",
       "input": "あるいは違うかも",
-      "suzume_expected": [
-        {
-          "lemma": "或いは",
-          "pos": "Conjunction",
-          "surface": "あるいは"
-        },
-        {
-          "lemma": "違う",
-          "pos": "Verb",
-          "surface": "違う"
-        },
-        {
-          "lemma": "かも",
-          "pos": "Particle",
-          "surface": "かも"
-        }
-      ],
       "tags": [
         "conjunction",
         "split_prevention"
@@ -581,6 +550,57 @@
       ],
       "id": "wochi_ntoyaru",
       "input": "宿題をちゃんとやる"
+    },
+    {
+      "description": "何らかの方法 - regression test",
+      "expected": [
+        {
+          "lemma": "何らかの",
+          "pos": "Determiner",
+          "surface": "何らかの"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        }
+      ],
+      "id": "rakano",
+      "input": "何らかの方法"
+    },
+    {
+      "description": "何らかの理由 - regression test",
+      "expected": [
+        {
+          "lemma": "何らかの",
+          "pos": "Determiner",
+          "surface": "何らかの"
+        },
+        {
+          "lemma": "理由",
+          "pos": "Noun",
+          "surface": "理由"
+        }
+      ],
+      "id": "rakano_1",
+      "input": "何らかの理由"
+    },
+    {
+      "description": "何らかの対応 - regression test",
+      "expected": [
+        {
+          "lemma": "何らかの",
+          "pos": "Determiner",
+          "surface": "何らかの"
+        },
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        }
+      ],
+      "id": "rakano_2",
+      "input": "何らかの対応"
     }
   ],
   "description": "Basic tokenization tests",

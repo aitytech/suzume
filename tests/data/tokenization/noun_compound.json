@@ -477,6 +477,104 @@
       ],
       "id": "kikomorigachina",
       "input": "引きこもりがちな生活"
+    },
+    {
+      "description": "時間名詞の朝晩と後続漢字名詞の境界",
+      "expected": [
+        {
+          "lemma": "朝晩",
+          "pos": "Noun",
+          "surface": "朝晩"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "chouban_temporal_noun_boundary",
+      "input": "朝晩確認する"
+    },
+    {
+      "description": "形容動詞語幹と比較語以上からなる複合名詞を一語で解析する",
+      "expected": [
+        {
+          "lemma": "必要以上",
+          "pos": "Noun",
+          "surface": "必要以上"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "hitsuyouijou_comparison_compound",
+      "input": "必要以上に使わない"
+    },
+    {
+      "description": "時間接尾辞時を含む複合名詞を一語で解析する",
+      "expected": [
+        {
+          "lemma": "緊急時",
+          "pos": "Noun",
+          "surface": "緊急時"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "備える",
+          "pos": "Verb",
+          "surface": "備える"
+        }
+      ],
+      "id": "kinkyuji_temporal_compound",
+      "input": "緊急時に備える"
+    },
+    {
+      "description": "Derivational noun suffix 度 keeps 新制度 as one search unit before a case particle",
+      "expected": [
+        {
+          "lemma": "新制度",
+          "pos": "Noun",
+          "surface": "新制度"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "導入",
+          "pos": "Noun",
+          "surface": "導入"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "shinseido_derived_degree_compound",
+      "input": "新制度を導入する"
     }
   ],
   "description": "Compound nouns",

@@ -728,9 +728,14 @@
       "description": "第1回 - regression test",
       "expected": [
         {
-          "lemma": "第1回",
+          "lemma": "第1",
           "pos": "Noun",
-          "surface": "第1回"
+          "surface": "第1"
+        },
+        {
+          "lemma": "回",
+          "pos": "Suffix",
+          "surface": "回"
         }
       ],
       "id": "1",
@@ -740,9 +745,14 @@
       "description": "第10回 - regression test",
       "expected": [
         {
-          "lemma": "第10回",
+          "lemma": "第10",
           "pos": "Noun",
-          "surface": "第10回"
+          "surface": "第10"
+        },
+        {
+          "lemma": "回",
+          "pos": "Suffix",
+          "surface": "回"
         }
       ],
       "id": "10",
@@ -752,9 +762,14 @@
       "description": "第100回 - regression test",
       "expected": [
         {
-          "lemma": "第100回",
+          "lemma": "第100",
           "pos": "Noun",
-          "surface": "第100回"
+          "surface": "第100"
+        },
+        {
+          "lemma": "回",
+          "pos": "Suffix",
+          "surface": "回"
         }
       ],
       "id": "100",
@@ -764,9 +779,14 @@
       "description": "第1章 - regression test",
       "expected": [
         {
-          "lemma": "第1章",
+          "lemma": "第1",
           "pos": "Noun",
-          "surface": "第1章"
+          "surface": "第1"
+        },
+        {
+          "lemma": "章",
+          "pos": "Suffix",
+          "surface": "章"
         }
       ],
       "id": "1_1",
@@ -776,9 +796,14 @@
       "description": "第2部 - regression test",
       "expected": [
         {
-          "lemma": "第2部",
+          "lemma": "第2",
           "pos": "Noun",
-          "surface": "第2部"
+          "surface": "第2"
+        },
+        {
+          "lemma": "部",
+          "pos": "Suffix",
+          "surface": "部"
         }
       ],
       "id": "2",
@@ -788,9 +813,14 @@
       "description": "第3条 - regression test",
       "expected": [
         {
-          "lemma": "第3条",
+          "lemma": "第3",
           "pos": "Noun",
-          "surface": "第3条"
+          "surface": "第3"
+        },
+        {
+          "lemma": "条",
+          "pos": "Suffix",
+          "surface": "条"
         }
       ],
       "id": "3",
@@ -800,9 +830,19 @@
       "description": "第3回目 - regression test",
       "expected": [
         {
-          "lemma": "第3回目",
+          "lemma": "第3",
           "pos": "Noun",
-          "surface": "第3回目"
+          "surface": "第3"
+        },
+        {
+          "lemma": "回",
+          "pos": "Suffix",
+          "surface": "回"
+        },
+        {
+          "lemma": "目",
+          "pos": "Suffix",
+          "surface": "目"
         }
       ],
       "id": "3_1",
@@ -812,9 +852,14 @@
       "description": "第１２回 - regression test",
       "expected": [
         {
-          "lemma": "第12回",
+          "lemma": "第12",
           "pos": "Noun",
-          "surface": "第12回"
+          "surface": "第12"
+        },
+        {
+          "lemma": "回",
+          "pos": "Suffix",
+          "surface": "回"
         }
       ],
       "id": "unnamed_1",
@@ -983,6 +1028,594 @@
       ],
       "id": "quantity_bound_suffixes",
       "input": "二階建て、三階建て、四階建て、二階建ての家、二本立て、三本立て"
+    },
+    {
+      "description": "Temporal counter before suru noun",
+      "expected": [
+        {
+          "lemma": "今",
+          "pos": "Noun",
+          "surface": "今"
+        },
+        {
+          "lemma": "一度",
+          "pos": "Noun",
+          "surface": "一度"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "imaichido_kakunin_suru",
+      "input": "今一度確認する"
+    },
+    {
+      "description": "Temporal counter before past suru noun",
+      "expected": [
+        {
+          "lemma": "今",
+          "pos": "Noun",
+          "surface": "今"
+        },
+        {
+          "lemma": "一度",
+          "pos": "Noun",
+          "surface": "一度"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "imaichido_kakunin_shita",
+      "input": "今一度確認した"
+    },
+    {
+      "description": "Numerator denominator fraction expression",
+      "expected": [
+        {
+          "lemma": "三分の一",
+          "pos": "Noun",
+          "surface": "三分の一"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "sanbunnoichi_tsukau",
+      "input": "三分の一を使う"
+    },
+    {
+      "description": "Numerator denominator fraction expression",
+      "expected": [
+        {
+          "lemma": "四分の三",
+          "pos": "Noun",
+          "surface": "四分の三"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ぶ"
+        }
+      ],
+      "id": "yonbunno_san_erabu",
+      "input": "四分の三を選ぶ"
+    },
+    {
+      "description": "Numerator denominator fraction expression",
+      "expected": [
+        {
+          "lemma": "十分の三",
+          "pos": "Noun",
+          "surface": "十分の三"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "juubunno_san_tsukau",
+      "input": "十分の三を使う"
+    },
+    {
+      "description": "Cardinal before approximate count",
+      "expected": [
+        {
+          "lemma": "百",
+          "pos": "Noun",
+          "surface": "百"
+        },
+        {
+          "lemma": "数人",
+          "pos": "Noun",
+          "surface": "数人"
+        },
+        {
+          "lemma": "集まる",
+          "pos": "Verb",
+          "surface": "集まる"
+        }
+      ],
+      "id": "hyakusuu_nin_atsumaru",
+      "input": "百数人集まる"
+    },
+    {
+      "description": "Cardinal before approximate count",
+      "expected": [
+        {
+          "lemma": "十",
+          "pos": "Noun",
+          "surface": "十"
+        },
+        {
+          "lemma": "数件",
+          "pos": "Noun",
+          "surface": "数件"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "juusuu_ken_aru",
+      "input": "十数件ある"
+    },
+    {
+      "description": "Cardinal before approximate count",
+      "expected": [
+        {
+          "lemma": "十",
+          "pos": "Noun",
+          "surface": "十"
+        },
+        {
+          "lemma": "数名",
+          "pos": "Noun",
+          "surface": "数名"
+        },
+        {
+          "lemma": "参加",
+          "pos": "Noun",
+          "surface": "参加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "juusuu_mei_sanka_suru",
+      "input": "十数名参加する"
+    },
+    {
+      "description": "Edition suffix after ordinal",
+      "expected": [
+        {
+          "lemma": "第3",
+          "pos": "Noun",
+          "surface": "第3"
+        },
+        {
+          "lemma": "版",
+          "pos": "Suffix",
+          "surface": "版"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "dai3han_yomu",
+      "input": "第3版を読む"
+    },
+    {
+      "description": "Edition suffix after ordinal",
+      "expected": [
+        {
+          "lemma": "第三",
+          "pos": "Noun",
+          "surface": "第三"
+        },
+        {
+          "lemma": "版",
+          "pos": "Suffix",
+          "surface": "版"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "daisanhan_yomu",
+      "input": "第三版を読む"
+    },
+    {
+      "description": "Quantity before comparison expression",
+      "expected": [
+        {
+          "lemma": "十倍",
+          "pos": "Noun",
+          "surface": "十倍"
+        },
+        {
+          "lemma": "以上",
+          "pos": "Noun",
+          "surface": "以上"
+        },
+        {
+          "lemma": "増える",
+          "pos": "Verb",
+          "surface": "増える"
+        }
+      ],
+      "id": "juubai_ijou_fueru",
+      "input": "十倍以上増える"
+    },
+    {
+      "description": "Quantity before comparison expression",
+      "expected": [
+        {
+          "lemma": "百倍",
+          "pos": "Noun",
+          "surface": "百倍"
+        },
+        {
+          "lemma": "以上",
+          "pos": "Noun",
+          "surface": "以上"
+        },
+        {
+          "lemma": "増える",
+          "pos": "Verb",
+          "surface": "増える"
+        }
+      ],
+      "id": "hyakubai_ijou_fueru",
+      "input": "百倍以上増える"
+    },
+    {
+      "description": "序数を含む単字複合名詞を一体化する",
+      "expected": [
+        {
+          "lemma": "第一歩",
+          "pos": "Noun",
+          "surface": "第一歩"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏み出す",
+          "pos": "Verb",
+          "surface": "踏み出す"
+        }
+      ],
+      "id": "daiippo_wo_fumidasu",
+      "input": "第一歩を踏み出す"
+    },
+    {
+      "description": "序数と次で始まる後続名詞を分離する",
+      "expected": [
+        {
+          "lemma": "第二",
+          "pos": "Noun",
+          "surface": "第二"
+        },
+        {
+          "lemma": "次計画",
+          "pos": "Suffix",
+          "surface": "次計画"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "作る",
+          "pos": "Verb",
+          "surface": "作る"
+        }
+      ],
+      "id": "daini_jikeikaku_wo_tsukuru",
+      "input": "第二次計画を作る"
+    },
+    {
+      "description": "英数字連結の入力識別子を保持する",
+      "expected": [
+        {
+          "lemma": "ABC123",
+          "pos": "Noun",
+          "surface": "ABC123"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "入力",
+          "pos": "Noun",
+          "surface": "入力"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ascii_alnum_input",
+      "input": "ABC123を入力する"
+    },
+    {
+      "description": "ASCII数字を含む序数と回数接尾辞を分離する",
+      "expected": [
+        {
+          "lemma": "第10",
+          "pos": "Noun",
+          "surface": "第10"
+        },
+        {
+          "lemma": "回",
+          "pos": "Suffix",
+          "surface": "回"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        }
+      ],
+      "id": "dai10kai_no_kaigi",
+      "input": "第10回の会議"
+    },
+    {
+      "description": "かな表記の月助数詞を一体化する",
+      "expected": [
+        {
+          "lemma": "一か月",
+          "pos": "Noun",
+          "surface": "一か月"
+        },
+        {
+          "lemma": "以内",
+          "pos": "Noun",
+          "surface": "以内"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "提出",
+          "pos": "Noun",
+          "surface": "提出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ikkagetsu_inai_ni_teishutsu_suru",
+      "input": "一か月以内に提出する"
+    },
+    {
+      "description": "比較表現の未満を接尾辞に分類する",
+      "expected": [
+        {
+          "lemma": "三個",
+          "pos": "Noun",
+          "surface": "三個"
+        },
+        {
+          "lemma": "未満",
+          "pos": "Suffix",
+          "surface": "未満"
+        }
+      ],
+      "id": "sanko_miman",
+      "input": "三個未満"
+    },
+    {
+      "description": "序数語を名詞として分類する",
+      "expected": [
+        {
+          "lemma": "第一",
+          "pos": "Noun",
+          "surface": "第一"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "daiichi_ni_kakunin_suru",
+      "input": "第一に確認する"
+    },
+    {
+      "description": "反復した数詞カウンタを一語として保持する",
+      "expected": [
+        {
+          "lemma": "一人一人",
+          "pos": "Noun",
+          "surface": "一人一人"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "配る",
+          "pos": "Verb",
+          "surface": "配る"
+        }
+      ],
+      "id": "hitori_hitori_ni_kubaru",
+      "input": "一人一人に配る"
+    },
+    {
+      "description": "Counter boundary before a kanji suru-noun predicate",
+      "expected": [
+        {
+          "lemma": "毎週",
+          "pos": "Noun",
+          "surface": "毎週"
+        },
+        {
+          "lemma": "一回",
+          "pos": "Noun",
+          "surface": "一回"
+        },
+        {
+          "lemma": "実施",
+          "pos": "Noun",
+          "surface": "実施"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "maishuu_ikkai_jisshi_suru",
+      "input": "毎週一回実施する"
+    },
+    {
+      "description": "時分の複合時間量を一つの数量として分割",
+      "expected": [
+        {
+          "lemma": "1時間15分",
+          "pos": "Noun",
+          "surface": "1時間15分"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "compound_duration_hours_minutes",
+      "input": "1時間15分かかる"
+    },
+    {
+      "description": "漢数字と昼夜による複合期間の動詞境界",
+      "expected": [
+        {
+          "lemma": "一昼夜",
+          "pos": "Noun",
+          "surface": "一昼夜"
+        },
+        {
+          "lemma": "かける",
+          "pos": "Verb",
+          "surface": "かけ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "ichuuyoru_duration_boundary",
+      "input": "一昼夜かけて調べる"
+    },
+    {
+      "description": "概数副詞に続く漢数字の時間量を一語で解析する",
+      "expected": [
+        {
+          "lemma": "およそ",
+          "pos": "Adverb",
+          "surface": "およそ"
+        },
+        {
+          "lemma": "三時間",
+          "pos": "Noun",
+          "surface": "三時間"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "oyoso_sanjikan_duration",
+      "input": "およそ三時間かかる"
     }
   ],
   "description": "number_counter tests",
