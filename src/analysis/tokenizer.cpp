@@ -65,6 +65,38 @@ bool hasInterrogativeEndingAt(const dictionary::DictionaryManager& dict_manager,
   return false;
 }
 
+// A lexicalized noun beginning with お/ご can contain a suffix that happens to
+// be a verb form.  Once the lattice has reached that suffix, prefer the whole
+// dictionary noun and do not reopen it as a low-cost verb/auxiliary chain.
+// The verb-tail check is essential: ordinary prefixed nouns such as おかし
+// retain their independently searchable prefix + noun analysis.
+bool startsHonorificPrefixedNounWithVerbTail(const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                             const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                             size_t start_pos) {
+  if (start_pos == 0 || !grammar::isHonorificPrefix(extractSubstring(codepoints, start_pos - 1, start_pos))) {
+    return false;
+  }
+
+  const size_t prefix_pos = start_pos - 1;
+  const size_t prefix_byte_pos = byteOffsetAt(byte_offsets, prefix_pos);
+  for (const auto& result : dict_manager.lookup(text, prefix_byte_pos)) {
+    if (result.entry == nullptr || result.entry->pos != core::PartOfSpeech::Noun || result.length <= 1) {
+      continue;
+    }
+
+    const size_t noun_end = prefix_pos + result.length;
+    if (noun_end <= start_pos || noun_end > codepoints.size()) {
+      continue;
+    }
+
+    const std::string verb_tail = extractSubstring(codepoints, start_pos, noun_end);
+    if (dict_manager.lookupExact(verb_tail, core::PartOfSpeech::Verb) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 Tokenizer::Tokenizer(const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
@@ -140,16 +172,26 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 
   // Lookup in dictionary
   auto results = dict_manager_.lookup(text, byte_pos);
+  const bool suppress_prefixed_noun_interior =
+      startsHonorificPrefixedNounWithVerbTail(dict_manager_, text, codepoints, byte_offsets, start_pos);
 
   size_t longest_conjunction = 0;
+  size_t longest_interjection = 0;
   for (const auto& result : results) {
     if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Conjunction) {
       longest_conjunction = std::max(longest_conjunction, result.length);
+    }
+    if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Interjection) {
+      longest_interjection = std::max(longest_interjection, result.length);
     }
   }
 
   for (const auto& result : results) {
     if (result.entry == nullptr) {
+      continue;
+    }
+
+    if (suppress_prefixed_noun_interior) {
       continue;
     }
 
@@ -212,6 +254,14 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       continue;
     }
 
+    // The contrastive nominal construction のでは keeps the nominalizer,
+    // copular connective, and topic particle independently searchable.  The
+    // causal compound particle ので cannot consume its initial two morae.
+    if (result.entry->extended_pos == core::ExtendedPOS::ParticleConj &&
+        grammar::isCausalParticleBeforeTopic(result.entry->surface, text.substr(byteOffsetAt(byte_offsets, end_pos)))) {
+      continue;
+    }
+
     // Skip a dictionary adjective ending in double い when its final い is the
     // leading い of the receptive auxiliary いただく: the adjective reading
     // would fuse a wa-row renyokei's い with the auxiliary's onset
@@ -235,6 +285,18 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 
     // Cost is now derived from ExtendedPOS via getCategoryCost()
     float cost = analysis::getCategoryCost(result.entry->extended_pos);
+
+    if (result.entry->pos == core::PartOfSpeech::Noun && result.length >= 2 &&
+        grammar::isAllKanji(result.entry->surface)) {
+      cost += candidate::kVerifiedMultiCharacterNounBonus;
+      flags |= core::LatticeEdge::kHasCustomCost;
+    }
+
+    if (result.entry->extended_pos == core::ExtendedPOS::PronounInterrogative &&
+        result.length >= longest_interjection) {
+      cost += candidate::kInterrogativePronounBonus;
+      flags |= core::LatticeEdge::kHasCustomCost;
+    }
 
     if (result.entry->pos == core::PartOfSpeech::Verb &&
         result.entry->extended_pos == core::ExtendedPOS::VerbShuushikei &&
@@ -318,9 +380,18 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 
     const std::string_view lemma =
         is_godan_potential ? std::string_view(result.entry->surface) : std::string_view(result.entry->lemma);
+    dictionary::ConjugationType conj_type = dictionary::ConjugationType::None;
+    // Dictionary entries deliberately omit conjugation metadata. For a verb
+    // whose dictionary-form ending uniquely identifies a Godan row, preserve
+    // that information on the lattice edge so a low-cost dictionary match does
+    // not discard the type carried by an equivalent generated candidate.
+    if (result.entry->pos == core::PartOfSpeech::Verb && !lemma.empty()) {
+      const char32_t final_cp = utf8::decodeFirstChar(utf8::lastChar(lemma));
+      conj_type = grammar::verbTypeToConjType(grammar::verbTypeFromBaseCodepoint(final_cp));
+    }
     lattice.addEdge(result.entry->surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
-                    result.entry->pos, cost, flags, lemma, dictionary::ConjugationType::None,
-                    core::CandidateOrigin::Dictionary, 1.0F, {}, result.entry->extended_pos, "dict");
+                    result.entry->pos, cost, flags, lemma, conj_type, core::CandidateOrigin::Dictionary, 1.0F, {},
+                    result.entry->extended_pos, "dict");
 
     // Extend verbs, auxiliaries, and adjectives with colloquial emphasis
     // (ですっ, 行くーー, きたあああ). Unknown candidates use the same matcher.
@@ -425,6 +496,25 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view text,
                                      const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                      size_t start_pos, const std::vector<normalize::CharType>& char_types) const {
+  // A pure-hiragana sequence enclosed by brackets is a parenthetical reading
+  // (東京（とうきょう）). It is annotation text, so retain it as one searchable
+  // content token instead of a sequence of incidental particles and auxiliaries.
+  if (start_pos > 0 && normalize::isOpeningBracket(codepoints[start_pos - 1])) {
+    size_t reading_end = start_pos;
+    while (reading_end < codepoints.size() && reading_end - start_pos < candidate::kParentheticalReadingMaxLength &&
+           char_types[reading_end] == normalize::CharType::Hiragana) {
+      ++reading_end;
+    }
+    if (reading_end > start_pos && reading_end < codepoints.size() &&
+        normalize::isClosingBracket(codepoints[reading_end])) {
+      lattice.addEdge(extractSubstring(codepoints, start_pos, reading_end), static_cast<uint32_t>(start_pos),
+                      static_cast<uint32_t>(reading_end), core::PartOfSpeech::Noun,
+                      candidate::kParentheticalReadingCandidateCost, core::LatticeEdge::kIsUnknown, {},
+                      dictionary::ConjugationType::None, core::CandidateOrigin::Unknown, candidate::kNoOriginConfidence,
+                      {}, core::ExtendedPOS::Noun, "parenthetical_reading");
+    }
+  }
+
   // Check for dictionary entries at this position to penalize longer unknown words
   size_t byte_pos = byteOffsetAt(byte_offsets, start_pos);
   auto dict_results = dict_manager_.lookup(text, byte_pos);
@@ -758,7 +848,8 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
         // Don't penalize verb conjugation endings
         // - te-form: て/で/って/んで/いて/いで
         // - renyoukei し: extremely common for suru/godan verbs (分割し, 話し)
-        bool is_verb_ending = utf8::equalsAny(hiragana_suffix, {"て", "で", "って", "んで", "いて", "いで", "し"});
+        bool is_verb_ending = utf8::equalsAny(hiragana_suffix, {"て", "で", "って", "んで", "いて", "いで", "し"}) ||
+                              candidate.extended_pos == core::ExtendedPOS::VerbRenyokei;
 
         // Skip penalty if:
         // - Known verb conjugation ending (te-form, renyoukei)

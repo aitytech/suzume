@@ -86,6 +86,14 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kVeryStrongBonus;
   }
 
+  // Recent-completion たて attaches directly to a verb's continuative form
+  // (焼き+たて、作り+たて). Its dedicated suffix category must overcome the
+  // generic Verb→Suffix cost as well as the homographic past-plus-te path.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      next.extended_pos == core::ExtendedPOS::SuffixRecentCompletion) {
+    bonus += cost::kVeryStrongBonus;
+  }
+
   // Classical perfect たり can be followed by the past auxiliary けり
   // (語り+たり+けり). This context disambiguates たり from the modern
   // listing particle without changing ordinary parallel-predicate analysis.

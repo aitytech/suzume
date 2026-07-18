@@ -25,8 +25,8 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       {EPOS::VerbMizenkei, EPOS::AuxNegativeNai, cost::kModerateBonus},
 
       // VerbRenyokei → AuxNegativeNai (しれ+ない for ichidan same-form mizen/renyokei)
-      // Ichidan verbs have same form for mizen and renyokei (e.g., しれ from しれる)
-      // This helps かもしれない → かも+しれ+ない over かも+し+れ+ない
+      // Ichidan verbs have same form for mizen and renyokei (e.g., しれ from しれる).
+      // This helps かもしれない → かも+しれ+ない over かも+し+れ+ない.
       {EPOS::VerbRenyokei, EPOS::AuxNegativeNai, cost::kStrongBonus},
 
       // VerbRenyokei → AdjStem (食べ+な, でき+な) - minor bonus. The negative ない is stored
@@ -42,6 +42,10 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // Ichidan verbs have same form for mizen and renyokei (e.g., 消え from 消える)
       // This helps 消えぬ炎 → 消え+ぬ+炎 over 消えぬ+炎
       {EPOS::VerbRenyokei, EPOS::AuxNegativeNu, cost::kModerateBonus},
+
+      // A finite i-adjective also cannot take that negative auxiliary. The
+      // following ん in ないんだ is the nominalizer の.
+      {EPOS::AdjBasic, EPOS::AuxNegativeNu, cost::kAlmostNever},
 
       // まい (negative volitional) connection grammar:
       // - Godan 終止形 + まい (行く+まい, なる+まい)
@@ -74,8 +78,10 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // Needs extra strength to overcome base AUX→AUX category penalty (0.3)
       {EPOS::AuxPotential, EPOS::AuxNegativeNai, cost::kExtraStrongBonus},
 
-      // VerbMizenkei → AuxCausative (食べ+させる) - moderate bonus
-      {EPOS::VerbMizenkei, EPOS::AuxCausative, cost::kModerateBonus},
+      // VerbMizenkei → AuxCausative (読ま+せる, 食べ+させる) - strong
+      // bonus. This must outrank a nominal stem followed by a homographic
+      // polite auxiliary (読+ませ).
+      {EPOS::VerbMizenkei, EPOS::AuxCausative, cost::kStrongBonus},
 
       // VerbMizenkei → VerbMizenkei (読ま+さ, やら+さ causative pattern)
       // Godan mizenkei + causative さ (する mizenkei) - moderate bonus
@@ -114,8 +120,9 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbOnbinkei → AuxTenseTa (書い+た, 泳い+だ) - strong bonus
       {EPOS::VerbOnbinkei, EPOS::AuxTenseTa, cost::kStrongBonus},
 
-      // VerbOnbinkei → AuxAspectOku (読ん+どい) - moderate bonus for contracted ~ておく split
-      {EPOS::VerbOnbinkei, EPOS::AuxAspectOku, cost::kModerateBonus},
+      // VerbOnbinkei → AuxAspectOku (書い+とく, 読ん+どく) - strong bonus for
+      // the contracted ~ておく boundary over a nominalized-stem candidate.
+      {EPOS::VerbOnbinkei, EPOS::AuxAspectOku, cost::kStrongBonus},
 
       // VerbOnbinkei → AuxAspectShimau (行っ+ちゃっ) - strong bonus for contracted ~てしまう split
       {EPOS::VerbOnbinkei, EPOS::AuxAspectShimau, cost::kStrongBonus},
@@ -293,6 +300,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // Suffix → AuxCopulaDa (的+な in 論理的な) - strong bonus
       // 的 suffix followed by な (copula attributive) is very common
       {EPOS::Suffix, EPOS::AuxCopulaDa, cost::kStrongBonus},
+
+      // The tendency suffix retains ordinary suffix inflection (病気がちで、
+      // 忘れがちだ) while its dedicated left-context rule selects a verb
+      // continuative form when present.
+      {EPOS::SuffixTendency, EPOS::AuxCopulaDa, cost::kStrongBonus},
 
       // Suffix → ParticleCase (的+に in 感情的になる) - moderate bonus
       // Helps split 的+に+なる instead of 的+になる (as single verb)

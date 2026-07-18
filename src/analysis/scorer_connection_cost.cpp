@@ -63,6 +63,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
 
   surface_bonus += connection_rules::computeSuffixShortVerbBonus(prev, next);
 
+  surface_bonus += connection_rules::computeParticleQuoteBonus(prev, next);
+
   surface_bonus += connection_rules::computeProgressiveHonorificBonus(prev, next);
 
   surface_bonus += connection_rules::computeSugiFinalParticleBonus(prev, next);
@@ -74,6 +76,25 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   surface_bonus += connection_rules::computeClassicalNegativeBoundaryPenalty(prev, next);
 
   surface_bonus += connection_rules::computeBarePotentialRenyokeiPenalty(prev, next);
+
+  // A past auxiliary cannot normally be followed directly by the conjunctive
+  // particle で. This otherwise lets た+で+す outrank the closed-class polite
+  // copula た+です because the general past→conjunction bonus is intentionally
+  // strong for forms such as たものの.
+  if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && next.extended_pos == core::ExtendedPOS::ParticleConj &&
+      next.surface == "で") {
+    surface_bonus += cost::kAlmostNever;
+  }
+
+  // The dictionary conjunction まして is not a continuation of a verb or
+  // deverbal noun. In polite inflection (読み+まし+て, 書かれ+まし+て), its
+  // low lexical cost can otherwise beat the valid auxiliary chain before the
+  // following て is considered. Nominal coordination remains governed by the
+  // ordinary Noun→Conjunction rule for actual coordinating conjunctions.
+  if (next.extended_pos == core::ExtendedPOS::Conjunction && next.surface == "まして" &&
+      (prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.pos == core::PartOfSpeech::Noun)) {
+    surface_bonus += cost::kAlmostNever;
+  }
 
   // Note: "かも" is kept as single token per SuzumeUtils.pm normalization
   // (か+も → かも merge rule). No penalty for AUX → かも.

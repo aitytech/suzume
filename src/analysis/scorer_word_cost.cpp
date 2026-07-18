@@ -67,10 +67,13 @@ float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
   // Bonus for kanji+okurigana i-adjectives from dictionary (情けない, etc.)
   // These compete with verb renyokei + ない split paths that get strong
   // VERB_連用→AUX_否定 connection bonus (-0.8).
-  // Pattern: kanji-containing, 4+ chars, ending in い, from dictionary
+  // Apply the same lexical preference to their conjugated forms (情けなく,
+  // 情けなかっ): otherwise only the base form can beat a grammatical-looking
+  // verb/particle split. AdjNaAdj is deliberately excluded.
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&
       edge.extended_pos != core::ExtendedPOS::AdjStem && grammar::containsKanji(edge.surface) &&
-      edge.surface.size() >= 4 * core::kJapaneseCharBytes && utf8::endsWith(edge.surface, "い")) {
+      edge.surface.size() >= 4 * core::kJapaneseCharBytes && edge.extended_pos != core::ExtendedPOS::AdjNaAdj &&
+      !utf8::endsWith(edge.surface, "ければ")) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     bonus += lengthScaledBonus(sc::kBonusKanjiOkuriganaAdjBase, char_len, 4, sc::kBonusKanjiOkuriganaAdjPerChar);
   }
@@ -87,7 +90,7 @@ float computeSpuriousVerbPenalty(const core::LatticeEdge& edge) {
   // Prevents misanalysis like 学生みたい → 学生み+たい
   // Only apply to surfaces with 2+ kanji (e.g., 学生み) to avoid penalizing
   // legitimate verb renyokei like 行き, 読み, 書き
-  if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb &&
+  if (!edge.lemmaVerified() && edge.pos == core::PartOfSpeech::Verb &&
       edge.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       edge.surface.length() >= core::kThreeJapaneseCharBytes) {  // ≥3 chars (at least 2 kanji + 1 hiragana)
     // Count kanji characters
@@ -422,6 +425,14 @@ float computeFixedExpressionDictBonus(const core::LatticeEdge& edge) {
 /// Dictionary bonuses for kanji determiners and long hiragana nouns.
 float computeDeterminerNounDictBonus(const core::LatticeEdge& edge) {
   float bonus{};
+
+  // Fixed demonstrative and indefinite pronouns are closed lexical items.
+  // Their internal particles remain available through separate entries, but a
+  // registered three-or-more-mora pronoun should win when it covers the span.
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Pronoun &&
+      suzume::normalize::utf8Length(edge.surface) >= 3) {
+    bonus += sc::kBonusLongPronoun;
+  }
 
   // Bonus for dictionary determiners/adnominals containing kanji (小さな, 大きな, etc.)
   // These compete with ADJ_語幹 + suffix split paths which get connection bonuses.

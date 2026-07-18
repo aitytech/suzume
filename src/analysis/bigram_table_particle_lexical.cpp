@@ -16,11 +16,6 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Needs to overcome: base bigram diff (0.5-0.2=0.3) + VERB_連用 bonus (-0.8)
       {EPOS::ParticleAdverbial, EPOS::ParticleCase, cost::kVeryStrongBonus},
 
-      // A final particle can be quoted as a complete utterance (かしら+と
-      // 思う, かな+と考える). Prefer that closed-class boundary over a
-      // coincidental noun-plus-suffix analysis.
-      {EPOS::ParticleFinal, EPOS::ParticleCase, cost::kStrongBonus},
-
       // An adverbial particle can be followed by a conditional particle
       // (くらい+なら, ほど+なら, だけ+なら). Prefer the grammatical particle
       // chain over a homographic mizenkei verb.
@@ -48,6 +43,10 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       //   is penalized by surface length in scorer_connection_cost.cpp.
       {EPOS::ParticleAdverbial, EPOS::VerbRenyokei, cost::kStrongBonus},
 
+      // An adverb can be followed by a focus particle (そう+かも, もっとも+でも).
+      // Prefer that grammatical boundary over a homographic short verb.
+      {EPOS::Adverb, EPOS::ParticleAdverbial, cost::kStrongBonus},
+
       // ParticleAdverbial → VerbShuushikei (でも+行く) - strong bonus
       // This favors でも+行く over で+も+行く
       {EPOS::ParticleAdverbial, EPOS::VerbShuushikei, cost::kStrongBonus},
@@ -56,6 +55,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // (何でも+いい, どちらでも+よい).
       {EPOS::ParticleAdverbial, EPOS::AdjBasic, cost::kStrongBonus},
       {EPOS::ParticleAdverbial, EPOS::AdjNaAdj, cost::kStrongBonus},
+
+      // A topic particle directly scopes a negative predicate (は+ない,
+      // では+なく). Prefer the auxiliary reading over the homographic
+      // adjective continuation.
+      {EPOS::ParticleTopic, EPOS::AuxNegativeNai, cost::kMinorBonus},
 
       // ParticleCase → Adverb (か+もし) - moderate penalty
       // This discourages splitting かもしれない as か+もし+れない
@@ -223,6 +227,16 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // (sentence-final particles rarely continue to verbs)
       {EPOS::ParticleFinal, EPOS::VerbShuushikei, cost::kVeryRare},
 
+      // A sentence-final particle cannot directly modify a noun. This keeps
+      // an attributive copula available in adverb + な + noun sequences;
+      // quoted uses retain an intervening symbol.
+      {EPOS::ParticleFinal, EPOS::Noun, cost::kAlmostNever},
+
+      // A sentence-final particle cannot introduce the contracted negative
+      // auxiliary. This preserves a following honorific suffix as a single
+      // unit instead of fragmenting it into a final particle plus ん.
+      {EPOS::ParticleFinal, EPOS::AuxNegativeNu, cost::kAlmostNever},
+
       // ParticleFinal → VerbOnbinkei (な+いん) - prohibit
       // (prevents ないんだ → な+いん+だ over ない+ん+だ)
       {EPOS::ParticleFinal, EPOS::VerbOnbinkei, cost::kAlmostNever},
@@ -230,6 +244,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // ParticleFinal → VerbMizenkei (な+さ) - strong penalty
       // (prevents なさそう → な(終助詞)+さ(未然)+そう over な(形容詞)+さ(接尾辞)+そう)
       {EPOS::ParticleFinal, EPOS::VerbMizenkei, cost::kVeryRare},
+
+      // A sentence-final particle cannot introduce an independent adjective.
+      // This preserves verb+auxiliary sequences such as そう+なる+まい over
+      // a spurious そう+な+るまい segmentation.
+      {EPOS::ParticleFinal, EPOS::AdjBasic, cost::kVeryRare},
 
       // AuxCopulaDa → VerbOnbinkei (な+いん) - prohibit
       // (prevents ないんだ → な+いん+だ over ない+ん+だ)

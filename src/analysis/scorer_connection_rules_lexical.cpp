@@ -60,12 +60,20 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kVeryStrongBonus;
   }
 
-  // The adjectival suffix らしい productively follows demonstrative and
-  // personal pronouns (それ+らしい, 彼+らしい). Keep that boundary ahead of
-  // an unconstrained whole-hiragana adjective candidate.
-  if (prev.extended_pos == core::ExtendedPOS::Pronoun && next.extended_pos == core::ExtendedPOS::AdjBasic &&
-      next.lemma == "らしい") {
-    bonus += cost::kVeryStrongBonus;
+  // The conjecture auxiliary らしい productively follows demonstrative and
+  // personal pronouns (それ+らしい, 彼+らしい). Keep that closed-class
+  // analysis ahead of an unconstrained whole-hiragana adjective candidate.
+  if (prev.extended_pos == core::ExtendedPOS::Pronoun && next.extended_pos == core::ExtendedPOS::AuxConjectureRashii) {
+    bonus += cost::kExtremeBonus;
+  }
+
+  // A dictionary noun followed by a registered adverbial particle is a stable
+  // nominal phrase (あん+だけ, そん+だけ).  Keep that lexical boundary ahead
+  // of a spurious copula plus sentence-final particle, but do not promote
+  // generated noun readings such as the adjective ない before ほど.
+  if (prev.pos == core::PartOfSpeech::Noun && prev.fromDictionary() &&
+      next.extended_pos == core::ExtendedPOS::ParticleAdverbial) {
+    bonus += cost::kMinorBonus;
   }
 
   // Determiners directly modify formal nouns (このこと, どういうこと).
@@ -84,10 +92,13 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
 
   // The productive honorific construction お/ご + verb (お聞きになる,
   // おはす) must retain the dictionary-verified verbal reading ahead of a
-  // homographic noun candidate.  This covers both renyokei requests and
-  // finite literary honorific verbs without affecting ordinary prefixed nouns.
+  // homographic noun candidate. This covers renyokei requests and finite
+  // literary honorific verbs; an irrealis stem cannot directly follow the
+  // prefix and must instead take its auxiliary before the construction is
+  // complete.
   if (prev.extended_pos == core::ExtendedPOS::Prefix && grammar::isHonorificPrefix(prev.surface) &&
-      next.pos == core::PartOfSpeech::Verb && next.fromDictionary()) {
+      next.pos == core::PartOfSpeech::Verb && next.extended_pos != core::ExtendedPOS::VerbMizenkei &&
+      next.fromDictionary()) {
     bonus += cost::kDoubleVeryStrongBonus;
   }
 
@@ -98,12 +109,35 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kProhibitive;
   }
 
+  // An adverbial particle can directly modify a kanji verb in euphonic form
+  // before the past auxiliary (ずつ+配っ+た). A generated candidate must also
+  // have an actual euphonic ending: its ExtendedPOS alone can be spuriously
+  // assigned to an unsplit negative such as 帰らない. Keep the productive past
+  // split ahead of a single VerbTaForm candidate; pure-hiragana copular forms
+  // stay outside this rule.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial &&
+      next.extended_pos == core::ExtendedPOS::VerbOnbinkei && grammar::containsKanji(next.surface) &&
+      (utf8::endsWithAny(next.surface, {"っ", "ん"}) ||
+       (utf8::endsWith(next.surface, "い") && !utf8::endsWith(next.surface, "ない")))) {
+    bonus += cost::kExtremeBonus;
+  }
+
   // A productive temporal compound ending in 時 (開始時, 緊急時) is a
   // complete search unit before a following case particle.  Keep that unit
   // ahead of the competing noun + formal-noun 時 path.
   if (prev.pos == core::PartOfSpeech::Noun && !prev.fromDictionary() &&
       grammar::endsWithTemporalNounSuffix(prev.surface) && next.extended_pos == core::ExtendedPOS::ParticleCase) {
     bonus += cost::kStrongBonus;
+  }
+
+  // A one-kanji noun followed by a one-kanji formal noun is usually a lexical
+  // compound (人物, 結末), not a productive formal-noun boundary.  Longer
+  // nominal stems remain available for bound temporal/spatial forms such as
+  // 年度+末 and 期間+内.
+  if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::NounFormal &&
+      prev.surface.size() == core::kJapaneseCharBytes && next.surface.size() == core::kJapaneseCharBytes &&
+      grammar::isAllKanji(prev.surface) && grammar::isAllKanji(next.surface)) {
+    bonus += cost::kStrong;
   }
 
   // A numeral duration ending in 時間 can directly modify a following
@@ -120,16 +154,26 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // rule while retaining the productive verb-form analysis and its lemma.
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.fromDictionary() &&
       prev.surface.size() >= 4 * core::kJapaneseCharBytes && grammar::isPureHiragana(prev.surface) &&
-      (next.pos == core::PartOfSpeech::Noun || next.pos == core::PartOfSpeech::Verb)) {
+      next.pos == core::PartOfSpeech::Noun) {
     bonus += cost::kDoubleVeryStrongBonus;
   }
 
   // The concessive particle とも attaches to a predicate (読まずとも), not
-  // directly to an adverb. After an adverb, retain the productive quotation
-  // plus topic sequence instead (そう+と+も言える).
-  if ((prev.pos == core::PartOfSpeech::Adverb || prev.extended_pos == core::ExtendedPOS::AdjNaAdj) &&
+  // directly to an adverb or a finite adjective. After either predicate-like
+  // modifier, retain the productive quotation plus topic sequence instead
+  // (そう+と+も言える, 恐しい+と+も思わない).
+  if ((prev.pos == core::PartOfSpeech::Adverb || prev.extended_pos == core::ExtendedPOS::AdjBasic ||
+       prev.extended_pos == core::ExtendedPOS::AdjNaAdj) &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"とも"})) {
     bonus += cost::kAlmostNever;
+  }
+
+  // The concessive とも can directly introduce an adjective predicate
+  // (読まずともよい). Keep that closed grammatical connection ahead of the
+  // unrelated quotative-particle path.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"とも"}) &&
+      next.pos == core::PartOfSpeech::Adjective) {
+    bonus += cost::kStrongBonus;
   }
 
   // An adverb ending in the connective mora て cannot directly introduce the
@@ -166,11 +210,12 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kStrong;
   }
 
-  // ところで is a discourse conjunction only at a clause boundary. After a
-  // formal noun or a past/copular auxiliary it is the compositional
-  // ところ+で construction (読んだところで, 本のところで), so reject the
-  // fused conjunction candidate in that grammatical environment.
-  if (next.extended_pos == core::ExtendedPOS::Conjunction && utf8::equalsAny(next.surface, {"ところで"}) &&
+  // ところで is a discourse conjunction only at a clause boundary. Likewise,
+  // ついで following a past form is the formal noun in an incidental-action
+  // construction. After a formal noun or a past/copular auxiliary, keep the
+  // compositional reading (読んだところで, 読んだついで) over a fused
+  // conjunction candidate.
+  if (next.extended_pos == core::ExtendedPOS::Conjunction && utf8::equalsAny(next.surface, {"ところで", "ついで"}) &&
       (prev.extended_pos == core::ExtendedPOS::NounFormal || prev.extended_pos == core::ExtendedPOS::AuxTenseTa ||
        prev.extended_pos == core::ExtendedPOS::AuxCopulaDa || prev.extended_pos == core::ExtendedPOS::VerbTaForm ||
        prev.extended_pos == core::ExtendedPOS::ParticleNo)) {
@@ -329,6 +374,18 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   return bonus;
 }
 
+float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  // A final particle can be quoted as a complete utterance (かしら+と
+  // 思う, かな+と考える). This relation is specific to the quotative case
+  // particle; applying it to every case particle incorrectly favors paths
+  // such as ADV+わ+から over an ordinary following predicate.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::ParticleCase &&
+      utf8::equalsAny(next.surface, {"と"})) {
+    return cost::kStrongBonus;
+  }
+  return cost::kNeutral;
+}
+
 // Progressive/contracted て, dialectal やで, 付け-で formal noun, honorific
 // renyokei (いたし/いただき), and い/た/だ auxiliary attachment rules.
 float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
@@ -349,6 +406,14 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   if (prev.extended_pos == core::ExtendedPOS::ParticleNo && next.extended_pos == core::ExtendedPOS::VerbShuushikei &&
       next.lemma == "ある") {
     bonus += cost::kDoubleVeryStrongBonus;
+  }
+
+  // The honorific potential construction Noun+に+なれ+ます keeps the
+  // potential form of なる intact. Without this connection, the homographic
+  // adjective stem plus passive auxiliary path can win before polite ます.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isSingleHiragana(prev.surface, U'に') &&
+      next.extended_pos == core::ExtendedPOS::VerbKateikei && next.lemma == "なる") {
+    bonus += cost::kStrongBonus;
   }
 
   // A dictionary-backed godan renyokei of the progressive subsidiary after
@@ -413,6 +478,38 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // Dialectal/character-speech やで is particle + particle in the regression
   // corpus, not copula で.
   if (prev.surface == "や" && next.surface == "で" && next.extended_pos == core::ExtendedPOS::AuxCopulaDa) {
+    bonus += cost::kAlmostNever;
+  }
+
+  // The attributive copula な cannot introduce the progressive/aspectual いる.
+  // This rules out the fabricated な+い+ん+だ chain and leaves the independent
+  // adjective plus nominalizer in ないんだ.
+  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && grammar::isAttributiveCopulaNa(prev.surface)) {
+    if (next.extended_pos == core::ExtendedPOS::AuxAspectIru || next.pos == core::PartOfSpeech::Verb) {
+      bonus += cost::kAlmostNever;
+    }
+  }
+
+  // The independent adjective ない is commonly nominalized before a copula
+  // (ない+ん+だ). Favor that complete adjective phrase over the unrelated
+  // negative-auxiliary homograph.
+  if (prev.extended_pos == core::ExtendedPOS::AdjBasic && grammar::isIndependentNegativeAdjective(prev.surface) &&
+      next.extended_pos == core::ExtendedPOS::ParticleNo) {
+    bonus += cost::kStrongBonus;
+  }
+
+  // The complete negative ない cannot itself take another negative ん. This
+  // applies regardless of the provisional POS chosen for the homograph and
+  // retains the nominalizer analysis in ないんだ.
+  if (grammar::isIndependentNegativeAdjective(prev.surface) && next.extended_pos == core::ExtendedPOS::AuxNegativeNu) {
+    bonus += cost::kAlmostNever;
+  }
+
+  // An onbin candidate that already includes the complete negative ない is
+  // not an irrealis form for another negative ん. This removes only the
+  // whole-verb competitor in 知らないんだ, not ordinary onbin inflections.
+  if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && grammar::endsWithNegativeNai(prev.surface) &&
+      next.extended_pos == core::ExtendedPOS::AuxNegativeNu) {
     bonus += cost::kAlmostNever;
   }
 

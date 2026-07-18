@@ -47,7 +47,16 @@ constexpr float kDictionaryOriginConfidence = 1.0F;
 // segment and a formal-noun tail (見た目, 行く末). This offsets the otherwise
 // very strong verb + auxiliary connection path while remaining limited to the
 // grammaticalized compound-noun shape.
-constexpr float kLexicalizedMixedScriptNounBonus = -1.2F;
+constexpr float kLexicalizedMixedScriptNounBonus = -1.6F;
+
+// A registered multi-character kanji noun is a verified search unit. Give it
+// a small preference over a path that crosses its boundary with an unknown
+// kanji run.
+constexpr float kVerifiedMultiCharacterNounBonus = -0.1F;
+
+// Closed interrogative pronouns are strong phrase anchors and must remain
+// available ahead of homographic inflected-verb readings (どれを選ぶ).
+constexpr float kInterrogativePronounBonus = -0.3F;
 
 // Ordinal compounds beginning with 第. A single trailing noun character is a
 // lexicalized ordinal noun (第一歩), while 第 + numeral before 次 begins a
@@ -119,6 +128,11 @@ constexpr float kVerifiedNounBonus = -0.3F;
 // won over 全部|食. Raised so the final cost clears the split-path cost.
 constexpr float kUnverifiedPrefixJoin3charPenalty = 1.4F;
 
+// A negation-prefix compound with a na-adjective continuation is a productive
+// predicative adjective even when its open-class base is not in the compact
+// dictionary (不十分だ, 不確かではない).
+constexpr float kPredicativeNegationPrefixAdjectiveBonus = -1.2F;
+
 // Te-form + auxiliary bonus
 // E.g., 食べて+いる, 走って+しまう
 constexpr float kTeFormAuxBonus = -0.8F;
@@ -150,7 +164,7 @@ constexpr float kSplitBaseCost = 1.0F;
 // merged token while the standalone 後/前 comes from the single-kanji candidate.
 // Strong enough to also beat a productive-prefix join (半 in 半年後 → 半+年後 at 0.4);
 // only ever applied when 後/前 follows a temporal counter, so it cannot over-split.
-constexpr float kCounterRelationSplitBonus = -1.2F;
+constexpr float kCounterRelationSplitBonus = -1.8F;
 
 // Quantity + comparison-boundary split bonus (百倍|以上, 三名|以上). A
 // numeral-counter phrase remains a search unit before the independent
@@ -193,7 +207,7 @@ constexpr float kLeadingNounCounterSplitBonus = -1.2F;
 // duration as its own search unit. Applied only under the structural gates in
 // generateCounterCandidates (run ends in 間 preceded by a temporal counter, followed by
 // an ordinary kanji noun — not a counter/relation/span suffix or interval member 隔).
-constexpr float kDurationSpanSplitBonus = -1.2F;
+constexpr float kDurationSpanSplitBonus = -2.6F;
 
 // Numeral + single kanji counter merge bonus (三十度, 九十度, 三十分, 十本). A multi-
 // digit kanji numeral before a counter that doubles as a nominal suffix (度: 態度,
@@ -231,6 +245,12 @@ constexpr float kNounVerbSplitBonus = -1.0F;
 // when nothing better spans the bracket, never shattering (た|ば|こ).
 constexpr float kPostParticleNounPenalty = 0.4F;
 
+// A pure-hiragana reading enclosed in brackets is metadata for the preceding
+// written form. Keep it as one content token without allowing an unbounded
+// unknown-word merge.
+constexpr size_t kParentheticalReadingMaxLength = 12;
+constexpr float kParentheticalReadingCandidateCost = 1.5F;
+
 // Formal-noun + na-adjective boundary (時+妙な, 事+不思議な).
 // A one-kanji formal noun is a grammatical boundary before an attributive
 // na-adjective. Without this penalty, the generic unknown-kanji generator
@@ -249,6 +269,10 @@ constexpr float kAdverbExplanatoryCopulaBonus = -0.5F;
 // productive mimetic shape that otherwise degrades into an unknown noun plus
 // the quotative particle.
 constexpr float kMimeticNtoAdverbBonus = -0.6F;
+
+// Four-character sokuon mimetics ending in り/ら (ぐったり, ふっくら).
+constexpr float kMimeticSokuonMannerAdverbCost = 0.2F;
+constexpr float kMimeticSokuonMannerConfidence = 0.8F;
 
 // Verified verb in split bonus
 // Applied when verb component is verified in dictionary
@@ -318,6 +342,12 @@ constexpr float kPrefixCompoundVerbStemConf = 0.5F;
 // Compound adjective (2-kanji stem: 薄暗い, 物悲しく)
 constexpr float kCompoundAdjConfMin = 0.3F;   // minimum inflection confidence
 constexpr float kCompoundAdjBaseCost = 0.5F;  // base cost for generated candidate
+// Productive 連用形 + っぽい adjective (忘れっぽい, 飽きっぽい). The
+// complete derived adjective competes with a very cheap stem + suffix path.
+constexpr float kProductivePpoiAdjCost = -2.5F;
+// Context-gated lexicalized adverbial adjective (間もなく). Its boundary must
+// compete with the strong noun-to-suffix connection for the preceding 間.
+constexpr float kLexicalizedAdverbialAdjCost = -0.8F;
 
 // Na-adjective candidate costs
 constexpr float kNaAdjYakaCost = 0.2F;               // やか/らか/か + な (華やかな, 静かな)

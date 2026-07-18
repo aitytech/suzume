@@ -195,7 +195,7 @@ constexpr float kBonusCompoundParticleToTopic = -2.7F;
 // Compound adjective length-scaled bonus (男らしい, 女らしい)
 // Formula: base + per_char * (char_len - 4) for char_len > 4
 constexpr float kBonusCompoundAdjBase = -1.0F;
-constexpr float kBonusCompoundAdjPerChar = 0.4F;
+constexpr float kBonusCompoundAdjPerChar = 0.5F;
 
 // Pure-hiragana dict NOUN → し(suru renyokei) gap adjustment
 // Tips balance: はなし(gap=0.013) vs なんし(gap=0.102)
@@ -217,6 +217,10 @@ constexpr float kBonusHiraganaAdjPerChar = 0.5F;
 // Kanji+okurigana i-adjective from dictionary (情けない), 4+ chars
 constexpr float kBonusKanjiOkuriganaAdjBase = -1.5F;
 constexpr float kBonusKanjiOkuriganaAdjPerChar = 0.3F;
+
+// Closed pronouns of three or more morae can otherwise lose to a pronoun plus
+// particle sequence (何かしら, あれこれ). Keep the registered lexical unit.
+constexpr float kBonusLongPronoun = -1.5F;
 
 // Pure-hiragana adverb from dictionary (たくさん, どうして)
 // Short (≤2 chars) gets weaker bonus; longer uses base + per-char beyond 2
