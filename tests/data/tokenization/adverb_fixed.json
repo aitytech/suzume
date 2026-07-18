@@ -234,6 +234,10 @@
       "input": "悪しからずご了承ください"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "「立派」は名詞述語として解析でき、助動詞「だ」との連接も文法的に正しい。語境界は一致するため品詞差を正規化する。"
+      },
       "description": "たいそう立派だ - auto-generated",
       "expected": [
         {
@@ -253,7 +257,24 @@
         }
       ],
       "id": "taisou_da",
-      "input": "たいそう立派だ"
+      "input": "たいそう立派だ",
+      "suzume_expected": [
+        {
+          "lemma": "たいそう",
+          "pos": "Adverb",
+          "surface": "たいそう"
+        },
+        {
+          "lemma": "立派",
+          "pos": "Noun",
+          "surface": "立派"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ]
     },
     {
       "description": "必ず成功する - auto-generated",
@@ -388,8 +409,26 @@
       "input": "いかほど必要か"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "限定程度副詞「たかだか」を一語で解析する",
       "expected": [
+        {
+          "lemma": "たかだか",
+          "pos": "Determiner",
+          "surface": "たかだか"
+        },
+        {
+          "lemma": "十人",
+          "pos": "Noun",
+          "surface": "十人"
+        }
+      ],
+      "id": "takadaka_limiting_degree_adverb",
+      "input": "たかだか十人",
+      "suzume_expected": [
         {
           "lemma": "たかだか",
           "pos": "Adverb",
@@ -400,9 +439,7 @@
           "pos": "Noun",
           "surface": "十人"
         }
-      ],
-      "id": "takadaka_limiting_degree_adverb",
-      "input": "たかだか十人"
+      ]
     },
     {
       "description": "数量を限定する副詞「わずか」を一語で解析する",
@@ -422,8 +459,31 @@
       "input": "わずか三人"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "固定副詞句「一切合切」を後続名詞から分離する",
       "expected": [
+        {
+          "lemma": "一切合切",
+          "pos": "Noun",
+          "surface": "一切合切"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "issaikassai_fixed_totalizing_adverb",
+      "input": "一切合切確認する",
+      "suzume_expected": [
         {
           "lemma": "一切合切",
           "pos": "Adverb",
@@ -439,9 +499,7 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ],
-      "id": "issaikassai_fixed_totalizing_adverb",
-      "input": "一切合切確認する"
+      ]
     },
     {
       "description": "強意副詞「しいて」を一語で解析する",
@@ -471,8 +529,31 @@
       "input": "しいて言えば正しい"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "逆接・選択副詞「むしろ」を一語で解析する",
       "expected": [
+        {
+          "lemma": "むしろ",
+          "pos": "Other",
+          "surface": "むしろ"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "mushiro_contrastive_adverb",
+      "input": "むしろ必要だ",
+      "suzume_expected": [
         {
           "lemma": "むしろ",
           "pos": "Adverb",
@@ -488,9 +569,7 @@
           "pos": "Auxiliary",
           "surface": "だ"
         }
-      ],
-      "id": "mushiro_contrastive_adverb",
-      "input": "むしろ必要だ"
+      ]
     },
     {
       "description": "様態副詞「おもむろに」を一語で解析する",

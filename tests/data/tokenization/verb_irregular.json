@@ -2310,6 +2310,23 @@
       ],
       "id": "shiiru_passive_progressive_pos_lemma",
       "input": "強いられている"
+    },
+    {
+      "description": "文語尊敬動詞の受身連鎖で語幹と補助動詞の境界を保持する",
+      "expected": [
+        {
+          "lemma": "あらせる",
+          "pos": "Verb",
+          "surface": "あらせ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "verb_classical_honorific_araserareru",
+      "input": "あらせられる"
     }
   ],
   "description": "Irregular verbs (する、くる)",

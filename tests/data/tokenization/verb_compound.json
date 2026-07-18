@@ -2778,8 +2778,21 @@
       "input": "見過ごせない"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "可能複合動詞の否定助動詞を分離する",
       "expected": [
+        {
+          "lemma": "やりきれない",
+          "pos": "Adjective",
+          "surface": "やりきれない"
+        }
+      ],
+      "id": "compound_verb_yarikire_negative_boundary",
+      "input": "やりきれない",
+      "suzume_expected": [
         {
           "lemma": "やりきれる",
           "pos": "Verb",
@@ -2790,13 +2803,24 @@
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ],
-      "id": "compound_verb_yarikire_negative_boundary",
-      "input": "やりきれない"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "複合動詞と使役連鎖の形態的曖昧さを保持する",
       "expected": [
+        {
+          "lemma": "見合わせる",
+          "pos": "Verb",
+          "surface": "見合わせる"
+        }
+      ],
+      "id": "compound_verb_miawaseru_causative_ambiguity",
+      "input": "見合わせる",
+      "suzume_expected": [
         {
           "lemma": "見合う",
           "pos": "Verb",
@@ -2807,9 +2831,170 @@
           "pos": "Auxiliary",
           "surface": "せる"
         }
+      ]
+    },
+    {
+      "description": "漢字名詞語幹に付けるが続く複合動詞",
+      "expected": [
+        {
+          "lemma": "関連付ける",
+          "pos": "Verb",
+          "surface": "関連付ける"
+        }
       ],
-      "id": "compound_verb_miawaseru_causative_ambiguity",
-      "input": "見合わせる"
+      "id": "verb_compound_nominal_tsukeru_related",
+      "input": "関連付ける"
+    },
+    {
+      "description": "漢字名詞語幹に付けるが続く複合動詞",
+      "expected": [
+        {
+          "lemma": "位置付ける",
+          "pos": "Verb",
+          "surface": "位置付ける"
+        }
+      ],
+      "id": "verb_compound_nominal_tsukeru_position",
+      "input": "位置付ける"
+    },
+    {
+      "description": "漢字名詞語幹に付けるが続く複合動詞",
+      "expected": [
+        {
+          "lemma": "特徴付ける",
+          "pos": "Verb",
+          "surface": "特徴付ける"
+        }
+      ],
+      "id": "verb_compound_nominal_tsukeru_feature",
+      "input": "特徴付ける"
+    },
+    {
+      "description": "漢字名詞語幹に付けるが連用形と接続助詞に分かれる",
+      "expected": [
+        {
+          "lemma": "関連付ける",
+          "pos": "Verb",
+          "surface": "関連付け"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "verb_compound_nominal_tsukeru_te",
+      "input": "関連付けて確認する"
+    },
+    {
+      "description": "五段動詞の受身継続連鎖で補助動詞境界を保持する",
+      "expected": [
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使わ"
+        },
+        {
+          "lemma": "れ続ける",
+          "pos": "Verb",
+          "surface": "れ続ける"
+        }
+      ],
+      "id": "verb_passive_continuative_godan_boundary",
+      "input": "使われ続ける"
+    },
+    {
+      "description": "一段動詞の受身継続連鎖で補助動詞境界を保持する",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "られ続ける",
+          "pos": "Verb",
+          "surface": "られ続ける"
+        }
+      ],
+      "id": "verb_passive_continuative_ichidan_boundary",
+      "input": "見られ続ける"
+    },
+    {
+      "description": "使役受身継続連鎖で補助動詞境界を保持する",
+      "expected": [
+        {
+          "lemma": "聞かす",
+          "pos": "Verb",
+          "surface": "聞かさ"
+        },
+        {
+          "lemma": "れ続ける",
+          "pos": "Verb",
+          "surface": "れ続ける"
+        }
+      ],
+      "id": "verb_causative_passive_continuative_boundary",
+      "input": "聞かされ続ける"
+    },
+    {
+      "description": "助詞・音便・接続助詞・補助動詞の連鎖境界",
+      "expected": [
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "決まる",
+          "pos": "Verb",
+          "surface": "決まっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "ni_kimatteiru_boundary",
+      "input": "に決まっている"
+    },
+    {
+      "description": "受身継続連鎖の過去形境界",
+      "expected": [
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使わ"
+        },
+        {
+          "lemma": "れ続ける",
+          "pos": "Verb",
+          "surface": "れ続け"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "verb_passive_continuative_godan_past_boundary",
+      "input": "使われ続けた"
     }
   ],
   "description": "Compound verbs",

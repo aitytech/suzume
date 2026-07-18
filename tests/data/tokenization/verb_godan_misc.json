@@ -2235,7 +2235,7 @@
         },
         {
           "lemma": "きり",
-          "pos": "Noun",
+          "pos": "Particle",
           "surface": "きり"
         },
         {
@@ -2267,7 +2267,7 @@
         },
         {
           "lemma": "きり",
-          "pos": "Noun",
+          "pos": "Particle",
           "surface": "きり"
         },
         {
@@ -2299,7 +2299,7 @@
         },
         {
           "lemma": "きり",
-          "pos": "Noun",
+          "pos": "Particle",
           "surface": "きり"
         },
         {
@@ -2331,7 +2331,7 @@
         },
         {
           "lemma": "きり",
-          "pos": "Noun",
+          "pos": "Particle",
           "surface": "きり"
         },
         {
@@ -2992,8 +2992,31 @@
       "input": "方針に沿って実施する"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "名詞基部の接尾動詞めくの音便形と過去助動詞",
       "expected": [
+        {
+          "lemma": "春めく",
+          "pos": "Verb",
+          "surface": "春めい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "陽気",
+          "pos": "Adjective",
+          "surface": "陽気"
+        }
+      ],
+      "id": "verb_godan_meku_harumeita",
+      "input": "春めいた陽気",
+      "suzume_expected": [
         {
           "lemma": "春めく",
           "pos": "Verb",
@@ -3009,9 +3032,7 @@
           "pos": "Noun",
           "surface": "陽気"
         }
-      ],
-      "id": "verb_godan_meku_harumeita",
-      "input": "春めいた陽気"
+      ]
     },
     {
       "description": "接尾動詞めくの音便形と過去助動詞",

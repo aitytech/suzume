@@ -375,6 +375,50 @@
       ],
       "id": "shirasete",
       "input": "知らせて"
+    },
+    {
+      "description": "一段動詞の使役受身連鎖で語幹と補助動詞の境界を保持する",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "verb_ichidan_causative_passive_boundary",
+      "input": "食べさせられる"
+    },
+    {
+      "description": "受身から使役へ連なる補助動詞の境界を保持する",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させる"
+        }
+      ],
+      "id": "verb_passive_causative_boundary",
+      "input": "書かれさせる"
     }
   ],
   "description": "verb_causative tests",

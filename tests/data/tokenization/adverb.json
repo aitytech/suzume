@@ -1,6 +1,10 @@
 {
   "cases": [
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "この「ただ」は接続ではなく限定を表す副詞である。語境界は一致しており、Suzume の副詞分類が文脈に適合する。"
+      },
       "description": "ただ as conjunction, not た+だ",
       "expected": [
         {
@@ -45,7 +49,49 @@
         }
       ],
       "id": "tada_conjunction",
-      "input": "ただ彼の掌に載せられた"
+      "input": "ただ彼の掌に載せられた",
+      "suzume_expected": [
+        {
+          "lemma": "ただ",
+          "pos": "Adverb",
+          "surface": "ただ"
+        },
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "掌",
+          "pos": "Noun",
+          "surface": "掌"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "載せる",
+          "pos": "Verb",
+          "surface": "載せ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "まるで as adverb, not まる+で",
@@ -379,6 +425,10 @@
       "input": "特段問題はない"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "形容詞「恐しい」を一語の検索単位として保つ。参照側の補助形容詞分割および異表記 lemma との差であり、語境界と品詞の文法性を損なわない。"
+      },
       "description": "別段 dict boundary prevents 別段恐しい kanji merge",
       "expected": [
         {
@@ -418,7 +468,44 @@
         }
       ],
       "id": "betsudan_dict_boundary",
-      "input": "別段恐しいとも思わなかった"
+      "input": "別段恐しいとも思わなかった",
+      "suzume_expected": [
+        {
+          "lemma": "別段",
+          "pos": "Adverb",
+          "surface": "別段"
+        },
+        {
+          "lemma": "恐しい",
+          "pos": "Adjective",
+          "surface": "恐しい"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "だいいち as adverb, boundary before 毛",

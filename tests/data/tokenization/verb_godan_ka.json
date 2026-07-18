@@ -683,6 +683,33 @@
       ],
       "id": "niha_ikanai_split",
       "input": "捨てるわけにはいかない"
+    },
+    {
+      "description": "文頭の行くの促音便lemma",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "みる",
+          "pos": "Auxiliary",
+          "surface": "み"
+        },
+        {
+          "lemma": "たい",
+          "pos": "Auxiliary",
+          "surface": "たい"
+        }
+      ],
+      "id": "verb_godan_ka_iku_sokuonbin_lemma",
+      "input": "行ってみたい"
     }
   ],
   "description": "Godan Ka-row verbs (五段カ行動詞) - verbs ending in く",

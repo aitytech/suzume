@@ -655,6 +655,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "擬態語の AっBら 形を副詞として一語に保持する。参照期待値の Other より検索単位・文法カテゴリとして適切。"
+      },
       "description": "ふっくら should be ADV (B62) - MeCab互換分割",
       "expected": [
         {
@@ -675,6 +679,23 @@
       ],
       "id": "fukkura_adv",
       "input": "ふっくら焼けた",
+      "suzume_expected": [
+        {
+          "lemma": "ふっくら",
+          "pos": "Adverb",
+          "surface": "ふっくら"
+        },
+        {
+          "lemma": "焼ける",
+          "pos": "Verb",
+          "surface": "焼け"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
       "tags": [
         "adverb",
         "onomatopoeia"

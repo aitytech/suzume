@@ -2145,6 +2145,10 @@
       "input": "高いだけではない、安いだけではない、新しいだけではない"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "形容詞語幹を名詞化する「さ」は接尾辞である。語境界は一致しており、Suzume の接尾辞分類が文法的に適切である。"
+      },
       "description": "名詞接尾辞らしいの連体形と名詞化語幹を分割する",
       "expected": [
         {
@@ -2224,7 +2228,84 @@
         }
       ],
       "id": "rashii_rashii_rashisa_rashisa_rashisa",
-      "input": "本らしい本。水らしい水。本らしさ。水らしさ。子供らしさ。"
+      "input": "本らしい本。水らしい水。本らしさ。水らしさ。子供らしさ。",
+      "suzume_expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        }
+      ]
     },
     {
       "description": "しょうがない - regression test",

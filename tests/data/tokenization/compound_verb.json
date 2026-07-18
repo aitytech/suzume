@@ -246,8 +246,21 @@
       "input": "思い切って進む"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "テ形と補助動詞「くる」の文法境界を維持する",
       "expected": [
+        {
+          "lemma": "やってくる",
+          "pos": "Verb",
+          "surface": "やってくる"
+        }
+      ],
+      "id": "yatte_kuru_te_auxiliary_boundary",
+      "input": "やってくる",
+      "suzume_expected": [
         {
           "lemma": "やる",
           "pos": "Verb",
@@ -263,13 +276,29 @@
           "pos": "Auxiliary",
           "surface": "くる"
         }
-      ],
-      "id": "yatte_kuru_te_auxiliary_boundary",
-      "input": "やってくる"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "ひらがな表記の失敗補助動詞「そこなう」を補助動詞として解析する",
       "expected": [
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やり"
+        },
+        {
+          "lemma": "そこなう",
+          "pos": "Verb",
+          "surface": "そこなう"
+        }
+      ],
+      "id": "yarisokonau_hiragana_failure_auxiliary",
+      "input": "やりそこなう",
+      "suzume_expected": [
         {
           "lemma": "やる",
           "pos": "Verb",
@@ -280,9 +309,7 @@
           "pos": "Auxiliary",
           "surface": "そこなう"
         }
-      ],
-      "id": "yarisokonau_hiragana_failure_auxiliary",
-      "input": "やりそこなう"
+      ]
     },
     {
       "description": "一文字漢字五段動詞の連用形と後項動詞を複合動詞として結合する",
@@ -297,10 +324,14 @@
       "input": "押し込む"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "同形連用形「降り」の語義曖昧性を許容し、動詞境界を維持する",
       "expected": [
         {
-          "lemma": "降りる",
+          "lemma": "降る",
           "pos": "Verb",
           "surface": "降り"
         },
@@ -311,7 +342,19 @@
         }
       ],
       "id": "ori_hajimeru_lemma_ambiguity",
-      "input": "降り始める"
+      "input": "降り始める",
+      "suzume_expected": [
+        {
+          "lemma": "降りる",
+          "pos": "Verb",
+          "surface": "降り"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始める"
+        }
+      ]
     },
     {
       "description": "複合動詞「見当たる」の未然形と否定助動詞を分割する",
@@ -336,8 +379,31 @@
       "input": "見当たらない問題"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "「差し支えない」を名詞述語として解析する曖昧性を許容する",
       "expected": [
+        {
+          "lemma": "差し支える",
+          "pos": "Verb",
+          "surface": "差し支え"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "範囲",
+          "pos": "Noun",
+          "surface": "範囲"
+        }
+      ],
+      "id": "sashitsukae_nai_nominal_predicate_ambiguity",
+      "input": "差し支えない範囲",
+      "suzume_expected": [
         {
           "lemma": "差し支え",
           "pos": "Noun",
@@ -353,9 +419,7 @@
           "pos": "Noun",
           "surface": "範囲"
         }
-      ],
-      "id": "sashitsukae_nai_nominal_predicate_ambiguity",
-      "input": "差し支えない範囲"
+      ]
     }
   ],
   "description": "compound_verb tests",

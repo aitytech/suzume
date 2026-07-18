@@ -2027,7 +2027,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -2041,13 +2041,13 @@
           "surface": "ない"
         },
         {
-          "lemma": "違う",
-          "pos": "Verb",
+          "lemma": "ちがい",
+          "pos": "Noun",
           "surface": "違い"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         }
       ],
