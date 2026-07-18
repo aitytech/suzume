@@ -173,6 +173,33 @@
       ],
       "id": "kina",
       "input": "大きな木"
+    },
+    {
+      "description": "Temporal adjective continuative form remains a single token",
+      "expected": [
+        {
+          "lemma": "終了",
+          "pos": "Noun",
+          "surface": "終了"
+        },
+        {
+          "lemma": "間もない",
+          "pos": "Adjective",
+          "surface": "間もなく"
+        },
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "mamonaku_temporal_renyokei",
+      "input": "終了間もなく報告する"
     }
   ],
   "description": "adjective_general tests",

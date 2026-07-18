@@ -1,0 +1,515 @@
+{
+  "cases": [
+    {
+      "description": "固定副詞とナ形容詞の副詞形を分割する",
+      "expected": [
+        {
+          "lemma": "おのずから",
+          "pos": "Adverb",
+          "surface": "おのずから"
+        },
+        {
+          "lemma": "明らか",
+          "pos": "Adjective",
+          "surface": "明らか"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "onozukara_akiraka_ni_naru",
+      "input": "おのずから明らかになる"
+    },
+    {
+      "description": "固定副詞語幹と格助詞を分割する",
+      "expected": [
+        {
+          "lemma": "ことさら",
+          "pos": "Adverb",
+          "surface": "ことさら"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "強調",
+          "pos": "Noun",
+          "surface": "強調"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kotosarani_kyouchou_suru",
+      "input": "ことさらに強調する"
+    },
+    {
+      "description": "条件副詞を一語として解析する",
+      "expected": [
+        {
+          "lemma": "ひとたび",
+          "pos": "Adverb",
+          "surface": "ひとたび"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始める"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "止まる",
+          "pos": "Verb",
+          "surface": "止まら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "hitotabi_hajimeru_to_tomaranai",
+      "input": "ひとたび始めると止まらない"
+    },
+    {
+      "description": "依頼副詞と敬語接頭辞を分割する",
+      "expected": [
+        {
+          "lemma": "なにとぞ",
+          "pos": "Adverb",
+          "surface": "なにとぞ"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "願い",
+          "pos": "Noun",
+          "surface": "願い"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "nanitozo_onegai_shimasu",
+      "input": "なにとぞお願いします"
+    },
+    {
+      "description": "強調副詞を一語として解析する",
+      "expected": [
+        {
+          "lemma": "ぜひとも",
+          "pos": "Adverb",
+          "surface": "ぜひとも"
+        },
+        {
+          "lemma": "参加",
+          "pos": "Noun",
+          "surface": "参加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "たい",
+          "pos": "Auxiliary",
+          "surface": "たい"
+        }
+      ],
+      "id": "zehitomo_sanka_shitai",
+      "input": "ぜひとも参加したい"
+    },
+    {
+      "description": "固定副詞を一語として解析する",
+      "expected": [
+        {
+          "lemma": "取りあえず",
+          "pos": "Adverb",
+          "surface": "取りあえず"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "toriaezu_kakunin_suru",
+      "input": "取りあえず確認する"
+    },
+    {
+      "description": "漢字副詞のPOSとlemmaを保持する",
+      "expected": [
+        {
+          "lemma": "予め",
+          "pos": "Adverb",
+          "surface": "予め"
+        },
+        {
+          "lemma": "準備",
+          "pos": "Noun",
+          "surface": "準備"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "arakajime_junbi_suru",
+      "input": "予め準備する"
+    },
+    {
+      "description": "期間副詞のPOSとlemmaを保持する",
+      "expected": [
+        {
+          "lemma": "ひとしきり",
+          "pos": "Adverb",
+          "surface": "ひとしきり"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話す"
+        }
+      ],
+      "id": "hitoshikirihanasu",
+      "input": "ひとしきり話す"
+    },
+    {
+      "description": "悪しからずご了承ください - auto-generated",
+      "expected": [
+        {
+          "lemma": "悪しからず",
+          "pos": "Adverb",
+          "surface": "悪しからず"
+        },
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "了承",
+          "pos": "Noun",
+          "surface": "了承"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "shikarazugo_kudasai",
+      "input": "悪しからずご了承ください"
+    },
+    {
+      "description": "たいそう立派だ - auto-generated",
+      "expected": [
+        {
+          "lemma": "たいそう",
+          "pos": "Adverb",
+          "surface": "たいそう"
+        },
+        {
+          "lemma": "立派",
+          "pos": "Adjective",
+          "surface": "立派"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "taisou_da",
+      "input": "たいそう立派だ"
+    },
+    {
+      "description": "必ず成功する - auto-generated",
+      "expected": [
+        {
+          "lemma": "必ず",
+          "pos": "Adverb",
+          "surface": "必ず"
+        },
+        {
+          "lemma": "成功",
+          "pos": "Noun",
+          "surface": "成功"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "zu_suru",
+      "input": "必ず成功する"
+    },
+    {
+      "description": "たいして変わらない - auto-generated",
+      "expected": [
+        {
+          "lemma": "たいして",
+          "pos": "Adverb",
+          "surface": "たいして"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "taishite_waranai",
+      "input": "たいして変わらない"
+    },
+    {
+      "description": "さほど難しくない - auto-generated",
+      "expected": [
+        {
+          "lemma": "さほど",
+          "pos": "Adverb",
+          "surface": "さほど"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "sahodo_shikunai",
+      "input": "さほど難しくない"
+    },
+    {
+      "description": "概して正しい - auto-generated",
+      "expected": [
+        {
+          "lemma": "概して",
+          "pos": "Adverb",
+          "surface": "概して"
+        },
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しい"
+        }
+      ],
+      "id": "shite_shii",
+      "input": "概して正しい"
+    },
+    {
+      "description": "理由を強調する副詞「何しろ」を一語で解析する",
+      "expected": [
+        {
+          "lemma": "何しろ",
+          "pos": "Adverb",
+          "surface": "何しろ"
+        },
+        {
+          "lemma": "急ぐ",
+          "pos": "Verb",
+          "surface": "急い"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "nanshiro_emphatic_reason_adverb",
+      "input": "何しろ急いでいる"
+    },
+    {
+      "description": "疑問程度副詞「いかほど」を一語で解析する",
+      "expected": [
+        {
+          "lemma": "いかほど",
+          "pos": "Adverb",
+          "surface": "いかほど"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "ikahodo_interrogative_degree_adverb",
+      "input": "いかほど必要か"
+    },
+    {
+      "description": "限定程度副詞「たかだか」を一語で解析する",
+      "expected": [
+        {
+          "lemma": "たかだか",
+          "pos": "Adverb",
+          "surface": "たかだか"
+        },
+        {
+          "lemma": "十人",
+          "pos": "Noun",
+          "surface": "十人"
+        }
+      ],
+      "id": "takadaka_limiting_degree_adverb",
+      "input": "たかだか十人"
+    },
+    {
+      "description": "数量を限定する副詞「わずか」を一語で解析する",
+      "expected": [
+        {
+          "lemma": "わずか",
+          "pos": "Adverb",
+          "surface": "わずか"
+        },
+        {
+          "lemma": "三人",
+          "pos": "Noun",
+          "surface": "三人"
+        }
+      ],
+      "id": "wazuka_quantity_adverb",
+      "input": "わずか三人"
+    },
+    {
+      "description": "固定副詞句「一切合切」を後続名詞から分離する",
+      "expected": [
+        {
+          "lemma": "一切合切",
+          "pos": "Adverb",
+          "surface": "一切合切"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "issaikassai_fixed_totalizing_adverb",
+      "input": "一切合切確認する"
+    },
+    {
+      "description": "強意副詞「しいて」を一語で解析する",
+      "expected": [
+        {
+          "lemma": "しいて",
+          "pos": "Adverb",
+          "surface": "しいて"
+        },
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言え"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しい"
+        }
+      ],
+      "id": "shiite_emphatic_adverb",
+      "input": "しいて言えば正しい"
+    },
+    {
+      "description": "逆接・選択副詞「むしろ」を一語で解析する",
+      "expected": [
+        {
+          "lemma": "むしろ",
+          "pos": "Adverb",
+          "surface": "むしろ"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "mushiro_contrastive_adverb",
+      "input": "むしろ必要だ"
+    },
+    {
+      "description": "様態副詞「おもむろに」を一語で解析する",
+      "expected": [
+        {
+          "lemma": "おもむろに",
+          "pos": "Adverb",
+          "surface": "おもむろに"
+        },
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩く"
+        }
+      ],
+      "id": "omomuroni_manner_adverb",
+      "input": "おもむろに歩く"
+    }
+  ],
+  "description": "adverb_fixed tests",
+  "version": "1.0"
+}

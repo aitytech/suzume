@@ -1,0 +1,43 @@
+{
+  "cases": [
+    {
+      "description": "ひらがな表記の文語動詞を活用分割する",
+      "expected": [
+        {
+          "lemma": "経験",
+          "pos": "Noun",
+          "surface": "経験"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "かんがみる",
+          "pos": "Verb",
+          "surface": "かんがみ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "判断",
+          "pos": "Noun",
+          "surface": "判断"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kangamite_hiragana_verb",
+      "input": "経験にかんがみて判断する"
+    }
+  ],
+  "description": "verb_literary tests",
+  "version": "1.0"
+}

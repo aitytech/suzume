@@ -63,6 +63,121 @@
       ],
       "id": "ka_uno",
       "input": "遥か向うの田圃"
+    },
+    {
+      "description": "必要ない - regression test",
+      "expected": [
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "nai",
+      "input": "必要ない"
+    },
+    {
+      "description": "便利ではない - regression test",
+      "expected": [
+        {
+          "lemma": "便利",
+          "pos": "Adjective",
+          "surface": "便利"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "dehanai",
+      "input": "便利ではない"
+    },
+    {
+      "description": "ナ形容詞語幹と副詞形を分割する",
+      "expected": [
+        {
+          "lemma": "大まか",
+          "pos": "Adjective",
+          "surface": "大まか"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "oomaka_ni_setsumei_suru",
+      "input": "大まかに説明する"
+    },
+    {
+      "description": "さまざまな方法 - auto-generated",
+      "expected": [
+        {
+          "lemma": "さまざま",
+          "pos": "Adjective",
+          "surface": "さまざま"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        }
+      ],
+      "id": "samazamana",
+      "input": "さまざまな方法"
+    },
+    {
+      "description": "ほぼ同じだ - auto-generated",
+      "expected": [
+        {
+          "lemma": "ほぼ",
+          "pos": "Adverb",
+          "surface": "ほぼ"
+        },
+        {
+          "lemma": "同じ",
+          "pos": "Adjective",
+          "surface": "同じ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "hobo_jida",
+      "input": "ほぼ同じだ"
     }
   ],
   "description": "na_adjective tests",

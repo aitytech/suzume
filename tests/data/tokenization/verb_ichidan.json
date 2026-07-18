@@ -639,10 +639,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "でて - MeCab互換分割 (で+て)",
       "expected": [
         {
@@ -658,17 +654,6 @@
       ],
       "id": "hiragana_dete",
       "input": "でて",
-      "suzume_expected": [
-        {
-          "lemma": "でる",
-          "pos": "Verb",
-          "surface": "で"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
       "tags": [
         "ichidan",
         "te_form",
@@ -1777,10 +1762,6 @@
       "input": "食べよ"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-design",
-        "reason": "一段動詞「見る」の文語命令形として文法的に解析するため"
-      },
       "description": "見よ - regression test",
       "expected": [
         {
@@ -1790,14 +1771,7 @@
         }
       ],
       "id": "yo",
-      "input": "見よ",
-      "suzume_expected": [
-        {
-          "lemma": "見る",
-          "pos": "Verb",
-          "surface": "見よ"
-        }
-      ]
+      "input": "見よ"
     },
     {
       "description": "着よ - regression test",
@@ -1812,10 +1786,6 @@
       "input": "着よ"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-design",
-        "reason": "一段動詞の文語命令形を一語の活用形として保持するため"
-      },
       "description": "調べよ - regression test",
       "expected": [
         {
@@ -1830,14 +1800,238 @@
         }
       ],
       "id": "beyo_1",
-      "input": "調べよ",
-      "suzume_expected": [
+      "input": "調べよ"
+    },
+    {
+      "description": "並べてある - regression test",
+      "expected": [
         {
-          "lemma": "調べる",
+          "lemma": "並べる",
           "pos": "Verb",
-          "surface": "調べよ"
+          "surface": "並べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
         }
-      ]
+      ],
+      "id": "betearu",
+      "input": "並べてある"
+    },
+    {
+      "description": "止めてある - regression test",
+      "expected": [
+        {
+          "lemma": "止める",
+          "pos": "Verb",
+          "surface": "止め"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "metearu",
+      "input": "止めてある"
+    },
+    {
+      "description": "掛けてある - regression test",
+      "expected": [
+        {
+          "lemma": "掛ける",
+          "pos": "Verb",
+          "surface": "掛け"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "ketearu",
+      "input": "掛けてある"
+    },
+    {
+      "description": "立ててある - regression test",
+      "expected": [
+        {
+          "lemma": "立てる",
+          "pos": "Verb",
+          "surface": "立て"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "tetearu",
+      "input": "立ててある"
+    },
+    {
+      "description": "Lexical Ichidan verb ending in seru remains one token",
+      "expected": [
+        {
+          "lemma": "知らせる",
+          "pos": "Verb",
+          "surface": "知らせる"
+        }
+      ],
+      "id": "raseru",
+      "input": "知らせる"
+    },
+    {
+      "description": "Lexical seru verb remains intact after a case-marked object",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "知らせる",
+          "pos": "Verb",
+          "surface": "知らせる"
+        }
+      ],
+      "id": "wo_raseru",
+      "input": "本を知らせる"
+    },
+    {
+      "description": "Lexical seru renyokei keeps verb POS and lemma before past tense",
+      "expected": [
+        {
+          "lemma": "知らせる",
+          "pos": "Verb",
+          "surface": "知らせ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "raseta",
+      "input": "知らせた"
+    },
+    {
+      "description": "Lexical seru stem keeps verb POS and lemma before negation",
+      "expected": [
+        {
+          "lemma": "知らせる",
+          "pos": "Verb",
+          "surface": "知らせ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "rasenai",
+      "input": "知らせない"
+    },
+    {
+      "description": "Dictionary-backed lexical seru verb beats productive causative split",
+      "expected": [
+        {
+          "lemma": "合わせる",
+          "pos": "Verb",
+          "surface": "合わせる"
+        }
+      ],
+      "id": "waseru",
+      "input": "合わせる"
+    },
+    {
+      "description": "Lexical seru verb with an i-row internal stem remains one token",
+      "expected": [
+        {
+          "lemma": "浴びせる",
+          "pos": "Verb",
+          "surface": "浴びせる"
+        }
+      ],
+      "id": "biseru",
+      "input": "浴びせる"
+    },
+    {
+      "description": "Dictionary-backed potential lexical form remains one token",
+      "expected": [
+        {
+          "lemma": "燃やせる",
+          "pos": "Verb",
+          "surface": "燃やせる"
+        }
+      ],
+      "id": "yaseru",
+      "input": "燃やせる"
+    },
+    {
+      "description": "Nominal homograph remains a noun before a case particle",
+      "expected": [
+        {
+          "lemma": "知らせ",
+          "pos": "Noun",
+          "surface": "知らせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "受ける",
+          "pos": "Verb",
+          "surface": "受ける"
+        }
+      ],
+      "id": "rasewo_keru",
+      "input": "知らせを受ける"
+    },
+    {
+      "description": "Productive godan causative remains split",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "maseru",
+      "input": "読ませる"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",

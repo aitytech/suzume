@@ -352,10 +352,6 @@
       "input": "話すことができない"
     },
     {
-      "accepted_diff": {
-        "category": "design-diff",
-        "reason": "MeCab normalize merges 色+褪せる via kanji-merge, but Suzume splits at kanji/hiragana boundary; both acceptable"
-      },
       "description": "色褪せる splits as 色+褪せる (both 1-token and 2-token acceptable)",
       "expected": [
         {
@@ -365,19 +361,7 @@
         }
       ],
       "id": "iroaseru-compound-verb",
-      "input": "色褪せる",
-      "suzume_expected": [
-        {
-          "lemma": "色",
-          "pos": "Noun",
-          "surface": "色"
-        },
-        {
-          "lemma": "褪せる",
-          "pos": "Verb",
-          "surface": "褪せる"
-        }
-      ]
+      "input": "色褪せる"
     },
     {
       "description": "食べさせる - regression test",
@@ -568,10 +552,6 @@
       "input": "読め"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-policy",
-        "reason": "Potential verb 読める lemmatizes to its base verb 読む (search-unit policy); MeCab keeps 読める"
-      },
       "description": "Potential 読める lemmatizes to base 読む in-sentence (search-unit policy; MeCab keeps 読める)",
       "expected": [
         {
@@ -596,29 +576,7 @@
         }
       ],
       "id": "kono_ga_meru",
-      "input": "この本が読める",
-      "suzume_expected": [
-        {
-          "lemma": "この",
-          "pos": "Determiner",
-          "surface": "この"
-        },
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読める"
-        }
-      ]
+      "input": "この本が読める"
     },
     {
       "description": "lexicalized godan verb 引きずる recognized as single verb (L2)",
@@ -892,10 +850,6 @@
       "input": "かんで"
     },
     {
-      "accepted_diff": {
-        "category": "grammatical-ambiguity",
-        "reason": "ひらがなの撥音便は「む・ぶ・ぬ」が同形になるため、文法的に成立する「よむ」を保持する"
-      },
       "description": "Pure-hiragana godan-ma hatsuonbin: よむ past (よむ/よぶ ambiguous, pick よむ)",
       "expected": [
         {
@@ -910,25 +864,9 @@
         }
       ],
       "id": "yonda",
-      "input": "よんだ",
-      "suzume_expected": [
-        {
-          "lemma": "よむ",
-          "pos": "Verb",
-          "surface": "よん"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ]
+      "input": "よんだ"
     },
     {
-      "accepted_diff": {
-        "category": "grammatical-ambiguity",
-        "reason": "撥音便を動詞語幹と同一検索単位にし、文脈上の語彙候補「ならぶ」を保持する"
-      },
       "description": "Pure-hiragana godan-ba hatsuonbin: ならぶ te-form (MeCab splits as なる mizenkei)",
       "expected": [
         {
@@ -948,19 +886,7 @@
         }
       ],
       "id": "narande",
-      "input": "ならんで",
-      "suzume_expected": [
-        {
-          "lemma": "ならぶ",
-          "pos": "Verb",
-          "surface": "ならん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        }
-      ]
+      "input": "ならんで"
     },
     {
       "description": "Pure-hiragana godan-ma hatsuonbin: しずむ te-form",
@@ -1783,14 +1709,9 @@
       "description": "待ちかねる - regression test",
       "expected": [
         {
-          "lemma": "待つ",
+          "lemma": "待ちかねる",
           "pos": "Verb",
-          "surface": "待ち"
-        },
-        {
-          "lemma": "かねる",
-          "pos": "Auxiliary",
-          "surface": "かねる"
+          "surface": "待ちかねる"
         }
       ],
       "id": "chikaneru",
@@ -1980,7 +1901,7 @@
         },
         {
           "lemma": "あげる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "あげ"
         },
         {
@@ -2007,7 +1928,7 @@
         },
         {
           "lemma": "あげる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "あげ"
         },
         {
@@ -2034,7 +1955,7 @@
         },
         {
           "lemma": "あげる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "あげ"
         },
         {
@@ -2061,7 +1982,7 @@
         },
         {
           "lemma": "あげる",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "あげ"
         },
         {
@@ -2436,8 +2357,8 @@
           "surface": "お"
         },
         {
-          "lemma": "読み",
-          "pos": "Noun",
+          "lemma": "読む",
+          "pos": "Verb",
           "surface": "読み"
         },
         {
@@ -2463,8 +2384,8 @@
           "surface": "お"
         },
         {
-          "lemma": "書き",
-          "pos": "Noun",
+          "lemma": "書く",
+          "pos": "Verb",
           "surface": "書き"
         },
         {
@@ -2490,8 +2411,8 @@
           "surface": "お"
         },
         {
-          "lemma": "帰り",
-          "pos": "Noun",
+          "lemma": "帰る",
+          "pos": "Verb",
           "surface": "帰り"
         },
         {
@@ -2517,8 +2438,8 @@
           "surface": "お"
         },
         {
-          "lemma": "話し",
-          "pos": "Noun",
+          "lemma": "話す",
+          "pos": "Verb",
           "surface": "話し"
         },
         {
@@ -2544,8 +2465,8 @@
           "surface": "お"
         },
         {
-          "lemma": "使い",
-          "pos": "Noun",
+          "lemma": "使う",
+          "pos": "Verb",
           "surface": "使い"
         },
         {
@@ -2709,6 +2630,535 @@
       ],
       "id": "meru_keru_merurashii_kerurashii_berareruyouninaru",
       "input": "読める、書ける、読めるらしい、書けるらしい。食べられるようになる。"
+    },
+    {
+      "description": "Causative-passive short せ remains an auxiliary before passive",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "causative_passive_short_se_aux",
+      "input": "本を書かせられた"
+    },
+    {
+      "description": "見つかった - regression test",
+      "expected": [
+        {
+          "lemma": "見つかる",
+          "pos": "Verb",
+          "surface": "見つかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tsukattta",
+      "input": "見つかった"
+    },
+    {
+      "description": "いつでもできる - regression test",
+      "expected": [
+        {
+          "lemma": "いつ",
+          "pos": "Pronoun",
+          "surface": "いつ"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        }
+      ],
+      "id": "itsudemodekiru",
+      "input": "いつでもできる"
+    },
+    {
+      "description": "確認できる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        }
+      ],
+      "id": "dekiru",
+      "input": "確認できる"
+    },
+    {
+      "description": "Godan-ra past",
+      "expected": [
+        {
+          "lemma": "異なる",
+          "pos": "Verb",
+          "surface": "異なっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kotanatta",
+      "input": "異なった"
+    },
+    {
+      "description": "Godan-ra progressive",
+      "expected": [
+        {
+          "lemma": "異なる",
+          "pos": "Verb",
+          "surface": "異なっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "kotanatteiru",
+      "input": "異なっている"
+    },
+    {
+      "description": "Godan-ra te-form coordination",
+      "expected": [
+        {
+          "lemma": "異なる",
+          "pos": "Verb",
+          "surface": "異なっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "kotanattesusumu",
+      "input": "異なって進む"
+    },
+    {
+      "description": "可能形と丁寧助動詞のlemmaを復元する",
+      "expected": [
+        {
+          "lemma": "書ける",
+          "pos": "Verb",
+          "surface": "書け"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "kakemasu_potential",
+      "input": "書けます"
+    },
+    {
+      "description": "固定程度副詞句",
+      "expected": [
+        {
+          "lemma": "多少なりとも",
+          "pos": "Adverb",
+          "surface": "多少なりとも"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "tashonaritomo_fixed_degree_adverb",
+      "input": "多少なりとも進む"
+    },
+    {
+      "description": "ゴダン動詞連用形の品詞とlemma",
+      "expected": [
+        {
+          "lemma": "基づく",
+          "pos": "Verb",
+          "surface": "基づき"
+        },
+        {
+          "lemma": "決める",
+          "pos": "Verb",
+          "surface": "決める"
+        }
+      ],
+      "id": "motozuki_renyokei_verb_lemma",
+      "input": "基づき決める"
+    },
+    {
+      "description": "範囲複合格助詞",
+      "expected": [
+        {
+          "lemma": "春",
+          "pos": "Noun",
+          "surface": "春"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "夏",
+          "pos": "Noun",
+          "surface": "夏"
+        },
+        {
+          "lemma": "にかけて",
+          "pos": "Particle",
+          "surface": "にかけて"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続く"
+        }
+      ],
+      "id": "nikakete_range_compound_particle",
+      "input": "春から夏にかけて続く"
+    },
+    {
+      "description": "定型条件構文の仮定形",
+      "expected": [
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あれば"
+        },
+        {
+          "lemma": "参加",
+          "pos": "Noun",
+          "surface": "参加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "to_areba_fixed_conditional_form",
+      "input": "必要とあれば参加する"
+    },
+    {
+      "description": "一段動詞連用形とサ変述語の境界",
+      "expected": [
+        {
+          "lemma": "踏まえる",
+          "pos": "Verb",
+          "surface": "踏まえ"
+        },
+        {
+          "lemma": "決定",
+          "pos": "Noun",
+          "surface": "決定"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "fumae_ichidan_renyokei_sahen_boundary",
+      "input": "踏まえ決定する"
+    },
+    {
+      "description": "規則に沿って進む - regression test",
+      "expected": [
+        {
+          "lemma": "規則",
+          "pos": "Noun",
+          "surface": "規則"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "沿う",
+          "pos": "Verb",
+          "surface": "沿っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "ni_ttte_mu",
+      "input": "規則に沿って進む"
+    },
+    {
+      "description": "方針に沿って実施する - regression test",
+      "expected": [
+        {
+          "lemma": "方針",
+          "pos": "Noun",
+          "surface": "方針"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "沿う",
+          "pos": "Verb",
+          "surface": "沿っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "実施",
+          "pos": "Noun",
+          "surface": "実施"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ni_ttte_suru",
+      "input": "方針に沿って実施する"
+    },
+    {
+      "description": "名詞基部の接尾動詞めくの音便形と過去助動詞",
+      "expected": [
+        {
+          "lemma": "春めく",
+          "pos": "Verb",
+          "surface": "春めい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "陽気",
+          "pos": "Noun",
+          "surface": "陽気"
+        }
+      ],
+      "id": "verb_godan_meku_harumeita",
+      "input": "春めいた陽気"
+    },
+    {
+      "description": "接尾動詞めくの音便形と過去助動詞",
+      "expected": [
+        {
+          "lemma": "秋めく",
+          "pos": "Verb",
+          "surface": "秋めい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "空気",
+          "pos": "Noun",
+          "surface": "空気"
+        }
+      ],
+      "id": "verb_godan_meku_akimeita",
+      "input": "秋めいた空気"
+    },
+    {
+      "description": "名詞基部の接尾動詞づくの音便形と過去助動詞",
+      "expected": [
+        {
+          "lemma": "活気づく",
+          "pos": "Verb",
+          "surface": "活気づい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "街",
+          "pos": "Noun",
+          "surface": "街"
+        }
+      ],
+      "id": "verb_godan_zuku_kakizuita",
+      "input": "活気づいた街"
+    },
+    {
+      "description": "名詞基部の接尾動詞づくの音便形と継続補助動詞",
+      "expected": [
+        {
+          "lemma": "活気づく",
+          "pos": "Verb",
+          "surface": "活気づい"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "verb_godan_zuku_kakizuiteiru",
+      "input": "活気づいている"
+    },
+    {
+      "description": "継続動詞の音便形と時間表現以来",
+      "expected": [
+        {
+          "lemma": "開始以来",
+          "pos": "Noun",
+          "surface": "開始以来"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "verb_godan_tsuzuku_iraizoku",
+      "input": "開始以来続いている"
+    },
+    {
+      "description": "継続動詞の音便形と時間表現以降",
+      "expected": [
+        {
+          "lemma": "開始以降",
+          "pos": "Noun",
+          "surface": "開始以降"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "verb_godan_tsuzuku_ikouzoku",
+      "input": "開始以降続いている"
+    },
+    {
+      "description": "継続動詞の音便形と時間表現以来",
+      "expected": [
+        {
+          "lemma": "終了以来",
+          "pos": "Noun",
+          "surface": "終了以来"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "verb_godan_tsuzuku_shuryouirai",
+      "input": "終了以来続いている"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

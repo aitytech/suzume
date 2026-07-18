@@ -1,10 +1,6 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "Regression: 棄てる ichidan verb dict entry",
       "expected": [
         {
@@ -34,34 +30,34 @@
         }
       ],
       "id": "teta_wo_u",
-      "input": "棄てた物を拾う",
-      "suzume_expected": [
+      "input": "棄てた物を拾う"
+    },
+    {
+      "description": "完了助動詞の仮定形をAuxiliaryとして解析する",
+      "expected": [
         {
-          "lemma": "棄てる",
+          "lemma": "見る",
           "pos": "Verb",
-          "surface": "棄て"
+          "surface": "見"
         },
         {
           "lemma": "た",
           "pos": "Auxiliary",
-          "surface": "た"
+          "surface": "たら"
         },
         {
-          "lemma": "もの",
+          "lemma": "確認",
           "pos": "Noun",
-          "surface": "物"
+          "surface": "確認"
         },
         {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "拾う",
+          "lemma": "する",
           "pos": "Verb",
-          "surface": "拾う"
+          "surface": "する"
         }
-      ]
+      ],
+      "id": "mitara_kakunin_suru",
+      "input": "見たら確認する"
     }
   ],
   "description": "verb_ta_form tests",

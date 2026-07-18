@@ -749,10 +749,6 @@
       "input": "男っぽさがある"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-design",
-        "reason": "接尾辞形容詞の語幹を生産的に分割し、検索単位を保持するため"
-      },
       "description": "安っぽさがある - regression test",
       "expected": [
         {
@@ -777,34 +773,7 @@
         }
       ],
       "id": "ttposagaaru_2",
-      "input": "安っぽさがある",
-      "suzume_expected": [
-        {
-          "lemma": "安",
-          "pos": "Noun",
-          "surface": "安"
-        },
-        {
-          "lemma": "っぽい",
-          "pos": "Adjective",
-          "surface": "っぽ"
-        },
-        {
-          "lemma": "さ",
-          "pos": "Suffix",
-          "surface": "さ"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        }
-      ]
+      "input": "安っぽさがある"
     },
     {
       "description": "Split the i-adjective renyokei and connective particle before naranai.",
@@ -977,6 +946,60 @@
       ],
       "id": "emotive_adjective_te_naranai_boundary",
       "input": "嬉しくてならない。悲しくてならない。寂しくてならない。恋しくてならない。懐かしくてならない。楽しくてならない。欲しくてならない。寂しくてならなかった。"
+    },
+    {
+      "description": "i形容詞語幹に外観接尾辞げが続く形",
+      "expected": [
+        {
+          "lemma": "悲しい",
+          "pos": "Adjective",
+          "surface": "悲し"
+        },
+        {
+          "lemma": "げ",
+          "pos": "Suffix",
+          "surface": "げ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "表情",
+          "pos": "Noun",
+          "surface": "表情"
+        }
+      ],
+      "id": "adjective_kanashige_stem_suffix",
+      "input": "悲しげな表情"
+    },
+    {
+      "description": "名詞に外観接尾辞げが続く形",
+      "expected": [
+        {
+          "lemma": "不安",
+          "pos": "Noun",
+          "surface": "不安"
+        },
+        {
+          "lemma": "げ",
+          "pos": "Suffix",
+          "surface": "げ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "様子",
+          "pos": "Noun",
+          "surface": "様子"
+        }
+      ],
+      "id": "adjective_fuan_ge_suffix",
+      "input": "不安げな様子"
     }
   ],
   "description": "adjective tests",

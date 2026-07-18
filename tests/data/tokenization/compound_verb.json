@@ -1,10 +1,6 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "Regression: verb rentaikei + 所 should not merge into compound noun",
       "expected": [
         {
@@ -29,29 +25,7 @@
         }
       ],
       "id": "seru_ni_ru",
-      "input": "見渡せる所に座る",
-      "suzume_expected": [
-        {
-          "lemma": "見渡する",
-          "pos": "Verb",
-          "surface": "見渡せる"
-        },
-        {
-          "lemma": "所",
-          "pos": "Noun",
-          "surface": "所"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "座る",
-          "pos": "Verb",
-          "surface": "座る"
-        }
-      ]
+      "input": "見渡せる所に座る"
     },
     {
       "description": "五段終止形後の副助詞だけと存在動詞音便形を複合動詞候補へ融合しない",
@@ -226,6 +200,162 @@
       ],
       "id": "mikakeru_kikakeru_bekakeru_minaosu_kikaesu_bedasu_mitsudukeru_kiau_mikaketa_minaoshiteiru_kikaenai_bedashita",
       "input": "読みかける。書きかける。食べかける。読みなおす。書きかえす。食べだす。読みつづける。書きあう。読みかけた。読みなおしている。書きかえない。食べだした。"
+    },
+    {
+      "description": "複合動詞のテ形と完了補助動詞を分割する",
+      "expected": [
+        {
+          "lemma": "使いきる",
+          "pos": "Verb",
+          "surface": "使いきっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "しまう"
+        }
+      ],
+      "id": "tsukaikitte_shimau",
+      "input": "使いきってしまう"
+    },
+    {
+      "description": "複合動詞のテ形を分割する",
+      "expected": [
+        {
+          "lemma": "思い切る",
+          "pos": "Verb",
+          "surface": "思い切っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "omoikitte_susumu",
+      "input": "思い切って進む"
+    },
+    {
+      "description": "テ形と補助動詞「くる」の文法境界を維持する",
+      "expected": [
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "くる"
+        }
+      ],
+      "id": "yatte_kuru_te_auxiliary_boundary",
+      "input": "やってくる"
+    },
+    {
+      "description": "ひらがな表記の失敗補助動詞「そこなう」を補助動詞として解析する",
+      "expected": [
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やり"
+        },
+        {
+          "lemma": "そこなう",
+          "pos": "Auxiliary",
+          "surface": "そこなう"
+        }
+      ],
+      "id": "yarisokonau_hiragana_failure_auxiliary",
+      "input": "やりそこなう"
+    },
+    {
+      "description": "一文字漢字五段動詞の連用形と後項動詞を複合動詞として結合する",
+      "expected": [
+        {
+          "lemma": "押し込む",
+          "pos": "Verb",
+          "surface": "押し込む"
+        }
+      ],
+      "id": "oshikomu_single_kanji_godan_compound",
+      "input": "押し込む"
+    },
+    {
+      "description": "同形連用形「降り」の語義曖昧性を許容し、動詞境界を維持する",
+      "expected": [
+        {
+          "lemma": "降りる",
+          "pos": "Verb",
+          "surface": "降り"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始める"
+        }
+      ],
+      "id": "ori_hajimeru_lemma_ambiguity",
+      "input": "降り始める"
+    },
+    {
+      "description": "複合動詞「見当たる」の未然形と否定助動詞を分割する",
+      "expected": [
+        {
+          "lemma": "見当たる",
+          "pos": "Verb",
+          "surface": "見当たら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        }
+      ],
+      "id": "miataru_negative_compound_boundary",
+      "input": "見当たらない問題"
+    },
+    {
+      "description": "「差し支えない」を名詞述語として解析する曖昧性を許容する",
+      "expected": [
+        {
+          "lemma": "差し支え",
+          "pos": "Noun",
+          "surface": "差し支え"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "範囲",
+          "pos": "Noun",
+          "surface": "範囲"
+        }
+      ],
+      "id": "sashitsukae_nai_nominal_predicate_ambiguity",
+      "input": "差し支えない範囲"
     }
   ],
   "description": "compound_verb tests",

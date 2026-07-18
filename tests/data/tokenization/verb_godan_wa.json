@@ -443,10 +443,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "verb form: context-dependent POS/lemma"
-      },
       "description": "しまって - MeCab-compatible split with lemma しまう",
       "expected": [
         {
@@ -462,17 +458,6 @@
       ],
       "id": "p4_shimatte_te",
       "input": "しまって",
-      "suzume_expected": [
-        {
-          "lemma": "しまう",
-          "pos": "Auxiliary",
-          "surface": "しまっ"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
       "tags": [
         "p4",
         "godanwa",
@@ -481,10 +466,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "あらった - GodanWa past form without dictionary, lemma should be あらう",
       "expected": [
         {
@@ -500,17 +481,6 @@
       ],
       "id": "p4_aratta_past",
       "input": "あらった",
-      "suzume_expected": [
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あらっ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
       "tags": [
         "p4",
         "godanwa",
@@ -520,10 +490,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "あらって - GodanWa te-form without dictionary, lemma should be あらう",
       "expected": [
         {
@@ -539,17 +505,6 @@
       ],
       "id": "p4_aratte_te",
       "input": "あらって",
-      "suzume_expected": [
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あらっ"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
       "tags": [
         "p4",
         "godanwa",
@@ -1064,10 +1019,6 @@
       "input": "ならって"
     },
     {
-      "accepted_diff": {
-        "category": "grammatical-ambiguity",
-        "reason": "ひらがなの促音便は複数の原形候補を持つため、文法的に成立する「おもう」を保持する"
-      },
       "description": "Pure-hiragana godan-wa sokuonbin: おもう past (MeCab gives non-word おもる)",
       "expected": [
         {
@@ -1082,25 +1033,9 @@
         }
       ],
       "id": "omottta",
-      "input": "おもった",
-      "suzume_expected": [
-        {
-          "lemma": "おもう",
-          "pos": "Verb",
-          "surface": "おもっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "おもった"
     },
     {
-      "accepted_diff": {
-        "category": "grammatical-ambiguity",
-        "reason": "ひらがなの促音便は複数の原形候補を持つため、文法的に成立する「すう」を保持する"
-      },
       "description": "Pure-hiragana godan-wa sokuonbin: すう te-form (すう/する ambiguous, pick すう)",
       "expected": [
         {
@@ -1115,19 +1050,7 @@
         }
       ],
       "id": "suttte",
-      "input": "すって",
-      "suzume_expected": [
-        {
-          "lemma": "すう",
-          "pos": "Verb",
-          "surface": "すっ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ]
+      "input": "すって"
     },
     {
       "description": "Pure-hiragana godan-wa sokuonbin: まよう te-form",

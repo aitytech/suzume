@@ -261,37 +261,12 @@
       ],
       "id": "compound_verb_hiragana_v2_dasu",
       "input": "走りだしたくなかった",
-      "suzume_expected": [
-        {
-          "lemma": "走り出す",
-          "pos": "Verb",
-          "surface": "走りだし"
-        },
-        {
-          "lemma": "たい",
-          "pos": "Auxiliary",
-          "surface": "たく"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
       "tags": [
         "compound_verb",
         "hiragana_v2"
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "飛びこみたい - hiragana subsidiary verb",
       "expected": [
         {
@@ -307,17 +282,6 @@
       ],
       "id": "compound_verb_hiragana_v2_komu",
       "input": "飛びこみたい",
-      "suzume_expected": [
-        {
-          "lemma": "飛び込む",
-          "pos": "Verb",
-          "surface": "飛びこみ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "たい"
-        }
-      ],
       "tags": [
         "compound_verb",
         "hiragana_v2"
@@ -722,10 +686,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma normalization difference"
-      },
       "description": "S3: 演じきった should be compound verb with lemma 演じ切る",
       "expected": [
         {
@@ -751,25 +711,6 @@
       ],
       "id": "s3_enjikitta",
       "input": "役を演じきった",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "役"
-        },
-        {
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "演じ切る",
-          "pos": "Verb",
-          "surface": "演じきっ"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
       "tags": [
         "s3_fix",
         "compound_verb",
@@ -963,10 +904,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "抱きしめて - auto-generated",
       "expected": [
         {
@@ -982,18 +919,6 @@
       ],
       "id": "kishimete",
       "input": "抱きしめて",
-      "suzume_expected": [
-        {
-          "lemma": "抱き締める",
-          "pos": "Verb",
-          "surface": "抱きしめ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
       "tags": [
         "compound",
         "ichidan"
@@ -1175,10 +1100,6 @@
       "input": "振る舞う"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS classification design diff (pre-existing)"
-      },
       "description": "compound verb passive split: 語り継ぐ mizenkei + れる",
       "expected": [
         {
@@ -1208,34 +1129,7 @@
         }
       ],
       "id": "ri_garerudearou",
-      "input": "語り継がれるであろう",
-      "suzume_expected": [
-        {
-          "lemma": "語り継ぐ",
-          "pos": "Verb",
-          "surface": "語り継が"
-        },
-        {
-          "lemma": "れる",
-          "pos": "Auxiliary",
-          "surface": "れる"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あろ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        }
-      ]
+      "input": "語り継がれるであろう"
     },
     {
       "description": "compound verb passive split: 読み込む mizenkei + れる",
@@ -2809,6 +2703,113 @@
       ],
       "id": "i_gini",
       "input": "使い過ぎに注意"
+    },
+    {
+      "description": "複合動詞のV2活用型を保持して、GodanSa語尾をサ変へ誤補正しない",
+      "expected": [
+        {
+          "lemma": "見直す",
+          "pos": "Verb",
+          "surface": "見直す"
+        }
+      ],
+      "id": "compound_verb_minaosu_godan_sa_lemma",
+      "input": "見直す"
+    },
+    {
+      "description": "資料を取り扱う - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り扱う",
+          "pos": "Verb",
+          "surface": "取り扱う"
+        }
+      ],
+      "id": "wo_ri_u",
+      "input": "資料を取り扱う"
+    },
+    {
+      "description": "箱を持ち運ぶ - regression test",
+      "expected": [
+        {
+          "lemma": "箱",
+          "pos": "Noun",
+          "surface": "箱"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "持ち運ぶ",
+          "pos": "Verb",
+          "surface": "持ち運ぶ"
+        }
+      ],
+      "id": "wo_chi_bu",
+      "input": "箱を持ち運ぶ"
+    },
+    {
+      "description": "見過ごせない - regression test",
+      "expected": [
+        {
+          "lemma": "見過ごせる",
+          "pos": "Verb",
+          "surface": "見過ごせ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "gosenai",
+      "input": "見過ごせない"
+    },
+    {
+      "description": "可能複合動詞の否定助動詞を分離する",
+      "expected": [
+        {
+          "lemma": "やりきれる",
+          "pos": "Verb",
+          "surface": "やりきれ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "compound_verb_yarikire_negative_boundary",
+      "input": "やりきれない"
+    },
+    {
+      "description": "複合動詞と使役連鎖の形態的曖昧さを保持する",
+      "expected": [
+        {
+          "lemma": "見合う",
+          "pos": "Verb",
+          "surface": "見合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "compound_verb_miawaseru_causative_ambiguity",
+      "input": "見合わせる"
     }
   ],
   "description": "Compound verbs",

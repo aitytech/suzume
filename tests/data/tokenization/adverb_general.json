@@ -379,10 +379,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ã§ã: conjunction vs particle - position-dependent"
-      },
       "description": "たとえ should be Adverb (conditional) - grammar-first: で(AUX,だ)+も(PARTICLE)",
       "expected": [
         {
@@ -408,24 +404,6 @@
       ],
       "id": "adverb_tatoe",
       "input": "たとえ雨でも行く",
-      "suzume_expected": [
-        {
-          "pos": "Adverb",
-          "surface": "たとえ"
-        },
-        {
-          "pos": "Noun",
-          "surface": "雨"
-        },
-        {
-          "pos": "Particle",
-          "surface": "でも"
-        },
-        {
-          "pos": "Verb",
-          "surface": "行く"
-        }
-      ],
       "tags": [
         "adverb"
       ]
@@ -988,10 +966,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma/POS diff: よう Noun vs Auxiliary"
-      },
       "description": "あたかも should be single ADV",
       "expected": [
         {
@@ -1017,38 +991,12 @@
       ],
       "id": "adv_atakamo",
       "input": "あたかも夢のよう",
-      "suzume_expected": [
-        {
-          "lemma": "あたかも",
-          "pos": "Adverb",
-          "surface": "あたかも"
-        },
-        {
-          "lemma": "夢",
-          "pos": "Noun",
-          "surface": "夢"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "よう",
-          "pos": "Noun",
-          "surface": "よう"
-        }
-      ],
       "tags": [
         "adverb",
         "split_prevention"
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "さながら should be single ADV",
       "expected": [
         {
@@ -1074,28 +1022,6 @@
       ],
       "id": "adv_sanagara",
       "input": "さながら映画のよう",
-      "suzume_expected": [
-        {
-          "lemma": "さながら",
-          "pos": "Adverb",
-          "surface": "さながら"
-        },
-        {
-          "lemma": "映画",
-          "pos": "Noun",
-          "surface": "映画"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "よう",
-          "pos": "Noun",
-          "surface": "よう"
-        }
-      ],
       "tags": [
         "adverb",
         "split_prevention"
@@ -2136,12 +2062,12 @@
         },
         {
           "lemma": "つとめて",
-          "pos": "Adverb",
+          "pos": "Noun",
           "surface": "つとめて"
         },
         {
           "lemma": "水",
-          "pos": "Noun",
+          "pos": "Suffix",
           "surface": "水"
         },
         {
@@ -2435,6 +2361,887 @@
       ],
       "id": "hamotoyori_wo_mu_hamotoyori_wo_ku_hamotoyori_wo_mu",
       "input": "本はもとより水を読む。水はもとより紙を書く。紙はもとより本を包む。"
+    },
+    {
+      "description": "全然知らない - regression test",
+      "expected": [
+        {
+          "lemma": "全然",
+          "pos": "Adverb",
+          "surface": "全然"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ranai",
+      "input": "全然知らない"
+    },
+    {
+      "description": "いったん待つ - regression test",
+      "expected": [
+        {
+          "lemma": "いったん",
+          "pos": "Adverb",
+          "surface": "いったん"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "itttan_tsu",
+      "input": "いったん待つ"
+    },
+    {
+      "description": "どうしても行く - regression test",
+      "expected": [
+        {
+          "lemma": "どうしても",
+          "pos": "Adverb",
+          "surface": "どうしても"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "doushitemo_ku",
+      "input": "どうしても行く"
+    },
+    {
+      "description": "ひとまず待つ - regression test",
+      "expected": [
+        {
+          "lemma": "ひとまず",
+          "pos": "Adverb",
+          "surface": "ひとまず"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "hitomazu_tsu",
+      "input": "ひとまず待つ"
+    },
+    {
+      "description": "ことごとく読む - regression test",
+      "expected": [
+        {
+          "lemma": "ことごとく",
+          "pos": "Adverb",
+          "surface": "ことごとく"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "kotogotoku_mu",
+      "input": "ことごとく読む"
+    },
+    {
+      "description": "おおむね正しい - regression test",
+      "expected": [
+        {
+          "lemma": "おおむね",
+          "pos": "Adverb",
+          "surface": "おおむね"
+        },
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しい"
+        }
+      ],
+      "id": "oomune_shii",
+      "input": "おおむね正しい"
+    },
+    {
+      "description": "せいぜい待つ - regression test",
+      "expected": [
+        {
+          "lemma": "せいぜい",
+          "pos": "Adverb",
+          "surface": "せいぜい"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "seizei_tsu",
+      "input": "せいぜい待つ"
+    },
+    {
+      "description": "とうてい無理だ - regression test",
+      "expected": [
+        {
+          "lemma": "とうてい",
+          "pos": "Adverb",
+          "surface": "とうてい"
+        },
+        {
+          "lemma": "無理",
+          "pos": "Adjective",
+          "surface": "無理"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "toutei_da",
+      "input": "とうてい無理だ"
+    },
+    {
+      "description": "いかに重要か - regression test",
+      "expected": [
+        {
+          "lemma": "いかに",
+          "pos": "Adverb",
+          "surface": "いかに"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "ikani_ka",
+      "input": "いかに重要か"
+    },
+    {
+      "description": "あまつさえ待つ - regression test",
+      "expected": [
+        {
+          "lemma": "あまつさえ",
+          "pos": "Adverb",
+          "surface": "あまつさえ"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "amatsusae_tsu",
+      "input": "あまつさえ待つ"
+    },
+    {
+      "description": "おおよそ正しい - regression test",
+      "expected": [
+        {
+          "lemma": "おおよそ",
+          "pos": "Adverb",
+          "surface": "おおよそ"
+        },
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しい"
+        }
+      ],
+      "id": "ooyoso_shii",
+      "input": "おおよそ正しい"
+    },
+    {
+      "description": "概ね正しい - regression test",
+      "expected": [
+        {
+          "lemma": "概ね",
+          "pos": "Adverb",
+          "surface": "概ね"
+        },
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しい"
+        }
+      ],
+      "id": "ne_shii",
+      "input": "概ね正しい"
+    },
+    {
+      "description": "今さら遅い - regression test",
+      "expected": [
+        {
+          "lemma": "今さら",
+          "pos": "Adverb",
+          "surface": "今さら"
+        },
+        {
+          "lemma": "遅い",
+          "pos": "Adjective",
+          "surface": "遅い"
+        }
+      ],
+      "id": "sara_i",
+      "input": "今さら遅い"
+    },
+    {
+      "description": "一応確認する - regression test",
+      "expected": [
+        {
+          "lemma": "一応",
+          "pos": "Adverb",
+          "surface": "一応"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru",
+      "input": "一応確認する"
+    },
+    {
+      "description": "全く知らない - regression test",
+      "expected": [
+        {
+          "lemma": "全く",
+          "pos": "Adverb",
+          "surface": "全く"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ku_ranai",
+      "input": "全く知らない"
+    },
+    {
+      "description": "できるだけ書く - regression test",
+      "expected": [
+        {
+          "lemma": "できるだけ",
+          "pos": "Adverb",
+          "surface": "できるだけ"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        }
+      ],
+      "id": "dekirudake_ku",
+      "input": "できるだけ書く"
+    },
+    {
+      "description": "Interrogative adverb before explanatory copular nominalizer",
+      "expected": [
+        {
+          "lemma": "なぜ",
+          "pos": "Adverb",
+          "surface": "なぜ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "nazenanoda",
+      "input": "なぜなのだ"
+    },
+    {
+      "description": "Interrogative adverb in explanatory question",
+      "expected": [
+        {
+          "lemma": "なぜ",
+          "pos": "Adverb",
+          "surface": "なぜ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "nazenanoka",
+      "input": "なぜなのか"
+    },
+    {
+      "description": "Interrogative adverb in short explanatory question",
+      "expected": [
+        {
+          "lemma": "なぜ",
+          "pos": "Adverb",
+          "surface": "なぜ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        }
+      ],
+      "id": "nazenano",
+      "input": "なぜなの"
+    },
+    {
+      "description": "Generalize explanatory copula after an interrogative adverb",
+      "expected": [
+        {
+          "lemma": "どうして",
+          "pos": "Adverb",
+          "surface": "どうして"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "doushitenanoda",
+      "input": "どうしてなのだ"
+    },
+    {
+      "description": "副詞「何とも」と可能否定",
+      "expected": [
+        {
+          "lemma": "何とも",
+          "pos": "Adverb",
+          "surface": "何とも"
+        },
+        {
+          "lemma": "言える",
+          "pos": "Verb",
+          "surface": "言え"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "tomo_enai",
+      "input": "何とも言えない"
+    },
+    {
+      "description": "副詞「何とも」と形容動詞",
+      "expected": [
+        {
+          "lemma": "何とも",
+          "pos": "Adverb",
+          "surface": "何とも"
+        },
+        {
+          "lemma": "不思議",
+          "pos": "Adjective",
+          "surface": "不思議"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "tomo_da",
+      "input": "何とも不思議だ"
+    },
+    {
+      "description": "ひらがな表記の副詞「なんとも」",
+      "expected": [
+        {
+          "lemma": "なんとも",
+          "pos": "Adverb",
+          "surface": "なんとも"
+        },
+        {
+          "lemma": "言える",
+          "pos": "Verb",
+          "surface": "言え"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "nantomo_enai",
+      "input": "なんとも言えない"
+    },
+    {
+      "description": "副詞「何とも」と否定形容詞",
+      "expected": [
+        {
+          "lemma": "何とも",
+          "pos": "Adverb",
+          "surface": "何とも"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "tomonai",
+      "input": "何ともない"
+    },
+    {
+      "description": "副詞「何とも」と動詞否定",
+      "expected": [
+        {
+          "lemma": "何とも",
+          "pos": "Adverb",
+          "surface": "何とも"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "tomo_wanai",
+      "input": "何とも思わない"
+    },
+    {
+      "description": "何とかなる - auto-generated",
+      "expected": [
+        {
+          "lemma": "何とか",
+          "pos": "Adverb",
+          "surface": "何とか"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "nantoka_naru",
+      "input": "何とかなる"
+    },
+    {
+      "description": "何とかして進む - auto-generated",
+      "expected": [
+        {
+          "lemma": "何とか",
+          "pos": "Adverb",
+          "surface": "何とか"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "nantoka_shite_susumu",
+      "input": "何とかして進む"
+    },
+    {
+      "description": "何とか解決する - auto-generated",
+      "expected": [
+        {
+          "lemma": "何とか",
+          "pos": "Adverb",
+          "surface": "何とか"
+        },
+        {
+          "lemma": "解決",
+          "pos": "Noun",
+          "surface": "解決"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nantoka_kaiketsu_suru",
+      "input": "何とか解決する"
+    },
+    {
+      "description": "Negative-scope adverb before relation",
+      "expected": [
+        {
+          "lemma": "一切",
+          "pos": "Noun",
+          "surface": "一切"
+        },
+        {
+          "lemma": "関係",
+          "pos": "Noun",
+          "surface": "関係"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "issai_kankeinai",
+      "input": "一切関係ない"
+    },
+    {
+      "description": "Negative-scope adverb before noun",
+      "expected": [
+        {
+          "lemma": "一切",
+          "pos": "Noun",
+          "surface": "一切"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "issai_mondainai",
+      "input": "一切問題ない"
+    },
+    {
+      "description": "Nominal use before genitive particle",
+      "expected": [
+        {
+          "lemma": "一切",
+          "pos": "Noun",
+          "surface": "一切"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "関係",
+          "pos": "Noun",
+          "surface": "関係"
+        }
+      ],
+      "id": "issai_no_kankei",
+      "input": "一切の関係"
+    },
+    {
+      "description": "Negative-polarity quantity adverb",
+      "expected": [
+        {
+          "lemma": "何一つ",
+          "pos": "Adverb",
+          "surface": "何一つ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "nani_hitotsu_nai",
+      "input": "何一つない"
+    },
+    {
+      "description": "Negative-polarity quantity adverb",
+      "expected": [
+        {
+          "lemma": "何一つ",
+          "pos": "Adverb",
+          "surface": "何一つ"
+        },
+        {
+          "lemma": "残る",
+          "pos": "Verb",
+          "surface": "残ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "nani_hitotsu_nokoranai",
+      "input": "何一つ残らない"
+    },
+    {
+      "description": "Fixed continuative adverb",
+      "expected": [
+        {
+          "lemma": "いまだに",
+          "pos": "Adverb",
+          "surface": "いまだに"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続く"
+        }
+      ],
+      "id": "imada_ni_tsuzuku",
+      "input": "いまだに続く"
+    },
+    {
+      "description": "Fixed continuative adverb",
+      "expected": [
+        {
+          "lemma": "未だに",
+          "pos": "Adverb",
+          "surface": "未だに"
+        },
+        {
+          "lemma": "残る",
+          "pos": "Verb",
+          "surface": "残る"
+        }
+      ],
+      "id": "imada_ni_nokoru",
+      "input": "未だに残る"
+    },
+    {
+      "description": "比較副詞とナ形容詞を分割する",
+      "expected": [
+        {
+          "lemma": "何より",
+          "pos": "Adverb",
+          "surface": "何より"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "点",
+          "pos": "Noun",
+          "surface": "点"
+        }
+      ],
+      "id": "naniyori_juyou_na_ten",
+      "input": "何より重要な点"
+    },
+    {
+      "description": "んと型の様態副詞を一語として保持する",
+      "expected": [
+        {
+          "lemma": "きちんと",
+          "pos": "Adverb",
+          "surface": "きちんと"
+        },
+        {
+          "lemma": "整理",
+          "pos": "Noun",
+          "surface": "整理"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kichinto_seiri_suru",
+      "input": "きちんと整理する"
+    },
+    {
+      "description": "ひらがなの程度副詞を保持する",
+      "expected": [
+        {
+          "lemma": "たいへん",
+          "pos": "Adverb",
+          "surface": "たいへん"
+        },
+        {
+          "lemma": "助かる",
+          "pos": "Verb",
+          "surface": "助かる"
+        }
+      ],
+      "id": "taihen_tasukaru",
+      "input": "たいへん助かる"
+    },
+    {
+      "description": "固定副詞もっぱらを副詞として解析する",
+      "expected": [
+        {
+          "lemma": "もっぱら",
+          "pos": "Adverb",
+          "surface": "もっぱら"
+        },
+        {
+          "lemma": "利用",
+          "pos": "Noun",
+          "surface": "利用"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "moppara_fixed_adverb",
+      "input": "もっぱら利用する"
+    },
+    {
+      "description": "程度を表す固定副詞ひとしおを一語で解析する",
+      "expected": [
+        {
+          "lemma": "ひとしお",
+          "pos": "Adverb",
+          "surface": "ひとしお"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じる"
+        }
+      ],
+      "id": "hitoshio_fixed_adverb",
+      "input": "ひとしお感じる"
+    },
+    {
+      "description": "発見・推量を表す固定副詞さてはを一語で解析する",
+      "expected": [
+        {
+          "lemma": "さては",
+          "pos": "Adverb",
+          "surface": "さては"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "satewa_discovery_adverb",
+      "input": "さては問題がある"
+    },
+    {
+      "description": "概略を表す固定副詞あらかたに副詞を付与する",
+      "expected": [
+        {
+          "lemma": "あらかた",
+          "pos": "Adverb",
+          "surface": "あらかた"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わる"
+        }
+      ],
+      "id": "arakata_overview_adverb",
+      "input": "あらかた終わる"
+    },
+    {
+      "description": "概略を表す固定副詞あらましを一語で解析する",
+      "expected": [
+        {
+          "lemma": "あらまし",
+          "pos": "Adverb",
+          "surface": "あらまし"
+        },
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "aramashi_overview_adverb",
+      "input": "あらまし説明する"
     }
   ],
   "description": "General adverbs",

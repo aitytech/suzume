@@ -262,10 +262,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "漢字複合語を検索単位で保持するためのPOS差を維持する。"
-      },
       "description": "積極的に参加する (participate proactively) - MeCab互換分割",
       "expected": [
         {
@@ -291,28 +287,6 @@
       ],
       "id": "teki_sekkyokuteki_sankasuru",
       "input": "積極的に参加する",
-      "suzume_expected": [
-        {
-          "lemma": "積極的",
-          "pos": "Noun",
-          "surface": "積極的"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "参加",
-          "pos": "Noun",
-          "surface": "参加"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
       "tags": [
         "grammar",
         "na-adjective",
@@ -753,10 +727,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "辞書由来名詞と一段動詞候補のPOS差を既知制約として維持する。"
-      },
       "description": "B24: 感じる verbs should have correct lemma, not 感じする",
       "expected": [
         {
@@ -772,18 +742,6 @@
       ],
       "id": "kanjiru_lemma",
       "input": "感じて",
-      "suzume_expected": [
-        {
-          "lemma": "感じ",
-          "pos": "Noun",
-          "surface": "感じ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
       "tags": [
         "ichidan",
         "lemma"
@@ -806,10 +764,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "辞書由来名詞と一段動詞候補のPOS差を既知制約として維持する。"
-      },
       "description": "感じた past form - MeCab-compatible split",
       "expected": [
         {
@@ -825,18 +779,6 @@
       ],
       "id": "kanjiru_past",
       "input": "感じた",
-      "suzume_expected": [
-        {
-          "lemma": "感じ",
-          "pos": "Noun",
-          "surface": "感じ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
       "tags": [
         "ichidan",
         "past"
@@ -911,10 +853,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "名詞化動詞後の否定語に関するPOS差を維持する。"
-      },
       "description": "B25: 仕方ない should be NOUN + AUX, not VERB (仕方する)",
       "expected": [
         {
@@ -930,18 +868,6 @@
       ],
       "id": "shikata_noun",
       "input": "仕方ない",
-      "suzume_expected": [
-        {
-          "lemma": "仕方",
-          "pos": "Noun",
-          "surface": "仕方"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        }
-      ],
       "tags": [
         "noun",
         "negation"
@@ -1820,10 +1746,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "否定補助動詞の文脈依存POS差を維持する。"
-      },
       "description": "勉強しなくて - negative te-form (MeCab-style split)",
       "expected": [
         {
@@ -1849,28 +1771,6 @@
       ],
       "id": "suru_negative_te_shinakute",
       "input": "勉強しなくて",
-      "suzume_expected": [
-        {
-          "lemma": "勉強",
-          "pos": "Noun",
-          "surface": "勉強"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "なく"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
       "tags": [
         "suru",
         "negative"
@@ -2030,10 +1930,6 @@
       "input": "全部食べちゃった"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "縮約形のlemma差を既知制約として維持する。"
-      },
       "description": "全部飲んじゃった - auto-generated",
       "expected": [
         {
@@ -2058,29 +1954,7 @@
         }
       ],
       "id": "nji_ttta",
-      "input": "全部飲んじゃった",
-      "suzume_expected": [
-        {
-          "lemma": "全部",
-          "pos": "Noun",
-          "surface": "全部"
-        },
-        {
-          "lemma": "飲む",
-          "pos": "Verb",
-          "surface": "飲ん"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "じゃっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "全部飲んじゃった"
     },
     {
       "description": "全部食べちゃう - auto-generated",
@@ -2328,6 +2202,114 @@
       ],
       "id": "sahen_passive_confirm",
       "input": "確認される"
+    },
+    {
+      "description": "可能動詞と副助詞・接続助詞を分割する",
+      "expected": [
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        },
+        {
+          "lemma": "くらい",
+          "pos": "Particle",
+          "surface": "くらい"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        }
+      ],
+      "id": "dekiru_kurai_nara",
+      "input": "できるくらいなら"
+    },
+    {
+      "description": "カ変未然形と可能受身助動詞を分割する",
+      "expected": [
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来ら"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れる"
+        },
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来る"
+        }
+      ],
+      "id": "korareru_jikan_ni_kuru",
+      "input": "来られる時間に来る"
+    },
+    {
+      "description": "カ変使役受身を来さ・せ・られるに分割する",
+      "expected": [
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        }
+      ],
+      "id": "kuru_causative_passive_boundary",
+      "input": "来させられる人"
+    },
+    {
+      "description": "上一段イ段動詞の受身進行形を動詞として扱う",
+      "expected": [
+        {
+          "lemma": "強いる",
+          "pos": "Verb",
+          "surface": "強い"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "shiiru_passive_progressive_pos_lemma",
+      "input": "強いられている"
     }
   ],
   "description": "Irregular verbs (する、くる)",

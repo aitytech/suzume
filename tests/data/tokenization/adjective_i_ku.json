@@ -305,7 +305,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なく"
         },
         {
@@ -327,7 +327,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なく"
         },
         {
@@ -349,7 +349,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なく"
         },
         {
@@ -371,7 +371,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なく"
         },
         {
@@ -393,7 +393,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なく"
         },
         {
@@ -415,7 +415,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なく"
         },
         {
@@ -437,7 +437,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なく"
         },
         {
@@ -464,7 +464,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なく"
         },
         {
@@ -486,7 +486,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なく"
         },
         {
@@ -541,6 +541,153 @@
       ],
       "id": "takaku_nakereba",
       "input": "高くなければ"
+    },
+    {
+      "description": "難しくても進む - regression test",
+      "expected": [
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "shikutemo_mu",
+      "input": "難しくても進む"
+    },
+    {
+      "description": "難しくても必要だ - regression test",
+      "expected": [
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shikutemo_da",
+      "input": "難しくても必要だ"
+    },
+    {
+      "description": "高くても買う - regression test",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高く"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "kutemo_u",
+      "input": "高くても買う"
+    },
+    {
+      "description": "難しくて困る - regression test",
+      "expected": [
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "shikute_ru",
+      "input": "難しくて困る"
+    },
+    {
+      "description": "難しくとも進む - regression test",
+      "expected": [
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しく"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "shikutomo_mu",
+      "input": "難しくとも進む"
+    },
+    {
+      "description": "い形容詞連用形のPOSとlemmaを保持する",
+      "expected": [
+        {
+          "lemma": "明るい",
+          "pos": "Adjective",
+          "surface": "明るく"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話す"
+        }
+      ],
+      "id": "akaruku_hanasu",
+      "input": "明るく話す"
     }
   ],
   "description": "I-adjectives ku-forms (連用形) - adverbial, negative, te-form, ku-naru patterns",

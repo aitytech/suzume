@@ -17,10 +17,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma diff: MeCab lemma=平然と, Suzume lemma=平然"
-      },
       "description": "平然と (calmly)",
       "expected": [
         {
@@ -31,13 +27,6 @@
       ],
       "id": "taru_adj_heizento",
       "input": "平然と",
-      "suzume_expected": [
-        {
-          "lemma": "平然",
-          "pos": "Adverb",
-          "surface": "平然と"
-        }
-      ],
       "tags": [
         "grammar",
         "taru-adjective"
@@ -97,10 +86,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma diff: taru-adj MeCab lemma includes と, Suzume lemma does not"
-      },
       "description": "悠然と (leisurely)",
       "expected": [
         {
@@ -111,23 +96,12 @@
       ],
       "id": "taru_adj_yuuzento",
       "input": "悠然と",
-      "suzume_expected": [
-        {
-          "lemma": "悠然",
-          "pos": "Adverb",
-          "surface": "悠然と"
-        }
-      ],
       "tags": [
         "grammar",
         "taru-adjective"
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "同じ should be DET (連体詞), not VERB (W-015)",
       "expected": [
         {
@@ -148,28 +122,45 @@
       ],
       "id": "det_onaji",
       "input": "同じ事を",
-      "suzume_expected": [
-        {
-          "lemma": "同じ",
-          "pos": "Determiner",
-          "surface": "同じ"
-        },
-        {
-          "lemma": "こと",
-          "pos": "Noun",
-          "surface": "事"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        }
-      ],
       "tags": [
         "determiner",
         "wagahai",
         "W-015"
       ]
+    },
+    {
+      "description": "ろくでもない話 - auto-generated",
+      "expected": [
+        {
+          "lemma": "ろくでもない",
+          "pos": "Adjective",
+          "surface": "ろくでもない"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "rokudemonai",
+      "input": "ろくでもない話"
+    },
+    {
+      "description": "不可避を表す固定形容詞を一語で扱う",
+      "expected": [
+        {
+          "lemma": "やむを得ない",
+          "pos": "Adjective",
+          "surface": "やむを得ない"
+        },
+        {
+          "lemma": "事情",
+          "pos": "Noun",
+          "surface": "事情"
+        }
+      ],
+      "id": "yamuoenai_fixed_adjective",
+      "input": "やむを得ない事情"
     }
   ],
   "description": "Taru-adjectives and irregular adjectives",

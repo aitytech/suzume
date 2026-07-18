@@ -431,10 +431,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "verb form: context-dependent POS/lemma"
-      },
       "description": "来られる - Kuru verb passive (single token for irregular verb)",
       "expected": [
         {
@@ -450,17 +446,6 @@
       ],
       "id": "kuru_passive",
       "input": "来られる",
-      "suzume_expected": [
-        {
-          "lemma": "来る",
-          "pos": "Verb",
-          "surface": "来"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "られる"
-        }
-      ],
       "tags": [
         "passive",
         "kuru"

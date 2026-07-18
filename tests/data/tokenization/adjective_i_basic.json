@@ -213,10 +213,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "Youth slang っす",
       "expected": [
         {
@@ -232,18 +228,6 @@
       ],
       "id": "character_ssu",
       "input": "いいっす",
-      "suzume_expected": [
-        {
-          "lemma": "いい",
-          "pos": "Adjective",
-          "surface": "いい"
-        },
-        {
-          "lemma": "です",
-          "pos": "Auxiliary",
-          "surface": "っす"
-        }
-      ],
       "tags": [
         "character_speech",
         "youth"
@@ -2103,7 +2087,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -2128,7 +2112,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -2153,7 +2137,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
@@ -2241,6 +2225,179 @@
       ],
       "id": "rashii_rashii_rashisa_rashisa_rashisa",
       "input": "本らしい本。水らしい水。本らしさ。水らしさ。子供らしさ。"
+    },
+    {
+      "description": "しょうがない - regression test",
+      "expected": [
+        {
+          "lemma": "しょうがない",
+          "pos": "Adjective",
+          "surface": "しょうがない"
+        }
+      ],
+      "id": "shi_uganai",
+      "input": "しょうがない"
+    },
+    {
+      "description": "うれしくてしょうがない - regression test",
+      "expected": [
+        {
+          "lemma": "うれしい",
+          "pos": "Adjective",
+          "surface": "うれしく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "しょうがない",
+          "pos": "Adjective",
+          "surface": "しょうがない"
+        }
+      ],
+      "id": "ureshikuteshi_uganai",
+      "input": "うれしくてしょうがない"
+    },
+    {
+      "description": "仕方がない - regression test",
+      "expected": [
+        {
+          "lemma": "仕方",
+          "pos": "Noun",
+          "surface": "仕方"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "ganai",
+      "input": "仕方がない"
+    },
+    {
+      "description": "慣用形容詞「言うまでもない」の連体用法",
+      "expected": [
+        {
+          "lemma": "言うまでもない",
+          "pos": "Adjective",
+          "surface": "言うまでもない"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "umademonai",
+      "input": "言うまでもない話"
+    },
+    {
+      "description": "慣用形容詞「言うまでもない」の終止用法",
+      "expected": [
+        {
+          "lemma": "言うまでもない",
+          "pos": "Adjective",
+          "surface": "言うまでもない"
+        }
+      ],
+      "id": "umademonai_2",
+      "input": "言うまでもない"
+    },
+    {
+      "description": "慣用形容詞「言うまでもない」の連用形",
+      "expected": [
+        {
+          "lemma": "言うまでもない",
+          "pos": "Adjective",
+          "surface": "言うまでもなく"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "umademonaku_mu",
+      "input": "言うまでもなく進む"
+    },
+    {
+      "description": "慣用形容詞「言うまでもない」の過去形",
+      "expected": [
+        {
+          "lemma": "言うまでもない",
+          "pos": "Adjective",
+          "surface": "言うまでもなかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "umademonakattta",
+      "input": "言うまでもなかった"
+    },
+    {
+      "description": "一般動詞＋助詞列＋否定形容詞の対照",
+      "expected": [
+        {
+          "lemma": "考える",
+          "pos": "Verb",
+          "surface": "考える"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "erumademonai",
+      "input": "考えるまでもない"
+    },
+    {
+      "description": "高からず低からず - auto-generated",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高から"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        },
+        {
+          "lemma": "低い",
+          "pos": "Adjective",
+          "surface": "低から"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "karazu_karazu",
+      "input": "高からず低からず"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional",

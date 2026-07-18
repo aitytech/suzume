@@ -1,10 +1,6 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS classification design diff (pre-existing)"
-      },
       "description": "ただ as conjunction, not た+だ",
       "expected": [
         {
@@ -49,49 +45,7 @@
         }
       ],
       "id": "tada_conjunction",
-      "input": "ただ彼の掌に載せられた",
-      "suzume_expected": [
-        {
-          "lemma": "ただ",
-          "pos": "Adverb",
-          "surface": "ただ"
-        },
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "掌",
-          "pos": "Noun",
-          "surface": "掌"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "載せる",
-          "pos": "Verb",
-          "surface": "載せ"
-        },
-        {
-          "lemma": "られる",
-          "pos": "Auxiliary",
-          "surface": "られ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "ただ彼の掌に載せられた"
     },
     {
       "description": "まるで as adverb, not まる+で",
@@ -425,10 +379,6 @@
       "input": "特段問題はない"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-diff",
-        "reason": "Lemma normalization difference between MeCab and Suzume (e.g. 事vsこと, 平然vs平然と, kanji vs hiragana lemma)"
-      },
       "description": "別段 dict boundary prevents 別段恐しい kanji merge",
       "expected": [
         {
@@ -468,50 +418,9 @@
         }
       ],
       "id": "betsudan_dict_boundary",
-      "input": "別段恐しいとも思わなかった",
-      "suzume_expected": [
-        {
-          "lemma": "別段",
-          "pos": "Adverb",
-          "surface": "別段"
-        },
-        {
-          "lemma": "恐しい",
-          "pos": "Adjective",
-          "surface": "恐しい"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "思う",
-          "pos": "Verb",
-          "surface": "思わ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "別段恐しいとも思わなかった"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation"
-      },
       "description": "だいいち as adverb, boundary before 毛",
       "expected": [
         {
@@ -551,37 +460,7 @@
         }
       ],
       "id": "daiichi_hiragana_boundary",
-      "input": "だいいち毛がないように見える",
-      "suzume_expected": [
-        {
-          "pos": "Adverb",
-          "surface": "だいいち"
-        },
-        {
-          "pos": "Noun",
-          "surface": "毛"
-        },
-        {
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "よう"
-        },
-        {
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "pos": "Verb",
-          "surface": "見える"
-        }
-      ]
+      "input": "だいいち毛がないように見える"
     },
     {
       "description": "つるつる+し split (onomatopoeia + suru)",
@@ -621,10 +500,6 @@
       "input": "つるつるしてまるで薬缶だ"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "POS/lemma limitation: surfaces match, POS classification differs from MeCab"
-      },
       "description": "第一 dict entry acts as kanji compound boundary",
       "expected": [
         {
@@ -664,44 +539,7 @@
         }
       ],
       "id": "daiichi_kanji_boundary",
-      "input": "第一毛がないように見える",
-      "suzume_expected": [
-        {
-          "lemma": "第一",
-          "pos": "Adverb",
-          "surface": "第一"
-        },
-        {
-          "lemma": "毛",
-          "pos": "Noun",
-          "surface": "毛"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "よう",
-          "pos": "Auxiliary",
-          "surface": "よう"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "見える",
-          "pos": "Verb",
-          "surface": "見える"
-        }
-      ]
+      "input": "第一毛がないように見える"
     },
     {
       "description": "じめじめ+し+た - ABAB onomatopoeia + suru verb",

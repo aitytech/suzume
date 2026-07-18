@@ -613,14 +613,19 @@
       "description": "読んでる - regression test",
       "expected": [
         {
-          "lemma": "読む",
+          "lemma": "読んでる",
           "pos": "Verb",
           "surface": "読ん"
         },
         {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
           "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "でる"
+          "pos": "Verb",
+          "surface": "る"
         }
       ],
       "id": "nderu",
@@ -630,14 +635,19 @@
       "description": "遊んでる - regression test",
       "expected": [
         {
-          "lemma": "遊ぶ",
+          "lemma": "遊んでる",
           "pos": "Verb",
           "surface": "遊ん"
         },
         {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
           "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "でる"
+          "pos": "Verb",
+          "surface": "る"
         }
       ],
       "id": "nderu_1",
@@ -647,14 +657,19 @@
       "description": "飲んでる - regression test",
       "expected": [
         {
-          "lemma": "飲む",
+          "lemma": "飲んでる",
           "pos": "Verb",
           "surface": "飲ん"
         },
         {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
           "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "でる"
+          "pos": "Verb",
+          "surface": "る"
         }
       ],
       "id": "nderu_2",
@@ -664,14 +679,19 @@
       "description": "住んでる - regression test",
       "expected": [
         {
-          "lemma": "住む",
+          "lemma": "住んでる",
           "pos": "Verb",
           "surface": "住ん"
         },
         {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
           "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "でる"
+          "pos": "Verb",
+          "surface": "る"
         }
       ],
       "id": "nderu_3",
@@ -681,14 +701,19 @@
       "description": "選んでる - regression test",
       "expected": [
         {
-          "lemma": "選ぶ",
+          "lemma": "選んでる",
           "pos": "Verb",
           "surface": "選ん"
         },
         {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
           "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "でる"
+          "pos": "Verb",
+          "surface": "る"
         }
       ],
       "id": "nderu_4",
@@ -749,14 +774,9 @@
       "description": "言いそびれる - regression test",
       "expected": [
         {
-          "lemma": "言う",
+          "lemma": "言いそびれる",
           "pos": "Verb",
-          "surface": "言い"
-        },
-        {
-          "lemma": "そびれる",
-          "pos": "Auxiliary",
-          "surface": "そびれる"
+          "surface": "言いそびれる"
         }
       ],
       "id": "isobireru",
@@ -833,7 +853,7 @@
         },
         {
           "lemma": "損なう",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "損なう"
         }
       ],
@@ -850,7 +870,7 @@
         },
         {
           "lemma": "損なう",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "損なう"
         }
       ],
@@ -867,7 +887,7 @@
         },
         {
           "lemma": "損なう",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "損なう"
         }
       ],
@@ -878,14 +898,9 @@
       "description": "言い損なう - auto-generated",
       "expected": [
         {
-          "lemma": "言う",
+          "lemma": "言い損なう",
           "pos": "Verb",
-          "surface": "言い"
-        },
-        {
-          "lemma": "損なう",
-          "pos": "Auxiliary",
-          "surface": "損なう"
+          "surface": "言い損なう"
         }
       ],
       "id": "iisokonau",
@@ -895,14 +910,9 @@
       "description": "見損なう - auto-generated",
       "expected": [
         {
-          "lemma": "見る",
+          "lemma": "見損なう",
           "pos": "Verb",
-          "surface": "見"
-        },
-        {
-          "lemma": "損なう",
-          "pos": "Auxiliary",
-          "surface": "損なう"
+          "surface": "見損なう"
         }
       ],
       "id": "misokonau",
@@ -918,7 +928,7 @@
         },
         {
           "lemma": "損なう",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "損なっ"
         },
         {
@@ -940,7 +950,7 @@
         },
         {
           "lemma": "損なう",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "損なわ"
         },
         {
@@ -962,7 +972,7 @@
         },
         {
           "lemma": "損なう",
-          "pos": "Auxiliary",
+          "pos": "Verb",
           "surface": "損なえ"
         },
         {
@@ -1981,6 +1991,163 @@
       ],
       "id": "ndeyaranai_iteyaranai_beteyaranai_ndeyaranakattta",
       "input": "読んでやらない。書いてやらない。食べてやらない。読んでやらなかった。"
+    },
+    {
+      "description": "読んでしまう - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "しまう"
+        }
+      ],
+      "id": "ndeshimau",
+      "input": "読んでしまう"
+    },
+    {
+      "description": "読んでしまった - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "しまっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ndeshimattta",
+      "input": "読んでしまった"
+    },
+    {
+      "description": "忘れずに書く - regression test",
+      "expected": [
+        {
+          "lemma": "忘れる",
+          "pos": "Verb",
+          "surface": "忘れ"
+        },
+        {
+          "lemma": "ず",
+          "pos": "Auxiliary",
+          "surface": "ずに"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        }
+      ],
+      "id": "rezuni_ku",
+      "input": "忘れずに書く"
+    },
+    {
+      "description": "行かずに待つ - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "ず",
+          "pos": "Auxiliary",
+          "surface": "ずに"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "kazuni_tsu",
+      "input": "行かずに待つ"
+    },
+    {
+      "description": "未然形に続く否定助動詞ずを分割する",
+      "expected": [
+        {
+          "lemma": "欠かす",
+          "pos": "Verb",
+          "surface": "欠かさ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kakasazu_kakunin_suru",
+      "input": "欠かさず確認する"
+    },
+    {
+      "description": "古語否定ぬに続く形式名詞を分割する",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ikanu_wake_dewa_nai",
+      "input": "行かぬわけではない"
     }
   ],
   "description": "verb_auxiliary tests",

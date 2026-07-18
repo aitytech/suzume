@@ -110,10 +110,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "auxiliary verb: context-dependent classification"
-      },
       "description": "確認してあります - MeCab互換分割",
       "expected": [
         {
@@ -144,30 +140,6 @@
       ],
       "id": "suru_te_arimasu",
       "input": "確認してあります",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あり"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -374,10 +346,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "auxiliary verb: context-dependent classification"
-      },
       "description": "説明してくれる - MeCab互換分割",
       "expected": [
         {
@@ -403,25 +371,6 @@
       ],
       "id": "suru_te_kureru_plain",
       "input": "説明してくれる",
-      "suzume_expected": [
-        {
-          "pos": "Noun",
-          "surface": "説明"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "pos": "Auxiliary",
-          "surface": "くれる"
-        }
-      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -800,6 +749,102 @@
       ],
       "id": "sezu_mu",
       "input": "説明せず進む"
+    },
+    {
+      "description": "限定追加表現の内部境界",
+      "expected": [
+        {
+          "lemma": "学生",
+          "pos": "Noun",
+          "surface": "学生"
+        },
+        {
+          "lemma": "のみ",
+          "pos": "Particle",
+          "surface": "のみ"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        },
+        {
+          "lemma": "教師",
+          "pos": "Noun",
+          "surface": "教師"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "参加",
+          "pos": "Noun",
+          "surface": "参加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nominarazu_limiting_chain_boundary",
+      "input": "学生のみならず教師も参加する"
+    },
+    {
+      "description": "名詞と否定連用形の境界",
+      "expected": [
+        {
+          "lemma": "関係",
+          "pos": "Noun",
+          "surface": "関係"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "実施",
+          "pos": "Noun",
+          "surface": "実施"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kankei_naku_noun_renyokei_boundary",
+      "input": "関係なく実施する"
+    },
+    {
+      "description": "順序接続詞",
+      "expected": [
+        {
+          "lemma": "次いで",
+          "pos": "Conjunction",
+          "surface": "次いで"
+        },
+        {
+          "lemma": "実施",
+          "pos": "Noun",
+          "surface": "実施"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "tsuide_sequential_conjunction",
+      "input": "次いで実施する"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

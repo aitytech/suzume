@@ -270,6 +270,48 @@
       ],
       "id": "nji_ou",
       "input": "読んじゃおう"
+    },
+    {
+      "description": "一漢字一段動詞の意志形を未然形と助動詞に分割する",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "miyou_ni_mo_houhou_ga_nai",
+      "input": "見ようにも方法がない"
     }
   ],
   "description": "verb_volitional tests",

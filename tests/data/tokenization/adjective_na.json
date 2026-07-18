@@ -1060,10 +1060,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Na-adjective rentaikei requires dictionary"
-      },
       "description": "さすがな人 (attributive form) - MeCab-compatible lemma",
       "expected": [
         {
@@ -1084,20 +1080,6 @@
       ],
       "id": "na_sasugana_hito",
       "input": "さすがな人",
-      "suzume_expected": [
-        {
-          "pos": "Adverb",
-          "surface": "さすが"
-        },
-        {
-          "pos": "Particle",
-          "surface": "な"
-        },
-        {
-          "pos": "Noun",
-          "surface": "人"
-        }
-      ],
       "tags": [
         "grammar",
         "na-adjective",
@@ -1389,10 +1371,6 @@
       "input": "厳かな式"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "さまざま 形状詞 POS Noun vs Adjective is the same reduplicated-adjectival-noun limitation as いろいろ (Adverb vs Adjective); surface is correct"
-      },
       "description": "Reduplicated 形状詞 さまざま stays whole before な (no さ+まざま split)",
       "expected": [
         {
@@ -1432,44 +1410,7 @@
         }
       ],
       "id": "samazamana_kara_shita",
-      "input": "さまざまな観点から議論した",
-      "suzume_expected": [
-        {
-          "lemma": "さまざま",
-          "pos": "Noun",
-          "surface": "さまざま"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "観点",
-          "pos": "Noun",
-          "surface": "観点"
-        },
-        {
-          "lemma": "から",
-          "pos": "Particle",
-          "surface": "から"
-        },
-        {
-          "lemma": "議論",
-          "pos": "Noun",
-          "surface": "議論"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "さまざまな観点から議論した"
     },
     {
       "description": "安らかだった - regression test",
@@ -1660,7 +1601,7 @@
       "expected": [
         {
           "lemma": "学生",
-          "pos": "Adjective",
+          "pos": "Noun",
           "surface": "学生"
         },
         {
@@ -1707,7 +1648,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1727,7 +1668,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1747,7 +1688,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {

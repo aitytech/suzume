@@ -28,10 +28,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "ãã: conditional auxiliary vs particle"
-      },
       "description": "行ったら教えて - MeCab互換分割 (行っ+たら+教え+て)",
       "expected": [
         {
@@ -57,27 +53,6 @@
       ],
       "id": "pattern_conditional_tara",
       "input": "行ったら教えて",
-      "suzume_expected": [
-        {
-          "lemma": "行く",
-          "pos": "Verb",
-          "surface": "行っ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Particle",
-          "surface": "たら"
-        },
-        {
-          "lemma": "教える",
-          "pos": "Verb",
-          "surface": "教え"
-        },
-        {
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
       "tags": [
         "grammar",
         "pattern",
@@ -595,10 +570,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "verb form: context-dependent POS/lemma"
-      },
       "description": "S4: あざむく should be VERB (not あ+ざ+む+く)",
       "expected": [
         {
@@ -609,12 +580,6 @@
       ],
       "id": "s4_azamuku",
       "input": "あざむく",
-      "suzume_expected": [
-        {
-          "pos": "Other",
-          "surface": "あざむく"
-        }
-      ],
       "tags": [
         "s4_fix",
         "hiragana_verb",

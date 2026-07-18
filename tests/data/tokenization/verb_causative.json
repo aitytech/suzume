@@ -302,14 +302,9 @@
       "description": "遊ばせれば - auto-generated",
       "expected": [
         {
-          "lemma": "遊ぶ",
+          "lemma": "遊ばせる",
           "pos": "Verb",
-          "surface": "遊ば"
-        },
-        {
-          "lemma": "せる",
-          "pos": "Auxiliary",
-          "surface": "せれ"
+          "surface": "遊ばせれ"
         },
         {
           "lemma": "ば",
@@ -368,14 +363,9 @@
       "description": "知らせて - auto-generated",
       "expected": [
         {
-          "lemma": "知る",
+          "lemma": "知らせる",
           "pos": "Verb",
-          "surface": "知ら"
-        },
-        {
-          "lemma": "せる",
-          "pos": "Auxiliary",
-          "surface": "せ"
+          "surface": "知らせ"
         },
         {
           "lemma": "て",

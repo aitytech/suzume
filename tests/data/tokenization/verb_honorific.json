@@ -466,6 +466,67 @@
         "kanji",
         "te_form"
       ]
+    },
+    {
+      "description": "文頭の尊敬語は補助動詞ではなく語彙動詞として解析する",
+      "expected": [
+        {
+          "lemma": "いらっしゃる",
+          "pos": "Verb",
+          "surface": "いらっしゃる"
+        }
+      ],
+      "id": "honorific_irassharu_standalone_lexical_verb",
+      "input": "いらっしゃる"
+    },
+    {
+      "description": "文頭の尊敬語を語彙動詞として保持する",
+      "expected": [
+        {
+          "lemma": "なさる",
+          "pos": "Verb",
+          "surface": "なさる"
+        }
+      ],
+      "id": "honorific_nasaru_standalone_lexical_verb",
+      "input": "なさる"
+    },
+    {
+      "description": "目的語を伴うお+連用形+しますの連用形を動詞として保持する",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "預かる",
+          "pos": "Verb",
+          "surface": "預かり"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "honorific_azukari_polite_service_verb",
+      "input": "荷物をお預かりします"
     }
   ],
   "description": "Honorific verbs (敬語動詞)",

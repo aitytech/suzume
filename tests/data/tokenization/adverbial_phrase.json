@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "description": "期間を表すにわたりを一単位に分割する",
+      "expected": [
+        {
+          "lemma": "長年",
+          "pos": "Noun",
+          "surface": "長年"
+        },
+        {
+          "lemma": "にわたり",
+          "pos": "Particle",
+          "surface": "にわたり"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続く"
+        }
+      ],
+      "id": "chounen_ni_watari_tsuzuku",
+      "input": "長年にわたり続く"
+    }
+  ],
+  "description": "adverbial_phrase tests",
+  "version": "1.0"
+}
