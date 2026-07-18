@@ -20,6 +20,7 @@ float computeExistentialAruNominalPredicateBonus(const core::LatticeEdge& prev, 
 float computeCompletionAuxiliaryBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeBarePotentialRenyokeiPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeAdjectiveTePredicatePenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+float computeClassicalNegativeBoundaryPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 
 }  // namespace suzume::analysis::connection_rules
 

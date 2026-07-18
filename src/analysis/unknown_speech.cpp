@@ -26,6 +26,14 @@
 
 namespace suzume::analysis {
 
+namespace {
+
+bool isBareVowelMora(char32_t codepoint) {
+  return codepoint == U'あ' || codepoint == U'い' || codepoint == U'う' || codepoint == U'え' || codepoint == U'お';
+}
+
+}  // namespace
+
 std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandidates(
     std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
     const std::vector<normalize::CharType>& char_types) const {
@@ -325,7 +333,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
       // Skip if first char is a common particle (の, は, が, を, に, で, も, と, へ, か)
       // to avoid false matches like のやり, はしり, がわり
       char32_t first = codepoints[start_pos];
-      if (!normalize::isParticleCodepoint(first) && first != U'ら') {
+      if (!normalize::isParticleCodepoint(first) && !isBareVowelMora(first) && first != U'ら') {
         std::string surface = extractSubstring(codepoints, start_pos, start_pos + 3);
         if (!surface.empty()) {
           auto cand = makeCandidate(surface, start_pos, start_pos + 3, core::PartOfSpeech::Adverb, 0.7F, true,
@@ -351,6 +359,24 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
 #endif
         candidates.push_back(cand);
       }
+    }
+  }
+
+  // Try XXんと pattern for manner adverbs (きちんと, ちゃんと). A two-or-more
+  // mora stem followed by んと is a productive mimetic shape. Require the
+  // complete four-character prefix and a non-particle start so that the rule
+  // does not absorb ordinary one-mora words or particle sequences.
+  if (seq_len >= 4 && start_type == normalize::CharType::Hiragana && codepoints[start_pos + 2] == U'ん' &&
+      codepoints[start_pos + 3] == U'と' && !normalize::isParticleCodepoint(codepoints[start_pos])) {
+    std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
+    if (!surface.empty()) {
+      auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Adverb,
+                                candidate::kMimeticNtoAdverbBonus, true, CandidateOrigin::Onomatopoeia);
+#ifdef SUZUME_DEBUG_INFO
+      cand.confidence = candidate::kHighOriginConfidence;
+      cand.pattern = "xx_nto_pattern";
+#endif
+      candidates.push_back(cand);
     }
   }
 

@@ -16,6 +16,16 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Needs to overcome: base bigram diff (0.5-0.2=0.3) + VERB_連用 bonus (-0.8)
       {EPOS::ParticleAdverbial, EPOS::ParticleCase, cost::kVeryStrongBonus},
 
+      // A final particle can be quoted as a complete utterance (かしら+と
+      // 思う, かな+と考える). Prefer that closed-class boundary over a
+      // coincidental noun-plus-suffix analysis.
+      {EPOS::ParticleFinal, EPOS::ParticleCase, cost::kStrongBonus},
+
+      // An adverbial particle can be followed by a conditional particle
+      // (くらい+なら, ほど+なら, だけ+なら). Prefer the grammatical particle
+      // chain over a homographic mizenkei verb.
+      {EPOS::ParticleAdverbial, EPOS::ParticleConj, cost::kStrongBonus},
+
       // Focus particle → polite copula (だけ+です, さえ+です). A focus
       // particle can close a nominal predicate, so prefer the copula over the
       // unrelated で + す segmentation.
@@ -41,6 +51,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // ParticleAdverbial → VerbShuushikei (でも+行く) - strong bonus
       // This favors でも+行く over で+も+行く
       {EPOS::ParticleAdverbial, EPOS::VerbShuushikei, cost::kStrongBonus},
+
+      // Adverbial particles scope naturally over an evaluative adjective
+      // (何でも+いい, どちらでも+よい).
+      {EPOS::ParticleAdverbial, EPOS::AdjBasic, cost::kStrongBonus},
+      {EPOS::ParticleAdverbial, EPOS::AdjNaAdj, cost::kStrongBonus},
 
       // ParticleCase → Adverb (か+もし) - moderate penalty
       // This discourages splitting かもしれない as か+もし+れない
@@ -96,9 +111,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // adjective; this prevents the false noun はな + auxiliary い path.
       {EPOS::ParticleTopic, EPOS::AdjBasic, cost::kVeryStrongBonus},
 
-      // ParticleConj → VerbShuushikei (て+食べる for compound verbs) - minor penalty
-      // (te-form usually followed by auxiliary, not new verb)
-      {EPOS::ParticleConj, EPOS::VerbShuushikei, cost::kUncommon},
+      // ParticleConj → VerbShuushikei (食べて+帰る) - neutral.
+      // A te-form productively connects coordinate predicates, so it must not
+      // lose to a noun + copula reinterpretation merely because the following
+      // verb is lexical rather than an auxiliary.
+      {EPOS::ParticleConj, EPOS::VerbShuushikei, cost::kNeutral},
 
       // Connective て/で → binding particle (読んで+さえ, 見て+こそ).
       // The binding particle follows a verb te-form; treating で as a copula
@@ -272,9 +289,10 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // (で+は+ござい+ます), retaining its dependent honorific reading.
       {EPOS::ParticleTopic, EPOS::AuxGozaru, cost::kStrongBonus},
 
-      // AuxGozaru → AuxTenseMasu (ござい+ます) - very strong bonus to prevent verb candidate win
-      // Without this, verb_candidates generates "ございる" which beats dictionary "ござる"
-      {EPOS::AuxGozaru, EPOS::AuxTenseMasu, cost::kVeryStrongBonus},
+      // AuxGozaru → AuxTenseMasu (ござい+ます). The dependent honorific
+      // reading remains preferred after its licensed copular/interjection
+      // contexts, while a sentence-initial ござい keeps its lexical verb POS.
+      {EPOS::AuxGozaru, EPOS::AuxTenseMasu, cost::kModerateBonus},
 
       // AuxCopulaDa → AuxCopulaDa (で+ある/あれ/あろ) - very strong bonus for
       // the formal copula and its volitional form であろう.
@@ -494,6 +512,7 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::Conjunction, EPOS::AdjBasic, cost::kStrongBonus},
       {EPOS::Conjunction, EPOS::AdjStem, cost::kStrongBonus},
       {EPOS::Conjunction, EPOS::AdjRenyokei, cost::kStrongBonus},
+      {EPOS::Conjunction, EPOS::AdjNaAdj, cost::kStrongBonus},
 
       // =========================================================================
       // Interjection connections
@@ -510,6 +529,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Adverb → ParticleTopic (少し+は, もっと+は, ちょっと+は) - minor bonus
       // Adverb + は/も is a natural pattern; default penalty causes ADV to lose to NOUN
       {EPOS::Adverb, EPOS::ParticleTopic, cost::kMinorBonus},
+
+      // Adverb → ParticleFinal (まさか+ね, もちろん+ね) - very strong bonus.
+      // Sentence-final particles can close an adverbial response; without this,
+      // a homographic short verb continuative (ねる → ね) wins instead.
+      {EPOS::Adverb, EPOS::ParticleFinal, cost::kVeryStrongBonus},
 
       // Adverb → Noun (俄然+注目) - moderate bonus
       // Adverb modifying noun is natural and should beat kanji compound analysis
@@ -572,7 +596,7 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // the verb 成る. Only the left context (AdjNaAdj→なる) is rewarded: a right-context なる→Noun
       // bonus would misfire on the 終助詞 なり (鳴るなり法隆寺), and 〜になる/〜となる keep the verb
       // reading because a particle, not a na-adjective stem, precedes なる.
-      {EPOS::AdjNaAdj, EPOS::AuxClassicalNari, cost::kStrongBonus},
+      {EPOS::AdjNaAdj, EPOS::AuxClassicalNari, cost::kExtremeBonus},
 
       // Classical タリ活用 連体形 たる (堂々たる, 確固たる, 暗澹たる). It is adnominal, so it
       // MUST be followed by a nominal (…たる態度) or the special particle や (…たるや). Keying
@@ -596,6 +620,9 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::AuxClassicalTari, EPOS::AuxClassicalBeshi, cost::kStrongBonus},
       {EPOS::AuxClassicalBeshi, EPOS::Noun, cost::kModerateBonus},
       {EPOS::AuxClassicalBeshi, EPOS::NounFormal, cost::kModerateBonus},
+      // Predicative obligation keeps the formal boundary (べき+だ), rather
+      // than being swallowed by an unrelated hiragana verb candidate.
+      {EPOS::AuxClassicalBeshi, EPOS::AuxCopulaDa, cost::kStrongBonus},
       {EPOS::VerbShuushikei, EPOS::AuxClassicalBeshi, cost::kStrongBonus},
       {EPOS::AuxPassive, EPOS::AuxClassicalBeshi, cost::kStrongBonus},
       {EPOS::AuxNegativeNu, EPOS::AuxClassicalBeshi, cost::kStrongBonus},

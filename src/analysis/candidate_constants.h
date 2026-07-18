@@ -39,8 +39,40 @@ namespace suzume::analysis::candidate {
 // reach it positionally without a raw score literal.
 constexpr float kNoOriginConfidence = 0.0F;
 
+// Confidence for a direct dictionary candidate or an equivalently constrained
+// closed-class candidate emitted by the tokenizer.
+constexpr float kDictionaryOriginConfidence = 1.0F;
+
+// Dictionary-backed lexicalized compounds with an inflected verb-like medial
+// segment and a formal-noun tail (見た目, 行く末). This offsets the otherwise
+// very strong verb + auxiliary connection path while remaining limited to the
+// grammaticalized compound-noun shape.
+constexpr float kLexicalizedMixedScriptNounBonus = -1.2F;
+
+// Ordinal compounds beginning with 第. A single trailing noun character is a
+// lexicalized ordinal noun (第一歩), while 第 + numeral before 次 begins a
+// compositional ordinal boundary (第二|次計画).
+constexpr float kOrdinalSingleNounMergeBonus = -1.2F;
+constexpr float kOrdinalSequentialSplitBonus = -1.2F;
+constexpr float kOrdinalDigitCounterSplitBonus = -1.2F;
+constexpr float kNumeralKanaMonthMergeBonus = -1.2F;
+
 // Last-resort single-character edge used to keep the lattice connected.
 constexpr float kFallbackCandidateCost = 5.0F;
+
+// A normal whole-word alternative for a suffix candidate.  Relational suffixes
+// (年度末) retain a preferred stem + suffix boundary.
+constexpr float kSuffixWholeCandidateCost = 1.2F;
+
+// A kanji compound formed by a derivational noun suffix (新制度, 安全性).
+// It is a complete search unit and must compete with the stem + suffix path,
+// which receives a strong Noun→Suffix connection bonus.
+constexpr float kDerivedSuffixCompoundNounCost = -0.2F;
+
+// Productive nominal-base suffix verbs such as 春めく and 謎めく. The
+// derivational ending identifies a verbal predicate while keeping ordinary
+// unknown kanji+hira compounds available as alternatives.
+constexpr float kProductiveSuffixVerbCost = -0.2F;
 
 // Colloquial emphatic suffixes (やばいっ, きたあああ).
 constexpr size_t kEmphaticMinRepeatedVowels = 2;
@@ -120,6 +152,11 @@ constexpr float kSplitBaseCost = 1.0F;
 // only ever applied when 後/前 follows a temporal counter, so it cannot over-split.
 constexpr float kCounterRelationSplitBonus = -1.2F;
 
+// Quantity + comparison-boundary split bonus (百倍|以上, 三名|以上). A
+// numeral-counter phrase remains a search unit before the independent
+// comparison expression, rather than merging into a long kanji sequence.
+constexpr float kCounterComparisonSplitBonus = -1.2F;
+
 // Counter-quantity 半 suffix token (三時間|半, 五分|半). Zero defers to the
 // NounNumber category cost; the discount that lets the split beat the merged
 // kanji_seq run lives on the left counter token (kCounterRelationSplitBonus).
@@ -166,6 +203,17 @@ constexpr float kDurationSpanSplitBonus = -1.2F;
 // kanji→non-kanji boundary, so a following kanji (五度目, 五度見た) keeps its boundary.
 constexpr float kNumeralCounterMergeBonus = -0.5F;
 
+// Fraction merge cost (三分の一, 十分の三). A numerator, the denominator
+// marker 分の, and a numeral denominator form one quantity search unit. The
+// structure is unambiguous and this cost keeps it ahead of the individual
+// counter and particle candidates.
+constexpr float kFractionMergeCost = -0.8F;
+
+// Approximate numeral split bonus (十|数件, 百|数名). A cardinal numeral before
+// 数 + counter is distinct from an ordinary multi-digit numeral and keeps the
+// approximate-count element as its own search unit.
+constexpr float kApproximateNumeralSplitBonus = -1.2F;
+
 // Temporal-noun boundary: an adverbial temporal noun (現在, 昨日) heading a
 // 2+-kanji noun run splits off (現在|担当者) rather than merging the whole run.
 // Applied in suffix_candidates_prefix.cpp.
@@ -189,9 +237,28 @@ constexpr float kPostParticleNounPenalty = 0.4F;
 // can fuse both kanji into a fabricated noun and bypass that boundary.
 constexpr float kFormalNounNaAdjectiveBoundaryPenalty = 0.5F;
 
+// Adverb before the explanatory copular nominalizer (な+の).
+// The ordinary ADV→AUX_断定 connection is intentionally penalized because
+// adverbs do not normally take a copula.  In an explanatory question such as
+// なぜ+な+の, however, the attributive copula closes the interrogative phrase
+// before the nominalizer.  Discount the complete dictionary-backed adverb so
+// a particle-like suffix inside it cannot win by avoiding that connection.
+constexpr float kAdverbExplanatoryCopulaBonus = -0.5F;
+
+// Hiragana manner adverb ending in んと (きちんと, ちゃんと). This is a
+// productive mimetic shape that otherwise degrades into an unknown noun plus
+// the quotative particle.
+constexpr float kMimeticNtoAdverbBonus = -0.6F;
+
 // Verified verb in split bonus
 // Applied when verb component is verified in dictionary
 constexpr float kVerifiedVerbBonus = -0.8F;
+
+// A dictionary-backed lexical Ichidan base ending in せる competes with the
+// productive godan-mizenkei + causative せる analysis (合わせる vs 合わ+せる).
+// Only the finite dictionary form receives this bonus; genuinely productive
+// causatives have no matching lexical base entry.
+constexpr float kLexicalSeruBaseBonus = -1.2F;
 
 // =============================================================================
 // Adjective Candidate Constants (adjective_candidates.cpp)
@@ -253,9 +320,10 @@ constexpr float kCompoundAdjConfMin = 0.3F;   // minimum inflection confidence
 constexpr float kCompoundAdjBaseCost = 0.5F;  // base cost for generated candidate
 
 // Na-adjective candidate costs
-constexpr float kNaAdjYakaCost = 0.2F;  // やか/らか/か + な (華やかな, 静かな)
-constexpr float kNaAdjTekiCost = 1.5F;  // 的 suffix (論理的) — high to prefer NOUN+的+な
-constexpr float kNaAdjStemCost = 0.5F;  // kanji compound + な (獰猛な)
+constexpr float kNaAdjYakaCost = 0.2F;               // やか/らか/か + な (華やかな, 静かな)
+constexpr float kNaAdjTekiCost = 1.5F;               // 的 suffix (論理的) — high to prefer NOUN+的+な
+constexpr float kNaAdjStemCost = 0.5F;               // kanji compound + な (獰猛な)
+constexpr float kNaAdjSingleKanjiCopulaCost = 1.5F;  // ambiguous single kanji + だ (変だ)
 
 // Hiragana i-adjective confidence thresholds
 constexpr float kHiraAdjConfMin = 0.55F;        // default hiragana-only
@@ -330,6 +398,41 @@ constexpr float kAdjSplitForcePenalty = 2.0F;
 // Moderate penalty for uncertain adjective patterns
 // Applied to unconfirmed さ nominalization and らしい conjecture
 constexpr float kAdjModeratePenalty = 1.5F;
+
+// Nominalized renyokei before a particle is a productive deverbal noun
+// context (答えは, 決まりを), not a finite verbal continuation.
+constexpr float kNominalizedNounParticleBonus = -1.5F;
+
+// A formal noun immediately before the copular topic sequence では/でも is a
+// complete nominal predicate (はずでは, わけでも), not a particle + classical
+// negative fragment. The context gate keeps locative ところで untouched.
+constexpr float kFormalNounCopularTopicBonus = -0.8F;
+
+// A formal copular topic before ある is a fixed syntactic unit (ではある),
+// preferred over the separately analyzed copula and topic particle.
+constexpr float kCopularTopicAruCandidateCost = -3.0F;
+
+// The quoted final-particle pair かなと keeps two explicit sentence-particle
+// boundaries despite the usual BOS/final-particle connection penalties.
+constexpr float kSentenceParticleQuoteCost = -1.2F;
+
+// A two-mora final particle at BOS needs to overcome the generic sentence-
+// particle start penalty before its following quote particle supplies context.
+constexpr float kLongSentenceParticleQuoteCost = -2.3F;
+
+// The contracted explanatory negative んじゃない must outrank a chain of
+// one-mora auxiliary homographs at the beginning of an utterance.
+constexpr float kContractedNjaNegativeCost = -3.0F;
+constexpr float kClassicalAraNLimitCost = -4.0F;
+
+// Within that contraction, the independent negative auxiliary must remain
+// whole rather than decomposing into copular and continuative homographs.
+constexpr float kContractedNegativeAuxCost = -0.5F;
+
+// A fused でも candidate cannot carry the copular-negative reading when a
+// ない-family form follows. Prefer the productive で(AUX)+も(PARTICLE) path;
+// ordinary adverbial でも before a predicate (本でも読む) stays untouched.
+constexpr float kFusedDemoNegativePenalty = 2.0F;
 
 }  // namespace suzume::analysis::candidate
 

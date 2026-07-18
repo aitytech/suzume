@@ -305,11 +305,11 @@ float computeNounSuffixVerbDictBonus(const core::LatticeEdge& edge) {
     bonus += sc::kBonusLongSuffix;
   }
 
-  // Bonus for short hiragana verbs from dictionary (e.g., なる, ある, いる, する)
+  // Bonus for short hiragana verbs from dictionary (e.g., なる, ある, いる, する, かかる)
   // These compete with L1 function word entries (DET, AUX) which have lower category costs.
   // Dictionary registration indicates standalone verb usage should take precedence.
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      edge.surface.length() <= core::kTwoJapaneseCharBytes) {  // ≤2 chars
+      edge.surface.length() <= core::kThreeJapaneseCharBytes) {  // ≤3 chars
     bonus += sc::kBonusShortHiraganaVerb;
   }
 

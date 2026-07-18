@@ -93,7 +93,8 @@ constexpr std::array<float, static_cast<size_t>(ExtendedPOS::Count_)> kCategoryC
   // reading (当たる, 隔たる) — those verbs carry a +1.0 penalty that would otherwise let
   // 当|たる sneak past. The AuxClassicalTari->Noun/Particle bigram bonus (bigram_table.cpp)
   // more than repays this cost when a nominal actually follows (堂々たる態度).
-  table[static_cast<size_t>(ExtendedPOS::AuxClassicalTari)] = 0.5F;  // たる (文語断定連体)
+  table[static_cast<size_t>(ExtendedPOS::AuxClassicalTari)] = 0.5F;     // たる (文語断定連体)
+  table[static_cast<size_t>(ExtendedPOS::AuxClassicalPerfect)] = 0.4F;  // たり/り (文語完了・存続)
   // AuxClassicalBeshi (連体形 べき) preserves べき's prior word cost (it used to ride
   // AuxVolitional's 0.3); the adnominal べき→Noun and 終止形/受身→べき bigram bonuses in
   // bigram_table.cpp carry its placement, so the category cost stays neutral at 0.3.
@@ -121,8 +122,9 @@ constexpr std::array<float, static_cast<size_t>(ExtendedPOS::Count_)> kCategoryC
 
   // Appearance/Conjecture
   table[static_cast<size_t>(ExtendedPOS::AuxAppearanceSou)] = 0.4F;     // そう
-  table[static_cast<size_t>(ExtendedPOS::AuxConjectureRashii)] = 0.4F;  // らしい
+  table[static_cast<size_t>(ExtendedPOS::AuxConjectureRashii)] = 0.3F;  // らしい
   table[static_cast<size_t>(ExtendedPOS::AuxConjectureMitai)] = 0.4F;   // みたい
+  table[static_cast<size_t>(ExtendedPOS::AuxSimilitudeYou)] = 0.4F;     // よう
 
   // Copula
   table[static_cast<size_t>(ExtendedPOS::AuxCopulaDa)] = 0.2F;    // だ

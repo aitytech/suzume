@@ -308,12 +308,16 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
         continue;
       }
 
-      // Penalize kanji sequences that extend past iteration mark (々)
-      // e.g., 時々妙 should be split as 時々 + 妙, not kept as one compound
-      // The pattern kanji+々 is a complete reduplication that rarely extends further
+      // Penalize kanji sequences that extend past iteration mark (々), except
+      // for a complete double-reduplication X々Y々 (津々浦々, 様々). The latter
+      // is a productive four-character compound shape and must retain its
+      // whole-word candidate; a lone completed pair followed by another kanji
+      // (時々妙) is still a boundary.
       if (start_type == normalize::CharType::Kanji && len >= 3) {
+        bool is_double_reduplication = len == 4 && normalize::isIterationMark(codepoints[start_pos + 1]) &&
+                                       normalize::isIterationMark(codepoints[start_pos + 3]);
         for (size_t i = start_pos + 1; i < candidate_end - 1; ++i) {
-          if (normalize::isIterationMark(codepoints[i])) {
+          if (!is_double_reduplication && normalize::isIterationMark(codepoints[i])) {
             // Found 々 in the middle - penalize extending past it
             cost += 5.0F;
             break;

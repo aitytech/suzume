@@ -281,6 +281,9 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
     // This preserves the adjective stem and appearance-auxiliary boundary.
     appendCandidates(candidates, generateAdjectiveStemCandidates(text, codepoints, start_pos, char_types));
 
+    // Generate productive nominal-base suffix verbs (春めく、謎めく).
+    appendCandidates(candidates, generateProductiveSuffixVerbCandidates(codepoints, start_pos, char_types));
+
     // Generate na-adjective candidates (〜的 patterns)
     appendCandidates(candidates, generateNaAdjectiveCandidates(text, codepoints, start_pos, char_types));
 

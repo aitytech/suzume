@@ -14,6 +14,7 @@
 #include "analysis/category_cost.h"
 #include "candidate_constants.h"
 #include "core/debug.h"
+#include "core/kana_constants.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "join_candidates.h"
@@ -43,6 +44,25 @@ bool allCharsAre(const std::vector<normalize::CharType>& char_types, const std::
     return false;
   }
   return true;
+}
+
+// The emphatic interrogative construction (何と+し+て+も, 誰と+し+て+も)
+// is compositional.  Its quoted particle and する te-form must not be hidden
+// by the otherwise valid compound-particle candidate として.  Look for a
+// dictionary-verified interrogative ending exactly at the candidate boundary;
+// this keeps ordinary nominal uses such as 道具としても intact.
+bool hasInterrogativeEndingAt(const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                              const ByteOffsets& byte_offsets, size_t end_pos) {
+  for (size_t start_pos = 0; start_pos < end_pos; ++start_pos) {
+    const size_t byte_pos = byteOffsetAt(byte_offsets, start_pos);
+    for (const auto& result : dict_manager.lookup(text, byte_pos)) {
+      if (result.entry != nullptr && result.entry->extended_pos == core::ExtendedPOS::PronounInterrogative &&
+          start_pos + result.length == end_pos) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 }  // namespace
@@ -143,6 +163,55 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // Calculate end position in characters
     size_t end_pos = start_pos + result.length;
 
+    // The one-mora classical desiderative auxiliary ま is valid only as the
+    // first component of まほしき.  Keeping it context-gated prevents a
+    // common temporal adverb such as いま from being split as い+ま.
+    if (result.entry->extended_pos == core::ExtendedPOS::AuxDesireTai &&
+        grammar::isClassicalDesiderativeMarker(result.entry->surface) &&
+        !grammar::startsClassicalDesiderativeSequence(text.substr(byteOffsetAt(byte_offsets, start_pos)))) {
+      continue;
+    }
+
+    // The classical honorific たまふ is represented as た+ま+ふ.  Its
+    // one-mora pieces are admitted only inside that exact auxiliary chain.
+    if (result.entry->extended_pos == core::ExtendedPOS::AuxHonorific &&
+        grammar::isClassicalHonorificComponent(result.entry->surface)) {
+      const bool is_marker = grammar::isClassicalDesiderativeMarker(result.entry->surface);
+      const bool has_honorific_start =
+          grammar::startsClassicalHonorificSequence(text.substr(byteOffsetAt(byte_offsets, start_pos)));
+      const bool follows_honorific_marker = start_pos > 0 && grammar::isClassicalDesiderativeMarker(extractSubstring(
+                                                                 codepoints, start_pos - 1, start_pos));
+      if ((is_marker && !has_honorific_start) || (!is_marker && !follows_honorific_marker)) {
+        continue;
+      }
+    }
+
+    // The historical terminal component ふ is meaningful only after a kanji
+    // stem.  The positional gate retains separations such as 候+ふ and 思+ふ
+    // without admitting a free one-mora verb in ordinary hiragana text.
+    if (result.entry->pos == core::PartOfSpeech::Verb &&
+        result.entry->extended_pos == core::ExtendedPOS::VerbShuushikei &&
+        grammar::isClassicalFuruTerminal(result.entry->surface) &&
+        (start_pos == 0 || !normalize::isKanjiCodepoint(codepoints[start_pos - 1]))) {
+      continue;
+    }
+
+    // A dictionary noun homographic with a verb renyokei (知らせ) cannot
+    // precede the closed classical honorific auxiliary chain たまふ.  Keep the
+    // verb boundary available in that grammatical environment.
+    if (result.entry->pos == core::PartOfSpeech::Noun &&
+        grammar::startsClassicalHonorificAuxiliaryChain(text.substr(byteOffsetAt(byte_offsets, end_pos)))) {
+      continue;
+    }
+
+    // In an interrogative emphatic sequence, として is not the viewpoint
+    // compound particle: it is と+し+て before the focus particle も.
+    if (result.entry->extended_pos == core::ExtendedPOS::ParticleCase &&
+        grammar::isQuotativeSuruTeCompoundParticle(result.entry->surface) && end_pos < codepoints.size() &&
+        codepoints[end_pos] == U'も' && hasInterrogativeEndingAt(dict_manager_, text, byte_offsets, start_pos)) {
+      continue;
+    }
+
     // Skip a dictionary adjective ending in double い when its final い is the
     // leading い of the receptive auxiliary いただく: the adjective reading
     // would fuse a wa-row renyokei's い with the auxiliary's onset
@@ -166,6 +235,50 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 
     // Cost is now derived from ExtendedPOS via getCategoryCost()
     float cost = analysis::getCategoryCost(result.entry->extended_pos);
+
+    if (result.entry->pos == core::PartOfSpeech::Verb &&
+        result.entry->extended_pos == core::ExtendedPOS::VerbShuushikei &&
+        utf8::endsWith(result.entry->surface, "せる")) {
+      cost += candidate::kLexicalSeruBaseBonus;
+      flags |= core::LatticeEdge::kHasCustomCost;
+    }
+
+    if (result.entry->extended_pos == core::ExtendedPOS::NounFormal && end_pos + 1 < codepoints.size() &&
+        codepoints[end_pos] == U'で' && (codepoints[end_pos + 1] == U'は' || codepoints[end_pos + 1] == U'も')) {
+      cost += candidate::kFormalNounCopularTopicBonus;
+      flags |= core::LatticeEdge::kHasCustomCost;
+    }
+
+    if (result.entry->pos == core::PartOfSpeech::Adverb && end_pos + 1 < codepoints.size() &&
+        codepoints[end_pos] == U'な' && codepoints[end_pos + 1] == U'の') {
+      cost += candidate::kAdverbExplanatoryCopulaBonus;
+      flags |= core::LatticeEdge::kHasCustomCost;
+    }
+
+    // A dictionary-backed mixed-script noun can be a lexicalized compound
+    // containing an inflected verbal segment. Prefer that registered search
+    // unit over a coincidental inflection path.
+    if (result.entry->pos == core::PartOfSpeech::Noun && result.length >= 3) {
+      bool has_kanji = false;
+      bool has_hiragana = false;
+      for (size_t idx = start_pos; idx < end_pos; ++idx) {
+        has_kanji = has_kanji || normalize::isKanjiCodepoint(codepoints[idx]);
+        has_hiragana = has_hiragana || kana::isHiraganaCodepoint(codepoints[idx]);
+      }
+      if (has_kanji && has_hiragana) {
+        cost += candidate::kLexicalizedMixedScriptNounBonus;
+        flags |= core::LatticeEdge::kHasCustomCost;
+      }
+    }
+
+    const bool is_fused_demo = result.length == 2 && end_pos >= 2 && codepoints[end_pos - 2] == U'で' &&
+                               codepoints[end_pos - 1] == U'も' &&
+                               (result.entry->extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+                                result.entry->extended_pos == core::ExtendedPOS::Conjunction);
+    if (is_fused_demo && verb_helpers::naiNegativeFollowsAt(codepoints, end_pos)) {
+      cost += candidate::kFusedDemoNegativePenalty;
+      flags |= core::LatticeEdge::kHasCustomCost;
+    }
 
     // A bare え-row dict-verb imperative closing a clause (書け, 止まれ) is the 命令形 of the
     // base verb, not the potential-verb renyokei; without this the spurious 未然+受身れ split
@@ -232,6 +345,80 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
                         "dict_emphatic");
       }
     }
+  }
+
+  // The formal copular topic では remains a single search unit before ある
+  // (ではあるまいか, ではあるが).  Other では contexts retain the productive
+  // で+は boundary used by copular negation.
+  if (grammar::startsCopularTopicAru(text.substr(byte_pos))) {
+    lattice.addEdge("では", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 2),
+                    core::PartOfSpeech::Conjunction, candidate::kCopularTopicAruCandidateCost, 0, "では",
+                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
+                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::Conjunction, "copular_topic_aru");
+  }
+
+  // あらん限り is the classical existential mizenkei あら plus the
+  // euphonic ん form of conjectural む.  The following formal noun makes this
+  // reading distinct from colloquial negative ん.
+  if (grammar::startsClassicalAraNLimit(text.substr(byte_pos))) {
+    lattice.addEdge("あら", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 2),
+                    core::PartOfSpeech::Verb, candidate::kClassicalAraNLimitCost, 0, "ある",
+                    dictionary::ConjugationType::GodanRa, core::CandidateOrigin::Unknown,
+                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::VerbMizenkei,
+                    "classical_ara_n_limit");
+    lattice.addEdge(
+        "ん", static_cast<uint32_t>(start_pos + 2), static_cast<uint32_t>(start_pos + 3), core::PartOfSpeech::Auxiliary,
+        candidate::kClassicalAraNLimitCost, 0, "ん", dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
+        candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::AuxVolitional, "classical_ara_n_limit");
+  }
+
+  // A quoted final-particle pair (かなと) retains the two searchable
+  // particles. The context avoids changing copular な or non-final かな…
+  // sequences elsewhere.
+  if (grammar::startsSentenceParticleKanaQuote(text.substr(byte_pos))) {
+    lattice.addEdge("か", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 1),
+                    core::PartOfSpeech::Particle, candidate::kSentenceParticleQuoteCost, 0, "か",
+                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
+                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::ParticleFinal,
+                    "sentence_particle_kana_quote");
+    lattice.addEdge("な", static_cast<uint32_t>(start_pos + 1), static_cast<uint32_t>(start_pos + 2),
+                    core::PartOfSpeech::Particle, candidate::kSentenceParticleQuoteCost, 0, "な",
+                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
+                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::ParticleFinal,
+                    "sentence_particle_kana_quote");
+  }
+
+  const std::string_view long_final_particle = grammar::longFinalParticleBeforeQuote(text.substr(byte_pos));
+  if (!long_final_particle.empty()) {
+    const uint32_t particle_end = static_cast<uint32_t>(start_pos + normalize::utf8Length(long_final_particle));
+    lattice.addEdge(long_final_particle, static_cast<uint32_t>(start_pos), particle_end, core::PartOfSpeech::Particle,
+                    candidate::kLongSentenceParticleQuoteCost, 0, long_final_particle,
+                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
+                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::ParticleFinal,
+                    "long_sentence_particle_quote");
+  }
+
+  if (grammar::startsContractedNjaNegative(text.substr(byte_pos))) {
+    lattice.addEdge("んじゃ", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 3),
+                    core::PartOfSpeech::Conjunction, candidate::kContractedNjaNegativeCost, 0, "んじゃ",
+                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
+                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::Conjunction,
+                    "contracted_nja_negative");
+    lattice.addEdge("ない", static_cast<uint32_t>(start_pos + 3), static_cast<uint32_t>(start_pos + 5),
+                    core::PartOfSpeech::Adjective, candidate::kContractedNegativeAuxCost, 0, "ない",
+                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
+                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::AdjBasic, "contracted_nja_negative");
+  }
+
+  // Edition 版 is a suffix only after a numeral or ordinal component
+  // (第3版, 第三版).  Elsewhere it retains the independent noun reading
+  // (新しい版), so do not register it as an unconditional dictionary suffix.
+  if (start_pos > 0 && codepoints[start_pos] == U'版' && normalize::isNumeralCodepoint(codepoints[start_pos - 1])) {
+    const float cost = analysis::getCategoryCost(core::ExtendedPOS::Suffix);
+    lattice.addEdge("版", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 1),
+                    core::PartOfSpeech::Suffix, cost, core::LatticeEdge::kFromDictionary, "版",
+                    dictionary::ConjugationType::None, core::CandidateOrigin::Dictionary,
+                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::Suffix, "ordinal_edition_suffix");
   }
 }
 
@@ -441,7 +628,11 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
                     }
                   }
                 }
-                if (tail_is_productive_suffix) {
+                // A na-adjective stem also forms a lexical comparison compound
+                // with 以上 (必要以上, 予想以上). Numeral+counter expressions
+                // retain their dedicated split candidates in the counter layer.
+                bool tail_is_comparison_bound = (tail_surface == "以上");
+                if (tail_is_productive_suffix || tail_is_comparison_bound) {
                   continue;
                 }
               }

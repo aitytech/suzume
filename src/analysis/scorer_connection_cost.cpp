@@ -71,6 +71,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   surface_bonus += connection_rules::computeExistentialAruNominalPredicateBonus(prev, next);
   surface_bonus += connection_rules::computeCompletionAuxiliaryBonus(prev, next);
   surface_bonus += connection_rules::computeAdjectiveTePredicatePenalty(prev, next);
+  surface_bonus += connection_rules::computeClassicalNegativeBoundaryPenalty(prev, next);
 
   surface_bonus += connection_rules::computeBarePotentialRenyokeiPenalty(prev, next);
 
@@ -107,7 +108,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   if (prev.pos == core::PartOfSpeech::Verb && prev.fromDictionary() && grammar::isPureHiragana(prev.surface) &&
       prev.surface.size() <= 9 &&  // ≤3 hiragana chars (9 bytes)
       next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
-      !(prev.extended_pos == core::ExtendedPOS::VerbMizenkei && prev.lemma == "する") &&
+      !(prev.extended_pos == core::ExtendedPOS::VerbMizenkei && prev.lemma == "する") && prev.lemma != "ある" &&
       !utf8::equalsAny(next.surface, {"ん", "ぬ", "ざる", "ざれ", "ね"})) {
     surface_bonus += cost::kAlmostNever;
   }
@@ -533,8 +534,17 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // 醒/覚/冷 from splitting before まして). Symbol prev excluded so punctuation may
   // precede a conjunction (雨、しかし…); codepoint count stays correct for 4-byte kanji.
   if (next.pos == core::PartOfSpeech::Conjunction && prev.pos != core::PartOfSpeech::Symbol &&
-      normalize::utf8Length(prev.surface) == 1) {
+      prev.pos != core::PartOfSpeech::Particle && normalize::utf8Length(prev.surface) == 1) {
     surface_bonus += cost::kAlmostNever;
+  }
+
+  // A non-dictionary hiragana noun immediately before a conjunction is often
+  // an unknown edge that swallowed a particle sequence.  Keep the productive
+  // particle boundaries in comparisons such as に+も+まして, while preserving
+  // dictionary-backed lexical nouns and formal nouns before conjunctions.
+  if (next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun && !prev.fromDictionary() &&
+      grammar::isPureHiragana(prev.surface)) {
+    surface_bonus += cost::kProhibitive;
   }
 
   float total = base_cost + extended_cost + surface_bonus;

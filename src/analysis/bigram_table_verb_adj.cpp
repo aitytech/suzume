@@ -234,6 +234,9 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // AdjMizenkei → AuxVolitional (高かろ+う) - strong bonus for conjectural splitting
       {EPOS::AdjMizenkei, EPOS::AuxVolitional, cost::kStrongBonus},
 
+      // AdjMizenkei → AuxNegativeNu (高から+ず, 美しから+ず).
+      {EPOS::AdjMizenkei, EPOS::AuxNegativeNu, cost::kStrongBonus},
+
       // AdjBasic → AuxCopulaDesu (美しい+です) - moderate bonus
       {EPOS::AdjBasic, EPOS::AuxCopulaDesu, cost::kModerateBonus},
 
@@ -275,6 +278,10 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // Helps AUX_過度 beat VERB interpretation when both have same cost
       {EPOS::AdjStem, EPOS::AuxExcessive, cost::kModerateBonus},
       {EPOS::AdjNaAdj, EPOS::AuxExcessive, cost::kModerateBonus},
+
+      // A na-adjective can take the direct negative adjective without the
+      // copular な (必要+ない, 便利+ない).
+      {EPOS::AdjNaAdj, EPOS::AdjBasic, cost::kVeryStrongBonus},
 
       // AdjStem → AuxGaru (怖+がる, 可愛+がる) - moderate bonus
       {EPOS::AdjStem, EPOS::AuxGaru, cost::kModerateBonus},
