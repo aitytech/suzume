@@ -114,6 +114,15 @@ bool isIndependentNegativeAdjective(std::string_view surface);
 /** @brief Whether a surface ends in the complete negative form ない */
 bool endsWithNegativeNai(std::string_view surface);
 
+/** @brief Whether an auxiliary lemma is the classical causative す */
+bool isClassicalCausativeAuxiliaryLemma(std::string_view lemma);
+
+/** @brief Whether an auxiliary lemma is the contracted negative ん */
+bool isContractedNegativeAuxiliaryLemma(std::string_view lemma);
+
+/** @brief Whether an aspect-auxiliary surface is the contracted ている form */
+bool isContractedProgressiveSurface(std::string_view surface);
+
 /**
  * @brief Whether an adverb is the standalone component of とともに
  * @param surface Candidate adverb surface

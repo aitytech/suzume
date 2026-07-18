@@ -158,6 +158,18 @@ bool endsWithNegativeNai(std::string_view surface) {
   return utf8::endsWith(surface, "ない");
 }
 
+bool isClassicalCausativeAuxiliaryLemma(std::string_view lemma) {
+  return lemma == "す";
+}
+
+bool isContractedNegativeAuxiliaryLemma(std::string_view lemma) {
+  return lemma == "ん";
+}
+
+bool isContractedProgressiveSurface(std::string_view surface) {
+  return surface == "て" || surface == "で";
+}
+
 bool isParallelTogetherAdverb(std::string_view surface) {
   return surface == "ともに";
 }
