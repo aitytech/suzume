@@ -19,6 +19,16 @@ Lemmatizer::Lemmatizer(const dictionary::DictionaryManager* dict_manager) : dict
 using namespace lemmatizer_detail;
 
 std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
+  // A terminal small-tsu can be a colloquial emphasis mark after a past form
+  // (来たっ).  Analyze the underlying past form, while leaving dictionary and
+  // non-past emphatic words such as 行くっ untouched.
+  if (morpheme.pos == core::PartOfSpeech::Verb && utf8::endsWith(morpheme.surface, "たっ")) {
+    const std::string_view past_surface = utf8::dropLastChar(morpheme.surface);
+    if (std::string lemma = lemmatizeByGrammar(past_surface, morpheme.pos, morpheme.conj_type); !lemma.empty()) {
+      return lemma;
+    }
+  }
+
   // If morpheme is from dictionary and has distinct lemma set, trust it
   // (lemma != surface means it was explicitly set, not defaulted)
   // When lemma == surface, we need to re-derive for conjugated forms
