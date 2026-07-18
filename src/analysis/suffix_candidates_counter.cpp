@@ -94,10 +94,9 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
   // dictionary exceptions.
   if (codepoints[start_pos] == U'第' && normalize::isNumeralCodepoint(codepoints[start_pos + 1])) {
     size_t ordinal_end = start_pos + 1;
-    bool ordinal_has_digit = false;
+    bool ordinal_has_numeral = false;
     while (ordinal_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[ordinal_end])) {
-      ordinal_has_digit = ordinal_has_digit ||
-                          (ordinal_end < char_types.size() && char_types[ordinal_end] == normalize::CharType::Digit);
+      ordinal_has_numeral = true;
       ++ordinal_end;
     }
     if (ordinal_end < char_types.size() && char_types[ordinal_end] == normalize::CharType::Kanji) {
@@ -106,7 +105,7 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
         ++tail_end;
       }
       size_t tail_len = tail_end - ordinal_end;
-      if (tail_len == 1 && ordinal_has_digit && normalize::isCounterKanji(codepoints[ordinal_end])) {
+      if (tail_len == 1 && ordinal_has_numeral && normalize::isCounterKanji(codepoints[ordinal_end])) {
         std::string ordinal_surface = extractSubstring(codepoints, start_pos, ordinal_end);
         std::string counter_surface = extractSubstring(codepoints, ordinal_end, tail_end);
         if (!ordinal_surface.empty()) {

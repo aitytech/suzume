@@ -709,10 +709,11 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
 
   // A duration starts with 時間 rather than 時. Consume 間 before scanning
   // its optional minute/second fields so 1時間15分 remains one quantity.
+  // Leave 間 to the following span when it heads an interval word (5時|間隔).
   size_t duration_pos = idx;
   if (duration_pos < text.size()) {
     char32_t duration_marker = normalize::decodeUtf8(text, duration_pos);
-    if (duration_marker == U'間') {
+    if (duration_marker == U'間' && absorbsPeriodKan(text, duration_pos)) {
       idx = duration_pos;
     }
   }

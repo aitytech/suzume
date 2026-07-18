@@ -477,7 +477,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
       if (curr == U'を' || curr == U'が' || curr == U'の') {
         break;  // hard stops: never sit inside a native hiragana noun
       }
-      if (multi_char_particle_at(scan)) {
+      // A multi-character particle immediately after the first mora can be
+      // part of a native hiragana noun (こども).  Require a substantive
+      // preceding run before treating it as an internal word boundary.
+      if (scan - start_pos >= 2 && multi_char_particle_at(scan)) {
         break;  // stop before a multi-char particle boundary
       }
       if (isInternalParticleChar(curr)) {
