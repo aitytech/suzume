@@ -13,6 +13,12 @@
 namespace suzume::grammar {
 namespace {
 
+TEST(CharPatternsTest, CausalParticleBeforeTopic) {
+  EXPECT_TRUE(isCausalParticleBeforeTopic("ので", "はない"));
+  EXPECT_FALSE(isCausalParticleBeforeTopic("ので", "ある"));
+  EXPECT_FALSE(isCausalParticleBeforeTopic("のに", "はない"));
+}
+
 // ===== endsWithVerbNegative tests =====
 
 class VerbNegativeTest : public ::testing::Test {};
@@ -177,6 +183,14 @@ TEST(CharPatternsTest, VowelAndORowUseCanonicalRows) {
   EXPECT_TRUE(isORowCodepoint(U'を'));
   EXPECT_EQ(getVowelForChar(U'を'), U'お');
   EXPECT_EQ(getVowelForChar(U'ぴ'), U'い');
+}
+
+TEST(CharPatternsTest, BaseEndingIdentifiesOnlyUnambiguousGodanRows) {
+  EXPECT_EQ(verbTypeFromBaseCodepoint(U'く'), VerbType::GodanKa);
+  EXPECT_EQ(verbTypeFromBaseCodepoint(U'む'), VerbType::GodanMa);
+  EXPECT_EQ(verbTypeFromBaseCodepoint(U'う'), VerbType::GodanWa);
+  EXPECT_EQ(verbTypeFromBaseCodepoint(U'る'), VerbType::Unknown);
+  EXPECT_EQ(verbTypeFromBaseCodepoint(U'べ'), VerbType::Unknown);
 }
 
 }  // namespace

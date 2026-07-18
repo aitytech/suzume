@@ -62,8 +62,8 @@ class AuxiliaryGeneratorTest : public ::testing::Test {
 // Hash the complete ordered (surface, right_id, required_conn) sequence so a
 // data compaction cannot accidentally drop or reorder a duplicate surface.
 TEST_F(AuxiliaryGeneratorTest, PreservesOrderedEntryContract) {
-  EXPECT_EQ(generated_entries_.size(), 426U);
-  EXPECT_EQ(hashGeneratedEntries(generated_entries_), 5616919045693076472ULL);
+  EXPECT_EQ(generated_entries_.size(), 432U);
+  EXPECT_EQ(hashGeneratedEntries(generated_entries_), 17909466396321192694ULL);
 }
 
 // Verify generator produces expected number of unique surfaces
@@ -170,6 +170,13 @@ TEST_F(AuxiliaryGeneratorTest, HasTeiruForms) {
   EXPECT_TRUE(hasSurface("いて"));
   EXPECT_TRUE(hasSurface("います"));
   EXPECT_TRUE(hasSurface("いました"));
+}
+
+TEST_F(AuxiliaryGeneratorTest, HasTearuForms) {
+  EXPECT_TRUE(hasSurface("ある"));
+  EXPECT_TRUE(hasSurface("あった"));
+  EXPECT_TRUE(hasSurface("あって"));
+  EXPECT_TRUE(hasSurface("あります"));
 }
 
 TEST_F(AuxiliaryGeneratorTest, HasNaiForms) {
