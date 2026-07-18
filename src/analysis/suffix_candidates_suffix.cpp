@@ -159,11 +159,13 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
       }
     }
 
-    // Pattern 3: Short hiragana nickname + ちゃん/くん/さん
-    // Examples: たっちゃん, ゆうちゃん, けんちゃん, わんちゃん, けんくん
-    // Also lexicalized family terms: おねえさん, おにいさん, おかあさん, おとうさん
-    // Tokenizer use case: treat as a single search unit. Restrict stem to 1-3
-    // hiragana chars so we don't merge full names (e.g., はなこさん stays split).
+    // Pattern 3: Short hiragana nickname + ちゃん/くん, plus an honorific
+    // family-style stem followed by さん.
+    // Examples: たっちゃん, ゆうちゃん, けんちゃん, わんちゃん, けんくん.
+    // The honorific さん remains an independent suffix: it is a useful search
+    // boundary and short ordinary hiragana words must not be reclassified as
+    // nicknames merely because they precede it. Lexicalized family terms are
+    // supplied by the dictionary.
     if (surface.size() >= 9) {  // at least 1-char stem (3 bytes) + 2+ char honorific
       for (const auto* honorific : {"ちゃん", "くん", "さん"}) {
         std::string_view h(honorific);
@@ -173,11 +175,13 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
         std::string_view stem = std::string_view(surface).substr(0, surface.size() - h.size());
         size_t stem_chars = stem.size() / 3;  // Each hiragana = 3 bytes in UTF-8
         if (stem_chars >= 2 && stem_chars <= 3) {
-          // Stronger bonus when stem starts with お/ご (lexicalized family terms
-          // like おねえさん, おかあさん) so the 1-token path beats お(PREFIX) +
-          // nickname split, which gets a -1.3 PREFIX→NOUN bigram bonus.
+          // Only an honorific-style stem can lexicalize with さん. Ordinary
+          // さん terms remain dictionary-backed or split above.
           bool starts_with_honorific_prefix =
               stem.size() >= 3 && (stem.compare(0, 3, "お") == 0 || stem.compare(0, 3, "ご") == 0);
+          if (h == "さん" && !starts_with_honorific_prefix) {
+            break;
+          }
           float cost = starts_with_honorific_prefix ? -1.5F : -0.5F;
           candidates.push_back(makeSuffixCandidate(surface, start_pos, candidate_end, core::PartOfSpeech::Noun, cost,
                                                    surface, 0.9F, "hira_nickname"));
@@ -205,6 +209,43 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
   }
   if (base_end == start_pos) {
     return candidates;
+  }
+
+  struct IchidanSuffixForm {
+    std::string_view inflection;
+    core::ExtendedPOS extended_pos;
+  };
+  static constexpr std::array<IchidanSuffixForm, 5> kIchidanTsukeruForms = {{
+      {"付ける", core::ExtendedPOS::VerbShuushikei},
+      {"付け", core::ExtendedPOS::VerbRenyokei},
+      {"付けれ", core::ExtendedPOS::VerbKateikei},
+      {"付けよ", core::ExtendedPOS::VerbMeireikei},
+      {"付けろ", core::ExtendedPOS::VerbMeireikei},
+  }};
+
+  // 漢字語幹+付ける is a productive compound-verb pattern (関連付ける、
+  // 位置付ける). Restrict the base to two or more kanji so an ordinary
+  // single-kanji lexical verb keeps its normal candidate path.
+  const size_t tsukeru_base_end = base_end > start_pos ? base_end - 1 : start_pos;
+  if (base_end > start_pos && codepoints[tsukeru_base_end] == U'付' && tsukeru_base_end - start_pos >= 2) {
+    for (const auto& form : kIchidanTsukeruForms) {
+      const size_t form_length = normalize::utf8::decode(std::string(form.inflection)).size();
+      const size_t candidate_end = tsukeru_base_end + form_length;
+      if (candidate_end > codepoints.size() ||
+          extractSubstring(codepoints, tsukeru_base_end, candidate_end) != form.inflection) {
+        continue;
+      }
+
+      const std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
+      const std::string lemma = extractSubstring(codepoints, start_pos, tsukeru_base_end) + "付ける";
+      auto candidate =
+          makeVerbCandidate(surface, start_pos, candidate_end, candidate::kProductiveSuffixVerbCost, lemma,
+                            dictionary::ConjugationType::Ichidan, true, CandidateOrigin::SuffixPattern,
+                            candidate::kDictionaryOriginConfidence, "nominal_ichidan_suffix", form.extended_pos);
+      candidate.lemma_verified = true;
+      candidates.push_back(std::move(candidate));
+      return candidates;
+    }
   }
 
   struct GodanKaForm {

@@ -158,7 +158,8 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
         std::string surface = extractSubstring(codepoints, start_pos, hiragana_end + 1);
         if (!surface.empty()) {
           float nom2_cost = 0.8F;
-          if (hiragana_end + 1 < char_types.size() && normalize::isParticleCodepoint(codepoints[hiragana_end + 1])) {
+          if (hiragana_end + 1 < char_types.size() && normalize::isParticleCodepoint(codepoints[hiragana_end + 1]) &&
+              codepoints[hiragana_end + 1] != U'て' && codepoints[hiragana_end + 1] != U'で') {
             nom2_cost += candidate::kNominalizedNounParticleBonus;
           }
           auto cand = makeCandidate(surface, start_pos, hiragana_end + 1, core::PartOfSpeech::Noun, nom2_cost, false,
@@ -201,6 +202,14 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       skip_single_char = true;
     }
   }
+  // A dictionary i-adjective (甘い、辛い) is not a deverbal noun merely
+  // because its final mora is also an i-row renyokei ending.
+  if (first_hiragana == U'い' && dict_manager != nullptr) {
+    const std::string adjective_surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
+    if (dict_manager->lookupExact(adjective_surface, core::PartOfSpeech::Adjective) != nullptr) {
+      skip_single_char = true;
+    }
+  }
 
   if (!skip_single_char) {
     std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
@@ -214,7 +223,8 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       // A following particle makes the renyokei a nominalized search unit:
       // 答えは, 始まりは, 決まりを.  Prefer that productive noun reading over
       // a finite-verb candidate whose continuation is grammatically absent.
-      if (kanji_end + 1 < char_types.size() && normalize::isParticleCodepoint(codepoints[kanji_end + 1])) {
+      if (kanji_end + 1 < char_types.size() && normalize::isParticleCodepoint(codepoints[kanji_end + 1]) &&
+          codepoints[kanji_end + 1] != U'て' && codepoints[kanji_end + 1] != U'で') {
         nom1_cost += candidate::kNominalizedNounParticleBonus;
       }
       // Deverbal compound noun bonus (連用形転成名詞の複合):
@@ -401,6 +411,23 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
           if (dict_manager != nullptr) {
             for (const auto& entry : dict_manager->lookup(suffix_portion, 0)) {
               if (entry.entry != nullptr && entry.entry->pos == core::PartOfSpeech::Adjective) {
+                const size_t ppoi_end = sokuon_pos + 2;
+                const std::string base = extractSubstring(codepoints, start_pos, sokuon_pos);
+                // An i-adjective stem productively forms 〜っぽい.  Keep its
+                // stem before the following nominalizer (安っぽ+さ), while a
+                // nominal base such as 男 retains the ordinary noun+suffix
+                // boundary.  The dictionary gate is on the adjective base,
+                // not on individual derived words.
+                if (ppoi_end <= codepoints.size() && extractSubstring(codepoints, sokuon_pos, ppoi_end) == "っぽ") {
+                  if (dict_manager->lookupExact(base + "い", core::PartOfSpeech::Adjective) != nullptr) {
+                    auto stem = makeCandidate(extractSubstring(codepoints, start_pos, ppoi_end), start_pos, ppoi_end,
+                                              core::PartOfSpeech::Adjective, candidate::kCompoundAdjBaseCost, true,
+                                              CandidateOrigin::KanjiHiraganaCompound, core::ExtendedPOS::AdjStem);
+                    stem.lemma = base + "っぽい";
+                    stem.conj_type = dictionary::ConjugationType::IAdjective;
+                    candidates.push_back(std::move(stem));
+                  }
+                }
                 return candidates;
               }
             }
@@ -427,6 +454,23 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     return candidates;
   }
   char32_t second_hira = (hiragana_len >= 2) ? codepoints[kanji_end + 1] : 0;
+
+  // A kanji verb continuative stem productively combines with the resemblance
+  // suffix っぽい to form one i-adjective search unit (忘れっぽい, 飽きっぽい).
+  // This is morphology, not a per-word lexicon: i-row marks Godan
+  // continuative stems and e-row marks Ichidan continuative stems.
+  const std::string hiragana_candidate = extractSubstring(codepoints, kanji_end, hiragana_end);
+  if (utf8::endsWith(hiragana_candidate, "っぽい") &&
+      (grammar::isIRowCodepoint(first_hira) || grammar::isERowCodepoint(first_hira))) {
+    const std::string derived = extractSubstring(codepoints, start_pos, hiragana_end);
+    auto adjective = makeCandidate(derived, start_pos, hiragana_end, core::PartOfSpeech::Adjective,
+                                   candidate::kProductivePpoiAdjCost, false, CandidateOrigin::KanjiHiraganaCompound,
+                                   core::ExtendedPOS::AdjBasic);
+    adjective.lemma = derived;
+    adjective.conj_type = dictionary::ConjugationType::IAdjective;
+    candidates.push_back(std::move(adjective));
+    return candidates;
+  }
 
   // Skip small kana at start - morphologically invalid
   // EXCEPTION: っ (sokuon) can appear in compound patterns like 横っ面, 取っ手, 引っ込む

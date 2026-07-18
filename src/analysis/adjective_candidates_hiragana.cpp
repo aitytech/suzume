@@ -274,6 +274,14 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
         continue;
       }
       for (size_t aux_end = max_hiragana_end; aux_end > particle_end; --aux_end) {
+        // A one-mora dictionary auxiliary such as い is too ambiguous to
+        // establish a closed-class boundary by itself: it is also the final
+        // mora of ordinary i-adjectives (かまびすしい).  The protected
+        // particle+auxiliary patterns have a multi-mora inflection (が+いない,
+        // など+いない), so require that grammatical evidence here.
+        if (aux_end - particle_end < 2) {
+          continue;
+        }
         std::string aux_surface = extractSubstring(codepoints, particle_end, aux_end);
         if (dict_manager->lookupExact(aux_surface, core::PartOfSpeech::Auxiliary) != nullptr) {
           return candidates;
@@ -653,6 +661,13 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
       // The stem is everything before the auxiliary pattern, including the し
       std::string stem = full_surface.substr(0, pattern_pos + 3);  // +3 for し
       std::string base_form = stem + "い";                         // e.g., おいし → おいしい
+
+      // A te-form connective cannot be part of an i-adjective stem. Keep its
+      // boundary in desiderative-looking chains (読ん+で+ほし+そう,
+      // 書い+て+ほし+そう) instead of fabricating an adjective that absorbs it.
+      if (utf8::contains(stem, "て") || utf8::contains(stem, "で")) {
+        continue;
+      }
 
       // Validate that this forms a valid i-adjective
       const auto& adj_results = inflection.analyze(base_form);

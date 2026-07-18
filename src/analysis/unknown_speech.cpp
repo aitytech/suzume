@@ -351,11 +351,29 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
     if (seq_len >= 4 && isSmallKanaAt(start_pos + 1) && codepoints[start_pos + 3] == U'り') {
       std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
       if (!surface.empty()) {
-        auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Adverb, 0.2F, true,
-                                  CandidateOrigin::Onomatopoeia);
+        auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Adverb,
+                                  candidate::kMimeticSokuonMannerAdverbCost, true, CandidateOrigin::Onomatopoeia);
 #ifdef SUZUME_DEBUG_INFO
-        cand.confidence = 0.8F;
+        cand.confidence = candidate::kMimeticSokuonMannerConfidence;
         cand.pattern = "xtu_cv_ri_pattern";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+
+    // Four-character AっBら patterns are manner adverbs too.  They share the
+    // sokuon-plus-mora shape of the AっBり family, but use the adverbial ら
+    // ending; retain the complete structural unit before a following
+    // predicate instead of treating its first mora as a verb stem.
+    if (seq_len >= 4 && isSmallKanaAt(start_pos + 1) && codepoints[start_pos + 3] == U'ら' &&
+        !normalize::isParticleCodepoint(codepoints[start_pos])) {
+      std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Adverb,
+                                  candidate::kMimeticSokuonMannerAdverbCost, true, CandidateOrigin::Onomatopoeia);
+#ifdef SUZUME_DEBUG_INFO
+        cand.confidence = candidate::kMimeticSokuonMannerConfidence;
+        cand.pattern = "xtu_cv_ra_pattern";
 #endif
         candidates.push_back(cand);
       }

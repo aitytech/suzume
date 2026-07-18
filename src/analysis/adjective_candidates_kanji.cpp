@@ -179,18 +179,20 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
                                                           const dictionary::DictionaryManager* dict_manager) {
   std::vector<UnknownCandidate> candidates;
 
-  // Lexicalized adverbial adjective 間もなく (連用形 of 間もない, "soon"). Emitted as one
-  // token ONLY when 間 is not preceded by a kanji, so 時間もなく / 居間もなく still split as
-  // 時間|も|なく — a plain dictionary entry cannot express "not after kanji", but a guarded
-  // candidate can. The base form 間もない is deliberately not lexicalized (MeCab splits it
-  // as 間|も|ない), so only the 連用形 is recognized here.
+  // Lexicalized adverbial adjective 間もなく (連用形 of 間もない, "soon"). A single
+  // preceding kanji forms a compact noun with 間 (時間 / 居間), while a longer kanji
+  // phrase can end before the adverb (終了間もなく). The base form 間もない is deliberately
+  // not lexicalized (MeCab splits it as 間|も|ない), so only the 連用形 is recognized here.
+  bool follows_single_kanji_compound = start_pos > 0 && start_pos - 1 < char_types.size() &&
+                                       char_types[start_pos - 1] == normalize::CharType::Kanji &&
+                                       (start_pos < 2 || char_types[start_pos - 2] != normalize::CharType::Kanji);
   if (start_pos + 3 < codepoints.size() && codepoints[start_pos] == U'間' && codepoints[start_pos + 1] == U'も' &&
-      codepoints[start_pos + 2] == U'な' && codepoints[start_pos + 3] == U'く' &&
-      (start_pos == 0 || start_pos - 1 >= char_types.size() ||
-       char_types[start_pos - 1] != normalize::CharType::Kanji)) {
-    candidates.push_back(makeIAdjCandidate("間もなく", start_pos, start_pos + 4, "間もない",
-                                           candidate::kCompoundAdjBaseCost, CandidateOrigin::AdjectiveI,
-                                           candidate::kDictFallbackAdjConfidence, "ma_mo_naku"));
+      codepoints[start_pos + 2] == U'な' && codepoints[start_pos + 3] == U'く' && !follows_single_kanji_compound) {
+    auto candidate =
+        makeIAdjCandidate("間もなく", start_pos, start_pos + 4, "間もない", candidate::kLexicalizedAdverbialAdjCost,
+                          CandidateOrigin::AdjectiveI, candidate::kDictFallbackAdjConfidence, "ma_mo_naku");
+    candidate.has_suffix = true;
+    candidates.push_back(std::move(candidate));
   }
 
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
@@ -917,8 +919,10 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
   }
 
   // Pattern 2: Check for kanji compound + na-adjective continuation (e.g., 獰猛な, 変だ).
-  // A direct appearance of そう or the copula だ also licenses a na-adjective
-  // stem when the open-class lexeme is absent from the dictionary.
+  // A bare copula cannot license an arbitrary multi-kanji unknown: nominal
+  // predicates such as 学生だ are much more common, and the noun candidate is
+  // the grammatically neutral analysis.  The one-kanji ambiguity remains
+  // useful for open-class predicates such as 変だ.
   // A bare な licenses an attributive na-adjective stem, but なら does not:
   // nouns and na-adjectives both take conditional なら, so generating an
   // adjective for every unknown kanji compound would destroy that ambiguity.
@@ -926,8 +930,7 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
                               (kanji_end + 1 >= codepoints.size() || codepoints[kanji_end + 1] != U'ら');
   const bool followed_by_sou =
       kanji_end + 1 < codepoints.size() && codepoints[kanji_end] == U'そ' && codepoints[kanji_end + 1] == U'う';
-  const bool followed_by_copula_da = kanji_end < codepoints.size() && codepoints[kanji_end] == U'だ';
-  if (followed_by_na || followed_by_sou || followed_by_copula_da) {
+  if (followed_by_na || followed_by_sou || single_kanji_before_copula) {
     // Skip if first character is a formal noun (形式名詞)
     // e.g., 時妙な should be 時+妙な, not 時妙(ADJ)+な
     // Formal nouns (時, 事, 所, etc.) are standalone grammatical words

@@ -13,6 +13,7 @@
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
+#include "scorer_constants.h"
 #include "tokenizer_utils.h"
 #include "verb_candidates_helpers.h"
 
@@ -186,15 +187,26 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   // (e.g., 全員=2, 再開=2, 不安=2)
   // Longer unverified combinations should be split
   size_t total_len = noun_end - start_pos;
+  const bool has_copular_na_adjective_continuation =
+      noun_end < codepoints.size() &&
+      (codepoints[noun_end] == U'だ' || codepoints[noun_end] == U'で' || codepoints[noun_end] == U'な');
+  const bool has_predicative_adjective_evidence =
+      adjective_in_dict || normalize::isNumeralCodepoint(codepoints[noun_start]);
+  const bool is_predicative_negation_compound = scorer::startsWithNegationPrefix(surface) &&
+                                                has_copular_na_adjective_continuation &&
+                                                has_predicative_adjective_evidence;
   if (total_len >= 4 && !noun_in_dict) {
     // Strong penalty for unverified 4+ char combinations
     // Must overcome: prefix_bonus(-0.4) + optimal_length_bonus(-0.5) = -0.9
     // Target: make final cost higher than split path (~1.0)
     // Penalty: +2.0 base, +0.5 per extra char
     final_cost += 2.0F + 0.5F * static_cast<float>(total_len - 4);
-  } else if (total_len == 3 && !noun_in_dict) {
+  } else if (total_len == 3 && !noun_in_dict && !is_predicative_negation_compound) {
     // Penalty for 3-char unverified so the join cannot beat the plain
     // 2-char kanji_seq noun split (e.g. 全部食 vs 全部|食 from 全部食べちゃった).
+    // A negation-prefix compound before a copula or adjectival continuation is
+    // a complete predicative unit (不十分だ, 不確かではない), even when its
+    // open-class base has no dictionary entry.
     final_cost += candidate::kUnverifiedPrefixJoin3charPenalty;
   }
 
@@ -212,8 +224,15 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   // the whole productive prefix compound should be reclassified as an
   // adjective.
   bool is_nominal_capability_compound = utf8::endsWith(surface, "可能");
-  if (!is_nominal_capability_compound && adjective_in_dict) {
+  // A negation-prefix compound in a na-adjective continuation is productive
+  // even where its open-class base is absent from the compact dictionary
+  // (不十分だ, 不確かではない).  Keep the nominal path too: the lattice can
+  // still select it in non-adjectival contexts.
+  if (!is_nominal_capability_compound && (adjective_in_dict || is_predicative_negation_compound)) {
     float adjective_cost = scorer.posPrior(core::PartOfSpeech::Adjective) + matched_prefix->bonus;
+    if (is_predicative_negation_compound) {
+      adjective_cost += candidate::kPredicativeNegationPrefixAdjectiveBonus;
+    }
     lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(noun_end),
                     core::PartOfSpeech::Adjective, adjective_cost, flags, surface, dictionary::ConjugationType::None,
                     core::CandidateOrigin::PrefixCompound, candidate::kNoOriginConfidence, "prefix_na_adjective",
