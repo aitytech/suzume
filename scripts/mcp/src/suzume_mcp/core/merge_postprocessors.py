@@ -32,6 +32,41 @@ def _postprocess_kamo(result: list[dict], applied_rule: str | None) -> list[dict
     return merged
 
 
+def _postprocess_totomoni(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Merge the kanji spelling of the parallel compound particle と共に."""
+    merged = []
+    idx = 0
+    while idx < len(result):
+        if (
+            idx + 1 < len(result)
+            and result[idx].get("surface") == "と"
+            and result[idx].get("pos") == "助詞"
+            and result[idx + 1].get("surface") == "共に"
+            and result[idx + 1].get("pos") == "副詞"
+        ):
+            merged.append({"surface": "と共に", "pos": "助詞", "lemma": "と共に"})
+            idx += 2
+            if applied_rule is None:
+                applied_rule = "totomoni-compound-particle"
+            continue
+        if (
+            idx + 2 < len(result)
+            and result[idx].get("surface") == "と"
+            and result[idx].get("pos") == "助詞"
+            and result[idx + 1].get("surface") == "共"
+            and result[idx + 2].get("surface") == "に"
+            and result[idx + 2].get("pos") == "助詞"
+        ):
+            merged.append({"surface": "と共に", "pos": "助詞", "lemma": "と共に"})
+            idx += 3
+            if applied_rule is None:
+                applied_rule = "totomoni-compound-particle"
+            continue
+        merged.append(result[idx])
+        idx += 1
+    return merged, applied_rule
+
+
 def _postprocess_noni(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
     """Merge の+に -> のに after past tense."""
     merged = []

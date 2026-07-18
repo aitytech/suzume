@@ -7,6 +7,7 @@ from .constants import (
     COMPOUND_VERB_V2_GODAN,
     COMPOUND_VERB_V2_ICHIDAN,
     FAMILY_TERMS,
+    FIXED_ADVERB_LEMMAS,
     HIRAGANA_COMPOUNDS,
     NAI_ADJECTIVES,
     TARI_ADVERB_STEMS,
@@ -28,6 +29,7 @@ from .merge_postprocessors import (
     _postprocess_onomatopoeia_tto_merge,
     _postprocess_prefix_split,
     _postprocess_search_unit_split,
+    _postprocess_totomoni,
 )
 
 # Numeric-approximation/aggregation prefixes that modify a whole quantity and split
@@ -418,7 +420,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 # Skip any additional ー-only tokens
                 while j < len(tokens) and regex.match(r"^ー+$", tokens[j].get("surface", "")):
                     j += 1
-                result.append({"surface": combined, "pos": t.get("pos", ""), "lemma": lemma + "ー"})
+                result.append({"surface": combined, "pos": t.get("pos", ""), "lemma": lemma})
                 i = j
                 merged = True
                 if applied_rule is None:
@@ -741,8 +743,31 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 if applied_rule is None:
                     applied_rule = "zu-ni-merge"
 
+        # 11c. Resultative 〜てある retains the te-particle boundary.  MeCab
+        # may emit an ichidan te-form as one token (並べて), while Suzume keeps
+        # the productive verb stem + て + ある chain for its grammar model.
+        if (
+            not merged
+            and t.get("surface", "").endswith("て")
+            and len(t.get("surface", "")) > 1
+            and i + 1 < len(tokens)
+            and tokens[i + 1].get("surface") in ("ある", "あっ", "あり")
+        ):
+            stem = t["surface"][:-1]
+            lemma = t.get("lemma") or stem
+            if lemma == t["surface"]:
+                lemma = stem + "る"
+            result.append({"surface": stem, "pos": "動詞", "lemma": lemma})
+            result.append({"surface": "て", "pos": "助詞", "lemma": "て"})
+            i += 1
+            merged = True
+            if applied_rule is None:
+                applied_rule = "te-aru-split"
+
         # No merge: pass through
         if not merged:
+            lemma = t.get("lemma") or t.get("surface", "")
+            lemma = FIXED_ADVERB_LEMMAS.get(t.get("surface", ""), lemma)
             result.append(
                 {
                     "surface": t.get("surface", ""),
@@ -751,13 +776,14 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     "pos_sub2": t.get("pos_sub2"),
                     "conj_type": t.get("conj_type"),
                     "conj_form": t.get("conj_form"),
-                    "lemma": t.get("lemma") or t.get("surface", ""),
+                    "lemma": lemma,
                 }
             )
             i += 1
 
     # Post-process passes
     result = _postprocess_kamo(result, applied_rule)
+    result, applied_rule = _postprocess_totomoni(result, applied_rule)
     result, applied_rule = _postprocess_noni(result, applied_rule)
     result, applied_rule = _postprocess_atode(result, applied_rule)
     _postprocess_epenthetic_sa(result)

@@ -93,6 +93,11 @@ def map_mecab_pos(token: dict | str) -> str:
         token["lemma"] = "なら"
         return "Particle"
 
+    # おろか is a fixed adverbial particle, never an honorific-prefix noun.
+    if surface == "おろか":
+        token["lemma"] = "おろか"
+        return "Particle"
+
     # ん: context-dependent
     if surface == "ん":
         if pos == "名詞":

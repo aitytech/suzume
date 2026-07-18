@@ -3,6 +3,7 @@
 import regex
 
 from .constants import (
+    LITERARY_VOLITIONAL_PARTICLE_COMPOUNDS,
     TTARA_STEMS,
     TTEBA_STEMS,
     USER_DICT_COMPOUNDS,
@@ -259,6 +260,18 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             result.append({"surface": "ん", "pos": "助動詞", "lemma": "ん"})
             if applied_rule is None:
                 applied_rule = "literary-volitional-n-split"
+            continue
+
+        # 12. Literary volitional auxiliary + quotative particle.  Keep the
+        # two closed-class grammatical units searchable even when MeCab emits
+        # a fused noun token (見むと → 見 + む + と).
+        compound = LITERARY_VOLITIONAL_PARTICLE_COMPOUNDS.get(surface)
+        if compound is not None:
+            auxiliary, particle = compound
+            result.append({"surface": auxiliary, "pos": "助動詞", "lemma": auxiliary})
+            result.append({"surface": particle, "pos": "助詞", "lemma": particle})
+            if applied_rule is None:
+                applied_rule = "literary-volitional-particle-split"
             continue
 
         # No split needed

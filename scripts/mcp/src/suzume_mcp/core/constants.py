@@ -47,6 +47,13 @@ VERB_NAI_COMPOUND_ADJECTIVES: list[str] = [
     "揺るぎない",
 ]
 
+# Classical volitional auxiliary followed by a quotative particle.  MeCab
+# sometimes treats the closed-class sequence as one noun token; Suzume keeps
+# both grammatical search units independent.
+LITERARY_VOLITIONAL_PARTICLE_COMPOUNDS: dict[str, tuple[str, str]] = {
+    "むと": ("む", "と"),
+}
+
 # Counter/unit patterns (unused - kept for reference)
 COUNTER_UNITS: list[str] = [
     "人",
@@ -379,6 +386,8 @@ PREFIX_EXCEPTIONS: set[str] = _PREFIXED_FAMILY_TERMS | {
     "おっぱい",
     "おしっこ",
     "おもらし",
+    # Fixed particle, not the honorific prefix お plus a noun.
+    "おろか",
 }
 
 # User-dict registered kanji+katakana compounds (skip splitting)
@@ -425,6 +434,7 @@ EMPHATIC_SOKUON: dict[str, str] = {
 
 # Adverb overrides (words MeCab misclassifies)
 ADVERB_OVERRIDES: set[str] = {
+    "全く",
     "いずれ",
     "いつか",
     "しどろもどろ",
@@ -432,6 +442,13 @@ ADVERB_OVERRIDES: set[str] = {
     "なるほど",
     "たくさん",
     "かく",
+    "あらまし",
+}
+
+# Fixed function-word lemmas that differ from a reference analyzer's legacy
+# inflectional analysis.  These are lexical entries, not productive rules.
+FIXED_ADVERB_LEMMAS: dict[str, str] = {
+    "全く": "全く",
 }
 
 # Pronoun overrides (名詞 -> Pronoun)

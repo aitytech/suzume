@@ -7,7 +7,13 @@ from .mecab import mecab_analyze
 from .merge_rules import apply_suzume_merge
 from .pos_mapping import correct_mecab_pos, map_mecab_pos, normalize_pos
 from .postprocessors import (
+    postprocess_classical_conjecture_aux,
+    postprocess_classical_desiderative_aux,
+    postprocess_classical_honorific_aux,
+    postprocess_classical_perfect_aux,
+    postprocess_classical_ramu_boundary,
     postprocess_copula_neg,
+    postprocess_dai_final_particle,
     postprocess_de_aru,
     postprocess_de_particle,
     postprocess_demo,
@@ -15,20 +21,28 @@ from .postprocessors import (
     postprocess_gozai_verb,
     postprocess_hiragana_godan_wa_terminal,
     postprocess_hiragana_purpose_noun,
+    postprocess_honorific_oki_aux,
     postprocess_honorific_request,
     postprocess_ii,
     postprocess_ikaga,
     postprocess_indefinite_ka,
     postprocess_iru_aux,
     postprocess_itadakeru_aux,
+    postprocess_ka_suru_noun,
+    postprocess_kiri_limited_particle,
+    postprocess_kuru_causative,
     postprocess_mecab_tokens,
     postprocess_miru_aux,
     postprocess_monono_conjunction,
     postprocess_n_kuruwa,
     postprocess_na_adj_noun,
     postprocess_nai_context,
+    postprocess_nanka_particle,
     postprocess_nara_verb,
+    postprocess_onaji_predicate,
+    postprocess_prolonged_sound_noun,
     postprocess_quantity_bound_suffix,
+    postprocess_renyokei_compound_particle,
     postprocess_shimau_aux,
     postprocess_short_hiragana_onbin,
     postprocess_sou,
@@ -36,8 +50,9 @@ from .postprocessors import (
     postprocess_subsidiary_yuku,
     postprocess_tagaru_aux,
     postprocess_taihen,
+    postprocess_to_areba_conditional,
     postprocess_tsuke_noun,
-    postprocess_tsurete_particle,
+    postprocess_yoshi_formal_noun,
     postprocess_you_noun,
     preprocess_for_mecab,
 )
@@ -114,8 +129,10 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     postprocess_shimau_aux(tokens)
     if postprocess_quantity_bound_suffix(tokens) and applied_rule is None:
         applied_rule = "quantity-bound-suffix"
-    if postprocess_tsurete_particle(tokens) and applied_rule is None:
-        applied_rule = "tsurete-particle"
+    if postprocess_renyokei_compound_particle(tokens) and applied_rule is None:
+        applied_rule = "renyokei-compound-particle"
+    if postprocess_to_areba_conditional(tokens) and applied_rule is None:
+        applied_rule = "to-areba-conditional"
     if postprocess_tagaru_aux(tokens) and applied_rule is None:
         applied_rule = "tagaru-search-unit"
     if postprocess_fuu_formal_noun(tokens) and applied_rule is None:
@@ -132,14 +149,36 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "hiragana-godan-wa-terminal"
     if postprocess_honorific_request(tokens) and applied_rule is None:
         applied_rule = "honorific-request-renyokei"
+    if postprocess_honorific_oki_aux(tokens) and applied_rule is None:
+        applied_rule = "honorific-oki-aux"
     postprocess_de_particle(tokens)
+    postprocess_dai_final_particle(tokens)
+    if postprocess_nanka_particle(tokens) and applied_rule is None:
+        applied_rule = "nanka-colloquial-particle"
+    if postprocess_kiri_limited_particle(tokens) and applied_rule is None:
+        applied_rule = "kiri-limiting-particle"
+    if postprocess_kuru_causative(tokens) and applied_rule is None:
+        applied_rule = "kuru-causative-lemma"
+    if postprocess_onaji_predicate(tokens) and applied_rule is None:
+        applied_rule = "onaji-predicative-na-adjective"
     postprocess_de_aru(tokens)
     postprocess_gozai_verb(tokens)
+    postprocess_ka_suru_noun(tokens)
     postprocess_taihen(tokens)
     postprocess_na_adj_noun(tokens)
     postprocess_tsuke_noun(tokens)
-    postprocess_copula_neg(tokens)
+    if postprocess_copula_neg(tokens) and applied_rule is None:
+        applied_rule = "copular-negative-pos"
     postprocess_you_noun(tokens)
+    postprocess_classical_ramu_boundary(tokens)
+    if postprocess_classical_desiderative_aux(tokens) and applied_rule is None:
+        applied_rule = "classical-desiderative-aux"
+    if postprocess_classical_honorific_aux(tokens) and applied_rule is None:
+        applied_rule = "classical-honorific-aux"
+    postprocess_classical_conjecture_aux(tokens)
+    postprocess_classical_perfect_aux(tokens)
+    postprocess_prolonged_sound_noun(tokens)
+    postprocess_yoshi_formal_noun(tokens)
     postprocess_sou_aux(tokens)
     postprocess_nara_verb(tokens)
     postprocess_n_kuruwa(tokens)
