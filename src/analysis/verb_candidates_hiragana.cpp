@@ -81,30 +81,6 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
   return false;
 }
 
-bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                    const dictionary::DictionaryManager* dict_manager) {
-  if (dict_manager == nullptr || start_pos == 0) {
-    return false;
-  }
-  constexpr size_t kParticleLookback = 4;
-  constexpr size_t kParticleProbe = 5;
-  size_t first_start = start_pos > kParticleLookback ? start_pos - kParticleLookback : 0;
-  size_t probe_end = std::min(codepoints.size(), start_pos + kParticleProbe);
-  for (size_t particle_start = first_start; particle_start < start_pos; ++particle_start) {
-    std::string probe = extractSubstring(codepoints, particle_start, probe_end);
-    for (const auto& match : dict_manager->lookup(probe, 0)) {
-      if (match.entry == nullptr || match.entry->pos != core::PartOfSpeech::Particle) {
-        continue;
-      }
-      size_t particle_end = particle_start + normalize::utf8Length(match.entry->surface);
-      if (particle_end > start_pos) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 }  // namespace
 
 std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -118,7 +94,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     return candidates;
   }
 
-  if (startsInsideDictionaryParticle(codepoints, start_pos, dict_manager)) {
+  if (vh::startsInsideDictionaryParticle(codepoints, start_pos, dict_manager)) {
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " inside_dictionary_particle\n");
     return candidates;
   }
@@ -465,6 +441,15 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
           }
         }
       }
+    }
+
+    // A fabricated verb must not cross a productive te-form boundary between
+    // two dictionary-verified verb forms (なっ+て+なら, やっ+て+みる).
+    // Genuine lexical verbs are exempt because their full surface is verified.
+    if (!is_dictionary_verb &&
+        vh::hasInternalVerbChainBoundary(codepoints, start_pos, end_pos, inflection, dict_manager)) {
+      SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << surface << "\" internal_connective_verb_boundary\n");
+      continue;
     }
 
     const size_t pre_filter_len = end_pos - start_pos;

@@ -415,6 +415,22 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   // Add emphatic variants (来た → 来たっ, etc.)
   vh::addEmphaticVariants(candidates, codepoints);
 
+  // Do not let an unverified inflection hypothesis replace an exact
+  // dictionary function word or deverbal noun.  Kana-final dictionary forms
+  // such as 概ね, 答え and 同じ otherwise invite fabricated ichidan/godan
+  // lemmas solely because their final kana resembles a renyokei marker.
+  // Verified lexical verb forms remain available for genuine homographs.
+  candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
+                                  [&](const UnknownCandidate& cand) {
+                                    return cand.pos == core::PartOfSpeech::Verb && !cand.lemma_verified &&
+                                           ((cand.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+                                             grammar::endsWithRenyokeiMarker(cand.surface)) ||
+                                            (cand.extended_pos == core::ExtendedPOS::VerbShuushikei &&
+                                             cand.surface.compare(cand.lemma) == 0)) &&
+                                           vh::hasNonVerbDictionaryEntry(dict_manager, cand.surface);
+                                  }),
+                   candidates.end());
+
   // Apply mid-kanji-run dictionary compound penalty (see comment above)
   if (mid_compound_penalty != 0.0F) {
     for (auto& cand : candidates) {

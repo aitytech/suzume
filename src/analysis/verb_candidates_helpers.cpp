@@ -17,6 +17,62 @@
 
 namespace suzume::analysis::verb_helpers {
 
+bool hasInternalVerbChainBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                  const grammar::Inflection& inflection,
+                                  const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 3) {
+    return false;
+  }
+  auto is_verified_verb_form = [&](size_t form_start, size_t form_end) {
+    const std::string form = extractSubstring(codepoints, form_start, form_end);
+    if (hasDictionaryEntry(dict_manager, form, core::PartOfSpeech::Verb) ||
+        hasDictionaryEntry(dict_manager, form, core::PartOfSpeech::Auxiliary)) {
+      return true;
+    }
+    if (form_end > form_start + 1 &&
+        (codepoints[form_end - 1] == U'っ' || codepoints[form_end - 1] == U'ん' || codepoints[form_end - 1] == U'い')) {
+      const std::string stem = extractSubstring(codepoints, form_start, form_end - 1);
+      const std::string onbin = extractSubstring(codepoints, form_end - 1, form_end);
+      if (firstGodanOnbinDictBase(dict_manager, stem, onbin).matched) {
+        return true;
+      }
+    }
+    for (const auto& candidate : inflection.analyze(form)) {
+      if (candidate.verb_type != grammar::VerbType::IAdjective &&
+          (isVerbInDictionary(dict_manager, candidate.base_form) ||
+           hasDictionaryEntry(dict_manager, candidate.base_form, core::PartOfSpeech::Auxiliary))) {
+        return true;
+      }
+    }
+    if (form_end > form_start) {
+      const std::string_view base_suffix = grammar::godanBaseSuffixFromARow(codepoints[form_end - 1]);
+      if (!base_suffix.empty()) {
+        const std::string stem = extractSubstring(codepoints, form_start, form_end - 1);
+        if (isVerbInDictionary(dict_manager, stem + std::string(base_suffix))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  for (size_t connective_pos = start_pos + 2; connective_pos + 2 < end_pos; ++connective_pos) {
+    if (codepoints[connective_pos] != U'て' && codepoints[connective_pos] != U'で') {
+      continue;
+    }
+    if (is_verified_verb_form(start_pos, connective_pos) && is_verified_verb_form(connective_pos + 1, end_pos)) {
+      return true;
+    }
+  }
+  for (size_t negative_pos = start_pos + 2; negative_pos + 1 < end_pos; ++negative_pos) {
+    if (codepoints[negative_pos] == U'ず' && is_verified_verb_form(start_pos, negative_pos) &&
+        is_verified_verb_form(negative_pos + 1, end_pos)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // =============================================================================
 // Single-kanji Ichidan verbs
 // =============================================================================
@@ -85,6 +141,27 @@ bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manage
     if (result.entry != nullptr && result.entry->surface == surface &&
         result.entry->pos == core::PartOfSpeech::Particle) {
       return true;
+    }
+  }
+  return false;
+}
+
+bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0) {
+    return false;
+  }
+  constexpr size_t kParticleLookback = 4;
+  constexpr size_t kParticleProbe = 5;
+  size_t first_start = start_pos > kParticleLookback ? start_pos - kParticleLookback : 0;
+  size_t probe_end = std::min(codepoints.size(), start_pos + kParticleProbe);
+  for (size_t particle_start = first_start; particle_start < start_pos; ++particle_start) {
+    std::string probe = extractSubstring(codepoints, particle_start, probe_end);
+    for (const auto& match : dict_manager->lookup(probe, 0)) {
+      if (match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Particle &&
+          particle_start + normalize::utf8Length(match.entry->surface) > start_pos) {
+        return true;
+      }
     }
   }
   return false;

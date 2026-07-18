@@ -31,6 +31,13 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
                                        const dictionary::DictionaryManager* dict_manager,
                                        const VerbCandidateOptions& verb_opts, bool sokuonbin_stem_verified,
                                        const std::string& sokuonbin_lemma, std::vector<UnknownCandidate>& candidates) {
+  // A completed reduplicative noun provides a reliable predicate boundary:
+  // 月々支払う, 人々集まる.  Permit a conservatively scored compound verb in
+  // this context even when its open-class inflection confidence only reaches
+  // the dictionary threshold.
+  const bool follows_reduplicated_noun = start_pos >= 2 && normalize::isIterationMark(codepoints[start_pos - 1]) &&
+                                         normalize::isKanjiCodepoint(codepoints[start_pos - 2]);
+
   // Try different stem lengths (kanji only, or kanji + 1 hiragana for ichidan)
   // This handles both godan (kanji stem) and ichidan (kanji + hiragana stem)
   for (size_t stem_end = kanji_end; stem_end <= kanji_end + 1 && stem_end < hiragana_end; ++stem_end) {
@@ -189,6 +196,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
                                                 normalize::isKanjiCodepoint(codepoints[end_pos]);
         if (cand.stem == expected_stem &&
             (cand.confidence > conf_threshold ||
+             (follows_reduplicated_noun && cand.confidence >= verb_opts.confidence_ichidan_dict) ||
              (is_multi_kanji_godan_wa_renyokei && cand.confidence >= verb_opts.confidence_ichidan_dict)) &&
             cand.verb_type != grammar::VerbType::IAdjective) {
           // Check whether this candidate's base form exists in the dictionary as a
@@ -269,6 +277,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
                                     ? verb_opts.confidence_ichidan_dict
                                     : verb_opts.confidence_standard;
       if (best.confidence > proceed_threshold ||
+          (follows_reduplicated_noun && best.confidence >= verb_opts.confidence_ichidan_dict) ||
           (is_multi_kanji_godan_wa_renyokei && best.confidence >= proceed_threshold)) {
         if (surface == "付け" && end_pos < codepoints.size() && codepoints[end_pos] == U'で') {
           continue;  // 付けで is formal noun + particle, not 付ける renyokei.
@@ -463,7 +472,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // Skip patterns where removing first kanji leaves a valid dictionary verb
         // e.g., 本買った → 本 + 買った, where 買う is a dict verb
         // This handles particleless noun+verb patterns: 本買った, 服買った, 車買った
-        if (dict_manager != nullptr && kanji_count == 2) {
+        if (dict_manager != nullptr && kanji_count == 2 && !follows_reduplicated_noun) {
           auto stem_cps = normalize::utf8::decode(best.stem);
           if (stem_cps.size() == 2) {
             // Get second kanji as potential verb stem
@@ -553,7 +562,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // in any dictionary is likewise noun+verb over-merge or a suru-compound
         // (全部食べちゃった misparsed with 全部食 as a fake verb stem); real 2-kanji
         // verbs are dict entries, so they are unaffected by widening the range.
-        if (kanji_count >= 2 && !in_dict && !is_multi_kanji_godan_wa_renyokei) {
+        if (kanji_count >= 2 && !in_dict && !is_multi_kanji_godan_wa_renyokei && !follows_reduplicated_noun) {
           base_cost += bigram_cost::kRare;
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +1.0 (two_kanji_non_dict_penalty)\n");
         }

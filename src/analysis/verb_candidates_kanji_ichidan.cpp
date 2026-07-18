@@ -141,6 +141,16 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
                                              "kuru_literary_volitional_n", core::ExtendedPOS::VerbMizenkei));
     }
 
+    // The irregular mizenkei of 来る keeps the bare kanji before classical
+    // negative ず (来+ず, 来+ず+じまい), just as it does before ない/ざる.
+    if (kanji_char == U'来' && codepoints[kanji_end] == U'ず') {
+      const std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
+      candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end, candidate::verb_cost::kStandardBonus,
+                                             "来る", dictionary::ConjugationType::Kuru, true,
+                                             CandidateOrigin::VerbKanji, candidate::kHighOriginConfidence,
+                                             "kuru_classical_negative_zu", core::ExtendedPOS::VerbMizenkei));
+    }
+
     if (vh::isSingleKanjiIchidan(kanji_char)) {
       // Check if followed by a polite ます-family auxiliary or negative auxiliary.
       // The ます family (ます/まし(た)/ませ(ん)/ましょ(う)) attaches only to a verb
@@ -155,14 +165,20 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
       // Negative auxiliary ない and its conjugations:
       // ない (終止/連体), なく (連用), なかっ (た接続), なけれ (仮定), なきゃ (口語縮約仮定)
       bool is_negative_aux = (h1 == kNa && (h2 == kI || h2 == kKu || h2 == kKa || h2 == kKe || h2 == kKi));
-      // Classical negative auxiliary ず/ざる/ざれ also attaches to the ichidan
-      // mizenkei (= bare stem): 見ざるを得ない → 見 + ざる, 見ずに → 見 + ずに.
-      bool is_classical_negative_aux = (h1 == kZu) || (h1 == kZa && (h2 == kRu || h2 == kRe));
+      // Classical negative auxiliary ぬ/ず/ざる/ざれ also attaches to the ichidan
+      // mizenkei (= bare stem): 見ぬ人, 見ざるを得ない → 見 + ざる, 見ずに → 見 + ずに.
+      bool is_classical_negative_aux = (h1 == U'ぬ') || (h1 == kZu) || (h1 == kZa && (h2 == kRu || h2 == kRe));
       // The literary volitional ん is distinct from the contracted negative
       // when the quotative particle follows (見んとする, 寝んとする).
       bool is_literary_volitional_n = (h1 == U'ん' && h2 == kTo);
+      // Classical む attaches to the same bare ichidan stem (見む, 寝む).
+      bool is_classical_volitional_mu = (h1 == U'む');
+      std::string following_hiragana = extractSubstring(codepoints, kanji_end, hiragana_end);
+      // Classical desiderative まほしき also follows a bare ichidan renyokei.
+      bool is_classical_desiderative = grammar::startsClassicalDesiderativeSequence(following_hiragana);
 
-      if (is_polite_aux || is_negative_aux || is_classical_negative_aux || is_literary_volitional_n) {
+      if (is_polite_aux || is_negative_aux || is_classical_negative_aux || is_literary_volitional_n ||
+          is_classical_volitional_mu || is_classical_desiderative) {
         std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
         std::string base_form = surface + "る";
         constexpr float kCost = candidate::verb_cost::kStandardBonus;  // Strong bonus to beat NOUN candidate
@@ -173,8 +189,11 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
         candidates.push_back(makeVerbCandidate(
             surface, start_pos, kanji_end, kCost, base_form, grammar::verbTypeToConjType(grammar::VerbType::Ichidan),
             true, CandidateOrigin::VerbKanji, 0.9F,
-            is_literary_volitional_n ? "single_kanji_ichidan_literary_volitional" : "single_kanji_ichidan_polite",
-            is_literary_volitional_n ? core::ExtendedPOS::VerbMizenkei : core::ExtendedPOS::Unknown));
+            (is_literary_volitional_n || is_classical_volitional_mu) ? "single_kanji_ichidan_literary_volitional"
+            : is_classical_desiderative                              ? "single_kanji_ichidan_classical_desiderative"
+                                                                     : "single_kanji_ichidan_polite",
+            (is_literary_volitional_n || is_classical_volitional_mu) ? core::ExtendedPOS::VerbMizenkei
+                                                                     : core::ExtendedPOS::Unknown));
       }
 
       // Also handle た and て patterns for single-kanji Ichidan verbs

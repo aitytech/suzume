@@ -26,10 +26,18 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   // Find the kanji portion (V1 stem)
   size_t kanji_end = findCharRegionEnd(char_types, start_pos, 4, CharType::Kanji);
 
-  // Next must be hiragana (連用形 ending)
+  // Next must be hiragana (連用形 ending), except for a single-kanji
+  // ichidan V1 directly followed by a kanji V2 (見上げる).
   if (kanji_end >= char_types.size() || char_types[kanji_end] != CharType::Hiragana) {
     return;
   }
+
+  // A leading one-kanji ichidan stem can be written without its stem vowel
+  // before a kanji V2.  The initial kanji run then contains both verbs, so
+  // start matching V2 after the first kanji instead of treating its last
+  // hiragana as V1's stem ending.
+  const bool has_kanji_v2_after_bare_ichidan =
+      kanji_end >= start_pos + 2 && char_types[start_pos + 1] == CharType::Kanji;
 
   // Get the hiragana character (potential 連用形 ending)
   char32_t renyokei_char = codepoints[kanji_end];
@@ -46,11 +54,13 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
                                              << " sokuonbin=" << is_sokuonbin << "\n");
 
   // If not a 連用形 ending, this might be an Ichidan verb
-  bool is_ichidan = (base_ending == 0 && !is_sokuonbin);
+  bool is_ichidan = (base_ending == 0 && !is_sokuonbin) || has_kanji_v2_after_bare_ichidan;
 
   // Position after 連用形 (for Godan) or after stem (for Ichidan)
   size_t v2_start;
-  if (is_sokuonbin) {
+  if (has_kanji_v2_after_bare_ichidan) {
+    v2_start = start_pos + 1;
+  } else if (is_sokuonbin) {
     // For sokuonbin: V2 starts after っ
     v2_start = kanji_end + 1;
   } else if (is_ichidan) {
@@ -224,6 +234,24 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   for (const auto& v2_verb : kSubsidiaryVerbs) {
     std::string_view v2_surface(v2_verb.surface);
     std::string_view v2_reading(v2_verb.reading ? v2_verb.reading : "");
+
+    // The hiragana reading of compound V2 入る overlaps with the aspect
+    // auxiliary いる.  A preceding て/で is a grammatical boundary
+    // (異なっ|て|いる), not a renyokei stem for a compound ending in 入る.
+    // Keep real compounds such as 立ち入る eligible: their V2 begins directly
+    // after the V1 renyokei and therefore has no te-form particle before it.
+    if (v2_reading == "いる" && v2_start > start_pos &&
+        (codepoints[v2_start - 1] == U'て' || codepoints[v2_start - 1] == U'で')) {
+      continue;
+    }
+
+    // The hiragana V2 reading 切る also overlaps with the lexical potential
+    // verb できる.  Its leading で completes that word, rather than forming an
+    // ichidan V1 stem (化でる) before a compound-verb V2.  Kanji-written V2
+    // compounds such as 撫で切る are unaffected.
+    if (v2_reading == "きる" && v2_start > start_pos && codepoints[v2_start - 1] == U'で') {
+      continue;
+    }
 
     // Determine if this is a renyokei entry by checking if base_form != surface
     // Renyokei entries: 過ぎ (base 過ぎる), 出し (base 出す), etc.
@@ -435,9 +463,8 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       }
     }
 
-    // Case 3: V2 mizenkei form match for passive/causative
-    // E.g., 打ち込まれ → V2 込む mizenkei = 込ま, followed by れ (passive)
-    // This handles compound verbs in passive/causative form without following た/て
+    // Case 3: V2 mizenkei form match before passive, causative, or negative auxiliaries.
+    // E.g., 打ち込まれ, 取り込ませ, 見当たらない.
     bool matched_mizenkei = false;
     if (!matched_kanji && !matched_reading && !matched_renyokei && !matched_potential && !matched_inflected) {
       // Try kanji mizenkei (込ま from 込む)
@@ -451,12 +478,12 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         std::string_view text_at_v2 = text.substr(v2_start_byte, mizen.size());
         if (text_at_v2 != mizen)
           return false;
-        // Must be followed by passive れ or causative せ
+        // Must be followed by passive れ, causative せ, or negative な/ず.
         size_t after_byte = v2_start_byte + mizen.size();
         if (after_byte + 3 > text.size())
           return false;
         std::string_view after = text.substr(after_byte, 3);
-        return after == "れ" || after == "せ";
+        return after == "れ" || after == "せ" || after == "な" || after == "ず";
       };
 
       if (tryMizenMatch(kanji_mizen)) {
@@ -530,7 +557,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // This allows compound verbs like 読み込む where 読む is not in dictionary
     // but is recognizable as a verb by inflection patterns
     if (!v1_verified) {
-      size_t kanji_count = kanji_end - start_pos;
+      size_t kanji_count = has_kanji_v2_after_bare_ichidan ? 1 : kanji_end - start_pos;
 
       // For sokuonbin with single-kanji V1 (e.g., 引っ+張る, 突っ+込む):
       // Accept without full verification. The combination of single kanji +
@@ -594,6 +621,42 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
         if (verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, v1_renyokei)) {
           // V1 renyokei is a known non-verb word, don't form compound
+          use_inflection_fallback = false;
+        }
+      }
+
+      // A single-kanji ichidan stem followed by a verified compound V2 is a
+      // productive compound-verb shape.  Unlike a free-form inflection guess,
+      // the e/i-row stem, the absence of a competing non-verb entry, and the
+      // V2 constraint together identify the boundary (受け取る, 見上げる).
+      bool starts_inside_formal_noun = false;
+      if (use_inflection_fallback && is_ichidan && kanji_count == 1 && start_pos > 0) {
+        const std::string enclosing_surface = extractSubstring(codepoints, start_pos - 1, start_pos + 1);
+        const auto* enclosing_entry = dict_manager.lookupExact(enclosing_surface, core::PartOfSpeech::Noun);
+        starts_inside_formal_noun =
+            enclosing_entry != nullptr && enclosing_entry->extended_pos == core::ExtendedPOS::NounFormal;
+      }
+      if (use_inflection_fallback && is_ichidan && kanji_count == 1) {
+        if (starts_inside_formal_noun) {
+          use_inflection_fallback = false;
+        } else {
+          v1_verified = true;
+          v1_ichidan_inflection = true;
+          use_inflection_fallback = false;
+        }
+      }
+
+      // A single-kanji Godan renyokei before a verified V2 is likewise a
+      // productive compound shape (押し込む、読み返す), provided inflection
+      // analysis reconstructs exactly the V1 base. This keeps open-class V1
+      // verbs out of the dictionary while retaining a grammatical boundary.
+      if (use_inflection_fallback && !is_ichidan && kanji_count == 1) {
+        size_t v1_renyokei_end = byteOffsetAt(byte_offsets, kanji_end + 1);
+        std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
+        auto infl_result = inflection.getBest(v1_renyokei);
+        if (infl_result.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
+            infl_result.base_form == v1_base) {
+          v1_verified = true;
           use_inflection_fallback = false;
         }
       }
@@ -851,12 +914,14 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // lexical terminal forms in the public token contract, so retain their
     // surface lemma (取り戻せる) rather than their Godan source form.
     std::string compound_lemma = best_match.compound_base;
+    dictionary::ConjugationType compound_conj_type =
+        compoundConjugationType(best_match.v2_verb_type, best_match.v2_base_ending);
 
     // Mizenkei match: add VerbMizenkei edge and return (no te-stem/mizenkei derivation)
     // E.g., 打ち込ま (mizenkei of 打ち込む) for passive 打ち込まれ
     if (best_match.is_mizenkei) {
       lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
-                      core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, dictionary::ConjugationType::None,
+                      core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, compound_conj_type,
                       core::CandidateOrigin::Unknown, 0.0F, "compound_mizenkei", core::ExtendedPOS::VerbMizenkei,
                       "compound_mizenkei");
       return;
@@ -873,7 +938,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     bool renyokei_multichar = best_match.renyokei_form && best_match.matched_len >= core::kTwoJapaneseCharBytes;
     core::ExtendedPOS compound_epos = renyokei_multichar ? core::ExtendedPOS::VerbRenyokei : core::ExtendedPOS::Unknown;
     lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
-                    core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, dictionary::ConjugationType::None,
+                    core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, compound_conj_type,
                     core::CandidateOrigin::Unknown, candidate::kNoOriginConfidence, "compound", compound_epos,
                     "compound");
 
@@ -917,8 +982,8 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       }
 
       lattice.addEdge(stem, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(stem_end_pos),
-                      core::PartOfSpeech::Verb, te_stem_cost, flags, compound_lemma, dictionary::ConjugationType::None,
-                      core::CandidateOrigin::Unknown, 0.0F, "compound_te_stem", epos, "compound_te_stem");
+                      core::PartOfSpeech::Verb, te_stem_cost, flags, compound_lemma, compound_conj_type,
+                      core::CandidateOrigin::VerbCompound, 0.0F, "compound_te_stem", epos, "compound_te_stem");
       return true;
     };
 
@@ -999,9 +1064,9 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         // Use base cost without passive+te penalty
         float mizenkei_cost = base_cost + opts.compound_verb_bonus + opts.verified_v1_bonus;
         lattice.addEdge(stem, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(stem_end_pos),
-                        core::PartOfSpeech::Verb, mizenkei_cost, flags, compound_lemma,
-                        dictionary::ConjugationType::None, core::CandidateOrigin::Unknown, 0.0F, "compound_mizenkei",
-                        core::ExtendedPOS::VerbMizenkei, "compound_mizenkei");
+                        core::PartOfSpeech::Verb, mizenkei_cost, flags, compound_lemma, compound_conj_type,
+                        core::CandidateOrigin::Unknown, 0.0F, "compound_mizenkei", core::ExtendedPOS::VerbMizenkei,
+                        "compound_mizenkei");
         return true;
       };
 

@@ -86,6 +86,29 @@ bool hasFormalNounPrefixBoundary(const dictionary::DictionaryManager* dict_manag
   return false;
 }
 
+// An unverified mizenkei may start by absorbing a particle before a real verb
+// (に+行かない, は+ならない, も+ならない).  Preserve that closed-class
+// boundary when the remainder reconstructs to a dictionary verb.
+bool hasLeadingParticleVerbBoundary(const dictionary::DictionaryManager* dict_manager,
+                                    const std::vector<char32_t>& codepoints, size_t start_pos, size_t mizenkei_end,
+                                    std::string_view base_suffix) {
+  if (dict_manager == nullptr || mizenkei_end - start_pos < 3 || base_suffix.empty()) {
+    return false;
+  }
+  for (size_t split_pos = start_pos + 1; split_pos + 1 < mizenkei_end; ++split_pos) {
+    const std::string particle = extractSubstring(codepoints, start_pos, split_pos);
+    if (!vh::hasParticleDictionaryEntry(dict_manager, particle)) {
+      continue;
+    }
+    const std::string remainder_stem = extractSubstring(codepoints, split_pos, mizenkei_end - 1);
+    const std::string remainder_base = remainder_stem + std::string(base_suffix);
+    if (vh::isVerbInDictionary(dict_manager, remainder_base)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // True when an unverified hiragana mizenkei surface is really [verb] + [adverbial
 // particle] rather than a single verb. しか is a 副助詞 and there is no godan verb
 // 〜しく, so みるしか / やるしか must split as verb + しか, never be fabricated as the
@@ -341,6 +364,17 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
     // Get lemma from dictionary if available
     std::string lemma = vh::lookupVerbLemma(dict_manager, stem, base_form);
 
+    // A stem can be a homograph of a different inflection.  In particular,
+    // the classical する form せ must not be reinterpreted as the continuative
+    // form of a fabricated lexical せる before passive られる.  Keep this
+    // candidate only when the stem's lexical lemma agrees with the reconstructed
+    // Ichidan base; otherwise the closed-class auxiliary candidate owns the
+    // boundary.  This is lemma-based rather than surface-specific, so the same
+    // guard rejects every conflicting inflectional homograph.
+    if (lemma != base_form) {
+      continue;
+    }
+
     // Generate the ichidan renyokei candidate
     // Negative cost to beat the single-word verb candidate
     constexpr float kCost = candidate::verb_cost::kStandardBonus;
@@ -496,6 +530,14 @@ void appendMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t
     // (わけわから+ない should split as わけ + わから + ない)
     if (!is_in_dict && hasFormalNounPrefixBoundary(dict_manager, codepoints, start_pos, mizenkei_end)) {
       cost_nai += bigram_cost::kStrong;
+    }
+    if (!is_in_dict &&
+        hasLeadingParticleVerbBoundary(dict_manager, codepoints, start_pos, mizenkei_end, forms.base_suffix)) {
+      cost_nai += bigram_cost::kStrong;
+    }
+    if (!is_in_dict &&
+        vh::hasInternalVerbChainBoundary(codepoints, start_pos, mizenkei_end, inflection, dict_manager)) {
+      continue;
     }
     SUZUME_DEBUG_VERBOSE_BLOCK {
       SUZUME_DEBUG_STREAM << "[VERB_CAND] " << mizenkei_surface << " hiragana_mizenkei_nai lemma=" << lemma

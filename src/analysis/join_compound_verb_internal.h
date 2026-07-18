@@ -25,6 +25,32 @@ enum class V2VerbType : uint8_t {
   Ichidan,  // 一段: 続ける→続け, 上げる→上げ (drop る)
 };
 
+// The compound inherits V2's inflection class. Retaining this on generated
+// edges prevents later lemmatization from treating a GodanSa compound such as
+// 見直す as the classical suru form 見直する.
+inline dictionary::ConjugationType compoundConjugationType(V2VerbType verb_type, std::string_view base_ending) {
+  if (verb_type == V2VerbType::Ichidan) {
+    return dictionary::ConjugationType::Ichidan;
+  }
+  if (base_ending == "く")
+    return dictionary::ConjugationType::GodanKa;
+  if (base_ending == "ぐ")
+    return dictionary::ConjugationType::GodanGa;
+  if (base_ending == "す")
+    return dictionary::ConjugationType::GodanSa;
+  if (base_ending == "つ")
+    return dictionary::ConjugationType::GodanTa;
+  if (base_ending == "ぬ")
+    return dictionary::ConjugationType::GodanNa;
+  if (base_ending == "ぶ")
+    return dictionary::ConjugationType::GodanBa;
+  if (base_ending == "む")
+    return dictionary::ConjugationType::GodanMa;
+  if (base_ending == "る")
+    return dictionary::ConjugationType::GodanRa;
+  return dictionary::ConjugationType::GodanWa;
+}
+
 struct SubsidiaryVerb {
   const char* surface;      // Kanji form (or hiragana if no kanji)
   const char* reading;      // Hiragana reading (nullptr if same as surface)
@@ -54,6 +80,9 @@ inline constexpr SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"替わる", "かわる", "る", V2VerbType::Godan},  // 入れ替わる, 切り替わる
     {"つかる", nullptr, "る", V2VerbType::Godan},   // 見つかる
     {"合う", "あう", "う", V2VerbType::Godan},      // 話し合う, 話しあう
+    {"扱う", "あつかう", "う", V2VerbType::Godan},  // 取り扱う
+    {"運ぶ", "はこぶ", "ぶ", V2VerbType::Godan},    // 持ち運ぶ
+    {"過ごす", "すごす", "す", V2VerbType::Godan},  // 見過ごす
     {"消す", "けす", "す", V2VerbType::Godan},      // 取り消す
     {"直す", "なおす", "す", V2VerbType::Godan},    // やり直す, やりなおす
     {"切る", "きる", "る", V2VerbType::Godan},      // 締め切る, 締めきる
@@ -64,6 +93,7 @@ inline constexpr SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"抜く", "ぬく", "く", V2VerbType::Godan},      // 追い抜く, 突き抜く
     {"掛かる", "かかる", "る", V2VerbType::Godan},  // 取り掛かる
     {"付く", "つく", "く", V2VerbType::Godan},      // 思い付く, 気付く
+    {"当たる", "あたる", "る", V2VerbType::Godan},  // 見当たる, 行き当たる
     {"巡る", "めぐる", "る", V2VerbType::Godan},    // 駆け巡る, 飛び巡る
     {"飛ばす", "とばす", "す", V2VerbType::Godan},  // 吹き飛ばす, 弾き飛ばす
     {"交う", "かう", "う", V2VerbType::Godan},      // 飛び交う, 行き交う
@@ -107,6 +137,7 @@ inline constexpr SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"立てる", "たてる", "てる", V2VerbType::Ichidan},      // 組み立てる, 打ち立てる
     {"重ねる", "かさねる", "ねる", V2VerbType::Ichidan},    // 積み重ねる, 折り重ねる
     {"広げる", "ひろげる", "げる", V2VerbType::Ichidan},    // 繰り広げる, 押し広げる
+    {"支える", "ささえる", "える", V2VerbType::Ichidan},    // 差し支える
     {"受ける", "うける", "ける", V2VerbType::Ichidan},      // 引き受ける, 請け受ける
     {"降りる", "おりる", "りる", V2VerbType::Ichidan},      // 乗り降りる
     {"締める", "しめる", "める", V2VerbType::Ichidan},      // 抱きしめる, 締め締める

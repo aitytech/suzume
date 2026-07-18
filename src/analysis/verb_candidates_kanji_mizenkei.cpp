@@ -45,6 +45,17 @@ void appendGodanMizenkeiPassiveCausativeCandidates(const std::vector<char32_t>& 
           std::string base_form = kanji_stem + std::string(base_suffix);
           std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
 
+          // A closed-class irregular form in L1 is authoritative over this
+          // productive Godan fallback.  In particular, do not fabricate a
+          // Godan lemma for an irregular verb's causative connection form.
+          if (dict_manager != nullptr) {
+            const dictionary::DictionaryEntry* exact = dict_manager->lookupExact(surface);
+            if (exact != nullptr && exact->pos == core::PartOfSpeech::Verb &&
+                exact->extended_pos == core::ExtendedPOS::VerbMizenkei) {
+              return;
+            }
+          }
+
           // Verify via inflection analysis of base form
           const auto& results = inflection.analyze(base_form);
           bool is_valid = false;
@@ -135,32 +146,39 @@ void appendSaRowContractedMizenkeiCandidates(const std::vector<char32_t>& codepo
   }
 }
 
-// Godan mizenkei pattern: kanji + A-row hiragana + ず (classical negative)
+// Godan mizenkei pattern: kanji + mizenkei ending + ず (classical negative)
 // E.g., 抜かずに → 抜か (mizenkei of 抜く) + ず + に
 //       行かずに → 行か (mizenkei of 行く) + ず + に
 //       書かずに → 書か (mizenkei of 書く) + ず + に
-// The main loop skips single A-row hiragana as particle (か, etc.)
-// so we generate mizenkei candidates explicitly when followed by ず.
+//       欠かさず → 欠かさ (mizenkei of 欠かす) + ず
+// The main loop skips short A-row hiragana as particles, so generate the
+// complete mizenkei candidate explicitly when followed by ず.
 void appendGodanMizenkeiZuCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                      size_t hiragana_end, const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,
                                      std::vector<UnknownCandidate>& candidates) {
-  if (kanji_end + 1 < hiragana_end && codepoints[kanji_end + 1] == U'ず') {
-    char32_t first_hira = codepoints[kanji_end];
-    if (grammar::isARowCodepoint(first_hira)) {
-      grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(first_hira);
+  size_t zu_pos = kanji_end;
+  while (zu_pos < hiragana_end && codepoints[zu_pos] != U'ず') {
+    ++zu_pos;
+  }
+  if (zu_pos < hiragana_end && zu_pos > kanji_end) {
+    const bool is_single_kanji_stem = kanji_end - start_pos == 1;
+    char32_t mizenkei_ending = codepoints[zu_pos - 1];
+    if (grammar::isARowCodepoint(mizenkei_ending)) {
+      grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(mizenkei_ending);
       if (verb_type != grammar::VerbType::Unknown) {
-        std::string_view base_suffix = grammar::godanBaseSuffixFromARow(first_hira);
+        std::string_view base_suffix = grammar::godanBaseSuffixFromARow(mizenkei_ending);
         if (!base_suffix.empty()) {
-          std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
-          std::string base_form = kanji_stem + std::string(base_suffix);
-          std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
+          std::string surface = extractSubstring(codepoints, start_pos, zu_pos);
+          std::string base_form = surface.substr(0, surface.size() - core::kJapaneseCharBytes);
+          base_form += base_suffix;
 
           // Verify via dictionary or inflection analysis of conjugated form
           bool is_valid = vh::isVerbInDictionary(dict_manager, base_form);
-          if (!is_valid) {
+          if (!is_valid && is_single_kanji_stem) {
             // Analyze mizenkei+ない form (standard negative) for better confidence
-            // Base form alone (e.g., 躊躇う) may not be recognized
+            // Base form alone may not be recognized. Multi-kanji stems require
+            // dictionary evidence so a preceding noun cannot be absorbed.
             std::string neg_form = surface + "ない";
             const auto& infl_results = inflection.analyze(neg_form);
             for (const auto& cand : infl_results) {
@@ -186,7 +204,7 @@ void appendGodanMizenkeiZuCandidates(const std::vector<char32_t>& codepoints, si
               SUZUME_DEBUG_LOG("[VERB_CAND] " << surface << " godan_mizenkei_zu lemma=" << base_form
                                               << " cost=" << kCost << "\n");
               candidates.push_back(makeVerbCandidate(
-                  surface, start_pos, kanji_end + 1, kCost, base_form, grammar::verbTypeToConjType(verb_type), true,
+                  surface, start_pos, zu_pos, kCost, base_form, grammar::verbTypeToConjType(verb_type), true,
                   CandidateOrigin::VerbKanji, 0.8F, "godan_mizenkei_zu", core::ExtendedPOS::VerbMizenkei));
             }
           }

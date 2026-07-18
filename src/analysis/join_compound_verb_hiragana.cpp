@@ -23,6 +23,10 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
     return;
   }
 
+  if (verb_helpers::startsInsideDictionaryParticle(codepoints, start_pos, &dict_manager)) {
+    return;
+  }
+
   // Get byte position for start
   size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
 
@@ -159,6 +163,25 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
         v1_base = std::string(v1_surface) + "る";
       }
 
+      // An e-row surface is shared by an Ichidan renyokei and a Godan
+      // kateikei.  Immediately after the topic particle は, a dictionary-
+      // verified Godan kateikei introduces an independent predicate and must
+      // not be absorbed into a following compound V2 (とは+いえ+続ける).
+      // Outside that grammatical context, keep genuinely ambiguous/productive
+      // compounds available.
+      if (is_ichidan && grammar::isERowCodepoint(last_char)) {
+        const std::string_view godan_suffix = grammar::godanBaseSuffixFromERow(last_char);
+        if (!godan_suffix.empty()) {
+          std::string godan_base(v1_surface.substr(0, v1_surface.size() - core::kJapaneseCharBytes));
+          godan_base += godan_suffix;
+          const bool has_godan_base = dict_manager.lookupExact(godan_base, core::PartOfSpeech::Verb) != nullptr;
+          const bool follows_topic = start_pos > 0 && codepoints[start_pos - 1] == U'は';
+          if (has_godan_base && follows_topic) {
+            continue;
+          }
+        }
+      }
+
       // A closed-class particle is never the first verb in a compound. This
       // must be checked before the inflection fallback: particle surfaces can
       // otherwise receive a mechanically plausible unknown Godan reading
@@ -215,6 +238,7 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       float final_cost = base_cost + opts.compound_verb_bonus + opts.verified_v1_bonus;
 
       uint8_t flags = core::LatticeEdge::kFromDictionary;
+      dictionary::ConjugationType compound_conj_type = compoundConjugationType(v2_verb.verb_type, v2_verb.base_ending);
 
       if (matched_v2_te_stem) {
         // V2 matched via te-form euphonic stem — the compound surface is the
@@ -224,19 +248,19 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
                                              ? core::ExtendedPOS::VerbRenyokei
                                              : core::ExtendedPOS::VerbOnbinkei;
         lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
-                        core::PartOfSpeech::Verb, final_cost, flags, compound_base, dictionary::ConjugationType::None,
-                        core::CandidateOrigin::Unknown, candidate::kNoOriginConfidence, "hira_compound_te_stem",
+                        core::PartOfSpeech::Verb, final_cost, flags, compound_base, compound_conj_type,
+                        core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "hira_compound_te_stem",
                         te_stem_epos, "hira_compound_te_stem");
       } else if (matched_v2_renyokei) {
         // V2 matched in renyokei form — add compound renyokei candidate
         // e.g., とりあげ (from とりあげる) for とりあげない
         lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
-                        core::PartOfSpeech::Verb, final_cost, flags, compound_base, dictionary::ConjugationType::None,
+                        core::PartOfSpeech::Verb, final_cost, flags, compound_base, compound_conj_type,
                         core::CandidateOrigin::Unknown, 0.0F, "hira_compound_renyokei", core::ExtendedPOS::VerbRenyokei,
                         "hira_compound_renyokei");
       } else {
         lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
-                        core::PartOfSpeech::Verb, final_cost, flags, compound_base);
+                        core::PartOfSpeech::Verb, final_cost, flags, compound_base, compound_conj_type);
       }
 
       return;  // Found a match, stop searching

@@ -61,6 +61,14 @@ bool isSingleKanjiIchidanSurface(std::string_view surface);
 bool hasDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
                         core::PartOfSpeech pos);
 
+// Detect a grammatical chain boundary inside a larger fabricated verb candidate:
+// either productive て/で between verified verbs (なっ+て+なら), or classical
+// negative ず before a verified continuation (あら+ず+し).  The full candidate
+// is discarded only when both lexical sides are dictionary-backed.
+bool hasInternalVerbChainBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                  const grammar::Inflection& inflection,
+                                  const dictionary::DictionaryManager* dict_manager);
+
 /**
  * @brief Check if a base form exists in dictionary as a verb
  */
@@ -108,6 +116,12 @@ bool hasNonVerbDictionaryEntry(const dictionary::DictionaryManager* dict_manager
  * Used to detect compound particles (について, によって, として, etc.)
  */
 bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
+
+// True when start_pos is strictly inside a dictionary particle. Candidate
+// generators use this to avoid manufacturing a verb from the tail of a
+// compound particle (から + やり直す, not か + らやり直す).
+bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const dictionary::DictionaryManager* dict_manager);
 
 // =============================================================================
 // Fabricated closed-class absorption guards
