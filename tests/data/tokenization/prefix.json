@@ -206,6 +206,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "「元気」は名詞述語として解析できる。語境界は一致し、Suzume の名詞分類は助動詞との連接にも整合する。"
+      },
       "description": "Honorific お + 元気",
       "expected": [
         {
@@ -221,6 +225,18 @@
       ],
       "id": "o_healthy",
       "input": "お元気",
+      "suzume_expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "元気",
+          "pos": "Noun",
+          "surface": "元気"
+        }
+      ],
       "tags": [
         "prefix",
         "o"
@@ -495,6 +511,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "敬語接頭辞後の「預かり」は名詞化した検索単位として成立する。語境界は一致しており、Suzume の名詞解析を採用する。"
+      },
       "description": "Honorific お + 預かり (nominalized verb)",
       "expected": [
         {
@@ -510,6 +530,18 @@
       ],
       "id": "o_custody",
       "input": "お預かり",
+      "suzume_expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "預かり",
+          "pos": "Noun",
+          "surface": "預かり"
+        }
+      ],
       "tags": [
         "prefix",
         "o"
@@ -642,6 +674,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "敬語接頭辞後の「引き取り」は名詞化した検索単位として成立する。語境界は一致しており、Suzume の名詞解析を採用する。"
+      },
       "description": "Honorific お + 引き取り",
       "expected": [
         {
@@ -657,6 +693,18 @@
       ],
       "id": "o_pickup",
       "input": "お引き取り",
+      "suzume_expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "引き取り",
+          "pos": "Noun",
+          "surface": "引き取り"
+        }
+      ],
       "tags": [
         "prefix",
         "o"

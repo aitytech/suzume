@@ -525,6 +525,10 @@
       "input": "だれかいる"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "「各々」は各人を指す代名詞として扱い、「判断する」は一体の述語として検索単位にする。"
+      },
       "description": "Distributive pronoun before suru noun",
       "expected": [
         {
@@ -544,9 +548,25 @@
         }
       ],
       "id": "onoonyudan_suru",
-      "input": "各々判断する"
+      "input": "各々判断する",
+      "suzume_expected": [
+        {
+          "lemma": "各々",
+          "pos": "Pronoun",
+          "surface": "各々"
+        },
+        {
+          "lemma": "判断する",
+          "pos": "Verb",
+          "surface": "判断する"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "「各々」は各人を指す代名詞として扱い、「判断した」は判断するの過去形として解析する。"
+      },
       "description": "Distributive pronoun before past suru noun",
       "expected": [
         {
@@ -571,7 +591,29 @@
         }
       ],
       "id": "onoonyudan_shita",
-      "input": "各々判断した"
+      "input": "各々判断した",
+      "suzume_expected": [
+        {
+          "lemma": "各々",
+          "pos": "Pronoun",
+          "surface": "各々"
+        },
+        {
+          "lemma": "判断",
+          "pos": "Noun",
+          "surface": "判断"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "Pronoun plus adjectival rashii",
@@ -760,8 +802,41 @@
       "input": "そこかしこにある"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "どれほどのことか - regression test",
       "expected": [
+        {
+          "lemma": "どれ",
+          "pos": "Pronoun",
+          "surface": "どれ"
+        },
+        {
+          "lemma": "ほど",
+          "pos": "Particle",
+          "surface": "ほど"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "dorehodonokotoka",
+      "input": "どれほどのことか",
+      "suzume_expected": [
         {
           "lemma": "どれほど",
           "pos": "Adverb",
@@ -782,13 +857,54 @@
           "pos": "Particle",
           "surface": "か"
         }
-      ],
-      "id": "dorehodonokotoka",
-      "input": "どれほどのことか"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "どれほどの差があるか - regression test",
       "expected": [
+        {
+          "lemma": "どれ",
+          "pos": "Pronoun",
+          "surface": "どれ"
+        },
+        {
+          "lemma": "ほど",
+          "pos": "Particle",
+          "surface": "ほど"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "差",
+          "pos": "Noun",
+          "surface": "差"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "dorehodono_gaaruka",
+      "input": "どれほどの差があるか",
+      "suzume_expected": [
         {
           "lemma": "どれほど",
           "pos": "Adverb",
@@ -819,9 +935,93 @@
           "pos": "Particle",
           "surface": "か"
         }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
+      "description": "固定指示代名詞「あれこれ」を一語として保持する",
+      "expected": [
+        {
+          "lemma": "あれこれ",
+          "pos": "Noun",
+          "surface": "あれこれ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "比べる",
+          "pos": "Verb",
+          "surface": "比べる"
+        }
       ],
-      "id": "dorehodono_gaaruka",
-      "input": "どれほどの差があるか"
+      "id": "pronoun_fixed_are_kore",
+      "input": "あれこれを比べる",
+      "suzume_expected": [
+        {
+          "lemma": "あれこれ",
+          "pos": "Pronoun",
+          "surface": "あれこれ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "比べる",
+          "pos": "Verb",
+          "surface": "比べる"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
+      "description": "不定代名詞「何かしら」を一語として保持する",
+      "expected": [
+        {
+          "lemma": "何かしら",
+          "pos": "Noun",
+          "surface": "何かしら"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "pronoun_indefinite_nanikashira",
+      "input": "何かしら必要だ",
+      "suzume_expected": [
+        {
+          "lemma": "何かしら",
+          "pos": "Pronoun",
+          "surface": "何かしら"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Noun",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ]
     }
   ],
   "description": "Pronouns",

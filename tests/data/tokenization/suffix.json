@@ -312,6 +312,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "傾向接尾辞「がち」は動詞連用形に接続するため、「遅れ」は名詞ではなく動詞「遅れる」の連用形として扱う。"
+      },
       "description": "S6: がち should be recognized as suffix",
       "expected": [
         {
@@ -337,6 +341,28 @@
       ],
       "id": "s6_gachi_suffix",
       "input": "遅れがちになる",
+      "suzume_expected": [
+        {
+          "lemma": "遅れる",
+          "pos": "Verb",
+          "surface": "遅れ"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
       "tags": [
         "s6_fix",
         "gachi",
@@ -483,6 +509,10 @@
       "input": "傷だらけ"
     },
     {
+      "accepted_diff": {
+        "category": "tokenization-design",
+        "reason": "「っぱなし」は動詞連用形に接続する状態接尾辞であり、「出し＋っぱなし」の文法的境界を保持する。"
+      },
       "description": "っぱなし suffix after verb renyokei",
       "expected": [
         {
@@ -502,7 +532,24 @@
         }
       ],
       "id": "ppanashi_dashippanashi",
-      "input": "出しっぱなしだ"
+      "input": "出しっぱなしだ",
+      "suzume_expected": [
+        {
+          "lemma": "出す",
+          "pos": "Verb",
+          "surface": "出し"
+        },
+        {
+          "lemma": "っぱなし",
+          "pos": "Suffix",
+          "surface": "っぱなし"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ]
     },
     {
       "description": "後 after a duration counter is tagged Suffix (名詞,接尾)",
@@ -591,6 +638,10 @@
       "input": "宝くじを買った"
     },
     {
+      "accepted_diff": {
+        "category": "tokenization-design",
+        "reason": "完了直後を表す「たて」は生産的な接尾辞であり、動詞連用形との境界を保持する。検索時に動作語と新鮮さの接尾辞を個別に扱える分割を採用する。"
+      },
       "description": "焼きたて - auto-generated",
       "expected": [
         {
@@ -605,9 +656,25 @@
         }
       ],
       "id": "yakitate",
-      "input": "焼きたて"
+      "input": "焼きたて",
+      "suzume_expected": [
+        {
+          "lemma": "焼く",
+          "pos": "Verb",
+          "surface": "焼き"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "segmentation",
+        "reason": "完成直後を表す「たて」は動詞連用形に生産的に接続する接尾辞であり、過去助動詞「た」＋接続助詞「て」ではなく検索単位として保持する。"
+      },
       "description": "できたて - auto-generated",
       "expected": [
         {
@@ -627,9 +694,25 @@
         }
       ],
       "id": "dekitate",
-      "input": "できたて"
+      "input": "できたて",
+      "suzume_expected": [
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "tokenization-design",
+        "reason": "完了直後を表す「たて」は生産的な接尾辞であり、動詞連用形との境界を保持する。検索時に動作語と新鮮さの接尾辞を個別に扱える分割を採用する。"
+      },
       "description": "作りたて - auto-generated",
       "expected": [
         {
@@ -639,9 +722,25 @@
         }
       ],
       "id": "tsukuritate",
-      "input": "作りたて"
+      "input": "作りたて",
+      "suzume_expected": [
+        {
+          "lemma": "作る",
+          "pos": "Verb",
+          "surface": "作り"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "tokenization-design",
+        "reason": "完了直後を表す「たて」は生産的な接尾辞であり、動詞連用形との境界を保持する。検索時に動作語と新鮮さの接尾辞を個別に扱える分割を採用する。"
+      },
       "description": "書きたて - auto-generated",
       "expected": [
         {
@@ -651,9 +750,25 @@
         }
       ],
       "id": "kakitate",
-      "input": "書きたて"
+      "input": "書きたて",
+      "suzume_expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "segmentation",
+        "reason": "完成直後を表す「たて」は動詞連用形に生産的に接続する接尾辞であり、過去助動詞「た」＋接続助詞「て」ではなく検索単位として保持する。"
+      },
       "description": "読みたて - auto-generated",
       "expected": [
         {
@@ -673,9 +788,25 @@
         }
       ],
       "id": "yomitate",
-      "input": "読みたて"
+      "input": "読みたて",
+      "suzume_expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "tokenization-design",
+        "reason": "完了直後を表す「たて」は生産的な接尾辞であり、動詞連用形との境界を保持する。検索時に動作語と新鮮さの接尾辞を個別に扱える分割を採用する。"
+      },
       "description": "炊きたて - auto-generated",
       "expected": [
         {
@@ -685,9 +816,25 @@
         }
       ],
       "id": "takitate",
-      "input": "炊きたて"
+      "input": "炊きたて",
+      "suzume_expected": [
+        {
+          "lemma": "炊く",
+          "pos": "Verb",
+          "surface": "炊き"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "segmentation",
+        "reason": "完成直後を表す「たて」は動詞連用形に生産的に接続する接尾辞であり、過去助動詞「た」＋接続助詞「て」ではなく検索単位として保持する。"
+      },
       "description": "入れたて - auto-generated",
       "expected": [
         {
@@ -707,7 +854,19 @@
         }
       ],
       "id": "iretate",
-      "input": "入れたて"
+      "input": "入れたて",
+      "suzume_expected": [
+        {
+          "lemma": "入れる",
+          "pos": "Verb",
+          "surface": "入れ"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ]
     },
     {
       "description": "買いたて - auto-generated",
@@ -727,6 +886,10 @@
       "input": "買いたて"
     },
     {
+      "accepted_diff": {
+        "category": "tokenization-design",
+        "reason": "完了直後を表す「たて」は生産的な接尾辞であり、動詞連用形との境界を保持する。検索時に動作語と新鮮さの接尾辞を個別に扱える分割を採用する。"
+      },
       "description": "生まれたて - auto-generated",
       "expected": [
         {
@@ -736,7 +899,19 @@
         }
       ],
       "id": "umaretate",
-      "input": "生まれたて"
+      "input": "生まれたて",
+      "suzume_expected": [
+        {
+          "lemma": "生まれる",
+          "pos": "Verb",
+          "surface": "生まれ"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
+        }
+      ]
     },
     {
       "description": "税抜き - auto-generated",
@@ -909,6 +1084,10 @@
       "input": "欠点ずくめ"
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "傾向接尾辞「がち」は動詞連用形に接続するため、読み・書き・食べは各動詞の連用形として扱う。コピュラ連用形「で」を含む否定連鎖も独立した検索単位として保持する。"
+      },
       "description": "Preserve the tendency suffix and copular-negative boundaries.",
       "expected": [
         {
@@ -988,7 +1167,84 @@
         }
       ],
       "id": "tendency_suffix_gachi_copular_negative",
-      "input": "読みがちではない。書きがちではない。食べがちではない。"
+      "input": "読みがちではない。書きがちではない。食べがちではない。",
+      "suzume_expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ]
     },
     {
       "description": "区間接尾辞を前接名詞から分割する",
@@ -1139,6 +1395,99 @@
       ],
       "id": "suffix_zumi_shonin",
       "input": "承認済みの申請"
+    },
+    {
+      "description": "時間接尾辞後の境界",
+      "expected": [
+        {
+          "lemma": "終了",
+          "pos": "Noun",
+          "surface": "終了"
+        },
+        {
+          "lemma": "後",
+          "pos": "Suffix",
+          "surface": "後"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "処理",
+          "pos": "Noun",
+          "surface": "処理"
+        }
+      ],
+      "id": "suffix_go_shuryogo",
+      "input": "終了後の処理"
+    },
+    {
+      "description": "用途接尾辞用の境界",
+      "expected": [
+        {
+          "lemma": "記録",
+          "pos": "Noun",
+          "surface": "記録"
+        },
+        {
+          "lemma": "用",
+          "pos": "Suffix",
+          "surface": "用"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        }
+      ],
+      "id": "suffix_you_kiroku",
+      "input": "記録用の紙"
+    },
+    {
+      "description": "用途接尾辞用の境界",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "用",
+          "pos": "Suffix",
+          "surface": "用"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        }
+      ],
+      "id": "suffix_you_kakunin",
+      "input": "確認用の紙"
+    },
+    {
+      "description": "連用形に付く生産的接尾辞「っぽい」を一語の形容詞として扱う",
+      "expected": [
+        {
+          "lemma": "忘れっぽい",
+          "pos": "Adjective",
+          "surface": "忘れっぽい"
+        }
+      ],
+      "id": "suffix_productive_renyokei_ppoi",
+      "input": "忘れっぽい"
     }
   ],
   "description": "Suffixes (さん、的、化)",

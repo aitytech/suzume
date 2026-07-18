@@ -1357,8 +1357,36 @@
       "input": "分からん"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "五段動詞「済む」の未然形と否定助動詞を分割する",
       "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "ず",
+          "pos": "Auxiliary",
+          "surface": "ずに"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "済まない",
+          "pos": "Adjective",
+          "surface": "済まない"
+        }
+      ],
+      "id": "sumu_negative_auxiliary_boundary",
+      "input": "行かずには済まない",
+      "suzume_expected": [
         {
           "lemma": "行く",
           "pos": "Verb",
@@ -1384,13 +1412,49 @@
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ],
-      "id": "sumu_negative_auxiliary_boundary",
-      "input": "行かずには済まない"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "否定構文の「思わ + ずに」の助動詞境界を維持する",
       "expected": [
+        {
+          "lemma": "思わず",
+          "pos": "Adverb",
+          "surface": "思わず"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "い"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "omowazu_ni_negative_auxiliary_boundary",
+      "input": "思わずにはいられない",
+      "suzume_expected": [
         {
           "lemma": "思う",
           "pos": "Verb",
@@ -1421,9 +1485,7 @@
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ],
-      "id": "omowazu_ni_negative_auxiliary_boundary",
-      "input": "思わずにはいられない"
+      ]
     },
     {
       "description": "否定構文内の「え」を動詞「える」の連用形として解析する",

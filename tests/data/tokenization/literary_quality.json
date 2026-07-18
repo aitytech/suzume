@@ -1168,6 +1168,10 @@
       "input": "恐れ入りますが、少々お待ちいただけますでしょうか"
     },
     {
+      "accepted_diff": {
+        "category": "segmentation",
+        "reason": "「あの日見た」は連体修飾節であり、「日見」という漢字複合名詞にはならない。日（名詞）と見た（動詞過去形）の文法境界を保持する。"
+      },
       "description": "ことができる as multi-word: 生涯+忘れる+こと+が+でき+なかっ+た",
       "expected": [
         {
@@ -1242,7 +1246,84 @@
         }
       ],
       "id": "shougai_kotogadekiru",
-      "input": "あの日見た光景を、彼女は生涯忘れることができなかった"
+      "input": "あの日見た光景を、彼女は生涯忘れることができなかった",
+      "suzume_expected": [
+        {
+          "lemma": "あの",
+          "pos": "Determiner",
+          "surface": "あの"
+        },
+        {
+          "lemma": "日",
+          "pos": "Noun",
+          "surface": "日"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "光景",
+          "pos": "Noun",
+          "surface": "光景"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "彼女",
+          "pos": "Pronoun",
+          "surface": "彼女"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "生涯",
+          "pos": "Noun",
+          "surface": "生涯"
+        },
+        {
+          "lemma": "忘れる",
+          "pos": "Verb",
+          "surface": "忘れる"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "Honorific 待ち+いただけ split - godan-wa false candidate penalty",

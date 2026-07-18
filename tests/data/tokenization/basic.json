@@ -180,6 +180,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "接続詞「あるいは」の表層・品詞・境界は一致している。辞書の正書法lemma「或いは」は検索上同義の正規形であり、ひらがな表層を維持した意図的差異とする。"
+      },
       "description": "あるいは should be CONJ, not ADJ+は split - MeCab uses かも as single particle",
       "expected": [
         {
@@ -200,6 +204,23 @@
       ],
       "id": "conj_aruiha",
       "input": "あるいは違うかも",
+      "suzume_expected": [
+        {
+          "lemma": "或いは",
+          "pos": "Conjunction",
+          "surface": "あるいは"
+        },
+        {
+          "lemma": "違う",
+          "pos": "Verb",
+          "surface": "違う"
+        },
+        {
+          "lemma": "かも",
+          "pos": "Particle",
+          "surface": "かも"
+        }
+      ],
       "tags": [
         "conjunction",
         "split_prevention"
@@ -601,6 +622,55 @@
       ],
       "id": "rakano_2",
       "input": "何らかの対応"
+    },
+    {
+      "description": "動詞連用形の後の「がち」は傾向接尾辞として解析する。",
+      "expected": [
+        {
+          "lemma": "忘れる",
+          "pos": "Verb",
+          "surface": "忘れ"
+        },
+        {
+          "lemma": "がち",
+          "pos": "Suffix",
+          "surface": "がち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "Basic_gachi_tendency_suffix_copular",
+      "input": "忘れがちで困る"
+    },
+    {
+      "description": "強意語「がち」は名詞的に取り、助詞「で」と分割する。",
+      "expected": [
+        {
+          "lemma": "がち",
+          "pos": "Noun",
+          "surface": "がち"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "うまい",
+          "pos": "Adjective",
+          "surface": "うまい"
+        }
+      ],
+      "id": "Basic_gachi_de_emphatic_adverbial",
+      "input": "がちでうまい"
     }
   ],
   "description": "Basic tokenization tests",

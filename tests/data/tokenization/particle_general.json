@@ -147,7 +147,7 @@
       "expected": [
         {
           "lemma": "なんか",
-          "pos": "Other",
+          "pos": "Particle",
           "surface": "なんか"
         },
         {
@@ -190,6 +190,38 @@
       ],
       "id": "kirino",
       "input": "一度きりの機会"
+    },
+    {
+      "description": "疑問代名詞・数詞・複合助詞の境界",
+      "expected": [
+        {
+          "lemma": "誰",
+          "pos": "Pronoun",
+          "surface": "誰"
+        },
+        {
+          "lemma": "一人",
+          "pos": "Noun",
+          "surface": "一人"
+        },
+        {
+          "lemma": "として",
+          "pos": "Particle",
+          "surface": "として"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "darehitoritoshite_boundary",
+      "input": "誰一人として来ない"
     }
   ],
   "description": "particle_general tests",

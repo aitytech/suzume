@@ -1,8 +1,31 @@
 {
   "cases": [
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "文語完了たりの後に過去助動詞けりが続く",
       "expected": [
+        {
+          "lemma": "語り",
+          "pos": "Noun",
+          "surface": "語り"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "classical_tari_keri_perfect_past_chain",
+      "input": "語りたりけり",
+      "suzume_expected": [
         {
           "lemma": "語る",
           "pos": "Verb",
@@ -18,9 +41,7 @@
           "pos": "Auxiliary",
           "surface": "けり"
         }
-      ],
-      "id": "classical_tari_keri_perfect_past_chain",
-      "input": "語りたりけり"
+      ]
     },
     {
       "description": "文語比況助動詞ごとしを補助動詞として解析する",

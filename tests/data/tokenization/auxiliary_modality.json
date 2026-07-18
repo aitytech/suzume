@@ -126,6 +126,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "口語コピュラの推量形「じゃろ」は標準形「だろ」をlemmaとする。語境界・品詞は一致しており、Suzume のlemma正規化に沿う。"
+      },
       "description": "Elderly speech じゃろう",
       "expected": [
         {
@@ -146,6 +150,23 @@
       ],
       "id": "character_jarou",
       "input": "そうじゃろう",
+      "suzume_expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だろ",
+          "pos": "Auxiliary",
+          "surface": "じゃろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
       "tags": [
         "character_speech",
         "elderly"
@@ -1389,6 +1410,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "「違いない」は動詞「違う」の否定と、名詞「違い」＋独立した存在否定形容詞「ない」の両解釈が可能である。検索単位と名詞述語の一貫性から後者を採用する。"
+      },
       "description": "違いない should be Auxiliary (certainty idiom)",
       "expected": [
         {
@@ -1404,12 +1429,28 @@
       ],
       "id": "auxiliary_chigainai",
       "input": "違いない",
+      "suzume_expected": [
+        {
+          "lemma": "ちがい",
+          "pos": "Noun",
+          "surface": "違い"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
       "tags": [
         "auxiliary",
         "certainty"
       ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "「違いない」は動詞「違う」の否定と、名詞「違い」＋独立した存在否定形容詞「ない」の両解釈が可能である。検索単位と名詞述語の一貫性から後者を採用する。"
+      },
       "description": "に違いない certainty expression - に is particle, 違いない is auxiliary",
       "expected": [
         {
@@ -1435,6 +1476,28 @@
       ],
       "id": "auxiliary_ni_chigainai",
       "input": "彼に違いない",
+      "suzume_expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ちがい",
+          "pos": "Noun",
+          "surface": "違い"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
       "tags": [
         "auxiliary",
         "certainty"

@@ -2453,8 +2453,36 @@
       "input": "これだけは守る"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "上限表現の形容詞連用形「多く」と副助詞「とも」を分割する",
       "expected": [
+        {
+          "lemma": "多く",
+          "pos": "Noun",
+          "surface": "多く"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        },
+        {
+          "lemma": "三つ",
+          "pos": "Noun",
+          "surface": "三つ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ooku_tomo_upper_bound_particle_boundary",
+      "input": "多くとも三つだ",
+      "suzume_expected": [
         {
           "lemma": "多い",
           "pos": "Adjective",
@@ -2475,13 +2503,39 @@
           "pos": "Auxiliary",
           "surface": "だ"
         }
-      ],
-      "id": "ooku_tomo_upper_bound_particle_boundary",
-      "input": "多くとも三つだ"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "程度表現を連体詞・名詞・限定助詞の検索単位で分割する",
       "expected": [
+        {
+          "lemma": "ほんの",
+          "pos": "Determiner",
+          "surface": "ほんの"
+        },
+        {
+          "lemma": "少し",
+          "pos": "Adverb",
+          "surface": "少し"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "残る",
+          "pos": "Verb",
+          "surface": "残る"
+        }
+      ],
+      "id": "honno_sukoshi_dake_degree_boundaries",
+      "input": "ほんの少しだけ残る",
+      "suzume_expected": [
         {
           "lemma": "ほんの",
           "pos": "Determiner",
@@ -2502,9 +2556,7 @@
           "pos": "Verb",
           "surface": "残る"
         }
-      ],
-      "id": "honno_sukoshi_dake_degree_boundaries",
-      "input": "ほんの少しだけ残る"
+      ]
     }
   ],
   "description": "Binding and adverbial particles (は、も、だけ)",

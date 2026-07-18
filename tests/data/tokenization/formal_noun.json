@@ -1209,6 +1209,10 @@
       "input": "読むくせに書かない。書くくせに読まない。食べるくせに飲まない。高いくせに安い。静かなくせに進む。"
     },
     {
+      "accepted_diff": {
+        "category": "tokenization-design",
+        "reason": "「おそれ」は危険性を表す形式名詞として一語で扱う。接頭辞と代名詞への分割ではなく、助動詞・助詞との文法的境界を保持する検索単位を採用する。"
+      },
       "description": "Keep hiragana osore as one formal-noun search unit after an attributive clause.",
       "expected": [
         {
@@ -1363,7 +1367,129 @@
         }
       ],
       "id": "ichidan_hiragana_osore_formal_noun",
-      "input": "遅れるおそれがある。欠けるおそれがある。起きるおそれがある。見えるおそれがある。遅れるおそれはない。欠けるおそれはない。"
+      "input": "遅れるおそれがある。欠けるおそれがある。起きるおそれがある。見えるおそれがある。遅れるおそれはない。欠けるおそれはない。",
+      "suzume_expected": [
+        {
+          "lemma": "遅れる",
+          "pos": "Verb",
+          "surface": "遅れる"
+        },
+        {
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "欠ける",
+          "pos": "Verb",
+          "surface": "欠ける"
+        },
+        {
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "起きる",
+          "pos": "Verb",
+          "surface": "起きる"
+        },
+        {
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "見える",
+          "pos": "Verb",
+          "surface": "見える"
+        },
+        {
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "遅れる",
+          "pos": "Verb",
+          "surface": "遅れる"
+        },
+        {
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "欠ける",
+          "pos": "Verb",
+          "surface": "欠ける"
+        },
+        {
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ]
     },
     {
       "description": "Recognize the formal noun in the certainty predicate ni-chigainai.",
@@ -1906,6 +2032,10 @@
       "input": "読んでいるあいだに書く。書いているあいだに読む。食べているあいだに飲む。書いているうちに読む。食べているうちに飲む。"
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "「同じ」は形容動詞語幹として扱い、「で＋は＋ない」はコピュラ否定連鎖として解析する。"
+      },
       "description": "同じではない - regression test",
       "expected": [
         {
@@ -1930,7 +2060,29 @@
         }
       ],
       "id": "jidehanai",
-      "input": "同じではない"
+      "input": "同じではない",
+      "suzume_expected": [
+        {
+          "lemma": "同じ",
+          "pos": "Adjective",
+          "surface": "同じ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ]
     },
     {
       "description": "古語否定と形式名詞ふりを分割する",

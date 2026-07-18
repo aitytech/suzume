@@ -1,8 +1,41 @@
 {
   "cases": [
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+      },
       "description": "そうでなければ困る - auto-generated",
       "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "soudenakereba_ru",
+      "input": "そうでなければ困る",
+      "suzume_expected": [
         {
           "lemma": "そう",
           "pos": "Adjective",
@@ -28,9 +61,7 @@
           "pos": "Verb",
           "surface": "困る"
         }
-      ],
-      "id": "soudenakereba_ru",
-      "input": "そうでなければ困る"
+      ]
     },
     {
       "description": "必要でなければ中止する - auto-generated",

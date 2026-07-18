@@ -119,6 +119,33 @@
       ],
       "id": "njanai_colloquial_contraction",
       "input": "んじゃないか"
+    },
+    {
+      "description": "te-form preparatory auxiliary volitional",
+      "expected": [
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Auxiliary",
+          "surface": "おこ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "shiteokou",
+      "input": "しておこう"
     }
   ],
   "description": "auxiliary_general tests",

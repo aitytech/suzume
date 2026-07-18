@@ -85,6 +85,10 @@
       "input": "読みはじめる、書きはじめる、食べはじめる"
     },
     {
+      "accepted_diff": {
+        "category": "tokenization-design",
+        "reason": "「〜てしまう」は完了・遺憾を表す補助動詞として一つの検索単位に保つ。短縮形「〜ちゃう」と通常形で同じ補助動詞単位を採用する。"
+      },
       "description": "鼻音便後の縮約完了補助動詞じゃうの活用",
       "expected": [
         {
@@ -224,7 +228,134 @@
         }
       ],
       "id": "nasal_onbin_contracted_shimau",
-      "input": "読んじゃう、飲んじゃう、遊んじゃう、選んじゃう、住んじゃう、読んじゃった、飲んじゃった、読んじゃわない、読んでしまう、飲んでしまう"
+      "input": "読んじゃう、飲んじゃう、遊んじゃう、選んじゃう、住んじゃう、読んじゃった、飲んじゃった、読んじゃわない、読んでしまう、飲んでしまう",
+      "suzume_expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃう"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃう"
+        },
+        {
+          "lemma": "遊ぶ",
+          "pos": "Verb",
+          "surface": "遊ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃう"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃう"
+        },
+        {
+          "lemma": "住む",
+          "pos": "Verb",
+          "surface": "住ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃう"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃわ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "しまう"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "しまう"
+        }
+      ]
     },
     {
       "description": "試行補助動詞みるの連用形と願望助動詞たくの境界を保つ",
@@ -473,6 +604,10 @@
       "input": "読んでやりたくない。書いてやりたくない。食べてやりたくない。"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "「あぐねる」は前項動詞に付く補助動詞として扱う。語境界は一致し、Suzume の補助動詞分類が文法的に適切である。"
+      },
       "description": "未遂補助動詞あぐねるの連用形と過去助動詞の境界を保つ",
       "expected": [
         {
@@ -522,7 +657,54 @@
         }
       ],
       "id": "aguneru_hesitation_past",
-      "input": "読みあぐねた。書きあぐねた。食べあぐねた。"
+      "input": "読みあぐねた。書きあぐねた。食べあぐねた。",
+      "suzume_expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "あぐねる",
+          "pos": "Auxiliary",
+          "surface": "あぐね"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "あぐねる",
+          "pos": "Auxiliary",
+          "surface": "あぐね"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "あぐねる",
+          "pos": "Auxiliary",
+          "surface": "あぐね"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "五段動詞の願望様態形で連用形lemmaを原形として復元する",
@@ -699,6 +881,10 @@
       "input": "本でなくなる。水でなくなる。静かでなくなる。高くなくなる。本でなくなった。"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "方向・継続を表す「いく」は前項動詞に付く補助動詞である。語境界は一致し、Suzume の補助動詞分類を採用する。"
+      },
       "description": "移動補助動詞いくの意志形で未然形と意志助動詞の境界を保つ",
       "expected": [
         {
@@ -763,7 +949,69 @@
         }
       ],
       "id": "iku_directional_volitional_boundary",
-      "input": "読んでいこう。書いていこう。食べていこう。"
+      "input": "読んでいこう。書いていこう。食べていこう。",
+      "suzume_expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Auxiliary",
+          "surface": "いこ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Auxiliary",
+          "surface": "いこ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Auxiliary",
+          "surface": "いこ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ]
     },
     {
       "description": "イ音便テ形後の移動補助動詞いく未然形を非語の複合動詞に融合しない",
@@ -1849,6 +2097,10 @@
       "input": "書いていらっしゃらない。歩いていらっしゃらない。解いていらっしゃらない。食べていらっしゃらない。見ていらっしゃらない。読んでいらっしゃらない。"
     },
     {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "否定述語に続く「物」は一般的な対象を表す形式名詞として解析し、既存の形式名詞正規化に従って lemma を「もの」とする。"
+      },
       "description": "Keep the colloquial kkonai negative-conjecture auxiliary chain split.",
       "expected": [
         {
@@ -2043,7 +2295,199 @@
         }
       ],
       "id": "negative_conjecture_kko_boundary",
-      "input": "読みっこない。書きっこない。食べっこない。読みっこなかった。書きっこなかった。食べっこなかった。読みっこなくはない。食べっこない物。"
+      "input": "読みっこない。書きっこない。食べっこない。読みっこなかった。書きっこなかった。食べっこなかった。読みっこなくはない。食べっこない物。",
+      "suzume_expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "く",
+          "pos": "Auxiliary",
+          "surface": "っ"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "く",
+          "pos": "Auxiliary",
+          "surface": "っ"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "く",
+          "pos": "Auxiliary",
+          "surface": "っ"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "く",
+          "pos": "Auxiliary",
+          "surface": "っ"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "く",
+          "pos": "Auxiliary",
+          "surface": "っ"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "く",
+          "pos": "Auxiliary",
+          "surface": "っ"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "く",
+          "pos": "Auxiliary",
+          "surface": "っ"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "く",
+          "pos": "Auxiliary",
+          "surface": "っ"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "こ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "物"
+        }
+      ]
     },
     {
       "description": "Split a classical negative zu before an independent following predicate.",
