@@ -1,0 +1,210 @@
+/**
+ * @file pretokenizer_utils.cpp
+ * @brief Shared byte and numeric helpers for pre-tokenizer matchers
+ */
+
+#include <cctype>
+
+#include "normalize/char_type.h"
+#include "normalize/utf8.h"
+#include "pretokenizer/pretokenizer_internal.h"
+
+namespace suzume::pretokenizer::pretokenizer_detail {
+
+// Check if byte is ASCII digit
+bool isAsciiDigit(char chr) {
+  return chr >= '0' && chr <= '9';
+}
+
+// Decide whether a period suffix 間 immediately following a time/duration
+// counter (N時/N年) should be absorbed into the atomic counter token.
+//
+// Absorb by default — N時間/N年間 are lexicalized durations, so keeping them
+// atomic prevents 間 from being stranded at a segment boundary. The single
+// exception is the interval signal: 間 followed by a lone kanji that is itself
+// followed by a non-kanji boundary (間隔で, 間近に). There the trailing kanji
+// would be stranded, so 間 heads the following interval word (間隔/間近) rather
+// than the counter. When 間 is followed by two or more kanji (時間営業, 年間活動)
+// or by a non-kanji (年間の, 年間で), the duration reading is correct. This
+// mirrors the cost-model discrimination that split_candidates applies to the
+// non-pretokenized N分間 path.
+//
+// `pos_after_kan` is the byte offset of the character following 間.
+bool absorbsPeriodKan(std::string_view text, size_t pos_after_kan) {
+  if (pos_after_kan >= text.size()) {
+    return true;  // 間 at end of input → duration
+  }
+  size_t idx = pos_after_kan;
+  char32_t next_cp = normalize::decodeUtf8(text, idx);
+  if (!normalize::isKanjiCodepoint(next_cp)) {
+    return true;  // 間 + hiragana/particle → duration (年間の, 年間で)
+  }
+  if (normalize::isTemporalRelationSuffixKanji(next_cp)) {
+    return true;  // 間 + 後/前 → duration + relational suffix (2時間|後, 5年間|前)
+  }
+  if (idx >= text.size()) {
+    // 間 + lone kanji at end: interval only for an 間X compound (…間隔), else duration
+    return !normalize::isIntervalCompoundSecondKanji(next_cp);
+  }
+  char32_t after_cp = normalize::decodeUtf8(text, idx);
+  if (normalize::isKanjiCodepoint(after_cp)) {
+    return true;  // 2+ kanji → duration (時間営業, 年間活動)
+  }
+  // 間 + single kanji + non-kanji: interval only when the kanji forms an 間X compound
+  // (間隔で), else the counter takes the duration reading (年間|続けた, 時間|半).
+  return !normalize::isIntervalCompoundSecondKanji(next_cp);
+}
+
+// Keep a duration counter in the analyzer when the closed-class interval
+// suffix follows it. This preserves the noun→suffix boundary in 1時間おき,
+// which an atomic time pretoken would otherwise hide.
+bool hasIntervalSuffix(std::string_view text, size_t pos) {
+  constexpr std::string_view kIntervalSuffix{"おき"};
+  return text.substr(pos).compare(0, kIntervalSuffix.size(), kIntervalSuffix) == 0;
+}
+
+// Check if byte is ASCII alpha
+bool isAsciiAlpha(char chr) {
+  return (chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z');
+}
+
+// Check if byte is ASCII alphanumeric
+bool isAsciiAlnum(char chr) {
+  return isAsciiDigit(chr) || isAsciiAlpha(chr);
+}
+
+// Check if this is a full-width digit (０-９)
+bool isFullwidthDigit(char32_t codepoint) {
+  return codepoint >= 0xFF10 && codepoint <= 0xFF19;
+}
+
+// Scan integer digits without allocating. Value is retained for the first two
+// digits, which is sufficient for the bounded time fields below.
+IntegerScan scanInteger(std::string_view text, size_t pos) {
+  size_t idx = pos;
+  size_t digit_count = 0;
+  int value = 0;
+  while (idx < text.size()) {
+    char chr = text[idx];
+    int digit = 0;
+    if (isAsciiDigit(chr)) {
+      digit = chr - '0';
+      ++idx;
+    } else {
+      size_t byte_pos = idx;
+      char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
+      if (isFullwidthDigit(codepoint)) {
+        digit = static_cast<int>(codepoint - 0xFF10);
+        idx = byte_pos;
+      } else {
+        break;
+      }
+    }
+    if (digit_count < 2) {
+      value = value * 10 + digit;
+    }
+    ++digit_count;
+  }
+  return {idx, digit_count, value};
+}
+
+// Month and place counters have five conventional prefix spellings. Treating
+// the spelling variation as one orthographic class keeps the numeric counter
+// atomic without adding entries for individual surface forms.
+bool isMonthPlaceCounterPrefix(char32_t codepoint) {
+  return codepoint == U'か' || codepoint == U'ヶ' || codepoint == U'ヵ' || codepoint == U'ケ' || codepoint == U'箇';
+}
+
+// Address-number output historically normalizes full-width digits to ASCII.
+// Keep the owning form only for that caller.
+size_t parseIntegerText(std::string_view text, size_t pos, std::string& digits) {
+  digits.clear();
+  size_t idx = pos;
+  while (idx < text.size()) {
+    const char chr = text[idx];
+    if (isAsciiDigit(chr)) {
+      digits += chr;
+      ++idx;
+      continue;
+    }
+    size_t byte_pos = idx;
+    const char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
+    if (!isFullwidthDigit(codepoint)) {
+      break;
+    }
+    digits += static_cast<char>('0' + (codepoint - 0xFF10));
+    idx = byte_pos;
+  }
+  return idx;
+}
+
+// Parse digits at position (including decimals), return end position
+size_t scanDigits(std::string_view text, size_t pos) {
+  size_t idx = pos;
+  bool seen_comma = false;
+  size_t digits_since_comma = 0;
+  while (idx < text.size()) {
+    char chr = text[idx];
+    if (isAsciiDigit(chr)) {
+      ++idx;
+      ++digits_since_comma;
+    } else if (chr == '.') {
+      // Check if followed by digit (decimal point)
+      if (idx + 1 < text.size() && isAsciiDigit(text[idx + 1])) {
+        ++idx;
+        digits_since_comma = 0;
+      } else {
+        break;
+      }
+    } else if (chr == ',') {
+      // Thousand separator: require one to three digits before the first comma,
+      // and exactly three digits between subsequent commas.
+      if ((!seen_comma || digits_since_comma == 3) && digits_since_comma > 0 && digits_since_comma <= 3 &&
+          idx + 3 < text.size() && isAsciiDigit(text[idx + 1]) && isAsciiDigit(text[idx + 2]) &&
+          isAsciiDigit(text[idx + 3]) && (idx + 4 >= text.size() || !isAsciiDigit(text[idx + 4]))) {
+        seen_comma = true;
+        digits_since_comma = 0;
+        ++idx;
+      } else {
+        break;
+      }
+    } else {
+      // Check for full-width digits
+      size_t byte_pos = idx;
+      char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
+      if (isFullwidthDigit(codepoint)) {
+        idx = byte_pos;
+        ++digits_since_comma;
+      } else {
+        break;
+      }
+    }
+  }
+  return idx;
+}
+
+// Check if text at pos starts with given string (case-insensitive for ASCII)
+bool startsWithCI(std::string_view text, size_t pos, std::string_view prefix) {
+  if (pos + prefix.size() > text.size()) {
+    return false;
+  }
+  for (size_t idx = 0; idx < prefix.size(); ++idx) {
+    char txt_c = text[pos + idx];
+    char pre_c = prefix[idx];
+    if (std::tolower(static_cast<unsigned char>(txt_c)) != std::tolower(static_cast<unsigned char>(pre_c))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void setTokenFromRange(PreToken& token, std::string_view text, size_t start, size_t end, PreTokenType type,
+                       core::PartOfSpeech pos) {
+  token.surface = std::string(text.substr(start, end - start));
+  token.start = start;
+  token.end = end;
+  token.type = type;
+  token.pos = pos;
+}
+
+}  // namespace suzume::pretokenizer::pretokenizer_detail

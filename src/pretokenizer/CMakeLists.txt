@@ -1,6 +1,9 @@
 # PreTokenizer library
 add_library(suzume_pretokenizer OBJECT
     pretokenizer.cpp
+    pretokenizer_quantity.cpp
+    pretokenizer_utils.cpp
+    pretokenizer_web.cpp
 )
 
 target_include_directories(suzume_pretokenizer

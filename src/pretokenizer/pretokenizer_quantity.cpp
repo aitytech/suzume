@@ -1,0 +1,438 @@
+/**
+ * @file pretokenizer_quantity.cpp
+ * @brief Date, time, and quantity matchers for the pre-tokenizer
+ */
+
+#include "normalize/utf8.h"
+#include "pretokenizer/pretokenizer_internal.h"
+
+namespace suzume::pretokenizer {
+
+using namespace pretokenizer_detail;
+
+bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& token) const {
+  // Match patterns: MM月DD日, YYYY年MM月DD日, YYYY年MM月, YYYY年, YYYY年度 (fiscal year)
+  if (pos > 0 && isAsciiDigit(text[pos - 1])) {
+    return false;
+  }
+
+  const IntegerScan year = scanInteger(text, pos);
+  size_t idx = year.end;
+
+  if (year.empty()) {
+    return false;
+  }
+
+  // A month and day without a year is still an atomic calendar date. Check it
+  // before requiring 年 so 7月18日 does not become two adjacent date tokens.
+  if (year.digit_count <= 2 && year.value >= 1 && year.value <= 12 && idx < text.size()) {
+    size_t byte_pos = idx;
+    char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
+    if (codepoint == U'月') {
+      const IntegerScan day = scanInteger(text, byte_pos);
+      if (!day.empty() && day.digit_count <= 2 && day.value >= 1 && day.value <= 31 && day.end < text.size()) {
+        byte_pos = day.end;
+        codepoint = normalize::decodeUtf8(text, byte_pos);
+        if (codepoint == U'日') {
+          setTokenFromRange(token, text, pos, byte_pos, PreTokenType::Date, core::PartOfSpeech::Noun);
+          return true;
+        }
+      }
+    }
+  }
+
+  if (year.digit_count > 4) {
+    return false;
+  }
+
+  // Check for 年
+  size_t byte_pos = idx;
+  if (byte_pos >= text.size()) {
+    return false;
+  }
+
+  char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
+  if (codepoint != U'年') {
+    return false;
+  }
+  idx = byte_pos;
+  size_t year_end = idx;  // Position right after "年", before any month match
+
+  // Try to match month
+  const IntegerScan month = scanInteger(text, idx);
+  size_t month_end = month.end;
+
+  bool matched_month = false;
+  if (!month.empty() && month.digit_count <= 2) {
+    byte_pos = month_end;
+    if (byte_pos < text.size()) {
+      codepoint = normalize::decodeUtf8(text, byte_pos);
+      if (codepoint == U'月') {
+        idx = byte_pos;
+        matched_month = true;
+
+        // Try to match day
+        const IntegerScan day = scanInteger(text, idx);
+        size_t day_end = day.end;
+
+        if (!day.empty() && day.digit_count <= 2) {
+          byte_pos = day_end;
+          if (byte_pos < text.size()) {
+            codepoint = normalize::decodeUtf8(text, byte_pos);
+            if (codepoint == U'日') {
+              idx = byte_pos;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Fiscal year suffix: N年度 (令和6年度, 2024年度予算). Only applies when no
+  // month was matched — 年度 marks a fiscal/administrative year, distinct
+  // from a calendar date with month/day. Matching it here as part of the
+  // atomic date token avoids leaving 度 stranded at a pretokenizer segment
+  // boundary, where it has no context to attach to the preceding 年.
+  if (!matched_month) {
+    byte_pos = year_end;
+    if (byte_pos < text.size()) {
+      codepoint = normalize::decodeUtf8(text, byte_pos);
+      if (codepoint == U'度') {
+        idx = byte_pos;
+      } else if (codepoint == U'間' && absorbsPeriodKan(text, byte_pos)) {
+        // Duration suffix 間 (期間接尾): N年 + 間 = N年間. Absorbed only when it
+        // is not the interval signal 間 + stranded-kanji (see absorbsPeriodKan),
+        // so 3年間活動 stays 3年間|活動 while 3年間隔 splits as 3年|間隔.
+        idx = byte_pos;
+      }
+    }
+  }
+
+  if (idx > pos) {
+    setTokenFromRange(token, text, pos, idx, PreTokenType::Date, core::PartOfSpeech::Noun);
+    return true;
+  }
+
+  return false;
+}
+
+bool PreTokenizer::tryMatchCounter(std::string_view text, size_t pos, PreToken& token) const {
+  const IntegerScan number = scanInteger(text, pos);
+  if (number.empty()) {
+    return false;
+  }
+
+  size_t idx = number.end;
+  if (idx >= text.size()) {
+    return false;
+  }
+  const char32_t prefix = normalize::decodeUtf8(text, idx);
+  if (!isMonthPlaceCounterPrefix(prefix) || idx >= text.size()) {
+    return false;
+  }
+
+  const char32_t unit = normalize::decodeUtf8(text, idx);
+  if (unit != U'月' && unit != U'所') {
+    return false;
+  }
+
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Counter, core::PartOfSpeech::Noun);
+  return true;
+}
+
+bool PreTokenizer::tryMatchCurrency(std::string_view text, size_t pos, PreToken& token) const {
+  // Match patterns: 数字+[万億兆]?円
+  size_t idx = scanDigits(text, pos);
+
+  if (idx == pos) {
+    return false;
+  }
+
+  size_t byte_pos = idx;
+  if (byte_pos >= text.size()) {
+    return false;
+  }
+
+  char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
+
+  // Optional: 万, 億, 兆
+  if (codepoint == U'万' || codepoint == U'億' || codepoint == U'兆') {
+    idx = byte_pos;
+    if (byte_pos < text.size()) {
+      codepoint = normalize::decodeUtf8(text, byte_pos);
+    } else {
+      return false;
+    }
+  }
+
+  // Required: 円
+  if (codepoint != U'円') {
+    return false;
+  }
+  idx = byte_pos;
+
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Currency, core::PartOfSpeech::Noun);
+  return true;
+}
+
+bool PreTokenizer::tryMatchStorage(std::string_view text, size_t pos, PreToken& token) const {
+  // Match patterns: 数字[KMGT]?B
+  size_t idx = scanDigits(text, pos);
+
+  if (idx == pos) {
+    return false;
+  }
+
+  if (idx >= text.size()) {
+    return false;
+  }
+
+  // Optional: K, M, G, T prefix
+  char prefix = text[idx];
+  if (prefix == 'K' || prefix == 'k' || prefix == 'M' || prefix == 'm' || prefix == 'G' || prefix == 'g' ||
+      prefix == 'T' || prefix == 't') {
+    ++idx;
+  }
+
+  // Required: B
+  if (idx >= text.size() || (text[idx] != 'B' && text[idx] != 'b')) {
+    return false;
+  }
+  ++idx;
+
+  // Reject when the byte suffix is immediately followed by another ASCII letter
+  // (e.g. the 'p' of Mbps/kbps/bps), which marks a network bit-rate unit rather
+  // than a storage size; let it fall through to normal tokenization instead.
+  if (idx < text.size()) {
+    char next = text[idx];
+    if ((next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z')) {
+      return false;
+    }
+  }
+
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Storage, core::PartOfSpeech::Noun);
+  return true;
+}
+
+bool PreTokenizer::tryMatchVersion(std::string_view text, size_t pos, PreToken& token) const {
+  // Match patterns: v?数字.数字(.数字)*
+  size_t idx = pos;
+
+  // Optional 'v' or 'V' prefix
+  if (idx < text.size() && (text[idx] == 'v' || text[idx] == 'V')) {
+    ++idx;
+  }
+
+  // First number (integer-only scan avoids consuming decimal points)
+  IntegerScan number = scanInteger(text, idx);
+  size_t num_end = number.end;
+  if (number.empty()) {
+    return false;
+  }
+  idx = num_end;
+
+  // Must have at least one .number
+  if (idx >= text.size() || text[idx] != '.') {
+    return false;
+  }
+  ++idx;
+
+  number = scanInteger(text, idx);
+  num_end = number.end;
+  if (number.empty()) {
+    return false;
+  }
+  idx = num_end;
+
+  // Additional .number segments
+  while (idx < text.size() && text[idx] == '.') {
+    size_t next = idx + 1;
+    number = scanInteger(text, next);
+    num_end = number.end;
+    if (number.empty()) {
+      break;
+    }
+    idx = num_end;
+  }
+
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Version, core::PartOfSpeech::Noun);
+  return true;
+}
+
+bool PreTokenizer::tryMatchPercentage(std::string_view text, size_t pos, PreToken& token) const {
+  // Match patterns: 数字%
+  size_t idx = scanDigits(text, pos);
+
+  if (idx == pos) {
+    return false;
+  }
+
+  if (idx >= text.size()) {
+    return false;
+  }
+
+  // Check for % (ASCII) or ％ (full-width)
+  char chr = text[idx];
+  if (chr == '%') {
+    ++idx;
+  } else {
+    size_t byte_pos = idx;
+    char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
+    if (codepoint == U'％') {
+      idx = byte_pos;
+    } else {
+      return false;
+    }
+  }
+
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Percentage, core::PartOfSpeech::Noun);
+  return true;
+}
+
+bool PreTokenizer::tryMatchAddressNumber(std::string_view text, size_t pos, PreToken& token) const {
+  // Match address number patterns: 1-2-3, 1-2-3-4 etc.
+  // Pattern: digit(s) + (hyphen + digit(s))+
+  std::string num_str;
+  size_t idx = parseIntegerText(text, pos, num_str);
+
+  if (num_str.empty()) {
+    return false;
+  }
+
+  // Must have at least one hyphen-number sequence
+  bool has_hyphen = false;
+  std::string surface = num_str;
+
+  while (idx < text.size() && text[idx] == '-') {
+    size_t hyphen_pos = idx;
+    ++idx;
+
+    // Parse the next number
+    std::string next_num;
+    size_t next_end = parseIntegerText(text, idx, next_num);
+    if (next_num.empty()) {
+      // No number after hyphen, revert
+      idx = hyphen_pos;
+      break;
+    }
+
+    surface += '-';
+    surface += next_num;
+    idx = next_end;
+    has_hyphen = true;
+  }
+
+  if (!has_hyphen) {
+    return false;
+  }
+
+  token.surface = surface;
+  token.start = pos;
+  token.end = idx;
+  token.type = PreTokenType::Number;
+  token.pos = core::PartOfSpeech::Noun;
+  return true;
+}
+
+bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& token) const {
+  // Match patterns: HH時, HH時MM分, HH時MM分SS秒
+  // Check that we're not starting in the middle of a number
+  if (pos > 0) {
+    char prev = text[pos - 1];
+    if (isAsciiDigit(prev)) {
+      return false;
+    }
+    // Also check for full-width digits before this position
+    // This requires looking back at UTF-8 boundary
+  }
+
+  const IntegerScan hour = scanInteger(text, pos);
+  size_t idx = hour.end;
+
+  if (hour.empty() || hour.digit_count > 2) {
+    return false;
+  }
+
+  // Validate hour (0-23 or 1-24)
+  if (hour.value > 24) {
+    return false;
+  }
+
+  // Check for 時
+  size_t byte_pos = idx;
+  if (byte_pos >= text.size()) {
+    return false;
+  }
+
+  char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
+  if (codepoint != U'時') {
+    return false;
+  }
+  idx = byte_pos;
+
+  // A duration starts with 時間 rather than 時. Consume 間 before scanning
+  // its optional minute/second fields so 1時間15分 remains one quantity.
+  // Leave 間 to the following span when it heads an interval word (5時|間隔).
+  size_t duration_pos = idx;
+  if (duration_pos < text.size()) {
+    char32_t duration_marker = normalize::decodeUtf8(text, duration_pos);
+    if (duration_marker == U'間' && absorbsPeriodKan(text, duration_pos)) {
+      idx = duration_pos;
+    }
+  }
+
+  // Try to match minutes
+  const IntegerScan minute = scanInteger(text, idx);
+  size_t min_end = minute.end;
+
+  if (!minute.empty() && minute.digit_count <= 2) {
+    if (minute.value <= 59) {
+      byte_pos = min_end;
+      if (byte_pos < text.size()) {
+        codepoint = normalize::decodeUtf8(text, byte_pos);
+        if (codepoint == U'分') {
+          idx = byte_pos;
+
+          // Try to match seconds
+          const IntegerScan second = scanInteger(text, idx);
+          size_t sec_end = second.end;
+
+          if (!second.empty() && second.digit_count <= 2) {
+            if (second.value <= 59) {
+              byte_pos = sec_end;
+              if (byte_pos < text.size()) {
+                codepoint = normalize::decodeUtf8(text, byte_pos);
+                if (codepoint == U'秒') {
+                  idx = byte_pos;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Duration suffix 間 (期間接尾): HH時 + 間 = HH時間. Absorbed only when it is
+  // not the interval signal 間 + stranded-kanji (see absorbsPeriodKan), so
+  // 24時間営業 stays 24時間|営業 while 5時間隔 splits as 5時|間隔.
+  size_t kan_pos = idx;
+  if (kan_pos < text.size()) {
+    char32_t codepoint_kan = normalize::decodeUtf8(text, kan_pos);
+    if (codepoint_kan == U'間' && absorbsPeriodKan(text, kan_pos)) {
+      idx = kan_pos;
+    }
+  }
+
+  if (idx > pos) {
+    if (hasIntervalSuffix(text, idx)) {
+      return false;
+    }
+    setTokenFromRange(token, text, pos, idx, PreTokenType::Time, core::PartOfSpeech::Noun);
+    return true;
+  }
+
+  return false;
+}
+
+}  // namespace suzume::pretokenizer
