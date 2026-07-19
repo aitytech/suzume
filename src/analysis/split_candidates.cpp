@@ -501,29 +501,25 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
         // (prefer 作画崩壊+し). Also check last kanji + full verb part for cases
         // like 大掃除+する → skip because 掃除 is a dict word.
         if (noun_surface.size() >= 6) {  // Noun has at least 2 kanji (6 bytes UTF-8)
-          auto noun_cps = normalize::toCodepoints(noun_surface);
-          if (!noun_cps.empty()) {
-            std::string last_kanji = normalize::encodeUtf8(noun_cps.back());
-            // Check last_kanji + verb_part (e.g., 除+する = 掃除する? no, but 除する? no)
-            std::string alt_word = last_kanji + std::string(verb_part);
-            if (dict_manager.lookupExact(alt_word) != nullptr) {
-              SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_NV] skip \"" << noun_surface << "\" + \"" << verb_part
-                                                            << "\": alt dict word \"" << alt_word << "\" exists\n");
-              goto next_split;
-            }
-            // Check last_kanji + first_kanji_of_verb (e.g., 崩+壊 = 崩壊)
-            // This catches compounds where the verb's kanji belongs to a noun
-            if (verb_start < kanji_end) {
-              std::string first_verb_kanji = normalize::encodeUtf8(codepoints[verb_start]);
-              std::string compound = last_kanji + first_verb_kanji;
-              auto comp_results = dict_manager.lookup(compound, 0);
-              for (const auto& result : comp_results) {
-                if (result.entry != nullptr && result.entry->surface == compound) {
-                  SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_NV] skip \"" << noun_surface << "\" + \"" << verb_part
-                                                                << "\": compound \"" << compound
-                                                                << "\" is dict word\n");
-                  goto next_split;
-                }
+          const std::string last_kanji = normalize::encodeUtf8(codepoints[verb_start - 1]);
+          // Check last_kanji + verb_part (e.g., 除+する = 掃除する? no, but 除する? no)
+          std::string alt_word = last_kanji + std::string(verb_part);
+          if (dict_manager.lookupExact(alt_word) != nullptr) {
+            SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_NV] skip \"" << noun_surface << "\" + \"" << verb_part
+                                                          << "\": alt dict word \"" << alt_word << "\" exists\n");
+            goto next_split;
+          }
+          // Check last_kanji + first_kanji_of_verb (e.g., 崩+壊 = 崩壊)
+          // This catches compounds where the verb's kanji belongs to a noun
+          if (verb_start < kanji_end) {
+            std::string first_verb_kanji = normalize::encodeUtf8(codepoints[verb_start]);
+            std::string compound = last_kanji + first_verb_kanji;
+            auto comp_results = dict_manager.lookup(compound, 0);
+            for (const auto& result : comp_results) {
+              if (result.entry != nullptr && result.entry->surface == compound) {
+                SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_NV] skip \"" << noun_surface << "\" + \"" << verb_part
+                                                              << "\": compound \"" << compound << "\" is dict word\n");
+                goto next_split;
               }
             }
           }
