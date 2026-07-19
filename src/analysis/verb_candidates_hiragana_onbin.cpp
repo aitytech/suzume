@@ -97,6 +97,34 @@ void appendContextualSubsidiaryCandidate(const std::vector<char32_t>& codepoints
   candidates.push_back(std::move(candidate));
 }
 
+// The contextual Ichidan subsidiary forms share one shape: a continuative
+// stem is allowed only before a grammatical follower, while its finite,
+// conditional, imperative, and volitional forms retain the whole surface.
+// Keeping this in the onbin owner preserves the caller-specific te-form gate.
+void appendContextualIchidanSubsidiaryForms(const std::vector<char32_t>& codepoints, size_t start_pos, size_t stem_end,
+                                            std::string_view lemma, const char* pattern,
+                                            const dictionary::DictionaryManager* dict_manager,
+                                            std::vector<UnknownCandidate>& candidates) {
+  if (stem_end >= codepoints.size()) {
+    return;
+  }
+
+  // The Ichidan volitional is stem + よう, never the bare renyokei stem + よう.
+  const bool is_volitional_stem = codepoints[stem_end] == core::hiragana::kYo;
+  if (!is_volitional_stem && grammaticalStemFollowerStartsAt(codepoints, stem_end, dict_manager)) {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, stem_end, lemma, dictionary::ConjugationType::Ichidan,
+                                        core::ExtendedPOS::AuxAspectMiru, pattern, bigram_cost::kMinor, candidates);
+  }
+
+  const char32_t ending = codepoints[stem_end];
+  if (ending == core::hiragana::kRu || ending == core::hiragana::kRe || ending == U'ろ' ||
+      ending == core::hiragana::kYo) {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, stem_end + 1, lemma,
+                                        dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru, pattern,
+                                        bigram_cost::kMinor, candidates);
+  }
+}
+
 }  // namespace
 
 void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
@@ -439,27 +467,8 @@ void appendMiruAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size
     return;
   }
 
-  // The ichidan volitional is みよ+う, not the renyokei boundary み+よう.
-  // Leave that form to the two-kana candidate below so the general stem rule
-  // cannot create the spurious latter analysis.
-  const bool is_volitional_stem = start_pos + 1 < codepoints.size() && codepoints[start_pos + 1] == core::hiragana::kYo;
-  if (!is_volitional_stem && grammaticalStemFollowerStartsAt(codepoints, start_pos + 1, dict_manager)) {
-    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 1, "みる",
-                                        dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru,
-                                        "hiragana_miru_auxiliary", bigram_cost::kMinor, candidates);
-  }
-
-  if (start_pos + 1 >= codepoints.size()) {
-    return;
-  }
-  // 一段活用の終止・仮定・命令・意志形: みる/みれ/みろ/みよ.
-  const char32_t ending = codepoints[start_pos + 1];
-  if (ending == core::hiragana::kRu || ending == core::hiragana::kRe || ending == U'ろ' ||
-      ending == core::hiragana::kYo) {
-    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "みる",
-                                        dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru,
-                                        "hiragana_miru_auxiliary", bigram_cost::kMinor, candidates);
-  }
+  appendContextualIchidanSubsidiaryForms(codepoints, start_pos, start_pos + 1, "みる", "hiragana_miru_auxiliary",
+                                         dict_manager, candidates);
 }
 
 // 見せる is a closed subsidiary verb after a te-form (読んでみせる). Its
@@ -472,23 +481,8 @@ void appendMiseruAuxiliaryCandidates(const std::vector<char32_t>& codepoints, si
       !isClearTeFormBeforeSubsidiary(codepoints, start_pos, true)) {
     return;
   }
-  // 見せる likewise inflects to みせよ+う rather than みせ+よう.
-  const bool is_volitional_stem = start_pos + 2 < codepoints.size() && codepoints[start_pos + 2] == core::hiragana::kYo;
-  if (!is_volitional_stem && grammaticalStemFollowerStartsAt(codepoints, start_pos + 2, dict_manager)) {
-    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "みせる",
-                                        dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru,
-                                        "hiragana_miseru_auxiliary", bigram_cost::kMinor, candidates);
-  }
-  if (start_pos + 2 >= codepoints.size()) {
-    return;
-  }
-  const char32_t ending = codepoints[start_pos + 2];
-  if (ending == core::hiragana::kRu || ending == core::hiragana::kRe || ending == U'ろ' ||
-      ending == core::hiragana::kYo) {
-    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 3, "みせる",
-                                        dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru,
-                                        "hiragana_miseru_auxiliary", bigram_cost::kMinor, candidates);
-  }
+  appendContextualIchidanSubsidiaryForms(codepoints, start_pos, start_pos + 2, "みせる", "hiragana_miseru_auxiliary",
+                                         dict_manager, candidates);
 }
 
 // The benefactive auxiliary あげる has the ichidan stem あげ before the
