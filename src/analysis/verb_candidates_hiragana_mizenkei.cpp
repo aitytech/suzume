@@ -74,13 +74,10 @@ bool hasFormalNounPrefixBoundary(const dictionary::DictionaryManager* dict_manag
     return false;
   }
   for (size_t prefix_len = 2; prefix_len + 2 <= total_len; ++prefix_len) {
-    std::string prefix = extractSubstring(codepoints, start_pos, start_pos + prefix_len);
-    auto results = dict_manager->lookup(prefix, 0);
-    for (const auto& result : results) {
-      if (result.entry != nullptr && result.entry->surface == prefix && result.entry->pos == core::PartOfSpeech::Noun &&
-          result.entry->extended_pos == core::ExtendedPOS::NounFormal) {
-        return true;
-      }
+    const std::string prefix = extractSubstring(codepoints, start_pos, start_pos + prefix_len);
+    const auto* entry = dict_manager->lookupExact(prefix, core::PartOfSpeech::Noun);
+    if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::NounFormal) {
+      return true;
     }
   }
   return false;
@@ -167,11 +164,9 @@ bool pronounEndsAt(const dictionary::DictionaryManager* dict_manager, const std:
   }
   const size_t max_len = pos < 3 ? pos : 3;
   for (size_t len = 1; len <= max_len; ++len) {
-    std::string word = extractSubstring(codepoints, pos - len, pos);
-    for (const auto& result : dict_manager->lookup(word, 0)) {
-      if (result.entry != nullptr && result.length == len && result.entry->pos == core::PartOfSpeech::Pronoun) {
-        return true;
-      }
+    const std::string word = extractSubstring(codepoints, pos - len, pos);
+    if (dict_manager->lookupExact(word, core::PartOfSpeech::Pronoun) != nullptr) {
+      return true;
     }
   }
   return false;

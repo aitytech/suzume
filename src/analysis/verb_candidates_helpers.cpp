@@ -356,12 +356,9 @@ bool formalNounFollowsAt(const dictionary::DictionaryManager* dict_manager, cons
 std::string lookupVerbLemma(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
                             std::string_view fallback) {
   if (dict_manager != nullptr) {
-    auto results = dict_manager->lookup(surface, 0);
-    for (const auto& result : results) {
-      if (result.entry != nullptr && result.entry->surface == surface &&
-          result.entry->pos == core::PartOfSpeech::Verb && !result.entry->lemma.empty()) {
-        return result.entry->lemma;
-      }
+    const auto* entry = dict_manager->lookupExact(surface, core::PartOfSpeech::Verb);
+    if (entry != nullptr && !entry->lemma.empty()) {
+      return entry->lemma;
     }
   }
   return std::string(fallback);
