@@ -20,6 +20,7 @@ add_library(suzume_analysis OBJECT
   scorer.cpp
   scorer_connection_cost.cpp
   scorer_connection_rules_renyokei.cpp
+  scorer_connection_rules_voice.cpp
   scorer_connection_rules_lexical.cpp
   scorer_connection_rules_verb.cpp
   scorer_options_loader.cpp
