@@ -94,6 +94,17 @@ bool addPassiveContinuativeTailCandidates(core::Lattice& lattice, const std::vec
                                           size_t start_pos, size_t kanji_end,
                                           const dictionary::DictionaryManager& dict_manager);
 
+// Resolves V2 forms, verifies the corresponding V1, and returns the highest-priority
+// match. The caller retains V2 boundary discovery and emits the selected edge separately.
+CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector<char32_t>& codepoints,
+                                        const ByteOffsets& byte_offsets, size_t start_pos,
+                                        const std::vector<normalize::CharType>& char_types, size_t kanji_end,
+                                        size_t v2_start, char32_t base_ending, bool is_sokuonbin, bool is_ichidan,
+                                        bool has_kanji_v2_after_bare_ichidan, bool dict_compound_v1,
+                                        std::string_view dict_compound_v1_lemma,
+                                        const dictionary::DictionaryManager& dict_manager,
+                                        const grammar::Inflection& inflection);
+
 void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
                                 const ByteOffsets& byte_offsets, size_t start_pos, size_t v2_start,
                                 const CompoundVerbMatch& match, const dictionary::DictionaryManager& dict_manager,

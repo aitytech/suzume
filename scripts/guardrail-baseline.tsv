@@ -10,8 +10,9 @@ src/analysis/bigram_table_particle_lexical.cpp	0	0	0
 src/analysis/bigram_table_verb_adj.cpp	0	0	0
 src/analysis/compound_verb_emit.cpp	0	4	0
 src/analysis/compound_verb_forms.cpp	0	0	0
+src/analysis/compound_verb_match.cpp	0	5	0
 src/analysis/compound_verb_voice.cpp	0	0	0
-src/analysis/join_compound_verb.cpp	0	5	0
+src/analysis/join_compound_verb.cpp	0	0	0
 src/analysis/join_compound_verb_hiragana.cpp	0	2	0
 src/analysis/join_compound_verb_lexicon.cpp	0	0	0
 src/analysis/join_noun.cpp	0	18	0
