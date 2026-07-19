@@ -37,6 +37,8 @@ add_library(suzume_analysis OBJECT
   suffix_candidates_prefix.cpp
   suffix_candidates_suffix.cpp
   tokenizer.cpp
+  tokenizer_dictionary.cpp
+  tokenizer_unknown.cpp
   tokenizer_utils.cpp
   unknown.cpp
   unknown_same_type.cpp

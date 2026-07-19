@@ -34,7 +34,9 @@ src/analysis/suffix_candidates_compound.cpp	0	16	0
 src/analysis/suffix_candidates_counter.cpp	0	6	0
 src/analysis/suffix_candidates_prefix.cpp	0	2	0
 src/analysis/suffix_candidates_suffix.cpp	0	10	0
-src/analysis/tokenizer.cpp	0	8	0
+src/analysis/tokenizer.cpp	0	0	0
+src/analysis/tokenizer_dictionary.cpp	0	2	0
+src/analysis/tokenizer_unknown.cpp	0	6	0
 src/analysis/tokenizer_utils.cpp	0	0	0
 src/analysis/unknown.cpp	0	20	0
 src/analysis/unknown_same_type.cpp	0	13	0
