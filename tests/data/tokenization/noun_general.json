@@ -3484,6 +3484,33 @@
       ],
       "id": "minogashi_nominalized_noun",
       "input": "見逃し"
+    },
+    {
+      "description": "Voiced all-over suffix after nominal base",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "づくめ",
+          "pos": "Suffix",
+          "surface": "づくめ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "手順",
+          "pos": "Noun",
+          "surface": "手順"
+        }
+      ],
+      "id": "voiced_all_over_suffix",
+      "input": "確認づくめの手順"
     }
   ],
   "description": "General nouns",

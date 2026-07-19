@@ -35,6 +35,9 @@ struct SubsidiaryVerb {
   const char* reading;      // Hiragana reading (nullptr if same as surface)
   const char* base_ending;  // Base form ending for verb type detection
   V2VerbType verb_type;     // Determines renyokei generation
+  // Sahen continuatives normally join their lexical V2 (し続ける).  V2s
+  // whose preceding し remains an independent search unit opt out here.
+  bool joins_suru{true};
 };
 
 // List of V2 verbs that can form compound verbs
@@ -87,44 +90,45 @@ inline constexpr SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"上る", "のぼる", "る", V2VerbType::Godan},    // 立ち上る, 這い上る
     {"こもる", "こもる", "る", V2VerbType::Godan},  // 閉じこもる, 立てこもる, 引きこもる
     // Ichidan verbs (一段)
-    {"続ける", "つづける", "ける", V2VerbType::Ichidan},    // 読み続ける, 読みつづける
-    {"まとめる", "まとめる", "める", V2VerbType::Ichidan},  // 取りまとめる
-    {"つける", nullptr, "ける", V2VerbType::Ichidan},       // 見つける
-    {"替える", "かえる", "える", V2VerbType::Ichidan},      // 切り替える
-    {"換える", "かえる", "える", V2VerbType::Ichidan},      // 入れ換える
-    {"合わせる", "あわせる", "せる", V2VerbType::Ichidan},  // 組み合わせる
-    {"浮かべる", "うかべる", "べる", V2VerbType::Ichidan},  // 思い浮かべる
-    {"切れる", "きれる", "れる", V2VerbType::Ichidan},      // 使い切れる
-    {"出る", "でる", "る", V2VerbType::Ichidan},            // 飛び出る
-    {"上げる", "あげる", "げる", V2VerbType::Ichidan},      // 売り上げる, 取り上げる
-    {"下げる", "さげる", "げる", V2VerbType::Ichidan},      // 引き下げる
-    {"抜ける", "ぬける", "ける", V2VerbType::Ichidan},      // 突き抜ける
-    {"着く", "つく", "く", V2VerbType::Godan},              // 落ち着く, たどり着く
-    {"取る", "とる", "る", V2VerbType::Godan},              // 搾り取る, 掠め取る
-    {"越す", "こす", "す", V2VerbType::Godan},              // 引っ越す, 追い越す
-    {"越える", "こえる", "える", V2VerbType::Ichidan},      // 乗り越える, 飛び越える
-    {"張る", "はる", "る", V2VerbType::Godan},              // 引っ張る, 頑張る
-    {"叫ぶ", "さけぶ", "ぶ", V2VerbType::Godan},            // 泣き叫ぶ, 喚き叫ぶ
-    {"注ぐ", "そそぐ", "ぐ", V2VerbType::Godan},            // 降り注ぐ, 流し注ぐ
-    {"継ぐ", "つぐ", "ぐ", V2VerbType::Godan},              // 語り継ぐ, 受け継ぐ, 引き継ぐ
-    {"刺す", "さす", "す", V2VerbType::Godan},              // 突き刺す, 差し刺す
-    {"望む", "のぞむ", "む", V2VerbType::Godan},            // 待ち望む, 見望む
-    {"落とす", "おとす", "す", V2VerbType::Godan},          // 切り落とす, 打ち落とす
-    {"落ちる", "おちる", "ちる", V2VerbType::Ichidan},      // 転げ落ちる
-    {"掛ける", "かける", "ける", V2VerbType::Ichidan},      // 呼び掛ける, 働き掛ける
-    {"付ける", "つける", "ける", V2VerbType::Ichidan},      // 押し付ける, 決め付ける
-    {"入れる", "いれる", "れる", V2VerbType::Ichidan},      // 取り入れる, 持ち入れる
-    {"分ける", "わける", "ける", V2VerbType::Ichidan},      // 切り分ける, 振り分ける
-    {"立てる", "たてる", "てる", V2VerbType::Ichidan},      // 組み立てる, 打ち立てる
-    {"重ねる", "かさねる", "ねる", V2VerbType::Ichidan},    // 積み重ねる, 折り重ねる
-    {"広げる", "ひろげる", "げる", V2VerbType::Ichidan},    // 繰り広げる, 押し広げる
-    {"支える", "ささえる", "える", V2VerbType::Ichidan},    // 差し支える
-    {"受ける", "うける", "ける", V2VerbType::Ichidan},      // 引き受ける, 請け受ける
-    {"降りる", "おりる", "りる", V2VerbType::Ichidan},      // 乗り降りる
-    {"締める", "しめる", "める", V2VerbType::Ichidan},      // 抱きしめる, 締め締める
-    {"止める", "とめる", "める", V2VerbType::Ichidan},      // 受け止める, 食い止める
-    {"入る", "いる", "る", V2VerbType::Godan},              // 飛び入る, 立ち入る
-    {"止まる", "とまる", "る", V2VerbType::Godan},          // 立ち止まる, 踏み止まる, 思い止まる
+    {"続ける", "つづける", "ける", V2VerbType::Ichidan},             // 読み続ける, 読みつづける
+    {"まとめる", "まとめる", "める", V2VerbType::Ichidan},           // 取りまとめる
+    {"つける", nullptr, "ける", V2VerbType::Ichidan},                // 見つける
+    {"替える", "かえる", "える", V2VerbType::Ichidan},               // 切り替える
+    {"換える", "かえる", "える", V2VerbType::Ichidan},               // 入れ換える
+    {"合わせる", "あわせる", "せる", V2VerbType::Ichidan},           // 組み合わせる
+    {"浮かべる", "うかべる", "べる", V2VerbType::Ichidan},           // 思い浮かべる
+    {"切れる", "きれる", "れる", V2VerbType::Ichidan},               // 使い切れる
+    {"間違える", "まちがえる", "える", V2VerbType::Ichidan, false},  // 書き間違える
+    {"出る", "でる", "る", V2VerbType::Ichidan},                     // 飛び出る
+    {"上げる", "あげる", "げる", V2VerbType::Ichidan},               // 売り上げる, 取り上げる
+    {"下げる", "さげる", "げる", V2VerbType::Ichidan},               // 引き下げる
+    {"抜ける", "ぬける", "ける", V2VerbType::Ichidan},               // 突き抜ける
+    {"着く", "つく", "く", V2VerbType::Godan},                       // 落ち着く, たどり着く
+    {"取る", "とる", "る", V2VerbType::Godan},                       // 搾り取る, 掠め取る
+    {"越す", "こす", "す", V2VerbType::Godan},                       // 引っ越す, 追い越す
+    {"越える", "こえる", "える", V2VerbType::Ichidan},               // 乗り越える, 飛び越える
+    {"張る", "はる", "る", V2VerbType::Godan},                       // 引っ張る, 頑張る
+    {"叫ぶ", "さけぶ", "ぶ", V2VerbType::Godan},                     // 泣き叫ぶ, 喚き叫ぶ
+    {"注ぐ", "そそぐ", "ぐ", V2VerbType::Godan},                     // 降り注ぐ, 流し注ぐ
+    {"継ぐ", "つぐ", "ぐ", V2VerbType::Godan},                       // 語り継ぐ, 受け継ぐ, 引き継ぐ
+    {"刺す", "さす", "す", V2VerbType::Godan},                       // 突き刺す, 差し刺す
+    {"望む", "のぞむ", "む", V2VerbType::Godan},                     // 待ち望む, 見望む
+    {"落とす", "おとす", "す", V2VerbType::Godan},                   // 切り落とす, 打ち落とす
+    {"落ちる", "おちる", "ちる", V2VerbType::Ichidan},               // 転げ落ちる
+    {"掛ける", "かける", "ける", V2VerbType::Ichidan},               // 呼び掛ける, 働き掛ける
+    {"付ける", "つける", "ける", V2VerbType::Ichidan},               // 押し付ける, 決め付ける
+    {"入れる", "いれる", "れる", V2VerbType::Ichidan},               // 取り入れる, 持ち入れる
+    {"分ける", "わける", "ける", V2VerbType::Ichidan},               // 切り分ける, 振り分ける
+    {"立てる", "たてる", "てる", V2VerbType::Ichidan},               // 組み立てる, 打ち立てる
+    {"重ねる", "かさねる", "ねる", V2VerbType::Ichidan},             // 積み重ねる, 折り重ねる
+    {"広げる", "ひろげる", "げる", V2VerbType::Ichidan},             // 繰り広げる, 押し広げる
+    {"支える", "ささえる", "える", V2VerbType::Ichidan},             // 差し支える
+    {"受ける", "うける", "ける", V2VerbType::Ichidan},               // 引き受ける, 請け受ける
+    {"降りる", "おりる", "りる", V2VerbType::Ichidan},               // 乗り降りる
+    {"締める", "しめる", "める", V2VerbType::Ichidan},               // 抱きしめる, 締め締める
+    {"止める", "とめる", "める", V2VerbType::Ichidan},               // 受け止める, 食い止める
+    {"入る", "いる", "る", V2VerbType::Godan},                       // 飛び入る, 立ち入る
+    {"止まる", "とまる", "る", V2VerbType::Godan},  // 立ち止まる, 踏み止まる, 思い止まる
 };
 
 // Sokuonbin-compatible godan verb endings (く, つ, う, る)

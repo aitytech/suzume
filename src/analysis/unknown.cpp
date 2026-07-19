@@ -53,6 +53,20 @@ bool spansConjunctionStart(const suzume::analysis::UnknownCandidate& candidate, 
       std::string conjunction = suzume::analysis::extractSubstring(codepoints, boundary, conjunction_end);
       if (dict_manager->lookupExact(conjunction, suzume::core::PartOfSpeech::Conjunction) != nullptr &&
           (boundary > candidate.start || conjunction_end > candidate.end)) {
+        // A two-kanji content noun can overlap the first kanji of a
+        // conjunction whose last mora is an independent case particle
+        // (変更+に, not 変+更に).  Keep that noun candidate so the lattice can
+        // evaluate the grammatical case boundary.  Topic-final conjunctions
+        // such as 又は remain protected by the ordinary hard boundary below.
+        const bool conjunction_leaves_one_case_particle =
+            boundary + 1 == candidate.end && conjunction_end == candidate.end + 1;
+        if (conjunction_leaves_one_case_particle) {
+          const std::string trailing = suzume::analysis::extractSubstring(codepoints, candidate.end, conjunction_end);
+          const auto* particle = dict_manager->lookupExact(trailing, suzume::core::PartOfSpeech::Particle);
+          if (particle != nullptr && particle->extended_pos == suzume::core::ExtendedPOS::ParticleCase) {
+            continue;
+          }
+        }
         return true;
       }
     }

@@ -160,6 +160,9 @@ void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, siz
   };
 
   for (const auto& subsidiary : compound_verb_detail::kSubsidiaryVerbs) {
+    if (!subsidiary.joins_suru) {
+      continue;
+    }
     const std::string_view reading = subsidiary.reading == nullptr ? std::string_view{} : subsidiary.reading;
     const auto conjugation =
         compound_verb_detail::compoundConjugationType(subsidiary.verb_type, subsidiary.base_ending);
@@ -196,7 +199,8 @@ void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, siz
     const auto tryMizenkei = [&](const std::string& form, std::string_view lemma_base) {
       if (matchesAt(v2_start, form)) {
         const size_t end_pos = v2_start + normalize::utf8Length(form);
-        if (end_pos < codepoints.size() && (codepoints[end_pos] == U'な' || codepoints[end_pos] == U'ず')) {
+        if (end_pos < codepoints.size() &&
+            (codepoints[end_pos] == U'な' || codepoints[end_pos] == U'ず' || codepoints[end_pos] == U'ら')) {
           addCandidate(end_pos, lemma_base, core::ExtendedPOS::VerbMizenkei, "suru_subsidiary_mizenkei");
         }
       }

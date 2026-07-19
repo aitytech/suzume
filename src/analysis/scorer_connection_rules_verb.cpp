@@ -37,11 +37,20 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   float bonus{};  // value-init to 0
 
   // A generated compound predicate retains its lexical unit through its
-  // connective continuation (思い出し+て). This
-  // prevents a dictionary nominalization plus a short homographic verb from
-  // winning solely through an unrelated lexical word cost.
-  if (prev.origin == core::CandidateOrigin::VerbCompound && next.extended_pos == core::ExtendedPOS::ParticleConj) {
-    bonus += cost::kStrongBonus + cost::kMinorBonus;
+  // connective continuation (思い出し+て). This prevents a dictionary
+  // nominalization plus a short homographic verb from winning solely through
+  // an unrelated lexical word cost.  The same semantic group covers two
+  // closed inflectional continuations: 係結び+仮定形 and 〜ておく+べき.
+  const bool compound_connective =
+      prev.origin == core::CandidateOrigin::VerbCompound && next.extended_pos == core::ExtendedPOS::ParticleConj;
+  const bool binding_hypothetical =
+      prev.extended_pos == core::ExtendedPOS::ParticleBinding && next.extended_pos == core::ExtendedPOS::VerbKateikei;
+  const bool preparatory_obligation =
+      prev.extended_pos == core::ExtendedPOS::AuxAspectOku && next.extended_pos == core::ExtendedPOS::AuxClassicalBeshi;
+  if (compound_connective || binding_hypothetical || preparatory_obligation) {
+    bonus += (compound_connective ? cost::kStrongBonus + cost::kMinorBonus : cost::kNeutral) +
+             (binding_hypothetical ? cost::kVeryStrongBonus : cost::kNeutral) +
+             (preparatory_obligation ? cost::kStrongBonus : cost::kNeutral);
   }
 
   // A sufficiently long pure-hiragana sokuonbin is a complete verbal stem.
@@ -67,9 +76,17 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // irregular suru predicate. Keep this connection available beside the
   // homographic verbal-noun analysis rather than forcing every such phrase
   // through a noun boundary.
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      next.lemma == "する") {
-    bonus += cost::kMinorBonus;
+  // A sahen continuative may be followed by a dictionary-verified lexical V2
+  // while retaining its search boundary (確認し+間違える).  This is distinct
+  // from an arbitrary unknown verb sequence, so the lexical gate keeps the
+  // connection from promoting fabricated kanji fragments.
+  const bool renyokei_suru_compound = prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+                                      next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.lemma == "する";
+  const bool sahen_lexical_v2 = prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.lemma == "する" &&
+                                next.extended_pos == core::ExtendedPOS::VerbShuushikei && next.fromDictionary();
+  if (renyokei_suru_compound || sahen_lexical_v2) {
+    bonus += (renyokei_suru_compound ? cost::kMinorBonus : cost::kNeutral) +
+             (sahen_lexical_v2 ? cost::kVeryStrongBonus : cost::kNeutral);
   }
 
   // Demonstrative manner adverbs form closed compound adverbs with して
@@ -841,12 +858,23 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
     bonus += cost::kStrongBonus + cost::kModerateBonus;
   }
 
-  // The literary connective ずして is the classical negative auxiliary
-  // followed by the renyokei of する.  Prefer that verbal continuation over
-  // the homographic conjunctive-particle し (あら+ず+し+て).
-  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNu && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      next.lemma == "する") {
-    bonus += cost::kVeryStrongBonus;
+  // A topic particle cannot directly select the classical negative auxiliary.
+  // In sequences such as 〜たはずだ, the apparent は+ず boundary is the formal
+  // noun はず, not a predicate followed by negation.
+  // Ichidan stems are both continuative and irrealis.  After the suru
+  // continuative, their irrealis reading is licensed before a negative
+  // auxiliary (確認し+終え+ない) rather than an unrelated unknown noun.
+  const bool classical_negative_suru = prev.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
+                                       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.lemma == "する";
+  const bool topic_before_classical_negative =
+      prev.extended_pos == core::ExtendedPOS::ParticleTopic && next.extended_pos == core::ExtendedPOS::AuxNegativeNu;
+  const bool sahen_ichidan_irrealis = prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.lemma == "する" &&
+                                      next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
+                                      next.conj_type == dictionary::ConjugationType::Ichidan;
+  if (classical_negative_suru || topic_before_classical_negative || sahen_ichidan_irrealis) {
+    bonus += (classical_negative_suru ? cost::kVeryStrongBonus : cost::kNeutral) +
+             (topic_before_classical_negative ? cost::kProhibitive : cost::kNeutral) +
+             (sahen_ichidan_irrealis ? cost::kVeryStrongBonus : cost::kNeutral);
   }
 
   // The copula's conjunctive form is で; an emphatic small-tsu variant cannot

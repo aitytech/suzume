@@ -350,13 +350,13 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     surface_bonus += cost::kVeryRare;  // 1.8
   }
 
-  // Penalty for AuxCopulaDa(な) → し(PART_接続) pattern
-  // な is the adnominal form of copula だ, normally followed by a noun (きれいな人)
-  // な+し as copula+conjunction is invalid - this prevents はなし → は+な+し
-  // The bigram AuxCopulaDa→ParticleConj bonus (-0.8) is for だ+し, not な+し
-  // BUT: な+のに and な+ので are valid (嫌なのに, 嫌なので) - only penalize し
+  // The attributive copula な normally takes a noun or nominalizer.  It
+  // cannot directly precede an arbitrary conjunction: only the
+  // nominalizer-led なので/なのに forms are valid.  This keeps a closed
+  // particle such as など from being split into な+ど while preserving those
+  // productive copular constructions.
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && prev.surface == "な" &&
-      next.extended_pos == core::ExtendedPOS::ParticleConj && next.surface == "し") {
+      next.extended_pos == core::ExtendedPOS::ParticleConj && !utf8::startsWith(next.surface, "の")) {
     surface_bonus += cost::kVeryRare;  // Cancel the -0.8 bonus and add penalty
   }
 

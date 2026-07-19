@@ -3421,6 +3421,55 @@
       ],
       "id": "particle_final_open_ichidan_homograph_te",
       "input": "水をかけて"
+    },
+    {
+      "description": "Kanji noun before case particle overlapping conjunction",
+      "expected": [
+        {
+          "lemma": "変更",
+          "pos": "Noun",
+          "surface": "変更"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "伴う",
+          "pos": "Verb",
+          "surface": "伴う"
+        },
+        {
+          "lemma": "処理",
+          "pos": "Noun",
+          "surface": "処理"
+        }
+      ],
+      "id": "kanji_noun_case_boundary",
+      "input": "変更に伴う処理"
+    },
+    {
+      "description": "Sahen compound continuative before passive auxiliary",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "し続ける",
+          "pos": "Verb",
+          "surface": "し続け"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "suru_continuative_passive",
+      "input": "確認し続けられる"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

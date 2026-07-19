@@ -414,11 +414,12 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   }
 
   // ところで is a discourse conjunction only at a clause boundary. Likewise,
-  // ついで following a past form is the formal noun in an incidental-action
+  // ところが and ついで following a past form are formal-noun constructions
   // construction. After a formal noun or a past/copular auxiliary, keep the
   // compositional reading (読んだところで, 読んだついで) over a fused
   // conjunction candidate.
-  if (next.extended_pos == core::ExtendedPOS::Conjunction && utf8::equalsAny(next.surface, {"ところで", "ついで"}) &&
+  if (next.extended_pos == core::ExtendedPOS::Conjunction &&
+      utf8::equalsAny(next.surface, {"ところで", "ところが", "ついで"}) &&
       (prev.extended_pos == core::ExtendedPOS::NounFormal || prev.extended_pos == core::ExtendedPOS::AuxTenseTa ||
        prev.extended_pos == core::ExtendedPOS::AuxCopulaDa || prev.extended_pos == core::ExtendedPOS::VerbTaForm ||
        prev.extended_pos == core::ExtendedPOS::ParticleNo)) {

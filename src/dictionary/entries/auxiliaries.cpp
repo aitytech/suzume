@@ -402,8 +402,10 @@ EntrySpecRange getAuxiliaryEntries() {
       suffix("抜き", "抜き"),
       suffix("ぬき", "ぬき"),
 
-      // All-over suffix: 白ずくめ, 欠点ずくめ.
+      // All-over suffix: 白ずくめ, 欠点ずくめ.  The voiced allomorph is
+      // productive after nominal bases (確認づくめ).
       suffix("ずくめ", "ずくめ"),
+      suffix("づくめ", "づくめ"),
 
       // Interval suffix: 一日おき, 一時間おき.
       suffix("おき", "おき"),
