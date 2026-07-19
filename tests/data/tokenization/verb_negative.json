@@ -110,69 +110,6 @@
         "category": "grammar-valid-difference",
         "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
       },
-      "description": "書かなくちゃいけない - regression test",
-      "expected": [
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書か"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なく"
-        },
-        {
-          "lemma": "ちゃ",
-          "pos": "Particle",
-          "surface": "ちゃ"
-        },
-        {
-          "lemma": "いける",
-          "pos": "Auxiliary",
-          "surface": "いけ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ],
-      "id": "kanakuchi_ikenai",
-      "input": "書かなくちゃいけない",
-      "suzume_expected": [
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書か"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "なく"
-        },
-        {
-          "lemma": "ちゃ",
-          "pos": "Particle",
-          "surface": "ちゃ"
-        },
-        {
-          "lemma": "いける",
-          "pos": "Verb",
-          "surface": "いけ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
-    },
-    {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "食べなくちゃならない - regression test",
       "expected": [
         {
@@ -284,6 +221,69 @@
       ],
       "id": "nakeri_naranai",
       "input": "見なけりゃならない"
+    },
+    {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "なくは公開トークン契約により連用形の形容詞として保持し、短縮義務形のいけは補助動詞として解析する。"
+      },
+      "description": "書かなくちゃいけない - 短縮義務形の補助動詞",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "ちゃ",
+          "pos": "Particle",
+          "surface": "ちゃ"
+        },
+        {
+          "lemma": "いける",
+          "pos": "Auxiliary",
+          "surface": "いけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "kanakuchi_ikenai",
+      "input": "書かなくちゃいけない",
+      "suzume_expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "ちゃ",
+          "pos": "Particle",
+          "surface": "ちゃ"
+        },
+        {
+          "lemma": "いける",
+          "pos": "Auxiliary",
+          "surface": "いけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ]
     }
   ],
   "description": "verb_negative tests",

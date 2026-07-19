@@ -591,6 +591,47 @@ void resolveBenefactivePotential(std::vector<core::Morpheme>& result) {
   }
 }
 
+// A clause-initial inability form has no predicate to attach to, so it is the
+// lexical verb rather than a subsidiary auxiliary (かね+ない).  The lattice
+// retains the closed-class candidate because the continuation alone is also
+// valid for an auxiliary; the missing predecessor supplies the distinction.
+void resolveInitialInabilityVerb(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
+    const bool starts_clause = idx == 0 || result[idx - 1].pos == core::PartOfSpeech::Symbol;
+    auto& inability = result[idx];
+    const auto& negative = result[idx + 1];
+    if (!starts_clause || inability.extended_pos != core::ExtendedPOS::AuxInability ||
+        negative.extended_pos != core::ExtendedPOS::AuxNegativeNai) {
+      continue;
+    }
+    inability.pos = core::PartOfSpeech::Verb;
+    inability.extended_pos = core::ExtendedPOS::VerbMizenkei;
+    inability.conj_form = grammar::ConjForm::Mizenkei;
+  }
+}
+
+// After an unvoiced te-form, the negative e-row receiving form is a finite
+// potential verb (書いて+もらえ+ない), while the voiced de-form retains the
+// benefactive auxiliary reading (読んで+もらえ+ない).  The e-row gate excludes
+// Godan benefactives such as やら+ない. Resolve this only after the complete
+// three-token context is available.
+void resolveTeBenefactiveNegativePotential(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
+    const auto& connective = result[idx - 1];
+    auto& benefactive = result[idx];
+    const auto& negative = result[idx + 1];
+    if (connective.surface != "て" || connective.extended_pos != core::ExtendedPOS::ParticleConj ||
+        benefactive.extended_pos != core::ExtendedPOS::AuxBenefactive || !grammar::endsWithERow(benefactive.surface) ||
+        negative.extended_pos != core::ExtendedPOS::AuxNegativeNai) {
+      continue;
+    }
+    benefactive.pos = core::PartOfSpeech::Verb;
+    benefactive.extended_pos = core::ExtendedPOS::VerbMizenkei;
+    benefactive.conj_type = dictionary::ConjugationType::Ichidan;
+    benefactive.conj_form = grammar::ConjForm::Mizenkei;
+  }
+}
+
 // A finite いる directly after the connective te/de particle is the
 // progressive auxiliary. The lattice preserves the lexical verb candidate so
 // existential uses remain available, then this complete local context assigns
@@ -1332,6 +1373,8 @@ std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> r
 
   resolveParticleAruOnbin(result);
   resolveBenefactivePotential(result);
+  resolveInitialInabilityVerb(result);
+  resolveTeBenefactiveNegativePotential(result);
   resolveProgressiveIru(result);
   resolveSahenRenyokei(result);
   resolveDemonstrativeQuotativeOnbin(result);

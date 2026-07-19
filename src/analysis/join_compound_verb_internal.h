@@ -55,6 +55,7 @@ inline constexpr SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"返す", "かえす", "す", V2VerbType::Godan},    // 繰り返す, 繰りかえす
     {"戻す", "もどす", "す", V2VerbType::Godan},    // 取り戻す, 取りもどす
     {"返る", "かえる", "る", V2VerbType::Godan},    // 振り返る, 振りかえる
+    {"帰る", "かえる", "る", V2VerbType::Godan},    // 持ち帰る
     {"変わる", "かわる", "る", V2VerbType::Godan},  // 移り変わる, 生まれ変わる
     {"替わる", "かわる", "る", V2VerbType::Godan},  // 入れ替わる, 切り替わる
     {"つかる", nullptr, "る", V2VerbType::Godan},   // 見つかる
@@ -87,6 +88,7 @@ inline constexpr SubsidiaryVerb kSubsidiaryVerbs[] = {
     {"こもる", "こもる", "る", V2VerbType::Godan},  // 閉じこもる, 立てこもる, 引きこもる
     // Ichidan verbs (一段)
     {"続ける", "つづける", "ける", V2VerbType::Ichidan},    // 読み続ける, 読みつづける
+    {"まとめる", "まとめる", "める", V2VerbType::Ichidan},  // 取りまとめる
     {"つける", nullptr, "ける", V2VerbType::Ichidan},       // 見つける
     {"替える", "かえる", "える", V2VerbType::Ichidan},      // 切り替える
     {"換える", "かえる", "える", V2VerbType::Ichidan},      // 入れ換える
@@ -138,6 +140,11 @@ std::string generateRenyokei(std::string_view surface, std::string_view reading,
 // Godan: replace ending with a-row (込む→込ま, 返す→返さ)
 // Ichidan: drop る (続ける→続け, same as renyokei for ichidan)
 std::string generateMizenkei(std::string_view surface, std::string_view reading, V2VerbType verb_type);
+
+// Generate kateikei surface from base form
+// Godan: replace ending with e-row (返す→返せ)
+// Ichidan: replace る with れ (続ける→続けれ)
+std::string generateKateikei(std::string_view surface, std::string_view reading, V2VerbType verb_type);
 
 // Generate a Godan potential form (戻す→戻せる) from the dictionary form.
 // The V2 allowlist controls which lexical verbs participate; this merely shares

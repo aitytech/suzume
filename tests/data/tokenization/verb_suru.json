@@ -845,6 +845,111 @@
       ],
       "id": "tsuide_sequential_conjunction",
       "input": "次いで実施する"
+    },
+    {
+      "description": "サ変の準備補助動詞の否定形",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Auxiliary",
+          "surface": "おか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "suru_oku_negative",
+      "input": "確認しておかない"
+    },
+    {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "なくは公開トークン契約により連用形の形容詞として保持し、短縮義務形のいけは補助動詞として解析する。"
+      },
+      "description": "サ変の短縮義務形",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "ちゃ",
+          "pos": "Particle",
+          "surface": "ちゃ"
+        },
+        {
+          "lemma": "いける",
+          "pos": "Auxiliary",
+          "surface": "いけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "suru_nakucha_ikenai",
+      "input": "確認しなくちゃいけない",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "ちゃ",
+          "pos": "Particle",
+          "surface": "ちゃ"
+        },
+        {
+          "lemma": "いける",
+          "pos": "Auxiliary",
+          "surface": "いけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ]
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

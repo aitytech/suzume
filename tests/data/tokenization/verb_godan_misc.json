@@ -3264,6 +3264,163 @@
       ],
       "id": "verb_godan_tsuzuku_shuryouirai",
       "input": "終了以来続いている"
+    },
+    {
+      "description": "終助詞と同形の開始音を持つ開放語動詞",
+      "expected": [
+        {
+          "lemma": "混雑",
+          "pos": "Noun",
+          "surface": "混雑"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さける",
+          "pos": "Verb",
+          "surface": "さける"
+        }
+      ],
+      "id": "particle_final_open_ichidan",
+      "input": "混雑をさける"
+    },
+    {
+      "description": "終助詞と同形の開始音を持つ開放語一段動詞の否定形",
+      "expected": [
+        {
+          "lemma": "混雑",
+          "pos": "Noun",
+          "surface": "混雑"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さける",
+          "pos": "Verb",
+          "surface": "さけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "particle_final_open_ichidan_negative",
+      "input": "混雑をさけない"
+    },
+    {
+      "description": "終助詞と同形の開始音を持つ開放語一段動詞のテ形",
+      "expected": [
+        {
+          "lemma": "混雑",
+          "pos": "Noun",
+          "surface": "混雑"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さける",
+          "pos": "Verb",
+          "surface": "さけ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "particle_final_open_ichidan_te",
+      "input": "混雑をさけて"
+    },
+    {
+      "description": "終助詞と同形の開始音を持つ開放語一段動詞の過去形",
+      "expected": [
+        {
+          "lemma": "混雑",
+          "pos": "Noun",
+          "surface": "混雑"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さける",
+          "pos": "Verb",
+          "surface": "さけ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "particle_final_open_ichidan_past",
+      "input": "混雑をさけた"
+    },
+    {
+      "description": "終助詞と同形の開始音を持つ別の一段動詞の過去形",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "かける",
+          "pos": "Verb",
+          "surface": "かけ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "particle_final_open_ichidan_homograph_past",
+      "input": "水をかけた"
+    },
+    {
+      "description": "終助詞と同形の開始音を持つ別の一段動詞のテ形",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "かける",
+          "pos": "Verb",
+          "surface": "かけ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "particle_final_open_ichidan_homograph_te",
+      "input": "水をかけて"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

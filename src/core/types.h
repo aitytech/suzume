@@ -220,27 +220,28 @@ enum class AnalysisMode : uint8_t {
  */
 enum class CandidateOrigin : uint8_t {
   Unknown = 0,
-  Dictionary,                    // 辞書からの直接候補
-  VerbKanji,                     // 漢字+ひらがな動詞 (食べる)
-  VerbHiragana,                  // ひらがな動詞 (いく, できる)
-  VerbHiraganaPassiveRenyokei,   // ひらがな一段連用形 + られる
-  VerbHiraganaNegativeRenyokei,  // ひらがな連用形 + ない
-  VerbKatakana,                  // カタカナ動詞 (バズる)
-  VerbCompound,                  // 複合動詞 (恐れ入る)
-  AdjectiveI,                    // イ形容詞 (美しい)
-  AdjectiveIHiragana,            // ひらがなイ形容詞 (まずい)
-  AdjectiveNa,                   // ナ形容詞・的形容詞 (理性的)
-  NominalizedNoun,               // 連用形転成名詞 (手助け)
-  SuffixPattern,                 // 接尾辞パターン (〜化, 〜性)
-  SameType,                      // 同一文字種 (漢字列, カタカナ列)
-  Alphanumeric,                  // 英数字
-  Onomatopoeia,                  // オノマトペ (わくわく)
-  CharacterSpeech,               // キャラ語尾 (ナリ, ござる)
-  Split,                         // 分割候補 (NOUN+VERB)
-  Join,                          // 結合候補 (複合動詞結合)
-  KanjiHiraganaCompound,         // 漢字+ひらがな複合名詞 (玉ねぎ)
-  Counter,                       // 数量詞パターン (一つ〜九つ)
-  PrefixCompound,                // 接頭的複合語 (今日, 本日, 全国)
+  Dictionary,                     // 辞書からの直接候補
+  VerbKanji,                      // 漢字+ひらがな動詞 (食べる)
+  VerbHiragana,                   // ひらがな動詞 (いく, できる)
+  VerbHiraganaPassiveRenyokei,    // ひらがな一段連用形 + られる
+  VerbHiraganaNegativeRenyokei,   // ひらがな連用形 + ない
+  VerbHiraganaInflectedRenyokei,  // ひらがな一段連用形 + て/た
+  VerbKatakana,                   // カタカナ動詞 (バズる)
+  VerbCompound,                   // 複合動詞 (恐れ入る)
+  AdjectiveI,                     // イ形容詞 (美しい)
+  AdjectiveIHiragana,             // ひらがなイ形容詞 (まずい)
+  AdjectiveNa,                    // ナ形容詞・的形容詞 (理性的)
+  NominalizedNoun,                // 連用形転成名詞 (手助け)
+  SuffixPattern,                  // 接尾辞パターン (〜化, 〜性)
+  SameType,                       // 同一文字種 (漢字列, カタカナ列)
+  Alphanumeric,                   // 英数字
+  Onomatopoeia,                   // オノマトペ (わくわく)
+  CharacterSpeech,                // キャラ語尾 (ナリ, ござる)
+  Split,                          // 分割候補 (NOUN+VERB)
+  Join,                           // 結合候補 (複合動詞結合)
+  KanjiHiraganaCompound,          // 漢字+ひらがな複合名詞 (玉ねぎ)
+  Counter,                        // 数量詞パターン (一つ〜九つ)
+  PrefixCompound,                 // 接頭的複合語 (今日, 本日, 全国)
 };
 
 /**

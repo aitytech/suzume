@@ -68,6 +68,28 @@ std::string generateMizenkei(std::string_view surface, std::string_view reading,
   return result;
 }
 
+std::string generateKateikei(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
+  const std::string_view base = reading.empty() ? surface : reading;
+  if (base.size() < core::kJapaneseCharBytes) {
+    return "";
+  }
+
+  if (verb_type == V2VerbType::Ichidan) {
+    return std::string(base.substr(0, base.size() - core::kJapaneseCharBytes)) + "れ";
+  }
+
+  const char32_t last_cp = utf8::decodeLastChar(base);
+  for (const auto& [row_verb_type, row] : grammar::Conjugation::getGodanRows()) {
+    (void)row_verb_type;
+    if (row.base_vowel == last_cp) {
+      std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
+      result += normalize::utf8::encode({row.e_row});
+      return result;
+    }
+  }
+  return "";
+}
+
 std::string generateGodanPotential(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
   if (verb_type != V2VerbType::Godan) {
     return "";
@@ -236,11 +258,20 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     const bool follows_godan_mizenkei =
         passive_pos > kanji_end && grammar::isARowCodepoint(codepoints[passive_pos - 1]);
     const bool follows_ichidan_passive = passive_pos == kanji_end + 1 && codepoints[kanji_end] == U'ら';
-    if (!follows_godan_mizenkei && !follows_ichidan_passive) {
+    // Causative-passive chains retain their voice boundaries, but the
+    // passive-continuative tail itself remains one search unit: サ変/一段
+    // + させ + られ続ける.  The exact three-mora sequence is grammatical
+    // evidence; it does not admit an arbitrary られ+続ける join.
+    const bool follows_causative_passive = passive_pos >= kanji_end + 3 && codepoints[passive_pos - 3] == U'さ' &&
+                                           codepoints[passive_pos - 2] == U'せ' && codepoints[passive_pos - 1] == U'ら';
+    if (!follows_godan_mizenkei && !follows_ichidan_passive && !follows_causative_passive) {
       continue;
     }
-    if (follows_ichidan_passive) {
+    if (follows_ichidan_passive || follows_causative_passive) {
       tail_start = kanji_end;
+      if (follows_causative_passive) {
+        tail_start = passive_pos - 1;
+      }
     }
 
     // A Godan causative mizenkei (聞かさ from 聞く) can itself precede
@@ -505,6 +536,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     bool v1_dict_verified = false;                // true if V1 was verified via dictionary (not inflection fallback)
     bool v1_embedded_verified = false;            // true if V1 was verified via an embedded dictionary verb
     bool v1_ichidan_inflection = false;           // true if V1 is a single-kanji ichidan verb verified by inflection
+    bool v1_godan_inflection = false;  // true if V1 is a single-kanji godan verb verified by exact inflection
   };
   V2Match best_match;
 
@@ -800,6 +832,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     bool v1_dict_verified = dict_compound_v1;  // tracks dict verification for cost calculation
     bool v1_embedded_verified = false;         // tracks embedded dict verb verification for cost calculation
     bool v1_ichidan_inflection = false;        // single-kanji ichidan V1 confirmed only by inflection
+    bool v1_godan_inflection = false;          // single-kanji godan V1 confirmed by exact inflection
     if (dict_compound_v1) {
       // Already resolved: V1 is the dict-verified compound verb (引きずる).
       v1_base = dict_compound_v1_lemma;
@@ -970,6 +1003,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         if (infl_result.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
             infl_result.base_form == v1_base) {
           v1_verified = true;
+          v1_godan_inflection = true;
           use_inflection_fallback = false;
         }
       }
@@ -1148,6 +1182,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       best_match.v1_dict_verified = v1_dict_verified;
       best_match.v1_embedded_verified = v1_embedded_verified;
       best_match.v1_ichidan_inflection = v1_ichidan_inflection;
+      best_match.v1_godan_inflection = v1_godan_inflection;
     }
   }
 
@@ -1247,7 +1282,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // e.g., 仕立てる = 仕 + 立てる) is weaker evidence: the leading kanji is
     // unconstrained, so it keeps the reduced penalty relative to a dict-confirmed V1.
     float v1_bonus = 0.0F;
-    if (best_match.v1_dict_verified || best_match.v1_ichidan_inflection) {
+    if (best_match.v1_dict_verified || best_match.v1_ichidan_inflection || best_match.v1_godan_inflection) {
       v1_bonus = opts.verified_v1_bonus;  // -0.3: reward for a confirmed real V1
     } else if (best_match.v1_embedded_verified) {
       v1_bonus = bigram_cost::kMinor;  // +0.5: reduced penalty for partial-evidence V1

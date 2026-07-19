@@ -527,9 +527,16 @@ void appendOkuAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size_
   if (ending != U'か' && ending != U'き' && ending != U'い' && ending != U'く' && ending != U'け' && ending != U'こ') {
     return;
   }
+  // Only the irrealis stem can take the negative auxiliary. Score this
+  // context-gated inflection locally so an unrelated おく contraction (どい)
+  // cannot acquire the same preference across a particle boundary.
+  float candidate_cost = bigram_cost::kMinor;
+  if (ending == U'か' && vh::naiNegativeFollowsAt(codepoints, start_pos + 2)) {
+    candidate_cost += bigram_cost::kDoubleVeryStrongBonus;
+  }
   appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 2, "おく",
                                       dictionary::ConjugationType::GodanKa, core::ExtendedPOS::AuxAspectOku,
-                                      "hiragana_oku_auxiliary", bigram_cost::kMinor, candidates);
+                                      "hiragana_oku_auxiliary", candidate_cost, candidates);
 }
 
 // 1-char ichidan renyokei before て/た (ねて → ね + て). Requires the base form
@@ -815,10 +822,25 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     }
     const std::string following = extractSubstring(codepoints, end_pos, std::min(end_pos + 2, codepoints.size()));
     const bool is_negative_continuation = utf8::startsWith(following, "ない") || utf8::startsWith(following, "なか");
-    const core::CandidateOrigin origin =
-        is_negative_continuation ? CandidateOrigin::VerbHiraganaNegativeRenyokei : CandidateOrigin::VerbHiragana;
+    // A stem after a clear te/de boundary belongs to a subsidiary-verb
+    // construction.  Leave that category to its dedicated candidate so an
+    // otherwise valid Ichidan reconstruction cannot turn 〜てやらない into a
+    // lexical predicate.  Outside that boundary, the negative confirms that
+    // the ambiguous Ichidan stem is mizenkei (さけ+ない, かけ+ない).
+    const bool is_lexical_negative_continuation =
+        is_negative_continuation && !isClearTeFormBeforeSubsidiary(codepoints, start_pos, true);
+    const core::CandidateOrigin origin = is_lexical_negative_continuation
+                                             ? CandidateOrigin::VerbHiraganaNegativeRenyokei
+                                         : is_followed_by_te_ta ? CandidateOrigin::VerbHiraganaInflectedRenyokei
+                                                                : CandidateOrigin::VerbHiragana;
+    // Ichidan stems share their surface in renyokei and mizenkei. A following
+    // negative auxiliary determines the latter, which must receive the normal
+    // VerbMizenkei → AuxNegativeNai connection instead of competing as a
+    // continuative verb (さけ+ない, かけ+ない).
+    const core::ExtendedPOS extended_pos =
+        is_lexical_negative_continuation ? core::ExtendedPOS::VerbMizenkei : core::ExtendedPOS::VerbRenyokei;
     candidates.push_back(makeVerbCandidate(stem_surface, start_pos, end_pos, cost, chosen_base, chosen_conj, true,
-                                           origin, chosen_confidence, "hiragana_renyokei"));
+                                           origin, chosen_confidence, "hiragana_renyokei", extended_pos));
 
     // Also generate kateikei stem if followed by れば
     // E.g., できれば → できれ (kateikei of できる) + ば

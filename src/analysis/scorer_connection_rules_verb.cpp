@@ -734,11 +734,14 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
 
   // Surface-based bonus for VerbRenyokei → た/たら (ichidan/irregular
   // past and conditional-past forms). E.g., 食べ+た, 見+たら.
-  // Guard: require kanji or dict origin to prevent false verbs like まし(ましる)
-  // from stealing た bonus over AUX_丁寧 path (参加してきました)
+  // Guard: require kanji, dictionary, or a context-validated ひらがな一段
+  // candidate.  The latter is created only for its immediately following
+  // て/た, so it can retain a real split (混雑を+さけ+た) without allowing
+  // unbounded fragments such as まし(ましる) to steal the past auxiliary.
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::equalsAny(next.surface, {"た", "たら"}) &&
       next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
-      (grammar::containsKanji(prev.surface) || prev.fromDictionary())) {
+      (grammar::containsKanji(prev.surface) || prev.fromDictionary() ||
+       prev.origin == core::CandidateOrigin::VerbHiraganaInflectedRenyokei)) {
     bonus += cost::kVeryStrongBonus;
   }
 
@@ -927,7 +930,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"ちゃ"}) &&
       ((next.extended_pos == core::ExtendedPOS::AuxPotential && utf8::equalsAny(next.surface, {"いけ"})) ||
        (next.extended_pos == core::ExtendedPOS::VerbMizenkei && utf8::equalsAny(next.surface, {"なら"})))) {
-    bonus += cost::kVeryStrongBonus;
+    bonus += cost::kDoubleVeryStrongBonus;
   }
 
   // Bonus for VERB_未然 → AUX_否定古(ず/ずに/ね) connection
@@ -1049,12 +1052,21 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   // Single-char particles: が, を, に, へ, と, で, から, etc.
   // Only penalize very short verbs (2 chars or less) to avoid affecting なくし, etc.
   // Exception: "い" (いる renyokei) has specific bonus rule below for PART_格→い pattern
+  // Generated ichidan stems are emitted only after a following inflection has
+  // validated the reconstruction. They are therefore not the short
+  // unconstrained stems this guard targets (混雑を+さけ+ない/て/た), even
+  // though their surfaces are two morae.
+  const bool is_validated_ichidan_inflection = (next.origin == core::CandidateOrigin::VerbHiraganaNegativeRenyokei &&
+                                                next.extended_pos == core::ExtendedPOS::VerbMizenkei) ||
+                                               (next.origin == core::CandidateOrigin::VerbHiraganaInflectedRenyokei &&
+                                                next.extended_pos == core::ExtendedPOS::VerbRenyokei);
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase &&
       prev.surface.size() <= core::kJapaneseCharBytes &&  // Single hiragana char (3 bytes in UTF-8)
       next.pos == core::PartOfSpeech::Verb && !next.fromDictionary() && grammar::isPureHiragana(next.surface) &&
       next.surface.size() <= 6 &&  // 2 chars or less (6 bytes in UTF-8)
       next.extended_pos != core::ExtendedPOS::VerbShuushikei &&
-      next.surface != "い") {  // Exclude い - has specific rule
+      next.surface != "い" &&  // Exclude い - has specific rule
+      !is_validated_ichidan_inflection) {
     bonus += cost::kAlmostNever;
   }
 

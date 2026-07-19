@@ -51,7 +51,14 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
   size_t max_particle_end = std::min(probe_end, start_pos + kMaxParticleChars);
   for (size_t particle_end = start_pos + 1; particle_end <= max_particle_end; ++particle_end) {
     std::string particle_surface = extractSubstring(codepoints, start_pos, particle_end);
-    if (dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle) == nullptr) {
+    const auto* particle_entry = dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle);
+    if (particle_entry == nullptr) {
+      continue;
+    }
+    // A sentence-final particle cannot introduce a dependent auxiliary or a
+    // following verb inflection. Treating its homographic mora as a boundary
+    // would suppress productive open-class verbs such as さける and かける.
+    if (particle_entry->extended_pos == core::ExtendedPOS::ParticleFinal) {
       continue;
     }
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_PARTICLE] \"" << particle_surface << "\" at pos=" << start_pos << "\n");
@@ -111,9 +118,9 @@ bool hasSokuonbinTenseEvidence(const std::vector<char32_t>& codepoints, size_t s
   return false;
 }
 
-void appendSuruSubsidiaryRenyokeiCandidate(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                           size_t hiragana_end, const dictionary::DictionaryManager* dict_manager,
-                                           std::vector<UnknownCandidate>& candidates) {
+void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const dictionary::DictionaryManager* dict_manager,
+                                    std::vector<UnknownCandidate>& candidates) {
   if (dict_manager == nullptr || start_pos == 0 || codepoints[start_pos] != U'し' ||
       !normalize::isKanjiCodepoint(codepoints[start_pos - 1])) {
     return;
@@ -134,27 +141,103 @@ void appendSuruSubsidiaryRenyokeiCandidate(const std::vector<char32_t>& codepoin
   if (vh::isVerbInDictionary(dict_manager, sahen_stem + "す")) {
     return;
   }
+  // The contiguous kanji sequence can include the single-kanji V1 of an
+  // established compound after a preceding noun (ご報告+申し上げる).  Check
+  // that immediate V1 before treating the whole sequence as a Sahen stem.
+  const std::string final_kanji = extractSubstring(codepoints, start_pos - 1, start_pos);
+  if (vh::isVerbInDictionary(dict_manager, final_kanji + "す")) {
+    return;
+  }
+
+  const auto matchesAt = [&](size_t pos, std::string_view form) {
+    return !form.empty() && pos + normalize::utf8Length(form) <= codepoints.size() &&
+           extractSubstring(codepoints, pos, pos + normalize::utf8Length(form)) == form;
+  };
+  const auto followsRenyokeiAuxiliary = [&](size_t pos) {
+    return pos < codepoints.size() &&
+           (codepoints[pos] == U'た' || codepoints[pos] == U'て' || codepoints[pos] == U'で' ||
+            codepoints[pos] == U'ま' || codepoints[pos] == U'な' || codepoints[pos] == U'ず');
+  };
 
   for (const auto& subsidiary : compound_verb_detail::kSubsidiaryVerbs) {
-    if (subsidiary.verb_type != compound_verb_detail::V2VerbType::Ichidan) {
-      continue;
-    }
     const std::string_view reading = subsidiary.reading == nullptr ? std::string_view{} : subsidiary.reading;
-    const std::string renyokei =
-        compound_verb_detail::generateRenyokei(subsidiary.surface, reading, subsidiary.verb_type);
-    const size_t candidate_end = start_pos + 1 + normalize::utf8Length(renyokei);
-    if (candidate_end >= hiragana_end || !vh::naiNegativeFollowsAt(codepoints, candidate_end) ||
-        extractSubstring(codepoints, start_pos + 1, candidate_end) != renyokei) {
-      continue;
+    const auto conjugation =
+        compound_verb_detail::compoundConjugationType(subsidiary.verb_type, subsidiary.base_ending);
+    const auto addCandidate = [&](size_t end_pos, std::string_view lemma_base, core::ExtendedPOS epos,
+                                  const char* origin) {
+      const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+      candidates.push_back(makeVerbCandidate(
+          surface, start_pos, end_pos, candidate::verb_cost::kStrongBonus + bigram_cost::kVeryStrongBonus,
+          "し" + std::string(lemma_base), conjugation, true, CandidateOrigin::VerbHiragana,
+          candidate::kHighOriginConfidence, origin, epos));
+    };
+
+    const size_t v2_start = start_pos + 1;
+    if (matchesAt(v2_start, subsidiary.surface)) {
+      addCandidate(v2_start + normalize::utf8Length(subsidiary.surface), subsidiary.surface,
+                   core::ExtendedPOS::VerbShuushikei, "suru_subsidiary_base");
+    } else if (!reading.empty() && matchesAt(v2_start, reading)) {
+      addCandidate(v2_start + normalize::utf8Length(reading), reading, core::ExtendedPOS::VerbShuushikei,
+                   "suru_subsidiary_base");
     }
 
-    const std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
-    const std::string lemma = "し" + std::string(reading.empty() ? subsidiary.surface : reading);
-    candidates.push_back(makeVerbCandidate(
-        surface, start_pos, candidate_end, candidate::verb_cost::kStrongBonus + bigram_cost::kVeryStrongBonus, lemma,
-        dictionary::ConjugationType::Ichidan, true, CandidateOrigin::VerbHiragana, candidate::kHighOriginConfidence,
-        "suru_subsidiary_renyokei", core::ExtendedPOS::VerbRenyokei));
-    return;
+    const auto tryRenyokei = [&](const std::string& form, std::string_view lemma_base) {
+      if (matchesAt(v2_start, form)) {
+        const size_t end_pos = v2_start + normalize::utf8Length(form);
+        if (followsRenyokeiAuxiliary(end_pos)) {
+          addCandidate(end_pos, lemma_base, core::ExtendedPOS::VerbRenyokei, "suru_subsidiary_renyokei");
+        }
+      }
+    };
+    tryRenyokei(compound_verb_detail::generateKanjiRenyokei(subsidiary.surface, reading, subsidiary.verb_type),
+                subsidiary.surface);
+    tryRenyokei(compound_verb_detail::generateRenyokei(reading, "", subsidiary.verb_type), reading);
+
+    const auto tryMizenkei = [&](const std::string& form, std::string_view lemma_base) {
+      if (matchesAt(v2_start, form)) {
+        const size_t end_pos = v2_start + normalize::utf8Length(form);
+        if (end_pos < codepoints.size() && (codepoints[end_pos] == U'な' || codepoints[end_pos] == U'ず')) {
+          addCandidate(end_pos, lemma_base, core::ExtendedPOS::VerbMizenkei, "suru_subsidiary_mizenkei");
+        }
+      }
+    };
+    tryMizenkei(compound_verb_detail::generateMizenkei(subsidiary.surface, "", subsidiary.verb_type),
+                subsidiary.surface);
+    tryMizenkei(compound_verb_detail::generateMizenkei(reading, "", subsidiary.verb_type), reading);
+
+    const auto tryKateikei = [&](const std::string& form, std::string_view lemma_base) {
+      if (matchesAt(v2_start, form)) {
+        const size_t end_pos = v2_start + normalize::utf8Length(form);
+        if (end_pos < codepoints.size() && codepoints[end_pos] == U'ば') {
+          addCandidate(end_pos, lemma_base, core::ExtendedPOS::VerbKateikei, "suru_subsidiary_kateikei");
+        }
+      }
+    };
+    tryKateikei(compound_verb_detail::generateKateikei(subsidiary.surface, "", subsidiary.verb_type),
+                subsidiary.surface);
+    tryKateikei(compound_verb_detail::generateKateikei(reading, "", subsidiary.verb_type), reading);
+
+    if (subsidiary.verb_type == compound_verb_detail::V2VerbType::Godan) {
+      if (compound_verb_detail::getTeFormType(subsidiary.base_ending) == compound_verb_detail::TeFormType::Renyokei) {
+        continue;
+      }
+      const auto tryTeStem = [&](const std::pair<std::string, bool>& te_stem, std::string_view lemma_base) {
+        const auto& [form, uses_de] = te_stem;
+        if (matchesAt(v2_start, form)) {
+          const size_t end_pos = v2_start + normalize::utf8Length(form);
+          if (end_pos < codepoints.size() &&
+              (uses_de ? (codepoints[end_pos] == U'で' || codepoints[end_pos] == U'だ')
+                       : (codepoints[end_pos] == U'て' || codepoints[end_pos] == U'た'))) {
+            addCandidate(end_pos, lemma_base, core::ExtendedPOS::VerbTeForm, "suru_subsidiary_te_form");
+          }
+        }
+      };
+      tryTeStem(compound_verb_detail::generateTeFormStem(subsidiary.surface, "", subsidiary.verb_type,
+                                                         subsidiary.base_ending),
+                subsidiary.surface);
+      tryTeStem(compound_verb_detail::generateTeFormStem(reading, "", subsidiary.verb_type, subsidiary.base_ending),
+                reading);
+    }
   }
 }
 
@@ -424,14 +507,14 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   SUZUME_DEBUG_LOG_TRACE("[HIRA_SEQ] final: start=" << start_pos << " end=" << hiragana_end
                                                     << " len=" << (hiragana_end - start_pos) << "\n");
 
+  appendSuruSubsidiaryCandidates(codepoints, start_pos, dict_manager, candidates);
+
   // Need at least 2 hiragana for a verb
   if (hiragana_end <= start_pos + 1) {
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " too_short (need >=2 hiragana, got "
                                                 << (hiragana_end - start_pos) << ")\n");
     return candidates;
   }
-
-  appendSuruSubsidiaryRenyokeiCandidate(codepoints, start_pos, hiragana_end, dict_manager, candidates);
 
   // A closed-class particle followed by a dictionary-verified verb inflection
   // is a grammatical boundary, never the stem of an unknown hiragana verb.

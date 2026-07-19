@@ -163,6 +163,8 @@ const char* originToString(CandidateOrigin origin) {
       return "verb_hira_passive_renyo";
     case CandidateOrigin::VerbHiraganaNegativeRenyokei:
       return "verb_hira_negative_renyo";
+    case CandidateOrigin::VerbHiraganaInflectedRenyokei:
+      return "verb_hira_inflected_renyo";
     case CandidateOrigin::VerbKatakana:
       return "verb_kata";
     case CandidateOrigin::VerbCompound:
