@@ -28,28 +28,7 @@ enum class V2VerbType : uint8_t {
 // The compound inherits V2's inflection class. Retaining this on generated
 // edges prevents later lemmatization from treating a GodanSa compound such as
 // 見直す as the classical suru form 見直する.
-inline dictionary::ConjugationType compoundConjugationType(V2VerbType verb_type, std::string_view base_ending) {
-  if (verb_type == V2VerbType::Ichidan) {
-    return dictionary::ConjugationType::Ichidan;
-  }
-  if (base_ending == "く")
-    return dictionary::ConjugationType::GodanKa;
-  if (base_ending == "ぐ")
-    return dictionary::ConjugationType::GodanGa;
-  if (base_ending == "す")
-    return dictionary::ConjugationType::GodanSa;
-  if (base_ending == "つ")
-    return dictionary::ConjugationType::GodanTa;
-  if (base_ending == "ぬ")
-    return dictionary::ConjugationType::GodanNa;
-  if (base_ending == "ぶ")
-    return dictionary::ConjugationType::GodanBa;
-  if (base_ending == "む")
-    return dictionary::ConjugationType::GodanMa;
-  if (base_ending == "る")
-    return dictionary::ConjugationType::GodanRa;
-  return dictionary::ConjugationType::GodanWa;
-}
+dictionary::ConjugationType compoundConjugationType(V2VerbType verb_type, std::string_view base_ending);
 
 struct SubsidiaryVerb {
   const char* surface;      // Kanji form (or hiragana if no kanji)
@@ -153,86 +132,17 @@ inline constexpr char32_t kSokuonbinEndings[] = {U'く', U'つ', U'う', U'る'}
 // Generate renyokei surface from base form
 // Godan: replace ending with i-row (込む→込み, 返す→返し)
 // Ichidan: drop る (続ける→続け)
-inline std::string generateRenyokei(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
-  std::string_view base = reading.empty() ? surface : reading;
-  if (base.empty())
-    return "";
-
-  if (verb_type == V2VerbType::Ichidan) {
-    // Drop final る (3 bytes in UTF-8)
-    if (base.size() >= 3) {
-      return std::string(base.substr(0, base.size() - 3));
-    }
-    return "";
-  }
-
-  // Godan: replace last hiragana with i-row equivalent
-  // む→み, す→し, く→き, ぐ→ぎ, う→い, る→り, つ→ち, ぬ→に, ぶ→び
-  if (base.size() < 3)
-    return "";
-  char32_t last_cp = utf8::decodeLastChar(base);
-  auto i_row = grammar::godanIRowSuffixFromURow(last_cp);
-  if (i_row.empty())
-    return "";  // Unknown ending
-  std::string result(base.substr(0, base.size() - 3));
-  result += i_row;
-  return result;
-}
+std::string generateRenyokei(std::string_view surface, std::string_view reading, V2VerbType verb_type);
 
 // Generate mizenkei surface from base form
 // Godan: replace ending with a-row (込む→込ま, 返す→返さ)
 // Ichidan: drop る (続ける→続け, same as renyokei for ichidan)
-inline std::string generateMizenkei(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
-  std::string_view base = reading.empty() ? surface : reading;
-  if (base.empty())
-    return "";
-
-  if (verb_type == V2VerbType::Ichidan) {
-    // Drop final る (3 bytes in UTF-8) — same as renyokei
-    if (base.size() >= 3) {
-      return std::string(base.substr(0, base.size() - 3));
-    }
-    return "";
-  }
-
-  // Godan: replace last hiragana with a-row equivalent
-  // む→ま, す→さ, く→か, ぐ→が, う→わ, る→ら, つ→た, ぬ→な, ぶ→ば
-  if (base.size() < 3)
-    return "";
-  char32_t last_cp = utf8::decodeLastChar(base);
-  auto a_row = grammar::godanARowSuffixFromURow(last_cp);
-  if (a_row.empty())
-    return "";  // Unknown ending
-  std::string result(base.substr(0, base.size() - 3));
-  result += a_row;
-  return result;
-}
+std::string generateMizenkei(std::string_view surface, std::string_view reading, V2VerbType verb_type);
 
 // Generate a Godan potential form (戻す→戻せる) from the dictionary form.
 // The V2 allowlist controls which lexical verbs participate; this merely shares
 // their ordinary Godan conjugation across all of those entries.
-inline std::string generateGodanPotential(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
-  if (verb_type != V2VerbType::Godan) {
-    return "";
-  }
-
-  std::string_view base = reading.empty() ? surface : reading;
-  if (base.size() < core::kJapaneseCharBytes) {
-    return "";
-  }
-
-  char32_t last_cp = utf8::decodeLastChar(base);
-  for (const auto& [row_verb_type, row] : grammar::Conjugation::getGodanRows()) {
-    (void)row_verb_type;
-    if (row.base_vowel == last_cp) {
-      std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
-      result += normalize::utf8::encode({row.e_row});
-      result += "る";
-      return result;
-    }
-  }
-  return "";
-}
+std::string generateGodanPotential(std::string_view surface, std::string_view reading, V2VerbType verb_type);
 
 // Te-form euphonic form type for Godan verbs
 enum class TeFormType : uint8_t {
@@ -244,96 +154,21 @@ enum class TeFormType : uint8_t {
 };
 
 // Determine te-form type and suffix from verb ending
-inline TeFormType getTeFormType(std::string_view base_ending) {
-  if (base_ending == "く" || base_ending == "ぐ")
-    return TeFormType::Ionbin;
-  if (base_ending == "つ" || base_ending == "う" || base_ending == "る")
-    return TeFormType::Sokuonbin;
-  if (base_ending == "む" || base_ending == "ぶ" || base_ending == "ぬ")
-    return TeFormType::Hatsuonbin;
-  if (base_ending == "す")
-    return TeFormType::Renyokei;
-  // Default for ichidan
-  return TeFormType::Ichidan;
-}
+TeFormType getTeFormType(std::string_view base_ending);
 
 // Generate te-form euphonic stem (before て/で)
 // Returns: stem and whether it uses で (vs て)
-inline std::pair<std::string, bool> generateTeFormStem(std::string_view surface, std::string_view reading,
-                                                       V2VerbType verb_type, std::string_view base_ending) {
-  std::string_view base = reading.empty() ? surface : reading;
-  if (base.empty() || base.size() < 3)
-    return {"", false};
-
-  if (verb_type == V2VerbType::Ichidan) {
-    // Drop final る (3 bytes in UTF-8)
-    return {std::string(base.substr(0, base.size() - 3)), false};
-  }
-
-  // Godan: generate euphonic form based on verb ending
-  std::string result(base.substr(0, base.size() - 3));
-  TeFormType te_type = getTeFormType(base_ending);
-
-  switch (te_type) {
-    case TeFormType::Ionbin:
-      result += "い";
-      return {result, base_ending == "ぐ"};  // ぐ→いで, く→いて
-    case TeFormType::Sokuonbin:
-      result += "っ";
-      return {result, false};  // っ+て
-    case TeFormType::Hatsuonbin:
-      result += "ん";
-      return {result, true};  // ん+で
-    case TeFormType::Renyokei:
-      result += "し";
-      return {result, false};  // し+て
-    default:
-      return {"", false};
-  }
-}
+std::pair<std::string, bool> generateTeFormStem(std::string_view surface, std::string_view reading,
+                                                V2VerbType verb_type, std::string_view base_ending);
 
 // Generate kanji renyokei from kanji surface
-inline std::string generateKanjiRenyokei(std::string_view kanji_surface, std::string_view reading,
-                                         V2VerbType verb_type) {
-  if (reading.empty()) {
-    return generateRenyokei(kanji_surface, "", verb_type);
-  }
-  // For kanji+okurigana, need to replace okurigana with renyokei
-  // E.g., 込む(こむ) → 込み, 続ける(つづける) → 続け
-  std::string hiragana_renyokei = generateRenyokei(reading, "", verb_type);
-  if (hiragana_renyokei.empty())
-    return "";
-
-  // Find where kanji ends and okurigana begins
-  // Kanji surface should have same kanji prefix as reading suffix is okurigana
-  size_t kanji_bytes = 0;
-  for (size_t scan_pos = 0; scan_pos < kanji_surface.size();) {
-    size_t next_pos = scan_pos;
-    if (!normalize::isKanjiCodepoint(normalize::decodeUtf8(kanji_surface, next_pos)))
-      break;  // stop at okurigana
-    kanji_bytes = next_pos;
-    scan_pos = next_pos;
-  }
-  if (kanji_bytes == 0)
-    return "";
-
-  // Kanji prefix + hiragana renyokei suffix
-  std::string result(kanji_surface.substr(0, kanji_bytes));
-  size_t reading_kanji_len = reading.size() - (kanji_surface.size() - kanji_bytes);
-  if (reading_kanji_len < hiragana_renyokei.size()) {
-    result += hiragana_renyokei.substr(reading_kanji_len);
-  }
-  return result;
-}
+std::string generateKanjiRenyokei(std::string_view kanji_surface, std::string_view reading, V2VerbType verb_type);
 
 // Map a Godan i-row 連用形 codepoint (き, ぎ, し, ...) to its dictionary-form
 // codepoint (く, ぐ, す, ...); returns 0 when the char is not a Godan renyokei
 // ending. Backed by the shared Conjugation-derived table in grammar so the
 // い段→終止形 mapping lives in exactly one place.
-inline char32_t godanRenyokeiBaseCp(char32_t renyokei_cp) {
-  std::string_view base = grammar::godanBaseSuffixFromIRow(renyokei_cp);
-  return base.empty() ? 0 : utf8::decodeFirstChar(base);
-}
+char32_t godanRenyokeiBaseCp(char32_t renyokei_cp);
 
 // Cost bonuses imported from candidate_constants.h:
 // candidate::kCompoundVerbBonus, candidate::kVerifiedV1Bonus

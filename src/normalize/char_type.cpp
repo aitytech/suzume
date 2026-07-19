@@ -113,12 +113,7 @@ CharType classifyChar(char32_t codepoint) {
       (codepoint >= 0x231A && codepoint <= 0x231B) ||    // Watch, hourglass
       (codepoint >= 0x23E9 && codepoint <= 0x23F3) ||    // Media controls
       (codepoint >= 0x23F8 && codepoint <= 0x23FA) ||    // Media controls
-      (codepoint >= 0x200D && codepoint <= 0x200D) ||    // ZWJ (Zero Width Joiner)
-      (codepoint >= 0xFE0E && codepoint <= 0xFE0F) ||    // Variation selectors
-      (codepoint >= 0x20E3 && codepoint <= 0x20E3) ||    // Combining enclosing keycap
-      (codepoint >= 0xE0020 && codepoint <= 0xE007F) ||  // Tag characters (flags)
-      (codepoint >= 0x1F1E6 && codepoint <= 0x1F1FF) ||  // Regional Indicator Symbols
-      (codepoint >= 0x1F3FB && codepoint <= 0x1F3FF)) {  // Skin tone modifiers
+      isEmojiModifier(codepoint) || isRegionalIndicator(codepoint)) {
     return CharType::Emoji;
   }
 

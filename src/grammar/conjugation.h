@@ -13,6 +13,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -254,46 +255,20 @@ std::string onbinFormOf(const Conjugation::GodanRow& row);
  */
 bool isGodanVerbType(VerbType type);
 
+// The verb/adjective portion of ConjugationType deliberately shares VerbType's
+// serialized values. Keep this boundary checked here, rather than maintaining
+// two mirrored switches in every consumer TU.
+static_assert(static_cast<uint8_t>(dictionary::ConjugationType::None) == static_cast<uint8_t>(VerbType::Unknown));
+static_assert(static_cast<uint8_t>(dictionary::ConjugationType::IAdjective) ==
+              static_cast<uint8_t>(VerbType::IAdjective));
+
 /**
  * @brief Convert ConjugationType to VerbType
  */
-inline VerbType conjTypeToVerbType(dictionary::ConjugationType conj_type) {
-  switch (conj_type) {
-    case dictionary::ConjugationType::None:
-      return VerbType::Unknown;
-    case dictionary::ConjugationType::Ichidan:
-      return VerbType::Ichidan;
-    case dictionary::ConjugationType::GodanKa:
-      return VerbType::GodanKa;
-    case dictionary::ConjugationType::GodanGa:
-      return VerbType::GodanGa;
-    case dictionary::ConjugationType::GodanSa:
-      return VerbType::GodanSa;
-    case dictionary::ConjugationType::GodanTa:
-      return VerbType::GodanTa;
-    case dictionary::ConjugationType::GodanNa:
-      return VerbType::GodanNa;
-    case dictionary::ConjugationType::GodanBa:
-      return VerbType::GodanBa;
-    case dictionary::ConjugationType::GodanMa:
-      return VerbType::GodanMa;
-    case dictionary::ConjugationType::GodanRa:
-      return VerbType::GodanRa;
-    case dictionary::ConjugationType::GodanWa:
-      return VerbType::GodanWa;
-    case dictionary::ConjugationType::Suru:
-      return VerbType::Suru;
-    case dictionary::ConjugationType::Kuru:
-      return VerbType::Kuru;
-    case dictionary::ConjugationType::IAdjective:
-      return VerbType::IAdjective;
-    case dictionary::ConjugationType::NaAdjective:
-    case dictionary::ConjugationType::Interjection:
-    case dictionary::ConjugationType::ProperFamily:
-    case dictionary::ConjugationType::ProperGiven:
-      return VerbType::Unknown;
-  }
-  return VerbType::Unknown;
+constexpr VerbType conjTypeToVerbType(dictionary::ConjugationType conj_type) {
+  const uint8_t type_value = static_cast<uint8_t>(conj_type);
+  return type_value <= static_cast<uint8_t>(VerbType::IAdjective) ? static_cast<VerbType>(type_value)
+                                                                  : VerbType::Unknown;
 }
 
 /**
@@ -319,38 +294,10 @@ std::string_view conjFormToJapanese(ConjForm form);
 /**
  * @brief Convert VerbType to ConjugationType
  */
-inline dictionary::ConjugationType verbTypeToConjType(VerbType verb_type) {
-  switch (verb_type) {
-    case VerbType::Unknown:
-      return dictionary::ConjugationType::None;
-    case VerbType::Ichidan:
-      return dictionary::ConjugationType::Ichidan;
-    case VerbType::GodanKa:
-      return dictionary::ConjugationType::GodanKa;
-    case VerbType::GodanGa:
-      return dictionary::ConjugationType::GodanGa;
-    case VerbType::GodanSa:
-      return dictionary::ConjugationType::GodanSa;
-    case VerbType::GodanTa:
-      return dictionary::ConjugationType::GodanTa;
-    case VerbType::GodanNa:
-      return dictionary::ConjugationType::GodanNa;
-    case VerbType::GodanBa:
-      return dictionary::ConjugationType::GodanBa;
-    case VerbType::GodanMa:
-      return dictionary::ConjugationType::GodanMa;
-    case VerbType::GodanRa:
-      return dictionary::ConjugationType::GodanRa;
-    case VerbType::GodanWa:
-      return dictionary::ConjugationType::GodanWa;
-    case VerbType::Suru:
-      return dictionary::ConjugationType::Suru;
-    case VerbType::Kuru:
-      return dictionary::ConjugationType::Kuru;
-    case VerbType::IAdjective:
-      return dictionary::ConjugationType::IAdjective;
-  }
-  return dictionary::ConjugationType::None;
+constexpr dictionary::ConjugationType verbTypeToConjType(VerbType verb_type) {
+  const uint8_t type_value = static_cast<uint8_t>(verb_type);
+  return type_value <= static_cast<uint8_t>(VerbType::IAdjective) ? static_cast<dictionary::ConjugationType>(type_value)
+                                                                  : dictionary::ConjugationType::None;
 }
 
 }  // namespace suzume::grammar

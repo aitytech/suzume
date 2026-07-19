@@ -41,6 +41,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // dictionary noun that happens to span the adjective and next kanji.
       {EPOS::ParticleCase, EPOS::AdjBasic, cost::kVeryStrongBonus},
 
+      // A bare na-adjective cannot modify an independent noun without an
+      // adnominal copula. Prefer the competing nominal compound boundary
+      // (自然+言語) over attaching the adjective directly.
+      {EPOS::AdjNaAdj, EPOS::Noun, cost::kStrong},
+
       // ParticleAdverbial → VerbRenyokei (かも+しれ in かもしれない, など+あり, でも+あり)
       // - strong bonus. Favors かも+しれ+ない over か+もし+れない and keeps a real
       //   verb renyokei after a subsidiary particle. A single-mora renyokei after
@@ -72,6 +77,44 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // ParticleCase → Adverb (か+もし) - moderate penalty
       // This discourages splitting かもしれない as か+もし+れない
       {EPOS::ParticleCase, EPOS::Adverb, cost::kRare},
+
+      // A final particle closes a predicate and cannot directly introduce an
+      // adverb. This is an ExtendedPOS-only rule, so keep it in the table
+      // rather than in Scorer::connectionCost().
+      {EPOS::ParticleFinal, EPOS::Adverb, cost::kAlmostNever},
+
+      // A conjunction can be followed by a binding particle (だけど+も).
+      {EPOS::Conjunction, EPOS::ParticleBinding, cost::kDoubleVeryStrongBonus},
+
+      // A terminal predicate can be followed by a binding particle in the
+      // exclusive construction (する+しか+ない, 見る+しか+ない).
+      {EPOS::VerbShuushikei, EPOS::ParticleBinding, cost::kVeryStrongBonus},
+
+      // An irrealis verb form selects auxiliaries, not a case particle.
+      {EPOS::VerbMizenkei, EPOS::ParticleCase, cost::kAlmostNever},
+
+      // The aspectual いく auxiliary follows a te-form, not a bare renyokei.
+      {EPOS::VerbRenyokei, EPOS::AuxAspectIku, cost::kAlmostNever},
+
+      // A case particle cannot be followed directly by a sentence-final
+      // particle (を+な is a fragment of a longer predicate).
+      {EPOS::ParticleCase, EPOS::ParticleFinal, cost::kAlmostNever},
+
+      // A determiner directly modifies an i-adjective stem nominalized by a
+      // following suffix (この+大き+さ).
+      {EPOS::Determiner, EPOS::AdjStem, cost::kStrongBonus},
+
+      // The conjecture auxiliary productively follows demonstrative and
+      // personal pronouns (それ+らしい, 彼+らしい).
+      {EPOS::Pronoun, EPOS::AuxConjectureRashii, cost::kExtremeBonus},
+
+      // A terminal volitional auxiliary cannot directly precede the past
+      // auxiliary.
+      {EPOS::AuxVolitional, EPOS::AuxTenseTa, cost::kAlmostNever},
+
+      // The contracted negative followed by the copula is the productive
+      // んで construction (読まんで).
+      {EPOS::AuxNegativeNu, EPOS::AuxCopulaDa, cost::kDoubleVeryStrongBonus},
 
       // ParticleCase → Noun (が+学生) - neutral
       {EPOS::ParticleCase, EPOS::Noun, cost::kNeutral},
@@ -706,7 +749,7 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::ParticleConj, EPOS::AuxHonorific, cost::kStrongBonus},
       {EPOS::AuxHonorific, EPOS::ParticleConj, cost::kVeryStrongBonus},
   };
-  applyRules(table, kRules);
+  applyRules(table, kRules, sizeof(kRules) / sizeof(kRules[0]));
 }
 
 }  // namespace suzume::analysis::bigram_rules

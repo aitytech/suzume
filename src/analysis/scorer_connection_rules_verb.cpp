@@ -149,14 +149,6 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kDoubleVeryStrongBonus;
   }
 
-  // A terminal predicate can be followed by a binding particle in the
-  // exclusive construction (する+しか+ない, 見る+しか+ない). This keeps the
-  // closed particle whole over a fabricated verb continuation.
-  if (prev.extended_pos == core::ExtendedPOS::VerbShuushikei &&
-      next.extended_pos == core::ExtendedPOS::ParticleBinding) {
-    bonus += cost::kVeryStrongBonus;
-  }
-
   // A dictionary-attested euphonic verb form followed by the connective
   // particle is the productive te-form boundary (読ん+で, 書い+て).  Keep
   // this lexical gate so unknown hiragana fragments remain conservative.
@@ -1163,13 +1155,6 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
         bonus += cost::kAlmostNever;
       }
     }
-  }
-
-  // Penalty for case particle → final particle pattern
-  // E.g., を+な in をなくした should not split as を+な+くし+た
-  // Final particles (な, ね, よ) don't follow case particles directly
-  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.extended_pos == core::ExtendedPOS::ParticleFinal) {
-    bonus += cost::kAlmostNever;
   }
 
   return bonus;

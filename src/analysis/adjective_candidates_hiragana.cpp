@@ -643,18 +643,10 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   // This handles patterns like おいしそう → おいし (stem) + そう (aux)
   // Similar to the kanji adjective stem logic at lines 1673-1785
   // Check for しそう, しすぎ patterns (adjective stem + auxiliary)
-  static constexpr std::array<std::string_view, 6> kHiraStemAuxPatterns = {
-      "しそう",    // appearance: おいしそう
-      "しそうだ",  // appearance + copula
-      "しそうな",  // attributive
-      "しそうに",  // adverbial
-      "しすぎ",    // excessive: おいしすぎ
-      "しすぎる",  // excessive + dictionary form
-  };
-
   // Start from maximum hiragana sequence
   std::string full_surface = extractSubstring(codepoints, start_pos, max_hiragana_end);
-  for (const auto& aux_pattern : kHiraStemAuxPatterns) {
+  for (size_t pattern_index = 0; pattern_index < adj_detail::kHiraganaIAdjStemAuxPatternCount; ++pattern_index) {
+    const std::string_view aux_pattern = adj_detail::kIAdjStemAuxPatterns[pattern_index];
     if (full_surface.size() >=
             aux_pattern.size() + core::kTwoJapaneseCharBytes &&  // Need at least 2 chars before pattern
         full_surface.find(aux_pattern) != std::string::npos) {

@@ -59,12 +59,7 @@ struct BigramRule {
 };
 static_assert(sizeof(BigramRule) == 3);
 
-template <size_t RuleCount>
-inline void applyRules(BigramMatrix& table, const BigramRule (&rules)[RuleCount]) {
-  for (const BigramRule& rule : rules) {
-    table[rule.prev][rule.next] = rule.cost;
-  }
-}
+void applyRules(BigramMatrix& table, const BigramRule* rules, size_t rule_count);
 
 void setVerbAndAdjectiveCosts(BigramMatrix& table);
 void setAuxiliaryAndNounCosts(BigramMatrix& table);

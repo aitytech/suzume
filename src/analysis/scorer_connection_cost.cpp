@@ -32,9 +32,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // ExtendedPOS bigram cost (replaces all check functions)
   float extended_cost = BigramTable::getCost(prev.extended_pos, next.extended_pos);
 
-  // Surface-based bonus for VerbRenyokei → すぎ pattern
-  // E.g., 読み+すぎる, 書き+すぎた, 食べ+すぎ: verb stem plus excessive auxiliary.
-  // The default VERB→VERB penalty should not apply to auxiliary verbs
+  // This pair adds to its existing static BigramTable bonus, so it cannot be
+  // represented as a replacement table entry without changing the total.
   float surface_bonus = 0.0F;
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxExcessive) {
     surface_bonus = cost::kVeryStrongBonus;
@@ -86,12 +85,6 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // strong for forms such as たものの.
   if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && next.extended_pos == core::ExtendedPOS::ParticleConj &&
       utf8::equalsAny(next.surface, {"で"})) {
-    surface_bonus += cost::kAlmostNever;
-  }
-
-  // A final particle closes the predicate and cannot directly introduce an
-  // adverb. Prefer the competing formal-noun or particle boundary instead.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::Adverb) {
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -512,13 +505,6 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       grammar::isAllKanji(next.surface.substr(0, 3)) &&
       !utf8::startsWith(next.surface, "ござ")) {  // Exclude honorific ござる
     surface_bonus += cost::kAlmostNever;
-  }
-
-  // Bonus for proper name sequence: Family → Given (姓→名)
-  // E.g., 優木(FAMILY) + せつ菜(GIVEN) should strongly prefer staying together
-  if (prev.extended_pos == core::ExtendedPOS::NounProperFamily &&
-      next.extended_pos == core::ExtendedPOS::NounProperGiven) {
-    surface_bonus += cost::kStrongBonus;  // -2.5 bonus
   }
 
   // Penalty for single-kana verb renyokei after adverb

@@ -10,7 +10,6 @@
 #ifndef SUZUME_ANALYSIS_VERB_CANDIDATES_HELPERS_H_
 #define SUZUME_ANALYSIS_VERB_CANDIDATES_HELPERS_H_
 
-#include <algorithm>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -72,16 +71,12 @@ bool hasInternalVerbChainBoundary(const std::vector<char32_t>& codepoints, size_
 /**
  * @brief Check if a base form exists in dictionary as a verb
  */
-inline bool isVerbInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form) {
-  return hasDictionaryEntry(dict_manager, base_form, core::PartOfSpeech::Verb);
-}
+bool isVerbInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form);
 
 /**
  * @brief Check if a base form exists in dictionary as an adjective
  */
-inline bool isAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form) {
-  return hasDictionaryEntry(dict_manager, base_form, core::PartOfSpeech::Adjective);
-}
+bool isAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form);
 
 /**
  * @brief Check if a surface exists in dictionary as a noun (exact match)
@@ -90,9 +85,7 @@ inline bool isAdjectiveInDictionary(const dictionary::DictionaryManager* dict_ma
  * dictionary prefix (e.g. a single-kanji noun) does not spuriously match a
  * longer verb candidate.
  */
-inline bool isNounInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
-  return hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Noun);
-}
+bool isNounInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
 
 /**
  * @brief Check if a surface exists in dictionary as a noun or adjective (exact match)
@@ -100,10 +93,7 @@ inline bool isNounInDictionary(const dictionary::DictionaryManager* dict_manager
  * Reports a hit only for an entry whose surface equals @p surface (see
  * isNounInDictionary for the exact-match rationale).
  */
-inline bool isNounOrAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
-  return hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Noun) ||
-         hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Adjective);
-}
+bool isNounOrAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
 
 /**
  * @brief Check if a surface has a non-verb entry in dictionary
@@ -275,46 +265,6 @@ enum class SokuonOnsetPolicy {
 };
 
 /**
- * @brief Decide whether a sokuon (っ/ッ) begins a following morpheme rather than
- *        attaching to the base candidate as emphatic elongation.
- *
- * A sokuon after a verb/adjective/auxiliary is normally emphatic (行くっ, やばいっ).
- * It must instead be released when it begins the colloquial polite auxiliary
- * っす/っさ/っせ or a Godan quotative っと. Generated full-form candidates also
- * release っ from って/った. Dictionary stems retain productive onbin before
- * て/た (あらっ+て/た), except for a u-row dictionary form that would otherwise
- * absorb a separate って. The shared policy keeps these intentional differences
- * explicit while reusing the scanning and cost logic.
- *
- * @param codepoints Full input codepoints.
- * @param sokuon_pos Index of the sokuon character.
- * @param base_pos   POS of the base candidate (Verb enables the っと quotative check).
- * @param base_final Final codepoint of the base candidate.
- * @param policy     Candidate source policy for って/った handling.
- * @return true if the sokuon should be released (not absorbed as emphatic).
- */
-inline bool isSuppressedSokuonOnset(const std::vector<char32_t>& codepoints, size_t sokuon_pos,
-                                    core::PartOfSpeech base_pos, char32_t base_final, SokuonOnsetPolicy policy) {
-  if (sokuon_pos + 1 >= codepoints.size()) {
-    return false;  // Sokuon at end - keep as emphatic
-  }
-  char32_t next = codepoints[sokuon_pos + 1];
-  // Colloquial polite auxiliary っす/っさ/っせ (=です).
-  if (next == U'す' || next == U'さ' || next == U'せ') {
-    return true;
-  }
-  const bool u_row_verb = base_pos == core::PartOfSpeech::Verb && normalize::isURowHiragana(base_final);
-  if (next == U'と') {
-    return u_row_verb;  // Godan quotative っと: 行く+っと, not 行くっ+と.
-  }
-  if (policy == SokuonOnsetPolicy::DictionaryEntry) {
-    // A dictionary stem such as あら must retain the onbin っ in あらっ+て/た.
-    return next == core::hiragana::kTe && u_row_verb;
-  }
-  return next == core::hiragana::kTe || next == core::hiragana::kTa;
-}
-
-/**
  * @brief Match standard emphatic marks and repeated final vowels after a candidate.
  */
 EmphaticSuffixMatch matchEmphaticSuffix(const std::vector<char32_t>& codepoints, size_t base_end,
@@ -339,19 +289,7 @@ float emphaticCostAdjustment(const EmphaticSuffixMatch& match);
  * stem. The completed-state construction 〜てある is different: it is always a
  * te-form followed by the existential subsidiary, including after such stems.
  */
-inline bool embedsTeFormAuxiliary(std::string_view surface) {
-  static constexpr std::string_view kPatterns[] = {
-      "ていく", "ていっ", "ていけ", "ていか",                // 〜ていく directional aspect
-      "てもら", "てくれ", "てあげ", "てほしい", "てくださ",  // benefactive / request
-      "てある", "である",                                    // completed-state existential
-  };
-  for (const std::string_view pat : kPatterns) {
-    if (surface.find(pat) != std::string_view::npos) {
-      return true;
-    }
-  }
-  return false;
-}
+bool embedsTeFormAuxiliary(std::string_view surface);
 
 /**
  * @brief True when a candidate span embeds a te-form て/で immediately followed
@@ -365,17 +303,7 @@ inline bool embedsTeFormAuxiliary(std::string_view surface) {
  * at @p start_pos is exempt: a candidate that merely begins with て/で (てみ
  * itself, で-leading runs) is a different shape and is left untouched.
  */
-inline bool embedsTeFormMiruAuxiliary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
-  if (end_pos > codepoints.size()) {
-    return false;
-  }
-  for (size_t pos = start_pos + 1; pos + 1 < end_pos; ++pos) {
-    if ((codepoints[pos] == core::hiragana::kTe || codepoints[pos] == U'で') && codepoints[pos + 1] == U'み') {
-      return true;
-    }
-  }
-  return false;
-}
+bool embedsTeFormMiruAuxiliary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);
 
 /**
  * @brief Extend candidates with emphatic suffix variants
@@ -534,27 +462,6 @@ bool containsPassiveCausativeAuxPattern(std::string_view surface);
 // =============================================================================
 
 /**
- * @brief Get the best ichidan confidence from inflection analysis results
- *
- * Scans all inflection candidates for Ichidan verb type and returns
- * the maximum confidence above the given threshold.
- *
- * @param candidates Inflection analysis results
- * @param min_threshold Minimum confidence to consider (default 0.4)
- * @return Best ichidan confidence, or 0.0 if none found
- */
-inline float getIchidanConfidence(const std::vector<grammar::InflectionCandidate>& candidates,
-                                  float min_threshold = 0.4F) {
-  float best = 0.0F;
-  for (const auto& cand : candidates) {
-    if (cand.verb_type == grammar::VerbType::Ichidan && cand.confidence >= min_threshold) {
-      best = std::max(best, cand.confidence);
-    }
-  }
-  return best;
-}
-
-/**
  * @brief Check whether a polite-auxiliary (ます family) follows at @p pos.
  *
  * ます / まし / ませ attach only to a verb renyokei, never to a bare noun, so
@@ -564,13 +471,7 @@ inline float getIchidanConfidence(const std::vector<grammar::InflectionCandidate
  * @param codepoints Full input codepoints
  * @param pos Index expected to hold the leading ま
  */
-inline bool masuAuxFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
-  if (pos + 1 >= codepoints.size() || codepoints[pos] != U'ま') {
-    return false;
-  }
-  const char32_t next = codepoints[pos + 1];
-  return next == U'す' || next == U'し' || next == U'せ';
-}
+bool masuAuxFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 
 /**
  * @brief Check whether an ichidan causative auxiliary (させ family) follows at @p pos.
@@ -583,9 +484,7 @@ inline bool masuAuxFollowsAt(const std::vector<char32_t>& codepoints, size_t pos
  * @param codepoints Full input codepoints
  * @param pos Index expected to hold the leading さ
  */
-inline bool causativeSaseFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
-  return pos + 1 < codepoints.size() && codepoints[pos] == U'さ' && codepoints[pos + 1] == U'せ';
-}
+bool causativeSaseFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 
 /**
  * @brief Check whether a character can start a する-auxiliary after renyokei し.
@@ -596,11 +495,7 @@ inline bool causativeSaseFollowsAt(const std::vector<char32_t>& codepoints, size
  * Used to tell a renyokei し + する-auxiliary chain apart from a nominalized
  * noun or a false godan-sa stem that would absorb the し.
  */
-inline bool isSuruAuxiliaryStarter(char32_t next_char) {
-  return next_char == U'ち' || next_char == U'て' || next_char == U'た' || next_char == U'な' || next_char == U'ま' ||
-         next_char == U'よ' || next_char == U'ろ' || next_char == U'そ' || next_char == U'と' || next_char == U'か' ||
-         next_char == U'つ';
-}
+bool isSuruAuxiliaryStarter(char32_t next_char);
 
 /**
  * @brief Check whether a ない-family negative begins at @p pos.
@@ -613,22 +508,7 @@ inline bool isSuruAuxiliaryStarter(char32_t next_char) {
  * @param codepoints Full input codepoints
  * @param pos Index expected to hold the leading な
  */
-inline bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
-  if (pos + 1 >= codepoints.size() || codepoints[pos] != U'な') {
-    return false;
-  }
-  const char32_t second = codepoints[pos + 1];
-  if (second == U'い' || second == U'く') {
-    return true;  // ない / なく(て)
-  }
-  if (pos + 2 >= codepoints.size()) {
-    return false;
-  }
-  const char32_t third = codepoints[pos + 2];
-  return (second == U'か' && third == U'っ') ||                      // なかっ(た)
-         (second == U'け' && (third == U'れ' || third == U'り')) ||  // なけれ(ば) / なけりゃ
-         (second == U'き' && third == U'ゃ');                        // なきゃ
-}
+bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 
 /**
  * @brief Check whether the conditional negative auxiliary なけれ begins at @p pos.
@@ -641,10 +521,7 @@ inline bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t
  * @param codepoints Full input codepoints
  * @param pos Index expected to hold the leading な
  */
-inline bool naiConditionalFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
-  return pos + 2 < codepoints.size() && codepoints[pos] == U'な' && codepoints[pos + 1] == U'け' &&
-         codepoints[pos + 2] == U'れ';
-}
+bool naiConditionalFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 
 /**
  * @brief Check whether the いただく paradigm begins at @p pos.
@@ -659,15 +536,7 @@ inline bool naiConditionalFollowsAt(const std::vector<char32_t>& codepoints, siz
  * @param codepoints Full input codepoints
  * @param pos Index expected to hold the leading い
  */
-inline bool itadakuParadigmStartsAt(const std::vector<char32_t>& codepoints, size_t pos) {
-  if (pos + 3 >= codepoints.size() || codepoints[pos] != U'い' || codepoints[pos + 1] != U'た' ||
-      codepoints[pos + 2] != U'だ') {
-    return false;
-  }
-  const char32_t inflected = codepoints[pos + 3];
-  return inflected == U'か' || inflected == U'き' || inflected == U'く' || inflected == U'け' || inflected == U'こ' ||
-         inflected == U'い';
-}
+bool itadakuParadigmStartsAt(const std::vector<char32_t>& codepoints, size_t pos);
 
 /**
  * @brief Best inflection candidate per verb class (Ichidan / Suru / Godan)
@@ -711,22 +580,6 @@ std::string baseFormSuffix(grammar::VerbType verb_type);
  * which is almost always NOUN + いる rather than an Ichidan verb.
  */
 bool isValidIRowIchidanStem(std::string_view stem);
-
-/**
- * @brief Check if an inflection suffix contains auxiliary verb patterns
- *
- * Looks for た/て/で/だ/ない/れ, which indicate a complete inflected form (as
- * opposed to a bare renyokei ending like し/み that is nominal, not verbal,
- * evidence). ます is intentionally excluded so the politeness auxiliary stays separate
- * (申し上げます -> 申し上げ + ます). Shared by the compound-verb join path and
- * the sokuonbin-prefix stem probe so both treat conjugation evidence alike.
- */
-inline bool hasAuxiliarySuffix(std::string_view suffix) {
-  if (suffix.empty()) {
-    return false;
-  }
-  return utf8::containsAny(suffix, {"た", "て", "で", "だ", "ない", "れ"});
-}
 
 // =============================================================================
 // Character Region Detection

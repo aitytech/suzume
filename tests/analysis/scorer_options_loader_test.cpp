@@ -11,6 +11,8 @@
 #include <fstream>
 #include <string>
 
+#include "analysis/scorer_bigram_overrides.h"
+
 namespace suzume::analysis {
 namespace {
 
@@ -123,6 +125,29 @@ TEST_F(JsonParserTest, PartialOverridePreservesDefaults) {
 
   // Check that non-loaded value is preserved
   EXPECT_FLOAT_EQ(opts.candidates.split.alpha_kanji_bonus, -0.123F);
+}
+
+TEST_F(JsonParserTest, LoadEveryBigramOverride) {
+  std::string json = R"({"bigram":{)";
+  for (size_t index = 0; index < kBigramOverrideSpecs.size(); ++index) {
+    if (index != 0) {
+      json += ',';
+    }
+    json += '"';
+    json += kBigramOverrideSpecs[index].name;
+    json += R"(":)";
+    json += std::to_string(static_cast<float>(index) + 0.25F);
+  }
+  json += "}}";
+
+  TempJsonFile file(json);
+  ScorerOptions opts;
+  ASSERT_TRUE(ScorerOptionsLoader::loadFromFile(file.path(), opts));
+
+  for (size_t index = 0; index < kBigramOverrideSpecs.size(); ++index) {
+    const BigramOverrideSpec& spec = kBigramOverrideSpecs[index];
+    EXPECT_FLOAT_EQ(opts.bigram.*(spec.value), static_cast<float>(index) + 0.25F) << spec.name;
+  }
 }
 
 // =============================================================================

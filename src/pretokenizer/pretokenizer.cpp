@@ -205,6 +205,15 @@ bool startsWithCI(std::string_view text, size_t pos, std::string_view prefix) {
   return true;
 }
 
+void setTokenFromRange(PreToken& token, std::string_view text, size_t start, size_t end, PreTokenType type,
+                       core::PartOfSpeech pos) {
+  token.surface = std::string(text.substr(start, end - start));
+  token.start = start;
+  token.end = end;
+  token.type = type;
+  token.pos = pos;
+}
+
 }  // namespace
 
 bool PreTokenizer::tryMatchUrl(std::string_view text, size_t pos, PreToken& token) const {
@@ -240,11 +249,8 @@ bool PreTokenizer::tryMatchUrl(std::string_view text, size_t pos, PreToken& toke
   }
 
   if (idx > start + (is_https ? 8 : 7)) {
-    token.surface = std::string(text.substr(start, idx - start));
-    token.start = start;
-    token.end = idx;
-    token.type = PreTokenType::Url;
-    token.pos = core::PartOfSpeech::Noun;  // Treat URLs as nouns (not symbols)
+    setTokenFromRange(token, text, start, idx, PreTokenType::Url,
+                      core::PartOfSpeech::Noun);  // Treat URLs as nouns (not symbols)
     return true;
   }
 
@@ -275,11 +281,7 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
         byte_pos = day.end;
         codepoint = normalize::decodeUtf8(text, byte_pos);
         if (codepoint == U'日') {
-          token.surface = std::string(text.substr(pos, byte_pos - pos));
-          token.start = pos;
-          token.end = byte_pos;
-          token.type = PreTokenType::Date;
-          token.pos = core::PartOfSpeech::Noun;
+          setTokenFromRange(token, text, pos, byte_pos, PreTokenType::Date, core::PartOfSpeech::Noun);
           return true;
         }
       }
@@ -354,11 +356,7 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
   }
 
   if (idx > pos) {
-    token.surface = std::string(text.substr(pos, idx - pos));
-    token.start = pos;
-    token.end = idx;
-    token.type = PreTokenType::Date;
-    token.pos = core::PartOfSpeech::Noun;
+    setTokenFromRange(token, text, pos, idx, PreTokenType::Date, core::PartOfSpeech::Noun);
     return true;
   }
 
@@ -385,11 +383,7 @@ bool PreTokenizer::tryMatchCounter(std::string_view text, size_t pos, PreToken& 
     return false;
   }
 
-  token.surface = std::string(text.substr(pos, idx - pos));
-  token.start = pos;
-  token.end = idx;
-  token.type = PreTokenType::Counter;
-  token.pos = core::PartOfSpeech::Noun;
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Counter, core::PartOfSpeech::Noun);
   return true;
 }
 
@@ -424,11 +418,7 @@ bool PreTokenizer::tryMatchCurrency(std::string_view text, size_t pos, PreToken&
   }
   idx = byte_pos;
 
-  token.surface = std::string(text.substr(pos, idx - pos));
-  token.start = pos;
-  token.end = idx;
-  token.type = PreTokenType::Currency;
-  token.pos = core::PartOfSpeech::Noun;
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Currency, core::PartOfSpeech::Noun);
   return true;
 }
 
@@ -467,11 +457,7 @@ bool PreTokenizer::tryMatchStorage(std::string_view text, size_t pos, PreToken& 
     }
   }
 
-  token.surface = std::string(text.substr(pos, idx - pos));
-  token.start = pos;
-  token.end = idx;
-  token.type = PreTokenType::Storage;
-  token.pos = core::PartOfSpeech::Noun;
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Storage, core::PartOfSpeech::Noun);
   return true;
 }
 
@@ -516,11 +502,7 @@ bool PreTokenizer::tryMatchVersion(std::string_view text, size_t pos, PreToken& 
     idx = num_end;
   }
 
-  token.surface = std::string(text.substr(pos, idx - pos));
-  token.start = pos;
-  token.end = idx;
-  token.type = PreTokenType::Version;
-  token.pos = core::PartOfSpeech::Noun;
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Version, core::PartOfSpeech::Noun);
   return true;
 }
 
@@ -550,11 +532,7 @@ bool PreTokenizer::tryMatchPercentage(std::string_view text, size_t pos, PreToke
     }
   }
 
-  token.surface = std::string(text.substr(pos, idx - pos));
-  token.start = pos;
-  token.end = idx;
-  token.type = PreTokenType::Percentage;
-  token.pos = core::PartOfSpeech::Noun;
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Percentage, core::PartOfSpeech::Noun);
   return true;
 }
 
@@ -663,11 +641,7 @@ bool PreTokenizer::tryMatchEmail(std::string_view text, size_t pos, PreToken& to
     return false;
   }
 
-  token.surface = std::string(text.substr(start, idx - start));
-  token.start = start;
-  token.end = idx;
-  token.type = PreTokenType::Email;
-  token.pos = core::PartOfSpeech::Noun;
+  setTokenFromRange(token, text, start, idx, PreTokenType::Email, core::PartOfSpeech::Noun);
   return true;
 }
 
@@ -765,11 +739,7 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
     if (hasIntervalSuffix(text, idx)) {
       return false;
     }
-    token.surface = std::string(text.substr(pos, idx - pos));
-    token.start = pos;
-    token.end = idx;
-    token.type = PreTokenType::Time;
-    token.pos = core::PartOfSpeech::Noun;
+    setTokenFromRange(token, text, pos, idx, PreTokenType::Time, core::PartOfSpeech::Noun);
     return true;
   }
 
@@ -839,11 +809,7 @@ bool PreTokenizer::tryMatchHashtag(std::string_view text, size_t pos, PreToken& 
     return false;
   }
 
-  token.surface = std::string(text.substr(pos, idx - pos));
-  token.start = pos;
-  token.end = idx;
-  token.type = PreTokenType::Hashtag;
-  token.pos = core::PartOfSpeech::Noun;
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Hashtag, core::PartOfSpeech::Noun);
   return true;
 }
 
@@ -903,11 +869,7 @@ bool PreTokenizer::tryMatchMention(std::string_view text, size_t pos, PreToken& 
     }
   }
 
-  token.surface = std::string(text.substr(pos, idx - pos));
-  token.start = pos;
-  token.end = idx;
-  token.type = PreTokenType::Mention;
-  token.pos = core::PartOfSpeech::Noun;
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Mention, core::PartOfSpeech::Noun);
   return true;
 }
 
@@ -943,11 +905,7 @@ bool PreTokenizer::tryMatchAsciiWithDots(std::string_view text, size_t pos, PreT
     return false;
   }
 
-  token.surface = std::string(text.substr(start, idx - start));
-  token.start = start;
-  token.end = idx;
-  token.type = PreTokenType::AsciiSeq;
-  token.pos = core::PartOfSpeech::Noun;
+  setTokenFromRange(token, text, start, idx, PreTokenType::AsciiSeq, core::PartOfSpeech::Noun);
   return true;
 }
 
@@ -1001,11 +959,7 @@ PreTokenResult PreTokenizer::process(std::string_view text) const {
       }
 
       // Add boundary token
-      token.surface = std::string(text.substr(pos, byte_pos - pos));
-      token.start = pos;
-      token.end = byte_pos;
-      token.type = PreTokenType::Boundary;
-      token.pos = core::PartOfSpeech::Symbol;
+      setTokenFromRange(token, text, pos, byte_pos, PreTokenType::Boundary, core::PartOfSpeech::Symbol);
       result.tokens.push_back(token);
 
       pos = byte_pos;

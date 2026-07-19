@@ -848,11 +848,10 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
   //       なくなった → なくなっ (onbin of なくなる) + た (auxiliary)
   // This separates the verb's onbin stem from the tense auxiliary.
   {
-    // Find hiragana extent (all consecutive hiragana from start_pos)
-    size_t hira_extent_end = start_pos;
-    while (hira_extent_end < char_types.size() && char_types[hira_extent_end] == normalize::CharType::Hiragana) {
-      ++hira_extent_end;
-    }
+    // Find the complete hiragana run from start_pos.
+    const size_t remaining_chars = char_types.size() - start_pos;
+    const size_t hira_extent_end =
+        vh::findCharRegionEnd(char_types, start_pos, remaining_chars, normalize::CharType::Hiragana);
     size_t hira_len = hira_extent_end - start_pos;
 
     // Need at least 3 chars: stem(1+) + っ + た/て
@@ -947,11 +946,10 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
   //       よんだ → よん (onbin of よむ) + だ (auxiliary)
   // This separates the onbin stem of godan-ma/ba/na verbs from the auxiliary.
   {
-    // Find hiragana extent (all consecutive hiragana from start_pos)
-    size_t hira_extent_end = start_pos;
-    while (hira_extent_end < char_types.size() && char_types[hira_extent_end] == normalize::CharType::Hiragana) {
-      ++hira_extent_end;
-    }
+    // Find the complete hiragana run from start_pos.
+    const size_t remaining_chars = char_types.size() - start_pos;
+    const size_t hira_extent_end =
+        vh::findCharRegionEnd(char_types, start_pos, remaining_chars, normalize::CharType::Hiragana);
     size_t hira_len = hira_extent_end - start_pos;
 
     // Need at least 3 chars: stem(1+) + ん + だ/で

@@ -234,6 +234,7 @@ TEST(TypesExtendedTest, ExtendedPosToPosAdjForms) {
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::AdjKatt), PartOfSpeech::Adjective);
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::AdjKeForm), PartOfSpeech::Adjective);
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::AdjNaAdj), PartOfSpeech::Adjective);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AdjMizenkei), PartOfSpeech::Adjective);
 }
 
 TEST(TypesExtendedTest, ExtendedPosToPosAuxiliaries) {
@@ -259,6 +260,16 @@ TEST(TypesExtendedTest, ExtendedPosToPosAuxiliaries) {
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxCopulaDesu), PartOfSpeech::Auxiliary);
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxHonorific), PartOfSpeech::Auxiliary);
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxGozaru), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxNegativeMai), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxClassicalNari), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxClassicalKeri), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxClassicalTari), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxClassicalPerfect), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxClassicalBeshi), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxInability), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxBenefactive), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxSimilitudeYou), PartOfSpeech::Auxiliary);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::AuxKuruwaPolite), PartOfSpeech::Auxiliary);
 }
 
 TEST(TypesExtendedTest, ExtendedPosToPosAuxExcessiveAndGaruMapToVerb) {
@@ -300,6 +311,9 @@ TEST(TypesExtendedTest, ExtendedPosToPosOthers) {
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::Determiner), PartOfSpeech::Determiner);
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::Prefix), PartOfSpeech::Prefix);
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::Suffix), PartOfSpeech::Suffix);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::SuffixRecentCompletion), PartOfSpeech::Suffix);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::SuffixTendency), PartOfSpeech::Suffix);
+  EXPECT_EQ(extendedPosToPos(ExtendedPOS::DeterminerQuotative), PartOfSpeech::Determiner);
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::Symbol), PartOfSpeech::Symbol);
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::Interjection), PartOfSpeech::Interjection);
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::Other), PartOfSpeech::Other);
@@ -345,6 +359,7 @@ TEST(TypesExtendedTest, IsVerbForm) {
 TEST(TypesExtendedTest, IsAdjectiveForm) {
   EXPECT_TRUE(isAdjectiveForm(ExtendedPOS::AdjBasic));
   EXPECT_TRUE(isAdjectiveForm(ExtendedPOS::AdjNaAdj));
+  EXPECT_TRUE(isAdjectiveForm(ExtendedPOS::AdjMizenkei));
   EXPECT_FALSE(isAdjectiveForm(ExtendedPOS::VerbShuushikei));
   EXPECT_FALSE(isAdjectiveForm(ExtendedPOS::Noun));
 }
@@ -352,6 +367,8 @@ TEST(TypesExtendedTest, IsAdjectiveForm) {
 TEST(TypesExtendedTest, IsAuxiliaryType) {
   EXPECT_TRUE(isAuxiliaryType(ExtendedPOS::AuxTenseTa));
   EXPECT_TRUE(isAuxiliaryType(ExtendedPOS::AuxGozaru));
+  EXPECT_TRUE(isAuxiliaryType(ExtendedPOS::AuxClassicalBeshi));
+  EXPECT_TRUE(isAuxiliaryType(ExtendedPOS::AuxSimilitudeYou));
   // AuxExcessive and AuxGaru are outside the range
   EXPECT_FALSE(isAuxiliaryType(ExtendedPOS::AuxExcessive));
   EXPECT_FALSE(isAuxiliaryType(ExtendedPOS::AuxGaru));
@@ -370,6 +387,13 @@ TEST(TypesExtendedTest, IsNounType) {
   EXPECT_TRUE(isNounType(ExtendedPOS::NounNumber));
   EXPECT_FALSE(isNounType(ExtendedPOS::Pronoun));
   EXPECT_FALSE(isNounType(ExtendedPOS::VerbShuushikei));
+}
+
+TEST(TypesExtendedTest, IsPronounType) {
+  EXPECT_TRUE(isPronounType(ExtendedPOS::Pronoun));
+  EXPECT_TRUE(isPronounType(ExtendedPOS::PronounInterrogative));
+  EXPECT_FALSE(isPronounType(ExtendedPOS::Noun));
+  EXPECT_FALSE(isPronounType(ExtendedPOS::VerbShuushikei));
 }
 
 // =============================================================================

@@ -2,6 +2,17 @@
 
 namespace suzume::analysis {
 
+namespace bigram_rules {
+
+void applyRules(BigramMatrix& table, const BigramRule* rules, size_t rule_count) {
+  for (size_t rule_index = 0; rule_index < rule_count; ++rule_index) {
+    const BigramRule& rule = rules[rule_index];
+    table[rule.prev][rule.next] = rule.cost;
+  }
+}
+
+}  // namespace bigram_rules
+
 float BigramTable::getCost(core::ExtendedPOS prev, core::ExtendedPOS next) {
   size_t prev_idx = static_cast<size_t>(prev);
   size_t next_idx = static_cast<size_t>(next);

@@ -374,10 +374,6 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Ensures で+あり+ます uses AuxCopulaDa for both で and あり
       {EPOS::AuxCopulaDa, EPOS::AuxTenseMasu, cost::kStrongBonus},
 
-      // AuxCopulaDesu → AuxTenseTa (でし+た) - very-strong bonus for polite past copula
-      // Ensures 本でした → 本+でし+た over 本+で+し+た
-      {EPOS::AuxCopulaDesu, EPOS::AuxTenseTa, cost::kVeryStrongBonus},
-
       // AuxTenseTa → AuxCopulaDesu (た+です) - moderate bonus for polite past
       // e.g., 長かっ+た+です, 美しかっ+た+です (adjective past polite)
       {EPOS::AuxTenseTa, EPOS::AuxCopulaDesu, cost::kModerateBonus},
@@ -452,10 +448,9 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // outrank a homographic continuative-verb candidate (答え+は正しい).
       {EPOS::Noun, EPOS::ParticleTopic, cost::kStrongBonus},
 
-      // A continuative verb can be topicalized in the contrastive pattern
-      // (減り+は+しない). Preserve this predicate reading over a homographic
-      // nominalization.
-      {EPOS::VerbRenyokei, EPOS::ParticleTopic, cost::kModerateBonus},
+      // A family name followed by a given name remains a single proper-name
+      // sequence. This is independent of their surface spellings.
+      {EPOS::NounProperFamily, EPOS::NounProperGiven, cost::kStrongBonus},
 
       // Nominal coordination (本+及び+水, 本+又は+水) must preserve both
       // noun boundaries instead of letting an unknown noun absorb the linker.
@@ -848,7 +843,7 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Nominal completion-state suffix (確認+済み, 承認+済み).
       {EPOS::Noun, EPOS::SuffixRecentCompletion, cost::kStrongBonus},
   };
-  applyRules(table, kRules);
+  applyRules(table, kRules, sizeof(kRules) / sizeof(kRules[0]));
 }  // namespace suzume::analysis::bigram_rules
 
 }  // namespace suzume::analysis::bigram_rules

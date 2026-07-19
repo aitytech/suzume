@@ -24,14 +24,6 @@ struct AuxiliaryBase {
   uint16_t required_conn;
 };
 
-// UTF-8 helper: drop last character (assumes valid UTF-8 hiragana)
-std::string dropLastChar(std::string_view text) {
-  if (text.size() >= core::kJapaneseCharBytes) {
-    return std::string(text.substr(0, text.size() - core::kJapaneseCharBytes));
-  }
-  return std::string(text);
-}
-
 // Conjugation suffix with output connection ID
 struct ConjSuffix {
   const char* suffix;
@@ -104,7 +96,7 @@ constexpr ConjSuffix kMasu[] = {
 // VERB(renyokei/onbinkei) + て(PARTICLE) win over a unified te-form.
 void appendWithStem(const AuxiliaryBase& base, const ConjSuffix* suffixes, size_t suffix_count,
                     std::vector<AuxiliaryEntry>& result) {
-  const std::string stem = dropLastChar(base.surface);
+  const std::string stem(utf8::dropLastChar(base.surface));
   result.reserve(result.size() + suffix_count);
   for (size_t suffix_index = 0; suffix_index < suffix_count; ++suffix_index) {
     const ConjSuffix& suf = suffixes[suffix_index];
@@ -132,7 +124,7 @@ void appendGodanWithStem(const AuxiliaryBase& base, bool te_attach_only, bool fo
   const std::string onbin = onbinFormOf(row);
   const std::string ta_kana = row.voiced_ta ? "だ" : "た";
   const std::string te_kana = row.voiced_ta ? "で" : "て";
-  const std::string stem = dropLastChar(base.surface);
+  const std::string stem(utf8::dropLastChar(base.surface));
 
   result.reserve(result.size() + (te_attach_only ? 4 : 9));
   result.push_back({stem + vowels.base, conn::kAuxOutBase, base.required_conn});

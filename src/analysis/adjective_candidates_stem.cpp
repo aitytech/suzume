@@ -286,24 +286,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
   // The stem ends with し, and is followed by そう/すぎる/etc.
   // E.g., 難しそう → 難し (stem) + そう
   // E.g., 美しすぎる → 美し (stem) + すぎる
-  static constexpr std::array<std::string_view, 14> kAdjStemAuxPatterns = {
-      "しそう",    // appearance: 難しそう, 美しそう
-      "しそうだ",  // appearance + copula
-      "しそうな",  // attributive
-      "しそうに",  // adverbial
-      "しすぎ",    // excessive: 難しすぎ, 美しすぎ
-      "しすぎる",  // excessive + dictionary form
-      "しすぎた",  // excessive + past
-      "きそう",    // appearance: 大きそう
-      "きそうだ",  // appearance + copula
-      "きそうな",  // attributive
-      "きそうに",  // adverbial
-      "きすぎ",    // excessive: 大きすぎ
-      "きすぎる",  // excessive + dictionary form
-      "きすぎた",  // excessive + past
-  };
-
-  for (const auto& pattern : kAdjStemAuxPatterns) {
+  for (const std::string_view pattern : adj_detail::kIAdjStemAuxPatterns) {
     if (hiragana_part.size() >= pattern.size() && hiragana_part.substr(0, pattern.size()) == pattern) {
       SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   shii pattern=\"" << pattern << "\" matched\n");
 

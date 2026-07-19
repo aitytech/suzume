@@ -10,6 +10,15 @@
 
 namespace suzume::analysis {
 
+size_t findCharRegionEnd(const std::vector<normalize::CharType>& char_types, size_t start_pos, size_t max_len,
+                         normalize::CharType target_type) {
+  size_t end = start_pos;
+  while (end < char_types.size() && end - start_pos < max_len && char_types[end] == target_type) {
+    ++end;
+  }
+  return end;
+}
+
 ByteOffsets buildByteOffsets(const std::vector<char32_t>& codepoints) {
   ByteOffsets byte_offsets;
   byte_offsets.reserve(codepoints.size() + 1);

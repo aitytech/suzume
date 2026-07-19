@@ -26,6 +26,21 @@
 namespace suzume::analysis::kanji_verb_detail {
 namespace vh = verb_helpers;
 
+namespace {
+
+float getIchidanConfidence(const std::vector<grammar::InflectionCandidate>& candidates,
+                           float min_threshold = candidate::verb_cost::kIchidanDefaultMinConfidence) {
+  float best = candidate::kNoConfidence;
+  for (const auto& candidate : candidates) {
+    if (candidate.verb_type == grammar::VerbType::Ichidan && candidate.confidence >= min_threshold) {
+      best = std::max(best, candidate.confidence);
+    }
+  }
+  return best;
+}
+
+}  // namespace
+
 void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                      size_t hiragana_end, const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,
@@ -265,8 +280,8 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
             if (codepoints[renyokei_end] == U'れ' && renyokei_end + 1 < codepoints.size() &&
                 codepoints[renyokei_end + 1] == U'ば') {
               std::string kateikei_surface = extractSubstring(codepoints, start_pos, renyokei_end + 1);
-              float kateikei_confidence = vh::getIchidanConfidence(inflection.analyze(kateikei_surface),
-                                                                   candidate::verb_cost::kIchidanKateikeiMinConfidence);
+              float kateikei_confidence = getIchidanConfidence(inflection.analyze(kateikei_surface),
+                                                               candidate::verb_cost::kIchidanKateikeiMinConfidence);
               if (kateikei_confidence >= candidate::verb_cost::kIchidanKateikeiMinConfidence) {
                 candidates.push_back(makeVerbCandidate(
                     kateikei_surface, start_pos, renyokei_end + 1, candidate::verb_cost::kStrongBonus, surface + "る",
@@ -429,7 +444,7 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
     std::string causative_stem = extractSubstring(codepoints, start_pos, kanji_end + 2);
     std::string base_form = causative_stem + "る";
     float confidence =
-        vh::getIchidanConfidence(inflection.analyze(surface), candidate::verb_cost::kIchidanKateikeiMinConfidence);
+        getIchidanConfidence(inflection.analyze(surface), candidate::verb_cost::kIchidanKateikeiMinConfidence);
     if (confidence >= candidate::verb_cost::kIchidanKateikeiMinConfidence) {
       candidates.push_back(makeVerbCandidate(surface, start_pos, kateikei_end, candidate::verb_cost::kStrongBonus,
                                              base_form, dictionary::ConjugationType::Ichidan, true,
@@ -445,7 +460,7 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
       codepoints[kanji_end + 1] == U'う') {
     std::string full_surface = extractSubstring(codepoints, start_pos, kanji_end + 2);
     float confidence =
-        vh::getIchidanConfidence(inflection.analyze(full_surface), candidate::verb_cost::kIchidanKateikeiMinConfidence);
+        getIchidanConfidence(inflection.analyze(full_surface), candidate::verb_cost::kIchidanKateikeiMinConfidence);
     if (confidence >= candidate::verb_cost::kIchidanKateikeiMinConfidence) {
       std::string stem = extractSubstring(codepoints, start_pos, kanji_end);
       candidates.push_back(makeVerbCandidate(stem, start_pos, kanji_end, candidate::verb_cost::kStrongBonus,
@@ -487,7 +502,7 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
 
         // Verify using inflection analysis on the kateikei form
         const auto& all_candidates = inflection.analyze(surface);
-        float ichidan_confidence = vh::getIchidanConfidence(all_candidates, 0.3F);
+        float ichidan_confidence = getIchidanConfidence(all_candidates, 0.3F);
 
         if (!is_iadj_kateikei && ichidan_confidence >= 0.3F) {
           // Negative cost to beat the split path 語幹+れ(受身)+ば
@@ -550,7 +565,7 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
           // Verify using inflection analysis
           const auto& all_candidates = inflection.analyze(renyokei_surface + "よう");
           float min_confidence = could_be_adjective ? 0.5F : 0.3F;
-          float ichidan_confidence = vh::getIchidanConfidence(all_candidates, min_confidence);
+          float ichidan_confidence = getIchidanConfidence(all_candidates, min_confidence);
 
           if (ichidan_confidence >= min_confidence) {
             // Negative cost to beat the renyokei + final-particle path.
@@ -620,7 +635,7 @@ void appendCausativeRenyokeiCandidates(const std::vector<char32_t>& codepoints, 
 
         // Verify this is a valid ichidan verb
         const auto& all_candidates = inflection.analyze(causative_base);
-        float ichidan_confidence = vh::getIchidanConfidence(all_candidates);
+        float ichidan_confidence = getIchidanConfidence(all_candidates);
 
         if (ichidan_confidence >= 0.4F) {
           float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_confidence,
@@ -687,7 +702,7 @@ void appendGodanPassiveRenyokeiCandidates(const std::vector<char32_t>& codepoint
           // The best overall interpretation might be Godan (言う + れる), but
           // there should also be an Ichidan interpretation (言われる as verb)
           const auto& all_candidates = inflection.analyze(passive_base);
-          float ichidan_confidence = vh::getIchidanConfidence(all_candidates);
+          float ichidan_confidence = getIchidanConfidence(all_candidates);
 
           // Passive verbs are Ichidan conjugation (言われる conjugates like 食べる)
           if (ichidan_confidence >= 0.4F) {

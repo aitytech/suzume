@@ -63,6 +63,8 @@ set(TEST_SOURCES
   pretokenizer/pretokenizer_number_test.cpp
   pretokenizer/pretokenizer_text_test.cpp
   analysis/scorer_options_loader_test.cpp
+  analysis/bigram_table_test.cpp
+  analysis/scorer_word_cost_test.cpp
   analysis/verb_guard_family_test.cpp
   output/japanese_format_test.cpp
   postprocess/tag_generator_test.cpp

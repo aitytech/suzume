@@ -18,6 +18,7 @@ add_library(suzume_analysis OBJECT
   scorer_connection_cost.cpp
   scorer_connection_rules_lexical.cpp
   scorer_connection_rules_verb.cpp
+  scorer_options_loader.cpp
   scorer_word_cost.cpp
   split_candidates.cpp
   suffix_candidates_compound.cpp

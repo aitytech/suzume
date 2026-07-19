@@ -455,6 +455,10 @@ constexpr float kKanjiSokuonbinMinConfidence = 0.3F;
 constexpr float kTerminalHiraganaGodanKaConfidence = 0.6F;
 // Minimum evidence for a rule-derived Ichidan conditional stem (…れ + ば).
 constexpr float kIchidanKateikeiMinConfidence = 0.3F;
+
+// Default floor when selecting an Ichidan analysis from ambiguous inflection
+// candidates. More restrictive call sites use their own named thresholds.
+constexpr float kIchidanDefaultMinConfidence = 0.4F;
 }  // namespace verb_cost
 
 // =============================================================================

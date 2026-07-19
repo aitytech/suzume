@@ -3,11 +3,12 @@
 # WASM size regression gate. Suzume ships to the browser, so binary size is a product
 # constraint: L1 entries, hardcoded lists, and static data all land in the .wasm and
 # nobody notices until release. This fails when the built artifact exceeds the committed
-# baseline by more than TOLERANCE_PCT, and always prints the current size + delta.
+# baseline by more than TOLERANCE_PCT, and always prints raw and reproducible
+# gzip (-9 -n) sizes. Legacy one-number baselines remain raw-only compatible.
 #
 # Usage:
 #   scripts/check_wasm_size.sh <path-to.wasm>          # check against baseline
-#   scripts/check_wasm_size.sh <path-to.wasm> update   # set baseline to current size
+#   scripts/check_wasm_size.sh <path-to.wasm> update   # set raw + gzip baseline
 
 set -eu
 cd "$(git rev-parse --show-toplevel)"
@@ -18,28 +19,55 @@ BASELINE="scripts/wasm-size-baseline.txt"
 TOLERANCE_PCT=5
 
 [ -f "$WASM" ] || { echo "❌ wasm artifact not found: $WASM"; exit 1; }
-size=$(wc -c < "$WASM" | tr -d ' ')
+raw_size=$(wc -c < "$WASM" | tr -d ' ')
+gzip_size=$(gzip -9 -n -c "$WASM" | wc -c | tr -d ' ')
 
 if [ "$MODE" = "update" ]; then
-  echo "$size" > "$BASELINE"
-  echo "✅ wasm-size baseline set to $size bytes ($((size/1024)) KB)"
+  printf '%s\t%s\n' "$raw_size" "$gzip_size" > "$BASELINE"
+  echo "✅ wasm-size baseline set to raw=$raw_size bytes ($((raw_size/1024)) KB), gzip=$gzip_size bytes"
   exit 0
 fi
 
 [ -f "$BASELINE" ] || { echo "❌ missing $BASELINE (run: scripts/check_wasm_size.sh $WASM update)"; exit 1; }
-base=$(tr -d ' \n' < "$BASELINE")
-limit=$(( base + base * TOLERANCE_PCT / 100 ))
-delta=$(( size - base ))
-pct=$(( delta * 100 / base ))
+baseline_line=$(tr -d '\r\n' < "$BASELINE")
+IFS="$(printf '\t')" read -r raw_base gzip_base <<EOF
+$baseline_line
+EOF
 
-printf 'wasm size: %d KB (baseline %d KB, delta %+d KB / %+d%%)\n' \
-  "$((size/1024))" "$((base/1024))" "$((delta/1024))" "$pct"
-[ -n "${GITHUB_STEP_SUMMARY:-}" ] && \
-  printf '### WASM size\n%d KB (baseline %d KB, %+d%%)\n' "$((size/1024))" "$((base/1024))" "$pct" >> "$GITHUB_STEP_SUMMARY"
+[ -n "$raw_base" ] || { echo "❌ invalid WASM baseline: $BASELINE"; exit 1; }
+raw_limit=$(( raw_base + raw_base * TOLERANCE_PCT / 100 ))
+raw_delta=$(( raw_size - raw_base ))
+raw_pct=$(( raw_delta * 100 / raw_base ))
 
-if [ "$size" -gt "$limit" ]; then
+printf 'wasm raw: %d KB (baseline %d KB, delta %+d KB / %+d%%)\n' \
+  "$((raw_size/1024))" "$((raw_base/1024))" "$((raw_delta/1024))" "$raw_pct"
+
+gzip_failed=0
+if [ -n "${gzip_base:-}" ]; then
+  gzip_limit=$(( gzip_base + gzip_base * TOLERANCE_PCT / 100 ))
+  gzip_delta=$(( gzip_size - gzip_base ))
+  gzip_pct=$(( gzip_delta * 100 / gzip_base ))
+  printf 'wasm gzip: %d KB (baseline %d KB, delta %+d KB / %+d%%)\n' \
+    "$((gzip_size/1024))" "$((gzip_base/1024))" "$((gzip_delta/1024))" "$gzip_pct"
+  [ "$gzip_size" -gt "$gzip_limit" ] && gzip_failed=1
+else
+  printf 'wasm gzip: %d KB (legacy baseline has no gzip value)\n' "$((gzip_size/1024))"
+fi
+
+[ -n "${GITHUB_STEP_SUMMARY:-}" ] && {
+  printf '### WASM size\nraw: %d KB (baseline %d KB, %+d%%)\n' \
+    "$((raw_size/1024))" "$((raw_base/1024))" "$raw_pct" >> "$GITHUB_STEP_SUMMARY"
+  if [ -n "${gzip_base:-}" ]; then
+    printf 'gzip: %d KB (baseline %d KB, %+d%%)\n' \
+      "$((gzip_size/1024))" "$((gzip_base/1024))" "$gzip_pct" >> "$GITHUB_STEP_SUMMARY"
+  else
+    printf 'gzip: %d KB (legacy baseline unavailable)\n' "$((gzip_size/1024))" >> "$GITHUB_STEP_SUMMARY"
+  fi
+}
+
+if [ "$raw_size" -gt "$raw_limit" ] || [ "$gzip_failed" -ne 0 ]; then
   echo "❌ wasm grew more than ${TOLERANCE_PCT}% over baseline."
-  echo "   Investigate (new static data / L1 entries / hardcoded lists)."
+  echo "   Investigate raw CODE/DATA and gzip regressions."
   echo "   If intentional, run: scripts/check_wasm_size.sh $WASM update"
   exit 1
 fi

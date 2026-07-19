@@ -1,3 +1,4 @@
+#include <array>
 #include <cmath>
 
 #include "analysis/bigram_table.h"
@@ -31,6 +32,27 @@ float lengthScaledBonus(float base, size_t char_len, size_t min_len, float per_c
   return base - static_cast<float>(char_len > min_len ? char_len - min_len : 0) * per_char;
 }
 
+bool isCompleteDictionaryAdjective(const core::LatticeEdge& edge) {
+  return edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&
+         edge.extended_pos != core::ExtendedPOS::AdjStem;
+}
+
+bool isUnregisteredPureHiraganaVerb(const core::LatticeEdge& edge) {
+  return !edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface);
+}
+
+struct VerbEndingPenaltyRule {
+  std::string_view suffix;
+  float penalty;
+};
+
+constexpr std::array<VerbEndingPenaltyRule, 4> kHiraganaVerbEndingPenalties = {{
+    {"そう", cost::kRare},
+    {"てき", cost::kVeryRare},
+    {"まし", cost::kVeryRare},
+    {"てい", cost::kVeryRare},
+}};
+
 /// Dictionary bonuses for i-adjectives (hiragana, kanji+い, kanji+okurigana).
 float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
   float bonus{};
@@ -41,8 +63,7 @@ float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
   // Longer adjectives get stronger bonus to beat split paths
   // Exclude AdjStem (語幹) as it's not a complete i-adjective
   // Exclude conditional forms ending in ければ (should split: よければ → よけれ + ば)
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&
-      edge.extended_pos != core::ExtendedPOS::AdjStem && grammar::isPureHiragana(edge.surface) &&
+  if (isCompleteDictionaryAdjective(edge) && grammar::isPureHiragana(edge.surface) &&
       !utf8::endsWith(edge.surface, "ければ") &&
       // Exclude ない/なく/なかっ - has auxiliary counterpart, context-dependent
       // Exclude そう - has auxiliary counterpart (様態), context-dependent
@@ -57,8 +78,7 @@ float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
   // Kanji i-adjectives are common (暑い, 寒い, 熱い, 高い, 安い, etc.)
   // The godan-wa verb candidate often beats the adjective due to connection bonuses
   // Surface pattern: 1 kanji + い (2 chars total)
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&
-      edge.extended_pos != core::ExtendedPOS::AdjStem &&
+  if (isCompleteDictionaryAdjective(edge) &&
       edge.surface.size() == core::kTwoJapaneseCharBytes &&  // 2 chars (1 kanji + い) = 6 bytes
       utf8::endsWith(edge.surface, "い") && grammar::isAllKanji(edge.surface.substr(0, 3))) {  // First char is kanji
     bonus += cost::kModerateBonus;  // -0.5 to beat godan-wa verb candidate
@@ -70,8 +90,7 @@ float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
   // Apply the same lexical preference to their conjugated forms (情けなく,
   // 情けなかっ): otherwise only the base form can beat a grammatical-looking
   // verb/particle split. AdjNaAdj is deliberately excluded.
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&
-      edge.extended_pos != core::ExtendedPOS::AdjStem && grammar::containsKanji(edge.surface) &&
+  if (isCompleteDictionaryAdjective(edge) && grammar::containsKanji(edge.surface) &&
       edge.surface.size() >= 4 * core::kJapaneseCharBytes && edge.extended_pos != core::ExtendedPOS::AdjNaAdj &&
       !utf8::endsWith(edge.surface, "ければ")) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
@@ -135,8 +154,7 @@ float computeSpuriousVerbPenalty(const core::LatticeEdge& edge) {
   // E.g., "さんで" as te-form of "さむ" is likely さん+で misanalysis
   // Patterns: xさん, xさんで, さんで where x is short hiragana (likely name)
   // This complements the hatsuonbin penalty above for other verb forms
-  if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      (utf8::contains(edge.surface, "さん"))) {
+  if (isUnregisteredPureHiraganaVerb(edge) && utf8::contains(edge.surface, "さん")) {
     size_t san_pos = edge.surface.find("さん");
     if (san_pos != std::string::npos) {
       // Penalize if:
@@ -164,7 +182,7 @@ float computeSpuriousVerbPenalty(const core::LatticeEdge& edge) {
   // E.g., "ございませんでし" as verb renyokei is spurious
   // Should be ござい|ませ|ん|でし (aux chain), not ございませんでし (verb)
   // Valid long verbs typically have kanji stems
-  if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
+  if (isUnregisteredPureHiraganaVerb(edge) &&
       edge.surface.size() >= core::kSixJapaneseCharBytes) {  // 6+ hiragana chars (6*3=18 bytes)
     penalty += sc::kPenaltyVeryLongHiraganaVerb;
   }
@@ -206,39 +224,15 @@ float computeStandaloneAuxiliaryPenalty(const core::LatticeEdge& edge) {
 float computeVerbEndingPenalty(const core::LatticeEdge& edge) {
   float penalty{};
 
-  // Penalty for pure-hiragana verb candidates ending with そう
-  // E.g., "なさそう" should be な + さ + そう, not なさそう (verb)
-  // The そう ending is typically from そう (様態 auxiliary), not a verb stem
-  // Valid verbs ending in そう are rare and usually have kanji stems
-  if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      utf8::endsWith(edge.surface, "そう") &&
-      edge.surface.size() >= core::kThreeJapaneseCharBytes) {  // 3+ chars (at least xそう)
-    penalty += cost::kRare;
-  }
-
-  // Penalty for pure-hiragana verb candidates ending with てき
-  // E.g., "なってき" should be なっ + て + き (来る), not なってき (verb)
-  // The てき ending is almost always て (particle) + き/こ (来る auxiliary)
-  // Exception: できる is valid but is in dictionary
-  if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      utf8::endsWith(edge.surface, "てき") && edge.surface.size() >= 9) {  // 3+ chars (at least xてき)
-    penalty += cost::kVeryRare;
-  }
-
-  // Penalty for pure-hiragana verb candidates ending with まし
-  // E.g., "しまし" should be し + まし (masu renyokei), not しまし (verb)
-  // The まし ending is almost always ます (polite aux) renyokei form
-  if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      utf8::endsWith(edge.surface, "まし") && edge.surface.size() >= 9) {  // 3+ chars (at least xまし)
-    penalty += cost::kVeryRare;
-  }
-
-  // Penalty for pure-hiragana verb candidates ending with てい
-  // E.g., "させてい" should be させ + て + い (progressive), not させてい (verb)
-  // The てい ending is almost always て (particle) + い (いる renyokei)
-  if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(edge.surface) &&
-      utf8::endsWith(edge.surface, "てい") && edge.surface.size() >= 9) {  // 3+ chars (at least xてい)
-    penalty += cost::kVeryRare;
+  // Common unregistered-hiragana endings are more plausibly an auxiliary
+  // boundary than an independent verb. The table keeps their shared gate and
+  // per-ending severity together.
+  if (isUnregisteredPureHiraganaVerb(edge)) {
+    for (const VerbEndingPenaltyRule& rule : kHiraganaVerbEndingPenalties) {
+      if (edge.surface.size() >= core::kThreeJapaneseCharBytes && utf8::endsWith(edge.surface, rule.suffix)) {
+        penalty += rule.penalty;
+      }
+    }
   }
 
   // Penalty for pure-hiragana verb te-form candidates not in dictionary

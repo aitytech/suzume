@@ -13,6 +13,7 @@
 
 #ifndef SUZUME_USE_EMBEDDED_DICT
 #include <filesystem>
+#include <iostream>
 #endif
 
 #include "analysis/analyzer.h"

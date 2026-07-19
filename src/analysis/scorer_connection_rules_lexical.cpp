@@ -50,13 +50,6 @@ bool isGodanRenyokeiOfLemma(std::string_view surface, std::string_view lemma) {
 float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
-  // A na-adjective requires an adnominal copula before an independent noun.
-  // When the same surface also has a noun analysis, retain that nominal
-  // compound boundary (自然+言語) instead of attaching the bare adjective.
-  if (prev.extended_pos == core::ExtendedPOS::AdjNaAdj && next.extended_pos == core::ExtendedPOS::Noun) {
-    bonus += cost::kStrong;
-  }
-
   // The temporal suffix 中 cannot govern an accusative object.  In a noun
   // compound before を, retain the complete lexical noun (背中を) rather than
   // treating its final character as a duration suffix.
@@ -129,11 +122,6 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kAlmostNever;
   }
 
-  // A conjunction can be followed by a binding particle (だけど+も).
-  if (prev.extended_pos == core::ExtendedPOS::Conjunction && next.extended_pos == core::ExtendedPOS::ParticleBinding) {
-    bonus += cost::kDoubleVeryStrongBonus;
-  }
-
   // A bare noun followed by the adverbial negative なく is the formal
   // "without [noun]" construction (資金なくして). Prefer it over the
   // transitive verb なくす, whose object requires a case-marked noun (物を
@@ -150,13 +138,6 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::Noun && utf8::endsWith(prev.surface, "違い") &&
       next.extended_pos == core::ExtendedPOS::AdjBasic && next.lemma == "ない") {
     bonus += cost::kStrongBonus;
-  }
-
-  // The conjecture auxiliary らしい productively follows demonstrative and
-  // personal pronouns (それ+らしい, 彼+らしい). Keep that closed-class
-  // analysis ahead of an unconstrained whole-hiragana adjective candidate.
-  if (prev.extended_pos == core::ExtendedPOS::Pronoun && next.extended_pos == core::ExtendedPOS::AuxConjectureRashii) {
-    bonus += cost::kExtremeBonus;
   }
 
   // A personal or demonstrative pronoun cannot directly precede the
@@ -180,13 +161,6 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // Preserve that productive adnominal boundary over a split into an
   // adverb/adjective and the independent verb いう.
   if (prev.extended_pos == core::ExtendedPOS::Determiner && next.extended_pos == core::ExtendedPOS::NounFormal) {
-    bonus += cost::kStrongBonus;
-  }
-
-  // A determiner can modify an i-adjective stem that is nominalized by a
-  // following suffix (あまりの+暑+さ, この+大き+さ). Keep this adnominal
-  // construction ahead of a formal-noun plus genitive-particle analysis.
-  if (prev.extended_pos == core::ExtendedPOS::Determiner && next.extended_pos == core::ExtendedPOS::AdjStem) {
     bonus += cost::kStrongBonus;
   }
 
@@ -260,18 +234,6 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kAlmostNever;
   }
 
-  // The irrealis form selects auxiliaries, not a case particle. This rejects
-  // false adjective fragments such as おこ+が+ましい.
-  if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && next.extended_pos == core::ExtendedPOS::ParticleCase) {
-    bonus += cost::kAlmostNever;
-  }
-
-  // The aspectual いく auxiliary follows a te-form, not a bare renyokei.
-  // The latter belongs to a lexical compound verb and keeps its lexical POS.
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxAspectIku) {
-    bonus += cost::kAlmostNever;
-  }
-
   // An adjective stem cannot take the past-conditional particle ったら.
   // The sequence is a verb's euphonic stem plus tense auxiliary (なっ+たら).
   if (prev.extended_pos == core::ExtendedPOS::AdjStem && next.extended_pos == core::ExtendedPOS::ParticleFinal &&
@@ -313,10 +275,6 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // noun, rather than as a malformed whole adjective (嬉しくてしかたがない).
   if (prev.extended_pos == core::ExtendedPOS::AdjBasic && utf8::endsWith(prev.surface, "て") &&
       next.extended_pos == core::ExtendedPOS::NounFormal) {
-    bonus += cost::kAlmostNever;
-  }
-
-  if (prev.extended_pos == core::ExtendedPOS::AuxVolitional && next.extended_pos == core::ExtendedPOS::AuxTenseTa) {
     bonus += cost::kAlmostNever;
   }
 
@@ -1024,13 +982,6 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
        next.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
        next.extended_pos == core::ExtendedPOS::Conjunction)) {
     bonus += cost::kStrong;
-  }
-
-  // んで is the connective copula after the contracted negative (読まんで),
-  // followed by a binding particle in んでも. Prefer that auxiliary reading
-  // over the homographic connective particle.
-  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNu && next.extended_pos == core::ExtendedPOS::AuxCopulaDa) {
-    bonus += sc::kBonusDoubleVeryStrong;
   }
 
   // Penalty for VerbOnbinkei(ん) → Verb(でる) pattern

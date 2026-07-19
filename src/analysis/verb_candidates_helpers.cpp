@@ -17,6 +17,81 @@
 
 namespace suzume::analysis::verb_helpers {
 
+bool embedsTeFormAuxiliary(std::string_view surface) {
+  static constexpr std::string_view kPatterns[] = {
+      "ていく", "ていっ", "ていけ", "ていか",                // 〜ていく directional aspect
+      "てもら", "てくれ", "てあげ", "てほしい", "てくださ",  // benefactive / request
+      "てある", "である",                                    // completed-state existential
+  };
+  for (const std::string_view pattern : kPatterns) {
+    if (surface.find(pattern) != std::string_view::npos) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool embedsTeFormMiruAuxiliary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (end_pos > codepoints.size()) {
+    return false;
+  }
+  for (size_t pos = start_pos + 1; pos + 1 < end_pos; ++pos) {
+    if ((codepoints[pos] == core::hiragana::kTe || codepoints[pos] == U'で') && codepoints[pos + 1] == U'み') {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool masuAuxFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos + 1 >= codepoints.size() || codepoints[pos] != U'ま') {
+    return false;
+  }
+  const char32_t next = codepoints[pos + 1];
+  return next == U'す' || next == U'し' || next == U'せ';
+}
+
+bool causativeSaseFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  return pos + 1 < codepoints.size() && codepoints[pos] == U'さ' && codepoints[pos + 1] == U'せ';
+}
+
+bool isSuruAuxiliaryStarter(char32_t next_char) {
+  return next_char == U'ち' || next_char == U'て' || next_char == U'た' || next_char == U'な' || next_char == U'ま' ||
+         next_char == U'よ' || next_char == U'ろ' || next_char == U'そ' || next_char == U'と' || next_char == U'か' ||
+         next_char == U'つ';
+}
+
+bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos + 1 >= codepoints.size() || codepoints[pos] != U'な') {
+    return false;
+  }
+  const char32_t second = codepoints[pos + 1];
+  if (second == U'い' || second == U'く') {
+    return true;
+  }
+  if (pos + 2 >= codepoints.size()) {
+    return false;
+  }
+  const char32_t third = codepoints[pos + 2];
+  return (second == U'か' && third == U'っ') || (second == U'け' && (third == U'れ' || third == U'り')) ||
+         (second == U'き' && third == U'ゃ');
+}
+
+bool naiConditionalFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  return pos + 2 < codepoints.size() && codepoints[pos] == U'な' && codepoints[pos + 1] == U'け' &&
+         codepoints[pos + 2] == U'れ';
+}
+
+bool itadakuParadigmStartsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos + 3 >= codepoints.size() || codepoints[pos] != U'い' || codepoints[pos + 1] != U'た' ||
+      codepoints[pos + 2] != U'だ') {
+    return false;
+  }
+  const char32_t inflected = codepoints[pos + 3];
+  return inflected == U'か' || inflected == U'き' || inflected == U'く' || inflected == U'け' || inflected == U'こ' ||
+         inflected == U'い';
+}
+
 bool hasInternalVerbChainBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                   const grammar::Inflection& inflection,
                                   const dictionary::DictionaryManager* dict_manager) {
@@ -101,6 +176,23 @@ bool isSingleKanjiIchidanSurface(std::string_view surface) {
 // =============================================================================
 // Dictionary Lookup Helpers
 // =============================================================================
+
+bool isVerbInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form) {
+  return hasDictionaryEntry(dict_manager, base_form, core::PartOfSpeech::Verb);
+}
+
+bool isAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form) {
+  return hasDictionaryEntry(dict_manager, base_form, core::PartOfSpeech::Adjective);
+}
+
+bool isNounInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
+  return hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Noun);
+}
+
+bool isNounOrAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
+  return hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Noun) ||
+         hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Adjective);
+}
 
 bool hasDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
                         core::PartOfSpeech pos) {
@@ -366,6 +458,29 @@ char32_t getHiraganaVowel(char32_t c) {
       return 0;
   }
 }
+
+namespace {
+
+bool isSuppressedSokuonOnset(const std::vector<char32_t>& codepoints, size_t sokuon_pos, core::PartOfSpeech base_pos,
+                             char32_t base_final, SokuonOnsetPolicy policy) {
+  if (sokuon_pos + 1 >= codepoints.size()) {
+    return false;
+  }
+  const char32_t next = codepoints[sokuon_pos + 1];
+  if (next == U'す' || next == U'さ' || next == U'せ') {
+    return true;
+  }
+  const bool u_row_verb = base_pos == core::PartOfSpeech::Verb && normalize::isURowHiragana(base_final);
+  if (next == U'と') {
+    return u_row_verb;
+  }
+  if (policy == SokuonOnsetPolicy::DictionaryEntry) {
+    return next == core::hiragana::kTe && u_row_verb;
+  }
+  return next == core::hiragana::kTe || next == core::hiragana::kTa;
+}
+
+}  // namespace
 
 EmphaticSuffixMatch matchEmphaticSuffix(const std::vector<char32_t>& codepoints, size_t base_end,
                                         core::PartOfSpeech base_pos, SokuonOnsetPolicy policy) {

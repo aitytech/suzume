@@ -334,12 +334,17 @@ inline bool isAdjectiveForm(ExtendedPOS epos) {
 
 /**
  * @brief Check if ExtendedPOS is an auxiliary
- * Note: AuxExcessive (すぎる) is excluded as it maps to Verb (補助動詞)
+ * Note: AuxExcessive (すぎる) and AuxGaru (がる) are excluded because they
+ * map to Verb (補助動詞/接尾動詞).
  */
 inline bool isAuxiliaryType(ExtendedPOS epos) {
-  // (AuxNegativeMai sits outside the contiguous range; see ExtendedPOS comment)
+  // Late additions are listed explicitly because their serialized enum values
+  // cannot be inserted into the contiguous auxiliary range.
   return (epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai ||
-         epos == ExtendedPOS::AuxInability || epos == ExtendedPOS::AuxBenefactive ||
+         epos == ExtendedPOS::AuxClassicalNari || epos == ExtendedPOS::AuxClassicalKeri ||
+         epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalPerfect ||
+         epos == ExtendedPOS::AuxClassicalBeshi || epos == ExtendedPOS::AuxInability ||
+         epos == ExtendedPOS::AuxBenefactive || epos == ExtendedPOS::AuxSimilitudeYou ||
          epos == ExtendedPOS::AuxKuruwaPolite;
 }
 
@@ -355,6 +360,13 @@ inline bool isParticleType(ExtendedPOS epos) {
  */
 inline bool isNounType(ExtendedPOS epos) {
   return epos >= ExtendedPOS::Noun && epos <= ExtendedPOS::NounNumber;
+}
+
+/**
+ * @brief Check if ExtendedPOS is a pronoun type
+ */
+inline bool isPronounType(ExtendedPOS epos) {
+  return epos >= ExtendedPOS::Pronoun && epos <= ExtendedPOS::PronounInterrogative;
 }
 
 /**

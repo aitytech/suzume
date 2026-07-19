@@ -405,13 +405,10 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
 }
 
 PartOfSpeech extendedPosToPos(ExtendedPOS epos) {
-  // Verb forms -> Verb
-  if (epos >= ExtendedPOS::VerbShuushikei && epos <= ExtendedPOS::VerbTaraForm) {
+  if (isVerbForm(epos)) {
     return PartOfSpeech::Verb;
   }
-  // Adjective forms -> Adjective
-  // (AdjMizenkei sits outside the contiguous range; see ExtendedPOS comment)
-  if ((epos >= ExtendedPOS::AdjBasic && epos <= ExtendedPOS::AdjNaAdj) || epos == ExtendedPOS::AdjMizenkei) {
+  if (isAdjectiveForm(epos)) {
     return PartOfSpeech::Adjective;
   }
   // AuxExcessive (すぎる), AuxGaru (がる) -> Verb (MeCab: 動詞,非自立/接尾)
@@ -419,27 +416,16 @@ PartOfSpeech extendedPosToPos(ExtendedPOS epos) {
   if (epos == ExtendedPOS::AuxExcessive || epos == ExtendedPOS::AuxGaru) {
     return PartOfSpeech::Verb;
   }
-  // Auxiliary types -> Auxiliary
-  // (AuxNegativeMai, AuxClassicalNari, AuxClassicalKeri, AuxClassicalTari, AuxClassicalPerfect, AuxClassicalBeshi
-  // sit outside the contiguous range; see ExtendedPOS comment)
-  if ((epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai ||
-      epos == ExtendedPOS::AuxClassicalNari || epos == ExtendedPOS::AuxClassicalKeri ||
-      epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalPerfect ||
-      epos == ExtendedPOS::AuxClassicalBeshi || epos == ExtendedPOS::AuxInability ||
-      epos == ExtendedPOS::AuxBenefactive || epos == ExtendedPOS::AuxSimilitudeYou ||
-      epos == ExtendedPOS::AuxKuruwaPolite) {
+  if (isAuxiliaryType(epos)) {
     return PartOfSpeech::Auxiliary;
   }
-  // Particle types -> Particle
-  if (epos >= ExtendedPOS::ParticleCase && epos <= ExtendedPOS::ParticleBinding) {
+  if (isParticleType(epos)) {
     return PartOfSpeech::Particle;
   }
-  // Noun types -> Noun
-  if (epos >= ExtendedPOS::Noun && epos <= ExtendedPOS::NounNumber) {
+  if (isNounType(epos)) {
     return PartOfSpeech::Noun;
   }
-  // Pronoun types -> Pronoun
-  if (epos >= ExtendedPOS::Pronoun && epos <= ExtendedPOS::PronounInterrogative) {
+  if (isPronounType(epos)) {
     return PartOfSpeech::Pronoun;
   }
 

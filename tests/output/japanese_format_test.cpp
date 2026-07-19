@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <memory>
 
 #include "core/types.h"
@@ -400,28 +401,60 @@ TEST_F(ConjFormDetectionTest, Particle_ReturnsBase) {
 
 class ConjTypeToVerbTypeTest : public ::testing::Test {};
 
-TEST_F(ConjTypeToVerbTypeTest, None) {
-  EXPECT_EQ(grammar::conjTypeToVerbType(dictionary::ConjugationType::None), grammar::VerbType::Unknown);
+TEST_F(ConjTypeToVerbTypeTest, EveryConjugationTypeMapsAsSpecified) {
+  using CT = dictionary::ConjugationType;
+  using VT = grammar::VerbType;
+  constexpr std::array<std::pair<CT, VT>, 18> kCases = {{
+      {CT::None, VT::Unknown},
+      {CT::Ichidan, VT::Ichidan},
+      {CT::GodanKa, VT::GodanKa},
+      {CT::GodanGa, VT::GodanGa},
+      {CT::GodanSa, VT::GodanSa},
+      {CT::GodanTa, VT::GodanTa},
+      {CT::GodanNa, VT::GodanNa},
+      {CT::GodanBa, VT::GodanBa},
+      {CT::GodanMa, VT::GodanMa},
+      {CT::GodanRa, VT::GodanRa},
+      {CT::GodanWa, VT::GodanWa},
+      {CT::Suru, VT::Suru},
+      {CT::Kuru, VT::Kuru},
+      {CT::IAdjective, VT::IAdjective},
+      {CT::NaAdjective, VT::Unknown},
+      {CT::Interjection, VT::Unknown},
+      {CT::ProperFamily, VT::Unknown},
+      {CT::ProperGiven, VT::Unknown},
+  }};
+
+  for (size_t case_index = 0; case_index < kCases.size(); ++case_index) {
+    SCOPED_TRACE(case_index);
+    EXPECT_EQ(grammar::conjTypeToVerbType(kCases[case_index].first), kCases[case_index].second);
+  }
 }
 
-TEST_F(ConjTypeToVerbTypeTest, Ichidan) {
-  EXPECT_EQ(grammar::conjTypeToVerbType(dictionary::ConjugationType::Ichidan), grammar::VerbType::Ichidan);
-}
+TEST_F(ConjTypeToVerbTypeTest, EveryVerbTypeRoundTripsToConjugationType) {
+  using CT = dictionary::ConjugationType;
+  using VT = grammar::VerbType;
+  constexpr std::array<std::pair<VT, CT>, 14> kCases = {{
+      {VT::Unknown, CT::None},
+      {VT::Ichidan, CT::Ichidan},
+      {VT::GodanKa, CT::GodanKa},
+      {VT::GodanGa, CT::GodanGa},
+      {VT::GodanSa, CT::GodanSa},
+      {VT::GodanTa, CT::GodanTa},
+      {VT::GodanNa, CT::GodanNa},
+      {VT::GodanBa, CT::GodanBa},
+      {VT::GodanMa, CT::GodanMa},
+      {VT::GodanRa, CT::GodanRa},
+      {VT::GodanWa, CT::GodanWa},
+      {VT::Suru, CT::Suru},
+      {VT::Kuru, CT::Kuru},
+      {VT::IAdjective, CT::IAdjective},
+  }};
 
-TEST_F(ConjTypeToVerbTypeTest, GodanKa) {
-  EXPECT_EQ(grammar::conjTypeToVerbType(dictionary::ConjugationType::GodanKa), grammar::VerbType::GodanKa);
-}
-
-TEST_F(ConjTypeToVerbTypeTest, Suru) {
-  EXPECT_EQ(grammar::conjTypeToVerbType(dictionary::ConjugationType::Suru), grammar::VerbType::Suru);
-}
-
-TEST_F(ConjTypeToVerbTypeTest, Kuru) {
-  EXPECT_EQ(grammar::conjTypeToVerbType(dictionary::ConjugationType::Kuru), grammar::VerbType::Kuru);
-}
-
-TEST_F(ConjTypeToVerbTypeTest, IAdjective) {
-  EXPECT_EQ(grammar::conjTypeToVerbType(dictionary::ConjugationType::IAdjective), grammar::VerbType::IAdjective);
+  for (size_t case_index = 0; case_index < kCases.size(); ++case_index) {
+    SCOPED_TRACE(case_index);
+    EXPECT_EQ(grammar::verbTypeToConjType(kCases[case_index].first), kCases[case_index].second);
+  }
 }
 
 // =============================================================================
