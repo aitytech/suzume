@@ -18,8 +18,10 @@ src/analysis/join_te_aux.cpp	0	2	0
 src/analysis/scorer.cpp	0	170	0
 src/analysis/scorer_connection_cost.cpp	45	4	74
 src/analysis/scorer_connection_rules_lexical.cpp	26	0	117
+src/analysis/scorer_connection_rules_negative.cpp	8	0	23
+src/analysis/scorer_connection_rules_particle.cpp	9	0	19
 src/analysis/scorer_connection_rules_renyokei.cpp	10	0	64
-src/analysis/scorer_connection_rules_verb.cpp	25	0	49
+src/analysis/scorer_connection_rules_verb.cpp	8	0	9
 src/analysis/scorer_connection_rules_voice.cpp	5	0	21
 src/analysis/scorer_options_loader.cpp	0	2	0
 src/analysis/scorer_word_cost.cpp	5	1	22

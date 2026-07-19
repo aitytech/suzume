@@ -22,6 +22,8 @@ add_library(suzume_analysis OBJECT
   scorer_connection_rules_renyokei.cpp
   scorer_connection_rules_voice.cpp
   scorer_connection_rules_lexical.cpp
+  scorer_connection_rules_negative.cpp
+  scorer_connection_rules_particle.cpp
   scorer_connection_rules_verb.cpp
   scorer_options_loader.cpp
   scorer_word_cost.cpp
