@@ -14,6 +14,7 @@ add_library(suzume_analysis OBJECT
   join_compound_verb.cpp
   join_compound_verb_hiragana.cpp
   join_compound_verb_lexicon.cpp
+  compound_verb_voice.cpp
   join_noun.cpp
   join_te_aux.cpp
   scorer.cpp

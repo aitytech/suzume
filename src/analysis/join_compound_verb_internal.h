@@ -66,6 +66,12 @@ inline SubsidiaryVerbRange subsidiaryVerbs() {
   return {kSubsidiaryVerbs, kSubsidiaryVerbs + kSubsidiaryVerbCount};
 }
 
+// Emits the verified passive-continuative tail (れ続ける and its inflections)
+// and returns true when that grammar-owned path consumes the candidate span.
+bool addPassiveContinuativeTailCandidates(core::Lattice& lattice, const std::vector<char32_t>& codepoints,
+                                          size_t start_pos, size_t kanji_end,
+                                          const dictionary::DictionaryManager& dict_manager);
+
 // Sokuonbin-compatible godan verb endings (く, つ, う, る)
 // Used to try all possible base forms when analyzing っ-onbin compound verbs
 inline constexpr char32_t kSokuonbinEndings[] = {U'く', U'つ', U'う', U'る'};
