@@ -393,6 +393,17 @@ TEST_F(NormalizerTest, SpacingMark_TaRowDakuten) {
   EXPECT_EQ(std::get<std::string>(result), "ダンス");
 }
 
+TEST_F(NormalizerTest, SpacingMarkWaKeepsKanaPlaneAsymmetry) {
+  // Katakana ワ has a precomposed voiced form (ヷ); hiragana わ does not.
+  auto katakana_result = normalizer_.normalize("ワ\u309B");
+  ASSERT_TRUE(core::isSuccess(katakana_result));
+  EXPECT_EQ(std::get<std::string>(katakana_result), "ヷ");
+
+  auto hiragana_result = normalizer_.normalize("わ\u309B");
+  ASSERT_TRUE(core::isSuccess(hiragana_result));
+  EXPECT_EQ(std::get<std::string>(hiragana_result), "わ\u309B");
+}
+
 TEST_F(NormalizerTest, SpacingMark_InvalidBaseUnchanged) {
   // あ cannot take dakuten: sequence passes through unchanged
   auto result = normalizer_.normalize("あ\u309B");

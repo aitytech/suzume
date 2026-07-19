@@ -108,98 +108,39 @@ constexpr char32_t kHiraganaBo = 0x307C;  // ぼ
 constexpr char32_t kHalfwidthDakuten = 0xFF9E;     // ﾞ
 constexpr char32_t kHalfwidthHandakuten = 0xFF9F;  // ﾟ
 
-// Combines kana (hiragana or katakana) with dakuten, returns combined char or 0 if not applicable
-char32_t combineWithDakuten(char32_t base) {
-  // Hiragana ka-row: かきくけこ -> がぎぐげご
-  if (base >= 0x304B && base <= 0x3053 && ((base - 0x304B) % 2 == 0)) {
-    return base + 1;
-  }
-  // Hiragana sa-row: さしすせそ -> ざじずぜぞ
-  if (base >= 0x3055 && base <= 0x305D && ((base - 0x3055) % 2 == 0)) {
-    return base + 1;
-  }
-  // Hiragana ta-row: た(0x305F)->だ, ち(0x3061)->ぢ, つ(0x3064)->づ, て(0x3066)->で, と(0x3068)->ど
-  switch (base) {
-    case 0x305F:
-      return 0x3060;  // た -> だ
-    case 0x3061:
-      return 0x3062;  // ち -> ぢ
-    case 0x3064:
-      return 0x3065;  // つ -> づ
-    case 0x3066:
-      return 0x3067;  // て -> で
-    case 0x3068:
-      return 0x3069;  // と -> ど
-    default:
-      break;
-  }
-  // Hiragana ha-row: はひふへほ -> ばびぶべぼ
-  if (base >= 0x306F && base <= 0x307D && ((base - 0x306F) % 3 == 0)) {
-    return base + 1;
-  }
-  // う -> ゔ
-  if (base == 0x3046) {
-    return 0x3094;
-  }
-  // Ka-row: カキクケコ -> ガギグゲゴ
-  if (base >= 0x30AB && base <= 0x30B3 && ((base - 0x30AB) % 2 == 0)) {
-    return base + 1;
-  }
-  // Sa-row: サシスセソ -> ザジズゼゾ
-  if (base >= 0x30B5 && base <= 0x30BD && ((base - 0x30B5) % 2 == 0)) {
-    return base + 1;
-  }
-  // Ta-row: タチツテト -> ダヂヅデド
-  if (base >= 0x30BF && base <= 0x30C8) {
-    // タ(0x30BF)->ダ, チ(0x30C1)->ヂ, ツ(0x30C4)->ヅ, テ(0x30C6)->デ, ト(0x30C8)->ド
-    switch (base) {
-      case 0x30BF:
-        return 0x30C0;  // タ -> ダ
-      case 0x30C1:
-        return 0x30C2;  // チ -> ヂ
-      case 0x30C4:
-        return 0x30C5;  // ツ -> ヅ
-      case 0x30C6:
-        return 0x30C7;  // テ -> デ
-      case 0x30C8:
-        return 0x30C9;  // ト -> ド
-      default:
-        return 0;
+// Hiragana and katakana counterparts differ by this fixed Unicode-plane
+// offset for the voiced forms handled below. Keeping the rule in the hiragana
+// plane prevents the two scripts from drifting when a mark rule is added.
+constexpr char32_t kKatakanaPlaneOffset = 0x60;
+
+char32_t combineKanaWithSoundMark(char32_t base, bool handakuten) {
+  const bool is_katakana = base >= 0x30A0 && base <= 0x30FF;
+  const char32_t hiragana_base = is_katakana ? base - kKatakanaPlaneOffset : base;
+  char32_t combined = 0;
+
+  // はひふへほ is the only row that accepts both dakuten and handakuten.
+  if (hiragana_base >= 0x306F && hiragana_base <= 0x307D && ((hiragana_base - 0x306F) % 3 == 0)) {
+    combined = hiragana_base + (handakuten ? 2 : 1);
+  } else if (!handakuten) {
+    if ((hiragana_base >= 0x304B && hiragana_base <= 0x3053 && ((hiragana_base - 0x304B) % 2 == 0)) ||
+        (hiragana_base >= 0x3055 && hiragana_base <= 0x305D && ((hiragana_base - 0x3055) % 2 == 0))) {
+      combined = hiragana_base + 1;
+    } else if (hiragana_base == 0x305F || hiragana_base == 0x3061 || hiragana_base == 0x3064 ||
+               hiragana_base == 0x3066 || hiragana_base == 0x3068) {
+      combined = hiragana_base + 1;
+    } else if (hiragana_base == 0x3046) {  // う -> ゔ
+      combined = 0x3094;
+    } else if (hiragana_base == 0x309D) {  // ゝ -> ゞ
+      combined = 0x309E;
     }
   }
-  // Ha-row: ハヒフヘホ -> バビブベボ
-  if (base >= 0x30CF && base <= 0x30DD && ((base - 0x30CF) % 3 == 0)) {
-    return base + 1;
-  }
-  // ウ -> ヴ
-  if (base == 0x30A6) {
-    return 0x30F4;
-  }
-  // ワ -> ヷ (rare)
-  if (base == 0x30EF) {
+
+  // ワ has a precomposed katakana voiced counterpart, but its hiragana
+  // counterpart does not. Keep that Unicode asymmetry explicit.
+  if (combined == 0 && !handakuten && base == 0x30EF) {
     return 0x30F7;
   }
-  // Iteration marks: ゝ -> ゞ, ヽ -> ヾ
-  if (base == 0x309D) {
-    return 0x309E;
-  }
-  if (base == 0x30FD) {
-    return 0x30FE;
-  }
-  return 0;
-}
-
-// Combines kana (hiragana or katakana) with handakuten, returns combined char or 0 if not applicable
-char32_t combineWithHandakuten(char32_t base) {
-  // Hiragana ha-row: はひふへほ -> ぱぴぷぺぽ
-  if (base >= 0x306F && base <= 0x307D && ((base - 0x306F) % 3 == 0)) {
-    return base + 2;
-  }
-  // Ha-row: ハヒフヘホ -> パピプペポ
-  if (base >= 0x30CF && base <= 0x30DD && ((base - 0x30CF) % 3 == 0)) {
-    return base + 2;
-  }
-  return 0;
+  return combined == 0 || !is_katakana ? combined : combined + kKatakanaPlaneOffset;
 }
 
 // Returns true if the codepoint is any dakuten mark (half-width, combining, or spacing)
@@ -290,7 +231,7 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
 
       // Check if next char is a dakuten or handakuten mark
       if (isDakutenMark(next_cp)) {
-        char32_t combined = combineWithDakuten(normalized_cp);
+        char32_t combined = combineKanaWithSoundMark(normalized_cp, false);
         if (combined != 0) {
           pos = next_pos;  // Consume the dakuten
           // Fall through instead of emitting directly: a combined ヴ/ゔ must be
@@ -299,7 +240,7 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
           normalized_cp = combined;
         }
       } else if (isHandakutenMark(next_cp)) {
-        char32_t combined = combineWithHandakuten(normalized_cp);
+        char32_t combined = combineKanaWithSoundMark(normalized_cp, true);
         if (combined != 0) {
           pos = next_pos;  // Consume the handakuten
           encodeUtf8(combined, result);

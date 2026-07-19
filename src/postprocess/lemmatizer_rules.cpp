@@ -508,11 +508,8 @@ std::string fixHatsuonbin(std::string_view stem, const dictionary::DictionaryMan
     for (const auto& [verb_type, ending] : grammar::Conjugation::getGodanTypesByOnbin("ん")) {
       (void)verb_type;
       std::string base = std::string(stem) + std::string(ending);
-      auto results = dict_manager->lookup(base, 0);
-      for (const auto& result : results) {
-        if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Verb) {
-          return base;
-        }
+      if (hasExactVerbEntry(dict_manager, base)) {
+        return base;
       }
     }
   }

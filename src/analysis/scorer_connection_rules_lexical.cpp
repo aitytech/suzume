@@ -244,11 +244,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kStrongBonus;
   }
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(prev.surface) &&
-      next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
-    bonus += cost::kStrongBonus;
-  }
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(prev.surface) &&
-      next.extended_pos == core::ExtendedPOS::AdjBasic) {
+      (next.extended_pos == core::ExtendedPOS::VerbShuushikei || next.extended_pos == core::ExtendedPOS::AdjBasic)) {
     bonus += cost::kStrongBonus;
   }
 
@@ -446,19 +442,12 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kProhibitive;
   }
 
-  // The benefactive expression お+かげで uses the instrumental case
-  // particle, not the copula. Its formal-noun reading supplies the productive
-  // prefix boundary; retain the corresponding particle analysis afterwards.
+  // The benefactive formal noun かげ continues either with the instrumental
+  // particle (おかげで) or the honorific suffix (おかげさまで). Both retain
+  // the productive formal-noun boundary over their homographic alternatives.
   if (prev.extended_pos == core::ExtendedPOS::NounFormal && utf8::equalsAny(prev.surface, {"かげ"}) &&
-      next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"で"})) {
-    bonus += cost::kStrongBonus;
-  }
-
-  // おかげさまで extends the benefactive formal noun with the honorific
-  // suffix さま. Prefer that productive suffix to the unrelated sentence
-  // particle さ followed by まで.
-  if (prev.extended_pos == core::ExtendedPOS::NounFormal && utf8::equalsAny(prev.surface, {"かげ"}) &&
-      next.pos == core::PartOfSpeech::Suffix && utf8::equalsAny(next.surface, {"さま"})) {
+      ((next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"で"})) ||
+       (next.pos == core::PartOfSpeech::Suffix && utf8::equalsAny(next.surface, {"さま"})))) {
     bonus += cost::kStrongBonus;
   }
 
@@ -493,12 +482,9 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // NOUN+degree/frequency-suffix split. Without this, the NOUN→SUFFIX bigram
   // bonus (-0.8) makes 今年|度 cheaper than the whole 今年度.
   if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix &&
-      grammar::isAllKanji(prev.surface) && next.surface.size() == core::kJapaneseCharBytes &&
-      grammar::isAllKanji(next.surface)) {
-    auto prev_codepoints = normalize::toCodepoints(prev.surface);
-    auto next_codepoints = normalize::toCodepoints(next.surface);
-    if (prev_codepoints.size() >= 2 && next_codepoints.size() == 1 &&
-        normalize::isFiscalYearBindingPair(prev_codepoints.back(), next_codepoints.front())) {
+      prev.surface.size() >= 2 * core::kJapaneseCharBytes && grammar::isAllKanji(prev.surface) &&
+      next.surface.size() == core::kJapaneseCharBytes && grammar::isAllKanji(next.surface)) {
+    if (normalize::isFiscalYearBindingPair(utf8::decodeLastChar(prev.surface), utf8::decodeFirstChar(next.surface))) {
       bonus += cost::kRare;  // +1.0 to neutralize -0.8 bigram bonus
     }
   }
