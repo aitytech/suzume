@@ -734,16 +734,9 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   // E.g., 火だるま: if だるま is in dictionary, don't generate compound
   // Only skip for exact matches - partial matches (like た in たまり) don't count
   std::string hiragana_portion = extractSubstring(codepoints, kanji_end, hiragana_end);
-  if (dict_manager != nullptr && !hiragana_portion.empty()) {
-    auto entries = dict_manager->lookup(hiragana_portion, 0);
-    for (const auto& entry : entries) {
-      // Check for exact match: entry length must equal the hiragana portion length
-      if (entry.length == hiragana_len) {
-        // Exact match found - skip compound candidate
-        // This allows split like 火+だるま to win
-        return candidates;
-      }
-    }
+  if (dict_manager != nullptr && dict_manager->lookupExact(hiragana_portion) != nullptr) {
+    // This allows split like 火+だるま to win.
+    return candidates;
   }
 
   // Skip compound generation if the full surface is a known verb in dictionary

@@ -514,13 +514,10 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
           if (verb_start < kanji_end) {
             std::string first_verb_kanji = normalize::encodeUtf8(codepoints[verb_start]);
             std::string compound = last_kanji + first_verb_kanji;
-            auto comp_results = dict_manager.lookup(compound, 0);
-            for (const auto& result : comp_results) {
-              if (result.entry != nullptr && result.entry->surface == compound) {
-                SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_NV] skip \"" << noun_surface << "\" + \"" << verb_part
-                                                              << "\": compound \"" << compound << "\" is dict word\n");
-                goto next_split;
-              }
+            if (dict_manager.lookupExact(compound) != nullptr) {
+              SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_NV] skip \"" << noun_surface << "\" + \"" << verb_part
+                                                            << "\": compound \"" << compound << "\" is dict word\n");
+              goto next_split;
             }
           }
         }

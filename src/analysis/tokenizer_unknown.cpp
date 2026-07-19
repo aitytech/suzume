@@ -460,19 +460,10 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
         // - Known verb conjugation ending (te-form, renyoukei)
         // - Candidate has has_suffix flag (mizenkei for ぬ/れべき patterns)
         if (!is_verb_ending && !candidate.has_suffix) {
-          size_t suffix_byte_pos = byteOffsetAt(byte_offsets, hiragana_start);
-          auto suffix_results = dict_manager_.lookup(text, suffix_byte_pos);
-
-          for (const auto& result : suffix_results) {
-            if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Particle) {
-              size_t suffix_len = candidate.end - hiragana_start;
-              if (result.length == suffix_len) {
-                adjusted_cost += 1.5F;
-                SUZUME_DEBUG_LOG_VERBOSE("[TOK_UNK] \"" << candidate.surface << "\": +1.5 (particle_suffix=\""
-                                                        << hiragana_suffix << "\")\n");
-                break;
-              }
-            }
+          if (dict_manager_.lookupExact(hiragana_suffix, core::PartOfSpeech::Particle) != nullptr) {
+            adjusted_cost += 1.5F;
+            SUZUME_DEBUG_LOG_VERBOSE("[TOK_UNK] \"" << candidate.surface << "\": +1.5 (particle_suffix=\""
+                                                    << hiragana_suffix << "\")\n");
           }
         }
       }

@@ -218,20 +218,16 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
     }
   }
 
-  // Check if the combined form is already in dictionary
+  // Check if the combined form is already in dictionary.
   size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
-  auto combined_results = dict_manager.lookup(text, start_byte);
-
-  for (const auto& result : combined_results) {
-    if (result.entry != nullptr && result.length == noun_end - start_pos) {
-      return;  // Already in dictionary
-    }
-  }
-
-  // Generate joined candidate
   size_t end_byte = byteOffsetAt(byte_offsets, noun_end);
   std::string surface(text.substr(start_byte, end_byte - start_byte));
 
+  if (dict_manager.lookupExact(surface) != nullptr) {
+    return;
+  }
+
+  // Generate joined candidate
   float base_cost = scorer.posPrior(core::PartOfSpeech::Noun);
   float final_cost = base_cost + matched_prefix->bonus;
 
