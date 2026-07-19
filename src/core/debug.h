@@ -79,8 +79,6 @@ class Debug {
 
 #else  // SUZUME_DEBUG not defined - complete elimination
 
-#include <ostream>  // std::ostream for the NullStream manipulator overload below
-
 #define SUZUME_DEBUG_LOG(expr) ((void)0)
 #define SUZUME_DEBUG_LOG_VERBOSE(expr) ((void)0)
 #define SUZUME_DEBUG_LOG_TRACE(expr) ((void)0)
@@ -89,14 +87,15 @@ class Debug {
 #define SUZUME_DEBUG_VERBOSE_BLOCK if constexpr (false)
 #define SUZUME_DEBUG_TRACE_BLOCK if constexpr (false)
 
-// Dummy stream that discards everything (for rare direct stream usage)
+// Dummy stream that discards everything (for rare direct stream usage). The
+// templated insertion accepts manipulators as ordinary values, so release
+// consumers do not need to include the iostream hierarchy.
 namespace suzume::core {
 struct NullStream {
   template <typename T>
   NullStream& operator<<(const T&) {
     return *this;
   }
-  NullStream& operator<<(std::ostream& (*)(std::ostream&)) { return *this; }
 };
 inline NullStream& nullStream() {
   static NullStream ns;
