@@ -418,11 +418,7 @@ std::string fixGodanRenyokeiBeforeLiteraryTe(std::string_view surface, std::stri
   if (dict_manager == nullptr || next_surface != "て" || lemma != std::string(surface) + "る") {
     return "";
   }
-  const auto codepoints = normalize::toCodepoints(surface);
-  if (codepoints.empty()) {
-    return "";
-  }
-  const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(codepoints.back());
+  const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(utf8::decodeLastChar(surface));
   if (godan_ending.empty()) {
     return "";
   }

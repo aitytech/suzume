@@ -1,7 +1,5 @@
 #include "postprocess/lemmatizer.h"
 
-#include <algorithm>
-
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
@@ -106,8 +104,7 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
         // Check if the stem (lemma minus る) is katakana
         std::string stem(utf8::dropLastChar(lemma));
         if (!stem.empty()) {
-          auto codepoints = normalize::toCodepoints(stem);
-          if (!codepoints.empty() && normalize::classifyChar(codepoints[0]) == normalize::CharType::Katakana) {
+          if (normalize::classifyChar(utf8::decodeFirstChar(stem)) == normalize::CharType::Katakana) {
             // Correct the lemma: stem + すぎる
             return stem + "すぎる";
           }

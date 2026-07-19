@@ -10,6 +10,7 @@ add_library(suzume_analysis OBJECT
   bigram_table_aux_noun.cpp
   bigram_table_particle_lexical.cpp
   bigram_table_verb_adj.cpp
+  compound_verb_forms.cpp
   join_compound_verb.cpp
   join_compound_verb_hiragana.cpp
   join_noun.cpp

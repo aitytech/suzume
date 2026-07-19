@@ -8,6 +8,7 @@ src/analysis/bigram_table.cpp	0	1	0
 src/analysis/bigram_table_aux_noun.cpp	0	1	0
 src/analysis/bigram_table_particle_lexical.cpp	0	0	0
 src/analysis/bigram_table_verb_adj.cpp	0	0	0
+src/analysis/compound_verb_forms.cpp	0	0	0
 src/analysis/join_compound_verb.cpp	0	10	0
 src/analysis/join_compound_verb_hiragana.cpp	0	2	0
 src/analysis/join_noun.cpp	0	18	0

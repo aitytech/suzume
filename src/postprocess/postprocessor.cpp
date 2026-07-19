@@ -61,12 +61,12 @@ void retagBasicNegativeAdjective(core::Morpheme& negative) {
 // others require an explicit renyokei form, so that policy stays at the call
 // site.
 bool retagGodanRenyokeiFromIRow(core::Morpheme& stem, bool set_conj_form) {
-  const auto codepoints = normalize::toCodepoints(stem.surface);
-  if (codepoints.empty() || !grammar::isIRowCodepoint(codepoints.back())) {
+  const char32_t stem_last = utf8::decodeLastChar(stem.surface);
+  if (!grammar::isIRowCodepoint(stem_last)) {
     return false;
   }
-  const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(codepoints.back());
-  const grammar::VerbType verb_type = grammar::verbTypeFromIRowCodepoint(codepoints.back());
+  const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(stem_last);
+  const grammar::VerbType verb_type = grammar::verbTypeFromIRowCodepoint(stem_last);
   if (base_suffix.empty() || verb_type == grammar::VerbType::Unknown) {
     return false;
   }
@@ -150,6 +150,11 @@ bool isCompoundRenyokeiShape(const std::string& surface) {
     in_kanji_run = is_kanji;
   }
   return kanji_runs >= 2;
+}
+
+bool isOnlyProlongedSoundMarks(std::string_view surface) {
+  const auto codepoints = normalize::toCodepoints(surface);
+  return !codepoints.empty() && std::all_of(codepoints.begin(), codepoints.end(), normalize::isProlongedSoundMark);
 }
 
 // Right context that forces the nominal reading of a compound renyokei: a case particle
@@ -1284,40 +1289,10 @@ void resolveSimilitudeYou(std::vector<core::Morpheme>& result) {
   }
 }
 
-}  // namespace
-
-Postprocessor::Postprocessor(const PostprocessOptions& options) : options_(options), lemmatizer_() {}
-
-Postprocessor::Postprocessor(const dictionary::DictionaryManager* dict_manager, const PostprocessOptions& options)
-    : options_(options), lemmatizer_(dict_manager) {}
-
-std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> result) const {
-  [[maybe_unused]] size_t before_count = 0;
-
-  // NOUN + SUFFIX merging is intentionally NOT applied: tokens stay separate as
-  // PREFIX + NOUN + SUFFIX (e.g., お姉さん → お(PREFIX) + 姉(NOUN) + さん(SUFFIX)).
-
-  // Convert PREFIX + VERB to PREFIX + NOUN (renyoukei nominalization)
-  // e.g., お願い → お(PREFIX) + 願い(NOUN), not 願い(VERB)
-  convertPrefixVerbToNoun(result);
-  // Note: this function logs individual changes, so no summary needed
-
-  // Merge consecutive numeric expressions (always applied)
-  before_count = result.size();
-  result = mergeNumericExpressions(std::move(result));
-  if (result.size() != before_count) {
-    SUZUME_DEBUG_LOG("[POSTPROC] mergeNumericExpressions: " << before_count << " → " << result.size() << "\n");
-  }
-
-  // Keep a na-adjective stem and the attributive copula な as separate
-  // grammatical search units.
-
-  // Apply lemmatization
-  if (options_.lemmatize) {
-    lemmatizer_.lemmatizeAll(result);
-    SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] lemmatize: applied\n");
-  }
-
+// These stages deliberately preserve the resolver order in process().  The
+// second stage follows PREFIX+VERB nominalization because its rules inspect
+// the resulting noun/verb category.
+void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   // A small closed class of kanji+i surfaces is an Ichidan continuative stem
   // (強いる, 用いる, 率いる, ...), while some members are also i-adjectives.
   // The passive auxiliary makes the verbal reading unambiguous.
@@ -1381,11 +1356,140 @@ std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> r
   resolvePoliteSuruRenyokei(result);
   resolveIndefiniteExistentialIru(result);
   resolveNominalizedRenyokeiPredicate(result);
-  convertPrefixVerbToNoun(result);
+}
+
+void resolvePostPrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolveCompoundAdjectiveRenyokei(result);
   resolveAdverbExplanatoryCopula(result);
   resolveSimilitudeYou(result);
   resolveNominalConditionalNara(result);
+}
+
+// These repairs run only after merges and filtering have finalized the local
+// token context.  Moving them earlier would change the grammatical evidence
+// each resolver observes.
+void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
+  resolveDurationPredicateKakaru(result);
+
+  // Resolve the sentence-initial demonstrative after all compound candidates
+  // have been filtered, so retagging cannot alter a copular boundary.
+  if (result.size() >= 2 && result[0].surface == "そう" && result[0].pos == core::PartOfSpeech::Adverb &&
+      result[1].extended_pos == core::ExtendedPOS::AuxCopulaDa &&
+      (result.size() < 3 || result[2].surface != "ござい")) {
+    retagNaAdjectivalSou(result[0]);
+  }
+  if (result.size() >= 2 && result[0].surface == "どう" && result[0].pos == core::PartOfSpeech::Adverb &&
+      result[1].extended_pos == core::ExtendedPOS::ParticleCase && result[1].surface == "に") {
+    result[0].pos = core::PartOfSpeech::Adjective;
+    result[0].extended_pos = core::ExtendedPOS::AdjNaAdj;
+    result[0].lemma = "どう";
+    result[0].conj_type = dictionary::ConjugationType::None;
+    result[0].conj_form = grammar::ConjForm::Base;
+  }
+  for (size_t idx = 0; idx + 3 < result.size(); ++idx) {
+    const auto& stem = result[idx];
+    auto& sou = result[idx + 1];
+    auto& na = result[idx + 2];
+    auto& noun = result[idx + 3];
+    if (stem.extended_pos != core::ExtendedPOS::AdjStem || sou.surface != "そう" || na.surface != "な" ||
+        noun.pos != core::PartOfSpeech::Adjective || !grammar::containsKanji(noun.surface)) {
+      continue;
+    }
+    retagAppearanceSou(sou);
+    retagCopulaDa(na);
+    noun.pos = core::PartOfSpeech::Noun;
+    noun.extended_pos = core::ExtendedPOS::Noun;
+    noun.lemma = noun.surface;
+    noun.conj_type = dictionary::ConjugationType::None;
+    noun.conj_form = grammar::ConjForm::Base;
+  }
+
+  // A one-kanji Ichidan stem has the same visible form before the negative
+  // auxiliary. Resolve its lemma from the final token sequence, after all
+  // ambiguity-specific retagging has completed.
+  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
+    auto& stem = result[idx];
+    const auto& negative = result[idx + 1];
+    if (stem.pos == core::PartOfSpeech::Verb && stem.surface.size() == core::kJapaneseCharBytes &&
+        grammar::isAllKanji(stem.surface) && negative.surface == "ない") {
+      stem.lemma = stem.surface + "る";
+    }
+  }
+
+  // A kanji-plus-て continuative before the past auxiliary or connective
+  // particle is an Ichidan stem (立て+て, 棄て+た). The lattice also has a
+  // homographic analysis that drops the e-row mora from the lemma; restore
+  // the productive Ichidan dictionary form after contextual disambiguation.
+  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
+    auto& stem = result[idx];
+    const auto& next = result[idx + 1];
+    const auto codepoints = normalize::toCodepoints(stem.surface);
+    const bool is_ichidan_te_stem = stem.pos == core::PartOfSpeech::Verb &&
+                                    stem.extended_pos == core::ExtendedPOS::VerbRenyokei && codepoints.size() == 2 &&
+                                    normalize::isKanjiCodepoint(codepoints.front()) && codepoints.back() == U'て';
+    const bool inflection_follows =
+        next.extended_pos == core::ExtendedPOS::AuxTenseTa || next.extended_pos == core::ExtendedPOS::ParticleConj;
+    if (is_ichidan_te_stem && inflection_follows) {
+      stem.lemma = stem.surface + "る";
+      stem.conj_type = dictionary::ConjugationType::Ichidan;
+      stem.conj_form = grammar::ConjForm::Renyokei;
+    }
+  }
+
+  // A suffix between the genitive particle and a case particle heads its own
+  // nominal phrase (穴の中から, 月の末に). Retag it as a noun; a true bound
+  // suffix instead remains directly attached to its nominal stem.
+  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
+    auto& candidate = result[idx];
+    const auto& previous = result[idx - 1];
+    const auto& next = result[idx + 1];
+    if (candidate.pos == core::PartOfSpeech::Suffix && previous.extended_pos == core::ExtendedPOS::ParticleNo &&
+        next.extended_pos == core::ExtendedPOS::ParticleCase) {
+      candidate.pos = core::PartOfSpeech::Noun;
+      candidate.extended_pos = core::ExtendedPOS::Noun;
+      candidate.conj_type = dictionary::ConjugationType::None;
+      candidate.conj_form = grammar::ConjForm::Base;
+    }
+  }
+}
+
+}  // namespace
+
+Postprocessor::Postprocessor(const PostprocessOptions& options) : options_(options), lemmatizer_() {}
+
+Postprocessor::Postprocessor(const dictionary::DictionaryManager* dict_manager, const PostprocessOptions& options)
+    : options_(options), lemmatizer_(dict_manager) {}
+
+std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> result) const {
+  [[maybe_unused]] size_t before_count = 0;
+
+  // NOUN + SUFFIX merging is intentionally NOT applied: tokens stay separate as
+  // PREFIX + NOUN + SUFFIX (e.g., お姉さん → お(PREFIX) + 姉(NOUN) + さん(SUFFIX)).
+
+  // Convert PREFIX + VERB to PREFIX + NOUN (renyoukei nominalization)
+  // e.g., お願い → お(PREFIX) + 願い(NOUN), not 願い(VERB)
+  convertPrefixVerbToNoun(result);
+  // Note: this function logs individual changes, so no summary needed
+
+  // Merge consecutive numeric expressions (always applied)
+  before_count = result.size();
+  result = mergeNumericExpressions(std::move(result));
+  if (result.size() != before_count) {
+    SUZUME_DEBUG_LOG("[POSTPROC] mergeNumericExpressions: " << before_count << " → " << result.size() << "\n");
+  }
+
+  // Keep a na-adjective stem and the attributive copula な as separate
+  // grammatical search units.
+
+  // Apply lemmatization
+  if (options_.lemmatize) {
+    lemmatizer_.lemmatizeAll(result);
+    SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] lemmatize: applied\n");
+  }
+
+  resolvePrePrefixMorphemeRoles(result);
+  convertPrefixVerbToNoun(result);
+  resolvePostPrefixMorphemeRoles(result);
 
   for (size_t i = 0; i + 1 < result.size(); ++i) {
     if (result[i].surface == "付け" && result[i].pos == core::PartOfSpeech::Verb && result[i + 1].surface == "で" &&
@@ -1514,88 +1618,7 @@ std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> r
   // Filter unwanted morphemes
   result = filterMorphemes(std::move(result));
 
-  resolveDurationPredicateKakaru(result);
-
-  // Resolve the sentence-initial demonstrative after all compound candidates
-  // have been filtered, so retagging cannot alter a copular boundary.
-  if (result.size() >= 2 && result[0].surface == "そう" && result[0].pos == core::PartOfSpeech::Adverb &&
-      result[1].extended_pos == core::ExtendedPOS::AuxCopulaDa &&
-      (result.size() < 3 || result[2].surface != "ござい")) {
-    retagNaAdjectivalSou(result[0]);
-  }
-  if (result.size() >= 2 && result[0].surface == "どう" && result[0].pos == core::PartOfSpeech::Adverb &&
-      result[1].extended_pos == core::ExtendedPOS::ParticleCase && result[1].surface == "に") {
-    result[0].pos = core::PartOfSpeech::Adjective;
-    result[0].extended_pos = core::ExtendedPOS::AdjNaAdj;
-    result[0].lemma = "どう";
-    result[0].conj_type = dictionary::ConjugationType::None;
-    result[0].conj_form = grammar::ConjForm::Base;
-  }
-  for (size_t idx = 0; idx + 3 < result.size(); ++idx) {
-    const auto& stem = result[idx];
-    auto& sou = result[idx + 1];
-    auto& na = result[idx + 2];
-    auto& noun = result[idx + 3];
-    if (stem.extended_pos != core::ExtendedPOS::AdjStem || sou.surface != "そう" || na.surface != "な" ||
-        noun.pos != core::PartOfSpeech::Adjective || !grammar::containsKanji(noun.surface)) {
-      continue;
-    }
-    retagAppearanceSou(sou);
-    retagCopulaDa(na);
-    noun.pos = core::PartOfSpeech::Noun;
-    noun.extended_pos = core::ExtendedPOS::Noun;
-    noun.lemma = noun.surface;
-    noun.conj_type = dictionary::ConjugationType::None;
-    noun.conj_form = grammar::ConjForm::Base;
-  }
-
-  // A one-kanji Ichidan stem has the same visible form before the negative
-  // auxiliary. Resolve its lemma from the final token sequence, after all
-  // ambiguity-specific retagging has completed.
-  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
-    auto& stem = result[idx];
-    const auto& negative = result[idx + 1];
-    if (stem.pos == core::PartOfSpeech::Verb && stem.surface.size() == core::kJapaneseCharBytes &&
-        grammar::isAllKanji(stem.surface) && negative.surface == "ない") {
-      stem.lemma = stem.surface + "る";
-    }
-  }
-
-  // A kanji-plus-て continuative before the past auxiliary or connective
-  // particle is an Ichidan stem (立て+て, 棄て+た). The lattice also has a
-  // homographic analysis that drops the e-row mora from the lemma; restore
-  // the productive Ichidan dictionary form after contextual disambiguation.
-  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
-    auto& stem = result[idx];
-    const auto& next = result[idx + 1];
-    const auto codepoints = normalize::toCodepoints(stem.surface);
-    const bool is_ichidan_te_stem = stem.pos == core::PartOfSpeech::Verb &&
-                                    stem.extended_pos == core::ExtendedPOS::VerbRenyokei && codepoints.size() == 2 &&
-                                    normalize::isKanjiCodepoint(codepoints.front()) && codepoints.back() == U'て';
-    const bool inflection_follows =
-        next.extended_pos == core::ExtendedPOS::AuxTenseTa || next.extended_pos == core::ExtendedPOS::ParticleConj;
-    if (is_ichidan_te_stem && inflection_follows) {
-      stem.lemma = stem.surface + "る";
-      stem.conj_type = dictionary::ConjugationType::Ichidan;
-      stem.conj_form = grammar::ConjForm::Renyokei;
-    }
-  }
-
-  // A suffix between the genitive particle and a case particle heads its own
-  // nominal phrase (穴の中から, 月の末に). Retag it as a noun; a true bound
-  // suffix instead remains directly attached to its nominal stem.
-  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
-    auto& candidate = result[idx];
-    const auto& previous = result[idx - 1];
-    const auto& next = result[idx + 1];
-    if (candidate.pos == core::PartOfSpeech::Suffix && previous.extended_pos == core::ExtendedPOS::ParticleNo &&
-        next.extended_pos == core::ExtendedPOS::ParticleCase) {
-      candidate.pos = core::PartOfSpeech::Noun;
-      candidate.extended_pos = core::ExtendedPOS::Noun;
-      candidate.conj_type = dictionary::ConjugationType::None;
-      candidate.conj_form = grammar::ConjForm::Base;
-    }
-  }
+  resolveFinalMorphemeRoles(result);
 
   return result;
 }
@@ -1699,10 +1722,10 @@ void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphem
         // rule below for stems that already reached the lattice as verbs.
         if (morpheme.pos == core::PartOfSpeech::Noun && i + 1 < morphemes.size() &&
             grammar::isHumbleHonorificLemma(morphemes[i + 1].lemma)) {
-          auto codepoints = normalize::toCodepoints(morpheme.surface);
-          if (!codepoints.empty() && grammar::isIRowCodepoint(codepoints.back())) {
+          const char32_t morpheme_last = utf8::decodeLastChar(morpheme.surface);
+          if (grammar::isIRowCodepoint(morpheme_last)) {
             retagGodanRenyokeiFromIRow(morpheme, false);
-          } else if (!codepoints.empty() && grammar::isERowCodepoint(codepoints.back())) {
+          } else if (grammar::isERowCodepoint(morpheme_last)) {
             morpheme.lemma = morpheme.surface + "る";
             morpheme.conj_type = dictionary::ConjugationType::Ichidan;
             morpheme.pos = core::PartOfSpeech::Verb;
@@ -1713,8 +1736,7 @@ void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphem
             morphemes[i + 1].extended_pos == core::ExtendedPOS::VerbRenyokei && morphemes[i + 1].surface == "し" &&
             morphemes[i + 2].extended_pos == core::ExtendedPOS::AuxTenseMasu && i >= 2 &&
             morphemes[i - 2].extended_pos == core::ExtendedPOS::ParticleCase && morphemes[i - 2].surface == "を") {
-          auto codepoints = normalize::toCodepoints(morpheme.surface);
-          if (!codepoints.empty() && grammar::isIRowCodepoint(codepoints.back())) {
+          if (grammar::isIRowCodepoint(utf8::decodeLastChar(morpheme.surface))) {
             retagGodanRenyokeiFromIRow(morpheme, true);
           }
         }
@@ -1747,8 +1769,7 @@ void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphem
             // An e-row continuative before する is an ichidan verb in the
             // productive honorific construction (お見せする), not a nominal
             // renyokei such as お待ちする.
-            const auto stem_codepoints = normalize::toCodepoints(morpheme.surface);
-            if (!stem_codepoints.empty() && grammar::isERowCodepoint(stem_codepoints.back()) &&
+            if (grammar::isERowCodepoint(utf8::decodeLastChar(morpheme.surface)) &&
                 next.pos == core::PartOfSpeech::Verb && next.lemma == "する") {
               preserves_verbal_reading = true;
             }
@@ -1893,231 +1914,6 @@ std::vector<core::Morpheme> Postprocessor::mergeLexicalizedAdverbs(std::vector<c
   return result;
 }
 
-namespace {
-
-// Check if a character is a digit (ASCII or fullwidth)
-bool isDigitChar(char32_t ch) {
-  return (ch >= U'0' && ch <= U'9') || (ch >= U'０' && ch <= U'９');
-}
-
-// Check if surface is a numeric expression (starts with digit or contains units)
-bool isNumericExpression(const std::string& surface) {
-  if (surface.empty())
-    return false;
-
-  size_t pos = 0;
-  char32_t first_ch = suzume::normalize::decodeUtf8(surface, pos);
-  return isDigitChar(first_ch);
-}
-
-// Check if surface ends with a digit
-bool endsWithDigit(const std::string& surface) {
-  if (surface.empty())
-    return false;
-
-  auto codepoints = suzume::normalize::toCodepoints(surface);
-  if (codepoints.empty())
-    return false;
-
-  return isDigitChar(codepoints.back());
-}
-
-using normalize::isAllKatakana;
-using normalize::isCounterKanji;
-
-// Check if surface looks like a unit (noun that can follow numbers)
-// For kanji: must start with a counter kanji (円, 分, 時間, etc.)
-// For katakana: any katakana noun merges (MeCab treats number + katakana as one
-// quantity token, e.g. 3キロ, 100メダル), so no curated unit list is needed.
-bool looksLikeUnit(const std::string& surface) {
-  if (surface.empty())
-    return false;
-
-  // Only the first codepoint drives the kanji-unit branch; kanji/katakana are
-  // 3-byte, so decoding just the leading char avoids allocating a codepoint
-  // vector. Non-3-byte leads decode to 0 and fall through to the katakana check.
-  char32_t first = utf8::decodeFirstChar(surface);
-
-  // Kanji units: first char must be a counter kanji
-  // CJK Unified Ideographs: U+4E00-U+9FFF
-  if (first >= 0x4E00 && first <= 0x9FFF) {
-    return isCounterKanji(first);
-  }
-
-  // Katakana nouns: any all-katakana surface merges with a preceding numeral
-  if (isAllKatakana(surface)) {
-    return true;
-  }
-
-  return false;
-}
-
-// Check if surface ends with a numeric unit that can be followed by more numbers
-bool endsWithContinuableUnit(const std::string& surface) {
-  if (surface.empty())
-    return false;
-
-  // Targets 兆/億/万/千/百 are all 3-byte kanji; decode only the trailing char.
-  char32_t last_ch = utf8::decodeLastChar(surface);
-  // Units that can be followed by more numbers (兆, 億, 万, 千, 百)
-  return last_ch == U'兆' || last_ch == U'億' || last_ch == U'万' || last_ch == U'千' || last_ch == U'百';
-}
-
-}  // namespace
-
-std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<core::Morpheme> morphemes) {
-  if (morphemes.empty()) {
-    return morphemes;
-  }
-
-  std::vector<core::Morpheme> result;
-  result.reserve(morphemes.size());
-
-  size_t idx = 0;
-  while (idx < morphemes.size()) {
-    const auto& current = morphemes[idx];
-
-    // Pattern 0: Ordinal prefix + numeric expression (第 + 3回 → 第3回).
-    // The prefix scopes the complete quantity, including an optional ordinal
-    // suffix (第3回目), so retain it as one search unit.
-    if (current.pos == core::PartOfSpeech::Noun && utf8::equalsAny(current.surface, {"第"}) &&
-        idx + 1 < morphemes.size()) {
-      const auto& next = morphemes[idx + 1];
-      if (next.pos == core::PartOfSpeech::Noun && isNumericExpression(next.surface)) {
-        core::Morpheme merged = current;
-        merged.surface += next.surface;
-        merged.lemma = merged.surface;
-        merged.end = next.end;
-        merged.end_pos = next.end_pos;
-        size_t merge_end = idx + 2;
-
-        if (merge_end < morphemes.size() && morphemes[merge_end].pos == core::PartOfSpeech::Noun &&
-            utf8::equalsAny(morphemes[merge_end].surface, {"目"})) {
-          merged.surface += morphemes[merge_end].surface;
-          merged.lemma = merged.surface;
-          merged.end = morphemes[merge_end].end;
-          merged.end_pos = morphemes[merge_end].end_pos;
-          ++merge_end;
-        }
-
-        result.push_back(merged);
-        idx = merge_end;
-        continue;
-      }
-    }
-
-    // Pattern 1: Merge large numbers (3億 + 5000万円)
-    if (current.pos == core::PartOfSpeech::Noun && isNumericExpression(current.surface) &&
-        endsWithContinuableUnit(current.surface)) {
-      core::Morpheme merged = current;
-      size_t merge_end = idx + 1;
-
-      // Collect consecutive numeric expressions
-      while (merge_end < morphemes.size()) {
-        const auto& next = morphemes[merge_end];
-        if (next.pos == core::PartOfSpeech::Noun && isNumericExpression(next.surface)) {
-          merged.surface += next.surface;
-          merged.lemma = merged.surface;
-          merged.end = next.end;
-          merged.end_pos = next.end_pos;
-          ++merge_end;
-
-          // Continue if this also ends with a continuable unit
-          if (!endsWithContinuableUnit(next.surface)) {
-            break;
-          }
-        } else {
-          break;
-        }
-      }
-
-      SUZUME_DEBUG_IF(merge_end > idx + 1) {
-        SUZUME_DEBUG_STREAM << "[POSTPROC] Merged numeric: ";
-        for (size_t i = idx; i < merge_end; ++i) {
-          if (i > idx)
-            SUZUME_DEBUG_STREAM << " + ";
-          SUZUME_DEBUG_STREAM << "\"" << morphemes[i].surface << "\"";
-        }
-        SUZUME_DEBUG_STREAM << " → \"" << merged.surface << "\"\n";
-      }
-
-      result.push_back(merged);
-      idx = merge_end;
-      continue;
-    }
-
-    // Pattern 2: Merge number + unit (3 + 時間, 100 + ゴールド, 3時 + 間)
-    // Exception: 対 (versus) should not merge - 2対1 should be 2|対|1
-    if (current.pos == core::PartOfSpeech::Noun && isNumericExpression(current.surface) &&
-        endsWithDigit(current.surface) && idx + 1 < morphemes.size()) {
-      const auto& next = morphemes[idx + 1];
-      bool is_versus = (next.surface == "対");
-      if (next.pos == core::PartOfSpeech::Noun && looksLikeUnit(next.surface) && !is_versus) {
-        core::Morpheme merged = current;
-        merged.surface += next.surface;
-        merged.lemma = merged.surface;
-        merged.end = next.end;
-        merged.end_pos = next.end_pos;
-
-        SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged number+unit: \"" << current.surface << "\" + \"" << next.surface
-                                                                     << "\" → \"" << merged.surface << "\"\n");
-
-        result.push_back(merged);
-        idx += 2;
-        continue;
-      }
-    }
-
-    // Pattern 3: Merge numeric with unit suffix (3時 + 間 → 3時間)
-    if (current.pos == core::PartOfSpeech::Noun && isNumericExpression(current.surface) && idx + 1 < morphemes.size()) {
-      const auto& next = morphemes[idx + 1];
-      // Check for common time/counter suffixes that get split
-      if (next.pos == core::PartOfSpeech::Noun && utf8::equalsAny(next.surface, {"間", "半", "目"})) {
-        core::Morpheme merged = current;
-        merged.surface += next.surface;
-        merged.lemma = merged.surface;
-        merged.end = next.end;
-        merged.end_pos = next.end_pos;
-
-        SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged numeric+suffix: \"" << current.surface << "\" + \"" << next.surface
-                                                                        << "\" → \"" << merged.surface << "\"\n");
-
-        result.push_back(merged);
-        idx += 2;
-        continue;
-      }
-    }
-
-    // Pattern 4: Merge indefinite numeral + counter suffix (数 + ヶ月 → 数ヶ月)
-    // Indefinite numerals: 数 (suu = some/several), 幾 (iku = how many)
-    if ((current.pos == core::PartOfSpeech::Noun || current.pos == core::PartOfSpeech::Pronoun) &&
-        utf8::equalsAny(current.surface, {"数", "幾", "何"}) && idx + 1 < morphemes.size()) {
-      const auto& next = morphemes[idx + 1];
-      if (next.pos == core::PartOfSpeech::Suffix) {
-        core::Morpheme merged = current;
-        merged.pos = core::PartOfSpeech::Noun;  // Merged result is always NOUN
-        merged.surface += next.surface;
-        merged.lemma = merged.surface;
-        merged.end = next.end;
-        merged.end_pos = next.end_pos;
-
-        SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged indefinite+suffix: \""
-                                 << current.surface << "\" + \"" << next.surface << "\" → \"" << merged.surface
-                                 << "\"\n");
-
-        result.push_back(merged);
-        idx += 2;
-        continue;
-      }
-    }
-
-    result.push_back(std::move(morphemes[idx]));
-    ++idx;
-  }
-
-  return result;
-}
-
 std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(std::vector<core::Morpheme> morphemes) {
   if (morphemes.size() < 2) {
     return morphemes;
@@ -2127,32 +1923,24 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(std::vector<c
   result.reserve(morphemes.size());
 
   for (size_t i = 0; i < morphemes.size(); ++i) {
-    // Check if next morpheme is ー (or consecutive ーs)
     if (i + 1 < morphemes.size()) {
       const auto& next = morphemes[i + 1];
-      const auto next_cps = normalize::toCodepoints(next.surface);
-      const bool next_is_prolonged = std::all_of(next_cps.begin(), next_cps.end(), normalize::isProlongedSoundMark);
-
-      if (next_is_prolonged && !next.surface.empty()) {
+      if (isOnlyProlongedSoundMarks(next.surface)) {
         const auto& current = morphemes[i];
-        // Only merge if preceding token is not a symbol
         if (current.pos != core::PartOfSpeech::Symbol) {
           core::Morpheme merged = current;
           merged.surface += next.surface;
           merged.end = next.end;
           merged.end_pos = next.end_pos;
-          // Update lemma
           if (!merged.lemma.empty()) {
             merged.lemma += next.surface;
           }
 
-          // Skip any additional ー tokens
           size_t skip = i + 2;
           while (skip < morphemes.size()) {
-            const auto skip_cps = normalize::toCodepoints(morphemes[skip].surface);
-            const bool is_prolonged = std::all_of(skip_cps.begin(), skip_cps.end(), normalize::isProlongedSoundMark);
-            if (!is_prolonged)
+            if (!isOnlyProlongedSoundMarks(morphemes[skip].surface)) {
               break;
+            }
             merged.surface += morphemes[skip].surface;
             if (!merged.lemma.empty()) {
               merged.lemma += morphemes[skip].surface;
@@ -2165,7 +1953,7 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(std::vector<c
           SUZUME_DEBUG_LOG("[POSTPROC] Merged prolonged sound mark: \"" << current.surface << "\" + \"ー\" → \""
                                                                         << merged.surface << "\"\n");
           result.push_back(merged);
-          i = skip - 1;  // Will be incremented by loop
+          i = skip - 1;
           continue;
         }
       }
