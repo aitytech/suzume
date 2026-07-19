@@ -2,6 +2,7 @@
 #define SUZUME_ANALYSIS_JOIN_COMPOUND_VERB_INTERNAL_H_
 
 #include <cstddef>
+#include <string>
 
 #include "bigram_table.h"
 #include "candidate_constants.h"
@@ -48,6 +49,27 @@ struct SubsidiaryVerb {
   bool joins_reading{true};
 };
 
+// The selected V2 entry and the evidence collected while matching it. Match
+// policy produces this value; the emitter consumes it without re-searching the
+// closed lexicon.
+struct CompoundVerbMatch {
+  size_t matched_len = 0;
+  std::string compound_base;
+  bool is_renyokei = false;
+  bool renyokei_form = false;
+  bool is_mizenkei = false;
+  bool is_kateikei = false;
+  bool is_potential = false;
+  bool includes_aux = false;
+  bool matched_via_reading = false;
+  float confidence = 0.0F;
+  const SubsidiaryVerb* v2_verb = nullptr;
+  bool v1_dict_verified = false;
+  bool v1_embedded_verified = false;
+  bool v1_ichidan_inflection = false;
+  bool v1_godan_inflection = false;
+};
+
 // The V2 allowlist has one owner in join_compound_verb_lexicon.cpp.  Keep
 // iteration range-based at every consumer so matching order remains the table
 // order without exposing the static storage in this header.
@@ -71,6 +93,11 @@ inline SubsidiaryVerbRange subsidiaryVerbs() {
 bool addPassiveContinuativeTailCandidates(core::Lattice& lattice, const std::vector<char32_t>& codepoints,
                                           size_t start_pos, size_t kanji_end,
                                           const dictionary::DictionaryManager& dict_manager);
+
+void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
+                                const ByteOffsets& byte_offsets, size_t start_pos, size_t v2_start,
+                                const CompoundVerbMatch& match, const dictionary::DictionaryManager& dict_manager,
+                                const Scorer& scorer);
 
 // Sokuonbin-compatible godan verb endings (く, つ, う, る)
 // Used to try all possible base forms when analyzing っ-onbin compound verbs
