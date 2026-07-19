@@ -140,9 +140,9 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   // Check for sokuonbin (っ) compound pattern: 突っ込む, 引っ張る, ぶっ壊す
   // Sokuonbin verbs: godan-ka(く), godan-ta(つ), godan-wa(う), godan-ra(る)
   bool is_sokuonbin = (base_ending == 0 && renyokei_char == U'っ');
-  SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND] pos=" << start_pos << " kanji_end=" << kanji_end << " renyokei="
-                                             << normalize::utf8::encode({renyokei_char}) << " base_ending="
-                                             << (base_ending ? normalize::utf8::encode({base_ending}) : "0")
+  SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND] pos=" << start_pos << " kanji_end=" << kanji_end
+                                             << " renyokei=" << normalize::encodeUtf8(renyokei_char) << " base_ending="
+                                             << (base_ending ? normalize::encodeUtf8(base_ending) : "0")
                                              << " sokuonbin=" << is_sokuonbin << "\n");
 
   // If not a 連用形 ending, this might be an Ichidan verb
@@ -292,7 +292,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
           size_t k2_start_byte = byteOffsetAt(byte_offsets, k2_start);
           size_t k2_end_byte = byteOffsetAt(byte_offsets, k2_end);
           std::string embedded2(text.substr(k2_start_byte, k2_end_byte - k2_start_byte));
-          embedded2 += normalize::utf8::encode({base2});
+          embedded2 += normalize::encodeUtf8(base2);
           if (dict_manager.lookupExact(embedded2, core::PartOfSpeech::Verb) != nullptr) {
             v2_start = k2_end + 1;
             is_sokuonbin = false;
@@ -581,7 +581,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         // Check if text starts with V2 kanji prefix, then analyze hiragana suffix
         if (!matched_inflected && char_types[v2_start] == CharType::Kanji) {
           // Extract kanji prefix from V2 surface (e.g., "巡" from "巡る")
-          auto v2_surface_decoded = normalize::utf8::decode(std::string(v2_surface));
+          auto v2_surface_decoded = normalize::utf8::decode(v2_surface);
           size_t kanji_prefix_len = 0;
           for (size_t idx = 0; idx < v2_surface_decoded.size(); ++idx) {
             char32_t c = v2_surface_decoded[idx];
@@ -701,7 +701,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         // E.g., 突 + く = 突く, 打 + つ = 打つ
         // Leave base_ending = 0 for now, will be set if match found
       } else if (!is_ichidan) {
-        v1_base += normalize::utf8::encode({base_ending});
+        v1_base += normalize::encodeUtf8(base_ending);
       } else {
         v1_base += "る";
       }
@@ -709,7 +709,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       if (is_sokuonbin) {
         // Try all sokuonbin-compatible godan endings
         for (char32_t ending : kSokuonbinEndings) {
-          std::string candidate = v1_base + normalize::utf8::encode({ending});
+          std::string candidate = v1_base + normalize::encodeUtf8(ending);
           if (dict_manager.lookupExact(candidate, core::PartOfSpeech::Verb) != nullptr) {
             v1_verified = true;
             v1_dict_verified = true;
@@ -743,7 +743,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         v1_verified = true;
         // Try to determine V1 base form for compound lemma
         for (char32_t ending : kSokuonbinEndings) {
-          std::string candidate = v1_base + normalize::utf8::encode({ending});
+          std::string candidate = v1_base + normalize::encodeUtf8(ending);
           if (dict_manager.lookupExact(candidate) != nullptr) {
             v1_base = candidate;
             base_ending = ending;
@@ -909,7 +909,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
             // Inflection analysis of っ-form (e.g., 引っ) gives base_form
             // like 引く. Accept if it matches any sokuonbin candidate.
             for (char32_t ending : kSokuonbinEndings) {
-              std::string candidate = v1_base + normalize::utf8::encode({ending});
+              std::string candidate = v1_base + normalize::encodeUtf8(ending);
               if (infl_result.base_form == candidate) {
                 v1_verified = true;
                 v1_base = candidate;
@@ -1308,8 +1308,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       if (text_prefix != stem)
         return false;
 
-      auto stem_decoded = normalize::utf8::decode(stem);
-      size_t stem_end_pos = start_pos + stem_decoded.size();
+      const size_t stem_end_pos = start_pos + normalize::utf8Length(stem);
       if (stem_end_pos > codepoints.size())
         return false;
 
@@ -1386,8 +1385,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         if (text_prefix != stem)
           return false;
 
-        auto stem_decoded = normalize::utf8::decode(stem);
-        size_t stem_end_pos = start_pos + stem_decoded.size();
+        const size_t stem_end_pos = start_pos + normalize::utf8Length(stem);
         if (stem_end_pos > codepoints.size())
           return false;
 

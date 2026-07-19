@@ -229,7 +229,7 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
   const size_t tsukeru_base_end = base_end > start_pos ? base_end - 1 : start_pos;
   if (base_end > start_pos && codepoints[tsukeru_base_end] == U'付' && tsukeru_base_end - start_pos >= 2) {
     for (const auto& form : kIchidanTsukeruForms) {
-      const size_t form_length = normalize::utf8::decode(std::string(form.inflection)).size();
+      const size_t form_length = normalize::utf8Length(form.inflection);
       const size_t candidate_end = tsukeru_base_end + form_length;
       if (candidate_end > codepoints.size() ||
           extractSubstring(codepoints, tsukeru_base_end, candidate_end) != form.inflection) {
@@ -355,8 +355,8 @@ std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& co
     if (kanji_seq.size() > suffix.size() &&
         kanji_seq.compare(kanji_seq.size() - suffix.size(), suffix.size(), suffix) == 0) {
       // Calculate stem length in codepoints
-      auto suffix_codepoints = normalize::utf8::decode(std::string(suffix));
-      size_t stem_end = end_pos - suffix_codepoints.size();
+      const size_t suffix_length = normalize::utf8Length(suffix);
+      size_t stem_end = end_pos - suffix_length;
       size_t stem_codepoint_len = stem_end - start_pos;
 
       // Restrict suffix-stem split to 2-char kanji stems.

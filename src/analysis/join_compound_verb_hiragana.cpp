@@ -180,7 +180,7 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
         // Godan: replace last char with base ending
         v1_base =
             std::string(v1_surface.substr(0, v1_surface.size() - core::kJapaneseCharBytes));  // Remove last hiragana
-        v1_base += normalize::utf8::encode({base_ending});
+        v1_base += normalize::encodeUtf8(base_ending);
       } else {
         // Ichidan: add る
         v1_base = std::string(v1_surface) + "る";

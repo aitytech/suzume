@@ -114,7 +114,7 @@ void addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
       continue;
     }
 
-    size_t stem_char_len = normalize::utf8::decode(std::string(stem)).size();
+    const size_t stem_char_len = normalize::utf8Length(stem);
 
     // Try different lengths after the stem
     for (size_t aux_end = aux_start + stem_char_len; aux_end <= hiragana_end && aux_end <= aux_start + 8; ++aux_end) {

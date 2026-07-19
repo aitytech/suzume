@@ -480,7 +480,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
           auto stem_cps = normalize::utf8::decode(best.stem);
           if (stem_cps.size() == 2) {
             // Get second kanji as potential verb stem
-            std::string remainder_stem = normalize::utf8::encode({stem_cps[1]});
+            std::string remainder_stem = normalize::encodeUtf8(stem_cps[1]);
             // Check if remainder + verb ending is a dictionary verb
             std::string conj_suffix = vh::baseFormSuffix(best.verb_type);
             if (!conj_suffix.empty()) {

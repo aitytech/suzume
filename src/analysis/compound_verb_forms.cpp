@@ -83,7 +83,7 @@ std::string generateKateikei(std::string_view surface, std::string_view reading,
     (void)row_verb_type;
     if (row.base_vowel == last_cp) {
       std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
-      result += normalize::utf8::encode({row.e_row});
+      result += normalize::encodeUtf8(row.e_row);
       return result;
     }
   }
@@ -105,7 +105,7 @@ std::string generateGodanPotential(std::string_view surface, std::string_view re
     (void)row_verb_type;
     if (row.base_vowel == last_cp) {
       std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
-      result += normalize::utf8::encode({row.e_row});
+      result += normalize::encodeUtf8(row.e_row);
       result += "る";
       return result;
     }
