@@ -6,6 +6,11 @@ add_library(suzume_postprocess OBJECT
   lemmatizer_conj_form.cpp
   lemmatizer_rules.cpp
   postprocessor.cpp
+  postprocessor_resolvers_appearance.cpp
+  postprocessor_resolvers_common.cpp
+  postprocessor_resolvers_nominal.cpp
+  postprocessor_resolvers_stages.cpp
+  postprocessor_resolvers_verb.cpp
   postprocessor_numeric.cpp
   tag_generator.cpp
 )

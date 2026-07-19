@@ -1,0 +1,94 @@
+#include <string_view>
+#include <utility>
+
+#include "core/debug.h"
+#include "core/utf8_constants.h"
+#include "grammar/char_patterns.h"
+#include "grammar/conjugation.h"
+#include "grammar/honorific_verbs.h"
+#include "grammar/inflection_scorer_constants.h"
+#include "normalize/char_type.h"
+#include "normalize/utf8.h"
+#include "postprocess/postprocessor.h"
+#include "postprocess/postprocessor_resolvers_internal.h"
+
+namespace suzume::postprocess::resolver {
+
+void retag(core::Morpheme& morpheme, core::PartOfSpeech pos, core::ExtendedPOS extended_pos, std::string_view lemma,
+           dictionary::ConjugationType conj_type, grammar::ConjForm conj_form) {
+  morpheme.pos = pos;
+  morpheme.extended_pos = extended_pos;
+  morpheme.lemma = lemma;
+  morpheme.conj_type = conj_type;
+  morpheme.conj_form = conj_form;
+}
+
+void retagAppearanceSou(core::Morpheme& sou) {
+  retag(sou, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxAppearanceSou, "そう",
+        dictionary::ConjugationType::None, grammar::ConjForm::Base);
+}
+
+void retagNaAdjectivalSou(core::Morpheme& sou) {
+  retag(sou, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjNaAdj, "そう", dictionary::ConjugationType::None,
+        grammar::ConjForm::Base);
+}
+
+void retagAdverbialSou(core::Morpheme& sou) {
+  retag(sou, core::PartOfSpeech::Adverb, core::ExtendedPOS::Adverb, "そう", dictionary::ConjugationType::None,
+        grammar::ConjForm::Base);
+}
+
+void retagCopulaDa(core::Morpheme& copula) {
+  retag(copula, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxCopulaDa, "だ", dictionary::ConjugationType::None,
+        grammar::ConjForm::Base);
+}
+
+void retagNegativeNai(core::Morpheme& negative) {
+  retag(negative, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxNegativeNai, "ない",
+        dictionary::ConjugationType::None, grammar::ConjForm::Base);
+}
+
+void retagBasicNegativeAdjective(core::Morpheme& negative) {
+  retag(negative, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjBasic, "ない",
+        dictionary::ConjugationType::IAdjective, grammar::ConjForm::Base);
+}
+
+// Recover a Godan dictionary form from an i-row continuative stem.  Some
+// callers intentionally preserve the lattice-provided conjugation form while
+// others require an explicit renyokei form, so that policy stays at the call
+// site.
+bool retagGodanRenyokeiFromIRow(core::Morpheme& stem, bool set_conj_form) {
+  const char32_t stem_last = utf8::decodeLastChar(stem.surface);
+  if (!grammar::isIRowCodepoint(stem_last)) {
+    return false;
+  }
+  const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(stem_last);
+  const grammar::VerbType verb_type = grammar::verbTypeFromIRowCodepoint(stem_last);
+  if (base_suffix.empty() || verb_type == grammar::VerbType::Unknown) {
+    return false;
+  }
+  stem.pos = core::PartOfSpeech::Verb;
+  stem.extended_pos = core::ExtendedPOS::VerbRenyokei;
+  stem.lemma = std::string(utf8::dropLastChar(stem.surface)) + std::string(base_suffix);
+  stem.conj_type = grammar::verbTypeToConjType(verb_type);
+  if (set_conj_form) {
+    stem.conj_form = grammar::ConjForm::Renyokei;
+  }
+  return true;
+}
+
+// Check if a surface is a counter/duration quantity that a temporal 後 attaches to
+// as a suffix (2時間, 10日, 5分, 数日, 半年): first codepoint is a numeral or inexact
+// quantity prefix (数/半/何) and the last is a counter kanji. MeCab tags 後 after such
+// a quantity as 名詞,接尾 (Suffix), whereas 後 after an ordinary noun (食事の後) stays a
+// plain noun.
+bool isCounterDurationNoun(const std::string& surface) {
+  auto codepoints = normalize::toCodepoints(surface);
+  if (codepoints.empty()) {
+    return false;
+  }
+  return (normalize::isNumeralCodepoint(codepoints.front()) || normalize::isQuantityPrefixKanji(codepoints.front())) &&
+         normalize::isCounterKanji(codepoints.back());
+}
+
+}  // namespace suzume::postprocess::resolver
