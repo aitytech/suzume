@@ -167,6 +167,23 @@ bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, siz
   return false;
 }
 
+bool startsWithMultiMoraDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                           const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos >= codepoints.size()) {
+    return false;
+  }
+  constexpr size_t kMinimumParticleLength = 2;
+  constexpr size_t kParticleProbe = 4;
+  const size_t probe_end = std::min(codepoints.size(), start_pos + kParticleProbe);
+  for (size_t particle_end = start_pos + kMinimumParticleLength; particle_end <= probe_end; ++particle_end) {
+    const auto* entry = dict_manager->lookupExact(extractSubstring(codepoints, start_pos, particle_end));
+    if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleBinding) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager,
                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                core::ExtendedPOS particle_pos) {

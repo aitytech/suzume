@@ -108,6 +108,7 @@ EntrySpecRange getPronounEntries() {
       pronoun_interrogative("なに", ""),
       // Closed indefinite pronoun, not an interrogative plus final particle.
       pronoun_interrogative("何かしら", ""),
+      pronoun("よそ", ""),  // 外所: place/other-party pronoun
 
       // Interrogatives (疑問詞)
       pronoun_interrogative("いつ", ""),

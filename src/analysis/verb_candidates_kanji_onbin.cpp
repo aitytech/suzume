@@ -42,6 +42,24 @@ SokuonbinBase resolveSokuonbinBase(const dictionary::DictionaryManager* dict_man
   return {stem + "る", grammar::VerbType::GodanRa};
 }
 
+bool isGodanTerminalEnding(char32_t codepoint) {
+  for (const auto& [verb_type, row] : grammar::Conjugation::getGodanRows()) {
+    static_cast<void>(verb_type);
+    if (row.base_vowel == codepoint) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool hasStandaloneVerbTail(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                           size_t tail_start, size_t tail_end) {
+  if (dict_manager == nullptr || tail_start >= tail_end) {
+    return false;
+  }
+  return vh::isVerbInDictionary(dict_manager, extractSubstring(codepoints, tail_start, tail_end));
+}
+
 void appendVerifiedTailGodanTaCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                  size_t kanji_end, const dictionary::DictionaryManager* dict_manager,
                                                  std::vector<UnknownCandidate>& candidates) {
@@ -93,7 +111,7 @@ void appendVerifiedTailGodanTaCompoundCandidates(const std::vector<char32_t>& co
 
 // Fallback verification for a 促音便 base when it is not in the dictionary:
 // only for single-char stems, accept a GodanRa inflection analysis of
-// onbin_surface + た with confidence ≥ 0.3.
+// onbin_surface + た with sufficient confidence.
 bool sokuonbinInflVerified(const grammar::Inflection& inflection, const std::string& onbin_surface,
                            const std::string& potential_base, size_t hiragana_before_onbin) {
   if (hiragana_before_onbin != 1) {
@@ -101,7 +119,7 @@ bool sokuonbinInflVerified(const grammar::Inflection& inflection, const std::str
   }
   for (const auto& result : inflection.analyze(onbin_surface + "た")) {
     if (result.verb_type == grammar::VerbType::GodanRa && result.base_form == potential_base &&
-        result.confidence >= 0.3F) {
+        result.confidence >= candidate::verb_cost::kKanjiSokuonbinMinConfidence) {
       return true;
     }
   }
@@ -356,7 +374,7 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
           std::string onbin_surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
           // Dict-matched verbs get bonus (-0.5) to beat unsplit forms
           // Inflection-only matches (2-kanji stems only) get neutral cost
-          const float sokuonbin_cost = matched_via_dict ? -0.5F : 0.0F;
+          const float sokuonbin_cost = matched_via_dict ? candidate::verb_cost::kStandardBonus : bigram_cost::kNeutral;
           SUZUME_DEBUG_VERBOSE_BLOCK {
             SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << " kanji_sokuonbin lemma=" << matched_base_form
                                 << " cost=" << sokuonbin_cost << (matched_via_dict ? " (dict)" : " (infl)") << "\n";
@@ -365,7 +383,11 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
               makeVerbCandidate(onbin_surface, start_pos, kanji_end + 1, sokuonbin_cost, matched_base_form,
                                 grammar::verbTypeToConjType(matched_verb_type), true, CandidateOrigin::VerbKanji, 0.9F,
                                 "kanji_sokuonbin", core::ExtendedPOS::VerbOnbinkei);
-          candidate.lemma_verified = matched_via_dict;
+          // The non-dictionary fallback reaches here only for a one-kanji
+          // stem whose complete sokuonbin form was validated by inflection.
+          // Preserve that evidence, as the extended and te-auxiliary paths do,
+          // so an ordinary verb does not lose to a fabricated noun boundary.
+          candidate.lemma_verified = matched_via_dict || kanji_end == start_pos + 1;
           candidates.push_back(std::move(candidate));
         }
       }
@@ -457,6 +479,7 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
             // (single-char stems only; longer となっ may be noun+particle+verb).
             bool infl_verified =
                 !in_dict && sokuonbinInflVerified(inflection, onbin_surface, potential_base, hiragana_before_onbin);
+            const bool standalone_verb_tail = hasStandaloneVerbTail(dict_manager, codepoints, kanji_end, onbin_end);
 
             // Skip if this is an i-adjective katt-form (美しかっ → 美しい, 高かっ → 高い)
             // The stem ends with か, so remove か and add い to get adjective base form
@@ -482,11 +505,11 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
                   makeVerbCandidate(onbin_surface, start_pos, onbin_end, kExtendedSokuonbinCost, potential_base,
                                     grammar::verbTypeToConjType(onbin_verb_type), true, CandidateOrigin::VerbKanji,
                                     0.9F, "extended_sokuonbin", core::ExtendedPOS::VerbOnbinkei);
-              // A single-kanji stem with one hiragana mora before っ has an
-              // unambiguous productive Godan reconstruction when the
-              // inflection analyzer agrees.  Keep that evidence so the
-              // generic kanji-onbin false-positive guard does not erase it.
-              candidate.lemma_verified = in_dict || (infl_verified && kanji_end == start_pos + 1);
+              // A standalone dictionary verb tail supplies a grammatical
+              // boundary, so an inflection-only compound must remain
+              // unverified and receive the generic false-positive penalty.
+              candidate.lemma_verified =
+                  in_dict || (infl_verified && kanji_end == start_pos + 1 && !standalone_verb_tail);
               candidates.push_back(std::move(candidate));
             }
           }  // end else (not copula だ pattern)
@@ -527,9 +550,16 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
         continue;
       }
 
+      // A terminal predicate followed by って is a colloquial quotation
+      // (読む+っていう), rather than a te-form that continues into an auxiliary.
+      if (after_sokuon == U'て' && isGodanTerminalEnding(codepoints[pos - 1])) {
+        continue;
+      }
+
       bool in_dict_check = vh::isVerbInDictionary(dict_manager, potential_base);
       bool infl_verified =
           !in_dict_check && sokuonbinInflVerified(inflection, onbin_surface, potential_base, hiragana_before_onbin);
+      const bool standalone_verb_tail = hasStandaloneVerbTail(dict_manager, codepoints, kanji_end, onbin_end);
 
       if (in_dict_check || infl_verified) {
         constexpr float kTeAuxSokuonbinCost = candidate::verb_cost::kModerateBonus;
@@ -537,10 +567,13 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
           SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << " te_aux_sokuonbin lemma=" << potential_base
                               << (in_dict_check ? " [dict]" : " [infl]") << " cost=" << kTeAuxSokuonbinCost << "\n";
         }
-        candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kTeAuxSokuonbinCost, potential_base,
-                                               grammar::verbTypeToConjType(onbin_verb_type), true,
-                                               CandidateOrigin::VerbKanji, 0.9F, "te_aux_sokuonbin",
-                                               core::ExtendedPOS::VerbOnbinkei));
+        auto candidate =
+            makeVerbCandidate(onbin_surface, start_pos, onbin_end, kTeAuxSokuonbinCost, potential_base,
+                              grammar::verbTypeToConjType(onbin_verb_type), true, CandidateOrigin::VerbKanji, 0.9F,
+                              "te_aux_sokuonbin", core::ExtendedPOS::VerbOnbinkei);
+        candidate.lemma_verified =
+            in_dict_check || (infl_verified && kanji_end == start_pos + 1 && !standalone_verb_tail);
+        candidates.push_back(std::move(candidate));
       }
       break;  // Only process first っ+て/で occurrence
     }

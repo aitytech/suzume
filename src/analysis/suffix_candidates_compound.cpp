@@ -20,6 +20,37 @@
 
 namespace suzume::analysis {
 
+namespace {
+
+// A one-mora particle can also begin a longer registered derivational form
+// (使い+やす+さ, 読み+にく+さ). In that situation it does not license a
+// nominalized-noun particle bonus for the preceding continuative stem.
+bool startsLongerNonParticleEntry(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos >= codepoints.size()) {
+    return false;
+  }
+
+  const size_t probe_end = std::min(codepoints.size(), start_pos + static_cast<size_t>(4));
+  const std::string probe = extractSubstring(codepoints, start_pos, probe_end);
+  for (const auto& match : dict_manager->lookup(probe, 0)) {
+    if (match.entry != nullptr && match.entry->pos != core::PartOfSpeech::Particle &&
+        normalize::utf8Length(match.entry->surface) > 1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool hasNominalizedNounParticleContinuation(const std::vector<char32_t>& codepoints, size_t end_pos,
+                                            const dictionary::DictionaryManager* dict_manager) {
+  return end_pos < codepoints.size() && normalize::isParticleCodepoint(codepoints[end_pos]) &&
+         codepoints[end_pos] != U'て' && codepoints[end_pos] != U'で' &&
+         !startsLongerNonParticleEntry(codepoints, end_pos, dict_manager);
+}
+
+}  // namespace
+
 std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints,
                                                                 size_t start_pos,
                                                                 const std::vector<normalize::CharType>& char_types,
@@ -133,6 +164,8 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
   // Check for 2-hiragana patterns if second char is also valid
   if (hiragana_end < char_types.size() && char_types[hiragana_end] == normalize::CharType::Hiragana) {
     char32_t second_hiragana = codepoints[hiragana_end];
+    const bool second_starts_classical_conjectural_auxiliary =
+        grammar::startsClassicalConjecturalAuxiliary(extractSubstring(codepoints, hiragana_end, codepoints.size()));
     // Common 2-char nominalization endings
     // Note: い is excluded — kanji+2hira ending in い is overwhelmingly
     // i-adjective (美しい, 正しい, 激しい), not nominalized noun
@@ -154,16 +187,17 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
         }
       }
       // Generate 2-hiragana candidate
-      if (!trailing_shi_is_suru) {
+      if (!trailing_shi_is_suru && !second_starts_classical_conjectural_auxiliary) {
         std::string surface = extractSubstring(codepoints, start_pos, hiragana_end + 1);
         if (!surface.empty()) {
           float nom2_cost = 0.8F;
-          if (hiragana_end + 1 < char_types.size() && normalize::isParticleCodepoint(codepoints[hiragana_end + 1]) &&
-              codepoints[hiragana_end + 1] != U'て' && codepoints[hiragana_end + 1] != U'で') {
+          const bool has_particle_continuation =
+              hasNominalizedNounParticleContinuation(codepoints, hiragana_end + 1, dict_manager);
+          if (has_particle_continuation) {
             nom2_cost += candidate::kNominalizedNounParticleBonus;
           }
-          auto cand = makeCandidate(surface, start_pos, hiragana_end + 1, core::PartOfSpeech::Noun, nom2_cost, false,
-                                    CandidateOrigin::NominalizedNoun);
+          auto cand = makeCandidate(surface, start_pos, hiragana_end + 1, core::PartOfSpeech::Noun, nom2_cost,
+                                    has_particle_continuation, CandidateOrigin::NominalizedNoun);
 #ifdef SUZUME_DEBUG_INFO
           cand.confidence = 0.8F;
           cand.pattern = "nominalized_2hira";
@@ -175,7 +209,8 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
   }
 
   // Generate 1-hiragana candidate
-  bool skip_single_char = false;
+  bool skip_single_char =
+      grammar::startsClassicalConjecturalAuxiliary(extractSubstring(codepoints, kanji_end + 1, codepoints.size()));
   if (kanji_end + 1 < char_types.size() && char_types[kanji_end + 1] == normalize::CharType::Hiragana) {
     char32_t next_char = codepoints[kanji_end + 1];
     if (next_char == U'な') {
@@ -211,6 +246,21 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
     }
   }
 
+  // A long kanji sequence ending in an attested godan stem before a particle
+  // normally contains a nominal boundary (東京+行き, 翌月+払い), rather than
+  // one unknown nominalization. Two-kanji deverbal compounds are handled by
+  // the verified compound path below.
+  if (kanji_count >= 3 && dict_manager != nullptr && kanji_end + 1 < codepoints.size() &&
+      normalize::isParticleCodepoint(codepoints[kanji_end + 1])) {
+    const std::string_view base_ending = grammar::godanBaseSuffixFromIRow(first_hiragana);
+    if (!base_ending.empty()) {
+      const std::string verb_base = normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending);
+      if (verb_helpers::isVerbInDictionary(dict_manager, verb_base)) {
+        skip_single_char = true;
+      }
+    }
+  }
+
   if (!skip_single_char) {
     std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
     if (!surface.empty()) {
@@ -223,8 +273,9 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       // A following particle makes the renyokei a nominalized search unit:
       // 答えは, 始まりは, 決まりを.  Prefer that productive noun reading over
       // a finite-verb candidate whose continuation is grammatically absent.
-      if (kanji_end + 1 < char_types.size() && normalize::isParticleCodepoint(codepoints[kanji_end + 1]) &&
-          codepoints[kanji_end + 1] != U'て' && codepoints[kanji_end + 1] != U'で') {
+      const bool has_particle_continuation =
+          hasNominalizedNounParticleContinuation(codepoints, kanji_end + 1, dict_manager);
+      if (has_particle_continuation) {
         nom1_cost += candidate::kNominalizedNounParticleBonus;
       }
       // Deverbal compound noun bonus (連用形転成名詞の複合):
@@ -254,6 +305,16 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
           }
         }
       }
+      // A one-kanji i-adjective may use the classical terminal -し form at
+      // the end of a predicate. Keep that attested terminal form as one
+      // lexical unit instead of reanalyzing its final し as a suru stem.
+      const bool is_classical_iadjective_terminal =
+          kanji_count == 1 && first_hiragana == U'し' && kanji_end + 1 == codepoints.size() &&
+          verb_helpers::isAdjectiveInDictionary(dict_manager,
+                                                extractSubstring(codepoints, start_pos, kanji_end) + "い");
+      if (is_classical_iadjective_terminal) {
+        nom1_cost += candidate::kClassicalIAdjectiveTerminalNounBonus;
+      }
       // Single kanji + し followed by sentence punctuation (、。) is almost
       // always 一字漢語サ変動詞 renyokei in formal/literary text (呈し、訴し、),
       // not a nominalized noun. Skip to let the VERB candidate win.
@@ -265,8 +326,8 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
         }
       }
       if (!skip_nom_single_kanji_shi) {
-        auto cand = makeCandidate(surface, start_pos, kanji_end + 1, core::PartOfSpeech::Noun, nom1_cost, false,
-                                  CandidateOrigin::NominalizedNoun);
+        auto cand = makeCandidate(surface, start_pos, kanji_end + 1, core::PartOfSpeech::Noun, nom1_cost,
+                                  has_particle_continuation, CandidateOrigin::NominalizedNoun);
 #ifdef SUZUME_DEBUG_INFO
         cand.confidence = 0.6F;
         cand.pattern = "nominalized_1hira";
@@ -542,7 +603,13 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
           ++ctx_end;
         }
         std::string orphan_ctx = extractSubstring(codepoints, orphan_pos, ctx_end);
-        orphan_split_viable = !dict_manager->lookup(orphan_ctx, 0).empty();
+        orphan_split_viable = false;
+        for (const auto& match : dict_manager->lookup(orphan_ctx, 0)) {
+          if (match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Particle) {
+            orphan_split_viable = true;
+            break;
+          }
+        }
       }
       if (orphan_split_viable) {
         looks_like_aux = true;
@@ -605,7 +672,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   bool is_e_row =
       (first_hira == U'え' || first_hira == U'け' || first_hira == U'げ' || first_hira == U'せ' ||
        first_hira == U'て' || first_hira == U'ね' || first_hira == U'べ' || first_hira == U'め' || first_hira == U'れ');
-  if (is_e_row && hiragana_len == 2 && second_hira == U'る') {
+  if (is_e_row && hiragana_len >= 2 && second_hira == U'る') {
     looks_like_aux = true;
   }
 

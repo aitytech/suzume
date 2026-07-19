@@ -796,6 +796,16 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
                                   [](const UnknownCandidate& cand) { return utf8::endsWith(cand.surface, "かった"); }),
                    candidates.end());
 
+  // The conjunctive くて is never an adjective terminal form. Its trimmed
+  // continuative candidate is emitted above, so remove the whole-span
+  // alternative that would otherwise hide the connective particle.
+  candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
+                                  [](const UnknownCandidate& cand) {
+                                    return cand.pos == core::PartOfSpeech::Adjective &&
+                                           utf8::endsWith(cand.surface, "くて");
+                                  }),
+                   candidates.end());
+
   // Add mizenkei (かろ) candidates for the conjectural pattern: stem + かろ + う
   // (高かろう, 美しかろう). Shared with the pure-hiragana generator.
   appendIAdjKaroCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager, candidates);
@@ -892,8 +902,12 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
   // Most productive patterns need at least two kanji.  A single-kanji stem
   // is also useful immediately before だ: the competing noun analysis stays
   // available, and the surrounding connection rules resolve the ambiguity.
-  const bool single_kanji_before_copula =
-      kanji_len == 1 && kanji_end < codepoints.size() && codepoints[kanji_end] == U'だ';
+  // A copular だ cannot be followed directly by る. That shape belongs to a
+  // kanji-hiragana lexical noun such as 火+だるま, not an open-class
+  // single-kanji na-adjective predicate.
+  const bool single_kanji_before_copula = kanji_len == 1 && kanji_end < codepoints.size() &&
+                                          codepoints[kanji_end] == U'だ' &&
+                                          (kanji_end + 1 >= codepoints.size() || codepoints[kanji_end + 1] != U'る');
   if (kanji_len < 2 && !single_kanji_before_copula) {
     return candidates;
   }
@@ -901,16 +915,15 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
   std::string kanji_seq = extractSubstring(codepoints, start_pos, kanji_end);
 
   // Pattern 1: Check for na-adjective suffixes (的)
-  // NOTE: MeCab splits 論理的な as 論理+的+な, not 論理的+な
-  // So we generate this candidate with higher cost to allow NOUN+SUFFIX path to win
-  // The candidate is still useful for cases where no split path exists
+  // Keep X+的 as one tokenizer search unit while preserving its na-adjective
+  // class.  A bare noun path remains available for contexts that do not
+  // license the derived adjective.
   for (const auto& suffix : kNaAdjSuffixes) {
     // Check if kanji_seq ends with suffix
     if (kanji_seq.size() >= suffix.size()) {
       std::string_view kanji_suffix(kanji_seq.data() + kanji_seq.size() - suffix.size(), suffix.size());
       if (kanji_suffix == suffix) {
-        // Found a na-adjective pattern like 理性的, 論理的
-        // Higher cost favors the compositional NOUN + 的(SUFFIX) + な path.
+        // Found a na-adjective pattern like 理性的, 論理的.
         candidates.push_back(makeNaAdjCandidate(kanji_seq, start_pos, kanji_end, candidate::kNaAdjTekiCost, true, 1.0F,
                                                 "na_adjective_teki"));
         break;  // Use first matching suffix
@@ -927,7 +940,8 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
   // nouns and na-adjectives both take conditional なら, so generating an
   // adjective for every unknown kanji compound would destroy that ambiguity.
   const bool followed_by_na = kanji_end < codepoints.size() && codepoints[kanji_end] == U'な' &&
-                              (kanji_end + 1 >= codepoints.size() || codepoints[kanji_end + 1] != U'ら');
+                              (kanji_end + 1 >= codepoints.size() ||
+                               (codepoints[kanji_end + 1] != U'ら' && codepoints[kanji_end + 1] != U'の'));
   const bool followed_by_sou =
       kanji_end + 1 < codepoints.size() && codepoints[kanji_end] == U'そ' && codepoints[kanji_end + 1] == U'う';
   if (followed_by_na || followed_by_sou || single_kanji_before_copula) {

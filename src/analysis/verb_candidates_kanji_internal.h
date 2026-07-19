@@ -33,6 +33,7 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
                                                std::vector<UnknownCandidate>& candidates);
 void appendCausativeRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                        size_t hiragana_end, const grammar::Inflection& inflection,
+                                       const dictionary::DictionaryManager* dict_manager,
                                        const VerbCandidateOptions& verb_opts,
                                        std::vector<UnknownCandidate>& candidates);
 void appendGodanPassiveRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,

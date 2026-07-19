@@ -190,8 +190,8 @@ void appendGodanMizenkeiZuCandidates(const std::vector<char32_t>& codepoints, si
           }
 
           if (is_valid) {
-            // Skip if verb+ず or verb+ずに is a dictionary entry (e.g., 思わず=ADV)
-            // In that case, the dictionary entry should win over the split path
+            // A lexicalized verb+ず entry (思わず) wins unless the following に
+            // explicitly creates the productive ずに auxiliary construction.
             bool dict_has_zu_form = false;
             if (dict_manager != nullptr) {
               std::string zu_form = surface + "ず";
@@ -199,7 +199,8 @@ void appendGodanMizenkeiZuCandidates(const std::vector<char32_t>& codepoints, si
               dict_has_zu_form =
                   dict_manager->lookupExact(zu_form) != nullptr || dict_manager->lookupExact(zuni_form) != nullptr;
             }
-            if (!dict_has_zu_form) {
+            const bool followed_by_case_ni = zu_pos + 1 < codepoints.size() && codepoints[zu_pos + 1] == U'に';
+            if (!dict_has_zu_form || followed_by_case_ni) {
               constexpr float kCost = candidate::verb_cost::kWeakPenalty;
               SUZUME_DEBUG_LOG("[VERB_CAND] " << surface << " godan_mizenkei_zu lemma=" << base_form
                                               << " cost=" << kCost << "\n");

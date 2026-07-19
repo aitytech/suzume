@@ -7,7 +7,7 @@ EntrySpecRange getConjunctionEntries() {
       // Sequential (順接)
       conj("従って", ""), conj("故に", ""), conj("ゆえに", ""), conj("そして", ""), conj("そうして", ""),
       conj("そうすると", ""), conj("それから", ""), conj("それで", ""), conj("だから", ""), conj("そのため", ""),
-      conj("したがって", ""),
+      conj("したがって", ""), conj("だからといって", ""), conj("だからこそ", ""),
 
       // Adversative (逆接)
       conj("しかし", ""), conj("しかしながら", ""), conj("だが", ""), conj("けれども", ""),
@@ -49,18 +49,45 @@ EntrySpecRange getConjunctionEntries() {
       // are function adverbs kept in L1 to beat the spurious verb decompositions. Kanji-initial
       // 決して is intentionally NOT registered here: it would swallow the 決 of 解決して
       // (解決|し|て → 解|決して); its 決し(非語 VERB)+て over-split needs a candidate-side fix.
-      adv("もとより", ""),   // 追加・強調: 本はもとより水を読む
-      conj("ともあれ", ""),  // 譲歩・話題転換: ともあれ始める
-      adv("めったに", ""),   // 滅多に〜ない - prevent めった(非語 VERB める)+に split
-      adv("どうぞ", ""),     // 陳述副詞 - prevent どう(ADJ)+ぞ split
-      adv("あえて", ""),     // 意図的選択: あえ(非語一段動詞)+て を防ぐ
-      adv("あくまで", ""),   // 限定・強調: あく(動詞)+まで を防ぐ
-      adv("いたって", ""),   // 程度: いたっ(動詞音便)+て を防ぐ
-      adv("すこぶる", ""),   // 程度: す+こぶる の非語分解を防ぐ
-      adv("おおいに", ""),   // 程度: おお+い+に の分解を防ぐ
-      adv("つとめて", ""),   // 努力: つ+とめ+て の非語分解を防ぐ
-      adv("ひいては", ""),   // 帰結・拡張: ひい+て+は を防ぐ
-      adv("かえって", ""),   // 逆接・予想外: かえっ(動詞音便)+て を防ぐ
+      adv("もとより", ""),                      // 追加・強調: 本はもとより水を読む
+      conj("ともあれ", ""),                     // 譲歩・話題転換: ともあれ始める
+      adv("とりわけ", ""),                      // Focus adverb
+      adv("目の当たり", ""),                    // Fixed evidential adverb
+      adv("めったに", ""),                      // 滅多に〜ない - prevent めった(非語 VERB める)+に split
+      adv("めちゃ", ""),                        // Colloquial degree adverb
+      na_adj("めった", ""),                     // めったなことではない
+      adv("どうぞ", ""),                        // 陳述副詞 - prevent どう(ADJ)+ぞ split
+      adv("あえて", ""),                        // 意図的選択: あえ(非語一段動詞)+て を防ぐ
+      adv("あくまで", ""),                      // 限定・強調: あく(動詞)+まで を防ぐ
+      adv("いたって", ""),                      // 程度: いたっ(動詞音便)+て を防ぐ
+      adv("すこぶる", ""),                      // 程度: す+こぶる の非語分解を防ぐ
+      adv("おおいに", ""),                      // 程度: おお+い+に の分解を防ぐ
+      adv("つとめて", ""),                      // 努力: つ+とめ+て の非語分解を防ぐ
+      adv("ひいては", ""),                      // 帰結・拡張: ひい+て+は を防ぐ
+      adv("かえって", ""),                      // 逆接・予想外: かえっ(動詞音便)+て を防ぐ
+      adv("直ちに", ""),                        // 即時: 直ち+に の分解を防ぐ
+      adv("いかにも", ""),                      // 強意: いかに+も の分解を防ぐ
+      adv("まさしく", ""),                      // 強意: OTHER フォールバックを防ぐ
+      adv("至って", ""),                        // 程度: 至+って の分解を防ぐ
+      adv("案外", ""),                          // 評価副詞: 後続ナ形容詞との未知語併合を防ぐ
+      adv("いかんせん", ""),                    // 評価・譲歩の定型副詞
+      adv("おしなべて", ""),                    // 総括副詞
+      adv("総じて", ""),                        // 総括副詞
+      adv("さしあたり", ""),                    // 当面の時間副詞
+      adv("かたがた", ""),                      // 目的併記の定型副詞
+      adv("かねて", ""),                        // Fixed temporal adverb
+      adv("なんら", ""),                        // 否定呼応の総称副詞
+      adv("互いに", ""),                        // 相互副詞
+      adv("なにせ", ""),                        // 理由強調副詞
+      adv("あいかわらず", ""),                  // 継続副詞
+      adv("あいにく", ""),                      // 逆接副詞
+      adv("つねに", ""),                        // 恒常副詞
+      adv("思いがけず", ""),                    // Fixed adverbial expression
+      adv("おそらくは", ""),                    // Fixed probability adverb
+      particle("ものの", EPOS::ParticleConj),   // 譲歩接続助詞
+      particle("がてら", EPOS::ParticleConj),   // purpose-combining conjunctive expression
+      particle("ていう", EPOS::ParticleQuote),  // 口語引用表現
+      particle("やら", EPOS::ParticleAdverbial),  // 列挙助詞
   };
   return makeEntrySpecRange(kEntries);
 }

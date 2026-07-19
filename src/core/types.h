@@ -184,6 +184,7 @@ enum class ExtendedPOS : uint8_t {
   SuffixTendency,          // 傾向: がち
   DeterminerQuotative,     // 引用連体: という、っていう
   AuxSimilitudeYou,        // 比況・様態: よう（読むようだ、次のように）
+  AuxKuruwaPolite,         // Regional polite auxiliary: なんし
 
   // Count marker (for array sizing)
   Count_  // Total number of categories
@@ -338,7 +339,8 @@ inline bool isAdjectiveForm(ExtendedPOS epos) {
 inline bool isAuxiliaryType(ExtendedPOS epos) {
   // (AuxNegativeMai sits outside the contiguous range; see ExtendedPOS comment)
   return (epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai ||
-         epos == ExtendedPOS::AuxInability || epos == ExtendedPOS::AuxBenefactive;
+         epos == ExtendedPOS::AuxInability || epos == ExtendedPOS::AuxBenefactive ||
+         epos == ExtendedPOS::AuxKuruwaPolite;
 }
 
 /**

@@ -123,6 +123,11 @@ bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manage
 bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
                                     const dictionary::DictionaryManager* dict_manager);
 
+// Detect a multi-mora particle beginning exactly at @p start_pos. Such a
+// closed-class prefix cannot be the first half of a productive compound verb.
+bool startsWithMultiMoraDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                           const dictionary::DictionaryManager* dict_manager);
+
 // =============================================================================
 // Fabricated closed-class absorption guards
 // =============================================================================
@@ -601,7 +606,7 @@ inline bool isSuruAuxiliaryStarter(char32_t next_char) {
  * @brief Check whether a ない-family negative begins at @p pos.
  *
  * Matches the negative auxiliary ない and its conjugated/contracted onsets:
- * ない, なかっ(た), なく(て), なけれ(ば), なきゃ. A bare な followed by
+ * ない, なかっ(た), なく(て), なけれ(ば), なけりゃ, なきゃ. A bare な followed by
  * anything else (なる, なさい, ...) does not match, so callers can use this as
  * an unambiguous "negation follows" gate after a verb mizenkei.
  *
@@ -620,9 +625,25 @@ inline bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t
     return false;
   }
   const char32_t third = codepoints[pos + 2];
-  return (second == U'か' && third == U'っ') ||  // なかっ(た)
-         (second == U'け' && third == U'れ') ||  // なけれ(ば)
-         (second == U'き' && third == U'ゃ');    // なきゃ
+  return (second == U'か' && third == U'っ') ||                      // なかっ(た)
+         (second == U'け' && (third == U'れ' || third == U'り')) ||  // なけれ(ば) / なけりゃ
+         (second == U'き' && third == U'ゃ');                        // なきゃ
+}
+
+/**
+ * @brief Check whether the conditional negative auxiliary なけれ begins at @p pos.
+ *
+ * This is the irrealis-stem continuation used by 〜なければ.  Keeping it
+ * separate from the broader ない-family gate lets candidate generators apply
+ * the conditional's stronger boundary evidence without changing ordinary or
+ * contracted negative forms.
+ *
+ * @param codepoints Full input codepoints
+ * @param pos Index expected to hold the leading な
+ */
+inline bool naiConditionalFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  return pos + 2 < codepoints.size() && codepoints[pos] == U'な' && codepoints[pos + 1] == U'け' &&
+         codepoints[pos + 2] == U'れ';
 }
 
 /**

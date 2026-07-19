@@ -455,6 +455,14 @@ float computeDeterminerNounDictBonus(const core::LatticeEdge& edge) {
     }
   }
 
+  // Demonstrative manner determiners are a closed class. Their complete
+  // lexical reading must outrank the productive adverb plus quotative-verb
+  // sequence when they directly modify a noun.
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Determiner && grammar::isPureHiragana(edge.surface) &&
+      suzume::normalize::utf8Length(edge.surface) >= 3) {
+    bonus += sc::kBonusHiraganaDeterminer;
+  }
+
   // Bonus for longer hiragana nouns from dictionary (ふともも, ひとつ, etc.)
   // These compete with adverb+noun split paths that get adverb bonus + connection bonus.
   // E.g., ふともも(NOUN, 0.5) vs ふと(ADV, -0.5) + もも(NOUN, 0.5, conn=-0.5) = -0.5
@@ -487,6 +495,9 @@ float computeAdverbDictBonus(const core::LatticeEdge& edge) {
         (char_len <= 2) ? sc::kBonusHiraganaAdverbShort
                         : lengthScaledBonus(sc::kBonusHiraganaAdverbBase, char_len, 2, sc::kBonusHiraganaAdverbPerChar);
     bonus += adverb_bonus;
+    if (char_len == 2 && utf8::endsWith(edge.surface, "う")) {
+      bonus += sc::kBonusHiraganaUFinalAdverb;
+    }
   }
 
   // Bonus for non-hiragana adverbs from dictionary (初めて, 大して, etc.)
@@ -542,6 +553,14 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // A completion auxiliary must attach to a preceding predicate.
   cost += computeStandaloneAuxiliaryPenalty(edge);
 
+  if (edge.extended_pos == core::ExtendedPOS::AuxKuruwaPolite) {
+    cost += sc::kBonusKuruwaPoliteAuxiliary;
+  }
+
+  if (edge.start == 0 && edge.extended_pos == core::ExtendedPOS::ParticleBinding) {
+    cost += sc::kBonusStandaloneBindingParticle;
+  }
+
   // Penalties for spurious verb candidates identified by their inflected endings (そう/てき/まし/てい/te/ta).
   cost += computeVerbEndingPenalty(edge);
 
@@ -550,7 +569,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // Dictionary registration indicates compound adjective should take precedence.
   // Pattern: kanji stem + hiragana suffix forming an i-adjective
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&
-      edge.surface.length() >= core::kFourJapaneseCharBytes) {  // ≥4 chars (kanji + ひらがな suffix)
+      edge.surface.length() >= core::kFourJapaneseCharBytes && !utf8::endsWith(edge.surface, "ければ")) {
     // Check if surface contains kanji — compound adjective from dictionary
     // Covers both base form (い) and inflected forms (く, かっ, けれ, etc.)
     if (grammar::containsKanji(edge.surface)) {
@@ -561,12 +580,11 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
     }
   }
 
-  // Penalty for kanji compound NOUN ending with 中 (chuu/juu suffix)
-  // E.g., "一日中" should be split as 一日|中 (noun + suffix)
-  // Registered compounds like "世界中" will also split (accepted difference from MeCab)
-  // This helps Suffix 中 candidates win over NOUN compounds
+  // Two-character kanji compounds ending in 中 are normally a nominal stem
+  // followed by the bound suffix. Longer compounds retain a whole-noun
+  // candidate, because the additional stem material gives a searchable unit.
   if (!edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun && utf8::endsWith(edge.surface, "中") &&
-      grammar::isAllKanji(edge.surface) && edge.surface.size() >= 6) {  // 2+ kanji (at least N中)
+      grammar::isAllKanji(edge.surface) && edge.surface.size() < core::kThreeJapaneseCharBytes) {
     cost += sc::kPenaltyKanjiChuuCompound;
   }
 

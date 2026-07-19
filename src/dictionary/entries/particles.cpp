@@ -20,6 +20,7 @@ EntrySpecRange getParticleEntries() {
       particle("は", EPOS::ParticleTopic),
       particle("も", EPOS::ParticleTopic),
       particle("こそ", EPOS::ParticleBinding),
+      particle("なむ", EPOS::ParticleBinding),  // 文語係助詞
       particle("さえ", EPOS::ParticleBinding),
       particle("すら", EPOS::ParticleBinding),
       particle("しか", EPOS::ParticleBinding),
@@ -31,6 +32,9 @@ EntrySpecRange getParticleEntries() {
       particle("ば", EPOS::ParticleConj),
       particle("たら", EPOS::ParticleConj),
       particle("なら", EPOS::ParticleConj),
+
+      // Binding particles (係助詞)
+      particle("しも", EPOS::ParticleBinding),
       // Contracted conditional ちゃ (= ては): なく+ちゃ+いけない.
       particle("ちゃ", EPOS::ParticleConj),
       // Note: ら removed - たら handles conditional, ら suffix is in L2 as SUFFIX
@@ -55,6 +59,7 @@ EntrySpecRange getParticleEntries() {
       particle("だり", EPOS::ParticleConj),  // 並立助詞 (voiced: 飲んだり)
       particle("なり", EPOS::ParticleConj),  // 動作直後: 鳴るなり
       particle("や", EPOS::ParticleConj),    // 並立助詞 (AやB)
+      particle("だの", EPOS::ParticleConj),  // 列挙: 赤だの青だの
 
       // Quotation particles (引用助詞)
       particle("って", EPOS::ParticleQuote),

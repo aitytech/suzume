@@ -32,15 +32,17 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     return;
   }
 
-  // A leading one-kanji ichidan stem can be written without its stem vowel
-  // before a kanji V2.  The initial kanji run then contains both verbs, so
-  // start matching V2 after the first kanji instead of treating its last
-  // hiragana as V1's stem ending.
-  const bool has_kanji_v2_after_bare_ichidan =
-      kanji_end >= start_pos + 2 && char_types[start_pos + 1] == CharType::Kanji;
-
   // Get the hiragana character (potential 連用形 ending)
   char32_t renyokei_char = codepoints[kanji_end];
+
+  // A leading one-kanji ichidan stem can be written without its stem vowel
+  // before a kanji V2. The initial kanji run then contains both verbs, so
+  // start matching V2 after the first kanji instead of treating its last
+  // hiragana as V1's stem ending. A Godan renyokei remains a boundary after
+  // the full kanji sequence (提出+し), not evidence for a bare Ichidan stem.
+  const bool has_kanji_v2_after_bare_ichidan = kanji_end >= start_pos + 2 &&
+                                               char_types[start_pos + 1] == CharType::Kanji &&
+                                               godanRenyokeiBaseCp(renyokei_char) == 0;
 
   // A voice auxiliary followed by the continuative subsidiary remains a
   // grammatical tail rather than a lexical V1+V2 compound. Keep the tail as
@@ -225,6 +227,24 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     }
   }
 
+  // A multi-kanji ichidan V1 can end in the first hiragana after the leading
+  // kanji run (仕立てる, 心掛ける).  The bare-ichidan branch above starts V2
+  // after only the first kanji, which is right for 見上げる but loses that
+  // lexical V1 shape.  When the reconstructed V1 is dictionary-verified,
+  // retain its entire stem and begin matching the subsidiary V2 after it.
+  if (!dict_compound_v1 && has_kanji_v2_after_bare_ichidan && kanji_end > start_pos + 1 &&
+      kanji_end + 1 < codepoints.size() && char_types[kanji_end + 1] == CharType::Kanji &&
+      (grammar::isERowCodepoint(renyokei_char) || grammar::isIRowCodepoint(renyokei_char))) {
+    const std::string multi_kanji_ichidan_base = extractSubstring(codepoints, start_pos, kanji_end + 1) + "る";
+    if (dict_manager.lookupExact(multi_kanji_ichidan_base, core::PartOfSpeech::Verb) != nullptr) {
+      v2_start = kanji_end + 1;
+      is_sokuonbin = false;
+      is_ichidan = true;
+      dict_compound_v1 = true;
+      dict_compound_v1_lemma = multi_kanji_ichidan_base;
+    }
+  }
+
   // Sokuonbin compound V1: 単漢字 + っ + 漢字 + 連用形 (引っ張り) whose embedded second verb
   // (張る) is dict-verified. The sokuonbin compound 引っ張る is rule-derivable, not in the
   // dictionary, so the branch above misses it; here the whole 引っ張り becomes V1 so a further
@@ -273,6 +293,14 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
           particle_start + normalize::utf8Length(match.entry->surface) <= v2_start) {
         return;
       }
+    }
+
+    // A terminal u-row verb followed by a case particle is a clause boundary,
+    // even when the particle is a single character (行く+に+越した).  A
+    // continuative ending such as し remains eligible for lexical compounds.
+    const auto* particle = dict_manager.lookupExact(particle_probe, core::PartOfSpeech::Particle);
+    if (particle != nullptr && particle_start > start_pos && kana::isURowCodepoint(codepoints[particle_start - 1])) {
+      return;
     }
   }
 
@@ -350,6 +378,15 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         matched_kanji = true;
         matched_len = v2_surface.size();
       }
+    }
+
+    // The hiragana spellings とる and どる are contracted progressive
+    // auxiliaries after a verb stem. Keep the lexical V2 entries available
+    // in their kanji spelling (受け取る), but do not build a false compound
+    // candidate over the productive auxiliary sequence (食べとった).
+    if (!matched_kanji && char_types[v2_start] == CharType::Hiragana &&
+        (v2_reading == "とる" || v2_reading == "どる")) {
+      continue;
     }
 
     // Try reading (hiragana) match if kanji didn't match
@@ -697,8 +734,19 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         size_t v1_renyokei_end = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end + 1);
         std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
         if (verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, v1_renyokei)) {
-          // V1 renyokei is a known non-verb word, don't form compound
-          use_inflection_fallback = false;
+          // A single-kanji Godan continuative can be both a nominalized word
+          // and the productive first half of a compound verb (思い+出す,
+          // 問い+合わせる). Keep the verbal analysis only when inflection
+          // reconstructs the exact Godan base; unrelated noun homographs
+          // remain blocked.
+          const auto inflection_candidate = inflection.getBest(v1_renyokei);
+          const bool productive_godan_compound =
+              !is_ichidan && kanji_count == 1 &&
+              inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
+              inflection_candidate.base_form == v1_base;
+          if (!productive_godan_compound) {
+            use_inflection_fallback = false;
+          }
         }
       }
 
@@ -723,7 +771,12 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         // Likewise, ん is a Godan hatsuonbin marker, never an Ichidan
         // renyokei. A following compound V2 must not turn 読んで+あげられる
         // into the fabricated lexical verb 読んであげる.
-        if (renyokei_char == U'で' || renyokei_char == U'ん') {
+        const bool bare_ichidan_stem = v2_start == kanji_end;
+        if (bare_ichidan_stem && !verb_helpers::isSingleKanjiIchidan(codepoints[start_pos])) {
+          // A bare single-kanji Ichidan stem is a closed class. Without an
+          // e/i-row stem vowel, arbitrary kanji must not be promoted to one.
+          use_inflection_fallback = false;
+        } else if (renyokei_char == U'で' || renyokei_char == U'ん') {
           use_inflection_fallback = false;
         } else if (starts_inside_formal_noun) {
           use_inflection_fallback = false;
@@ -812,6 +865,19 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       continue;
     }
 
+    // A nominal base followed by an independently registered suffix form
+    // (税+抜き, 水+抜き) is not evidence for a lexical compound verb.  The
+    // productive single-kanji V1 fallback is deliberately dictionary-free,
+    // so let the suffix analysis own this boundary unless V1 itself was
+    // dictionary-verified.
+    if (!v1_dict_verified && !dict_compound_v1 && !is_sokuonbin && kanji_end < codepoints.size()) {
+      const std::string v2_form = extractSubstring(codepoints, v2_start, kanji_end + 1);
+      if (dict_manager.lookupExact(v2_form, core::PartOfSpeech::Suffix) != nullptr ||
+          dict_manager.lookupExact(v2_form, core::PartOfSpeech::Noun) != nullptr) {
+        continue;
+      }
+    }
+
     // For inflected V2 matches (Case 1/2), check if the full surface could be
     // an adjective instead of a compound verb. This prevents false positives
     // like 美しかった (adjective) being parsed as 美し+交った (compound verb).
@@ -856,6 +922,18 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       // Longer renyokei match beats shorter renyokei match
       // This makes 出し (6 bytes) beat 出 (3 bytes) for V1+V2 compounds
       should_update = true;
+    } else if (matched_renyokei && best_match.is_mizenkei && matched_len > best_match.matched_len) {
+      // A longer ichidan continuative can overlap with the mizenkei of a
+      // different V2 (組み合わせ vs. 組み合わ).  A deverbal suffix immediately
+      // after it establishes the nominalized compound reading.
+      const size_t renyokei_end_pos =
+          advanceCharsToBytePos(codepoints, v2_start, v2_start_byte, v2_start_byte + matched_len);
+      if (renyokei_end_pos < codepoints.size() &&
+          (codepoints[renyokei_end_pos] == U'方' || codepoints[renyokei_end_pos] == U'手' ||
+           codepoints[renyokei_end_pos] == U'物' || codepoints[renyokei_end_pos] == U'所' ||
+           codepoints[renyokei_end_pos] == U'場')) {
+        should_update = true;
+      }
     } else if (is_renyokei_entry && (matched_kanji || matched_reading) && best_match.includes_aux &&
                !best_match.is_renyokei) {
       // Renyokei exact match beats inflection match that includes aux
@@ -923,6 +1001,13 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       return;
     }
 
+    // An internal te-form followed by a benefactive or request auxiliary is
+    // compositional (見+て+あげる), not a lexical V1+V2 compound. The helper
+    // preserves ordinary compounds such as 取り上げる, which have no te-form.
+    if (verb_helpers::embedsTeFormAuxiliary(compound_surface)) {
+      return;
+    }
+
     // Skip if compound surface is registered as NOUN in dictionary,
     // UNLESS followed by an auxiliary suffix (た/て/で/ない) which indicates verb usage.
     // This prevents nominalized compound verbs (売り上げ, 打ち合わせ) from being tokenized as VERB
@@ -935,6 +1020,10 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
         // た/て/で/な(い)/れ/ら/ま(す) indicate verb conjugation
         followed_by_aux = (next_cp == U'た' || next_cp == U'て' || next_cp == U'で' || next_cp == U'な' ||
                            next_cp == U'れ' || next_cp == U'ら' || next_cp == U'ま' || next_cp == U'ず');
+        // A deverbal suffix also validates the compound continuative.  It is
+        // emitted below as a nominal candidate, not retained as a verb.
+        followed_by_aux = followed_by_aux || next_cp == U'方' || next_cp == U'手' || next_cp == U'物' ||
+                          next_cp == U'所' || next_cp == U'場';
       }
       if (!followed_by_aux) {
         SUZUME_DEBUG_LOG("[COMPOUND_SKIP] \"" << compound_surface << "\" is dict NOUN, skipping compound verb\n");
@@ -1001,7 +1090,12 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // compounds to their ordinary compositional scoring.
     const bool compound_lemma_verified =
         dict_manager.lookupExact(best_match.compound_base, core::PartOfSpeech::Verb) != nullptr;
-    if (compound_lemma_verified) {
+    const std::string nominalized_compound = generateRenyokei(best_match.compound_base, "", best_match.v2_verb_type);
+    const bool compound_nominalization_verified =
+        !nominalized_compound.empty() &&
+        dict_manager.lookupExact(nominalized_compound, core::PartOfSpeech::Noun) != nullptr;
+    if (compound_lemma_verified ||
+        (compound_nominalization_verified && !best_match.includes_aux && !best_match.is_mizenkei)) {
       final_cost += bigram_cost::kStrongBonus;
     }
 
@@ -1011,7 +1105,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // Te-stem and mizenkei candidates are generated separately (below) to provide
     // the split path; this penalty ensures the split path wins over the merged form.
     if (best_match.includes_aux) {
-      final_cost += bigram_cost::kMinor;  // 0.5 penalty to favor split path
+      final_cost += bigram_cost::kStrong;
     }
 
     uint8_t flags = core::LatticeEdge::kFromDictionary;
@@ -1051,6 +1145,33 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
                     core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "compound", compound_epos,
                     "compound");
 
+    // A compound verb continuative followed by a deverbal suffix is a single
+    // nominal search unit.  The V1/V2 verification above keeps this productive
+    // rule from absorbing arbitrary kanji-hiragana sequences.
+    if (best_match.renyokei_form && compound_end_pos < codepoints.size() &&
+        (codepoints[compound_end_pos] == U'方' || codepoints[compound_end_pos] == U'物' ||
+         codepoints[compound_end_pos] == U'所' || codepoints[compound_end_pos] == U'場')) {
+      const size_t noun_end_pos = compound_end_pos + 1;
+      const size_t noun_end_byte = byteOffsetAt(byte_offsets, noun_end_pos);
+      const std::string noun_surface(text.substr(start_byte, noun_end_byte - start_byte));
+      const float noun_cost = scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus;
+      lattice.addEdge(noun_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(noun_end_pos),
+                      core::PartOfSpeech::Noun, noun_cost, flags, noun_surface, dictionary::ConjugationType::None,
+                      core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence,
+                      "compound_renyokei_suffix_noun", core::ExtendedPOS::NounVerbal, "compound_renyokei_suffix_noun");
+    }
+
+    // The agentive 手 remains a suffix search unit, while the preceding
+    // compound continuative is nominalized (引き受け+手).
+    if (best_match.renyokei_form && compound_end_pos < codepoints.size() && codepoints[compound_end_pos] == U'手') {
+      const float noun_cost = scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus;
+      lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
+                      core::PartOfSpeech::Noun, noun_cost, flags, compound_surface, dictionary::ConjugationType::None,
+                      core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence,
+                      "compound_renyokei_agentive_suffix", core::ExtendedPOS::NounVerbal,
+                      "compound_renyokei_agentive_suffix");
+    }
+
     // An ichidan V2 forms its conditional from the compound renyokei plus
     // れば.  Keep that inflectional boundary available for every lexical or
     // productive compound (言い換えれ+ば, 組み合わせれ+ば) instead of
@@ -1079,7 +1200,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // V1 is an inflection-only verb (e.g., ichidan 受ける, not in the dictionary).
     float te_stem_cost = final_cost;
     if (best_match.includes_aux) {
-      te_stem_cost -= bigram_cost::kMinor;
+      te_stem_cost -= bigram_cost::kStrong;
     }
 
     // Helper lambda to add te-stem edge

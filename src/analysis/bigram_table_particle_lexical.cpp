@@ -36,6 +36,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Needs to overcome DET→NOUN bonus (-2.5) when competing with な+どの path.
       {EPOS::ParticleAdverbial, EPOS::ParticleNo, cost::kVeryStrongBonus},
 
+      // A case-marked modifier can be followed by a predicative adjective
+      // (これまでに+ない方法). Prefer this grammatical boundary to a
+      // dictionary noun that happens to span the adjective and next kanji.
+      {EPOS::ParticleCase, EPOS::AdjBasic, cost::kVeryStrongBonus},
+
       // ParticleAdverbial → VerbRenyokei (かも+しれ in かもしれない, など+あり, でも+あり)
       // - strong bonus. Favors かも+しれ+ない over か+もし+れない and keeps a real
       //   verb renyokei after a subsidiary particle. A single-mora renyokei after
@@ -46,6 +51,9 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // An adverb can be followed by a focus particle (そう+かも, もっとも+でも).
       // Prefer that grammatical boundary over a homographic short verb.
       {EPOS::Adverb, EPOS::ParticleAdverbial, cost::kStrongBonus},
+
+      // The regional polite auxiliary follows invitation adverbs (おいで+なんし).
+      {EPOS::Adverb, EPOS::AuxKuruwaPolite, cost::kStrongBonus},
 
       // ParticleAdverbial → VerbShuushikei (でも+行く) - strong bonus
       // This favors でも+行く over で+も+行く
@@ -75,6 +83,15 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // moderate bonus for ordinary negative predicates.
       {EPOS::ParticleCase, EPOS::VerbMizenkei, cost::kModerateBonus},
 
+      // A case particle can introduce an onbin predicate (荷物を受け取っ+た).
+      // This is a complete predicate boundary, unlike the renyokei case that
+      // remains deliberately unscored for quotative constructions.
+      {EPOS::ParticleCase, EPOS::VerbOnbinkei, cost::kVeryStrongBonus},
+
+      // Conditional predicates introduce concessive clauses (しかれ+ども,
+      // 読め+ども) and must outrank a homographic particle-plus-auxiliary path.
+      {EPOS::VerbKateikei, EPOS::ParticleConj, cost::kStrongBonus},
+
       // A renyokei immediately before a case particle normally functions as a
       // nominalization (香り+を, 読み+を, 流れ+に). Left context can override this
       // for purpose constructions such as 本を買いに行く.
@@ -85,11 +102,19 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // remain available for the productive nominalizer construction (食べる+の).
       {EPOS::VerbRenyokei, EPOS::ParticleNo, cost::kStrong},
 
+      // A contrastive topic can attach to a continuative verb in emphatic
+      // negation (減り+は+し+ない). Preserve the verbal reading alongside
+      // ordinary nominalized renyokei uses.
+      {EPOS::VerbRenyokei, EPOS::ParticleTopic, cost::kStrongBonus},
+
       // ParticleTopic/ParticleCase → Pronoun (は+いつ, は+どこ, に+何, で+誰)
       // Particles naturally precede pronouns in questions and relative clauses
       // は+いつ, も+何, に+どこ are very common patterns
       {EPOS::ParticleTopic, EPOS::Pronoun, cost::kModerateBonus},
       {EPOS::ParticleCase, EPOS::Pronoun, cost::kMinorBonus},
+      // Enumerative particles can introduce the first member of a list
+      // (やら+これ+やら), where the homographic verb reading is impossible.
+      {EPOS::ParticleAdverbial, EPOS::Pronoun, cost::kMinorBonus},
 
       // ParticleTopic → VerbShuushikei (は+食べる) - neutral
       {EPOS::ParticleTopic, EPOS::VerbShuushikei, cost::kNeutral},
@@ -120,6 +145,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // lose to a noun + copula reinterpretation merely because the following
       // verb is lexical rather than an auxiliary.
       {EPOS::ParticleConj, EPOS::VerbShuushikei, cost::kNeutral},
+
+      // A focus particle can precede a finite predicate (にすら+ある,
+      // まで+届く). Prefer the grammatical particle boundary over an
+      // unknown noun that absorbs the particle sequence.
+      {EPOS::ParticleBinding, EPOS::VerbShuushikei, cost::kVeryStrongBonus},
 
       // Connective て/で → binding particle (読んで+さえ, 見て+こそ).
       // The binding particle follows a verb te-form; treating で as a copula
@@ -266,10 +296,9 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::AuxCopulaDa, EPOS::VerbRenyokei, cost::kMinor},
       {EPOS::AuxCopulaDa, EPOS::VerbShuushikei, cost::kMinor},
 
-      // Sentence-final particles productively stack (だ+よ+ね, だ+よ+な).
-      // Prefer the grammatical sequence over an unknown noun that absorbs a
-      // casual copula ending.
-      {EPOS::ParticleFinal, EPOS::ParticleFinal, cost::kStrongBonus},
+      // Two sentence-final particles cannot form an unqualified boundary.
+      // Surface-specific valid stacks are restored by connection rules.
+      {EPOS::ParticleFinal, EPOS::ParticleFinal, cost::kStrong},
 
       // ParticleFinal → ParticleNo (か+の) - moderate bonus (indefinite pronoun pattern)
       // いくつかの, 何かの, 誰かの, どれかの - か functions as indefinite marker, not sentence-ender
@@ -316,23 +345,26 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // AuxCopulaDa → AuxCopulaDa (で+ある/あれ/あろ) - very strong bonus for
       // the formal copula and its volitional form であろう.
       // MeCab splits である as で(だ連用形) + ある(助動詞), not で(出る連用形) + ある
-      {EPOS::AuxCopulaDa, EPOS::AuxCopulaDa, cost::kVeryStrongBonus},
+      // Copular forms cannot be chained directly (で+な). The copular
+      // negative uses the adverbial adjective form なく as one token.
+      {EPOS::AuxCopulaDa, EPOS::AuxCopulaDa, cost::kAlmostNever},
 
       // =========================================================================
       // Appearance/Conjecture connections
       // =========================================================================
 
-      // VerbRenyokei → AuxAppearanceSou (食べ+そう) - very strong bonus
-      // Must beat adverb bonus (-1.0 for 2-char hiragana) to prefer auxiliary
-      {EPOS::VerbRenyokei, EPOS::AuxAppearanceSou, cost::kVeryStrongBonus},
+      // VerbRenyokei → AuxAppearanceSou (食べ+そう) - decisive bonus
+      // The lexical demonstrative reading has an additional u-final adverb
+      // prior, so this inflectional connection must remain stronger.
+      {EPOS::VerbRenyokei, EPOS::AuxAppearanceSou, cost::kAppearanceAuxiliaryBonus},
 
       // Na-adjective stems take appearance そう directly (静か+そう).
       {EPOS::AdjNaAdj, EPOS::AuxAppearanceSou, cost::kStrongBonus},
 
-      // AuxAspectShimau → AuxAppearanceSou (しまい+そう) - strong bonus
+      // AuxAspectShimau → AuxAppearanceSou (しまい+そう) - very strong bonus
       // しまいそう (about to end up doing) is natural; AUX chain must beat ADJ+ADV path
       // Strong bonus needed because そう(ADV) has dict bonus (-0.5) vs そう(AUX) cost (0.4)
-      {EPOS::AuxAspectShimau, EPOS::AuxAppearanceSou, cost::kStrongBonus},
+      {EPOS::AuxAspectShimau, EPOS::AuxAppearanceSou, cost::kVeryStrongBonus},
 
       // Other → AuxAppearanceSou - penalty (様態そう shouldn't appear at BOS)
       // At sentence start, そう should be demonstrative na-adjective, not appearance aux
@@ -382,6 +414,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // らしく + ない) is favored the same way as a genuine adjective's く-form + ない.
       // Genuine derived adjectives (素晴らしい) stay merged via their dict-inflected 連用形.
       {EPOS::AuxConjectureRashii, EPOS::AuxNegativeNai, cost::kExtremeBonus},
+
+      // The conjectural auxiliary's stem (らし) cannot be followed by the
+      // progressive auxiliary く. Its adverbial form is the single inflected
+      // token らしく, so this rejects a spurious らし+く segmentation.
+      {EPOS::AuxConjectureRashii, EPOS::AuxAspectIku, cost::kAlmostNever},
 
       // AuxAspectIru → AuxConjectureRashii/Mitai (ている+らしい/みたい) - mirror the
       // VerbShuushikei rows above so the aspectual reading of the 補助動詞 いる is not
@@ -480,7 +517,9 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::ParticleCase, EPOS::ParticleCase, cost::kVeryRare},
 
       // Note: PART_格 → PART_係 (に+は, で+は, と+は) is valid Japanese,
-      // so we intentionally do NOT penalize ParticleCase → ParticleTopic.
+      // so preserve the stacked-particle boundary. This also covers に+も,
+      // whose focus-particle reading is productive before a predicate.
+      {EPOS::ParticleCase, EPOS::ParticleTopic, cost::kVeryStrongBonus},
 
       // Note: PART_接続 → PART_係 bonus is NOT set here because short particles
       // like て, し also have PART_接続 and would incorrectly bond with は, も.
@@ -545,9 +584,16 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Greetings like おはようございます need this to prefer dict AuxGozaru over verb candidate
       {EPOS::Interjection, EPOS::AuxGozaru, cost::kStrongBonus},
 
+      // A fixed interjection can be followed by the polite copula and past
+      // auxiliary (すみません+でし+た).
+      {EPOS::Interjection, EPOS::AuxCopulaDesu, cost::kDoubleVeryStrongBonus},
+
       // Adverb → ParticleTopic (少し+は, もっと+は, ちょっと+は) - minor bonus
       // Adverb + は/も is a natural pattern; default penalty causes ADV to lose to NOUN
       {EPOS::Adverb, EPOS::ParticleTopic, cost::kMinorBonus},
+
+      // Adverb → ParticleCase (かねて+より, あまり+に) - strong bonus.
+      {EPOS::Adverb, EPOS::ParticleCase, cost::kStrongBonus},
 
       // Adverb → ParticleFinal (まさか+ね, もちろん+ね) - very strong bonus.
       // Sentence-final particles can close an adverbial response; without this,
@@ -610,6 +656,18 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // fallback penalty that makes the whole thing collapse into one unsplit
       // kanji_hira_compound NOUN token (e.g. 春 with no dictionary entry of its own).
       {EPOS::AuxClassicalNari, EPOS::AuxClassicalKeri, cost::kExtremeBonus},
+
+      // The classical copula attaches to a nominal predicate before the past
+      // auxiliary (春+なり+けり). This preserves the closed auxiliary chain
+      // over an unknown kanji-hiragana verb candidate.
+      {EPOS::Noun, EPOS::AuxClassicalNari, cost::kVeryStrongBonus},
+
+      // The classical past auxiliary follows a verb's renyokei and its
+      // 已然形 licenses the conditional particle (見+けれ+ば). These two
+      // connections disambiguate the auxiliary chain from an unrelated
+      // modern ichidan conditional such as 見けれ+ば.
+      {EPOS::VerbRenyokei, EPOS::AuxClassicalKeri, cost::kVeryStrongBonus},
+      {EPOS::AuxClassicalKeri, EPOS::ParticleConj, cost::kVeryStrongBonus},
 
       // 連体形 なる (壮大なる計画): a na-adjective stem + なる is the classical adnominal 断定, not
       // the verb 成る. Only the left context (AdjNaAdj→なる) is rewarded: a right-context なる→Noun

@@ -43,6 +43,43 @@ constexpr size_t kMaxNounLen = 6;
 // Maximum hiragana length for verb suffix
 constexpr size_t kMaxVerbHiraganaLen = 8;
 
+bool hasSuruContinuation(const std::vector<char32_t>& codepoints, size_t suffix_start) {
+  if (suffix_start >= codepoints.size()) {
+    return false;
+  }
+
+  if (codepoints[suffix_start] == U'す') {
+    return suffix_start + 1 < codepoints.size() && codepoints[suffix_start + 1] == U'る';
+  }
+
+  if (codepoints[suffix_start] != U'し' || suffix_start + 1 >= codepoints.size()) {
+    return false;
+  }
+
+  char32_t next_char = codepoints[suffix_start + 1];
+  return next_char == U'ち' || next_char == U'て' || next_char == U'た' || next_char == U'な' || next_char == U'ま' ||
+         next_char == U'よ' || next_char == U'ろ' || next_char == U'そ' || next_char == U'と' || next_char == U'か' ||
+         next_char == U'つ';
+}
+
+bool hasDictionaryLexicalPrefix(const std::vector<dictionary::LookupResult>& results, size_t full_length) {
+  for (const auto& result : results) {
+    if (result.entry != nullptr && result.length < full_length) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool containsIterationMark(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  for (size_t index = start_pos; index < end_pos; ++index) {
+    if (normalize::isIterationMark(codepoints[index])) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
@@ -305,6 +342,25 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
   // Use inflection analysis to check if verb part looks conjugated
 
   size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  const auto noun_results = dict_manager.lookup(text, start_byte);
+
+  // A kanji verbal noun before an inflected する is a separate search unit.
+  // Preserve an earlier lexical noun or adjective boundary so compounds such
+  // as temporal expressions remain decomposable before their final verbal noun.
+  size_t kanji_length = kanji_end - start_pos;
+  const std::string final_kanji = normalize::encodeUtf8(codepoints[kanji_end - 1]);
+  const bool ends_with_derivational_suffix =
+      dict_manager.lookupExact(final_kanji, core::PartOfSpeech::Suffix) != nullptr;
+  if (hasSuruContinuation(codepoints, kanji_end) && !hasDictionaryLexicalPrefix(noun_results, kanji_length) &&
+      !(start_pos > 0 && normalize::isIterationMark(codepoints[start_pos - 1])) &&
+      !containsIterationMark(codepoints, start_pos, kanji_end) && !ends_with_derivational_suffix) {
+    size_t noun_end_byte = byteOffsetAt(byte_offsets, kanji_end);
+    std::string noun_surface(text.substr(start_byte, noun_end_byte - start_byte));
+    float noun_cost = getCategoryCost(core::ExtendedPOS::Noun) + scorer.splitOpts().noun_verb_split_bonus +
+                      candidate::kSuruVerbalNounContextBonus;
+    lattice.addEdge(noun_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(kanji_end),
+                    core::PartOfSpeech::Noun, noun_cost, core::LatticeEdge::kIsUnknown, "");
+  }
 
   // Try different noun lengths
   for (size_t noun_len = 1; noun_len < kanji_end - start_pos; ++noun_len) {
@@ -314,7 +370,6 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
     // Check if noun part is in dictionary as NOUN
     // Only consider actual NOUN entries, not ADV/VERB/etc.
     // Skip formal nouns (中, 上, 下, etc.) - they shouldn't split from preceding noun
-    auto noun_results = dict_manager.lookup(text, start_byte);
     bool noun_in_dict = false;
     bool is_formal_noun = false;
     bool noun_surface_is_non_noun_dict = false;

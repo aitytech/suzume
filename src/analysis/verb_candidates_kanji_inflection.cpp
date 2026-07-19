@@ -323,8 +323,8 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
           // For multi-char like "とし": base = kanji + と + す = 証とす
           std::string base_stem = extractSubstring(codepoints, start_pos, stem_end);
           std::string base_form = base_stem + "す";
-          if (!vh::isVerbInDictionary(dict_manager, base_form)) {
-            // Not a registered verb - likely サ変 or compound particle pattern
+          if (isInterrogativeKanji(codepoints[start_pos]) || !vh::isVerbInDictionary(dict_manager, base_form)) {
+            // An interrogative is a standalone argument, never a verb stem.
             continue;
           }
         }
@@ -595,11 +595,11 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // A multi-kanji stem followed by the classical サ変 terminal す is
         // compositional for search: 前進+す, 説明+す. The inflection analyzer can
         // also hypothesize an unregistered GodanSa word spanning the boundary;
-        // apply a small class-level penalty so the independently generated noun
+        // apply a substantial class-level penalty so the independently generated noun
         // and closed-class す entry win. Registered lexical GodanSa verbs and
         // single-kanji stems such as 愛す are unaffected.
         if (!in_dict && kanji_count >= 2 && best.verb_type == grammar::VerbType::GodanSa && best.base_form == surface) {
-          base_cost += bigram_cost::kMinor;
+          base_cost += bigram_cost::kVeryRare;
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kMinor
                                                    << " (multi_kanji_classical_suru_penalty)\n");
         }
@@ -815,6 +815,15 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         if (!best.suffix.empty() && vh::containsKuNaruPattern(best.suffix)) {
           base_cost += bigram_cost::kSevere;  // Force split
           SUZUME_DEBUG_LOG("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kSevere << " (ku_naru_verb_suffix)\n");
+        }
+        // A negative inflection is morphologically decomposed as 未然形 plus
+        // the negative auxiliary (読ま+ない, 読ま+なかっ+た).  The whole-span
+        // verb candidate is retained for lattice coverage, but must not beat
+        // that productive auxiliary boundary after a case-marked object.
+        if (utf8::contains(best.suffix, "ない") || utf8::contains(best.suffix, "なか") ||
+            utf8::contains(best.suffix, "なけ")) {
+          base_cost += bigram_cost::kStrong;
+          SUZUME_DEBUG_LOG("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kStrong << " (negative_suffix)\n");
         }
         // Penalize verb candidates absorbing the negative adverbial なく (ない's 連用形).
         // MeCab splits mizenkei + なく: 行かなくて → 行か + なく + て, not 行かなく(verb).

@@ -60,7 +60,7 @@ namespace scale = bigram_cost;
 
 // Bonus for compound particles from dictionary (について, によって, として, etc.)
 // Multi-char particles that should not be split into verb+て patterns
-constexpr float kBonusCompoundParticle = -1.0F;
+constexpr float kBonusCompoundParticle = -3.2F;
 
 // Bonus for みたい (conjecture auxiliary) from dictionary
 constexpr float kBonusMitaiDict = -1.0F;
@@ -84,6 +84,10 @@ constexpr float kBonusLongSuffix = -1.5F;
 
 // Bonus for short hiragana verbs from dictionary (なる, ある, いる, する)
 constexpr float kBonusShortHiraganaVerb = -0.3F;
+
+// A pure-hiragana sokuonbin stem of this length has enough lexical evidence
+// to attach its following te-form particle without reopening a shorter stem.
+constexpr size_t kLongPureHiraganaOnbinMinChars = 4;
 
 // Penalty for spurious kanji+hiragana verb renyokei not in dictionary
 // E.g., 学生み (学生みる doesn't exist) - false positive
@@ -119,6 +123,14 @@ constexpr float kPenaltyIshiVerbRenyokei = scale::kSevere;
 
 // Penalty for kanji 中 compound patterns (過剰分割防止)
 constexpr float kPenaltyKanjiChuuCompound = scale::kMinor;
+
+// The Kuruwa polite auxiliary is a closed-class inflectional marker. Its
+// dedicated category must remain available against noun-plus-suru fragments.
+constexpr float kBonusKuruwaPoliteAuxiliary = scale::kExtraStrongBonus;
+
+// A closed binding particle used as a standalone token must remain intact
+// rather than being decomposed into unrelated homographic short words.
+constexpr float kBonusStandaloneBindingParticle = scale::kExtraStrongBonus;
 
 // =============================================================================
 // Pattern String Constants
@@ -193,8 +205,8 @@ constexpr float kBonusVerbCausativePattern = -3.0F;
 constexpr float kBonusCompoundParticleToTopic = -2.7F;
 
 // Compound adjective length-scaled bonus (男らしい, 女らしい)
-// Formula: base + per_char * (char_len - 4) for char_len > 4
-constexpr float kBonusCompoundAdjBase = -1.0F;
+// Formula: base - per_char * (char_len - 4) for char_len > 4
+constexpr float kBonusCompoundAdjBase = -2.5F;
 constexpr float kBonusCompoundAdjPerChar = 0.5F;
 
 // Pure-hiragana dict NOUN → し(suru renyokei) gap adjustment
@@ -220,21 +232,28 @@ constexpr float kBonusKanjiOkuriganaAdjPerChar = 0.3F;
 
 // Closed pronouns of three or more morae can otherwise lose to a pronoun plus
 // particle sequence (何かしら, あれこれ). Keep the registered lexical unit.
-constexpr float kBonusLongPronoun = -1.5F;
+constexpr float kBonusLongPronoun = -3.5F;
 
 // Pure-hiragana adverb from dictionary (たくさん, どうして)
 // Short (≤2 chars) gets weaker bonus; longer uses base + per-char beyond 2
 constexpr float kBonusHiraganaAdverbShort = -1.0F;
+// Two-mora adverbs ending in う (そう, こう, どう) are closed demonstrative
+// forms. Their lexical reading must outrank a fabricated stem plus volitional
+// auxiliary path before a quotation particle.
+constexpr float kBonusHiraganaUFinalAdverb = -1.6F;
 constexpr float kBonusHiraganaAdverbBase = -2.5F;
 constexpr float kBonusHiraganaAdverbPerChar = 0.5F;
 
 // Non-hiragana (kanji-containing) adverb from dictionary (初めて, 大して), 3+ chars
-constexpr float kBonusNonHiraganaAdverbBase = -1.5F;
+constexpr float kBonusNonHiraganaAdverbBase = -1.8F;
 constexpr float kBonusNonHiraganaAdverbPerChar = 0.3F;
 
 // Kanji-containing determiner/adnominal from dictionary (小さな, 大きな), 3+ chars
 constexpr float kBonusKanjiDeterminerBase = -1.5F;
 constexpr float kBonusKanjiDeterminerPerChar = 0.3F;
+// Closed pure-hiragana determiners (こういう, そういう) compete with a
+// demonstrative adverb plus the lexical verb いう.
+constexpr float kBonusHiraganaDeterminer = -2.0F;
 
 // Longer pure-hiragana noun from dictionary (ふともも, ひとつ), 4+ chars
 constexpr float kBonusLongHiraganaNoun = -1.5F;

@@ -37,10 +37,11 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // The default VERB→VERB penalty should not apply to auxiliary verbs
   float surface_bonus = 0.0F;
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxExcessive) {
-    surface_bonus = cost::kStrongBonus;
+    surface_bonus = cost::kVeryStrongBonus;
   }
 
   surface_bonus += connection_rules::computeVerbRenyokeiEarlyBonus(prev, next);
+
   surface_bonus += sc::compoundVerbSplitBonus(prev.extended_pos, prev.surface, next.extended_pos, next.surface);
 
   surface_bonus += connection_rules::computePassiveCausativeBonus(prev, next);
@@ -84,8 +85,22 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // copula た+です because the general past→conjunction bonus is intentionally
   // strong for forms such as たものの.
   if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && next.extended_pos == core::ExtendedPOS::ParticleConj &&
-      next.surface == "で") {
+      utf8::equalsAny(next.surface, {"で"})) {
     surface_bonus += cost::kAlmostNever;
+  }
+
+  // A final particle closes the predicate and cannot directly introduce an
+  // adverb. Prefer the competing formal-noun or particle boundary instead.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::Adverb) {
+    surface_bonus += cost::kAlmostNever;
+  }
+
+  // The conditional past forms たら/だら followed by し are normally the
+  // conjecture auxiliary らしい (読んだ+らしい), not a conditional boundary
+  // followed by a connective particle.
+  if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::endsWith(prev.surface, "ら") &&
+      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"し"})) {
+    surface_bonus += cost::kStrong;
   }
 
   // The dictionary conjunction まして is not a continuation of a verb or
@@ -568,6 +583,75 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   if (next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun && !prev.fromDictionary() &&
       grammar::isPureHiragana(prev.surface)) {
     surface_bonus += cost::kProhibitive;
+  }
+
+  // After a conjunction, the hiragana spelling of で is a connective
+  // particle or copula, not the renyokei of 出る.
+  if (prev.pos == core::PartOfSpeech::Conjunction && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      next.surface == "で") {
+    surface_bonus += cost::kAlmostNever;
+  }
+
+  // A dictionary-backed compound adverb containing a genitive linker can
+  // follow a case-marked phrase (目の当たりにして). The internal linker
+  // distinguishes this fixed construction from an arbitrary particle+adverb
+  // sequence, whose ordinary connection penalty remains in force.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.pos == core::PartOfSpeech::Adverb &&
+      next.fromDictionary() && grammar::containsKanji(next.surface) &&
+      next.surface.find("の") != std::string_view::npos) {
+    surface_bonus += cost::kModerateBonus;
+  }
+
+  // A single-kanji formal noun followed by another single-kanji kanji edge is
+  // normally part of one lexical compound (事件, 時間), rather than a formal
+  // noun boundary. Function-word uses retain their particle/auxiliary tail.
+  if (prev.extended_pos == core::ExtendedPOS::NounFormal && prev.fromDictionary() &&
+      normalize::utf8Length(prev.surface) == 1 &&
+      (next.pos == core::PartOfSpeech::Noun || next.pos == core::PartOfSpeech::Suffix) &&
+      normalize::utf8Length(next.surface) == 1 && grammar::containsKanji(prev.surface) &&
+      grammar::containsKanji(next.surface)) {
+    surface_bonus += cost::kStrong;
+  }
+
+  // A formal noun can directly introduce a predicate in mizenkei before a
+  // negative auxiliary (わけ+わから+ん). Keep that predicate boundary ahead
+  // of a sequence of homographic particles.
+  if (prev.extended_pos == core::ExtendedPOS::NounFormal && next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
+      normalize::utf8Length(next.surface) >= 2) {
+    surface_bonus += cost::kVeryStrongBonus;
+  }
+
+  // A sentence-final particle cannot govern a case phrase, except when the
+  // case particle is the quotative と (かな+と+思う). This keeps final-particle
+  // quotation available while rejecting accidental paths such as わ+から.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::ParticleCase &&
+      !grammar::isSingleHiragana(next.surface, core::hiragana::kTo)) {
+    surface_bonus += cost::kAlmostNever;
+  }
+
+  // Colloquial sa-row mizenkei contracts さ to しゃ before the emphatic
+  // negative construction (出しゃ+し+ない). Prefer that productive boundary
+  // over an unrelated hiragana verb fabricated across the contraction.
+  if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && utf8::endsWith(prev.surface, "しゃ") &&
+      next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.lemma == "する") {
+    surface_bonus += cost::kStrongBonus;
+  }
+
+  // A counter-derived duration closed by 間 naturally introduces a predicate
+  // (3週間かかる). Keep that complete quantity ahead of an artificial
+  // counter-plus-suffix split.
+  if (prev.extended_pos == core::ExtendedPOS::NounNumber && prev.origin == core::CandidateOrigin::Counter &&
+      utf8::endsWith(prev.surface, "間") && next.pos == core::PartOfSpeech::Verb) {
+    surface_bonus += cost::kModerateBonus;
+  }
+
+  // A generated kanji-hiragana noun ending in a past marker is a fabricated
+  // alternative to a verb plus past auxiliary. It cannot introduce a
+  // conjunction; keep the predicate and formal-noun boundaries available.
+  if (next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun &&
+      prev.origin == core::CandidateOrigin::KanjiHiraganaCompound &&
+      utf8::equalsAny(utf8::lastChar(prev.surface), {"た", "だ"})) {
+    surface_bonus += cost::kAlmostNever;
   }
 
   float total = base_cost + extended_cost + surface_bonus;

@@ -72,8 +72,9 @@ constexpr std::array<float, static_cast<size_t>(ExtendedPOS::Count_)> kCategoryC
   // Auxiliaries (0.2-0.4) - low costs for function words
   // ===========================================================================
   // Tense (very common)
-  table[static_cast<size_t>(ExtendedPOS::AuxTenseTa)] = 0.2F;    // た
-  table[static_cast<size_t>(ExtendedPOS::AuxTenseMasu)] = 0.2F;  // ます
+  table[static_cast<size_t>(ExtendedPOS::AuxTenseTa)] = 0.2F;       // た
+  table[static_cast<size_t>(ExtendedPOS::AuxTenseMasu)] = 0.2F;     // ます
+  table[static_cast<size_t>(ExtendedPOS::AuxKuruwaPolite)] = 0.2F;  // なんし
 
   // Negation
   table[static_cast<size_t>(ExtendedPOS::AuxNegativeNai)] = 0.3F;  // ない

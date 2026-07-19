@@ -142,8 +142,28 @@ bool isSuruRenyokeiSurface(std::string_view surface) {
   return surface == "し";
 }
 
+bool isSuruBaseForm(std::string_view surface) {
+  return surface == "する";
+}
+
+bool isSuruImperativeSurface(std::string_view surface) {
+  return surface == "せよ" || surface == "しろ";
+}
+
+bool isConjunctiveParticleShi(std::string_view surface) {
+  return surface == "し";
+}
+
+bool isDemonstrativeUAdverb(std::string_view surface) {
+  return surface == "こう" || surface == "そう" || surface == "どう";
+}
+
 bool isHonorificPrefix(std::string_view surface) {
   return surface == "お" || surface == "ご";
+}
+
+bool isKanjiHonorificTitle(std::string_view surface) {
+  return surface == "様" || surface == "氏";
 }
 
 bool isAttributiveCopulaNa(std::string_view surface) {
@@ -152,6 +172,18 @@ bool isAttributiveCopulaNa(std::string_view surface) {
 
 bool isIndependentNegativeAdjective(std::string_view surface) {
   return surface == "ない";
+}
+
+bool isAruHypotheticalStem(std::string_view surface) {
+  return surface == "あれ";
+}
+
+bool isAruHypotheticalSurface(std::string_view surface) {
+  return surface == "あれば";
+}
+
+bool isAruContinuativeSurface(std::string_view surface) {
+  return surface == "あり";
 }
 
 bool endsWithNegativeNai(std::string_view surface) {
@@ -176,6 +208,35 @@ bool isParallelTogetherAdverb(std::string_view surface) {
 
 bool endsWithTemporalNounSuffix(std::string_view surface) {
   return utf8::endsWith(surface, "時");
+}
+
+bool isStateDurationSuffix(std::string_view surface) {
+  return surface == "中";
+}
+
+bool isDurationPredicateKakaru(std::string_view surface) {
+  return surface == "かかる";
+}
+
+bool isFinalParticleStack(std::string_view first, std::string_view second) {
+  return (first == "か" && second == "な") || (first == "よ" && (second == "ね" || second == "な")) ||
+         (first == "わ" && second == "ね") || (first == "ぜ" && second == "よ");
+}
+
+bool endsWithAdministrativeSuffix(std::string_view surface) {
+  switch (utf8::decodeLastChar(surface)) {
+    case U'県':
+    case U'都':
+    case U'府':
+    case U'道':
+    case U'市':
+    case U'区':
+    case U'町':
+    case U'村':
+      return true;
+    default:
+      return false;
+  }
 }
 
 bool startsClassicalDesiderativeSequence(std::string_view surface) {
@@ -216,6 +277,14 @@ bool isCausalParticleBeforeTopic(std::string_view particle_surface, std::string_
 
 bool startsSentenceParticleKanaQuote(std::string_view surface) {
   return utf8::startsWith(surface, "かなと");
+}
+
+bool startsInterrogativeQuoteIntroduction(std::string_view surface) {
+  return utf8::startsWith(surface, "かというと");
+}
+
+bool startsClassicalConjecturalAuxiliary(std::string_view surface) {
+  return utf8::startsWith(surface, "けむ");
 }
 
 std::string_view longFinalParticleBeforeQuote(std::string_view surface) {

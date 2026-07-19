@@ -23,7 +23,8 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
     return;
   }
 
-  if (verb_helpers::startsInsideDictionaryParticle(codepoints, start_pos, &dict_manager)) {
+  if (verb_helpers::startsInsideDictionaryParticle(codepoints, start_pos, &dict_manager) ||
+      verb_helpers::startsWithMultiMoraDictionaryParticle(codepoints, start_pos, &dict_manager)) {
     return;
   }
 
@@ -186,12 +187,14 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       // must be checked before the inflection fallback: particle surfaces can
       // otherwise receive a mechanically plausible unknown Godan reading
       // (しか+い → しかい) and swallow a following auxiliary.
-      if (dict_manager.lookupExact(v1_surface, core::PartOfSpeech::Particle) != nullptr) {
+      if (!grammar::isSuruRenyokeiSurface(v1_surface) &&
+          dict_manager.lookupExact(v1_surface, core::PartOfSpeech::Particle) != nullptr) {
         continue;
       }
 
       // Verify V1 is in dictionary as a verb
-      bool v1_verified = dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr;
+      bool v1_verified = grammar::isSuruRenyokeiSurface(v1_surface) ||
+                         dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr;
 
       // Fallback: use inflection analysis for unknown V1 verbs
       if (!v1_verified) {
@@ -232,10 +235,26 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       std::string compound_base =
           std::string(v1_surface) + std::string(matched_v2_via_reading ? v2_reading : v2_surface);
 
+      // A lexical non-verb at the complete surface outranks an unverified
+      // productive compound reading. This prevents a fixed adverb such as
+      // とりわけ from being fabricated as a continuative verb; attested
+      // compound verbs retain their candidate through the verified lemma.
+      const bool compound_lemma_verified = dict_manager.lookupExact(compound_base, core::PartOfSpeech::Verb) != nullptr;
+      if (!compound_lemma_verified && verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, compound_surface)) {
+        continue;
+      }
+
       // Calculate cost
       float base_cost = scorer.posPrior(core::PartOfSpeech::Verb);
       const auto& opts = scorer.joinOpts();
       float final_cost = base_cost + opts.compound_verb_bonus + opts.verified_v1_bonus;
+
+      // An attested compound is a lexical search unit.  Apply the same
+      // preference used for kanji compounds so a verified compound stem wins
+      // over an accidental V1 + subsidiary-verb analysis.
+      if (compound_lemma_verified) {
+        final_cost += bigram_cost::kStrongBonus;
+      }
 
       uint8_t flags = core::LatticeEdge::kFromDictionary;
       dictionary::ConjugationType compound_conj_type = compoundConjugationType(v2_verb.verb_type, v2_verb.base_ending);

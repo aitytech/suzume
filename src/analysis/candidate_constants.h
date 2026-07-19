@@ -58,13 +58,19 @@ constexpr float kVerifiedMultiCharacterNounBonus = -0.1F;
 // available ahead of homographic inflected-verb readings (どれを選ぶ).
 constexpr float kInterrogativePronounBonus = -0.3F;
 
-// Ordinal compounds beginning with 第. A single trailing noun character is a
-// lexicalized ordinal noun (第一歩), while 第 + numeral before 次 begins a
+// An adverb before the explanatory quotative opener かというと keeps its
+// independent interrogative boundary (なぜ+かというと).
+constexpr float kInterrogativeQuoteIntroductionBonus = -1.4F;
+
+// Ordinal compounds beginning with 第. 第 + numeral before 次 begins a
 // compositional ordinal boundary (第二|次計画).
-constexpr float kOrdinalSingleNounMergeBonus = -1.2F;
 constexpr float kOrdinalSequentialSplitBonus = -1.2F;
 constexpr float kOrdinalDigitCounterSplitBonus = -1.2F;
 constexpr float kNumeralKanaMonthMergeBonus = -1.2F;
+
+// A completed temporal counter with its grammatical closing suffix is a
+// single search unit (二時間目, 三ヶ月間).
+constexpr float kClosedTemporalCounterMergeBonus = -3.2F;
 
 // Last-resort single-character edge used to keep the lattice connected.
 constexpr float kFallbackCandidateCost = 5.0F;
@@ -98,6 +104,10 @@ constexpr float kHighOriginConfidence = 0.9F;
 // E.g., 読み+終わる, 書き+始める
 constexpr float kCompoundVerbBonus = -0.8F;
 
+// A compound verb in renyokei followed by a deverbal noun suffix is one
+// searchable nominal unit (組み合わせ方, 引き受け手).
+constexpr float kCompoundVerbSuffixNounBonus = -1.0F;
+
 // A compound whose final one-kanji Godan stem is dictionary-verified carries
 // stronger evidence than a generic compound-verb proposal.
 constexpr float kVerifiedTailCompoundVerbBonus = -1.4F;
@@ -119,6 +129,14 @@ constexpr float kVerifiedV1Bonus = -0.3F;
 // Verified noun in compound bonus
 // Applied when noun component is verified in dictionary
 constexpr float kVerifiedNounBonus = -0.3F;
+
+// An honorific prefix followed by a kanji noun and the closed suffix 様 is a
+// single searchable nominal expression (お客様, ご利用者様).
+constexpr float kHonorificSamaNounBonus = -0.8F;
+
+// A terminal honorific prefix is used as an interjection rather than as an
+// unattached prefix.
+constexpr float kStandaloneHonorificPrefixInterjectionBonus = -0.8F;
 
 // Unverified 3-char prefix+noun join penalty (全部食, 全部飲 from 全部食べちゃった).
 // A productive prefix (全 etc.) greedily takes the whole following kanji run as
@@ -179,6 +197,11 @@ constexpr float kCounterComparisonSplitBonus = -1.2F;
 // noun in front of a hiragana verb (三時間|半|かかった).
 constexpr float kCounterHalfSuffixCost = 0.0F;
 
+// Native numeral counters ending in つ (一つ, 二つ) are closed-class quantity
+// expressions. Keep their nominal reading ahead of accidental short-verb
+// analyses before a following content word.
+constexpr float kNativeTsuCounterBonus = -0.4F;
+
 // Quantity + object-counter split bonus (三名|参加, 二台|故障, 五冊|注文)
 // A numeral + discrete-object counter followed by an independent two-kanji noun
 // is a compositional quantity phrase, but the whole run is otherwise emitted as
@@ -236,6 +259,10 @@ constexpr float kTemporalNounBoundarySplitBonus = -1.2F;
 // Noun + Verb split bonus
 // E.g., 勉強+する, 説明+する
 constexpr float kNounVerbSplitBonus = -1.0F;
+
+// A kanji verbal noun after a completed predicate retains a small preference
+// over a fabricated terminal verb before the independent する token.
+constexpr float kSuruVerbalNounContextBonus = -0.2F;
 
 // Post-particle noun promotion penalty (は|たばこ|を: たばこ as a Noun)
 // A non-particle-initial hiragana run bracketed by genuine particles (私は…を) is
@@ -298,7 +325,7 @@ constexpr float kAdjKuSplitBonus = -0.5F;
 // く形 split bonus (hiragana i-adjectives: しんどく, うまく)
 constexpr float kAdjKuSplitBonusWeak = -0.3F;
 // かっ形 split bonus (past tense: 美味しかっ + た)
-constexpr float kAdjKattSplitBonus = -0.1F;
+constexpr float kAdjKattSplitBonus = -1.0F;
 // け形 split bonus (conditional: 美味しけれ + ば)
 constexpr float kAdjKeSplitBonus = -0.1F;
 // 語幹 split bonus (stem + そう: 美味し + そう)
@@ -344,14 +371,14 @@ constexpr float kCompoundAdjConfMin = 0.3F;   // minimum inflection confidence
 constexpr float kCompoundAdjBaseCost = 0.5F;  // base cost for generated candidate
 // Productive 連用形 + っぽい adjective (忘れっぽい, 飽きっぽい). The
 // complete derived adjective competes with a very cheap stem + suffix path.
-constexpr float kProductivePpoiAdjCost = -2.5F;
+constexpr float kProductivePpoiAdjCost = -3.0F;
 // Context-gated lexicalized adverbial adjective (間もなく). Its boundary must
 // compete with the strong noun-to-suffix connection for the preceding 間.
 constexpr float kLexicalizedAdverbialAdjCost = -0.8F;
 
 // Na-adjective candidate costs
 constexpr float kNaAdjYakaCost = 0.2F;               // やか/らか/か + な (華やかな, 静かな)
-constexpr float kNaAdjTekiCost = 1.5F;               // 的 suffix (論理的) — high to prefer NOUN+的+な
+constexpr float kNaAdjTekiCost = 0.4F;               // 的 suffix (論理的) as one na-adjective search unit
 constexpr float kNaAdjStemCost = 0.5F;               // kanji compound + な (獰猛な)
 constexpr float kNaAdjSingleKanjiCopulaCost = 1.5F;  // ambiguous single kanji + だ (変だ)
 
@@ -387,12 +414,20 @@ constexpr float kAdjVerbConfDiffMin = 0.15F;
 namespace verb_cost {
 // Standard bonus for verb candidates (mizenkei, passive, etc.)
 constexpr float kStandardBonus = -0.5F;
+// Strong evidence from a contracted auxiliary follower (やっ+とく).
+constexpr float kContractedOnbinBonus = -1.6F;
+// A one-kanji irrealis stem before the fully identified なけれ conditional
+// auxiliary has an unambiguous closed-class boundary.
+constexpr float kSingleKanjiNegativeConditionalBonus = -1.6F;
 // Moderate bonus for verb candidates (extended/te-aux sokuonbin)
 constexpr float kModerateBonus = -0.3F;
 // Strong bonus for verb candidates (ichidan renyokei, te/ta forms)
 constexpr float kStrongBonus = -0.8F;
 // Weak penalty for uncertain verb patterns (passive, causative, zu-form)
 constexpr float kWeakPenalty = 0.1F;
+// Minor penalty for a tense candidate with less evidence than a contracted
+// auxiliary boundary.
+constexpr float kMinorPenalty = 0.2F;
 // Bonus for a kanji dict-verb imperative/kateikei standing sentence-final (書け, 読め, 止まれ).
 // A bare え-row form terminating a clause is the imperative (命令形) of the base verb (読め→読む);
 // the potential-verb reading (読める) is a distinct word that needs the full surface or a
@@ -409,6 +444,15 @@ constexpr float kImperativeFinalBonus = -0.8F;
 constexpr float kConstructedVerbMinConfidence = 0.5F;
 // Stricter bar for WA-row passive base forms, which match spuriously more often.
 constexpr float kConstructedVerbPassiveMinConfidence = 0.6F;
+// Minimum inflection evidence for an unattested short hiragana sokuonbin
+// immediately before た/て (あらっ+た, やっ+て).
+constexpr float kShortHiraganaSokuonbinMinConfidence = 0.25F;
+// Minimum inflection evidence for a kanji sokuonbin whose base is absent
+// from the dictionary.
+constexpr float kKanjiSokuonbinMinConfidence = 0.3F;
+// Confidence assigned to a terminal pure-hiragana Godan-ka base that the
+// inflection analyzer misclassifies only as an i-adjective.
+constexpr float kTerminalHiraganaGodanKaConfidence = 0.6F;
 // Minimum evidence for a rule-derived Ichidan conditional stem (…れ + ば).
 constexpr float kIchidanKateikeiMinConfidence = 0.3F;
 }  // namespace verb_cost
@@ -420,6 +464,9 @@ constexpr float kIchidanKateikeiMinConfidence = 0.3F;
 // Extended cost for adjective stem candidates (dict and non-dict)
 // Used for stem+そう, stem splits where confidence is high
 constexpr float kAdjStemExtCost = -1.2F;
+// A dictionary-verified i-adjective stem before a productive suffix or
+// auxiliary must outrank an incidental noun plus する split.
+constexpr float kAdjStemDictionaryCost = -1.8F;
 
 // Strong penalty that preserves grammatical adjective boundaries.
 // Applied to compound adjectives, く+なる, という, and まい patterns.
@@ -432,6 +479,10 @@ constexpr float kAdjModeratePenalty = 1.5F;
 // Nominalized renyokei before a particle is a productive deverbal noun
 // context (答えは, 決まりを), not a finite verbal continuation.
 constexpr float kNominalizedNounParticleBonus = -1.5F;
+
+// A dictionary-confirmed i-adjective in the classical terminal -し form is a
+// self-contained lexical unit at the end of a predicate.
+constexpr float kClassicalIAdjectiveTerminalNounBonus = -0.5F;
 
 // A formal noun immediately before the copular topic sequence では/でも is a
 // complete nominal predicate (はずでは, わけでも), not a particle + classical

@@ -87,11 +87,10 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     }
   }
 
-  // Ordinal compounds start with 第 followed by a numeral sequence. A single
-  // trailing noun character forms a lexicalized ordinal noun (第一歩), whereas
-  // 次 followed by a kanji noun run is compositional (第二|次計画). Generate
-  // both boundaries from structure rather than treating individual ordinals as
-  // dictionary exceptions.
+  // Ordinal compounds start with 第 followed by a numeral sequence. Counter
+  // tails have dedicated structural boundaries, while lexicalized ordinal
+  // nouns are supplied by the dictionary. This prevents an arbitrary one-kanji
+  // noun following an ordinal from being fabricated as a compound.
   if (codepoints[start_pos] == U'第' && normalize::isNumeralCodepoint(codepoints[start_pos + 1])) {
     size_t ordinal_end = start_pos + 1;
     bool ordinal_has_numeral = false;
@@ -127,16 +126,31 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
 #endif
           candidates.push_back(counter);
         }
-      } else if (tail_len == 1 && codepoints[ordinal_end] != U'次') {
-        std::string surface = extractSubstring(codepoints, start_pos, tail_end);
-        if (!surface.empty()) {
-          auto cand = makeCandidate(surface, start_pos, tail_end, core::PartOfSpeech::Noun,
-                                    candidate::kOrdinalSingleNounMergeBonus, false, CandidateOrigin::Counter);
-          cand.lemma = surface;
+      } else if (tail_len == 2 && ordinal_has_numeral && normalize::isCounterKanji(codepoints[ordinal_end]) &&
+                 codepoints[ordinal_end + 1] == U'目') {
+        std::string ordinal_surface = extractSubstring(codepoints, start_pos, ordinal_end);
+        std::string counter_surface = extractSubstring(codepoints, ordinal_end, ordinal_end + 1);
+        std::string ordinal_suffix_surface = extractSubstring(codepoints, ordinal_end + 1, tail_end);
+        if (!ordinal_surface.empty() && !counter_surface.empty() && !ordinal_suffix_surface.empty()) {
+          auto ordinal = makeCandidate(ordinal_surface, start_pos, ordinal_end, core::PartOfSpeech::Noun,
+                                       candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter,
+                                       core::ExtendedPOS::NounNumber);
+          ordinal.lemma = ordinal_surface;
+          auto counter = makeCandidate(counter_surface, ordinal_end, ordinal_end + 1, core::PartOfSpeech::Suffix,
+                                       candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter);
+          counter.lemma = counter_surface;
+          auto ordinal_suffix =
+              makeCandidate(ordinal_suffix_surface, ordinal_end + 1, tail_end, core::PartOfSpeech::Suffix,
+                            candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter);
+          ordinal_suffix.lemma = ordinal_suffix_surface;
 #ifdef SUZUME_DEBUG_INFO
-          cand.pattern = "ordinal_single_noun_merge";
+          ordinal.pattern = "ordinal_counter_ordinal_suffix_prefix";
+          counter.pattern = "ordinal_counter_ordinal_suffix_counter";
+          ordinal_suffix.pattern = "ordinal_counter_ordinal_suffix_tail";
 #endif
-          candidates.push_back(cand);
+          candidates.push_back(ordinal);
+          candidates.push_back(counter);
+          candidates.push_back(ordinal_suffix);
         }
       } else if (tail_len >= 2 && codepoints[ordinal_end] == U'次') {
         std::string ordinal_surface = extractSubstring(codepoints, start_pos, ordinal_end);
@@ -187,6 +201,17 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
         cand.pattern = "numeral_jikan_duration_merge";
 #endif
         candidates.push_back(cand);
+        if (numeral_end + 2 < codepoints.size() && codepoints[numeral_end + 2] == U'目') {
+          std::string completed_surface = extractSubstring(codepoints, start_pos, numeral_end + 3);
+          auto completed = makeCandidate(completed_surface, start_pos, numeral_end + 3, core::PartOfSpeech::Noun,
+                                         candidate::kClosedTemporalCounterMergeBonus, false, CandidateOrigin::Counter,
+                                         core::ExtendedPOS::NounNumber);
+          completed.lemma = completed_surface;
+#ifdef SUZUME_DEBUG_INFO
+          completed.pattern = "temporal_counter_ordinal_merge";
+#endif
+          candidates.push_back(completed);
+        }
       }
     }
     if (numeral_end + 1 < codepoints.size() &&
@@ -202,6 +227,17 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
         cand.pattern = "numeral_kana_month_merge";
 #endif
         candidates.push_back(cand);
+        if (numeral_end + 2 < codepoints.size() && codepoints[numeral_end + 2] == U'間') {
+          std::string completed_surface = extractSubstring(codepoints, start_pos, numeral_end + 3);
+          auto completed = makeCandidate(completed_surface, start_pos, numeral_end + 3, core::PartOfSpeech::Noun,
+                                         candidate::kClosedTemporalCounterMergeBonus, false, CandidateOrigin::Counter,
+                                         core::ExtendedPOS::NounNumber);
+          completed.lemma = completed_surface;
+#ifdef SUZUME_DEBUG_INFO
+          completed.pattern = "temporal_counter_span_merge";
+#endif
+          candidates.push_back(completed);
+        }
       }
     }
   }
@@ -256,8 +292,9 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     if (has_quantity && scan > counter_start && suffix_is_compositional) {
       std::string surface = extractSubstring(codepoints, start_pos, scan);
       if (!surface.empty()) {
-        auto cand = makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun,
-                                  candidate::kCounterRelationSplitBonus, false, CandidateOrigin::Counter);
+        auto cand =
+            makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun, candidate::kCounterRelationSplitBonus,
+                          false, CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
         cand.lemma = surface;
 #ifdef SUZUME_DEBUG_INFO
         cand.pattern = "counter_relation_split";
@@ -286,9 +323,9 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
   }
 
   // A numeral followed by one or more temporal-unit kanji is a complete
-  // quantity before a hiragana word (一昼夜+かけて, 二時間+待つ). Emit the
-  // quantity boundary so an unknown verb candidate cannot absorb the final
-  // temporal kanji as its apparent stem.
+  // quantity before a hiragana word or degree particle (一昼夜+かけて,
+  // 二時間+待つ, 三時間+ほど). Emit the quantity boundary so an unknown
+  // word candidate cannot absorb the final temporal kanji as its stem.
   {
     size_t scan = start_pos;
     bool has_quantity = false;
@@ -312,7 +349,18 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
       }
     }
     bool followed_by_hiragana = scan < char_types.size() && char_types[scan] == normalize::CharType::Hiragana;
-    if (has_quantity && scan > unit_start && followed_by_hiragana) {
+    bool followed_by_quantity_particle = false;
+    constexpr size_t kMaxQuantityParticleLength = 4;
+    const size_t max_particle_end = std::min(codepoints.size(), scan + kMaxQuantityParticleLength);
+    for (size_t particle_end = scan + 1; particle_end <= max_particle_end; ++particle_end) {
+      const std::string particle_surface = extractSubstring(codepoints, scan, particle_end);
+      const auto* particle = dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle);
+      if (particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleAdverbial) {
+        followed_by_quantity_particle = true;
+        break;
+      }
+    }
+    if (has_quantity && scan > unit_start && (followed_by_hiragana || followed_by_quantity_particle)) {
       std::string surface = extractSubstring(codepoints, start_pos, scan);
       if (!surface.empty()) {
         auto cand = makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun, candidate::kCounterNounSplitBonus,
@@ -641,8 +689,8 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     // Generate counter candidate: Nつ
     std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 1);
     if (!surface.empty()) {
-      auto cand = makeCandidate(surface, start_pos, numeral_end + 1, core::PartOfSpeech::Noun, 0.0F, false,
-                                CandidateOrigin::Counter);
+      auto cand = makeCandidate(surface, start_pos, numeral_end + 1, core::PartOfSpeech::Noun,
+                                candidate::kNativeTsuCounterBonus, false, CandidateOrigin::Counter);
 #ifdef SUZUME_DEBUG_INFO
       cand.confidence = 0.95F;
       cand.pattern = "counter_tsu";

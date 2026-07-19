@@ -85,6 +85,14 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         bool verb_aux_follows = continuation == U'た' || continuation == U'て' ||
                                 vh::masuAuxFollowsAt(codepoints, renyokei_end) ||
                                 vh::causativeSaseFollowsAt(codepoints, renyokei_end);
+        // A dictionary-verified single-kanji Ichidan base followed by て and
+        // a contracted progressive or past marker is a te-form boundary
+        // (見+てる, 見+て+た), not a fabricated verb such as 見てる.
+        const bool single_kanji_te_form = is_single_kanji && first_hira == U'て' &&
+                                          (continuation == U'た' || continuation == U'る') &&
+                                          vh::isSingleKanjiIchidan(codepoints[start_pos]);
+        const bool negative_aux_follows =
+            continuation == U'な' && renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end + 1] == U'い';
         bool surface_is_dict_noun = !verb_aux_follows && vh::isNounInDictionary(dict_manager, surface);
         if (surface_is_dict_noun) {
           SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict NOUN, skipping ichidan_renyokei\n");
@@ -104,6 +112,39 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
             }
           }
         }
+        // A productive suffix boundary must not be hidden inside an
+        // unverified Ichidan proposal (中+抜き, not fabricated 中抜きる).
+        // Check every trailing span because lexical suffixes can begin with
+        // either kanji or hiragana.
+        bool trailing_span_is_dict_suffix = false;
+        if (!ichidan_base_is_dict && dict_manager != nullptr && kanji_end > start_pos + 1) {
+          for (size_t split = start_pos + 1; split < renyokei_end; ++split) {
+            const std::string suffix = extractSubstring(codepoints, split, renyokei_end);
+            if (vh::hasDictionaryEntry(dict_manager, suffix, core::PartOfSpeech::Suffix)) {
+              trailing_span_is_dict_suffix = true;
+              SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" trailing suffix \"" << suffix
+                                                << "\", skipping ichidan_renyokei\n");
+              break;
+            }
+          }
+        }
+        // An unverified multi-kanji Ichidan proposal must not hide a
+        // noun + Godan continuative boundary before the classical
+        // conjectural auxiliary. The auxiliary supplies grammatical evidence
+        // for the final-kanji verb without requiring either open-class word
+        // to be registered in the compact dictionary.
+        bool suffix_is_godan_before_classical_auxiliary = false;
+        if (!ichidan_base_is_dict && kanji_end > start_pos + 1 &&
+            grammar::startsClassicalConjecturalAuxiliary(
+                extractSubstring(codepoints, renyokei_end, codepoints.size()))) {
+          const std::string suffix_surface = extractSubstring(codepoints, kanji_end - 1, renyokei_end);
+          for (const auto& suffix_candidate : inflection.analyze(suffix_surface)) {
+            if (grammar::isGodanVerbType(suffix_candidate.verb_type)) {
+              suffix_is_godan_before_classical_auxiliary = true;
+              break;
+            }
+          }
+        }
         // A surface that is also a dictionary i-adjective (強い) is verbal
         // only in conjugation contexts: renyokei + た/て or mizenkei + られ/させ.
         // Elsewhere (predicate/attributive use: 力が強い, 強い風) the adjective
@@ -115,7 +156,8 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
                                     next_cp == U'る' || next_cp == U'れ');
         }
         if (!prefer_suru && !prefer_godan && ichidan_cand.confidence > conf_threshold && !surface_is_dict_noun &&
-            !suffix_is_dict_verb && !adj_homograph_blocked) {
+            !single_kanji_te_form && !suffix_is_dict_verb && !trailing_span_is_dict_suffix &&
+            !suffix_is_godan_before_classical_auxiliary && !adj_homograph_blocked) {
           // Negative cost to strongly favor split over combined analysis
           // Combined forms get optimal_length bonus (-0.5), so we need to be lower
           float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
@@ -125,10 +167,11 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
           // Set lemma to the base form (e.g., 入れ → 入れる, 論じ → 論じる)
           // This is critical for correct lemmatization when the surface is ambiguous
           // (e.g., 入れ could be godan 入る imperative or ichidan 入れる renyoukei)
-          auto renyokei_candidate =
-              makeVerbCandidate(surface, start_pos, renyokei_end, base_cost, ichidan_cand.base_form,
-                                grammar::verbTypeToConjType(ichidan_cand.verb_type), true, CandidateOrigin::VerbKanji,
-                                ichidan_cand.confidence, "ichidan_renyokei");
+          auto renyokei_candidate = makeVerbCandidate(
+              surface, start_pos, renyokei_end, base_cost, ichidan_cand.base_form,
+              grammar::verbTypeToConjType(ichidan_cand.verb_type), true, CandidateOrigin::VerbKanji,
+              ichidan_cand.confidence, "ichidan_renyokei",
+              negative_aux_follows ? core::ExtendedPOS::VerbMizenkei : core::ExtendedPOS::VerbRenyokei);
           renyokei_candidate.lemma_verified = ichidan_base_is_dict;
           candidates.push_back(std::move(renyokei_candidate));
           SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << surface << " ichidan_renyokei lemma=" << ichidan_cand.base_form
@@ -280,6 +323,10 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
       if (best_sa.confidence <= 0.5F)
         continue;
 
+      if (isInterrogativeKanji(codepoints[start_pos])) {
+        continue;
+      }
+
       // Skip if surface is a dictionary NOUN (exact match)
       if (vh::isNounInDictionary(dict_manager, surface))
         continue;
@@ -303,13 +350,26 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
             continue;
           }
           if (hira_chars <= 1) {
+            const bool sahen_past_after_ichidan_stem =
+                hira_chars == 1 && codepoints[kanji_end] == U'し' && renyokei_end < codepoints.size() &&
+                codepoints[renyokei_end] == U'た' && vh::isSingleKanjiIchidan(codepoints[start_pos]);
+            if (sahen_past_after_ichidan_stem) {
+              continue;
+            }
             // Single kanji + 1 hiragana (呈し, 訴え, 課し etc.).
             // Many one-kanji 漢語サ変動詞 stems exist; the verb candidate must
             // be available so it can compete with NOUN nominalization. Use
             // strong non-dict penalty so 悲し (no real 悲す verb) still loses to
             // NOUN/adjective interpretations, while 呈し (followed by 、/aux)
             // can win via context.
-            non_dict_penalty = bigram_cost::kStrong;
+            // A connective or past auxiliary provides direct inflectional
+            // evidence, so retain the lexical-verb candidate for forms such
+            // as 押して while keeping the stronger guard before nominal-like
+            // continuations such as 話しそう.
+            const bool inflectional_continuation =
+                renyokei_end < codepoints.size() &&
+                (codepoints[renyokei_end] == U'て' || codepoints[renyokei_end] == U'た');
+            non_dict_penalty = inflectional_continuation ? bigram_cost::kMinor : bigram_cost::kStrong;
           } else {
             // Block kanji+まし pattern (false godan-sa from verb+ます renyoukei)
             // E.g., 来まし → 来ます (false), 出まし → 出ます (false)
@@ -359,6 +419,25 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
                                                const grammar::Inflection& inflection,
                                                const dictionary::DictionaryManager* dict_manager,
                                                std::vector<UnknownCandidate>& candidates) {
+  // A Godan causative is itself an Ichidan-form predicate. Its conditional
+  // surface is stem + a-row + せれ + ば (遊ばせれば), so preserve the full
+  // conditional stem instead of splitting the causative auxiliary midway.
+  if (kanji_end + 3 < codepoints.size() && grammar::isARowCodepoint(codepoints[kanji_end]) &&
+      codepoints[kanji_end + 1] == U'せ' && codepoints[kanji_end + 2] == U'れ' && codepoints[kanji_end + 3] == U'ば') {
+    size_t kateikei_end = kanji_end + 3;
+    std::string surface = extractSubstring(codepoints, start_pos, kateikei_end);
+    std::string causative_stem = extractSubstring(codepoints, start_pos, kanji_end + 2);
+    std::string base_form = causative_stem + "る";
+    float confidence =
+        vh::getIchidanConfidence(inflection.analyze(surface), candidate::verb_cost::kIchidanKateikeiMinConfidence);
+    if (confidence >= candidate::verb_cost::kIchidanKateikeiMinConfidence) {
+      candidates.push_back(makeVerbCandidate(surface, start_pos, kateikei_end, candidate::verb_cost::kStrongBonus,
+                                             base_form, dictionary::ConjugationType::Ichidan, true,
+                                             CandidateOrigin::VerbKanji, confidence, "causative_kateikei",
+                                             core::ExtendedPOS::VerbKateikei));
+    }
+  }
+
   // A single-kanji ichidan stem can attach directly to よう (見よう, 着よう).
   // Unlike 食べよう, there is no e-row renyokei kana before よ, so emit the
   // mizenkei stem separately after inflection confirms the full form.
@@ -503,6 +582,7 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
 // Pattern: kanji + ら + せ (followed by られ for causative-passive)
 void appendCausativeRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                        size_t hiragana_end, const grammar::Inflection& inflection,
+                                       const dictionary::DictionaryManager* dict_manager,
                                        const VerbCandidateOptions& verb_opts,
                                        std::vector<UnknownCandidate>& candidates) {
   if (kanji_end + 2 <= hiragana_end) {
@@ -510,6 +590,13 @@ void appendCausativeRenyokeiCandidates(const std::vector<char32_t>& codepoints, 
     char32_t second_hira = codepoints[kanji_end + 1];
     // ら + せ pattern (causative renyokei)
     if (first_hira == U'ら' && second_hira == U'せ') {
+      std::string original_base = extractSubstring(codepoints, start_pos, kanji_end) + "る";
+      // When the underlying Godan verb is attested, preserve the productive
+      // mizenkei + causative-auxiliary boundary. The fallback below exists for
+      // an otherwise unavailable predicate analysis, not to replace it.
+      if (vh::isVerbInDictionary(dict_manager, original_base)) {
+        return;
+      }
       // Generate causative renyokei when followed by valid ichidan verb endings
       // or causative-passive (られ). This covers:
       //   眠らせた (past), 眠らせて (te-form), 眠らせない (negative),

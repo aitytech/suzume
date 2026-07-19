@@ -75,6 +75,56 @@ bool hasNaAdjectiveContinuation(const std::vector<char32_t>& codepoints, size_t 
 // Cost bonus imported from candidate_constants.h:
 // candidate::kVerifiedNounBonus
 
+bool isHiraganaHonorificPrefix(char32_t codepoint) {
+  return codepoint == U'お' || codepoint == U'ご';
+}
+
+void addHonorificSamaNounJoinCandidate(core::Lattice& lattice, std::string_view text,
+                                       const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                       size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                       const Scorer& scorer) {
+  if (start_pos + 2 >= codepoints.size() || !isHiraganaHonorificPrefix(codepoints[start_pos]) ||
+      char_types[start_pos + 1] != CharType::Kanji) {
+    return;
+  }
+
+  size_t end_pos = start_pos + 1;
+  while (end_pos < codepoints.size() && char_types[end_pos] == CharType::Kanji) {
+    ++end_pos;
+  }
+
+  // A productive honorific noun needs a lexical kanji base before the closed
+  // honorific suffix. This preserves the ordinary prefix analysis for お様.
+  if (end_pos - start_pos < 3 || codepoints[end_pos - 1] != U'様') {
+    return;
+  }
+
+  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  const size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
+  std::string surface(text.substr(start_byte, end_byte - start_byte));
+  const float cost = scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kHonorificSamaNounBonus;
+  lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos), core::PartOfSpeech::Noun,
+                  cost, core::LatticeEdge::kIsUnknown);
+}
+
+void addStandaloneHonorificPrefixInterjectionCandidate(core::Lattice& lattice, std::string_view text,
+                                                       const std::vector<char32_t>& codepoints,
+                                                       const ByteOffsets& byte_offsets, size_t start_pos,
+                                                       const Scorer& scorer) {
+  if (start_pos + 1 != codepoints.size() ||
+      !grammar::isHonorificPrefix(extractSubstring(codepoints, start_pos, start_pos + 1))) {
+    return;
+  }
+
+  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  const size_t end_byte = byteOffsetAt(byte_offsets, start_pos + 1);
+  std::string surface(text.substr(start_byte, end_byte - start_byte));
+  const float cost =
+      scorer.posPrior(core::PartOfSpeech::Interjection) + candidate::kStandaloneHonorificPrefixInterjectionBonus;
+  lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 1),
+                  core::PartOfSpeech::Interjection, cost, core::LatticeEdge::kIsUnknown);
+}
+
 }  // namespace
 
 void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
@@ -84,6 +134,9 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   if (start_pos >= codepoints.size()) {
     return;
   }
+
+  addHonorificSamaNounJoinCandidate(lattice, text, codepoints, byte_offsets, start_pos, char_types, scorer);
+  addStandaloneHonorificPrefixInterjectionCandidate(lattice, text, codepoints, byte_offsets, start_pos, scorer);
 
   // Check if current character is a productive prefix
   char32_t current_char = codepoints[start_pos];
@@ -337,7 +390,6 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     }
     ++hiragana_end;
   }
-
   // Reject if hiragana ends with な (na-adjective 連体形, not verb renyokei)
   // e.g., 効率的な方 should NOT become a compound noun (it's 効率+的+な+方)
   if (hiragana_end > kanji_end && codepoints[hiragana_end - 1] == U'な') {
@@ -347,7 +399,7 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
   // Reject if hiragana ends with た (past form, not verb renyokei)
   // e.g., 書いた方 should NOT become a compound noun (it's 書い+た+方)
   // Correct patterns: 歩き方, 食べ方 (V連用形+方)
-  if (hiragana_end > kanji_end && codepoints[hiragana_end - 1] == U'た') {
+  if (hiragana_end > kanji_end && (codepoints[hiragana_end - 1] == U'た' || codepoints[hiragana_end - 1] == U'だ')) {
     return;
   }
 

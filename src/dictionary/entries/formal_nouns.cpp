@@ -21,6 +21,13 @@ EntrySpecRange getFormalNounEntries() {
       // Bound temporal/spatial suffix after a nominal stem (期間内、期限内).
       // Keep the formal-noun entry above for standalone uses as well.
       suffix("内", ""),
+      // State suffix after a nominal stem (作業中、確認中). The standalone
+      // formal-noun reading remains available through the preceding entry.
+      suffix("中", ""),
+      // Agentive suffix after a deverbal stem (引き受け手、書き手).
+      suffix("手", ""),
+      // Destination suffix after a deverbal nominal (問い合わせ先、送り先).
+      suffix("先", ""),
       // Temporal endpoint formal noun (年度末、学期末). Short lexical compounds
       // such as 月末 retain their whole-word candidate.
       formal_noun("末", ""),
@@ -40,7 +47,6 @@ EntrySpecRange getFormalNounEntries() {
       // Suffix-like formal nouns
       // Lower cost for 付け to compete with verb_kanji ichidan pattern
       formal_noun("付け", ""),
-      formal_noun("付", ""),
       // Per-unit distributive formal noun (一人当たり, 利用者当たり).
       formal_noun("当たり", ""),
       // Hiragana-only forms
@@ -62,7 +68,7 @@ EntrySpecRange getFormalNounEntries() {
       formal_noun("ふう", ""),
       // Literary formal noun in conditional expressions (いかんにかかわらず,
       // 結果いかんで).
-      formal_noun("いかん", ""),
+      formal_noun("いかん", "いかん"),
       formal_noun("わけ", ""),
       formal_noun("すべ", ""),
       formal_noun("よし", ""),

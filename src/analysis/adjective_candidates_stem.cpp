@@ -373,8 +373,9 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       // Dictionary adjectives get a strong bonus for the stem + auxiliary path.
       // (美味しそう → 美味し + そう)
       // Need stronger negative cost like garu-connection pattern
-      float cost =
-          candidate::confidenceScaledCost(candidate::kAdjStemBaseCost, adj_confidence, candidate::kAdjStemConfScale);
+      float cost = is_dict_adjective ? candidate::kAdjStemDictionaryCost
+                                     : candidate::confidenceScaledCost(candidate::kAdjStemBaseCost, adj_confidence,
+                                                                       candidate::kAdjStemConfScale);
       SUZUME_DEBUG_LOG("[ADJ_STEM]   ✓ candidate stem=\"" << stem << "\" cost=" << cost << "\n");
       candidates.push_back(makeIAdjStemCandidate(stem, start_pos, stem_end, base_form, cost,
                                                  CandidateOrigin::AdjectiveI, adj_confidence, "adj_stem_shii"));

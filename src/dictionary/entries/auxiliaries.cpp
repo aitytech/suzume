@@ -44,6 +44,7 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("ない", "ない", EPOS::AuxNegativeNai),
       aux("なく", "ない", EPOS::AuxNegativeNai),      // 連用形 (読め+なく)
       aux("なかっ", "ない", EPOS::AuxNegativeNai),    // 連用タ接続
+      aux("んかっ", "ない", EPOS::AuxNegativeNai),    // contracted negative past stem
       aux("なけれ", "ない", EPOS::AuxNegativeNai),    // 仮定形 (なけれ+ば)
       aux("なきゃ", "ない", EPOS::AuxNegativeNai),    // 仮定形口語縮約 (なければ→なきゃ, 標準終止)
       aux("なけりゃ", "ない", EPOS::AuxNegativeNai),  // 仮定形口語縮約 (なければ→なけりゃ)
@@ -76,6 +77,8 @@ EntrySpecRange getAuxiliaryEntries() {
       // AuxClassicalNari category cost, winning only via the AdjNaAdj/Noun→なる→Noun bigram bonus.
       aux("なる", "なり", EPOS::AuxClassicalNari),
       aux("けり", "けり", EPOS::AuxClassicalKeri),  // 過去・詠嘆 (なりけり)
+      aux("ける", "けり", EPOS::AuxClassicalKeri),  // Adnominal form (なりける)
+      aux("けれ", "けり", EPOS::AuxClassicalKeri),  // 已然形 (見ければ)
       aux("けむ", "けむ", EPOS::AuxVolitional),     // 過去推量 (行きけむ)
       aux("らむ", "らむ", EPOS::AuxVolitional),     // 現在推量 (行くらむ)
       // Classical タリ活用 連体形 たる (堂々たる, 確固たる). Only 連体形 is registered:
@@ -103,7 +106,10 @@ EntrySpecRange getAuxiliaryEntries() {
 
       // Negative conjecture (否定推量): attaches to 終止形 (godan) / 未然形 (ichidan)
       aux("まい", "まい", EPOS::AuxNegativeMai),
-      aux("じ", "じ", EPOS::AuxNegativeMai),        // 文語打消意志: 行かじ、あらじ
+      // The classical negative-volitional じ attaches to the irrealis form.
+      // Unlike terminal-form まい, it therefore uses the classical-negative
+      // class with the same irrealis connection behavior.
+      aux("じ", "じ", EPOS::AuxNegativeNu),
       aux("まじき", "まじ", EPOS::AuxNegativeMai),  // 文語打消推量の連体形
 
       // Conjecture - らしい (推定)
@@ -174,6 +180,12 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("そこなっ", "そこなう", EPOS::AuxInability),
       aux("そこなわ", "そこなう", EPOS::AuxInability),
       aux("そこなえ", "そこなう", EPOS::AuxInability),
+      // Kanji spelling of the same closed-class failure subsidiary.
+      verb("損なう", "損なう", EPOS::AuxInability),
+      verb("損ない", "損なう", EPOS::AuxInability),
+      verb("損なっ", "損なう", EPOS::AuxInability),
+      verb("損なわ", "損なう", EPOS::AuxInability),
+      verb("損なえ", "損なう", EPOS::AuxInability),
 
       // Suru verb stem forms (サ変動詞語幹活用形) - VERB, not AUX
       verb("し", "する", EPOS::VerbRenyokei),
@@ -352,6 +364,8 @@ EntrySpecRange getAuxiliaryEntries() {
       // following copula or case particle (終了+後、記録+用).
       suffix("後", "後"),
       suffix("用", "用"),
+      // Naming suffix after a nominal base (ファイル+名、利用者+名).
+      suffix("名", "名"),
 
       // Note: 的 was previously L1 SUFFIX, but Suzume's tokenizer use case
       // prefers X+的 as one search unit (論理的, 科学的, 経済的). Merging is
@@ -421,6 +435,9 @@ EntrySpecRange getAuxiliaryEntries() {
       // has a NOUN reading (肉/にく) in the dictionary that carries 読みにくさ, whereas
       // no やす noun exists, so 読みやすさ would otherwise fragment into や+す+さ.
       adj("やす", "やすい", EPOS::AdjStem),
+      // Productive difficulty adjective stem (読みにくさ, 分かりにくい). Its
+      // derivational reading remains available beside the lexical noun 肉.
+      adj("にく", "にくい", EPOS::AdjStem),
 
       // Adjective suffix っぽい (～っぽい: 子供っぽい, 忘れっぽい)
       // MeCab: 子供っぽい → 子供 + っぽい
@@ -643,6 +660,7 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("くる", "くる", EPOS::AuxAspectKuru),
       // MeCab compat: split き+た/て/ます separately
       aux("き", "くる", EPOS::AuxAspectKuru),
+      aux("く", "", EPOS::AuxAspectIku),
       // Note: no unconditional こ (来る mizenkei) entry — the surface is far too
       // frequent as a word fragment (こと, これ, きのこ, ...). こ is generated
       // context-gated before a ない-family negative in
@@ -659,8 +677,8 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("ざんせん", "ある", EPOS::Unknown),
       aux("でありんす", "だ", EPOS::Unknown),
       aux("でありんした", "だ", EPOS::Unknown),
-      aux("なんし", "ます", EPOS::Unknown),
-      aux("なんした", "ます", EPOS::Unknown),
+      aux("なんし", "ます", EPOS::AuxKuruwaPolite),
+      aux("なんした", "ます", EPOS::AuxKuruwaPolite),
 
       // Cat-like (猫系) - sentence-final particles (な/ね/よ variants)
       particle("にゃ", EPOS::ParticleFinal),
@@ -671,8 +689,8 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("ですにゃ", "ですよ", EPOS::Unknown),
       aux("ですにゃん", "ですよ", EPOS::Unknown),
 
-      // Squid character (イカ娘) - sentence-final particle (MeCab: Noun)
-      // Note: で+ゲソ should split as で(Particle)+ゲソ(Noun)
+      // Character-style sentence-final particles (MeCab: noun).
+      // Keep the copular particle boundary before this final-particle form.
       particle("ゲソ", EPOS::ParticleFinal),
       particle("げそ", EPOS::ParticleFinal),
 
@@ -680,7 +698,6 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("ですわ", "です", EPOS::Unknown),
       aux("ですの", "です", EPOS::Unknown),
       aux("ますの", "ます", EPOS::Unknown),
-      aux("だわ", "だ", EPOS::Unknown),
 
       // Youth slang (若者言葉) - っす/っすか are colloquial です, so tag them as the
       // polite copula rather than falling back to the Auxiliary default (AuxTenseTa),
@@ -699,8 +716,6 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("でござる", "だ", EPOS::Unknown),
       aux("ござった", "だった", EPOS::Unknown),
       aux("でござった", "だった", EPOS::Unknown),
-      aux("ござらぬ", "ではない", EPOS::Unknown),
-      aux("ござらん", "ではない", EPOS::Unknown),
       aux("でございます", "です", EPOS::Unknown),
       aux("ナリ", "だ", EPOS::Unknown),
       aux("なり", "だ", EPOS::Unknown),

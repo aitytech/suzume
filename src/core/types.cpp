@@ -250,6 +250,8 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
       return "AUX_過去";
     case ExtendedPOS::AuxTenseMasu:
       return "AUX_丁寧";
+    case ExtendedPOS::AuxKuruwaPolite:
+      return "AUX_KURUWA_POLITE";
 
     // Auxiliaries - Negation
     case ExtendedPOS::AuxNegativeNai:
@@ -424,7 +426,8 @@ PartOfSpeech extendedPosToPos(ExtendedPOS epos) {
       epos == ExtendedPOS::AuxClassicalNari || epos == ExtendedPOS::AuxClassicalKeri ||
       epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalPerfect ||
       epos == ExtendedPOS::AuxClassicalBeshi || epos == ExtendedPOS::AuxInability ||
-      epos == ExtendedPOS::AuxBenefactive || epos == ExtendedPOS::AuxSimilitudeYou) {
+      epos == ExtendedPOS::AuxBenefactive || epos == ExtendedPOS::AuxSimilitudeYou ||
+      epos == ExtendedPOS::AuxKuruwaPolite) {
     return PartOfSpeech::Auxiliary;
   }
   // Particle types -> Particle

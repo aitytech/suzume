@@ -11,6 +11,7 @@
 
 #include "analysis/bigram_table.h"
 #include "analysis/candidate_constants.h"
+#include "analysis/join_compound_verb_internal.h"
 #include "analysis/scorer_constants.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "analysis/verb_candidates_hiragana_internal.h"
@@ -36,7 +37,8 @@ namespace {
 bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                         const std::vector<normalize::CharType>& char_types,
                                         const grammar::Inflection& inflection,
-                                        const dictionary::DictionaryManager* dict_manager) {
+                                        const dictionary::DictionaryManager* dict_manager,
+                                        bool allow_single_char_particle_after_kanji) {
   if (dict_manager == nullptr || hiragana_end <= start_pos + 1) {
     return false;
   }
@@ -73,12 +75,87 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
         bool is_connective = particle_surface == "て" || particle_surface == "で";
         if (is_verified_verb &&
             (is_connective || candidate.confidence >= candidate::kParticleVerbBoundaryMinConfidence)) {
+          if (allow_single_char_particle_after_kanji && particle_end == start_pos + 1) {
+            continue;
+          }
           return true;
         }
       }
     }
   }
   return false;
+}
+
+bool hasSokuonbinTenseEvidence(const std::vector<char32_t>& codepoints, size_t start_pos,
+                               const std::vector<normalize::CharType>& char_types,
+                               const grammar::Inflection& inflection) {
+  size_t end_pos = start_pos;
+  while (end_pos < char_types.size() && end_pos - start_pos < 12 &&
+         char_types[end_pos] == normalize::CharType::Hiragana) {
+    ++end_pos;
+  }
+  for (size_t onbin_pos = start_pos + 1; onbin_pos + 1 < end_pos; ++onbin_pos) {
+    if (codepoints[onbin_pos] != U'っ' || (codepoints[onbin_pos + 1] != U'た' && codepoints[onbin_pos + 1] != U'て')) {
+      continue;
+    }
+    const std::string inflected_surface = extractSubstring(codepoints, start_pos, onbin_pos + 2);
+    for (const auto& inflection_candidate : inflection.analyze(inflected_surface)) {
+      const bool is_sokuonbin_godan = inflection_candidate.verb_type == grammar::VerbType::GodanWa ||
+                                      inflection_candidate.verb_type == grammar::VerbType::GodanRa ||
+                                      inflection_candidate.verb_type == grammar::VerbType::GodanTa;
+      if (is_sokuonbin_godan && inflection_candidate.confidence >= candidate::kParticleVerbBoundaryMinConfidence) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void appendSuruSubsidiaryRenyokeiCandidate(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                           size_t hiragana_end, const dictionary::DictionaryManager* dict_manager,
+                                           std::vector<UnknownCandidate>& candidates) {
+  if (dict_manager == nullptr || start_pos == 0 || codepoints[start_pos] != U'し' ||
+      !normalize::isKanjiCodepoint(codepoints[start_pos - 1])) {
+    return;
+  }
+
+  // A Sahen noun plus する has a distinct continuative stem before a
+  // subsidiary verb.  Keep the し with that subsidiary only when the stem to
+  // its left is not independently a lexical godan-sa verb; this preserves
+  // ordinary V連用形+V2 boundaries such as 話し+切れ.
+  size_t sahen_start = start_pos;
+  while (sahen_start > 0 && normalize::isKanjiCodepoint(codepoints[sahen_start - 1])) {
+    --sahen_start;
+  }
+  if (start_pos - sahen_start < 2) {
+    return;
+  }
+  const std::string sahen_stem = extractSubstring(codepoints, sahen_start, start_pos);
+  if (vh::isVerbInDictionary(dict_manager, sahen_stem + "す")) {
+    return;
+  }
+
+  for (const auto& subsidiary : compound_verb_detail::kSubsidiaryVerbs) {
+    if (subsidiary.verb_type != compound_verb_detail::V2VerbType::Ichidan) {
+      continue;
+    }
+    const std::string_view reading = subsidiary.reading == nullptr ? std::string_view{} : subsidiary.reading;
+    const std::string renyokei =
+        compound_verb_detail::generateRenyokei(subsidiary.surface, reading, subsidiary.verb_type);
+    const size_t candidate_end = start_pos + 1 + normalize::utf8Length(renyokei);
+    if (candidate_end >= hiragana_end || !vh::naiNegativeFollowsAt(codepoints, candidate_end) ||
+        extractSubstring(codepoints, start_pos + 1, candidate_end) != renyokei) {
+      continue;
+    }
+
+    const std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
+    const std::string lemma = "し" + std::string(reading.empty() ? subsidiary.surface : reading);
+    candidates.push_back(makeVerbCandidate(
+        surface, start_pos, candidate_end, candidate::verb_cost::kStrongBonus + bigram_cost::kVeryStrongBonus, lemma,
+        dictionary::ConjugationType::Ichidan, true, CandidateOrigin::VerbHiragana, candidate::kHighOriginConfidence,
+        "suru_subsidiary_renyokei", core::ExtendedPOS::VerbRenyokei));
+    return;
+  }
 }
 
 }  // namespace
@@ -131,7 +208,12 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   // Skip if starting character is a particle that is NEVER a verb stem
   // Note: Characters that CAN be verb stems are NOT skipped:
   //   - な→なる/なくす, て→できる, や→やる, か→かける/かえる
-  if (normalize::isNeverVerbStemAtStart(first_char)) {
+  // The initial の is normally a particle, but a following っ+た/て sequence
+  // is independent Godan inflectional evidence.  Admit that structurally
+  // verified path so kana-written verbs are not cut through their onbin stem.
+  const bool is_particle_initial_sokuonbin =
+      first_char == U'の' && hasSokuonbinTenseEvidence(codepoints, start_pos, char_types, inflection);
+  if (normalize::isNeverVerbStemAtStart(first_char) && !is_particle_initial_sokuonbin) {
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_BLACKLIST] pos=" << start_pos << " char=U+" << std::hex
                                                      << static_cast<uint32_t>(first_char) << std::dec
                                                      << " blocked (isNeverVerbStemAtStart)\n");
@@ -349,10 +431,14 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     return candidates;
   }
 
+  appendSuruSubsidiaryRenyokeiCandidate(codepoints, start_pos, hiragana_end, dict_manager, candidates);
+
   // A closed-class particle followed by a dictionary-verified verb inflection
   // is a grammatical boundary, never the stem of an unknown hiragana verb.
   // This preserves て+さえ+いれ+ば and analogous binding-particle sequences.
-  if (startsWithParticleThenVerifiedVerb(codepoints, start_pos, hiragana_end, char_types, inflection, dict_manager)) {
+  const bool follows_kanji = start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]);
+  if (startsWithParticleThenVerifiedVerb(codepoints, start_pos, hiragana_end, char_types, inflection, dict_manager,
+                                         follows_kanji)) {
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " particle_then_verified_verb\n");
     return candidates;
   }
@@ -441,6 +527,22 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
           }
         }
       }
+    }
+
+    // A terminal hiragana run ending in く can be an unattested Godan-ka
+    // dictionary form. Some stems are otherwise analyzed only as i-adjective
+    // fragments, even though 〜く is their finite verb ending. Dictionary
+    // adverbs and adjective forms remain protected by the non-verb gate below.
+    if (!is_dictionary_verb && end_pos == hiragana_end && end_pos - start_pos >= 3 &&
+        codepoints[end_pos - 1] == U'く' &&
+        (best.verb_type == grammar::VerbType::IAdjective ||
+         best.confidence < candidate::verb_cost::kTerminalHiraganaGodanKaConfidence)) {
+      best.base_form = surface;
+      best.stem = surface.substr(0, surface.size() - core::kJapaneseCharBytes);
+      best.suffix.clear();
+      best.verb_type = grammar::VerbType::GodanKa;
+      best.confidence = candidate::verb_cost::kTerminalHiraganaGodanKaConfidence;
+      best.morphemes.clear();
     }
 
     // A fabricated verb must not cross a productive te-form boundary between
@@ -916,6 +1018,22 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
 
   appendHiraganaDerivedCandidates(codepoints, start_pos, hiragana_end, char_types, inflection, dict_manager,
                                   candidates);
+
+  // A particle-initial kana run normally loses to a particle analysis.  When
+  // the full run independently proves a Godan sokuonbin tense form, however,
+  // favor its complete stem over a shorter accidental particle-plus-auxiliary
+  // path.  This is limited to the stem immediately before た/て, so internal
+  // small-tsu contractions retain their ordinary component analysis.
+  if (is_particle_initial_sokuonbin) {
+    for (auto& verb_candidate : candidates) {
+      const bool ends_before_tense =
+          verb_candidate.extended_pos == core::ExtendedPOS::VerbOnbinkei && verb_candidate.end < codepoints.size() &&
+          (codepoints[verb_candidate.end] == U'た' || codepoints[verb_candidate.end] == U'て');
+      if (ends_before_tense) {
+        verb_candidate.cost += bigram_cost::kDoubleVeryStrongBonus + bigram_cost::kExtraStrongBonus;
+      }
+    }
+  }
 
   // Add emphatic variants (いくっ, するっ, etc.)
   vh::addEmphaticVariants(candidates, codepoints);

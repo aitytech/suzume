@@ -70,6 +70,20 @@ bool grammaticalStemFollowerStartsAt(const std::vector<char32_t>& codepoints, si
   return false;
 }
 
+// A dictionary hit alone is insufficient for an euphonic Godan candidate:
+// the reconstructed base must also have the Godan class that licenses the
+// observed onbin. This excludes non-Godan homographs such as する from a
+// fabricated すっ+て path.
+bool hasMatchingGodanInflection(const grammar::Inflection& inflection, std::string_view base_form,
+                                grammar::VerbType expected_type) {
+  for (const auto& analysis : inflection.analyze(base_form)) {
+    if (analysis.base_form == base_form && analysis.verb_type == expected_type) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void appendContextualSubsidiaryCandidate(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                          std::string_view lemma, dictionary::ConjugationType conj_type,
                                          core::ExtendedPOS extended_pos, const char* pattern, float candidate_cost,
@@ -152,13 +166,15 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
       std::string base_form = stem + std::string(base_suffix);
 
       // Check if base form exists in dictionary as this verb type
-      bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
+      bool is_valid_verb = !grammar::isSuruBaseForm(base_form) && vh::isVerbInDictionary(dict_manager, base_form) &&
+                           hasMatchingGodanInflection(inflection, base_form, verb_type);
       // Capture dictionary attestation before the inflection fallback below may
       // set is_valid_verb on a non-dictionary base.
       const bool lemma_dict_verified = is_valid_verb;
 
-      // For sokuonbin tense patterns (っ+た/て), also use inflection analysis:
-      // it validates common verbs like かう, やる that may not be in the dictionary.
+      // For sokuonbin tense and contraction patterns (っ+た/て, っとく), also
+      // use inflection analysis. It validates common verbs like かう and やる
+      // that may not be in the dictionary.
       // Hatsuonbin (ん) is deliberately EXCLUDED: its godan type is rule-ambiguous
       // (む/ぶ/ぬ are table-identical, all endorsed at equal confidence), so the
       // fallback would validate a table-first NON-WORD base (あそんで→あそむ). The
@@ -166,15 +182,20 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
       // the dedicated hatsuonbin generator), never from an inflection guess.
       // Exception: skip short particle-starting stems (となっ should be と+なっ);
       // longer stems like はじまっ (3+ chars) are allowed.
-      if (!is_valid_verb && is_tense_pattern && is_sokuonbin && !starts_with_short_particle_stem) {
-        // Construct full form: onbin + tense suffix (e.g., かった, やった)
-        std::string_view tense_char = (next_char == U'た' || next_char == U'だ') ? "た" : "て";
-        std::string full_form = stem + "っ" + std::string(tense_char);
+      if (!is_valid_verb && (is_tense_pattern || is_contraction_pattern) && is_sokuonbin &&
+          !starts_with_short_particle_stem) {
+        // A contraction is validated through its uncontracted te-form
+        // (やっとく -> やって); tense patterns retain their observed suffix.
+        std::string_view suffix = is_contraction_pattern                       ? "て"
+                                  : (next_char == U'た' || next_char == U'だ') ? "た"
+                                                                               : "て";
+        std::string full_form = stem + "っ" + std::string(suffix);
         const auto& analysis = inflection.analyze(full_form);
         for (const auto& cand : analysis) {
           // Lower threshold (0.25) for short stems like かっ, やっ
           // since godan_single_hiragana_stem penalty reduces confidence
-          if (cand.verb_type == verb_type && cand.base_form == base_form && cand.confidence >= 0.25F) {
+          if (cand.verb_type == verb_type && cand.base_form == base_form &&
+              cand.confidence >= candidate::verb_cost::kShortHiraganaSokuonbinMinConfidence) {
             is_valid_verb = true;
             break;
           }
@@ -189,7 +210,8 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
       std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_pos + 1);
       // For tense patterns, use higher cost to avoid false positives for short stems
       // Contraction patterns (っとく, っちゃう) are more reliable, use lower cost
-      float cost = is_contraction_pattern ? -0.5F : 0.2F;
+      const float cost =
+          is_contraction_pattern ? candidate::verb_cost::kContractedOnbinBonus : candidate::verb_cost::kMinorPenalty;
       SUZUME_DEBUG_VERBOSE_BLOCK {
         SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface
                             << (is_tense_pattern ? " hiragana_onbin_tense" : " hiragana_onbin_contraction")
@@ -199,11 +221,9 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
       auto onbin_cand = makeVerbCandidate(onbin_surface, start_pos, onbin_pos + 1, cost, base_form,
                                           grammar::verbTypeToConjType(verb_type), true, CandidateOrigin::VerbHiragana,
                                           0.9F, pattern, core::ExtendedPOS::VerbOnbinkei);
-      // Verified only for genuinely rule-only forms: if the onbin surface is
-      // itself a dictionary entry, that edge carries the authoritative reading
-      // and this candidate must not undercut it (であった あっ, いった いっ).
-      const bool onbin_surface_in_dict = dict_manager != nullptr && dict_manager->lookupExact(onbin_surface) != nullptr;
-      onbin_cand.lemma_verified = lemma_dict_verified && !onbin_surface_in_dict;
+      // The reconstructed base is dictionary-attested, irrespective of
+      // whether the inflected surface also has a dictionary entry.
+      onbin_cand.lemma_verified = lemma_dict_verified;
       candidates.push_back(std::move(onbin_cand));
       break;  // Found valid candidate for this position
     }
@@ -849,6 +869,11 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
         const auto& sokuonbin_types = vh::getGodanTypesByOnbin("っ");
 
         auto sokuonbin_match = vh::firstGodanOnbinDictBase(dict_manager, stem, "っ");
+        if (sokuonbin_match.matched &&
+            (grammar::isSuruBaseForm(sokuonbin_match.base_form) ||
+             !hasMatchingGodanInflection(inflection, sokuonbin_match.base_form, sokuonbin_match.verb_type))) {
+          sokuonbin_match.matched = false;
+        }
         bool found_dict_match = sokuonbin_match.matched;
         if (found_dict_match) {
           constexpr float kHiraganaSokuonbinCost = candidate::verb_cost::kStandardBonus;
@@ -862,10 +887,7 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
               onbin_surface, start_pos, onbin_end, kHiraganaSokuonbinCost, sokuonbin_match.base_form,
               grammar::verbTypeToConjType(sokuonbin_match.verb_type), true, CandidateOrigin::VerbHiragana, 0.9F,
               "hiragana_sokuonbin", core::ExtendedPOS::VerbOnbinkei);
-          // Verified only when the onbin surface is not itself a dictionary
-          // entry (that edge would carry the authoritative reading).
-          sokuonbin_cand.lemma_verified =
-              dict_manager == nullptr || dict_manager->lookupExact(onbin_surface) == nullptr;
+          sokuonbin_cand.lemma_verified = true;
           candidates.push_back(std::move(sokuonbin_cand));
         }
         // Phase 2: Inflection analysis fallback for short hiragana stems (e.g., やっ)
@@ -874,21 +896,38 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
           std::string full_surface = extractSubstring(codepoints, start_pos, hira_extent_end);
           const auto& infl_results = inflection.analyze(full_surface);
           for (const auto& result : infl_results) {
-            if (result.confidence >= 0.5F) {
+            // Short pure-hiragana stems receive a single-stem confidence
+            // deduction, so retain the same threshold as the earlier tense
+            // fallback (e.g., あらっ + た from あらう).
+            if (result.confidence >= candidate::verb_cost::kShortHiraganaSokuonbinMinConfidence) {
               for (const auto& [verb_type, base_suffix] : sokuonbin_types) {
                 std::string potential_base = stem + std::string(base_suffix);
                 if (result.base_form == potential_base && result.verb_type == verb_type) {
-                  constexpr float kHiraganaSokuonbinCost = -0.3F;  // Slightly higher than dict match
+                  // Without a dictionary attestation, a pure-hiragana
+                  // sokuonbin is ambiguous among several godan rows. Follow
+                  // the tokenizer's ordinary hiragana preference for the
+                  // productive wa-row (あらっ + た → あらう).
+                  grammar::VerbType selected_type = verb_type;
+                  std::string_view selected_suffix = base_suffix;
+                  for (const auto& [fallback_type, fallback_suffix] : sokuonbin_types) {
+                    if (fallback_type == grammar::VerbType::GodanWa) {
+                      selected_type = fallback_type;
+                      selected_suffix = fallback_suffix;
+                      break;
+                    }
+                  }
+                  std::string selected_base = stem + std::string(selected_suffix);
+                  constexpr float kHiraganaSokuonbinCost = candidate::verb_cost::kModerateBonus;
                   SUZUME_DEBUG_VERBOSE_BLOCK {
                     SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface
-                                        << " hiragana_sokuonbin_infl lemma=" << potential_base
-                                        << " type=" << grammar::verbTypeToString(verb_type)
+                                        << " hiragana_sokuonbin_infl lemma=" << selected_base
+                                        << " type=" << grammar::verbTypeToString(selected_type)
                                         << " cost=" << kHiraganaSokuonbinCost << "\n";
                   }
                   candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaSokuonbinCost,
-                                                         potential_base, grammar::verbTypeToConjType(verb_type), true,
-                                                         CandidateOrigin::VerbHiragana, 0.8F, "hiragana_sokuonbin_infl",
-                                                         core::ExtendedPOS::VerbOnbinkei));
+                                                         selected_base, grammar::verbTypeToConjType(selected_type),
+                                                         true, CandidateOrigin::VerbHiragana, 0.8F,
+                                                         "hiragana_sokuonbin_infl", core::ExtendedPOS::VerbOnbinkei));
                   found_dict_match = true;
                   break;
                 }
@@ -939,10 +978,7 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
               onbin_surface, start_pos, onbin_end, kHiraganaHatsuonbinCost, hatsuonbin_match.base_form,
               grammar::verbTypeToConjType(hatsuonbin_match.verb_type), true, CandidateOrigin::VerbHiragana, 0.9F,
               "hiragana_hatsuonbin", core::ExtendedPOS::VerbOnbinkei);
-          // Verified only when the onbin surface is not itself a dictionary
-          // entry (that edge would carry the authoritative reading).
-          hatsuonbin_cand.lemma_verified =
-              dict_manager == nullptr || dict_manager->lookupExact(onbin_surface) == nullptr;
+          hatsuonbin_cand.lemma_verified = true;
           candidates.push_back(std::move(hatsuonbin_cand));
         }
       }

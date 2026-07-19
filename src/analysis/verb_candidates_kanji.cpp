@@ -193,7 +193,12 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   // e.g., 金がない → 金 + が + ない, not 金ぐ
   // Note about か: excluded - can be part of verb conjugation (書かない, 動かす)
   char32_t first_hiragana = codepoints[kanji_end];
-  if (normalize::isNeverVerbStemAfterKanji(first_hiragana)) {
+  // や is usually the enumerating particle, but kanji + やす is the regular
+  // Godan-sa shape of verbs such as 増やす and 費やす.  The final す supplies
+  // the inflectional evidence that distinguishes it from the particle.
+  const bool is_yasu_godan_shape =
+      first_hiragana == U'や' && kanji_end + 1 < codepoints.size() && codepoints[kanji_end + 1] == U'す';
+  if (normalize::isNeverVerbStemAfterKanji(first_hiragana) && !is_yasu_godan_shape) {
     // Exception 1: A-row hiragana followed by れべき may be mizenkei pattern
     // e.g., 泳がれべき = 泳が (mizenkei) + れべき (passive + classical obligation)
     // Exception 2: A-row hiragana followed by れ is godan passive renyokei
@@ -389,6 +394,11 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   appendIchidanKateikeiVolitionalCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager,
                                             candidates);
 
+  // Keep a productive Godan causative in its inflected verb unit when the
+  // following ending confirms the renyokei or conditional form.
+  appendCausativeRenyokeiCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager, verb_opts,
+                                    candidates);
+
   // Try Godan passive renyokei pattern: kanji + a-row + れ
   appendGodanPassiveRenyokeiCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager,
                                        verb_opts, candidates);
@@ -420,23 +430,28 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   // such as 概ね, 答え and 同じ otherwise invite fabricated ichidan/godan
   // lemmas solely because their final kana resembles a renyokei marker.
   // Verified lexical verb forms remain available for genuine homographs.
-  candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
-                                  [&](const UnknownCandidate& cand) {
-                                    const bool has_auxiliary_continuation =
-                                        cand.end < codepoints.size() &&
-                                        (codepoints[cand.end] == U'た' || codepoints[cand.end] == U'て');
-                                    const bool has_passive_auxiliary_continuation = cand.end + 1 < codepoints.size() &&
-                                                                                    codepoints[cand.end] == U'ら' &&
-                                                                                    codepoints[cand.end + 1] == U'れ';
-                                    return cand.pos == core::PartOfSpeech::Verb && !cand.lemma_verified &&
-                                           ((cand.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-                                             grammar::endsWithRenyokeiMarker(cand.surface) &&
-                                             !has_auxiliary_continuation && !has_passive_auxiliary_continuation) ||
-                                            (cand.extended_pos == core::ExtendedPOS::VerbShuushikei &&
-                                             cand.surface.compare(cand.lemma) == 0)) &&
-                                           vh::hasNonVerbDictionaryEntry(dict_manager, cand.surface);
-                                  }),
-                   candidates.end());
+  candidates.erase(
+      std::remove_if(
+          candidates.begin(), candidates.end(),
+          [&](const UnknownCandidate& cand) {
+            const bool has_auxiliary_continuation =
+                cand.end < codepoints.size() && (codepoints[cand.end] == U'た' || codepoints[cand.end] == U'て');
+            const bool has_excessive_auxiliary_continuation =
+                dict_manager != nullptr && cand.end + 2 <= codepoints.size() && [&] {
+                  const auto* next = dict_manager->lookupExact(extractSubstring(codepoints, cand.end, cand.end + 2));
+                  return next != nullptr && next->extended_pos == core::ExtendedPOS::AuxExcessive;
+                }();
+            const bool has_passive_auxiliary_continuation =
+                cand.end + 1 < codepoints.size() && codepoints[cand.end] == U'ら' && codepoints[cand.end + 1] == U'れ';
+            return cand.pos == core::PartOfSpeech::Verb && !cand.lemma_verified &&
+                   ((cand.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+                     grammar::endsWithRenyokeiMarker(cand.surface) && !has_auxiliary_continuation &&
+                     !has_excessive_auxiliary_continuation && !has_passive_auxiliary_continuation) ||
+                    (cand.extended_pos == core::ExtendedPOS::VerbShuushikei &&
+                     cand.surface.compare(cand.lemma) == 0)) &&
+                   vh::hasNonVerbDictionaryEntry(dict_manager, cand.surface);
+          }),
+      candidates.end());
 
   // Apply mid-kanji-run dictionary compound penalty (see comment above)
   if (mid_compound_penalty != 0.0F) {

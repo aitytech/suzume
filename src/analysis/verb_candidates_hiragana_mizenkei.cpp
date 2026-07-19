@@ -299,7 +299,7 @@ void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, si
     }
     candidates.push_back(makeVerbCandidate(surface, start_pos, split_end, cost, lemma,
                                            grammar::verbTypeToConjType(verb_type), true, CandidateOrigin::VerbHiragana,
-                                           0.9F, "hiragana_passive_mizenkei"));
+                                           0.9F, "hiragana_passive_mizenkei", core::ExtendedPOS::VerbMizenkei));
     break;  // Only generate one passive candidate per length
   }
 }
@@ -332,6 +332,14 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
       continue;
 
     std::string stem = extractSubstring(codepoints, start_pos, stem_end);
+
+    // A hiragana Ichidan stem ends in the e- or i-row before る.  Dictionary
+    // membership alone is insufficient because Godan-ra verbs such as おる
+    // would otherwise fabricate an Ichidan stem before られ.
+    const char32_t stem_last = codepoints[stem_end - 1];
+    if (!grammar::isERowCodepoint(stem_last) && !grammar::isIRowCodepoint(stem_last)) {
+      continue;
+    }
 
     // A hiragana tail starting immediately after kanji can otherwise turn a
     // preceding ichidan stem plus causative into a fabricated verb

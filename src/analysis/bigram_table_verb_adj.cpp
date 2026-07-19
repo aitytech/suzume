@@ -29,11 +29,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // This helps かもしれない → かも+しれ+ない over かも+し+れ+ない.
       {EPOS::VerbRenyokei, EPOS::AuxNegativeNai, cost::kStrongBonus},
 
-      // VerbRenyokei → AdjStem (食べ+な, でき+な) - minor bonus. The negative ない is stored
+      // VerbRenyokei → AdjStem (食べ+な, 読み+にく, 使い+やす) - strong bonus. The negative ない is stored
       // as an adjective stem (な/ない) and attaches to a verb 未然形, which shares the ichidan
       // renyokei surface. Overrides the default cross-category penalty so the negative reading
       // 食べ + な(ない) + さ + そう wins over the 断定 copula な, without over-splitting でき.
-      {EPOS::VerbRenyokei, EPOS::AdjStem, cost::kMinorBonus},
+      {EPOS::VerbRenyokei, EPOS::AdjStem, cost::kStrongBonus},
 
       // VerbMizenkei → AuxNegativeNu (くだら+ん contracted negative) - moderate bonus
       {EPOS::VerbMizenkei, EPOS::AuxNegativeNu, cost::kModerateBonus},
@@ -52,6 +52,10 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // - Ichidan 未然形 + まい (食べ+まい; surfaces carry VerbRenyokei EPOS)
       // - する/来る 未然形 + まい (し+まい, こ+まい)
       {EPOS::VerbShuushikei, EPOS::AuxNegativeMai, cost::kModerateBonus},
+      // Attributive/terminal verb forms precede concessive and causal
+      // conjunctive particles (いう+ものの, 読む+ので). This favors the
+      // closed-class particle over a formal-noun plus nominalizer split.
+      {EPOS::VerbShuushikei, EPOS::ParticleConj, cost::kStrongBonus},
       {EPOS::VerbRenyokei, EPOS::AuxNegativeMai, cost::kModerateBonus},
       {EPOS::VerbMizenkei, EPOS::AuxNegativeMai, cost::kModerateBonus},
 
@@ -120,12 +124,16 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbOnbinkei → AuxTenseTa (書い+た, 泳い+だ) - strong bonus
       {EPOS::VerbOnbinkei, EPOS::AuxTenseTa, cost::kStrongBonus},
 
-      // VerbOnbinkei → AuxAspectOku (書い+とく, 読ん+どく) - strong bonus for
-      // the contracted ~ておく boundary over a nominalized-stem candidate.
-      {EPOS::VerbOnbinkei, EPOS::AuxAspectOku, cost::kStrongBonus},
+      // VerbOnbinkei → contracted progressive auxiliary (行っ+て+た).
+      {EPOS::VerbOnbinkei, EPOS::AuxAspectIru, cost::kVeryStrongBonus},
 
-      // VerbOnbinkei → AuxAspectShimau (行っ+ちゃっ) - strong bonus for contracted ~てしまう split
-      {EPOS::VerbOnbinkei, EPOS::AuxAspectShimau, cost::kStrongBonus},
+      // VerbOnbinkei → AuxAspectOku (書い+とく, やっ+とく, 読ん+どく) - very
+      // strong bonus for the contracted ~ておく boundary over nominal and
+      // adverb alternatives.
+      {EPOS::VerbOnbinkei, EPOS::AuxAspectOku, cost::kVeryStrongBonus},
+
+      // VerbOnbinkei → AuxAspectShimau (行っ+ちゃっ) - very strong bonus for contracted ~てしまう split
+      {EPOS::VerbOnbinkei, EPOS::AuxAspectShimau, cost::kVeryStrongBonus},
 
       // VerbTeForm → AuxAspectIru (食べて+いる) - penalty to prefer 食べ+て+いる split
       // MeCab splits as 食べ+て+いる, not 食べて+いる
@@ -147,7 +155,7 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       {EPOS::VerbTeForm, EPOS::AuxAspectKuru, cost::kModerateBonus},
 
       // VerbRenyokei → AuxInability (読み+かねる, 言い+かねます).
-      {EPOS::VerbRenyokei, EPOS::AuxInability, cost::kVeryStrongBonus},
+      {EPOS::VerbRenyokei, EPOS::AuxInability, cost::kExtremeBonus},
 
       // VerbRenyokei → AuxAspectHajimeru (読み+はじめる, 食べ+はじめる).
       {EPOS::VerbRenyokei, EPOS::AuxAspectHajimeru, cost::kVeryStrongBonus},
@@ -162,6 +170,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // bonus (-0.8, net 0); use very-strong so the net (-0.8) matches the working
       // VerbOnbinkei → AuxTenseTa connection (食べ+た).
       {EPOS::VerbRenyokei, EPOS::AuxAspectShimau, cost::kVeryStrongBonus},
+
+      // The excessive subsidiary follows a verb continuative (読み+過ぎる,
+      // 通り+過ぎる). Keep this productive auxiliary boundary ahead of a
+      // lexical compound that spans the same surface.
+      {EPOS::VerbRenyokei, EPOS::AuxExcessive, cost::kStrongBonus},
 
       // =========================================================================
       // Verb Forms → Particles
@@ -179,9 +192,6 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
 
       // VerbShuushikei → ParticleQuote (食べる+と言う) - neutral
       {EPOS::VerbShuushikei, EPOS::ParticleQuote, cost::kNeutral},
-
-      // VerbKateikei → ParticleConj (食べれ+ば) - strong bonus
-      {EPOS::VerbKateikei, EPOS::ParticleConj, cost::kStrongBonus},
 
       // VerbKateikei → AdjBasic (滅びれば+いい) - strong bonus for 〜ればいい pattern
       // This helps beat the split path 滅び+れ+ば+いい where れ is misanalyzed as passive
@@ -259,7 +269,10 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // i-adjective attributive form + noun is fundamental Japanese grammar
       // Without this, long unknown NOUN candidates (一番美しい) beat split paths
       {EPOS::AdjBasic, EPOS::Noun, cost::kModerateBonus},
-      {EPOS::AdjBasic, EPOS::NounFormal, cost::kModerateBonus},
+      // An i-adjective directly modifies a formal noun (難い+もの,
+      // 美しい+こと). Keep this productive adnominal boundary ahead of a
+      // homographic verb-renyokei candidate that postprocessing would merge.
+      {EPOS::AdjBasic, EPOS::NounFormal, cost::kDoubleVeryStrongBonus},
 
       // Verb terminal → formal noun (読む+たび, 書く+こと, 見る+たび).
       // Formal nouns are productive clause nominalizers, so favor this
@@ -277,9 +290,9 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // fallback that otherwise merges のか into one NOUN (いいのか → いい|の|か).
       {EPOS::AdjBasic, EPOS::ParticleNo, cost::kModerateBonus},
 
-      // AdjStem → AuxAppearanceSou (美し+そう) - very strong bonus
-      // Must beat adverb bonus (-1.0 for 2-char hiragana) to prefer auxiliary
-      {EPOS::AdjStem, EPOS::AuxAppearanceSou, cost::kVeryStrongBonus},
+      // AdjStem → AuxAppearanceSou (美し+そう) - decisive bonus
+      // Must beat a homographic noun + suru-renyokei analysis before そう.
+      {EPOS::AdjStem, EPOS::AuxAppearanceSou, cost::kAppearanceAuxiliaryBonus},
 
       // AdjStem/AdjNaAdj → AuxExcessive (高+すぎる, シンプル+すぎる) - moderate bonus
       // Helps AUX_過度 beat VERB interpretation when both have same cost

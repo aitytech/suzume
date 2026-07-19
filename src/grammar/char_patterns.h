@@ -97,6 +97,15 @@ bool isQuotativeSuruTeCompoundParticle(std::string_view surface);
  * @return True for し
  */
 bool isSuruRenyokeiSurface(std::string_view surface);
+/** @brief Whether a surface is the base form of the irregular verb する */
+bool isSuruBaseForm(std::string_view surface);
+bool isSuruImperativeSurface(std::string_view surface);
+
+/** @brief Whether a surface is the conjunctive particle し */
+bool isConjunctiveParticleShi(std::string_view surface);
+
+/** @brief Whether a surface is a demonstrative adverb ending in う */
+bool isDemonstrativeUAdverb(std::string_view surface);
 
 /**
  * @brief Whether a prefix is the productive honorific prefix お or ご
@@ -105,11 +114,23 @@ bool isSuruRenyokeiSurface(std::string_view surface);
  */
 bool isHonorificPrefix(std::string_view surface);
 
+/** @brief Whether a surface is a one-character kanji honorific title. */
+bool isKanjiHonorificTitle(std::string_view surface);
+
 /** @brief Whether a surface is the attributive form な of the copula だ */
 bool isAttributiveCopulaNa(std::string_view surface);
 
 /** @brief Whether a surface is the independent negative adjective ない */
 bool isIndependentNegativeAdjective(std::string_view surface);
+
+/** @brief Whether a surface is the hypothetical stem of the irregular verb ある */
+bool isAruHypotheticalStem(std::string_view surface);
+
+/** @brief Whether a surface is the complete hypothetical form of the irregular verb ある */
+bool isAruHypotheticalSurface(std::string_view surface);
+
+/** @brief Whether a surface is the continuative form of the irregular verb ある */
+bool isAruContinuativeSurface(std::string_view surface);
 
 /** @brief Whether a surface ends in the complete negative form ない */
 bool endsWithNegativeNai(std::string_view surface);
@@ -136,6 +157,35 @@ bool isParallelTogetherAdverb(std::string_view surface);
  * @return True when the surface ends with 時
  */
 bool endsWithTemporalNounSuffix(std::string_view surface);
+
+/**
+ * @brief Whether a suffix surface is the productive state/duration marker 中
+ * @param surface Candidate suffix surface
+ * @return True when the suffix is 中
+ */
+bool isStateDurationSuffix(std::string_view surface);
+
+/**
+ * @brief Whether a surface is the duration predicate かかる
+ * @param surface Candidate predicate surface
+ * @return True when the surface is かかる
+ */
+bool isDurationPredicateKakaru(std::string_view surface);
+
+/**
+ * @brief Whether two final particles form a licensed sentence-final stack
+ * @param first Surface of the preceding final particle
+ * @param second Surface of the following final particle
+ * @return True for productive final-particle sequences
+ */
+bool isFinalParticleStack(std::string_view first, std::string_view second);
+
+/**
+ * @brief Whether a noun surface ends with an administrative suffix
+ * @param surface Candidate noun surface
+ * @return True for prefectural, municipal, and regional suffixes
+ */
+bool endsWithAdministrativeSuffix(std::string_view surface);
 
 /**
  * @brief Whether text begins the classical desiderative まほしき sequence
@@ -203,6 +253,20 @@ bool isCausalParticleBeforeTopic(std::string_view particle_surface, std::string_
  * @return True when the sequence begins with かなと
  */
 bool startsSentenceParticleKanaQuote(std::string_view surface);
+
+/**
+ * @brief Whether text begins the interrogative quotative introduction かというと
+ * @param surface Text immediately after an adverb candidate
+ * @return True for the explanatory quote opener
+ */
+bool startsInterrogativeQuoteIntroduction(std::string_view surface);
+
+/**
+ * @brief Whether text begins the classical conjectural auxiliary けむ
+ * @param surface Text immediately after a prospective verb stem
+ * @return True when the classical continuative auxiliary follows
+ */
+bool startsClassicalConjecturalAuxiliary(std::string_view surface);
 
 /**
  * @brief Find a long final particle immediately followed by quote particle と

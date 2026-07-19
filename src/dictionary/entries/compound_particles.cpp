@@ -31,14 +31,17 @@ EntrySpecRange getCompoundParticleEntries() {
       particle("に関して", EPOS::ParticleCase),
       particle("に関する", EPOS::ParticleCase),
       particle("に際して", EPOS::ParticleCase),
+      particle("に際し", EPOS::ParticleCase),
       particle("に対して", EPOS::ParticleCase),
       particle("に対する", EPOS::ParticleCase),
 
       // Duration/Scope (範囲・期間)
       particle("にわたって", EPOS::ParticleCase),
       particle("にわたり", EPOS::ParticleCase),
+      particle("にわたる", EPOS::ParticleCase),
       particle("にあたって", EPOS::ParticleCase),
       particle("にあたり", EPOS::ParticleCase),
+      adv("わりに", "わりに"),  // concessive degree/expectation marker
 
       // Topic/Means (話題・手段)
       particle("をめぐって", EPOS::ParticleCase),
