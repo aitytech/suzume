@@ -89,6 +89,12 @@ UnknownCandidate makeIAdjCandidate(const std::string& surface, size_t start, siz
                                    float cost, CandidateOrigin origin, float confidence, const char* pattern);
 
 /**
+ * @brief Create a na-adjective candidate.
+ */
+UnknownCandidate makeNaAdjCandidate(const std::string& surface, size_t start, size_t end, float cost, bool has_suffix,
+                                    CandidateOrigin origin, float confidence, const char* pattern);
+
+/**
  * @brief Create an i-adjective stem candidate (expects suffix)
  */
 UnknownCandidate makeIAdjStemCandidate(const std::string& surface, size_t start, size_t end, const std::string& lemma,

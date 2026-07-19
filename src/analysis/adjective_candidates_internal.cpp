@@ -74,6 +74,18 @@ UnknownCandidate makeIAdjCandidate(const std::string& surface, size_t start, siz
   return candidate;
 }
 
+UnknownCandidate makeNaAdjCandidate(const std::string& surface, size_t start, size_t end, float cost, bool has_suffix,
+                                    [[maybe_unused]] CandidateOrigin origin, [[maybe_unused]] float confidence,
+                                    [[maybe_unused]] const char* pattern) {
+  auto candidate = makeCandidate(surface, start, end, core::PartOfSpeech::Adjective, cost, has_suffix, origin,
+                                 core::ExtendedPOS::AdjNaAdj);
+#ifdef SUZUME_DEBUG_INFO
+  candidate.confidence = confidence;
+  candidate.pattern = pattern;
+#endif
+  return candidate;
+}
+
 UnknownCandidate makeIAdjStemCandidate(const std::string& surface, size_t start, size_t end, const std::string& lemma,
                                        float cost, [[maybe_unused]] CandidateOrigin origin,
                                        [[maybe_unused]] float confidence, [[maybe_unused]] const char* pattern) {
