@@ -10,6 +10,7 @@ add_library(suzume_grammar OBJECT
   inflection_scorer.cpp
   inflection_scorer_form_potential.cpp
   inflection_scorer_stem_godan.cpp
+  honorific_verbs.cpp
   patterns.cpp
   verb_endings.cpp
 )
