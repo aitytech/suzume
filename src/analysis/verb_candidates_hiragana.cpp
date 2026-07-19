@@ -170,7 +170,7 @@ void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, siz
             codepoints[pos] == U'ま' || codepoints[pos] == U'な' || codepoints[pos] == U'ず');
   };
 
-  for (const auto& subsidiary : compound_verb_detail::kSubsidiaryVerbs) {
+  for (const auto& subsidiary : compound_verb_detail::subsidiaryVerbs()) {
     if (!subsidiary.joins_suru) {
       continue;
     }

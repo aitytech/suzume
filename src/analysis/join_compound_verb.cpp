@@ -365,7 +365,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   };
   V2Match best_match;
 
-  for (const auto& v2_verb : kSubsidiaryVerbs) {
+  for (const auto& v2_verb : subsidiaryVerbs()) {
     if (!v2_verb.joins_general) {
       continue;
     }
@@ -1338,7 +1338,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       // compound_base is V1 renyokei + V2 kanji surface
       // We need to replace V2 kanji with V2 hiragana
       // Find which V2 verb was matched to get its surface length
-      for (const auto& v2_verb : kSubsidiaryVerbs) {
+      for (const auto& v2_verb : subsidiaryVerbs()) {
         std::string_view v2_surface(v2_verb.surface);
         if (best_match.compound_base.size() >= v2_surface.size() &&
             best_match.compound_base.compare(best_match.compound_base.size() - v2_surface.size(), v2_surface.size(),
@@ -1364,7 +1364,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       // For V2 matched via hiragana reading, also try hiragana mizenkei
       std::string hira_mizenkei;
       if (best_match.matched_via_reading && !best_match.v2_reading.empty()) {
-        for (const auto& v2_verb : kSubsidiaryVerbs) {
+        for (const auto& v2_verb : subsidiaryVerbs()) {
           std::string_view v2_surface(v2_verb.surface);
           if (best_match.compound_base.size() >= v2_surface.size() &&
               best_match.compound_base.compare(best_match.compound_base.size() - v2_surface.size(), v2_surface.size(),

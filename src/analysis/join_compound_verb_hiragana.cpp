@@ -51,7 +51,7 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
   size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
 
   // For each V2 subsidiary verb, check if it appears after a potential V1
-  for (const auto& v2_verb : kSubsidiaryVerbs) {
+  for (const auto& v2_verb : subsidiaryVerbs()) {
     if (!v2_verb.joins_general) {
       continue;
     }
