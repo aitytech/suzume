@@ -95,6 +95,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "尊敬接頭辞に続く形容詞「忙しい」の形容詞解析を保持する。"
+      },
       "description": "Honorific prefix お with adjective",
       "expected": [
         {
@@ -115,6 +119,23 @@
       ],
       "id": "keigo_o_prefix",
       "input": "お忙しいところ",
+      "suzume_expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "忙しい",
+          "pos": "Adjective",
+          "surface": "忙しい"
+        },
+        {
+          "lemma": "ところ",
+          "pos": "Noun",
+          "surface": "ところ"
+        }
+      ],
       "tags": [
         "keigo",
         "prefix"
@@ -527,6 +548,18 @@
       ],
       "id": "honorific_azukari_polite_service_verb",
       "input": "荷物をお預かりします"
+    },
+    {
+      "description": "honorific lexical verb",
+      "expected": [
+        {
+          "lemma": "思し召す",
+          "pos": "Verb",
+          "surface": "思し召す"
+        }
+      ],
+      "id": "omeshimesu_honorific_verb",
+      "input": "思し召す"
     }
   ],
   "description": "Honorific verbs (敬語動詞)",

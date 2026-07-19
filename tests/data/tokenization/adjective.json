@@ -1000,6 +1000,119 @@
       ],
       "id": "adjective_fuan_ge_suffix",
       "input": "不安げな様子"
+    },
+    {
+      "description": "na adjective classification",
+      "expected": [
+        {
+          "lemma": "意外",
+          "pos": "Adjective",
+          "surface": "意外"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        }
+      ],
+      "id": "na",
+      "input": "意外な結果"
+    },
+    {
+      "description": "productive teki na adjective",
+      "expected": [
+        {
+          "lemma": "個別的",
+          "pos": "Adjective",
+          "surface": "個別的"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        }
+      ],
+      "id": "na_2",
+      "input": "個別的な対応"
+    },
+    {
+      "description": "na adjective in copular negative",
+      "expected": [
+        {
+          "lemma": "めった",
+          "pos": "Adjective",
+          "surface": "めった"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "metttanakotodehanai",
+      "input": "めったなことではない"
+    },
+    {
+      "description": "case particle negative adjective boundary",
+      "expected": [
+        {
+          "lemma": "今",
+          "pos": "Noun",
+          "surface": "今"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        }
+      ],
+      "id": "imamadeni_negative_adjective",
+      "input": "今までにない方法"
     }
   ],
   "description": "adjective tests",

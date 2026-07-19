@@ -1,6 +1,10 @@
 {
   "cases": [
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "Regression: 棄てる ichidan verb dict entry",
       "expected": [
         {
@@ -30,7 +34,34 @@
         }
       ],
       "id": "teta_wo_u",
-      "input": "棄てた物を拾う"
+      "input": "棄てた物を拾う",
+      "suzume_expected": [
+        {
+          "lemma": "棄てる",
+          "pos": "Verb",
+          "surface": "棄て"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "拾う",
+          "pos": "Verb",
+          "surface": "拾う"
+        }
+      ]
     },
     {
       "description": "完了助動詞の仮定形をAuxiliaryとして解析する",

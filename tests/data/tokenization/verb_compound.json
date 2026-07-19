@@ -2507,9 +2507,14 @@
       "description": "通り過ぎた - auto-generated",
       "expected": [
         {
-          "lemma": "通り過ぎる",
+          "lemma": "通る",
           "pos": "Verb",
-          "surface": "通り過ぎ"
+          "surface": "通り"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Auxiliary",
+          "surface": "過ぎ"
         },
         {
           "lemma": "た",
@@ -2534,9 +2539,14 @@
           "surface": "が"
         },
         {
-          "lemma": "通り過ぎる",
+          "lemma": "通る",
           "pos": "Verb",
-          "surface": "通り過ぎ"
+          "surface": "通り"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Auxiliary",
+          "surface": "過ぎ"
         },
         {
           "lemma": "て",
@@ -2583,9 +2593,14 @@
       "description": "行き過ぎた行動 - auto-generated",
       "expected": [
         {
-          "lemma": "行き過ぎる",
+          "lemma": "行く",
           "pos": "Verb",
-          "surface": "行き過ぎ"
+          "surface": "行き"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Auxiliary",
+          "surface": "過ぎ"
         },
         {
           "lemma": "た",
@@ -3047,6 +3062,141 @@
       ],
       "id": "kikakeno_kitateno_mikakeno",
       "input": "書きかけの紙。書きたての文。読みかけの本。"
+    },
+    {
+      "description": "compound ichidan conditional boundary",
+      "expected": [
+        {
+          "lemma": "言い換える",
+          "pos": "Verb",
+          "surface": "言い換えれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "i_ereba",
+      "input": "言い換えれば"
+    },
+    {
+      "description": "sahen renyokei plus limiting subsidiary boundary",
+      "expected": [
+        {
+          "lemma": "理解",
+          "pos": "Noun",
+          "surface": "理解"
+        },
+        {
+          "lemma": "しきれる",
+          "pos": "Verb",
+          "surface": "しきれ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shikirenai",
+      "input": "理解しきれない"
+    },
+    {
+      "accepted_diff": {
+        "category": "segmentation-diff",
+        "reason": "生産的な複合述語を「言い + 損なっ + た」と分割し、構成動詞を検索可能にする。"
+      },
+      "description": "compound failure verb past form",
+      "expected": [
+        {
+          "lemma": "言い損なう",
+          "pos": "Verb",
+          "surface": "言い損なっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "i_nattta",
+      "input": "言い損なった",
+      "suzume_expected": [
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言い"
+        },
+        {
+          "lemma": "損なう",
+          "pos": "Verb",
+          "surface": "損なっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
+    },
+    {
+      "description": "lexical compound verb",
+      "expected": [
+        {
+          "lemma": "取り逃がす",
+          "pos": "Verb",
+          "surface": "取り逃がす"
+        }
+      ],
+      "id": "torinigasu_compound_verb",
+      "input": "取り逃がす"
+    },
+    {
+      "description": "compound verb te-form",
+      "expected": [
+        {
+          "lemma": "差し置く",
+          "pos": "Verb",
+          "surface": "差し置い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "sashi_oite_compound_verb",
+      "input": "差し置いて"
+    },
+    {
+      "description": "dictionary continuative te-form",
+      "expected": [
+        {
+          "lemma": "押しのける",
+          "pos": "Verb",
+          "surface": "押しのけ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "oshinokete_compound_verb",
+      "input": "押しのけて"
+    },
+    {
+      "description": "lexical compound ichidan verb",
+      "expected": [
+        {
+          "lemma": "照らし合わせる",
+          "pos": "Verb",
+          "surface": "照らし合わせる"
+        }
+      ],
+      "id": "terashiawaseru_compound_verb",
+      "input": "照らし合わせる"
     }
   ],
   "description": "Compound verbs",

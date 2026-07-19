@@ -448,6 +448,241 @@
       ],
       "id": "godan_terminal_quotative_before_formal_noun",
       "input": "読むってこと、書くってこと、話すってこと、待つってこと、遊ぶってこと、読むって本、書くって本、食べるってこと"
+    },
+    {
+      "description": "formal particle expression",
+      "expected": [
+        {
+          "lemma": "をもって",
+          "pos": "Particle",
+          "surface": "をもって"
+        },
+        {
+          "lemma": "終了",
+          "pos": "Noun",
+          "surface": "終了"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "womottte_suru",
+      "input": "をもって終了する"
+    },
+    {
+      "description": "limiting particle",
+      "expected": [
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "dake_suru",
+      "input": "だけ確認する"
+    },
+    {
+      "description": "restrictive particle boundary",
+      "expected": [
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "surushikanai",
+      "input": "するしかない"
+    },
+    {
+      "description": "colloquial quotative particle",
+      "expected": [
+        {
+          "lemma": "ていう",
+          "pos": "Particle",
+          "surface": "ていう"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "teiu",
+      "input": "ていう話"
+    },
+    {
+      "description": "enumerative particle before pronoun",
+      "expected": [
+        {
+          "lemma": "やら",
+          "pos": "Particle",
+          "surface": "やら"
+        },
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "やら",
+          "pos": "Particle",
+          "surface": "やら"
+        }
+      ],
+      "id": "yarakoreyara",
+      "input": "やらこれやら"
+    },
+    {
+      "description": "読むな - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "な",
+          "pos": "Particle",
+          "surface": "な"
+        }
+      ],
+      "id": "prohibitive sentence-final particle",
+      "input": "読むな"
+    },
+    {
+      "description": "ばかりか重要だ - auto-generated",
+      "expected": [
+        {
+          "lemma": "ばかり",
+          "pos": "Particle",
+          "surface": "ばかり"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "additive particle boundary",
+      "input": "ばかりか重要だ"
+    },
+    {
+      "description": "concessive particle boundary",
+      "expected": [
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "ものの",
+          "pos": "Particle",
+          "surface": "ものの"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "tohaiumonono_concessive",
+      "input": "とはいうものの難しい"
+    },
+    {
+      "description": "Enumerative particle remains intact between noun alternatives.",
+      "expected": [
+        {
+          "lemma": "赤",
+          "pos": "Adjective",
+          "surface": "赤"
+        },
+        {
+          "lemma": "だの",
+          "pos": "Particle",
+          "surface": "だの"
+        },
+        {
+          "lemma": "青",
+          "pos": "Adjective",
+          "surface": "青"
+        },
+        {
+          "lemma": "だの",
+          "pos": "Particle",
+          "surface": "だの"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ぶ"
+        }
+      ],
+      "id": "enumerative_dano",
+      "input": "赤だの青だの選ぶ"
+    },
+    {
+      "description": "Classical focus particle remains intact before a quotation.",
+      "expected": [
+        {
+          "lemma": "なむ",
+          "pos": "Particle",
+          "surface": "なむ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "classical_focus_namu",
+      "input": "なむと思う"
     }
   ],
   "description": "particle tests",

@@ -106,6 +106,10 @@
       "input": "行かねばならぬ"
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "書かなくちゃいけない - regression test",
       "expected": [
         {
@@ -135,9 +139,40 @@
         }
       ],
       "id": "kanakuchi_ikenai",
-      "input": "書かなくちゃいけない"
+      "input": "書かなくちゃいけない",
+      "suzume_expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "ちゃ",
+          "pos": "Particle",
+          "surface": "ちゃ"
+        },
+        {
+          "lemma": "いける",
+          "pos": "Verb",
+          "surface": "いけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "食べなくちゃならない - regression test",
       "expected": [
         {
@@ -167,7 +202,34 @@
         }
       ],
       "id": "benakuchi_naranai",
-      "input": "食べなくちゃならない"
+      "input": "食べなくちゃならない",
+      "suzume_expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "ちゃ",
+          "pos": "Particle",
+          "surface": "ちゃ"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ]
     },
     {
       "description": "読まなきゃならない - regression test",

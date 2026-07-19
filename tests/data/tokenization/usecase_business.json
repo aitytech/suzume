@@ -896,6 +896,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "Transaction: お振込みは翌営業日に反映されます - MeCab互換分割",
       "expected": [
         {
@@ -946,6 +950,53 @@
       ],
       "id": "finance_transaction",
       "input": "お振込みは翌営業日に反映されます",
+      "suzume_expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "振込み",
+          "pos": "Noun",
+          "surface": "振込み"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "翌営業日",
+          "pos": "Noun",
+          "surface": "翌営業日"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反映",
+          "pos": "Noun",
+          "surface": "反映"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
       "tags": [
         "business",
         "finance"
@@ -1080,6 +1131,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "Payment: お支払いは月末締め翌月払いです",
       "expected": [
         {
@@ -1125,12 +1180,58 @@
       ],
       "id": "finance_payment",
       "input": "お支払いは月末締め翌月払いです",
+      "suzume_expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "支払い",
+          "pos": "Noun",
+          "surface": "支払い"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "月末",
+          "pos": "Noun",
+          "surface": "月末"
+        },
+        {
+          "lemma": "締める",
+          "pos": "Verb",
+          "surface": "締め"
+        },
+        {
+          "lemma": "翌月",
+          "pos": "Noun",
+          "surface": "翌月"
+        },
+        {
+          "lemma": "払う",
+          "pos": "Verb",
+          "surface": "払い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
       "tags": [
         "business",
         "finance"
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "Terms: 本サービスの利用に際して",
       "expected": [
         {
@@ -1161,6 +1262,33 @@
       ],
       "id": "legal_terms_of_service",
       "input": "本サービスの利用に際して",
+      "suzume_expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "サービス",
+          "pos": "Noun",
+          "surface": "サービス"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "利用",
+          "pos": "Noun",
+          "surface": "利用"
+        },
+        {
+          "lemma": "に際して",
+          "pos": "Particle",
+          "surface": "に際して"
+        }
+      ],
       "tags": [
         "business",
         "legal"

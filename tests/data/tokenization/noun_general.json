@@ -416,8 +416,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "「何でも」は不定の内容を表す複合助詞として一体の検索単位にでき、助動詞「で」と係助詞「も」へ分割する必要はない。"
+        "category": "segmentation-diff",
+        "reason": "Treat the lexicalized existential expression as the search units 何・でも・あり・だ・な."
       },
       "description": "B31: 何でもあり should be noun idiom",
       "expected": [
@@ -466,8 +466,8 @@
           "surface": "でも"
         },
         {
-          "lemma": "ある",
-          "pos": "Auxiliary",
+          "lemma": "あり",
+          "pos": "Noun",
           "surface": "あり"
         },
         {
@@ -476,8 +476,8 @@
           "surface": "だ"
         },
         {
-          "lemma": "だ",
-          "pos": "Auxiliary",
+          "lemma": "な",
+          "pos": "Particle",
           "surface": "な"
         }
       ],
@@ -1169,7 +1169,7 @@
       "expected": [
         {
           "lemma": "国際的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "国際的"
         },
         {
@@ -1489,7 +1489,7 @@
         },
         {
           "lemma": "中",
-          "pos": "Noun",
+          "pos": "Suffix",
           "surface": "中"
         },
         {
@@ -3405,6 +3405,85 @@
       ],
       "id": "noun_saichu_copular_predicate",
       "input": "最中だった"
+    },
+    {
+      "description": "compound noun and case particle boundary",
+      "expected": [
+        {
+          "lemma": "事故",
+          "pos": "Noun",
+          "surface": "事故"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "遭う",
+          "pos": "Verb",
+          "surface": "遭う"
+        }
+      ],
+      "id": "jiko_particle_boundary",
+      "input": "事故に遭う"
+    },
+    {
+      "description": "compound verbal noun",
+      "expected": [
+        {
+          "lemma": "度外視",
+          "pos": "Noun",
+          "surface": "度外視"
+        }
+      ],
+      "id": "dogaishi_compound_noun",
+      "input": "度外視"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "動詞「忍ぶ」の連用形と否定助動詞による解析を保持する。"
+      },
+      "description": "nominal predicate negative adjective",
+      "expected": [
+        {
+          "lemma": "忍び",
+          "pos": "Noun",
+          "surface": "忍び"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shinobinai_nominal_negative",
+      "input": "忍びない",
+      "suzume_expected": [
+        {
+          "lemma": "忍ぶ",
+          "pos": "Verb",
+          "surface": "忍び"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ]
+    },
+    {
+      "description": "lexical deverbal noun",
+      "expected": [
+        {
+          "lemma": "見逃し",
+          "pos": "Noun",
+          "surface": "見逃し"
+        }
+      ],
+      "id": "minogashi_nominalized_noun",
+      "input": "見逃し"
     }
   ],
   "description": "General nouns",

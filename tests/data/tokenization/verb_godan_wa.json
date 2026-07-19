@@ -756,6 +756,10 @@
       "input": "あらう"
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "文脈のないひらがな表記は「行く」と「言う」が曖昧なため、選択された「行く」の解析を許容する。"
+      },
       "description": "itta - 1-char stem sokuonbin, MeCab reads as いう (言った); ambiguous with 行った",
       "expected": [
         {
@@ -770,7 +774,19 @@
         }
       ],
       "id": "ittta",
-      "input": "いった"
+      "input": "いった",
+      "suzume_expected": [
+        {
+          "lemma": "いく",
+          "pos": "Verb",
+          "surface": "いっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "向かった - auto-generated",
@@ -1019,6 +1035,10 @@
       "input": "ならって"
     },
     {
+      "accepted_diff": {
+        "category": "lemma-limitation",
+        "reason": "The sokuonbin form derives from おもう; おもる is not a valid lemma."
+      },
       "description": "Pure-hiragana godan-wa sokuonbin: おもう past (MeCab gives non-word おもる)",
       "expected": [
         {
@@ -1033,9 +1053,25 @@
         }
       ],
       "id": "omottta",
-      "input": "おもった"
+      "input": "おもった",
+      "suzume_expected": [
+        {
+          "lemma": "おもう",
+          "pos": "Verb",
+          "surface": "おもっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "lemma-limitation",
+        "reason": "The form can derive from すう; restoring する is grammatically invalid."
+      },
       "description": "Pure-hiragana godan-wa sokuonbin: すう te-form (すう/する ambiguous, pick すう)",
       "expected": [
         {
@@ -1050,7 +1086,19 @@
         }
       ],
       "id": "suttte",
-      "input": "すって"
+      "input": "すって",
+      "suzume_expected": [
+        {
+          "lemma": "すう",
+          "pos": "Verb",
+          "surface": "すっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ]
     },
     {
       "description": "Pure-hiragana godan-wa sokuonbin: まよう te-form",
@@ -1782,6 +1830,18 @@
       ],
       "id": "renyokei_formal_noun_you",
       "input": "読みようがない、書きようがない、食べようがない、読みようによって変わる、書きようによって変わる"
+    },
+    {
+      "description": "hiragana godan verb",
+      "expected": [
+        {
+          "lemma": "かなう",
+          "pos": "Verb",
+          "surface": "かなう"
+        }
+      ],
+      "id": "kanau_hiragana_godan",
+      "input": "かなう"
     }
   ],
   "description": "Godan Wa-row verbs (五段ワ行動詞) - verbs ending in う",

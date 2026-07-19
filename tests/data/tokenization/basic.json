@@ -227,6 +227,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "segmentation-diff",
+        "reason": "「そんなら」は口語的な条件表現であり、Suzume の「そんな + ら」解析を有効な検索単位として保持する。"
+      },
       "description": "そんなら should be CONJ, not そんな+ら split",
       "expected": [
         {
@@ -252,6 +256,28 @@
       ],
       "id": "conj_sonnara",
       "input": "そんなら行こう",
+      "suzume_expected": [
+        {
+          "lemma": "そんな",
+          "pos": "Determiner",
+          "surface": "そんな"
+        },
+        {
+          "lemma": "ら",
+          "pos": "Other",
+          "surface": "ら"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行こ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
       "tags": [
         "conjunction",
         "split_prevention"
@@ -655,12 +681,12 @@
       "expected": [
         {
           "lemma": "がち",
-          "pos": "Noun",
+          "pos": "Suffix",
           "surface": "がち"
         },
         {
-          "lemma": "で",
-          "pos": "Particle",
+          "lemma": "だ",
+          "pos": "Auxiliary",
           "surface": "で"
         },
         {

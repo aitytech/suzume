@@ -923,7 +923,7 @@
         },
         {
           "lemma": "抜き",
-          "pos": "Noun",
+          "pos": "Suffix",
           "surface": "抜き"
         }
       ],
@@ -940,7 +940,7 @@
         },
         {
           "lemma": "抜き",
-          "pos": "Noun",
+          "pos": "Suffix",
           "surface": "抜き"
         }
       ],
@@ -952,12 +952,12 @@
       "expected": [
         {
           "lemma": "中",
-          "pos": "Prefix",
+          "pos": "Noun",
           "surface": "中"
         },
         {
           "lemma": "抜き",
-          "pos": "Noun",
+          "pos": "Suffix",
           "surface": "抜き"
         }
       ],
@@ -974,7 +974,7 @@
         },
         {
           "lemma": "抜き",
-          "pos": "Noun",
+          "pos": "Suffix",
           "surface": "抜き"
         }
       ],
@@ -991,7 +991,7 @@
         },
         {
           "lemma": "ぬき",
-          "pos": "Noun",
+          "pos": "Suffix",
           "surface": "ぬき"
         }
       ],
@@ -1008,7 +1008,7 @@
         },
         {
           "lemma": "ぬき",
-          "pos": "Noun",
+          "pos": "Suffix",
           "surface": "ぬき"
         }
       ],
@@ -1530,6 +1530,168 @@
       ],
       "id": "regatai_shigatai",
       "input": "忘れがたい経験。理解しがたい内容。"
+    },
+    {
+      "description": "purpose suffix boundary",
+      "expected": [
+        {
+          "lemma": "記録",
+          "pos": "Noun",
+          "surface": "記録"
+        },
+        {
+          "lemma": "用",
+          "pos": "Suffix",
+          "surface": "用"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        }
+      ],
+      "id": "no",
+      "input": "記録用の資料"
+    },
+    {
+      "description": "purpose suffix boundary before case particle",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "用",
+          "pos": "Suffix",
+          "surface": "用"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "ni_u",
+      "input": "確認用に使う"
+    },
+    {
+      "description": "direction suffix before case particle",
+      "expected": [
+        {
+          "lemma": "サーバー",
+          "pos": "Noun",
+          "surface": "サーバー"
+        },
+        {
+          "lemma": "側",
+          "pos": "Noun",
+          "surface": "側"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        }
+      ],
+      "id": "de",
+      "input": "サーバー側で"
+    },
+    {
+      "description": "evaluative adjective suffix",
+      "expected": [
+        {
+          "lemma": "忘れる",
+          "pos": "Verb",
+          "surface": "忘れ"
+        },
+        {
+          "lemma": "がたい",
+          "pos": "Adjective",
+          "surface": "がたい"
+        },
+        {
+          "lemma": "経験",
+          "pos": "Noun",
+          "surface": "経験"
+        }
+      ],
+      "id": "regatai",
+      "input": "忘れがたい経験"
+    },
+    {
+      "description": "state suffix boundary",
+      "expected": [
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "中",
+          "pos": "Suffix",
+          "surface": "中"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "連絡",
+          "pos": "Noun",
+          "surface": "連絡"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sagyouchuu_state_suffix",
+      "input": "作業中に連絡する"
+    },
+    {
+      "description": "destination suffix",
+      "expected": [
+        {
+          "lemma": "問い合わせ",
+          "pos": "Noun",
+          "surface": "問い合わせ"
+        },
+        {
+          "lemma": "先",
+          "pos": "Suffix",
+          "surface": "先"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "toiawasesaki_destination_suffix",
+      "input": "問い合わせ先を確認する"
     }
   ],
   "description": "Suffixes (さん、的、化)",

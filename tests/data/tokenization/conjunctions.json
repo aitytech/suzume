@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "description": "interrogative quotative introduction",
+      "expected": [
+        {
+          "lemma": "なぜ",
+          "pos": "Adverb",
+          "surface": "なぜ"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "理由",
+          "pos": "Noun",
+          "surface": "理由"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "nazekatoiu_quote_intro",
+      "input": "なぜかというと理由がある"
+    }
+  ],
+  "description": "conjunctions tests",
+  "version": "1.0"
+}

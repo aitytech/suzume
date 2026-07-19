@@ -65,6 +65,28 @@
       ],
       "id": "demoii",
       "input": "何でもいい"
+    },
+    {
+      "description": "evaluative particle variant",
+      "expected": [
+        {
+          "lemma": "でも",
+          "pos": "Conjunction",
+          "surface": "でも"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        }
+      ],
+      "id": "demoyoi",
+      "input": "でもよい方法"
     }
   ],
   "description": "pattern_auxiliary tests",

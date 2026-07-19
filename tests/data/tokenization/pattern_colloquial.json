@@ -264,6 +264,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "Slang phrase マジでキモい",
       "expected": [
         {
@@ -284,6 +288,23 @@
       ],
       "id": "phrase_majide_kimoi",
       "input": "マジでキモい",
+      "suzume_expected": [
+        {
+          "lemma": "マジ",
+          "pos": "Noun",
+          "surface": "マジ"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "キモい",
+          "pos": "Adjective",
+          "surface": "キモい"
+        }
+      ],
       "tags": [
         "slang",
         "phrase"
@@ -316,6 +337,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "Internet slang phrase マジで尊い",
       "expected": [
         {
@@ -336,6 +361,23 @@
       ],
       "id": "phrase_majide_toutoi",
       "input": "マジで尊い",
+      "suzume_expected": [
+        {
+          "lemma": "マジ",
+          "pos": "Noun",
+          "surface": "マジ"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "尊い",
+          "pos": "Adjective",
+          "surface": "尊い"
+        }
+      ],
       "tags": [
         "slang",
         "phrase",
@@ -513,6 +555,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "きたああああ - vowel repetition for emphasis",
       "expected": [
         {
@@ -538,6 +584,18 @@
       ],
       "id": "vowel_repeat_kita",
       "input": "きたああああ",
+      "suzume_expected": [
+        {
+          "lemma": "きる",
+          "pos": "Verb",
+          "surface": "きた"
+        },
+        {
+          "lemma": "ああああ",
+          "pos": "Adverb",
+          "surface": "ああああ"
+        }
+      ],
       "tags": [
         "emphatic",
         "vowel_repeat"

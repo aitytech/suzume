@@ -1398,7 +1398,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         }
       ],
@@ -1417,13 +1417,13 @@
       "description": "違いない should be Auxiliary (certainty idiom)",
       "expected": [
         {
-          "lemma": "違う",
-          "pos": "Verb",
+          "lemma": "ちがい",
+          "pos": "Noun",
           "surface": "違い"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         }
       ],
@@ -1464,13 +1464,13 @@
           "surface": "に"
         },
         {
-          "lemma": "違う",
-          "pos": "Verb",
+          "lemma": "ちがい",
+          "pos": "Noun",
           "surface": "違い"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         }
       ],

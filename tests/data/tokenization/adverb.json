@@ -850,6 +850,431 @@
       ],
       "id": "sonna_kina",
       "input": "そんな大きな家"
+    },
+    {
+      "description": "fixed immediate adverb",
+      "expected": [
+        {
+          "lemma": "直ちに",
+          "pos": "Adverb",
+          "surface": "直ちに"
+        },
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "chini_suru",
+      "input": "直ちに対応する"
+    },
+    {
+      "description": "emphatic fixed adverb",
+      "expected": [
+        {
+          "lemma": "いかにも",
+          "pos": "Adverb",
+          "surface": "いかにも"
+        },
+        {
+          "lemma": "自然",
+          "pos": "Adjective",
+          "surface": "自然"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ikanimo_da",
+      "input": "いかにも自然だ"
+    },
+    {
+      "description": "emphatic fixed adverb",
+      "expected": [
+        {
+          "lemma": "まさしく",
+          "pos": "Adverb",
+          "surface": "まさしく"
+        },
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しい"
+        }
+      ],
+      "id": "masashiku_shii",
+      "input": "まさしく正しい"
+    },
+    {
+      "description": "evaluative fixed adverb",
+      "expected": [
+        {
+          "lemma": "案外",
+          "pos": "Adverb",
+          "surface": "案外"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "da",
+      "input": "案外簡単だ"
+    },
+    {
+      "description": "negative idiomatic adverb",
+      "expected": [
+        {
+          "lemma": "少ない",
+          "pos": "Adjective",
+          "surface": "少なから"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        },
+        {
+          "lemma": "影響",
+          "pos": "Noun",
+          "surface": "影響"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nakarazu_suru",
+      "input": "少なからず影響する"
+    },
+    {
+      "description": "short degree adverb",
+      "expected": [
+        {
+          "lemma": "少し",
+          "pos": "Adverb",
+          "surface": "少し"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "shi_tsu",
+      "input": "少し待つ"
+    },
+    {
+      "description": "fixed concessive adverb",
+      "expected": [
+        {
+          "lemma": "いかんせん",
+          "pos": "Adverb",
+          "surface": "いかんせん"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "ikansen_shii",
+      "input": "いかんせん難しい"
+    },
+    {
+      "description": "summarizing fixed adverb",
+      "expected": [
+        {
+          "lemma": "おしなべて",
+          "pos": "Adverb",
+          "surface": "おしなべて"
+        },
+        {
+          "lemma": "同じ",
+          "pos": "Adjective",
+          "surface": "同じ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "oshinabete_jida",
+      "input": "おしなべて同じだ"
+    },
+    {
+      "description": "summarizing fixed adverb",
+      "expected": [
+        {
+          "lemma": "総じて",
+          "pos": "Adverb",
+          "surface": "総じて"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "jite_da",
+      "input": "総じて重要だ"
+    },
+    {
+      "description": "temporary fixed adverb",
+      "expected": [
+        {
+          "lemma": "さしあたり",
+          "pos": "Adverb",
+          "surface": "さしあたり"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sashiatari_suru",
+      "input": "さしあたり確認する"
+    },
+    {
+      "description": "comparative fixed adverb",
+      "expected": [
+        {
+          "lemma": "年齢",
+          "pos": "Noun",
+          "surface": "年齢"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "わりに",
+          "pos": "Adverb",
+          "surface": "わりに"
+        },
+        {
+          "lemma": "若い",
+          "pos": "Adjective",
+          "surface": "若い"
+        }
+      ],
+      "id": "nowarini_i",
+      "input": "年齢のわりに若い"
+    },
+    {
+      "description": "temporal formal noun boundary",
+      "expected": [
+        {
+          "lemma": "次第",
+          "pos": "Noun",
+          "surface": "次第"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わる"
+        }
+      ],
+      "id": "ni_waru",
+      "input": "次第に変わる"
+    },
+    {
+      "description": "indefinite negative adverb",
+      "expected": [
+        {
+          "lemma": "なんら",
+          "pos": "Adverb",
+          "surface": "なんら"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "nanra_nai",
+      "input": "なんら問題ない"
+    },
+    {
+      "description": "reciprocal adverb",
+      "expected": [
+        {
+          "lemma": "互いに",
+          "pos": "Adverb",
+          "surface": "互いに"
+        },
+        {
+          "lemma": "協力",
+          "pos": "Noun",
+          "surface": "協力"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ini_suru",
+      "input": "互いに協力する"
+    },
+    {
+      "description": "reason emphatic adverb",
+      "expected": [
+        {
+          "lemma": "なにせ",
+          "pos": "Adverb",
+          "surface": "なにせ"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "nanise_shii",
+      "input": "なにせ難しい"
+    },
+    {
+      "description": "durative fixed adverb",
+      "expected": [
+        {
+          "lemma": "あいかわらず",
+          "pos": "Adverb",
+          "surface": "あいかわらず"
+        },
+        {
+          "lemma": "元気",
+          "pos": "Adjective",
+          "surface": "元気"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "aikawarazu_da",
+      "input": "あいかわらず元気だ"
+    },
+    {
+      "description": "adversative fixed adverb",
+      "expected": [
+        {
+          "lemma": "あいにく",
+          "pos": "Adverb",
+          "surface": "あいにく"
+        },
+        {
+          "lemma": "不在",
+          "pos": "Noun",
+          "surface": "不在"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ainiku_da",
+      "input": "あいにく不在だ"
+    },
+    {
+      "description": "constant fixed adverb",
+      "expected": [
+        {
+          "lemma": "つねに",
+          "pos": "Adverb",
+          "surface": "つねに"
+        },
+        {
+          "lemma": "注意",
+          "pos": "Noun",
+          "surface": "注意"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "tsuneni_suru",
+      "input": "つねに注意する"
+    },
+    {
+      "description": "negative adverb lemma",
+      "expected": [
+        {
+          "lemma": "二度と",
+          "pos": "Adverb",
+          "surface": "二度と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "nidoto_negative_adverb",
+      "input": "二度としない"
+    },
+    {
+      "description": "Fixed adverbial expression remains intact.",
+      "expected": [
+        {
+          "lemma": "思いがけず",
+          "pos": "Adverb",
+          "surface": "思いがけず"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "fixed_omoigakezu",
+      "input": "思いがけず進める"
     }
   ],
   "description": "adverb tests",

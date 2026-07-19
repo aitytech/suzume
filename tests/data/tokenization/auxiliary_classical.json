@@ -260,6 +260,72 @@
       ],
       "id": "sumajiki",
       "input": "許すまじき行動"
+    },
+    {
+      "description": "classical negative conjecture",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "まじ",
+          "pos": "Auxiliary",
+          "surface": "まじき"
+        },
+        {
+          "lemma": "姿",
+          "pos": "Noun",
+          "surface": "姿"
+        }
+      ],
+      "id": "mimajiki_attributive",
+      "input": "見まじき姿"
+    },
+    {
+      "description": "classical past conditional",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かる"
+        }
+      ],
+      "id": "mikereba_classical",
+      "input": "見ければ分かる"
+    },
+    {
+      "description": "sentence-initial lexical continuative and classical past",
+      "expected": [
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "ける"
+        }
+      ],
+      "id": "narikeru_lexical_verb_past",
+      "input": "なりける"
     }
   ],
   "description": "auxiliary_classical tests",

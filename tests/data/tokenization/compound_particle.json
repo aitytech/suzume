@@ -85,6 +85,55 @@
       ],
       "id": "totomoni_kanji_parallel_particle",
       "input": "と共に進む"
+    },
+    {
+      "description": "attributive duration particle",
+      "expected": [
+        {
+          "lemma": "長期",
+          "pos": "Noun",
+          "surface": "長期"
+        },
+        {
+          "lemma": "にわたる",
+          "pos": "Particle",
+          "surface": "にわたる"
+        },
+        {
+          "lemma": "計画",
+          "pos": "Noun",
+          "surface": "計画"
+        }
+      ],
+      "id": "niwataru_attributive",
+      "input": "長期にわたる計画"
+    },
+    {
+      "description": "formal particle renyokei",
+      "expected": [
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "に際し",
+          "pos": "Particle",
+          "surface": "に際し"
+        },
+        {
+          "lemma": "注意",
+          "pos": "Noun",
+          "surface": "注意"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nisaishi_formal",
+      "input": "作業に際し注意する"
     }
   ],
   "description": "compound_particle tests",

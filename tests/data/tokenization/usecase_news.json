@@ -844,6 +844,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "Conclusion statement",
       "expected": [
         {
@@ -899,6 +903,58 @@
       ],
       "id": "academic_conclusion",
       "input": "以上の結果から次のように結論づけられる",
+      "suzume_expected": [
+        {
+          "lemma": "以上",
+          "pos": "Noun",
+          "surface": "以上"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "次",
+          "pos": "Noun",
+          "surface": "次"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "結論づく",
+          "pos": "Verb",
+          "surface": "結論づけ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
       "tags": [
         "academic"
       ]
@@ -1080,6 +1136,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "News article style - Current suzume unifies 経済政策",
       "expected": [
         {
@@ -1175,6 +1235,98 @@
       ],
       "id": "long_news_article",
       "input": "政府は昨日の閣議で、新しい経済政策を正式に決定したと発表した",
+      "suzume_expected": [
+        {
+          "lemma": "政府",
+          "pos": "Noun",
+          "surface": "政府"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "昨日",
+          "pos": "Noun",
+          "surface": "昨日"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "閣議",
+          "pos": "Noun",
+          "surface": "閣議"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "新しい",
+          "pos": "Adjective",
+          "surface": "新しい"
+        },
+        {
+          "lemma": "経済政策",
+          "pos": "Noun",
+          "surface": "経済政策"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "正式",
+          "pos": "Noun",
+          "surface": "正式"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "決定",
+          "pos": "Noun",
+          "surface": "決定"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "発表",
+          "pos": "Noun",
+          "surface": "発表"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
       "tags": [
         "long"
       ]

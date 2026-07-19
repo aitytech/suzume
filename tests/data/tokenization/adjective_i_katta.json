@@ -171,6 +171,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-correction",
+        "reason": "The contracted negative past is analyzed as んかっ (lemma ない), avoiding the ungrammatical ん plus lexical-verb chain."
+      },
       "description": "くだらんかった - contracted past form of くだらなかった",
       "expected": [
         {
@@ -196,6 +200,23 @@
       ],
       "id": "contracted_kudaranai_past",
       "input": "くだらんかった",
+      "suzume_expected": [
+        {
+          "lemma": "くだる",
+          "pos": "Verb",
+          "surface": "くだら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "んかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
       "tags": [
         "contraction",
         "colloquial",

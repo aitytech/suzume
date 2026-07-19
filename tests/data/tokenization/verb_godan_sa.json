@@ -182,6 +182,18 @@
         "complex",
         "business"
       ]
+    },
+    {
+      "description": "kanji plus やす godan-sa base form",
+      "expected": [
+        {
+          "lemma": "費やす",
+          "pos": "Verb",
+          "surface": "費やす"
+        }
+      ],
+      "id": "yasu",
+      "input": "費やす"
     }
   ],
   "description": "Godan Sa-row verbs (五段サ行動詞) - verbs ending in す",

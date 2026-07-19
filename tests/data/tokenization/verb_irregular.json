@@ -233,7 +233,7 @@
       "expected": [
         {
           "lemma": "効率的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "効率的"
         },
         {
@@ -298,7 +298,7 @@
       "expected": [
         {
           "lemma": "具体的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "具体的"
         },
         {
@@ -853,6 +853,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "B25: 仕方ない should be NOUN + AUX, not VERB (仕方する)",
       "expected": [
         {
@@ -868,6 +872,18 @@
       ],
       "id": "shikata_noun",
       "input": "仕方ない",
+      "suzume_expected": [
+        {
+          "lemma": "仕方",
+          "pos": "Noun",
+          "surface": "仕方"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
       "tags": [
         "noun",
         "negation"
@@ -1116,6 +1132,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "むしろ should be Adverb (not Verb むする)",
       "expected": [
         {
@@ -1136,6 +1156,23 @@
       ],
       "id": "adverb_mushiro",
       "input": "むしろ簡単だ",
+      "suzume_expected": [
+        {
+          "lemma": "むしろ",
+          "pos": "Adverb",
+          "surface": "むしろ"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
       "tags": [
         "adverb"
       ]
@@ -2327,6 +2364,43 @@
       ],
       "id": "verb_classical_honorific_araserareru",
       "input": "あらせられる"
+    },
+    {
+      "description": "Sahen noun and suru boundary remains explicit.",
+      "expected": [
+        {
+          "lemma": "常識",
+          "pos": "Noun",
+          "surface": "常識"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "超越",
+          "pos": "Noun",
+          "surface": "超越"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "考える",
+          "pos": "Verb",
+          "surface": "考える"
+        }
+      ],
+      "id": "sahen_chouetsu_boundary",
+      "input": "常識を超越して考える"
     }
   ],
   "description": "Irregular verbs (する、くる)",

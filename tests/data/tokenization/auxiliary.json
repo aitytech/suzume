@@ -3791,6 +3791,170 @@
       ],
       "id": "kanenai",
       "input": "かねない"
+    },
+    {
+      "description": "honorific auxiliary chain",
+      "expected": [
+        {
+          "lemma": "なさる",
+          "pos": "Verb",
+          "surface": "なさっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "nasattteiru",
+      "input": "なさっている"
+    },
+    {
+      "description": "polite lexical verb chain",
+      "expected": [
+        {
+          "lemma": "ござる",
+          "pos": "Verb",
+          "surface": "ござい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "gozaimashita",
+      "input": "ございました"
+    },
+    {
+      "description": "te auxiliary chain",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Auxiliary",
+          "surface": "おく"
+        }
+      ],
+      "id": "ndeoku",
+      "input": "読んでおく"
+    },
+    {
+      "description": "causative passive appearance auxiliary",
+      "expected": [
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "saseraresouda",
+      "input": "させられそうだ"
+    },
+    {
+      "description": "classical prohibition auxiliary boundary",
+      "expected": [
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べから"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "bekarazu",
+      "input": "べからず"
+    },
+    {
+      "description": "causative benefactive boundary",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いただく",
+          "pos": "Verb",
+          "surface": "いただく"
+        }
+      ],
+      "id": "maseteitadaku",
+      "input": "読ませていただく"
+    },
+    {
+      "description": "dependent benefactive auxiliary",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Auxiliary",
+          "surface": "いただける"
+        }
+      ],
+      "id": "teitadakeru",
+      "input": "見ていただける"
     }
   ],
   "description": "auxiliary tests",

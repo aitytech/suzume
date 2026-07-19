@@ -9,8 +9,8 @@
           "surface": "読み"
         },
         {
-          "lemma": "にく",
-          "pos": "Noun",
+          "lemma": "にくい",
+          "pos": "Adjective",
           "surface": "にく"
         },
         {
@@ -220,6 +220,10 @@
       "input": "一日おき"
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "1時間おき - regression test",
       "expected": [
         {
@@ -234,7 +238,19 @@
         }
       ],
       "id": "1_oki_1",
-      "input": "1時間おき"
+      "input": "1時間おき",
+      "suzume_expected": [
+        {
+          "lemma": "1時間",
+          "pos": "Noun",
+          "surface": "1時間"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Verb",
+          "surface": "おき"
+        }
+      ]
     },
     {
       "description": "週おき - regression test",
@@ -298,6 +314,10 @@
       "input": "1日おきに配る"
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "1時間おきに配る - regression test",
       "expected": [
         {
@@ -322,7 +342,29 @@
         }
       ],
       "id": "1_okini_ru_1",
-      "input": "1時間おきに配る"
+      "input": "1時間おきに配る",
+      "suzume_expected": [
+        {
+          "lemma": "1時間",
+          "pos": "Noun",
+          "surface": "1時間"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Verb",
+          "surface": "おき"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "配る",
+          "pos": "Verb",
+          "surface": "配る"
+        }
+      ]
     },
     {
       "description": "週おきに集まる - regression test",

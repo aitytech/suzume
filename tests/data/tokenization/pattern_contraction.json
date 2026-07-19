@@ -366,7 +366,7 @@
       "expected": [
         {
           "lemma": "めちゃ",
-          "pos": "Other",
+          "pos": "Adverb",
           "surface": "めちゃ"
         },
         {
@@ -383,7 +383,7 @@
       "expected": [
         {
           "lemma": "めちゃ",
-          "pos": "Other",
+          "pos": "Adverb",
           "surface": "めちゃ"
         },
         {

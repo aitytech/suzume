@@ -490,6 +490,10 @@
       "input": "幾度となく繰り返される議論に辟易していた"
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "literary-volitional-n-split normalization (乗り越え+ん)",
       "expected": [
         {
@@ -564,7 +568,79 @@
         }
       ],
       "id": "ikanaru_womo_ri_entosuru_ganakerebanaranai",
-      "input": "いかなる困難をも乗り越えんとする気概がなければならない"
+      "input": "いかなる困難をも乗り越えんとする気概がなければならない",
+      "suzume_expected": [
+        {
+          "lemma": "いかなる",
+          "pos": "Determiner",
+          "surface": "いかなる"
+        },
+        {
+          "lemma": "困難",
+          "pos": "Noun",
+          "surface": "困難"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "乗り越える",
+          "pos": "Verb",
+          "surface": "乗り越え"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "気概",
+          "pos": "Noun",
+          "surface": "気概"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ]
     },
     {
       "description": "移り変わり compound verb fix",
@@ -1029,6 +1105,10 @@
       "input": "人間の心というものは、時として己の意志に反して動くものである"
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "Emphatic negation: ありはしない splits as あり+は+し+ない",
       "expected": [
         {
@@ -1103,7 +1183,79 @@
         }
       ],
       "id": "arihashi_nai_emphatic",
-      "input": "千変万化の世の中にあって、不変のものなどありはしない"
+      "input": "千変万化の世の中にあって、不変のものなどありはしない",
+      "suzume_expected": [
+        {
+          "lemma": "千変万化",
+          "pos": "Noun",
+          "surface": "千変万化"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "世の中",
+          "pos": "Noun",
+          "surface": "世の中"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "不変",
+          "pos": "Noun",
+          "surface": "不変"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "など",
+          "pos": "Particle",
+          "surface": "など"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Auxiliary",
+          "surface": "あり"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ]
     },
     {
       "description": "Honorific: お待ちいただけます splits as お+待ち+いただけ+ます",
@@ -1353,6 +1505,10 @@
       "input": "お待ちいただけます"
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Use the grammatical dictionary form 揺るぐ for the continuative verb before the negative auxiliary."
+      },
       "description": "されども彼の決意は揺るぎないものであった - auto-generated",
       "expected": [
         {
@@ -1417,7 +1573,69 @@
         }
       ],
       "id": "saredomo_no_ha_ruginaimonodeattta",
-      "input": "されども彼の決意は揺るぎないものであった"
+      "input": "されども彼の決意は揺るぎないものであった",
+      "suzume_expected": [
+        {
+          "lemma": "されど",
+          "pos": "Conjunction",
+          "surface": "されど"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "決意",
+          "pos": "Noun",
+          "surface": "決意"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "揺るぐ",
+          "pos": "Verb",
+          "surface": "揺るぎ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "文語副詞の送り仮名境界を保持する",

@@ -1022,6 +1022,45 @@
           "surface": "だ"
         }
       ]
+    },
+    {
+      "description": "fixed demonstrative compound",
+      "expected": [
+        {
+          "lemma": "あれこれ",
+          "pos": "Pronoun",
+          "surface": "あれこれ"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試す"
+        }
+      ],
+      "id": "arekore_su",
+      "input": "あれこれ試す"
+    },
+    {
+      "description": "idiomatic place pronoun",
+      "expected": [
+        {
+          "lemma": "よそ",
+          "pos": "Pronoun",
+          "surface": "よそ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "置く",
+          "pos": "Verb",
+          "surface": "置く"
+        }
+      ],
+      "id": "yosoni_ku",
+      "input": "よそに置く"
     }
   ],
   "description": "Pronouns",

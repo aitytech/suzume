@@ -379,10 +379,6 @@
       "input": "見当たらない問題"
     },
     {
-      "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
-      },
       "description": "「差し支えない」を名詞述語として解析する曖昧性を許容する",
       "expected": [
         {
@@ -402,24 +398,7 @@
         }
       ],
       "id": "sashitsukae_nai_nominal_predicate_ambiguity",
-      "input": "差し支えない範囲",
-      "suzume_expected": [
-        {
-          "lemma": "差し支え",
-          "pos": "Noun",
-          "surface": "差し支え"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        },
-        {
-          "lemma": "範囲",
-          "pos": "Noun",
-          "surface": "範囲"
-        }
-      ]
+      "input": "差し支えない範囲"
     }
   ],
   "description": "compound_verb tests",

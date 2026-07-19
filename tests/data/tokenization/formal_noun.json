@@ -2270,6 +2270,23 @@
       ],
       "id": "kawari_replacement_noun_pos",
       "input": "代わりに使う"
+    },
+    {
+      "description": "result expression formal noun boundary",
+      "expected": [
+        {
+          "lemma": "ことに",
+          "pos": "Adverb",
+          "surface": "ことに"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "kotoni_naru_result_expression",
+      "input": "ことになる"
     }
   ],
   "description": "formal_noun tests",

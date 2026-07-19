@@ -965,6 +965,119 @@
       ],
       "id": "tosureba_nai",
       "input": "とすれば問題ない"
+    },
+    {
+      "description": "counterargument conjunction",
+      "expected": [
+        {
+          "lemma": "だからといって",
+          "pos": "Conjunction",
+          "surface": "だからといって"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "dakaratoittte_dehanai",
+      "input": "だからといって簡単ではない"
+    },
+    {
+      "description": "emphatic causal conjunction",
+      "expected": [
+        {
+          "lemma": "だからこそ",
+          "pos": "Conjunction",
+          "surface": "だからこそ"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "dakarakoso_da",
+      "input": "だからこそ重要だ"
+    },
+    {
+      "description": "Purpose-combining conjunctive expression remains a particle.",
+      "expected": [
+        {
+          "lemma": "散歩",
+          "pos": "Noun",
+          "surface": "散歩"
+        },
+        {
+          "lemma": "がてら",
+          "pos": "Particle",
+          "surface": "がてら"
+        },
+        {
+          "lemma": "買い物",
+          "pos": "Noun",
+          "surface": "買い物"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "purpose_gatera_expression",
+      "input": "散歩がてら買い物する"
+    },
+    {
+      "description": "Reason particle and copula remain separate.",
+      "expected": [
+        {
+          "lemma": "なぜなら",
+          "pos": "Conjunction",
+          "surface": "なぜなら"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "reason_kara_copula_boundary",
+      "input": "なぜなら必要だからだ"
     }
   ],
   "description": "conjunction tests",

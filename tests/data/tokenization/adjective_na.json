@@ -90,7 +90,7 @@
       "expected": [
         {
           "lemma": "理性的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "理性的"
         },
         {
@@ -112,7 +112,7 @@
       "expected": [
         {
           "lemma": "論理的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "論理的"
         },
         {
@@ -134,7 +134,7 @@
       "expected": [
         {
           "lemma": "効率的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "効率的"
         },
         {
@@ -156,7 +156,7 @@
       "expected": [
         {
           "lemma": "論理的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "論理的"
         },
         {
@@ -184,7 +184,7 @@
       "expected": [
         {
           "lemma": "効率的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "効率的"
         },
         {
@@ -212,7 +212,7 @@
       "expected": [
         {
           "lemma": "理性的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "理性的"
         },
         {
@@ -240,7 +240,7 @@
       "expected": [
         {
           "lemma": "感情的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "感情的"
         },
         {
@@ -268,7 +268,7 @@
       "expected": [
         {
           "lemma": "科学的",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "科学的"
         },
         {

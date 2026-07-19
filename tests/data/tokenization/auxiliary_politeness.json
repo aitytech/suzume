@@ -467,14 +467,9 @@
       "description": "なんし - kuruwa-kotoba polite auxiliary (archaic courtesan speech)",
       "expected": [
         {
-          "lemma": "なん",
-          "pos": "Noun",
-          "surface": "なん"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "なんし"
         }
       ],
       "id": "kuruwa_nanshi_standalone",
@@ -493,14 +488,9 @@
           "surface": "おいで"
         },
         {
-          "lemma": "なん",
-          "pos": "Noun",
-          "surface": "なん"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "なんし"
         }
       ],
       "id": "kuruwa_oide_nanshi",

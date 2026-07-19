@@ -1616,6 +1616,28 @@
       ],
       "id": "oyoso_sanjikan_duration",
       "input": "およそ三時間かかる"
+    },
+    {
+      "description": "duration and degree particle",
+      "expected": [
+        {
+          "lemma": "三時間",
+          "pos": "Noun",
+          "surface": "三時間"
+        },
+        {
+          "lemma": "ほど",
+          "pos": "Particle",
+          "surface": "ほど"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "sanjikanhodo_duration",
+      "input": "三時間ほどかかる"
     }
   ],
   "description": "number_counter tests",

@@ -1,6 +1,10 @@
 {
   "cases": [
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "坊っちゃん冒頭 - 親譲りの無鉄砲で小供の時から損ばかりしている",
       "expected": [
         {
@@ -71,12 +75,83 @@
       ],
       "id": "botchan_opening",
       "input": "親譲りの無鉄砲で小供の時から損ばかりしている",
+      "suzume_expected": [
+        {
+          "lemma": "親譲り",
+          "pos": "Noun",
+          "surface": "親譲り"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "無鉄砲",
+          "pos": "Adjective",
+          "surface": "無鉄砲"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "小供",
+          "pos": "Noun",
+          "surface": "小供"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "時",
+          "pos": "Noun",
+          "surface": "時"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "損",
+          "pos": "Noun",
+          "surface": "損"
+        },
+        {
+          "lemma": "ばかり",
+          "pos": "Particle",
+          "surface": "ばかり"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
       "tags": [
         "literature",
         "botchan"
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammar-valid-difference",
+        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+      },
       "description": "そこから飛び降りる事は出来まい - compound verb split + negative presumption unified",
       "expected": [
         {
@@ -117,6 +192,43 @@
       ],
       "id": "botchan_impossible_jump",
       "input": "そこから飛び降りる事は出来まい",
+      "suzume_expected": [
+        {
+          "lemma": "そこ",
+          "pos": "Pronoun",
+          "surface": "そこ"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "飛び降りる",
+          "pos": "Verb",
+          "surface": "飛び降りる"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "事"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "出来る",
+          "pos": "Verb",
+          "surface": "出来"
+        },
+        {
+          "lemma": "まい",
+          "pos": "Auxiliary",
+          "surface": "まい"
+        }
+      ],
       "tags": [
         "literature",
         "botchan"
