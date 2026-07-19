@@ -200,13 +200,11 @@ bool hasDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::
   if (dict_manager == nullptr || surface.empty()) {
     return false;
   }
-  auto results = dict_manager->lookup(surface, 0);
-  for (const auto& result : results) {
-    if (result.entry != nullptr && result.entry->surface == surface && result.entry->pos == pos) {
-      SUZUME_DEBUG_LOG_TRACE("[DICT] \"" << surface << "\" (" << core::posToString(pos) << "/"
-                                         << core::extendedPosToString(result.entry->extended_pos) << ") = FOUND\n");
-      return true;
-    }
+  const auto* entry = dict_manager->lookupExact(surface, pos);
+  if (entry != nullptr) {
+    SUZUME_DEBUG_LOG_TRACE("[DICT] \"" << surface << "\" (" << core::posToString(pos) << "/"
+                                       << core::extendedPosToString(entry->extended_pos) << ") = FOUND\n");
+    return true;
   }
   SUZUME_DEBUG_LOG_TRACE("[DICT] \"" << surface << "\" (" << core::posToString(pos) << ") = NOT_FOUND\n");
   return false;
@@ -226,17 +224,7 @@ bool hasNonVerbDictionaryEntry(const dictionary::DictionaryManager* dict_manager
 }
 
 bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
-  if (dict_manager == nullptr) {
-    return false;
-  }
-  auto results = dict_manager->lookup(surface, 0);
-  for (const auto& result : results) {
-    if (result.entry != nullptr && result.entry->surface == surface &&
-        result.entry->pos == core::PartOfSpeech::Particle) {
-      return true;
-    }
-  }
-  return false;
+  return dict_manager != nullptr && dict_manager->lookupExact(surface, core::PartOfSpeech::Particle) != nullptr;
 }
 
 bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
