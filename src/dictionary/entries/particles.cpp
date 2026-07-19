@@ -96,6 +96,7 @@ EntrySpecRange getParticleEntries() {
       particle("とか", EPOS::ParticleAdverbial),  // 並立 (AとかBとか)
       particle("なんて", EPOS::ParticleAdverbial),
       particle("だって", EPOS::ParticleAdverbial),
+      particle("だに", EPOS::ParticleAdverbial),    // 文語的な最小限定・強調
       particle("おろか", EPOS::ParticleAdverbial),  // 強調・追加: 基本はおろか応用も
       particle("しも", EPOS::ParticleAdverbial),    // 強調・限定: 誰しも、必ずしも
       particle("きり", EPOS::ParticleAdverbial),    // 限定: 一度きり、これきり

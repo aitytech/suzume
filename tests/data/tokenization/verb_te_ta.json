@@ -1186,6 +1186,50 @@
       ],
       "id": "mite_mu_kite_mu_rite_mu_gite_mu_miteiru_kiteiru_miteyamanai_kiteyamanu_rite_mu_gite_mu_bete_mu",
       "input": "読みて進む、書きて進む、走りて進む、泳ぎて進む。読みている、書きている、読みてやまない、書きてやまぬ。借りて進む、過ぎて進む、食べて進む。"
+    },
+    {
+      "description": "ラ行五段促音便の対照",
+      "expected": [
+        {
+          "lemma": "切る",
+          "pos": "Verb",
+          "surface": "切っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "sokuonbin_kiru_control",
+      "input": "切っている"
+    },
+    {
+      "description": "タ行五段促音便の対照",
+      "expected": [
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "sokuonbin_matsu_control",
+      "input": "待っている"
     }
   ],
   "description": "Te-form and ta-form patterns",

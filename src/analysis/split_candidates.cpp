@@ -80,6 +80,32 @@ bool containsIterationMark(const std::vector<char32_t>& codepoints, size_t start
   return false;
 }
 
+// A suru verbal-noun candidate may not start inside a dictionary-backed
+// modifier and absorb the following kanji predicate (ある程度|確認する,
+// not ある|程度確認|する). Restrict this guard to the specialized
+// suru-noun generator; applying it to all unknown candidates makes an
+// overlapping modifier homograph at an invalid start position self-validating.
+bool crossesModifierBoundaryForSuruNoun(std::string_view text, const ByteOffsets& byte_offsets, size_t candidate_start,
+                                        size_t candidate_end, const dictionary::DictionaryManager& dict_manager) {
+  constexpr size_t kModifierLookbackChars = 8;
+  const size_t lookback = std::min(candidate_start, kModifierLookbackChars);
+  for (size_t back = 1; back <= lookback; ++back) {
+    const size_t modifier_start = candidate_start - back;
+    for (const auto& result : dict_manager.lookup(text, byteOffsetAt(byte_offsets, modifier_start))) {
+      if (result.entry == nullptr || result.length <= back) {
+        continue;
+      }
+      const auto pos = result.entry->pos;
+      const bool is_modifier = pos == core::PartOfSpeech::Adverb || pos == core::PartOfSpeech::Determiner ||
+                               pos == core::PartOfSpeech::Conjunction;
+      if (is_modifier && modifier_start + result.length < candidate_end) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
@@ -352,6 +378,7 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
   const bool ends_with_derivational_suffix =
       dict_manager.lookupExact(final_kanji, core::PartOfSpeech::Suffix) != nullptr;
   if (hasSuruContinuation(codepoints, kanji_end) && !hasDictionaryLexicalPrefix(noun_results, kanji_length) &&
+      !crossesModifierBoundaryForSuruNoun(text, byte_offsets, start_pos, kanji_end, dict_manager) &&
       !(start_pos > 0 && normalize::isIterationMark(codepoints[start_pos - 1])) &&
       !containsIterationMark(codepoints, start_pos, kanji_end) && !ends_with_derivational_suffix) {
     size_t noun_end_byte = byteOffsetAt(byte_offsets, kanji_end);

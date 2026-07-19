@@ -608,6 +608,82 @@
       ],
       "id": "limiting_particle_nomidearu",
       "input": "読むのみである、書くのみである、食べるのみである、本のみである、水のみ飲む"
+    },
+    {
+      "description": "確認だにできない - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "だに",
+          "pos": "Particle",
+          "surface": "だに"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "danidekinai",
+      "input": "確認だにできない"
+    },
+    {
+      "description": "見るだに恐ろしい - regression test",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        },
+        {
+          "lemma": "だに",
+          "pos": "Particle",
+          "surface": "だに"
+        },
+        {
+          "lemma": "恐ろしい",
+          "pos": "Adjective",
+          "surface": "恐ろしい"
+        }
+      ],
+      "id": "rudani_roshii",
+      "input": "見るだに恐ろしい"
+    },
+    {
+      "description": "確認だと伝える - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "伝える",
+          "pos": "Verb",
+          "surface": "伝える"
+        }
+      ],
+      "id": "dato_eru",
+      "input": "確認だと伝える"
     }
   ],
   "description": "particle_adverbial tests",

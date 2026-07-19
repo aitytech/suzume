@@ -356,6 +356,9 @@ constexpr float kIAdjConfMin = 0.5F;
 // Initial confidence for a candidate that has not yet been validated.
 constexpr float kNoConfidence = 0.0F;
 
+// Confidence recorded for a candidate validated by an exact dictionary base.
+constexpr float kVerifiedConfidence = 1.0F;
+
 // Debug confidence recorded on the generated 未然形 (かろ) conjectural candidate
 constexpr float kIAdjKaroConfidence = 0.8F;
 

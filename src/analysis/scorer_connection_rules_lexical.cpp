@@ -144,12 +144,23 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   }
 
   // A dictionary noun followed by a registered adverbial particle is a stable
-  // nominal phrase (あん+だけ, そん+だけ).  Keep that lexical boundary ahead
+  // nominal phrase (あん+だけ, そん+だけ). Keep that lexical boundary ahead
   // of a spurious copula plus sentence-final particle, but do not promote
   // generated noun readings such as the adjective ない before ほど.
   if (prev.pos == core::PartOfSpeech::Noun && prev.fromDictionary() &&
       next.extended_pos == core::ExtendedPOS::ParticleAdverbial) {
     bonus += cost::kMinorBonus;
+  }
+
+  // A registered two-mora adverbial particle beginning with the copula だ can
+  // follow a lexical or generated noun. Preserve that closed particle over
+  // the mechanically attractive だ(AUX)+case-particle path. The category,
+  // dictionary, length, and initial-codepoint gates describe the collision
+  // family without assigning a word-specific score.
+  if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::ParticleAdverbial &&
+      next.fromDictionary() && normalize::utf8Length(next.surface) == 2 &&
+      utf8::decodeFirstChar(next.surface) == U'だ' && utf8::decodeLastChar(next.surface) == U'に') {
+    bonus += cost::kVeryStrongBonus;
   }
 
   // Determiners directly modify formal nouns (このこと, どういうこと).
@@ -423,7 +434,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
       (prev.extended_pos == core::ExtendedPOS::NounFormal || prev.extended_pos == core::ExtendedPOS::AuxTenseTa ||
        prev.extended_pos == core::ExtendedPOS::AuxCopulaDa || prev.extended_pos == core::ExtendedPOS::VerbTaForm ||
        prev.extended_pos == core::ExtendedPOS::ParticleNo)) {
-    bonus += cost::kProhibitive;
+    bonus += cost::kProhibitive + cost::kSevere;
   }
 
   // ゆえに is a discourse conjunction at a clause boundary, but after a
@@ -505,9 +516,15 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // Penalty for ADV → でも (CONJ or PART_副) pattern
   // After adverbs, でも should split as で(copula)+も(particle)
   // e.g., それほどでもない → それほど+で+も+ない
-  if (prev.pos == core::PartOfSpeech::Adverb && next.surface == "でも" &&
-      (next.pos == core::PartOfSpeech::Conjunction || next.extended_pos == core::ExtendedPOS::ParticleAdverbial)) {
-    bonus += cost::kAlmostNever;
+  const bool adverb_before_fused_demo =
+      prev.pos == core::PartOfSpeech::Adverb && next.surface == "でも" &&
+      (next.pos == core::PartOfSpeech::Conjunction || next.extended_pos == core::ExtendedPOS::ParticleAdverbial);
+  const bool adverb_before_focus_mo =
+      prev.pos == core::PartOfSpeech::Adverb && prev.fromDictionary() && normalize::utf8Length(prev.surface) == 2 &&
+      grammar::containsKanji(prev.surface) && utf8::endsWith(prev.surface, "し") &&
+      next.extended_pos == core::ExtendedPOS::ParticleTopic && grammar::isSingleHiragana(next.surface, U'も');
+  if (adverb_before_fused_demo || adverb_before_focus_mo) {
+    bonus += adverb_before_fused_demo ? cost::kAlmostNever : cost::kDoubleVeryStrongBonus;
   }
 
   // Penalty for predicate → copula-compound conjunction (だから/だけど/だが/…) pattern

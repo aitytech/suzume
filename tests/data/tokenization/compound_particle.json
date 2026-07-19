@@ -134,6 +134,222 @@
       ],
       "id": "nisaishi_formal",
       "input": "作業に際し注意する"
+    },
+    {
+      "description": "確認にひきかえて進める - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ひきかえる",
+          "pos": "Verb",
+          "surface": "ひきかえ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "nihikikaete_meru",
+      "input": "確認にひきかえて進める"
+    },
+    {
+      "description": "期待にひきかえて進める - regression test",
+      "expected": [
+        {
+          "lemma": "期待",
+          "pos": "Noun",
+          "surface": "期待"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ひきかえる",
+          "pos": "Verb",
+          "surface": "ひきかえ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "nihikikaete_meru_1",
+      "input": "期待にひきかえて進める"
+    },
+    {
+      "description": "計画にひきかえて進める - regression test",
+      "expected": [
+        {
+          "lemma": "計画",
+          "pos": "Noun",
+          "surface": "計画"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ひきかえる",
+          "pos": "Verb",
+          "surface": "ひきかえ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "nihikikaete_meru_2",
+      "input": "計画にひきかえて進める"
+    },
+    {
+      "description": "確認に引き換えて進める - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "引き換える",
+          "pos": "Verb",
+          "surface": "引き換え"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_ki_ete_meru",
+      "input": "確認に引き換えて進める"
+    },
+    {
+      "description": "結果に引き換える - regression test",
+      "expected": [
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "引き換える",
+          "pos": "Verb",
+          "surface": "引き換える"
+        }
+      ],
+      "id": "ni_ki_eru",
+      "input": "結果に引き換える"
+    },
+    {
+      "description": "結果とひきかえる - regression test",
+      "expected": [
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "ひきかえる",
+          "pos": "Verb",
+          "surface": "ひきかえる"
+        }
+      ],
+      "id": "tohikikaeru",
+      "input": "結果とひきかえる"
+    },
+    {
+      "description": "本をとりかえる - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "とりかえる",
+          "pos": "Verb",
+          "surface": "とりかえる"
+        }
+      ],
+      "id": "wotorikaeru",
+      "input": "本をとりかえる"
+    },
+    {
+      "description": "確認について進める - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "について",
+          "pos": "Particle",
+          "surface": "について"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "nitsuite_meru",
+      "input": "確認について進める"
     }
   ],
   "description": "compound_particle tests",

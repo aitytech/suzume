@@ -587,6 +587,834 @@
       ],
       "id": "omomuroni_manner_adverb",
       "input": "おもむろに歩く"
+    },
+    {
+      "description": "ある程度確認する - regression test",
+      "expected": [
+        {
+          "lemma": "ある程度",
+          "pos": "Adverb",
+          "surface": "ある程度"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "aru_suru",
+      "input": "ある程度確認する"
+    },
+    {
+      "description": "ある程度作業する - regression test",
+      "expected": [
+        {
+          "lemma": "ある程度",
+          "pos": "Adverb",
+          "surface": "ある程度"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "aru_suru_1",
+      "input": "ある程度作業する"
+    },
+    {
+      "description": "ある程度問題がある - regression test",
+      "expected": [
+        {
+          "lemma": "ある程度",
+          "pos": "Adverb",
+          "surface": "ある程度"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "aru_gaaru",
+      "input": "ある程度問題がある"
+    },
+    {
+      "description": "ある方法で確認する - regression test",
+      "expected": [
+        {
+          "lemma": "ある",
+          "pos": "Determiner",
+          "surface": "ある"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "aru_de_suru",
+      "input": "ある方法で確認する"
+    },
+    {
+      "description": "何せ確認が必要だ - regression test",
+      "expected": [
+        {
+          "lemma": "何せ",
+          "pos": "Adverb",
+          "surface": "何せ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "se_ga_da",
+      "input": "何せ確認が必要だ"
+    },
+    {
+      "description": "予て確認する - regression test",
+      "expected": [
+        {
+          "lemma": "予て",
+          "pos": "Adverb",
+          "surface": "予て"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "te_suru",
+      "input": "予て確認する"
+    },
+    {
+      "description": "飽くまで確認する - regression test",
+      "expected": [
+        {
+          "lemma": "飽くまで",
+          "pos": "Adverb",
+          "surface": "飽くまで"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kumade_suru",
+      "input": "飽くまで確認する"
+    },
+    {
+      "description": "生憎確認できない - regression test",
+      "expected": [
+        {
+          "lemma": "生憎",
+          "pos": "Adverb",
+          "surface": "生憎"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "dekinai",
+      "input": "生憎確認できない"
+    },
+    {
+      "description": "大抵確認する - regression test",
+      "expected": [
+        {
+          "lemma": "大抵",
+          "pos": "Adverb",
+          "surface": "大抵"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru",
+      "input": "大抵確認する"
+    },
+    {
+      "description": "凡そ確認する - regression test",
+      "expected": [
+        {
+          "lemma": "凡そ",
+          "pos": "Adverb",
+          "surface": "凡そ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "so_suru",
+      "input": "凡そ確認する"
+    },
+    {
+      "description": "尤も確認は必要だ - regression test",
+      "expected": [
+        {
+          "lemma": "尤も",
+          "pos": "Conjunction",
+          "surface": "尤も"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "mo_ha_da",
+      "input": "尤も確認は必要だ"
+    },
+    {
+      "description": "取り分け確認する - regression test",
+      "expected": [
+        {
+          "lemma": "取り分け",
+          "pos": "Adverb",
+          "surface": "取り分け"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ri_ke_suru",
+      "input": "取り分け確認する"
+    },
+    {
+      "description": "ろくすっぽ確認できない - regression test",
+      "expected": [
+        {
+          "lemma": "ろくすっぽ",
+          "pos": "Adverb",
+          "surface": "ろくすっぽ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "rokusuttpo_dekinai",
+      "input": "ろくすっぽ確認できない"
+    },
+    {
+      "description": "おおかた確認した - regression test",
+      "expected": [
+        {
+          "lemma": "おおかた",
+          "pos": "Adverb",
+          "surface": "おおかた"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ookata_shita",
+      "input": "おおかた確認した"
+    },
+    {
+      "description": "よほど難しい - regression test",
+      "expected": [
+        {
+          "lemma": "よほど",
+          "pos": "Adverb",
+          "surface": "よほど"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "yohodo_shii",
+      "input": "よほど難しい"
+    },
+    {
+      "description": "さして難しくない - regression test",
+      "expected": [
+        {
+          "lemma": "さして",
+          "pos": "Adverb",
+          "surface": "さして"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "sashite_shikunai",
+      "input": "さして難しくない"
+    },
+    {
+      "description": "つとに知られている - regression test",
+      "expected": [
+        {
+          "lemma": "つとに",
+          "pos": "Adverb",
+          "surface": "つとに"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "tsutoni_rareteiru",
+      "input": "つとに知られている"
+    },
+    {
+      "description": "つぶさに確認する - regression test",
+      "expected": [
+        {
+          "lemma": "つぶさに",
+          "pos": "Adverb",
+          "surface": "つぶさに"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "tsubusani_suru",
+      "input": "つぶさに確認する"
+    },
+    {
+      "description": "おのずと分かる - regression test",
+      "expected": [
+        {
+          "lemma": "おのずと",
+          "pos": "Adverb",
+          "surface": "おのずと"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かる"
+        }
+      ],
+      "id": "onozuto_karu",
+      "input": "おのずと分かる"
+    },
+    {
+      "description": "しきりに確認する - regression test",
+      "expected": [
+        {
+          "lemma": "しきりに",
+          "pos": "Adverb",
+          "surface": "しきりに"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "shikirini_suru",
+      "input": "しきりに確認する"
+    },
+    {
+      "description": "いまだ確認できない - regression test",
+      "expected": [
+        {
+          "lemma": "いまだ",
+          "pos": "Adverb",
+          "surface": "いまだ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "imada_dekinai",
+      "input": "いまだ確認できない"
+    },
+    {
+      "description": "ずいぶん難しい - regression test",
+      "expected": [
+        {
+          "lemma": "ずいぶん",
+          "pos": "Adverb",
+          "surface": "ずいぶん"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "zuibun_shii",
+      "input": "ずいぶん難しい"
+    },
+    {
+      "description": "なにぶん時間がない - regression test",
+      "expected": [
+        {
+          "lemma": "なにぶん",
+          "pos": "Adverb",
+          "surface": "なにぶん"
+        },
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "nanibun_ganai",
+      "input": "なにぶん時間がない"
+    },
+    {
+      "description": "なにせ確認する - regression test",
+      "expected": [
+        {
+          "lemma": "なにせ",
+          "pos": "Adverb",
+          "surface": "なにせ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nanise_suru",
+      "input": "なにせ確認する"
+    },
+    {
+      "description": "かねて確認する - regression test",
+      "expected": [
+        {
+          "lemma": "かねて",
+          "pos": "Adverb",
+          "surface": "かねて"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kanete_suru",
+      "input": "かねて確認する"
+    },
+    {
+      "description": "あくまで確認する - regression test",
+      "expected": [
+        {
+          "lemma": "あくまで",
+          "pos": "Adverb",
+          "surface": "あくまで"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "akumade_suru",
+      "input": "あくまで確認する"
+    },
+    {
+      "description": "あいにく確認できない - regression test",
+      "expected": [
+        {
+          "lemma": "あいにく",
+          "pos": "Adverb",
+          "surface": "あいにく"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ainiku_dekinai",
+      "input": "あいにく確認できない"
+    },
+    {
+      "description": "とりわけ確認する - regression test",
+      "expected": [
+        {
+          "lemma": "とりわけ",
+          "pos": "Adverb",
+          "surface": "とりわけ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "toriwake_suru",
+      "input": "とりわけ確認する"
+    },
+    {
+      "description": "さほど確認しない - regression test",
+      "expected": [
+        {
+          "lemma": "さほど",
+          "pos": "Adverb",
+          "surface": "さほど"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "sahodo_shinai",
+      "input": "さほど確認しない"
+    },
+    {
+      "description": "おおよそ確認する - regression test",
+      "expected": [
+        {
+          "lemma": "おおよそ",
+          "pos": "Adverb",
+          "surface": "おおよそ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ooyoso_suru",
+      "input": "おおよそ確認する"
+    },
+    {
+      "description": "さも難しい - regression test",
+      "expected": [
+        {
+          "lemma": "さも",
+          "pos": "Adverb",
+          "surface": "さも"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "samo_shii",
+      "input": "さも難しい"
+    },
+    {
+      "description": "さも正しいように進める - regression test",
+      "expected": [
+        {
+          "lemma": "さも",
+          "pos": "Adverb",
+          "surface": "さも"
+        },
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しい"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "samo_shiiyouni_meru",
+      "input": "さも正しいように進める"
+    },
+    {
+      "description": "固定副詞「然程」を一検索単位とする。MeCab正規化の漢字分割とは意図的に異なる。",
+      "expected": [
+        {
+          "lemma": "然程",
+          "pos": "Adverb",
+          "surface": "然程"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shinai",
+      "input": "然程確認しない"
+    },
+    {
+      "description": "時を表す固定副詞「このほど」の副詞用法を保持する。",
+      "expected": [
+        {
+          "lemma": "このほど",
+          "pos": "Adverb",
+          "surface": "このほど"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "konohodo_shita",
+      "input": "このほど確認した"
     }
   ],
   "description": "adverb_fixed tests",

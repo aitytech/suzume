@@ -7,14 +7,16 @@ EntrySpecRange getConjunctionEntries() {
       // Sequential (順接)
       conj("従って", ""), conj("故に", ""), conj("ゆえに", ""), conj("そして", ""), conj("そうして", ""),
       conj("そうすると", ""), conj("それから", ""), conj("それで", ""), conj("だから", ""), conj("そのため", ""),
-      conj("したがって", ""), conj("だからといって", ""), conj("だからこそ", ""),
+      conj("したがって", ""), conj("ついては", ""), conj("もって", ""), conj("よって", ""), conj("だからといって", ""),
+      conj("だからこそ", ""),
 
       // Adversative (逆接)
-      conj("しかし", ""), conj("しかしながら", ""), conj("だが", ""), conj("けれども", ""),
+      conj("しかし", ""), conj("然し", ""), conj("しかしながら", ""), conj("だが", ""), conj("けれども", ""),
       conj("だけど", ""),  // colloquial variant
       conj("ところが", ""), conj("それでも", ""), conj("それなのに", ""), conj("でも", ""),
       conj("だって", ""),  // にもかかわらず removed for MeCab compat
-      conj("どころか", ""), conj("それどころか", ""), conj("されど", ""), conj("もっとも", ""),
+      conj("どころか", ""), conj("それどころか", ""), conj("されど", ""), conj("さりとて", ""), conj("しかるに", ""),
+      conj("もっとも", ""), conj("尤も", ""),
 
       // Parallel/Addition (並列・添加)
       conj("又", ""), conj("及び", ""), conj("および", ""), conj("並びに", ""), conj("ならびに", ""), conj("且つ", ""),
@@ -52,6 +54,7 @@ EntrySpecRange getConjunctionEntries() {
       adv("もとより", ""),                      // 追加・強調: 本はもとより水を読む
       conj("ともあれ", ""),                     // 譲歩・話題転換: ともあれ始める
       adv("とりわけ", ""),                      // Focus adverb
+      adv("取り分け", ""),                      // Orthographic variant
       adv("目の当たり", ""),                    // Fixed evidential adverb
       adv("めったに", ""),                      // 滅多に〜ない - prevent めった(非語 VERB める)+に split
       adv("めちゃ", ""),                        // Colloquial degree adverb
@@ -59,6 +62,7 @@ EntrySpecRange getConjunctionEntries() {
       adv("どうぞ", ""),                        // 陳述副詞 - prevent どう(ADJ)+ぞ split
       adv("あえて", ""),                        // 意図的選択: あえ(非語一段動詞)+て を防ぐ
       adv("あくまで", ""),                      // 限定・強調: あく(動詞)+まで を防ぐ
+      adv("飽くまで", ""),                      // Orthographic variant
       adv("いたって", ""),                      // 程度: いたっ(動詞音便)+て を防ぐ
       adv("すこぶる", ""),                      // 程度: す+こぶる の非語分解を防ぐ
       adv("おおいに", ""),                      // 程度: おお+い+に の分解を防ぐ
@@ -76,11 +80,14 @@ EntrySpecRange getConjunctionEntries() {
       adv("さしあたり", ""),                    // 当面の時間副詞
       adv("かたがた", ""),                      // 目的併記の定型副詞
       adv("かねて", ""),                        // Fixed temporal adverb
+      adv("予て", ""),                          // Orthographic variant
       adv("なんら", ""),                        // 否定呼応の総称副詞
       adv("互いに", ""),                        // 相互副詞
       adv("なにせ", ""),                        // 理由強調副詞
+      adv("何せ", ""),                          // Orthographic variant
       adv("あいかわらず", ""),                  // 継続副詞
       adv("あいにく", ""),                      // 逆接副詞
+      adv("生憎", ""),                          // Orthographic variant
       adv("つねに", ""),                        // 恒常副詞
       adv("思いがけず", ""),                    // Fixed adverbial expression
       adv("おそらくは", ""),                    // Fixed probability adverb

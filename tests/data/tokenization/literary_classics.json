@@ -1879,14 +1879,9 @@
           "surface": "予想"
         },
         {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        },
-        {
-          "lemma": "に",
+          "lemma": "だに",
           "pos": "Particle",
-          "surface": "に"
+          "surface": "だに"
         },
         {
           "lemma": "する",

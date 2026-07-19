@@ -3429,6 +3429,323 @@
       ],
       "id": "hikiukete_agentive_suffix_variant",
       "input": "引き受け手を確認する"
+    },
+    {
+      "description": "送り先を確認する - regression test",
+      "expected": [
+        {
+          "lemma": "送り先",
+          "pos": "Noun",
+          "surface": "送り先"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ri_wo_suru",
+      "input": "送り先を確認する"
+    },
+    {
+      "description": "届け先を確認する - regression test",
+      "expected": [
+        {
+          "lemma": "届け先",
+          "pos": "Noun",
+          "surface": "届け先"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ke_wo_suru",
+      "input": "届け先を確認する"
+    },
+    {
+      "description": "書き先を確認する - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "先",
+          "pos": "Suffix",
+          "surface": "先"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ki_wo_suru",
+      "input": "書き先を確認する"
+    },
+    {
+      "description": "確認するあてもない - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "あて",
+          "pos": "Noun",
+          "surface": "あて"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "suruatemonai",
+      "input": "確認するあてもない"
+    },
+    {
+      "description": "確認するあてがない - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "あて",
+          "pos": "Noun",
+          "surface": "あて"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "suruateganai",
+      "input": "確認するあてがない"
+    },
+    {
+      "description": "確認するあてはない - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "あて",
+          "pos": "Noun",
+          "surface": "あて"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "suruatehanai",
+      "input": "確認するあてはない"
+    },
+    {
+      "description": "読むあてもない - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "あて",
+          "pos": "Noun",
+          "surface": "あて"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "muatemonai",
+      "input": "読むあてもない"
+    },
+    {
+      "description": "書くあてがない - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "あて",
+          "pos": "Noun",
+          "surface": "あて"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "kuateganai",
+      "input": "書くあてがない"
+    },
+    {
+      "description": "確認する予定がある - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "予定",
+          "pos": "Noun",
+          "surface": "予定"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "suru_gaaru",
+      "input": "確認する予定がある"
+    },
+    {
+      "description": "あてにする - regression test",
+      "expected": [
+        {
+          "lemma": "あて",
+          "pos": "Noun",
+          "surface": "あて"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "atenisuru",
+      "input": "あてにする"
+    },
+    {
+      "description": "行くあてがある - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "あて",
+          "pos": "Noun",
+          "surface": "あて"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "kuategaaru",
+      "input": "行くあてがある"
     }
   ],
   "description": "Formal nouns (こと、もの、ところ)",

@@ -2053,6 +2053,244 @@
       ],
       "id": "ni_nai_ni_nai_ni_nai_ni_inai_nai_inai",
       "input": "本に相違ない。水に相違ない。紙に相違ない。本に間違いない。問題ない。違いない。"
+    },
+    {
+      "description": "まれに確認する - regression test",
+      "expected": [
+        {
+          "lemma": "まれ",
+          "pos": "Adjective",
+          "surface": "まれ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "mareni_suru",
+      "input": "まれに確認する"
+    },
+    {
+      "description": "まれな問題だ - regression test",
+      "expected": [
+        {
+          "lemma": "まれ",
+          "pos": "Adjective",
+          "surface": "まれ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "marena_da",
+      "input": "まれな問題だ"
+    },
+    {
+      "description": "まれにある - regression test",
+      "expected": [
+        {
+          "lemma": "まれ",
+          "pos": "Adjective",
+          "surface": "まれ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "mareniaru",
+      "input": "まれにある"
+    },
+    {
+      "description": "ひたむきに確認する - regression test",
+      "expected": [
+        {
+          "lemma": "ひたむき",
+          "pos": "Adjective",
+          "surface": "ひたむき"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "hitamukini_suru",
+      "input": "ひたむきに確認する"
+    },
+    {
+      "description": "ひたむきな姿勢だ - regression test",
+      "expected": [
+        {
+          "lemma": "ひたむき",
+          "pos": "Adjective",
+          "surface": "ひたむき"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "姿勢",
+          "pos": "Noun",
+          "surface": "姿勢"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "hitamukina_da",
+      "input": "ひたむきな姿勢だ"
+    },
+    {
+      "description": "ひたむきだ - regression test",
+      "expected": [
+        {
+          "lemma": "ひたむき",
+          "pos": "Adjective",
+          "surface": "ひたむき"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "hitamukida",
+      "input": "ひたむきだ"
+    },
+    {
+      "description": "静かに確認する - regression test",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kani_suru",
+      "input": "静かに確認する"
+    },
+    {
+      "description": "静かな姿勢だ - regression test",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "姿勢",
+          "pos": "Noun",
+          "surface": "姿勢"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kana_da",
+      "input": "静かな姿勢だ"
+    },
+    {
+      "description": "検証済み動詞内部だけを抑制し、名詞後の正規ナ形容詞候補は保持する。",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "後",
+          "pos": "Noun",
+          "surface": "後"
+        },
+        {
+          "lemma": "ひたむき",
+          "pos": "Adjective",
+          "surface": "ひたむき"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "no_hitamukini_meru",
+      "input": "確認の後ひたむきに進める"
     }
   ],
   "description": "Na-adjectives (ナ形容詞)",

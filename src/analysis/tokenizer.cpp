@@ -127,6 +127,32 @@ bool startsHonorificPrefixedNounWithVerbTail(const dictionary::DictionaryManager
   return false;
 }
 
+// A pure-hiragana na-adjective can share its surface with the interior of a
+// kanji-led inflected verb. If a previously generated verb edge already
+// crosses this position, the adjective cannot begin here without cutting the
+// verb stem (読まれ, 生まれて, 止まれ). Scan only the immediately preceding
+// kanji run; this keeps the check bounded and leaves genuine clause-initial or
+// post-particle adjective uses available.
+bool startsInsideKanjiLedVerb(const core::Lattice& lattice, const std::vector<char32_t>& codepoints, size_t start_pos) {
+  if (start_pos == 0 || !normalize::isKanjiCodepoint(codepoints[start_pos - 1])) {
+    return false;
+  }
+
+  size_t kanji_start = start_pos;
+  while (kanji_start > 0 && normalize::isKanjiCodepoint(codepoints[kanji_start - 1])) {
+    --kanji_start;
+  }
+  for (size_t pos = kanji_start; pos < start_pos; ++pos) {
+    for (const uint32_t edge_id : lattice.edgeIdsAt(pos)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.pos == core::PartOfSpeech::Verb && edge.end > start_pos && edge.lemmaVerified()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 Tokenizer::Tokenizer(const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
@@ -206,6 +232,18 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
   const bool suppress_prefixed_noun_interior =
       startsHonorificPrefixedNounWithVerbTail(dict_manager_, text, codepoints, byte_offsets, start_pos);
 
+  // Interrogative + か forms an indefinite pronoun (誰+か, 何+か,
+  // どこ+か). Generate the adverbial-particle homograph only at that
+  // verified boundary so a global one-mora entry cannot split lexical words
+  // containing か (かかる, 静か, うれしかった).
+  if (codepoints[start_pos] == U'か' && hasInterrogativeEndingAt(dict_manager_, text, byte_offsets, start_pos)) {
+    lattice.addEdge("か", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 1),
+                    core::PartOfSpeech::Particle, getCategoryCost(core::ExtendedPOS::ParticleAdverbial),
+                    core::LatticeEdge::kFromDictionary, "か", dictionary::ConjugationType::None,
+                    core::CandidateOrigin::Dictionary, candidate::kDictionaryOriginConfidence, {},
+                    core::ExtendedPOS::ParticleAdverbial, "indefinite_particle_ka");
+  }
+
   size_t longest_conjunction = 0;
   size_t longest_interjection = 0;
   for (const auto& result : results) {
@@ -225,6 +263,14 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // Calculate end position in characters before context-sensitive candidate
     // guards below inspect the following lexical head.
     size_t end_pos = start_pos + result.length;
+
+    // Do not reopen the interior of a kanji-led verb as a pure-hiragana
+    // dictionary na-adjective. The same adjective remains available at a real
+    // boundary (sentence start or after a particle).
+    if (result.entry->extended_pos == core::ExtendedPOS::AdjNaAdj && grammar::isPureHiragana(result.entry->surface) &&
+        startsInsideKanjiLedVerb(lattice, codepoints, start_pos)) {
+      continue;
+    }
 
     // A period suffix cannot head an interval compound.  In a numeral-led
     // expression such as 10分間隔, the counter generator already supplies

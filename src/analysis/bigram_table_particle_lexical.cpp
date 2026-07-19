@@ -78,6 +78,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // This discourages splitting かもしれない as か+もし+れない
       {EPOS::ParticleCase, EPOS::Adverb, cost::kRare},
 
+      // A case-marked phrase requires a predicate; a discourse conjunction
+      // cannot directly consume that slot. This keeps a dictionary predicate
+      // whose prefix is a conjunction homograph intact (を+さておく).
+      {EPOS::ParticleCase, EPOS::Conjunction, cost::kSevere},
+
       // A final particle closes a predicate and cannot directly introduce an
       // adverb. This is an ExtendedPOS-only rule, so keep it in the table
       // rather than in Scorer::connectionCost().
@@ -92,6 +97,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
 
       // An irrealis verb form selects auxiliaries, not a case particle.
       {EPOS::VerbMizenkei, EPOS::ParticleCase, cost::kAlmostNever},
+
+      // A derivational suffix completes a nominal unit and cannot directly
+      // take a predicate connective. Case-marked nominalizations such as
+      // 高さ+で remain governed by Suffix -> ParticleCase.
+      {EPOS::Suffix, EPOS::ParticleConj, cost::kAlmostNever},
 
       // The aspectual いく auxiliary follows a te-form, not a bare renyokei.
       {EPOS::VerbRenyokei, EPOS::AuxAspectIku, cost::kAlmostNever},
@@ -632,7 +642,7 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::Interjection, EPOS::AuxCopulaDesu, cost::kDoubleVeryStrongBonus},
 
       // Adverb → ParticleTopic (少し+は, もっと+は, ちょっと+は) - minor bonus
-      // Adverb + は/も is a natural pattern; default penalty causes ADV to lose to NOUN
+      // The stronger も focus is selected contextually in the lexical scorer.
       {EPOS::Adverb, EPOS::ParticleTopic, cost::kMinorBonus},
 
       // Adverb → ParticleCase (かねて+より, あまり+に) - strong bonus.

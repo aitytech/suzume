@@ -399,6 +399,150 @@
       ],
       "id": "sashitsukae_nai_nominal_predicate_ambiguity",
       "input": "差し支えない範囲"
+    },
+    {
+      "description": "確認しそこなう - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "しそこなう",
+          "pos": "Verb",
+          "surface": "しそこなう"
+        }
+      ],
+      "id": "shisokonau",
+      "input": "確認しそこなう"
+    },
+    {
+      "description": "確認しそこなった - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "しそこなう",
+          "pos": "Verb",
+          "surface": "しそこなっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shisokonattta",
+      "input": "確認しそこなった"
+    },
+    {
+      "description": "確認しそこなわない - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "しそこなう",
+          "pos": "Verb",
+          "surface": "しそこなわ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shisokonawanai",
+      "input": "確認しそこなわない"
+    },
+    {
+      "description": "確認しそこなえば - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "しそこなう",
+          "pos": "Verb",
+          "surface": "しそこなえ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "shisokonaeba",
+      "input": "確認しそこなえば"
+    },
+    {
+      "description": "確認しそこなって - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "しそこなう",
+          "pos": "Verb",
+          "surface": "しそこなっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "shisokonattte",
+      "input": "確認しそこなって"
+    },
+    {
+      "description": "読みそこなう - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "そこなう",
+          "pos": "Auxiliary",
+          "surface": "そこなう"
+        }
+      ],
+      "id": "misokonau",
+      "input": "読みそこなう"
+    },
+    {
+      "description": "読みそこなった - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "そこなう",
+          "pos": "Auxiliary",
+          "surface": "そこなっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "misokonattta",
+      "input": "読みそこなった"
     }
   ],
   "description": "compound_verb tests",

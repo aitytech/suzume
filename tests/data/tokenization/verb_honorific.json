@@ -560,6 +560,155 @@
       ],
       "id": "omeshimesu_honorific_verb",
       "input": "思し召す"
+    },
+    {
+      "description": "ご確認申し上げる - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "申し上げる",
+          "pos": "Verb",
+          "surface": "申し上げる"
+        }
+      ],
+      "id": "go_shi_geru",
+      "input": "ご確認申し上げる"
+    },
+    {
+      "description": "確認申し上げる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "申し上げる",
+          "pos": "Verb",
+          "surface": "申し上げる"
+        }
+      ],
+      "id": "shi_geru",
+      "input": "確認申し上げる"
+    },
+    {
+      "description": "ご報告申し上げる - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "申し上げる",
+          "pos": "Verb",
+          "surface": "申し上げる"
+        }
+      ],
+      "id": "go_shi_geru_1",
+      "input": "ご報告申し上げる"
+    },
+    {
+      "description": "ご案内申し上げる - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "案内",
+          "pos": "Noun",
+          "surface": "案内"
+        },
+        {
+          "lemma": "申し上げる",
+          "pos": "Verb",
+          "surface": "申し上げる"
+        }
+      ],
+      "id": "go_shi_geru_2",
+      "input": "ご案内申し上げる"
+    },
+    {
+      "description": "ご確認申し上げない - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "申し上げる",
+          "pos": "Verb",
+          "surface": "申し上げ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "go_shi_genai",
+      "input": "ご確認申し上げない"
+    },
+    {
+      "description": "荷物を持ち上げる - regression test",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "持ち上げる",
+          "pos": "Verb",
+          "surface": "持ち上げる"
+        }
+      ],
+      "id": "wo_chi_geru",
+      "input": "荷物を持ち上げる"
+    },
+    {
+      "description": "新商品し上げる - regression test",
+      "expected": [
+        {
+          "lemma": "新商品",
+          "pos": "Noun",
+          "surface": "新商品"
+        },
+        {
+          "lemma": "し上げる",
+          "pos": "Verb",
+          "surface": "し上げる"
+        }
+      ],
+      "id": "shi_geru_1",
+      "input": "新商品し上げる"
     }
   ],
   "description": "Honorific verbs (敬語動詞)",

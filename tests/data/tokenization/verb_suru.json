@@ -1174,6 +1174,281 @@
       ],
       "id": "suru_past_tokoro_case",
       "input": "確認したところが問題だ"
+    },
+    {
+      "description": "確認に反し進める - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反する",
+          "pos": "Verb",
+          "surface": "反し"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_shi_meru",
+      "input": "確認に反し進める"
+    },
+    {
+      "description": "期待に反し進める - regression test",
+      "expected": [
+        {
+          "lemma": "期待",
+          "pos": "Noun",
+          "surface": "期待"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反する",
+          "pos": "Verb",
+          "surface": "反し"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_shi_meru_1",
+      "input": "期待に反し進める"
+    },
+    {
+      "description": "計画に反し進める - regression test",
+      "expected": [
+        {
+          "lemma": "計画",
+          "pos": "Noun",
+          "surface": "計画"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反する",
+          "pos": "Verb",
+          "surface": "反し"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_shi_meru_2",
+      "input": "計画に反し進める"
+    },
+    {
+      "description": "規則に反し進める - regression test",
+      "expected": [
+        {
+          "lemma": "規則",
+          "pos": "Noun",
+          "surface": "規則"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反する",
+          "pos": "Verb",
+          "surface": "反し"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_shi_meru_3",
+      "input": "規則に反し進める"
+    },
+    {
+      "description": "規則に反する - regression test",
+      "expected": [
+        {
+          "lemma": "規則",
+          "pos": "Noun",
+          "surface": "規則"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反する",
+          "pos": "Verb",
+          "surface": "反する"
+        }
+      ],
+      "id": "ni_suru",
+      "input": "規則に反する"
+    },
+    {
+      "description": "規則に沿って進める - regression test",
+      "expected": [
+        {
+          "lemma": "規則",
+          "pos": "Noun",
+          "surface": "規則"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "沿う",
+          "pos": "Verb",
+          "surface": "沿っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_ttte_meru",
+      "input": "規則に沿って進める"
+    },
+    {
+      "description": "確認し進める - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "shi_meru",
+      "input": "確認し進める"
+    },
+    {
+      "description": "確認に反すれば進める - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反する",
+          "pos": "Verb",
+          "surface": "反すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_sureba_meru",
+      "input": "確認に反すれば進める"
+    },
+    {
+      "description": "確認に反して進める - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反する",
+          "pos": "Verb",
+          "surface": "反し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_shite_meru",
+      "input": "確認に反して進める"
+    },
+    {
+      "description": "意図に反した - regression test",
+      "expected": [
+        {
+          "lemma": "意図",
+          "pos": "Noun",
+          "surface": "意図"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反する",
+          "pos": "Verb",
+          "surface": "反し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ni_shita",
+      "input": "意図に反した"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

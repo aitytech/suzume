@@ -3530,6 +3530,119 @@
       ],
       "id": "aramashi_overview_adverb",
       "input": "あらまし説明する"
+    },
+    {
+      "description": "少しも確認しない - regression test",
+      "expected": [
+        {
+          "lemma": "少し",
+          "pos": "Adverb",
+          "surface": "少し"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shimo_shinai",
+      "input": "少しも確認しない"
+    },
+    {
+      "description": "少しも難しくない - regression test",
+      "expected": [
+        {
+          "lemma": "少し",
+          "pos": "Adverb",
+          "surface": "少し"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shimo_shikunai",
+      "input": "少しも難しくない"
+    },
+    {
+      "description": "少しも変わらない - regression test",
+      "expected": [
+        {
+          "lemma": "少し",
+          "pos": "Adverb",
+          "surface": "少し"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shimo_waranai",
+      "input": "少しも変わらない"
+    },
+    {
+      "description": "少しだけ確認する - regression test",
+      "expected": [
+        {
+          "lemma": "少し",
+          "pos": "Adverb",
+          "surface": "少し"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "shidake_suru",
+      "input": "少しだけ確認する"
     }
   ],
   "description": "General adverbs",

@@ -3470,6 +3470,156 @@
       ],
       "id": "suru_continuative_passive",
       "input": "確認し続けられる"
+    },
+    {
+      "description": "確認してみせた - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "みせる",
+          "pos": "Auxiliary",
+          "surface": "みせ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shitemiseta",
+      "input": "確認してみせた"
+    },
+    {
+      "description": "確認してみせる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "みせる",
+          "pos": "Auxiliary",
+          "surface": "みせる"
+        }
+      ],
+      "id": "shitemiseru",
+      "input": "確認してみせる"
+    },
+    {
+      "description": "確認してみせない - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "みせる",
+          "pos": "Auxiliary",
+          "surface": "みせ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shitemisenai",
+      "input": "確認してみせない"
+    },
+    {
+      "description": "確認してみせれば - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "みせる",
+          "pos": "Auxiliary",
+          "surface": "みせれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "shitemisereba",
+      "input": "確認してみせれば"
+    },
+    {
+      "description": "絵を見せた - regression test",
+      "expected": [
+        {
+          "lemma": "絵",
+          "pos": "Noun",
+          "surface": "絵"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見せる",
+          "pos": "Verb",
+          "surface": "見せ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_seta",
+      "input": "絵を見せた"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

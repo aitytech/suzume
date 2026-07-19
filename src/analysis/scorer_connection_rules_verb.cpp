@@ -420,10 +420,14 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
 
   // The potential form of the humble receiving verb is a benefactive
   // auxiliary after a te-form (見て+いただける, 読んで+いただける).  Its
-  // dictionary entry retains VerbShuushikei until postprocessing assigns the
-  // auxiliary POS, so select the complete closed-class surface here.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::VerbShuushikei &&
-      next.fromDictionary() && next.lemma == "いただける") {
+  // dictionary entries retain a verbal ExtendedPOS until postprocessing
+  // assigns the auxiliary POS, so select every attested inflection in this
+  // closed class (いただける／いただけない／いただければ).
+  const bool is_potential_benefactive_inflection = next.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+                                                   next.extended_pos == core::ExtendedPOS::VerbRenyokei ||
+                                                   next.extended_pos == core::ExtendedPOS::VerbKateikei;
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && is_potential_benefactive_inflection &&
+      next.fromDictionary() && grammar::isPotentialBenefactiveLemma(next.lemma)) {
     bonus += cost::kDoubleVeryStrongBonus;
   }
 
@@ -555,16 +559,23 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::VerbShuushikei &&
       grammar::containsKanji(prev.surface) && prev.conj_type == dictionary::ConjugationType::GodanWa &&
       next.lemmaVerified()) {
-    bonus += cost::kStrongBonus;
-    bonus += cost::kModerateBonus;
-    if (normalize::utf8Length(prev.surface) >= 3) {
-      // Multi-kanji stems incur the general unregistered-renyokei penalty.
-      // In this verified compound-predicate environment that penalty would
-      // otherwise let an unrelated i-adjective candidate win.
-      bonus += cost::kStrongBonus;
-      bonus += cost::kMinorBonus;
-      bonus += cost::kMinorBonus;
-    }
+    // Multi-kanji stems incur the general unregistered-renyokei penalty.
+    // In this verified compound-predicate environment that penalty would
+    // otherwise let an unrelated i-adjective candidate win.
+    const bool needs_unregistered_stem_offset = normalize::utf8Length(prev.surface) >= 3;
+    bonus +=
+        cost::kStrongBonus + cost::kModerateBonus +
+        (needs_unregistered_stem_offset ? cost::kStrongBonus + cost::kMinorBonus + cost::kMinorBonus : cost::kNeutral);
+  }
+
+  // A dictionary-attested single-kanji する verb can use its bare 連用形 as
+  // literary/written coordination (反し+進める).  Restrict this to the
+  // verified lexical Suru shape so ordinary compositional Sahen predicates
+  // keep their noun+し search-unit boundary.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::VerbShuushikei &&
+      prev.conj_type == dictionary::ConjugationType::Suru && prev.lemmaVerified() && next.lemmaVerified() &&
+      normalize::utf8Length(prev.surface) == 2 && grammar::containsKanji(prev.surface)) {
+    bonus += cost::kStrongBonus + cost::kModerateBonus;
   }
 
   return bonus;
@@ -608,6 +619,14 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
     bonus += cost::kAlmostNever;
   }
 
+  // The irrealis of する is さ only before a voice auxiliary (さ+せる), not
+  // before a connective particle. This rejects fabricated さ+て paths while
+  // leaving other irrealis + ば patterns and productive causatives intact.
+  if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && prev.lemma == "する" &&
+      (next.extended_pos == core::ExtendedPOS::ParticleConj || next.extended_pos == core::ExtendedPOS::AuxAspectIru)) {
+    bonus += cost::kAlmostNever;
+  }
+
   // The classical causative す attaches to an a-row irrealis stem
   // (いら+し+て). A non-a-row homograph cannot supply that inflectional
   // context, so it must not create a fabricated voice chain such as
@@ -630,7 +649,15 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // spurious causative-plus-passive chain (せ+れ+ば).
   if (prev.extended_pos == core::ExtendedPOS::AuxCausative && utf8::endsWith(prev.surface, "れ") &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::endsWith(next.surface, "ば")) {
-    bonus += cost::kVeryStrongBonus;
+    bonus += cost::kVeryStrongBonus + cost::kModerateBonus;
+  }
+
+  // A causative auxiliary retains its boundary before the actual past marker
+  // (読ま+せ+た). Restrict the bonus to た/だ so homographic colloquial
+  // auxiliaries tagged AuxTenseTa do not turn し+てる into a causative chain.
+  if (prev.extended_pos == core::ExtendedPOS::AuxCausative && next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
+      grammar::isPastMarkerTaDaSurface(next.surface)) {
+    bonus += cost::kStrongBonus;
   }
 
   // The conditional form of a passive auxiliary also attaches directly to

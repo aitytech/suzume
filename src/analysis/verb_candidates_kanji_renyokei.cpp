@@ -322,6 +322,28 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         continue;
 
       std::string surface = extractSubstring(codepoints, start_pos, renyokei_end);
+
+      // A dictionary-backed single-kanji する verb has the same 連用形 shape
+      // as an unknown GodanSa verb (反し: 反する vs fabricated 反す).  The
+      // generic inflection scorer deliberately disfavors single-kanji Suru
+      // stems, so recover this closed ambiguity from the attested base form
+      // before falling back to productive GodanSa generation.  Multi-kanji
+      // Sahen predicates remain compositional search units (確認+し).
+      if (kanji_end == start_pos + 1 && renyokei_end == kanji_end + 1) {
+        const std::string suru_base = extractSubstring(codepoints, start_pos, kanji_end) + "する";
+        if (vh::isVerbInDictionary(dict_manager, suru_base)) {
+          auto suru_candidate = makeVerbCandidate(
+              surface, start_pos, renyokei_end, candidate::verb_cost::kStrongBonus, suru_base,
+              dictionary::ConjugationType::Suru, true, CandidateOrigin::VerbKanji, candidate::kVerifiedConfidence,
+              "verified_single_kanji_suru_renyokei", core::ExtendedPOS::VerbRenyokei);
+          suru_candidate.lemma_verified = true;
+          candidates.push_back(std::move(suru_candidate));
+          SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] "
+                                   << surface << " verified single-kanji suru renyokei lemma=" << suru_base << "\n");
+          continue;
+        }
+      }
+
       const auto& all_cands = inflection.analyze(surface);
 
       // Find best godan-sa candidate
@@ -434,6 +456,24 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
                                                const grammar::Inflection& inflection,
                                                const dictionary::DictionaryManager* dict_manager,
                                                std::vector<UnknownCandidate>& candidates) {
+  // Dictionary-backed single-kanji する verbs form 仮定形 with すれ+ば
+  // (反する→反すれ+ば).  The generic analyzer can otherwise detach the
+  // lexical kanji and select the standalone する paradigm.
+  if (kanji_end == start_pos + 1 && kanji_end + 2 < codepoints.size() && codepoints[kanji_end] == U'す' &&
+      codepoints[kanji_end + 1] == U'れ' && codepoints[kanji_end + 2] == U'ば') {
+    const std::string suru_base = extractSubstring(codepoints, start_pos, kanji_end) + "する";
+    if (vh::isVerbInDictionary(dict_manager, suru_base)) {
+      const size_t kateikei_end = kanji_end + 2;
+      auto suru_candidate =
+          makeVerbCandidate(extractSubstring(codepoints, start_pos, kateikei_end), start_pos, kateikei_end,
+                            candidate::verb_cost::kStrongBonus, suru_base, dictionary::ConjugationType::Suru, true,
+                            CandidateOrigin::VerbKanji, candidate::kVerifiedConfidence,
+                            "verified_single_kanji_suru_kateikei", core::ExtendedPOS::VerbKateikei);
+      suru_candidate.lemma_verified = true;
+      candidates.push_back(std::move(suru_candidate));
+    }
+  }
+
   // A Godan causative is itself an Ichidan-form predicate. Its conditional
   // surface is stem + a-row + せれ + ば (遊ばせれば), so preserve the full
   // conditional stem instead of splitting the causative auxiliary midway.

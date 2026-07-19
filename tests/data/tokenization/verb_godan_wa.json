@@ -1842,6 +1842,116 @@
       ],
       "id": "kanau_hiragana_godan",
       "input": "かなう"
+    },
+    {
+      "description": "ワ行五段促音便のlemma復元",
+      "expected": [
+        {
+          "lemma": "整う",
+          "pos": "Verb",
+          "surface": "整っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "sokuonbin_totono_lemma",
+      "input": "整っている"
+    },
+    {
+      "description": "ワ行五段促音便の派生lemma復元",
+      "expected": [
+        {
+          "lemma": "補う",
+          "pos": "Verb",
+          "surface": "補っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "sokuonbin_ogonau_lemma",
+      "input": "補っている"
+    },
+    {
+      "description": "ワ行五段促音便の派生lemma復元",
+      "expected": [
+        {
+          "lemma": "扱う",
+          "pos": "Verb",
+          "surface": "扱っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "sokuonbin_atsukau_lemma",
+      "input": "扱っている"
+    },
+    {
+      "description": "辞書既知ワ行五段の対照",
+      "expected": [
+        {
+          "lemma": "誘う",
+          "pos": "Verb",
+          "surface": "誘っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "sokuonbin_sasou_control",
+      "input": "誘っている"
+    },
+    {
+      "description": "辞書既知ワ行五段の対照",
+      "expected": [
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "sokuonbin_kau_control",
+      "input": "買っている"
     }
   ],
   "description": "Godan Wa-row verbs (五段ワ行動詞) - verbs ending in う",

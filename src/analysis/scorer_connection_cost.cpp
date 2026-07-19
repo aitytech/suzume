@@ -49,15 +49,26 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
   // Conjunctions cannot usually start from a bare token or an unknown
   // hiragana noun; after a conjunction, hiragana で is not 出る's renyokei.
   if (next.pos == core::PartOfSpeech::Conjunction && prev.pos != core::PartOfSpeech::Symbol &&
-      prev.pos != core::PartOfSpeech::Particle && normalize::utf8Length(prev.surface) == 1) {
+      prev.pos != core::PartOfSpeech::Particle && prev.pos != core::PartOfSpeech::Auxiliary &&
+      normalize::utf8Length(prev.surface) == 1) {
     bonus += cost::kAlmostNever;
   }
   if (next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun && !prev.fromDictionary() &&
       grammar::isPureHiragana(prev.surface)) {
     bonus += cost::kProhibitive;
   }
-  if (prev.pos == core::PartOfSpeech::Conjunction && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      next.surface == "で") {
+  const bool conjunction_before_hiragana_de = prev.pos == core::PartOfSpeech::Conjunction &&
+                                              next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+                                              next.surface == "で";
+  // A hiragana conjunction ending in the connective して cannot directly
+  // govern existential いる.  In this context the ending is the productive
+  // する te-form and いる is aspectual (そう+し+て+いる).
+  const bool conjunction_shite_before_iru = prev.pos == core::PartOfSpeech::Conjunction &&
+                                            grammar::isPureHiragana(prev.surface) &&
+                                            utf8::endsWith(prev.surface, "して") &&
+                                            ((next.pos == core::PartOfSpeech::Verb && next.lemma == "いる") ||
+                                             next.extended_pos == core::ExtendedPOS::AuxAspectIru);
+  if (conjunction_before_hiragana_de || conjunction_shite_before_iru) {
     bonus += cost::kAlmostNever;
   }
 

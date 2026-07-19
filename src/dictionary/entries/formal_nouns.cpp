@@ -99,6 +99,9 @@ EntrySpecRange getFormalNounEntries() {
       // Fixed degree expression (ある程度は理解できる).
       adv("ある程度", ""),
       formal_noun("つもり", ""),
+      // Intended target/purpose after an attributive predicate
+      // (読むあてがない, 確認するあてもない).
+      formal_noun("あて", ""),
       // Formal noun for an incidental accompanying action (書いたついでに).
       formal_noun("ついで", ""),
       // Formal noun for a simultaneous/parallel action (読むかたわら書く).

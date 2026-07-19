@@ -412,6 +412,10 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // This grammatical chain must outrank a sequence of short particles.
       {EPOS::AuxTenseTa, EPOS::ParticleAdverbial, cost::kStrongBonus},
 
+      // A completed clause can be followed directly by a coordinating
+      // conjunction even when punctuation is omitted (確認し+た+従って…).
+      {EPOS::AuxTenseTa, EPOS::Conjunction, cost::kDoubleVeryStrongBonus},
+
       // AuxTenseTa → ParticleFinal (た+ね/よ) - minor bonus
       {EPOS::AuxTenseTa, EPOS::ParticleFinal, cost::kMinorBonus},
 

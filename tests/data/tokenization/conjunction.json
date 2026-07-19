@@ -1078,6 +1078,641 @@
       ],
       "id": "reason_kara_copula_boundary",
       "input": "なぜなら必要だからだ"
+    },
+    {
+      "description": "確認した従って進めた - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "従って",
+          "pos": "Conjunction",
+          "surface": "従って"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shita_ttte_meta",
+      "input": "確認した従って進めた"
+    },
+    {
+      "description": "確認したそうして進めた - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "そうして",
+          "pos": "Conjunction",
+          "surface": "そうして"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shitasoushite_meta",
+      "input": "確認したそうして進めた"
+    },
+    {
+      "description": "確認したしかも進めた - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "しかも",
+          "pos": "Conjunction",
+          "surface": "しかも"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shitashikamo_meta",
+      "input": "確認したしかも進めた"
+    },
+    {
+      "description": "確認したただし進めた - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "ただし",
+          "pos": "Conjunction",
+          "surface": "ただし"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shitatadashi_meta",
+      "input": "確認したただし進めた"
+    },
+    {
+      "description": "確認したともあれ進めた - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "ともあれ",
+          "pos": "Conjunction",
+          "surface": "ともあれ"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shitatomoare_meta",
+      "input": "確認したともあれ進めた"
+    },
+    {
+      "description": "そうしている - regression test",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "soushiteiru",
+      "input": "そうしている"
+    },
+    {
+      "description": "そうしていた - regression test",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "soushiteita",
+      "input": "そうしていた"
+    },
+    {
+      "description": "確認したし進めた - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "し",
+          "pos": "Particle",
+          "surface": "し"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shitashi_meta",
+      "input": "確認したし進めた"
+    },
+    {
+      "description": "然し確認は必要だ - regression test",
+      "expected": [
+        {
+          "lemma": "然し",
+          "pos": "Conjunction",
+          "surface": "然し"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shi_ha_da",
+      "input": "然し確認は必要だ"
+    },
+    {
+      "description": "さりとて確認は必要だ - regression test",
+      "expected": [
+        {
+          "lemma": "さりとて",
+          "pos": "Conjunction",
+          "surface": "さりとて"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "saritote_ha_da",
+      "input": "さりとて確認は必要だ"
+    },
+    {
+      "description": "ついては確認を進める - regression test",
+      "expected": [
+        {
+          "lemma": "ついては",
+          "pos": "Conjunction",
+          "surface": "ついては"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "tsuiteha_wo_meru",
+      "input": "ついては確認を進める"
+    },
+    {
+      "description": "よって確認を進める - regression test",
+      "expected": [
+        {
+          "lemma": "よって",
+          "pos": "Conjunction",
+          "surface": "よって"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "yottte_wo_meru",
+      "input": "よって確認を進める"
+    },
+    {
+      "description": "もっとも確認は必要だ - regression test",
+      "expected": [
+        {
+          "lemma": "もっとも",
+          "pos": "Conjunction",
+          "surface": "もっとも"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "motttomo_ha_da",
+      "input": "もっとも確認は必要だ"
+    },
+    {
+      "description": "しかし確認は必要だ - regression test",
+      "expected": [
+        {
+          "lemma": "しかし",
+          "pos": "Conjunction",
+          "surface": "しかし"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shikashi_ha_da",
+      "input": "しかし確認は必要だ"
+    },
+    {
+      "description": "荷物を持って進める - regression test",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "持つ",
+          "pos": "Verb",
+          "surface": "持っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "wo_ttte_meru",
+      "input": "荷物を持って進める"
+    },
+    {
+      "description": "規則によって進める - regression test",
+      "expected": [
+        {
+          "lemma": "規則",
+          "pos": "Noun",
+          "surface": "規則"
+        },
+        {
+          "lemma": "によって",
+          "pos": "Particle",
+          "surface": "によって"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "niyottte_meru",
+      "input": "規則によって進める"
+    },
+    {
+      "description": "確認については報告する - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "について",
+          "pos": "Particle",
+          "surface": "について"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nitsuiteha_suru",
+      "input": "確認については報告する"
+    },
+    {
+      "description": "確認をもって終了する - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "をもって",
+          "pos": "Particle",
+          "surface": "をもって"
+        },
+        {
+          "lemma": "終了",
+          "pos": "Noun",
+          "surface": "終了"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "womottte_suru",
+      "input": "確認をもって終了する"
+    },
+    {
+      "description": "文頭の閉じた接続詞「しかるに」を保持する。",
+      "expected": [
+        {
+          "lemma": "しかるに",
+          "pos": "Conjunction",
+          "surface": "しかるに"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shikaruni_ha_da",
+      "input": "しかるに確認は必要だ"
+    },
+    {
+      "description": "文頭の閉じた接続詞「もって」を保持し、動詞・複合助詞用法と区別する。",
+      "expected": [
+        {
+          "lemma": "もって",
+          "pos": "Conjunction",
+          "surface": "もって"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "終える",
+          "pos": "Verb",
+          "surface": "終える"
+        }
+      ],
+      "id": "mottte_wo_eru",
+      "input": "もって確認を終える"
     }
   ],
   "description": "conjunction tests",

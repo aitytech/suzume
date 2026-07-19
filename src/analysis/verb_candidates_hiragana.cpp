@@ -49,6 +49,9 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
   }
   constexpr size_t kMaxParticleChars = 4;
   size_t max_particle_end = std::min(probe_end, start_pos + kMaxParticleChars);
+  const std::string full_surface = extractSubstring(codepoints, start_pos, probe_end);
+  const bool full_surface_is_dictionary_verb =
+      dict_manager->lookupExact(full_surface, core::PartOfSpeech::Verb) != nullptr;
   for (size_t particle_end = start_pos + 1; particle_end <= max_particle_end; ++particle_end) {
     std::string particle_surface = extractSubstring(codepoints, start_pos, particle_end);
     const auto* particle_entry = dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle);
@@ -65,6 +68,14 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
     size_t verb_start = particle_end;
     for (size_t verb_end = probe_end; verb_end > verb_start + 1; --verb_end) {
       std::string verb_surface = extractSubstring(codepoints, verb_start, verb_end);
+      // An exact open-class verb after a closed particle is stronger boundary
+      // evidence than a generated particle-prefixed verb, even immediately
+      // after kanji (結果+と+ひきかえる). Preserve an independently attested
+      // whole verb such as できる before considering this split.
+      if (allow_single_char_particle_after_kanji && !full_surface_is_dictionary_verb &&
+          dict_manager->lookupExact(verb_surface, core::PartOfSpeech::Verb) != nullptr) {
+        return true;
+      }
       if (dict_manager->lookupExact(verb_surface, core::PartOfSpeech::Auxiliary) != nullptr) {
         SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << particle_surface << "+" << verb_surface
                                                   << " particle_then_auxiliary\n");
@@ -169,8 +180,11 @@ void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, siz
     const auto addCandidate = [&](size_t end_pos, std::string_view lemma_base, core::ExtendedPOS epos,
                                   const char* origin) {
       const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+      const float restricted_auxiliary_bonus =
+          subsidiary.joins_general ? bigram_cost::kNeutral : bigram_cost::kTripleVeryStrongBonus;
       candidates.push_back(makeVerbCandidate(
-          surface, start_pos, end_pos, candidate::verb_cost::kStrongBonus + bigram_cost::kVeryStrongBonus,
+          surface, start_pos, end_pos,
+          candidate::verb_cost::kStrongBonus + bigram_cost::kVeryStrongBonus + restricted_auxiliary_bonus,
           "し" + std::string(lemma_base), conjugation, true, CandidateOrigin::VerbHiragana,
           candidate::kHighOriginConfidence, origin, epos));
     };
@@ -232,7 +246,7 @@ void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, siz
           if (end_pos < codepoints.size() &&
               (uses_de ? (codepoints[end_pos] == U'で' || codepoints[end_pos] == U'だ')
                        : (codepoints[end_pos] == U'て' || codepoints[end_pos] == U'た'))) {
-            addCandidate(end_pos, lemma_base, core::ExtendedPOS::VerbTeForm, "suru_subsidiary_te_form");
+            addCandidate(end_pos, lemma_base, core::ExtendedPOS::VerbOnbinkei, "suru_subsidiary_te_form");
           }
         }
       };

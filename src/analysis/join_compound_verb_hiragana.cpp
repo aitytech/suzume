@@ -28,11 +28,33 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
     return;
   }
 
+  // Do not reinterpret a closed particle plus an independently attested verb
+  // as a hiragana V1+V2 compound (結果+と+ひきかえる). A whole dictionary verb
+  // at the same position still wins this ambiguity (できる, not で+きる).
+  size_t hiragana_end = start_pos;
+  while (hiragana_end < char_types.size() && char_types[hiragana_end] == CharType::Hiragana) {
+    ++hiragana_end;
+  }
+  if (start_pos + 2 < hiragana_end) {
+    const std::string leading = extractSubstring(codepoints, start_pos, start_pos + 1);
+    const auto* particle = dict_manager.lookupExact(leading, core::PartOfSpeech::Particle);
+    const std::string whole = extractSubstring(codepoints, start_pos, hiragana_end);
+    const std::string remainder = extractSubstring(codepoints, start_pos + 1, hiragana_end);
+    if (particle != nullptr && particle->extended_pos != core::ExtendedPOS::ParticleFinal &&
+        dict_manager.lookupExact(whole, core::PartOfSpeech::Verb) == nullptr &&
+        dict_manager.lookupExact(remainder, core::PartOfSpeech::Verb) != nullptr) {
+      return;
+    }
+  }
+
   // Get byte position for start
   size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
 
   // For each V2 subsidiary verb, check if it appears after a potential V1
   for (const auto& v2_verb : kSubsidiaryVerbs) {
+    if (!v2_verb.joins_general) {
+      continue;
+    }
     // Only consider V2 with readings (hiragana patterns)
     if (v2_verb.reading == nullptr) {
       continue;

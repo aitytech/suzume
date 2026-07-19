@@ -2365,6 +2365,135 @@
       ],
       "id": "ikanu_wake_dewa_nai",
       "input": "行かぬわけではない"
+    },
+    {
+      "description": "負わざる - regression test",
+      "expected": [
+        {
+          "lemma": "負う",
+          "pos": "Verb",
+          "surface": "負わ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざる"
+        }
+      ],
+      "id": "wazaru",
+      "input": "負わざる"
+    },
+    {
+      "description": "担わざる - regression test",
+      "expected": [
+        {
+          "lemma": "担う",
+          "pos": "Verb",
+          "surface": "担わ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざる"
+        }
+      ],
+      "id": "wazaru_1",
+      "input": "担わざる"
+    },
+    {
+      "description": "負わざれど - regression test",
+      "expected": [
+        {
+          "lemma": "負う",
+          "pos": "Verb",
+          "surface": "負わ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざれ"
+        },
+        {
+          "lemma": "ど",
+          "pos": "Particle",
+          "surface": "ど"
+        }
+      ],
+      "id": "wazaredo",
+      "input": "負わざれど"
+    },
+    {
+      "description": "担わざれば - regression test",
+      "expected": [
+        {
+          "lemma": "担う",
+          "pos": "Verb",
+          "surface": "担わ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wazareba",
+      "input": "担わざれば"
+    },
+    {
+      "description": "買わざる - regression test",
+      "expected": [
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買わ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざる"
+        }
+      ],
+      "id": "wazaru_2",
+      "input": "買わざる"
+    },
+    {
+      "description": "負わずに - regression test",
+      "expected": [
+        {
+          "lemma": "負う",
+          "pos": "Verb",
+          "surface": "負わ"
+        },
+        {
+          "lemma": "ず",
+          "pos": "Auxiliary",
+          "surface": "ずに"
+        }
+      ],
+      "id": "wazuni",
+      "input": "負わずに"
+    },
+    {
+      "description": "負わない - regression test",
+      "expected": [
+        {
+          "lemma": "負う",
+          "pos": "Verb",
+          "surface": "負わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wanai",
+      "input": "負わない"
     }
   ],
   "description": "verb_auxiliary tests",

@@ -35,6 +35,10 @@ inline constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "く�
  */
 inline constexpr std::string_view kBenefactiveRenyokei[] = {"もらい", "あげ"};
 
+// Potential receiving verbs whose finite and inflected forms become
+// benefactive subsidiaries after a conjunctive て/で.
+inline constexpr std::string_view kPotentialBenefactiveLemmas[] = {"いただける"};
+
 /**
  * @brief Renyokei surface of the modal subsidiary verb かねる
  *
@@ -62,6 +66,16 @@ inline bool isHumbleHonorificRenyokei(std::string_view surface) {
 /** Return true for a humble/honorific subsidiary verb lemma. */
 inline bool isHumbleHonorificLemma(std::string_view lemma) {
   for (const std::string_view entry : kHumbleHonorificLemmas) {
+    if (entry == lemma) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Return true for a potential benefactive subsidiary verb lemma. */
+inline bool isPotentialBenefactiveLemma(std::string_view lemma) {
+  for (const std::string_view entry : kPotentialBenefactiveLemmas) {
     if (entry == lemma) {
       return true;
     }

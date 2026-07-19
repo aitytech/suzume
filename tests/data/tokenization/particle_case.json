@@ -783,6 +783,65 @@
       ],
       "id": "compound_particle_nikakete",
       "input": "本にかけて進む、水にかけて進む、紙にかけて進む"
+    },
+    {
+      "description": "どこかで確認する - regression test",
+      "expected": [
+        {
+          "lemma": "どこ",
+          "pos": "Pronoun",
+          "surface": "どこ"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "dokokade_suru",
+      "input": "どこかで確認する"
+    },
+    {
+      "description": "何かで試す - regression test",
+      "expected": [
+        {
+          "lemma": "何",
+          "pos": "Pronoun",
+          "surface": "何"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試す"
+        }
+      ],
+      "id": "kade_su",
+      "input": "何かで試す"
     }
   ],
   "description": "Case particles (が、を、に、で)",

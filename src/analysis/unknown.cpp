@@ -74,6 +74,32 @@ bool spansConjunctionStart(const suzume::analysis::UnknownCandidate& candidate, 
   return false;
 }
 
+// A generic kanji noun candidate may end by consuming the stem kanji of a
+// Godan continuative compound (確認申|し上げる). Preserve the boundary when the
+// final kanji plus the following i-row ending reconstructs an attested verb
+// and a second kanji verb follows. Dictionary verification prevents an
+// arbitrary noun-final kanji followed by し from triggering the rule.
+bool endsInsideVerifiedCompoundVerb(const suzume::analysis::UnknownCandidate& candidate,
+                                    const std::vector<char32_t>& codepoints,
+                                    const std::vector<suzume::normalize::CharType>& char_types,
+                                    const suzume::dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || candidate.origin != suzume::core::CandidateOrigin::SameType ||
+      candidate.pos != suzume::core::PartOfSpeech::Noun || candidate.end <= candidate.start + 1 ||
+      candidate.end + 1 >= codepoints.size() || char_types[candidate.start] != suzume::normalize::CharType::Kanji ||
+      char_types[candidate.end] != suzume::normalize::CharType::Hiragana ||
+      char_types[candidate.end + 1] != suzume::normalize::CharType::Kanji) {
+    return false;
+  }
+
+  const std::string_view base_suffix = suzume::grammar::godanBaseSuffixFromIRow(codepoints[candidate.end]);
+  if (base_suffix.empty()) {
+    return false;
+  }
+  const std::string verb_base =
+      suzume::analysis::extractSubstring(codepoints, candidate.end - 1, candidate.end) + std::string(base_suffix);
+  return dict_manager->lookupExact(verb_base, suzume::core::PartOfSpeech::Verb) != nullptr;
+}
+
 }  // namespace
 
 namespace suzume::analysis {
@@ -365,7 +391,11 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
   candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
                                   [&](const UnknownCandidate& candidate) {
-                                    return spansConjunctionStart(candidate, codepoints, dict_manager_);
+                                    if (spansConjunctionStart(candidate, codepoints, dict_manager_)) {
+                                      return true;
+                                    }
+                                    return endsInsideVerifiedCompoundVerb(candidate, codepoints, char_types,
+                                                                          dict_manager_);
                                   }),
                    candidates.end());
 

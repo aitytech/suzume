@@ -494,6 +494,31 @@ void mergeSplitCopularNegative(std::vector<core::Morpheme>& result) {
   }
 }
 
+// At clause end, the negative renyokei after the formal noun こと can lose by
+// a near tie to the impossible copula+aspect split な+く. Restore the closed
+// grammatical form without affecting ordinary attributive copula な.
+void mergeSplitFormalNounNegativeRenyokei(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
+    const auto& formal_noun = result[idx - 1];
+    auto& na = result[idx];
+    const auto& ku = result[idx + 1];
+    if (formal_noun.surface != "こと" || formal_noun.extended_pos != core::ExtendedPOS::NounFormal ||
+        na.surface != "な" || na.extended_pos != core::ExtendedPOS::AuxCopulaDa || ku.surface != "く" ||
+        ku.pos != core::PartOfSpeech::Auxiliary) {
+      continue;
+    }
+    na.surface = "なく";
+    na.lemma = "ない";
+    na.pos = core::PartOfSpeech::Adjective;
+    na.extended_pos = core::ExtendedPOS::AdjRenyokei;
+    na.conj_type = dictionary::ConjugationType::IAdjective;
+    na.conj_form = grammar::ConjForm::Renyokei;
+    na.end = ku.end;
+    na.end_pos = ku.end_pos;
+    result.erase(result.begin() + static_cast<std::ptrdiff_t>(idx + 1));
+  }
+}
+
 // At the beginning of a clause, ない followed by a concessive conjunction is
 // the independent i-adjective (ないのに), rather than the verbal negative
 // auxiliary.  The lattice cannot use that following conjunction to resolve the
@@ -586,13 +611,31 @@ void resolveBenefactivePotential(std::vector<core::Morpheme>& result) {
         (idx >= 2 && result[idx - 2].pos == core::PartOfSpeech::Prefix && predecessor.pos == core::PartOfSpeech::Noun);
     const bool followed_by_polite =
         idx + 1 < result.size() && result[idx + 1].extended_pos == core::ExtendedPOS::AuxTenseMasu;
-    if (!dependent_predecessor || followed_by_polite || benefactive.lemma != "いただける") {
+    const bool conditional_form = benefactive.extended_pos == core::ExtendedPOS::VerbKateikei;
+    if (!dependent_predecessor || followed_by_polite || conditional_form ||
+        !grammar::isPotentialBenefactiveLemma(benefactive.lemma)) {
       continue;
     }
     benefactive.pos = core::PartOfSpeech::Auxiliary;
     benefactive.extended_pos = core::ExtendedPOS::AuxBenefactive;
     benefactive.conj_type = dictionary::ConjugationType::Ichidan;
     benefactive.conj_form = grammar::ConjForm::Base;
+  }
+}
+
+// The closed subsidiary みせる expresses resolve after a te-form
+// (確認し+て+みせる). Candidate generation already marks only that contextual
+// path as AuxAspectMiru, so expose its auxiliary POS without changing the
+// homographic lexical verb in 絵を見せる.
+void resolveDemonstrativeMiseru(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    const auto& connective = result[idx - 1];
+    auto& subsidiary = result[idx];
+    if (connective.extended_pos != core::ExtendedPOS::ParticleConj || subsidiary.lemma != "みせる") {
+      continue;
+    }
+    subsidiary.pos = core::PartOfSpeech::Auxiliary;
+    subsidiary.extended_pos = core::ExtendedPOS::AuxAspectMiru;
   }
 }
 
@@ -1139,6 +1182,36 @@ void resolveIndefiniteExistentialIru(std::vector<core::Morpheme>& result) {
   }
 }
 
+// In an indefinite phrase followed by a content predicate, homographic で is
+// the case particle (どこ+か+で+確認する), not the copular continuative.
+// Keep the copular reading before auxiliaries and lexical ある (何かである).
+void resolveIndefiniteCaseDe(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 2; idx + 1 < result.size(); ++idx) {
+    const auto& interrogative = result[idx - 2];
+    const auto& indefinite = result[idx - 1];
+    auto& de = result[idx];
+    const auto& predicate = result[idx + 1];
+    if (interrogative.extended_pos != core::ExtendedPOS::PronounInterrogative ||
+        indefinite.extended_pos != core::ExtendedPOS::ParticleAdverbial || indefinite.surface != "か" ||
+        de.surface != "で") {
+      continue;
+    }
+    const bool starts_copular_negative = idx + 2 < result.size() &&
+                                         predicate.extended_pos == core::ExtendedPOS::ParticleTopic &&
+                                         result[idx + 2].extended_pos == core::ExtendedPOS::AuxNegativeNai;
+    if (starts_copular_negative) {
+      retagCopulaDa(de);
+      continue;
+    }
+    if (de.extended_pos != core::ExtendedPOS::AuxCopulaDa || predicate.pos == core::PartOfSpeech::Auxiliary ||
+        (predicate.pos == core::PartOfSpeech::Verb && predicate.lemma == "ある")) {
+      continue;
+    }
+    retag(de, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleCase, "で", dictionary::ConjugationType::None,
+          grammar::ConjForm::Base);
+  }
+}
+
 // A continuative form is used as a nominal predicate before a copula, a
 // nominalizing suffix, or the copular change construction 〜に+なる. The
 // lattice keeps a verb candidate for the same surface, but these contexts
@@ -1316,6 +1389,7 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolveNominalPredicateNai(result);
   resolveCertaintyChigaiNai(result);
   mergeSplitCopularNegative(result);
+  mergeSplitFormalNounNegativeRenyokei(result);
   resolveInitialNegativeAdjective(result);
   resolveObligationNaranai(result);
   resolveHonorificVerbInflection(result);
@@ -1347,6 +1421,7 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   }
 
   resolveParticleAruOnbin(result);
+  resolveDemonstrativeMiseru(result);
   resolveBenefactivePotential(result);
   resolveInitialInabilityVerb(result);
   resolveTeBenefactiveNegativePotential(result);
@@ -1354,6 +1429,7 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolveSahenRenyokei(result);
   resolveDemonstrativeQuotativeOnbin(result);
   resolvePoliteSuruRenyokei(result);
+  resolveIndefiniteCaseDe(result);
   resolveIndefiniteExistentialIru(result);
   resolveNominalizedRenyokeiPredicate(result);
 }

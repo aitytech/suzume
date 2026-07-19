@@ -146,30 +146,38 @@ void appendSaRowContractedMizenkeiCandidates(const std::vector<char32_t>& codepo
   }
 }
 
-// Godan mizenkei pattern: kanji + mizenkei ending + ず (classical negative)
+// Godan mizenkei pattern: kanji + mizenkei ending + ず/ざる/ざれ
+// (classical negative)
 // E.g., 抜かずに → 抜か (mizenkei of 抜く) + ず + に
 //       行かずに → 行か (mizenkei of 行く) + ず + に
 //       書かずに → 書か (mizenkei of 書く) + ず + に
 //       欠かさず → 欠かさ (mizenkei of 欠かす) + ず
 // The main loop skips short A-row hiragana as particles, so generate the
-// complete mizenkei candidate explicitly when followed by ず.
+// complete mizenkei candidate explicitly when followed by a classical
+// negative auxiliary.
 void appendGodanMizenkeiZuCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                      size_t hiragana_end, const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,
                                      std::vector<UnknownCandidate>& candidates) {
-  size_t zu_pos = kanji_end;
-  while (zu_pos < hiragana_end && codepoints[zu_pos] != U'ず') {
-    ++zu_pos;
+  size_t negative_pos = kanji_end;
+  while (negative_pos < hiragana_end) {
+    const bool is_zu = codepoints[negative_pos] == U'ず';
+    const bool is_zaru_or_zare = codepoints[negative_pos] == U'ざ' && negative_pos + 1 < hiragana_end &&
+                                 (codepoints[negative_pos + 1] == U'る' || codepoints[negative_pos + 1] == U'れ');
+    if (is_zu || is_zaru_or_zare) {
+      break;
+    }
+    ++negative_pos;
   }
-  if (zu_pos < hiragana_end && zu_pos > kanji_end) {
+  if (negative_pos < hiragana_end && negative_pos > kanji_end) {
     const bool is_single_kanji_stem = kanji_end - start_pos == 1;
-    char32_t mizenkei_ending = codepoints[zu_pos - 1];
+    char32_t mizenkei_ending = codepoints[negative_pos - 1];
     if (grammar::isARowCodepoint(mizenkei_ending)) {
       grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(mizenkei_ending);
       if (verb_type != grammar::VerbType::Unknown) {
         std::string_view base_suffix = grammar::godanBaseSuffixFromARow(mizenkei_ending);
         if (!base_suffix.empty()) {
-          std::string surface = extractSubstring(codepoints, start_pos, zu_pos);
+          std::string surface = extractSubstring(codepoints, start_pos, negative_pos);
           std::string base_form = surface.substr(0, surface.size() - core::kJapaneseCharBytes);
           base_form += base_suffix;
 
@@ -192,20 +200,22 @@ void appendGodanMizenkeiZuCandidates(const std::vector<char32_t>& codepoints, si
           if (is_valid) {
             // A lexicalized verb+ず entry (思わず) wins unless the following に
             // explicitly creates the productive ずに auxiliary construction.
+            const bool followed_by_zu = codepoints[negative_pos] == U'ず';
             bool dict_has_zu_form = false;
-            if (dict_manager != nullptr) {
+            if (followed_by_zu && dict_manager != nullptr) {
               std::string zu_form = surface + "ず";
               std::string zuni_form = surface + "ずに";
               dict_has_zu_form =
                   dict_manager->lookupExact(zu_form) != nullptr || dict_manager->lookupExact(zuni_form) != nullptr;
             }
-            const bool followed_by_case_ni = zu_pos + 1 < codepoints.size() && codepoints[zu_pos + 1] == U'に';
+            const bool followed_by_case_ni =
+                followed_by_zu && negative_pos + 1 < codepoints.size() && codepoints[negative_pos + 1] == U'に';
             if (!dict_has_zu_form || followed_by_case_ni) {
               constexpr float kCost = candidate::verb_cost::kWeakPenalty;
               SUZUME_DEBUG_LOG("[VERB_CAND] " << surface << " godan_mizenkei_zu lemma=" << base_form
                                               << " cost=" << kCost << "\n");
               candidates.push_back(makeVerbCandidate(
-                  surface, start_pos, zu_pos, kCost, base_form, grammar::verbTypeToConjType(verb_type), true,
+                  surface, start_pos, negative_pos, kCost, base_form, grammar::verbTypeToConjType(verb_type), true,
                   CandidateOrigin::VerbKanji, 0.8F, "godan_mizenkei_zu", core::ExtendedPOS::VerbMizenkei));
             }
           }
