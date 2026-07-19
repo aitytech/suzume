@@ -15,11 +15,9 @@
 #include <vector>
 
 #include "core/types.h"
-#include "core/utf8_constants.h"
 #include "dictionary/dictionary.h"
 #include "grammar/conjugation.h"
 #include "grammar/inflection.h"
-#include "normalize/char_type.h"
 #include "tokenizer_utils.h"
 #include "unknown.h"
 

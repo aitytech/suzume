@@ -69,6 +69,7 @@ EXTENDED_POS = (
     "AUX_試行",
     "AUX_進行",
     "AUX_接近",
+    "AUX_開始",
     "AUX_様態",
     "AUX_推定",
     "AUX_みたい",
@@ -109,7 +110,15 @@ EXTENDED_POS = (
     "AUX_文語断定",
     "AUX_文語過去",
     "AUX_文語断定連体",
+    "AUX_文語完了",
     "AUX_文語当為",
+    "AUX_不可能",
+    "AUX_授受",
+    "SUFFIX_直後",
+    "SUFFIX_傾向",
+    "DET_引用",
+    "AUX_よう",
+    "AUX_KURUWA_POLITE",
 )
 CONJUGATION_TYPES: tuple[str | None, ...] = (
     None,

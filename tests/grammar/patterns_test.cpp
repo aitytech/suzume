@@ -19,6 +19,23 @@ TEST(CharPatternsTest, CausalParticleBeforeTopic) {
   EXPECT_FALSE(isCausalParticleBeforeTopic("のに", "はない"));
 }
 
+TEST(CharPatternsTest, SharedClosedSurfacePredicates) {
+  EXPECT_TRUE(isTeDeSurface("て"));
+  EXPECT_TRUE(isTeDeSurface("で"));
+  EXPECT_FALSE(isTeDeSurface("てる"));
+  EXPECT_TRUE(isContractedProgressiveSurface("てる"));
+  EXPECT_TRUE(isDialectalOruContractionLemma("とる"));
+  EXPECT_TRUE(isDialectalOruContractionLemma("どる"));
+  EXPECT_FALSE(isDialectalOruContractionLemma("いる"));
+  EXPECT_TRUE(isAccusativeParticleWoSurface("を"));
+  EXPECT_TRUE(isConcessiveParticleTomoSurface("とも"));
+  EXPECT_TRUE(isColloquialConditionalNegativeSurface("なきゃ"));
+  EXPECT_TRUE(isColloquialConditionalNegativeSurface("なけりゃ"));
+  EXPECT_TRUE(isPastMarkerTaDaSurface("た"));
+  EXPECT_TRUE(isPastMarkerTaDaSurface("だ"));
+  EXPECT_FALSE(isPastMarkerTaDaSurface("て"));
+}
+
 // ===== endsWithVerbNegative tests =====
 
 class VerbNegativeTest : public ::testing::Test {};

@@ -314,7 +314,7 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
         // Check last character of stem (use std::string_view on stem directly)
         std::string_view stem_view(stem);
         std::string_view stem_end = stem_view.substr(stem_view.size() - core::kJapaneseCharBytes);
-        if (utf8::equalsAny(stem_end, {"て", "で"})) {
+        if (isTeDeSurface(stem_end)) {
           // Check if this is analyzing as 〜てる/〜でる form
           // These stems (見て, 食べて) are te-forms, not contracted progressive stems
           candidate.confidence -= inflection::kPenaltyIchidanContractedProgressivePast;

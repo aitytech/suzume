@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "analysis/candidate_constants.h"
+#include "core/utf8_constants.h"
 #include "normalize/utf8.h"
 #include "verb_candidates_helpers.h"
 

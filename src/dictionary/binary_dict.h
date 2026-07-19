@@ -75,6 +75,7 @@ class BinaryDictionary {
    * @brief Load dictionary from file
    * @param path File path
    * @return Number of entries on success, error on failure
+   * @note Native-only I/O. WASM builds return an error; use loadFromMemory().
    */
   core::Expected<size_t, core::Error> loadFromFile(const std::string& path);
 
@@ -142,6 +143,7 @@ class BinaryDictWriter {
    * @brief Build and write to file
    * @param path Output file path
    * @return Number of bytes written on success, error on failure
+   * @note Native-only I/O. WASM builds return an error; use build().
    */
   core::Expected<size_t, core::Error> writeToFile(const std::string& path);
 

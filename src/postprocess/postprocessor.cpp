@@ -272,8 +272,7 @@ void resolveProgressiveContractionNominalizer(std::vector<core::Morpheme>& resul
     const auto& connective = result[idx - 1];
     const auto& continuation = result[idx + 1];
     if (contraction.surface != "ん" || contraction.extended_pos != core::ExtendedPOS::AuxNegativeNu ||
-        connective.extended_pos != core::ExtendedPOS::ParticleConj ||
-        !utf8::equalsAny(connective.surface, {"て", "で"}) ||
+        connective.extended_pos != core::ExtendedPOS::ParticleConj || !grammar::isTeDeSurface(connective.surface) ||
         (continuation.extended_pos != core::ExtendedPOS::ParticleNo &&
          continuation.extended_pos != core::ExtendedPOS::AuxCopulaDa)) {
       continue;
@@ -600,9 +599,8 @@ void resolveProgressiveIru(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx < result.size(); ++idx) {
     const auto& connective = result[idx - 1];
     auto& iru = result[idx];
-    if (connective.extended_pos != core::ExtendedPOS::ParticleConj ||
-        !utf8::equalsAny(connective.surface, {"て", "で"}) || iru.surface != "いる" || iru.lemma != "いる" ||
-        iru.extended_pos != core::ExtendedPOS::VerbShuushikei) {
+    if (connective.extended_pos != core::ExtendedPOS::ParticleConj || !grammar::isTeDeSurface(connective.surface) ||
+        iru.surface != "いる" || iru.lemma != "いる" || iru.extended_pos != core::ExtendedPOS::VerbShuushikei) {
       continue;
     }
     iru.pos = core::PartOfSpeech::Auxiliary;

@@ -154,7 +154,7 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // this lexical gate so unknown hiragana fragments remain conservative.
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && prev.lemmaVerified() &&
       prev.origin != core::CandidateOrigin::VerbCompound && prev.origin != core::CandidateOrigin::Join &&
-      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"て", "で"})) {
+      next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(next.surface)) {
     bonus += cost::kVeryStrongBonus;
   }
 
@@ -165,7 +165,7 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
       prev.origin == core::CandidateOrigin::VerbCompound || prev.origin == core::CandidateOrigin::Join;
   const bool is_humble_auxiliary_onbin = prev.fromDictionary() && grammar::isHumbleHonorificLemma(prev.lemma);
   if ((is_compound_onbin || is_humble_auxiliary_onbin) && prev.extended_pos == core::ExtendedPOS::VerbOnbinkei &&
-      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"て", "で"})) {
+      next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(next.surface)) {
     bonus += cost::kVeryStrongBonus;
   }
 
@@ -173,7 +173,7 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // complete te-form boundary.  This prevents a nominalized homograph from
   // taking precedence over a verified lexical verb (押しのけ+て).
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.fromDictionary() &&
-      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"て", "で"})) {
+      next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(next.surface)) {
     bonus += cost::kModerateBonus;
   }
 
@@ -290,7 +290,7 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // restriction surface-scoped because other ParticleCase homographs also act
   // as valid quotation or conditional particles after a finite verb (〜る+と).
   if (prev.extended_pos == core::ExtendedPOS::VerbShuushikei && next.extended_pos == core::ExtendedPOS::ParticleCase &&
-      utf8::equalsAny(next.surface, {"を"})) {
+      grammar::isAccusativeParticleWoSurface(next.surface)) {
     bonus += cost::kStrong;
   }
 
@@ -852,7 +852,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // take connective て/で. In なっ+て the onbin belongs to lexical なる, so
   // prevent a generated emphatic AuxCopulaDa edge from replacing that verb.
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && utf8::endsWith(prev.surface, "っ") &&
-      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"て", "で"})) {
+      next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(next.surface)) {
     bonus += cost::kAlmostNever;
   }
 
@@ -901,11 +901,13 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
       utf8::equalsAny(next.surface, {"まで"})) {
     bonus += cost::kVeryStrongBonus;
   }
-  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai && utf8::equalsAny(prev.surface, {"なきゃ", "なけりゃ"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai &&
+      grammar::isColloquialConditionalNegativeSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbMizenkei && utf8::equalsAny(next.surface, {"なら"})) {
     bonus += cost::kStrongBonus;
   }
-  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai && utf8::equalsAny(prev.surface, {"なきゃ", "なけりゃ"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai &&
+      grammar::isColloquialConditionalNegativeSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::AuxPotential && utf8::equalsAny(next.surface, {"いけ"})) {
     // The lexical いける renyokei has a low candidate cost before ない. Give
     // this closed obligation connection a small additional preference so its
@@ -1035,7 +1037,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   // predicate (本を買いに行く, 本を読み始める). This left-context evidence
   // offsets the general renyokei-before-case-particle nominalization bias while
   // leaving standalone nominal forms such as 読みを/香りを untouched.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(prev.surface, {"を"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.fromDictionary()) {
     bonus += cost::kExtraStrongBonus;
   }

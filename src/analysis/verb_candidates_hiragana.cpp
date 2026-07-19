@@ -688,9 +688,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     bool looks_like_te_form = false;
     if ((pre_check_len == 3 || pre_check_len == 4) && surface.size() >= core::kJapaneseCharBytes) {
       std::string_view last_char = utf8::lastChar(surface);
-      if (utf8::equalsAny(last_char, {"た", "だ"})) {
+      if (grammar::isPastMarkerTaDaSurface(last_char)) {
         looks_like_past_form = true;
-      } else if (utf8::equalsAny(last_char, {"て", "で"})) {
+      } else if (grammar::isTeDeSurface(last_char)) {
         // Te-form verbs (あらって, しまって, かって) need lower threshold too
         looks_like_te_form = true;
       }
@@ -869,7 +869,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       // Skip if stem (without た/だ) is a known auxiliary (e.g., そうだ → そう is AUX)
       bool is_medium_past_form = false;
       if ((candidate_len == 3 || candidate_len == 4) && best.confidence >= verb_opts.confidence_past_te) {
-        if (utf8::equalsAny(utf8::lastChar(surface), {"た", "だ"})) {
+        if (grammar::isPastMarkerTaDaSurface(utf8::lastChar(surface))) {
           // Extract stem (surface without last た/だ)
           std::string_view stem(surface.data(), surface.size() - core::kJapaneseCharBytes);
           // Skip if stem is a known auxiliary (e.g., そう+だ should not be verb candidate)

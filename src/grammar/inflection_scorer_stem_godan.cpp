@@ -623,7 +623,7 @@ float scoreGodan(float base, const InflectionScoreContext& context) {
   // are handled separately. This penalty applies to Godan types only.
   if (is_godan_non_ra && stem_len >= core::kTwoJapaneseCharBytes) {
     std::string_view last_char = utf8::lastChar(stem);
-    if (utf8::equalsAny(last_char, {"て", "で"})) {
+    if (isTeDeSurface(last_char)) {
       float pen = GET_OPT(penalty_godan_te_stem, inflection::kPenaltyGodanTeStem);
       base -= pen;
       logConfidenceAdjustment(-pen, "godan_te_stem_invalid");

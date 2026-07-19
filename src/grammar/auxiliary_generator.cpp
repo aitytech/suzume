@@ -17,11 +17,20 @@ namespace suzume::grammar {
 
 namespace {
 
+enum class AuxiliaryFormFamily : uint8_t {
+  Standard,
+  TeAttachment,
+  Progressive,
+  Sokuonbin,
+  Masu,
+};
+
 struct AuxiliaryBase {
   std::string_view surface;
   VerbType conj_type;
   uint16_t category_id;
   uint16_t required_conn;
+  AuxiliaryFormFamily form_family = AuxiliaryFormFamily::Standard;
 };
 
 // Conjugation suffix with output connection ID
@@ -576,16 +585,16 @@ const auto& auxiliaryBases() {
   using namespace conn;
   static constexpr AuxiliaryBase kBases[] = {
       // === Te-form attachments (て形接続) ===
-      {"いる", VerbType::Ichidan, kAuxTeiru, kAuxOutTe},
+      {"いる", VerbType::Ichidan, kAuxTeiru, kAuxOutTe, AuxiliaryFormFamily::Progressive},
       {"ある", VerbType::GodanRa, kAuxTearu, kAuxOutTe},
       {"しまう", VerbType::GodanWa, kAuxTeshimau, kAuxOutTe},
       {"おく", VerbType::GodanKa, kAuxTeoku, kAuxOutTe},
       {"くる", VerbType::Kuru, kAuxTekuru, kAuxOutTe},
-      {"いく", VerbType::GodanKa, kAuxTeiku, kAuxOutTe},
+      {"いく", VerbType::GodanKa, kAuxTeiku, kAuxOutTe, AuxiliaryFormFamily::Sokuonbin},
       {"みる", VerbType::Ichidan, kAuxTemiru, kAuxOutTe},
-      {"もらう", VerbType::GodanWa, kAuxTemorau, kAuxOutTe},
-      {"くれる", VerbType::Ichidan, kAuxTekureru, kAuxOutTe},
-      {"あげる", VerbType::Ichidan, kAuxTeageru, kAuxOutTe},
+      {"もらう", VerbType::GodanWa, kAuxTemorau, kAuxOutTe, AuxiliaryFormFamily::TeAttachment},
+      {"くれる", VerbType::Ichidan, kAuxTekureru, kAuxOutTe, AuxiliaryFormFamily::TeAttachment},
+      {"あげる", VerbType::Ichidan, kAuxTeageru, kAuxOutTe, AuxiliaryFormFamily::TeAttachment},
 
       // === Mizenkei attachments (未然形接続) ===
       {"ない", VerbType::IAdjective, kAuxNai, kVerbMizenkei},
@@ -595,7 +604,7 @@ const auto& auxiliaryBases() {
       {"させる", VerbType::Ichidan, kAuxSeru, kVerbMizenkei},
 
       // === Renyokei attachments (連用形接続) ===
-      {"ます", VerbType::Unknown, kAuxMasu, kVerbRenyokei},  // Special
+      {"ます", VerbType::Unknown, kAuxMasu, kVerbRenyokei, AuxiliaryFormFamily::Masu},
       {"たい", VerbType::IAdjective, kAuxTai, kVerbRenyokei},
       {"やすい", VerbType::IAdjective, kAuxRenyokei, kVerbRenyokei},
       {"にくい", VerbType::IAdjective, kAuxRenyokei, kVerbRenyokei},
@@ -615,22 +624,13 @@ const auto& auxiliaryBases() {
 }
 
 void appendAuxiliaryBase(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>& result) {
-  // Benefactive te-attachments (てくれる, てもらう, てあげる) use limited forms
-  // to avoid over-matching like 待ってくれない → 待つ (wrong)
-  const bool is_benefactive = base.category_id == conn::kAuxTemorau || base.category_id == conn::kAuxTekureru ||
-                              base.category_id == conn::kAuxTeageru;
-
-  // Progressive ている uses forms without negative
-  // Keep い(mizenkei) + ない(AUX) instead of a single いない token.
-  const bool is_progressive = base.category_id == conn::kAuxTeiru;
-
   switch (base.conj_type) {
     case VerbType::Ichidan:
-      if (is_benefactive) {
+      if (base.form_family == AuxiliaryFormFamily::TeAttachment) {
         appendWithStem(base, kIchidanTeAttach, std::size(kIchidanTeAttach), result);
         return;
       }
-      if (is_progressive) {
+      if (base.form_family == AuxiliaryFormFamily::Progressive) {
         appendWithStem(base, kIchidanProgressive, std::size(kIchidanProgressive), result);
         return;
       }
@@ -640,10 +640,8 @@ void appendAuxiliaryBase(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>&
     case VerbType::GodanKa:
     case VerbType::GodanSa:
     case VerbType::GodanRa:
-      // Benefactive bases (てもらう) stop after te; いく (ていく) is 促音便 irregular
-      // (いった/いって). Only もらう(Wa) is a benefactive godan base and only いく(Ka)
-      // carries kAuxTeiku, so the shared call reproduces the old per-type tables.
-      appendGodanWithStem(base, is_benefactive, base.category_id == conn::kAuxTeiku, result);
+      appendGodanWithStem(base, base.form_family == AuxiliaryFormFamily::TeAttachment,
+                          base.form_family == AuxiliaryFormFamily::Sokuonbin, result);
       return;
     case VerbType::Kuru:
       appendFullForms(base, kKuruFull, std::size(kKuruFull), result);
@@ -652,7 +650,7 @@ void appendAuxiliaryBase(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>&
       appendWithStem(base, kIAdjective, std::size(kIAdjective), result);
       return;
     case VerbType::Unknown:
-      if (base.surface == "ます") {
+      if (base.form_family == AuxiliaryFormFamily::Masu) {
         appendFullForms(base, kMasu, std::size(kMasu), result);
         return;
       }

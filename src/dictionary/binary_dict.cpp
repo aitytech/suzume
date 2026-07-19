@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <cstring>
+#ifndef __EMSCRIPTEN__
 #include <fstream>
+#endif
 #include <limits>
 #include <unordered_map>
 
@@ -193,6 +195,11 @@ BinaryDictionary::BinaryDictionary() = default;
 BinaryDictionary::~BinaryDictionary() = default;
 
 core::Expected<size_t, core::Error> BinaryDictionary::loadFromFile(const std::string& path) {
+#ifdef __EMSCRIPTEN__
+  (void)path;
+  return core::makeUnexpected(
+      core::Error(core::ErrorCode::InvalidInput, "File dictionary loading is unavailable in WASM"));
+#else
   std::ifstream file(path, std::ios::binary | std::ios::ate);
   if (!file) {
     return core::makeUnexpected(core::Error(core::ErrorCode::FileNotFound, "Failed to open dictionary file: " + path));
@@ -206,19 +213,11 @@ core::Expected<size_t, core::Error> BinaryDictionary::loadFromFile(const std::st
     return core::makeUnexpected(core::Error(core::ErrorCode::InternalError, "Failed to read dictionary file: " + path));
   }
 
-  DoubleArray loaded_trie;
-  std::vector<DictionaryEntry> loaded_entries;
-  auto result = parseData(loaded_data.data(), loaded_data.size(), loaded_trie, loaded_entries);
-  if (!result.hasValue()) {
-    return result;
-  }
-
-  // loaded_data is not retained: the trie and entries own independent copies of
-  // everything they need (deserialized units and constructed strings), so the
-  // raw file bytes can be freed here.
-  trie_ = std::move(loaded_trie);
-  entries_ = std::move(loaded_entries);
-  return result;
+  // Reuse the memory loader so file and embedded dictionaries share the same
+  // validation and atomic publish path. The decoded trie and entries own their
+  // data, so loaded_data can be released immediately after this call.
+  return loadFromMemory(loaded_data.data(), loaded_data.size());
+#endif
 }
 
 core::Expected<size_t, core::Error> BinaryDictionary::loadFromMemory(const uint8_t* data, size_t size) {
@@ -744,6 +743,11 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
 }
 
 core::Expected<size_t, core::Error> BinaryDictWriter::writeToFile(const std::string& path) {
+#ifdef __EMSCRIPTEN__
+  (void)path;
+  return core::makeUnexpected(
+      core::Error(core::ErrorCode::InvalidInput, "File dictionary writing is unavailable in WASM"));
+#else
   auto result = build();
   if (!result) {
     return core::makeUnexpected(result.error());
@@ -763,6 +767,7 @@ core::Expected<size_t, core::Error> BinaryDictWriter::writeToFile(const std::str
   }
 
   return data.size();
+#endif
 }
 
 }  // namespace suzume::dictionary

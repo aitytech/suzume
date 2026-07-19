@@ -738,7 +738,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
                         /*allow_choon=*/false)) {
           // Check if ends with て or で (te-form markers)
           std::string_view last_char = utf8::lastChar(surface);
-          if (utf8::equalsAny(last_char, {"て", "で"})) {
+          if (grammar::isTeDeSurface(last_char)) {
             skip_penalty = true;
             skip_reason = "short_te_form";
           }

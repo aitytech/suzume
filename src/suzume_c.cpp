@@ -5,6 +5,7 @@
 
 #include "suzume/suzume_c.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
@@ -28,9 +29,131 @@ struct SuzumeHandle {
 
 namespace {
 
+constexpr std::array<suzume::core::ExtendedPOS, 82> kSerializedExtendedPos = {
+    suzume::core::ExtendedPOS::Unknown,
+    suzume::core::ExtendedPOS::VerbShuushikei,
+    suzume::core::ExtendedPOS::VerbRenyokei,
+    suzume::core::ExtendedPOS::VerbMizenkei,
+    suzume::core::ExtendedPOS::VerbOnbinkei,
+    suzume::core::ExtendedPOS::VerbTeForm,
+    suzume::core::ExtendedPOS::VerbKateikei,
+    suzume::core::ExtendedPOS::VerbMeireikei,
+    suzume::core::ExtendedPOS::VerbRentaikei,
+    suzume::core::ExtendedPOS::VerbTaForm,
+    suzume::core::ExtendedPOS::VerbTaraForm,
+    suzume::core::ExtendedPOS::AdjBasic,
+    suzume::core::ExtendedPOS::AdjRenyokei,
+    suzume::core::ExtendedPOS::AdjStem,
+    suzume::core::ExtendedPOS::AdjKatt,
+    suzume::core::ExtendedPOS::AdjKeForm,
+    suzume::core::ExtendedPOS::AdjNaAdj,
+    suzume::core::ExtendedPOS::AuxTenseTa,
+    suzume::core::ExtendedPOS::AuxTenseMasu,
+    suzume::core::ExtendedPOS::AuxNegativeNai,
+    suzume::core::ExtendedPOS::AuxNegativeNu,
+    suzume::core::ExtendedPOS::AuxDesireTai,
+    suzume::core::ExtendedPOS::AuxVolitional,
+    suzume::core::ExtendedPOS::AuxPassive,
+    suzume::core::ExtendedPOS::AuxCausative,
+    suzume::core::ExtendedPOS::AuxPotential,
+    suzume::core::ExtendedPOS::AuxAspectIru,
+    suzume::core::ExtendedPOS::AuxAspectShimau,
+    suzume::core::ExtendedPOS::AuxAspectOku,
+    suzume::core::ExtendedPOS::AuxAspectMiru,
+    suzume::core::ExtendedPOS::AuxAspectIku,
+    suzume::core::ExtendedPOS::AuxAspectKuru,
+    suzume::core::ExtendedPOS::AuxAspectHajimeru,
+    suzume::core::ExtendedPOS::AuxAppearanceSou,
+    suzume::core::ExtendedPOS::AuxConjectureRashii,
+    suzume::core::ExtendedPOS::AuxConjectureMitai,
+    suzume::core::ExtendedPOS::AuxCopulaDa,
+    suzume::core::ExtendedPOS::AuxCopulaDesu,
+    suzume::core::ExtendedPOS::AuxHonorific,
+    suzume::core::ExtendedPOS::AuxGozaru,
+    suzume::core::ExtendedPOS::AuxExcessive,
+    suzume::core::ExtendedPOS::AuxGaru,
+    suzume::core::ExtendedPOS::ParticleCase,
+    suzume::core::ExtendedPOS::ParticleTopic,
+    suzume::core::ExtendedPOS::ParticleFinal,
+    suzume::core::ExtendedPOS::ParticleConj,
+    suzume::core::ExtendedPOS::ParticleQuote,
+    suzume::core::ExtendedPOS::ParticleAdverbial,
+    suzume::core::ExtendedPOS::ParticleNo,
+    suzume::core::ExtendedPOS::ParticleBinding,
+    suzume::core::ExtendedPOS::Noun,
+    suzume::core::ExtendedPOS::NounFormal,
+    suzume::core::ExtendedPOS::NounVerbal,
+    suzume::core::ExtendedPOS::NounProper,
+    suzume::core::ExtendedPOS::NounProperFamily,
+    suzume::core::ExtendedPOS::NounProperGiven,
+    suzume::core::ExtendedPOS::NounNumber,
+    suzume::core::ExtendedPOS::Pronoun,
+    suzume::core::ExtendedPOS::PronounInterrogative,
+    suzume::core::ExtendedPOS::Adverb,
+    suzume::core::ExtendedPOS::AdverbQuotative,
+    suzume::core::ExtendedPOS::Conjunction,
+    suzume::core::ExtendedPOS::Determiner,
+    suzume::core::ExtendedPOS::Prefix,
+    suzume::core::ExtendedPOS::Suffix,
+    suzume::core::ExtendedPOS::Symbol,
+    suzume::core::ExtendedPOS::Interjection,
+    suzume::core::ExtendedPOS::Other,
+    suzume::core::ExtendedPOS::AdjMizenkei,
+    suzume::core::ExtendedPOS::AuxNegativeMai,
+    suzume::core::ExtendedPOS::AuxClassicalNari,
+    suzume::core::ExtendedPOS::AuxClassicalKeri,
+    suzume::core::ExtendedPOS::AuxClassicalTari,
+    suzume::core::ExtendedPOS::AuxClassicalPerfect,
+    suzume::core::ExtendedPOS::AuxClassicalBeshi,
+    suzume::core::ExtendedPOS::AuxInability,
+    suzume::core::ExtendedPOS::AuxBenefactive,
+    suzume::core::ExtendedPOS::SuffixRecentCompletion,
+    suzume::core::ExtendedPOS::SuffixTendency,
+    suzume::core::ExtendedPOS::DeterminerQuotative,
+    suzume::core::ExtendedPOS::AuxSimilitudeYou,
+    suzume::core::ExtendedPOS::AuxKuruwaPolite,
+};
+
+constexpr bool serializedExtendedPosValuesAreStable() {
+  for (size_t index = 0; index < kSerializedExtendedPos.size(); ++index) {
+    if (static_cast<uint8_t>(kSerializedExtendedPos[index]) != index) {
+      return false;
+    }
+  }
+  return true;
+}
+
 static_assert(static_cast<uint8_t>(suzume::core::PartOfSpeech::Count_) == 15);
 static_assert(static_cast<uint8_t>(suzume::core::ExtendedPOS::Count_) == 82);
+static_assert(serializedExtendedPosValuesAreStable());
 static_assert(static_cast<uint8_t>(suzume::dictionary::ConjugationType::ProperGiven) == 17);
+static_assert(sizeof(suzume_pos_t) == 1);
+static_assert(sizeof(suzume_extended_pos_t) == 1);
+static_assert(sizeof(suzume_conjugation_type_t) == 1);
+static_assert(sizeof(suzume_conjugation_form_t) == 1);
+static_assert(SUZUME_POS_UNKNOWN == static_cast<uint8_t>(suzume::core::PartOfSpeech::Unknown));
+static_assert(SUZUME_POS_NOUN == static_cast<uint8_t>(suzume::core::PartOfSpeech::Noun));
+static_assert(SUZUME_POS_VERB == static_cast<uint8_t>(suzume::core::PartOfSpeech::Verb));
+static_assert(SUZUME_POS_ADJECTIVE == static_cast<uint8_t>(suzume::core::PartOfSpeech::Adjective));
+static_assert(SUZUME_POS_ADVERB == static_cast<uint8_t>(suzume::core::PartOfSpeech::Adverb));
+static_assert(SUZUME_POS_PARTICLE == static_cast<uint8_t>(suzume::core::PartOfSpeech::Particle));
+static_assert(SUZUME_POS_AUXILIARY == static_cast<uint8_t>(suzume::core::PartOfSpeech::Auxiliary));
+static_assert(SUZUME_POS_CONJUNCTION == static_cast<uint8_t>(suzume::core::PartOfSpeech::Conjunction));
+static_assert(SUZUME_POS_DETERMINER == static_cast<uint8_t>(suzume::core::PartOfSpeech::Determiner));
+static_assert(SUZUME_POS_PRONOUN == static_cast<uint8_t>(suzume::core::PartOfSpeech::Pronoun));
+static_assert(SUZUME_POS_PREFIX == static_cast<uint8_t>(suzume::core::PartOfSpeech::Prefix));
+static_assert(SUZUME_POS_SUFFIX == static_cast<uint8_t>(suzume::core::PartOfSpeech::Suffix));
+static_assert(SUZUME_POS_INTERJECTION == static_cast<uint8_t>(suzume::core::PartOfSpeech::Interjection));
+static_assert(SUZUME_POS_SYMBOL == static_cast<uint8_t>(suzume::core::PartOfSpeech::Symbol));
+static_assert(SUZUME_POS_OTHER == static_cast<uint8_t>(suzume::core::PartOfSpeech::Other));
+static_assert(static_cast<uint8_t>(suzume::core::AnalysisMode::Normal) == 0);
+static_assert(static_cast<uint8_t>(suzume::core::AnalysisMode::Search) == 1);
+static_assert(static_cast<uint8_t>(suzume::core::AnalysisMode::Split) == 2);
+static_assert(SUZUME_MORPHEME_USER_DICT == (1U << 0U));
+static_assert(SUZUME_MORPHEME_FORMAL_NOUN == (1U << 1U));
+static_assert(SUZUME_MORPHEME_LOW_INFO == (1U << 2U));
+static_assert(SUZUME_MORPHEME_UNKNOWN == (1U << 3U));
+static_assert(SUZUME_MORPHEME_FROM_DICTIONARY == (1U << 4U));
 
 thread_local std::string last_error;
 

@@ -7,6 +7,131 @@
 
 namespace suzume::normalize {
 
+namespace {
+
+// The quantity-related predicates below overlap substantially (for example,
+// every temporal counter is also a general counter). Keep their closed classes
+// in one packed table so additions cannot make those predicates drift apart.
+enum CharProperty : uint8_t {
+  kCounter = 1 << 0,
+  kDurationSuffix = 1 << 1,
+  kTemporalRelationSuffix = 1 << 2,
+  kTemporalCounter = 1 << 3,
+  kQuantityPrefix = 1 << 4,
+  kNumericApproxPrefix = 1 << 5,
+  kTemporalSpanSuffix = 1 << 6,
+};
+
+struct CharPropertyEntry {
+  char32_t codepoint;
+  uint8_t properties;
+};
+
+constexpr std::array<CharPropertyEntry, 87> kCharProperties = {{{U'丁', kCounter},
+                                                                {U'万', kCounter},
+                                                                {U'世', kCounter},
+                                                                {U'両', kCounter},
+                                                                {U'中', kDurationSuffix | kTemporalSpanSuffix},
+                                                                {U'人', kCounter},
+                                                                {U'件', kCounter},
+                                                                {U'位', kCounter},
+                                                                {U'何', kQuantityPrefix},
+                                                                {U'個', kCounter},
+                                                                {U'倍', kCounter},
+                                                                {U'億', kCounter},
+                                                                {U'兆', kCounter},
+                                                                {U'円', kCounter},
+                                                                {U'冊', kCounter},
+                                                                {U'分', kCounter | kDurationSuffix | kTemporalCounter},
+                                                                {U'前', kTemporalRelationSuffix},
+                                                                {U'割', kCounter},
+                                                                {U'勝', kCounter},
+                                                                {U'匹', kCounter},
+                                                                {U'半', kQuantityPrefix},
+                                                                {U'口', kCounter},
+                                                                {U'台', kCounter},
+                                                                {U'号', kCounter},
+                                                                {U'名', kCounter},
+                                                                {U'問', kCounter},
+                                                                {U'回', kCounter},
+                                                                {U'基', kCounter},
+                                                                {U'巻', kCounter},
+                                                                {U'席', kCounter},
+                                                                {U'年', kCounter | kTemporalCounter},
+                                                                {U'度', kCounter},
+                                                                {U'後', kTemporalRelationSuffix},
+                                                                {U'戦', kCounter},
+                                                                {U'戸', kCounter},
+                                                                {U'才', kCounter},
+                                                                {U'敗', kCounter},
+                                                                {U'数', kQuantityPrefix},
+                                                                {U'日', kCounter | kTemporalCounter},
+                                                                {U'時', kCounter | kTemporalCounter},
+                                                                {U'曲', kCounter},
+                                                                {U'月', kCounter | kTemporalCounter},
+                                                                {U'期', kCounter},
+                                                                {U'末', kTemporalSpanSuffix},
+                                                                {U'本', kCounter},
+                                                                {U'束', kCounter},
+                                                                {U'条', kCounter},
+                                                                {U'杯', kCounter},
+                                                                {U'枚', kCounter},
+                                                                {U'棟', kCounter},
+                                                                {U'機', kCounter},
+                                                                {U'次', kCounter},
+                                                                {U'歳', kCounter},
+                                                                {U'段', kCounter},
+                                                                {U'泊', kCounter},
+                                                                {U'点', kCounter},
+                                                                {U'版', kCounter},
+                                                                {U'番', kCounter},
+                                                                {U'畳', kCounter},
+                                                                {U'発', kCounter},
+                                                                {U'着', kCounter},
+                                                                {U'票', kCounter},
+                                                                {U'秒', kCounter | kDurationSuffix | kTemporalCounter},
+                                                                {U'種', kCounter},
+                                                                {U'章', kCounter},
+                                                                {U'紀', kCounter},
+                                                                {U'約', kNumericApproxPrefix},
+                                                                {U'級', kCounter},
+                                                                {U'組', kCounter},
+                                                                {U'総', kNumericApproxPrefix},
+                                                                {U'羽', kCounter},
+                                                                {U'色', kCounter},
+                                                                {U'計', kNumericApproxPrefix},
+                                                                {U'話', kCounter},
+                                                                {U'足', kCounter},
+                                                                {U'軒', kCounter},
+                                                                {U'通', kCounter},
+                                                                {U'連', kCounter},
+                                                                {U'週', kCounter | kTemporalCounter},
+                                                                {U'部', kCounter},
+                                                                {U'銭', kCounter},
+                                                                {U'間', kCounter | kDurationSuffix | kTemporalCounter},
+                                                                {U'階', kCounter},
+                                                                {U'隻', kCounter},
+                                                                {U'面', kCounter},
+                                                                {U'頭', kCounter},
+                                                                {U'食', kCounter}}};
+
+bool hasCharProperty(char32_t codepoint, CharProperty property) {
+  size_t first = 0;
+  size_t last = kCharProperties.size();
+  while (first < last) {
+    size_t middle = first + (last - first) / 2;
+    if (kCharProperties[middle].codepoint < codepoint) {
+      first = middle + 1;
+    } else {
+      last = middle;
+    }
+  }
+  return first < kCharProperties.size() && kCharProperties[first].codepoint == codepoint &&
+         (kCharProperties[first].properties & property) != 0;
+}
+
+}  // namespace
+
 CharType classifyChar(char32_t codepoint) {
   // Hiragana: U+3040-U+309F
   if (codepoint >= 0x3040 && codepoint <= 0x309F) {
@@ -297,154 +422,27 @@ bool isKanjiCodepoint(char32_t ch) {
 }
 
 bool isCounterKanji(char32_t cp) {
-  switch (cp) {
-    // Currency/value
-    case U'円':
-    case U'銭':
-    case U'万':
-    case U'億':
-    case U'兆':
-    // Time
-    case U'分':
-    case U'秒':
-    case U'時':
-    case U'日':
-    case U'月':
-    case U'年':
-    case U'週':
-    case U'期':
-    case U'世':
-    // General counters
-    case U'個':
-    case U'本':
-    case U'人':
-    case U'台':
-    case U'枚':
-    case U'杯':
-    case U'回':
-    case U'歳':
-    case U'才':
-    case U'階':
-    case U'号':
-    case U'番':
-    case U'匹':
-    case U'冊':
-    case U'件':
-    case U'丁':
-    case U'通':
-    case U'発':
-    case U'点':
-    case U'票':
-    case U'頭':
-    case U'羽':
-    case U'着':
-    case U'足':
-    case U'軒':
-    case U'組':
-    case U'曲':
-    case U'巻':
-    case U'版':
-    case U'畳':
-    case U'割':
-    case U'部':
-    case U'面':
-    case U'問':
-    case U'章':
-    case U'条':
-    case U'棟':
-    case U'戸':
-    case U'席':
-    case U'食':
-    case U'泊':
-    case U'口':
-    case U'束':
-    case U'両':
-    case U'機':
-    case U'基':
-    case U'隻':
-    // Units/measures
-    case U'度':
-    case U'倍':
-    case U'段':
-    case U'級':
-    case U'位':
-    case U'種':
-    case U'色':
-    case U'名':
-    case U'話':
-    case U'連':
-    case U'敗':
-    case U'勝':
-    case U'戦':
-    // Compound second char (時間, 分間, 年間, 世紀, etc.)
-    case U'間':
-    case U'紀':
-    // Ordinal/sequential
-    case U'次':
-      return true;
-    default:
-      return false;
-  }
+  return hasCharProperty(cp, kCounter);
 }
 
 bool isDurationSuffixKanji(char32_t code_point) {
-  switch (code_point) {
-    case U'間':
-    case U'分':
-    case U'秒':
-    case U'中':
-      return true;
-    default:
-      return false;
-  }
+  return hasCharProperty(code_point, kDurationSuffix);
 }
 
 bool isTemporalRelationSuffixKanji(char32_t code_point) {
-  switch (code_point) {
-    case U'後':
-    case U'前':
-      return true;
-    default:
-      return false;
-  }
+  return hasCharProperty(code_point, kTemporalRelationSuffix);
 }
 
 bool isTemporalCounterKanji(char32_t code_point) {
-  switch (code_point) {
-    case U'日':
-    case U'月':
-    case U'年':
-    case U'週':
-    case U'時':
-    case U'分':
-    case U'秒':
-    case U'間':
-      return true;
-    default:
-      return false;
-  }
+  return hasCharProperty(code_point, kTemporalCounter);
 }
 
 bool isQuantityPrefixKanji(char32_t code_point) {
-  switch (code_point) {
-    case U'数':
-    case U'半':
-    case U'何':
-      return true;
-    default:
-      return false;
-  }
+  return hasCharProperty(code_point, kQuantityPrefix);
 }
 
 bool isNumericApproxPrefixKanji(char32_t code_point) {
-  switch (code_point) {
-    case U'約':
-    case U'計':
-    case U'総':
-      return true;
-    default:
-      return false;
-  }
+  return hasCharProperty(code_point, kNumericApproxPrefix);
 }
 
 bool isIntervalCompoundSecondKanji(char32_t code_point) {
@@ -455,13 +453,7 @@ bool isIntervalCompoundSecondKanji(char32_t code_point) {
 }
 
 bool isTemporalSpanSuffixKanji(char32_t code_point) {
-  switch (code_point) {
-    case U'中':
-    case U'末':
-      return true;
-    default:
-      return false;
-  }
+  return hasCharProperty(code_point, kTemporalSpanSuffix);
 }
 
 bool isFiscalYearBindingPair(char32_t stem_last, char32_t suffix) {

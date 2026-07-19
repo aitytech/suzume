@@ -11,6 +11,7 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Suzume } from '../dist/index.js';
+import { extendedPosLabel } from '../js/abi_labels.js';
 import {
   allocString,
   EXTENDED_OPTIONS_LAYOUT,
@@ -39,7 +40,43 @@ describe('JS API: struct layout compatibility', () => {
     }
   });
 
-  it('parseMorphemes returns all 7 fields matching Morpheme interface', () => {
+  it('labels every serialized ExtendedPOS code without shifting late additions', () => {
+    expect(extendedPosLabel(0)).toBe('UNKNOWN');
+    expect(extendedPosLabel(32)).toBe('AUX_開始');
+    expect(extendedPosLabel(33)).toBe('AUX_様態');
+    expect(extendedPosLabel(73)).toBe('AUX_文語完了');
+    expect(extendedPosLabel(77)).toBe('SUFFIX_直後');
+    expect(extendedPosLabel(80)).toBe('AUX_よう');
+    expect(extendedPosLabel(81)).toBe('AUX_KURUWA_POLITE');
+    expect(extendedPosLabel(82)).toBe('UNKNOWN');
+  });
+
+  it('exports the complete C ABI surface required by the JS binding', () => {
+    const expectedExports = [
+      '_suzume_analyze',
+      '_suzume_create',
+      '_suzume_create_with_extended_options',
+      '_suzume_destroy',
+      '_suzume_dictionary_warning',
+      '_suzume_dictionary_warning_count',
+      '_suzume_generate_tags',
+      '_suzume_generate_tags_with_options',
+      '_suzume_init_extended_options',
+      '_suzume_last_error',
+      '_suzume_load_binary_dict',
+      '_suzume_load_user_dict',
+      '_suzume_result_free',
+      '_suzume_tags_free',
+      '_suzume_version',
+    ];
+    const exports = Object.keys(module as object)
+      .filter((name) => name.startsWith('_suzume_'))
+      .sort();
+
+    expect(exports).toEqual(expectedExports);
+  });
+
+  it('parseMorphemes returns the complete Morpheme result field snapshot', () => {
     const analyze = module.cwrap('suzume_analyze', 'number', ['number', 'number']) as (
       h: number,
       t: number,
@@ -53,8 +90,24 @@ describe('JS API: struct layout compatibility', () => {
     const morphemes = parseMorphemes(module, resultPtr);
     expect(morphemes.length).toBeGreaterThan(0);
 
-    // Verify all fields exist (matching js/index.ts Morpheme interface)
     const m = morphemes[0];
+    expect(Object.keys(m).sort()).toEqual([
+      'baseForm',
+      'conjForm',
+      'conjType',
+      'end',
+      'extendedPos',
+      'isFormalNoun',
+      'isFromDictionary',
+      'isLowInfo',
+      'isUnknown',
+      'isUserDict',
+      'pos',
+      'posJa',
+      'score',
+      'start',
+      'surface',
+    ]);
     expect(typeof m.surface).toBe('string');
     expect(typeof m.pos).toBe('string');
     expect(typeof m.baseForm).toBe('string');
@@ -62,6 +115,7 @@ describe('JS API: struct layout compatibility', () => {
     // conjType/conjForm can be string or null
     expect(m.conjType === null || typeof m.conjType === 'string').toBe(true);
     expect(m.conjForm === null || typeof m.conjForm === 'string').toBe(true);
+    expect(typeof m.extendedPos).toBe('string');
     expect(typeof m.start).toBe('number');
     expect(typeof m.end).toBe('number');
     expect(typeof m.isUserDict).toBe('boolean');

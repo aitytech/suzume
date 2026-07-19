@@ -198,8 +198,32 @@ bool isContractedNegativeAuxiliaryLemma(std::string_view lemma) {
   return lemma == "ん";
 }
 
-bool isContractedProgressiveSurface(std::string_view surface) {
+bool isTeDeSurface(std::string_view surface) {
   return surface == "て" || surface == "で";
+}
+
+bool isContractedProgressiveSurface(std::string_view surface) {
+  return isTeDeSurface(surface) || surface == "てる";
+}
+
+bool isDialectalOruContractionLemma(std::string_view lemma) {
+  return lemma == "とる" || lemma == "どる";
+}
+
+bool isAccusativeParticleWoSurface(std::string_view surface) {
+  return surface == "を";
+}
+
+bool isConcessiveParticleTomoSurface(std::string_view surface) {
+  return surface == "とも";
+}
+
+bool isColloquialConditionalNegativeSurface(std::string_view surface) {
+  return surface == "なきゃ" || surface == "なけりゃ";
+}
+
+bool isPastMarkerTaDaSurface(std::string_view surface) {
+  return surface == "た" || surface == "だ";
 }
 
 bool isParallelTogetherAdverb(std::string_view surface) {

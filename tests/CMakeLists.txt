@@ -30,6 +30,17 @@ set(CLI_SOURCES_FOR_TESTS
   ${CMAKE_SOURCE_DIR}/src/suzume-cli/cli_common.cpp
 )
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+include(${CMAKE_SOURCE_DIR}/src/dictionary/entries/packed_core_entries_sources.cmake)
+set(PACKED_CORE_ENTRIES_TEST_CPP ${CMAKE_CURRENT_BINARY_DIR}/packed_core_entries.cpp)
+add_custom_command(
+  OUTPUT ${PACKED_CORE_ENTRIES_TEST_CPP}
+  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/generate_packed_core_entries.py
+          --output ${PACKED_CORE_ENTRIES_TEST_CPP} ${SUZUME_PACKED_CORE_ENTRY_SOURCES}
+  DEPENDS ${CMAKE_SOURCE_DIR}/scripts/generate_packed_core_entries.py ${SUZUME_PACKED_CORE_ENTRY_SOURCES}
+  VERBATIM
+)
+
 # Test source files
 set(TEST_SOURCES
   ${CMAKE_SOURCE_DIR}/src/suzume_c.cpp
@@ -48,6 +59,8 @@ set(TEST_SOURCES
   dictionary/double_array_test.cpp
   dictionary/binary_dict_test.cpp
   dictionary/core_dict_test.cpp
+  dictionary/packed_core_entries_test.cpp
+  ${PACKED_CORE_ENTRIES_TEST_CPP}
   dictionary/user_dict_test.cpp
   dictionary/conj_type_test.cpp
   grammar/conjugator_test.cpp

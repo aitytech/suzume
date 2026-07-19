@@ -1,5 +1,3 @@
-#include <cmath>
-
 #include "analysis/bigram_table.h"
 #include "analysis/category_cost.h"
 #include "analysis/scorer.h"
@@ -15,9 +13,6 @@
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 
-#ifdef SUZUME_DEBUG_INFO
-using suzume::core::CandidateOrigin;
-#endif
 namespace cost = suzume::analysis::bigram_cost;
 namespace sc = suzume::analysis::scorer;
 
@@ -54,7 +49,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // compound before を, retain the complete lexical noun (背中を) rather than
   // treating its final character as a duration suffix.
   if (prev.extended_pos == core::ExtendedPOS::Suffix && grammar::isStateDurationSuffix(prev.surface) &&
-      next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"を"})) {
+      next.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(next.surface)) {
     bonus += cost::kStrong;
   }
 
@@ -195,7 +190,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // A finite verb directly follows the accusative particle を (しびれを切らす),
   // but not every case particle permits that boundary.  In particular, で
   // must leave the polite copula です intact.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(prev.surface, {"を"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
     bonus += cost::kVeryStrongBonus;
   }
@@ -223,14 +218,14 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // form. The restriction preserves whole i-adjectives such as おいしく
   // against a fabricated おい+し route.
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
-      utf8::equalsAny(next.surface, {"し"})) {
+      grammar::isConjunctiveParticleShi(next.surface)) {
     bonus += cost::kAlmostNever;
   }
 
   // A connective し also cannot attach to an interjection or an adverb. Those
   // paths split i-adjective stems (おい+し, バカバカ+し) without a predicate.
   if ((prev.pos == core::PartOfSpeech::Interjection || prev.extended_pos == core::ExtendedPOS::Adverb) &&
-      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"し"})) {
+      next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConjunctiveParticleShi(next.surface)) {
     bonus += cost::kAlmostNever;
   }
 
@@ -245,14 +240,14 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // classical negative ず, then introduces a finite predicate. Keep this
   // closed particle whole instead of splitting it into quotative と plus も.
   if ((prev.extended_pos == core::ExtendedPOS::AdjRenyokei || prev.extended_pos == core::ExtendedPOS::AuxNegativeNu) &&
-      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"とも"})) {
+      next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(next.surface)) {
     bonus += cost::kStrongBonus;
   }
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"とも"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
     bonus += cost::kStrongBonus;
   }
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"とも"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::AdjBasic) {
     bonus += cost::kStrongBonus;
   }
@@ -260,12 +255,12 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // A case-marked object cannot be followed by an unsplit negative verb
   // candidate. Negative inflection is represented as a predicate stem plus
   // its auxiliary (を+え+ない), including past and conditional forms.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(prev.surface, {"を"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       utf8::endsWithAny(next.surface, {"ない", "なかっ", "なけれ"})) {
     bonus += cost::kAlmostNever;
   }
-  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(prev.surface, {"を"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbOnbinkei && utf8::endsWith(next.surface, "なかっ")) {
     bonus += cost::kAlmostNever;
   }
@@ -349,14 +344,14 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // (そう+と+も言える, 恐しい+と+も思わない).
   if ((prev.pos == core::PartOfSpeech::Adverb || prev.extended_pos == core::ExtendedPOS::AdjBasic ||
        prev.extended_pos == core::ExtendedPOS::AdjNaAdj) &&
-      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"とも"})) {
+      next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(next.surface)) {
     bonus += cost::kAlmostNever;
   }
 
   // The concessive とも can directly introduce an adjective predicate
   // (読まずともよい). Keep that closed grammatical connection ahead of the
   // unrelated quotative-particle path.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"とも"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(prev.surface) &&
       next.pos == core::PartOfSpeech::Adjective) {
     bonus += cost::kStrongBonus;
   }
@@ -690,7 +685,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // connective て/で should beat a homographic unknown lexical verb. Restrict
   // this to a true renyokei (e.g. おり from おる) so fused inflected forms such
   // as います and いない retain their grammatical internal split.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"て", "で"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::AuxAspectIru && next.fromDictionary() &&
       isGodanRenyokeiOfLemma(next.surface, next.lemma)) {
     bonus += cost::kVeryStrongBonus;
@@ -708,7 +703,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // auxiliary: 〜てみたい consists of the trial subsidiary み + desiderative
   // たい. This applies whether the competing connective edge was classified as a
   // particle or as a contracted aspect auxiliary.
-  if (utf8::equalsAny(prev.surface, {"て", "で"}) && next.extended_pos == core::ExtendedPOS::AuxConjectureMitai) {
+  if (grammar::isTeDeSurface(prev.surface) && next.extended_pos == core::ExtendedPOS::AuxConjectureMitai) {
     bonus += cost::kAlmostNever;
   }
 
@@ -748,7 +743,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // after its contracted て/で form (食べ+て+ん+の, 読ん+で+ん+の). This is
   // distinct from an independent progressive auxiliary such as いる or い,
   // whose nominalization must not absorb a following clause boundary.
-  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && grammar::isContractedProgressiveSurface(prev.surface) &&
+  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && grammar::isTeDeSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::ParticleNo) {
     bonus += cost::kDoubleVeryStrongBonus;
   }
@@ -756,7 +751,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // The ん in a contracted progressive (〜てんだ) is the nominalizer の, not
   // the negative auxiliary. Exclude only that impossible immediate auxiliary
   // attachment, leaving genuine negative forms after mizenkei untouched.
-  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && grammar::isContractedProgressiveSurface(prev.surface) &&
+  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && grammar::isTeDeSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
       grammar::isContractedNegativeAuxiliaryLemma(next.lemma)) {
     bonus += cost::kAlmostNever;
@@ -766,7 +761,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // their conditional form attaches to a conjunctive particle (食べ+とれ+ば).
   // Keep this lemma-scoped to avoid broadly favoring a finite progressive
   // before compound conjunction candidates such as のに.
-  const bool is_dialectal_oru_contraction = utf8::equalsAny(prev.lemma, {"とる", "どる"});
+  const bool is_dialectal_oru_contraction = grammar::isDialectalOruContractionLemma(prev.lemma);
   if ((prev.extended_pos == core::ExtendedPOS::AuxAspectIru || prev.extended_pos == core::ExtendedPOS::VerbKateikei) &&
       is_dialectal_oru_contraction && next.extended_pos == core::ExtendedPOS::ParticleConj) {
     bonus += cost::kStrongBonus;

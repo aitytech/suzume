@@ -446,6 +446,54 @@ TEST(Utf8Test, Invalid_FourByteAboveUnicodeMax) {
   EXPECT_EQ(cps[0], 0xFFFD);
 }
 
+TEST(Utf8Test, InvalidDecodeRecoveryAdvancesByEstablishedWidths) {
+  const std::string truncated_three = "\xE0\xA0";
+  size_t pos = 0;
+  EXPECT_EQ(decodeUtf8(truncated_three, pos), 0xFFFD);
+  EXPECT_EQ(pos, 1U);
+  EXPECT_EQ(decodeUtf8(truncated_three, pos), 0xFFFD);
+  EXPECT_EQ(pos, 2U);
+
+  const std::string invalid_continuation =
+      "\xE0\x80"
+      "A";
+  pos = 0;
+  EXPECT_EQ(decodeUtf8(invalid_continuation, pos), 0xFFFD);
+  EXPECT_EQ(pos, 1U);
+  EXPECT_EQ(decodeUtf8(invalid_continuation, pos), 0xFFFD);
+  EXPECT_EQ(pos, 2U);
+  EXPECT_EQ(decodeUtf8(invalid_continuation, pos), U'A');
+  EXPECT_EQ(pos, 3U);
+
+  const std::string overlong_two = "\xC1\xA1";
+  pos = 0;
+  EXPECT_EQ(decodeUtf8(overlong_two, pos), 0xFFFD);
+  EXPECT_EQ(pos, 2U);
+
+  const std::string surrogate = "\xED\xA0\x80";
+  pos = 0;
+  EXPECT_EQ(decodeUtf8(surrogate, pos), 0xFFFD);
+  EXPECT_EQ(pos, 3U);
+
+  const std::string too_large = "\xF4\x90\x80\x80";
+  pos = 0;
+  EXPECT_EQ(decodeUtf8(too_large, pos), 0xFFFD);
+  EXPECT_EQ(pos, 4U);
+
+  const std::string invalid_lead = "\xF8\x88\x80\x80\x80";
+  pos = 0;
+  EXPECT_EQ(decodeUtf8(invalid_lead, pos), 0xFFFD);
+  EXPECT_EQ(pos, 1U);
+}
+
+TEST(Utf8Test, ReplacementCharacterIsValidUtf8) {
+  const std::string replacement = "\xEF\xBF\xBD";
+  size_t pos = 0;
+  EXPECT_TRUE(isValidUtf8(replacement));
+  EXPECT_EQ(decodeUtf8(replacement, pos), 0xFFFD);
+  EXPECT_EQ(pos, 3U);
+}
+
 TEST(Utf8Test, Invalid_EncodeSurrogateAndAboveUnicodeMaxAsReplacement) {
   EXPECT_EQ(encodeUtf8(0xD800), "\xEF\xBF\xBD");
   EXPECT_EQ(encodeUtf8(0x110000), "\xEF\xBF\xBD");

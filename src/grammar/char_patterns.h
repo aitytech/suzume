@@ -141,8 +141,26 @@ bool isClassicalCausativeAuxiliaryLemma(std::string_view lemma);
 /** @brief Whether an auxiliary lemma is the contracted negative ん */
 bool isContractedNegativeAuxiliaryLemma(std::string_view lemma);
 
-/** @brief Whether an aspect-auxiliary surface is the contracted ている form */
+/** @brief Whether a surface is either connective-form marker て or で */
+bool isTeDeSurface(std::string_view surface);
+
+/** @brief Whether an aspect auxiliary has a contracted progressive surface */
 bool isContractedProgressiveSurface(std::string_view surface);
+
+/** @brief Whether a lemma is a regional contraction of the aspect verb おる */
+bool isDialectalOruContractionLemma(std::string_view lemma);
+
+/** @brief Whether a case-particle surface is the accusative を */
+bool isAccusativeParticleWoSurface(std::string_view surface);
+
+/** @brief Whether a conjunctive-particle surface is the concessive とも */
+bool isConcessiveParticleTomoSurface(std::string_view surface);
+
+/** @brief Whether a negative auxiliary surface is a colloquial conditional form */
+bool isColloquialConditionalNegativeSurface(std::string_view surface);
+
+/** @brief Whether a one-character surface is the past marker た or だ */
+bool isPastMarkerTaDaSurface(std::string_view surface);
 
 /**
  * @brief Whether an adverb is the standalone component of とともに

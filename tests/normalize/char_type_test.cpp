@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string_view>
+
 namespace suzume {
 namespace normalize {
 namespace {
@@ -591,6 +593,24 @@ TEST(CharTypeTest, IsCounterKanjiFalse) {
   EXPECT_FALSE(isCounterKanji(U'山'));
   EXPECT_FALSE(isCounterKanji(U'川'));
   EXPECT_FALSE(isCounterKanji(U'A'));
+}
+
+TEST(CharTypeTest, QuantityCharacterPropertiesMatchClosedClasses) {
+  const auto expect_membership = [](auto predicate, std::u32string_view expected) {
+    for (char32_t codepoint = 0x4E00; codepoint <= 0x9FFF; ++codepoint) {
+      EXPECT_EQ(predicate(codepoint), expected.find(codepoint) != std::u32string_view::npos) << codepoint;
+    }
+  };
+
+  expect_membership(isCounterKanji,
+                    U"円銭万億兆分秒時日月年週期世個本人台枚杯回歳才階号番匹冊件丁通発点票頭羽着足軒組曲巻版畳割部面問"
+                    U"章条棟戸席食泊口束両機基隻度倍段級位種色名話連敗勝戦間紀次");
+  expect_membership(isDurationSuffixKanji, U"間分秒中");
+  expect_membership(isTemporalRelationSuffixKanji, U"後前");
+  expect_membership(isTemporalCounterKanji, U"日月年週時分秒間");
+  expect_membership(isQuantityPrefixKanji, U"数半何");
+  expect_membership(isNumericApproxPrefixKanji, U"約計総");
+  expect_membership(isTemporalSpanSuffixKanji, U"中末");
 }
 
 }  // namespace
