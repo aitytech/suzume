@@ -24,6 +24,31 @@ _CAUSATIVE_LEMMA_ENDINGS: dict[str, str] = {
     "はす": "ふ",  # rare archaic row
 }
 
+_GODAN_RENYOKEI_TO_BASE: dict[str, str] = {
+    "い": "う",
+    "き": "く",
+    "ぎ": "ぐ",
+    "し": "す",
+    "ち": "つ",
+    "に": "ぬ",
+    "び": "ぶ",
+    "み": "む",
+    "り": "る",
+}
+_ICHIDAN_RENYOKEI_ENDINGS = frozenset("えけげせぜてでねへべめれ")
+
+
+def _base_from_renyokei(stem: str) -> str | None:
+    """Reconstruct a dictionary form from a productive renyokei surface."""
+    if not stem:
+        return None
+    ending = stem[-1]
+    if ending in _GODAN_RENYOKEI_TO_BASE:
+        return stem[:-1] + _GODAN_RENYOKEI_TO_BASE[ending]
+    if ending in _ICHIDAN_RENYOKEI_ENDINGS:
+        return stem + "る"
+    return None
+
 
 def _split_causative_passive(tokens: list[dict]) -> tuple[list[dict], bool]:
     """Pre-pass: split MeCab's merged causative さ when followed by passive れ.
@@ -272,7 +297,57 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             result.append({"surface": particle, "pos": "助詞", "lemma": particle})
             if applied_rule is None:
                 applied_rule = "literary-volitional-particle-split"
-            continue
+                continue
+
+        # 13. An excessive auxiliary remains a separate search unit. MeCab can
+        # lexicalize a kanji V1 plus 過ぎ into one verb token (行き過ぎ), while
+        # Suzume consistently exposes the productive V1 + 過ぎ boundary.
+        if t.get("pos") == "動詞" and surface.endswith("過ぎ") and t.get("lemma", "").endswith("過ぎる"):
+            verb_part = surface[: -len("過ぎ")]
+            verb_lemma = _base_from_renyokei(verb_part)
+            if verb_lemma is not None:
+                result.append({"surface": verb_part, "pos": "動詞", "lemma": verb_lemma})
+                result.append({"surface": "過ぎ", "pos": "助動詞", "lemma": "過ぎる"})
+                if applied_rule is None:
+                    applied_rule = "excessive-auxiliary-split"
+                continue
+
+        # 14. The failure subsidiary 損なう remains searchable after its V1.
+        # MeCab may lexicalize the whole compound, including the bare one-kanji
+        # ichidan stem used before a kanji-written subsidiary.
+        if t.get("pos") == "動詞" and surface.endswith("損なう"):
+            verb_part = surface[: -len("損なう")]
+            verb_lemma = _base_from_renyokei(verb_part)
+            if verb_lemma is None and regex.fullmatch(r"\p{Han}", verb_part):
+                verb_lemma = verb_part + "る"
+            if verb_lemma is not None:
+                result.append({"surface": verb_part, "pos": "動詞", "lemma": verb_lemma})
+                result.append({"surface": "損なう", "pos": "動詞", "lemma": "損なう"})
+                if applied_rule is None:
+                    applied_rule = "failure-subsidiary-split"
+                continue
+
+        if t.get("pos") == "動詞" and surface.endswith("そびれる"):
+            verb_part = surface[: -len("そびれる")]
+            verb_lemma = _base_from_renyokei(verb_part)
+            if verb_lemma is None and regex.fullmatch(r"\p{Han}", verb_part):
+                verb_lemma = verb_part + "る"
+            if verb_lemma is not None:
+                result.append({"surface": verb_part, "pos": "動詞", "lemma": verb_lemma})
+                result.append({"surface": "そびれる", "pos": "助動詞", "lemma": "そびれる"})
+                if applied_rule is None:
+                    applied_rule = "failure-subsidiary-split"
+                continue
+
+        if t.get("pos") == "動詞" and surface.endswith("かねる"):
+            verb_part = surface[: -len("かねる")]
+            verb_lemma = _base_from_renyokei(verb_part)
+            if verb_lemma is not None:
+                result.append({"surface": verb_part, "pos": "動詞", "lemma": verb_lemma})
+                result.append({"surface": "かねる", "pos": "助動詞", "lemma": "かねる"})
+                if applied_rule is None:
+                    applied_rule = "inability-subsidiary-split"
+                continue
 
         # No split needed
         result.append(t)

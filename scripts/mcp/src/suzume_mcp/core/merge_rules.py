@@ -84,6 +84,21 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 if applied_rule is None:
                     applied_rule = "family-merge"
 
+        # 1.4. Fixed temporal adverb split by the reference analyzer.
+        if not merged and t.get("surface") == "かね" and i + 1 < len(tokens):
+            if tokens[i + 1].get("surface") == "て":
+                result.append({"surface": "かねて", "pos": "副詞", "lemma": "かねて"})
+                i += 2
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "kanete-merge"
+
+        if not merged and t.get("surface") == "より" and result:
+            if result[-1].get("surface") == "かねて":
+                result.append({"surface": "より", "pos": "助詞", "lemma": "より"})
+                i += 1
+                merged = True
+
         # 1.5. URL pattern
         if not merged:
             m = regex.match(r"^(https?://[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+)", remaining)
@@ -675,7 +690,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
             j = i + 1
             if j < len(tokens):
                 nxt = tokens[j]
-                if nxt.get("pos") == "動詞":
+                if nxt.get("pos") == "動詞" and (nxt.get("lemma") or nxt.get("surface", "")) != "でる":
                     next_lemma = nxt.get("lemma") or nxt.get("surface", "")
                     v2_base = ""
                     for v2 in COMPOUND_VERB_V2_GODAN + COMPOUND_VERB_V2_ICHIDAN:

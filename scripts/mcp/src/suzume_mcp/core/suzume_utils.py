@@ -7,16 +7,21 @@ from .mecab import mecab_analyze
 from .merge_rules import apply_suzume_merge
 from .pos_mapping import correct_mecab_pos, map_mecab_pos, normalize_pos
 from .postprocessors import (
+    postprocess_chigai_negative_adjective,
     postprocess_classical_conjecture_aux,
     postprocess_classical_desiderative_aux,
     postprocess_classical_honorific_aux,
+    postprocess_classical_kere_aux,
     postprocess_classical_perfect_aux,
     postprocess_classical_ramu_boundary,
+    postprocess_contracted_progressive_aux,
     postprocess_copula_neg,
     postprocess_dai_final_particle,
     postprocess_de_aru,
     postprocess_de_particle,
     postprocess_demo,
+    postprocess_difficulty_adjective_stem,
+    postprocess_exclusion_suffix,
     postprocess_fuu_formal_noun,
     postprocess_gozai_verb,
     postprocess_hiragana_godan_wa_terminal,
@@ -47,9 +52,11 @@ from .postprocessors import (
     postprocess_short_hiragana_onbin,
     postprocess_sou,
     postprocess_sou_aux,
+    postprocess_state_suffix,
     postprocess_subsidiary_yuku,
     postprocess_tagaru_aux,
     postprocess_taihen,
+    postprocess_teki_na_adjective,
     postprocess_to_areba_conditional,
     postprocess_tsuke_noun,
     postprocess_yoshi_formal_noun,
@@ -123,12 +130,22 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     postprocess_demo(tokens)
     postprocess_ii(tokens)
     postprocess_iru_aux(tokens)
+    if postprocess_contracted_progressive_aux(tokens) and applied_rule is None:
+        applied_rule = "contracted-progressive-aux"
     postprocess_itadakeru_aux(tokens)
     postprocess_miru_aux(tokens)
     postprocess_monono_conjunction(tokens)
     postprocess_shimau_aux(tokens)
     if postprocess_quantity_bound_suffix(tokens) and applied_rule is None:
         applied_rule = "quantity-bound-suffix"
+    if postprocess_exclusion_suffix(tokens) and applied_rule is None:
+        applied_rule = "exclusion-suffix"
+    if postprocess_state_suffix(tokens) and applied_rule is None:
+        applied_rule = "state-suffix"
+    if postprocess_teki_na_adjective(tokens) and applied_rule is None:
+        applied_rule = "teki-na-adjective"
+    if postprocess_difficulty_adjective_stem(tokens) and applied_rule is None:
+        applied_rule = "difficulty-adjective-stem"
     if postprocess_renyokei_compound_particle(tokens) and applied_rule is None:
         applied_rule = "renyokei-compound-particle"
     if postprocess_to_areba_conditional(tokens) and applied_rule is None:
@@ -153,6 +170,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "honorific-oki-aux"
     postprocess_de_particle(tokens)
     postprocess_dai_final_particle(tokens)
+    if postprocess_chigai_negative_adjective(tokens) and applied_rule is None:
+        applied_rule = "chigai-negative-adjective"
     if postprocess_nanka_particle(tokens) and applied_rule is None:
         applied_rule = "nanka-colloquial-particle"
     if postprocess_kiri_limited_particle(tokens) and applied_rule is None:
@@ -176,6 +195,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     if postprocess_classical_honorific_aux(tokens) and applied_rule is None:
         applied_rule = "classical-honorific-aux"
     postprocess_classical_conjecture_aux(tokens)
+    if postprocess_classical_kere_aux(tokens) and applied_rule is None:
+        applied_rule = "classical-kere-aux"
     postprocess_classical_perfect_aux(tokens)
     postprocess_prolonged_sound_noun(tokens)
     postprocess_yoshi_formal_noun(tokens)

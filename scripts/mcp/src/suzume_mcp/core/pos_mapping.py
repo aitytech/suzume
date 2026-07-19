@@ -115,11 +115,6 @@ def map_mecab_pos(token: dict | str) -> str:
     if pos == "名詞" and regex.match(r"^[\u30A0-\u30FF]{2,}$", surface) and _is_katakana_onomatopoeia(surface):
         return "Adverb"
 
-    # 違い: Noun -> Verb
-    if surface == "違い" and pos == "名詞":
-        token["lemma"] = "違う"
-        return "Verb"
-
     # 時々: 副詞 -> Noun
     if surface == "時々" and pos == "副詞":
         return "Noun"

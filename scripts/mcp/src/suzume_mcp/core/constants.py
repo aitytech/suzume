@@ -443,6 +443,7 @@ ADVERB_OVERRIDES: set[str] = {
     "たくさん",
     "かく",
     "あらまし",
+    "めちゃ",
 }
 
 # Fixed function-word lemmas that differ from a reference analyzer's legacy
