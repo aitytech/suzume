@@ -24,12 +24,12 @@ namespace suzume::analysis::connection_rules {
 namespace {
 
 bool isGodanRenyokeiOfLemma(std::string_view surface, std::string_view lemma) {
-  const auto codepoints = normalize::toCodepoints(surface);
-  if (codepoints.empty()) {
+  const char32_t surface_last_codepoint = utf8::decodeLastChar(surface);
+  if (surface_last_codepoint == 0) {
     return false;
   }
 
-  const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(codepoints.back());
+  const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(surface_last_codepoint);
   if (base_suffix.empty()) {
     return false;
   }

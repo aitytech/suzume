@@ -590,8 +590,8 @@ Subcommands:
                          Test single input with expected output
   -f, --file <tests.tsv>
                          Run tests from file
-  benchmark [--iterations=N] [-f <corpus.txt>]
-                         Run performance benchmark
+  benchmark [--iterations=N] [--samples=N] [--warmup=N] [-f <corpus.txt>]
+                         Report median initialize, first-analysis, and steady-analysis timing
 Options:
   -d, --dict PATH        Load user dictionary
   -h, --help             Show this help
@@ -603,7 +603,7 @@ Examples:
   suzume-cli test "text" --expect "tag1,tag2"
   suzume-cli test -f tests.tsv
   suzume-cli test -f tests.tsv -d user.dic
-  suzume-cli test benchmark --iterations=1000
+  suzume-cli test benchmark --iterations=1000 --samples=5 --warmup=1
 )";
 }
 

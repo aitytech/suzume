@@ -767,10 +767,8 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
       prev.surface.size() >= core::kTwoJapaneseCharBytes &&  // At least 2 chars (Aれ, e.g. かれ)
       utf8::endsWith(prev.surface, "れ") && next.surface == "た" &&
       next.extended_pos == core::ExtendedPOS::AuxTenseTa) {
-    // Codepoint immediately before the trailing れ (3 bytes)
-    std::string_view before(prev.surface.data(), prev.surface.size() - 3);
-    auto before_cps = normalize::toCodepoints(before);
-    if (!before_cps.empty() && grammar::verbTypeFromARowCodepoint(before_cps.back()) != grammar::VerbType::Unknown) {
+    const std::string_view before_re = utf8::dropLastChar(prev.surface);
+    if (grammar::verbTypeFromARowCodepoint(utf8::decodeLastChar(before_re)) != grammar::VerbType::Unknown) {
       bonus += cost::kSevere;  // Cancel VerbRenyokei→た bonus
     }
   }
@@ -1162,10 +1160,10 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   if (prev.pos == core::PartOfSpeech::Determiner && next.pos == core::PartOfSpeech::Noun && !next.fromDictionary()) {
     size_t char_len = suzume::normalize::utf8Length(next.surface);
     if (char_len >= 3 && grammar::containsKanji(next.surface) && !grammar::isAllKanji(next.surface)) {
-      // Check if surface ends with exactly 1 hiragana (nominalized pattern)
-      auto codepoints = normalize::toCodepoints(next.surface);
-      if (!codepoints.empty() && kana::isHiraganaCodepoint(codepoints.back()) && codepoints.size() >= 2 &&
-          normalize::isKanjiCodepoint(codepoints[codepoints.size() - 2])) {
+      // Check whether the final two characters are kanji + hiragana.
+      const std::string_view before_last = utf8::dropLastChar(next.surface);
+      if (kana::isHiraganaCodepoint(utf8::decodeLastChar(next.surface)) && !before_last.empty() &&
+          normalize::isKanjiCodepoint(utf8::decodeLastChar(before_last))) {
         bonus += cost::kAlmostNever;
       }
     }

@@ -312,9 +312,9 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     // Check if it's kanji+っ+kanji pattern
     bool has_sokuon_between_kanji = false;
     auto codepoints = normalize::toCodepoints(prev.surface);
-    for (size_t i = 1; i + 1 < codepoints.size(); ++i) {
-      if (codepoints[i] == U'っ' && suzume::normalize::isKanjiCodepoint(codepoints[i - 1]) &&
-          suzume::normalize::isKanjiCodepoint(codepoints[i + 1])) {
+    for (size_t idx = 1; idx + 1 < codepoints.size(); ++idx) {
+      if (codepoints[idx] == U'っ' && suzume::normalize::isKanjiCodepoint(codepoints[idx - 1]) &&
+          suzume::normalize::isKanjiCodepoint(codepoints[idx + 1])) {
         has_sokuon_between_kanji = true;
         break;
       }

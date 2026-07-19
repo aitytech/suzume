@@ -6,6 +6,11 @@
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <vector>
+
+#ifndef __EMSCRIPTEN__
+#include <sys/resource.h>
+#endif
 
 #include "suzume.h"
 
@@ -29,6 +34,31 @@ std::vector<std::string> split(const std::string& str, char delim) {
     }
   }
   return result;
+}
+
+double medianMilliseconds(std::vector<double> samples) {
+  std::sort(samples.begin(), samples.end());
+  const size_t middle = samples.size() / 2;
+  if (samples.size() % 2 != 0) {
+    return samples[middle];
+  }
+  return (samples[middle - 1] + samples[middle]) / 2.0;
+}
+
+size_t peakResidentSetBytes() {
+#ifdef __EMSCRIPTEN__
+  return 0;
+#else
+  rusage usage{};
+  if (getrusage(RUSAGE_SELF, &usage) != 0 || usage.ru_maxrss < 0) {
+    return 0;
+  }
+#ifdef __APPLE__
+  return static_cast<size_t>(usage.ru_maxrss);
+#else
+  return static_cast<size_t>(usage.ru_maxrss) * 1024;
+#endif
+#endif
 }
 
 bool runSingleTest(Suzume& analyzer, const std::string& input, const std::set<std::string>& expected, bool verbose) {
@@ -219,28 +249,28 @@ int cmdTestFile(const std::vector<std::string>& args, bool verbose, const std::v
 int cmdTestBenchmark(const std::vector<std::string>& args, bool /* verbose */,
                      const std::vector<std::string>& dict_paths) {
   size_t iterations = 1000;
+  size_t samples = 5;
+  size_t warmup_iterations = 1;
   std::string corpus_file;
 
   for (size_t idx = 0; idx < args.size(); ++idx) {
     if (args[idx].substr(0, 13) == "--iterations=") {
-      if (!parseSizeOption(args[idx].substr(13), &iterations)) {
+      if (!parseSizeOption(args[idx].substr(13), &iterations) || iterations == 0) {
         printError("Invalid iterations: " + args[idx].substr(13));
+        return 1;
+      }
+    } else if (args[idx].substr(0, 10) == "--samples=") {
+      if (!parseSizeOption(args[idx].substr(10), &samples) || samples == 0) {
+        printError("Invalid samples: " + args[idx].substr(10));
+        return 1;
+      }
+    } else if (args[idx].substr(0, 9) == "--warmup=") {
+      if (!parseSizeOption(args[idx].substr(9), &warmup_iterations)) {
+        printError("Invalid warmup: " + args[idx].substr(9));
         return 1;
       }
     } else if ((args[idx] == "-f" || args[idx] == "--file") && idx + 1 < args.size()) {
       corpus_file = args[idx + 1];
-    }
-  }
-
-  // Create analyzer
-  SuzumeOptions options;
-  Suzume analyzer(options);
-
-  for (const auto& path : dict_paths) {
-    auto load_result = analyzer.loadUserDictionaryResult(path);
-    if (!load_result.hasValue()) {
-      printError("Failed to load dictionary: " + path + ": " + load_result.error().message);
-      return 1;
     }
   }
 
@@ -261,9 +291,9 @@ int cmdTestBenchmark(const std::vector<std::string>& args, bool /* verbose */,
   } else {
     // Default test texts
     texts = {
-        "Tokyo",
-        "Hello world",
-        "This is a test.",
+        "東京でテストを行う。",
+        "りんごを食べる。",
+        "１２３ＡＢＣを確認する。",
     };
   }
 
@@ -278,36 +308,66 @@ int cmdTestBenchmark(const std::vector<std::string>& args, bool /* verbose */,
     total_chars += text.size();
   }
 
-  std::cout << "Benchmark: " << iterations << " iterations, " << texts.size() << " texts, " << total_chars
-            << " chars total\n";
+  std::cout << "Benchmark: " << iterations << " steady iterations, " << samples << " samples, " << warmup_iterations
+            << " warmup iterations, " << texts.size() << " texts, " << total_chars << " bytes per corpus pass\n";
 
-  // Warmup
-  for (const auto& text : texts) {
-    analyzer.analyze(text);
-  }
+  std::vector<double> initialization_ms;
+  std::vector<double> first_analysis_ms;
+  std::vector<double> steady_ms;
+  size_t analyzed_morphemes = 0;
 
-  // Benchmark
-  auto start = std::chrono::high_resolution_clock::now();
-
-  for (size_t iter = 0; iter < iterations; ++iter) {
-    for (const auto& text : texts) {
-      auto morphemes = analyzer.analyze(text);
-      // Prevent optimization
-      if (morphemes.empty() && !text.empty()) {
-        std::cerr << "Unexpected empty result\n";
+  for (size_t sample = 0; sample < samples; ++sample) {
+    SuzumeOptions options;
+    const auto initialization_start = std::chrono::steady_clock::now();
+    Suzume analyzer(options);
+    for (const auto& path : dict_paths) {
+      auto load_result = analyzer.loadUserDictionaryResult(path);
+      if (!load_result.hasValue()) {
+        printError("Failed to load dictionary: " + path + ": " + load_result.error().message);
+        return 1;
       }
     }
+
+    const auto initialization_end = std::chrono::steady_clock::now();
+    initialization_ms.push_back(
+        std::chrono::duration<double, std::milli>(initialization_end - initialization_start).count());
+
+    const auto first_analysis_start = std::chrono::steady_clock::now();
+    analyzed_morphemes += analyzer.analyze(texts.front()).size();
+    const auto first_analysis_end = std::chrono::steady_clock::now();
+    first_analysis_ms.push_back(
+        std::chrono::duration<double, std::milli>(first_analysis_end - first_analysis_start).count());
+
+    for (size_t warmup = 0; warmup < warmup_iterations; ++warmup) {
+      for (const auto& text : texts) {
+        analyzed_morphemes += analyzer.analyze(text).size();
+      }
+    }
+
+    const auto steady_start = std::chrono::steady_clock::now();
+    for (size_t iter = 0; iter < iterations; ++iter) {
+      for (const auto& text : texts) {
+        analyzed_morphemes += analyzer.analyze(text).size();
+      }
+    }
+    const auto steady_end = std::chrono::steady_clock::now();
+    steady_ms.push_back(std::chrono::duration<double, std::milli>(steady_end - steady_start).count());
   }
 
-  auto end = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  const double initialization_median = medianMilliseconds(initialization_ms);
+  const double first_analysis_median = medianMilliseconds(first_analysis_ms);
+  const double steady_median = medianMilliseconds(steady_ms);
+  const double chars_per_second = (static_cast<double>(total_chars) * iterations) / (steady_median / 1000.0);
 
-  auto ms_total = static_cast<double>(duration.count());
-  double chars_per_sec = (static_cast<double>(total_chars) * iterations) / (ms_total / 1000.0);
-
-  std::cout << "Time: " << ms_total << " ms\n";
-  std::cout << "Throughput: " << static_cast<size_t>(chars_per_sec) << " chars/sec\n";
-  std::cout << "Per text: " << (ms_total / (iterations * texts.size())) << " ms avg\n";
+  std::cout << "Initialize median: " << initialization_median << " ms\n";
+  std::cout << "First analysis median: " << first_analysis_median << " ms\n";
+  std::cout << "Steady median: " << steady_median << " ms\n";
+  std::cout << "Steady throughput: " << static_cast<size_t>(chars_per_second) << " bytes/sec\n";
+  std::cout << "Steady per text: " << (steady_median / (iterations * texts.size())) << " ms\n";
+  std::cout << "Peak RSS: " << peakResidentSetBytes() << " bytes\n";
+  if (analyzed_morphemes == 0) {
+    printWarning("Benchmark inputs produced no morphemes");
+  }
 
   return 0;
 }
