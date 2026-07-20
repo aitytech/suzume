@@ -5,6 +5,8 @@
 
 namespace suzume::analysis::kanji_verb_detail {
 
+float getIchidanConfidence(const std::vector<grammar::InflectionCandidate>& candidates, float min_threshold);
+
 void appendGodanMizenkeiPassiveCausativeCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                    size_t kanji_end, size_t hiragana_end,
                                                    const grammar::Inflection& inflection,

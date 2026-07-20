@@ -64,6 +64,7 @@ add_library(suzume_analysis OBJECT
   verb_candidates_hiragana_subsidiary.cpp
   verb_candidates_hiragana_suru.cpp
   verb_candidates_kanji.cpp
+  verb_candidates_kanji_derived.cpp
   verb_candidates_kanji_finalization.cpp
   verb_candidates_kanji_ichidan.cpp
   verb_candidates_kanji_inflection.cpp
