@@ -16,7 +16,7 @@ src/analysis/compound_verb_voice.cpp	0	0	0
 src/analysis/join_compound_verb.cpp	0	0	0
 src/analysis/join_compound_verb_hiragana.cpp	0	2	0
 src/analysis/join_compound_verb_lexicon.cpp	0	0	0
-src/analysis/join_noun.cpp	0	18	0
+src/analysis/join_noun.cpp	0	0	0
 src/analysis/join_te_aux.cpp	0	2	0
 src/analysis/scorer.cpp	0	170	0
 src/analysis/scorer_connection_cost.cpp	45	4	74

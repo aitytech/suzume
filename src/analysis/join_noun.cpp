@@ -36,22 +36,22 @@ const ProductivePrefix kProductivePrefixes[] = {
     // E.g., お水 → お(PREFIX) + 水(NOUN), not お水(NOUN)
 
     // Negation prefixes
-    {U'不', -0.4F, true},  // 不安, 不要, 不便
-    {U'未', -0.4F, true},  // 未経験, 未確認
-    {U'非', -0.4F, true},  // 非常, 非公開
-    {U'無', -0.4F, true},  // 無理, 無料
+    {U'不', candidate::kProductivePrefixJoinBonus, true},  // 不安, 不要, 不便
+    {U'未', candidate::kProductivePrefixJoinBonus, true},  // 未経験, 未確認
+    {U'非', candidate::kProductivePrefixJoinBonus, true},  // 非常, 非公開
+    {U'無', candidate::kProductivePrefixJoinBonus, true},  // 無理, 無料
 
     // Degree/quantity prefixes
-    {U'超', -0.3F, true},  // 超人, 超高速
-    {U'再', -0.4F, true},  // 再開, 再確認
-    {U'準', -0.4F, true},  // 準備, 準決勝
-    {U'副', -0.4F, true},  // 副社長, 副作用
-    {U'総', -0.4F, true},  // 総合, 総数
-    {U'各', -0.4F, true},  // 各地, 各種
-    {U'両', -0.4F, true},  // 両方, 両手
-    {U'最', -0.4F, true},  // 最高, 最新
-    {U'全', -0.4F, true},  // 全部, 全員
-    {U'半', -0.4F, true},  // 半分, 半額
+    {U'超', candidate::kIntensifierPrefixJoinBonus, true},  // 超人, 超高速
+    {U'再', candidate::kProductivePrefixJoinBonus, true},   // 再開, 再確認
+    {U'準', candidate::kProductivePrefixJoinBonus, true},   // 準備, 準決勝
+    {U'副', candidate::kProductivePrefixJoinBonus, true},   // 副社長, 副作用
+    {U'総', candidate::kProductivePrefixJoinBonus, true},   // 総合, 総数
+    {U'各', candidate::kProductivePrefixJoinBonus, true},   // 各地, 各種
+    {U'両', candidate::kProductivePrefixJoinBonus, true},   // 両方, 両手
+    {U'最', candidate::kProductivePrefixJoinBonus, true},   // 最高, 最新
+    {U'全', candidate::kProductivePrefixJoinBonus, true},   // 全部, 全員
+    {U'半', candidate::kProductivePrefixJoinBonus, true},   // 半分, 半額
 };
 
 constexpr size_t kNumPrefixes = sizeof(kProductivePrefixes) / sizeof(kProductivePrefixes[0]);
@@ -267,7 +267,8 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
     // Must overcome: prefix_bonus(-0.4) + optimal_length_bonus(-0.5) = -0.9
     // Target: make final cost higher than split path (~1.0)
     // Penalty: +2.0 base, +0.5 per extra char
-    final_cost += 2.0F + 0.5F * static_cast<float>(total_len - 4);
+    final_cost += candidate::kUnverifiedPrefixJoinLongBasePenalty +
+                  candidate::kUnverifiedPrefixJoinLongPerCharPenalty * static_cast<float>(total_len - 4);
   } else if (total_len == 3 && !noun_in_dict && !is_predicative_negation_compound) {
     // Penalty for 3-char unverified so the join cannot beat the plain
     // 2-char kanji_seq noun split (e.g. 全部食 vs 全部|食 from 全部食べちゃった).
@@ -368,8 +369,7 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
     std::string surface(text.substr(start_byte, end_byte - start_byte));
     float base_cost = scorer.posPrior(core::PartOfSpeech::Noun);
-    constexpr float kCompoundNounBonus = -1.0F;
-    float final_cost = base_cost + kCompoundNounBonus;
+    float final_cost = base_cost + candidate::kVerbSuffixNounJoinBonus;
     uint8_t flags = core::LatticeEdge::kFromDictionary;
     lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos), core::PartOfSpeech::Noun,
                     final_cost, flags, surface);
@@ -521,8 +521,7 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
 
   // Calculate cost with bonus for compound noun pattern
   float base_cost = scorer.posPrior(core::PartOfSpeech::Noun);
-  constexpr float kCompoundNounBonus = -1.0F;  // Moderate bonus
-  float final_cost = base_cost + kCompoundNounBonus;
+  float final_cost = base_cost + candidate::kVerbSuffixNounJoinBonus;
 
   uint8_t flags = core::LatticeEdge::kFromDictionary;
 

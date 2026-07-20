@@ -146,6 +146,21 @@ constexpr float kStandaloneHonorificPrefixInterjectionBonus = -0.8F;
 // won over 全部|食. Raised so the final cost clears the split-path cost.
 constexpr float kUnverifiedPrefixJoin3charPenalty = 1.4F;
 
+// Productive kanji prefixes are generally favored over an unconnected prefix
+// plus noun path. The intensifier 超 is intentionally a little weaker than
+// closed negation, repetition, and quantity prefixes.
+constexpr float kProductivePrefixJoinBonus = -0.4F;
+constexpr float kIntensifierPrefixJoinBonus = -0.3F;
+
+// An unverified long productive-prefix compound must lose to its component
+// analysis unless the following noun is dictionary-attested.
+constexpr float kUnverifiedPrefixJoinLongBasePenalty = 2.0F;
+constexpr float kUnverifiedPrefixJoinLongPerCharPenalty = 0.5F;
+
+// A verb continuative plus a nominal suffix (物/方/所/手/場) is one searchable
+// deverbal noun unit.
+constexpr float kVerbSuffixNounJoinBonus = -1.0F;
+
 // A negation-prefix compound with a na-adjective continuation is a productive
 // predicative adjective even when its open-class base is not in the compact
 // dictionary (不十分だ, 不確かではない).
