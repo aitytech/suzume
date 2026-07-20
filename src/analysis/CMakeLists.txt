@@ -70,6 +70,7 @@ add_library(suzume_analysis OBJECT
   verb_candidates_kanji_inflection.cpp
   verb_candidates_kanji_mizenkei.cpp
   verb_candidates_kanji_onbin.cpp
+  verb_candidates_kanji_onbin_extended.cpp
   verb_candidates_kanji_renyokei.cpp
 )
 
