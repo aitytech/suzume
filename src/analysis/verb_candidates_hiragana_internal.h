@@ -17,6 +17,8 @@ bool endsWithParticleAfterVerb(const dictionary::DictionaryManager* dict_manager
 
 bool pronounEndsAt(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
                    size_t pos);
+bool hasMatchingGodanInflection(const grammar::Inflection& inflection, std::string_view base_form,
+                                grammar::VerbType expected_type);
 void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                      const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,
