@@ -29,8 +29,6 @@ struct VerbEnding {
   std::string_view base;
 };
 
-constexpr float kUnverifiedLemmaConfidenceThreshold = 0.5F;
-
 // Common verb conjugation endings (simplified)
 // NOTE: Order matters - longer patterns should come first
 const VerbEnding kVerbEndings[] = {
@@ -614,93 +612,6 @@ bool Lemmatizer::verifyCandidateWithDictionary(const grammar::InflectionCandidat
   // e.g., 見せられた → base="見せる" with wrong type=GodanRa should still
   // be accepted because 見せる exists as Ichidan verb in dictionary
   return found_verb_or_adj;
-}
-
-std::string Lemmatizer::lemmatizeByGrammar(std::string_view surface, core::PartOfSpeech pos,
-                                           dictionary::ConjugationType conj_type) const {
-  // First, check if surface itself is a base form (not conjugated form) in dictionary
-  // (e.g., 差し上げる should return 差し上げる, not 差し上ぐ)
-  // We check that lemma == surface, meaning it's the dictionary form, not a conjugated form
-  // Conjugated forms like 使い (from 使う) have lemma != surface (lemma = 使う)
-  if (dict_manager_ != nullptr) {
-    auto results = dict_manager_->lookup(surface, 0);
-    for (const auto& result : results) {
-      if (result.entry != nullptr && result.entry->surface == surface &&
-          result.entry->lemma == surface &&  // Must be base form, not conjugated
-          (result.entry->pos == core::PartOfSpeech::Verb || result.entry->pos == core::PartOfSpeech::Adjective)) {
-        // Surface is a valid base form in dictionary
-        return std::string(surface);
-      }
-    }
-  }
-
-  // Get all candidates (const reference to cached result)
-  const auto& all_candidates = inflection_.analyze(surface);
-
-  if (all_candidates.empty()) {
-    return std::string(surface);
-  }
-
-  // Apply POS/conjugation filters into a local copy only when needed
-  // Otherwise use the cached reference directly to avoid copying
-  std::vector<grammar::InflectionCandidate> filtered_storage;
-  const std::vector<grammar::InflectionCandidate>* candidates = &all_candidates;
-
-  // Filter candidates by POS if specified
-  // For Adjective POS, only accept IAdjective verb_type
-  // This prevents 美味しそう (ADJ) from getting lemma 美味する (Suru verb)
-  if (pos == core::PartOfSpeech::Adjective) {
-    for (const auto& cnd : *candidates) {
-      if (cnd.verb_type == grammar::VerbType::IAdjective) {
-        filtered_storage.push_back(cnd);
-      }
-    }
-    if (!filtered_storage.empty()) {
-      candidates = &filtered_storage;
-    } else {
-      // No IAdjective candidates → na-adjective (大変, 不思議, etc.)
-      // Na-adjectives don't conjugate, lemma = surface
-      return std::string(surface);
-    }
-  }
-
-  // Filter candidates by conjugation type if specified
-  // This helps when verb_candidates.cpp has determined the correct verb type
-  // e.g., for 話しそう with conj_type=GodanSa, prefer 話す (GodanSa) over 話しい (IAdjective)
-  if (conj_type != dictionary::ConjugationType::None) {
-    std::vector<grammar::InflectionCandidate> conj_filtered;
-    for (const auto& cnd : *candidates) {
-      if (grammar::verbTypeToConjType(cnd.verb_type) == conj_type) {
-        conj_filtered.push_back(cnd);
-      }
-    }
-    if (!conj_filtered.empty()) {
-      filtered_storage = std::move(conj_filtered);
-      candidates = &filtered_storage;
-    }
-  }
-
-  // If dictionary is available, try to find a verified candidate
-  // For dictionary-verified candidates, accept confidence above the scorer floor.
-  // Dictionary verification compensates for confidence penalties from heuristics
-  // (e.g., all-kanji i-adjective stems like 面白 get penalized but are valid)
-  if (dict_manager_ != nullptr) {
-    for (const auto& candidate : *candidates) {
-      if (candidate.confidence > grammar::inflection::kConfidenceFloor && verifyCandidateWithDictionary(candidate)) {
-        return candidate.base_form;
-      }
-    }
-  }
-
-  // Fall back to the best candidate if no dictionary match found
-  // Use the ordinary unverified threshold since inflection scoring caps common
-  // candidates at this level.
-  const auto& best = candidates->front();
-  if (!best.base_form.empty() && best.confidence >= kUnverifiedLemmaConfidenceThreshold) {
-    return best.base_form;
-  }
-
-  return std::string(surface);
 }
 
 namespace lemmatizer_detail {

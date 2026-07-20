@@ -4,6 +4,7 @@ add_library(suzume_postprocess OBJECT
   lemmatizer.cpp
   lemmatizer_batch.cpp
   lemmatizer_conj_form.cpp
+  lemmatizer_grammar.cpp
   lemmatizer_rules.cpp
   postprocessor.cpp
   postprocessor_resolvers_appearance.cpp
