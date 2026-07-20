@@ -40,6 +40,18 @@ bool beginsMizenkeiAuxiliary(std::string_view text, size_t start_byte, std::stri
   return following == "れ" || following == "せ" || following == "な" || following == "ず";
 }
 
+bool isCompoundVerbOrNominalizationAttested(const dictionary::DictionaryManager& dict_manager, std::string_view base,
+                                            V2VerbType verb_type) {
+  if (base.empty()) {
+    return false;
+  }
+  if (dict_manager.lookupExact(base, core::PartOfSpeech::Verb) != nullptr) {
+    return true;
+  }
+  const std::string nominalized = generateRenyokei(base, "", verb_type);
+  return !nominalized.empty() && dict_manager.lookupExact(nominalized, core::PartOfSpeech::Noun) != nullptr;
+}
+
 }  // namespace
 
 CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector<char32_t>& codepoints,
@@ -735,19 +747,11 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // 1. Longer renyokei match beats shorter (出し > 出)
     // 2. Renyokei exact match beats inflection match with aux
     // 3. Match without aux beats match with aux
-    auto compoundIsAttested = [&](const std::string& base, V2VerbType verb_type) {
-      if (base.empty()) {
-        return false;
-      }
-      if (dict_manager.lookupExact(base, core::PartOfSpeech::Verb) != nullptr) {
-        return true;
-      }
-      const std::string nominalized = generateRenyokei(base, "", verb_type);
-      return !nominalized.empty() && dict_manager.lookupExact(nominalized, core::PartOfSpeech::Noun) != nullptr;
-    };
-    const bool current_compound_attested = compoundIsAttested(compound_base, v2_verb.verb_type);
+    const bool current_compound_attested =
+        isCompoundVerbOrNominalizationAttested(dict_manager, compound_base, v2_verb.verb_type);
     const bool best_compound_attested =
-        best_match.v2_verb != nullptr && compoundIsAttested(best_match.compound_base, best_match.v2_verb->verb_type);
+        best_match.v2_verb != nullptr &&
+        isCompoundVerbOrNominalizationAttested(dict_manager, best_match.compound_base, best_match.v2_verb->verb_type);
     bool should_update = false;
     if (best_match.matched_len == 0) {
       // First valid match
@@ -802,9 +806,7 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
       // via its nominalized renyokei (組み合わせ, 問い合わせ are dict nouns).
       // Otherwise the mizenkei reading is the grammatically correct one
       // (話し合わせる = 話し合う + せる causative).
-      std::string nominalized = generateRenyokei(compound_base, "", v2_verb.verb_type);
-      if (dict_manager.lookupExact(compound_base, core::PartOfSpeech::Verb) != nullptr ||
-          (!nominalized.empty() && dict_manager.lookupExact(nominalized, core::PartOfSpeech::Noun) != nullptr)) {
+      if (isCompoundVerbOrNominalizationAttested(dict_manager, compound_base, v2_verb.verb_type)) {
         should_update = true;
       }
     }
