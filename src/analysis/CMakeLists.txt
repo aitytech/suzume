@@ -59,6 +59,7 @@ add_library(suzume_analysis OBJECT
   verb_candidates_hiragana_derived.cpp
   verb_candidates_hiragana_inflection.cpp
   verb_candidates_hiragana_mizenkei.cpp
+  verb_candidates_hiragana_mizenkei_negative.cpp
   verb_candidates_hiragana_onbin.cpp
   verb_candidates_hiragana_subsidiary.cpp
   verb_candidates_hiragana_suru.cpp
