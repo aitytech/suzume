@@ -61,6 +61,20 @@ float maxConfidenceFor(const std::vector<grammar::InflectionCandidate>& candidat
   return confidence;
 }
 
+bool isVerbOnbinContextAfterI(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos >= codepoints.size()) {
+    return false;
+  }
+  const char32_t next = codepoints[pos];
+  if (next == U'て' || next == U'た' || next == U'だ' || next == U'や') {
+    return true;
+  }
+  if (next == U'で') {
+    return pos + 1 >= codepoints.size() || codepoints[pos + 1] != U'す';
+  }
+  return false;
+}
+
 UnknownCandidate makeIAdjCandidate(const std::string& surface, size_t start, size_t end, const std::string& lemma,
                                    float cost, [[maybe_unused]] CandidateOrigin origin,
                                    [[maybe_unused]] float confidence, [[maybe_unused]] const char* pattern) {

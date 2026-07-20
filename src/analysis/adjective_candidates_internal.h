@@ -78,6 +78,11 @@ float firstConfidenceAtLeast(const std::vector<grammar::InflectionCandidate>& ca
 float maxConfidenceFor(const std::vector<grammar::InflectionCandidate>& candidates,
                        std::initializer_list<grammar::VerbType> types);
 
+/**
+ * @brief Whether the character after い makes it a Godan onbin surface.
+ */
+bool isVerbOnbinContextAfterI(const std::vector<char32_t>& codepoints, size_t pos);
+
 // =============================================================================
 // UnknownCandidate Factory Helpers
 // =============================================================================
@@ -136,6 +141,14 @@ void appendKanjiIAdjPostVariants(const std::vector<char32_t>& codepoints, size_t
                                  size_t hiragana_end, const grammar::Inflection& inflection,
                                  const dictionary::DictionaryManager* dict_manager,
                                  std::vector<UnknownCandidate>& candidates);
+
+/**
+ * @brief Append compound i-adjective candidates for a two-kanji stem.
+ */
+void appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                       size_t hiragana_end, const grammar::Inflection& inflection,
+                                       const dictionary::DictionaryManager* dict_manager,
+                                       std::vector<UnknownCandidate>& candidates);
 
 }  // namespace suzume::analysis::adj_detail
 
