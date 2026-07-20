@@ -43,6 +43,16 @@ bool isObjectCounterKanji(char32_t code_point) {
   }
 }
 
+bool hasKanjiSuruPredicateAt(const std::vector<char32_t>& codepoints,
+                             const std::vector<normalize::CharType>& char_types, size_t start_pos) {
+  size_t predicate_end = start_pos;
+  while (predicate_end < char_types.size() && char_types[predicate_end] == normalize::CharType::Kanji) {
+    ++predicate_end;
+  }
+  return predicate_end > start_pos && predicate_end + 1 < codepoints.size() && codepoints[predicate_end] == U'す' &&
+         codepoints[predicate_end + 1] == U'る';
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -612,14 +622,7 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     // numeral+counter predicate boundary below, but retains the quantity
     // prefix inside the number phrase.
     if (num_end < char_types.size() && normalize::isCounterKanji(codepoints[num_end])) {
-      size_t predicate_start = num_end + 1;
-      while (predicate_start < char_types.size() && char_types[predicate_start] == normalize::CharType::Kanji) {
-        ++predicate_start;
-      }
-      const bool has_kanji_suru_predicate = predicate_start > num_end + 1 && predicate_start + 1 < codepoints.size() &&
-                                            codepoints[predicate_start] == U'す' &&
-                                            codepoints[predicate_start + 1] == U'る';
-      if (has_kanji_suru_predicate) {
+      if (hasKanjiSuruPredicateAt(codepoints, char_types, num_end + 1)) {
         std::string surface = extractSubstring(codepoints, start_pos, num_end + 1);
         if (!surface.empty()) {
           auto cand = makeCandidate(surface, start_pos, num_end + 1, core::PartOfSpeech::Noun,
@@ -803,14 +806,7 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
   // 一回戦 must remain available; requiring the complete nominal+する
   // predicate distinguishes the productive quantity construction.
   if (numeral_end < char_types.size() && normalize::isCounterKanji(codepoints[numeral_end])) {
-    size_t predicate_start = numeral_end + 1;
-    while (predicate_start < char_types.size() && char_types[predicate_start] == normalize::CharType::Kanji) {
-      ++predicate_start;
-    }
-    const bool has_kanji_suru_predicate =
-        predicate_start > numeral_end + 1 && predicate_start + 1 < codepoints.size() &&
-        codepoints[predicate_start] == U'す' && codepoints[predicate_start + 1] == U'る';
-    if (has_kanji_suru_predicate) {
+    if (hasKanjiSuruPredicateAt(codepoints, char_types, numeral_end + 1)) {
       std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 1);
       if (!surface.empty()) {
         auto cand = makeCandidate(surface, start_pos, numeral_end + 1, core::PartOfSpeech::Noun,
