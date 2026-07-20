@@ -54,7 +54,7 @@ src/analysis/verb_candidates_hiragana_subsidiary.cpp	0	0	0
 src/analysis/verb_candidates_hiragana_suru.cpp	0	0	0
 src/analysis/verb_candidates_kanji.cpp	0	5	0
 src/analysis/verb_candidates_kanji_ichidan.cpp	0	7	0
-src/analysis/verb_candidates_kanji_inflection.cpp	2	11	0
+src/analysis/verb_candidates_kanji_inflection.cpp	2	0	0
 src/analysis/verb_candidates_kanji_mizenkei.cpp	0	16	0
 src/analysis/verb_candidates_kanji_onbin.cpp	0	10	0
 src/analysis/verb_candidates_kanji_renyokei.cpp	0	11	0

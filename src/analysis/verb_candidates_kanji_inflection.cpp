@@ -172,9 +172,9 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
       // Prefer dictionary-verified candidates when multiple have similar confidence
       // This handles ambiguous っ-onbin patterns like 待って (待つ/待る/待う)
       grammar::InflectionCandidate best;
-      best.confidence = 0.0F;
+      best.confidence = candidate::kNoConfidence;
       grammar::InflectionCandidate dict_verified_best;
-      dict_verified_best.confidence = 0.0F;
+      dict_verified_best.confidence = candidate::kNoConfidence;
 
       for (const auto& cand : inflection_results) {
         // Skip candidates from のだ/んだ stripping — these should be split tokens
@@ -219,7 +219,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
 
       // Use dictionary-verified candidate if available
       // Dictionary verification trumps confidence penalties from hiragana stems
-      bool is_dict_verified = dict_verified_best.confidence > 0.0F;
+      bool is_dict_verified = dict_verified_best.confidence > candidate::kNoConfidence;
       if (is_dict_verified) {
         best = dict_verified_best;
       }
@@ -448,7 +448,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // e.g., 勉強する → 勉強 + する (split preferred)
         if (best.verb_type == grammar::VerbType::Suru && best.stem.size() >= core::kTwoJapaneseCharBytes) {
           // Penalize unified suru-verb to prefer noun + する/される/させる split
-          base_cost += 3.0F;
+          base_cost += candidate::kSuruVerbSplitPenalty;
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +3.0 (suru_split_penalty)\n");
         }
         // Penalize ALL verb candidates with prefix-like kanji at start
@@ -458,7 +458,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
           auto stem_codepoints = normalize::utf8::decode(best.stem);
           if (!stem_codepoints.empty() && isPrefixLikeKanji(stem_codepoints[0])) {
             // Heavy penalty to force split
-            base_cost += 3.0F;
+            base_cost += candidate::kStandaloneKanjiVerbSplitPenalty;
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +3.0 (prefix_kanji_penalty)\n");
           }
         }
@@ -469,7 +469,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
           auto stem_codepoints = normalize::utf8::decode(best.stem);
           if (!stem_codepoints.empty() && isInterrogativeKanji(stem_codepoints[0])) {
             // Heavy penalty to force split
-            base_cost += 3.0F;
+            base_cost += candidate::kStandaloneKanjiVerbSplitPenalty;
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +3.0 (interrogative_kanji_penalty)\n");
           }
         }
@@ -505,7 +505,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
           if (surface_cps.size() == 3 && normalize::isKanjiCodepoint(surface_cps[0]) && surface_cps[1] == U'い' &&
               surface_cps[2] == U'る') {
             // Single kanji + いる pattern - penalize to prefer NOUN + いる split
-            base_cost += 2.5F;
+            base_cost += candidate::kSingleKanjiIruVerbSplitPenalty;
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.5 (single_kanji_iru_penalty)\n");
           }
         }
@@ -568,7 +568,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
           if (best.verb_type == grammar::VerbType::GodanRa && utf8::endsWith(surface, "り")) {
             std::string ichidan_base = surface + "る";
             if (vh::isVerbInDictionary(dict_manager, ichidan_base)) {
-              base_cost += 1.0F;
+              base_cost += candidate::kGodanRaIchidanAmbiguityPenalty;
               SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +1.0 (godan_ra_ichidan_ambiguity, "
                                                        << ichidan_base << " in dict)\n");
             }
@@ -577,7 +577,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // Penalty for compound adjective patterns (verb renyokei + やすい/にくい/がたい)
         // MeCab splits these: 使いにくい → 使い + にくい
         if (is_comp_adj) {
-          base_cost += 2.0F;  // Strong penalty to force split
+          base_cost += candidate::kAdjSplitForcePenalty;
           SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (compound_adj_penalty)\n");
         }
         // Penalize 2+-kanji verb candidates whose base form is not in dict
@@ -683,7 +683,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // E.g., 読み込まれていない = 読み込ま + れ + て + い + ない
         if (utf8::endsWith(surface, "まれて") || utf8::endsWith(surface, "まれた") ||
             utf8::endsWith(surface, "られて") || utf8::endsWith(surface, "られた")) {
-          base_cost += bigram_cost::kVeryRare + bigram_cost::kNegligible;  // 2.0F
+          base_cost += bigram_cost::kVeryRare + bigram_cost::kNegligible;
         }
         // Penalty for verb candidates containing て+auxiliary verb chains
         // MeCab splits: 付いてくる → 付い+て+くる, 集まってくる → 集まっ+て+くる
@@ -842,7 +842,7 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
           for (const auto& result : prefix_results) {
             if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Verb &&
                 result.length < normalize::utf8Length(surface)) {
-              base_cost += 2.0F;
+              base_cost += candidate::kUnverifiedGodanWaExceedsVerbPenalty;
               SUZUME_DEBUG_LOG("[COST_ADJ] \"" << surface << "\" +2.0 (godan_wa_exceeds_dict_verb)\n");
               break;
             }

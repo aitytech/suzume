@@ -161,6 +161,12 @@ constexpr float kUnverifiedPrefixJoinLongPerCharPenalty = 0.5F;
 // deverbal noun unit.
 constexpr float kVerbSuffixNounJoinBonus = -1.0F;
 
+constexpr float kSuruVerbSplitPenalty = 3.0F;
+constexpr float kStandaloneKanjiVerbSplitPenalty = 3.0F;
+constexpr float kSingleKanjiIruVerbSplitPenalty = 2.5F;
+constexpr float kGodanRaIchidanAmbiguityPenalty = 1.0F;
+constexpr float kUnverifiedGodanWaExceedsVerbPenalty = 2.0F;
+
 // A negation-prefix compound with a na-adjective continuation is a productive
 // predicative adjective even when its open-class base is not in the compact
 // dictionary (不十分だ, 不確かではない).
