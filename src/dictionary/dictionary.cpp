@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdlib>
+#include <iterator>
 #ifndef __EMSCRIPTEN__
 #include <filesystem>
 #endif
@@ -46,6 +47,10 @@ constexpr std::array<ConjTypeAlias, 18> kConjTypeAliases = {{
     {ConjugationType::ProperFamily, "FAMILY", "ProperFamily", "PROPER_FAMILY"},
     {ConjugationType::ProperGiven, "GIVEN", "ProperGiven", "PROPER_GIVEN"},
 }};
+
+void appendLookupResults(std::vector<LookupResult>& destination, std::vector<LookupResult>&& source) {
+  destination.insert(destination.end(), std::make_move_iterator(source.begin()), std::make_move_iterator(source.end()));
+}
 
 }  // namespace
 
@@ -112,19 +117,16 @@ std::vector<LookupResult> DictionaryManager::lookup(std::string_view text, size_
   std::vector<LookupResult> results;
 
   // Lookup in core dictionary (Layer 1: hardcoded)
-  auto core_results = core_dict_->lookup(text, start_pos);
-  results.insert(results.end(), core_results.begin(), core_results.end());
+  appendLookupResults(results, core_dict_->lookup(text, start_pos));
 
   // Lookup in core binary dictionary (Layer 2: core.dic)
   if (core_binary_dict_ && core_binary_dict_->isLoaded()) {
-    auto binary_results = core_binary_dict_->lookup(text, start_pos);
-    results.insert(results.end(), binary_results.begin(), binary_results.end());
+    appendLookupResults(results, core_binary_dict_->lookup(text, start_pos));
   }
 
   // Lookup in user binary dictionary (Layer 3: user.dic)
   if (user_binary_dict_ && user_binary_dict_->isLoaded()) {
-    auto user_binary_results = user_binary_dict_->lookup(text, start_pos);
-    results.insert(results.end(), user_binary_results.begin(), user_binary_results.end());
+    appendLookupResults(results, user_binary_dict_->lookup(text, start_pos));
   }
 
   // Lookup in custom user dictionaries (Layer 4: CSV/TSV files)
@@ -133,7 +135,7 @@ std::vector<LookupResult> DictionaryManager::lookup(std::string_view text, size_
     for (auto& r : user_results) {
       r.from_user_dict = true;
     }
-    results.insert(results.end(), user_results.begin(), user_results.end());
+    appendLookupResults(results, std::move(user_results));
   }
 
   return results;
