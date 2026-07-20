@@ -19,6 +19,15 @@ size_t findCharRegionEnd(const std::vector<normalize::CharType>& char_types, siz
   return end;
 }
 
+bool hasKanjiSuruPredicateAt(const std::vector<char32_t>& codepoints,
+                             const std::vector<normalize::CharType>& char_types, size_t start_pos,
+                             size_t minimum_kanji_count) {
+  const size_t predicate_end = findCharRegionEnd(
+      char_types, start_pos, char_types.size() - std::min(start_pos, char_types.size()), normalize::CharType::Kanji);
+  return predicate_end - start_pos >= minimum_kanji_count && predicate_end + 1 < codepoints.size() &&
+         codepoints[predicate_end] == U'す' && codepoints[predicate_end + 1] == U'る';
+}
+
 ByteOffsets buildByteOffsets(const std::vector<char32_t>& codepoints) {
   ByteOffsets byte_offsets;
   byte_offsets.reserve(codepoints.size() + 1);

@@ -38,6 +38,15 @@ size_t findCharRegionEnd(const std::vector<normalize::CharType>& char_types, siz
                          normalize::CharType target_type);
 
 /**
+ * @brief Check whether a kanji run at @p start_pos is followed by する.
+ *
+ * @param minimum_kanji_count Minimum length required for the kanji run.
+ */
+bool hasKanjiSuruPredicateAt(const std::vector<char32_t>& codepoints,
+                             const std::vector<normalize::CharType>& char_types, size_t start_pos,
+                             size_t minimum_kanji_count = 1);
+
+/**
  * @brief Build UTF-8 byte offsets for every character boundary
  *
  * @param codepoints Vector of Unicode codepoints

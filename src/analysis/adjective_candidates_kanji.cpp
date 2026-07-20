@@ -18,6 +18,7 @@
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
 #include "suffix_candidates.h"
+#include "tokenizer_utils.h"
 #include "unknown.h"
 #include "verb_candidates_helpers.h"
 
@@ -312,13 +313,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     std::string surface = extractSubstring(codepoints, start_pos, adj_end);
     std::string lemma = extractSubstring(codepoints, start_pos, kanji_end) + "い";
     bool follows_counter = start_pos > 0 && normalize::isCounterKanji(codepoints[start_pos - 1]);
-    size_t predicate_end = adj_end;
-    while (predicate_end < char_types.size() && char_types[predicate_end] == normalize::CharType::Kanji) {
-      ++predicate_end;
-    }
-    bool followed_by_kanji_suru_predicate = predicate_end > adj_end && predicate_end + 1 < codepoints.size() &&
-                                            codepoints[predicate_end] == U'す' &&
-                                            codepoints[predicate_end + 1] == U'る';
+    bool followed_by_kanji_suru_predicate = hasKanjiSuruPredicateAt(codepoints, char_types, adj_end);
     bool counter_conditioned_adjective = follows_counter && followed_by_kanji_suru_predicate;
     if (is_adj_context || counter_conditioned_adjective) {
       float cost =

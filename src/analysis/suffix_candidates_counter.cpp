@@ -43,16 +43,6 @@ bool isObjectCounterKanji(char32_t code_point) {
   }
 }
 
-bool hasKanjiSuruPredicateAt(const std::vector<char32_t>& codepoints,
-                             const std::vector<normalize::CharType>& char_types, size_t start_pos) {
-  size_t predicate_end = start_pos;
-  while (predicate_end < char_types.size() && char_types[predicate_end] == normalize::CharType::Kanji) {
-    ++predicate_end;
-  }
-  return predicate_end > start_pos && predicate_end + 1 < codepoints.size() && codepoints[predicate_end] == U'す' &&
-         codepoints[predicate_end + 1] == U'る';
-}
-
 }  // namespace
 
 std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -107,13 +97,7 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
       !normalize::isNumeralCodepoint(codepoints[start_pos + 1]) && codepoints[start_pos] == codepoints[start_pos + 2] &&
       codepoints[start_pos + 1] == codepoints[start_pos + 3] &&
       char_types[start_pos + 1] == normalize::CharType::Kanji) {
-    size_t predicate_end = start_pos + 4;
-    while (predicate_end < char_types.size() && char_types[predicate_end] == normalize::CharType::Kanji) {
-      ++predicate_end;
-    }
-    const bool has_kanji_suru_predicate = predicate_end >= start_pos + 6 && predicate_end + 1 < codepoints.size() &&
-                                          codepoints[predicate_end] == U'す' && codepoints[predicate_end + 1] == U'る';
-    if (has_kanji_suru_predicate) {
+    if (hasKanjiSuruPredicateAt(codepoints, char_types, start_pos + 4, 2)) {
       std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
       if (!surface.empty()) {
         auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Noun,
