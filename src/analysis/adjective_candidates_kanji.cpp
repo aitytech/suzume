@@ -290,7 +290,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // Lower cost wins, so 0.35 should beat verb candidates
         SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE] \"" << surface << "\" cost=" << candidate::kSingleKanjiICost << "\n");
         candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, surface, candidate::kSingleKanjiICost,
-                                               CandidateOrigin::AdjectiveI, 0.5F, "single_kanji_i"));
+                                               CandidateOrigin::AdjectiveI, candidate::kIAdjConfMin, "single_kanji_i"));
       }
     }
   }
@@ -320,7 +320,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
           counter_conditioned_adjective ? candidate::kCounterConditionedKuAdjectiveCost : candidate::kSingleKanjiKuCost;
       SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE_KU] \"" << surface << "\" cost=" << cost << "\n");
       candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, lemma, cost, CandidateOrigin::AdjectiveI,
-                                             0.5F, "single_kanji_ku"));
+                                             candidate::kIAdjConfMin, "single_kanji_ku"));
     }
   }
 
