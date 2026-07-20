@@ -51,6 +51,12 @@ void appendSuruInabilityCandidates(const std::vector<char32_t>& codepoints, size
                                    std::vector<UnknownCandidate>& candidates);
 void appendEruObligationCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                    std::vector<UnknownCandidate>& candidates);
+bool isClearTeFormBeforeSubsidiary(const std::vector<char32_t>& codepoints, size_t start_pos, bool allow_emphatic_mo);
+void appendContextualSubsidiaryCandidate(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                         std::string_view lemma, dictionary::ConjugationType conj_type,
+                                         core::ExtendedPOS extended_pos, const char* pattern, float candidate_cost,
+                                         std::vector<UnknownCandidate>& candidates,
+                                         core::PartOfSpeech pos = core::PartOfSpeech::Auxiliary);
 void appendIkuAuxiliaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                   std::vector<UnknownCandidate>& candidates);
 void appendYaruBenefactiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,

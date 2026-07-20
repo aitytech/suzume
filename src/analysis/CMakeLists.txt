@@ -50,6 +50,7 @@ add_library(suzume_analysis OBJECT
   verb_candidates_hiragana.cpp
   verb_candidates_hiragana_mizenkei.cpp
   verb_candidates_hiragana_onbin.cpp
+  verb_candidates_hiragana_subsidiary.cpp
   verb_candidates_kanji.cpp
   verb_candidates_kanji_ichidan.cpp
   verb_candidates_kanji_inflection.cpp
