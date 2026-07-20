@@ -487,6 +487,8 @@ constexpr float kImperativeFinalBonus = -0.8F;
 // acceptance threshold stays uniform across the fabricated closed-class
 // absorption guard family (see the guard-family note in verb_candidates_helpers.h).
 constexpr float kConstructedVerbMinConfidence = 0.5F;
+// Compound V1 context resolves the usual Ichidan/Godan ambiguity.
+constexpr float kCompoundVerbIchidanMinConfidence = 0.25F;
 // Stricter bar for WA-row passive base forms, which match spuriously more often.
 constexpr float kConstructedVerbPassiveMinConfidence = 0.6F;
 // Minimum inflection evidence for an unattested short hiragana sokuonbin

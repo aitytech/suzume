@@ -16,21 +16,6 @@ bool hasAuxiliarySuffix(std::string_view suffix) {
   return !suffix.empty() && utf8::containsAny(suffix, {"た", "て", "で", "だ", "ない", "れ"});
 }
 
-// A continuative can be ambiguous across conjugation classes (降り → 降りる /
-// 降る). Compound-verb generation has already reconstructed the V1 base from
-// the continuative ending, so validate that base against every inflection
-// candidate instead of discarding it merely because another analysis scores
-// higher in isolation.
-bool hasInflectionCandidateForBase(const grammar::Inflection& inflection, std::string_view surface,
-                                   std::string_view base_form, float min_confidence) {
-  for (const auto& candidate : inflection.analyze(surface)) {
-    if (candidate.confidence >= min_confidence && candidate.base_form == base_form) {
-      return true;
-    }
-  }
-  return false;
-}
-
 bool beginsMizenkeiAuxiliary(std::string_view text, size_t start_byte, std::string_view mizenkei) {
   if (mizenkei.empty() || start_byte + mizenkei.size() + core::kJapaneseCharBytes > text.size() ||
       text.substr(start_byte, mizenkei.size()) != mizenkei) {
@@ -424,267 +409,28 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
                              << " kateikei=" << matched_kateikei << " inflected=" << matched_inflected
                              << " mizenkei=" << matched_mizenkei << " len=" << matched_len << "\n");
 
-    // Build the V1 base form for verification
-    std::string v1_base;
-    size_t v1_end_byte = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end);
-    // Check if V1 base form is in dictionary
-    bool v1_verified = dict_compound_v1;
-    bool v1_dict_verified = dict_compound_v1;  // tracks dict verification for cost calculation
-    bool v1_embedded_verified = false;         // tracks embedded dict verb verification for cost calculation
-    bool v1_ichidan_inflection = false;        // single-kanji ichidan V1 confirmed only by inflection
-    bool v1_godan_inflection = false;          // single-kanji godan V1 confirmed by exact inflection
-    if (dict_compound_v1) {
-      // Already resolved: V1 is the dict-verified compound verb (引きずる).
-      v1_base = dict_compound_v1_lemma;
-    } else {
-      v1_base = std::string(text.substr(start_byte, v1_end_byte - start_byte));
-
-      if (is_sokuonbin) {
-        // Sokuonbin: try く/つ/う/る endings to find dictionary match
-        // E.g., 突 + く = 突く, 打 + つ = 打つ
-        // Leave base_ending = 0 for now, will be set if match found
-      } else if (!is_ichidan) {
-        v1_base += normalize::encodeUtf8(base_ending);
-      } else {
-        v1_base += "る";
-      }
-
-      if (is_sokuonbin) {
-        // Try all sokuonbin-compatible godan endings
-        for (char32_t ending : kSokuonbinEndings) {
-          std::string candidate = v1_base + normalize::encodeUtf8(ending);
-          if (dict_manager.lookupExact(candidate, core::PartOfSpeech::Verb) != nullptr) {
-            v1_verified = true;
-            v1_dict_verified = true;
-            v1_base = candidate;
-            base_ending = ending;
-            break;
-          }
-        }
-      } else {
-        if (dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr) {
-          v1_verified = true;
-          v1_dict_verified = true;
-        }
-      }
-    }
-
-    // A kanji-led V1 can have more than one kana before its continuative
-    // ending (混じり+合う). The first kana may look like an Ichidan stem, but
-    // the complete span can instead prove a Godan continuative. Preserve the
-    // Ichidan reading unless inflection recognizes the whole span as Godan
-    // and its final kana is that row's continuative form.
-    if (!v1_verified && !dict_compound_v1 && is_ichidan && v2_start > kanji_end + 1) {
-      const std::string v1_renyokei(text.substr(start_byte, v2_start_byte - start_byte));
-      const auto inflection_candidate = inflection.getBest(v1_renyokei);
-      const auto* godan_row = grammar::Conjugation::getGodanRow(inflection_candidate.verb_type);
-      if (godan_row != nullptr &&
-          inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
-          codepoints[v2_start - 1] == godan_row->i_row) {
-        v1_base = inflection_candidate.base_form;
-        v1_verified = true;
-        v1_godan_inflection = true;
-      }
-    }
-
-    SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND] V1 base=" << v1_base << " verified=" << v1_verified
-                                                   << " sokuonbin=" << is_sokuonbin << "\n");
-
-    // Fallback: use inflection analysis for unknown V1 verbs
-    // This allows compound verbs like 読み込む where 読む is not in dictionary
-    // but is recognizable as a verb by inflection patterns
-    if (!v1_verified) {
-      size_t kanji_count = has_kanji_v2_after_bare_ichidan ? 1 : kanji_end - start_pos;
-
-      // For sokuonbin with single-kanji V1 (e.g., 引っ+張る, 突っ+込む):
-      // Accept without full verification. The combination of single kanji +
-      // っ (sokuonbin marker) + verified V2 is strong evidence of a compound verb.
-      // False positives are prevented by V2 matching (V2 must follow っ).
-      if (is_sokuonbin && kanji_count == 1) {
-        v1_verified = true;
-        // Try to determine V1 base form for compound lemma
-        for (char32_t ending : kSokuonbinEndings) {
-          std::string candidate = v1_base + normalize::encodeUtf8(ending);
-          if (dict_manager.lookupExact(candidate) != nullptr) {
-            v1_base = candidate;
-            base_ending = ending;
-            break;
-          }
-        }
-      }
-
-      // For multi-kanji ichidan V1 stems, accept when stripping the leading
-      // kanji yields a dictionary verb (e.g., 仕立てる = 仕 + 立てる).
-      // Lexicalized prefix+verb compounds are often absent from the dictionary
-      // as a whole, but an embedded dictionary verb combined with a verified
-      // V2 is strong evidence that the V1 is a real verb rather than a noun.
-      if (!v1_verified && is_ichidan && kanji_count >= 2) {
-        size_t v1_second_char_byte = byteOffsetAt(byte_offsets, start_pos + 1);
-        std::string embedded_base(text.substr(v1_second_char_byte, v1_end_byte - v1_second_char_byte));
-        embedded_base += "る";
-        if (dict_manager.lookupExact(embedded_base, core::PartOfSpeech::Verb) != nullptr) {
-          v1_verified = true;
-          v1_embedded_verified = true;
-          SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND] V1 verified via embedded dict verb \"" << embedded_base << "\"\n");
-        }
-      }
-
-      bool use_inflection_fallback = !v1_verified;
-
-      // B65: For multi-kanji stems (2+ kanji), require dictionary match.
-      // This prevents spurious compound verbs like 大体分交う where 大体分 is
-      // incorrectly analyzed as a verb stem. The inflection analyzer is too lenient
-      // for long kanji sequences, accepting them with low confidence.
-      // Single-kanji stems like 見 (from 見つける) are more likely to be real verbs.
-      if (use_inflection_fallback && kanji_count >= 2) {
-        // Multi-kanji stem: don't use inflection fallback
-        use_inflection_fallback = false;
-      }
-
-      // Special case: single-kanji + に patterns
-      // に is both a common particle and the renyokei of Godan-Na verbs (死に→死ぬ).
-      // But Godan-Na verbs are rare, while kanji+に+VERB is a very common pattern
-      // (e.g., 本について = 本 + に + ついて, not 本ぬ compound).
-      // Block inflection fallback for single-kanji + に to prevent false positives.
-      char32_t renyokei_char = codepoints[kanji_end];
-      if (!is_ichidan && kanji_count == 1 && renyokei_char == U'に') {
-        use_inflection_fallback = false;
-      }
-
-      // Check if V1 renyokei is known as a non-verb (noun, adjective, etc.)
-      // If so, don't form compound verb. E.g., 好き is ADJ, not verb renyokei of 好く.
-      if (use_inflection_fallback) {
-        size_t v1_renyokei_end = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end + 1);
-        std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
-        if (verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, v1_renyokei)) {
-          // A single-kanji Godan continuative can be both a nominalized word
-          // and the productive first half of a compound verb (思い+出す,
-          // 問い+合わせる). Keep the verbal analysis only when inflection
-          // reconstructs the exact Godan base; unrelated noun homographs
-          // remain blocked.
-          const auto inflection_candidate = inflection.getBest(v1_renyokei);
-          const bool productive_godan_compound =
-              !is_ichidan && kanji_count == 1 &&
-              inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
-              inflection_candidate.base_form == v1_base;
-          if (!productive_godan_compound) {
-            use_inflection_fallback = false;
-          }
-        }
-      }
-
-      // A single-kanji ichidan stem followed by a verified compound V2 is a
-      // productive compound-verb shape.  Unlike a free-form inflection guess,
-      // the e/i-row stem, the absence of a competing non-verb entry, and the
-      // V2 constraint together identify the boundary (受け取る, 見上げる).
-      bool starts_inside_formal_noun = false;
-      if (use_inflection_fallback && is_ichidan && kanji_count == 1 && start_pos > 0) {
-        const std::string enclosing_surface = extractSubstring(codepoints, start_pos - 1, start_pos + 1);
-        const auto* enclosing_entry = dict_manager.lookupExact(enclosing_surface, core::PartOfSpeech::Noun);
-        starts_inside_formal_noun =
-            enclosing_entry != nullptr && enclosing_entry->extended_pos == core::ExtendedPOS::NounFormal;
-      }
-      if (use_inflection_fallback && is_ichidan && kanji_count == 1) {
-        // A non-dictionary kanji+で stem is overwhelmingly a nominal copula
-        // (本であった, 事実である), not an open-class ichidan verb before
-        // the hiragana spelling of the V2 合う.  Dictionary-verified verbs
-        // such as 撫でる have already bypassed this fallback above, so this
-        // guard preserves real lexical compounds while preventing a copular
-        // predicate from being fabricated as *本であう.
-        // Likewise, ん is a Godan hatsuonbin marker, never an Ichidan
-        // renyokei. A following compound V2 must not turn 読んで+あげられる
-        // into the fabricated lexical verb 読んであげる.
-        const bool bare_ichidan_stem = v2_start == kanji_end;
-        if (bare_ichidan_stem && !verb_helpers::isSingleKanjiIchidan(codepoints[start_pos])) {
-          // A bare single-kanji Ichidan stem is a closed class. Without an
-          // e/i-row stem vowel, arbitrary kanji must not be promoted to one.
-          use_inflection_fallback = false;
-        } else if (renyokei_char == U'で' || renyokei_char == U'ん') {
-          use_inflection_fallback = false;
-        } else if (starts_inside_formal_noun) {
-          use_inflection_fallback = false;
-        } else {
-          v1_verified = true;
-          v1_ichidan_inflection = true;
-          use_inflection_fallback = false;
-        }
-      }
-
-      // A single-kanji Godan renyokei before a verified V2 is likewise a
-      // productive compound shape (押し込む、読み返す), provided inflection
-      // analysis reconstructs exactly the V1 base. This keeps open-class V1
-      // verbs out of the dictionary while retaining a grammatical boundary.
-      if (use_inflection_fallback && !is_ichidan && kanji_count == 1) {
-        size_t v1_renyokei_end = byteOffsetAt(byte_offsets, kanji_end + 1);
-        std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
-        if (hasInflectionCandidateForBase(inflection, v1_renyokei, v1_base,
-                                          candidate::verb_cost::kConstructedVerbMinConfidence)) {
-          v1_verified = true;
-          v1_godan_inflection = true;
-          use_inflection_fallback = false;
-        }
-      }
-
-      if (use_inflection_fallback) {
-        size_t v1_renyokei_end = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end + 1);
-        std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
-        // A particle at the end of the proposed V1 marks a grammatical boundary,
-        // not a compound-verb stem (読む + だけ + あっ + て).
-        for (size_t split = core::kJapaneseCharBytes; split < v1_renyokei.size(); split += core::kJapaneseCharBytes) {
-          std::string_view suffix(v1_renyokei.data() + split, v1_renyokei.size() - split);
-          if (dict_manager.lookupExact(suffix, core::PartOfSpeech::Particle) != nullptr) {
-            use_inflection_fallback = false;
-            break;
-          }
-        }
-      }
-
-      if (use_inflection_fallback) {
-        // Get V1 renyokei form for inflection analysis
-        size_t v1_renyokei_end = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end + 1);
-        std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
-
-        auto infl_result = inflection.getBest(v1_renyokei);
-
-        // Accept if inflection analysis identifies it as a verb with reasonable confidence
-        // and the base form matches our constructed v1_base
-        // B63: For ichidan verbs in compound verb context, use lower threshold (0.25)
-        // because ichidan patterns get penalized by inflection analyzer's potential/godan ambiguity,
-        // but the compound verb context (kanji + e-row + known V2) strongly suggests ichidan verb
-        float min_confidence = is_ichidan ? 0.25F : 0.5F;
-        if (infl_result.confidence >= min_confidence) {
-          if (infl_result.base_form == v1_base) {
-            v1_verified = true;
-            // A single-kanji ichidan V1 (受ける, 逃げる, 助ける) confirmed by
-            // inflection is strong evidence of a real verb, on par with an
-            // embedded dictionary verb: give it the reduced penalty rather than
-            // the full inflection-only penalty so that its compounds (受け取っ+た)
-            // beat a spurious three-way split (受け+取っ+た). These common ichidan
-            // verbs are open-class and therefore absent from the dictionary.
-            if (is_ichidan && kanji_count == 1) {
-              v1_ichidan_inflection = true;
-            }
-          } else if (is_sokuonbin) {
-            // For sokuonbin, v1_base is just the kanji stem (e.g., 引).
-            // Inflection analysis of っ-form (e.g., 引っ) gives base_form
-            // like 引く. Accept if it matches any sokuonbin candidate.
-            for (char32_t ending : kSokuonbinEndings) {
-              std::string candidate = v1_base + normalize::encodeUtf8(ending);
-              if (infl_result.base_form == candidate) {
-                v1_verified = true;
-                v1_base = candidate;
-                base_ending = ending;
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
+    const CompoundV1Verification v1 = verifyCompoundVerbV1({
+        text,
+        codepoints,
+        byte_offsets,
+        start_pos,
+        kanji_end,
+        v2_start,
+        start_byte,
+        v2_start_byte,
+        base_ending,
+        is_sokuonbin,
+        is_ichidan,
+        has_kanji_v2_after_bare_ichidan,
+        dict_compound_v1,
+        dict_compound_v1_lemma,
+        dict_manager,
+        inflection,
+    });
 
     // Only generate compound verb candidates when V1 is a verified verb
     // This prevents false positives like 試験に落ちる (試験 is not a verb)
-    if (!v1_verified) {
+    if (!v1.verified) {
       continue;
     }
 
@@ -693,7 +439,7 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // inflection-only V1 in that position can instead fabricate a compound
     // across the noun/verb boundary (生+涯忘れる).
     const bool starts_inside_kanji_run = start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]);
-    if (starts_inside_kanji_run && !v1_dict_verified && !dict_compound_v1) {
+    if (starts_inside_kanji_run && !v1.dict_verified && !dict_compound_v1) {
       continue;
     }
 
@@ -702,7 +448,7 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // productive single-kanji V1 fallback is deliberately dictionary-free,
     // so let the suffix analysis own this boundary unless V1 itself was
     // dictionary-verified.
-    if (!v1_dict_verified && !dict_compound_v1 && !is_sokuonbin && kanji_end < codepoints.size()) {
+    if (!v1.dict_verified && !dict_compound_v1 && !is_sokuonbin && kanji_end < codepoints.size()) {
       const std::string v2_form = extractSubstring(codepoints, v2_start, kanji_end + 1);
       if (dict_manager.lookupExact(v2_form, core::PartOfSpeech::Suffix) != nullptr ||
           dict_manager.lookupExact(v2_form, core::PartOfSpeech::Noun) != nullptr) {
@@ -822,11 +568,11 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
       best_match.includes_aux = inflection_includes_aux;
       best_match.matched_via_reading = matched_reading || matched_inflected || matched_renyokei_via_reading;
       best_match.v2_verb = &v2_verb;
-      best_match.v1_dict_verified = v1_dict_verified;
-      best_match.v1_embedded_verified = v1_embedded_verified;
-      best_match.v1_ichidan_inflection = v1_ichidan_inflection;
-      best_match.v1_bare_ichidan = has_kanji_v2_after_bare_ichidan && v1_ichidan_inflection;
-      best_match.v1_godan_inflection = v1_godan_inflection;
+      best_match.v1_dict_verified = v1.dict_verified;
+      best_match.v1_embedded_verified = v1.embedded_verified;
+      best_match.v1_ichidan_inflection = v1.ichidan_inflection;
+      best_match.v1_bare_ichidan = has_kanji_v2_after_bare_ichidan && v1.ichidan_inflection;
+      best_match.v1_godan_inflection = v1.godan_inflection;
     }
   }
 

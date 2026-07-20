@@ -14,6 +14,7 @@ add_library(suzume_analysis OBJECT
   compound_verb_forms.cpp
   compound_verb_emit.cpp
   compound_verb_match.cpp
+  compound_verb_verify.cpp
   join_compound_verb.cpp
   join_compound_verb_hiragana.cpp
   join_compound_verb_lexicon.cpp
