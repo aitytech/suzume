@@ -51,6 +51,9 @@ void appendSuruInabilityCandidates(const std::vector<char32_t>& codepoints, size
                                    std::vector<UnknownCandidate>& candidates);
 void appendEruObligationCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                    std::vector<UnknownCandidate>& candidates);
+void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const dictionary::DictionaryManager* dict_manager,
+                                    std::vector<UnknownCandidate>& candidates);
 bool isClearTeFormBeforeSubsidiary(const std::vector<char32_t>& codepoints, size_t start_pos, bool allow_emphatic_mo);
 void appendContextualSubsidiaryCandidate(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                          std::string_view lemma, dictionary::ConjugationType conj_type,
