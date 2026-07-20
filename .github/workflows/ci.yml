@@ -71,7 +71,7 @@ jobs:
           yarn install --immutable
           yarn build
       - name: Check WASM size regression
-        run: scripts/check_wasm_size.sh bindings/wasm/dist/suzume-wasm.wasm
+        run: scripts/check_wasm_size.sh bindings/wasm/dist/suzume.wasm
       - name: Run WASM tests
         working-directory: bindings/wasm
         run: yarn test

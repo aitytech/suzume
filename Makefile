@@ -215,10 +215,10 @@ wasm-dict:
 wasm: wasm-dict wasm-configure
 	@echo "Building WASM module..."
 	@# Force re-link so updated embedded dictionaries are picked up
-	@rm -f $(WASM_BUILD_DIR)/bin/suzume-wasm.wasm $(WASM_BUILD_DIR)/bin/suzume-wasm.js
+	@rm -f $(WASM_BUILD_DIR)/bin/suzume.wasm $(WASM_BUILD_DIR)/bin/suzume.js
 	cmake --build $(WASM_BUILD_DIR) --parallel
 	@echo "WASM build complete!"
-	@ls -lh bindings/wasm/dist/suzume-wasm.wasm bindings/wasm/dist/suzume.js
+	@ls -lh bindings/wasm/dist/suzume.wasm bindings/wasm/dist/suzume.js
 
 # Run WASM tests
 wasm-test: wasm

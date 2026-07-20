@@ -101,8 +101,9 @@ if(BUILD_WASM)
   add_executable(suzume-wasm suzume_c.cpp)
   target_link_libraries(suzume-wasm PRIVATE suzume)
   target_compile_definitions(suzume-wasm PRIVATE ${SUZUME_PRIVATE_DEFS})
+  set_target_properties(suzume-wasm PROPERTIES OUTPUT_NAME suzume)
 
-  # Copy output to dist directory (keep original names for JS compatibility)
+  # Copy the Emscripten output to the npm package directory.
   add_custom_command(TARGET suzume-wasm POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${WASM_OUTPUT_DIR}"
     # Emscripten has already optimized the module, but one final Binaryen -Oz
@@ -111,18 +112,20 @@ if(BUILD_WASM)
     # it repeatedly: a second pass only saved tens of raw bytes in measurement
     # and made gzip results unstable by changing function order.
     COMMAND "${WASM_OPT}"
-      "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.wasm"
+      "$<TARGET_FILE_DIR:suzume-wasm>/suzume.wasm"
       -Oz --enable-bulk-memory --enable-nontrapping-float-to-int
-      -o "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.optimized.wasm"
+      -o "$<TARGET_FILE_DIR:suzume-wasm>/suzume.optimized.wasm"
     COMMAND ${CMAKE_COMMAND} -E rename
-      "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.optimized.wasm"
-      "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.wasm"
+      "$<TARGET_FILE_DIR:suzume-wasm>/suzume.optimized.wasm"
+      "$<TARGET_FILE_DIR:suzume-wasm>/suzume.wasm"
+    COMMAND ${CMAKE_COMMAND} -E rm -f
+      "${WASM_OUTPUT_DIR}/suzume-wasm.wasm"
     COMMAND ${CMAKE_COMMAND} -E copy
-      "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.js"
+      "$<TARGET_FILE_DIR:suzume-wasm>/suzume.js"
       "${WASM_OUTPUT_DIR}/suzume.js"
     COMMAND ${CMAKE_COMMAND} -E copy
-      "$<TARGET_FILE_DIR:suzume-wasm>/suzume-wasm.wasm"
-      "${WASM_OUTPUT_DIR}/suzume-wasm.wasm"
+      "$<TARGET_FILE_DIR:suzume-wasm>/suzume.wasm"
+      "${WASM_OUTPUT_DIR}/suzume.wasm"
     COMMENT "Copying WASM files to dist/"
   )
 endif()

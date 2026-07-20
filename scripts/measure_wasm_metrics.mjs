@@ -15,7 +15,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
-const wasmPath = resolve(repositoryRoot, 'bindings/wasm/dist/suzume-wasm.wasm');
+const wasmPath = resolve(repositoryRoot, 'bindings/wasm/dist/suzume.wasm');
 const indexPath = resolve(repositoryRoot, 'bindings/wasm/dist/index.js');
 const { Suzume } = await import(pathToFileURL(indexPath).href);
 
