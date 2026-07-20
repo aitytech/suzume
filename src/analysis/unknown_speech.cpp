@@ -83,9 +83,8 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandi
                          first_char == U'だ' || first_char == U'ま' || first_char == U'や' || first_char == U'か' ||
                          first_char == U'が' || first_char == U'べ' || first_char == U'ち' || first_char == U'に' ||
                          first_char == U'せ' || first_char == U'ず' || first_char == U'ど' || first_char == U'て' ||
-                         first_char == U'も' || first_char == U'み' || first_char == U'ん' || first_char == U'こ' ||
-                         first_char == U'そ' || first_char == U'と' || first_char == U'お' || first_char == U'は' ||
-                         first_char == U'へ';
+                         first_char == U'も' || first_char == U'み' || first_char == U'ん' || first_char == U'そ' ||
+                         first_char == U'と' || first_char == U'お' || first_char == U'は' || first_char == U'へ';
     if (!valid_starter) {
       return candidates;
     }

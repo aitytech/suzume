@@ -514,8 +514,9 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
       should_update = true;
     } else if (matched_renyokei && best_match.is_mizenkei && matched_len > best_match.matched_len) {
       // A longer ichidan continuative can overlap with the mizenkei of a
-      // different V2 (組み合わせ vs. 組み合わ).  A deverbal suffix immediately
-      // after it establishes the nominalized compound reading.
+      // different V2 (組み合わせ vs. 組み合わ).  A deverbal suffix or a
+      // nominal-forcing particle immediately after it establishes the
+      // nominalized compound reading.
       const size_t renyokei_end_pos =
           advanceCharsToBytePos(codepoints, v2_start, v2_start_byte, v2_start_byte + matched_len);
       const bool followed_by_deverbal_suffix =
@@ -523,10 +524,13 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
           (codepoints[renyokei_end_pos] == U'方' || codepoints[renyokei_end_pos] == U'手' ||
            codepoints[renyokei_end_pos] == U'物' || codepoints[renyokei_end_pos] == U'所' ||
            codepoints[renyokei_end_pos] == U'場');
+      const bool followed_by_nominal_particle =
+          beginsNominalForcingParticle(codepoints, renyokei_end_pos, dict_manager);
       const bool followed_by_ichidan_conditional =
           v2_verb.verb_type == V2VerbType::Ichidan && renyokei_end_pos + 1 < codepoints.size() &&
           codepoints[renyokei_end_pos] == U'れ' && codepoints[renyokei_end_pos + 1] == U'ば';
-      if (followed_by_deverbal_suffix || (followed_by_ichidan_conditional && current_compound_attested)) {
+      if (followed_by_deverbal_suffix || followed_by_nominal_particle ||
+          (followed_by_ichidan_conditional && current_compound_attested)) {
         should_update = true;
       }
     } else if (is_renyokei_entry && (matched_kanji || matched_reading) && best_match.includes_aux &&

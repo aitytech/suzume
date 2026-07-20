@@ -352,6 +352,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
   // Generate hiragana verb candidates (pure hiragana verbs like いく, くる)
   if (char_types[start_pos] == normalize::CharType::Hiragana) {
     appendCandidates(candidates, generateHiraganaVerbCandidates(text, codepoints, start_pos, char_types));
+    appendCandidates(candidates, generateNaAdjectiveCandidates(text, codepoints, start_pos, char_types));
 
     // Generate hiragana i-adjective candidates (まずい, おいしい, etc.)
     appendCandidates(candidates, generateHiraganaAdjectiveCandidates(text, codepoints, start_pos, char_types));

@@ -420,6 +420,11 @@ EntrySpecRange getAuxiliaryEntries() {
       // MeCab: 出しっぱなし → 出し + っぱなし (verb renyokei + suffix)
       suffix("っぱなし", "っぱなし"),
 
+      // Repetitive-action suffix まくり (走りまくり, 食べまくり).
+      // It remains a searchable bound suffix after a verb continuative rather
+      // than being reinterpreted as the classical auxiliary り.
+      suffix("まくり", "まくり"),
+
       // Recent-completion suffix たて (焼きたて, 作りたて)
       // MeCab: 焼きたて → 焼き + たて (verb renyokei + suffix)
       suffix_recent_completion("たて", "たて"),

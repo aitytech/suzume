@@ -20,6 +20,22 @@
 
 namespace suzume::analysis {
 
+namespace {
+
+bool hasNominalPhraseParticleAt(const dictionary::DictionaryManager* dict_manager,
+                                const std::vector<char32_t>& codepoints, size_t pos) {
+  if (dict_manager == nullptr || pos >= codepoints.size()) {
+    return false;
+  }
+  const auto* entry =
+      dict_manager->lookupExact(extractSubstring(codepoints, pos, pos + 1), core::PartOfSpeech::Particle);
+  return entry != nullptr && (entry->extended_pos == core::ExtendedPOS::ParticleCase ||
+                              entry->extended_pos == core::ExtendedPOS::ParticleTopic ||
+                              entry->extended_pos == core::ExtendedPOS::ParticleNo);
+}
+
+}  // namespace
+
 std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types,
     const dictionary::DictionaryManager* dict_manager) {
@@ -45,12 +61,42 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     return candidates;
   }
 
-  // Need hiragana after kanji
-  if (kanji_end >= char_types.size() || char_types[kanji_end] != normalize::CharType::Hiragana) {
-    return candidates;
+  // -がかり and -がけ are nominal suffixes after a noun or a verb
+  // continuative (手がかり, 通りがかり, 通りがけ, 一日がけ).  The
+  // nominal-phrase-particle gate distinguishes these closed nominal constructions
+  // from an ordinary subject marker followed by unrelated hiragana, while
+  // keeping the complete compound as one search unit in a noun phrase.
+  constexpr std::string_view kGakari = "がかり";
+  constexpr std::string_view kGake = "がけ";
+  size_t nominal_stem_end = kanji_end;
+  while (nominal_stem_end < char_types.size() && char_types[nominal_stem_end] == normalize::CharType::Kanji) {
+    ++nominal_stem_end;
+  }
+  for (size_t suffix_start = nominal_stem_end;
+       suffix_start < codepoints.size() && char_types[suffix_start] == normalize::CharType::Hiragana; ++suffix_start) {
+    for (std::string_view suffix : {kGakari, kGake}) {
+      const size_t suffix_end = suffix_start + normalize::utf8Length(suffix);
+      if (suffix_end > codepoints.size() || extractSubstring(codepoints, suffix_start, suffix_end) != suffix ||
+          !hasNominalPhraseParticleAt(dict_manager, codepoints, suffix_end)) {
+        continue;
+      }
+      const std::string surface = extractSubstring(codepoints, start_pos, suffix_end);
+      auto candidate = makeCandidate(surface, start_pos, suffix_end, core::PartOfSpeech::Noun,
+                                     candidate::kDerivedSuffixCompoundNounCost, false, CandidateOrigin::SuffixPattern);
+      candidate.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+      candidate.confidence = candidate::kDictionaryOriginConfidence;
+      candidate.pattern = "nominal_gakari_gake";
+#endif
+      candidates.push_back(std::move(candidate));
+      return candidates;
+    }
   }
 
   // Find hiragana portion (2-4 characters)
+  if (kanji_end >= char_types.size() || char_types[kanji_end] != normalize::CharType::Hiragana) {
+    return candidates;
+  }
   size_t hiragana_end = kanji_end;
   while (hiragana_end < char_types.size() && hiragana_end - kanji_end < 4 &&
          char_types[hiragana_end] == normalize::CharType::Hiragana) {

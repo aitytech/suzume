@@ -263,7 +263,25 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
           std::string stem = kanji_part + ext_okurigana;
           std::string base_form = stem + "い";
 
-          if (isAdjectiveInDictionary(dict_manager, base_form)) {
+          bool is_verified_adjective = isAdjectiveInDictionary(dict_manager, base_form);
+          float adjective_confidence =
+              is_verified_adjective ? candidate::kDictionaryOriginConfidence : candidate::kNoOriginConfidence;
+          // -げ takes the stem of an i-adjective (頼もし+げ, 怪し+げ).  The
+          // inflection engine recognizes productive -しい adjectives that are
+          // intentionally absent from the lexical dictionary, but an ordinary
+          // sa-row verb continuative such as 話し must remain a verb.  Require
+          // the adjective analysis and reject that competing dictionary verb.
+          const bool is_shii_stem = pattern == "げ" && utf8::endsWith(stem, "し");
+          if (!is_verified_adjective && is_shii_stem) {
+            adjective_confidence = adj_detail::firstConfidenceAtLeast(
+                inflection.analyze(base_form), grammar::VerbType::IAdjective, candidate::kIAdjConfMin);
+            const std::string verb_form = stem.substr(0, stem.size() - core::kJapaneseCharBytes) + "す";
+            if (isVerbInDictionary(dict_manager, verb_form)) {
+              adjective_confidence = candidate::kNoOriginConfidence;
+            }
+            is_verified_adjective = adjective_confidence != candidate::kNoOriginConfidence;
+          }
+          if (is_verified_adjective) {
             // Count hiragana chars in okurigana for stem_end calculation
             size_t okurigana_chars = byte_pos / 3;
             size_t stem_end = kanji_end + okurigana_chars;
@@ -273,7 +291,8 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
                              << stem << "\" base=\"" << base_form << "\" pattern=\"" << pattern << "\" cost=" << cost
                              << "\n");
             candidates.push_back(makeIAdjStemCandidate(stem, start_pos, stem_end, base_form, cost,
-                                                       CandidateOrigin::AdjectiveI, 1.0F, "adj_stem_ext_garu"));
+                                                       CandidateOrigin::AdjectiveI, adjective_confidence,
+                                                       "adj_stem_ext_garu"));
             goto ext_garu_done;  // Found a match, skip remaining patterns
           }
         }

@@ -26,6 +26,37 @@ constexpr std::array<std::string_view, 1> kNaAdjSuffixes = {
     "的",
 };
 
+std::vector<UnknownCandidate> generateHiraganaNariNaAdjectiveCandidates(
+    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types) {
+  std::vector<UnknownCandidate> candidates;
+  if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Hiragana) {
+    return candidates;
+  }
+
+  // -やか/-らか are productive na-adjective endings.  Before the classical
+  // attributive auxiliary なる, the whole hiragana stem is an adjective
+  // (すこやかなる, あきらかなる), not a sequence of short verb candidates.
+  // Keep the bounded scan local to one adjective-sized word so an earlier
+  // hiragana adverb cannot be absorbed into the stem.
+  constexpr size_t kMaxHiraganaNaAdjectiveLength = 6;
+  for (size_t stem_end = start_pos + 3;
+       stem_end <= codepoints.size() && stem_end - start_pos <= kMaxHiraganaNaAdjectiveLength; ++stem_end) {
+    if (char_types[stem_end - 1] != normalize::CharType::Hiragana || stem_end + 2 > codepoints.size() ||
+        extractSubstring(codepoints, stem_end, stem_end + 2) != "なる") {
+      continue;
+    }
+    const std::string stem = extractSubstring(codepoints, start_pos, stem_end);
+    if (!utf8::endsWithAny(stem, {"やか", "らか"})) {
+      continue;
+    }
+    candidates.push_back(makeNaAdjCandidate(stem, start_pos, stem_end, candidate::kNaAdjYakaCost, true,
+                                            CandidateOrigin::AdjectiveNa, candidate::kHiraganaNaAdjNariConfidence,
+                                            "hira_na_adj_yaka_raka_nari"));
+    return candidates;
+  }
+  return candidates;
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -33,7 +64,13 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
                                                             const UnknownOptions& /*options*/) {
   std::vector<UnknownCandidate> candidates;
 
-  if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
+  if (start_pos >= char_types.size()) {
+    return candidates;
+  }
+  if (char_types[start_pos] == normalize::CharType::Hiragana) {
+    return generateHiraganaNariNaAdjectiveCandidates(codepoints, start_pos, char_types);
+  }
+  if (char_types[start_pos] != normalize::CharType::Kanji) {
     return candidates;
   }
 

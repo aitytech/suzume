@@ -33,36 +33,6 @@
       ]
     },
     {
-      "description": "にもかかわらず should be single Conjunction",
-      "expected": [
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "かかわる",
-          "pos": "Verb",
-          "surface": "かかわら"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ず"
-        }
-      ],
-      "id": "conjunction_nimokakawarazu",
-      "input": "にもかかわらず",
-      "tags": [
-        "conjunction"
-      ]
-    },
-    {
       "description": "「こんにちは」- should recognize こんにちは",
       "expected": [
         {
@@ -697,6 +667,33 @@
       ],
       "id": "Basic_gachi_de_emphatic_adverbial",
       "input": "がちでうまい"
+    },
+    {
+      "description": "Particle + verb irrealis + classical negative stays morphologically split",
+      "expected": [
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "かかわる",
+          "pos": "Verb",
+          "surface": "かかわら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "conjunction_nimokakawarazu",
+      "input": "にもかかわらず"
     }
   ],
   "description": "Basic tokenization tests",

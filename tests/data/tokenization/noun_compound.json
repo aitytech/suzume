@@ -2559,6 +2559,116 @@
       ],
       "id": "ki_reru",
       "input": "置き忘れる"
+    },
+    {
+      "description": "名詞的接尾要素がかりを含む複合名詞を一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "通りがかり",
+          "pos": "Noun",
+          "surface": "通りがかり"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "立ち寄る",
+          "pos": "Verb",
+          "surface": "立ち寄る"
+        }
+      ],
+      "id": "derived_gakari_nominal_renyokei",
+      "input": "通りがかりに立ち寄る"
+    },
+    {
+      "description": "名詞的接尾要素がかりを含む複合名詞を一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "手がかり",
+          "pos": "Noun",
+          "surface": "手がかり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "探す",
+          "pos": "Verb",
+          "surface": "探す"
+        }
+      ],
+      "id": "derived_gakari_nominal_noun",
+      "input": "手がかりを探す"
+    },
+    {
+      "description": "Continuative plus -がけ is one nominal search unit.",
+      "expected": [
+        {
+          "lemma": "通りがけ",
+          "pos": "Noun",
+          "surface": "通りがけ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "立ち寄る",
+          "pos": "Verb",
+          "surface": "立ち寄る"
+        }
+      ],
+      "id": "derived_gake_nominal_renyokei",
+      "input": "通りがけに立ち寄る"
+    },
+    {
+      "description": "Nominal -がけ applies to multi-kanji noun stems before の.",
+      "expected": [
+        {
+          "lemma": "一日がけ",
+          "pos": "Noun",
+          "surface": "一日がけ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "仕事",
+          "pos": "Noun",
+          "surface": "仕事"
+        }
+      ],
+      "id": "derived_gake_nominal_noun",
+      "input": "一日がけの仕事"
+    },
+    {
+      "description": "A lexical noun remains intact before the conjunctive particle がてら.",
+      "expected": [
+        {
+          "lemma": "買い物",
+          "pos": "Noun",
+          "surface": "買い物"
+        },
+        {
+          "lemma": "がてら",
+          "pos": "Particle",
+          "surface": "がてら"
+        },
+        {
+          "lemma": "訪ねる",
+          "pos": "Verb",
+          "surface": "訪ねる"
+        }
+      ],
+      "id": "formal_noun_before_gatera",
+      "input": "買い物がてら訪ねる"
     }
   ],
   "description": "Compound nouns",

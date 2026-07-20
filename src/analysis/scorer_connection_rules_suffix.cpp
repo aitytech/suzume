@@ -42,6 +42,16 @@ bool isGodanRenyokeiOfLemma(std::string_view surface, std::string_view lemma) {
 float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // A generated nominalized-noun reading of an i-row stem competes with the
+  // productive verb-continuative reading before a bound suffix.  In that
+  // context the latter is grammatically licensed (置き+っぱなし, 書き+方),
+  // while the nominalized candidate has no independent evidence.  Keep this
+  // narrowly scoped to generated candidates so dictionary nouns are unchanged.
+  if (prev.origin == core::CandidateOrigin::NominalizedNoun && prev.pos == core::PartOfSpeech::Noun &&
+      grammar::isIRowCodepoint(utf8::decodeLastChar(prev.surface)) && next.pos == core::PartOfSpeech::Suffix) {
+    return cost::kMinor;
+  }
+
   // The temporal suffix 中 cannot govern an accusative object.  In a noun
   // compound before を, retain the complete lexical noun (背中を) rather than
   // treating its final character as a duration suffix.

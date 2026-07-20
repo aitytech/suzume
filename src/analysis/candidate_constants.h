@@ -417,6 +417,12 @@ constexpr float kCompoundAdjBaseCost = 0.5F;  // base cost for generated candida
 // Productive 連用形 + っぽい adjective (忘れっぽい, 飽きっぽい). The
 // complete derived adjective competes with a very cheap stem + suffix path.
 constexpr float kProductivePpoiAdjCost = -3.0F;
+// Productive adjective-forming suffixes -がましい/-めかしい.  Their closed
+// derivational shape is strong enough to outrank a fabricated particle plus
+// independent adjective sequence while leaving ordinary i-adjectives on the
+// confidence-scaled path.
+constexpr float kDerivedSuffixAdjectiveCost = -1.2F;
+constexpr float kHiraganaNaAdjNariConfidence = 0.9F;
 // Context-gated lexicalized adverbial adjective (間もなく). Its boundary must
 // compete with the strong noun-to-suffix connection for the preceding 間.
 constexpr float kLexicalizedAdverbialAdjCost = -0.8F;

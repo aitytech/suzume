@@ -444,6 +444,19 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // ADJ prior (0.3) is higher than VERB prior (0.2), so we need lower edge cost
         float cost = candidate::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
                                                      candidate::kKanjiAdjConfScale);
+        const bool ga_mashii_derivation = utf8::endsWith(surface, "がましい");
+        bool meka_shii_derivation = utf8::endsWith(surface, "めかしい");
+        if (meka_shii_derivation) {
+          const std::string stem = surface.substr(0, surface.size() - std::string_view("めかしい").size());
+          const std::string adjective_base = stem + "い";
+          meka_shii_derivation =
+              isAdjectiveInDictionary(dict_manager, adjective_base) ||
+              adj_detail::firstConfidenceAtLeast(inflection.analyze(adjective_base), grammar::VerbType::IAdjective,
+                                                 candidate::kIAdjConfMin) != candidate::kNoOriginConfidence;
+        }
+        if (ga_mashii_derivation || meka_shii_derivation) {
+          cost = std::min(cost, candidate::kDerivedSuffixAdjectiveCost);
+        }
         // Penalty for non-dictionary i-adjective nominalization (さ ending)
         // This prevents false positives like 勉強さ (from non-existent 勉強い)
         // from beating suru-verb split path (勉強 + さ + れる)
@@ -603,6 +616,7 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // Set lemma to base form from inflection analysis (e.g., 使いやすく → 使いやすい)
         auto adj_cand = makeIAdjCandidate(surface, start_pos, end_pos, cand.base_form, cost,
                                           CandidateOrigin::AdjectiveI, cand.confidence, "i_adjective");
+        adj_cand.has_suffix = ga_mashii_derivation || meka_shii_derivation;
         // Note: 2-kanji stem compound adjectives (薄暗い, 物悲しく) need
         // has_suffix to skip exceeds_dict_length penalty. This is handled
         // in the compound adjective section below (with tighter guards).

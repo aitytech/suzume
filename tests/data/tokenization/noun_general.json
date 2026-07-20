@@ -3785,10 +3785,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "格助詞に直接続く連用形転成名詞はNounVerbalとして扱い、同形の推定助動詞分割を避ける。"
-      },
       "description": "連用形が格助詞前で推定助動詞へ分割されないこと",
       "expected": [
         {
@@ -3802,14 +3798,9 @@
           "surface": "の"
         },
         {
-          "lemma": "打つ",
-          "pos": "Verb",
-          "surface": "打ち"
-        },
-        {
-          "lemma": "鳴らす",
-          "pos": "Verb",
-          "surface": "鳴らし"
+          "lemma": "打ち鳴らし",
+          "pos": "Noun",
+          "surface": "打ち鳴らし"
         },
         {
           "lemma": "を",
@@ -3823,39 +3814,7 @@
         }
       ],
       "id": "no_chi_rashiwo_ku",
-      "input": "確認の打ち鳴らしを聞く",
-      "suzume_expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "打つ",
-          "pos": "Verb",
-          "surface": "打ち"
-        },
-        {
-          "lemma": "鳴らし",
-          "pos": "Noun",
-          "surface": "鳴らし"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "聞く",
-          "pos": "Verb",
-          "surface": "聞く"
-        }
-      ]
+      "input": "確認の打ち鳴らしを聞く"
     },
     {
       "description": "子どもらしさを示す - auto-generated",

@@ -3015,8 +3015,8 @@
       "description": "書きかけの紙。書きたての文。読みかけの本。 - auto-generated",
       "expected": [
         {
-          "lemma": "書きかける",
-          "pos": "Verb",
+          "lemma": "書きかけ",
+          "pos": "Noun",
           "surface": "書きかけ"
         },
         {
@@ -3030,8 +3030,8 @@
           "surface": "紙"
         },
         {
-          "lemma": "書きたてる",
-          "pos": "Verb",
+          "lemma": "書きたて",
+          "pos": "Noun",
           "surface": "書きたて"
         },
         {
@@ -3045,8 +3045,8 @@
           "surface": "文"
         },
         {
-          "lemma": "読みかける",
-          "pos": "Verb",
+          "lemma": "読みかけ",
+          "pos": "Noun",
           "surface": "読みかけ"
         },
         {
@@ -8331,6 +8331,726 @@
       ],
       "id": "compound_v2_shikiru_conditional",
       "input": "雨が降りしきれば"
+    },
+    {
+      "description": "Dictionary-verified Ichidan compound nominal stays one search unit before a case particle",
+      "expected": [
+        {
+          "lemma": "折り曲げ",
+          "pos": "Noun",
+          "surface": "折り曲げ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ],
+      "id": "dictionary_ichidan_compound_nominal",
+      "input": "折り曲げを防ぐ"
+    },
+    {
+      "description": "Verb continuative plus repetitive-action suffix stays split",
+      "expected": [
+        {
+          "lemma": "走る",
+          "pos": "Verb",
+          "surface": "走り"
+        },
+        {
+          "lemma": "まくり",
+          "pos": "Suffix",
+          "surface": "まくり"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "一日",
+          "pos": "Noun",
+          "surface": "一日"
+        }
+      ],
+      "id": "verb_renyokei_makuri_suffix",
+      "input": "走りまくりの一日"
+    },
+    {
+      "description": "Verb continuative remains verbal before a bound suffix",
+      "expected": [
+        {
+          "lemma": "置く",
+          "pos": "Verb",
+          "surface": "置き"
+        },
+        {
+          "lemma": "っぱなし",
+          "pos": "Suffix",
+          "surface": "っぱなし"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        }
+      ],
+      "id": "verb_renyokei_suffix_prefers_verb",
+      "input": "置きっぱなしの荷物"
+    },
+    {
+      "description": "終止形と当為助動詞に続く形式名詞を保つ",
+      "expected": [
+        {
+          "lemma": "なす",
+          "pos": "Verb",
+          "surface": "なす"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        }
+      ],
+      "id": "classical_obligation_before_formal_noun",
+      "input": "なすべきこと"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "取り消し",
+          "pos": "Noun",
+          "surface": "取り消し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_torikeshi_nominal",
+      "input": "確認の取り消しを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "繰り上げ",
+          "pos": "Noun",
+          "surface": "繰り上げ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_kuriage_nominal",
+      "input": "確認の繰り上げを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "追い越し",
+          "pos": "Noun",
+          "surface": "追い越し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_oikoshi_nominal",
+      "input": "確認の追い越しを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "取り込み",
+          "pos": "Noun",
+          "surface": "取り込み"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_torikomi_nominal",
+      "input": "確認の取り込みを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "立て直し",
+          "pos": "Noun",
+          "surface": "立て直し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_tatenaoshi_nominal",
+      "input": "確認の立て直しを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "聞き返し",
+          "pos": "Noun",
+          "surface": "聞き返し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_kikikaeshi_nominal",
+      "input": "確認の聞き返しを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "聞き流し",
+          "pos": "Noun",
+          "surface": "聞き流し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_kikinagashi_nominal",
+      "input": "確認の聞き流しを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "言い渡し",
+          "pos": "Noun",
+          "surface": "言い渡し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_iiwatashi_nominal",
+      "input": "確認の言い渡しを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "言い回し",
+          "pos": "Noun",
+          "surface": "言い回し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "直す",
+          "pos": "Verb",
+          "surface": "直す"
+        }
+      ],
+      "id": "compound_iimawashi_nominal",
+      "input": "確認の言い回しを直す"
+    },
+    {
+      "description": "Compound continuative before の is a deverbal noun.",
+      "expected": [
+        {
+          "lemma": "書きかけ",
+          "pos": "Noun",
+          "surface": "書きかけ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "手紙",
+          "pos": "Noun",
+          "surface": "手紙"
+        }
+      ],
+      "id": "compound_renyokei_nominal_no",
+      "input": "書きかけの手紙"
+    },
+    {
+      "description": "A second continuative compound retains its nominal reading before の.",
+      "expected": [
+        {
+          "lemma": "書きたて",
+          "pos": "Noun",
+          "surface": "書きたて"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "文",
+          "pos": "Noun",
+          "surface": "文"
+        }
+      ],
+      "id": "compound_renyokei_nominal_no_tate",
+      "input": "書きたての文"
+    },
+    {
+      "description": "Verified godan compound continuative is a noun before a case particle.",
+      "expected": [
+        {
+          "lemma": "折り畳み",
+          "pos": "Noun",
+          "surface": "折り畳み"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "広げる",
+          "pos": "Verb",
+          "surface": "広げる"
+        }
+      ],
+      "id": "dictionary_godan_compound_nominal",
+      "input": "折り畳みを広げる"
+    },
+    {
+      "description": "確認の足し合わせを行う - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "足し合わせ",
+          "pos": "Noun",
+          "surface": "足し合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_shi_wasewo_u",
+      "input": "確認の足し合わせを行う"
+    },
+    {
+      "description": "確認の書き合わせを行う - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "書き合わせ",
+          "pos": "Noun",
+          "surface": "書き合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_ki_wasewo_u",
+      "input": "確認の書き合わせを行う"
+    },
+    {
+      "description": "確認の取り合わせを行う - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "取り合わせ",
+          "pos": "Noun",
+          "surface": "取り合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_ri_wasewo_u",
+      "input": "確認の取り合わせを行う"
+    },
+    {
+      "description": "Keep the causative auxiliary boundary when the terminal form follows.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "話し合う",
+          "pos": "Verb",
+          "surface": "話し合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "compound_causative_control",
+      "input": "確認を話し合わせる"
+    },
+    {
+      "description": "Treat a compound continuative before a case particle as one deverbal noun.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "引き合わせ",
+          "pos": "Noun",
+          "surface": "引き合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_nominal_hiki_awase",
+      "input": "確認の引き合わせを行う"
+    },
+    {
+      "description": "Treat a compound continuative before a case particle as one deverbal noun.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "掛け合わせ",
+          "pos": "Noun",
+          "surface": "掛け合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_nominal_kake_awase",
+      "input": "確認の掛け合わせを行う"
+    },
+    {
+      "description": "Keep the causative analysis when a terminal form remains ambiguous.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "抱き合う",
+          "pos": "Verb",
+          "surface": "抱き合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "compound_causative_daki_awaseru",
+      "input": "確認を抱き合わせる"
+    },
+    {
+      "description": "Preserve the independently valid verbal boundary for an ambiguous terminal form.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "誘う",
+          "pos": "Verb",
+          "surface": "誘い"
+        },
+        {
+          "lemma": "合わせる",
+          "pos": "Verb",
+          "surface": "合わせる"
+        }
+      ],
+      "id": "compound_split_sasoi_awaseru",
+      "input": "確認を誘い合わせる"
+    },
+    {
+      "description": "Keep the causative analysis when a terminal form remains ambiguous.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "押し合う",
+          "pos": "Verb",
+          "surface": "押し合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "compound_causative_oshi_awaseru",
+      "input": "確認を押し合わせる"
     }
   ],
   "description": "Compound verbs",

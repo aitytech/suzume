@@ -371,6 +371,111 @@
         "sugiru",
         "context"
       ]
+    },
+    {
+      "description": "派生形容詞と形容詞語幹の接尾辞境界を保つ",
+      "expected": [
+        {
+          "lemma": "恩着せがましい",
+          "pos": "Adjective",
+          "surface": "恩着せがましい"
+        },
+        {
+          "lemma": "態度",
+          "pos": "Noun",
+          "surface": "態度"
+        }
+      ],
+      "id": "derived_gamashii_adjective",
+      "input": "恩着せがましい態度"
+    },
+    {
+      "description": "派生形容詞と形容詞語幹の接尾辞境界を保つ",
+      "expected": [
+        {
+          "lemma": "古めかしい",
+          "pos": "Adjective",
+          "surface": "古めかしい"
+        },
+        {
+          "lemma": "建物",
+          "pos": "Noun",
+          "surface": "建物"
+        }
+      ],
+      "id": "derived_mekashii_adjective",
+      "input": "古めかしい建物"
+    },
+    {
+      "description": "派生形容詞と形容詞語幹の接尾辞境界を保つ",
+      "expected": [
+        {
+          "lemma": "頼もしい",
+          "pos": "Adjective",
+          "surface": "頼もし"
+        },
+        {
+          "lemma": "げ",
+          "pos": "Suffix",
+          "surface": "げ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "表情",
+          "pos": "Noun",
+          "surface": "表情"
+        }
+      ],
+      "id": "derived_ge_adjective_stem",
+      "input": "頼もしげな表情"
+    },
+    {
+      "description": "Hiragana -やか adjective before classical なる.",
+      "expected": [
+        {
+          "lemma": "すこやか",
+          "pos": "Adjective",
+          "surface": "すこやか"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なる"
+        },
+        {
+          "lemma": "成長",
+          "pos": "Noun",
+          "surface": "成長"
+        }
+      ],
+      "id": "hiragana_na_adjective_classical_nari",
+      "input": "すこやかなる成長"
+    },
+    {
+      "description": "Hiragana -らか adjective before classical なる.",
+      "expected": [
+        {
+          "lemma": "あきらか",
+          "pos": "Adjective",
+          "surface": "あきらか"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なる"
+        },
+        {
+          "lemma": "事実",
+          "pos": "Noun",
+          "surface": "事実"
+        }
+      ],
+      "id": "hiragana_raka_adjective_classical_nari",
+      "input": "あきらかなる事実"
     }
   ],
   "description": "Compound adjectives (〜やすい、〜にくい、〜すぎる)",

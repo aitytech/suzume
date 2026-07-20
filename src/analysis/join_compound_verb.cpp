@@ -9,6 +9,114 @@ namespace suzume::analysis {
 
 using namespace compound_verb_detail;
 
+namespace {
+
+void addDictionaryVerifiedIchidanCompoundNominalCandidate(core::Lattice& lattice, std::string_view text,
+                                                          const std::vector<char32_t>& codepoints,
+                                                          const ByteOffsets& byte_offsets, size_t start_pos,
+                                                          const std::vector<normalize::CharType>& char_types,
+                                                          const dictionary::DictionaryManager& dict_manager,
+                                                          const Scorer& scorer) {
+  size_t end_pos = start_pos + 1;
+  bool has_hiragana = false;
+  bool has_kanji_after_hiragana = false;
+
+  while (end_pos < codepoints.size() && end_pos - start_pos <= 6) {
+    if (beginsNominalForcingParticle(codepoints, end_pos, dict_manager)) {
+      break;
+    }
+    if (char_types[end_pos] == CharType::Hiragana) {
+      has_hiragana = true;
+    } else if (char_types[end_pos] == CharType::Kanji) {
+      has_kanji_after_hiragana = has_kanji_after_hiragana || has_hiragana;
+    } else {
+      return;
+    }
+    ++end_pos;
+  }
+
+  if (end_pos >= codepoints.size() || end_pos - start_pos < 4 || !has_kanji_after_hiragana ||
+      !grammar::isERowCodepoint(codepoints[end_pos - 1]) ||
+      !beginsNominalForcingParticle(codepoints, end_pos, dict_manager)) {
+    return;
+  }
+
+  const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+  const std::string lemma = surface + "る";
+  if (dict_manager.lookupExact(lemma, core::PartOfSpeech::Verb) == nullptr) {
+    return;
+  }
+
+  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  const size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
+  lattice.addEdge(
+      text.substr(start_byte, end_byte - start_byte), static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
+      core::PartOfSpeech::Noun, scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus,
+      core::LatticeEdge::kFromDictionary, surface, dictionary::ConjugationType::None,
+      core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "dictionary_ichidan_compound_nominal",
+      core::ExtendedPOS::NounVerbal, "dictionary_ichidan_compound_nominal");
+}
+
+void addDictionaryVerifiedGodanCompoundNominalCandidate(core::Lattice& lattice, std::string_view text,
+                                                        const std::vector<char32_t>& codepoints,
+                                                        const ByteOffsets& byte_offsets, size_t start_pos,
+                                                        const std::vector<normalize::CharType>& char_types,
+                                                        const dictionary::DictionaryManager& dict_manager,
+                                                        const Scorer& scorer) {
+  const size_t v1_kanji_end = findCharRegionEnd(char_types, start_pos, 3, CharType::Kanji);
+  if (v1_kanji_end >= codepoints.size() || char_types[v1_kanji_end] != CharType::Hiragana ||
+      !grammar::isIRowCodepoint(codepoints[v1_kanji_end])) {
+    return;
+  }
+  const std::string_view v1_base_ending = grammar::godanBaseSuffixFromIRow(codepoints[v1_kanji_end]);
+  if (v1_base_ending.empty()) {
+    return;
+  }
+  const std::string v1_base = extractSubstring(codepoints, start_pos, v1_kanji_end) + std::string(v1_base_ending);
+  if (dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) == nullptr) {
+    return;
+  }
+
+  const size_t v2_start = v1_kanji_end + 1;
+  if (v2_start >= codepoints.size() || char_types[v2_start] != CharType::Kanji) {
+    return;
+  }
+  size_t end_pos = v2_start;
+  while (end_pos < codepoints.size() && end_pos - start_pos <= 7) {
+    if (beginsNominalForcingParticle(codepoints, end_pos, dict_manager)) {
+      break;
+    }
+    if (char_types[end_pos] != CharType::Kanji && char_types[end_pos] != CharType::Hiragana) {
+      return;
+    }
+    ++end_pos;
+  }
+  if (end_pos >= codepoints.size() || end_pos <= v2_start + 1 || !grammar::isIRowCodepoint(codepoints[end_pos - 1]) ||
+      !beginsNominalForcingParticle(codepoints, end_pos, dict_manager)) {
+    return;
+  }
+
+  // An i-row V2 can also be an Ichidan stem (使い過ぎる).  Those known
+  // subsidiary verbs are handled by the ordinary compound matcher; this
+  // fallback is only for an otherwise unregistered Godan V2 such as 畳む.
+  const std::string v2_surface = extractSubstring(codepoints, v2_start, end_pos);
+  if (dict_manager.lookupExact(v2_surface + "る", core::PartOfSpeech::Verb) != nullptr) {
+    return;
+  }
+
+  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  const size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
+  const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+  lattice.addEdge(
+      text.substr(start_byte, end_byte - start_byte), static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
+      core::PartOfSpeech::Noun, scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus,
+      core::LatticeEdge::kFromDictionary, surface, dictionary::ConjugationType::None,
+      core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "dictionary_godan_compound_nominal",
+      core::ExtendedPOS::NounVerbal, "dictionary_godan_compound_nominal");
+}
+
+}  // namespace
+
 void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text,
                                    const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                    size_t start_pos, const std::vector<normalize::CharType>& char_types,
@@ -22,6 +130,16 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   if (char_types[start_pos] != CharType::Kanji) {
     return;
   }
+
+  // A lexicalized Ichidan compound can appear as a nominalized continuative
+  // before a case particle (折り曲げを).  Such forms must remain one search
+  // unit even when their V2 is not in the closed subsidiary-verb lexicon.
+  // The complete dictionary lemma is required, so arbitrary V1+V2 sequences
+  // and aspectual forms such as 書き始め stay compositional.
+  addDictionaryVerifiedIchidanCompoundNominalCandidate(lattice, text, codepoints, byte_offsets, start_pos, char_types,
+                                                       dict_manager, scorer);
+  addDictionaryVerifiedGodanCompoundNominalCandidate(lattice, text, codepoints, byte_offsets, start_pos, char_types,
+                                                     dict_manager, scorer);
 
   // Find the kanji portion (V1 stem)
   size_t kanji_end = findCharRegionEnd(char_types, start_pos, 4, CharType::Kanji);

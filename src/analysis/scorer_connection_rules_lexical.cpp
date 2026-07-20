@@ -65,12 +65,21 @@ float computeCompoundNominalizationBonus(const core::LatticeEdge& prev, const co
     return cost::kModerateBonus;
   }
 
-  // A verified compound in renyokei can be nominalized by の (書きかけの紙,
-  // 書きたての文). Its single-word candidate must remain available against a
-  // competing decomposition into a verb stem and suffix.
-  if (prev.origin == core::CandidateOrigin::VerbCompound && prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+  // A deverbal-noun continuative followed by の heads a nominal phrase
+  // (書きかけの紙, 書きたての文). Prefer the noun reading emitted alongside
+  // the compound-verb edge; otherwise a verb-only bonus would incorrectly
+  // discard that grammatical category while keeping the same search unit.
+  if (prev.origin == core::CandidateOrigin::VerbCompound && prev.extended_pos == core::ExtendedPOS::NounVerbal &&
       next.extended_pos == core::ExtendedPOS::ParticleNo && utf8::equalsAny(next.surface, {"の"})) {
     return cost::kTripleVeryStrongBonus + cost::kModerateBonus;
+  }
+
+  // がてら attaches to a complete noun (買い物がてら、仕事がてら). A formal
+  // noun after an independent renyokei is instead a competing internal split
+  // of a lexical noun, so keep that path behind its complete-noun candidate.
+  if (prev.extended_pos == core::ExtendedPOS::NounFormal && next.extended_pos == core::ExtendedPOS::ParticleConj &&
+      utf8::equalsAny(next.surface, {"がてら"})) {
+    return cost::kStrong;
   }
   return cost::kNeutral;
 }
