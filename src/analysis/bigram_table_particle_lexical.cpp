@@ -547,156 +547,12 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::AdjStem, EPOS::Other, cost::kAlmostNever},           // な+い(OTHER)
 
       // Note: Particle → AdjStem is allowed for patterns like やる気がなさそう (が+な+さ+そう)
+  };
+  applyRules(table, kRules, sizeof(kRules) / sizeof(kRules[0]));
 
-      // =========================================================================
-      // Particle → Particle penalties (unnatural adjacent particle chains)
-      // =========================================================================
-      // These particle combinations never occur adjacent in valid Japanese.
-      // Penalizing them helps hiragana words (はし, もも, かし) compete against
-      // false particle-chain interpretations (は+し, も+も, か+し).
+  setParticleAndLexicalPenaltyCosts(table);
 
-      // PART_係 → PART_接続 (は+し, も+て): topic particle directly followed by
-      // conjunctive particle is grammatically invalid (need content between them)
-      {EPOS::ParticleTopic, EPOS::ParticleConj, cost::kRare},
-
-      // PART_係 → PART_格 (は+が, は+を, も+に): topic+case markers never stack
-      // adjacent on the same phrase (は...が with content between is fine)
-      {EPOS::ParticleTopic, EPOS::ParticleCase, cost::kRare},
-
-      // PART_係 → PART_係 (は+も, も+は): double topic marking never adjacent
-      {EPOS::ParticleTopic, EPOS::ParticleTopic, cost::kVeryRare},
-
-      // PART_格 → PART_格 (が+を, を+に, に+で): case particles never stack
-      {EPOS::ParticleCase, EPOS::ParticleCase, cost::kVeryRare},
-
-      // Note: PART_格 → PART_係 (に+は, で+は, と+は) is valid Japanese,
-      // so preserve the stacked-particle boundary. This also covers に+も,
-      // whose focus-particle reading is productive before a predicate.
-      {EPOS::ParticleCase, EPOS::ParticleTopic, cost::kVeryStrongBonus},
-
-      // Note: PART_接続 → PART_係 bonus is NOT set here because short particles
-      // like て, し also have PART_接続 and would incorrectly bond with は, も.
-      // Instead, compound particle (≥3 chars) + topic particle bonus is handled
-      // in scorer.cpp with surface length check.
-
-      // =========================================================================
-      // Particle → Other penalties (prevents over-segmentation of hiragana words)
-      // =========================================================================
-      // Patterns like も+ちろん, と+にかく are not valid Japanese morphology
-      // Single-char particles followed by unknown hiragana are usually misanalyses
-
-      // ParticleTopic → Other: penalty (も+ちろん is invalid)
-      {EPOS::ParticleTopic, EPOS::Other, cost::kRare},
-
-      // ParticleCase → Other: penalty (と+にかく, に+かく are invalid)
-      {EPOS::ParticleCase, EPOS::Other, cost::kRare},
-
-      // ParticleFinal → Other: penalty (ね+random, よ+random are invalid)
-      {EPOS::ParticleFinal, EPOS::Other, cost::kRare},
-
-      // ParticleConj → Other: minor penalty (て+random at sentence start is unlikely)
-      // Less penalty than others because て+noun/verb is valid in some contexts
-      {EPOS::ParticleConj, EPOS::Other, cost::kUncommon},
-
-      // =========================================================================
-      // Conjunction → Auxiliary penalties
-      // =========================================================================
-      // Conjunctions like でも/だって typically don't directly precede auxiliaries
-      // 彼女でもない should be 彼女|で|も|ない (copula+particle) not 彼女|でも(CONJ)|ない
-
-      // Conjunction → AuxNegativeNai: strong penalty (でも+ない is invalid as CONJ+AUX)
-      {EPOS::Conjunction, EPOS::AuxNegativeNai, cost::kVeryRare},
-
-      // Conjunction → ParticleFinal: moderate penalty (でも+な is invalid)
-      // Conjunctions don't typically connect to final particles mid-sentence
-      {EPOS::Conjunction, EPOS::ParticleFinal, cost::kRare},
-
-      // Conjunction → VerbShuushikei/VerbRenyokei: strong bonus (でも+行く)
-      // This favors でも+行く as single CONJ+VERB over で+も+行く
-      // Note: PART_副 path is preferred but Viterbi may prune it,
-      // so CONJ path serves as fallback for demo+verb patterns
-      {EPOS::Conjunction, EPOS::VerbShuushikei, cost::kStrongBonus},
-      {EPOS::Conjunction, EPOS::VerbRenyokei, cost::kStrongBonus},
-
-      // Conjunction → Adjective: strong bonus (でも高い, それでも安い)
-      // Adjectives after conjunctions are natural; without this, VERB candidates win
-      {EPOS::Conjunction, EPOS::AdjBasic, cost::kStrongBonus},
-      {EPOS::Conjunction, EPOS::AdjStem, cost::kStrongBonus},
-      {EPOS::Conjunction, EPOS::AdjRenyokei, cost::kStrongBonus},
-      {EPOS::Conjunction, EPOS::AdjNaAdj, cost::kStrongBonus},
-
-      // =========================================================================
-      // Interjection connections
-      // =========================================================================
-
-      // Adverb → Interjection (いったい+何だ) - strong bonus
-      // いったい何だ should tokenize as いったい + 何だ, not いったい + 何 + だ
-      {EPOS::Adverb, EPOS::Interjection, cost::kStrongBonus},
-
-      // Interjection → AuxGozaru (おはよう+ござい+ます) - strong bonus
-      // Greetings like おはようございます need this to prefer dict AuxGozaru over verb candidate
-      {EPOS::Interjection, EPOS::AuxGozaru, cost::kStrongBonus},
-
-      // A fixed interjection can be followed by the polite copula and past
-      // auxiliary (すみません+でし+た).
-      {EPOS::Interjection, EPOS::AuxCopulaDesu, cost::kDoubleVeryStrongBonus},
-
-      // Adverb → ParticleTopic (少し+は, もっと+は, ちょっと+は) - minor bonus
-      // The stronger も focus is selected contextually in the lexical scorer.
-      {EPOS::Adverb, EPOS::ParticleTopic, cost::kMinorBonus},
-
-      // Adverb → ParticleCase (かねて+より, あまり+に) - strong bonus.
-      {EPOS::Adverb, EPOS::ParticleCase, cost::kStrongBonus},
-
-      // Adverb → ParticleFinal (まさか+ね, もちろん+ね) - very strong bonus.
-      // Sentence-final particles can close an adverbial response; without this,
-      // a homographic short verb continuative (ねる → ね) wins instead.
-      {EPOS::Adverb, EPOS::ParticleFinal, cost::kVeryStrongBonus},
-
-      // Adverb → Noun (俄然+注目) - moderate bonus
-      // Adverb modifying noun is natural and should beat kanji compound analysis
-      {EPOS::Adverb, EPOS::Noun, cost::kModerateBonus},
-
-      // Adverb → Adjective (とても+面白い, 非常に+難しい) - strong bonus
-      // Adverbs very commonly modify adjectives; should prefer ADJ over NOUN
-      {EPOS::Adverb, EPOS::AdjBasic, cost::kStrongBonus},
-      {EPOS::Adverb, EPOS::AdjRenyokei, cost::kStrongBonus},
-      {EPOS::Adverb, EPOS::AdjNaAdj, cost::kStrongBonus},
-      {EPOS::Adverb, EPOS::AdjKatt, cost::kStrongBonus},
-
-      // Adverb → AdjStem (さすが+な) - strong penalty
-      // Prevents さすが(ADV)+な(AdjStem of ない); should be ADV+な(AuxCopulaDa連体形)
-      {EPOS::Adverb, EPOS::AdjStem, cost::kVeryRare},
-
-      // Adverb → Verb (たまたま+見つけ, すぐ+食べ) - moderate bonus
-      // Adverb modifying verb is natural; prefer dictionary compound over split
-      {EPOS::Adverb, EPOS::VerbRenyokei, cost::kModerateBonus},
-      {EPOS::Adverb, EPOS::VerbShuushikei, cost::kModerateBonus},
-      {EPOS::Adverb, EPOS::VerbOnbinkei, cost::kModerateBonus},
-      {EPOS::Adverb, EPOS::VerbTaForm, cost::kModerateBonus},
-
-      // Prefix → Noun (お+待ち, ご+確認) - strong bonus
-      // Honorific prefix + noun is very common and should beat combined forms
-      {EPOS::Prefix, EPOS::Noun, cost::kStrongBonus},
-
-      // Prefix → VerbRenyokei (お+待ち as verb renyokei) - strong bonus
-      // お待ち can be verb renyokei (待つ) as well as noun
-      {EPOS::Prefix, EPOS::VerbRenyokei, cost::kStrongBonus},
-
-      // =========================================================================
-      // Particle → Interjection penalties
-      // =========================================================================
-      // In running text (not dialogue), particles are never followed by interjections.
-      // Interjections appear at sentence boundaries, not after case/topic particles.
-      // E.g., にはいつ → に+は+いつ, not に+はい(INTJ)+つ
-      {EPOS::ParticleCase, EPOS::Interjection, cost::kAlmostNever},
-      {EPOS::ParticleTopic, EPOS::Interjection, cost::kAlmostNever},
-      {EPOS::ParticleNo, EPOS::Interjection, cost::kAlmostNever},
-      {EPOS::ParticleAdverbial, EPOS::Interjection, cost::kAlmostNever},
-      {EPOS::ParticleConj, EPOS::Interjection, cost::kAlmostNever},
-      {EPOS::ParticleQuote, EPOS::Interjection, cost::kAlmostNever},
-      {EPOS::ParticleFinal, EPOS::Interjection, cost::kAlmostNever},
-
+  static constexpr BigramRule kClassicalRules[] = {
       // =========================================================================
       // Classical assertion/past なり/けり (文語断定・過去)
       // =========================================================================
@@ -759,7 +615,7 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::ParticleConj, EPOS::AuxHonorific, cost::kStrongBonus},
       {EPOS::AuxHonorific, EPOS::ParticleConj, cost::kVeryStrongBonus},
   };
-  applyRules(table, kRules, sizeof(kRules) / sizeof(kRules[0]));
+  applyRules(table, kClassicalRules, sizeof(kClassicalRules) / sizeof(kClassicalRules[0]));
 }
 
 }  // namespace suzume::analysis::bigram_rules

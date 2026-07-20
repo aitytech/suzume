@@ -14,6 +14,7 @@ add_library(suzume_analysis OBJECT
   bigram_table.cpp
   bigram_table_aux_noun.cpp
   bigram_table_particle_lexical.cpp
+  bigram_table_particle_penalties.cpp
   bigram_table_verb_adj.cpp
   compound_verb_forms.cpp
   compound_verb_emit.cpp
