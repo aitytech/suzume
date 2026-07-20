@@ -153,6 +153,38 @@ bool isVerbOnbinContextAfterI(const std::vector<char32_t>& codepoints, size_t po
   return false;
 }
 
+// A duration/formal-noun kanji may begin a compound adjective only when its
+// tail is independently an i-adjective, never merely a Godan continuative.
+bool hasValidDurationCompoundTail(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                  char32_t first_hira, const grammar::Inflection& inflection,
+                                  const dictionary::DictionaryManager* dict_manager) {
+  const std::string tail_adj = extractSubstring(codepoints, start_pos + 1, kanji_end) + "い";
+  const bool tail_is_dict_adj = isAdjectiveInDictionary(dict_manager, tail_adj);
+  bool tail_is_i_adj = tail_is_dict_adj;
+  float tail_adj_confidence = candidate::kNoOriginConfidence;
+  if (!tail_is_i_adj && !(first_hira == U'い' && isVerbOnbinContextAfterI(codepoints, kanji_end + 1)) &&
+      !verb_helpers::isNounInDictionary(dict_manager, tail_adj) &&
+      !verb_helpers::hasDictionaryEntry(dict_manager, tail_adj, core::PartOfSpeech::Verb)) {
+    for (const auto& tail_res : inflection.analyze(tail_adj)) {
+      if (tail_res.verb_type == grammar::VerbType::IAdjective &&
+          tail_res.confidence >= candidate::kCompoundAdjConfMin) {
+        tail_is_i_adj = true;
+        tail_adj_confidence = std::max(tail_adj_confidence, tail_res.confidence);
+      }
+    }
+  }
+  if (tail_is_i_adj && !tail_is_dict_adj) {
+    const std::string tail_surface = extractSubstring(codepoints, start_pos + 1, kanji_end + 1);
+    for (const auto& tail_res : inflection.analyze(tail_surface)) {
+      if (grammar::isGodanVerbType(tail_res.verb_type) && tail_res.base_form == tail_surface &&
+          tail_res.confidence > tail_adj_confidence) {
+        return false;
+      }
+    }
+  }
+  return tail_is_i_adj;
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -658,40 +690,10 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     // kanji+い as an i-adjective, and the compound's い is not a verb-onbin
     // surface (間続いた, 分置いて).
     char32_t head_char = codepoints[start_pos];
-    if (normalize::isDurationSuffixKanji(head_char)) {
-      std::string tail_adj = extractSubstring(codepoints, start_pos + 1, kanji_end) + "い";
-      bool tail_is_dict_adj = isAdjectiveInDictionary(dict_manager, tail_adj);
-      bool tail_is_i_adj = tail_is_dict_adj;
-      float tail_adj_confidence = candidate::kNoOriginConfidence;
-      if (!tail_is_i_adj && !(first_hira == U'い' && isVerbOnbinContextAfterI(codepoints, kanji_end + 1)) &&
-          !verb_helpers::isNounInDictionary(dict_manager, tail_adj) &&
-          !verb_helpers::hasDictionaryEntry(dict_manager, tail_adj, core::PartOfSpeech::Verb)) {
-        for (const auto& tail_res : inflection.analyze(tail_adj)) {
-          if (tail_res.verb_type == grammar::VerbType::IAdjective &&
-              tail_res.confidence >= candidate::kCompoundAdjConfMin) {
-            tail_is_i_adj = true;
-            tail_adj_confidence = std::max(tail_adj_confidence, tail_res.confidence);
-          }
-        }
-      }
-      // For a rule-derived tail, reject the compound reading when the same
-      // second-kanji + okurigana span has stronger evidence as a terminal Godan
-      // verb (中+働く). Dictionary-backed adjectives such as 間近い/分厚い are
-      // authoritative and bypass this ambiguity check.
-      if (tail_is_i_adj && !tail_is_dict_adj) {
-        std::string tail_surface = extractSubstring(codepoints, start_pos + 1, kanji_end + 1);
-        for (const auto& tail_res : inflection.analyze(tail_surface)) {
-          if (grammar::isGodanVerbType(tail_res.verb_type) && tail_res.base_form == tail_surface &&
-              tail_res.confidence > tail_adj_confidence) {
-            tail_is_i_adj = false;
-            break;
-          }
-        }
-      }
-      if (!tail_is_i_adj) {
-        SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] duration-suffix head \"" << head_char << "\" not an i-adj compound\n");
-        goto skip_compound_adj;
-      }
+    if (normalize::isDurationSuffixKanji(head_char) &&
+        !hasValidDurationCompoundTail(codepoints, start_pos, kanji_end, first_hira, inflection, dict_manager)) {
+      SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] duration-suffix head \"" << head_char << "\" not an i-adj compound\n");
+      goto skip_compound_adj;
     }
     {
       // For し: must be followed by い/く/け/か (しい-adj conjugation),
