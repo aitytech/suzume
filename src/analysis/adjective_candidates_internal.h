@@ -83,6 +83,11 @@ float maxConfidenceFor(const std::vector<grammar::InflectionCandidate>& candidat
  */
 bool isVerbOnbinContextAfterI(const std::vector<char32_t>& codepoints, size_t pos);
 
+/**
+ * @brief Whether a codepoint range contains a prolonged sound mark.
+ */
+bool containsProlongedSoundMark(const std::vector<char32_t>& codepoints, size_t start, size_t end);
+
 // =============================================================================
 // UnknownCandidate Factory Helpers
 // =============================================================================
@@ -149,6 +154,14 @@ void appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& codepoints, 
                                        size_t hiragana_end, const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
                                        std::vector<UnknownCandidate>& candidates);
+
+/**
+ * @brief Append surface-qualified pure-hiragana i-adjective candidates.
+ */
+void appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
+                                         bool starts_with_particle, const grammar::Inflection& inflection,
+                                         const dictionary::DictionaryManager* dict_manager,
+                                         std::vector<UnknownCandidate>& candidates);
 
 }  // namespace suzume::analysis::adj_detail
 
