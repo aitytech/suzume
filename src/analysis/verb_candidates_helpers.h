@@ -471,6 +471,11 @@ bool containsPassiveCausativeAuxPattern(std::string_view surface);
  */
 bool masuAuxFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 
+// Returns the length of a complete finite ます inflection beginning at pos,
+// or zero when the following characters do not form one.  The caller decides
+// whether the form is at a clause boundary.
+size_t finiteMasuFormLengthAt(const std::vector<char32_t>& codepoints, size_t pos);
+
 /**
  * @brief Check whether an ichidan causative auxiliary (させ family) follows at @p pos.
  *

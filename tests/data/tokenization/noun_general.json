@@ -3511,6 +3511,508 @@
       ],
       "id": "voiced_all_over_suffix",
       "input": "確認づくめの手順"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-search-unit",
+        "reason": "格助詞に直接続く検証済み複合動詞連用形は、検索可能な動名詞句として一単位に保持する。"
+      },
+      "description": "複合動詞連用形の格助詞直結を名詞句として保持",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "押す",
+          "pos": "Verb",
+          "surface": "押し"
+        },
+        {
+          "lemma": "下げ",
+          "pos": "Noun",
+          "surface": "下げ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試す"
+        }
+      ],
+      "id": "no_shi_gewo_su",
+      "input": "確認の押し下げを試す",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "押し下げ",
+          "pos": "Noun",
+          "surface": "押し下げ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試す"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-search-unit",
+        "reason": "格助詞に直接続く検証済み複合動詞連用形は、検索可能な動名詞句として一単位に保持する。"
+      },
+      "description": "複合動詞連用形の格助詞直結を名詞句として保持",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "押し",
+          "pos": "Noun",
+          "surface": "押し"
+        },
+        {
+          "lemma": "付け",
+          "pos": "Noun",
+          "surface": "付け"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "no_shi_kewo_keru",
+      "input": "確認の押し付けを避ける",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "押し付け",
+          "pos": "Noun",
+          "surface": "押し付け"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-search-unit",
+        "reason": "格助詞に直接続く検証済み複合動詞連用形は、検索可能な動名詞句として一単位に保持する。"
+      },
+      "description": "複合動詞連用形の格助詞直結を名詞句として保持",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "押し",
+          "pos": "Noun",
+          "surface": "押し"
+        },
+        {
+          "lemma": "返し",
+          "pos": "Suffix",
+          "surface": "返し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "no_shi_shiwo_tsu",
+      "input": "確認の押し返しを待つ",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "押し返し",
+          "pos": "Noun",
+          "surface": "押し返し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-search-unit",
+        "reason": "格助詞に直接続く検証済み複合動詞連用形は、検索可能な動名詞句として一単位に保持する。"
+      },
+      "description": "複合動詞連用形の格助詞直結を名詞句として保持",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "押し",
+          "pos": "Noun",
+          "surface": "押し"
+        },
+        {
+          "lemma": "開き",
+          "pos": "Suffix",
+          "surface": "開き"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_shi_kiwo_u",
+      "input": "確認の押し開きを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "押し開き",
+          "pos": "Noun",
+          "surface": "押し開き"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞に直接続く連用形転成名詞はNounVerbalとして扱い、同形の推定助動詞分割を避ける。"
+      },
+      "description": "連用形が格助詞前で推定助動詞へ分割されないこと",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "打つ",
+          "pos": "Verb",
+          "surface": "打ち"
+        },
+        {
+          "lemma": "鳴らす",
+          "pos": "Verb",
+          "surface": "鳴らし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "no_chi_rashiwo_ku",
+      "input": "確認の打ち鳴らしを聞く",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "打つ",
+          "pos": "Verb",
+          "surface": "打ち"
+        },
+        {
+          "lemma": "鳴らし",
+          "pos": "Noun",
+          "surface": "鳴らし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ]
+    },
+    {
+      "description": "子どもらしさを示す - auto-generated",
+      "expected": [
+        {
+          "lemma": "子ども",
+          "pos": "Noun",
+          "surface": "子ども"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "示す",
+          "pos": "Verb",
+          "surface": "示す"
+        }
+      ],
+      "id": "domorashisawo_su",
+      "input": "子どもらしさを示す"
+    },
+    {
+      "description": "再利用を進める - auto-generated",
+      "expected": [
+        {
+          "lemma": "再利用",
+          "pos": "Noun",
+          "surface": "再利用"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "wo_meru",
+      "input": "再利用を進める"
+    },
+    {
+      "description": "未使用の項目 - auto-generated",
+      "expected": [
+        {
+          "lemma": "未使用",
+          "pos": "Noun",
+          "surface": "未使用"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "項目",
+          "pos": "Noun",
+          "surface": "項目"
+        }
+      ],
+      "id": "no_2",
+      "input": "未使用の項目"
+    },
+    {
+      "description": "不使用の項目 - auto-generated",
+      "expected": [
+        {
+          "lemma": "不使用",
+          "pos": "Noun",
+          "surface": "不使用"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "項目",
+          "pos": "Noun",
+          "surface": "項目"
+        }
+      ],
+      "id": "no_3",
+      "input": "不使用の項目"
+    },
+    {
+      "description": "再活用を進める - auto-generated",
+      "expected": [
+        {
+          "lemma": "再活用",
+          "pos": "Noun",
+          "surface": "再活用"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "wo_meru_2",
+      "input": "再活用を進める"
+    },
+    {
+      "description": "格助詞に係る並列連用形は両方を転成名詞として扱う",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "上がり",
+          "pos": "Noun",
+          "surface": "上がり"
+        },
+        {
+          "lemma": "下がり",
+          "pos": "Noun",
+          "surface": "下がり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "parallel_renyokei_nominal",
+      "input": "確認の上がり下がりを見る"
     }
   ],
   "description": "General nouns",

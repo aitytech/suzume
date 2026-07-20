@@ -108,6 +108,33 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
   auto candidates = unknown_gen_.generate(text, codepoints, start_pos, char_types);
 
   for (const auto& candidate : candidates) {
+    // A dictionary kanji-containing i-adjective must not be shadowed by an
+    // identical unknown noun fallback. The fallback can otherwise pair with a
+    // following suffix (美しい+方) and erase the adjective's grammatical
+    // attributive boundary. Pure-hiragana adjectives such as ない remain
+    // context-sensitive, so preserve their existing alternative paths.
+    // Preserve genuinely ambiguous dictionary surfaces by keeping the fallback
+    // when the dictionary also supplies an exact noun entry.
+    const bool is_exact_noun_fallback = candidate.pos == core::PartOfSpeech::Noun &&
+                                        candidate.end - candidate.start > 1 &&
+                                        grammar::containsKanji(candidate.surface);
+    if (is_exact_noun_fallback) {
+      bool has_exact_adjective = false;
+      bool has_exact_noun = false;
+      for (const auto& result : dict_results) {
+        if (result.entry == nullptr || result.length != candidate.end - candidate.start) {
+          continue;
+        }
+        const bool is_exact_i_adjective = result.entry->pos == core::PartOfSpeech::Adjective &&
+                                          result.entry->extended_pos != core::ExtendedPOS::AdjNaAdj;
+        has_exact_adjective = has_exact_adjective || is_exact_i_adjective;
+        has_exact_noun = has_exact_noun || result.entry->pos == core::PartOfSpeech::Noun;
+      }
+      if (has_exact_adjective && !has_exact_noun) {
+        continue;
+      }
+    }
+
     bool is_conjunction_prefix = false;
     for (const auto& result : dict_results) {
       if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Conjunction &&

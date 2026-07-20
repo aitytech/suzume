@@ -3446,7 +3446,7 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "The particle and verb boundaries are grammatical; 丁寧 retains its nominal analysis before に as an intentional tag-granularity difference."
+        "reason": "尊敬接頭辞後の忙しいは形容詞、丁寧は格助詞に接続する名詞として文法的に妥当であり、表層境界は一致する。"
       },
       "description": "敬語多重化 + にもかかわらず — honorific prefix + くださる",
       "expected": [
@@ -3546,7 +3546,7 @@
         },
         {
           "lemma": "忙しい",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "忙しい"
         },
         {

@@ -128,7 +128,8 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
       const auto* auxiliary_entry = dict_manager->lookupExact(auxiliary_surface);
       const bool is_closed_auxiliary =
           auxiliary_entry != nullptr && (auxiliary_entry->pos == core::PartOfSpeech::Auxiliary ||
-                                         auxiliary_entry->extended_pos == core::ExtendedPOS::AuxInability);
+                                         auxiliary_entry->extended_pos == core::ExtendedPOS::AuxInability ||
+                                         auxiliary_entry->extended_pos == core::ExtendedPOS::AuxExcessive);
       if (!is_closed_auxiliary) {
         continue;
       }

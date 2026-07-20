@@ -52,6 +52,30 @@ bool masuAuxFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
   return next == U'す' || next == U'し' || next == U'せ';
 }
 
+size_t finiteMasuFormLengthAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos + 1 >= codepoints.size() || codepoints[pos] != U'ま') {
+    return 0;
+  }
+  if (codepoints[pos + 1] == U'す') {
+    if (pos + 3 < codepoints.size() && codepoints[pos + 2] == U'れ' && codepoints[pos + 3] == U'ば') {
+      return 4;  // ますれば
+    }
+    return 2;  // ます
+  }
+  if (codepoints[pos + 1] == U'し') {
+    if (pos + 2 < codepoints.size() && (codepoints[pos + 2] == U'た' || codepoints[pos + 2] == U'て')) {
+      return 3;  // ました / まして
+    }
+    if (pos + 3 < codepoints.size() && codepoints[pos + 2] == U'ょ' && codepoints[pos + 3] == U'う') {
+      return 4;  // ましょう
+    }
+  }
+  if (pos + 2 < codepoints.size() && codepoints[pos + 1] == U'せ' && codepoints[pos + 2] == U'ん') {
+    return 3;  // ません
+  }
+  return 0;
+}
+
 bool causativeSaseFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
   return pos + 1 < codepoints.size() && codepoints[pos] == U'さ' && codepoints[pos + 1] == U'せ';
 }

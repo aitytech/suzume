@@ -92,6 +92,7 @@ extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount] = {
     {"散らす", "ちらす", "す", V2VerbType::Godan},                  // 書き散らす
     {"囲む", "かこむ", "む", V2VerbType::Godan},                    // 取り囲む
     {"締まる", "しまる", "る", V2VerbType::Godan},                  // 取り締まる
+    {"仕切る", "しきる", "る", V2VerbType::Godan},                  // 降りしきる, 鳴りしきる
     {"次ぐ", "つぐ", "ぐ", V2VerbType::Godan},                      // 取り次ぐ
     {"除く", "のぞく", "く", V2VerbType::Godan},                    // 取り除く
     {"移る", "うつる", "る", V2VerbType::Godan},                    // 乗り移る
@@ -119,12 +120,29 @@ extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount] = {
     {"叫ぶ", "さけぶ", "ぶ", V2VerbType::Godan},                     // 泣き叫ぶ, 喚き叫ぶ
     {"注ぐ", "そそぐ", "ぐ", V2VerbType::Godan},                     // 降り注ぐ, 流し注ぐ
     {"継ぐ", "つぐ", "ぐ", V2VerbType::Godan},                       // 語り継ぐ, 受け継ぐ, 引き継ぐ
+    {"挟む", "はさむ", "む", V2VerbType::Godan},                     // 差し挟む
+    {"招く", "まねく", "く", V2VerbType::Godan},                     // 差し招く
+    {"歩く", "あるく", "く", V2VerbType::Godan},                     // 渡り歩く
+    {"ほどく", "ほどく", "く", V2VerbType::Godan},                   // 振りほどく
+    {"向く", "むく", "く", V2VerbType::Godan},                       // 振り向く
+    {"描く", "えがく", "く", V2VerbType::Godan},                     // 思い描く
+    {"誤る", "あやまる", "る", V2VerbType::Godan},                   // 読み誤る
+    {"尽くす", "つくす", "す", V2VerbType::Godan},                   // 立ち尽くす
+    {"引く", "ひく", "く", V2VerbType::Godan},                       // 差し引く, 値引く
+    {"向かう", "むかう", "う", V2VerbType::Godan},                   // 立ち向かう
+    {"並ぶ", "ならぶ", "ぶ", V2VerbType::Godan},                     // 立ち並ぶ
+    {"果たす", "はたす", "す", V2VerbType::Godan},                   // 使い果たす
+    {"こなす", "こなす", "す", V2VerbType::Godan},                   // 使いこなす
     {"刺す", "さす", "す", V2VerbType::Godan},                       // 突き刺す, 差し刺す
     {"望む", "のぞむ", "む", V2VerbType::Godan},                     // 待ち望む, 見望む
     {"落とす", "おとす", "す", V2VerbType::Godan},                   // 切り落とす, 打ち落とす
     {"落ちる", "おちる", "ちる", V2VerbType::Ichidan},               // 転げ落ちる
     {"掛ける", "かける", "ける", V2VerbType::Ichidan},               // 呼び掛ける, 働き掛ける
     {"付ける", "つける", "ける", V2VerbType::Ichidan},               // 押し付ける, 決め付ける
+    {"当てる", "あてる", "てる", V2VerbType::Ichidan},               // 振り当てる
+    {"向ける", "むける", "ける", V2VerbType::Ichidan},               // 差し向ける
+    {"遂げる", "とげる", "げる", V2VerbType::Ichidan},               // やり遂げる
+    {"戻る", "もどる", "る", V2VerbType::Godan},                     // 立ち戻る
     {"入れる", "いれる", "れる", V2VerbType::Ichidan},               // 取り入れる, 持ち入れる
     {"分ける", "わける", "ける", V2VerbType::Ichidan},               // 切り分ける, 振り分ける
     {"立てる", "たてる", "てる", V2VerbType::Ichidan},               // 組み立てる, 打ち立てる
@@ -155,9 +173,21 @@ extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount] = {
     {"違える", "ちがえる", "える", V2VerbType::Ichidan},    // 取り違える
     {"退ける", "のける", "ける", V2VerbType::Ichidan},      // 押し退ける
     {"遅れる", "おくれる", "れる", V2VerbType::Ichidan},    // 乗り遅れる
+    {"忘れる", "わすれる", "れる", V2VerbType::Ichidan},    // 置き忘れる, 言い忘れる
     {"起きる", "おきる", "きる", V2VerbType::Ichidan},      // 飛び起きる
     {"下りる", "おりる", "りる", V2VerbType::Ichidan},      // 飛び下りる
     {"そこなう", "そこなう", "う", V2VerbType::Godan, true, false},  // 確認しそこなう
+    {"損じる", "そんじる", "じる", V2VerbType::Ichidan},             // 書き損じる, 読み損じる
+    {"渡る", "わたる", "る", V2VerbType::Godan},                     // 飛び渡る, 歩き渡る
+    {"かざす", "かざす", "す", V2VerbType::Godan},                   // 振りかざす, 差しかざす
+    {"置く", "おく", "く", V2VerbType::Godan},                       // 書き置く, 取り置く
+    {"足す", "たす", "す", V2VerbType::Godan},                       // 付け足す, 書き足す
+    {"直る", "なおる", "る", V2VerbType::Godan},                     // 向き直る, 座り直る
+    {"下す", "くだす", "す", V2VerbType::Godan},                     // 書き下す, 読み下す
+    {"交わす", "かわす", "す", V2VerbType::Godan},                   // 取り交わす, 書き交わす
+    {"添う", "そう", "う", V2VerbType::Godan},                       // 寄り添う, 書き添う
+    {"乱れる", "みだれる", "れる", V2VerbType::Ichidan},             // 入り乱れる, 打ち乱れる
+    {"混じる", "まじる", "じる", V2VerbType::Godan},                 // 入り混じる, 溶け混じる
 };
 
 }  // namespace suzume::analysis::compound_verb_detail

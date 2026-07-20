@@ -309,12 +309,23 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
       bool is_mo_negative = next == U'も' && adj_end + 1 < codepoints.size() && codepoints[adj_end + 1] == U'な';
       is_adj_context = (next == U'て' || next == U'な' || is_mo_negative);
     }
-    if (is_adj_context) {
-      std::string surface = extractSubstring(codepoints, start_pos, adj_end);
-      std::string lemma = extractSubstring(codepoints, start_pos, kanji_end) + "い";
-      SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE_KU] \"" << surface << "\" cost=" << candidate::kSingleKanjiKuCost << "\n");
-      candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, lemma, candidate::kSingleKanjiKuCost,
-                                             CandidateOrigin::AdjectiveI, 0.5F, "single_kanji_ku"));
+    std::string surface = extractSubstring(codepoints, start_pos, adj_end);
+    std::string lemma = extractSubstring(codepoints, start_pos, kanji_end) + "い";
+    bool follows_counter = start_pos > 0 && normalize::isCounterKanji(codepoints[start_pos - 1]);
+    size_t predicate_end = adj_end;
+    while (predicate_end < char_types.size() && char_types[predicate_end] == normalize::CharType::Kanji) {
+      ++predicate_end;
+    }
+    bool followed_by_kanji_suru_predicate = predicate_end > adj_end && predicate_end + 1 < codepoints.size() &&
+                                            codepoints[predicate_end] == U'す' &&
+                                            codepoints[predicate_end + 1] == U'る';
+    bool counter_conditioned_adjective = follows_counter && followed_by_kanji_suru_predicate;
+    if (is_adj_context || counter_conditioned_adjective) {
+      float cost =
+          counter_conditioned_adjective ? candidate::kCounterConditionedKuAdjectiveCost : candidate::kSingleKanjiKuCost;
+      SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SINGLE_KU] \"" << surface << "\" cost=" << cost << "\n");
+      candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, lemma, cost, CandidateOrigin::AdjectiveI,
+                                             0.5F, "single_kanji_ku"));
     }
   }
 

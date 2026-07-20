@@ -43,6 +43,10 @@ bool isInterrogativeKanji(char32_t cp) {
   return cp == U'何' || cp == U'誰' || cp == U'幾';
 }
 
+bool isNominalUsePrefix(char32_t cp) {
+  return cp == U'再' || cp == U'未' || cp == U'不';
+}
+
 std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints,
                                                                size_t start_pos,
                                                                const std::vector<normalize::CharType>& char_types,
@@ -61,6 +65,20 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
 
   // Check if first character is a prefix-like kanji
   char32_t first_char = codepoints[start_pos];
+  // 再・未・不 are closed kango prefixes.  A following single kanji plus
+  // nominal 用 is a productive lexical search unit (再利用, 未使用,
+  // 不使用), unlike an arbitrary three-kanji sequence.  Restrict the shape
+  // to the suffix 用 and an actual word boundary so this cannot absorb a
+  // longer compound such as 不安要素.
+  if (isNominalUsePrefix(first_char) && start_pos + 2 < codepoints.size() && start_pos + 2 < char_types.size() &&
+      char_types[start_pos + 1] == normalize::CharType::Kanji && codepoints[start_pos + 2] == U'用' &&
+      (start_pos + 3 >= char_types.size() || char_types[start_pos + 3] != normalize::CharType::Kanji)) {
+    std::string surface = extractSubstring(codepoints, start_pos, start_pos + 3);
+    candidates.push_back(makeCandidate(surface, start_pos, start_pos + 3, core::PartOfSpeech::Noun,
+                                       candidate::kPrefixNominalUseBonus, false, CandidateOrigin::PrefixCompound));
+    return candidates;
+  }
+
   if (!isPrefixLikeKanji(first_char)) {
     return candidates;
   }

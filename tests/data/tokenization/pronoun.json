@@ -1211,6 +1211,49 @@
       ],
       "id": "kadehanai",
       "input": "誰かではない"
+    },
+    {
+      "accepted_diff": {
+        "category": "normalization",
+        "reason": "「各自」は各人を指す代名詞として扱い、後続のサ変名詞との境界を保持する。"
+      },
+      "description": "Distributive pronoun before a suru noun must not absorb the following noun.",
+      "expected": [
+        {
+          "lemma": "各自",
+          "pos": "Noun",
+          "surface": "各自"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kakujikakunin_suru",
+      "input": "各自確認する",
+      "suzume_expected": [
+        {
+          "lemma": "各自",
+          "pos": "Pronoun",
+          "surface": "各自"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ]
     }
   ],
   "description": "Pronouns",

@@ -5166,6 +5166,201 @@
       ],
       "id": "ikanu_mama_classical_negative_boundary",
       "input": "行かぬまま進む"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "文語連語「せんがため」の「ため」は形式名詞として解析する。併せて「夜通し」は名詞用法を保持し、MeCab由来の動詞・副詞分類とは意図的に異なる。"
+      },
+      "description": "問題を解決せんがため、担当者は夜通し作業した。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "解決",
+          "pos": "Noun",
+          "surface": "解決"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "せ"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ためる",
+          "pos": "Verb",
+          "surface": "ため"
+        },
+        {
+          "lemma": "担当者",
+          "pos": "Noun",
+          "surface": "担当者"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "夜通し",
+          "pos": "Adverb",
+          "surface": "夜通し"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_sengatame_ha_shi_shita",
+      "input": "問題を解決せんがため、担当者は夜通し作業した。",
+      "suzume_expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "解決",
+          "pos": "Noun",
+          "surface": "解決"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "せ"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ため",
+          "pos": "Noun",
+          "surface": "ため"
+        },
+        {
+          "lemma": "担当者",
+          "pos": "Noun",
+          "surface": "担当者"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "夜通し",
+          "pos": "Noun",
+          "surface": "夜通し"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
+    },
+    {
+      "description": "その言葉を聞くにつけ、記憶がよみがえった。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "言葉",
+          "pos": "Noun",
+          "surface": "言葉"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        },
+        {
+          "lemma": "につけ",
+          "pos": "Particle",
+          "surface": "につけ"
+        },
+        {
+          "lemma": "記憶",
+          "pos": "Noun",
+          "surface": "記憶"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "よみがえる",
+          "pos": "Verb",
+          "surface": "よみがえっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "sono_wo_kunitsuke_gayomigaettta",
+      "input": "その言葉を聞くにつけ、記憶がよみがえった。"
     }
   ],
   "description": "literary_classic tests",

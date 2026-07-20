@@ -269,6 +269,7 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // i-adjective attributive form + noun is fundamental Japanese grammar
       // Without this, long unknown NOUN candidates (一番美しい) beat split paths
       {EPOS::AdjBasic, EPOS::Noun, cost::kModerateBonus},
+
       // An i-adjective directly modifies a formal noun (難い+もの,
       // 美しい+こと). Keep this productive adnominal boundary ahead of a
       // homographic verb-renyokei candidate that postprocessing would merge.

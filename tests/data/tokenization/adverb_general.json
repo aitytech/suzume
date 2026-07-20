@@ -3643,6 +3643,495 @@
       ],
       "id": "shidake_suru",
       "input": "少しだけ確認する"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "「また」は接続詞・副詞の両用法があり、述語修飾の副詞解析を許容する。"
+      },
+      "description": "また確認する - regression test",
+      "expected": [
+        {
+          "lemma": "また",
+          "pos": "Conjunction",
+          "surface": "また"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "mata_suru",
+      "input": "また確認する",
+      "suzume_expected": [
+        {
+          "lemma": "また",
+          "pos": "Adverb",
+          "surface": "また"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ]
+    },
+    {
+      "description": "たいてい確認する - regression test",
+      "expected": [
+        {
+          "lemma": "たいてい",
+          "pos": "Adverb",
+          "surface": "たいてい"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "taitei_suru",
+      "input": "たいてい確認する"
+    },
+    {
+      "description": "ふたたび確認する - regression test",
+      "expected": [
+        {
+          "lemma": "ふたたび",
+          "pos": "Adverb",
+          "surface": "ふたたび"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "futatabi_suru",
+      "input": "ふたたび確認する"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-search-unit",
+        "reason": "閉じた固定副詞は内部の助詞候補へ分解せず、検索単位として保持する。"
+      },
+      "description": "どのみち確認する - regression test",
+      "expected": [
+        {
+          "lemma": "どの",
+          "pos": "Determiner",
+          "surface": "どの"
+        },
+        {
+          "lemma": "みち",
+          "pos": "Noun",
+          "surface": "みち"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "donomichi_suru",
+      "input": "どのみち確認する",
+      "suzume_expected": [
+        {
+          "lemma": "どのみち",
+          "pos": "Adverb",
+          "surface": "どのみち"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ]
+    },
+    {
+      "description": "どうにか確認する - regression test",
+      "expected": [
+        {
+          "lemma": "どうにか",
+          "pos": "Adverb",
+          "surface": "どうにか"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "dounika_suru",
+      "input": "どうにか確認する"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-search-unit",
+        "reason": "閉じた固定副詞は内部の助詞候補へ分解せず、検索単位として保持する。"
+      },
+      "description": "ふいに確認する - regression test",
+      "expected": [
+        {
+          "lemma": "ふう",
+          "pos": "Verb",
+          "surface": "ふい"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "fuini_suru",
+      "input": "ふいに確認する",
+      "suzume_expected": [
+        {
+          "lemma": "ふいに",
+          "pos": "Adverb",
+          "surface": "ふいに"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "文脈上の固定副詞として解析し、MeCabの名詞分類とは意図的に異なる。"
+      },
+      "description": "いまなお確認できる - regression test",
+      "expected": [
+        {
+          "lemma": "いま",
+          "pos": "Noun",
+          "surface": "いま"
+        },
+        {
+          "lemma": "なお",
+          "pos": "Conjunction",
+          "surface": "なお"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        }
+      ],
+      "id": "imanao_dekiru",
+      "input": "いまなお確認できる",
+      "suzume_expected": [
+        {
+          "lemma": "いま",
+          "pos": "Adverb",
+          "surface": "いま"
+        },
+        {
+          "lemma": "なお",
+          "pos": "Conjunction",
+          "surface": "なお"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "文脈上の固定副詞として解析し、MeCabの名詞分類とは意図的に異なる。"
+      },
+      "description": "それなりに確認する - regression test",
+      "expected": [
+        {
+          "lemma": "それなり",
+          "pos": "Noun",
+          "surface": "それなり"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sorenarini_suru",
+      "input": "それなりに確認する",
+      "suzume_expected": [
+        {
+          "lemma": "それなり",
+          "pos": "Adverb",
+          "surface": "それなり"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "文脈上の固定副詞として解析し、MeCabの名詞分類とは意図的に異なる。"
+      },
+      "description": "いっさい確認しない - regression test",
+      "expected": [
+        {
+          "lemma": "いっさい",
+          "pos": "Noun",
+          "surface": "いっさい"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ittsai_shinai",
+      "input": "いっさい確認しない",
+      "suzume_expected": [
+        {
+          "lemma": "いっさい",
+          "pos": "Adverb",
+          "surface": "いっさい"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ]
+    },
+    {
+      "description": "いっこうに確認できない - regression test",
+      "expected": [
+        {
+          "lemma": "いっこうに",
+          "pos": "Adverb",
+          "surface": "いっこうに"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ittkouni_dekinai",
+      "input": "いっこうに確認できない"
+    },
+    {
+      "description": "ゆっくりと照らす - regression test",
+      "expected": [
+        {
+          "lemma": "ゆっくり",
+          "pos": "Adverb",
+          "surface": "ゆっくり"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "照らす",
+          "pos": "Verb",
+          "surface": "照らす"
+        }
+      ],
+      "id": "yuttkurito_rasu",
+      "input": "ゆっくりと照らす"
+    },
+    {
+      "description": "とうに確認した - regression test",
+      "expected": [
+        {
+          "lemma": "とうに",
+          "pos": "Adverb",
+          "surface": "とうに"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "touni_shita",
+      "input": "とうに確認した"
+    },
+    {
+      "description": "さしも確認しない - regression test",
+      "expected": [
+        {
+          "lemma": "さしも",
+          "pos": "Adverb",
+          "surface": "さしも"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "sashimo_shinai",
+      "input": "さしも確認しない"
+    },
+    {
+      "description": "取り急ぎ確認する - auto-generated",
+      "expected": [
+        {
+          "lemma": "取り急ぎ",
+          "pos": "Adverb",
+          "surface": "取り急ぎ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ri_gi_suru",
+      "input": "取り急ぎ確認する"
     }
   ],
   "description": "General adverbs",

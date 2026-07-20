@@ -575,6 +575,1990 @@
       ],
       "id": "shinseido_derived_degree_compound",
       "input": "新制度を導入する"
+    },
+    {
+      "description": "複合動詞連用形の名詞用法を保持",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "差し引き",
+          "pos": "Noun",
+          "surface": "差し引き"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "計算",
+          "pos": "Noun",
+          "surface": "計算"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "no_shi_kiwo_suru",
+      "input": "確認の差し引きを計算する"
+    },
+    {
+      "description": "確認の値上がりを調べる - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "値上がり",
+          "pos": "Noun",
+          "surface": "値上がり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "no_gariwo_beru",
+      "input": "確認の値上がりを調べる"
+    },
+    {
+      "description": "確認の値下がりを調べる - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "値下がり",
+          "pos": "Noun",
+          "surface": "値下がり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "no_gariwo_beru_2",
+      "input": "確認の値下がりを調べる"
+    },
+    {
+      "description": "確認の打ち合わせ方を示す - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "打ち合わせ",
+          "pos": "Noun",
+          "surface": "打ち合わせ"
+        },
+        {
+          "lemma": "方",
+          "pos": "Suffix",
+          "surface": "方"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "示す",
+          "pos": "Verb",
+          "surface": "示す"
+        }
+      ],
+      "id": "no_chi_wase_wo_su",
+      "input": "確認の打ち合わせ方を示す"
+    },
+    {
+      "description": "美しい方を確認する - regression test",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しい"
+        },
+        {
+          "lemma": "方",
+          "pos": "Noun",
+          "surface": "方"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "shii_wo_suru",
+      "input": "美しい方を確認する"
+    },
+    {
+      "description": "高い方を選ぶ - regression test",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "方",
+          "pos": "Noun",
+          "surface": "方"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ぶ"
+        }
+      ],
+      "id": "i_wo_bu",
+      "input": "高い方を選ぶ"
+    },
+    {
+      "description": "複合動詞連用形の名詞句",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "読み取り",
+          "pos": "Noun",
+          "surface": "読み取り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "noun_compound_yomitori_nominal",
+      "input": "確認の読み取りを行う"
+    },
+    {
+      "description": "複合動詞連用形の名詞句",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "払い戻し",
+          "pos": "Noun",
+          "surface": "払い戻し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "求める",
+          "pos": "Verb",
+          "surface": "求める"
+        }
+      ],
+      "id": "noun_compound_haraimodoshi_nominal",
+      "input": "確認の払い戻しを求める"
+    },
+    {
+      "description": "複合動詞連用形の名詞句",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "言い換え",
+          "pos": "Noun",
+          "surface": "言い換え"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "示す",
+          "pos": "Verb",
+          "surface": "示す"
+        }
+      ],
+      "id": "noun_compound_iikae_nominal",
+      "input": "確認の言い換えを示す"
+    },
+    {
+      "description": "格助詞に支配された複合動詞連用形の名詞化",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "振り返り",
+          "pos": "Noun",
+          "surface": "振り返り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "noun_compound_furikaeri_nominal",
+      "input": "確認の振り返りを行う"
+    },
+    {
+      "description": "複合動詞連用形の名詞句",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "思い込み",
+          "pos": "Noun",
+          "surface": "思い込み"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "正す",
+          "pos": "Verb",
+          "surface": "正す"
+        }
+      ],
+      "id": "noun_compound_omoikomi_nominal",
+      "input": "確認の思い込みを正す"
+    },
+    {
+      "description": "語彙化した複合動詞の連用形名詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "出来上がり",
+          "pos": "Noun",
+          "surface": "出来上がり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "noun_compound_dekiagari_nominal",
+      "input": "確認の出来上がりを確認する"
+    },
+    {
+      "description": "固定化した複合名詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "仕上がり",
+          "pos": "Noun",
+          "surface": "仕上がり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "noun_compound_shiagari_nominal",
+      "input": "確認の仕上がりを確認する"
+    },
+    {
+      "description": "Keep the lexicalized nominal compound as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "折れ曲がり",
+          "pos": "Noun",
+          "surface": "折れ曲がり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "直す",
+          "pos": "Verb",
+          "surface": "直す"
+        }
+      ],
+      "id": "noun_compound_oremagari_nominal",
+      "input": "確認の折れ曲がりを直す"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "折れ線",
+          "pos": "Noun",
+          "surface": "折れ線"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "引く",
+          "pos": "Verb",
+          "surface": "引く"
+        }
+      ],
+      "id": "noun_compound_oresen",
+      "input": "確認の折れ線を引く"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "抜け道",
+          "pos": "Noun",
+          "surface": "抜け道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "探す",
+          "pos": "Verb",
+          "surface": "探す"
+        }
+      ],
+      "id": "noun_compound_nukemichi",
+      "input": "確認の抜け道を探す"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "抜き差し",
+          "pos": "Noun",
+          "surface": "抜き差し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "noun_compound_nukizashi",
+      "input": "確認の抜き差しを行う"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "抜け殻",
+          "pos": "Noun",
+          "surface": "抜け殻"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "noun_compound_nukegara",
+      "input": "確認の抜け殻を調べる"
+    },
+    {
+      "description": "Keep the lexicalized nominalized compound as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "見比べ",
+          "pos": "Noun",
+          "surface": "見比べ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "noun_compound_mikurabe_nominal",
+      "input": "確認の見比べを進める"
+    },
+    {
+      "description": "Keep the nominalized compound and following lexical verb as separate search tokens.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "乗り越え",
+          "pos": "Noun",
+          "surface": "乗り越え"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "目指す",
+          "pos": "Verb",
+          "surface": "目指す"
+        }
+      ],
+      "id": "noun_compound_norikoe_mezasu",
+      "input": "確認の乗り越えを目指す"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "差し障り",
+          "pos": "Noun",
+          "surface": "差し障り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "noun_compound_sashisawari",
+      "input": "確認の差し障りを避ける"
+    },
+    {
+      "description": "Keep the lexicalized compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "取り壊し",
+          "pos": "Noun",
+          "surface": "取り壊し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "noun_compound_torikowashi_nominal",
+      "input": "確認の取り壊しを進める"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "立ち読み",
+          "pos": "Noun",
+          "surface": "立ち読み"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "noun_compound_tachiyomi",
+      "input": "確認の立ち読みを行う"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "立ち見",
+          "pos": "Noun",
+          "surface": "立ち見"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続ける"
+        }
+      ],
+      "id": "noun_compound_tachimi",
+      "input": "確認の立ち見を続ける"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "立ち話",
+          "pos": "Noun",
+          "surface": "立ち話"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "noun_compound_tachibanashi",
+      "input": "確認の立ち話を避ける"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "読み書き",
+          "pos": "Noun",
+          "surface": "読み書き"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "noun_compound_yomikaki",
+      "input": "確認の読み書きを行う"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "走り高跳び",
+          "pos": "Noun",
+          "surface": "走り高跳び"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "noun_compound_hashiritakatobi",
+      "input": "確認の走り高跳びを行う"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "走り書き",
+          "pos": "Noun",
+          "surface": "走り書き"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "残す",
+          "pos": "Verb",
+          "surface": "残す"
+        }
+      ],
+      "id": "noun_compound_hashirigaki",
+      "input": "確認の走り書きを残す"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "走り幅跳び",
+          "pos": "Noun",
+          "surface": "走り幅跳び"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "noun_compound_hashirihabatobi",
+      "input": "確認の走り幅跳びを行う"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "掛け声",
+          "pos": "Noun",
+          "surface": "掛け声"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "noun_compound_kakegoe",
+      "input": "確認の掛け声を聞く"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "足し算",
+          "pos": "Noun",
+          "surface": "足し算"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "noun_compound_tashizan",
+      "input": "確認の足し算を行う"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "返り討ち",
+          "pos": "Noun",
+          "surface": "返り討ち"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "noun_compound_kaeriuchi",
+      "input": "確認の返り討ちを避ける"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "替え玉",
+          "pos": "Noun",
+          "surface": "替え玉"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "noun_compound_kaedama",
+      "input": "確認の替え玉を使う"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "替え時",
+          "pos": "Noun",
+          "surface": "替え時"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見極める",
+          "pos": "Verb",
+          "surface": "見極める"
+        }
+      ],
+      "id": "noun_compound_kaedoki",
+      "input": "確認の替え時を見極める"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "上げ幅",
+          "pos": "Noun",
+          "surface": "上げ幅"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "noun_compound_agehaba",
+      "input": "確認の上げ幅を調べる"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "回り道",
+          "pos": "Noun",
+          "surface": "回り道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "noun_compound_mawarimichi",
+      "input": "確認の回り道を避ける"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "寄せ書き",
+          "pos": "Noun",
+          "surface": "寄せ書き"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "noun_compound_yosegaki",
+      "input": "確認の寄せ書きを行う"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "押し売り",
+          "pos": "Noun",
+          "surface": "押し売り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "noun_compound_oshouri",
+      "input": "確認の押し売りを避ける"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "返し縫い",
+          "pos": "Noun",
+          "surface": "返し縫い"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "noun_compound_kaeshinui",
+      "input": "確認の返し縫いを行う"
+    },
+    {
+      "description": "Keep the fixed compound noun as one search token.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "出し惜しみ",
+          "pos": "Noun",
+          "surface": "出し惜しみ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "noun_compound_dashioshimi",
+      "input": "確認の出し惜しみを避ける"
+    },
+    {
+      "description": "確認の立て役者を決める - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "立て役者",
+          "pos": "Noun",
+          "surface": "立て役者"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "決める",
+          "pos": "Verb",
+          "surface": "決める"
+        }
+      ],
+      "id": "no_te_wo_meru",
+      "input": "確認の立て役者を決める"
+    },
+    {
+      "description": "確認の寄り道を避ける - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "寄り道",
+          "pos": "Noun",
+          "surface": "寄り道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "no_ri_wo_keru",
+      "input": "確認の寄り道を避ける"
+    },
+    {
+      "description": "確認の立ち聞きを避ける - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "立ち聞き",
+          "pos": "Noun",
+          "surface": "立ち聞き"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "no_chi_kiwo_keru",
+      "input": "確認の立ち聞きを避ける"
+    },
+    {
+      "description": "確認の駆け足を行う - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "駆け足",
+          "pos": "Noun",
+          "surface": "駆け足"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_ke_wo_u",
+      "input": "確認の駆け足を行う"
+    },
+    {
+      "description": "確認の入り口を確認する - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "入り口",
+          "pos": "Noun",
+          "surface": "入り口"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "no_ri_wo_suru",
+      "input": "確認の入り口を確認する"
+    },
+    {
+      "description": "確認の混じり気を調べる - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "混じり気",
+          "pos": "Noun",
+          "surface": "混じり気"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "no_jiri_wo_beru",
+      "input": "確認の混じり気を調べる"
+    },
+    {
+      "description": "確認の名付け親を決める - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "名付け親",
+          "pos": "Noun",
+          "surface": "名付け親"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "決める",
+          "pos": "Verb",
+          "surface": "決める"
+        }
+      ],
+      "id": "no_ke_wo_meru",
+      "input": "確認の名付け親を決める"
+    },
+    {
+      "description": "確認の落とし穴を避ける - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "落とし穴",
+          "pos": "Noun",
+          "surface": "落とし穴"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "no_toshi_wo_keru",
+      "input": "確認の落とし穴を避ける"
+    },
+    {
+      "description": "確認の落とし前をつける - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "落とし前",
+          "pos": "Noun",
+          "surface": "落とし前"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "つける",
+          "pos": "Verb",
+          "surface": "つける"
+        }
+      ],
+      "id": "no_toshi_wotsukeru",
+      "input": "確認の落とし前をつける"
+    },
+    {
+      "description": "確認の抜き打ちを行う - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "抜き打ち",
+          "pos": "Noun",
+          "surface": "抜き打ち"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_ki_chiwo_u",
+      "input": "確認の抜き打ちを行う"
+    },
+    {
+      "description": "確認の当たり障りを避ける - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "当たり障り",
+          "pos": "Noun",
+          "surface": "当たり障り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "no_tari_riwo_keru",
+      "input": "確認の当たり障りを避ける"
+    },
+    {
+      "description": "確認の当て外れを防ぐ - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "当て外れ",
+          "pos": "Noun",
+          "surface": "当て外れ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ],
+      "id": "no_te_rewo_gu",
+      "input": "確認の当て外れを防ぐ"
+    },
+    {
+      "description": "確認の当て字を使う - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "当て字",
+          "pos": "Noun",
+          "surface": "当て字"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "no_te_wo_u",
+      "input": "確認の当て字を使う"
+    },
+    {
+      "description": "確認の切れ端を調べる - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "切れ端",
+          "pos": "Noun",
+          "surface": "切れ端"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "no_re_wo_beru",
+      "input": "確認の切れ端を調べる"
+    },
+    {
+      "description": "確認の切れ味を試す - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "切れ味",
+          "pos": "Noun",
+          "surface": "切れ味"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試す"
+        }
+      ],
+      "id": "no_re_wo_su",
+      "input": "確認の切れ味を試す"
+    },
+    {
+      "description": "確認の割り振りを行う - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "割り振り",
+          "pos": "Noun",
+          "surface": "割り振り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_ri_riwo_u",
+      "input": "確認の割り振りを行う"
+    },
+    {
+      "description": "確認の割り増しを行う - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "割り増し",
+          "pos": "Noun",
+          "surface": "割り増し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_ri_shiwo_u",
+      "input": "確認の割り増しを行う"
+    },
+    {
+      "description": "確認の切り盛りを行う - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "切り盛り",
+          "pos": "Noun",
+          "surface": "切り盛り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_ri_riwo_u_2",
+      "input": "確認の切り盛りを行う"
+    },
+    {
+      "description": "確認の受け売りを避ける - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "受け売り",
+          "pos": "Noun",
+          "surface": "受け売り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "no_ke_riwo_keru",
+      "input": "確認の受け売りを避ける"
+    },
+    {
+      "description": "確認の受け答えを行う - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "受け答え",
+          "pos": "Noun",
+          "surface": "受け答え"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_ke_ewo_u",
+      "input": "確認の受け答えを行う"
+    },
+    {
+      "description": "確認の置き場を決める - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "置き場",
+          "pos": "Noun",
+          "surface": "置き場"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "決める",
+          "pos": "Verb",
+          "surface": "決める"
+        }
+      ],
+      "id": "no_ki_wo_meru",
+      "input": "確認の置き場を決める"
+    },
+    {
+      "description": "置き忘れる - auto-generated",
+      "expected": [
+        {
+          "lemma": "置き忘れる",
+          "pos": "Verb",
+          "surface": "置き忘れる"
+        }
+      ],
+      "id": "ki_reru",
+      "input": "置き忘れる"
     }
   ],
   "description": "Compound nouns",

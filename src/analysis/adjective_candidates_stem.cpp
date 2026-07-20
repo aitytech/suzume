@@ -388,12 +388,22 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
 
     SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   ext_stem pattern: stem=\"" << stem << "\" base=\"" << base_form << "\"\n");
 
-    // Validate: stem+い must be a dictionary i-adjective
-    // No inflection fallback — too permissive for kanji+hiragana+さ pattern
-    // (would accept nonsense like 像くだい as adjective)
+    // A dictionary entry is authoritative.  For the productive -しい class,
+    // inflection can also verify a lexical adjective that is intentionally not
+    // listed in L1: 頼もしさ, 好ましさ, and 望ましさ must retain their
+    // adjective-stem boundary before the nominalizer.  Keep this fallback
+    // narrow: arbitrary kanji+hira+さ remains rejected, a サ変 stem (確認し)
+    // is not an adjective, and ～らし is the conjecture auxiliary (本らしさ).
     bool is_dict_adj = isAdjectiveInDictionary(dict_manager, base_form);
-    if (!is_dict_adj) {
-      SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   ext_stem: skip (not dict adj)\n");
+    float adj_confidence = is_dict_adj ? candidate::kDictionaryOriginConfidence : candidate::kNoOriginConfidence;
+    const bool is_shii_stem = stem_suffix.size() >= 2 * core::kJapaneseCharBytes && utf8::endsWith(stem, "し") &&
+                              !utf8::endsWith(stem, "らし");
+    if (!is_dict_adj && is_shii_stem) {
+      adj_confidence = adj_detail::firstConfidenceAtLeast(inflection.analyze(base_form), grammar::VerbType::IAdjective,
+                                                          candidate::kIAdjConfMin);
+    }
+    if (adj_confidence == candidate::kNoOriginConfidence) {
+      SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   ext_stem: skip (not verified adjective)\n");
       continue;
     }
 
@@ -403,11 +413,13 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
     size_t stem_end = kanji_end + stem_char_count;
 
     // Use strong bonus for dictionary-verified compound adjectives
-    float cost = is_dict_adj ? candidate::kAdjStemExtCost : candidate::kAdjStemBaseCost;
+    float cost = is_dict_adj ? candidate::kAdjStemExtCost
+                             : candidate::confidenceScaledCost(candidate::kAdjStemBaseCost, adj_confidence,
+                                                               candidate::kAdjStemConfScale);
     SUZUME_DEBUG_LOG("[ADJ_STEM]   ✓ ext_stem candidate stem=\"" << stem << "\" cost=" << cost
                                                                  << " dict=" << is_dict_adj << "\n");
     candidates.push_back(makeIAdjStemCandidate(stem, start_pos, stem_end, base_form, cost, CandidateOrigin::AdjectiveI,
-                                               is_dict_adj ? 1.0F : 0.7F, "adj_stem_ext_sa"));
+                                               adj_confidence, "adj_stem_ext_sa"));
     break;  // Only first valid match
   }
 

@@ -7,6 +7,66 @@
 
 namespace suzume::analysis::compound_verb_detail {
 
+bool beginsNominalForcingParticle(const std::vector<char32_t>& codepoints, size_t pos,
+                                  const dictionary::DictionaryManager& dict_manager) {
+  if (pos >= codepoints.size()) {
+    return false;
+  }
+  bool starts_nominal_particle = false;
+  switch (codepoints[pos]) {
+    case U'を':
+    case U'が':
+    case U'に':
+    case U'で':
+    case U'と':
+    case U'へ':
+    case U'は':
+    case U'も':
+    case U'の':
+      starts_nominal_particle = true;
+      break;
+    case U'か':
+      starts_nominal_particle = pos + 1 < codepoints.size() && codepoints[pos + 1] == U'ら';
+      break;
+    case U'ま':
+      starts_nominal_particle = pos + 1 < codepoints.size() && codepoints[pos + 1] == U'で';
+      break;
+    case U'よ':
+      starts_nominal_particle = pos + 1 < codepoints.size() && codepoints[pos + 1] == U'り';
+      break;
+    default:
+      break;
+  }
+  if (!starts_nominal_particle) {
+    return false;
+  }
+
+  // Do not reinterpret the initial kana of a longer derivational form as a
+  // case particle (受け入れ+がたい, 引きこもり+がち, 読み+にくい).
+  const size_t probe_end = std::min(codepoints.size(), pos + static_cast<size_t>(4));
+  const std::string probe = extractSubstring(codepoints, pos, probe_end);
+  for (const auto& match : dict_manager.lookup(probe, 0)) {
+    if (match.entry != nullptr && match.entry->pos != core::PartOfSpeech::Particle &&
+        normalize::utf8Length(match.entry->surface) > 1) {
+      return false;
+    }
+  }
+  return true;
+}
+
+namespace {
+
+bool containsNegativeAuxiliary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  for (size_t pos = start_pos + 1; pos < end_pos; ++pos) {
+    if (verb_helpers::naiNegativeFollowsAt(codepoints, pos)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
 void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
                                 const ByteOffsets& byte_offsets, size_t start_pos, size_t v2_start,
                                 const CompoundVerbMatch& match, const dictionary::DictionaryManager& dict_manager,
@@ -101,8 +161,10 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     // Embedded-verified V1 (a dictionary verb embedded after a leading kanji,
     // e.g., 仕立てる = 仕 + 立てる) is weaker evidence: the leading kanji is
     // unconstrained, so it keeps the reduced penalty relative to a dict-confirmed V1.
+    const bool v1_is_verified =
+        best_match.v1_dict_verified || best_match.v1_ichidan_inflection || best_match.v1_godan_inflection;
     float v1_bonus = 0.0F;
-    if (best_match.v1_dict_verified || best_match.v1_ichidan_inflection || best_match.v1_godan_inflection) {
+    if (v1_is_verified) {
       v1_bonus = opts.verified_v1_bonus;  // -0.3: reward for a confirmed real V1
     } else if (best_match.v1_embedded_verified) {
       v1_bonus = bigram_cost::kMinor;  // +0.5: reduced penalty for partial-evidence V1
@@ -110,6 +172,14 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
       v1_bonus = bigram_cost::kRare;  // +1.0: penalty for inflection-only V1
     }
     float final_cost = base_cost + opts.compound_verb_bonus + v1_bonus;
+
+    // A closed-set bare one-kanji ichidan V1 followed by an allowlisted kanji
+    // V2 is a strongly constrained productive compound. This matters when
+    // the V2 appears in renyokei before an auxiliary (見回し+た): without the
+    // connection, an unrelated multi-kanji noun plus する can win the path.
+    if (best_match.v1_bare_ichidan && best_match.renyokei_form) {
+      final_cost += bigram_cost::kStrongBonus;
+    }
 
     // A compound whose complete lemma is attested in the dictionary is a
     // lexical search unit.  Prefer it over a coincidental noun + する or
@@ -182,6 +252,22 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
                     core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, compound_conj_type,
                     core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "compound", compound_epos,
                     "compound");
+
+    // A verified compound continuative directly marked by a case, topic, or
+    // nominalizer particle heads a nominal phrase.  Emit its deverbal-noun
+    // reading alongside the verbal edge so the particle does not force an
+    // artificial split inside the compound (押し下げを, 押し付けは).
+    const bool starts_inside_kanji_run = start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]);
+    if (v1_is_verified && !starts_inside_kanji_run &&
+        !containsNegativeAuxiliary(codepoints, start_pos, compound_end_pos) &&
+        compound_epos == core::ExtendedPOS::VerbRenyokei &&
+        beginsNominalForcingParticle(codepoints, compound_end_pos, dict_manager)) {
+      const float noun_cost = scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus;
+      lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
+                      core::PartOfSpeech::Noun, noun_cost, flags, compound_surface, dictionary::ConjugationType::None,
+                      core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "compound_renyokei_nominal",
+                      core::ExtendedPOS::NounVerbal, "compound_renyokei_nominal");
+    }
 
     // A compound verb continuative followed by a deverbal suffix is a single
     // nominal search unit.  The V1/V2 verification above keeps this productive

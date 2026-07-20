@@ -87,6 +87,37 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
     }
   }
 
+  // A repeated numeral+noun unit before a kanji サ変 predicate is a
+  // distributive quantity phrase (一語一語|確認する, 一件一件|点検する).
+  // Its second character is intentionally not limited to the closed counter
+  // inventory: ordinary nouns such as 語 and 歩 productively form this shape.
+  // Requiring a complete kanji+する predicate keeps lexical kanji compounds
+  // and standalone repetitions outside this boundary rule.
+  if (start_pos + 5 < codepoints.size() && normalize::isNumeralCodepoint(codepoints[start_pos]) &&
+      !normalize::isNumeralCodepoint(codepoints[start_pos + 1]) && codepoints[start_pos] == codepoints[start_pos + 2] &&
+      codepoints[start_pos + 1] == codepoints[start_pos + 3] &&
+      char_types[start_pos + 1] == normalize::CharType::Kanji) {
+    size_t predicate_end = start_pos + 4;
+    while (predicate_end < char_types.size() && char_types[predicate_end] == normalize::CharType::Kanji) {
+      ++predicate_end;
+    }
+    const bool has_kanji_suru_predicate = predicate_end >= start_pos + 6 && predicate_end + 1 < codepoints.size() &&
+                                          codepoints[predicate_end] == U'す' && codepoints[predicate_end + 1] == U'る';
+    if (has_kanji_suru_predicate) {
+      std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Noun,
+                                  candidate::kRepeatedNumeralNounPredicateSplitBonus, false, CandidateOrigin::Counter,
+                                  core::ExtendedPOS::NounNumber);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "repeated_numeral_noun_predicate_split";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+  }
+
   // Ordinal compounds start with 第 followed by a numeral sequence. Counter
   // tails have dedicated structural boundaries, while lexicalized ordinal
   // nouns are supplied by the dictionary. This prevents an arbitrary one-kanji
@@ -575,6 +606,33 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
         candidates.push_back(cand);
       }
     }
+
+    // An approximate quantity can also precede a kanji サ変 predicate
+    // (数十件|確認する, 何十回|実施する). This parallels the ordinary
+    // numeral+counter predicate boundary below, but retains the quantity
+    // prefix inside the number phrase.
+    if (num_end < char_types.size() && normalize::isCounterKanji(codepoints[num_end])) {
+      size_t predicate_start = num_end + 1;
+      while (predicate_start < char_types.size() && char_types[predicate_start] == normalize::CharType::Kanji) {
+        ++predicate_start;
+      }
+      const bool has_kanji_suru_predicate = predicate_start > num_end + 1 && predicate_start + 1 < codepoints.size() &&
+                                            codepoints[predicate_start] == U'す' &&
+                                            codepoints[predicate_start + 1] == U'る';
+      if (has_kanji_suru_predicate) {
+        std::string surface = extractSubstring(codepoints, start_pos, num_end + 1);
+        if (!surface.empty()) {
+          auto cand = makeCandidate(surface, start_pos, num_end + 1, core::PartOfSpeech::Noun,
+                                    candidate::kCounterNounSplitBonus, false, CandidateOrigin::Counter,
+                                    core::ExtendedPOS::NounNumber);
+          cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+          cand.pattern = "quantity_prefix_counter_suru_predicate_split";
+#endif
+          candidates.push_back(cand);
+        }
+      }
+    }
   }
 
   // First character(s) must be numeral(s)
@@ -591,6 +649,26 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
   // Must have at least one character after numerals
   if (numeral_end >= codepoints.size()) {
     return candidates;
+  }
+
+  // A numeral+counter phrase can modify an i-adjective in adverbial form
+  // (百件|近く確認する, 三日|早く終える). Preserve the quantity boundary so
+  // the generic kanji sequence cannot absorb the adjective's stem. The same
+  // structural boundary is also valid when the following ～く is a verb
+  // (十人|歩く), so no lexical adjective list is needed here.
+  if (normalize::isCounterKanji(codepoints[numeral_end]) && numeral_end + 2 < char_types.size() &&
+      char_types[numeral_end + 1] == normalize::CharType::Kanji && codepoints[numeral_end + 2] == U'く') {
+    std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 1);
+    if (!surface.empty()) {
+      auto cand = makeCandidate(surface, start_pos, numeral_end + 1, core::PartOfSpeech::Noun,
+                                candidate::kCounterNounSplitBonus, false, CandidateOrigin::Counter,
+                                core::ExtendedPOS::NounNumber);
+      cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+      cand.pattern = "counter_before_kanji_ku_split";
+#endif
+      candidates.push_back(cand);
+    }
   }
 
   // A numeral+counter phrase before the independent comparison expression

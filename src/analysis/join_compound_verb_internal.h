@@ -67,6 +67,7 @@ struct CompoundVerbMatch {
   bool v1_dict_verified = false;
   bool v1_embedded_verified = false;
   bool v1_ichidan_inflection = false;
+  bool v1_bare_ichidan = false;
   bool v1_godan_inflection = false;
 };
 
@@ -81,7 +82,7 @@ struct SubsidiaryVerbRange {
   const SubsidiaryVerb* end() const { return last; }
 };
 
-inline constexpr size_t kSubsidiaryVerbCount = 138;
+inline constexpr size_t kSubsidiaryVerbCount = 168;
 extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount];
 
 inline SubsidiaryVerbRange subsidiaryVerbs() {
@@ -109,6 +110,11 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
                                 const ByteOffsets& byte_offsets, size_t start_pos, size_t v2_start,
                                 const CompoundVerbMatch& match, const dictionary::DictionaryManager& dict_manager,
                                 const Scorer& scorer);
+
+// True when the following dictionary context forces the preceding renyokei
+// compound to act as a deverbal noun rather than a predicate.
+bool beginsNominalForcingParticle(const std::vector<char32_t>& codepoints, size_t pos,
+                                  const dictionary::DictionaryManager& dict_manager);
 
 // Sokuonbin-compatible godan verb endings (く, つ, う, る)
 // Used to try all possible base forms when analyzing っ-onbin compound verbs

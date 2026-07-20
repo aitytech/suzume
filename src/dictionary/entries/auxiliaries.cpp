@@ -292,8 +292,12 @@ EntrySpecRange getAuxiliaryEntries() {
       adj("なし", "ない", EPOS::AdjBasic),
 
       // Difficulty suffix - づらい. This is an adjective that follows a
-      // verb renyokei: 読みづらい, 書きづらい.
+      // verb renyokei: 読みづらい, 書きづらい.  Keep its adverbial and
+      // stem forms so づらくなる and づらさ use the same productive
+      // adjective paradigm rather than OTHER or a fabricated verb.
       adj("づらい", "づらい", EPOS::AdjBasic),
+      adj("づらく", "づらい", EPOS::AdjRenyokei),
+      adj("づら", "づらい", EPOS::AdjStem),
 
       // Kanji form of ない (無い) - used in formal writing
       // MeCab: 休むこと無く → 休む + こと + 無く (形容詞連用形)
@@ -357,8 +361,10 @@ EntrySpecRange getAuxiliaryEntries() {
       // Tendency suffix after a verb renyokei (読みがち, 食べがち).
       suffix_tendency("がち", "がち"),
 
-      // Quantitative bound suffixes: 1kg未満, 5cm以上.
+      // Quantitative bound suffixes: 1kg未満, 5cm以上, 十件以下, 十件程度.
       suffix("未満", "未満"),
+      suffix("以下", "以下"),
+      suffix("程度", "程度"),
       suffix("間", "間"),
       // Productive nominal suffixes keep their search boundary before a
       // following copula or case particle (終了+後、記録+用).
@@ -440,6 +446,7 @@ EntrySpecRange getAuxiliaryEntries() {
       // Productive difficulty adjective stem (読みにくさ, 分かりにくい). Its
       // derivational reading remains available beside the lexical noun 肉.
       adj("にく", "にくい", EPOS::AdjStem),
+      adj("がた", "がたい", EPOS::AdjStem),
 
       // Adjective suffix っぽい (～っぽい: 子供っぽい, 忘れっぽい)
       // MeCab: 子供っぽい → 子供 + っぽい
@@ -575,6 +582,23 @@ EntrySpecRange getAuxiliaryEntries() {
 
       // Inceptive subsidiary verb: 読みはじめる, 食べはじめる.
       aux("はじめる", "はじめる", EPOS::AuxAspectHajimeru),
+
+      // Completive subsidiary verb: 読み尽くす, 食べ尽くした.  This is
+      // a closed aspectual use after a verb continuative; the lexical verb
+      // use remains available through the general verb candidate generator.
+      aux("尽くす", "尽くす", EPOS::AuxAspectShimau),
+      aux("尽くさ", "尽くす", EPOS::AuxAspectShimau),
+      aux("尽くし", "尽くす", EPOS::AuxAspectShimau),
+      aux("尽くせ", "尽くす", EPOS::AuxAspectShimau),
+      aux("尽くそ", "尽くす", EPOS::AuxAspectShimau),
+      // Keep the lexical Godan-sa readings alongside the subsidiary entries.
+      // They are needed before an adjective (筆舌に尽くし難い) and when
+      // 尽くす has an ordinary case-marked object.
+      verb("尽くす", "尽くす", EPOS::VerbShuushikei),
+      verb("尽くさ", "尽くす", EPOS::VerbMizenkei),
+      verb("尽くし", "尽くす", EPOS::VerbRenyokei),
+      verb("尽くせ", "尽くす", EPOS::VerbKateikei),
+      verb("尽くそ", "尽くす", EPOS::VerbMizenkei),
 
       // Adjective-stem suffix verb - がる (ガル接続)
       // Used after adjective stems: 怖がる, 嫌がる, 可愛がる

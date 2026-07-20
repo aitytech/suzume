@@ -472,13 +472,19 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     if applied_rule is None:
                         applied_rule = "verb-renyokei+kai"
 
-        # 5a'. Verb renyokei + 方 (歩き方, やり方, 読み方, 言い方)
-        # As a tokenizer, V連用形+方 should be a single search unit.
+        # 5a'. Short simple verb renyokei + 方 (歩き方, やり方, 読み方, 言い方)
+        # remains a lexical search unit. Longer compound continuatives retain
+        # the productive suffix boundary (打ち合わせ + 方, 組み合わせ + 方).
         if not merged and t.get("pos") == "動詞" and t.get("conj_form") == "連用形":
             j = i + 1
             if j < len(tokens):
                 nxt = tokens[j]
-                if nxt.get("surface") == "方" and nxt.get("pos") == "名詞" and nxt.get("pos_sub1") == "接尾":
+                if (
+                    len(t.get("surface", "")) <= 2
+                    and nxt.get("surface") == "方"
+                    and nxt.get("pos") == "名詞"
+                    and nxt.get("pos_sub1") == "接尾"
+                ):
                     combined = t.get("surface", "") + "方"
                     result.append({"surface": combined, "pos": "名詞", "lemma": combined})
                     i = j + 1

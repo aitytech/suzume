@@ -3350,12 +3350,21 @@
       "input": "引き受け手を探す"
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "複合連用形の名詞化した組み合わせに接尾辞方が接続する解析は文法的に妥当であり、表層境界は一致する。"
+      },
       "description": "compound verb nominalizer",
       "expected": [
         {
-          "lemma": "組み合わせ方",
-          "pos": "Noun",
-          "surface": "組み合わせ方"
+          "lemma": "組み合わせる",
+          "pos": "Verb",
+          "surface": "組み合わせ"
+        },
+        {
+          "lemma": "方",
+          "pos": "Suffix",
+          "surface": "方"
         },
         {
           "lemma": "を",
@@ -3369,15 +3378,46 @@
         }
       ],
       "id": "kumiawasekata_nominalizer",
-      "input": "組み合わせ方を試す"
+      "input": "組み合わせ方を試す",
+      "suzume_expected": [
+        {
+          "lemma": "組み合わせ",
+          "pos": "Noun",
+          "surface": "組み合わせ"
+        },
+        {
+          "lemma": "方",
+          "pos": "Suffix",
+          "surface": "方"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試す"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "複合連用形の名詞化した組み合わせに接尾辞方が接続する解析は文法的に妥当であり、表層境界は一致する。"
+      },
       "description": "compound verb nominalizer variant",
       "expected": [
         {
-          "lemma": "組み合わせ方",
-          "pos": "Noun",
-          "surface": "組み合わせ方"
+          "lemma": "組み合わせる",
+          "pos": "Verb",
+          "surface": "組み合わせ"
+        },
+        {
+          "lemma": "方",
+          "pos": "Suffix",
+          "surface": "方"
         },
         {
           "lemma": "を",
@@ -3396,7 +3436,34 @@
         }
       ],
       "id": "kumiawasekata_nominalizer_variant",
-      "input": "組み合わせ方を確認する"
+      "input": "組み合わせ方を確認する",
+      "suzume_expected": [
+        {
+          "lemma": "組み合わせ",
+          "pos": "Noun",
+          "surface": "組み合わせ"
+        },
+        {
+          "lemma": "方",
+          "pos": "Suffix",
+          "surface": "方"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ]
     },
     {
       "description": "agentive suffix variant",

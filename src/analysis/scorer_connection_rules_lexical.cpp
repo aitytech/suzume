@@ -54,6 +54,17 @@ float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::Latti
 }
 
 float computeCompoundNominalizationBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  // A verb's continuative followed by its particle-marked deverbal noun
+  // reading is a productive serial nominalization (打ち+鳴らしを). Prefer
+  // that relation over reclassifying the preceding continuative as an
+  // unrelated noun. The generated noun is restricted at creation time to a
+  // direct particle continuation, so finite and derivational uses remain out
+  // of scope.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::NounVerbal &&
+      next.origin == core::CandidateOrigin::NominalizedNoun) {
+    return cost::kModerateBonus;
+  }
+
   // A verified compound in renyokei can be nominalized by の (書きかけの紙,
   // 書きたての文). Its single-word candidate must remain available against a
   // competing decomposition into a verb stem and suffix.

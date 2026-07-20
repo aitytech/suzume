@@ -200,6 +200,92 @@
       ],
       "id": "mamonaku_temporal_renyokei",
       "input": "終了間もなく報告する"
+    },
+    {
+      "description": "頼もしさを示す - auto-generated",
+      "expected": [
+        {
+          "lemma": "頼もしい",
+          "pos": "Adjective",
+          "surface": "頼もし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "示す",
+          "pos": "Verb",
+          "surface": "示す"
+        }
+      ],
+      "id": "moshisawo_su",
+      "input": "頼もしさを示す"
+    },
+    {
+      "description": "好ましさを評価する - auto-generated",
+      "expected": [
+        {
+          "lemma": "好ましい",
+          "pos": "Adjective",
+          "surface": "好まし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "評価",
+          "pos": "Noun",
+          "surface": "評価"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "mashisawo_suru",
+      "input": "好ましさを評価する"
+    },
+    {
+      "description": "望ましさを示す - auto-generated",
+      "expected": [
+        {
+          "lemma": "望ましい",
+          "pos": "Adjective",
+          "surface": "望まし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "示す",
+          "pos": "Verb",
+          "surface": "示す"
+        }
+      ],
+      "id": "mashisawo_su",
+      "input": "望ましさを示す"
     }
   ],
   "description": "adjective_general tests",

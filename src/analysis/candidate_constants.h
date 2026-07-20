@@ -213,6 +213,22 @@ constexpr float kNativeTsuCounterBonus = -0.4F;
 // compounds.
 constexpr float kCounterNounSplitBonus = -1.2F;
 
+// A repeated numeral+noun unit immediately before a kanji サ変 predicate is a
+// distributive quantity phrase (一語一語|確認する, 一件一件|点検する). The
+// regular same-type candidate otherwise absorbs the predicate into one long
+// unknown kanji run.
+constexpr float kRepeatedNumeralNounPredicateSplitBonus = -1.2F;
+
+// A single-kanji ～く form immediately after a counter and before a kanji
+// サ変 predicate is an adverbial modifier of the quantity (百件近く確認する).
+// It needs a small preference over the homographic Godan-ka candidate.
+constexpr float kCounterConditionedKuAdjectiveCost = 0.45F;
+
+// Method suffix 方 after a surface that is both a deverbal noun and a verb
+// continuative (打ち合わせ+方). This narrowly scoped cost lets the
+// grammatical suffix boundary beat the fused deverbal-noun candidate.
+constexpr float kDeverbalMethodSuffixCost = -1.0F;
+
 // Leading noun/prefix + numeral + counter split bonus (徒歩|五分, 約|二時間,
 // 気温|三十度, 定員|五名). A leading kanji noun or numeric-aggregation prefix glued
 // to a following numeral+counter phrase is otherwise emitted as one kanji_seq unknown
@@ -255,6 +271,11 @@ constexpr float kApproximateNumeralSplitBonus = -1.2F;
 // 2+-kanji noun run splits off (現在|担当者) rather than merging the whole run.
 // Applied in suffix_candidates_prefix.cpp.
 constexpr float kTemporalNounBoundarySplitBonus = -1.2F;
+
+// Closed kango prefixes (再/未/不) plus the nominal suffix 用 form a
+// searchable compound (再利用, 未使用, 不使用) without absorbing arbitrary
+// kanji runs.
+constexpr float kPrefixNominalUseBonus = -1.0F;
 
 // Noun + Verb split bonus
 // E.g., 勉強+する, 説明+する
@@ -486,6 +507,10 @@ constexpr float kAdjModeratePenalty = 1.5F;
 // Nominalized renyokei before a particle is a productive deverbal noun
 // context (答えは, 決まりを), not a finite verbal continuation.
 constexpr float kNominalizedNounParticleBonus = -1.5F;
+
+// Base candidate cost for a verified verb continuative used as a deverbal
+// noun before a case particle (鳴らしを、書きを).
+constexpr float kVerifiedRenyokeiNominalCandidateCost = 0.8F;
 
 // A dictionary-confirmed i-adjective in the classical terminal -し form is a
 // self-contained lexical unit at the end of a predicate.

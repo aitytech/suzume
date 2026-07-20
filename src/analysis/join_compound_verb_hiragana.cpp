@@ -110,13 +110,22 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
 
       // Try V2 renyokei match (e.g., あげ from あげる for とりあげない)
       if (matched_v2_len == 0) {
-        std::string v2_renyokei = generateRenyokei(v2_surface, v2_reading, v2_verb.verb_type);
+        std::string kanji_renyokei = generateKanjiRenyokei(v2_surface, v2_reading, v2_verb.verb_type);
+        std::string hira_renyokei = generateRenyokei(v2_reading, "", v2_verb.verb_type);
         // Require V2 renyokei to be 2+ chars to avoid false matches
         // (single-char で/し/き are ambiguous as particles/auxiliaries)
-        if (v2_renyokei.size() > core::kJapaneseCharBytes && v2_start_byte + v2_renyokei.size() <= text.size()) {
-          std::string_view text_at_v2 = text.substr(v2_start_byte, v2_renyokei.size());
-          if (text_at_v2 == v2_renyokei) {
-            matched_v2_len = v2_renyokei.size();
+        if (kanji_renyokei.size() > core::kJapaneseCharBytes && v2_start_byte + kanji_renyokei.size() <= text.size()) {
+          std::string_view text_at_v2 = text.substr(v2_start_byte, kanji_renyokei.size());
+          if (text_at_v2 == kanji_renyokei) {
+            matched_v2_len = kanji_renyokei.size();
+            matched_v2_renyokei = true;
+          }
+        }
+        if (matched_v2_len == 0 && hira_renyokei.size() > core::kJapaneseCharBytes &&
+            v2_start_byte + hira_renyokei.size() <= text.size()) {
+          std::string_view text_at_v2 = text.substr(v2_start_byte, hira_renyokei.size());
+          if (text_at_v2 == hira_renyokei) {
+            matched_v2_len = hira_renyokei.size();
             matched_v2_renyokei = true;
             matched_v2_via_reading = true;
           }
@@ -214,6 +223,15 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
         continue;
       }
 
+      // A respectful auxiliary can also be exposed as a lexical verb entry
+      // for its own inflectional analysis.  It is not a productive V1 in a
+      // lexical compound, however: treating its renyokei as one would make
+      // the negative-appearance chain な+さ+そう look like a V1+添う compound.
+      const auto* v1_auxiliary = dict_manager.lookupExact(v1_base, core::PartOfSpeech::Auxiliary);
+      if (v1_auxiliary != nullptr && v1_auxiliary->extended_pos == core::ExtendedPOS::AuxHonorific) {
+        continue;
+      }
+
       // Verify V1 is in dictionary as a verb
       bool v1_verified = grammar::isSuruRenyokeiSurface(v1_surface) ||
                          dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr;
@@ -299,6 +317,14 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
                         core::PartOfSpeech::Verb, final_cost, flags, compound_base, compound_conj_type,
                         core::CandidateOrigin::Unknown, 0.0F, "hira_compound_renyokei", core::ExtendedPOS::VerbRenyokei,
                         "hira_compound_renyokei");
+        if (beginsNominalForcingParticle(codepoints, compound_end_pos, dict_manager)) {
+          const float noun_cost = scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus;
+          lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
+                          core::PartOfSpeech::Noun, noun_cost, flags, compound_surface,
+                          dictionary::ConjugationType::None, core::CandidateOrigin::VerbCompound,
+                          candidate::kNoOriginConfidence, "hira_compound_renyokei_nominal",
+                          core::ExtendedPOS::NounVerbal, "hira_compound_renyokei_nominal");
+        }
       } else {
         lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
                         core::PartOfSpeech::Verb, final_cost, flags, compound_base, compound_conj_type);

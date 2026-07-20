@@ -108,6 +108,12 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
                                           vh::isSingleKanjiIchidan(codepoints[start_pos]);
         const bool negative_aux_follows =
             continuation == U'な' && renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end + 1] == U'い';
+        // A multi-kanji nominal stem followed by せ+ん is the literary
+        // irrealis of する (解決+せ+ん), not an unverified Ichidan verb
+        // ending in ～せる.  Dictionary-verified lexical verbs such as
+        // 見せる remain eligible.
+        const bool unverified_multi_kanji_suru_mizen =
+            !ichidan_base_is_dict && kanji_end - start_pos >= 2 && first_hira == U'せ' && continuation == U'ん';
         bool surface_is_dict_noun = !verb_aux_follows && vh::isNounInDictionary(dict_manager, surface);
         if (surface_is_dict_noun) {
           SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" is dict NOUN, skipping ichidan_renyokei\n");
@@ -172,7 +178,8 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         }
         if (!prefer_suru && !prefer_godan && ichidan_cand.confidence > conf_threshold && !surface_is_dict_noun &&
             !single_kanji_te_form && !suffix_is_dict_verb && !trailing_span_is_dict_suffix &&
-            !suffix_is_godan_before_classical_auxiliary && !adj_homograph_blocked) {
+            !suffix_is_godan_before_classical_auxiliary && !adj_homograph_blocked &&
+            !unverified_multi_kanji_suru_mizen) {
           // Negative cost to strongly favor split over combined analysis
           // Combined forms get optimal_length bonus (-0.5), so we need to be lower
           float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
@@ -440,9 +447,11 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " godan_sa_renyokei lemma=" << best_sa.base_form
                             << " conf=" << best_sa.confidence << " cost=" << base_cost << "\n";
       }
-      candidates.push_back(makeVerbCandidate(surface, start_pos, renyokei_end, base_cost, best_sa.base_form,
-                                             grammar::verbTypeToConjType(best_sa.verb_type), true,
-                                             CandidateOrigin::VerbKanji, best_sa.confidence, "godan_sa_renyokei"));
+      auto renyokei_candidate = makeVerbCandidate(surface, start_pos, renyokei_end, base_cost, best_sa.base_form,
+                                                  grammar::verbTypeToConjType(best_sa.verb_type), true,
+                                                  CandidateOrigin::VerbKanji, best_sa.confidence, "godan_sa_renyokei");
+      renyokei_candidate.lemma_verified = vh::isVerbInDictionary(dict_manager, best_sa.base_form);
+      candidates.push_back(std::move(renyokei_candidate));
     }
   }
 }

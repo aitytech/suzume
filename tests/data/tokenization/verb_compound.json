@@ -6460,6 +6460,1877 @@
       ],
       "id": "wo_besaseta",
       "input": "本を食べさせた"
+    },
+    {
+      "description": "確認を差し挟む - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "差し挟む",
+          "pos": "Verb",
+          "surface": "差し挟む"
+        }
+      ],
+      "id": "wo_shi_mu",
+      "input": "確認を差し挟む"
+    },
+    {
+      "description": "確認を差し招く - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "差し招く",
+          "pos": "Verb",
+          "surface": "差し招く"
+        }
+      ],
+      "id": "wo_shi_ku",
+      "input": "確認を差し招く"
+    },
+    {
+      "description": "確認を渡り歩く - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "渡り歩く",
+          "pos": "Verb",
+          "surface": "渡り歩く"
+        }
+      ],
+      "id": "wo_ri_ku_2",
+      "input": "確認を渡り歩く"
+    },
+    {
+      "description": "確認を振りほどく - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "振りほどく",
+          "pos": "Verb",
+          "surface": "振りほどく"
+        }
+      ],
+      "id": "wo_rihodoku",
+      "input": "確認を振りほどく"
+    },
+    {
+      "description": "確認を振り向く - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "振り向く",
+          "pos": "Verb",
+          "surface": "振り向く"
+        }
+      ],
+      "id": "wo_ri_ku_3",
+      "input": "確認を振り向く"
+    },
+    {
+      "description": "確認を振り当てる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "振り当てる",
+          "pos": "Verb",
+          "surface": "振り当てる"
+        }
+      ],
+      "id": "wo_ri_teru",
+      "input": "確認を振り当てる"
+    },
+    {
+      "description": "確認を差し向ける - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "差し向ける",
+          "pos": "Verb",
+          "surface": "差し向ける"
+        }
+      ],
+      "id": "wo_shi_keru_1",
+      "input": "確認を差し向ける"
+    },
+    {
+      "description": "確認を立ち尽くす - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "立ち尽くす",
+          "pos": "Verb",
+          "surface": "立ち尽くす"
+        }
+      ],
+      "id": "wo_chi_kusu",
+      "input": "確認を立ち尽くす"
+    },
+    {
+      "description": "確認を思い描く - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "思い描く",
+          "pos": "Verb",
+          "surface": "思い描く"
+        }
+      ],
+      "id": "wo_i_ku",
+      "input": "確認を思い描く"
+    },
+    {
+      "description": "確認を読み誤る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読み誤る",
+          "pos": "Verb",
+          "surface": "読み誤る"
+        }
+      ],
+      "id": "wo_mi_ru",
+      "input": "確認を読み誤る"
+    },
+    {
+      "description": "確認をやり遂げる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "やり遂げる",
+          "pos": "Verb",
+          "surface": "やり遂げる"
+        }
+      ],
+      "id": "woyari_geru",
+      "input": "確認をやり遂げる"
+    },
+    {
+      "description": "確認を立ち向かう - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "立ち向かう",
+          "pos": "Verb",
+          "surface": "立ち向かう"
+        }
+      ],
+      "id": "wo_chi_kau",
+      "input": "確認を立ち向かう"
+    },
+    {
+      "description": "確認を立ち並ぶ - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "立ち並ぶ",
+          "pos": "Verb",
+          "surface": "立ち並ぶ"
+        }
+      ],
+      "id": "wo_chi_bu_1",
+      "input": "確認を立ち並ぶ"
+    },
+    {
+      "description": "確認を立ち戻る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "立ち戻る",
+          "pos": "Verb",
+          "surface": "立ち戻る"
+        }
+      ],
+      "id": "wo_chi_ru",
+      "input": "確認を立ち戻る"
+    },
+    {
+      "description": "確認を使い果たす - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使い果たす",
+          "pos": "Verb",
+          "surface": "使い果たす"
+        }
+      ],
+      "id": "wo_i_tasu",
+      "input": "確認を使い果たす"
+    },
+    {
+      "description": "確認を使いこなす - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使いこなす",
+          "pos": "Verb",
+          "surface": "使いこなす"
+        }
+      ],
+      "id": "wo_ikonasu",
+      "input": "確認を使いこなす"
+    },
+    {
+      "description": "確認を抜きん出る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "抜きん出る",
+          "pos": "Verb",
+          "surface": "抜きん出る"
+        }
+      ],
+      "id": "wo_kin_ru",
+      "input": "確認を抜きん出る"
+    },
+    {
+      "description": "確認を抜きん出た - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "抜きん出る",
+          "pos": "Verb",
+          "surface": "抜きん出"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_kin_ta",
+      "input": "確認を抜きん出た"
+    },
+    {
+      "description": "V2 損じるの連用形名詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "書き損じ",
+          "pos": "Noun",
+          "surface": "書き損じ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "compound_sonji_nominal",
+      "input": "確認の書き損じを調べる"
+    },
+    {
+      "description": "V2 損じるの基本形",
+      "expected": [
+        {
+          "lemma": "書き損じる",
+          "pos": "Verb",
+          "surface": "書き損じる"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "compound_sonji_base",
+      "input": "書き損じることがある"
+    },
+    {
+      "description": "V2 損じるの過去形",
+      "expected": [
+        {
+          "lemma": "書き損じる",
+          "pos": "Verb",
+          "surface": "書き損じ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "箇所",
+          "pos": "Noun",
+          "surface": "箇所"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "直す",
+          "pos": "Verb",
+          "surface": "直す"
+        }
+      ],
+      "id": "compound_sonji_past",
+      "input": "書き損じた箇所を直す"
+    },
+    {
+      "description": "V2 渡るの連用形名詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "飛び渡り",
+          "pos": "Noun",
+          "surface": "飛び渡り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試す"
+        }
+      ],
+      "id": "compound_tobiwatari_nominal",
+      "input": "確認の飛び渡りを試す"
+    },
+    {
+      "description": "V2 渡るの基本形",
+      "expected": [
+        {
+          "lemma": "飛び渡る",
+          "pos": "Verb",
+          "surface": "飛び渡る"
+        },
+        {
+          "lemma": "鳥",
+          "pos": "Noun",
+          "surface": "鳥"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "compound_tobiwataru_base",
+      "input": "飛び渡る鳥を見る"
+    },
+    {
+      "description": "V2 渡るの過去形",
+      "expected": [
+        {
+          "lemma": "飛び渡る",
+          "pos": "Verb",
+          "surface": "飛び渡っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "鳥",
+          "pos": "Noun",
+          "surface": "鳥"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "compound_tobiwataru_past",
+      "input": "飛び渡った鳥を見る"
+    },
+    {
+      "description": "V2 かざすの連用形名詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "振りかざし",
+          "pos": "Noun",
+          "surface": "振りかざし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_furikazashi_nominal",
+      "input": "確認の振りかざしを行う"
+    },
+    {
+      "description": "V2 かざすの基本形",
+      "expected": [
+        {
+          "lemma": "振りかざす",
+          "pos": "Verb",
+          "surface": "振りかざす"
+        }
+      ],
+      "id": "compound_furikazasu_base",
+      "input": "振りかざす。"
+    },
+    {
+      "description": "V2 かざすの過去形",
+      "expected": [
+        {
+          "lemma": "振りかざす",
+          "pos": "Verb",
+          "surface": "振りかざし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_furikazasu_past",
+      "input": "振りかざした。"
+    },
+    {
+      "description": "V2 かざすの別V1",
+      "expected": [
+        {
+          "lemma": "差しかざす",
+          "pos": "Verb",
+          "surface": "差しかざす"
+        }
+      ],
+      "id": "compound_sashikazasu_base",
+      "input": "差しかざす。"
+    },
+    {
+      "description": "V2 置くの連用形名詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "書き置き",
+          "pos": "Noun",
+          "surface": "書き置き"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "残す",
+          "pos": "Verb",
+          "surface": "残す"
+        }
+      ],
+      "id": "compound_kakioki_nominal",
+      "input": "確認の書き置きを残す"
+    },
+    {
+      "description": "V2 置くの基本形",
+      "expected": [
+        {
+          "lemma": "書き置く",
+          "pos": "Verb",
+          "surface": "書き置く"
+        }
+      ],
+      "id": "compound_kakioku_base",
+      "input": "書き置く。"
+    },
+    {
+      "description": "V2 置くの過去形",
+      "expected": [
+        {
+          "lemma": "書き置く",
+          "pos": "Verb",
+          "surface": "書き置い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_kakioku_past",
+      "input": "書き置いた。"
+    },
+    {
+      "description": "V2 置くの別V1",
+      "expected": [
+        {
+          "lemma": "取り置く",
+          "pos": "Verb",
+          "surface": "取り置く"
+        }
+      ],
+      "id": "compound_torioku_base",
+      "input": "取り置く。"
+    },
+    {
+      "description": "V2 足す: nominalized 付け足し remains one derived noun",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "付け足し",
+          "pos": "Noun",
+          "surface": "付け足し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_v2_tasu_nominal",
+      "input": "確認の付け足しを行う"
+    },
+    {
+      "description": "V2 足す: basic compound verb",
+      "expected": [
+        {
+          "lemma": "付け足す",
+          "pos": "Verb",
+          "surface": "付け足す"
+        }
+      ],
+      "id": "compound_v2_tasu_basic",
+      "input": "付け足す。"
+    },
+    {
+      "description": "V2 足す: past conjugation",
+      "expected": [
+        {
+          "lemma": "付け足す",
+          "pos": "Verb",
+          "surface": "付け足し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_tasu_past",
+      "input": "付け足した。"
+    },
+    {
+      "description": "V2 足す: alternate V1 compound verb",
+      "expected": [
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書き足す",
+          "pos": "Verb",
+          "surface": "書き足す"
+        }
+      ],
+      "id": "compound_v2_tasu_alternate",
+      "input": "説明を書き足す。"
+    },
+    {
+      "description": "V2 直る: nominalized 向き直り remains one derived noun",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "向き直り",
+          "pos": "Noun",
+          "surface": "向き直り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "促す",
+          "pos": "Verb",
+          "surface": "促す"
+        }
+      ],
+      "id": "compound_v2_naoru_nominal",
+      "input": "確認の向き直りを促す"
+    },
+    {
+      "description": "V2 直る: basic compound verb",
+      "expected": [
+        {
+          "lemma": "向き直る",
+          "pos": "Verb",
+          "surface": "向き直る"
+        }
+      ],
+      "id": "compound_v2_naoru_basic",
+      "input": "向き直る。"
+    },
+    {
+      "description": "V2 直る: past conjugation",
+      "expected": [
+        {
+          "lemma": "向き直る",
+          "pos": "Verb",
+          "surface": "向き直っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_naoru_past",
+      "input": "向き直った。"
+    },
+    {
+      "description": "V2 直る: alternate V1 compound verb",
+      "expected": [
+        {
+          "lemma": "座り直る",
+          "pos": "Verb",
+          "surface": "座り直る"
+        }
+      ],
+      "id": "compound_v2_naoru_alternate",
+      "input": "座り直る。"
+    },
+    {
+      "description": "V2 下す: nominalized 書き下し remains one derived noun",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "書き下し",
+          "pos": "Noun",
+          "surface": "書き下し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_v2_kudasu_nominal",
+      "input": "確認の書き下しを行う"
+    },
+    {
+      "description": "V2 下す: basic compound verb",
+      "expected": [
+        {
+          "lemma": "書き下す",
+          "pos": "Verb",
+          "surface": "書き下す"
+        }
+      ],
+      "id": "compound_v2_kudasu_basic",
+      "input": "書き下す。"
+    },
+    {
+      "description": "V2 下す: past conjugation",
+      "expected": [
+        {
+          "lemma": "書き下す",
+          "pos": "Verb",
+          "surface": "書き下し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_kudasu_past",
+      "input": "書き下した。"
+    },
+    {
+      "description": "V2 下す: alternate V1 compound verb",
+      "expected": [
+        {
+          "lemma": "読み下す",
+          "pos": "Verb",
+          "surface": "読み下す"
+        }
+      ],
+      "id": "compound_v2_kudasu_alternate",
+      "input": "読み下す。"
+    },
+    {
+      "description": "V2 交わす: nominalized 取り交わし remains one derived noun",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "取り交わし",
+          "pos": "Noun",
+          "surface": "取り交わし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_v2_kawasu_nominal",
+      "input": "確認の取り交わしを行う"
+    },
+    {
+      "description": "V2 交わす: basic compound verb",
+      "expected": [
+        {
+          "lemma": "取り交わす",
+          "pos": "Verb",
+          "surface": "取り交わす"
+        }
+      ],
+      "id": "compound_v2_kawasu_basic",
+      "input": "取り交わす。"
+    },
+    {
+      "description": "V2 交わす: past conjugation",
+      "expected": [
+        {
+          "lemma": "取り交わす",
+          "pos": "Verb",
+          "surface": "取り交わし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_kawasu_past",
+      "input": "取り交わした。"
+    },
+    {
+      "description": "V2 交わす: alternate V1 compound verb",
+      "expected": [
+        {
+          "lemma": "書き交わす",
+          "pos": "Verb",
+          "surface": "書き交わす"
+        }
+      ],
+      "id": "compound_v2_kawasu_alternate",
+      "input": "書き交わす。"
+    },
+    {
+      "description": "Hiragana V1 plus kanji V2 renyokei: nominalized やり直し",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "やり直し",
+          "pos": "Noun",
+          "surface": "やり直し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "hira_compound_kanji_v2_renyokei_nominal",
+      "input": "確認のやり直しを行う"
+    },
+    {
+      "description": "Hiragana V1 plus kanji V2 renyokei: past conjugation",
+      "expected": [
+        {
+          "lemma": "やり直す",
+          "pos": "Verb",
+          "surface": "やり直し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "hira_compound_kanji_v2_renyokei_past",
+      "input": "やり直した。"
+    },
+    {
+      "description": "Hiragana V1 plus kanji V2 renyokei: nominalized やり過ごし",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "やり過ごし",
+          "pos": "Noun",
+          "surface": "やり過ごし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "hira_compound_kanji_v2_sugosu_nominal",
+      "input": "確認のやり過ごしを避ける"
+    },
+    {
+      "description": "Hiragana V1 plus kanji V2 renyokei: past conjugation",
+      "expected": [
+        {
+          "lemma": "やり過ごす",
+          "pos": "Verb",
+          "surface": "やり過ごし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "hira_compound_kanji_v2_sugosu_past",
+      "input": "やり過ごした。"
+    },
+    {
+      "description": "Hiragana V1 plus kanji V2 renyokei: alternate V1 nominalization",
+      "expected": [
+        {
+          "lemma": "読み直し",
+          "pos": "Noun",
+          "surface": "読み直し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "hira_compound_kanji_v2_alternate_nominal",
+      "input": "読み直しを行う。"
+    },
+    {
+      "description": "Compound verb 寄り添う nominalizes before a case particle.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "寄り添い",
+          "pos": "Noun",
+          "surface": "寄り添い"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "促す",
+          "pos": "Verb",
+          "surface": "促す"
+        }
+      ],
+      "id": "compound_v2_sou_nominal",
+      "input": "確認の寄り添いを促す。"
+    },
+    {
+      "description": "Compound verb 寄り添う remains one search unit.",
+      "expected": [
+        {
+          "lemma": "寄り添う",
+          "pos": "Verb",
+          "surface": "寄り添う"
+        }
+      ],
+      "id": "compound_v2_sou_base",
+      "input": "寄り添う。"
+    },
+    {
+      "description": "Compound verb 寄り添う retains its contracted past form.",
+      "expected": [
+        {
+          "lemma": "寄り添う",
+          "pos": "Verb",
+          "surface": "寄り添っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_sou_past",
+      "input": "寄り添った。"
+    },
+    {
+      "description": "Kanji continuative plus 添う forms one compound search unit.",
+      "expected": [
+        {
+          "lemma": "書き添う",
+          "pos": "Verb",
+          "surface": "書き添う"
+        }
+      ],
+      "id": "compound_v2_sou_kanji_v1",
+      "input": "書き添う。"
+    },
+    {
+      "description": "A case particle prevents a compound-verb join.",
+      "expected": [
+        {
+          "lemma": "寄り",
+          "pos": "Noun",
+          "surface": "寄り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "添う",
+          "pos": "Verb",
+          "surface": "添う"
+        }
+      ],
+      "id": "compound_v2_sou_particle_boundary",
+      "input": "寄りを添う。"
+    },
+    {
+      "description": "Compound verb 入り乱れる nominalizes before a case particle.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "入り乱れ",
+          "pos": "Noun",
+          "surface": "入り乱れ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ],
+      "id": "compound_v2_midareru_nominal",
+      "input": "確認の入り乱れを防ぐ"
+    },
+    {
+      "description": "Compound verb 入り乱れる remains one search unit.",
+      "expected": [
+        {
+          "lemma": "入り乱れる",
+          "pos": "Verb",
+          "surface": "入り乱れる"
+        }
+      ],
+      "id": "compound_v2_midareru_base",
+      "input": "入り乱れる。"
+    },
+    {
+      "description": "Compound verb 入り乱れる retains its past form.",
+      "expected": [
+        {
+          "lemma": "入り乱れる",
+          "pos": "Verb",
+          "surface": "入り乱れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_midareru_past",
+      "input": "入り乱れた。"
+    },
+    {
+      "description": "A case particle prevents a compound-verb join.",
+      "expected": [
+        {
+          "lemma": "入り",
+          "pos": "Noun",
+          "surface": "入り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "乱れる",
+          "pos": "Verb",
+          "surface": "乱れる"
+        }
+      ],
+      "id": "compound_v2_midareru_particle_boundary",
+      "input": "入りを乱れる。"
+    },
+    {
+      "description": "漢字＋複数かなの五段V1による複合動詞の基本形",
+      "expected": [
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合う"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_base",
+      "input": "混じり合う。"
+    },
+    {
+      "description": "漢字＋複数かなの五段V1による複合動詞の過去形",
+      "expected": [
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_past",
+      "input": "混じり合った。"
+    },
+    {
+      "description": "漢字＋複数かなの五段V1による複合動詞の仮定形",
+      "expected": [
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合え"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_conditional",
+      "input": "混じり合えば。"
+    },
+    {
+      "description": "複合動詞連用形の名詞化",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "混じり合い",
+          "pos": "Noun",
+          "surface": "混じり合い"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_nominal",
+      "input": "確認の混じり合いを調べる"
+    },
+    {
+      "description": "同じ五段連用形規則の並列例",
+      "expected": [
+        {
+          "lemma": "混ざり合う",
+          "pos": "Verb",
+          "surface": "混ざり合う"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_parallel",
+      "input": "混ざり合う。"
+    },
+    {
+      "description": "単漢字一段V1と漢字V2の連用形名詞化",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "見回し",
+          "pos": "Noun",
+          "surface": "見回し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_nominal",
+      "input": "確認の見回しを行う"
+    },
+    {
+      "description": "単漢字一段V1と漢字V2の過去形",
+      "expected": [
+        {
+          "lemma": "見回す",
+          "pos": "Verb",
+          "surface": "見回し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_past",
+      "input": "見回した。"
+    },
+    {
+      "description": "単漢字一段V1と漢字V2の接続形",
+      "expected": [
+        {
+          "lemma": "見回す",
+          "pos": "Verb",
+          "surface": "見回し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_te",
+      "input": "見回して。"
+    },
+    {
+      "description": "同じ単漢字一段V1規則の並列例",
+      "expected": [
+        {
+          "lemma": "見返す",
+          "pos": "Verb",
+          "surface": "見返し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_parallel",
+      "input": "見返した。"
+    },
+    {
+      "description": "助詞境界では複合動詞にしない",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "回す",
+          "pos": "Verb",
+          "surface": "回す"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_particle_boundary",
+      "input": "見と回す。"
+    },
+    {
+      "description": "複合動詞の後続助詞境界",
+      "expected": [
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合う"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_following_particle",
+      "input": "混じり合うと、"
+    },
+    {
+      "description": "漢字と複数かなの五段V1による複合動詞の否定形",
+      "expected": [
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_negative",
+      "input": "混じり合わない。"
+    },
+    {
+      "description": "単漢字一段V1と漢字V2の否定形",
+      "expected": [
+        {
+          "lemma": "見回す",
+          "pos": "Verb",
+          "surface": "見回さ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_negative",
+      "input": "見回さない。"
+    },
+    {
+      "description": "語彙化した複合動詞の過去形",
+      "expected": [
+        {
+          "lemma": "出来上がる",
+          "pos": "Verb",
+          "surface": "出来上がっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "verb_compound_dekiagaru_past",
+      "input": "出来上がった。"
+    },
+    {
+      "description": "Keep the lexicalized compound verb through Godan past inflection.",
+      "expected": [
+        {
+          "lemma": "枝",
+          "pos": "Noun",
+          "surface": "枝"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "折れ曲がる",
+          "pos": "Verb",
+          "surface": "折れ曲がっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "verb_compound_oremagaru_past",
+      "input": "枝が折れ曲がった。"
+    },
+    {
+      "description": "Keep the related lexicalized Ichidan compound verb as one search token.",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "折り曲げる",
+          "pos": "Verb",
+          "surface": "折り曲げ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "verb_compound_orimageru_past",
+      "input": "紙を折り曲げた。"
+    },
+    {
+      "description": "見つけ出した - auto-generated",
+      "expected": [
+        {
+          "lemma": "見つけ出す",
+          "pos": "Verb",
+          "surface": "見つけ出し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tsuke_shita",
+      "input": "見つけ出した"
+    },
+    {
+      "description": "見つけ出す - auto-generated",
+      "expected": [
+        {
+          "lemma": "見つけ出す",
+          "pos": "Verb",
+          "surface": "見つけ出す"
+        }
+      ],
+      "id": "tsuke_su",
+      "input": "見つけ出す"
+    },
+    {
+      "description": "格助詞前の複合連用形は検索単位として名詞化する",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "置き忘れ",
+          "pos": "Noun",
+          "surface": "置き忘れ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ],
+      "id": "compound_v2_wasureru_nominal",
+      "input": "確認の置き忘れを防ぐ"
+    },
+    {
+      "description": "複合動詞の過去形は補助動詞を分離する",
+      "expected": [
+        {
+          "lemma": "置き忘れる",
+          "pos": "Verb",
+          "surface": "置き忘れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_wasureru_past",
+      "input": "置き忘れた"
+    },
+    {
+      "description": "複合動詞の第2動詞は混じるを認識する",
+      "expected": [
+        {
+          "lemma": "入り混じる",
+          "pos": "Verb",
+          "surface": "入り混じる"
+        }
+      ],
+      "id": "compound_v2_majiru_base",
+      "input": "入り混じる"
+    },
+    {
+      "description": "格助詞前の複合連用形は検索単位として名詞化する",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "入り混じり",
+          "pos": "Noun",
+          "surface": "入り混じり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "compound_v2_majiru_nominal",
+      "input": "確認の入り混じりを調べる"
+    },
+    {
+      "description": "曖昧な連用形でも辞書登録済み複合動詞を選ぶ",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降りしきる",
+          "pos": "Verb",
+          "surface": "降りしきる"
+        }
+      ],
+      "id": "compound_v2_shikiru_base",
+      "input": "雨が降りしきる"
+    },
+    {
+      "description": "複合動詞の過去形は助動詞を分離する",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降りしきる",
+          "pos": "Verb",
+          "surface": "降りしきっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_shikiru_past",
+      "input": "雨が降りしきった"
+    },
+    {
+      "description": "複合動詞の未然形と否定助動詞を分離する",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降りしきる",
+          "pos": "Verb",
+          "surface": "降りしきら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "compound_v2_shikiru_negative",
+      "input": "雨が降りしきらない"
+    },
+    {
+      "description": "複合動詞の仮定形と接続助詞を分離する",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降りしきる",
+          "pos": "Verb",
+          "surface": "降りしきれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "compound_v2_shikiru_conditional",
+      "input": "雨が降りしきれば"
     }
   ],
   "description": "Compound verbs",

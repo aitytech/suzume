@@ -2494,6 +2494,143 @@
       ],
       "id": "wanai",
       "input": "負わない"
+    },
+    {
+      "description": "Ichidan continuative plus the completive subsidiary 尽くす preserves the auxiliary boundary.",
+      "expected": [
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べ"
+        },
+        {
+          "lemma": "尽くす",
+          "pos": "Auxiliary",
+          "surface": "尽くす"
+        }
+      ],
+      "id": "shirabetsukusu_completive_auxiliary",
+      "input": "調べ尽くす"
+    },
+    {
+      "description": "A verb continuative followed by the completive subsidiary 尽くす remains a grammatical boundary.",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "尽くす",
+          "pos": "Auxiliary",
+          "surface": "尽くす"
+        }
+      ],
+      "id": "yomitsukusu_completive_auxiliary",
+      "input": "読み尽くす"
+    },
+    {
+      "description": "A single-kanji Ichidan continuative before the excessive subsidiary 過ぎ must retain the auxiliary boundary.",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Auxiliary",
+          "surface": "過ぎ"
+        }
+      ],
+      "id": "misugi_excessive_auxiliary",
+      "input": "見過ぎ"
+    },
+    {
+      "description": "読みづらさを感じる - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "づらい",
+          "pos": "Adjective",
+          "surface": "づら"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じる"
+        }
+      ],
+      "id": "midurasawo_jiru",
+      "input": "読みづらさを感じる"
+    },
+    {
+      "description": "読みづらくなる - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "づらい",
+          "pos": "Adjective",
+          "surface": "づらく"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "midurakunaru",
+      "input": "読みづらくなる"
+    },
+    {
+      "description": "補助形容詞がたいの語幹名詞化",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "がたい",
+          "pos": "Adjective",
+          "surface": "がた"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じる"
+        }
+      ],
+      "id": "migatasawo_jiru",
+      "input": "読みがたさを感じる"
     }
   ],
   "description": "verb_auxiliary tests",

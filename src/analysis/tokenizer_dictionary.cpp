@@ -120,6 +120,73 @@ bool startsInsideKanjiLedVerb(const core::Lattice& lattice, const std::vector<ch
   return false;
 }
 
+// The temporal adverb いま overlaps the full polite forms of いる
+// (います/いました/いません/…).  At a clause boundary the closed inflectional
+// chain is more specific than the accidental いま+verb path.  Do not apply
+// this inside a longer lexical continuation: いますぐ remains いま+すぐ.
+bool startsIruPoliteFormAt(const std::vector<char32_t>& codepoints, size_t start_pos) {
+  if (start_pos >= codepoints.size() || codepoints[start_pos] != U'い') {
+    return false;
+  }
+  const size_t masu_length = verb_helpers::finiteMasuFormLengthAt(codepoints, start_pos + 1);
+  if (masu_length == 0) {
+    return false;
+  }
+  const size_t end_pos = start_pos + 1 + masu_length;
+  if (end_pos >= codepoints.size()) {
+    return true;
+  }
+  const char32_t following = codepoints[end_pos];
+  return normalize::isExtendedParticle(following) || following == U'。' || following == U'、' || following == U'」' ||
+         following == U'）';
+}
+
+// The literary conjunctive expression ～につけ attaches to a preceding finite
+// predicate and introduces a following clause (聞くにつけ、思い出す). It must
+// not compete with the unrelated verb つける in sentence-initial につけて or
+// in a construction such as 順位につけている, so require both the preceding
+// lattice verb boundary and the clause-separating comma.
+bool startsLiteraryNitsukeAt(const core::Lattice& lattice, const std::vector<char32_t>& codepoints, size_t start_pos) {
+  constexpr size_t kNitsukeLength = 3;
+  if (start_pos == 0 || start_pos + kNitsukeLength >= codepoints.size() || codepoints[start_pos] != U'に' ||
+      codepoints[start_pos + 1] != U'つ' || codepoints[start_pos + 2] != U'け' ||
+      codepoints[start_pos + kNitsukeLength] != U'、') {
+    return false;
+  }
+  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
+    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.end == start_pos && edge.extended_pos == core::ExtendedPOS::VerbShuushikei) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// The method suffix 方 attaches to a kanji-containing deverbal noun
+// (打ち合わせ+方). The unknown-word path can create the deverbal noun before
+// the suffix position but has no all-kanji suffix rule to supply 方 itself.
+bool hasPrecedingDeverbalNoun(const core::Lattice& lattice, size_t start_pos) {
+  bool has_noun = false;
+  bool has_renyokei = false;
+  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
+    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.end != start_pos) {
+        continue;
+      }
+      if (grammar::containsKanji(edge.surface) && edge.pos == core::PartOfSpeech::Noun) {
+        has_noun = true;
+      }
+      if (grammar::containsKanji(edge.surface) && edge.extended_pos == core::ExtendedPOS::VerbRenyokei) {
+        has_renyokei = true;
+      }
+    }
+  }
+  return has_noun && has_renyokei;
+}
+
 }  // namespace
 
 void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view text,
@@ -132,6 +199,22 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
   auto results = dict_manager_.lookup(text, byte_pos);
   const bool suppress_prefixed_noun_interior =
       startsHonorificPrefixedNounWithVerbTail(dict_manager_, text, codepoints, byte_offsets, start_pos);
+
+  if (startsLiteraryNitsukeAt(lattice, codepoints, start_pos)) {
+    lattice.addEdge("につけ", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 3),
+                    core::PartOfSpeech::Particle, getCategoryCost(core::ExtendedPOS::ParticleConj),
+                    core::LatticeEdge::kFromDictionary, "につけ", dictionary::ConjugationType::None,
+                    core::CandidateOrigin::Dictionary, candidate::kDictionaryOriginConfidence, {},
+                    core::ExtendedPOS::ParticleConj, "literary_nitsuke");
+  }
+
+  if (codepoints[start_pos] == U'方' && hasPrecedingDeverbalNoun(lattice, start_pos)) {
+    lattice.addEdge("方", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 1),
+                    core::PartOfSpeech::Suffix, candidate::kDeverbalMethodSuffixCost,
+                    core::LatticeEdge::kFromDictionary, "方", dictionary::ConjugationType::None,
+                    core::CandidateOrigin::SuffixPattern, candidate::kDictionaryOriginConfidence, {},
+                    core::ExtendedPOS::Suffix, "deverbal_method_suffix");
+  }
 
   // Interrogative + か forms an indefinite pronoun (誰+か, 何+か,
   // どこ+か). Generate the adverbial-particle homograph only at that
@@ -164,6 +247,11 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // Calculate end position in characters before context-sensitive candidate
     // guards below inspect the following lexical head.
     size_t end_pos = start_pos + result.length;
+
+    if (result.entry->pos == core::PartOfSpeech::Adverb && result.length == 2 &&
+        startsIruPoliteFormAt(codepoints, start_pos)) {
+      continue;
+    }
 
     // Do not reopen the interior of a kanji-led verb as a pure-hiragana
     // dictionary na-adjective. The same adjective remains available at a real

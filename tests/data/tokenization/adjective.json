@@ -1113,6 +1113,87 @@
       ],
       "id": "imamadeni_negative_adjective",
       "input": "今までにない方法"
+    },
+    {
+      "description": "確認の当たり前を確認する - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "当たり前",
+          "pos": "Adjective",
+          "surface": "当たり前"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "no_tari_wo_suru",
+      "input": "確認の当たり前を確認する"
+    },
+    {
+      "description": "当たり前だ - auto-generated",
+      "expected": [
+        {
+          "lemma": "当たり前",
+          "pos": "Adjective",
+          "surface": "当たり前"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "tari_da",
+      "input": "当たり前だ"
+    },
+    {
+      "description": "当たり前のことだ - auto-generated",
+      "expected": [
+        {
+          "lemma": "当たり前",
+          "pos": "Adjective",
+          "surface": "当たり前"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "tari_nokotoda",
+      "input": "当たり前のことだ"
     }
   ],
   "description": "adjective tests",

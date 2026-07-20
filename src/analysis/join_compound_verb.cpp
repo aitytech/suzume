@@ -226,9 +226,59 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     }
   }
 
-  const CompoundVerbMatch best_match = findCompoundVerbMatch(
+  CompoundVerbMatch best_match = findCompoundVerbMatch(
       text, codepoints, byte_offsets, start_pos, char_types, kanji_end, v2_start, base_ending, is_sokuonbin, is_ichidan,
       has_kanji_v2_after_bare_ichidan, dict_compound_v1, dict_compound_v1_lemma, dict_manager, inflection);
+
+  // A kanji V2 can itself end in a Godan continuative (見+回し).  The
+  // full-kanji path correctly treats that し as a boundary for ordinary
+  // words, but it obscures a preceding bare single-kanji ichidan V1. Try
+  // that boundary only after the ordinary analysis has no V2 match and only
+  // for the closed set of known single-kanji ichidan verbs.
+  if (best_match.v2_verb == nullptr && !dict_compound_v1 && kanji_end >= start_pos + 2 &&
+      char_types[start_pos + 1] == CharType::Kanji && verb_helpers::isSingleKanjiIchidan(codepoints[start_pos])) {
+    CompoundVerbMatch bare_ichidan_match =
+        findCompoundVerbMatch(text, codepoints, byte_offsets, start_pos, char_types, kanji_end, start_pos + 1, 0, false,
+                              true, true, false, "", dict_manager, inflection);
+    if (bare_ichidan_match.v2_verb != nullptr) {
+      v2_start = start_pos + 1;
+      best_match = std::move(bare_ichidan_match);
+    }
+  }
+
+  // The first kana after a kanji can itself be an i-row ichidan stem (降り
+  // + 合う), while a longer span can be a Godan continuative (混じり + 合う).
+  // Keep the established ichidan boundary when it produces a match. Only if
+  // it does not, test the next one or two hiragana positions as a complete
+  // Godan V1 and require inflectional evidence before moving the V2 boundary.
+  if (best_match.v2_verb == nullptr && is_ichidan && !dict_compound_v1 && !has_kanji_v2_after_bare_ichidan &&
+      v2_start == kanji_end + 1) {
+    const size_t alternate_limit = std::min(v2_start + 2, codepoints.size());
+    for (size_t alternate_v2_start = v2_start + 1; alternate_v2_start <= alternate_limit; ++alternate_v2_start) {
+      if (char_types[alternate_v2_start - 1] != CharType::Hiragana) {
+        break;
+      }
+
+      const std::string alternate_v1 = extractSubstring(codepoints, start_pos, alternate_v2_start);
+      const auto inflection_candidate = inflection.getBest(alternate_v1);
+      const auto* godan_row = grammar::Conjugation::getGodanRow(inflection_candidate.verb_type);
+      if (godan_row == nullptr ||
+          inflection_candidate.confidence < candidate::verb_cost::kConstructedVerbMinConfidence ||
+          codepoints[alternate_v2_start - 1] != godan_row->i_row) {
+        continue;
+      }
+
+      CompoundVerbMatch alternate_match =
+          findCompoundVerbMatch(text, codepoints, byte_offsets, start_pos, char_types, kanji_end, alternate_v2_start,
+                                base_ending, is_sokuonbin, is_ichidan, has_kanji_v2_after_bare_ichidan,
+                                dict_compound_v1, dict_compound_v1_lemma, dict_manager, inflection);
+      if (alternate_match.v2_verb != nullptr) {
+        v2_start = alternate_v2_start;
+        best_match = std::move(alternate_match);
+        break;
+      }
+    }
+  }
 
   emitCompoundVerbCandidates(lattice, text, codepoints, byte_offsets, start_pos, v2_start, best_match, dict_manager,
                              scorer);

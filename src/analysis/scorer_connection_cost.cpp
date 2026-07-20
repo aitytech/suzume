@@ -217,7 +217,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // ん can be AUX_否定古 or PART_準体, both should be penalized
   if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && grammar::isPureHiragana(prev.surface) &&
       prev.surface.size() <= 6 &&  // 2 chars or less (6 bytes in UTF-8)
-      next.surface == "ん") {
+      next.surface == "ん" && !(prev.lemma == "する" && prev.surface == "せ")) {
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -309,7 +309,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Exclude "で" which is でる renyokei (interferes with んでした → ん+でし+た)
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       next.surface == "し" && prev.fromDictionary() && prev.surface != "い" && prev.surface != "で") {
-    surface_bonus += cost::kVeryStrongBonus;
+    surface_bonus += cost::kStrongBonus;
   }
 
   // Penalty for kanji+sokuon+kanji NOUN → し(VerbRenyokei) pattern
@@ -351,7 +351,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Only for 2+ kanji nouns (sahen-compatible), not single-kanji like 下+さ
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
       next.surface == "せ" && prev.surface.size() >= 6) {  // 2+ kanji = 6+ bytes in UTF-8
-    surface_bonus += cost::kStrongBonus;
+    surface_bonus += cost::kVeryStrongBonus;
   }
 
   // Penalty for PART_準体(の) → で to prevent ので splitting

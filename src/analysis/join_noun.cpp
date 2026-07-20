@@ -79,6 +79,24 @@ bool isHiraganaHonorificPrefix(char32_t codepoint) {
   return codepoint == U'お' || codepoint == U'ご';
 }
 
+bool isCaseParticleCodepoint(char32_t codepoint) {
+  switch (codepoint) {
+    case U'に':
+    case U'で':
+    case U'と':
+    case U'を':
+    case U'が':
+    case U'は':
+    case U'へ':
+    case U'も':
+    case U'か':
+    case U'や':
+      return true;
+    default:
+      return false;
+  }
+}
+
 void addHonorificSamaNounJoinCandidate(core::Lattice& lattice, std::string_view text,
                                        const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                        size_t start_pos, const std::vector<normalize::CharType>& char_types,
@@ -420,23 +438,13 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     return;
   }
 
-  // Reject if hiragana ends with に (case particle, not verb renyokei)
-  // e.g., 静かに目 should NOT become a compound noun (it's 静か+に+目)
-  // Godan-na renyokei (死に) is only 1 hiragana, already blocked by particle check
-  if (hiragana_end > kanji_end && codepoints[hiragana_end - 1] == U'に') {
+  // A case particle cannot be the final mora of a verb continuative.  The
+  // scan admits up to two hiragana, so this must cover both one- and two-mora
+  // spans: otherwise 高みを目 and 越えを目 are fabricated as deverbal nouns.
+  // Valid forms such as 食べ物, 割れ目, and 読み方 end in the continuative,
+  // never in a case particle.
+  if (hiragana_end > kanji_end && isCaseParticleCodepoint(codepoints[hiragana_end - 1])) {
     return;
-  }
-
-  // Reject if hiragana is a single case particle (not verb renyokei)
-  // e.g., 東京都渋谷区に所在 should NOT become 東京都渋谷区に所 + ... (it's ...+に+所在+...)
-  // Case particles: に, で, と, を, が, は, へ, も, か, や
-  // These cannot be verb renyokei endings
-  if (hiragana_end - kanji_end == 1) {
-    char32_t hira_char = codepoints[kanji_end];
-    if (hira_char == U'に' || hira_char == U'で' || hira_char == U'と' || hira_char == U'を' || hira_char == U'が' ||
-        hira_char == U'は' || hira_char == U'へ' || hira_char == U'も' || hira_char == U'か' || hira_char == U'や') {
-      return;
-    }
   }
 
   // Check for suffix kanji: 物, 方, 所, 手, 場
@@ -454,6 +462,17 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
 
   if (!is_mono_suffix && !is_kata_suffix && !is_tokoro_suffix && !is_me_suffix && !is_te_suffix && !is_ba_suffix) {
     return;
+  }
+
+  // One-mora -い can be a godan-wa continuative (言い方), but an attested
+  // i-adjective such as 高い must retain its attributive boundary before the
+  // ordinary noun 方. Longer -い adjective tails were rejected above; consult
+  // the dictionary here for the ambiguous one-mora case.
+  if (is_kata_suffix && hiragana_end == kanji_end + 1 && codepoints[hiragana_end - 1] == U'い') {
+    const std::string potential_adjective = extractSubstring(codepoints, start_pos, hiragana_end);
+    if (verb_helpers::isAdjectiveInDictionary(&dict_manager, potential_adjective)) {
+      return;
+    }
   }
 
   // We need at least some hiragana between kanji and suffix (verb renyokei ending)

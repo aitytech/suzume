@@ -52,6 +52,77 @@ bool isVerifiedFiniteVerb(const dictionary::DictionaryManager* dict_manager, con
                                 candidate::verb_cost::kConstructedVerbMinConfidence, true);
 }
 
+bool hasNominalizedNounParticleContinuation(const std::vector<char32_t>& codepoints, size_t end_pos,
+                                            const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos >= codepoints.size() || codepoints[end_pos] == U'て' ||
+      codepoints[end_pos] == U'で') {
+    return false;
+  }
+
+  // Only case, topic, and nominalizer particles make the preceding
+  // continuative an object-like noun phrase. Conjunctive particles such as
+  // ながら and つつ instead retain the verbal reading.
+  bool starts_nominal_particle = false;
+  switch (codepoints[end_pos]) {
+    case U'を':
+    case U'が':
+    case U'に':
+    case U'で':
+    case U'と':
+    case U'へ':
+    case U'は':
+    case U'も':
+    case U'の':
+      starts_nominal_particle = true;
+      break;
+    case U'か':
+      starts_nominal_particle = end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'ら';
+      break;
+    case U'ま':
+      starts_nominal_particle = end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'で';
+      break;
+    case U'よ':
+      starts_nominal_particle = end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'り';
+      break;
+    default:
+      break;
+  }
+  if (!starts_nominal_particle) {
+    return false;
+  }
+
+  const size_t probe_end = std::min(codepoints.size(), end_pos + static_cast<size_t>(4));
+  const std::string probe = extractSubstring(codepoints, end_pos, probe_end);
+  bool has_particle = false;
+  for (const auto& match : dict_manager->lookup(probe, 0)) {
+    if (match.entry == nullptr) {
+      continue;
+    }
+    if (match.entry->pos == core::PartOfSpeech::Particle) {
+      has_particle = true;
+    } else if (normalize::utf8Length(match.entry->surface) > 1) {
+      // A longer lexical continuation such as -にくい owns this span; its
+      // initial kana must not be treated as a case-particle boundary.
+      return false;
+    }
+  }
+  return has_particle;
+}
+
+bool hasDictionaryAdjectiveTail(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  for (size_t tail_pos = start_pos + 1; tail_pos < end_pos; ++tail_pos) {
+    if (dict_manager->lookupExact(extractSubstring(codepoints, tail_pos, end_pos), core::PartOfSpeech::Adjective) !=
+        nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void appendNiSugiPredicateCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                      const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,
@@ -424,6 +495,27 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
 
   // Add emphatic variants (来た → 来たっ, etc.)
   vh::addEmphaticVariants(candidates, codepoints);
+
+  // An inflection-validated renyokei immediately followed by a particle can
+  // head a deverbal noun phrase (鳴らしを, 書きを). Keep that noun reading
+  // alongside the verbal candidate so a coincident auxiliary entry cannot
+  // split the stem internally. The particle and lexical-continuation guards
+  // keep finite predicates and derivational suffixes unaffected.
+  std::vector<UnknownCandidate> nominalized_candidates;
+  for (const auto& cand : candidates) {
+    if (cand.pos != core::PartOfSpeech::Verb || cand.origin != core::CandidateOrigin::VerbKanji ||
+        cand.extended_pos != core::ExtendedPOS::VerbRenyokei ||
+        (!cand.lemma_verified && cand.conj_type != dictionary::ConjugationType::GodanSa) ||
+        hasDictionaryAdjectiveTail(codepoints, cand.start, cand.end, dict_manager) ||
+        !hasNominalizedNounParticleContinuation(codepoints, cand.end, dict_manager)) {
+      continue;
+    }
+    nominalized_candidates.push_back(makeNounCandidate(
+        cand.surface, cand.start, cand.end,
+        candidate::kVerifiedRenyokeiNominalCandidateCost + candidate::kNominalizedNounParticleBonus, true,
+        core::CandidateOrigin::NominalizedNoun, core::ExtendedPOS::NounVerbal, "verified_renyokei_nominal"));
+  }
+  candidates.insert(candidates.end(), nominalized_candidates.begin(), nominalized_candidates.end());
 
   // Do not let an unverified inflection hypothesis replace an exact
   // dictionary function word or deverbal noun.  Kana-final dictionary forms

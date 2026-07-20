@@ -1284,6 +1284,82 @@
         "prefix",
         "edge"
       ]
+    },
+    {
+      "description": "ご理解ください - auto-generated",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "理解",
+          "pos": "Noun",
+          "surface": "理解"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "go_kudasai",
+      "input": "ご理解ください"
+    },
+    {
+      "description": "ご協力ください - auto-generated",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "協力",
+          "pos": "Noun",
+          "surface": "協力"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "go_kudasai_2",
+      "input": "ご協力ください"
+    },
+    {
+      "description": "ご理解くださいました - auto-generated",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "理解",
+          "pos": "Noun",
+          "surface": "理解"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "go_kudasaimashita",
+      "input": "ご理解くださいました"
     }
   ],
   "description": "Prefixes (お、ご、不、無)",

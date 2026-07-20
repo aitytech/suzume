@@ -57,6 +57,7 @@ EntrySpecRange getPronounEntries() {
 
       // Distributive pronoun (分配代名詞)
       pronoun("各々", ""),
+      pronoun("各自", ""),
 
       // Demonstrative - proximal (近称)
       pronoun("これ", ""),

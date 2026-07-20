@@ -162,13 +162,20 @@ void resolvePostPrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   // (EOS). Retag to NounVerbal with lemma = surface when such a compound-shape VerbRenyokei
   // is at the end of the sentence or is directly marked by a case/topic particle. Verbal
   // continuations (た/て/ながら, 連用中止 before 、, a following V2, quotative と) keep VERB.
-  // Runs after lemmatizeAll, so overwriting lemma = surface is final; the retag only fires
-  // when the right neighbor is a particle/EOS, so it never creates NOUN+NOUN adjacency that
-  // would perturb the later noun-compound merge.
+  // Runs after lemmatizeAll, so overwriting lemma = surface is final.  A preceding
+  // continuative can also be the first item in a parallel deverbal-noun sequence
+  // (上がり+下がりを); require the next item to have already been selected as
+  // NounVerbal and to be case/topic marked before extending the same retag.
   for (size_t i = 0; i < result.size(); ++i) {
+    const bool direct_nominal_context =
+        i + 1 == result.size() || (i + 1 < result.size() && resolver::isNominalForcingParticle(result[i + 1]));
+    const bool parallel_nominal_context =
+        i + 2 < result.size() && result[i + 1].pos == core::PartOfSpeech::Noun &&
+        result[i + 1].extended_pos == core::ExtendedPOS::NounVerbal && normalize::utf8Length(result[i].surface) >= 3 &&
+        normalize::utf8Length(result[i + 1].surface) >= 3 && resolver::isNominalForcingParticle(result[i + 2]);
     if (result[i].pos == core::PartOfSpeech::Verb && result[i].extended_pos == core::ExtendedPOS::VerbRenyokei &&
-        resolver::isCompoundRenyokeiShape(result[i].surface) &&
-        (i + 1 == result.size() || resolver::isNominalForcingParticle(result[i + 1]))) {
+        ((resolver::isCompoundRenyokeiShape(result[i].surface) && direct_nominal_context) ||
+         parallel_nominal_context)) {
       result[i].pos = core::PartOfSpeech::Noun;
       result[i].extended_pos = core::ExtendedPOS::NounVerbal;
       result[i].lemma = result[i].surface;
