@@ -35,6 +35,7 @@ add_library(suzume_analysis OBJECT
   split_candidates.cpp
   suffix_candidates_compound.cpp
   suffix_candidates_counter.cpp
+  suffix_candidates_counter_structural.cpp
   suffix_candidates_counter_temporal.cpp
   suffix_candidates_prefix.cpp
   suffix_candidates_suffix.cpp

@@ -1,0 +1,340 @@
+/**
+ * @file suffix_candidates_counter_structural.cpp
+ * @brief Structural counter boundaries outside the basic numeral scan
+ */
+
+#include "candidate_constants.h"
+#include "normalize/char_type.h"
+#include "normalize/exceptions.h"
+#include "suffix_candidates_counter_internal.h"
+#include "tokenizer_utils.h"
+#include "unknown.h"
+
+namespace suzume::analysis::counter_detail {
+namespace {
+
+// Discrete-object counter kanji whose numeral+counter phrase is a pure quantity
+// (三名, 二台, 五冊, 三箱) and never heads a lexical compound. Deliberately
+// narrower than normalize::isCounterKanji: measure/rank/event counters (段, 本,
+// 枚, 件, 頭, 級, …) head four-character lexical nouns (五段活用, 一本調子,
+// 一枚看板, 一件落着, 三頭政治) and must keep merging with what follows.
+bool isObjectCounterKanji(char32_t code_point) {
+  switch (code_point) {
+    case U'人':
+    case U'名':
+    case U'台':
+    case U'冊':
+    case U'箱':
+    case U'袋':
+    case U'匹':
+    case U'個':
+      return true;
+    default:
+      return false;
+  }
+}
+}  // namespace
+
+void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                       const std::vector<normalize::CharType>& char_types,
+                                       const dictionary::DictionaryManager* dict_manager,
+                                       std::vector<UnknownCandidate>& candidates) {
+  // Repeated numeral-counter units are distributive quantity expressions
+  // (一人一人, 一日一日). Keep two identical units as one search unit rather
+  // than allowing each discounted counter candidate to split the expression.
+  if (normalize::isNumeralCodepoint(codepoints[start_pos])) {
+    size_t numeral_end = start_pos;
+    while (numeral_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[numeral_end])) {
+      ++numeral_end;
+    }
+    if (numeral_end < codepoints.size() && normalize::isCounterKanji(codepoints[numeral_end])) {
+      size_t unit_end = numeral_end + 1;
+      size_t unit_length = unit_end - start_pos;
+      bool is_repeated_unit = unit_end + unit_length <= codepoints.size();
+      for (size_t offset = 0; is_repeated_unit && offset < unit_length; ++offset) {
+        is_repeated_unit = codepoints[start_pos + offset] == codepoints[unit_end + offset];
+      }
+      if (is_repeated_unit) {
+        size_t repeated_end = unit_end + unit_length;
+        std::string surface = extractSubstring(codepoints, start_pos, repeated_end);
+        if (!surface.empty()) {
+          auto cand = makeCandidate(surface, start_pos, repeated_end, core::PartOfSpeech::Noun,
+                                    candidate::kNumeralCounterMergeBonus, false, CandidateOrigin::Counter,
+                                    core::ExtendedPOS::NounNumber);
+          cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+          cand.pattern = "repeated_numeral_counter";
+#endif
+          candidates.push_back(cand);
+        }
+      }
+    }
+  }
+
+  // A repeated numeral+noun unit before a kanji サ変 predicate is a
+  // distributive quantity phrase (一語一語|確認する, 一件一件|点検する).
+  // Its second character is intentionally not limited to the closed counter
+  // inventory: ordinary nouns such as 語 and 歩 productively form this shape.
+  // Requiring a complete kanji+する predicate keeps lexical kanji compounds
+  // and standalone repetitions outside this boundary rule.
+  if (start_pos + 5 < codepoints.size() && normalize::isNumeralCodepoint(codepoints[start_pos]) &&
+      !normalize::isNumeralCodepoint(codepoints[start_pos + 1]) && codepoints[start_pos] == codepoints[start_pos + 2] &&
+      codepoints[start_pos + 1] == codepoints[start_pos + 3] &&
+      char_types[start_pos + 1] == normalize::CharType::Kanji) {
+    if (hasKanjiSuruPredicateAt(codepoints, char_types, start_pos + 4, 2)) {
+      std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Noun,
+                                  candidate::kRepeatedNumeralNounPredicateSplitBonus, false, CandidateOrigin::Counter,
+                                  core::ExtendedPOS::NounNumber);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "repeated_numeral_noun_predicate_split";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+  }
+
+  // Ordinal compounds start with 第 followed by a numeral sequence. Counter
+  // tails have dedicated structural boundaries, while lexicalized ordinal
+  // nouns are supplied by the dictionary. This prevents an arbitrary one-kanji
+  // noun following an ordinal from being fabricated as a compound.
+  if (codepoints[start_pos] == U'第' && normalize::isNumeralCodepoint(codepoints[start_pos + 1])) {
+    size_t ordinal_end = start_pos + 1;
+    bool ordinal_has_numeral = false;
+    while (ordinal_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[ordinal_end])) {
+      ordinal_has_numeral = true;
+      ++ordinal_end;
+    }
+    if (ordinal_end < char_types.size() && char_types[ordinal_end] == normalize::CharType::Kanji) {
+      size_t tail_end = ordinal_end;
+      while (tail_end < char_types.size() && char_types[tail_end] == normalize::CharType::Kanji) {
+        ++tail_end;
+      }
+      size_t tail_len = tail_end - ordinal_end;
+      if (tail_len == 1 && ordinal_has_numeral && normalize::isCounterKanji(codepoints[ordinal_end])) {
+        std::string ordinal_surface = extractSubstring(codepoints, start_pos, ordinal_end);
+        std::string counter_surface = extractSubstring(codepoints, ordinal_end, tail_end);
+        if (!ordinal_surface.empty()) {
+          auto ordinal = makeCandidate(ordinal_surface, start_pos, ordinal_end, core::PartOfSpeech::Noun,
+                                       candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter,
+                                       core::ExtendedPOS::NounNumber);
+          ordinal.lemma = ordinal_surface;
+#ifdef SUZUME_DEBUG_INFO
+          ordinal.pattern = "ordinal_digit_counter_prefix";
+#endif
+          candidates.push_back(ordinal);
+        }
+        if (!counter_surface.empty()) {
+          auto counter = makeCandidate(counter_surface, ordinal_end, tail_end, core::PartOfSpeech::Suffix,
+                                       candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter);
+          counter.lemma = counter_surface;
+#ifdef SUZUME_DEBUG_INFO
+          counter.pattern = "ordinal_digit_counter_suffix";
+#endif
+          candidates.push_back(counter);
+        }
+      } else if (tail_len == 2 && ordinal_has_numeral && normalize::isCounterKanji(codepoints[ordinal_end]) &&
+                 codepoints[ordinal_end + 1] == U'目') {
+        std::string ordinal_surface = extractSubstring(codepoints, start_pos, ordinal_end);
+        std::string counter_surface = extractSubstring(codepoints, ordinal_end, ordinal_end + 1);
+        std::string ordinal_suffix_surface = extractSubstring(codepoints, ordinal_end + 1, tail_end);
+        if (!ordinal_surface.empty() && !counter_surface.empty() && !ordinal_suffix_surface.empty()) {
+          auto ordinal = makeCandidate(ordinal_surface, start_pos, ordinal_end, core::PartOfSpeech::Noun,
+                                       candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter,
+                                       core::ExtendedPOS::NounNumber);
+          ordinal.lemma = ordinal_surface;
+          auto counter = makeCandidate(counter_surface, ordinal_end, ordinal_end + 1, core::PartOfSpeech::Suffix,
+                                       candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter);
+          counter.lemma = counter_surface;
+          auto ordinal_suffix =
+              makeCandidate(ordinal_suffix_surface, ordinal_end + 1, tail_end, core::PartOfSpeech::Suffix,
+                            candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter);
+          ordinal_suffix.lemma = ordinal_suffix_surface;
+#ifdef SUZUME_DEBUG_INFO
+          ordinal.pattern = "ordinal_counter_ordinal_suffix_prefix";
+          counter.pattern = "ordinal_counter_ordinal_suffix_counter";
+          ordinal_suffix.pattern = "ordinal_counter_ordinal_suffix_tail";
+#endif
+          candidates.push_back(ordinal);
+          candidates.push_back(counter);
+          candidates.push_back(ordinal_suffix);
+        }
+      } else if (tail_len >= 2 && codepoints[ordinal_end] == U'次') {
+        std::string ordinal_surface = extractSubstring(codepoints, start_pos, ordinal_end);
+        std::string tail_surface = extractSubstring(codepoints, ordinal_end, tail_end);
+        if (!ordinal_surface.empty()) {
+          auto ordinal = makeCandidate(ordinal_surface, start_pos, ordinal_end, core::PartOfSpeech::Noun,
+                                       candidate::kOrdinalSequentialSplitBonus, false, CandidateOrigin::Counter,
+                                       core::ExtendedPOS::NounNumber);
+          ordinal.lemma = ordinal_surface;
+#ifdef SUZUME_DEBUG_INFO
+          ordinal.pattern = "ordinal_sequential_prefix";
+#endif
+          candidates.push_back(ordinal);
+        }
+        if (!tail_surface.empty()) {
+          auto tail = makeCandidate(tail_surface, ordinal_end, tail_end, core::PartOfSpeech::Suffix,
+                                    candidate::kOrdinalSequentialSplitBonus, false, CandidateOrigin::Counter);
+          tail.lemma = tail_surface;
+#ifdef SUZUME_DEBUG_INFO
+          tail.pattern = "ordinal_sequential_tail";
+#endif
+          candidates.push_back(tail);
+        }
+      }
+    }
+  }
+
+  counter_detail::appendTemporalCounterCandidates(codepoints, start_pos, char_types, dict_manager, candidates);
+
+  // Quantity + object/temporal counter + independent kanji noun: a numeral+counter
+  // phrase followed by exactly two more kanji is compositional (三名|参加, 二台|故障,
+  // 一度|確認) — the counter phrase is a search-unit boundary. The whole run is
+  // otherwise emitted as one kanji_seq token that beats the split on total cost,
+  // so a discounted duplicate of the counter phrase lets the split path win.
+  // Structural gates keep lexical wholes intact:
+  //   - discrete-object and temporal counters only; measure/rank counters head
+  //     lexical compounds and never fire here
+  //   - exactly two trailing kanji ending the run: one trailing kanji is a
+  //     lexical suffix compound (一人前, 一年生, 二階建て), three or more a
+  //     longer lexical term (三人称単数, 二世帯住宅)
+  //   - a numeral/quantity kanji heading the trailing pair marks a reduplicated
+  //     idiom (十人十色, 一日千秋) and blocks the split
+  {
+    size_t scan = start_pos;
+    bool has_quantity = false;
+    if (normalize::isQuantityPrefixKanji(codepoints[scan])) {
+      ++scan;
+      has_quantity = true;
+    }
+    while (scan < codepoints.size() && normalize::isNumeralCodepoint(codepoints[scan])) {
+      ++scan;
+      has_quantity = true;
+    }
+    if (has_quantity && scan < codepoints.size() &&
+        (isObjectCounterKanji(codepoints[scan]) || normalize::isTemporalCounterKanji(codepoints[scan]))) {
+      size_t counter_end = scan + 1;
+      bool trailing_two_kanji = counter_end + 1 < char_types.size() &&
+                                char_types[counter_end] == normalize::CharType::Kanji &&
+                                char_types[counter_end + 1] == normalize::CharType::Kanji;
+      bool run_ends_after_pair =
+          counter_end + 2 >= char_types.size() || char_types[counter_end + 2] != normalize::CharType::Kanji;
+      bool trailing_is_reduplication =
+          trailing_two_kanji && (normalize::isNumeralCodepoint(codepoints[counter_end]) ||
+                                 normalize::isQuantityPrefixKanji(codepoints[counter_end]));
+      if (trailing_two_kanji && run_ends_after_pair && !trailing_is_reduplication) {
+        std::string surface = extractSubstring(codepoints, start_pos, counter_end);
+        if (!surface.empty()) {
+          auto cand = makeCandidate(surface, start_pos, counter_end, core::PartOfSpeech::Noun,
+                                    candidate::kCounterNounSplitBonus, false, CandidateOrigin::Counter);
+          cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+          cand.pattern = "counter_object_split";
+#endif
+          candidates.push_back(cand);
+        }
+      }
+    }
+  }
+
+  // Leading kanji noun/prefix + numeral(s) + counter: split before the numeral so the
+  // numeral+counter search unit stays intact (徒歩|五分, 約|二時間, 気温|三十度,
+  // 定員|五名). The whole run is otherwise one kanji_seq NOUN that beats the split on
+  // total cost, so a discounted duplicate of the leading token lets the split win.
+  // Structural gates keep lexical wholes intact: the leading run is either a numeric-
+  // aggregation prefix (約/計/総) or 2+ kanji — a single non-prefix kanji heads a
+  // lexical compound (中二階, 高三) — and the numeral must be immediately followed by a
+  // counter kanji or a katakana unit (五メートル, 五キロ), so a bare numeral compound
+  // (十字路, 百貨店, 世界一) or a kanji-run non-counter (東京五輪, 富士五湖) never fires.
+  {
+    size_t lead = start_pos;
+    while (lead < codepoints.size() && lead < char_types.size() && char_types[lead] == normalize::CharType::Kanji &&
+           !normalize::isNumeralCodepoint(codepoints[lead])) {
+      ++lead;
+    }
+    size_t lead_len = lead - start_pos;
+    bool lead_is_prefix = lead_len == 1 && normalize::isNumericApproxPrefixKanji(codepoints[start_pos]);
+    if ((lead_len >= 2 || lead_is_prefix) && lead < codepoints.size() &&
+        normalize::isNumeralCodepoint(codepoints[lead])) {
+      size_t num_end = lead;
+      while (num_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[num_end])) {
+        ++num_end;
+      }
+      bool counter_follows = num_end < codepoints.size() &&
+                             (normalize::isCounterKanji(codepoints[num_end]) ||
+                              (num_end < char_types.size() && char_types[num_end] == normalize::CharType::Katakana));
+      if (counter_follows) {
+        std::string surface = extractSubstring(codepoints, start_pos, lead);
+        if (!surface.empty()) {
+          // An approximation prefix (約/計/総) is a Prefix modifying the quantity; a
+          // multi-kanji leading run is an ordinary Noun.
+          core::PartOfSpeech lead_pos = lead_is_prefix ? core::PartOfSpeech::Prefix : core::PartOfSpeech::Noun;
+          core::ExtendedPOS lead_epos = lead_is_prefix ? core::ExtendedPOS::Prefix : core::ExtendedPOS::Unknown;
+          auto cand = makeCandidate(surface, start_pos, lead, lead_pos, candidate::kLeadingNounCounterSplitBonus, false,
+                                    CandidateOrigin::Counter, lead_epos);
+          cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+          cand.pattern = "leading_noun_counter_split";
+#endif
+          candidates.push_back(cand);
+        }
+      }
+    }
+  }
+
+  // Approximate-quantity prefix + numeral run + counter: 数/何 modify the numeral
+  // run they head (数十件, 何十回, 数百万円) and belong inside the quantity token.
+  // The merged numeral+counter candidate below (十件) otherwise undercuts the whole
+  // kanji_seq token (数十件) and strands the prefix (数|十件), so the same discounted
+  // merge is emitted extended over the prefix. Gates mirror the plain merge: a lone
+  // counter kanji at a kanji→non-kanji boundary. The prefix must be directly
+  // followed by a numeral, so a prefix bound straight to a counter (数日, 半年,
+  // 何回), a prefix heading an ordinary noun (数値, 数学), and the reverse pattern
+  // (十数年: 数 binds the following 年, not the preceding numeral) never fire.
+  if (normalize::isQuantityPrefixKanji(codepoints[start_pos]) &&
+      normalize::isNumeralCodepoint(codepoints[start_pos + 1])) {
+    size_t num_end = start_pos + 1;
+    while (num_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[num_end])) {
+      ++num_end;
+    }
+    bool lone_counter_at_boundary =
+        num_end < char_types.size() && normalize::isCounterKanji(codepoints[num_end]) &&
+        (num_end + 1 >= char_types.size() || char_types[num_end + 1] != normalize::CharType::Kanji);
+    if (lone_counter_at_boundary) {
+      std::string surface = extractSubstring(codepoints, start_pos, num_end + 1);
+      if (!surface.empty()) {
+        auto cand = makeCandidate(surface, start_pos, num_end + 1, core::PartOfSpeech::Noun,
+                                  candidate::kNumeralCounterMergeBonus, false, CandidateOrigin::Counter);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "quantity_prefix_counter_merge";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+
+    // An approximate quantity can also precede a kanji サ変 predicate
+    // (数十件|確認する, 何十回|実施する). This parallels the ordinary
+    // numeral+counter predicate boundary below, but retains the quantity
+    // prefix inside the number phrase.
+    if (num_end < char_types.size() && normalize::isCounterKanji(codepoints[num_end])) {
+      if (hasKanjiSuruPredicateAt(codepoints, char_types, num_end + 1)) {
+        std::string surface = extractSubstring(codepoints, start_pos, num_end + 1);
+        if (!surface.empty()) {
+          auto cand = makeCandidate(surface, start_pos, num_end + 1, core::PartOfSpeech::Noun,
+                                    candidate::kCounterNounSplitBonus, false, CandidateOrigin::Counter,
+                                    core::ExtendedPOS::NounNumber);
+          cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+          cand.pattern = "quantity_prefix_counter_suru_predicate_split";
+#endif
+          candidates.push_back(cand);
+        }
+      }
+    }
+  }
+}
+
+}  // namespace suzume::analysis::counter_detail

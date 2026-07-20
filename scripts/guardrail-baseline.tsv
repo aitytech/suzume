@@ -33,6 +33,7 @@ src/analysis/scorer_word_cost.cpp	5	1	22
 src/analysis/split_candidates.cpp	0	7	0
 src/analysis/suffix_candidates_compound.cpp	0	16	0
 src/analysis/suffix_candidates_counter.cpp	0	6	0
+src/analysis/suffix_candidates_counter_structural.cpp	0	0	0
 src/analysis/suffix_candidates_counter_temporal.cpp	0	0	0
 src/analysis/suffix_candidates_prefix.cpp	0	2	0
 src/analysis/suffix_candidates_suffix.cpp	0	10	0

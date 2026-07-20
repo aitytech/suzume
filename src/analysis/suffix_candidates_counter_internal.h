@@ -14,6 +14,10 @@ void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, si
                                      const std::vector<normalize::CharType>& char_types,
                                      const dictionary::DictionaryManager* dict_manager,
                                      std::vector<UnknownCandidate>& candidates);
+void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                       const std::vector<normalize::CharType>& char_types,
+                                       const dictionary::DictionaryManager* dict_manager,
+                                       std::vector<UnknownCandidate>& candidates);
 
 }  // namespace suzume::analysis::counter_detail
 
