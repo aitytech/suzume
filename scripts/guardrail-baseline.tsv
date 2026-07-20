@@ -43,7 +43,8 @@ src/analysis/unknown.cpp	0	20	0
 src/analysis/unknown_same_type.cpp	0	13	0
 src/analysis/unknown_speech.cpp	0	12	0
 src/analysis/verb_candidates.cpp	0	7	0
-src/analysis/verb_candidates_helpers.cpp	1	0	0
+src/analysis/verb_candidates_helpers.cpp	0	0	0
+src/analysis/verb_candidates_helpers_dictionary.cpp	1	0	0
 src/analysis/verb_candidates_hiragana.cpp	0	4	0
 src/analysis/verb_candidates_hiragana_mizenkei.cpp	0	10	0
 src/analysis/verb_candidates_hiragana_onbin.cpp	0	9	0

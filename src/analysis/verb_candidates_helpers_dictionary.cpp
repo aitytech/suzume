@@ -1,0 +1,213 @@
+/**
+ * @file verb_candidates_helpers_dictionary.cpp
+ * @brief Dictionary-backed verb candidate helpers
+ */
+
+#include "core/debug.h"
+#include "normalize/utf8.h"
+#include "verb_candidates_helpers.h"
+
+namespace suzume::analysis::verb_helpers {
+
+// =============================================================================
+// Dictionary Lookup Helpers
+// =============================================================================
+
+bool isVerbInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form) {
+  return hasDictionaryEntry(dict_manager, base_form, core::PartOfSpeech::Verb);
+}
+
+bool isAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form) {
+  return hasDictionaryEntry(dict_manager, base_form, core::PartOfSpeech::Adjective);
+}
+
+bool isNounInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
+  return hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Noun);
+}
+
+bool isNounOrAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
+  return hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Noun) ||
+         hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Adjective);
+}
+
+bool hasDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
+                        core::PartOfSpeech pos) {
+  if (dict_manager == nullptr || surface.empty()) {
+    return false;
+  }
+  const auto* entry = dict_manager->lookupExact(surface, pos);
+  if (entry != nullptr) {
+    SUZUME_DEBUG_LOG_TRACE("[DICT] \"" << surface << "\" (" << core::posToString(pos) << "/"
+                                       << core::extendedPosToString(entry->extended_pos) << ") = FOUND\n");
+    return true;
+  }
+  SUZUME_DEBUG_LOG_TRACE("[DICT] \"" << surface << "\" (" << core::posToString(pos) << ") = NOT_FOUND\n");
+  return false;
+}
+
+bool hasNonVerbDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  auto results = dict_manager->lookup(surface, 0);
+  for (const auto& result : results) {
+    if (result.entry != nullptr && result.entry->surface == surface && result.entry->pos != core::PartOfSpeech::Verb) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
+  return dict_manager != nullptr && dict_manager->lookupExact(surface, core::PartOfSpeech::Particle) != nullptr;
+}
+
+bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0) {
+    return false;
+  }
+  constexpr size_t kParticleLookback = 4;
+  constexpr size_t kParticleProbe = 5;
+  size_t first_start = start_pos > kParticleLookback ? start_pos - kParticleLookback : 0;
+  size_t probe_end = std::min(codepoints.size(), start_pos + kParticleProbe);
+  for (size_t particle_start = first_start; particle_start < start_pos; ++particle_start) {
+    std::string probe = extractSubstring(codepoints, particle_start, probe_end);
+    for (const auto& match : dict_manager->lookup(probe, 0)) {
+      if (match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Particle &&
+          particle_start + normalize::utf8Length(match.entry->surface) > start_pos) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool startsWithMultiMoraDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                           const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos >= codepoints.size()) {
+    return false;
+  }
+  constexpr size_t kMinimumParticleLength = 2;
+  constexpr size_t kParticleProbe = 4;
+  const size_t probe_end = std::min(codepoints.size(), start_pos + kParticleProbe);
+  for (size_t particle_end = start_pos + kMinimumParticleLength; particle_end <= probe_end; ++particle_end) {
+    const auto* entry = dict_manager->lookupExact(extractSubstring(codepoints, start_pos, particle_end));
+    if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleBinding) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager,
+                               const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                               core::ExtendedPOS particle_pos) {
+  if (dict_manager == nullptr || end_pos <= start_pos || end_pos > codepoints.size()) {
+    return false;
+  }
+  // Strip a trailing inflecting auxiliary. A focus particle can precede a
+  // negative (本だけない) or a copula (本だけだ / 本だけだった); neither
+  // sequence belongs inside a fabricated lexical candidate.
+  size_t tail_end = end_pos;
+  size_t total_len = end_pos - start_pos;
+  if (total_len >= 4 && codepoints[end_pos - 4] == U'な' && codepoints[end_pos - 3] == U'か' &&
+      codepoints[end_pos - 2] == U'っ' && codepoints[end_pos - 1] == U'た') {
+    tail_end = end_pos - 4;
+  } else if (total_len >= 3 && codepoints[end_pos - 3] == U'な' && codepoints[end_pos - 2] == U'か' &&
+             codepoints[end_pos - 1] == U'っ') {
+    tail_end = end_pos - 3;
+  } else if (total_len >= 2 && codepoints[end_pos - 2] == U'な' && codepoints[end_pos - 1] == U'い') {
+    tail_end = end_pos - 2;
+  }
+  total_len = tail_end - start_pos;
+  if (total_len >= 2 && codepoints[tail_end - 2] == U'だ' && codepoints[tail_end - 1] == U'っ') {
+    tail_end -= 2;
+  } else if (total_len >= 1 && codepoints[tail_end - 1] == U'だ') {
+    --tail_end;
+  }
+  // Probe particle suffixes of 2+ codepoints, keeping a non-empty prefix.
+  for (size_t particle_len = 2; start_pos + particle_len < tail_end; ++particle_len) {
+    std::string suffix = extractSubstring(codepoints, tail_end - particle_len, tail_end);
+    const dictionary::DictionaryEntry* suffix_entry = dict_manager->lookupExact(suffix);
+    if (suffix_entry != nullptr && suffix_entry->extended_pos == particle_pos) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool endsWithFocusParticleTail(const dictionary::DictionaryManager* dict_manager,
+                               const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  return endsWithParticleTailOfPos(dict_manager, codepoints, start_pos, end_pos,
+                                   core::ExtendedPOS::ParticleAdverbial) ||
+         endsWithParticleTailOfPos(dict_manager, codepoints, start_pos, end_pos, core::ExtendedPOS::ParticleBinding);
+}
+
+bool hasAuxiliaryNegativeBoundary(const dictionary::DictionaryManager* dict_manager,
+                                  const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 2 || end_pos > codepoints.size()) {
+    return false;
+  }
+  auto has_exact_epos = [&](size_t span_start, size_t span_end, core::ExtendedPOS epos) {
+    const auto* entry = dict_manager->lookupExact(extractSubstring(codepoints, span_start, span_end));
+    return entry != nullptr && entry->extended_pos == epos;
+  };
+  for (size_t boundary = start_pos + 1; boundary + 1 < end_pos; ++boundary) {
+    const std::string prefix = extractSubstring(codepoints, start_pos, boundary);
+    const auto* prefix_entry = dict_manager->lookupExact(prefix);
+    const bool is_closed_class_prefix =
+        prefix_entry != nullptr && (prefix_entry->pos == core::PartOfSpeech::Auxiliary ||
+                                    prefix_entry->extended_pos == core::ExtendedPOS::AuxExcessive);
+    if (!is_closed_class_prefix) {
+      continue;
+    }
+    for (size_t negative_end = boundary + 1; negative_end <= end_pos; ++negative_end) {
+      if (!has_exact_epos(boundary, negative_end, core::ExtendedPOS::AuxNegativeNai)) {
+        continue;
+      }
+      if (negative_end == end_pos || has_exact_epos(negative_end, end_pos, core::ExtendedPOS::AuxTenseTa)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool formalNounFollowsAt(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                         size_t pos) {
+  if (dict_manager == nullptr || pos >= codepoints.size()) {
+    return false;
+  }
+  const std::string remaining = extractSubstring(codepoints, pos, codepoints.size());
+  for (const auto& result : dict_manager->lookup(remaining, 0)) {
+    if (result.entry != nullptr && result.entry->extended_pos == core::ExtendedPOS::NounFormal) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string lookupVerbLemma(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
+                            std::string_view fallback) {
+  if (dict_manager != nullptr) {
+    const auto* entry = dict_manager->lookupExact(surface, core::PartOfSpeech::Verb);
+    if (entry != nullptr && !entry->lemma.empty()) {
+      return entry->lemma;
+    }
+  }
+  return std::string(fallback);
+}
+
+bool isVerifiedVerbBase(const dictionary::DictionaryManager* dict_manager, const grammar::Inflection& inflection,
+                        std::string_view base_form, float min_confidence, bool require_godan) {
+  if (isVerbInDictionary(dict_manager, base_form)) {
+    return true;
+  }
+  auto infl_result = inflection.getBest(base_form);
+  bool type_ok = require_godan ? grammar::isGodanVerbType(infl_result.verb_type)
+                               : infl_result.verb_type == grammar::VerbType::Ichidan;
+  return infl_result.confidence > min_confidence && type_ok;
+}
+
+}  // namespace suzume::analysis::verb_helpers

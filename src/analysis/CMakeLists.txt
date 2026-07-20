@@ -46,6 +46,7 @@ add_library(suzume_analysis OBJECT
   unknown_speech.cpp
   verb_candidates.cpp
   verb_candidates_helpers.cpp
+  verb_candidates_helpers_dictionary.cpp
   verb_candidates_hiragana.cpp
   verb_candidates_hiragana_mizenkei.cpp
   verb_candidates_hiragana_onbin.cpp
