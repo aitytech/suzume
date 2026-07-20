@@ -437,6 +437,8 @@ constexpr float kNaAdjSingleKanjiCopulaCost = 1.5F;  // ambiguous single kanji +
 constexpr float kHiraAdjConfMin = 0.55F;        // default hiragana-only
 constexpr float kHiraAdjConfParticle = 0.50F;   // particle-starting sequences
 constexpr float kHiraAdjConfProlonged = 0.40F;  // prolonged sound mark (すごーい)
+constexpr float kHiraAdjUnverifiedNaiRenyokeiMin = 0.30F;
+constexpr float kDerivedSuffixAdjectiveConfidence = 0.30F;
 
 // Hiragana i-adjective cost adjustments
 constexpr float kProlongedSoundBonus = -0.1F;   // colloquial すごーい, やばーい
@@ -553,6 +555,18 @@ constexpr float kFormalNounCopularTopicBonus = -0.8F;
 // A formal copular topic before ある is a fixed syntactic unit (ではある),
 // preferred over the separately analyzed copula and topic particle.
 constexpr float kCopularTopicAruCandidateCost = -3.0F;
+
+// A sentence-initial evaluative ことに is a closed adverbial unit only when
+// the following nominal predicate is explicitly copular.  This cost keeps
+// the unit available without changing ordinary こと + に argument phrases.
+constexpr float kEvaluativeKotoniCandidateCost = -3.0F;
+
+// A pure-hiragana deverbal nominal ending in -み before the independent
+// adjective continuative なく (よどみなく, たゆみなく) is a content noun,
+// not a fabricated inflected verb.  A lexicalized full-span adjective is
+// otherwise spuriously cheaper, so the productive boundary needs the same
+// modest preference as other contextually nominalized continuatives.
+constexpr float kHiraganaNominalNakuCandidateBonus = -1.5F;
 
 // The quoted final-particle pair かなと keeps two explicit sentence-particle
 // boundaries despite the usual BOS/final-particle connection penalties.

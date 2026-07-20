@@ -235,6 +235,58 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                                        size_t hiragana_end, const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
                                        std::vector<UnknownCandidate>& candidates) {
+  // A Godan passive can follow a multi-kana lexical stem (明かさ+れる,
+  // 逃がさ+れる), not only the first okurigana after kanji.  Find the A-row
+  // immediately before the passive continuation, then validate the complete
+  // observed inflection so an arbitrary kanji+kana sequence cannot become a
+  // verb.  A multi-kanji nominal stem plus される remains a sahen analysis.
+  const std::string kanji_prefix = extractSubstring(codepoints, start_pos, kanji_end);
+  const bool is_multi_kanji_nominal = kanji_end - start_pos >= 2 && grammar::isAllKanji(kanji_prefix);
+  if (!is_multi_kanji_nominal) {
+    for (size_t mizenkei_end = kanji_end + 1; mizenkei_end < hiragana_end; ++mizenkei_end) {
+      const char32_t mizenkei_ending = codepoints[mizenkei_end - 1];
+      if (!grammar::isARowCodepoint(mizenkei_ending) ||
+          !vh::isPassiveAuxContinuation(codepoints, mizenkei_end + 1, /*strict_masu=*/true)) {
+        continue;
+      }
+      const grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(mizenkei_ending);
+      const std::string_view base_suffix = grammar::godanBaseSuffixFromARow(mizenkei_ending);
+      if (verb_type == grammar::VerbType::Unknown || base_suffix.empty()) {
+        continue;
+      }
+      const std::string surface = extractSubstring(codepoints, start_pos, mizenkei_end);
+      const std::string stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
+      const std::string base_form = stem + std::string(base_suffix);
+      bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
+      if (!is_valid_verb) {
+        // The passive auxiliary itself is sufficient inflectional evidence.
+        // Do not include later auxiliary chains (〜れていない), because their
+        // competing analyses can mask the lexical Godan base we are checking.
+        size_t observed_end = mizenkei_end + 2;  // れ + る/た/て
+        const char32_t after_re = codepoints[mizenkei_end + 1];
+        if ((after_re == U'な' || after_re == U'ま') && observed_end < hiragana_end) {
+          ++observed_end;  // れない / れます
+        }
+        const std::string observed_form = extractSubstring(codepoints, start_pos, observed_end);
+        for (const auto& inflection_candidate : inflection.analyze(observed_form)) {
+          if (inflection_candidate.verb_type == verb_type && inflection_candidate.base_form == base_form &&
+              inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) {
+            is_valid_verb = true;
+            break;
+          }
+        }
+      }
+      const std::string competing_ichidan = surface + "れる";
+      if (is_valid_verb && !vh::isVerbInDictionary(dict_manager, competing_ichidan)) {
+        candidates.push_back(makeVerbCandidate(surface, start_pos, mizenkei_end, candidate::verb_cost::kStrongBonus,
+                                               base_form, grammar::verbTypeToConjType(verb_type), true,
+                                               CandidateOrigin::VerbKanji, candidate::kHighOriginConfidence,
+                                               "godan_mizenkei_passive_multi", core::ExtendedPOS::VerbMizenkei));
+      }
+      break;
+    }
+  }
+
   // A godan potential verb inflects as Ichidan. In the negative adverbial
   // pattern 読めなく/書けなく, its e-row stem must therefore be available as
   // the mizenkei of 読める/書ける, rather than only as the conditional form of
@@ -333,6 +385,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
         // E.g., 聞かせられた → 聞か (mizenkei) + せ (causative AUX) + られ + た
         //       書かせる → 書か (mizenkei) + せる (causative AUX)
         bool is_causative_pattern = false;
+        bool is_shortened_causative_passive = false;
         if (next_char == U'せ') {
           // せ followed by られ, る, た, て, etc.
           if (mizenkei_end + 1 < codepoints.size()) {
@@ -340,6 +393,15 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
             // せら (せられる, せられた)
             if (after_se == U'ら') {
               is_causative_pattern = true;
+            }
+            // Shortened causative-passive: 負わ+さ+れる,
+            // 読ま+さ+れた. The さ is the causative auxiliary and the
+            // following れ starts the passive auxiliary, not an inflection
+            // of an independent lexical verb.
+            else if (after_se == U'れ' &&
+                     vh::isPassiveAuxContinuation(codepoints, mizenkei_end + 2, /*strict_masu=*/true)) {
+              is_causative_pattern = true;
+              is_shortened_causative_passive = true;
             }
             // せる, せた, せて
             else if (after_se == U'る' || after_se == U'た' || after_se == U'て') {
@@ -395,9 +457,19 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                 // - WA-row (わ行): passive (奪われる) doesn't conflict with potential
                 // - RA-row (ら行): Xらる is not a valid modern verb, so Xられる
                 //   is always passive of Xる (e.g., 縛られる = passive of 縛る)
+                // - SA-row (さ行): Xさ+れる is the productive passive of
+                //   an open-class Godan-sa verb. The all-kanji sahen guard
+                //   above retains the nominal + される analysis where needed.
                 bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
-                // For passive pattern, allow inflection fallback for WA-row and RA-row
-                bool allow_inflection_fallback = !is_passive_pattern || first_hira == U'わ' || first_hira == U'ら';
+                // The shortened causative-passive is surface-ambiguous with
+                // a lexical Godan-sa passive (明かさ+れる). Require an
+                // attested base for this shortened path so the productive
+                // open-class SA-row analysis remains available without
+                // fabricating an unrelated underlying verb.
+                const bool is_base_dict_verb = is_valid_verb;
+                // For passive pattern, allow inflection fallback for WA-, RA-, and SA-row.
+                bool allow_inflection_fallback =
+                    !is_passive_pattern || first_hira == U'わ' || first_hira == U'ら' || first_hira == U'さ';
                 if (!is_valid_verb && allow_inflection_fallback) {
                   // For non-passive patterns (ない, ぬ, etc.), allow inflection fallback
                   // For WA-row passive, also allow with higher confidence threshold
@@ -406,8 +478,29 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                   is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form, threshold, true);
                 }
 
+                // A bare open-class Godan-sa base can be too short for the
+                // generic analyzer to rank confidently, while its explicit
+                // passive chain supplies the missing inflectional evidence.
+                // Validate that complete observed form before rejecting the
+                // productive mizenkei candidate; this remains type- and
+                // lemma-checked rather than accepting an arbitrary kanji+さ.
+                if (!is_valid_verb && is_passive_pattern && first_hira == U'さ') {
+                  const std::string observed_form = extractSubstring(codepoints, start_pos, hiragana_end);
+                  for (const auto& inflection_candidate : inflection.analyze(observed_form)) {
+                    if (inflection_candidate.verb_type == verb_type && inflection_candidate.base_form == base_form &&
+                        inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) {
+                      is_valid_verb = true;
+                      break;
+                    }
+                  }
+                }
+
                 // Skip irregular verb 来る for passive — its passive is 来+られる, not 来ら+れる
                 if (is_valid_verb && is_passive_pattern && base_form == "来る") {
+                  is_valid_verb = false;
+                }
+
+                if (is_valid_verb && is_shortened_causative_passive && !is_base_dict_verb) {
                   is_valid_verb = false;
                 }
 
@@ -456,10 +549,10 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                                              : is_passive_pattern ? "godan_mizenkei_passive"
                                                                   : "godan_mizenkei";
                   // Use explicit VerbMizenkei EPOS for negative/passive patterns to enable bigram connection
-                  core::ExtendedPOS epos =
-                      (is_nu_pattern || is_n_pattern || is_nai_pattern || is_nakatt_pattern || is_passive_pattern)
-                          ? core::ExtendedPOS::VerbMizenkei
-                          : core::ExtendedPOS::Unknown;
+                  core::ExtendedPOS epos = (is_nu_pattern || is_n_pattern || is_nai_pattern || is_nakatt_pattern ||
+                                            is_passive_pattern || is_causative_pattern)
+                                               ? core::ExtendedPOS::VerbMizenkei
+                                               : core::ExtendedPOS::Unknown;
                   candidates.push_back(makeVerbCandidate(surface, start_pos, mizenkei_end, cost, base_form,
                                                          grammar::verbTypeToConjType(verb_type), true,
                                                          CandidateOrigin::VerbKanji, 0.9F, info_pattern, epos));

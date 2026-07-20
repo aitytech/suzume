@@ -128,6 +128,7 @@ extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount] = {
     {"描く", "えがく", "く", V2VerbType::Godan},                     // 思い描く
     {"誤る", "あやまる", "る", V2VerbType::Godan},                   // 読み誤る
     {"尽くす", "つくす", "す", V2VerbType::Godan},                   // 立ち尽くす
+    {"聞かす", "きかす", "す", V2VerbType::Godan},                   // 言い聞かす
     {"引く", "ひく", "く", V2VerbType::Godan},                       // 差し引く, 値引く
     {"向かう", "むかう", "う", V2VerbType::Godan},                   // 立ち向かう
     {"並ぶ", "ならぶ", "ぶ", V2VerbType::Godan},                     // 立ち並ぶ

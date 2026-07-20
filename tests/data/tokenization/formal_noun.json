@@ -2287,6 +2287,28 @@
       ],
       "id": "kotoni_naru_result_expression",
       "input": "ことになる"
+    },
+    {
+      "description": "評価副詞 ことに のコピュラ文脈",
+      "expected": [
+        {
+          "lemma": "ことに",
+          "pos": "Adverb",
+          "surface": "ことに"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "literary_evaluative_kotoni",
+      "input": "ことに重要だ"
     }
   ],
   "description": "formal_noun tests",

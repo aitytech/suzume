@@ -1415,6 +1415,67 @@
       ],
       "id": "konohodo_shita",
       "input": "このほど確認した"
+    },
+    {
+      "description": "Literary degree adverb remains one search token",
+      "expected": [
+        {
+          "lemma": "いとも",
+          "pos": "Adverb",
+          "surface": "いとも"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "literary_itomo_adverb",
+      "input": "いとも簡単だ"
+    },
+    {
+      "description": "文語頻度副詞 たえず",
+      "expected": [
+        {
+          "lemma": "たえず",
+          "pos": "Adverb",
+          "surface": "たえず"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_taezu_adverb",
+      "input": "たえず書いた"
+    },
+    {
+      "description": "文語範囲副詞 あまねく",
+      "expected": [
+        {
+          "lemma": "あまねく",
+          "pos": "Adverb",
+          "surface": "あまねく"
+        },
+        {
+          "lemma": "広がる",
+          "pos": "Verb",
+          "surface": "広がる"
+        }
+      ],
+      "id": "literary_amaneku_adverb",
+      "input": "あまねく広がる"
     }
   ],
   "description": "adverb_fixed tests",

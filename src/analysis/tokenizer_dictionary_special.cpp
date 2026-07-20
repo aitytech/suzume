@@ -13,6 +13,30 @@
 
 namespace suzume::analysis::tokenizer_dictionary_detail {
 
+namespace {
+
+// ことに is the evaluative adverb only before a nominal predicate with an
+// explicit copula (ことに重要だ).  Restricting the context to that predicate
+// shape preserves productive formal-noun phrases such as ことに関する説明 and
+// 読むことにする.
+bool startsEvaluativeKotoni(const std::vector<char32_t>& codepoints, size_t start_pos) {
+  constexpr size_t kKotoniLength = 3;
+  if (start_pos + kKotoniLength >= codepoints.size() || codepoints[start_pos] != U'こ' ||
+      codepoints[start_pos + 1] != U'と' || codepoints[start_pos + 2] != U'に') {
+    return false;
+  }
+
+  size_t predicate_end = start_pos + kKotoniLength;
+  while (predicate_end < codepoints.size() &&
+         normalize::classifyChar(codepoints[predicate_end]) == normalize::CharType::Kanji) {
+    ++predicate_end;
+  }
+  return predicate_end > start_pos + kKotoniLength && predicate_end < codepoints.size() &&
+         codepoints[predicate_end] == U'だ';
+}
+
+}  // namespace
+
 void appendSpecialGrammarCandidates(core::Lattice& lattice, std::string_view text,
                                     const std::vector<char32_t>& codepoints, size_t start_pos, size_t byte_pos) {
   // 一方 is a conjunction only in its contrastive connective use before で.
@@ -45,6 +69,13 @@ void appendSpecialGrammarCandidates(core::Lattice& lattice, std::string_view tex
                     core::PartOfSpeech::Adverb, candidate::kCopularTopicAruCandidateCost, 0, "ことに",
                     dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
                     candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::Adverb, "result_kotoni_naru");
+  }
+
+  if (startsEvaluativeKotoni(codepoints, start_pos)) {
+    lattice.addEdge("ことに", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 3),
+                    core::PartOfSpeech::Adverb, candidate::kEvaluativeKotoniCandidateCost, 0, "ことに",
+                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
+                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::Adverb, "evaluative_kotoni");
   }
 
   // あらん限り is the classical existential mizenkei あら plus the

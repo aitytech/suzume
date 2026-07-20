@@ -89,6 +89,15 @@ float computeCompoundNominalizationBonus(const core::LatticeEdge& prev, const co
 float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // The one-mora て dictionary homograph cannot itself be a terminal
+  // progressive before a nominalizer.  The AuxAspectIru → の rule is for a
+  // complete いる/てる predicate; without this guard it fabricates paths such
+  // as すべ + て + の in front of a noun.
+  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && prev.surface == "て" &&
+      next.extended_pos == core::ExtendedPOS::ParticleNo) {
+    bonus += cost::kAlmostNever;
+  }
+
   // A generated renyokei ending in ず is a fused classical-negative path.
   // Before an independent finite predicate, the productive analysis is
   // mizenkei + ず + predicate (種類を問わ|ず|進む), not a fabricated verb

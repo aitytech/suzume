@@ -2261,6 +2261,50 @@
       ],
       "id": "sakigakete_compound_variant",
       "input": "先駆けて確認する"
+    },
+    {
+      "description": "Productive nominal-zukeru stem retains Ichidan lemma before passive",
+      "expected": [
+        {
+          "lemma": "印象づける",
+          "pos": "Verb",
+          "surface": "印象づけ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_inshozuke_passive",
+      "input": "印象づけられた"
+    },
+    {
+      "description": "Productive nominal-zukeru stem retains Ichidan lemma before te-form auxiliary",
+      "expected": [
+        {
+          "lemma": "印象づける",
+          "pos": "Verb",
+          "surface": "印象づけ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "literary_inshozuke_progressive",
+      "input": "印象づけている"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",

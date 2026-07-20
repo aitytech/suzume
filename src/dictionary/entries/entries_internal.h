@@ -61,6 +61,12 @@ constexpr EntrySpec formal_noun(const char* s, const char* lemma = "") {
   return {s, POS::Noun, EPOS::NounFormal, lemma};
 }
 
+// General-noun helper.  Use only for closed lexical nominal classes whose
+// part of speech cannot be supplied by a contextual grammar candidate.
+constexpr EntrySpec noun(const char* s, const char* lemma = "") {
+  return {s, POS::Noun, EPOS::Noun, lemma};
+}
+
 // Conjunction helper: creates CONJUNCTION entry
 // Usage: conj("しかし")
 constexpr EntrySpec conj(const char* s, const char* lemma = "") {

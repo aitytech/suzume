@@ -33,16 +33,22 @@ std::vector<UnknownCandidate> generateHiraganaNariNaAdjectiveCandidates(
     return candidates;
   }
 
-  // -やか/-らか are productive na-adjective endings.  Before the classical
-  // attributive auxiliary なる, the whole hiragana stem is an adjective
-  // (すこやかなる, あきらかなる), not a sequence of short verb candidates.
+  // -やか/-らか are productive na-adjective endings.  Before a na-adjective
+  // continuation, the whole hiragana stem is an adjective (すこやかなる,
+  // あきらかに), not a sequence of short verb candidates.
   // Keep the bounded scan local to one adjective-sized word so an earlier
   // hiragana adverb cannot be absorbed into the stem.
   constexpr size_t kMaxHiraganaNaAdjectiveLength = 6;
   for (size_t stem_end = start_pos + 3;
        stem_end <= codepoints.size() && stem_end - start_pos <= kMaxHiraganaNaAdjectiveLength; ++stem_end) {
-    if (char_types[stem_end - 1] != normalize::CharType::Hiragana || stem_end + 2 > codepoints.size() ||
-        extractSubstring(codepoints, stem_end, stem_end + 2) != "なる") {
+    if (char_types[stem_end - 1] != normalize::CharType::Hiragana || stem_end >= codepoints.size()) {
+      continue;
+    }
+    const bool has_classical_attributive =
+        stem_end + 2 <= codepoints.size() && extractSubstring(codepoints, stem_end, stem_end + 2) == "なる";
+    const bool has_na_adjective_continuation = codepoints[stem_end] == U'に' || codepoints[stem_end] == U'な' ||
+                                               codepoints[stem_end] == U'だ' || codepoints[stem_end] == U'さ';
+    if (!has_classical_attributive && !has_na_adjective_continuation) {
       continue;
     }
     const std::string stem = extractSubstring(codepoints, start_pos, stem_end);
@@ -93,7 +99,8 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
       if (is_yaka_pattern && has_na_adj_continuation) {
         std::string stem = extractSubstring(codepoints, start_pos, stem_end);
         candidates.push_back(makeNaAdjCandidate(stem, start_pos, stem_end, candidate::kNaAdjYakaCost, true,
-                                                CandidateOrigin::AdjectiveNa, 0.9F, "na_adj_yaka_raka"));
+                                                CandidateOrigin::AdjectiveNa, candidate::kHiraganaNaAdjNariConfidence,
+                                                "na_adj_yaka_raka"));
         return candidates;
       }
     }

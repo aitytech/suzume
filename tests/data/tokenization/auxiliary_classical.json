@@ -326,6 +326,76 @@
       ],
       "id": "narikeru_lexical_verb_past",
       "input": "なりける"
+    },
+    {
+      "description": "ひらがな名詞的連用形と なく の境界",
+      "expected": [
+        {
+          "lemma": "よどみ",
+          "pos": "Noun",
+          "surface": "よどみ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_yodominaku_split",
+      "input": "よどみなく話した"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "「たゆみなく」は連用名詞「たゆみ」と形容詞連用形「なく」の検索単位を保つ。ひらがな表記では動詞連用形との語彙的曖昧性を文脈だけで解消できず、名詞解析を採用する。"
+      },
+      "description": "ひらがな名詞的連用形と なく の派生例",
+      "expected": [
+        {
+          "lemma": "たゆむ",
+          "pos": "Verb",
+          "surface": "たゆみ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "literary_tayuminaku_split",
+      "input": "たゆみなく進む",
+      "suzume_expected": [
+        {
+          "lemma": "たゆみ",
+          "pos": "Noun",
+          "surface": "たゆみ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ]
     }
   ],
   "description": "auxiliary_classical tests",

@@ -29,6 +29,7 @@ EntrySpecRange getDeterminerEntries() {
       det("単なる", ""),    // fixed attributive determiner, not a finite verb
       det("たいした", ""),  // 大した - prevent 願望たい+し+た split (たいした問題)
       det("大した", ""),    // kanji spelling of the fixed evaluative determiner
+      det("あくる", ""),    // 時間名詞を修飾する固定連体詞
       det("何らかの", ""),  // indefinite determiner (何らかの方法)
 
       // Demonstrative manner determiners (指示様態連体詞)

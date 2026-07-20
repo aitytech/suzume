@@ -22,7 +22,7 @@ bool beginsMizenkeiAuxiliary(std::string_view text, size_t start_byte, std::stri
     return false;
   }
   const std::string_view following = text.substr(start_byte + mizenkei.size(), core::kJapaneseCharBytes);
-  return following == "れ" || following == "せ" || following == "な" || following == "ず";
+  return following == "れ" || following == "さ" || following == "せ" || following == "な" || following == "ず";
 }
 
 bool isCompoundVerbOrNominalizationAttested(const dictionary::DictionaryManager& dict_manager, std::string_view base,
@@ -102,6 +102,15 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // after the V1 renyokei and therefore has no te-form particle before it.
     if (v2_reading == "いる" && v2_start > start_pos &&
         (codepoints[v2_start - 1] == U'て' || codepoints[v2_start - 1] == U'で')) {
+      continue;
+    }
+
+    // Hiragana そう before the conditional/copular な is the appearance
+    // auxiliary (起こり+そう+なら), not the lexical V2 添う.  Keep the
+    // kanji-written lexical compound (寄り添うなら) eligible; this guard
+    // only resolves the homographic hiragana auxiliary sequence.
+    if (v2_reading == "そう" && char_types[v2_start] == CharType::Hiragana &&
+        utf8::startsWith(text.substr(v2_start_byte), "そうな")) {
       continue;
     }
 

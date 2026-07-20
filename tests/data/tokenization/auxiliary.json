@@ -3955,6 +3955,77 @@
       ],
       "id": "teitadakeru",
       "input": "見ていただける"
+    },
+    {
+      "description": "Kanji Ichidan stem before causative-passive auxiliaries",
+      "expected": [
+        {
+          "lemma": "確かめる",
+          "pos": "Verb",
+          "surface": "確かめ"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_tashikame_causative_passive",
+      "input": "確かめさせられた"
+    },
+    {
+      "description": "Kanji Ichidan stem remains intact before passive auxiliary",
+      "expected": [
+        {
+          "lemma": "確かめる",
+          "pos": "Verb",
+          "surface": "確かめ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_tashikame_passive",
+      "input": "確かめられた"
+    },
+    {
+      "description": "Multi-kana Ichidan stem remains intact before passive auxiliary",
+      "expected": [
+        {
+          "lemma": "遠ざける",
+          "pos": "Verb",
+          "surface": "遠ざけ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_tozakere_passive",
+      "input": "遠ざけられた"
     }
   ],
   "description": "auxiliary tests",

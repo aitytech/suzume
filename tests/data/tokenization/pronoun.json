@@ -1254,6 +1254,43 @@
           "surface": "する"
         }
       ]
+    },
+    {
+      "description": "Closed pronoun before Ichidan causative-passive chain",
+      "expected": [
+        {
+          "lemma": "おのれ",
+          "pos": "Pronoun",
+          "surface": "おのれ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "省みる",
+          "pos": "Verb",
+          "surface": "省み"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_onore_voice_chain",
+      "input": "おのれを省みさせられた"
     }
   ],
   "description": "Pronouns",

@@ -447,6 +447,14 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     return;
   }
 
+  // The two-mora case particles から・より・まで can otherwise look like a
+  // kanji verb stem ending in ら/り.  They are grammatical boundaries, so
+  // never use them as the renyokei portion of a deverbal 手/場 noun.
+  const std::string hiragana_portion = extractSubstring(codepoints, kanji_end, hiragana_end);
+  if (utf8::equalsAny(hiragana_portion, {"から", "より", "まで"})) {
+    return;
+  }
+
   // Check for suffix kanji: 物, 方, 所, 手, 場
   if (hiragana_end >= codepoints.size()) {
     return;

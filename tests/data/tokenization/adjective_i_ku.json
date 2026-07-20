@@ -688,6 +688,50 @@
       ],
       "id": "akaruku_hanasu",
       "input": "明るく話す"
+    },
+    {
+      "description": "純ひらがない形容詞の連用形",
+      "expected": [
+        {
+          "lemma": "あどけない",
+          "pos": "Adjective",
+          "surface": "あどけなく"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_adoke_naku",
+      "input": "あどけなく話した"
+    },
+    {
+      "description": "助詞と同形の語頭を持つひらがな形容詞連用形",
+      "expected": [
+        {
+          "lemma": "つつましい",
+          "pos": "Adjective",
+          "surface": "つつましく"
+        },
+        {
+          "lemma": "暮らす",
+          "pos": "Verb",
+          "surface": "暮らし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_tsutsumashiku",
+      "input": "つつましく暮らした"
     }
   ],
   "description": "I-adjectives ku-forms (連用形) - adverbial, negative, te-form, ku-naru patterns",

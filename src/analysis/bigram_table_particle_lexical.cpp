@@ -419,6 +419,12 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Strong bonus needed because そう(ADV) has dict bonus (-0.5) vs そう(AUX) cost (0.4)
       {EPOS::AuxAspectShimau, EPOS::AuxAppearanceSou, cost::kVeryStrongBonus},
 
+      // Appearance そう can take a conditional connective (降り+そう+なら).
+      // This preserves the auxiliary reading over the homographic
+      // demonstrative adverb, whose general adverbial conditional path is
+      // otherwise cheaper.
+      {EPOS::AuxAppearanceSou, EPOS::ParticleConj, cost::kStrongBonus},
+
       // Other → AuxAppearanceSou - penalty (様態そう shouldn't appear at BOS)
       // At sentence start, そう should be demonstrative na-adjective, not appearance aux
       {EPOS::Other, EPOS::AuxAppearanceSou, cost::kMinor},

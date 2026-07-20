@@ -3620,6 +3620,60 @@
       ],
       "id": "wo_seta",
       "input": "絵を見せた"
+    },
+    {
+      "description": "Pure-hiragana Godan-wa irrealis before negative auxiliary",
+      "expected": [
+        {
+          "lemma": "ととのう",
+          "pos": "Verb",
+          "surface": "ととのわ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "条件",
+          "pos": "Noun",
+          "surface": "条件"
+        }
+      ],
+      "id": "literary_totono_wa_nai",
+      "input": "ととのわない条件"
+    },
+    {
+      "description": "Open-class Godan-sa passive preserves mizenkei boundary",
+      "expected": [
+        {
+          "lemma": "明かす",
+          "pos": "Verb",
+          "surface": "明かさ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "い"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "literary_akasa_passive",
+      "input": "明かされていない"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

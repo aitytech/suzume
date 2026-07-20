@@ -58,6 +58,24 @@ bool hasSokuonbinTenseEvidence(const std::vector<char32_t>& codepoints, size_t s
   return false;
 }
 
+// A long pure-hiragana sequence ending in わない carries explicit Godan-wa
+// irrealis evidence. This lets the sequence scanner retain particle-shaped
+// internal morae only when the full inflection proves they belong to a verb.
+bool hasLongGodanWaNegativeEvidence(const std::vector<char32_t>& codepoints, size_t start_pos, size_t current_pos,
+                                    const std::vector<normalize::CharType>& char_types) {
+  for (size_t negative_pos = current_pos + 1; negative_pos + 2 < codepoints.size() && negative_pos - start_pos < 12;
+       ++negative_pos) {
+    if (char_types[negative_pos] != normalize::CharType::Hiragana) {
+      break;
+    }
+    if (negative_pos >= start_pos + 3 && codepoints[negative_pos] == U'わ' && codepoints[negative_pos + 1] == U'な' &&
+        codepoints[negative_pos + 2] == U'い') {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -74,6 +92,33 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   if (vh::startsInsideDictionaryParticle(codepoints, start_pos, dict_manager)) {
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " inside_dictionary_particle\n");
     return candidates;
+  }
+
+  // In the causative-passive chain V未然+させ+られ+た, られ is the
+  // closed-class passive auxiliary. Do not fabricate an independent
+  // hiragana verb られる/られた across that already-proven auxiliary
+  // boundary; the dictionary auxiliary candidate owns this position.
+  if (start_pos >= 2 && codepoints[start_pos] == U'ら' && codepoints[start_pos - 1] == U'せ' &&
+      codepoints[start_pos - 2] == U'さ') {
+    return candidates;
+  }
+
+  // Do not start a fabricated hiragana Ichidan verb in the final mora of a
+  // kanji-written Ichidan stem immediately before a voice auxiliary:
+  // 確かめ+られ, 確かめ+させ, 見せ+させ. The preceding kanji-tail candidate
+  // owns that lexical stem and the closed-class auxiliary owns the suffix.
+  const bool voice_auxiliary_follows =
+      (start_pos + 2 < codepoints.size() && codepoints[start_pos + 1] == U'さ' && codepoints[start_pos + 2] == U'せ') ||
+      (start_pos + 2 < codepoints.size() && codepoints[start_pos + 1] == U'ら' && codepoints[start_pos + 2] == U'れ');
+  if (voice_auxiliary_follows &&
+      (grammar::isERowCodepoint(codepoints[start_pos]) || grammar::isIRowCodepoint(codepoints[start_pos]))) {
+    size_t kana_stem_start = start_pos;
+    while (kana_stem_start > 0 && char_types[kana_stem_start - 1] == normalize::CharType::Hiragana) {
+      --kana_stem_start;
+    }
+    if (kana_stem_start > 0 && char_types[kana_stem_start - 1] == normalize::CharType::Kanji) {
+      return candidates;
+    }
   }
 
   // Context-gated irregular 来る mizenkei: こ + ない-family negative
@@ -185,7 +230,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       char32_t curr = codepoints[hiragana_end];
 
       // Check for particle-like characters (common particles + も, や)
-      if (normalize::isNeverVerbStemAfterKanji(curr)) {
+      const bool has_godan_wa_negative =
+          hasLongGodanWaNegativeEvidence(codepoints, start_pos, hiragana_end, char_types);
+      if (normalize::isNeverVerbStemAfterKanji(curr) && !(curr == U'の' && has_godan_wa_negative)) {
         SUZUME_DEBUG_LOG_TRACE("[HIRA_SEQ] pos=" << hiragana_end << " char=U+" << std::hex
                                                  << static_cast<uint32_t>(curr) << std::dec
                                                  << " action=break (isNeverVerbStemAfterKanji)\n");
@@ -308,6 +355,19 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         if (curr == U'と' && prev == U'っ') {
           ++hiragana_end;
           continue;
+        }
+
+        // A medial と can be part of an all-hiragana Godan-wa stem rather
+        // than the quotative particle when the remaining contiguous kana
+        // explicitly end in the wa-row irrealis plus ない.  The final わない
+        // is a unique Godan-wa signal, unlike the more ambiguous らない, and
+        // requiring at least three preceding morae keeps short particle
+        // sequences out of this verb path.
+        if (curr == U'と') {
+          if (has_godan_wa_negative) {
+            ++hiragana_end;
+            continue;
+          }
         }
 
         // Otherwise, treat as particle

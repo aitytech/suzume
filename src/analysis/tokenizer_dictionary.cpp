@@ -285,6 +285,9 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // particle に (本の+わりに, 読む+わりに). Before an adjective it instead
     // forms the fixed comparative adverb (年齢の+わりに+若い).
     if (result.entry->pos == core::PartOfSpeech::Adverb && result.entry->lemma == "わりに" && start_pos > 0) {
+      if (startsInsideKanjiLedVerb(lattice, codepoints, start_pos)) {
+        continue;
+      }
       const char32_t preceding = codepoints[start_pos - 1];
       bool followed_by_adjective = false;
       if (end_pos < codepoints.size()) {

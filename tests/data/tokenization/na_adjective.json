@@ -214,6 +214,109 @@
       ],
       "id": "hobo_jida",
       "input": "ほぼ同じだ"
+    },
+    {
+      "description": "ひらがなやか形容詞の連用用法",
+      "expected": [
+        {
+          "lemma": "みやびやか",
+          "pos": "Adjective",
+          "surface": "みやびやか"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_miyabiyaka_ni",
+      "input": "みやびやかに話した"
+    },
+    {
+      "description": "ひらがならか形容詞の連用用法",
+      "expected": [
+        {
+          "lemma": "こまやか",
+          "pos": "Adjective",
+          "surface": "こまやか"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_komayaka_ni",
+      "input": "こまやかに書いた"
+    },
+    {
+      "description": "ひらがなやか形容詞の名詞化",
+      "expected": [
+        {
+          "lemma": "こまやか",
+          "pos": "Adjective",
+          "surface": "こまやか"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "保つ",
+          "pos": "Verb",
+          "surface": "保つ"
+        }
+      ],
+      "id": "literary_komayakasa",
+      "input": "こまやかさを保つ"
+    },
+    {
+      "description": "評価用法のナ形容詞 もっとも",
+      "expected": [
+        {
+          "lemma": "もっとも",
+          "pos": "Adjective",
+          "surface": "もっとも"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        }
+      ],
+      "id": "literary_mottomo_na",
+      "input": "もっともな説明"
     }
   ],
   "description": "na_adjective tests",

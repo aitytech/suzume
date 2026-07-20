@@ -350,6 +350,48 @@
       ],
       "id": "nitsuite_meru",
       "input": "確認について進める"
+    },
+    {
+      "description": "Productive particle and auxiliary sequence remains split",
+      "expected": [
+        {
+          "lemma": "いずれ",
+          "pos": "Adverb",
+          "surface": "いずれ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "literary_izure_ni_shite_mo_split",
+      "input": "いずれにしても確認する"
     }
   ],
   "description": "compound_particle tests",

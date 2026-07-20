@@ -262,12 +262,70 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
   }};
   static constexpr std::array<std::string_view, 2> kNominalSuffixVerbStems = {"め", "づ"};
 
+  // The productive nominal suffix ～づける is an Ichidan verb (意味づける,
+  // 印象づける), distinct from the Godan ～づく.  Its renyokei is locally
+  // ambiguous with the conditional of ～づく, so require an Ichidan-only
+  // continuation before emitting it.  This lets voice and te-form chains
+  // select the grammatically licensed lemma without changing standalone
+  // nominal or conditional uses.
+  struct IchidanZukeruForm {
+    std::string_view inflection;
+    core::ExtendedPOS extended_pos;
+  };
+  static constexpr std::array<IchidanZukeruForm, 5> kIchidanZukeruForms = {{
+      {"づける", core::ExtendedPOS::VerbShuushikei},
+      {"づけ", core::ExtendedPOS::VerbRenyokei},
+      {"づけれ", core::ExtendedPOS::VerbKateikei},
+      {"づけよ", core::ExtendedPOS::VerbMeireikei},
+      {"づけろ", core::ExtendedPOS::VerbMeireikei},
+  }};
+  for (const auto& form : kIchidanZukeruForms) {
+    const size_t form_length = normalize::utf8Length(form.inflection);
+    const size_t candidate_end = base_end + form_length;
+    if (candidate_end > codepoints.size() || extractSubstring(codepoints, base_end, candidate_end) != form.inflection) {
+      continue;
+    }
+    const bool voice_follows = candidate_end + 1 < codepoints.size() && codepoints[candidate_end] == U'ら' &&
+                               codepoints[candidate_end + 1] == U'れ';
+    const bool te_or_past_follows =
+        candidate_end < codepoints.size() && (codepoints[candidate_end] == U'て' || codepoints[candidate_end] == U'た');
+    const bool negative_follows = candidate_end + 1 < codepoints.size() && codepoints[candidate_end] == U'な' &&
+                                  codepoints[candidate_end + 1] == U'い';
+    const bool polite_follows = candidate_end < codepoints.size() && codepoints[candidate_end] == U'ま';
+    if (form.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+        !(voice_follows || te_or_past_follows || negative_follows || polite_follows)) {
+      continue;
+    }
+
+    const std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
+    const std::string lemma = extractSubstring(codepoints, start_pos, base_end) + "づける";
+    auto candidate =
+        makeVerbCandidate(surface, start_pos, candidate_end, candidate::kProductiveSuffixVerbCost, lemma,
+                          dictionary::ConjugationType::Ichidan, true, CandidateOrigin::SuffixPattern,
+                          candidate::kDictionaryOriginConfidence, "nominal_ichidan_zukeru_suffix", form.extended_pos);
+    candidate.lemma_verified = true;
+    candidates.push_back(std::move(candidate));
+    return candidates;
+  }
+
   for (const auto& suffix_stem : kNominalSuffixVerbStems) {
     for (const auto& form : kGodanKaForms) {
       constexpr size_t kSuffixVerbFormLength = 2;
       const size_t candidate_end = base_end + kSuffixVerbFormLength;
       const std::string form_surface = std::string(suffix_stem) + std::string(form.inflection);
       if (candidate_end > codepoints.size() || extractSubstring(codepoints, base_end, candidate_end) != form_surface) {
+        continue;
+      }
+
+      // A Godan conditional cannot be followed by the passive auxiliary.
+      // In a surface such as 漢字語+づけ+られ, け is the Ichidan stem of
+      // ～づける, not the conditional of the productive ～づく pattern.
+      // Keep the productive Godan candidate in its valid conditional context
+      // (～づけば) while rejecting only the impossible voice attachment.
+      const bool conditional_before_passive =
+          form.extended_pos == core::ExtendedPOS::VerbKateikei && candidate_end + 1 < codepoints.size() &&
+          codepoints[candidate_end] == U'ら' && codepoints[candidate_end + 1] == U'れ';
+      if (conditional_before_passive) {
         continue;
       }
 

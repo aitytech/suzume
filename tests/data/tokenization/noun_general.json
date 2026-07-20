@@ -3972,6 +3972,131 @@
       ],
       "id": "parallel_renyokei_nominal",
       "input": "確認の上がり下がりを見る"
+    },
+    {
+      "description": "Case particle remains separate before verb and deverbal-hand pattern",
+      "expected": [
+        {
+          "lemma": "自分",
+          "pos": "Noun",
+          "surface": "自分"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "手伝う",
+          "pos": "Verb",
+          "surface": "手伝う"
+        }
+      ],
+      "id": "literary_case_particle_before_deverbal_hand",
+      "input": "自分から手伝う"
+    },
+    {
+      "description": "Two-mora case particle is not absorbed before following kanji noun",
+      "expected": [
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "手紙",
+          "pos": "Noun",
+          "surface": "手紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "受ける",
+          "pos": "Verb",
+          "surface": "受ける"
+        }
+      ],
+      "id": "literary_case_particle_before_kanji_noun",
+      "input": "人から手紙を受ける"
+    },
+    {
+      "description": "Kanji verb nominalization remains intact before case particle rather than exposing fixed adverb interior",
+      "expected": [
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わり"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        }
+      ],
+      "id": "literary_nominalized_renyokei_before_case",
+      "input": "作業の終わりに"
+    },
+    {
+      "description": "全称名詞 すべて の格助詞接続",
+      "expected": [
+        {
+          "lemma": "すべて",
+          "pos": "Noun",
+          "surface": "すべて"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "揃う",
+          "pos": "Verb",
+          "surface": "揃う"
+        }
+      ],
+      "id": "literary_subete_noun_case",
+      "input": "すべてが揃う"
+    },
+    {
+      "description": "全称名詞 すべて の連体修飾",
+      "expected": [
+        {
+          "lemma": "すべて",
+          "pos": "Noun",
+          "surface": "すべて"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        }
+      ],
+      "id": "literary_subete_noun_no",
+      "input": "すべての資料"
     }
   ],
   "description": "General nouns",

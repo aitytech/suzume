@@ -72,12 +72,18 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         const grammar::InflectionCandidate& ichidan_cand = bests.ichidan;
         const grammar::InflectionCandidate& suru_cand = bests.suru;
         const grammar::InflectionCandidate& godan_cand = bests.godan;
+        const bool causative_follows = vh::causativeSaseFollowsAt(codepoints, renyokei_end);
+        const bool passive_follows = renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end] == U'ら' &&
+                                     codepoints[renyokei_end + 1] == U'れ' &&
+                                     vh::isPassiveAuxContinuation(codepoints, renyokei_end + 2, /*strict_masu=*/true);
         // Skip if there's a suru-verb or godan-verb candidate with higher confidence
         // e.g., 勉強し has suru conf=0.82 vs ichidan conf=0.3 - prefer suru
         // e.g., 走り has godan conf=0.61 vs ichidan conf=0.3 - prefer godan
         const bool ichidan_base_is_dict = vh::isVerbInDictionary(dict_manager, ichidan_cand.base_form);
-        bool prefer_suru = !ichidan_base_is_dict && (suru_cand.confidence > ichidan_cand.confidence);
-        bool prefer_godan = !ichidan_base_is_dict && (godan_cand.confidence > ichidan_cand.confidence);
+        bool prefer_suru = !causative_follows && !passive_follows && !ichidan_base_is_dict &&
+                           (suru_cand.confidence > ichidan_cand.confidence);
+        bool prefer_godan = !causative_follows && !passive_follows && !ichidan_base_is_dict &&
+                            (godan_cand.confidence > ichidan_cand.confidence);
         // Use different thresholds for e-row vs i-row patterns:
         // - I-row (じ, み, etc.): lower threshold (0.28) - these are distinctively verb stems
         //   and get penalized by ichidan_kanji_i_row_stem, so need lower threshold
@@ -93,8 +99,7 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         // not 感じ(NOUN) + さ + せる); standalone 感じ stays NOUN.
         const char32_t continuation = renyokei_end < codepoints.size() ? codepoints[renyokei_end] : U'\0';
         bool verb_aux_follows = continuation == U'た' || continuation == U'て' ||
-                                vh::masuAuxFollowsAt(codepoints, renyokei_end) ||
-                                vh::causativeSaseFollowsAt(codepoints, renyokei_end);
+                                vh::masuAuxFollowsAt(codepoints, renyokei_end) || causative_follows || passive_follows;
         // A dictionary-verified single-kanji Ichidan base followed by て and
         // a contracted progressive or past marker is a te-form boundary
         // (見+てる, 見+て+た), not a fabricated verb such as 見てる.
@@ -103,6 +108,15 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
                                           vh::isSingleKanjiIchidan(codepoints[start_pos]);
         const bool negative_aux_follows =
             continuation == U'な' && renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end + 1] == U'い';
+        // An Ichidan verb uses the same stem before the classical negative
+        // auxiliaries ぬ/ず/ざる/ざれ as it does before ない.  In this
+        // environment the candidate surface is the full stem, so recover its
+        // lemma by appending る rather than asking the standalone inflection
+        // analyzer to interpret a final て as a te-form suffix.
+        const bool classical_negative_aux_follows =
+            continuation == U'ぬ' || continuation == U'ず' ||
+            (continuation == U'ざ' && renyokei_end + 1 < codepoints.size() &&
+             (codepoints[renyokei_end + 1] == U'る' || codepoints[renyokei_end + 1] == U'れ'));
         // A multi-kanji nominal stem followed by せ+ん is the literary
         // irrealis of する (解決+せ+ん), not an unverified Ichidan verb
         // ending in ～せる.  Dictionary-verified lexical verbs such as
@@ -177,21 +191,25 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
             !unverified_multi_kanji_suru_mizen) {
           // Negative cost to strongly favor split over combined analysis
           // Combined forms get optimal_length bonus (-0.5), so we need to be lower
-          float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
-                                                            verb_opts.confidence_cost_scale_small);
+          float base_cost = (causative_follows || passive_follows)
+                                ? candidate::verb_cost::kStrongBonus
+                                : candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
+                                                                  verb_opts.confidence_cost_scale_small);
           // Ichidan renyokei stems are valid morphological units, so mark the
           // candidate as suffixed to avoid the generic length penalty.
           // Set lemma to the base form (e.g., 入れ → 入れる, 論じ → 論じる)
           // This is critical for correct lemmatization when the surface is ambiguous
           // (e.g., 入れ could be godan 入る imperative or ichidan 入れる renyoukei)
+          const std::string lemma = classical_negative_aux_follows ? surface + "る" : ichidan_cand.base_form;
           auto renyokei_candidate = makeVerbCandidate(
-              surface, start_pos, renyokei_end, base_cost, ichidan_cand.base_form,
-              grammar::verbTypeToConjType(ichidan_cand.verb_type), true, CandidateOrigin::VerbKanji,
-              ichidan_cand.confidence, "ichidan_renyokei",
-              negative_aux_follows ? core::ExtendedPOS::VerbMizenkei : core::ExtendedPOS::VerbRenyokei);
+              surface, start_pos, renyokei_end, base_cost, lemma, grammar::verbTypeToConjType(ichidan_cand.verb_type),
+              true, CandidateOrigin::VerbKanji, ichidan_cand.confidence, "ichidan_renyokei",
+              (negative_aux_follows || classical_negative_aux_follows || causative_follows)
+                  ? core::ExtendedPOS::VerbMizenkei
+                  : core::ExtendedPOS::VerbRenyokei);
           renyokei_candidate.lemma_verified = ichidan_base_is_dict;
           candidates.push_back(std::move(renyokei_candidate));
-          SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << surface << " ichidan_renyokei lemma=" << ichidan_cand.base_form
+          SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << surface << " ichidan_renyokei lemma=" << lemma
                                                   << " cost=" << base_cost << "\n");
           // Also generate shuushikei (dictionary form) if followed by る
           // E.g., 捨てるわけ → 捨てる (VERB shuushikei) + わけ (NOUN)
@@ -230,13 +248,17 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
       bool follows_kanji_sahen_predicate =
           following_kanji_end > renyokei_end && following_kanji_end + 1 < codepoints.size() &&
           codepoints[following_kanji_end] == U'す' && codepoints[following_kanji_end + 1] == U'る';
+      const bool causative_follows = vh::causativeSaseFollowsAt(codepoints, renyokei_end);
+      const bool passive_follows = renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end] == U'ら' &&
+                                   codepoints[renyokei_end + 1] == U'れ' &&
+                                   vh::isPassiveAuxContinuation(codepoints, renyokei_end + 2, /*strict_masu=*/true);
       bool has_ichidan_continuation = renyokei_end < codepoints.size() &&
                                       (codepoints[renyokei_end] == U'る' || codepoints[renyokei_end] == U'て' ||
                                        codepoints[renyokei_end] == U'た' || codepoints[renyokei_end] == U'ま' ||
                                        codepoints[renyokei_end] == U'な' ||
                                        (codepoints[renyokei_end] == U'れ' && renyokei_end + 1 < codepoints.size() &&
                                         codepoints[renyokei_end + 1] == U'ば') ||
-                                       follows_kanji_sahen_predicate);
+                                       follows_kanji_sahen_predicate || causative_follows || passive_follows);
       if (!first_is_single_stem_ending && has_ichidan_continuation &&
           (grammar::isERowCodepoint(second_hira) || grammar::isIRowCodepoint(second_hira))) {
         std::string surface = extractSubstring(codepoints, start_pos, renyokei_end);
@@ -245,8 +267,8 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         const grammar::InflectionCandidate& ichidan_cand = bests.ichidan;
         const grammar::InflectionCandidate& suru_cand = bests.suru;
         const grammar::InflectionCandidate& godan_cand = bests.godan;
-        bool prefer_suru = (suru_cand.confidence > ichidan_cand.confidence);
-        bool prefer_godan = (godan_cand.confidence > ichidan_cand.confidence);
+        bool prefer_suru = !passive_follows && (suru_cand.confidence > ichidan_cand.confidence);
+        bool prefer_godan = !passive_follows && (godan_cand.confidence > ichidan_cand.confidence);
         // Higher confidence threshold for multi-char stems to avoid false positives
         constexpr float kMultiCharIchidanThreshold = 0.45F;
         // Skip surfaces ending in ない — almost always adjective (少ない) or negative suffix
@@ -270,12 +292,15 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
           bool absorbs_focus_particle =
               !base_is_dict_verb && vh::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, renyokei_end);
           if ((!surface_is_dict_entry || base_is_dict_verb) && !absorbs_focus_particle) {
-            float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
-                                                              verb_opts.confidence_cost_scale_small);
-            auto renyokei_candidate =
-                makeVerbCandidate(surface, start_pos, renyokei_end, base_cost, ichidan_cand.base_form,
-                                  grammar::verbTypeToConjType(ichidan_cand.verb_type), true, CandidateOrigin::VerbKanji,
-                                  ichidan_cand.confidence, "ichidan_renyokei_multi");
+            float base_cost = (causative_follows || passive_follows)
+                                  ? candidate::verb_cost::kStrongBonus
+                                  : candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
+                                                                    verb_opts.confidence_cost_scale_small);
+            auto renyokei_candidate = makeVerbCandidate(
+                surface, start_pos, renyokei_end, base_cost, ichidan_cand.base_form,
+                grammar::verbTypeToConjType(ichidan_cand.verb_type), true, CandidateOrigin::VerbKanji,
+                ichidan_cand.confidence, "ichidan_renyokei_multi",
+                causative_follows ? core::ExtendedPOS::VerbMizenkei : core::ExtendedPOS::VerbRenyokei);
             renyokei_candidate.lemma_verified = base_is_dict_verb;
             candidates.push_back(std::move(renyokei_candidate));
 

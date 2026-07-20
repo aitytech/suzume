@@ -476,6 +476,33 @@
       ],
       "id": "hiragana_raka_adjective_classical_nari",
       "input": "あきらかなる事実"
+    },
+    {
+      "description": "い形容詞語幹へのげ派生",
+      "expected": [
+        {
+          "lemma": "おくゆかしげ",
+          "pos": "Adjective",
+          "surface": "おくゆかしげ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_okuyukashige",
+      "input": "おくゆかしげに話した"
     }
   ],
   "description": "Compound adjectives (〜やすい、〜にくい、〜すぎる)",

@@ -32,6 +32,7 @@ using verb_helpers::isVerbInDictionary;
 
 using adj_detail::makeIAdjCandidate;
 using adj_detail::makeIAdjStemCandidate;
+using adj_detail::makeNaAdjCandidate;
 
 namespace {
 
@@ -72,6 +73,81 @@ void addReduplicatedShiiAdjective(std::vector<UnknownCandidate>& candidates, con
   }
 }
 
+void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& candidates,
+                                               const std::vector<char32_t>& codepoints, size_t start_pos,
+                                               const std::vector<normalize::CharType>& char_types,
+                                               const grammar::Inflection& inflection,
+                                               const dictionary::DictionaryManager* dict_manager) {
+  const size_t prefix_end = findCharRegionEnd(char_types, start_pos, 3, normalize::CharType::Hiragana);
+  if (prefix_end == start_pos || prefix_end >= char_types.size() ||
+      char_types[prefix_end] != normalize::CharType::Kanji) {
+    return;
+  }
+  const size_t kanji_end = findCharRegionEnd(char_types, prefix_end, 2, normalize::CharType::Kanji);
+  if (kanji_end == prefix_end || kanji_end >= char_types.size() ||
+      char_types[kanji_end] != normalize::CharType::Hiragana) {
+    return;
+  }
+  const size_t hiragana_end = findCharRegionEnd(char_types, kanji_end, 5, normalize::CharType::Hiragana);
+  for (size_t end_pos = hiragana_end; end_pos > kanji_end; --end_pos) {
+    const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+    const std::string tail_observed_surface = extractSubstring(codepoints, prefix_end, end_pos);
+    std::string tail_surface = tail_observed_surface;
+    if (utf8::endsWith(tail_surface, "く")) {
+      tail_surface.replace(tail_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
+    }
+    const auto& tail_candidates = inflection.analyze(tail_surface);
+    const bool tail_has_i_adjective = std::any_of(
+        tail_candidates.begin(), tail_candidates.end(), [](const grammar::InflectionCandidate& inflection_candidate) {
+          return inflection_candidate.verb_type == grammar::VerbType::IAdjective &&
+                 inflection_candidate.confidence >= candidate::kCompoundAdjConfMin;
+        });
+    const bool tail_has_verified_verb = std::any_of(
+        tail_candidates.begin(), tail_candidates.end(), [&](const grammar::InflectionCandidate& inflection_candidate) {
+          return inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
+                 isVerbInDictionary(dict_manager, inflection_candidate.base_form);
+        });
+    const auto& observed_tail_candidates = inflection.analyze(tail_observed_surface);
+    const bool observed_tail_has_verified_verb =
+        std::any_of(observed_tail_candidates.begin(), observed_tail_candidates.end(),
+                    [&](const grammar::InflectionCandidate& inflection_candidate) {
+                      return inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
+                             isVerbInDictionary(dict_manager, inflection_candidate.base_form);
+                    });
+    if (!tail_has_i_adjective || tail_has_verified_verb || observed_tail_has_verified_verb) {
+      continue;
+    }
+    std::string analysis_surface = surface;
+    if (utf8::endsWith(analysis_surface, "く")) {
+      analysis_surface.replace(analysis_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
+    }
+    const auto& inflection_candidates = inflection.analyze(analysis_surface);
+    const bool has_verified_verb_reading =
+        std::any_of(inflection_candidates.begin(), inflection_candidates.end(),
+                    [&](const grammar::InflectionCandidate& inflection_candidate) {
+                      return inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
+                             isVerbInDictionary(dict_manager, inflection_candidate.base_form);
+                    });
+    if (has_verified_verb_reading) {
+      continue;
+    }
+    for (const auto& inflection_candidate : inflection_candidates) {
+      if (inflection_candidate.verb_type != grammar::VerbType::IAdjective ||
+          inflection_candidate.confidence < candidate::kCompoundAdjConfMin) {
+        continue;
+      }
+      const float cost = candidate::confidenceScaledCost(
+          candidate::kCompoundAdjBaseCost, inflection_candidate.confidence, candidate::kKanjiAdjConfScale);
+      auto adjective = makeIAdjCandidate(surface, start_pos, end_pos, inflection_candidate.base_form, cost,
+                                         CandidateOrigin::AdjectiveI, inflection_candidate.confidence,
+                                         "hiragana_prefixed_kanji_i_adjective");
+      adjective.has_suffix = true;
+      candidates.push_back(std::move(adjective));
+      return;
+    }
+  }
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints,
@@ -107,6 +183,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   // the emitted base into …しく for the negative/adverbial forms.
   addReduplicatedShiiAdjective(candidates, codepoints, start_pos, char_types, inflection,
                                CandidateOrigin::AdjectiveIHiragana);
+  appendHiraganaPrefixedKanjiIAdjCandidates(candidates, codepoints, start_pos, char_types, inflection, dict_manager);
 
   // STEP 1: Find maximum hiragana sequence (without breaking at particles)
   // This allows us to analyze the full sequence first for adjectives like
@@ -157,7 +234,21 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
         }
         std::string aux_surface = extractSubstring(codepoints, particle_end, aux_end);
         if (dict_manager->lookupExact(aux_surface, core::PartOfSpeech::Auxiliary) != nullptr) {
-          return candidates;
+          std::string full_surface = extractSubstring(codepoints, start_pos, max_hiragana_end);
+          if (utf8::endsWith(full_surface, "く")) {
+            full_surface.replace(full_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
+          }
+          const auto& full_candidates = inflection.analyze(full_surface);
+          const bool has_full_i_adjective =
+              std::any_of(full_candidates.begin(), full_candidates.end(),
+                          [](const grammar::InflectionCandidate& inflection_candidate) {
+                            return inflection_candidate.verb_type == grammar::VerbType::IAdjective &&
+                                   inflection_candidate.confidence >= candidate::kHiraAdjConfParticle &&
+                                   normalize::utf8Length(inflection_candidate.stem) >= 2;
+                          });
+          if (!has_full_i_adjective) {
+            return candidates;
+          }
         }
       }
     }
@@ -170,6 +261,35 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   // verb-volitional homograph (わかろう).
   appendIAdjKaroCandidates(codepoints, start_pos, start_pos, max_hiragana_end, inflection, dict_manager, candidates);
   appendIAdjKaraZuCandidates(codepoints, start_pos, start_pos, max_hiragana_end, inflection, dict_manager, candidates);
+
+  // -げ derives a na-adjective from an i-adjective stem (おくゆかしげ,
+  // はかなげ).  The base adjective is checked by the same inflection engine
+  // as ordinary hiragana adjectives; a verified verb reading blocks the
+  // derivation so a verb continuative plus the lexical suffix is preserved.
+  const std::string full_hiragana_surface = extractSubstring(codepoints, start_pos, max_hiragana_end);
+  const size_t ge_pos = full_hiragana_surface.find("げ");
+  if (ge_pos != std::string::npos && ge_pos >= core::kTwoJapaneseCharBytes) {
+    const std::string stem = full_hiragana_surface.substr(0, ge_pos);
+    const std::string base_form = stem + "い";
+    const auto& base_candidates = inflection.analyze(base_form);
+    const float adjective_confidence = adj_detail::firstConfidenceAtLeast(
+        base_candidates, grammar::VerbType::IAdjective, candidate::kDerivedSuffixAdjectiveConfidence);
+    const bool has_verified_verb_reading = std::any_of(
+        base_candidates.begin(), base_candidates.end(), [&](const grammar::InflectionCandidate& inflection_candidate) {
+          return inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
+                 isVerbInDictionary(dict_manager, inflection_candidate.base_form);
+        });
+    if (adjective_confidence != candidate::kNoOriginConfidence && !has_verified_verb_reading) {
+      const size_t derived_end = ge_pos + core::kJapaneseCharBytes;
+      auto derived_candidate =
+          makeNaAdjCandidate(full_hiragana_surface.substr(0, derived_end), start_pos,
+                             start_pos + normalize::utf8Length(full_hiragana_surface.substr(0, derived_end)),
+                             candidate::kDerivedSuffixAdjectiveCost, true, CandidateOrigin::AdjectiveIHiragana,
+                             adjective_confidence, "i_adjective_ge_derivation");
+      derived_candidate.lemma = derived_candidate.surface;
+      candidates.push_back(std::move(derived_candidate));
+    }
+  }
 
   // STEP 2: Determine the hiragana_end for candidate generation
   // If first char is a particle, we only allow the full sequence if it's a valid adjective
@@ -189,12 +309,6 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
     for (size_t end = max_hiragana_end; end > start_pos + 2; --end) {
       std::string test_surface = extractSubstring(codepoints, start_pos, end);
 
-      // Skip patterns ending with just く (adverbial form)
-      // This prevents よろしく, わくわく from being validated as adjectives
-      if (utf8::endsWith(test_surface, "く") && !utf8::endsWith(test_surface, "くない")) {
-        continue;  // Skip - adverbial form, not adjective (くない is valid negative)
-      }
-
       // Skip patterns ending with just ない (negative auxiliary misidentified as adjective)
       // This prevents でもない from being validated as an adjective
       // Valid patterns: くない (adjective negative), but ない alone after particles is auxiliary
@@ -202,7 +316,11 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
         continue;  // Skip - likely negative auxiliary, not adjective
       }
 
-      const auto& test_candidates = inflection.analyze(test_surface);
+      std::string analysis_surface = test_surface;
+      if (utf8::endsWith(analysis_surface, "く")) {
+        analysis_surface.replace(analysis_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
+      }
+      const auto& test_candidates = inflection.analyze(analysis_surface);
       for (const auto& cand : test_candidates) {
         if (cand.verb_type == grammar::VerbType::IAdjective && cand.confidence >= candidate::kHiraAdjConfParticle) {
           // For particle-starting sequences, require stem length >= 2 characters

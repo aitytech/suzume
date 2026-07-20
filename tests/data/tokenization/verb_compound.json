@@ -9051,6 +9051,55 @@
       ],
       "id": "compound_causative_oshi_awaseru",
       "input": "確認を押し合わせる"
+    },
+    {
+      "description": "Compound Godan mizenkei remains separate before shortened causative passive",
+      "expected": [
+        {
+          "lemma": "考え込む",
+          "pos": "Verb",
+          "surface": "考え込ま"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_kangaekoma_short_causative_passive",
+      "input": "考え込まされた"
+    },
+    {
+      "description": "Compound Ichidan stem remains intact before passive auxiliary",
+      "expected": [
+        {
+          "lemma": "話しかける",
+          "pos": "Verb",
+          "surface": "話しかけ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_hanashikake_passive",
+      "input": "話しかけられた"
     }
   ],
   "description": "Compound verbs",

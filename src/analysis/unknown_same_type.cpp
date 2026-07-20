@@ -111,6 +111,21 @@ bool hasFormalNounNaAdjectiveBoundary(const std::vector<char32_t>& codepoints, s
   return normalize::isFormalNounSurface(first_char);
 }
 
+// A hiragana nominalized continuative ending in -み can precede the
+// independent adjective continuative なく (よどみなく, たゆみなく).  Emit the
+// productive nominal boundary instead of letting an unknown-verb candidate
+// absorb the suffix.  The -み condition excludes ordinary i-adjective
+// continuatives such as かたくなく, which remain on the adjective path.
+bool hasHiraganaNominalNakuEnding(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  constexpr size_t kNakuLength = 2;
+  constexpr size_t kMinimumNominalLength = 3;
+  if (end_pos - start_pos < kMinimumNominalLength + kNakuLength || codepoints[end_pos - 2] != U'な' ||
+      codepoints[end_pos - 1] != U'く') {
+    return false;
+  }
+  return codepoints[end_pos - kNakuLength - 1] == U'み';
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
@@ -429,6 +444,23 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
         candidates.push_back(suffix_cand);
       }
     }
+  }
+
+  // Productive hiragana nominal + adjective-continuative boundary.  This is
+  // deliberately independent of particle bracketing: literary adverbials
+  // commonly occur at the beginning of a clause (よどみなく話す).
+  if (start_type == normalize::CharType::Hiragana && hasHiraganaNominalNakuEnding(codepoints, start_pos, end_pos)) {
+    const size_t nominal_end = end_pos - 2;
+    const size_t nominal_len = nominal_end - start_pos;
+    std::string surface = extractSubstring(codepoints, start_pos, nominal_end);
+    auto noun_cand =
+        makeCandidate(surface, start_pos, nominal_end, core::PartOfSpeech::Noun,
+                      getCostForType(start_type, nominal_len) + candidate::kHiraganaNominalNakuCandidateBonus,
+                      /*has_suffix=*/true, CandidateOrigin::SameType);
+#ifdef SUZUME_DEBUG_INFO
+    noun_cand.pattern = "hiragana_nominal_naku";
+#endif
+    candidates.push_back(noun_cand);
   }
 
   // Bracketed hiragana noun promotion. A short hiragana run genuinely bracketed by

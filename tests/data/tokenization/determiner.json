@@ -102,6 +102,33 @@
       ],
       "id": "inaru",
       "input": "大いなる希望"
+    },
+    {
+      "description": "Fixed temporal determiner remains a determiner before noun",
+      "expected": [
+        {
+          "lemma": "あくる",
+          "pos": "Determiner",
+          "surface": "あくる"
+        },
+        {
+          "lemma": "日",
+          "pos": "Noun",
+          "surface": "日"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "literary_akuru_determiner",
+      "input": "あくる日に読む"
     }
   ],
   "description": "determiner tests",

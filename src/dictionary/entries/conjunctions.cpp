@@ -44,7 +44,10 @@ EntrySpecRange getConjunctionEntries() {
       conj("いわば", "言わば"), conj("言わば", ""), conj("さもないと", ""), conj("さもなければ", ""),
       conj("とすれば", ""),
       // そんなら removed: MeCab splits as そん+なら
-      conj("それにしても", ""), adv("ともかく", ""), conj("いずれにしても", ""),
+      conj("それにしても", ""), adv("ともかく", ""),
+      // Keep productive particle/auxiliary sequences searchable as their
+      // constituent morphemes (いずれ + に + し + て + も), rather than
+      // treating the whole sequence as a fixed conjunction.
 
       // Closed-class function adverbs that over-split into non-word verbs without an L1 anchor
       // (呼応副詞 めったに requires a 否定; 陳述副詞 どうぞ). Like the ともかく entry above, these
@@ -52,6 +55,11 @@ EntrySpecRange getConjunctionEntries() {
       // 決して is intentionally NOT registered here: it would swallow the 決 of 解決して
       // (解決|し|て → 解|決して); its 決し(非語 VERB)+て over-split needs a candidate-side fix.
       adv("もとより", ""),                      // 追加・強調: 本はもとより水を読む
+      adv("いとも", ""),                        // 文語の程度副詞
+      adv("たえず", ""),                        // 文語の頻度副詞
+      adv("あまねく", ""),                      // 文語の範囲副詞
+      na_adj("もっとも", ""),                   // 評価用法: もっともな理由
+      noun("すべて", ""),                       // 全称の閉じた名詞用法
       conj("ともあれ", ""),                     // 譲歩・話題転換: ともあれ始める
       adv("とりわけ", ""),                      // Focus adverb
       adv("取り分け", ""),                      // Orthographic variant

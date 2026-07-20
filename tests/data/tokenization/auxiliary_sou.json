@@ -90,6 +90,60 @@
       ],
       "id": "dekinasasouda",
       "input": "できなさそうだ"
+    },
+    {
+      "description": "Appearance sou remains an auxiliary before conditional connective",
+      "expected": [
+        {
+          "lemma": "起こる",
+          "pos": "Verb",
+          "surface": "起こり"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Auxiliary",
+          "surface": "そう"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "literary_okorisou_conditional",
+      "input": "起こりそうなら待つ"
+    },
+    {
+      "description": "Appearance sou conditional preserves verb stem and auxiliary boundary",
+      "expected": [
+        {
+          "lemma": "降りる",
+          "pos": "Verb",
+          "surface": "降り"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Auxiliary",
+          "surface": "そう"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "戻る",
+          "pos": "Verb",
+          "surface": "戻る"
+        }
+      ],
+      "id": "literary_furisou_conditional",
+      "input": "降りそうなら戻る"
     }
   ],
   "description": "auxiliary_sou tests",

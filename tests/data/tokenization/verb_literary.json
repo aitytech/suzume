@@ -36,6 +36,28 @@
       ],
       "id": "kangamite_hiragana_verb",
       "input": "経験にかんがみて判断する"
+    },
+    {
+      "description": "Ichidan stem before classical negative preserves lemma",
+      "expected": [
+        {
+          "lemma": "慌てる",
+          "pos": "Verb",
+          "surface": "慌て"
+        },
+        {
+          "lemma": "ず",
+          "pos": "Auxiliary",
+          "surface": "ずに"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "literary_awate_zu",
+      "input": "慌てずに進む"
     }
   ],
   "description": "verb_literary tests",

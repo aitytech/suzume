@@ -358,6 +358,28 @@
       ],
       "id": "sa",
       "input": "儚さ"
+    },
+    {
+      "description": "かな接頭部を持つ漢字い形容詞連用形",
+      "expected": [
+        {
+          "lemma": "か弱い",
+          "pos": "Adjective",
+          "surface": "か弱く"
+        },
+        {
+          "lemma": "支える",
+          "pos": "Verb",
+          "surface": "支え"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_kayowaku",
+      "input": "か弱く支えた"
     }
   ],
   "description": "I-adjectives compound/derived forms (複合・派生) - sou patterns, nominalization, contracted forms",

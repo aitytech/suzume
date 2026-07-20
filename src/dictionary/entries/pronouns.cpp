@@ -44,6 +44,7 @@ EntrySpecRange getPronounEntries() {
       pronoun("我", ""),
       pronoun("われ", ""),  // 我/吾 classical first-person pronoun
       pronoun("己", ""),
+      pronoun("おのれ", ""),
       pronoun("拙者", ""),
       pronoun("貴殿", ""),
       pronoun("某", ""),

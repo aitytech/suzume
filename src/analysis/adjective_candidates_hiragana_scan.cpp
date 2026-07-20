@@ -185,14 +185,6 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
       continue;  // Skip - godan negative renyokei
     }
 
-    // Skip patterns ending with just く (adverbial form of i-adjective)
-    // This prevents よろしく, わくわく from being recognized as adjectives.
-    // Valid i-adjective endings: い, かった, くない, ければ, さ, そう, etc.
-    // Note: くない is valid (negative), but just く is adverbial (not adjective POS)
-    if (utf8::endsWith(surface, "く") && !utf8::endsWith(surface, "くない")) {
-      continue;  // Skip - just く ending (adverbial form)
-    }
-
     // Skip patterns ending with just ない (negative auxiliary misidentified as adjective)
     // This prevents でもない from being recognized as an adjective when starting with particle
     // Valid patterns: くない (adjective negative), but ない alone after particles is auxiliary
@@ -222,9 +214,22 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
       analysis_surface = normalizeProlongedSoundMark(codepoints, start_pos, end_pos);
     }
 
+    // The inflection analyzer accepts an i-adjective's dictionary form, but
+    // not every productive hiragana renyokei directly.  Restore its final い
+    // only for the analysis, while the candidate retains the observed く-form
+    // and therefore receives AdjRenyokei from detectIAdjEpos().
+    if (utf8::endsWith(analysis_surface, "く")) {
+      analysis_surface.replace(analysis_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
+    }
+
     // Check all candidates for IAdjective, not just the best one
     // This handles cases where Suru interpretation may have higher confidence
     const auto& all_candidates = inflection.analyze(analysis_surface);
+    const bool has_verified_verb_reading =
+        std::any_of(all_candidates.begin(), all_candidates.end(), [&](const grammar::InflectionCandidate& candidate) {
+          return candidate.verb_type != grammar::VerbType::IAdjective &&
+                 isVerbInDictionary(dict_manager, candidate.base_form);
+        });
     for (const auto& cand : all_candidates) {
       // For hiragana-only adjectives, require higher confidence (0.55) than
       // kanji+hiragana adjectives (0.50) to avoid false positives like しそう → しい
@@ -236,7 +241,11 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
       float confidence_threshold = has_prolonged          ? candidate::kHiraAdjConfProlonged
                                    : starts_with_particle ? candidate::kHiraAdjConfParticle
                                                           : candidate::kHiraAdjConfMin;
-      if (cand.confidence >= confidence_threshold && cand.verb_type == grammar::VerbType::IAdjective) {
+      const bool is_unverified_nai_renyokei = utf8::endsWith(surface, "なく") &&
+                                              utf8::endsWith(cand.base_form, "ない") && !has_verified_verb_reading &&
+                                              cand.confidence >= candidate::kHiraAdjUnverifiedNaiRenyokeiMin;
+      if (cand.verb_type == grammar::VerbType::IAdjective &&
+          (cand.confidence >= confidence_threshold || is_unverified_nai_renyokei)) {
         // 様態 そう is a separate auxiliary, never an inflectional ending of
         // an i-adjective. This mirrors the kanji-adjective guard and keeps
         // derived forms split (ほし + そう + だ, やす + そう + だ).
