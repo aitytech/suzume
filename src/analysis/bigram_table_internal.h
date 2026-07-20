@@ -63,6 +63,7 @@ void applyRules(BigramMatrix& table, const BigramRule* rules, size_t rule_count)
 
 void setVerbAndAdjectiveCosts(BigramMatrix& table);
 void setAuxiliaryAndNounCosts(BigramMatrix& table);
+void setNominalParticleCosts(BigramMatrix& table);
 void setParticleAndLexicalCosts(BigramMatrix& table);
 void setParticleAndLexicalPenaltyCosts(BigramMatrix& table);
 

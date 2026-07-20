@@ -13,6 +13,7 @@ add_library(suzume_analysis OBJECT
   analyzer.cpp
   bigram_table.cpp
   bigram_table_aux_noun.cpp
+  bigram_table_nominal_particles.cpp
   bigram_table_particle_lexical.cpp
   bigram_table_particle_penalties.cpp
   bigram_table_verb_adj.cpp

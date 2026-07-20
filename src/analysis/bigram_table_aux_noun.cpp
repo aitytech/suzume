@@ -428,148 +428,15 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // AuxCopulaDa → ParticleFinal (だ+ね/よ) - minor bonus
       {EPOS::AuxCopulaDa, EPOS::ParticleFinal, cost::kMinorBonus},
 
-      // =========================================================================
-      // Noun → Particles
-      // =========================================================================
+  };
+  applyRules(table, kRules, sizeof(kRules) / sizeof(kRules[0]));
 
-      // Noun → ParticleCase (机+が/を/に) - neutral (very common)
-      {EPOS::Noun, EPOS::ParticleCase, cost::kNeutral},
+  setNominalParticleCosts(table);
 
-      // A bare noun cannot take the conjunctive て directly. This keeps a
-      // homographic verb renyokei (知らせ+て) ahead of the nominal reading.
-      {EPOS::Noun, EPOS::ParticleConj, cost::kStrong},
-
-      // A quantified expression followed by a registered suffix is a bound
-      // nominal construction (一時間+おき、三人+目), not a bare verb phrase.
-      {EPOS::NounNumber, EPOS::Suffix, cost::kStrongBonus},
-
-      // Quantities productively take degree particles (三時間+ほど、二人+だけ).
-      // Preserve the numeral-and-counter candidate over a clock-time split.
-      {EPOS::NounNumber, EPOS::ParticleAdverbial, cost::kStrongBonus},
-
-      // Noun → ParticleTopic (机+は/も) - strong bonus
-      // A topic marker ordinarily closes the preceding nominal unit and must
-      // outrank a homographic continuative-verb candidate (答え+は正しい).
-      {EPOS::Noun, EPOS::ParticleTopic, cost::kStrongBonus},
-
-      // A family name followed by a given name remains a single proper-name
-      // sequence. This is independent of their surface spellings.
-      {EPOS::NounProperFamily, EPOS::NounProperGiven, cost::kStrongBonus},
-
-      // Nominal coordination (本+及び+水, 本+又は+水) must preserve both
-      // noun boundaries instead of letting an unknown noun absorb the linker.
-      {EPOS::Noun, EPOS::Conjunction, cost::kDoubleVeryStrongBonus},
-
-      // A coordinating conjunction normally introduces the other nominal arm.
-      {EPOS::Conjunction, EPOS::Noun, cost::kStrongBonus},
-      // Sentence-initial/discourse conjunctions can also introduce a personal
-      // or demonstrative pronoun (ところが彼は、しかしそれは). Keep the
-      // lexical pronoun reading ahead of its generic noun homograph.
-      {EPOS::Conjunction, EPOS::Pronoun, cost::kMinorBonus},
-
-      // Noun → ParticleAdverbial (そん+だけ, あん+だけ) - strong bonus.
-      {EPOS::Noun, EPOS::ParticleAdverbial, cost::kStrongBonus},
-
-      // Noun → ParticleBinding (時間+さえ, 水+すら) - very strong bonus
-      // Binding particles attach to nouns just like adverbial ones; without this
-      // 時間さえ loses to 時間+さ(する未然, suru-passive surface bonus)+え and
-      // 水すら is absorbed into a fabricated verb blob. The stronger preference
-      // also preserves the boundary before an existence-negative ない.
-      {EPOS::Noun, EPOS::ParticleBinding, cost::kVeryStrongBonus},
-
-      // Case particle → binding particle (に+すら, で+さえ). A focus
-      // particle can scope over a case-marked phrase, so favor the two
-      // grammatical particles over an unknown noun that absorbs both.
-      {EPOS::ParticleCase, EPOS::ParticleBinding, cost::kStrongBonus},
-
-      // ParticleBinding → AdjBasic (さえ+ない, すら+ない) - strong bonus
-      // Existence-negation ない after a binding particle (時間さえない);
-      // mirrors NounFormal→AdjBasic. Without this the fragment path
-      // さ(する未然)+え(AUX可能)+ない outruns さえ+ない via the AUX chain bonus
-      {EPOS::ParticleBinding, EPOS::AdjBasic, cost::kStrongBonus},
-
-      // The same focus construction permits an adverbial negative adjective
-      // (にすら+なく), not a fabricated noun followed by なく.
-      {EPOS::ParticleBinding, EPOS::AdjRenyokei, cost::kStrongBonus},
-
-      // Noun → AdjNaAdj (一番+獰猛, とても+大切) - strong bonus
-      // Prevents long kanji noun from absorbing na-adjective stem
-      // (e.g., 一番獰猛+な → 一番+獰猛+な)
-      {EPOS::Noun, EPOS::AdjNaAdj, cost::kStrongBonus},
-
-      // A formal noun can close a temporal or manner phrase before a
-      // following na-adjective (この時+不思議な音). Keep that adjective
-      // analysis from losing to a nominal-copula homograph.
-      {EPOS::NounFormal, EPOS::AdjNaAdj, cost::kModerateBonus},
-
-      // A nominal stem can be followed by a formal noun in temporal endpoint
-      // expressions (年度+末、学期+末). Prefer this productive boundary over an
-      // unknown compound that absorbs the endpoint noun.
-      {EPOS::Noun, EPOS::NounFormal, cost::kMinorBonus},
-
-      // Two adjacent nominal candidates without an explicit grammatical
-      // connector are usually one kanji compound search unit. Dedicated suffix,
-      // counter, and formal-noun rules retain their productive boundaries.
-      {EPOS::Noun, EPOS::Noun, cost::kMinor},
-
-      // Formal noun → case particle (読みよう+がない, こと+がある).
-      {EPOS::NounFormal, EPOS::ParticleCase, cost::kModerateBonus},
-
-      // Formal nouns can be topicalized (はず+は, わけ+は, こと+は).
-      {EPOS::NounFormal, EPOS::ParticleTopic, cost::kModerateBonus},
-
-      // A formal noun does not ordinarily modify an adverb. This prevents a
-      // compound noun from being split before an unrelated adverb candidate
-      // (事実に → 事 + 実に).
-      {EPOS::NounFormal, EPOS::Adverb, cost::kStrong},
-
-      // Formal noun → binding particle (こと+さえ, わけ+すら).
-      // This is the same nominal attachment as Noun→ParticleBinding and keeps
-      // a following existence-negative from being read as さ(する未然)+え(可能).
-      {EPOS::NounFormal, EPOS::ParticleBinding, cost::kVeryStrongBonus},
-
-      // NounFormal → AuxCopulaDa (はず+だ, つもり+だ, ところ+だ) - very strong bonus
-      // Ensures formal noun + だ split over verb candidate (e.g., はずだ as VERB)
-      {EPOS::NounFormal, EPOS::AuxCopulaDa, cost::kVeryStrongBonus},
-
-      // NounFormal → AuxCopulaDesu (はず+です, つもり+です) - strong bonus
-      // Ensures はずです → はず+です over はず+で+す
-      {EPOS::NounFormal, EPOS::AuxCopulaDesu, cost::kStrongBonus},
-
-      // NounFormal → AuxNegativeNai (こと+ない) - moderate bonus
-      // Ensures こと+ない over こと+な+い (な=AuxCopulaDa連用形)
-      {EPOS::NounFormal, EPOS::AuxNegativeNai, cost::kModerateBonus},
-
-      // NounFormal → AdjBasic (こと+ない adjective) - double very strong bonus
-      // Ensures そんなこと+ない(ADJ) wins over そんなこと+ない(AUX)
-      // When ない follows a formal noun, it's the existence-negation adjective
-      // Needs to overcome: AUX word cost (0.3) + AuxNegativeNai bonus (-0.5) = -0.2
-      // vs ADJ word cost (0.5) + this bonus = must be < -0.2
-      {EPOS::NounFormal, EPOS::AdjBasic, cost::kDoubleVeryStrongBonus},
-
-      // NounFormal → ParticleAdverbial (こと+だけ, もの+など) - double
-      // very strong bonus. This nominal attachment must stay ahead of a
-      // particle's homographic copula-plus-particle decomposition
-      // (もの+な+ど).
-      {EPOS::NounFormal, EPOS::ParticleAdverbial, cost::kDoubleVeryStrongBonus},
-
-      // The nominalizer の introduces a formal noun (本+の+はず,
-      // 目的+の+ため). Prefer the grammatical nominal boundary over the
-      // topic-particle plus classical-negative split of the formal noun.
-      {EPOS::ParticleNo, EPOS::NounFormal, cost::kStrongBonus},
-
-      // The progressive auxiliary may be followed by a temporal formal noun:
-      // 読んでいるあいだ, 書いているうち.
-      {EPOS::AuxAspectIru, EPOS::NounFormal, cost::kVeryStrongBonus},
-
-      // Quotation particles introduce a nominalized proposition (って+こと,
-      // と+いう+もの). Prefer that boundary over a fabricated onbin + て path.
-      {EPOS::ParticleQuote, EPOS::NounFormal, cost::kVeryStrongBonus},
-
+  static constexpr BigramRule kLexicalNominalRules[] = {
       // =========================================================================
       // Pronoun → Particles
       // =========================================================================
-
       // Pronoun → ParticleCase (あれ+が, これ+を, それ+に) - moderate bonus
       // Pronouns naturally take case particles; beats VERB_連用 interpretation
       // E.g., あれが欲しい → あれ(PRON)+が, not あれ(VERB ある)+が
@@ -847,7 +714,7 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Nominal completion-state suffix (確認+済み, 承認+済み).
       {EPOS::Noun, EPOS::SuffixRecentCompletion, cost::kStrongBonus},
   };
-  applyRules(table, kRules, sizeof(kRules) / sizeof(kRules[0]));
+  applyRules(table, kLexicalNominalRules, sizeof(kLexicalNominalRules) / sizeof(kLexicalNominalRules[0]));
 }  // namespace suzume::analysis::bigram_rules
 
 }  // namespace suzume::analysis::bigram_rules
