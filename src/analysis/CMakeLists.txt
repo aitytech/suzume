@@ -5,6 +5,7 @@ add_library(suzume_analysis OBJECT
   adjective_candidates_internal.cpp
   adjective_candidates_kanji.cpp
   adjective_candidates_kanji_compound.cpp
+  adjective_candidates_kanji_special.cpp
   adjective_candidates_kanji_variants.cpp
   adjective_candidates_hiragana_scan.cpp
   adjective_candidates_na.cpp

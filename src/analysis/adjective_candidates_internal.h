@@ -88,6 +88,12 @@ bool isVerbOnbinContextAfterI(const std::vector<char32_t>& codepoints, size_t po
  */
 bool containsProlongedSoundMark(const std::vector<char32_t>& codepoints, size_t start, size_t end);
 
+bool appendKanjiIAdjSpecialCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                      size_t hiragana_end, const std::vector<normalize::CharType>& char_types,
+                                      const grammar::Inflection& inflection,
+                                      const dictionary::DictionaryManager* dict_manager,
+                                      std::vector<UnknownCandidate>& candidates);
+
 // =============================================================================
 // UnknownCandidate Factory Helpers
 // =============================================================================
