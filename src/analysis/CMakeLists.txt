@@ -55,6 +55,7 @@ add_library(suzume_analysis OBJECT
   verb_candidates_helpers.cpp
   verb_candidates_helpers_dictionary.cpp
   verb_candidates_hiragana.cpp
+  verb_candidates_hiragana_inflection.cpp
   verb_candidates_hiragana_mizenkei.cpp
   verb_candidates_hiragana_onbin.cpp
   verb_candidates_hiragana_subsidiary.cpp
