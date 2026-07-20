@@ -126,6 +126,17 @@ UnknownCandidate makeTrimmedAdjVariant(const UnknownCandidate& cand, size_t char
 void appendTrimmedAdjVariants(std::vector<UnknownCandidate>& candidates, const TrimmedAdjVariantRule* rules,
                               size_t rule_count, const dictionary::DictionaryManager* dict_manager = nullptr);
 
+/**
+ * @brief Append post-scan inflection variants for a kanji i-adjective path.
+ *
+ * Emits emphatic, connection-form, conjectural, classical-negative, and
+ * classical-attributive variants after the primary scan has completed.
+ */
+void appendKanjiIAdjPostVariants(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                 size_t hiragana_end, const grammar::Inflection& inflection,
+                                 const dictionary::DictionaryManager* dict_manager,
+                                 std::vector<UnknownCandidate>& candidates);
+
 }  // namespace suzume::analysis::adj_detail
 
 #endif  // SUZUME_ANALYSIS_ADJECTIVE_CANDIDATES_INTERNAL_H_

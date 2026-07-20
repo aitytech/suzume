@@ -1,7 +1,8 @@
 # file	surface_cmp	score_literals	score_additions
 src/analysis/adjective_candidates_hiragana.cpp	0	3	0
 src/analysis/adjective_candidates_internal.cpp	0	0	0
-src/analysis/adjective_candidates_kanji.cpp	0	2	0
+src/analysis/adjective_candidates_kanji.cpp	0	1	0
+src/analysis/adjective_candidates_kanji_variants.cpp	0	1	0
 src/analysis/adjective_candidates_na.cpp	0	3	0
 src/analysis/adjective_candidates_stem.cpp	0	4	0
 src/analysis/analyzer.cpp	0	0	0
