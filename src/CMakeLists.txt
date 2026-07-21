@@ -91,12 +91,16 @@ set_target_properties(suzume PROPERTIES LINKER_LANGUAGE CXX)
 
 # WASM executable (produces .js + .wasm)
 if(BUILD_WASM)
+  # wasm-opt ships with emsdk, but its location has moved across releases
+  # (upstream/bin in current emsdk, binaryen/bin in older layouts) and is not
+  # always on PATH, so search the known emsdk locations explicitly.
   get_filename_component(EMSCRIPTEN_ROOT "${CMAKE_CXX_COMPILER}" DIRECTORY)
-  set(WASM_OPT "${EMSCRIPTEN_ROOT}/binaryen/bin/wasm-opt")
-  if(NOT EXISTS "${WASM_OPT}")
-    unset(WASM_OPT)
-    find_program(WASM_OPT wasm-opt REQUIRED)
-  endif()
+  find_program(WASM_OPT wasm-opt
+    HINTS
+      "${EMSCRIPTEN_ROOT}/../bin"
+      "${EMSCRIPTEN_ROOT}/binaryen/bin"
+      "$ENV{EMSDK}/upstream/bin"
+    REQUIRED)
 
   add_executable(suzume-wasm suzume_c.cpp)
   target_link_libraries(suzume-wasm PRIVATE suzume)
