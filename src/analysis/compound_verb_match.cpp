@@ -21,8 +21,20 @@ bool beginsMizenkeiAuxiliary(std::string_view text, size_t start_byte, std::stri
       text.substr(start_byte, mizenkei.size()) != mizenkei) {
     return false;
   }
-  const std::string_view following = text.substr(start_byte + mizenkei.size(), core::kJapaneseCharBytes);
-  return following == "れ" || following == "さ" || following == "せ" || following == "な" || following == "ず";
+  const std::string_view suffix = text.substr(start_byte + mizenkei.size());
+  const std::string_view following = suffix.substr(0, core::kJapaneseCharBytes);
+  if (following == "れ" || following == "せ" || following == "な" || following == "ず") {
+    return true;
+  }
+
+  // The shortened causative-passive inserts さ before the passive auxiliary:
+  // 考え込ま+さ+れた.  A bare さ is not sufficient evidence because it also
+  // nominalizes adjectives; require a valid continuation of れる.
+  if (!utf8::startsWith(suffix, "され")) {
+    return false;
+  }
+  const std::string_view passive_tail = suffix.substr(core::kTwoJapaneseCharBytes);
+  return utf8::startsWithAny(passive_tail, {"る", "た", "て", "ない", "なかっ", "なけれ", "ます", "ませ", "ば"});
 }
 
 bool isCompoundVerbOrNominalizationAttested(const dictionary::DictionaryManager& dict_manager, std::string_view base,
@@ -105,15 +117,6 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
       continue;
     }
 
-    // Hiragana そう before the conditional/copular な is the appearance
-    // auxiliary (起こり+そう+なら), not the lexical V2 添う.  Keep the
-    // kanji-written lexical compound (寄り添うなら) eligible; this guard
-    // only resolves the homographic hiragana auxiliary sequence.
-    if (v2_reading == "そう" && char_types[v2_start] == CharType::Hiragana &&
-        utf8::startsWith(text.substr(v2_start_byte), "そうな")) {
-      continue;
-    }
-
     // The hiragana V2 reading 切る also overlaps with the lexical potential
     // verb できる.  Its leading で completes that word, rather than forming an
     // ichidan V1 stem (化でる) before a compound-verb V2.  Kanji-written V2
@@ -151,6 +154,14 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // candidate over the productive auxiliary sequence (食べとった).
     if (!matched_kanji && char_types[v2_start] == CharType::Hiragana &&
         (v2_reading == "とる" || v2_reading == "どる")) {
+      continue;
+    }
+
+    // Hiragana そう before conditional/copular な is the appearance
+    // auxiliary (起こり+そう+なら), not the lexical compound V2 添う.
+    // Kanji-written 添う remains available as an ordinary compound verb.
+    if (v2_reading == "そう" && char_types[v2_start] == CharType::Hiragana &&
+        utf8::startsWith(text.substr(v2_start_byte), "そうな")) {
       continue;
     }
 

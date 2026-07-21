@@ -172,8 +172,14 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
           // But allow ず-ending candidates (adverbialized forms)
           // Case 1: Dictionary entry is also a verb/adjective
           // But allow ず-ending candidates (adverbialized forms)
+          // An explicitly generated irrealis stem is already licensed by a
+          // following closed-class inflection (negative, causative, or
+          // passive).  A shorter dictionary verb/adjective must not suppress
+          // that productive boundary: 確かめ+させる is not 確か+めさせる.
+          const bool is_explicit_mizenkei = candidate.origin == CandidateOrigin::VerbKanji &&
+                                            candidate.extended_pos == core::ExtendedPOS::VerbMizenkei;
           if ((result.entry->pos == core::PartOfSpeech::Verb || result.entry->pos == core::PartOfSpeech::Adjective) &&
-              !ends_with_zu && !candidate.lemma_verified) {
+              !ends_with_zu && !candidate.lemma_verified && !is_explicit_mizenkei) {
             skip_penalty = true;
             skip_reason = "dict_has_verb_adj";
             break;

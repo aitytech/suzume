@@ -45,8 +45,9 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
     bonus += cost::kDoubleVeryStrongBonus + cost::kVeryStrongBonus;
   }
 
-  // The same generated stem must connect to passive られる rather than be
-  // treated as a standalone verb after the quotation.
+  // The quote-licensed stem must connect to passive られる rather than be
+  // treated as a standalone verb.  Its specialized origin is assigned only
+  // when the generator observes the preceding quotative と.
   if (prev.origin == core::CandidateOrigin::VerbHiraganaPassiveRenyokei &&
       next.extended_pos == core::ExtendedPOS::AuxPassive) {
     bonus += cost::kDoubleVeryStrongBonus + cost::kVeryStrongBonus;
@@ -126,6 +127,15 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxPassive &&
       next.surface == "れ" && !grammar::endsWithARow(prev.surface)) {
     bonus += cost::kRare;  // Cancel the -0.8 bonus
+  }
+
+  // An unverified verb candidate ending in the causative stem させ must
+  // decompose before the passive auxiliary.  The lexical alternative stays
+  // available when its surface is dictionary-backed (任せ+られ), while this
+  // blocks a fabricated tail such as 確か+めさせ+られ.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxPassive &&
+      utf8::endsWith(prev.surface, "させ") && !prev.fromDictionary()) {
+    return cost::kAlmostNever;
   }
 
   // A humble/honorific subsidiary may follow a connective particle, another

@@ -89,6 +89,27 @@ float computeCompoundNominalizationBonus(const core::LatticeEdge& prev, const co
 float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // A one-kanji noun followed by a generated multi-mora hiragana te-form is
+  // normally an artificial split through that verb's okurigana (食+べて,
+  // 考+えて).  Preserve the complete kanji-verb candidate; genuine verb
+  // boundaries in this position begin with a content kanji or an attested
+  // lexical form, rather than this unverified tail.
+  if (prev.pos == core::PartOfSpeech::Noun && prev.surface.size() == core::kJapaneseCharBytes &&
+      next.origin == core::CandidateOrigin::VerbHiragana && !next.fromDictionary() &&
+      next.extended_pos == core::ExtendedPOS::VerbTeForm && next.surface.size() >= core::kTwoJapaneseCharBytes) {
+    return cost::kAlmostNever;
+  }
+
+  // A standalone suru continuative is not followed directly by a degree
+  // adverb.  Without this boundary, an i-adjective ending in しい can be
+  // split into a fabricated noun+suru stem and an adverb beginning with い
+  // (恐+し+いとも).  A real coordination uses the conjunctive-particle
+  // reading of し instead.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSuruRenyokeiSurface(prev.surface) &&
+      next.pos == core::PartOfSpeech::Adverb) {
+    return cost::kAlmostNever;
+  }
+
   // The one-mora て dictionary homograph cannot itself be a terminal
   // progressive before a nominalizer.  The AuxAspectIru → の rule is for a
   // complete いる/てる predicate; without this guard it fabricates paths such

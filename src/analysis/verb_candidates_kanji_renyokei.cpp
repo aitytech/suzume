@@ -72,7 +72,11 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         const grammar::InflectionCandidate& ichidan_cand = bests.ichidan;
         const grammar::InflectionCandidate& suru_cand = bests.suru;
         const grammar::InflectionCandidate& godan_cand = bests.godan;
-        const bool causative_follows = vh::causativeSaseFollowsAt(codepoints, renyokei_end);
+        // An A-row stem followed by させ is already a Godan mizenkei plus
+        // causative auxiliary (聞か+せ, 読ま+せ).  Only non-A-row stems use
+        // that evidence to recover an Ichidan lexical stem.
+        const bool causative_follows =
+            vh::causativeSaseFollowsAt(codepoints, renyokei_end) && !grammar::isARowCodepoint(first_hira);
         const bool passive_follows = renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end] == U'ら' &&
                                      codepoints[renyokei_end + 1] == U'れ' &&
                                      vh::isPassiveAuxContinuation(codepoints, renyokei_end + 2, /*strict_masu=*/true);
@@ -114,9 +118,9 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         // lemma by appending る rather than asking the standalone inflection
         // analyzer to interpret a final て as a te-form suffix.
         const bool classical_negative_aux_follows =
-            continuation == U'ぬ' || continuation == U'ず' ||
-            (continuation == U'ざ' && renyokei_end + 1 < codepoints.size() &&
-             (codepoints[renyokei_end + 1] == U'る' || codepoints[renyokei_end + 1] == U'れ'));
+            first_hira != U'せ' && (continuation == U'ぬ' || continuation == U'ず' ||
+                                    (continuation == U'ざ' && renyokei_end + 1 < codepoints.size() &&
+                                     (codepoints[renyokei_end + 1] == U'る' || codepoints[renyokei_end + 1] == U'れ')));
         // A multi-kanji nominal stem followed by せ+ん is the literary
         // irrealis of する (解決+せ+ん), not an unverified Ichidan verb
         // ending in ～せる.  Dictionary-verified lexical verbs such as
@@ -267,8 +271,8 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         const grammar::InflectionCandidate& ichidan_cand = bests.ichidan;
         const grammar::InflectionCandidate& suru_cand = bests.suru;
         const grammar::InflectionCandidate& godan_cand = bests.godan;
-        bool prefer_suru = !passive_follows && (suru_cand.confidence > ichidan_cand.confidence);
-        bool prefer_godan = !passive_follows && (godan_cand.confidence > ichidan_cand.confidence);
+        bool prefer_suru = !causative_follows && !passive_follows && (suru_cand.confidence > ichidan_cand.confidence);
+        bool prefer_godan = !causative_follows && !passive_follows && (godan_cand.confidence > ichidan_cand.confidence);
         // Higher confidence threshold for multi-char stems to avoid false positives
         constexpr float kMultiCharIchidanThreshold = 0.45F;
         // Skip surfaces ending in ない — almost always adjective (少ない) or negative suffix

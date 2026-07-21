@@ -844,10 +844,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "Conclusion statement",
       "expected": [
         {
@@ -903,58 +899,6 @@
       ],
       "id": "academic_conclusion",
       "input": "以上の結果から次のように結論づけられる",
-      "suzume_expected": [
-        {
-          "lemma": "以上",
-          "pos": "Noun",
-          "surface": "以上"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "結果",
-          "pos": "Noun",
-          "surface": "結果"
-        },
-        {
-          "lemma": "から",
-          "pos": "Particle",
-          "surface": "から"
-        },
-        {
-          "lemma": "次",
-          "pos": "Noun",
-          "surface": "次"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "よう",
-          "pos": "Auxiliary",
-          "surface": "よう"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "結論づく",
-          "pos": "Verb",
-          "surface": "結論づけ"
-        },
-        {
-          "lemma": "られる",
-          "pos": "Auxiliary",
-          "surface": "られる"
-        }
-      ],
       "tags": [
         "academic"
       ]

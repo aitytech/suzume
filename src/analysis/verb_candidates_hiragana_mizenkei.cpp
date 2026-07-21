@@ -310,9 +310,15 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
       SUZUME_DEBUG_STREAM << "[VERB_CAND] " << stem << " hiragana_ichidan_rareru lemma=" << lemma << " cost=" << kCost
                           << "\n";
     }
-    candidates.push_back(
-        makeVerbCandidate(stem, start_pos, stem_end, kCost, lemma, dictionary::ConjugationType::Ichidan, true,
-                          CandidateOrigin::VerbHiraganaPassiveRenyokei, 0.9F, "hiragana_ichidan_rareru"));
+    // The specialized origin carries a scorer bonus for the quotative
+    // と+み+られる construction.  Do not attach it to every one-character
+    // hiragana stem, or an adjective tail can fabricate 確か+め+られる.
+    const CandidateOrigin origin = start_pos > 0 && codepoints[start_pos - 1] == U'と'
+                                       ? CandidateOrigin::VerbHiraganaPassiveRenyokei
+                                       : CandidateOrigin::VerbHiragana;
+    candidates.push_back(makeVerbCandidate(stem, start_pos, stem_end, kCost, lemma,
+                                           dictionary::ConjugationType::Ichidan, true, origin, 0.9F,
+                                           "hiragana_ichidan_rareru"));
     break;  // Only generate one ichidan rareru candidate per starting position
   }
 }

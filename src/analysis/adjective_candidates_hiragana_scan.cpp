@@ -185,6 +185,14 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
       continue;  // Skip - godan negative renyokei
     }
 
+    // A bare -く is normally an adverbial connective.  The two productive
+    // i-adjective continuatives -なく and -しく are recovered below only
+    // after their reconstructed base has passed the adjective/verb checks.
+    if (utf8::endsWith(surface, "く") && !utf8::endsWith(surface, "くない") && !utf8::endsWith(surface, "なく") &&
+        !utf8::endsWith(surface, "しく")) {
+      continue;
+    }
+
     // Skip patterns ending with just ない (negative auxiliary misidentified as adjective)
     // This prevents でもない from being recognized as an adjective when starting with particle
     // Valid patterns: くない (adjective negative), but ない alone after particles is auxiliary
@@ -241,11 +249,13 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
       float confidence_threshold = has_prolonged          ? candidate::kHiraAdjConfProlonged
                                    : starts_with_particle ? candidate::kHiraAdjConfParticle
                                                           : candidate::kHiraAdjConfMin;
-      const bool is_unverified_nai_renyokei = utf8::endsWith(surface, "なく") &&
-                                              utf8::endsWith(cand.base_form, "ない") && !has_verified_verb_reading &&
-                                              cand.confidence >= candidate::kHiraAdjUnverifiedNaiRenyokeiMin;
+      const bool is_unverified_adverbial_i_adjective =
+          !starts_with_particle && !has_verified_verb_reading &&
+          ((utf8::endsWith(surface, "なく") && utf8::endsWith(cand.base_form, "ない")) ||
+           (utf8::endsWith(surface, "しく") && utf8::endsWith(cand.base_form, "しい"))) &&
+          cand.confidence >= candidate::kHiraAdjUnverifiedNaiRenyokeiMin;
       if (cand.verb_type == grammar::VerbType::IAdjective &&
-          (cand.confidence >= confidence_threshold || is_unverified_nai_renyokei)) {
+          (cand.confidence >= confidence_threshold || is_unverified_adverbial_i_adjective)) {
         // 様態 そう is a separate auxiliary, never an inflectional ending of
         // an i-adjective. This mirrors the kanji-adjective guard and keeps
         // derived forms split (ほし + そう + だ, やす + そう + だ).

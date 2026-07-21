@@ -27,6 +27,7 @@ HELPERS = {
     "det": ("POS::Determiner", "EPOS::Determiner"),
     "quotative_det": ("POS::Determiner", "EPOS::DeterminerQuotative"),
     "formal_noun": ("POS::Noun", "EPOS::NounFormal"),
+    "noun": ("POS::Noun", "EPOS::Noun"),
     "conj": ("POS::Conjunction", "EPOS::Conjunction"),
     "adv": ("POS::Adverb", "EPOS::Adverb"),
     "suffix": ("POS::Suffix", "EPOS::Suffix"),

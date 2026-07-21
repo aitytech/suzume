@@ -78,7 +78,14 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
                                                const std::vector<normalize::CharType>& char_types,
                                                const grammar::Inflection& inflection,
                                                const dictionary::DictionaryManager* dict_manager) {
-  const size_t prefix_end = findCharRegionEnd(char_types, start_pos, 3, normalize::CharType::Hiragana);
+  // A one-to-three-mora hiragana prefix is otherwise indistinguishable from
+  // an attached particle within a sentence (いまだ+に続く).  Restrict this
+  // recovery path to a lexical word boundary; ordinary kanji adjective and
+  // particle candidates retain responsibility inside a clause.
+  if (start_pos > 0 && char_types[start_pos - 1] != normalize::CharType::Symbol) {
+    return;
+  }
+  const size_t prefix_end = findCharRegionEnd(char_types, start_pos, 1, normalize::CharType::Hiragana);
   if (prefix_end == start_pos || prefix_end >= char_types.size() ||
       char_types[prefix_end] != normalize::CharType::Kanji) {
     return;
@@ -92,6 +99,13 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
   for (size_t end_pos = hiragana_end; end_pos > kanji_end; --end_pos) {
     const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
     const std::string tail_observed_surface = extractSubstring(codepoints, prefix_end, end_pos);
+    // This path recovers an observed adverbial -く form such as か弱く.
+    // Let the ordinary adjective paths handle dictionary-form and negative
+    // endings: otherwise a leading case particle can be absorbed into a
+    // kanji-containing sequence (に関係ない, は根拠がない).
+    if (!utf8::endsWith(tail_observed_surface, "く")) {
+      continue;
+    }
     std::string tail_surface = tail_observed_surface;
     if (utf8::endsWith(tail_surface, "く")) {
       tail_surface.replace(tail_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
@@ -268,7 +282,15 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   // derivation so a verb continuative plus the lexical suffix is preserved.
   const std::string full_hiragana_surface = extractSubstring(codepoints, start_pos, max_hiragana_end);
   const size_t ge_pos = full_hiragana_surface.find("げ");
-  if (ge_pos != std::string::npos && ge_pos >= core::kTwoJapaneseCharBytes) {
+  const size_t derived_end = ge_pos == std::string::npos ? 0 : ge_pos + core::kJapaneseCharBytes;
+  const size_t derived_end_pos = derived_end == 0
+                                     ? codepoints.size()
+                                     : start_pos + normalize::utf8Length(full_hiragana_surface.substr(0, derived_end));
+  const bool has_na_adjective_continuation =
+      derived_end_pos < codepoints.size() &&
+      (codepoints[derived_end_pos] == U'に' || codepoints[derived_end_pos] == U'な' ||
+       codepoints[derived_end_pos] == U'だ' || codepoints[derived_end_pos] == U'さ');
+  if (ge_pos != std::string::npos && ge_pos >= core::kTwoJapaneseCharBytes && has_na_adjective_continuation) {
     const std::string stem = full_hiragana_surface.substr(0, ge_pos);
     const std::string base_form = stem + "い";
     const auto& base_candidates = inflection.analyze(base_form);
@@ -280,7 +302,6 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
                  isVerbInDictionary(dict_manager, inflection_candidate.base_form);
         });
     if (adjective_confidence != candidate::kNoOriginConfidence && !has_verified_verb_reading) {
-      const size_t derived_end = ge_pos + core::kJapaneseCharBytes;
       auto derived_candidate =
           makeNaAdjCandidate(full_hiragana_surface.substr(0, derived_end), start_pos,
                              start_pos + normalize::utf8Length(full_hiragana_surface.substr(0, derived_end)),
@@ -308,6 +329,12 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
     // words like かわいい (confidence=0.51)
     for (size_t end = max_hiragana_end; end > start_pos + 2; --end) {
       std::string test_surface = extractSubstring(codepoints, start_pos, end);
+
+      // A bare -く is an adverbial connective, not an adjective terminal.
+      // It is handled only by the bounded, morphology-specific paths above.
+      if (utf8::endsWith(test_surface, "く") && !utf8::endsWith(test_surface, "くない")) {
+        continue;
+      }
 
       // Skip patterns ending with just ない (negative auxiliary misidentified as adjective)
       // This prevents でもない from being validated as an adjective

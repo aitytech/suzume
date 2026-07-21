@@ -4028,6 +4028,10 @@
       "input": "人から手紙を受ける"
     },
     {
+      "accepted_diff": {
+        "category": "tokenizer-intentional",
+        "reason": "終わり is a productive deverbal noun before a case particle; preserve the noun search unit."
+      },
       "description": "Kanji verb nominalization remains intact before case particle rather than exposing fixed adverb interior",
       "expected": [
         {
@@ -4052,7 +4056,29 @@
         }
       ],
       "id": "literary_nominalized_renyokei_before_case",
-      "input": "作業の終わりに"
+      "input": "作業の終わりに",
+      "suzume_expected": [
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "終わり",
+          "pos": "Noun",
+          "surface": "終わり"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        }
+      ]
     },
     {
       "description": "全称名詞 すべて の格助詞接続",
