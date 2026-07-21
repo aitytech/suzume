@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 
 #include "cli_common.h"
