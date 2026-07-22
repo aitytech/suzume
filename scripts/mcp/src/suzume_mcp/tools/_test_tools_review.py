@@ -6,6 +6,7 @@ from pathlib import Path
 from ..core.suzume_cli import (
     get_expected_tokens_subprocess as get_expected_tokens,
 )
+from ..core.test_file_suggestions import suggest_test_files
 from ..core.test_file_utils import (
     find_test_by_input,
     generate_id,
@@ -385,63 +386,7 @@ async def test_suggest_file(input_text: str) -> str:
     if not tokens:
         return _json_error("No tokens found for input")
 
-    pos_count: dict[str, int] = {}
-    for tok in tokens:
-        pos_count[tok["pos"]] = pos_count.get(tok["pos"], 0) + 1
-
-    suggestions = []
-    first_pos = tokens[0]["pos"]
-    has_verb = "Verb" in pos_count
-    has_aux = "Auxiliary" in pos_count
-    has_adj = "Adjective" in pos_count
-
-    if has_adj and first_pos == "Adjective":
-        if input_text.endswith("そう"):
-            suggestions.append("adjective_i_compound")
-        elif "く" in input_text:
-            suggestions.append("adjective_i_ku")
-        elif "かっ" in input_text:
-            suggestions.append("adjective_i_katta")
-        else:
-            suggestions.append("adjective_i_basic")
-
-    if has_verb:
-        for tok in tokens:
-            if tok["pos"] == "Verb":
-                lemma = tok.get("lemma", "")
-                if lemma.endswith("する"):
-                    suggestions.append("verb_suru")
-                elif re.search(r"(来る|くる)$", lemma):
-                    suggestions.append("verb_irregular")
-                else:
-                    suggestions.append("verb_godan_misc")
-                break
-        if any(tok["surface"] in ("て", "で") for tok in tokens):
-            suggestions.append("verb_te_ta")
-
-    if has_aux and not has_verb and not has_adj:
-        suggestions.append("auxiliary_modality")
-
-    if first_pos == "Noun":
-        suggestions.append("noun_general")
-
-    if re.search(r"(です|ます)", input_text):
-        suggestions.append("auxiliary_politeness")
-    if input_text.endswith("ない"):
-        suggestions.append("auxiliary_negation")
-    if re.search(r"(だ|である)", input_text):
-        suggestions.append("copula")
-
-    if not suggestions:
-        suggestions.append("basic")
-
-    # Deduplicate while preserving order
-    seen: set[str] = set()
-    unique = []
-    for sug in suggestions:
-        if sug not in seen:
-            seen.add(sug)
-            unique.append(sug)
+    suggestions = suggest_test_files(input_text, tokens)
 
     token_list = [{"surface": tok["surface"], "pos": tok["pos"]} for tok in tokens]
 
@@ -449,6 +394,6 @@ async def test_suggest_file(input_text: str) -> str:
         {
             "input": input_text,
             "tokens": token_list,
-            "suggestions": unique,
+            "suggestions": suggestions,
         }
     )

@@ -6,6 +6,7 @@ from ..core.suzume_cli import (
 from ..core.suzume_cli import (
     get_expected_tokens_subprocess as get_expected_tokens,
 )
+from ..core.test_file_suggestions import suggest_test_files
 from ..core.test_file_utils import (
     find_test_by_id,
     find_test_by_input,
@@ -23,12 +24,32 @@ from ._test_tools_common import (
     _json_error,
     _json_result,
 )
+from ._test_tools_organization import append_cases_partitioned
+
+
+def _deduplicate_generated_ids(items: list[dict]) -> None:
+    existing_ids = set()
+    test_dir = get_test_data_dir(PROJECT_ROOT)
+    for path in test_dir.glob("*.json"):
+        data = load_json(path)
+        cases_key = "cases" if "cases" in data else "test_cases"
+        existing_ids.update(str(case.get("id", "")) for case in data.get(cases_key) or [])
+
+    for item in items:
+        base_id = item["id"]
+        test_id = base_id
+        suffix = 2
+        while test_id in existing_ids:
+            test_id = f"{base_id}_{suffix}"
+            suffix += 1
+        item["id"] = test_id
+        existing_ids.add(test_id)
 
 
 @mcp.tool()
 async def test_add(
     input_text: str,
-    file: str,
+    file: str = "",
     case_id: str = "",
     description: str = "",
     use_suzume: bool = False,
@@ -37,7 +58,7 @@ async def test_add(
 
     Args:
         input_text: Japanese text for the test case.
-        file: Target test file name (without .json).
+        file: Optional logical test file name. Empty uses the highest-ranked automatic suggestion.
         case_id: Optional custom ID (auto-generated if empty).
         description: Optional description.
         use_suzume: If True, use Suzume output instead of MeCab for expected.
@@ -71,28 +92,23 @@ async def test_add(
         return _json_error(str(exc))
     test_id = case_id or generate_id(input_text)
 
-    try:
-        file_name = normalize_test_file_name(file)
-    except ValueError as exc:
-        return _json_error(str(exc))
-
-    path = get_test_data_dir(PROJECT_ROOT) / f"{file_name}.json"
-    if path.exists():
-        data = load_json(path)
+    if file:
+        try:
+            file_name = normalize_test_file_name(file)
+        except ValueError as exc:
+            return _json_error(str(exc))
+        placement_source = "requested"
     else:
-        data = {"version": "1.0", "description": f"{file_name} tests", "cases": []}
+        suggestions = suggest_test_files(input_text, tokens)
+        if not suggestions:
+            return _json_error("Could not suggest a test file")
+        file_name = suggestions[0]
+        placement_source = "suggested"
 
-    cases_key = "cases" if "cases" in data else "test_cases"
-    data.setdefault(cases_key, [])
-
-    # Deduplicate ID
     if not case_id:
-        existing_ids = {c.get("id") for c in data[cases_key]}
-        if test_id in existing_ids:
-            suffix = 2
-            while f"{test_id}_{suffix}" in existing_ids:
-                suffix += 1
-            test_id = f"{test_id}_{suffix}"
+        id_holder = {"id": test_id}
+        _deduplicate_generated_ids([id_holder])
+        test_id = id_holder["id"]
 
     new_case = {
         "id": test_id,
@@ -101,13 +117,19 @@ async def test_add(
         "expected": expected,
     }
 
-    data[cases_key].append(new_case)
-    save_json(path, data)
+    try:
+        placement = append_cases_partitioned(PROJECT_ROOT, file_name, [new_case])
+    except (OSError, ValueError) as exc:
+        return _json_error(str(exc))
+    actual_file = placement["case_locations"][0]["file"]
 
     return _json_result(
         {
             "status": "ok",
-            "file": file_name,
+            "file": actual_file,
+            "requested_file": file_name,
+            "placement_source": placement_source,
+            "split": placement["split"],
             "input": input_text,
             "id": test_id,
             "source": source,
@@ -230,22 +252,30 @@ async def test_batch_add(
     """Batch add multiple test cases.
 
     Args:
-        file: Target test file name (without .json).
+        file: Logical test file name. An empty string groups inputs by their highest-ranked suggestions.
         inputs: List of Japanese input texts to add.
         apply: If True, actually add. Default is dry-run preview.
         use_suzume: If True, use Suzume output for expected.
     """
-    try:
-        file_name = normalize_test_file_name(file)
-    except ValueError as exc:
-        return _json_error(str(exc))
+    if file:
+        try:
+            file_name = normalize_test_file_name(file)
+        except ValueError as exc:
+            return _json_error(str(exc))
+    else:
+        file_name = ""
 
     to_add = []
     skipped = []
 
     # First pass: filter existing, collect new inputs
     new_inputs: list[tuple[int, str]] = []  # (original_index, input_text)
+    seen_inputs: set[str] = set()
     for i, inp in enumerate(inputs):
+        if inp in seen_inputs:
+            skipped.append({"input": inp, "reason": "duplicate within request"})
+            continue
+        seen_inputs.add(inp)
         existing = find_test_by_input(PROJECT_ROOT, inp)
         if existing:
             skipped.append({"input": inp, "reason": f"exists at {existing['basename']}/{existing['index']}"})
@@ -282,8 +312,33 @@ async def test_batch_add(
                 "source": source,
                 "rule": rule,
                 "_expected": expected,
+                "_file": file_name or suggest_test_files(inp, tokens)[0],
             }
         )
+
+    _deduplicate_generated_ids(to_add)
+
+    placements = []
+    grouped_items: dict[str, list[dict]] = {}
+    for item in to_add:
+        grouped_items.setdefault(item["_file"], []).append(item)
+    for logical_file, items in grouped_items.items():
+        new_cases = [
+            {
+                "id": item["id"],
+                "description": f"{item['input']} - regression test",
+                "input": item["input"],
+                "expected": item["_expected"],
+            }
+            for item in items
+        ]
+        try:
+            placement = append_cases_partitioned(PROJECT_ROOT, logical_file, new_cases, apply=apply)
+        except (OSError, ValueError) as exc:
+            return _json_error(str(exc))
+        placements.append(placement)
+        for item, location in zip(items, placement["case_locations"], strict=True):
+            item["file"] = location["file"]
 
     if not apply:
         # Strip internal fields for output
@@ -294,38 +349,19 @@ async def test_batch_add(
                 "surfaces": item["surfaces"],
                 "source": item["source"],
                 "rule": item["rule"],
+                "file": item["file"],
             }
             for item in to_add
         ]
         return _json_result(
             {
                 "file": file_name,
+                "files": [entry for placement in placements for entry in placement["files"]],
                 "to_add": to_add_out,
                 "skipped": skipped,
                 "applied": False,
             }
         )
-
-    path = get_test_data_dir(PROJECT_ROOT) / f"{file_name}.json"
-    if path.exists():
-        data = load_json(path)
-    else:
-        data = {"version": "1.0", "description": f"{file_name} tests", "cases": []}
-
-    cases_key = "cases" if "cases" in data else "test_cases"
-    data.setdefault(cases_key, [])
-
-    for item in to_add:
-        data[cases_key].append(
-            {
-                "id": item["id"],
-                "description": f"{item['input']} - regression test",
-                "input": item["input"],
-                "expected": item["_expected"],
-            }
-        )
-
-    save_json(path, data)
 
     to_add_out = [
         {
@@ -334,12 +370,14 @@ async def test_batch_add(
             "surfaces": item["surfaces"],
             "source": item["source"],
             "rule": item["rule"],
+            "file": item["file"],
         }
         for item in to_add
     ]
     return _json_result(
         {
             "file": file_name,
+            "files": [entry for placement in placements for entry in placement["files"]],
             "to_add": to_add_out,
             "skipped": skipped,
             "applied": True,

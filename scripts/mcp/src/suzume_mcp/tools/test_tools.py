@@ -9,6 +9,7 @@ from ._test_tools_mutation import (
     test_replace_pos,
     test_update,
 )
+from ._test_tools_organization import test_audit_layout, test_split_file
 from ._test_tools_read import (
     test_compare,
     test_diff_mecab,
@@ -30,6 +31,7 @@ from ._test_tools_review import (
 __all__ = [
     "test_accept_diff",
     "test_add",
+    "test_audit_layout",
     "test_batch_add",
     "test_check_coverage",
     "test_compare",
@@ -45,6 +47,7 @@ __all__ = [
     "test_reset_suzume",
     "test_search",
     "test_show",
+    "test_split_file",
     "test_suggest_file",
     "test_update",
     "test_validate_ids",
