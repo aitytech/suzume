@@ -1,0 +1,2588 @@
+{
+  "cases": [
+    {
+      "description": "確認を見破る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見破る",
+          "pos": "Verb",
+          "surface": "見破る"
+        }
+      ],
+      "id": "wo_ru_1",
+      "input": "確認を見破る"
+    },
+    {
+      "description": "確認を見下ろす - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見下ろす",
+          "pos": "Verb",
+          "surface": "見下ろす"
+        }
+      ],
+      "id": "wo_rosu",
+      "input": "確認を見下ろす"
+    },
+    {
+      "description": "確認を見送る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見送る",
+          "pos": "Verb",
+          "surface": "見送る"
+        }
+      ],
+      "id": "wo_ru_2",
+      "input": "確認を見送る"
+    },
+    {
+      "description": "確認を見捨てる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見捨てる",
+          "pos": "Verb",
+          "surface": "見捨てる"
+        }
+      ],
+      "id": "wo_teru",
+      "input": "確認を見捨てる"
+    },
+    {
+      "description": "確認を見放す - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見放す",
+          "pos": "Verb",
+          "surface": "見放す"
+        }
+      ],
+      "id": "wo_su",
+      "input": "確認を見放す"
+    },
+    {
+      "description": "確認を聞き届ける - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞き届ける",
+          "pos": "Verb",
+          "surface": "聞き届ける"
+        }
+      ],
+      "id": "wo_ki_keru",
+      "input": "確認を聞き届ける"
+    },
+    {
+      "description": "確認を聞き及ぶ - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞き及ぶ",
+          "pos": "Verb",
+          "surface": "聞き及ぶ"
+        }
+      ],
+      "id": "wo_ki_bu",
+      "input": "確認を聞き及ぶ"
+    },
+    {
+      "description": "確認を聞きかじる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞きかじる",
+          "pos": "Verb",
+          "surface": "聞きかじる"
+        }
+      ],
+      "id": "wo_kikajiru",
+      "input": "確認を聞きかじる"
+    },
+    {
+      "description": "確認を聞き漏らす - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞き漏らす",
+          "pos": "Verb",
+          "surface": "聞き漏らす"
+        }
+      ],
+      "id": "wo_ki_rasu",
+      "input": "確認を聞き漏らす"
+    },
+    {
+      "description": "確認を書き下ろす - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書き下ろす",
+          "pos": "Verb",
+          "surface": "書き下ろす"
+        }
+      ],
+      "id": "wo_ki_rosu",
+      "input": "確認を書き下ろす"
+    },
+    {
+      "description": "確認を書き添える - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書き添える",
+          "pos": "Verb",
+          "surface": "書き添える"
+        }
+      ],
+      "id": "wo_ki_eru",
+      "input": "確認を書き添える"
+    },
+    {
+      "description": "確認を書き残す - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書き残す",
+          "pos": "Verb",
+          "surface": "書き残す"
+        }
+      ],
+      "id": "wo_ki_su_3",
+      "input": "確認を書き残す"
+    },
+    {
+      "description": "確認を書き写す - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書き写す",
+          "pos": "Verb",
+          "surface": "書き写す"
+        }
+      ],
+      "id": "wo_ki_su_4",
+      "input": "確認を書き写す"
+    },
+    {
+      "description": "確認を書き散らす - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書き散らす",
+          "pos": "Verb",
+          "surface": "書き散らす"
+        }
+      ],
+      "id": "wo_ki_rasu_1",
+      "input": "確認を書き散らす"
+    },
+    {
+      "description": "確認を取り押さえる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り押さえる",
+          "pos": "Verb",
+          "surface": "取り押さえる"
+        }
+      ],
+      "id": "wo_ri_saeru",
+      "input": "確認を取り押さえる"
+    },
+    {
+      "description": "確認を取り囲む - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り囲む",
+          "pos": "Verb",
+          "surface": "取り囲む"
+        }
+      ],
+      "id": "wo_ri_mu",
+      "input": "確認を取り囲む"
+    },
+    {
+      "description": "確認を取り計らう - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り計らう",
+          "pos": "Verb",
+          "surface": "取り計らう"
+        }
+      ],
+      "id": "wo_ri_rau",
+      "input": "確認を取り計らう"
+    },
+    {
+      "description": "確認を取り調べる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り調べる",
+          "pos": "Verb",
+          "surface": "取り調べる"
+        }
+      ],
+      "id": "wo_ri_beru",
+      "input": "確認を取り調べる"
+    },
+    {
+      "description": "確認を取り締まる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り締まる",
+          "pos": "Verb",
+          "surface": "取り締まる"
+        }
+      ],
+      "id": "wo_ri_maru",
+      "input": "確認を取り締まる"
+    },
+    {
+      "description": "確認を取り次ぐ - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り次ぐ",
+          "pos": "Verb",
+          "surface": "取り次ぐ"
+        }
+      ],
+      "id": "wo_ri_gu",
+      "input": "確認を取り次ぐ"
+    },
+    {
+      "description": "確認を取り外す - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り外す",
+          "pos": "Verb",
+          "surface": "取り外す"
+        }
+      ],
+      "id": "wo_ri_su_1",
+      "input": "確認を取り外す"
+    },
+    {
+      "description": "確認を取り除く - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り除く",
+          "pos": "Verb",
+          "surface": "取り除く"
+        }
+      ],
+      "id": "wo_ri_ku_1",
+      "input": "確認を取り除く"
+    },
+    {
+      "description": "確認を取り違える - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り違える",
+          "pos": "Verb",
+          "surface": "取り違える"
+        }
+      ],
+      "id": "wo_ri_eru",
+      "input": "確認を取り違える"
+    },
+    {
+      "description": "確認を押し退ける - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "押し退ける",
+          "pos": "Verb",
+          "surface": "押し退ける"
+        }
+      ],
+      "id": "wo_shi_keru",
+      "input": "確認を押し退ける"
+    },
+    {
+      "description": "確認を押し寄せる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "押し寄せる",
+          "pos": "Verb",
+          "surface": "押し寄せる"
+        }
+      ],
+      "id": "wo_shi_seru",
+      "input": "確認を押し寄せる"
+    },
+    {
+      "description": "確認が押し迫る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "押し迫る",
+          "pos": "Verb",
+          "surface": "押し迫る"
+        }
+      ],
+      "id": "ga_shi_ru_1",
+      "input": "確認が押し迫る"
+    },
+    {
+      "description": "確認を乗り移る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "乗り移る",
+          "pos": "Verb",
+          "surface": "乗り移る"
+        }
+      ],
+      "id": "wo_ri_ru",
+      "input": "確認を乗り移る"
+    },
+    {
+      "description": "確認に乗り遅れる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "乗り遅れる",
+          "pos": "Verb",
+          "surface": "乗り遅れる"
+        }
+      ],
+      "id": "ni_ri_reru",
+      "input": "確認に乗り遅れる"
+    },
+    {
+      "description": "確認に乗り合わせる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "乗り合わせる",
+          "pos": "Verb",
+          "surface": "乗り合わせる"
+        }
+      ],
+      "id": "ni_ri_waseru",
+      "input": "確認に乗り合わせる"
+    },
+    {
+      "description": "確認が飛び散る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "飛び散る",
+          "pos": "Verb",
+          "surface": "飛び散る"
+        }
+      ],
+      "id": "ga_bi_ru",
+      "input": "確認が飛び散る"
+    },
+    {
+      "description": "確認に飛び起きる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "飛び起きる",
+          "pos": "Verb",
+          "surface": "飛び起きる"
+        }
+      ],
+      "id": "ni_bi_kiru",
+      "input": "確認に飛び起きる"
+    },
+    {
+      "description": "確認を飛び退く - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飛び退く",
+          "pos": "Verb",
+          "surface": "飛び退く"
+        }
+      ],
+      "id": "wo_bi_ku",
+      "input": "確認を飛び退く"
+    },
+    {
+      "description": "確認を飛び下りる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飛び下りる",
+          "pos": "Verb",
+          "surface": "飛び下りる"
+        }
+      ],
+      "id": "wo_bi_riru",
+      "input": "確認を飛び下りる"
+    },
+    {
+      "description": "資料を取り寄せた - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り寄せる",
+          "pos": "Verb",
+          "surface": "取り寄せ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_ri_seta",
+      "input": "資料を取り寄せた"
+    },
+    {
+      "description": "資料を取り寄せない - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り寄せる",
+          "pos": "Verb",
+          "surface": "取り寄せ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_ri_senai",
+      "input": "資料を取り寄せない"
+    },
+    {
+      "description": "資料を取り寄せれば - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り寄せる",
+          "pos": "Verb",
+          "surface": "取り寄せれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wo_ri_sereba",
+      "input": "資料を取り寄せれば"
+    },
+    {
+      "description": "資料を取り寄せて - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り寄せる",
+          "pos": "Verb",
+          "surface": "取り寄せ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "wo_ri_sete",
+      "input": "資料を取り寄せて"
+    },
+    {
+      "description": "道を踏み外した - regression test",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏み外す",
+          "pos": "Verb",
+          "surface": "踏み外し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_mi_shita",
+      "input": "道を踏み外した"
+    },
+    {
+      "description": "道を踏み外さない - regression test",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏み外す",
+          "pos": "Verb",
+          "surface": "踏み外さ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_mi_sanai",
+      "input": "道を踏み外さない"
+    },
+    {
+      "description": "道を踏み外して - regression test",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏み外す",
+          "pos": "Verb",
+          "surface": "踏み外し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "wo_mi_shite",
+      "input": "道を踏み外して"
+    },
+    {
+      "description": "道を踏み外せば - regression test",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏み外す",
+          "pos": "Verb",
+          "surface": "踏み外せ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wo_mi_seba",
+      "input": "道を踏み外せば"
+    },
+    {
+      "description": "確認を追いかけ回した - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "追いかけ回す",
+          "pos": "Verb",
+          "surface": "追いかけ回し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_ikake_shita",
+      "input": "確認を追いかけ回した"
+    },
+    {
+      "description": "対象を見失った - regression test",
+      "expected": [
+        {
+          "lemma": "対象",
+          "pos": "Noun",
+          "surface": "対象"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見失う",
+          "pos": "Verb",
+          "surface": "見失っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_ttta",
+      "input": "対象を見失った"
+    },
+    {
+      "description": "確認を読みふけった - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読みふける",
+          "pos": "Verb",
+          "surface": "読みふけっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_mifukettta",
+      "input": "確認を読みふけった"
+    },
+    {
+      "description": "確認を聞きかじった - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞きかじる",
+          "pos": "Verb",
+          "surface": "聞きかじっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_kikajittta",
+      "input": "確認を聞きかじった"
+    },
+    {
+      "description": "確認が行き違えば - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "行き違う",
+          "pos": "Verb",
+          "surface": "行き違え"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "ga_ki_eba",
+      "input": "確認が行き違えば"
+    },
+    {
+      "description": "確認を取り巻けば - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り巻く",
+          "pos": "Verb",
+          "surface": "取り巻け"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wo_ri_keba",
+      "input": "確認を取り巻けば"
+    },
+    {
+      "description": "確認を受け持てば - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "受け持つ",
+          "pos": "Verb",
+          "surface": "受け持て"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wo_ke_teba",
+      "input": "確認を受け持てば"
+    },
+    {
+      "description": "確認を聞き及べば - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞き及ぶ",
+          "pos": "Verb",
+          "surface": "聞き及べ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wo_ki_beba",
+      "input": "確認を聞き及べば"
+    },
+    {
+      "description": "確認を思い悩めば - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "思い悩む",
+          "pos": "Verb",
+          "surface": "思い悩め"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wo_i_meba",
+      "input": "確認を思い悩めば"
+    },
+    {
+      "description": "確認を取り次げば - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取り次ぐ",
+          "pos": "Verb",
+          "surface": "取り次げ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wo_ri_geba",
+      "input": "確認を取り次げば"
+    },
+    {
+      "description": "確認を思い知れば - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "思い知る",
+          "pos": "Verb",
+          "surface": "思い知れ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wo_i_reba",
+      "input": "確認を思い知れば"
+    },
+    {
+      "description": "荷物を取りに行く - regression test",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取る",
+          "pos": "Verb",
+          "surface": "取り"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "wo_rini_ku",
+      "input": "荷物を取りに行く"
+    },
+    {
+      "description": "本を読み始める - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始める"
+        }
+      ],
+      "id": "wo_mi_meru",
+      "input": "本を読み始める"
+    },
+    {
+      "description": "二人を話し合わせる - regression test",
+      "expected": [
+        {
+          "lemma": "二人",
+          "pos": "Noun",
+          "surface": "二人"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "話し合う",
+          "pos": "Verb",
+          "surface": "話し合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "wo_shi_waseru",
+      "input": "二人を話し合わせる"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "道を踏み外せる - regression test",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏む",
+          "pos": "Verb",
+          "surface": "踏み"
+        },
+        {
+          "lemma": "外せる",
+          "pos": "Verb",
+          "surface": "外せる"
+        }
+      ],
+      "id": "wo_mi_seru_1",
+      "input": "道を踏み外せる",
+      "suzume_expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏み外せる",
+          "pos": "Verb",
+          "surface": "踏み外せる"
+        }
+      ]
+    },
+    {
+      "description": "確認をさておいて報告する - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さておく",
+          "pos": "Verb",
+          "surface": "さておい"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "wosateoite_suru",
+      "input": "確認をさておいて報告する"
+    },
+    {
+      "description": "問題をさておく - regression test",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さておく",
+          "pos": "Verb",
+          "surface": "さておく"
+        }
+      ],
+      "id": "wosateoku",
+      "input": "問題をさておく"
+    },
+    {
+      "description": "計画をさておいた - regression test",
+      "expected": [
+        {
+          "lemma": "計画",
+          "pos": "Noun",
+          "surface": "計画"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さておく",
+          "pos": "Verb",
+          "surface": "さておい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wosateoita",
+      "input": "計画をさておいた"
+    },
+    {
+      "description": "課題をさておけば進める - regression test",
+      "expected": [
+        {
+          "lemma": "課題",
+          "pos": "Noun",
+          "surface": "課題"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さておく",
+          "pos": "Verb",
+          "surface": "さておけ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "wosateokeba_meru",
+      "input": "課題をさておけば進める"
+    },
+    {
+      "description": "確認をさておかない - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さておく",
+          "pos": "Verb",
+          "surface": "さておか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wosateokanai",
+      "input": "確認をさておかない"
+    },
+    {
+      "description": "問題をさておこう - regression test",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さておく",
+          "pos": "Verb",
+          "surface": "さておこ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "wosateokou",
+      "input": "問題をさておこう"
+    },
+    {
+      "description": "さて報告する - regression test",
+      "expected": [
+        {
+          "lemma": "さて",
+          "pos": "Conjunction",
+          "surface": "さて"
+        },
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sate_suru",
+      "input": "さて報告する"
+    },
+    {
+      "description": "さて、報告する - regression test",
+      "expected": [
+        {
+          "lemma": "さて",
+          "pos": "Conjunction",
+          "surface": "さて"
+        },
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sate_suru_1",
+      "input": "さて、報告する"
+    },
+    {
+      "description": "確認はさておき報告する - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "さておく",
+          "pos": "Verb",
+          "surface": "さておき"
+        },
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "hasateoki_suru",
+      "input": "確認はさておき報告する"
+    },
+    {
+      "description": "本を読ませておかない - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Auxiliary",
+          "surface": "おか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_maseteokanai",
+      "input": "本を読ませておかない"
+    },
+    {
+      "description": "確認をさせておく - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Auxiliary",
+          "surface": "おく"
+        }
+      ],
+      "id": "wosaseteoku",
+      "input": "確認をさせておく"
+    },
+    {
+      "description": "二人を話し合わせれば - regression test",
+      "expected": [
+        {
+          "lemma": "二人",
+          "pos": "Noun",
+          "surface": "二人"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "話し合う",
+          "pos": "Verb",
+          "surface": "話し合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wo_shi_wasereba",
+      "input": "二人を話し合わせれば"
+    },
+    {
+      "description": "担当者を話し合わせた - regression test",
+      "expected": [
+        {
+          "lemma": "担当者",
+          "pos": "Noun",
+          "surface": "担当者"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "話し合う",
+          "pos": "Verb",
+          "surface": "話し合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_shi_waseta",
+      "input": "担当者を話し合わせた"
+    },
+    {
+      "description": "人を話し合わせない - regression test",
+      "expected": [
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "話し合う",
+          "pos": "Verb",
+          "surface": "話し合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_shi_wasenai",
+      "input": "人を話し合わせない"
+    },
+    {
+      "description": "話し合わせれば分かる - regression test",
+      "expected": [
+        {
+          "lemma": "話し合う",
+          "pos": "Verb",
+          "surface": "話し合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かる"
+        }
+      ],
+      "id": "shi_wasereba_karu",
+      "input": "話し合わせれば分かる"
+    },
+    {
+      "description": "二つを組み合わせれば - regression test",
+      "expected": [
+        {
+          "lemma": "二つ",
+          "pos": "Noun",
+          "surface": "二つ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "組み合わせる",
+          "pos": "Verb",
+          "surface": "組み合わせれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "tsuwo_mi_wasereba",
+      "input": "二つを組み合わせれば"
+    },
+    {
+      "description": "二つを組み合わせた - regression test",
+      "expected": [
+        {
+          "lemma": "二つ",
+          "pos": "Noun",
+          "surface": "二つ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "組み合わせる",
+          "pos": "Verb",
+          "surface": "組み合わせ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tsuwo_mi_waseta",
+      "input": "二つを組み合わせた"
+    },
+    {
+      "description": "二つを組み合わせない - regression test",
+      "expected": [
+        {
+          "lemma": "二つ",
+          "pos": "Noun",
+          "surface": "二つ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "組み合わせる",
+          "pos": "Verb",
+          "surface": "組み合わせ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "tsuwo_mi_wasenai",
+      "input": "二つを組み合わせない"
+    },
+    {
+      "description": "言葉を言い合わせれば - regression test",
+      "expected": [
+        {
+          "lemma": "言葉",
+          "pos": "Noun",
+          "surface": "言葉"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "言い合う",
+          "pos": "Verb",
+          "surface": "言い合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "wo_i_wasereba",
+      "input": "言葉を言い合わせれば"
+    },
+    {
+      "description": "本を読ませた - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_maseta",
+      "input": "本を読ませた"
+    },
+    {
+      "description": "本を食べさせた - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_besaseta",
+      "input": "本を食べさせた"
+    },
+    {
+      "description": "確認を差し挟む - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "差し挟む",
+          "pos": "Verb",
+          "surface": "差し挟む"
+        }
+      ],
+      "id": "wo_shi_mu",
+      "input": "確認を差し挟む"
+    },
+    {
+      "description": "確認を差し招く - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "差し招く",
+          "pos": "Verb",
+          "surface": "差し招く"
+        }
+      ],
+      "id": "wo_shi_ku",
+      "input": "確認を差し招く"
+    },
+    {
+      "description": "確認を渡り歩く - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "渡り歩く",
+          "pos": "Verb",
+          "surface": "渡り歩く"
+        }
+      ],
+      "id": "wo_ri_ku_2",
+      "input": "確認を渡り歩く"
+    },
+    {
+      "description": "確認を振りほどく - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "振りほどく",
+          "pos": "Verb",
+          "surface": "振りほどく"
+        }
+      ],
+      "id": "wo_rihodoku",
+      "input": "確認を振りほどく"
+    },
+    {
+      "description": "確認を振り向く - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "振り向く",
+          "pos": "Verb",
+          "surface": "振り向く"
+        }
+      ],
+      "id": "wo_ri_ku_3",
+      "input": "確認を振り向く"
+    },
+    {
+      "description": "確認を振り当てる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "振り当てる",
+          "pos": "Verb",
+          "surface": "振り当てる"
+        }
+      ],
+      "id": "wo_ri_teru",
+      "input": "確認を振り当てる"
+    },
+    {
+      "description": "確認を差し向ける - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "差し向ける",
+          "pos": "Verb",
+          "surface": "差し向ける"
+        }
+      ],
+      "id": "wo_shi_keru_1",
+      "input": "確認を差し向ける"
+    },
+    {
+      "description": "確認を立ち尽くす - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "立ち尽くす",
+          "pos": "Verb",
+          "surface": "立ち尽くす"
+        }
+      ],
+      "id": "wo_chi_kusu",
+      "input": "確認を立ち尽くす"
+    },
+    {
+      "description": "確認を思い描く - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "思い描く",
+          "pos": "Verb",
+          "surface": "思い描く"
+        }
+      ],
+      "id": "wo_i_ku",
+      "input": "確認を思い描く"
+    },
+    {
+      "description": "確認を読み誤る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読み誤る",
+          "pos": "Verb",
+          "surface": "読み誤る"
+        }
+      ],
+      "id": "wo_mi_ru",
+      "input": "確認を読み誤る"
+    },
+    {
+      "description": "確認をやり遂げる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "やり遂げる",
+          "pos": "Verb",
+          "surface": "やり遂げる"
+        }
+      ],
+      "id": "woyari_geru",
+      "input": "確認をやり遂げる"
+    },
+    {
+      "description": "確認を立ち向かう - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "立ち向かう",
+          "pos": "Verb",
+          "surface": "立ち向かう"
+        }
+      ],
+      "id": "wo_chi_kau",
+      "input": "確認を立ち向かう"
+    },
+    {
+      "description": "確認を立ち並ぶ - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "立ち並ぶ",
+          "pos": "Verb",
+          "surface": "立ち並ぶ"
+        }
+      ],
+      "id": "wo_chi_bu_1",
+      "input": "確認を立ち並ぶ"
+    },
+    {
+      "description": "確認を立ち戻る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "立ち戻る",
+          "pos": "Verb",
+          "surface": "立ち戻る"
+        }
+      ],
+      "id": "wo_chi_ru",
+      "input": "確認を立ち戻る"
+    },
+    {
+      "description": "確認を使い果たす - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使い果たす",
+          "pos": "Verb",
+          "surface": "使い果たす"
+        }
+      ],
+      "id": "wo_i_tasu",
+      "input": "確認を使い果たす"
+    },
+    {
+      "description": "確認を使いこなす - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使いこなす",
+          "pos": "Verb",
+          "surface": "使いこなす"
+        }
+      ],
+      "id": "wo_ikonasu",
+      "input": "確認を使いこなす"
+    },
+    {
+      "description": "確認を抜きん出る - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "抜きん出る",
+          "pos": "Verb",
+          "surface": "抜きん出る"
+        }
+      ],
+      "id": "wo_kin_ru",
+      "input": "確認を抜きん出る"
+    },
+    {
+      "description": "確認を抜きん出た - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "抜きん出る",
+          "pos": "Verb",
+          "surface": "抜きん出"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_kin_ta",
+      "input": "確認を抜きん出た"
+    },
+    {
+      "description": "V2 損じるの連用形名詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "書き損じ",
+          "pos": "Noun",
+          "surface": "書き損じ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "compound_sonji_nominal",
+      "input": "確認の書き損じを調べる"
+    },
+    {
+      "description": "V2 損じるの基本形",
+      "expected": [
+        {
+          "lemma": "書き損じる",
+          "pos": "Verb",
+          "surface": "書き損じる"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "compound_sonji_base",
+      "input": "書き損じることがある"
+    },
+    {
+      "description": "V2 損じるの過去形",
+      "expected": [
+        {
+          "lemma": "書き損じる",
+          "pos": "Verb",
+          "surface": "書き損じ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "箇所",
+          "pos": "Noun",
+          "surface": "箇所"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "直す",
+          "pos": "Verb",
+          "surface": "直す"
+        }
+      ],
+      "id": "compound_sonji_past",
+      "input": "書き損じた箇所を直す"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "V2 渡るの連用形名詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "飛び渡る",
+          "pos": "Verb",
+          "surface": "飛び渡り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試す"
+        }
+      ],
+      "id": "compound_tobiwatari_nominal",
+      "input": "確認の飛び渡りを試す",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "飛び渡り",
+          "pos": "Noun",
+          "surface": "飛び渡り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試す"
+        }
+      ]
+    },
+    {
+      "description": "V2 渡るの基本形",
+      "expected": [
+        {
+          "lemma": "飛び渡る",
+          "pos": "Verb",
+          "surface": "飛び渡る"
+        },
+        {
+          "lemma": "鳥",
+          "pos": "Noun",
+          "surface": "鳥"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "compound_tobiwataru_base",
+      "input": "飛び渡る鳥を見る"
+    }
+  ],
+  "description": "Compound verbs (part 3/4)",
+  "version": "1.0"
+}

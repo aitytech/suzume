@@ -1,0 +1,3171 @@
+{
+  "cases": [
+    {
+      "description": "V2 渡るの過去形",
+      "expected": [
+        {
+          "lemma": "飛び渡る",
+          "pos": "Verb",
+          "surface": "飛び渡っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "鳥",
+          "pos": "Noun",
+          "surface": "鳥"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "compound_tobiwataru_past",
+      "input": "飛び渡った鳥を見る"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "V2 かざすの連用形名詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "振りかざす",
+          "pos": "Verb",
+          "surface": "振りかざし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_furikazashi_nominal",
+      "input": "確認の振りかざしを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "振りかざし",
+          "pos": "Noun",
+          "surface": "振りかざし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "description": "V2 かざすの基本形",
+      "expected": [
+        {
+          "lemma": "振りかざす",
+          "pos": "Verb",
+          "surface": "振りかざす"
+        }
+      ],
+      "id": "compound_furikazasu_base",
+      "input": "振りかざす。"
+    },
+    {
+      "description": "V2 かざすの過去形",
+      "expected": [
+        {
+          "lemma": "振りかざす",
+          "pos": "Verb",
+          "surface": "振りかざし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_furikazasu_past",
+      "input": "振りかざした。"
+    },
+    {
+      "description": "V2 かざすの別V1",
+      "expected": [
+        {
+          "lemma": "差しかざす",
+          "pos": "Verb",
+          "surface": "差しかざす"
+        }
+      ],
+      "id": "compound_sashikazasu_base",
+      "input": "差しかざす。"
+    },
+    {
+      "description": "V2 置くの連用形名詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "書き置き",
+          "pos": "Noun",
+          "surface": "書き置き"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "残す",
+          "pos": "Verb",
+          "surface": "残す"
+        }
+      ],
+      "id": "compound_kakioki_nominal",
+      "input": "確認の書き置きを残す"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "V2 置くの基本形",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "置く",
+          "pos": "Verb",
+          "surface": "置く"
+        }
+      ],
+      "id": "compound_kakioku_base",
+      "input": "書き置く。",
+      "suzume_expected": [
+        {
+          "lemma": "書き置く",
+          "pos": "Verb",
+          "surface": "書き置く"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "V2 置くの過去形",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "置く",
+          "pos": "Verb",
+          "surface": "置い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_kakioku_past",
+      "input": "書き置いた。",
+      "suzume_expected": [
+        {
+          "lemma": "書き置く",
+          "pos": "Verb",
+          "surface": "書き置い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
+    },
+    {
+      "description": "V2 置くの別V1",
+      "expected": [
+        {
+          "lemma": "取り置く",
+          "pos": "Verb",
+          "surface": "取り置く"
+        }
+      ],
+      "id": "compound_torioku_base",
+      "input": "取り置く。"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "V2 足す: nominalized 付け足し remains one derived noun",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "付け足す",
+          "pos": "Verb",
+          "surface": "付け足し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_v2_tasu_nominal",
+      "input": "確認の付け足しを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "付け足し",
+          "pos": "Noun",
+          "surface": "付け足し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "description": "V2 足す: basic compound verb",
+      "expected": [
+        {
+          "lemma": "付け足す",
+          "pos": "Verb",
+          "surface": "付け足す"
+        }
+      ],
+      "id": "compound_v2_tasu_basic",
+      "input": "付け足す。"
+    },
+    {
+      "description": "V2 足す: past conjugation",
+      "expected": [
+        {
+          "lemma": "付け足す",
+          "pos": "Verb",
+          "surface": "付け足し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_tasu_past",
+      "input": "付け足した。"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "V2 足す: alternate V1 compound verb",
+      "expected": [
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "足す",
+          "pos": "Verb",
+          "surface": "足す"
+        }
+      ],
+      "id": "compound_v2_tasu_alternate",
+      "input": "説明を書き足す。",
+      "suzume_expected": [
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書き足す",
+          "pos": "Verb",
+          "surface": "書き足す"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "V2 直る: nominalized 向き直り remains one derived noun",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "向き直る",
+          "pos": "Verb",
+          "surface": "向き直り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "促す",
+          "pos": "Verb",
+          "surface": "促す"
+        }
+      ],
+      "id": "compound_v2_naoru_nominal",
+      "input": "確認の向き直りを促す",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "向き直り",
+          "pos": "Noun",
+          "surface": "向き直り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "促す",
+          "pos": "Verb",
+          "surface": "促す"
+        }
+      ]
+    },
+    {
+      "description": "V2 直る: basic compound verb",
+      "expected": [
+        {
+          "lemma": "向き直る",
+          "pos": "Verb",
+          "surface": "向き直る"
+        }
+      ],
+      "id": "compound_v2_naoru_basic",
+      "input": "向き直る。"
+    },
+    {
+      "description": "V2 直る: past conjugation",
+      "expected": [
+        {
+          "lemma": "向き直る",
+          "pos": "Verb",
+          "surface": "向き直っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_naoru_past",
+      "input": "向き直った。"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "V2 直る: alternate V1 compound verb",
+      "expected": [
+        {
+          "lemma": "座り",
+          "pos": "Noun",
+          "surface": "座り"
+        },
+        {
+          "lemma": "直る",
+          "pos": "Verb",
+          "surface": "直る"
+        }
+      ],
+      "id": "compound_v2_naoru_alternate",
+      "input": "座り直る。",
+      "suzume_expected": [
+        {
+          "lemma": "座り直る",
+          "pos": "Verb",
+          "surface": "座り直る"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "V2 下す: nominalized 書き下し remains one derived noun",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "書き下す",
+          "pos": "Verb",
+          "surface": "書き下し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_v2_kudasu_nominal",
+      "input": "確認の書き下しを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "書き下し",
+          "pos": "Noun",
+          "surface": "書き下し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "description": "V2 下す: basic compound verb",
+      "expected": [
+        {
+          "lemma": "書き下す",
+          "pos": "Verb",
+          "surface": "書き下す"
+        }
+      ],
+      "id": "compound_v2_kudasu_basic",
+      "input": "書き下す。"
+    },
+    {
+      "description": "V2 下す: past conjugation",
+      "expected": [
+        {
+          "lemma": "書き下す",
+          "pos": "Verb",
+          "surface": "書き下し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_kudasu_past",
+      "input": "書き下した。"
+    },
+    {
+      "description": "V2 下す: alternate V1 compound verb",
+      "expected": [
+        {
+          "lemma": "読み下す",
+          "pos": "Verb",
+          "surface": "読み下す"
+        }
+      ],
+      "id": "compound_v2_kudasu_alternate",
+      "input": "読み下す。"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "V2 交わす: nominalized 取り交わし remains one derived noun",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "取り交わす",
+          "pos": "Verb",
+          "surface": "取り交わし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_v2_kawasu_nominal",
+      "input": "確認の取り交わしを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "取り交わし",
+          "pos": "Noun",
+          "surface": "取り交わし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "description": "V2 交わす: basic compound verb",
+      "expected": [
+        {
+          "lemma": "取り交わす",
+          "pos": "Verb",
+          "surface": "取り交わす"
+        }
+      ],
+      "id": "compound_v2_kawasu_basic",
+      "input": "取り交わす。"
+    },
+    {
+      "description": "V2 交わす: past conjugation",
+      "expected": [
+        {
+          "lemma": "取り交わす",
+          "pos": "Verb",
+          "surface": "取り交わし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_kawasu_past",
+      "input": "取り交わした。"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "V2 交わす: alternate V1 compound verb",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "交わす",
+          "pos": "Verb",
+          "surface": "交わす"
+        }
+      ],
+      "id": "compound_v2_kawasu_alternate",
+      "input": "書き交わす。",
+      "suzume_expected": [
+        {
+          "lemma": "書き交わす",
+          "pos": "Verb",
+          "surface": "書き交わす"
+        }
+      ]
+    },
+    {
+      "description": "Hiragana V1 plus kanji V2 renyokei: nominalized やり直し",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "やり直し",
+          "pos": "Noun",
+          "surface": "やり直し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "hira_compound_kanji_v2_renyokei_nominal",
+      "input": "確認のやり直しを行う"
+    },
+    {
+      "description": "Hiragana V1 plus kanji V2 renyokei: past conjugation",
+      "expected": [
+        {
+          "lemma": "やり直す",
+          "pos": "Verb",
+          "surface": "やり直し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "hira_compound_kanji_v2_renyokei_past",
+      "input": "やり直した。"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "Hiragana V1 plus kanji V2 renyokei: nominalized やり過ごし",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "やり過ごす",
+          "pos": "Verb",
+          "surface": "やり過ごし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "hira_compound_kanji_v2_sugosu_nominal",
+      "input": "確認のやり過ごしを避ける",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "やり過ごし",
+          "pos": "Noun",
+          "surface": "やり過ごし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ]
+    },
+    {
+      "description": "Hiragana V1 plus kanji V2 renyokei: past conjugation",
+      "expected": [
+        {
+          "lemma": "やり過ごす",
+          "pos": "Verb",
+          "surface": "やり過ごし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "hira_compound_kanji_v2_sugosu_past",
+      "input": "やり過ごした。"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "Hiragana V1 plus kanji V2 renyokei: alternate V1 nominalization",
+      "expected": [
+        {
+          "lemma": "読み直す",
+          "pos": "Verb",
+          "surface": "読み直し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "hira_compound_kanji_v2_alternate_nominal",
+      "input": "読み直しを行う。",
+      "suzume_expected": [
+        {
+          "lemma": "読み直し",
+          "pos": "Noun",
+          "surface": "読み直し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "Compound verb 寄り添う nominalizes before a case particle.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "寄り添う",
+          "pos": "Verb",
+          "surface": "寄り添い"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "促す",
+          "pos": "Verb",
+          "surface": "促す"
+        }
+      ],
+      "id": "compound_v2_sou_nominal",
+      "input": "確認の寄り添いを促す。",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "寄り添い",
+          "pos": "Noun",
+          "surface": "寄り添い"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "促す",
+          "pos": "Verb",
+          "surface": "促す"
+        }
+      ]
+    },
+    {
+      "description": "Compound verb 寄り添う remains one search unit.",
+      "expected": [
+        {
+          "lemma": "寄り添う",
+          "pos": "Verb",
+          "surface": "寄り添う"
+        }
+      ],
+      "id": "compound_v2_sou_base",
+      "input": "寄り添う。"
+    },
+    {
+      "description": "Compound verb 寄り添う retains its contracted past form.",
+      "expected": [
+        {
+          "lemma": "寄り添う",
+          "pos": "Verb",
+          "surface": "寄り添っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_sou_past",
+      "input": "寄り添った。"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "Kanji continuative plus 添う forms one compound search unit.",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "添う",
+          "pos": "Verb",
+          "surface": "添う"
+        }
+      ],
+      "id": "compound_v2_sou_kanji_v1",
+      "input": "書き添う。",
+      "suzume_expected": [
+        {
+          "lemma": "書き添う",
+          "pos": "Verb",
+          "surface": "書き添う"
+        }
+      ]
+    },
+    {
+      "description": "A case particle prevents a compound-verb join.",
+      "expected": [
+        {
+          "lemma": "寄り",
+          "pos": "Noun",
+          "surface": "寄り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "添う",
+          "pos": "Verb",
+          "surface": "添う"
+        }
+      ],
+      "id": "compound_v2_sou_particle_boundary",
+      "input": "寄りを添う。"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "Compound verb 入り乱れる nominalizes before a case particle.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "入り乱れる",
+          "pos": "Verb",
+          "surface": "入り乱れ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ],
+      "id": "compound_v2_midareru_nominal",
+      "input": "確認の入り乱れを防ぐ",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "入り乱れ",
+          "pos": "Noun",
+          "surface": "入り乱れ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ]
+    },
+    {
+      "description": "Compound verb 入り乱れる remains one search unit.",
+      "expected": [
+        {
+          "lemma": "入り乱れる",
+          "pos": "Verb",
+          "surface": "入り乱れる"
+        }
+      ],
+      "id": "compound_v2_midareru_base",
+      "input": "入り乱れる。"
+    },
+    {
+      "description": "Compound verb 入り乱れる retains its past form.",
+      "expected": [
+        {
+          "lemma": "入り乱れる",
+          "pos": "Verb",
+          "surface": "入り乱れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_midareru_past",
+      "input": "入り乱れた。"
+    },
+    {
+      "description": "A case particle prevents a compound-verb join.",
+      "expected": [
+        {
+          "lemma": "入り",
+          "pos": "Noun",
+          "surface": "入り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "乱れる",
+          "pos": "Verb",
+          "surface": "乱れる"
+        }
+      ],
+      "id": "compound_v2_midareru_particle_boundary",
+      "input": "入りを乱れる。"
+    },
+    {
+      "description": "漢字＋複数かなの五段V1による複合動詞の基本形",
+      "expected": [
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合う"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_base",
+      "input": "混じり合う。"
+    },
+    {
+      "description": "漢字＋複数かなの五段V1による複合動詞の過去形",
+      "expected": [
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_past",
+      "input": "混じり合った。"
+    },
+    {
+      "description": "漢字＋複数かなの五段V1による複合動詞の仮定形",
+      "expected": [
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合え"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_conditional",
+      "input": "混じり合えば。"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "複合動詞連用形の名詞化",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合い"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_nominal",
+      "input": "確認の混じり合いを調べる",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "混じり合い",
+          "pos": "Noun",
+          "surface": "混じり合い"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ]
+    },
+    {
+      "description": "同じ五段連用形規則の並列例",
+      "expected": [
+        {
+          "lemma": "混ざり合う",
+          "pos": "Verb",
+          "surface": "混ざり合う"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_parallel",
+      "input": "混ざり合う。"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "単漢字一段V1と漢字V2の連用形名詞化",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "見回す",
+          "pos": "Verb",
+          "surface": "見回し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_nominal",
+      "input": "確認の見回しを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "見回し",
+          "pos": "Noun",
+          "surface": "見回し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "description": "単漢字一段V1と漢字V2の過去形",
+      "expected": [
+        {
+          "lemma": "見回す",
+          "pos": "Verb",
+          "surface": "見回し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_past",
+      "input": "見回した。"
+    },
+    {
+      "description": "単漢字一段V1と漢字V2の接続形",
+      "expected": [
+        {
+          "lemma": "見回す",
+          "pos": "Verb",
+          "surface": "見回し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_te",
+      "input": "見回して。"
+    },
+    {
+      "description": "同じ単漢字一段V1規則の並列例",
+      "expected": [
+        {
+          "lemma": "見返す",
+          "pos": "Verb",
+          "surface": "見返し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_parallel",
+      "input": "見返した。"
+    },
+    {
+      "accepted_diff": {
+        "category": "bare-ichidan-noun-ambiguity",
+        "reason": "一字表層「見」は一段動詞連用形と名詞が同形で、人工的な「見と回す」には両方の局所接続が成立する。境界は正しく、一字名詞を一律動詞化しないため現在のNounフォールバックを意図差とする。"
+      },
+      "description": "助詞境界では複合動詞にしない",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "回す",
+          "pos": "Verb",
+          "surface": "回す"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_particle_boundary",
+      "input": "見と回す。",
+      "suzume_expected": [
+        {
+          "lemma": "見",
+          "pos": "Noun",
+          "surface": "見"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "回す",
+          "pos": "Verb",
+          "surface": "回す"
+        }
+      ]
+    },
+    {
+      "description": "複合動詞の後続助詞境界",
+      "expected": [
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合う"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_following_particle",
+      "input": "混じり合うと、"
+    },
+    {
+      "description": "漢字と複数かなの五段V1による複合動詞の否定形",
+      "expected": [
+        {
+          "lemma": "混じり合う",
+          "pos": "Verb",
+          "surface": "混じり合わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "compound_godan_multikana_v1_negative",
+      "input": "混じり合わない。"
+    },
+    {
+      "description": "単漢字一段V1と漢字V2の否定形",
+      "expected": [
+        {
+          "lemma": "見回す",
+          "pos": "Verb",
+          "surface": "見回さ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "compound_bare_ichidan_kanji_v2_negative",
+      "input": "見回さない。"
+    },
+    {
+      "description": "語彙化した複合動詞の過去形",
+      "expected": [
+        {
+          "lemma": "出来上がる",
+          "pos": "Verb",
+          "surface": "出来上がっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "verb_compound_dekiagaru_past",
+      "input": "出来上がった。"
+    },
+    {
+      "description": "Keep the lexicalized compound verb through Godan past inflection.",
+      "expected": [
+        {
+          "lemma": "枝",
+          "pos": "Noun",
+          "surface": "枝"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "折れ曲がる",
+          "pos": "Verb",
+          "surface": "折れ曲がっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "verb_compound_oremagaru_past",
+      "input": "枝が折れ曲がった。"
+    },
+    {
+      "description": "Keep the related lexicalized Ichidan compound verb as one search token.",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "折り曲げる",
+          "pos": "Verb",
+          "surface": "折り曲げ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "verb_compound_orimageru_past",
+      "input": "紙を折り曲げた。"
+    },
+    {
+      "description": "見つけ出した - auto-generated",
+      "expected": [
+        {
+          "lemma": "見つけ出す",
+          "pos": "Verb",
+          "surface": "見つけ出し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tsuke_shita",
+      "input": "見つけ出した"
+    },
+    {
+      "description": "見つけ出す - auto-generated",
+      "expected": [
+        {
+          "lemma": "見つけ出す",
+          "pos": "Verb",
+          "surface": "見つけ出す"
+        }
+      ],
+      "id": "tsuke_su",
+      "input": "見つけ出す"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "格助詞前の複合連用形は検索単位として名詞化する",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "置き忘れる",
+          "pos": "Verb",
+          "surface": "置き忘れ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ],
+      "id": "compound_v2_wasureru_nominal",
+      "input": "確認の置き忘れを防ぐ",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "置き忘れ",
+          "pos": "Noun",
+          "surface": "置き忘れ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ]
+    },
+    {
+      "description": "複合動詞の過去形は補助動詞を分離する",
+      "expected": [
+        {
+          "lemma": "置き忘れる",
+          "pos": "Verb",
+          "surface": "置き忘れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_wasureru_past",
+      "input": "置き忘れた"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "複合動詞の第2動詞は混じるを認識する",
+      "expected": [
+        {
+          "lemma": "入る",
+          "pos": "Verb",
+          "surface": "入り"
+        },
+        {
+          "lemma": "混じる",
+          "pos": "Verb",
+          "surface": "混じる"
+        }
+      ],
+      "id": "compound_v2_majiru_base",
+      "input": "入り混じる",
+      "suzume_expected": [
+        {
+          "lemma": "入り混じる",
+          "pos": "Verb",
+          "surface": "入り混じる"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "格助詞前の複合連用形は検索単位として名詞化する",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "入り",
+          "pos": "Noun",
+          "surface": "入り"
+        },
+        {
+          "lemma": "混じり",
+          "pos": "Suffix",
+          "surface": "混じり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "compound_v2_majiru_nominal",
+      "input": "確認の入り混じりを調べる",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "入り混じり",
+          "pos": "Noun",
+          "surface": "入り混じり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ]
+    },
+    {
+      "description": "曖昧な連用形でも辞書登録済み複合動詞を選ぶ",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降りしきる",
+          "pos": "Verb",
+          "surface": "降りしきる"
+        }
+      ],
+      "id": "compound_v2_shikiru_base",
+      "input": "雨が降りしきる"
+    },
+    {
+      "description": "複合動詞の過去形は助動詞を分離する",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降りしきる",
+          "pos": "Verb",
+          "surface": "降りしきっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "compound_v2_shikiru_past",
+      "input": "雨が降りしきった"
+    },
+    {
+      "description": "複合動詞の未然形と否定助動詞を分離する",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降りしきる",
+          "pos": "Verb",
+          "surface": "降りしきら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "compound_v2_shikiru_negative",
+      "input": "雨が降りしきらない"
+    },
+    {
+      "description": "複合動詞の仮定形と接続助詞を分離する",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降りしきる",
+          "pos": "Verb",
+          "surface": "降りしきれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "compound_v2_shikiru_conditional",
+      "input": "雨が降りしきれば"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "Dictionary-verified Ichidan compound nominal stays one search unit before a case particle",
+      "expected": [
+        {
+          "lemma": "折り曲げる",
+          "pos": "Verb",
+          "surface": "折り曲げ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ],
+      "id": "dictionary_ichidan_compound_nominal",
+      "input": "折り曲げを防ぐ",
+      "suzume_expected": [
+        {
+          "lemma": "折り曲げ",
+          "pos": "Noun",
+          "surface": "折り曲げ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+      },
+      "description": "Verb continuative plus repetitive-action suffix stays split",
+      "expected": [
+        {
+          "lemma": "走る",
+          "pos": "Verb",
+          "surface": "走り"
+        },
+        {
+          "lemma": "まくる",
+          "pos": "Auxiliary",
+          "surface": "まくり"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "一日",
+          "pos": "Noun",
+          "surface": "一日"
+        }
+      ],
+      "id": "verb_renyokei_makuri_suffix",
+      "input": "走りまくりの一日",
+      "suzume_expected": [
+        {
+          "lemma": "走る",
+          "pos": "Verb",
+          "surface": "走り"
+        },
+        {
+          "lemma": "まくり",
+          "pos": "Suffix",
+          "surface": "まくり"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "一日",
+          "pos": "Noun",
+          "surface": "一日"
+        }
+      ]
+    },
+    {
+      "description": "Verb continuative remains verbal before a bound suffix",
+      "expected": [
+        {
+          "lemma": "置く",
+          "pos": "Verb",
+          "surface": "置き"
+        },
+        {
+          "lemma": "っぱなし",
+          "pos": "Suffix",
+          "surface": "っぱなし"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        }
+      ],
+      "id": "verb_renyokei_suffix_prefers_verb",
+      "input": "置きっぱなしの荷物"
+    },
+    {
+      "description": "終止形と当為助動詞に続く形式名詞を保つ",
+      "expected": [
+        {
+          "lemma": "なす",
+          "pos": "Verb",
+          "surface": "なす"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        }
+      ],
+      "id": "classical_obligation_before_formal_noun",
+      "input": "なすべきこと"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "取り消し",
+          "pos": "Noun",
+          "surface": "取り消し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_torikeshi_nominal",
+      "input": "確認の取り消しを行う"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "繰り上げる",
+          "pos": "Verb",
+          "surface": "繰り上げ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_kuriage_nominal",
+      "input": "確認の繰り上げを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "繰り上げ",
+          "pos": "Noun",
+          "surface": "繰り上げ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "追い越し",
+          "pos": "Noun",
+          "surface": "追い越し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_oikoshi_nominal",
+      "input": "確認の追い越しを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "取り込み",
+          "pos": "Noun",
+          "surface": "取り込み"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_torikomi_nominal",
+      "input": "確認の取り込みを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "立て直し",
+          "pos": "Noun",
+          "surface": "立て直し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_tatenaoshi_nominal",
+      "input": "確認の立て直しを行う"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "聞き返す",
+          "pos": "Verb",
+          "surface": "聞き返し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_kikikaeshi_nominal",
+      "input": "確認の聞き返しを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "聞き返し",
+          "pos": "Noun",
+          "surface": "聞き返し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "聞き流す",
+          "pos": "Verb",
+          "surface": "聞き流し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_kikinagashi_nominal",
+      "input": "確認の聞き流しを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "聞き流し",
+          "pos": "Noun",
+          "surface": "聞き流し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "言い渡し",
+          "pos": "Noun",
+          "surface": "言い渡し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_iiwatashi_nominal",
+      "input": "確認の言い渡しを行う"
+    },
+    {
+      "description": "複合由来の連用形名詞を格助詞前で一検索単位に保つ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "言い回し",
+          "pos": "Noun",
+          "surface": "言い回し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "直す",
+          "pos": "Verb",
+          "surface": "直す"
+        }
+      ],
+      "id": "compound_iimawashi_nominal",
+      "input": "確認の言い回しを直す"
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "Compound continuative before の is a deverbal noun.",
+      "expected": [
+        {
+          "lemma": "書きかける",
+          "pos": "Verb",
+          "surface": "書きかけ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "手紙",
+          "pos": "Noun",
+          "surface": "手紙"
+        }
+      ],
+      "id": "compound_renyokei_nominal_no",
+      "input": "書きかけの手紙",
+      "suzume_expected": [
+        {
+          "lemma": "書きかけ",
+          "pos": "Noun",
+          "surface": "書きかけ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "手紙",
+          "pos": "Noun",
+          "surface": "手紙"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "A second continuative compound retains its nominal reading before の.",
+      "expected": [
+        {
+          "lemma": "書きたてる",
+          "pos": "Verb",
+          "surface": "書きたて"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "文",
+          "pos": "Noun",
+          "surface": "文"
+        }
+      ],
+      "id": "compound_renyokei_nominal_no_tate",
+      "input": "書きたての文",
+      "suzume_expected": [
+        {
+          "lemma": "書きたて",
+          "pos": "Noun",
+          "surface": "書きたて"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "文",
+          "pos": "Noun",
+          "surface": "文"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
+      },
+      "description": "Verified godan compound continuative is a noun before a case particle.",
+      "expected": [
+        {
+          "lemma": "折り畳む",
+          "pos": "Verb",
+          "surface": "折り畳み"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "広げる",
+          "pos": "Verb",
+          "surface": "広げる"
+        }
+      ],
+      "id": "dictionary_godan_compound_nominal",
+      "input": "折り畳みを広げる",
+      "suzume_expected": [
+        {
+          "lemma": "折り畳み",
+          "pos": "Noun",
+          "surface": "折り畳み"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "広げる",
+          "pos": "Verb",
+          "surface": "広げる"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "確認の足し合わせを行う - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "足し合わせ",
+          "pos": "Noun",
+          "surface": "足し合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_shi_wasewo_u",
+      "input": "確認の足し合わせを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "足し合わせ",
+          "pos": "Noun",
+          "surface": "足し合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "確認の書き合わせを行う - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "書き合わせ",
+          "pos": "Noun",
+          "surface": "書き合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_ki_wasewo_u",
+      "input": "確認の書き合わせを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "書き合わせ",
+          "pos": "Noun",
+          "surface": "書き合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "description": "確認の取り合わせを行う - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "取り合わせ",
+          "pos": "Noun",
+          "surface": "取り合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_ri_wasewo_u",
+      "input": "確認の取り合わせを行う"
+    },
+    {
+      "description": "Keep the causative auxiliary boundary when the terminal form follows.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "話し合う",
+          "pos": "Verb",
+          "surface": "話し合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "compound_causative_control",
+      "input": "確認を話し合わせる"
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "Treat a compound continuative before a case particle as one deverbal noun.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "引き合わせ",
+          "pos": "Noun",
+          "surface": "引き合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_nominal_hiki_awase",
+      "input": "確認の引き合わせを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "引き合わせ",
+          "pos": "Noun",
+          "surface": "引き合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
+      },
+      "description": "Treat a compound continuative before a case particle as one deverbal noun.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "掛け合わせ",
+          "pos": "Noun",
+          "surface": "掛け合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "compound_nominal_kake_awase",
+      "input": "確認の掛け合わせを行う",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "掛け合わせ",
+          "pos": "Noun",
+          "surface": "掛け合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "causative-ambiguity",
+        "reason": "「抱き合わせる」と「抱き合わ＋せる」は表層同形で、完全複合lemmaの語彙証拠なしには区別不能。非辞書複合では生産的な五段未然形＋使役助動詞の形態素境界を維持する。"
+      },
+      "description": "Keep the causative analysis when a terminal form remains ambiguous.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "抱き合わせる",
+          "pos": "Verb",
+          "surface": "抱き合わせる"
+        }
+      ],
+      "id": "compound_causative_daki_awaseru",
+      "input": "確認を抱き合わせる",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "抱き合う",
+          "pos": "Verb",
+          "surface": "抱き合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ]
+    },
+    {
+      "description": "Preserve the independently valid verbal boundary for an ambiguous terminal form.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "誘い合う",
+          "pos": "Verb",
+          "surface": "誘い合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "compound_split_sasoi_awaseru",
+      "input": "確認を誘い合わせる"
+    },
+    {
+      "accepted_diff": {
+        "category": "causative-ambiguity",
+        "reason": "「押し合わせる」と「押し合わ＋せる」は表層同形で、完全複合lemmaの語彙証拠なしには区別不能。非辞書複合では生産的な五段未然形＋使役助動詞の形態素境界を維持する。"
+      },
+      "description": "Keep the causative analysis when a terminal form remains ambiguous.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "押し合わせる",
+          "pos": "Verb",
+          "surface": "押し合わせる"
+        }
+      ],
+      "id": "compound_causative_oshi_awaseru",
+      "input": "確認を押し合わせる",
+      "suzume_expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "押し合う",
+          "pos": "Verb",
+          "surface": "押し合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ]
+    },
+    {
+      "description": "Compound Godan mizenkei remains separate before shortened causative passive",
+      "expected": [
+        {
+          "lemma": "考え込む",
+          "pos": "Verb",
+          "surface": "考え込ま"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_kangaekoma_short_causative_passive",
+      "input": "考え込まされた"
+    },
+    {
+      "description": "Compound Ichidan stem remains intact before passive auxiliary",
+      "expected": [
+        {
+          "lemma": "話しかける",
+          "pos": "Verb",
+          "surface": "話しかけ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_hanashikake_passive",
+      "input": "話しかけられた"
+    },
+    {
+      "description": "サ変境界規則が辞書検証済み複合動詞を分断しない負例",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見直す",
+          "pos": "Verb",
+          "surface": "見直し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_shita",
+      "input": "資料を見直した。"
+    },
+    {
+      "description": "Productive compound verb mizenkei remains one search unit before negative auxiliary",
+      "expected": [
+        {
+          "lemma": "書き直す",
+          "pos": "Verb",
+          "surface": "書き直さ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "productive_compound_mizenkei_negative",
+      "input": "書き直さない。"
+    },
+    {
+      "description": "検証済み複合動詞の未然形に古典否定ぬを接続する",
+      "expected": [
+        {
+          "lemma": "見届ける",
+          "pos": "Verb",
+          "surface": "見届け"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "知らせ",
+          "pos": "Noun",
+          "surface": "知らせ"
+        }
+      ],
+      "id": "compound_mizenkei_classical_nu_control",
+      "input": "見届けぬ知らせ"
+    },
+    {
+      "description": "語頭のサ変連用形は複合動詞V1になれる",
+      "expected": [
+        {
+          "lemma": "し続ける",
+          "pos": "Verb",
+          "surface": "し続ける"
+        }
+      ],
+      "id": "suru_renyokei_compound_at_sentence_start",
+      "input": "し続ける"
+    },
+    {
+      "description": "漢字サ変名詞の後では「し」から始まる複合候補を実境界から生成する",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "し続ける",
+          "pos": "Verb",
+          "surface": "し続ける"
+        }
+      ],
+      "id": "sahen_noun_boundary_before_hiragana_compound",
+      "input": "確認し続ける"
+    },
+    {
+      "description": "漢字始まり複合動詞は完全span候補を維持する",
+      "expected": [
+        {
+          "lemma": "話し続ける",
+          "pos": "Verb",
+          "surface": "話し続ける"
+        }
+      ],
+      "id": "kanji_okurigana_compound_whole_span",
+      "input": "話し続ける"
+    },
+    {
+      "description": "ひらがな始まりの複合動詞連用形もVerbCompound originを保持する",
+      "expected": [
+        {
+          "lemma": "やり直す",
+          "pos": "Verb",
+          "surface": "やり直し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "hiragana_compound_renyokei_origin_before_connective",
+      "input": "やり直して確認する"
+    },
+    {
+      "description": "辞書検証済み複合動詞の音便形内部から候補を再開しない",
+      "expected": [
+        {
+          "lemma": "言い損なう",
+          "pos": "Verb",
+          "surface": "言い損なっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "しまっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "dictionary_compound_onbinkei_internal_boundary",
+      "input": "言い損なってしまった"
+    }
+  ],
+  "description": "Compound verbs (part 4/4)",
+  "version": "1.0"
+}
