@@ -199,12 +199,7 @@ bool formalNounFollowsAt(const dictionary::DictionaryManager* dict_manager, cons
     return false;
   }
   const std::string remaining = extractSubstring(codepoints, pos, codepoints.size());
-  for (const auto& result : dict_manager->lookup(remaining, 0)) {
-    if (result.entry != nullptr && result.entry->extended_pos == core::ExtendedPOS::NounFormal) {
-      return true;
-    }
-  }
-  return false;
+  return lookupResultsHaveExtendedPOS(dict_manager->lookup(remaining, 0), core::ExtendedPOS::NounFormal);
 }
 
 std::string lookupVerbLemma(const dictionary::DictionaryManager* dict_manager, std::string_view surface,

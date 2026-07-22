@@ -149,15 +149,10 @@ bool absorbsPassiveBeforeNegative(const core::Lattice& lattice, const dictionary
     return false;
   }
 
-  bool followed_by_negative = false;
   const size_t probe_end = std::min(codepoints.size(), candidate.end + static_cast<size_t>(3));
   const std::string following = extractSubstring(codepoints, candidate.end, probe_end);
-  for (const auto& match : dict_manager.lookup(following, 0)) {
-    if (match.entry != nullptr && match.entry->extended_pos == core::ExtendedPOS::AuxNegativeNai) {
-      followed_by_negative = true;
-      break;
-    }
-  }
+  const bool followed_by_negative =
+      lookupResultsHaveExtendedPOS(dict_manager.lookup(following, 0), core::ExtendedPOS::AuxNegativeNai);
   if (!followed_by_negative) {
     return false;
   }

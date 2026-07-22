@@ -500,10 +500,9 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     const bool ends_at_sentence_boundary =
         end_pos >= codepoints.size() || normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Symbol;
     if (result.entry->pos == core::PartOfSpeech::Determiner && ends_at_sentence_boundary) {
-      const bool has_same_span_predicate = std::any_of(results.begin(), results.end(), [&](const auto& other) {
-        return other.entry != nullptr && other.length == result.length &&
-               (other.entry->pos == core::PartOfSpeech::Verb || other.entry->pos == core::PartOfSpeech::Adjective);
-      });
+      constexpr PartOfSpeechMask kPredicateMask =
+          partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Adjective);
+      const bool has_same_span_predicate = lookupResultsHavePartOfSpeech(results, kPredicateMask, result.length);
       if (has_same_span_predicate) {
         continue;
       }
@@ -518,9 +517,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       const size_t following_byte_pos = byteOffsetAt(byte_offsets, end_pos);
       const auto following_results = dict_manager_.lookup(text, following_byte_pos);
       const bool followed_by_case_particle =
-          std::any_of(following_results.begin(), following_results.end(), [](const auto& following) {
-            return following.entry != nullptr && following.entry->extended_pos == core::ExtendedPOS::ParticleCase;
-          });
+          lookupResultsHaveExtendedPOS(following_results, core::ExtendedPOS::ParticleCase);
       if (followed_by_case_particle) {
         continue;
       }
@@ -530,9 +527,8 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // following nominal particle selects the noun use (一切+の/は/を).  Keep
     // the adverb when it directly modifies a predicate (一切+確認しない).
     if (result.entry->pos == core::PartOfSpeech::Adverb && end_pos < codepoints.size()) {
-      const bool has_same_span_noun = std::any_of(results.begin(), results.end(), [&](const auto& other) {
-        return other.entry != nullptr && other.length == result.length && other.entry->pos == core::PartOfSpeech::Noun;
-      });
+      const bool has_same_span_noun =
+          lookupResultsHavePartOfSpeech(results, partOfSpeechMask(core::PartOfSpeech::Noun), result.length);
       const auto following_results = dict_manager_.lookup(text, byteOffsetAt(byte_offsets, end_pos));
       const bool followed_by_nominal_particle =
           std::any_of(following_results.begin(), following_results.end(), [](const auto& following) {
@@ -552,10 +548,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       // The same full-span adverb remains valid when it directly modifies a
       // predicate, so require both internal dictionary categories and the
       // right-hand nominal particle instead of naming any lexical surface.
-      const bool followed_by_no =
-          std::any_of(following_results.begin(), following_results.end(), [](const auto& following) {
-            return following.entry != nullptr && following.entry->extended_pos == core::ExtendedPOS::ParticleNo;
-          });
+      const bool followed_by_no = lookupResultsHaveExtendedPOS(following_results, core::ExtendedPOS::ParticleNo);
       if (followed_by_no) {
         bool has_interrogative_particle_split = false;
         for (const auto& prefix : results) {
@@ -565,11 +558,8 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
           }
           const size_t suffix_pos = start_pos + prefix.length;
           const auto suffix_results = dict_manager_.lookup(text, byteOffsetAt(byte_offsets, suffix_pos));
-          has_interrogative_particle_split =
-              std::any_of(suffix_results.begin(), suffix_results.end(), [&](const auto& suffix) {
-                return suffix.entry != nullptr && suffix.length == result.length - prefix.length &&
-                       suffix.entry->extended_pos == core::ExtendedPOS::ParticleAdverbial;
-              });
+          has_interrogative_particle_split = lookupResultsHaveExtendedPOS(
+              suffix_results, core::ExtendedPOS::ParticleAdverbial, result.length - prefix.length);
           if (has_interrogative_particle_split) {
             break;
           }
@@ -592,10 +582,8 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // 1時間+おき+ます keeps the verb candidate.
     if (result.entry->pos == core::PartOfSpeech::Verb &&
         hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::NounNumber)) {
-      const bool has_same_span_suffix = std::any_of(results.begin(), results.end(), [&](const auto& other) {
-        return other.entry != nullptr && other.length == result.length &&
-               other.entry->pos == core::PartOfSpeech::Suffix;
-      });
+      const bool has_same_span_suffix =
+          lookupResultsHavePartOfSpeech(results, partOfSpeechMask(core::PartOfSpeech::Suffix), result.length);
       bool has_nominal_right_context = end_pos >= codepoints.size();
       if (!has_nominal_right_context && normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Symbol) {
         has_nominal_right_context = true;
@@ -603,9 +591,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       if (!has_nominal_right_context) {
         const auto following_results = dict_manager_.lookup(text, byteOffsetAt(byte_offsets, end_pos));
         has_nominal_right_context =
-            std::any_of(following_results.begin(), following_results.end(), [](const auto& following) {
-              return following.entry != nullptr && following.entry->pos == core::PartOfSpeech::Particle;
-            });
+            lookupResultsHavePartOfSpeech(following_results, partOfSpeechMask(core::PartOfSpeech::Particle));
       }
       if (has_same_span_suffix && has_nominal_right_context) {
         continue;
@@ -621,10 +607,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
         hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::VerbMizenkei) && end_pos < codepoints.size()) {
       const size_t following_byte_pos = byteOffsetAt(byte_offsets, end_pos);
       const auto following_results = dict_manager_.lookup(text, following_byte_pos);
-      const bool followed_by_passive =
-          std::any_of(following_results.begin(), following_results.end(), [](const auto& following) {
-            return following.entry != nullptr && following.entry->extended_pos == core::ExtendedPOS::AuxPassive;
-          });
+      const bool followed_by_passive = lookupResultsHaveExtendedPOS(following_results, core::ExtendedPOS::AuxPassive);
       if (followed_by_passive) {
         continue;
       }
@@ -635,10 +618,8 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // adverbial に, and appearance そう select that entry rather than the noun
     // homograph. Noun-only words remain untouched.
     if (result.entry->pos == core::PartOfSpeech::Noun && end_pos < codepoints.size()) {
-      const bool has_same_surface_na_adjective = std::any_of(results.begin(), results.end(), [&](const auto& other) {
-        return other.entry != nullptr && other.length == result.length &&
-               other.entry->extended_pos == core::ExtendedPOS::AdjNaAdj;
-      });
+      const bool has_same_surface_na_adjective =
+          lookupResultsHaveExtendedPOS(results, core::ExtendedPOS::AdjNaAdj, result.length);
       const bool na_adjective_continuation =
           codepoints[end_pos] == U'に' ||
           (codepoints[end_pos] == U'な' && (end_pos + 1 >= codepoints.size() || codepoints[end_pos + 1] != U'ら')) ||
@@ -820,16 +801,10 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
         continue;
       }
       const char32_t preceding = codepoints[start_pos - 1];
-      bool followed_by_adjective = false;
-      if (end_pos < codepoints.size()) {
-        const size_t following_byte_pos = byteOffsetAt(byte_offsets, end_pos);
-        for (const auto& following : dict_manager_.lookup(text, following_byte_pos)) {
-          if (following.entry != nullptr && following.entry->pos == core::PartOfSpeech::Adjective) {
-            followed_by_adjective = true;
-            break;
-          }
-        }
-      }
+      const bool followed_by_adjective =
+          end_pos < codepoints.size() &&
+          lookupResultsHavePartOfSpeech(dict_manager_.lookup(text, byteOffsetAt(byte_offsets, end_pos)),
+                                        partOfSpeechMask(core::PartOfSpeech::Adjective));
       if (!followed_by_adjective &&
           (preceding == U'の' || preceding == U'る' || preceding == U'く' || preceding == U'む' || preceding == U'ぶ' ||
            preceding == U'ぬ' || preceding == U'す' || preceding == U'つ' || preceding == U'ぐ')) {

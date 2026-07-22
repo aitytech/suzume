@@ -19,7 +19,8 @@
 namespace suzume {
 namespace dictionary {
 class DictionaryManager;
-}
+struct LookupResult;
+}  // namespace dictionary
 }  // namespace suzume
 
 namespace suzume::analysis {
@@ -34,6 +35,14 @@ constexpr PartOfSpeechMask partOfSpeechMask(core::PartOfSpeech pos) {
 /** Whether an exact dictionary surface has any of the requested parts of speech. */
 bool hasExactPartOfSpeech(const dictionary::DictionaryManager& dict_manager, std::string_view surface,
                           PartOfSpeechMask pos_mask);
+
+/** Whether dictionary lookup results contain a requested POS, optionally at an exact character length. */
+bool lookupResultsHavePartOfSpeech(const std::vector<dictionary::LookupResult>& results, PartOfSpeechMask pos_mask,
+                                   size_t length = 0);
+
+/** Whether dictionary lookup results contain a requested ExtendedPOS, optionally at an exact character length. */
+bool lookupResultsHaveExtendedPOS(const std::vector<dictionary::LookupResult>& results, core::ExtendedPOS extended_pos,
+                                  size_t length = 0);
 
 /** Whether a complete dictionary match is a verb with the requested lemma. */
 bool hasCompleteVerbLemma(const dictionary::DictionaryManager& dict_manager, std::string_view surface,

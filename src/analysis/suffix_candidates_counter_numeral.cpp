@@ -109,13 +109,8 @@ void appendBasicNumeralCounterCandidates(const std::vector<char32_t>& codepoints
   if (dict_manager != nullptr && normalize::isCounterKanji(codepoints[numeral_end])) {
     size_t counter_end = numeral_end + 1;
     std::string suffix_text = extractSubstring(codepoints, counter_end, codepoints.size());
-    bool suffix_follows = false;
-    for (const auto& result : dict_manager->lookup(suffix_text, 0)) {
-      if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Suffix) {
-        suffix_follows = true;
-        break;
-      }
-    }
+    const bool suffix_follows = lookupResultsHavePartOfSpeech(dict_manager->lookup(suffix_text, 0),
+                                                              partOfSpeechMask(core::PartOfSpeech::Suffix));
     if (suffix_follows) {
       std::string surface = extractSubstring(codepoints, start_pos, counter_end);
       if (!surface.empty()) {

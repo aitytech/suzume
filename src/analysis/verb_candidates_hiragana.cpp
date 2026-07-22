@@ -23,6 +23,7 @@
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
 #include "suffix_candidates.h"
+#include "tokenizer_utils.h"
 #include "unknown.h"
 #include "verb_candidates.h"
 
@@ -173,13 +174,9 @@ void appendHiraganaRenyokeiBeforeAspect(const std::vector<char32_t>& codepoints,
   const std::string following = extractSubstring(codepoints, stem_end, codepoints.size());
   // Kanji-led aspect candidates are generated rather than dictionary-backed;
   // the leading aspect kanji is therefore also accepted as structural evidence.
-  bool aspect_follows = codepoints[stem_end] == U'始';
-  for (const auto& result : dict_manager->lookup(following, 0)) {
-    if (result.entry != nullptr && result.entry->extended_pos == core::ExtendedPOS::AuxAspectHajimeru) {
-      aspect_follows = true;
-      break;
-    }
-  }
+  const bool aspect_follows =
+      codepoints[stem_end] == U'始' ||
+      lookupResultsHaveExtendedPOS(dict_manager->lookup(following, 0), core::ExtendedPOS::AuxAspectHajimeru);
   if (!aspect_follows) {
     return;
   }

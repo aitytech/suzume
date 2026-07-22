@@ -655,13 +655,8 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
           ++ctx_end;
         }
         std::string orphan_ctx = extractSubstring(codepoints, orphan_pos, ctx_end);
-        orphan_split_viable = false;
-        for (const auto& match : dict_manager->lookup(orphan_ctx, 0)) {
-          if (match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Particle) {
-            orphan_split_viable = true;
-            break;
-          }
-        }
+        orphan_split_viable = lookupResultsHavePartOfSpeech(dict_manager->lookup(orphan_ctx, 0),
+                                                            partOfSpeechMask(core::PartOfSpeech::Particle));
       }
       if (orphan_split_viable) {
         looks_like_aux = true;

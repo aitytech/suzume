@@ -65,6 +65,22 @@ bool hasExactPartOfSpeech(const dictionary::DictionaryManager& dict_manager, std
   return false;
 }
 
+bool lookupResultsHavePartOfSpeech(const std::vector<dictionary::LookupResult>& results, PartOfSpeechMask pos_mask,
+                                   size_t length) {
+  return std::any_of(results.begin(), results.end(), [=](const auto& result) {
+    return result.entry != nullptr && (length == 0 || result.length == length) &&
+           (pos_mask & partOfSpeechMask(result.entry->pos)) != 0;
+  });
+}
+
+bool lookupResultsHaveExtendedPOS(const std::vector<dictionary::LookupResult>& results, core::ExtendedPOS extended_pos,
+                                  size_t length) {
+  return std::any_of(results.begin(), results.end(), [=](const auto& result) {
+    return result.entry != nullptr && (length == 0 || result.length == length) &&
+           result.entry->extended_pos == extended_pos;
+  });
+}
+
 bool hasCompleteVerbLemma(const dictionary::DictionaryManager& dict_manager, std::string_view surface,
                           size_t char_length, std::string_view lemma) {
   for (const auto& match : dict_manager.lookup(surface, 0)) {

@@ -142,15 +142,9 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
   // and standalone repetitions outside this boundary rule.
   if (start_pos + 5 < codepoints.size() && isRepeatedNumeralNounUnitAt(codepoints, char_types, start_pos)) {
     const std::string following = extractSubstring(codepoints, start_pos + 4, codepoints.size());
-    bool has_registered_predicate = false;
-    if (dict_manager != nullptr) {
-      for (const auto& result : dict_manager->lookup(following, 0)) {
-        if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Verb) {
-          has_registered_predicate = true;
-          break;
-        }
-      }
-    }
+    const bool has_registered_predicate =
+        dict_manager != nullptr &&
+        lookupResultsHavePartOfSpeech(dict_manager->lookup(following, 0), partOfSpeechMask(core::PartOfSpeech::Verb));
     if (hasKanjiSuruPredicateAt(codepoints, char_types, start_pos + 4, 2) || has_registered_predicate) {
       std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
       if (!surface.empty()) {
