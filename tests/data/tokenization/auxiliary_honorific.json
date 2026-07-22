@@ -243,8 +243,36 @@
       "input": "確認していない"
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+      },
       "description": "読んでいただけない - regression test",
       "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Verb",
+          "surface": "いただけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ndeitadakenai",
+      "input": "読んでいただけない",
+      "suzume_expected": [
         {
           "lemma": "読む",
           "pos": "Verb",
@@ -265,9 +293,7 @@
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ],
-      "id": "ndeitadakenai",
-      "input": "読んでいただけない"
+      ]
     }
   ],
   "description": "auxiliary_honorific tests",

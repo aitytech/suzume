@@ -151,8 +151,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "接続詞「あるいは」の表層・品詞・境界は一致している。辞書の正書法lemma「或いは」は検索上同義の正規形であり、ひらがな表層を維持した意図的差異とする。"
+        "category": "intentional-pos-lemma",
+        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
       },
       "description": "あるいは should be CONJ, not ADJ+は split - MeCab uses かも as single particle",
       "expected": [
@@ -198,8 +198,8 @@
     },
     {
       "accepted_diff": {
-        "category": "segmentation-diff",
-        "reason": "「そんなら」は口語的な条件表現であり、Suzume の「そんな + ら」解析を有効な検索単位として保持する。"
+        "category": "search-unit",
+        "reason": "テスト説明どおり、口語条件を表す閉じた接続詞「そんなら」を一つの検索単位・Conjunctionとして扱う。MeCab由来の非語彙的な「そん/なら」分割は採用しない。"
       },
       "description": "そんなら should be CONJ, not そんな+ら split",
       "expected": [
@@ -228,14 +228,9 @@
       "input": "そんなら行こう",
       "suzume_expected": [
         {
-          "lemma": "そんな",
-          "pos": "Determiner",
-          "surface": "そんな"
-        },
-        {
-          "lemma": "ら",
-          "pos": "Other",
-          "surface": "ら"
+          "lemma": "そんなら",
+          "pos": "Conjunction",
+          "surface": "そんなら"
         },
         {
           "lemma": "行く",

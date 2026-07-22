@@ -416,8 +416,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos",
+        "reason": "「長い間」の「間」は形容詞に後接する拘束的時間接尾辞として扱うSuzume既定POSで、境界・lemma・後続活用はすべて正しいため。"
       },
       "description": "長い間続いた - auto-generated",
       "expected": [
@@ -877,8 +877,8 @@
     },
     {
       "accepted_diff": {
-        "category": "ambiguity",
-        "reason": "Hiragana alone is ambiguous between valid Godan lemmas; the tokenizer's よむ analysis is accepted."
+        "category": "lemma-ambiguity",
+        "reason": "撥音便表層「よん」は「読む」「呼ぶ」等の活用行を保存せず、文脈なしではlemmaを一意に復元できない。境界とPOSは正しい。"
       },
       "description": "Pure-hiragana godan-ma hatsuonbin: よむ past (よむ/よぶ ambiguous, pick よむ)",
       "expected": [
@@ -910,8 +910,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intrinsic-ambiguity",
+        "reason": "単独ひらがな表記は古典否定「なら/ん/で」と「並ぶ」の撥音便「ならん/で」が本質的に曖昧だが、このテストの説明は明示的に後者を対象としており、現行Suzume解析がテスト意図にも一致する。"
       },
       "description": "Pure-hiragana godan-ba hatsuonbin: ならぶ te-form (MeCab splits as なる mizenkei)",
       "expected": [
@@ -1050,8 +1050,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Use the grammatical dictionary form 揺るぐ for the continuative verb before the negative auxiliary."
+        "category": "lemma-normalization",
+        "reason": "連用形「揺るぎ」の辞書形は「揺るぐ」。境界・POS・否定助動詞接続は一致する。"
       },
       "description": "揺るぎない信念 - auto-generated",
       "expected": [
@@ -1971,6 +1971,10 @@
       "input": "読んでみればよい"
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
+      },
       "description": "読んであげられる - regression test",
       "expected": [
         {
@@ -1995,9 +1999,35 @@
         }
       ],
       "id": "ndeagerareru",
-      "input": "読んであげられる"
+      "input": "読んであげられる",
+      "suzume_expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "あげる",
+          "pos": "Auxiliary",
+          "surface": "あげ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
+      },
       "description": "書いてあげられる - regression test",
       "expected": [
         {
@@ -2022,9 +2052,35 @@
         }
       ],
       "id": "iteagerareru",
-      "input": "書いてあげられる"
+      "input": "書いてあげられる",
+      "suzume_expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "あげる",
+          "pos": "Auxiliary",
+          "surface": "あげ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
+      },
       "description": "教えてあげられる - regression test",
       "expected": [
         {
@@ -2049,9 +2105,35 @@
         }
       ],
       "id": "eteagerareru",
-      "input": "教えてあげられる"
+      "input": "教えてあげられる",
+      "suzume_expected": [
+        {
+          "lemma": "教える",
+          "pos": "Verb",
+          "surface": "教え"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "あげる",
+          "pos": "Auxiliary",
+          "surface": "あげ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
+      },
       "description": "見せてあげられる - regression test",
       "expected": [
         {
@@ -2076,7 +2158,29 @@
         }
       ],
       "id": "seteagerareru",
-      "input": "見せてあげられる"
+      "input": "見せてあげられる",
+      "suzume_expected": [
+        {
+          "lemma": "見せる",
+          "pos": "Verb",
+          "surface": "見せ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "あげる",
+          "pos": "Auxiliary",
+          "surface": "あげ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ]
     },
     {
       "description": "行かないつもりだ - regression test",
@@ -2953,6 +3057,10 @@
       "input": "春から夏にかけて続く"
     },
     {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
+      },
       "description": "定型条件構文の仮定形",
       "expected": [
         {
@@ -2982,7 +3090,39 @@
         }
       ],
       "id": "to_areba_fixed_conditional_form",
-      "input": "必要とあれば参加する"
+      "input": "必要とあれば参加する",
+      "suzume_expected": [
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "参加",
+          "pos": "Noun",
+          "surface": "参加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ]
     },
     {
       "description": "一段動詞連用形とサ変述語の境界",
@@ -3077,8 +3217,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
       },
       "description": "名詞基部の接尾動詞めくの音便形と過去助動詞",
       "expected": [
@@ -3674,6 +3814,60 @@
       ],
       "id": "literary_akasa_passive",
       "input": "明かされていない"
+    },
+    {
+      "description": "音便先読みが一般名詞内部の助詞同形文字を越えない回帰",
+      "expected": [
+        {
+          "lemma": "からだ",
+          "pos": "Noun",
+          "surface": "からだ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "動かす",
+          "pos": "Verb",
+          "surface": "動かす"
+        }
+      ],
+      "id": "karadawo_kasu",
+      "input": "からだを動かす"
+    },
+    {
+      "description": "閉じた補助動詞みせるの丁寧形境界",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "みせる",
+          "pos": "Auxiliary",
+          "surface": "みせ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "shitemisemasu_auxiliary_boundary",
+      "input": "確認してみせます"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows",

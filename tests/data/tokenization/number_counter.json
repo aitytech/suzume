@@ -1641,8 +1641,8 @@
     },
     {
       "accepted_diff": {
-        "category": "intentional-tokenization",
-        "reason": "反復する数詞＋名詞は分配を表す一つの量表現であり、検索単位として「一語一語」を保持する。後続サ変名詞「確認」との境界を明示する。"
+        "category": "search-unit",
+        "reason": "分配数量の反復部全体を一検索単位とする既存の一歩一歩・一人ひとり規則と統一する"
       },
       "description": "一語一語確認する - auto-generated",
       "expected": [
@@ -1732,10 +1732,6 @@
       "input": "数十件確認する"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "数量を修飾する「近く」は形容詞「近い」の連用形であり、動詞ではない。数量表現と後続サ変名詞の境界を保持する。"
-      },
       "description": "百件近く確認する - auto-generated",
       "expected": [
         {
@@ -1760,34 +1756,12 @@
         }
       ],
       "id": "ku_suru",
-      "input": "百件近く確認する",
-      "suzume_expected": [
-        {
-          "lemma": "百件",
-          "pos": "Noun",
-          "surface": "百件"
-        },
-        {
-          "lemma": "近い",
-          "pos": "Adjective",
-          "surface": "近く"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ]
+      "input": "百件近く確認する"
     },
     {
       "accepted_diff": {
-        "category": "intentional-tokenization",
-        "reason": "「以下」は数量句に付く接尾辞であり、後続のサ変名詞「確認」とは独立する。数量・比較接尾辞・述語の境界を保持する。"
+        "category": "search-unit",
+        "reason": "数量範囲の以下とサ変名詞の確認は独立した検索単位であり、以下確認へ統合しないため。"
       },
       "description": "十件以下確認する - auto-generated",
       "expected": [
@@ -1834,8 +1808,8 @@
     },
     {
       "accepted_diff": {
-        "category": "intentional-tokenization",
-        "reason": "「程度」は数量句に付く接尾辞であり、後続のサ変名詞「確認」とは独立する。数量・程度接尾辞・述語の境界を保持する。"
+        "category": "search-unit",
+        "reason": "概数量の程度とサ変名詞の確認は独立した検索単位であり、程度確認へ統合しないため。"
       },
       "description": "十件程度確認する - auto-generated",
       "expected": [

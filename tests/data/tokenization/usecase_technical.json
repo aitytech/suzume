@@ -88,10 +88,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "Code review comment - MeCab互換分割",
       "expected": [
         {
@@ -147,58 +143,6 @@
       ],
       "id": "tech_doc_code_review",
       "input": "この関数は複雑すぎるので分割してください",
-      "suzume_expected": [
-        {
-          "lemma": "この",
-          "pos": "Determiner",
-          "surface": "この"
-        },
-        {
-          "lemma": "関数",
-          "pos": "Noun",
-          "surface": "関数"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "複雑",
-          "pos": "Noun",
-          "surface": "複雑"
-        },
-        {
-          "lemma": "すぎる",
-          "pos": "Verb",
-          "surface": "すぎる"
-        },
-        {
-          "lemma": "ので",
-          "pos": "Particle",
-          "surface": "ので"
-        },
-        {
-          "lemma": "分割",
-          "pos": "Noun",
-          "surface": "分割"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くださる",
-          "pos": "Verb",
-          "surface": "ください"
-        }
-      ],
       "tags": [
         "technical",
         "documentation"
@@ -206,8 +150,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
       },
       "description": "Documentation specification style",
       "expected": [
@@ -465,10 +409,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "Configuration instruction - MeCab互換分割",
       "expected": [
         {
@@ -519,53 +459,6 @@
       ],
       "id": "tech_doc_configuration",
       "input": "設定ファイルを編集する必要があります",
-      "suzume_expected": [
-        {
-          "lemma": "設定",
-          "pos": "Noun",
-          "surface": "設定"
-        },
-        {
-          "lemma": "ファイル",
-          "pos": "Noun",
-          "surface": "ファイル"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "編集",
-          "pos": "Noun",
-          "surface": "編集"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        },
-        {
-          "lemma": "必要",
-          "pos": "Noun",
-          "surface": "必要"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あり"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
       "tags": [
         "technical",
         "documentation"
@@ -1147,10 +1040,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "Reason clause with node - suru compound verb with polite aux",
       "expected": [
         {
@@ -1191,43 +1080,6 @@
       ],
       "id": "multi_clause_reason_node",
       "input": "忙しいので後で連絡します",
-      "suzume_expected": [
-        {
-          "lemma": "忙しい",
-          "pos": "Adjective",
-          "surface": "忙しい"
-        },
-        {
-          "lemma": "ので",
-          "pos": "Noun",
-          "surface": "ので"
-        },
-        {
-          "lemma": "後",
-          "pos": "Suffix",
-          "surface": "後"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "連絡",
-          "pos": "Noun",
-          "surface": "連絡"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
       "tags": [
         "multi-clause",
         "suru_verb"
@@ -1613,7 +1465,7 @@
         },
         {
           "lemma": "どう",
-          "pos": "Adjective",
+          "pos": "Adverb",
           "surface": "どう"
         },
         {

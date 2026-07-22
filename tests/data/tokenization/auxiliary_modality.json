@@ -127,8 +127,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "口語コピュラの推量形「じゃろ」は標準形「だろ」をlemmaとする。語境界・品詞は一致しており、Suzume のlemma正規化に沿う。"
+        "category": "lemma-normalization",
+        "reason": "方言的推量形「じゃろ」は標準形「だろ」をlemmaとする。境界・POS・助動詞連鎖は一致する。"
       },
       "description": "Elderly speech じゃろう",
       "expected": [
@@ -1410,10 +1410,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "「違いない」は動詞「違う」の否定と、名詞「違い」＋独立した存在否定形容詞「ない」の両解釈が可能である。検索単位と名詞述語の一貫性から後者を採用する。"
-      },
       "description": "違いない should be Auxiliary (certainty idiom)",
       "expected": [
         {
@@ -1429,28 +1425,12 @@
       ],
       "id": "auxiliary_chigainai",
       "input": "違いない",
-      "suzume_expected": [
-        {
-          "lemma": "ちがい",
-          "pos": "Noun",
-          "surface": "違い"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        }
-      ],
       "tags": [
         "auxiliary",
         "certainty"
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "「違いない」は動詞「違う」の否定と、名詞「違い」＋独立した存在否定形容詞「ない」の両解釈が可能である。検索単位と名詞述語の一貫性から後者を採用する。"
-      },
       "description": "に違いない certainty expression - に is particle, 違いない is auxiliary",
       "expected": [
         {
@@ -1476,28 +1456,6 @@
       ],
       "id": "auxiliary_ni_chigainai",
       "input": "彼に違いない",
-      "suzume_expected": [
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "ちがい",
-          "pos": "Noun",
-          "surface": "違い"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        }
-      ],
       "tags": [
         "auxiliary",
         "certainty"
@@ -1864,6 +1822,43 @@
       ],
       "id": "dearou_dearou_dearouga_dearouto",
       "input": "本であろう。水であろう。本であろうが、水であろうと。"
+    },
+    {
+      "description": "助動詞「ようだ」の連体形「ような」を名詞+助詞へ誤分類しない",
+      "expected": [
+        {
+          "lemma": "夢",
+          "pos": "Noun",
+          "surface": "夢"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "similitude_you_attributive_copula",
+      "input": "夢のような話だ"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

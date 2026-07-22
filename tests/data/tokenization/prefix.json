@@ -206,10 +206,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "normalization",
-        "reason": "「元気」は名詞述語として解析できる。語境界は一致し、Suzume の名詞分類は助動詞との連接にも整合する。"
-      },
       "description": "Honorific お + 元気",
       "expected": [
         {
@@ -225,18 +221,6 @@
       ],
       "id": "o_healthy",
       "input": "お元気",
-      "suzume_expected": [
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "元気",
-          "pos": "Noun",
-          "surface": "元気"
-        }
-      ],
       "tags": [
         "prefix",
         "o"
@@ -512,8 +496,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "敬語接頭辞後の「預かり」は名詞化した検索単位として成立する。語境界は一致しており、Suzume の名詞解析を採用する。"
+        "category": "search-unit",
+        "reason": "接頭辞おを伴う連用形転成名詞を検索単位・名詞として扱うため。"
       },
       "description": "Honorific お + 預かり (nominalized verb)",
       "expected": [
@@ -675,8 +659,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "敬語接頭辞後の「引き取り」は名詞化した検索単位として成立する。語境界は一致しており、Suzume の名詞解析を採用する。"
+        "category": "search-unit",
+        "reason": "接頭辞おを伴う複合連用形転成名詞を検索単位・名詞として扱うため。"
       },
       "description": "Honorific お + 引き取り",
       "expected": [
@@ -1229,6 +1213,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
+      },
       "description": "おかし is a word (お菓子), not prefix + unknown",
       "expected": [
         {
@@ -1254,6 +1242,23 @@
       ],
       "id": "edge_prefix_hiragana",
       "input": "おかしを食べる",
+      "suzume_expected": [
+        {
+          "lemma": "おかし",
+          "pos": "Noun",
+          "surface": "おかし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        }
+      ],
       "tags": [
         "prefix",
         "edge"

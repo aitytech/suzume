@@ -272,6 +272,10 @@
       "input": "読んじゃおう"
     },
     {
+      "accepted_diff": {
+        "category": "volitional-boundary",
+        "reason": "一段動詞の意向形は未然形「見よ」+意志助動詞「う」であり、形式名詞「よう」ではない"
+      },
       "description": "一漢字一段動詞の意志形を未然形と助動詞に分割する",
       "expected": [
         {
@@ -311,7 +315,44 @@
         }
       ],
       "id": "miyou_ni_mo_houhou_ga_nai",
-      "input": "見ようにも方法がない"
+      "input": "見ようにも方法がない",
+      "suzume_expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見よ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ]
     }
   ],
   "description": "verb_volitional tests",

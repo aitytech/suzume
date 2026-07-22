@@ -2,8 +2,8 @@
   "cases": [
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
       },
       "description": "そうでなければ困る - auto-generated",
       "expected": [

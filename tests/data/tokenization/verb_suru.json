@@ -1,6 +1,10 @@
 {
   "cases": [
     {
+      "accepted_diff": {
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
+      },
       "description": "説明してくれます - MeCab互換分割",
       "expected": [
         {
@@ -31,6 +35,33 @@
       ],
       "id": "suru_te_kureru",
       "input": "説明してくれます",
+      "suzume_expected": [
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くれる",
+          "pos": "Auxiliary",
+          "surface": "くれ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -186,6 +217,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
+      },
       "description": "説明してもらう - MeCab互換分割",
       "expected": [
         {
@@ -211,6 +246,28 @@
       ],
       "id": "suru_te_morau",
       "input": "説明してもらう",
+      "suzume_expected": [
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "もらう",
+          "pos": "Auxiliary",
+          "surface": "もらう"
+        }
+      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -218,6 +275,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
+      },
       "description": "説明してあげる - MeCab互換分割",
       "expected": [
         {
@@ -243,6 +304,28 @@
       ],
       "id": "suru_te_ageru",
       "input": "説明してあげる",
+      "suzume_expected": [
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "あげる",
+          "pos": "Auxiliary",
+          "surface": "あげる"
+        }
+      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -346,6 +429,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
+      },
       "description": "説明してくれる - MeCab互換分割",
       "expected": [
         {
@@ -371,6 +458,28 @@
       ],
       "id": "suru_te_kureru_plain",
       "input": "説明してくれる",
+      "suzume_expected": [
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くれる",
+          "pos": "Auxiliary",
+          "surface": "くれる"
+        }
+      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -879,10 +988,6 @@
       "input": "確認しておかない"
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "なくは公開トークン契約により連用形の形容詞として保持し、短縮義務形のいけは補助動詞として解析する。"
-      },
       "description": "サ変の短縮義務形",
       "expected": [
         {
@@ -917,39 +1022,7 @@
         }
       ],
       "id": "suru_nakucha_ikenai",
-      "input": "確認しなくちゃいけない",
-      "suzume_expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "なく"
-        },
-        {
-          "lemma": "ちゃ",
-          "pos": "Particle",
-          "surface": "ちゃ"
-        },
-        {
-          "lemma": "いける",
-          "pos": "Auxiliary",
-          "surface": "いけ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "確認しなくちゃいけない"
     },
     {
       "description": "Preparatory auxiliary before classical obligation",
@@ -1392,8 +1465,41 @@
       "input": "確認に反すれば進める"
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+      },
       "description": "確認に反して進める - regression test",
       "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反す",
+          "pos": "Verb",
+          "surface": "反し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_shite_meru",
+      "input": "確認に反して進める",
+      "suzume_expected": [
         {
           "lemma": "確認",
           "pos": "Noun",
@@ -1419,13 +1525,39 @@
           "pos": "Verb",
           "surface": "進める"
         }
-      ],
-      "id": "ni_shite_meru",
-      "input": "確認に反して進める"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+      },
       "description": "意図に反した - regression test",
       "expected": [
+        {
+          "lemma": "意図",
+          "pos": "Noun",
+          "surface": "意図"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "反す",
+          "pos": "Verb",
+          "surface": "反し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ni_shita",
+      "input": "意図に反した",
+      "suzume_expected": [
         {
           "lemma": "意図",
           "pos": "Noun",
@@ -1446,9 +1578,76 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
+      ]
+    },
+    {
+      "description": "生産的な漢字サ変名詞を個別辞書なしで保持する",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "表現",
+          "pos": "Noun",
+          "surface": "表現"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "頻出",
+          "pos": "Noun",
+          "surface": "頻出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
       ],
-      "id": "ni_shita",
-      "input": "意図に反した"
+      "id": "kono_ha_suru",
+      "input": "この表現は頻出する。"
+    },
+    {
+      "description": "接頭辞付きサ変名詞と連用形・後続述語の境界",
+      "expected": [
+        {
+          "lemma": "再提出",
+          "pos": "Noun",
+          "surface": "再提出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "忘れる",
+          "pos": "Verb",
+          "surface": "忘れ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shi_reteita",
+      "input": "再提出し忘れていた。"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

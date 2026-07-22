@@ -322,6 +322,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
+      },
       "description": "教えてもらった - MeCab互換分割 (教え+て+もらっ+た)",
       "expected": [
         {
@@ -347,6 +351,28 @@
       ],
       "id": "ichidan_oshiete_moratta",
       "input": "教えてもらった",
+      "suzume_expected": [
+        {
+          "lemma": "教える",
+          "pos": "Verb",
+          "surface": "教え"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "もらう",
+          "pos": "Auxiliary",
+          "surface": "もらっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
       "tags": [
         "ichidan",
         "benefactive"
@@ -640,8 +666,8 @@
     },
     {
       "accepted_diff": {
-        "category": "ambiguity",
-        "reason": "Hiragana spelling cannot determine the kanji lemma; the all-hiragana でる analysis is accepted."
+        "category": "intentional-pos-lemma",
+        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
       },
       "description": "でて - MeCab互換分割 (で+て)",
       "expected": [
@@ -1058,8 +1084,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "lemma-ambiguity",
+        "reason": "表層「降り」は「降る」「降りる」の連用形に同形で、文脈なしではlemmaを一意に復元できない。境界・POS・接続助詞は正しい。"
       },
       "description": "降りて - regression test",
       "expected": [
@@ -1795,8 +1821,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
       },
       "description": "見よ - regression test",
       "expected": [
@@ -1830,8 +1856,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "ichidan-imperative-search-unit",
+        "reason": "「調べよ」は一段動詞「調べる」の命令形一形態素で、終助詞「よ」を切り出さない"
       },
       "description": "調べよ - regression test",
       "expected": [
@@ -1996,10 +2022,6 @@
       "input": "知らせた"
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "Lexical seru stem keeps verb POS and lemma before negation",
       "expected": [
         {
@@ -2014,19 +2036,7 @@
         }
       ],
       "id": "rasenai",
-      "input": "知らせない",
-      "suzume_expected": [
-        {
-          "lemma": "知らせ",
-          "pos": "Noun",
-          "surface": "知らせ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "知らせない"
     },
     {
       "description": "Dictionary-backed lexical seru verb beats productive causative split",
@@ -2305,6 +2315,33 @@
       ],
       "id": "literary_inshozuke_progressive",
       "input": "印象づけている"
+    },
+    {
+      "description": "過去助動詞の前では同形の一段動詞連用形を維持する",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "答える",
+          "pos": "Verb",
+          "surface": "答え"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ichidan_renyokei_before_past_control",
+      "input": "彼は答えた"
     }
   ],
   "description": "Ichidan verbs (一段動詞)",

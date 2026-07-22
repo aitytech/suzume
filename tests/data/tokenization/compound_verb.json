@@ -247,8 +247,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "te-auxiliary-boundary",
+        "reason": "進行方向補助構文は動詞音便形「やっ」+接続助詞「て」+補助動詞「くる」の形態素境界を保つ"
       },
       "description": "テ形と補助動詞「くる」の文法境界を維持する",
       "expected": [
@@ -280,8 +280,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "intentional-pos",
+        "reason": "動詞連用形＋失敗・未遂を表す従属補助動詞「そこなう」であり、現行Auxiliary解析が文法的に妥当。"
       },
       "description": "ひらがな表記の失敗補助動詞「そこなう」を補助動詞として解析する",
       "expected": [
@@ -325,8 +325,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "lemma-ambiguity",
+        "reason": "表層「降り」は「降る」「降りる」の連用形に同形で、文脈だけではlemmaを一意に復元できない。境界・POS・後続は正しい。"
       },
       "description": "同形連用形「降り」の語義曖昧性を許容し、動詞境界を維持する",
       "expected": [
@@ -506,8 +506,26 @@
       "input": "確認しそこなって"
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos",
+        "reason": "動詞連用形＋失敗・未遂を表す従属補助動詞「そこなう」であり、現行Auxiliary解析が文法的に妥当。"
+      },
       "description": "読みそこなう - regression test",
       "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "そこなう",
+          "pos": "Verb",
+          "surface": "そこなう"
+        }
+      ],
+      "id": "misokonau",
+      "input": "読みそこなう",
+      "suzume_expected": [
         {
           "lemma": "読む",
           "pos": "Verb",
@@ -518,13 +536,34 @@
           "pos": "Auxiliary",
           "surface": "そこなう"
         }
-      ],
-      "id": "misokonau",
-      "input": "読みそこなう"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+      },
       "description": "読みそこなった - regression test",
       "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "そこなう",
+          "pos": "Verb",
+          "surface": "そこなっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "misokonattta",
+      "input": "読みそこなった",
+      "suzume_expected": [
         {
           "lemma": "読む",
           "pos": "Verb",
@@ -540,9 +579,7 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ],
-      "id": "misokonattta",
-      "input": "読みそこなった"
+      ]
     }
   ],
   "description": "compound_verb tests",

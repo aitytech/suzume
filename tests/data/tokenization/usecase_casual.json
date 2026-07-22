@@ -27,8 +27,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
       },
       "description": "Casual confirmation",
       "expected": [
@@ -118,8 +118,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "形容動詞的な「まじ」とコピュラの解析を保持する。"
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "Surprise expression - MeCab-compatible verb+た split",
       "expected": [
@@ -476,8 +476,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "Recommendation post - マジで is ADV (seriously/really)",
       "expected": [
@@ -997,8 +997,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "古典活用・接続・lemmaの文法に照らして現行解析が妥当で、表層境界は一致"
       },
       "description": "Colloquial 行っていた → 行ってた - MeCab互換分割",
       "expected": [

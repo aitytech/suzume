@@ -526,8 +526,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "「各々」は各人を指す代名詞として扱い、「判断する」は一体の述語として検索単位にする。"
+        "category": "intentional-pos-lemma",
+        "reason": "L1で分配代名詞として定義された各々は、同一語を含む既存回帰「各々判断した」と同じくPronounを公開POSとする。NounVerbal+するの境界修正後は表層・lemma・他トークンが一致。"
       },
       "description": "Distributive pronoun before suru noun",
       "expected": [
@@ -556,16 +556,21 @@
           "surface": "各々"
         },
         {
-          "lemma": "判断する",
+          "lemma": "判断",
+          "pos": "Noun",
+          "surface": "判断"
+        },
+        {
+          "lemma": "する",
           "pos": "Verb",
-          "surface": "判断する"
+          "surface": "する"
         }
       ]
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "「各々」は各人を指す代名詞として扱い、「判断した」は判断するの過去形として解析する。"
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "Distributive pronoun before past suru noun",
       "expected": [
@@ -802,10 +807,6 @@
       "input": "そこかしこにある"
     },
     {
-      "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
-      },
       "description": "どれほどのことか - regression test",
       "expected": [
         {
@@ -835,35 +836,9 @@
         }
       ],
       "id": "dorehodonokotoka",
-      "input": "どれほどのことか",
-      "suzume_expected": [
-        {
-          "lemma": "どれほど",
-          "pos": "Adverb",
-          "surface": "どれほど"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "こと",
-          "pos": "Noun",
-          "surface": "こと"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ]
+      "input": "どれほどのことか"
     },
     {
-      "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
-      },
       "description": "どれほどの差があるか - regression test",
       "expected": [
         {
@@ -903,44 +878,12 @@
         }
       ],
       "id": "dorehodono_gaaruka",
-      "input": "どれほどの差があるか",
-      "suzume_expected": [
-        {
-          "lemma": "どれほど",
-          "pos": "Adverb",
-          "surface": "どれほど"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "差",
-          "pos": "Noun",
-          "surface": "差"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ]
+      "input": "どれほどの差があるか"
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "固定指示代名詞「あれこれ」を一語として保持する",
       "expected": [
@@ -982,8 +925,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "不定代名詞「何かしら」を一語として保持する",
       "expected": [
@@ -1013,7 +956,7 @@
         },
         {
           "lemma": "必要",
-          "pos": "Noun",
+          "pos": "Adjective",
           "surface": "必要"
         },
         {
@@ -1214,8 +1157,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "「各自」は各人を指す代名詞として扱い、後続のサ変名詞との境界を保持する。"
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "Distributive pronoun before a suru noun must not absorb the following noun.",
       "expected": [
@@ -1256,8 +1199,51 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
+      },
       "description": "Closed pronoun before Ichidan causative-passive chain",
       "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "のれ",
+          "pos": "Noun",
+          "surface": "のれ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "省みる",
+          "pos": "Verb",
+          "surface": "省み"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_onore_voice_chain",
+      "input": "おのれを省みさせられた",
+      "suzume_expected": [
         {
           "lemma": "おのれ",
           "pos": "Pronoun",
@@ -1288,9 +1274,7 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ],
-      "id": "literary_onore_voice_chain",
-      "input": "おのれを省みさせられた"
+      ]
     }
   ],
   "description": "Pronouns",

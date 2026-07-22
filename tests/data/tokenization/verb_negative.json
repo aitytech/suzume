@@ -106,10 +106,6 @@
       "input": "行かねばならぬ"
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "食べなくちゃならない - regression test",
       "expected": [
         {
@@ -139,34 +135,7 @@
         }
       ],
       "id": "benakuchi_naranai",
-      "input": "食べなくちゃならない",
-      "suzume_expected": [
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "なく"
-        },
-        {
-          "lemma": "ちゃ",
-          "pos": "Particle",
-          "surface": "ちゃ"
-        },
-        {
-          "lemma": "なる",
-          "pos": "Verb",
-          "surface": "なら"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "食べなくちゃならない"
     },
     {
       "description": "読まなきゃならない - regression test",
@@ -223,10 +192,6 @@
       "input": "見なけりゃならない"
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "なくは公開トークン契約により連用形の形容詞として保持し、短縮義務形のいけは補助動詞として解析する。"
-      },
       "description": "書かなくちゃいけない - 短縮義務形の補助動詞",
       "expected": [
         {
@@ -256,34 +221,51 @@
         }
       ],
       "id": "kanakuchi_ikenai",
-      "input": "書かなくちゃいけない",
-      "suzume_expected": [
+      "input": "書かなくちゃいけない"
+    },
+    {
+      "description": "形式名詞直後の未然形＋文語否定を保持する一般化確認",
+      "expected": [
         {
-          "lemma": "書く",
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "わかる",
           "pos": "Verb",
-          "surface": "書か"
+          "surface": "わから"
         },
         {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "なく"
-        },
-        {
-          "lemma": "ちゃ",
-          "pos": "Particle",
-          "surface": "ちゃ"
-        },
-        {
-          "lemma": "いける",
+          "lemma": "ん",
           "pos": "Auxiliary",
-          "surface": "いけ"
+          "surface": "ん"
+        }
+      ],
+      "id": "formal_noun_negative_predicate_control",
+      "input": "ことわからん"
+    },
+    {
+      "description": "形式名詞直後の未然形＋現代語否定を保持する一般化確認",
+      "expected": [
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "わかる",
+          "pos": "Verb",
+          "surface": "わから"
         },
         {
           "lemma": "ない",
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ]
+      ],
+      "id": "formal_noun_modern_negative_control",
+      "input": "わけわからない"
     }
   ],
   "description": "verb_negative tests",

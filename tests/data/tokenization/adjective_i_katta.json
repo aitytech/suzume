@@ -172,8 +172,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-correction",
-        "reason": "The contracted negative past is analyzed as んかっ (lemma ない), avoiding the ungrammatical ん plus lexical-verb chain."
+        "category": "closed-auxiliary-boundary",
+        "reason": "口語否定過去「んかった」の時制前語幹「んかっ」は閉じた一つの補助語形であり、「ん/かっ」へ分けると独立しない活用断片を作る。Suzumeの「くだら/んかっ/た」を採用する。"
       },
       "description": "くだらんかった - contracted past form of くだらなかった",
       "expected": [
@@ -339,6 +339,33 @@
       ],
       "id": "shiki",
       "input": "美しき花"
+    },
+    {
+      "description": "五段促音便同形の規則で、辞書検証済みI形容詞過去を動詞化しない反例",
+      "expected": [
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高かっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "verified_adjective_past_control",
+      "input": "山が高かった。"
     }
   ],
   "description": "I-adjectives past forms (過去形) - katta forms, past negative, past with desu",

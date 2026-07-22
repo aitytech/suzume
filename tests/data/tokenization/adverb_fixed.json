@@ -235,8 +235,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "「立派」は名詞述語として解析でき、助動詞「だ」との連接も文法的に正しい。語境界は一致するため品詞差を正規化する。"
+        "category": "pos-ambiguity",
+        "reason": "「立派」はナ形容詞語幹と名詞述語の両解析が成立する。SuzumeのNoun+copulaは文法的で、表層境界と他トークンは正しい。"
       },
       "description": "たいそう立派だ - auto-generated",
       "expected": [
@@ -410,8 +410,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "限定程度副詞「たかだか」を一語で解析する",
       "expected": [
@@ -460,8 +460,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "grammar-pos",
+        "reason": "目的格を伴わず総体を表して後続述語を修飾する副詞用法として扱うため。"
       },
       "description": "固定副詞句「一切合切」を後続名詞から分離する",
       "expected": [
@@ -530,8 +530,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "逆接・選択副詞「むしろ」を一語で解析する",
       "expected": [
@@ -1363,8 +1363,41 @@
       "input": "さも正しいように進める"
     },
     {
+      "accepted_diff": {
+        "category": "fixed-adverb-search-unit",
+        "reason": "固定副詞「然程」は一検索単位であり、漢字ごとの分割は検索単位原則に反する"
+      },
       "description": "固定副詞「然程」を一検索単位とする。MeCab正規化の漢字分割とは意図的に異なる。",
       "expected": [
+        {
+          "lemma": "然",
+          "pos": "Adverb",
+          "surface": "然"
+        },
+        {
+          "lemma": "程",
+          "pos": "Noun",
+          "surface": "程"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shinai",
+      "input": "然程確認しない",
+      "suzume_expected": [
         {
           "lemma": "然程",
           "pos": "Adverb",
@@ -1385,13 +1418,39 @@
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ],
-      "id": "shinai",
-      "input": "然程確認しない"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+      },
       "description": "時を表す固定副詞「このほど」の副詞用法を保持する。",
       "expected": [
+        {
+          "lemma": "このほど",
+          "pos": "Noun",
+          "surface": "このほど"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "konohodo_shita",
+      "input": "このほど確認した",
+      "suzume_expected": [
         {
           "lemma": "このほど",
           "pos": "Adverb",
@@ -1412,9 +1471,7 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ],
-      "id": "konohodo_shita",
-      "input": "このほど確認した"
+      ]
     },
     {
       "description": "Literary degree adverb remains one search token",

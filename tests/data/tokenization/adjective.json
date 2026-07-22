@@ -1194,6 +1194,33 @@
       ],
       "id": "tari_nokotoda",
       "input": "当たり前のことだ"
+    },
+    {
+      "description": "かなI形容詞語幹＋げは形容詞語幹を維持する",
+      "expected": [
+        {
+          "lemma": "悲しい",
+          "pos": "Adjective",
+          "surface": "悲し"
+        },
+        {
+          "lemma": "げ",
+          "pos": "Suffix",
+          "surface": "げ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "様子",
+          "pos": "Noun",
+          "surface": "様子"
+        }
+      ],
+      "id": "kana_i_adjective_ge_control",
+      "input": "悲しげな様子"
     }
   ],
   "description": "adjective tests",

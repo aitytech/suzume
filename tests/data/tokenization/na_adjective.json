@@ -1,10 +1,6 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "Regression: 気の毒 na-adjective dict entry",
       "expected": [
         {
@@ -39,39 +35,7 @@
         }
       ],
       "id": "shiha_no_to_ttta",
-      "input": "少しは気の毒と思った",
-      "suzume_expected": [
-        {
-          "lemma": "少し",
-          "pos": "Noun",
-          "surface": "少し"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "気の毒",
-          "pos": "Adjective",
-          "surface": "気の毒"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "思う",
-          "pos": "Verb",
-          "surface": "思っ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "少しは気の毒と思った"
     },
     {
       "description": "Regression: 遥か na-adjective dict entry",
@@ -216,8 +180,36 @@
       "input": "ほぼ同じだ"
     },
     {
+      "accepted_diff": {
+        "category": "na-adjective-boundary",
+        "reason": "形容動詞語幹「みやびやか」+格助詞「に」が文法境界で、語中分割は不適切"
+      },
       "description": "ひらがなやか形容詞の連用用法",
       "expected": [
+        {
+          "lemma": "みや",
+          "pos": "Noun",
+          "surface": "みや"
+        },
+        {
+          "lemma": "びやかに",
+          "pos": "Noun",
+          "surface": "びやかに"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "literary_miyabiyaka_ni",
+      "input": "みやびやかに話した",
+      "suzume_expected": [
         {
           "lemma": "みやびやか",
           "pos": "Adjective",
@@ -238,9 +230,7 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ],
-      "id": "literary_miyabiyaka_ni",
-      "input": "みやびやかに話した"
+      ]
     },
     {
       "description": "ひらがならか形容詞の連用用法",
@@ -317,6 +307,70 @@
       ],
       "id": "literary_mottomo_na",
       "input": "もっともな説明"
+    },
+    {
+      "description": "ナ形容詞語幹と名詞化接尾辞さの境界を保つ",
+      "expected": [
+        {
+          "lemma": "庭",
+          "pos": "Noun",
+          "surface": "庭"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "保つ",
+          "pos": "Verb",
+          "surface": "保つ"
+        }
+      ],
+      "id": "na_adjective_sa_nominalizer_boundary",
+      "input": "庭の静かさを保つ"
+    },
+    {
+      "description": "副詞同形語を連体助動詞「な」の左文脈でナ形容詞に確定する",
+      "expected": [
+        {
+          "lemma": "大変",
+          "pos": "Adjective",
+          "surface": "大変"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "仕事",
+          "pos": "Noun",
+          "surface": "仕事"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "adverb_homograph_attributive_na_adjective",
+      "input": "大変な仕事だ"
     }
   ],
   "description": "na_adjective tests",

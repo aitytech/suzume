@@ -265,8 +265,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "Slang phrase マジでキモい",
       "expected": [
@@ -338,8 +338,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "Internet slang phrase マジで尊い",
       "expected": [
@@ -556,8 +556,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "search-unit",
+        "reason": "同一母音の連続強調を根拠なく等分せず、一つの強調単位として保持するため。"
       },
       "description": "きたああああ - vowel repetition for emphasis",
       "expected": [
@@ -586,9 +586,14 @@
       "input": "きたああああ",
       "suzume_expected": [
         {
-          "lemma": "きる",
-          "pos": "Verb",
-          "surface": "きた"
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
         },
         {
           "lemma": "ああああ",

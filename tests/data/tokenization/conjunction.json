@@ -2,8 +2,8 @@
   "cases": [
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "intentional-pos-lemma",
+        "reason": "古典活用・接続・lemmaの文法に照らして現行解析が妥当で、表層境界は一致"
       },
       "description": "読んだものの書かない、書いたものの読まない、食べたものの満足しない - auto-generated",
       "expected": [
@@ -1021,8 +1021,41 @@
       "input": "だからこそ重要だ"
     },
     {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
+      },
       "description": "Purpose-combining conjunctive expression remains a particle.",
       "expected": [
+        {
+          "lemma": "散歩",
+          "pos": "Noun",
+          "surface": "散歩"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "てる",
+          "pos": "Verb",
+          "surface": "てら"
+        },
+        {
+          "lemma": "買い物",
+          "pos": "Noun",
+          "surface": "買い物"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "purpose_gatera_expression",
+      "input": "散歩がてら買い物する",
+      "suzume_expected": [
         {
           "lemma": "散歩",
           "pos": "Noun",
@@ -1043,9 +1076,7 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ],
-      "id": "purpose_gatera_expression",
-      "input": "散歩がてら買い物する"
+      ]
     },
     {
       "description": "Reason particle and copula remain separate.",
@@ -1656,8 +1687,41 @@
       "input": "確認をもって終了する"
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+      },
       "description": "文頭の閉じた接続詞「しかるに」を保持する。",
       "expected": [
+        {
+          "lemma": "しかるに",
+          "pos": "Adverb",
+          "surface": "しかるに"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shikaruni_ha_da",
+      "input": "しかるに確認は必要だ",
+      "suzume_expected": [
         {
           "lemma": "しかるに",
           "pos": "Conjunction",
@@ -1683,13 +1747,39 @@
           "pos": "Auxiliary",
           "surface": "だ"
         }
-      ],
-      "id": "shikaruni_ha_da",
-      "input": "しかるに確認は必要だ"
+      ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+      },
       "description": "文頭の閉じた接続詞「もって」を保持し、動詞・複合助詞用法と区別する。",
       "expected": [
+        {
+          "lemma": "もって",
+          "pos": "Adverb",
+          "surface": "もって"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "終える",
+          "pos": "Verb",
+          "surface": "終える"
+        }
+      ],
+      "id": "mottte_wo_eru",
+      "input": "もって確認を終える",
+      "suzume_expected": [
         {
           "lemma": "もって",
           "pos": "Conjunction",
@@ -1710,9 +1800,39 @@
           "pos": "Verb",
           "surface": "終える"
         }
+      ]
+    },
+    {
+      "description": "句中の生産的な動詞+接続助詞を接続詞へ統合しない",
+      "expected": [
+        {
+          "lemma": "もしか",
+          "pos": "Adverb",
+          "surface": "もしか"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
       ],
-      "id": "mottte_wo_eru",
-      "input": "もって確認を終える"
+      "id": "productive_suru_to_inside_phrase",
+      "input": "もしかすると雨だ"
     }
   ],
   "description": "conjunction tests",

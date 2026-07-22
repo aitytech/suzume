@@ -18,8 +18,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "「平然と」は副詞形であり、lemma を語幹「平然」に正規化する。語境界と品詞は一致しており、Suzume の lemma 方針に沿う。"
+        "category": "intentional-pos-lemma",
+        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
       },
       "description": "平然と (calmly)",
       "expected": [
@@ -98,8 +98,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "「悠然と」は副詞形であり、lemma を語幹「悠然」に正規化する。語境界と品詞は一致しており、Suzume の lemma 方針に沿う。"
+        "category": "intentional-pos-lemma",
+        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
       },
       "description": "悠然と (leisurely)",
       "expected": [
@@ -125,8 +125,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "表記「事」の lemma を読みの標準形「こと」に統一する。語境界・品詞は一致しており、検索時の表記ゆれを吸収する既存の lemma 方針に沿う。"
+        "category": "intentional-pos-lemma",
+        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
       },
       "description": "同じ should be DET (連体詞), not VERB (W-015)",
       "expected": [

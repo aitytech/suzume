@@ -220,10 +220,6 @@
       "input": "一日おき"
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "1時間おき - regression test",
       "expected": [
         {
@@ -238,19 +234,7 @@
         }
       ],
       "id": "1_oki_1",
-      "input": "1時間おき",
-      "suzume_expected": [
-        {
-          "lemma": "1時間",
-          "pos": "Noun",
-          "surface": "1時間"
-        },
-        {
-          "lemma": "おく",
-          "pos": "Verb",
-          "surface": "おき"
-        }
-      ]
+      "input": "1時間おき"
     },
     {
       "description": "週おき - regression test",
@@ -314,10 +298,6 @@
       "input": "1日おきに配る"
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "1時間おきに配る - regression test",
       "expected": [
         {
@@ -342,29 +322,7 @@
         }
       ],
       "id": "1_okini_ru_1",
-      "input": "1時間おきに配る",
-      "suzume_expected": [
-        {
-          "lemma": "1時間",
-          "pos": "Noun",
-          "surface": "1時間"
-        },
-        {
-          "lemma": "おく",
-          "pos": "Verb",
-          "surface": "おき"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "配る",
-          "pos": "Verb",
-          "surface": "配る"
-        }
-      ]
+      "input": "1時間おきに配る"
     },
     {
       "description": "週おきに集まる - regression test",
@@ -538,6 +496,38 @@
       ],
       "id": "kensaku_shiyasui",
       "input": "検索しやすい"
+    },
+    {
+      "description": "連用形と既知の生産的接尾辞の境界を保持する",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "ぶり",
+          "pos": "Suffix",
+          "surface": "ぶり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "renyokei_productive_suffix_boundary_control",
+      "input": "読みぶりを確認する"
     }
   ],
   "description": "suffix_general tests",

@@ -656,8 +656,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "擬態語の AっBら 形を副詞として一語に保持する。参照期待値の Other より検索単位・文法カテゴリとして適切。"
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
       },
       "description": "ふっくら should be ADV (B62) - MeCab互換分割",
       "expected": [
@@ -1093,6 +1093,23 @@
       ],
       "id": "gatsurutsurushiteiru",
       "input": "肌がつるつるしている"
+    },
+    {
+      "description": "促音を含む様態擬態語を一語の副詞として保持する",
+      "expected": [
+        {
+          "lemma": "ぐったり",
+          "pos": "Adverb",
+          "surface": "ぐったり"
+        },
+        {
+          "lemma": "休む",
+          "pos": "Verb",
+          "surface": "休む"
+        }
+      ],
+      "id": "sokuon_manner_adverb_control",
+      "input": "ぐったり休む"
     }
   ],
   "description": "Onomatopoeia and mimetic words",

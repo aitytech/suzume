@@ -381,6 +381,139 @@
       ],
       "id": "attsari_mu",
       "input": "あっさり進む"
+    },
+    {
+      "description": "美しい人というより親切な人だ。 - regression test",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しい"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "親切",
+          "pos": "Adjective",
+          "surface": "親切"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shii_toiuyori_na_da",
+      "input": "美しい人というより親切な人だ。"
+    },
+    {
+      "description": "書こうとしている。 - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書こ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "koutoshiteiru",
+      "input": "書こうとしている。"
+    },
+    {
+      "description": "終止形に続く接続用法からでは動詞を名詞化しない",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "帰る",
+          "pos": "Verb",
+          "surface": "帰る"
+        }
+      ],
+      "id": "finite_verb_before_conjunctive_kara_control",
+      "input": "読むから帰る"
+    },
+    {
+      "description": "閉じた接続助詞と同一spanの根拠なしunknown名詞を競合させない",
+      "expected": [
+        {
+          "lemma": "寒い",
+          "pos": "Adjective",
+          "surface": "寒い"
+        },
+        {
+          "lemma": "ので",
+          "pos": "Particle",
+          "surface": "ので"
+        },
+        {
+          "lemma": "帰る",
+          "pos": "Verb",
+          "surface": "帰る"
+        }
+      ],
+      "id": "closed_conjunctive_particle_exact_span_ownership",
+      "input": "寒いので帰る"
     }
   ],
   "description": "particle_conj tests",

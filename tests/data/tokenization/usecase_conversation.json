@@ -36,8 +36,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "移動を表す本動詞「行く」の連用形であり、現行Verb分類が文法的に妥当で表層境界も一致"
       },
       "expected": [
         {
@@ -744,8 +744,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "pos-ambiguity",
+        "reason": "「お+願い+する」は名詞「願い」+サ変と動詞「願う」連用形を用いる敬語構文の双方が成立する。SuzumeのVerb/lemma=願うは文法的に妥当で、表層境界と他トークンも正しい。"
       },
       "description": "MeCab互換分割",
       "expected": [
@@ -917,8 +917,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
       },
       "expected": [
         {
@@ -1157,8 +1157,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "tokenizer-difference",
+        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
       },
       "expected": [
         {
@@ -1196,14 +1196,9 @@
       "input": "東京行きは何番線ですか",
       "suzume_expected": [
         {
-          "lemma": "東京",
+          "lemma": "東京行き",
           "pos": "Noun",
-          "surface": "東京"
-        },
-        {
-          "lemma": "行く",
-          "pos": "Verb",
-          "surface": "行き"
+          "surface": "東京行き"
         },
         {
           "lemma": "は",
@@ -1477,8 +1472,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "pos-ambiguity",
+        "reason": "「お+願い+する」は名詞「願い」+サ変と動詞「願う」連用形を用いる敬語構文の双方が成立する。SuzumeのVerb/lemma=願うは文法的に妥当で、表層境界と他トークンも正しい。"
       },
       "description": "MeCab互換分割",
       "expected": [

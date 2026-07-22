@@ -2,8 +2,8 @@
   "cases": [
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "grammar-pos",
+        "reason": "無鉄砲は形容動詞語幹、後続のでをコピュラ連用形とする解析が文法的に妥当なため。"
       },
       "description": "坊っちゃん冒頭 - 親譲りの無鉄砲で小供の時から損ばかりしている",
       "expected": [
@@ -149,8 +149,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
       },
       "description": "そこから飛び降りる事は出来まい - compound verb split + negative presumption unified",
       "expected": [

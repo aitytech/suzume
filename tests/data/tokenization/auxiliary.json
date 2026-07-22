@@ -86,8 +86,8 @@
     },
     {
       "accepted_diff": {
-        "category": "tokenization-design",
-        "reason": "「〜てしまう」は完了・遺憾を表す補助動詞として一つの検索単位に保つ。短縮形「〜ちゃう」と通常形で同じ補助動詞単位を採用する。"
+        "category": "search-unit",
+        "reason": "縮約完了助動詞「じゃう」は先行動詞に依存せず同じ閉じた形態素であり、遊ん/じゃう・選ん/じゃうも読ん/じゃう等と同じ一助動詞検索単位に統一する。実装修正後は読ん/じゃわ/ないを含む全補助鎖が文法境界どおり。"
       },
       "description": "鼻音便後の縮約完了補助動詞じゃうの活用",
       "expected": [
@@ -605,8 +605,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "「あぐねる」は前項動詞に付く補助動詞として扱う。語境界は一致し、Suzume の補助動詞分類が文法的に適切である。"
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
       },
       "description": "未遂補助動詞あぐねるの連用形と過去助動詞の境界を保つ",
       "expected": [
@@ -882,8 +882,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "方向・継続を表す「いく」は前項動詞に付く補助動詞である。語境界は一致し、Suzume の補助動詞分類を採用する。"
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
       },
       "description": "移動補助動詞いくの意志形で未然形と意志助動詞の境界を保つ",
       "expected": [
@@ -1188,6 +1188,10 @@
       "input": "読んでこよう。書いてこよう。食べてこよう。"
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
+      },
       "description": "移動補助動詞くるの仮定形を授受補助動詞くれると区別してlemmaを復元する",
       "expected": [
         {
@@ -1292,7 +1296,109 @@
         }
       ],
       "id": "kuru_directional_conditional_lemma",
-      "input": "読んでくればよい。書いてくればよい。食べてくればよい。読んでくれればよい。"
+      "input": "読んでくればよい。書いてくればよい。食べてくればよい。読んでくれればよい。",
+      "suzume_expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "くれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "くれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "くれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "くれる",
+          "pos": "Auxiliary",
+          "surface": "くれれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ]
     },
     {
       "description": "鼻音便テ形後の移動補助動詞くる連用形と過去助動詞の境界を保つ",
@@ -2098,8 +2204,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "否定述語に続く「物」は一般的な対象を表す形式名詞として解析し、既存の形式名詞正規化に従って lemma を「もの」とする。"
+        "category": "intentional-lemma",
+        "reason": "全ての「っこ」否定境界は文法どおり復旧済み。残差は一般名詞「物」のlemmaをSuzumeの正規化規約どおり「もの」とする表記正規化だけである。"
       },
       "description": "Keep the colloquial kkonai negative-conjecture auxiliary chain split.",
       "expected": [
@@ -4026,6 +4132,70 @@
       ],
       "id": "literary_tozakere_passive",
       "input": "遠ざけられた"
+    },
+    {
+      "description": "進行方向の補助動詞は接続助詞てを介して接続する",
+      "expected": [
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Verb",
+          "surface": "いく"
+        }
+      ],
+      "id": "aspect_iku_requires_te_boundary",
+      "input": "話していく"
+    },
+    {
+      "description": "過去助動詞と並列接続助詞たりを擬態語へ統合しない",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Particle",
+          "surface": "たり"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Particle",
+          "surface": "たり"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "tari_inflectional_homograph_control",
+      "input": "本だったり水だったりする"
     }
   ],
   "description": "auxiliary tests",

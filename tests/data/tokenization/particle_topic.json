@@ -2,8 +2,8 @@
   "cases": [
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "grammar-pos-and-canonical-lemma",
+        "reason": "格助詞「まで」後の「たっ」は独立動詞「たつ」の音便形へ文法的に解消する。一方、形式名詞「事」のlemmaは表記ゆれを正規化した「こと」がSuzumeのlemma契約に適合する。"
       },
       "description": "Regression: はいつまで - particle→interjection penalty + topic→pronoun bonus",
       "expected": [
@@ -127,8 +127,8 @@
           "surface": "まで"
         },
         {
-          "lemma": "たっ",
-          "pos": "Auxiliary",
+          "lemma": "たつ",
+          "pos": "Verb",
           "surface": "たっ"
         },
         {

@@ -2,8 +2,8 @@
   "cases": [
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "intentional-pos-lemma",
+        "reason": "古典活用・接続・lemmaの文法に照らして現行解析が妥当で、表層境界は一致"
       },
       "description": "文語完了たりの後に過去助動詞けりが続く",
       "expected": [
@@ -356,8 +356,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "「たゆみなく」は連用名詞「たゆみ」と形容詞連用形「なく」の検索単位を保つ。ひらがな表記では動詞連用形との語彙的曖昧性を文脈だけで解消できず、名詞解析を採用する。"
+        "category": "pos-ambiguity",
+        "reason": "「たゆみ」は動詞連用形と連用転成名詞の両解析が成立する。SuzumeのNounは文法的で、表層境界と後続解析は正しい。"
       },
       "description": "ひらがな名詞的連用形と なく の派生例",
       "expected": [
@@ -396,6 +396,23 @@
           "surface": "進む"
         }
       ]
+    },
+    {
+      "description": "従属コピュラござるの文語否定境界",
+      "expected": [
+        {
+          "lemma": "ござる",
+          "pos": "Verb",
+          "surface": "ござら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "gozaru_classical_negative_boundary",
+      "input": "ござらぬ"
     }
   ],
   "description": "auxiliary_classical tests",

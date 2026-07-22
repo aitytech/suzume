@@ -1358,8 +1358,8 @@
     },
     {
       "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
+        "category": "negative-auxiliary-boundary",
+        "reason": "五段未然形「済ま」+否定助動詞「ない」の生産的境界を保ち、語彙化して統合しない"
       },
       "description": "五段動詞「済む」の未然形と否定助動詞を分割する",
       "expected": [
@@ -1415,10 +1415,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "normalization",
-        "reason": "Established grammar-based tokenizer analysis differs from the normalized MeCab reference."
-      },
       "description": "否定構文の「思わ + ずに」の助動詞境界を維持する",
       "expected": [
         {
@@ -1453,39 +1449,7 @@
         }
       ],
       "id": "omowazu_ni_negative_auxiliary_boundary",
-      "input": "思わずにはいられない",
-      "suzume_expected": [
-        {
-          "lemma": "思う",
-          "pos": "Verb",
-          "surface": "思わ"
-        },
-        {
-          "lemma": "ず",
-          "pos": "Auxiliary",
-          "surface": "ずに"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "い"
-        },
-        {
-          "lemma": "られる",
-          "pos": "Auxiliary",
-          "surface": "られ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "思わずにはいられない"
     },
     {
       "description": "否定構文内の「え」を動詞「える」の連用形として解析する",

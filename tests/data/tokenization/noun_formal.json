@@ -1272,8 +1272,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "pos-ambiguity",
+        "reason": "冒頭「本」は接頭辞用法と名詞用法が文脈上両立する。SuzumeのNounは文法的で、全表層境界と形式名詞鎖は正しい。"
       },
       "description": "Formal wake remains a noun after affirmative clauses before dewa-nai.",
       "expected": [
@@ -3351,8 +3351,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "複合連用形の名詞化した組み合わせに接尾辞方が接続する解析は文法的に妥当であり、表層境界は一致する。"
+        "category": "lexicalized-deverbal-noun-pos",
+        "reason": "既存の語彙的名詞「組み合わせ」に生産的接尾辞「方」が接続する解析で、検索境界と後続構文は参照解析と一致する。"
       },
       "description": "compound verb nominalizer",
       "expected": [
@@ -3404,8 +3404,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "複合連用形の名詞化した組み合わせに接尾辞方が接続する解析は文法的に妥当であり、表層境界は一致する。"
+        "category": "lexicalized-deverbal-noun-pos",
+        "reason": "既存の語彙的名詞「組み合わせ」に生産的接尾辞「方」が接続する解析で、検索境界と後続構文は参照解析と一致する。"
       },
       "description": "compound verb nominalizer variant",
       "expected": [
@@ -3813,6 +3813,28 @@
       ],
       "id": "kuategaaru",
       "input": "行くあてがある"
+    },
+    {
+      "description": "形式名詞＋否定なくは名詞を維持する",
+      "expected": [
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "formal_noun_before_negative_naku_control",
+      "input": "ことなく進む"
     }
   ],
   "description": "Formal nouns (こと、もの、ところ)",

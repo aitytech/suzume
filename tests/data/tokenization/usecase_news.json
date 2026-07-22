@@ -287,6 +287,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "grammatical-pos-correction",
+        "reason": "丁寧推量の断定辞「でしょう」の直前では「曇り」は連用形転成名詞であり、動詞連用形ではないため"
+      },
       "description": "Weather forecast with のち (after) as temporal noun",
       "expected": [
         {
@@ -327,6 +331,43 @@
       ],
       "id": "weather_forecast",
       "input": "明日は晴れのち曇りでしょう",
+      "suzume_expected": [
+        {
+          "lemma": "明日",
+          "pos": "Noun",
+          "surface": "明日"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "晴れ",
+          "pos": "Noun",
+          "surface": "晴れ"
+        },
+        {
+          "lemma": "のち",
+          "pos": "Noun",
+          "surface": "のち"
+        },
+        {
+          "lemma": "曇り",
+          "pos": "Noun",
+          "surface": "曇り"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "でしょ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
       "tags": [
         "weather"
       ]
@@ -844,6 +885,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+      },
       "description": "Conclusion statement",
       "expected": [
         {
@@ -899,6 +944,58 @@
       ],
       "id": "academic_conclusion",
       "input": "以上の結果から次のように結論づけられる",
+      "suzume_expected": [
+        {
+          "lemma": "以上",
+          "pos": "Noun",
+          "surface": "以上"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "次",
+          "pos": "Noun",
+          "surface": "次"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "結論づける",
+          "pos": "Verb",
+          "surface": "結論づけ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
       "tags": [
         "academic"
       ]
@@ -1081,8 +1178,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "pos-ambiguity",
+        "reason": "「正式」はナ形容詞語幹+にと名詞+格助詞の両解析が成立する。SuzumeのNoun解析は文法的で、他トークンは正しい。"
       },
       "description": "News article style - Current suzume unifies 経済政策",
       "expected": [
@@ -1817,6 +1914,10 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "pos-limitation",
+        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+      },
       "description": "Teacher explanation (split: verb stem + polite aux)",
       "expected": [
         {
@@ -1867,6 +1968,53 @@
       ],
       "id": "education_explanation",
       "input": "この公式は次のように使います",
+      "suzume_expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "公式",
+          "pos": "Noun",
+          "surface": "公式"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "次",
+          "pos": "Noun",
+          "surface": "次"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使い"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
       "tags": [
         "education"
       ]

@@ -897,8 +897,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
       },
       "description": "Transaction: お振込みは翌営業日に反映されます - MeCab互換分割",
       "expected": [
@@ -1132,8 +1132,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "business-search-units",
+        "reason": "「月末」「締め」「翌月」「払い」は独立した検索単位で、参照側の境界横断複合は不適切"
       },
       "description": "Payment: お支払いは月末締め翌月払いです",
       "expected": [
@@ -1212,8 +1212,8 @@
           "surface": "翌月"
         },
         {
-          "lemma": "払う",
-          "pos": "Verb",
+          "lemma": "払い",
+          "pos": "Noun",
           "surface": "払い"
         },
         {
@@ -1229,8 +1229,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "prefix-noun-ambiguity",
+        "reason": "単独漢字「本」は接頭辞用法と普通名詞が同形で、後続名詞だけでは語彙的慣用を一意に決められない。全境界・lemmaは正しく、一律Prefix化は普通名詞複合を壊すためNounフォールバックを意図差とする。"
       },
       "description": "Terms: 本サービスの利用に際して",
       "expected": [

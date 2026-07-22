@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "description": "アスペクト補助動詞「くる」は接続助詞「で」の後では維持する",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "aspect_kuru_after_conjunctive_de_control",
+      "input": "読んできた"
+    },
+    {
+      "description": "試行補助動詞みるの否定境界",
+      "expected": [
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "みる",
+          "pos": "Auxiliary",
+          "surface": "み"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "trial_auxiliary_negative_boundary",
+      "input": "試してみない"
+    }
+  ],
+  "description": "auxiliary_aspect tests",
+  "version": "1.0"
+}

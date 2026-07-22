@@ -313,8 +313,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "傾向接尾辞「がち」は動詞連用形に接続するため、「遅れ」は名詞ではなく動詞「遅れる」の連用形として扱う。"
+        "category": "intentional-pos",
+        "reason": "生産的な動詞連用形＋接尾辞「がち」の構造で、現行Verb解析が妥当。"
       },
       "description": "S6: がち should be recognized as suffix",
       "expected": [
@@ -510,8 +510,8 @@
     },
     {
       "accepted_diff": {
-        "category": "tokenization-design",
-        "reason": "「っぱなし」は動詞連用形に接続する状態接尾辞であり、「出し＋っぱなし」の文法的境界を保持する。"
+        "category": "intentional-pos",
+        "reason": "生産的な動詞連用形＋接尾辞「っぱなし」の構造で、現行Verb解析が妥当。"
       },
       "description": "っぱなし suffix after verb renyokei",
       "expected": [
@@ -639,8 +639,8 @@
     },
     {
       "accepted_diff": {
-        "category": "tokenization-design",
-        "reason": "完了直後を表す「たて」は生産的な接尾辞であり、動詞連用形との境界を保持する。検索時に動作語と新鮮さの接尾辞を個別に扱える分割を採用する。"
+        "category": "productive-recent-completion-suffix",
+        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
       },
       "description": "焼きたて - auto-generated",
       "expected": [
@@ -672,8 +672,8 @@
     },
     {
       "accepted_diff": {
-        "category": "segmentation",
-        "reason": "完成直後を表す「たて」は動詞連用形に生産的に接続する接尾辞であり、過去助動詞「た」＋接続助詞「て」ではなく検索単位として保持する。"
+        "category": "productive-recent-completion-suffix",
+        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
       },
       "description": "できたて - auto-generated",
       "expected": [
@@ -710,8 +710,8 @@
     },
     {
       "accepted_diff": {
-        "category": "tokenization-design",
-        "reason": "完了直後を表す「たて」は生産的な接尾辞であり、動詞連用形との境界を保持する。検索時に動作語と新鮮さの接尾辞を個別に扱える分割を採用する。"
+        "category": "productive-recent-completion-suffix",
+        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
       },
       "description": "作りたて - auto-generated",
       "expected": [
@@ -738,8 +738,8 @@
     },
     {
       "accepted_diff": {
-        "category": "tokenization-design",
-        "reason": "完了直後を表す「たて」は生産的な接尾辞であり、動詞連用形との境界を保持する。検索時に動作語と新鮮さの接尾辞を個別に扱える分割を採用する。"
+        "category": "productive-recent-completion-suffix",
+        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
       },
       "description": "書きたて - auto-generated",
       "expected": [
@@ -766,8 +766,8 @@
     },
     {
       "accepted_diff": {
-        "category": "segmentation",
-        "reason": "完成直後を表す「たて」は動詞連用形に生産的に接続する接尾辞であり、過去助動詞「た」＋接続助詞「て」ではなく検索単位として保持する。"
+        "category": "productive-recent-completion-suffix",
+        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
       },
       "description": "読みたて - auto-generated",
       "expected": [
@@ -804,8 +804,8 @@
     },
     {
       "accepted_diff": {
-        "category": "tokenization-design",
-        "reason": "完了直後を表す「たて」は生産的な接尾辞であり、動詞連用形との境界を保持する。検索時に動作語と新鮮さの接尾辞を個別に扱える分割を採用する。"
+        "category": "productive-recent-completion-suffix",
+        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
       },
       "description": "炊きたて - auto-generated",
       "expected": [
@@ -832,8 +832,8 @@
     },
     {
       "accepted_diff": {
-        "category": "segmentation",
-        "reason": "完成直後を表す「たて」は動詞連用形に生産的に接続する接尾辞であり、過去助動詞「た」＋接続助詞「て」ではなく検索単位として保持する。"
+        "category": "productive-recent-completion-suffix",
+        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
       },
       "description": "入れたて - auto-generated",
       "expected": [
@@ -887,8 +887,8 @@
     },
     {
       "accepted_diff": {
-        "category": "tokenization-design",
-        "reason": "完了直後を表す「たて」は生産的な接尾辞であり、動詞連用形との境界を保持する。検索時に動作語と新鮮さの接尾辞を個別に扱える分割を採用する。"
+        "category": "productive-recent-completion-suffix",
+        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
       },
       "description": "生まれたて - auto-generated",
       "expected": [
@@ -1086,7 +1086,7 @@
     {
       "accepted_diff": {
         "category": "pos-limitation",
-        "reason": "傾向接尾辞「がち」は動詞連用形に接続するため、読み・書き・食べは各動詞の連用形として扱う。コピュラ連用形「で」を含む否定連鎖も独立した検索単位として保持する。"
+        "reason": "傾向接尾辞がちは三例とも動詞連用形に接続し、同一パラダイムのPOSを統一する"
       },
       "description": "Preserve the tendency suffix and copular-negative boundaries.",
       "expected": [
@@ -1692,6 +1692,75 @@
       ],
       "id": "toiawasesaki_destination_suffix",
       "input": "問い合わせ先を確認する"
+    },
+    {
+      "description": "独立tokenの名詞後「的」を生産的接尾辞として保持する",
+      "expected": [
+        {
+          "lemma": "なし崩し",
+          "pos": "Noun",
+          "surface": "なし崩し"
+        },
+        {
+          "lemma": "的",
+          "pos": "Suffix",
+          "surface": "的"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "productive_teki_suffix_after_noun",
+      "input": "なし崩し的な対応だ"
+    },
+    {
+      "description": "内容語へ直接接合する「後」は時間接尾辞を維持する",
+      "expected": [
+        {
+          "lemma": "終了",
+          "pos": "Noun",
+          "surface": "終了"
+        },
+        {
+          "lemma": "後",
+          "pos": "Suffix",
+          "surface": "後"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "temporal_ato_suffix_direct_attachment_control",
+      "input": "終了後に確認します"
     }
   ],
   "description": "Suffixes (さん、的、化)",

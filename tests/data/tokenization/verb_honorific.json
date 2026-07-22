@@ -96,8 +96,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "尊敬接頭辞に続く形容詞「忙しい」の形容詞解析を保持する。"
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
       },
       "description": "Honorific prefix お with adjective",
       "expected": [

@@ -197,8 +197,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos",
+        "reason": "「で＋ござる」は閉じた従属コピュラ連鎖であり、否定形も「で／ござら／ぬ」の境界を保ったまま「ござら」をAuxGozaruとする。終止形「これでござる」と丁寧形「でございます」と同じ役割分類である。"
       },
       "description": "Samurai speech ござらぬ - classical negative ぬ splits per design",
       "expected": [
@@ -248,8 +248,13 @@
         },
         {
           "lemma": "ござる",
-          "pos": "Verb",
-          "surface": "ござらぬ"
+          "pos": "Auxiliary",
+          "surface": "ござら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
         }
       ],
       "tags": [
@@ -1014,8 +1019,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "morpheme-boundary",
+        "reason": "既存の五段ラ行動詞の促音便＋接続助詞て＋進行補助動詞いるとして解析する"
       },
       "description": "過疎っている - 過疎る is a modern Japanese verb (internet slang for 'become dead/inactive')",
       "expected": [
@@ -1314,8 +1319,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "potential-lemma-normalization",
+        "reason": "可能形を基底五段動詞へ正規化する。表層・境界・POSは一致する。"
       },
       "description": "Katakana verb バズる potential form",
       "expected": [
@@ -2320,6 +2325,43 @@
       ],
       "id": "tsunagaru_hiragana_godan",
       "input": "つながる"
+    },
+    {
+      "description": "存在動詞「ある」を「はしない」の閉じた強調否定鎖から復元する",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "など",
+          "pos": "Particle",
+          "surface": "など"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あり"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "existential_aru_emphatic_negative_chain",
+      "input": "問題などありはしない"
     }
   ],
   "description": "Godan Ra-row verbs (五段ラ行動詞) - verbs ending in る",

@@ -303,6 +303,10 @@
       "input": "恥の多い生涯を送って来ました。"
     },
     {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
+      },
       "description": "新聞風 - ながらに接続",
       "expected": [
         {
@@ -352,7 +356,49 @@
         }
       ],
       "id": "no_ha_nagarani_eta",
-      "input": "被害者の遺族は涙ながらに訴えた。"
+      "input": "被害者の遺族は涙ながらに訴えた。",
+      "suzume_expected": [
+        {
+          "lemma": "被害者",
+          "pos": "Noun",
+          "surface": "被害者"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "遺族",
+          "pos": "Noun",
+          "surface": "遺族"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "涙ながら",
+          "pos": "Noun",
+          "surface": "涙ながら"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "訴える",
+          "pos": "Verb",
+          "surface": "訴え"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "論説風 - 受動態＋複合名詞",
@@ -718,8 +764,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
       },
       "description": "芥川・羅生門冒頭風",
       "expected": [
@@ -1674,8 +1720,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
       },
       "description": "漢語+として副詞 - kango-toshite-split正規化",
       "expected": [
@@ -2394,6 +2440,10 @@
       "input": "満場一致で可決された法案は国民生活に多大な影響を及ぼす。"
     },
     {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
+      },
       "description": "涙ながらに — 慣用表現",
       "expected": [
         {
@@ -2433,7 +2483,39 @@
         }
       ],
       "id": "ha_nagarani_eta",
-      "input": "彼女は涙ながらに訴えた。"
+      "input": "彼女は涙ながらに訴えた。",
+      "suzume_expected": [
+        {
+          "lemma": "彼女",
+          "pos": "Pronoun",
+          "surface": "彼女"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "涙ながら",
+          "pos": "Noun",
+          "surface": "涙ながら"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "訴える",
+          "pos": "Verb",
+          "surface": "訴え"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "四字熟語 + tari-adverb",
@@ -2813,8 +2895,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
       },
       "description": "なかろう split (negative volitional)",
       "expected": [
@@ -2885,10 +2967,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "いかなる determiner + 屈せず + べきである",
       "expected": [
         {
@@ -2948,66 +3026,13 @@
         }
       ],
       "id": "ikanaru_nimo_sezu_subekidearu",
-      "input": "いかなる困難にも屈せず前進すべきである。",
-      "suzume_expected": [
-        {
-          "lemma": "いかなる",
-          "pos": "Determiner",
-          "surface": "いかなる"
-        },
-        {
-          "lemma": "困難",
-          "pos": "Noun",
-          "surface": "困難"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "屈する",
-          "pos": "Verb",
-          "surface": "屈せ"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ず"
-        },
-        {
-          "lemma": "前進",
-          "pos": "Noun",
-          "surface": "前進"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "す"
-        },
-        {
-          "lemma": "べし",
-          "pos": "Auxiliary",
-          "surface": "べき"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        }
-      ]
+      "input": "いかなる困難にも屈せず前進すべきである。"
     },
     {
+      "accepted_diff": {
+        "category": "intentional-pos",
+        "reason": "「お＋願い＋申し上げる」は動詞「願う」の連用形を用いる謙譲構文で、現行Verb解析が妥当。"
+      },
       "description": "ビジネス敬語多重化",
       "expected": [
         {
@@ -3057,7 +3082,54 @@
         }
       ],
       "id": "go_kudasaimasuyouo_i_shi_gemasu",
-      "input": "ご査収くださいますようお願い申し上げます。"
+      "input": "ご査収くださいますようお願い申し上げます。",
+      "suzume_expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "査収",
+          "pos": "Noun",
+          "surface": "査収"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願い"
+        },
+        {
+          "lemma": "申し上げる",
+          "pos": "Verb",
+          "surface": "申し上げ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ]
     },
     {
       "description": "たる + 漢語 (tari adjective)",
@@ -3432,6 +3504,10 @@
       "input": "窓の外には、雪が静かに降り積もっていた。"
     },
     {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
+      },
       "description": "長い複文: ながらに + をも particle combination",
       "expected": [
         {
@@ -3511,7 +3587,79 @@
         }
       ],
       "id": "nagarani_ru_no_ha_no_womo_ttta",
-      "input": "涙ながらに語る彼女の姿は、誰の心をも打った。"
+      "input": "涙ながらに語る彼女の姿は、誰の心をも打った。",
+      "suzume_expected": [
+        {
+          "lemma": "涙ながら",
+          "pos": "Noun",
+          "surface": "涙ながら"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "語る",
+          "pos": "Verb",
+          "surface": "語る"
+        },
+        {
+          "lemma": "彼女",
+          "pos": "Pronoun",
+          "surface": "彼女"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "姿",
+          "pos": "Noun",
+          "surface": "姿"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "誰",
+          "pos": "Pronoun",
+          "surface": "誰"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "心",
+          "pos": "Noun",
+          "surface": "心"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "打つ",
+          "pos": "Verb",
+          "surface": "打っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "文語: あたかも + かのような simile pattern",
@@ -3633,8 +3781,56 @@
       "input": "思えば遠くへ来たものだ。"
     },
     {
+      "accepted_diff": {
+        "category": "intentional-morphology",
+        "reason": "非サ行五段動詞「行く」の未然形「行か」と使役「さ」、受身「れ」の生産的な形態素境界を保持する。MeCabの「行かす」解釈も可能な曖昧例。"
+      },
       "description": "使役受身: 行か+さ+れ+た causative-passive chain",
       "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "上司",
+          "pos": "Noun",
+          "surface": "上司"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "無理やり",
+          "pos": "Adverb",
+          "surface": "無理やり"
+        },
+        {
+          "lemma": "行かす",
+          "pos": "Verb",
+          "surface": "行かさ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ha_ni_yari_kasareta",
+      "input": "彼は上司に無理やり行かされた。",
+      "suzume_expected": [
         {
           "lemma": "彼",
           "pos": "Pronoun",
@@ -3680,9 +3876,7 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ],
-      "id": "ha_ni_yari_kasareta",
-      "input": "彼は上司に無理やり行かされた。"
+      ]
     },
     {
       "description": "受身+ざるを得ない: passive + obligatory pattern",
@@ -3876,10 +4070,6 @@
       "input": "子供たちに本を読ませてやりたい。"
     },
     {
-      "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
-      },
       "description": "体言止め: 困難 Noun(suzume) vs Adj(mecab) before を",
       "expected": [
         {
@@ -3944,69 +4134,7 @@
         }
       ],
       "id": "no_wo_ri_etekita_tachino",
-      "input": "幾多の困難を乗り越えてきた先人たちの知恵。",
-      "suzume_expected": [
-        {
-          "lemma": "幾多",
-          "pos": "Noun",
-          "surface": "幾多"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "困難",
-          "pos": "Noun",
-          "surface": "困難"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "乗り越える",
-          "pos": "Verb",
-          "surface": "乗り越え"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "き"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "先人",
-          "pos": "Noun",
-          "surface": "先人"
-        },
-        {
-          "lemma": "たち",
-          "pos": "Suffix",
-          "surface": "たち"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "知恵",
-          "pos": "Noun",
-          "surface": "知恵"
-        }
-      ]
+      "input": "幾多の困難を乗り越えてきた先人たちの知恵。"
     },
     {
       "description": "論説調: 講じる+べき+である formal pattern",
@@ -4223,8 +4351,8 @@
     },
     {
       "accepted_diff": {
-        "category": "grammar-valid-difference",
-        "reason": "Suzume's tokenization and part-of-speech analysis are grammatically valid; the reference difference is intentional."
+        "category": "pos-context",
+        "reason": "「およそ」は名詞「人間」の指示限定ではなく後続節全体を修飾する副詞用法。表層境界・他トークンのPOS/lemmaは妥当。"
       },
       "description": "文語: およそ POS diff, 得る Aux/Verb diff",
       "expected": [
@@ -4299,7 +4427,7 @@
         },
         {
           "lemma": "得る",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "得る"
         },
         {
@@ -5169,8 +5297,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "文語連語「せんがため」の「ため」は形式名詞として解析する。併せて「夜通し」は名詞用法を保持し、MeCab由来の動詞・副詞分類とは意図的に異なる。"
+        "category": "intentional-pos-lemma",
+        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
       },
       "description": "問題を解決せんがため、担当者は夜通し作業した。 - auto-generated",
       "expected": [

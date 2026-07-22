@@ -373,12 +373,31 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "search-unit-compound",
+        "reason": "助詞を含まない連用転成複合名詞「恩着せ」は一つの検索単位であり、後続の生産的形容詞接辞境界「が/ましい」は維持されている。NounVerbalの全体候補を採用する。"
+      },
       "description": "派生形容詞と形容詞語幹の接尾辞境界を保つ",
       "expected": [
         {
-          "lemma": "恩着せがましい",
-          "pos": "Adjective",
-          "surface": "恩着せがましい"
+          "lemma": "恩",
+          "pos": "Noun",
+          "surface": "恩"
+        },
+        {
+          "lemma": "着せる",
+          "pos": "Verb",
+          "surface": "着せ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ましいる",
+          "pos": "Verb",
+          "surface": "ましい"
         },
         {
           "lemma": "態度",
@@ -387,7 +406,29 @@
         }
       ],
       "id": "derived_gamashii_adjective",
-      "input": "恩着せがましい態度"
+      "input": "恩着せがましい態度",
+      "suzume_expected": [
+        {
+          "lemma": "恩着せ",
+          "pos": "Noun",
+          "surface": "恩着せ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ましい",
+          "pos": "Adjective",
+          "surface": "ましい"
+        },
+        {
+          "lemma": "態度",
+          "pos": "Noun",
+          "surface": "態度"
+        }
+      ]
     },
     {
       "description": "派生形容詞と形容詞語幹の接尾辞境界を保つ",
@@ -481,9 +522,14 @@
       "description": "い形容詞語幹へのげ派生",
       "expected": [
         {
-          "lemma": "おくゆかしげ",
+          "lemma": "おくゆかしい",
           "pos": "Adjective",
-          "surface": "おくゆかしげ"
+          "surface": "おくゆかし"
+        },
+        {
+          "lemma": "げ",
+          "pos": "Suffix",
+          "surface": "げ"
         },
         {
           "lemma": "に",
@@ -503,6 +549,48 @@
       ],
       "id": "literary_okuyukashige",
       "input": "おくゆかしげに話した"
+    },
+    {
+      "description": "複合形容詞語幹と名詞化接尾辞さの境界を保つ",
+      "expected": [
+        {
+          "lemma": "文章",
+          "pos": "Noun",
+          "surface": "文章"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "やすい",
+          "pos": "Adjective",
+          "surface": "やす"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "比べる",
+          "pos": "Verb",
+          "surface": "比べる"
+        }
+      ],
+      "id": "compound_adjective_sa_nominalizer_boundary",
+      "input": "文章の読みやすさを比べる"
     }
   ],
   "description": "Compound adjectives (〜やすい、〜にくい、〜すぎる)",

@@ -419,6 +419,65 @@
       ],
       "id": "verb_passive_causative_boundary",
       "input": "書かれさせる"
+    },
+    {
+      "description": "使役受身の役割復元を通常の形容詞名詞化へ適用しない負例",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美し"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shisaga_rareta",
+      "input": "美しさが知られた。"
+    },
+    {
+      "description": "動詞未然形後の使役さを名詞化接尾辞と誤認しない",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れる"
+        }
+      ],
+      "id": "mizenkei_sa_causative_homograph_control",
+      "input": "読まされる"
     }
   ],
   "description": "verb_causative tests",

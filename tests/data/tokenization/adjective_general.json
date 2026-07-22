@@ -286,6 +286,301 @@
       ],
       "id": "mashisawo_su",
       "input": "望ましさを示す"
+    },
+    {
+      "description": "サ変境界規則が形容詞連体形と名詞の境界を巻き込まない負例",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しい"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shii_ga_ita",
+      "input": "美しい人が歩いた。"
+    },
+    {
+      "description": "先行助詞をかな接頭部として漢字形容詞へ吸収しない",
+      "expected": [
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しい"
+        },
+        {
+          "lemma": "景色",
+          "pos": "Noun",
+          "surface": "景色"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "particle_before_kanji_adjective_control",
+      "input": "から美しい景色だ"
+    },
+    {
+      "description": "生産的な動詞未然形と否定助動詞を語彙形容詞へ統合しない",
+      "expected": [
+        {
+          "lemma": "働く",
+          "pos": "Verb",
+          "surface": "働か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        }
+      ],
+      "id": "lexical_nai_adjective_negative_control",
+      "input": "働かない人"
+    },
+    {
+      "description": "Pure-hiragana i-adjective stem before productive nominalizer さ",
+      "expected": [
+        {
+          "lemma": "うれしい",
+          "pos": "Adjective",
+          "surface": "うれし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "伝わる",
+          "pos": "Verb",
+          "surface": "伝わる"
+        }
+      ],
+      "id": "hira_i_adjective_nominalizer_sa_general",
+      "input": "うれしさが伝わる。"
+    },
+    {
+      "description": "使いやすさを比べる - regression test",
+      "expected": [
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使い"
+        },
+        {
+          "lemma": "やすい",
+          "pos": "Adjective",
+          "surface": "やす"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "比べる",
+          "pos": "Verb",
+          "surface": "比べる"
+        }
+      ],
+      "id": "iyasusawo_beru",
+      "input": "使いやすさを比べる"
+    },
+    {
+      "description": "美しい人が歩いた - regression test",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しい"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shii_ga_ita_1",
+      "input": "美しい人が歩いた"
+    },
+    {
+      "description": "とても高そうな山だ - regression test",
+      "expected": [
+        {
+          "lemma": "とても",
+          "pos": "Adverb",
+          "surface": "とても"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Auxiliary",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "totemo_souna_da",
+      "input": "とても高そうな山だ"
+    },
+    {
+      "description": "とても書きそうな人だ - regression test",
+      "expected": [
+        {
+          "lemma": "とても",
+          "pos": "Adverb",
+          "surface": "とても"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Auxiliary",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "totemo_kisouna_da",
+      "input": "とても書きそうな人だ"
+    },
+    {
+      "description": "美しいひとが歩く - regression test",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しい"
+        },
+        {
+          "lemma": "ひと",
+          "pos": "Noun",
+          "surface": "ひと"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩く"
+        }
+      ],
+      "id": "shiihitoga_ku",
+      "input": "美しいひとが歩く"
+    },
+    {
+      "description": "美しいので休む - regression test",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しい"
+        },
+        {
+          "lemma": "ので",
+          "pos": "Particle",
+          "surface": "ので"
+        },
+        {
+          "lemma": "休む",
+          "pos": "Verb",
+          "surface": "休む"
+        }
+      ],
+      "id": "shiinode_mu",
+      "input": "美しいので休む"
     }
   ],
   "description": "adjective_general tests",

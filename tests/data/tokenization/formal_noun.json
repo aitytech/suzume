@@ -1210,8 +1210,8 @@
     },
     {
       "accepted_diff": {
-        "category": "tokenization-design",
-        "reason": "「おそれ」は危険性を表す形式名詞として一語で扱う。接頭辞と代名詞への分割ではなく、助動詞・助詞との文法的境界を保持する検索単位を採用する。"
+        "category": "formal-noun-search-unit",
+        "reason": "ひらがな表記の形式名詞「おそれ」は一語で、接頭辞「お」+代名詞「それ」ではない"
       },
       "description": "Keep hiragana osore as one formal-noun search unit after an attributive clause.",
       "expected": [
@@ -2033,8 +2033,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "「同じ」は形容動詞語幹として扱い、「で＋は＋ない」はコピュラ否定連鎖として解析する。"
+        "category": "intentional-pos-lemma",
+        "reason": "古典活用・接続・lemmaの文法に照らして現行解析が妥当で、表層境界は一致"
       },
       "description": "同じではない - regression test",
       "expected": [
@@ -2149,6 +2149,10 @@
       "input": "雨ゆえに遅れた"
     },
     {
+      "accepted_diff": {
+        "category": "tokenizer-difference",
+        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
+      },
       "description": "恩恵原因表現を接頭辞おと形式名詞かげに分割する",
       "expected": [
         {
@@ -2193,7 +2197,44 @@
         }
       ],
       "id": "okage_honorific_formal_noun",
-      "input": "努力のおかげで成功した"
+      "input": "努力のおかげで成功した",
+      "suzume_expected": [
+        {
+          "lemma": "努力",
+          "pos": "Noun",
+          "surface": "努力"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "おかげ",
+          "pos": "Noun",
+          "surface": "おかげ"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "成功",
+          "pos": "Noun",
+          "surface": "成功"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ]
     },
     {
       "description": "文語的な形式名詞いかんを条件表現で解析する",

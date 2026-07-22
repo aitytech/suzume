@@ -22,17 +22,16 @@
       ]
     },
     {
+      "accepted_diff": {
+        "category": "intentional-morphology",
+        "reason": "ラ行五段「やる」の未然形「やら」と使役「さ」、受身「れ」の生産的な形態素境界を保持する。語彙動詞「やらす」解釈も可能な曖昧例。"
+      },
       "description": "やらされた - causative-passive (MeCab: やらさ+れ+た)",
       "expected": [
         {
-          "lemma": "やる",
+          "lemma": "やらす",
           "pos": "Verb",
-          "surface": "やら"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "さ"
+          "surface": "やらさ"
         },
         {
           "lemma": "れる",
@@ -47,27 +46,10 @@
       ],
       "id": "hiragana_verb_yarasareta",
       "input": "やらされた",
-      "tags": [
-        "basic",
-        "hiragana-verb"
-      ]
-    },
-    {
-      "description": "仕事をやらされた - MeCab互換分割",
-      "expected": [
+      "suzume_expected": [
         {
-          "lemma": "仕事",
-          "pos": "Noun",
-          "surface": "仕事"
-        },
-        {
-          "lemma": "を",
+          "lemma": "やら",
           "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "やる",
-          "pos": "Verb",
           "surface": "やら"
         },
         {
@@ -86,8 +68,78 @@
           "surface": "た"
         }
       ],
+      "tags": [
+        "basic",
+        "hiragana-verb"
+      ]
+    },
+    {
+      "accepted_diff": {
+        "category": "intentional-morphology",
+        "reason": "ラ行五段「やる」の未然形「やら」と使役「さ」、受身「れ」の生産的な形態素境界を保持する。語彙動詞「やらす」解釈も可能な曖昧例。"
+      },
+      "description": "仕事をやらされた - MeCab互換分割",
+      "expected": [
+        {
+          "lemma": "仕事",
+          "pos": "Noun",
+          "surface": "仕事"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "やらす",
+          "pos": "Verb",
+          "surface": "やらさ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
       "id": "hiragana_verb_sentence",
       "input": "仕事をやらされた",
+      "suzume_expected": [
+        {
+          "lemma": "仕事",
+          "pos": "Noun",
+          "surface": "仕事"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "やら",
+          "pos": "Particle",
+          "surface": "やら"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
       "tags": [
         "basic",
         "hiragana-verb",

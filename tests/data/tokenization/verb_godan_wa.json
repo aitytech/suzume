@@ -757,8 +757,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "文脈のないひらがな表記は「行く」と「言う」が曖昧なため、選択された「行く」の解析を許容する。"
+        "category": "lemma-ambiguity",
+        "reason": "促音便表層「いっ」は「行く」「言う」等のlemmaを文脈なしでは一意に復元できない。境界とPOSは正しい。"
       },
       "description": "itta - 1-char stem sokuonbin, MeCab reads as いう (言った); ambiguous with 行った",
       "expected": [
@@ -1036,8 +1036,8 @@
     },
     {
       "accepted_diff": {
-        "category": "lemma-limitation",
-        "reason": "The sokuonbin form derives from おもう; おもる is not a valid lemma."
+        "category": "intentional-pos-lemma",
+        "reason": "古典活用・接続・lemmaの文法に照らして現行解析が妥当で、表層境界は一致"
       },
       "description": "Pure-hiragana godan-wa sokuonbin: おもう past (MeCab gives non-word おもる)",
       "expected": [
@@ -1069,8 +1069,8 @@
     },
     {
       "accepted_diff": {
-        "category": "lemma-limitation",
-        "reason": "The form can derive from すう; restoring する is grammatically invalid."
+        "category": "lemma-ambiguity",
+        "reason": "促音便表層「すっ」は「吸う」「する」等のlemmaを文脈なしでは一意に復元できない。境界とPOSは正しい。"
       },
       "description": "Pure-hiragana godan-wa sokuonbin: すう te-form (すう/する ambiguous, pick すう)",
       "expected": [

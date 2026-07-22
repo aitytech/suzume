@@ -1,6 +1,6 @@
 // Universal tokenization test that auto-discovers all JSON test files.
-// No need to create separate C++ files for each JSON - just add JSON files
-// to tests/data/tokenization/ and they will be automatically picked up.
+// JSON files and newly appended cases under tests/data/tokenization/ are
+// discovered at test startup; no dedicated C++ case is required.
 
 #include <gtest/gtest.h>
 
