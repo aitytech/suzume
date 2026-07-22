@@ -10,10 +10,17 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "core/lattice.h"
 #include "normalize/char_type.h"
+
+namespace suzume {
+namespace dictionary {
+class DictionaryManager;
+}
+}  // namespace suzume
 
 namespace suzume::analysis {
 
@@ -103,6 +110,17 @@ size_t dictionarySokuonbinEndCovering(const core::Lattice& lattice, size_t pos);
  * @brief Find the end of any structurally generated compound verb covering pos.
  */
 size_t compoundVerbEndCovering(const core::Lattice& lattice, size_t pos);
+
+/**
+ * @brief Whether a candidate joins a licensed particle to an adverb prefix.
+ *
+ * A particle is treated as grammatical only when a content/predicate edge
+ * ends at the candidate start. This prevents homographic kana inside open
+ * adjectives and nouns from claiming a particle boundary.
+ */
+bool joinsParticleToDictionaryAdverb(const core::Lattice& lattice, const dictionary::DictionaryManager& dict_manager,
+                                     std::string_view text, const ByteOffsets& byte_offsets, size_t candidate_start,
+                                     size_t candidate_end);
 
 }  // namespace suzume::analysis
 

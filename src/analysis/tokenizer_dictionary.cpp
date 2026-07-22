@@ -485,6 +485,34 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // guards below inspect the following lexical head.
     size_t end_pos = start_pos + result.length;
 
+    // A context-licensed particle must not absorb the beginning of a complete
+    // following adverb (裏+で+しばらく, 時+は+すでに). Restricting the guard to
+    // an observed left content/predicate edge avoids kana homographs inside
+    // open words such as adjectives.
+    if (result.entry->pos != core::PartOfSpeech::Particle &&
+        joinsParticleToDictionaryAdverb(lattice, dict_manager_, text, byte_offsets, start_pos, end_pos)) {
+      continue;
+    }
+
+    // A dictionary terminal verb must yield to a longer, structurally valid
+    // i-onbin stem immediately selected by て/で. This recovers open Godan-ka/
+    // Godan-ga forms such as あるい+て without registering the lexical verb.
+    if (result.entry->pos == core::PartOfSpeech::Verb && end_pos + 1 < codepoints.size() &&
+        codepoints[end_pos] == U'い' && (codepoints[end_pos + 1] == U'て' || codepoints[end_pos + 1] == U'で')) {
+      const std::string longer_stem = extractSubstring(codepoints, start_pos, end_pos + 1);
+      const auto& longer_analyses = inflection_.analyze(longer_stem);
+      const bool has_longer_ionbin = std::any_of(
+          longer_analyses.begin(), longer_analyses.end(), [&](const grammar::InflectionCandidate& candidate) {
+            return (candidate.verb_type == grammar::VerbType::GodanKa ||
+                    candidate.verb_type == grammar::VerbType::GodanGa) &&
+                   candidate.base_form != result.entry->lemma &&
+                   candidate.confidence >= candidate::kParticleVerbBoundaryMinConfidence;
+          });
+      if (has_longer_ionbin) {
+        continue;
+      }
+    }
+
     // Exact dictionary nouns are tokenizer search units.  If multiple noun
     // entries share a start, keep the longest one instead of letting the
     // negative lexical costs of two shorter noun edges defeat it.  Competing
@@ -1193,11 +1221,11 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
                     result.entry->pos, cost, flags, lemma, conj_type, core::CandidateOrigin::Dictionary, 1.0F, {},
                     result.entry->extended_pos, "dict");
 
-    // Extend verbs, auxiliaries, and adjectives with colloquial emphasis
+    // Extend predicates and adverbs with colloquial emphasis
     // (ですっ, 行くーー, きたあああ). Unknown candidates use the same matcher.
     if (end_pos < codepoints.size() &&
         (result.entry->pos == core::PartOfSpeech::Verb || result.entry->pos == core::PartOfSpeech::Auxiliary ||
-         result.entry->pos == core::PartOfSpeech::Adjective)) {
+         result.entry->pos == core::PartOfSpeech::Adjective || result.entry->pos == core::PartOfSpeech::Adverb)) {
       // A dictionary irrealis stem cannot absorb っ before て/た as emphasis:
       // 染まっ+て belongs to the GodanRa verb 染まる, not 染ま(染む)+っ+て.
       const bool irrealis_before_te_or_ta =
@@ -1222,8 +1250,10 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
             result.entry->pos == core::PartOfSpeech::Auxiliary ||
             (result.entry->pos == core::PartOfSpeech::Adjective &&
              (emphatic.standard_char_count >= 2 || emphatic.repeated_vowel_count >= 3));
+        const std::string_view dictionary_lemma = result.entry->lemma.empty() ? std::string_view(result.entry->surface)
+                                                                              : std::string_view(result.entry->lemma);
         const std::string_view emphatic_lemma =
-            preserves_emphatic_surface ? std::string_view(emphatic_surface) : std::string_view(result.entry->lemma);
+            preserves_emphatic_surface ? std::string_view(emphatic_surface) : dictionary_lemma;
         lattice.addEdge(emphatic_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(emphatic.end),
                         result.entry->pos, cost + verb_helpers::emphaticCostAdjustment(emphatic), flags, emphatic_lemma,
                         dictionary::ConjugationType::None, core::CandidateOrigin::Dictionary, 1.0F, {}, emphatic_epos,

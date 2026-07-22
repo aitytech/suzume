@@ -276,13 +276,29 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
     // [お-row]+う is the volitional shape (未然形 お-row + auxiliary う):
     // なろう = なろ + う. Emitting it merged (auto-tagged 連用形 by
     // detectVerbForm's fallback) pre-empts the 未然形 + AuxVolitional split
-    // path, so suppress the merged candidate. Restricted to dict-attested
-    // bases: for unknown verbs no 未然形 edge exists, so the merged reading
-    // stays (and spurious o-row stem edges inside longer words are avoided).
+    // path, so suppress the merged candidate. Dictionary evidence normally
+    // licenses the split. An immediately quoted volitional supplies equivalent
+    // closed right context, allowing an open verb without a word entry.
     if (pre_filter_len >= 2 && codepoints[end_pos - 1] == U'う' && grammar::isORowCodepoint(codepoints[end_pos - 2]) &&
         best.base_form != surface) {
       bool base_is_dict_aux = vh::hasDictionaryEntry(dict_manager, best.base_form, core::PartOfSpeech::Auxiliary);
-      if (is_dictionary_verb || base_is_dict_aux) {
+      bool has_internal_auxiliary_suffix = false;
+      if (dict_manager != nullptr) {
+        const size_t stem_end = end_pos - 1;
+        for (size_t auxiliary_start = start_pos + 1; auxiliary_start < stem_end; ++auxiliary_start) {
+          if (dict_manager->lookupExact(extractSubstring(codepoints, auxiliary_start, stem_end),
+                                        core::PartOfSpeech::Auxiliary) != nullptr) {
+            has_internal_auxiliary_suffix = true;
+            break;
+          }
+        }
+      }
+      const bool particle_bounded_unknown_volitional =
+          !is_dictionary_verb && !base_is_dict_aux && !has_internal_auxiliary_suffix && end_pos < codepoints.size() &&
+          codepoints[end_pos] == U'と' && dict_manager != nullptr &&
+          dict_manager->lookupExact(extractSubstring(codepoints, end_pos, end_pos + 1), core::PartOfSpeech::Particle) !=
+              nullptr;
+      if (is_dictionary_verb || base_is_dict_aux || particle_bounded_unknown_volitional) {
         // Dictionary verbs already expose their 未然形 as a dict edge (なろ).
         // Aux-registered subsidiary verbs (しまう) list only hand-picked
         // forms, so generate the 未然形 stem here to complete the split path

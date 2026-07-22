@@ -433,6 +433,10 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
   auto candidates = unknown_gen_.generate(text, codepoints, start_pos, char_types);
 
   for (const auto& candidate : candidates) {
+    if (candidate.pos != core::PartOfSpeech::Particle &&
+        joinsParticleToDictionaryAdverb(lattice, dict_manager_, text, byte_offsets, candidate.start, candidate.end)) {
+      continue;
+    }
     if (overlapsPredicativeNegativeConjecture(lattice, dict_manager_, codepoints, candidate.start, candidate.end)) {
       continue;
     }

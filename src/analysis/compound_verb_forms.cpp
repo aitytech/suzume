@@ -68,6 +68,26 @@ std::string generateMizenkei(std::string_view surface, std::string_view reading,
   return result;
 }
 
+std::string generateVolitionalStem(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
+  if (verb_type != V2VerbType::Godan) {
+    return "";
+  }
+  const std::string_view base = reading.empty() ? surface : reading;
+  if (base.size() < core::kJapaneseCharBytes) {
+    return "";
+  }
+  const char32_t last_cp = utf8::decodeLastChar(base);
+  for (const auto& [row_verb_type, row] : grammar::Conjugation::getGodanRows()) {
+    (void)row_verb_type;
+    if (row.base_vowel == last_cp) {
+      std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
+      result += normalize::encodeUtf8(row.o_row);
+      return result;
+    }
+  }
+  return "";
+}
+
 std::string generateKateikei(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
   const std::string_view base = reading.empty() ? surface : reading;
   if (base.size() < core::kJapaneseCharBytes) {

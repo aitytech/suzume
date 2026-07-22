@@ -87,6 +87,51 @@ bool isInternalParticleChar(char32_t code_point) {
   }
 }
 
+// A generated hiragana noun cannot consist solely of two or more closed
+// particles. The dynamic program preserves a complete multi-mora particle as
+// one grammatical unit while rejecting accidental noun rescue paths such as
+// へ+と. Lexical dictionary readings remain separate candidates.
+bool decomposesIntoMultipleParticles(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                     const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 1) {
+    return false;
+  }
+  std::vector<int> part_count(end_pos - start_pos + 1, -1);
+  part_count[0] = 0;
+  for (size_t relative_start = 0; relative_start < end_pos - start_pos; ++relative_start) {
+    if (part_count[relative_start] < 0) {
+      continue;
+    }
+    for (size_t relative_end = relative_start + 1; relative_end <= end_pos - start_pos; ++relative_end) {
+      const std::string part = extractSubstring(codepoints, start_pos + relative_start, start_pos + relative_end);
+      if (dict_manager->lookupExact(part, core::PartOfSpeech::Particle) != nullptr) {
+        part_count[relative_end] = std::max(part_count[relative_end], part_count[relative_start] + 1);
+      }
+    }
+  }
+  return part_count.back() >= 2;
+}
+
+bool isFollowedByNominalParticle(const std::vector<char32_t>& codepoints, size_t end_pos,
+                                 const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos >= codepoints.size()) {
+    return false;
+  }
+  const size_t maximum_end = std::min(codepoints.size(), end_pos + 3);
+  for (size_t particle_end = end_pos + 1; particle_end <= maximum_end; ++particle_end) {
+    const auto* entry =
+        dict_manager->lookupExact(extractSubstring(codepoints, end_pos, particle_end), core::PartOfSpeech::Particle);
+    if (entry != nullptr && (entry->extended_pos == core::ExtendedPOS::ParticleCase ||
+                             entry->extended_pos == core::ExtendedPOS::ParticleTopic ||
+                             entry->extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+                             entry->extended_pos == core::ExtendedPOS::ParticleBinding ||
+                             entry->extended_pos == core::ExtendedPOS::ParticleNo)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Phonologically impossible hiragana word starts: small kana (拗音・促音), the
 // moraic nasal ん, and the case particles を/が which never begin a native word.
 bool isImpossibleHiraganaStart(char32_t code_point) {
@@ -412,6 +457,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
         }
         // Mark as has_suffix to skip exceeds_dict_length penalty in tokenizer
         has_suffix = true;
+      }
+      if (started_with_particle && !isFollowedByNominalParticle(codepoints, candidate_end, dict_manager_) &&
+          decomposesIntoMultipleParticles(codepoints, start_pos, candidate_end, dict_manager_)) {
+        continue;
       }
       auto cand = makeCandidate(surface, start_pos, candidate_end, pos, cost, has_suffix, CandidateOrigin::SameType);
 #ifdef SUZUME_DEBUG_INFO

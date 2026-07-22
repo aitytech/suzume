@@ -59,6 +59,7 @@ struct CompoundVerbMatch {
   bool is_renyokei = false;
   bool renyokei_form = false;
   bool is_mizenkei = false;
+  bool is_volitional = false;
   bool is_kateikei = false;
   bool is_potential = false;
   bool includes_aux = false;
@@ -173,6 +174,9 @@ std::string generateRenyokei(std::string_view surface, std::string_view reading,
 // Godan: replace ending with a-row (込む→込ま, 返す→返さ)
 // Ichidan: drop る (続ける→続け, same as renyokei for ichidan)
 std::string generateMizenkei(std::string_view surface, std::string_view reading, V2VerbType verb_type);
+
+// Generate the Godan o-row stem selected by the volitional auxiliary う.
+std::string generateVolitionalStem(std::string_view surface, std::string_view reading, V2VerbType verb_type);
 
 // Generate kateikei surface from base form
 // Godan: replace ending with e-row (返す→返せ)

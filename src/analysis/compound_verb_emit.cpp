@@ -313,11 +313,11 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
 
     // Mizenkei match: add VerbMizenkei edge and return (no te-stem/mizenkei derivation)
     // E.g., 打ち込ま (mizenkei of 打ち込む) for passive 打ち込まれ
-    if (best_match.is_mizenkei) {
+    if (best_match.is_mizenkei || best_match.is_volitional) {
+      const char* pattern = best_match.is_volitional ? "compound_volitional_mizenkei" : "compound_mizenkei";
       lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
                       core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, compound_conj_type,
-                      core::CandidateOrigin::VerbCompound, 0.0F, "compound_mizenkei", core::ExtendedPOS::VerbMizenkei,
-                      "compound_mizenkei");
+                      core::CandidateOrigin::VerbCompound, 0.0F, pattern, core::ExtendedPOS::VerbMizenkei, pattern);
       return;
     }
 

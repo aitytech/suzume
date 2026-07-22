@@ -6,6 +6,7 @@
 #include "tokenizer_utils.h"
 
 #include "core/utf8_constants.h"
+#include "dictionary/dictionary.h"
 #include "normalize/utf8.h"
 
 namespace suzume::analysis {
@@ -96,6 +97,57 @@ size_t dictionarySokuonbinEndCovering(const core::Lattice& lattice, size_t pos) 
 
 size_t compoundVerbEndCovering(const core::Lattice& lattice, size_t pos) {
   return compoundEndCovering(lattice, pos, false);
+}
+
+bool joinsParticleToDictionaryAdverb(const core::Lattice& lattice, const dictionary::DictionaryManager& dict_manager,
+                                     std::string_view text, const ByteOffsets& byte_offsets, size_t candidate_start,
+                                     size_t candidate_end) {
+  if (candidate_start == 0 || candidate_start + 1 >= candidate_end || byte_offsets.empty()) {
+    return false;
+  }
+
+  bool has_grammatical_left_context = false;
+  for (size_t edge_start = 0; edge_start < candidate_start; ++edge_start) {
+    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.end != candidate_start) {
+        continue;
+      }
+      if (edge.pos == core::PartOfSpeech::Noun || edge.pos == core::PartOfSpeech::Pronoun ||
+          edge.pos == core::PartOfSpeech::Verb || edge.pos == core::PartOfSpeech::Adjective ||
+          edge.pos == core::PartOfSpeech::Auxiliary) {
+        has_grammatical_left_context = true;
+        break;
+      }
+    }
+    if (has_grammatical_left_context) {
+      break;
+    }
+  }
+  if (!has_grammatical_left_context) {
+    return false;
+  }
+
+  for (size_t split_pos = candidate_start + 1; split_pos < candidate_end; ++split_pos) {
+    const size_t prefix_byte_start = byteOffsetAt(byte_offsets, candidate_start);
+    const size_t prefix_byte_end = byteOffsetAt(byte_offsets, split_pos);
+    const std::string_view particle = text.substr(prefix_byte_start, prefix_byte_end - prefix_byte_start);
+    const auto* particle_entry = dict_manager.lookupExact(particle, core::PartOfSpeech::Particle);
+    if (particle_entry == nullptr || (particle_entry->extended_pos != core::ExtendedPOS::ParticleCase &&
+                                      particle_entry->extended_pos != core::ExtendedPOS::ParticleTopic &&
+                                      particle_entry->extended_pos != core::ExtendedPOS::ParticleConj)) {
+      continue;
+    }
+    for (const auto& result : dict_manager.lookup(text, prefix_byte_end)) {
+      if (result.entry == nullptr || result.entry->pos != core::PartOfSpeech::Adverb || result.length < 2) {
+        continue;
+      }
+      if (candidate_end < split_pos + result.length) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 }  // namespace suzume::analysis

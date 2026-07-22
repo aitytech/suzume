@@ -341,7 +341,21 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
       start_type == normalize::CharType::Hiragana && !normalize::isParticleCodepoint(codepoints[start_pos]) &&
       !heterogeneous_has_small_kana) {
     std::string surface = extractSubstring(codepoints, start_pos, mimetic_end);
-    if (!surface.empty()) {
+    bool decomposes_as_predicate_particle = false;
+    if (dict_manager_ != nullptr) {
+      for (size_t split = start_pos + 1; split < mimetic_end; ++split) {
+        const std::string left = extractSubstring(codepoints, start_pos, split);
+        const std::string right = extractSubstring(codepoints, split, mimetic_end);
+        const bool left_is_predicate = dict_manager_->lookupExact(left, core::PartOfSpeech::Verb) != nullptr ||
+                                       dict_manager_->lookupExact(left, core::PartOfSpeech::Adjective) != nullptr ||
+                                       dict_manager_->lookupExact(left, core::PartOfSpeech::Auxiliary) != nullptr;
+        if (left_is_predicate && dict_manager_->lookupExact(right, core::PartOfSpeech::Particle) != nullptr) {
+          decomposes_as_predicate_particle = true;
+          break;
+        }
+      }
+    }
+    if (!surface.empty() && !decomposes_as_predicate_particle) {
       auto cand = makeCandidate(surface, start_pos, mimetic_end, core::PartOfSpeech::Adverb,
                                 candidate::kMimeticHeterogeneousAdverbCost, true, CandidateOrigin::Onomatopoeia);
 #ifdef SUZUME_DEBUG_INFO

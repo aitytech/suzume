@@ -117,6 +117,39 @@ bool hasLongGodanWaNegativeEvidence(const std::vector<char32_t>& codepoints, siz
   return false;
 }
 
+bool hasInternalLexicalParticleBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                        const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  for (size_t lexical_start = start_pos; lexical_start + 1 < end_pos; ++lexical_start) {
+    // A leading closed particle is already sufficient evidence that the run
+    // did not begin at a lexical verb boundary (は+ここ+で).  Accept a complete
+    // compound particle as well, while leaving merely particle-homographic
+    // prefixes of real verbs untouched.
+    if (lexical_start > start_pos) {
+      const std::string prefix = extractSubstring(codepoints, start_pos, lexical_start);
+      if (dict_manager->lookupExact(prefix, core::PartOfSpeech::Particle) == nullptr) {
+        continue;
+      }
+    }
+    for (size_t split = lexical_start + 1; split < end_pos; ++split) {
+      const std::string right = extractSubstring(codepoints, split, end_pos);
+      if (dict_manager->lookupExact(right, core::PartOfSpeech::Particle) == nullptr) {
+        continue;
+      }
+      const std::string left = extractSubstring(codepoints, lexical_start, split);
+      for (const auto pos : {core::PartOfSpeech::Pronoun, core::PartOfSpeech::Noun, core::PartOfSpeech::Adverb,
+                             core::PartOfSpeech::Determiner, core::PartOfSpeech::Conjunction}) {
+        if (dict_manager->lookupExact(left, pos) != nullptr) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 void appendHiraganaRenyokeiBeforeAspect(const std::vector<char32_t>& codepoints, size_t start_pos,
                                         const std::vector<normalize::CharType>& char_types,
                                         const dictionary::DictionaryManager* dict_manager,
@@ -129,6 +162,9 @@ void appendHiraganaRenyokeiBeforeAspect(const std::vector<char32_t>& codepoints,
     ++stem_end;
   }
   if (stem_end < start_pos + 2 || stem_end >= codepoints.size()) {
+    return;
+  }
+  if (hasInternalLexicalParticleBoundary(codepoints, start_pos, stem_end, dict_manager)) {
     return;
   }
 

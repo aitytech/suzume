@@ -293,6 +293,43 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
       tryKateikei(hira_kateikei, true);
     }
 
+    // A Godan V2 exposes its o-row stem before the closed volitional auxiliary
+    // う (考え出そ+う, 取り戻そ+う). Match the stem even when a shorter V2
+    // renyokei is homographic with its prefix (出る→出), because the following
+    // auxiliary supplies decisive inflectional evidence.
+    bool matched_volitional = false;
+    if (v2_verb.verb_type == V2VerbType::Godan) {
+      const std::string kanji_volitional = generateVolitionalStem(v2_surface, "", v2_verb.verb_type);
+      const std::string hira_volitional =
+          !v2_reading.empty() ? generateVolitionalStem(v2_reading, "", v2_verb.verb_type) : "";
+      auto tryVolitional = [&](const std::string& stem, bool via_reading) {
+        if (matched_volitional || stem.empty() ||
+            v2_start_byte + stem.size() + core::kJapaneseCharBytes > text.size()) {
+          return;
+        }
+        if (text.substr(v2_start_byte, stem.size()) != stem ||
+            text.substr(v2_start_byte + stem.size(), core::kJapaneseCharBytes) != "う") {
+          return;
+        }
+        const size_t volitional_end = v2_start + normalize::utf8Length(stem) + 1;
+        for (size_t split_pos = v2_start + 1; split_pos < volitional_end; ++split_pos) {
+          const auto* left_auxiliary = dict_manager.lookupExact(extractSubstring(codepoints, v2_start, split_pos),
+                                                                core::PartOfSpeech::Auxiliary);
+          const auto* right_auxiliary = dict_manager.lookupExact(
+              extractSubstring(codepoints, split_pos, volitional_end), core::PartOfSpeech::Auxiliary);
+          if (left_auxiliary != nullptr && right_auxiliary != nullptr &&
+              right_auxiliary->extended_pos == core::ExtendedPOS::AuxAppearanceSou) {
+            return;
+          }
+        }
+        matched_volitional = true;
+        matched_len = stem.size();
+        matched_renyokei_via_reading = via_reading;
+      };
+      tryVolitional(kanji_volitional, false);
+      tryVolitional(hira_volitional, true);
+    }
+
     // Keep a Godan mizenkei before its auxiliary separate.  Otherwise an
     // inflection match over the longer span (しきらない) would hide the
     // grammatical boundary that the mizenkei candidate below represents.
@@ -305,7 +342,7 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // Only for base forms (not renyokei entries) to avoid double-matching
     // Skip if already matched via renyokei to prevent aux detection overriding renyokei match
     if (!matched_kanji && !matched_reading && !matched_renyokei && !matched_potential && !matched_kateikei &&
-        !mizenkei_before_aux && !v2_reading.empty()) {
+        !matched_volitional && !mizenkei_before_aux && !v2_reading.empty()) {
       std::string_view base_ending(v2_verb.base_ending);
       // Only try inflection for base forms (ending in る/す/く/う/む/つ/ぶ/ぐ/ぬ or ichidan endings)
       if (utf8::equalsAny(base_ending, {"る", "す", "く", "う", "む", "つ", "ぶ", "ぐ", "ぬ", "める", "ける", "れる",
@@ -409,7 +446,7 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // E.g., 打ち込まれ, 取り込ませ, 見当たらない.
     bool matched_mizenkei = false;
     if (!matched_kanji && !matched_reading && !matched_renyokei && !matched_potential && !matched_kateikei &&
-        !matched_inflected) {
+        !matched_volitional && !matched_inflected) {
       auto tryMizenMatch = [&](const std::string& mizen) -> bool {
         return beginsMizenkeiAuxiliary(text, v2_start_byte, mizen);
       };
@@ -424,7 +461,7 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     }
 
     if (!matched_kanji && !matched_reading && !matched_renyokei && !matched_potential && !matched_kateikei &&
-        !matched_inflected && !matched_mizenkei) {
+        !matched_volitional && !matched_inflected && !matched_mizenkei) {
       continue;
     }
 
@@ -444,7 +481,8 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
                              << v2_verb.surface << " kanji=" << matched_kanji << " reading=" << matched_reading
                              << " renyokei=" << matched_renyokei << " potential=" << matched_potential
                              << " kateikei=" << matched_kateikei << " inflected=" << matched_inflected
-                             << " mizenkei=" << matched_mizenkei << " len=" << matched_len << "\n");
+                             << " mizenkei=" << matched_mizenkei << " volitional=" << matched_volitional
+                             << " len=" << matched_len << "\n");
 
     const CompoundV1Verification v1 = verifyCompoundVerbV1({
         text,
@@ -550,6 +588,10 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     if (best_match.matched_len == 0) {
       // First valid match
       should_update = true;
+    } else if (matched_volitional && !best_match.is_volitional) {
+      should_update = true;
+    } else if (best_match.is_volitional && !matched_volitional) {
+      should_update = false;
     } else if (current_compound_attested && !best_compound_attested) {
       // An attested full compound (降りしきる) must not lose to a shorter
       // overlapping V2 continuative (敷く → しき). Both readings are
@@ -616,6 +658,7 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
       best_match.is_renyokei = is_renyokei_entry && (matched_kanji || matched_reading);
       best_match.renyokei_form = matched_renyokei;
       best_match.is_mizenkei = matched_mizenkei;
+      best_match.is_volitional = matched_volitional;
       best_match.is_kateikei = matched_kateikei;
       best_match.is_potential = matched_potential;
       best_match.includes_aux = inflection_includes_aux;
