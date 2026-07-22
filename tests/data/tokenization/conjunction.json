@@ -1,10 +1,6 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "古典活用・接続・lemmaの文法に照らして現行解析が妥当で、表層境界は一致"
-      },
       "description": "読んだものの書かない、書いたものの読まない、食べたものの満足しない - auto-generated",
       "expected": [
         {
@@ -19,7 +15,7 @@
         },
         {
           "lemma": "ものの",
-          "pos": "Conjunction",
+          "pos": "Particle",
           "surface": "ものの"
         },
         {
@@ -44,7 +40,7 @@
         },
         {
           "lemma": "ものの",
-          "pos": "Conjunction",
+          "pos": "Particle",
           "surface": "ものの"
         },
         {
@@ -69,7 +65,7 @@
         },
         {
           "lemma": "ものの",
-          "pos": "Conjunction",
+          "pos": "Particle",
           "surface": "ものの"
         },
         {
@@ -89,89 +85,7 @@
         }
       ],
       "id": "past_concessive_monono",
-      "input": "読んだものの書かない、書いたものの読まない、食べたものの満足しない",
-      "suzume_expected": [
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        },
-        {
-          "lemma": "ものの",
-          "pos": "Particle",
-          "surface": "ものの"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書か"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書い"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "ものの",
-          "pos": "Particle",
-          "surface": "ものの"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ま"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "ものの",
-          "pos": "Particle",
-          "surface": "ものの"
-        },
-        {
-          "lemma": "満足",
-          "pos": "Noun",
-          "surface": "満足"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "読んだものの書かない、書いたものの読まない、食べたものの満足しない"
     },
     {
       "description": "Formal coordinating conjunctions remain distinct between nominal alternatives.",
@@ -1021,41 +935,8 @@
       "input": "だからこそ重要だ"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
-      },
       "description": "Purpose-combining conjunctive expression remains a particle.",
       "expected": [
-        {
-          "lemma": "散歩",
-          "pos": "Noun",
-          "surface": "散歩"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "てる",
-          "pos": "Verb",
-          "surface": "てら"
-        },
-        {
-          "lemma": "買い物",
-          "pos": "Noun",
-          "surface": "買い物"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
-      "id": "purpose_gatera_expression",
-      "input": "散歩がてら買い物する",
-      "suzume_expected": [
         {
           "lemma": "散歩",
           "pos": "Noun",
@@ -1076,7 +957,9 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ]
+      ],
+      "id": "purpose_gatera_expression",
+      "input": "散歩がてら買い物する"
     },
     {
       "description": "Reason particle and copula remain separate.",
@@ -1687,15 +1570,11 @@
       "input": "確認をもって終了する"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "文頭の閉じた接続詞「しかるに」を保持する。",
       "expected": [
         {
           "lemma": "しかるに",
-          "pos": "Adverb",
+          "pos": "Conjunction",
           "surface": "しかるに"
         },
         {
@@ -1720,45 +1599,14 @@
         }
       ],
       "id": "shikaruni_ha_da",
-      "input": "しかるに確認は必要だ",
-      "suzume_expected": [
-        {
-          "lemma": "しかるに",
-          "pos": "Conjunction",
-          "surface": "しかるに"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "必要",
-          "pos": "Adjective",
-          "surface": "必要"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ]
+      "input": "しかるに確認は必要だ"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "文頭の閉じた接続詞「もって」を保持し、動詞・複合助詞用法と区別する。",
       "expected": [
         {
           "lemma": "もって",
-          "pos": "Adverb",
+          "pos": "Conjunction",
           "surface": "もって"
         },
         {
@@ -1778,29 +1626,7 @@
         }
       ],
       "id": "mottte_wo_eru",
-      "input": "もって確認を終える",
-      "suzume_expected": [
-        {
-          "lemma": "もって",
-          "pos": "Conjunction",
-          "surface": "もって"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "終える",
-          "pos": "Verb",
-          "surface": "終える"
-        }
-      ]
+      "input": "もって確認を終える"
     },
     {
       "description": "句中の生産的な動詞+接続助詞を接続詞へ統合しない",

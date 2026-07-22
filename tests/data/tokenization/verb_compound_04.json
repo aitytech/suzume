@@ -2522,10 +2522,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
-      },
       "description": "確認の足し合わせを行う - regression test",
       "expected": [
         {
@@ -2555,40 +2551,9 @@
         }
       ],
       "id": "no_shi_wasewo_u",
-      "input": "確認の足し合わせを行う",
-      "suzume_expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "足し合わせ",
-          "pos": "Noun",
-          "surface": "足し合わせ"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "行う",
-          "pos": "Verb",
-          "surface": "行う"
-        }
-      ]
+      "input": "確認の足し合わせを行う"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
-      },
       "description": "確認の書き合わせを行う - regression test",
       "expected": [
         {
@@ -2618,34 +2583,7 @@
         }
       ],
       "id": "no_ki_wasewo_u",
-      "input": "確認の書き合わせを行う",
-      "suzume_expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "書き合わせ",
-          "pos": "Noun",
-          "surface": "書き合わせ"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "行う",
-          "pos": "Verb",
-          "surface": "行う"
-        }
-      ]
+      "input": "確認の書き合わせを行う"
     },
     {
       "description": "確認の取り合わせを行う - regression test",
@@ -2707,10 +2645,6 @@
       "input": "確認を話し合わせる"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
-      },
       "description": "Treat a compound continuative before a case particle as one deverbal noun.",
       "expected": [
         {
@@ -2740,40 +2674,9 @@
         }
       ],
       "id": "compound_nominal_hiki_awase",
-      "input": "確認の引き合わせを行う",
-      "suzume_expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "引き合わせ",
-          "pos": "Noun",
-          "surface": "引き合わせ"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "行う",
-          "pos": "Verb",
-          "surface": "行う"
-        }
-      ]
+      "input": "確認の引き合わせを行う"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
-      },
       "description": "Treat a compound continuative before a case particle as one deverbal noun.",
       "expected": [
         {
@@ -2803,34 +2706,7 @@
         }
       ],
       "id": "compound_nominal_kake_awase",
-      "input": "確認の掛け合わせを行う",
-      "suzume_expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "掛け合わせ",
-          "pos": "Noun",
-          "surface": "掛け合わせ"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "行う",
-          "pos": "Verb",
-          "surface": "行う"
-        }
-      ]
+      "input": "確認の掛け合わせを行う"
     },
     {
       "accepted_diff": {

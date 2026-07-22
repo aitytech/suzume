@@ -585,10 +585,6 @@
       "input": "誰までがその知らせを知っていた。"
     },
     {
-      "accepted_diff": {
-        "category": "unknown-inflection-ambiguity",
-        "reason": "「掛かっ」は五段ラ行音便（掛かる）と未知I形容詞過去（掛い）の表層が同形で、格助詞後はいずれも構文上可能、辞書証拠なしでは一意化できない。特徴量ベース解析の形容詞読みを許容する。"
-      },
       "description": "壁に掛かった時計が鳴った。 - regression test",
       "expected": [
         {
@@ -633,49 +629,7 @@
         }
       ],
       "id": "ni_kattta_ga_ttta",
-      "input": "壁に掛かった時計が鳴った。",
-      "suzume_expected": [
-        {
-          "lemma": "壁",
-          "pos": "Noun",
-          "surface": "壁"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "掛い",
-          "pos": "Adjective",
-          "surface": "掛かっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "時計",
-          "pos": "Noun",
-          "surface": "時計"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "鳴る",
-          "pos": "Verb",
-          "surface": "鳴っ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "壁に掛かった時計が鳴った。"
     },
     {
       "description": "何ら問題はなかった。 - regression test",
@@ -710,10 +664,6 @@
       "input": "何ら問題はなかった。"
     },
     {
-      "accepted_diff": {
-        "category": "bare-renyokei-noun-ambiguity",
-        "reason": "文末のe段表層「答え」は連用形・命令形と転成名詞が同形で、係り受け意味なしには一意化できない。境界は正しく、一律名詞化すると生産的な裸の動詞形を壊すため現在の動詞フォールバックを意図差とする。"
-      },
       "description": "これが答え。 - regression test",
       "expected": [
         {
@@ -733,24 +683,7 @@
         }
       ],
       "id": "korega_e",
-      "input": "これが答え。",
-      "suzume_expected": [
-        {
-          "lemma": "これ",
-          "pos": "Pronoun",
-          "surface": "これ"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "答う",
-          "pos": "Verb",
-          "surface": "答え"
-        }
-      ]
+      "input": "これが答え。"
     },
     {
       "description": "朝の明るさが部屋に満ちた。 - regression test",
@@ -2131,10 +2064,6 @@
       "input": "言葉を胸にしまい込んだ。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "辞書なしの単漢字促音便はラ・タ・ワ行が同形でlemmaを一意に復元できない。境界とPOSは正しく、既存の同語回帰と同じlemma限界として扱う。"
-      },
       "description": "二人のつながりを、手紙が保っていた。 - regression test",
       "expected": [
         {
@@ -2189,59 +2118,7 @@
         }
       ],
       "id": "notsunagariwo_ga_ttteita",
-      "input": "二人のつながりを、手紙が保っていた。",
-      "suzume_expected": [
-        {
-          "lemma": "二人",
-          "pos": "Noun",
-          "surface": "二人"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "つながり",
-          "pos": "Noun",
-          "surface": "つながり"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "手紙",
-          "pos": "Noun",
-          "surface": "手紙"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "保る",
-          "pos": "Verb",
-          "surface": "保っ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "い"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "二人のつながりを、手紙が保っていた。"
     },
     {
       "description": "道のまわりに、白い花が咲いていた。 - regression test",
@@ -2776,7 +2653,7 @@
     {
       "accepted_diff": {
         "category": "search-unit-difference",
-        "reason": "「尽くす」は登録済みの完遂相補助動詞で、動詞連用形「立ち」に生産的に接続する。完全複合lemmaの辞書証拠がないため、形態素境界を保つ「立ち/尽くす」が文法・検索単位仕様に適合する。全トークンのPOS/lemmaも妥当。"
+        "reason": "連用形に生産的に接続する完遂相補助動詞の形態素境界を維持するため"
       },
       "description": "彼が窓辺に立ち尽くす。 - regression test",
       "expected": [
@@ -4114,7 +3991,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {

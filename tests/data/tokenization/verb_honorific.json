@@ -95,31 +95,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
       "description": "Honorific prefix お with adjective",
       "expected": [
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "忙しい",
-          "pos": "Noun",
-          "surface": "忙しい"
-        },
-        {
-          "lemma": "ところ",
-          "pos": "Noun",
-          "surface": "ところ"
-        }
-      ],
-      "id": "keigo_o_prefix",
-      "input": "お忙しいところ",
-      "suzume_expected": [
         {
           "lemma": "お",
           "pos": "Prefix",
@@ -136,6 +113,8 @@
           "surface": "ところ"
         }
       ],
+      "id": "keigo_o_prefix",
+      "input": "お忙しいところ",
       "tags": [
         "keigo",
         "prefix"

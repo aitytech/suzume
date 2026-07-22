@@ -1805,31 +1805,8 @@
       "input": "少しだけ確認する"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "また確認する - regression test",
       "expected": [
-        {
-          "lemma": "また",
-          "pos": "Conjunction",
-          "surface": "また"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
-      "id": "mata_suru",
-      "input": "また確認する",
-      "suzume_expected": [
         {
           "lemma": "また",
           "pos": "Adverb",
@@ -1845,7 +1822,9 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ]
+      ],
+      "id": "mata_suru",
+      "input": "また確認する"
     },
     {
       "description": "たいてい確認する - regression test",
@@ -1892,36 +1871,8 @@
       "input": "ふたたび確認する"
     },
     {
-      "accepted_diff": {
-        "category": "fixed-adverb-search-unit",
-        "reason": "固定副詞「どのみち」は一検索単位で、連体詞「どの」+名詞「みち」の文字列解釈を採らない"
-      },
       "description": "どのみち確認する - regression test",
       "expected": [
-        {
-          "lemma": "どの",
-          "pos": "Determiner",
-          "surface": "どの"
-        },
-        {
-          "lemma": "みち",
-          "pos": "Noun",
-          "surface": "みち"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
-      "id": "donomichi_suru",
-      "input": "どのみち確認する",
-      "suzume_expected": [
         {
           "lemma": "どのみち",
           "pos": "Adverb",
@@ -1937,7 +1888,9 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ]
+      ],
+      "id": "donomichi_suru",
+      "input": "どのみち確認する"
     },
     {
       "description": "どうにか確認する - regression test",
@@ -1962,36 +1915,8 @@
       "input": "どうにか確認する"
     },
     {
-      "accepted_diff": {
-        "category": "lexical-adverb-search-unit",
-        "reason": "語彙化した副詞「ふいに」は検索単位として一語で扱う"
-      },
       "description": "ふいに確認する - regression test",
       "expected": [
-        {
-          "lemma": "ふう",
-          "pos": "Verb",
-          "surface": "ふい"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
-      "id": "fuini_suru",
-      "input": "ふいに確認する",
-      "suzume_expected": [
         {
           "lemma": "ふいに",
           "pos": "Adverb",
@@ -2007,7 +1932,9 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ]
+      ],
+      "id": "fuini_suru",
+      "input": "ふいに確認する"
     },
     {
       "accepted_diff": {

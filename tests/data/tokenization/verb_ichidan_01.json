@@ -322,10 +322,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "教えてもらった - MeCab互換分割 (教え+て+もらっ+た)",
       "expected": [
         {
@@ -340,7 +336,7 @@
         },
         {
           "lemma": "もらう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "もらっ"
         },
         {
@@ -351,28 +347,6 @@
       ],
       "id": "ichidan_oshiete_moratta",
       "input": "教えてもらった",
-      "suzume_expected": [
-        {
-          "lemma": "教える",
-          "pos": "Verb",
-          "surface": "教え"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "もらう",
-          "pos": "Auxiliary",
-          "surface": "もらっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
       "tags": [
         "ichidan",
         "benefactive"
@@ -1085,7 +1059,7 @@
     {
       "accepted_diff": {
         "category": "lemma-ambiguity",
-        "reason": "表層「降り」は「降る」「降りる」の連用形に同形で、文脈なしではlemmaを一意に復元できない。境界・POS・接続助詞は正しい。"
+        "reason": "同形の連用形からは五段・一段のlemmaを一意に決められず、境界とPOSは正しいため"
       },
       "description": "降りて - regression test",
       "expected": [

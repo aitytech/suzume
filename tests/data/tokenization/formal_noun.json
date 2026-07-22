@@ -999,7 +999,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -1034,7 +1034,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -1069,7 +1069,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -1209,10 +1209,6 @@
       "input": "読むくせに書かない。書くくせに読まない。食べるくせに飲まない。高いくせに安い。静かなくせに進む。"
     },
     {
-      "accepted_diff": {
-        "category": "formal-noun-search-unit",
-        "reason": "ひらがな表記の形式名詞「おそれ」は一語で、接頭辞「お」+代名詞「それ」ではない"
-      },
       "description": "Keep hiragana osore as one formal-noun search unit after an attributive clause.",
       "expected": [
         {
@@ -1221,14 +1217,9 @@
           "surface": "遅れる"
         },
         {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "それ",
-          "pos": "Pronoun",
-          "surface": "それ"
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
         },
         {
           "lemma": "が",
@@ -1246,14 +1237,9 @@
           "surface": "欠ける"
         },
         {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "それ",
-          "pos": "Pronoun",
-          "surface": "それ"
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
         },
         {
           "lemma": "が",
@@ -1271,14 +1257,9 @@
           "surface": "起きる"
         },
         {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "それ",
-          "pos": "Pronoun",
-          "surface": "それ"
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
         },
         {
           "lemma": "が",
@@ -1296,14 +1277,9 @@
           "surface": "見える"
         },
         {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "それ",
-          "pos": "Pronoun",
-          "surface": "それ"
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
         },
         {
           "lemma": "が",
@@ -1321,14 +1297,9 @@
           "surface": "遅れる"
         },
         {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "それ",
-          "pos": "Pronoun",
-          "surface": "それ"
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
         },
         {
           "lemma": "は",
@@ -1346,14 +1317,9 @@
           "surface": "欠ける"
         },
         {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "それ",
-          "pos": "Pronoun",
-          "surface": "それ"
+          "lemma": "おそれ",
+          "pos": "Noun",
+          "surface": "おそれ"
         },
         {
           "lemma": "は",
@@ -1367,129 +1333,7 @@
         }
       ],
       "id": "ichidan_hiragana_osore_formal_noun",
-      "input": "遅れるおそれがある。欠けるおそれがある。起きるおそれがある。見えるおそれがある。遅れるおそれはない。欠けるおそれはない。",
-      "suzume_expected": [
-        {
-          "lemma": "遅れる",
-          "pos": "Verb",
-          "surface": "遅れる"
-        },
-        {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        },
-        {
-          "lemma": "欠ける",
-          "pos": "Verb",
-          "surface": "欠ける"
-        },
-        {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        },
-        {
-          "lemma": "起きる",
-          "pos": "Verb",
-          "surface": "起きる"
-        },
-        {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        },
-        {
-          "lemma": "見える",
-          "pos": "Verb",
-          "surface": "見える"
-        },
-        {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        },
-        {
-          "lemma": "遅れる",
-          "pos": "Verb",
-          "surface": "遅れる"
-        },
-        {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        },
-        {
-          "lemma": "欠ける",
-          "pos": "Verb",
-          "surface": "欠ける"
-        },
-        {
-          "lemma": "おそれ",
-          "pos": "Noun",
-          "surface": "おそれ"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        }
-      ]
+      "input": "遅れるおそれがある。欠けるおそれがある。起きるおそれがある。見えるおそれがある。遅れるおそれはない。欠けるおそれはない。"
     },
     {
       "description": "Recognize the formal noun in the certainty predicate ni-chigainai.",
@@ -2032,15 +1876,11 @@
       "input": "読んでいるあいだに書く。書いているあいだに読む。食べているあいだに飲む。書いているうちに読む。食べているうちに飲む。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "古典活用・接続・lemmaの文法に照らして現行解析が妥当で、表層境界は一致"
-      },
       "description": "同じではない - regression test",
       "expected": [
         {
           "lemma": "同じ",
-          "pos": "Determiner",
+          "pos": "Adjective",
           "surface": "同じ"
         },
         {
@@ -2055,34 +1895,12 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
       "id": "jidehanai",
-      "input": "同じではない",
-      "suzume_expected": [
-        {
-          "lemma": "同じ",
-          "pos": "Adjective",
-          "surface": "同じ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "同じではない"
     },
     {
       "description": "古語否定と形式名詞ふりを分割する",
@@ -2149,56 +1967,8 @@
       "input": "雨ゆえに遅れた"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
-      },
       "description": "恩恵原因表現を接頭辞おと形式名詞かげに分割する",
       "expected": [
-        {
-          "lemma": "努力",
-          "pos": "Noun",
-          "surface": "努力"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "かげ",
-          "pos": "Noun",
-          "surface": "かげ"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "成功",
-          "pos": "Noun",
-          "surface": "成功"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "okage_honorific_formal_noun",
-      "input": "努力のおかげで成功した",
-      "suzume_expected": [
         {
           "lemma": "努力",
           "pos": "Noun",
@@ -2234,7 +2004,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "okage_honorific_formal_noun",
+      "input": "努力のおかげで成功した"
     },
     {
       "description": "文語的な形式名詞いかんを条件表現で解析する",

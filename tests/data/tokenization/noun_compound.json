@@ -2814,36 +2814,8 @@
       "input": "一日がけの仕事"
     },
     {
-      "accepted_diff": {
-        "category": "compound-particle-search-unit",
-        "reason": "閉じた複合助詞「がてら」は内部に自立語活用境界がなく一形態素として扱う"
-      },
       "description": "A lexical noun remains intact before the conjunctive particle がてら.",
       "expected": [
-        {
-          "lemma": "買い物",
-          "pos": "Noun",
-          "surface": "買い物"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "てる",
-          "pos": "Verb",
-          "surface": "てら"
-        },
-        {
-          "lemma": "訪ねる",
-          "pos": "Verb",
-          "surface": "訪ねる"
-        }
-      ],
-      "id": "formal_noun_before_gatera",
-      "input": "買い物がてら訪ねる",
-      "suzume_expected": [
         {
           "lemma": "買い物",
           "pos": "Noun",
@@ -2859,7 +2831,9 @@
           "pos": "Verb",
           "surface": "訪ねる"
         }
-      ]
+      ],
+      "id": "formal_noun_before_gatera",
+      "input": "買い物がてら訪ねる"
     }
   ],
   "description": "Compound nouns",

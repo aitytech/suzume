@@ -741,51 +741,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
-      },
       "description": "そのありさまを記録した。 - regression test",
       "expected": [
-        {
-          "lemma": "その",
-          "pos": "Determiner",
-          "surface": "その"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あり"
-        },
-        {
-          "lemma": "さま",
-          "pos": "Suffix",
-          "surface": "さま"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "記録",
-          "pos": "Noun",
-          "surface": "記録"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "sonoarisamawo_shita",
-      "input": "そのありさまを記録した。",
-      "suzume_expected": [
         {
           "lemma": "その",
           "pos": "Determiner",
@@ -816,7 +773,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "sonoarisamawo_shita",
+      "input": "そのありさまを記録した。"
     },
     {
       "description": "彼は友とわかれた。 - regression test",
@@ -3557,51 +3516,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "擬態語・和語数量表現は内部を恣意的に分断せず、後続助詞との境界を保つ現行検索単位が妥当"
-      },
       "description": "よっつの箱を並べた。 - regression test",
       "expected": [
-        {
-          "lemma": "よる",
-          "pos": "Verb",
-          "surface": "よっ"
-        },
-        {
-          "lemma": "つ",
-          "pos": "Auxiliary",
-          "surface": "つ"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "箱",
-          "pos": "Noun",
-          "surface": "箱"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "並べる",
-          "pos": "Verb",
-          "surface": "並べ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "yotttsuno_wo_beta",
-      "input": "よっつの箱を並べた。",
-      "suzume_expected": [
         {
           "lemma": "よっつ",
           "pos": "Noun",
@@ -3632,7 +3548,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "yotttsuno_wo_beta",
+      "input": "よっつの箱を並べた。"
     },
     {
       "description": "いちまいの紙を折った。 - regression test",
@@ -3716,14 +3634,9 @@
       "description": "おとといの雨が土を湿らせた。 - regression test",
       "expected": [
         {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "ととい",
+          "lemma": "おととい",
           "pos": "Noun",
-          "surface": "ととい"
+          "surface": "おととい"
         },
         {
           "lemma": "の",
@@ -3900,46 +3813,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "閉じた連体詞わがと検索対象の一般名詞国は生産的な連体修飾境界として分離する"
-      },
       "description": "わが国の記録を読んだ。 - regression test",
       "expected": [
-        {
-          "lemma": "わが国",
-          "pos": "Noun",
-          "surface": "わが国"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "記録",
-          "pos": "Noun",
-          "surface": "記録"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "waga_no_wo_nda",
-      "input": "わが国の記録を読んだ。",
-      "suzume_expected": [
         {
           "lemma": "わが",
           "pos": "Determiner",
@@ -3975,7 +3850,9 @@
           "pos": "Auxiliary",
           "surface": "だ"
         }
-      ]
+      ],
+      "id": "waga_no_wo_nda",
+      "input": "わが国の記録を読んだ。"
     },
     {
       "accepted_diff": {
@@ -4470,36 +4347,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
-      },
       "description": "ひととおり目を通した。 - regression test",
       "expected": [
-        {
-          "lemma": "ひととおり目",
-          "pos": "Noun",
-          "surface": "ひととおり目"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "通す",
-          "pos": "Verb",
-          "surface": "通し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "hitotoori_wo_shita",
-      "input": "ひととおり目を通した。",
-      "suzume_expected": [
         {
           "lemma": "ひととおり",
           "pos": "Adverb",
@@ -4525,7 +4374,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "hitotoori_wo_shita",
+      "input": "ひととおり目を通した。"
     },
     {
       "accepted_diff": {

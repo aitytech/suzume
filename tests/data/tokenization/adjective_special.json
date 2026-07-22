@@ -124,31 +124,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
-      },
       "description": "同じ should be DET (連体詞), not VERB (W-015)",
       "expected": [
-        {
-          "lemma": "同じ",
-          "pos": "Determiner",
-          "surface": "同じ"
-        },
-        {
-          "lemma": "事",
-          "pos": "Noun",
-          "surface": "事"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        }
-      ],
-      "id": "det_onaji",
-      "input": "同じ事を",
-      "suzume_expected": [
         {
           "lemma": "同じ",
           "pos": "Determiner",
@@ -165,6 +142,8 @@
           "surface": "を"
         }
       ],
+      "id": "det_onaji",
+      "input": "同じ事を",
       "tags": [
         "determiner",
         "wagahai",

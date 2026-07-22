@@ -1032,10 +1032,6 @@
       "input": "高いだけではない、安いだけではない、新しいだけではない"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
-      },
       "description": "名詞接尾辞らしいの連体形と名詞化語幹を分割する",
       "expected": [
         {
@@ -1080,7 +1076,7 @@
         },
         {
           "lemma": "さ",
-          "pos": "Particle",
+          "pos": "Suffix",
           "surface": "さ"
         },
         {
@@ -1095,7 +1091,7 @@
         },
         {
           "lemma": "さ",
-          "pos": "Particle",
+          "pos": "Suffix",
           "surface": "さ"
         },
         {
@@ -1110,89 +1106,12 @@
         },
         {
           "lemma": "さ",
-          "pos": "Particle",
+          "pos": "Suffix",
           "surface": "さ"
         }
       ],
       "id": "rashii_rashii_rashisa_rashisa_rashisa",
-      "input": "本らしい本。水らしい水。本らしさ。水らしさ。子供らしさ。",
-      "suzume_expected": [
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "らしい",
-          "pos": "Auxiliary",
-          "surface": "らしい"
-        },
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "水",
-          "pos": "Noun",
-          "surface": "水"
-        },
-        {
-          "lemma": "らしい",
-          "pos": "Auxiliary",
-          "surface": "らしい"
-        },
-        {
-          "lemma": "水",
-          "pos": "Noun",
-          "surface": "水"
-        },
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "らしい",
-          "pos": "Auxiliary",
-          "surface": "らし"
-        },
-        {
-          "lemma": "さ",
-          "pos": "Suffix",
-          "surface": "さ"
-        },
-        {
-          "lemma": "水",
-          "pos": "Noun",
-          "surface": "水"
-        },
-        {
-          "lemma": "らしい",
-          "pos": "Auxiliary",
-          "surface": "らし"
-        },
-        {
-          "lemma": "さ",
-          "pos": "Suffix",
-          "surface": "さ"
-        },
-        {
-          "lemma": "子供",
-          "pos": "Noun",
-          "surface": "子供"
-        },
-        {
-          "lemma": "らしい",
-          "pos": "Auxiliary",
-          "surface": "らし"
-        },
-        {
-          "lemma": "さ",
-          "pos": "Suffix",
-          "surface": "さ"
-        }
-      ]
+      "input": "本らしい本。水らしい水。本らしさ。水らしさ。子供らしさ。"
     },
     {
       "description": "しょうがない - regression test",

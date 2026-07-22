@@ -206,10 +206,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "日付け: noun vs verb - dictionary-dependent"
-      },
       "description": "日付けで - MeCab splits as 日 + 付け + で",
       "expected": [
         {
@@ -312,36 +308,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "生産的な動詞連用形＋接尾辞「がち」の構造で、現行Verb解析が妥当。"
-      },
       "description": "S6: がち should be recognized as suffix",
       "expected": [
-        {
-          "lemma": "遅れ",
-          "pos": "Noun",
-          "surface": "遅れ"
-        },
-        {
-          "lemma": "がち",
-          "pos": "Suffix",
-          "surface": "がち"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "なる",
-          "pos": "Verb",
-          "surface": "なる"
-        }
-      ],
-      "id": "s6_gachi_suffix",
-      "input": "遅れがちになる",
-      "suzume_expected": [
         {
           "lemma": "遅れる",
           "pos": "Verb",
@@ -363,6 +331,8 @@
           "surface": "なる"
         }
       ],
+      "id": "s6_gachi_suffix",
+      "input": "遅れがちになる",
       "tags": [
         "s6_fix",
         "gachi",
@@ -509,31 +479,8 @@
       "input": "傷だらけ"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "生産的な動詞連用形＋接尾辞「っぱなし」の構造で、現行Verb解析が妥当。"
-      },
       "description": "っぱなし suffix after verb renyokei",
       "expected": [
-        {
-          "lemma": "出し",
-          "pos": "Noun",
-          "surface": "出し"
-        },
-        {
-          "lemma": "っぱなし",
-          "pos": "Suffix",
-          "surface": "っぱなし"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "ppanashi_dashippanashi",
-      "input": "出しっぱなしだ",
-      "suzume_expected": [
         {
           "lemma": "出す",
           "pos": "Verb",
@@ -549,7 +496,9 @@
           "pos": "Auxiliary",
           "surface": "だ"
         }
-      ]
+      ],
+      "id": "ppanashi_dashippanashi",
+      "input": "出しっぱなしだ"
     },
     {
       "description": "後 after a duration counter is tagged Suffix (名詞,接尾)",
@@ -1084,91 +1033,8 @@
       "input": "欠点ずくめ"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "傾向接尾辞がちは三例とも動詞連用形に接続し、同一パラダイムのPOSを統一する"
-      },
       "description": "Preserve the tendency suffix and copular-negative boundaries.",
       "expected": [
-        {
-          "lemma": "読み",
-          "pos": "Noun",
-          "surface": "読み"
-        },
-        {
-          "lemma": "がち",
-          "pos": "Suffix",
-          "surface": "がち"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書き"
-        },
-        {
-          "lemma": "がち",
-          "pos": "Suffix",
-          "surface": "がち"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "がち",
-          "pos": "Suffix",
-          "surface": "がち"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ],
-      "id": "tendency_suffix_gachi_copular_negative",
-      "input": "読みがちではない。書きがちではない。食べがちではない。",
-      "suzume_expected": [
         {
           "lemma": "読む",
           "pos": "Verb",
@@ -1244,7 +1110,9 @@
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ]
+      ],
+      "id": "tendency_suffix_gachi_copular_negative",
+      "input": "読みがちではない。書きがちではない。食べがちではない。"
     },
     {
       "description": "区間接尾辞を前接名詞から分割する",

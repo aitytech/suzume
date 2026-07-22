@@ -2449,6 +2449,28 @@
       ],
       "id": "nokireina_wo_ta",
       "input": "彼のきれいな字を見た。"
+    },
+    {
+      "description": "指示代名詞を主語とするコピュラ省略の同定文",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "答え",
+          "pos": "Noun",
+          "surface": "答え"
+        }
+      ],
+      "id": "demonstrative_identification_answer",
+      "input": "それが答え。"
     }
   ],
   "description": "General nouns (part 2/2)",

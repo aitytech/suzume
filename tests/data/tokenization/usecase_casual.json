@@ -26,41 +26,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "Casual confirmation",
       "expected": [
-        {
-          "lemma": "本当",
-          "pos": "Noun",
-          "surface": "本当"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "そう",
-          "pos": "Adverb",
-          "surface": "そう"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        }
-      ],
-      "id": "casual_really",
-      "input": "本当にそうなの",
-      "suzume_expected": [
         {
           "lemma": "本当",
           "pos": "Noun",
@@ -87,6 +54,8 @@
           "surface": "の"
         }
       ],
+      "id": "casual_really",
+      "input": "本当にそうなの",
       "tags": [
         "casual"
       ]

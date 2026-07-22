@@ -1345,7 +1345,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -1363,41 +1363,8 @@
       "input": "さも正しいように進める"
     },
     {
-      "accepted_diff": {
-        "category": "fixed-adverb-search-unit",
-        "reason": "固定副詞「然程」は一検索単位であり、漢字ごとの分割は検索単位原則に反する"
-      },
       "description": "固定副詞「然程」を一検索単位とする。MeCab正規化の漢字分割とは意図的に異なる。",
       "expected": [
-        {
-          "lemma": "然",
-          "pos": "Adverb",
-          "surface": "然"
-        },
-        {
-          "lemma": "程",
-          "pos": "Noun",
-          "surface": "程"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ],
-      "id": "shinai",
-      "input": "然程確認しない",
-      "suzume_expected": [
         {
           "lemma": "然程",
           "pos": "Adverb",
@@ -1418,7 +1385,9 @@
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ]
+      ],
+      "id": "shinai",
+      "input": "然程確認しない"
     },
     {
       "accepted_diff": {

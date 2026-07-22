@@ -1310,46 +1310,8 @@
       "input": "静かにしていてくださいね。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "これを読んでくれるかい。 - regression test",
       "expected": [
-        {
-          "lemma": "これ",
-          "pos": "Pronoun",
-          "surface": "これ"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "くれる",
-          "pos": "Verb",
-          "surface": "くれる"
-        },
-        {
-          "lemma": "かい",
-          "pos": "Particle",
-          "surface": "かい"
-        }
-      ],
-      "id": "korewo_ndekurerukai",
-      "input": "これを読んでくれるかい。",
-      "suzume_expected": [
         {
           "lemma": "これ",
           "pos": "Pronoun",
@@ -1380,7 +1342,9 @@
           "pos": "Particle",
           "surface": "かい"
         }
-      ]
+      ],
+      "id": "korewo_ndekurerukai",
+      "input": "これを読んでくれるかい。"
     },
     {
       "description": "まだ雨は止まないのかね。 - regression test",
@@ -1892,10 +1856,6 @@
       "input": "あやうく転ぶところだった。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "つとめて平静を保った。 - regression test",
       "expected": [
         {
@@ -1905,7 +1865,7 @@
         },
         {
           "lemma": "平静",
-          "pos": "Adjective",
+          "pos": "Noun",
           "surface": "平静"
         },
         {
@@ -1925,34 +1885,7 @@
         }
       ],
       "id": "tsutomete_wo_ttta",
-      "input": "つとめて平静を保った。",
-      "suzume_expected": [
-        {
-          "lemma": "つとめて",
-          "pos": "Adverb",
-          "surface": "つとめて"
-        },
-        {
-          "lemma": "平静",
-          "pos": "Noun",
-          "surface": "平静"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "保る",
-          "pos": "Verb",
-          "surface": "保っ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "つとめて平静を保った。"
     },
     {
       "description": "忘れがたき言葉を、胸に留めた。 - regression test",
@@ -2722,10 +2655,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "unknown-inflection-ambiguity",
-        "reason": "「遠ざかっ」は五段ラ行音便（遠ざかる）と未知I形容詞過去（遠ざい）の表層が同形で、主格後はいずれも文法的に成立し、辞書証拠なしでは一意化できない。特徴量ベース解析の形容詞読みを許容する。"
-      },
       "description": "船が遠ざかった。 - regression test",
       "expected": [
         {
@@ -2750,29 +2679,7 @@
         }
       ],
       "id": "ga_zakattta",
-      "input": "船が遠ざかった。",
-      "suzume_expected": [
-        {
-          "lemma": "船",
-          "pos": "Noun",
-          "surface": "船"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "遠ざい",
-          "pos": "Adjective",
-          "surface": "遠ざかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "船が遠ざかった。"
     },
     {
       "description": "知らせが届くなら、窓を開けて待とう。 - regression test",
@@ -3413,7 +3320,7 @@
     {
       "accepted_diff": {
         "category": "lemma-ambiguity",
-        "reason": "音便表層だけでは五段活用行を一意に復元できないため、正しい境界とPOSを維持する既知のlemma曖昧性として受理"
+        "reason": "促音便表層だけでは五段活用行を一意に復元できず、境界とPOSは正しいため"
       },
       "description": "彼女はすんなり通った。 - regression test",
       "expected": [
@@ -3945,10 +3852,6 @@
       "input": "人が細い道を通り、門をくぐった。"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-ambiguity",
-        "reason": "音便表層だけでは五段活用行を一意に復元できないため、正しい境界とPOSを維持する既知のlemma曖昧性として受理"
-      },
       "description": "皆は変化を嫌っていた。 - regression test",
       "expected": [
         {
@@ -3993,49 +3896,7 @@
         }
       ],
       "id": "ha_wo_ttteita",
-      "input": "皆は変化を嫌っていた。",
-      "suzume_expected": [
-        {
-          "lemma": "皆",
-          "pos": "Pronoun",
-          "surface": "皆"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "変化",
-          "pos": "Noun",
-          "surface": "変化"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "嫌る",
-          "pos": "Verb",
-          "surface": "嫌っ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "い"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "皆は変化を嫌っていた。"
     },
     {
       "description": "向かいの窓に明かりが見えた。 - regression test",

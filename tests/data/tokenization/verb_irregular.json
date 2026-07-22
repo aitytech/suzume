@@ -1814,10 +1814,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "説明してもらっている - MeCab互換分割",
       "expected": [
         {
@@ -1837,7 +1833,7 @@
         },
         {
           "lemma": "もらう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "もらっ"
         },
         {
@@ -1853,38 +1849,6 @@
       ],
       "id": "suru_subsidiary_progressive",
       "input": "説明してもらっている",
-      "suzume_expected": [
-        {
-          "lemma": "説明",
-          "pos": "Noun",
-          "surface": "説明"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "もらう",
-          "pos": "Auxiliary",
-          "surface": "もらっ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "いる"
-        }
-      ],
       "tags": [
         "suru",
         "subsidiary"

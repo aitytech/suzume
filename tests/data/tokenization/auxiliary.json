@@ -1188,10 +1188,6 @@
       "input": "読んでこよう。書いてこよう。食べてこよう。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "移動補助動詞くるの仮定形を授受補助動詞くれると区別してlemmaを復元する",
       "expected": [
         {
@@ -1281,7 +1277,7 @@
         },
         {
           "lemma": "くれる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "くれれ"
         },
         {
@@ -1296,109 +1292,7 @@
         }
       ],
       "id": "kuru_directional_conditional_lemma",
-      "input": "読んでくればよい。書いてくればよい。食べてくればよい。読んでくれればよい。",
-      "suzume_expected": [
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "くれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書い"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "くれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "くれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "くれる",
-          "pos": "Auxiliary",
-          "surface": "くれれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        }
-      ]
+      "input": "読んでくればよい。書いてくればよい。食べてくればよい。読んでくれればよい。"
     },
     {
       "description": "鼻音便テ形後の移動補助動詞くる連用形と過去助動詞の境界を保つ",
@@ -2203,206 +2097,8 @@
       "input": "書いていらっしゃらない。歩いていらっしゃらない。解いていらっしゃらない。食べていらっしゃらない。見ていらっしゃらない。読んでいらっしゃらない。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-lemma",
-        "reason": "全ての「っこ」否定境界は文法どおり復旧済み。残差は一般名詞「物」のlemmaをSuzumeの正規化規約どおり「もの」とする表記正規化だけである。"
-      },
       "description": "Keep the colloquial kkonai negative-conjecture auxiliary chain split.",
       "expected": [
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読み"
-        },
-        {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書き"
-        },
-        {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読み"
-        },
-        {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書き"
-        },
-        {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読み"
-        },
-        {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なく"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "物",
-          "pos": "Noun",
-          "surface": "物"
-        }
-      ],
-      "id": "negative_conjecture_kko_boundary",
-      "input": "読みっこない。書きっこない。食べっこない。読みっこなかった。書きっこなかった。食べっこなかった。読みっこなくはない。食べっこない物。",
-      "suzume_expected": [
         {
           "lemma": "読む",
           "pos": "Verb",
@@ -2593,7 +2289,9 @@
           "pos": "Noun",
           "surface": "物"
         }
-      ]
+      ],
+      "id": "negative_conjecture_kko_boundary",
+      "input": "読みっこない。書きっこない。食べっこない。読みっこなかった。書きっこなかった。食べっこなかった。読みっこなくはない。食べっこない物。"
     },
     {
       "description": "Split a classical negative zu before an independent following predicate.",

@@ -1,41 +1,8 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "そうでなければ困る - auto-generated",
       "expected": [
-        {
-          "lemma": "そう",
-          "pos": "Adverb",
-          "surface": "そう"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なけれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "困る",
-          "pos": "Verb",
-          "surface": "困る"
-        }
-      ],
-      "id": "soudenakereba_ru",
-      "input": "そうでなければ困る",
-      "suzume_expected": [
         {
           "lemma": "そう",
           "pos": "Adjective",
@@ -61,7 +28,9 @@
           "pos": "Verb",
           "surface": "困る"
         }
-      ]
+      ],
+      "id": "soudenakereba_ru",
+      "input": "そうでなければ困る"
     },
     {
       "description": "必要でなければ中止する - auto-generated",

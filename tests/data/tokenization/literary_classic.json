@@ -763,56 +763,8 @@
       "input": "吾輩は猫である。名前はまだ無い。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
-      },
       "description": "芥川・羅生門冒頭風",
       "expected": [
-        {
-          "lemma": "ある",
-          "pos": "Determiner",
-          "surface": "ある"
-        },
-        {
-          "lemma": "日",
-          "pos": "Noun",
-          "surface": "日"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "暮方",
-          "pos": "Noun",
-          "surface": "暮方"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "事",
-          "pos": "Noun",
-          "surface": "事"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        }
-      ],
-      "id": "aru_no_no_dearu",
-      "input": "ある日の暮方の事である。",
-      "suzume_expected": [
         {
           "lemma": "ある",
           "pos": "Determiner",
@@ -853,7 +805,9 @@
           "pos": "Verb",
           "surface": "ある"
         }
-      ]
+      ],
+      "id": "aru_no_no_dearu",
+      "input": "ある日の暮方の事である。"
     },
     {
       "description": "漱石・草枕風 - 生まれて ichidan + 長い複文",
@@ -1592,7 +1546,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -2894,46 +2848,8 @@
       "input": "喜怒哀楽を表に出さぬ人物であった。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "なかろう split (negative volitional)",
       "expected": [
-        {
-          "lemma": "そう",
-          "pos": "Adverb",
-          "surface": "そう"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかろ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ],
-      "id": "soudehanakarouka",
-      "input": "そうではなかろうか。",
-      "suzume_expected": [
         {
           "lemma": "そう",
           "pos": "Adjective",
@@ -2964,7 +2880,9 @@
           "pos": "Particle",
           "surface": "か"
         }
-      ]
+      ],
+      "id": "soudehanakarouka",
+      "input": "そうではなかろうか。"
     },
     {
       "description": "いかなる determiner + 屈せず + べきである",
@@ -3057,7 +2975,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -3701,7 +3619,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -4084,7 +4002,7 @@
         },
         {
           "lemma": "困難",
-          "pos": "Adjective",
+          "pos": "Noun",
           "surface": "困難"
         },
         {
@@ -4732,7 +4650,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {

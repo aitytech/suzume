@@ -746,10 +746,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "segmentation-diff",
-        "reason": "compound verb boundary: 走り出し vs 走り|出したく"
-      },
       "description": "S3: 走り出したくなかった should split as 走り出し + たくなかった",
       "expected": [
         {

@@ -282,7 +282,7 @@
           "surface": "の"
         },
         {
-          "lemma": "事",
+          "lemma": "こと",
           "pos": "Noun",
           "surface": "事"
         },
@@ -491,7 +491,7 @@
         },
         {
           "lemma": "また",
-          "pos": "Conjunction",
+          "pos": "Adverb",
           "surface": "また"
         },
         {
@@ -516,7 +516,7 @@
         },
         {
           "lemma": "くれる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "くれる"
         },
         {

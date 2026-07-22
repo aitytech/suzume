@@ -525,31 +525,8 @@
       "input": "だれかいる"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "L1で分配代名詞として定義された各々は、同一語を含む既存回帰「各々判断した」と同じくPronounを公開POSとする。NounVerbal+するの境界修正後は表層・lemma・他トークンが一致。"
-      },
       "description": "Distributive pronoun before suru noun",
       "expected": [
-        {
-          "lemma": "各々",
-          "pos": "Noun",
-          "surface": "各々"
-        },
-        {
-          "lemma": "判断",
-          "pos": "Noun",
-          "surface": "判断"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
-      "id": "onoonyudan_suru",
-      "input": "各々判断する",
-      "suzume_expected": [
         {
           "lemma": "各々",
           "pos": "Pronoun",
@@ -565,18 +542,16 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ]
+      ],
+      "id": "onoonyudan_suru",
+      "input": "各々判断する"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "Distributive pronoun before past suru noun",
       "expected": [
         {
           "lemma": "各々",
-          "pos": "Noun",
+          "pos": "Pronoun",
           "surface": "各々"
         },
         {
@@ -596,29 +571,7 @@
         }
       ],
       "id": "onoonyudan_shita",
-      "input": "各々判断した",
-      "suzume_expected": [
-        {
-          "lemma": "各々",
-          "pos": "Pronoun",
-          "surface": "各々"
-        },
-        {
-          "lemma": "判断",
-          "pos": "Noun",
-          "surface": "判断"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "各々判断した"
     },
     {
       "description": "Pronoun plus adjectival rashii",
@@ -881,15 +834,11 @@
       "input": "どれほどの差があるか"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "固定指示代名詞「あれこれ」を一語として保持する",
       "expected": [
         {
           "lemma": "あれこれ",
-          "pos": "Noun",
+          "pos": "Pronoun",
           "surface": "あれこれ"
         },
         {
@@ -904,35 +853,14 @@
         }
       ],
       "id": "pronoun_fixed_are_kore",
-      "input": "あれこれを比べる",
-      "suzume_expected": [
-        {
-          "lemma": "あれこれ",
-          "pos": "Pronoun",
-          "surface": "あれこれ"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "比べる",
-          "pos": "Verb",
-          "surface": "比べる"
-        }
-      ]
+      "input": "あれこれを比べる"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "不定代名詞「何かしら」を一語として保持する",
       "expected": [
         {
           "lemma": "何かしら",
-          "pos": "Noun",
+          "pos": "Pronoun",
           "surface": "何かしら"
         },
         {
@@ -947,24 +875,7 @@
         }
       ],
       "id": "pronoun_indefinite_nanikashira",
-      "input": "何かしら必要だ",
-      "suzume_expected": [
-        {
-          "lemma": "何かしら",
-          "pos": "Pronoun",
-          "surface": "何かしら"
-        },
-        {
-          "lemma": "必要",
-          "pos": "Adjective",
-          "surface": "必要"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ]
+      "input": "何かしら必要だ"
     },
     {
       "description": "fixed demonstrative compound",
@@ -1156,31 +1067,8 @@
       "input": "誰かではない"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "Distributive pronoun before a suru noun must not absorb the following noun.",
       "expected": [
-        {
-          "lemma": "各自",
-          "pos": "Noun",
-          "surface": "各自"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
-      "id": "kakujikakunin_suru",
-      "input": "各自確認する",
-      "suzume_expected": [
         {
           "lemma": "各自",
           "pos": "Pronoun",
@@ -1196,54 +1084,13 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ]
+      ],
+      "id": "kakujikakunin_suru",
+      "input": "各自確認する"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
-      },
       "description": "Closed pronoun before Ichidan causative-passive chain",
       "expected": [
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "のれ",
-          "pos": "Noun",
-          "surface": "のれ"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "省みる",
-          "pos": "Verb",
-          "surface": "省み"
-        },
-        {
-          "lemma": "させる",
-          "pos": "Auxiliary",
-          "surface": "させ"
-        },
-        {
-          "lemma": "られる",
-          "pos": "Auxiliary",
-          "surface": "られ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "literary_onore_voice_chain",
-      "input": "おのれを省みさせられた",
-      "suzume_expected": [
         {
           "lemma": "おのれ",
           "pos": "Pronoun",
@@ -1274,7 +1121,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "literary_onore_voice_chain",
+      "input": "おのれを省みさせられた"
     }
   ],
   "description": "Pronouns",

@@ -197,36 +197,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "テスト説明どおり、口語条件を表す閉じた接続詞「そんなら」を一つの検索単位・Conjunctionとして扱う。MeCab由来の非語彙的な「そん/なら」分割は採用しない。"
-      },
       "description": "そんなら should be CONJ, not そんな+ら split",
       "expected": [
-        {
-          "lemma": "そん",
-          "pos": "Noun",
-          "surface": "そん"
-        },
-        {
-          "lemma": "なら",
-          "pos": "Particle",
-          "surface": "なら"
-        },
-        {
-          "lemma": "行く",
-          "pos": "Verb",
-          "surface": "行こ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        }
-      ],
-      "id": "conj_sonnara",
-      "input": "そんなら行こう",
-      "suzume_expected": [
         {
           "lemma": "そんなら",
           "pos": "Conjunction",
@@ -243,6 +215,8 @@
           "surface": "う"
         }
       ],
+      "id": "conj_sonnara",
+      "input": "そんなら行こう",
       "tags": [
         "conjunction",
         "split_prevention"

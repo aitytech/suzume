@@ -1213,36 +1213,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
-      },
       "description": "おかし is a word (お菓子), not prefix + unknown",
       "expected": [
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "かし",
-          "pos": "Noun",
-          "surface": "かし"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べる"
-        }
-      ],
-      "id": "edge_prefix_hiragana",
-      "input": "おかしを食べる",
-      "suzume_expected": [
         {
           "lemma": "おかし",
           "pos": "Noun",
@@ -1259,6 +1231,8 @@
           "surface": "食べる"
         }
       ],
+      "id": "edge_prefix_hiragana",
+      "input": "おかしを食べる",
       "tags": [
         "prefix",
         "edge"

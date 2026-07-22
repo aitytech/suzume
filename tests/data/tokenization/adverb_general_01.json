@@ -22,31 +22,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
-      },
       "description": "B32: こんだけ should be single adverb",
       "expected": [
-        {
-          "lemma": "こむ",
-          "pos": "Verb",
-          "surface": "こん"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        },
-        {
-          "lemma": "け",
-          "pos": "Particle",
-          "surface": "け"
-        }
-      ],
-      "id": "kondake_adv",
-      "input": "こんだけ",
-      "suzume_expected": [
         {
           "lemma": "こむ",
           "pos": "Verb",
@@ -58,6 +35,8 @@
           "surface": "だけ"
         }
       ],
+      "id": "kondake_adv",
+      "input": "こんだけ",
       "tags": [
         "adverb",
         "colloquial"
@@ -395,36 +374,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "たとえ should be Adverb (conditional) - grammar-first: で(AUX,だ)+も(PARTICLE)",
       "expected": [
-        {
-          "lemma": "たとえ",
-          "pos": "Adverb",
-          "surface": "たとえ"
-        },
-        {
-          "lemma": "雨",
-          "pos": "Noun",
-          "surface": "雨"
-        },
-        {
-          "lemma": "でも",
-          "pos": "Conjunction",
-          "surface": "でも"
-        },
-        {
-          "lemma": "行く",
-          "pos": "Verb",
-          "surface": "行く"
-        }
-      ],
-      "id": "adverb_tatoe",
-      "input": "たとえ雨でも行く",
-      "suzume_expected": [
         {
           "lemma": "たとえ",
           "pos": "Adverb",
@@ -446,6 +397,8 @@
           "surface": "行く"
         }
       ],
+      "id": "adverb_tatoe",
+      "input": "たとえ雨でも行く",
       "tags": [
         "adverb"
       ]
@@ -1008,10 +961,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
       "description": "あたかも should be single ADV",
       "expected": [
         {
@@ -1031,44 +980,18 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         }
       ],
       "id": "adv_atakamo",
       "input": "あたかも夢のよう",
-      "suzume_expected": [
-        {
-          "lemma": "あたかも",
-          "pos": "Adverb",
-          "surface": "あたかも"
-        },
-        {
-          "lemma": "夢",
-          "pos": "Noun",
-          "surface": "夢"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "よう",
-          "pos": "Noun",
-          "surface": "よう"
-        }
-      ],
       "tags": [
         "adverb",
         "split_prevention"
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
       "description": "さながら should be single ADV",
       "expected": [
         {
@@ -1088,34 +1011,12 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         }
       ],
       "id": "adv_sanagara",
       "input": "さながら映画のよう",
-      "suzume_expected": [
-        {
-          "lemma": "さながら",
-          "pos": "Adverb",
-          "surface": "さながら"
-        },
-        {
-          "lemma": "映画",
-          "pos": "Noun",
-          "surface": "映画"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "よう",
-          "pos": "Noun",
-          "surface": "よう"
-        }
-      ],
       "tags": [
         "adverb",
         "split_prevention"
@@ -1549,10 +1450,6 @@
       "input": "初めて見た"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "Dict adverb おめでとう: should not split",
       "expected": [
         {
@@ -1562,7 +1459,7 @@
         },
         {
           "lemma": "ござる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "ござい"
         },
         {
@@ -1572,24 +1469,7 @@
         }
       ],
       "id": "omedetou_gozaimasu",
-      "input": "おめでとうございます",
-      "suzume_expected": [
-        {
-          "lemma": "おめでとう",
-          "pos": "Adverb",
-          "surface": "おめでとう"
-        },
-        {
-          "lemma": "ござる",
-          "pos": "Auxiliary",
-          "surface": "ござい"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ]
+      "input": "おめでとうございます"
     },
     {
       "description": "必ずしも読まない - auto-generated",

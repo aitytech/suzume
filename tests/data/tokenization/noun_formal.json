@@ -3089,7 +3089,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -3121,7 +3121,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -3143,7 +3143,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -3175,7 +3175,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -3197,7 +3197,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -3224,7 +3224,7 @@
         },
         {
           "lemma": "よう",
-          "pos": "Auxiliary",
+          "pos": "Noun",
           "surface": "よう"
         },
         {
@@ -3835,6 +3835,33 @@
       ],
       "id": "formal_noun_before_negative_naku_control",
       "input": "ことなく進む"
+    },
+    {
+      "description": "形式名詞「よう」を名詞として保持する",
+      "expected": [
+        {
+          "lemma": "夢",
+          "pos": "Noun",
+          "surface": "夢"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "formal_you_similitude",
+      "input": "夢のようだ"
     }
   ],
   "description": "Formal nouns (こと、もの、ところ)",

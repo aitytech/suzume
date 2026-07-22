@@ -1,10 +1,6 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "説明してくれます - MeCab互換分割",
       "expected": [
         {
@@ -24,7 +20,7 @@
         },
         {
           "lemma": "くれる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "くれ"
         },
         {
@@ -35,33 +31,6 @@
       ],
       "id": "suru_te_kureru",
       "input": "説明してくれます",
-      "suzume_expected": [
-        {
-          "lemma": "説明",
-          "pos": "Noun",
-          "surface": "説明"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くれる",
-          "pos": "Auxiliary",
-          "surface": "くれ"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -217,10 +186,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "説明してもらう - MeCab互換分割",
       "expected": [
         {
@@ -240,34 +205,12 @@
         },
         {
           "lemma": "もらう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "もらう"
         }
       ],
       "id": "suru_te_morau",
       "input": "説明してもらう",
-      "suzume_expected": [
-        {
-          "lemma": "説明",
-          "pos": "Noun",
-          "surface": "説明"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "もらう",
-          "pos": "Auxiliary",
-          "surface": "もらう"
-        }
-      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -275,10 +218,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "説明してあげる - MeCab互換分割",
       "expected": [
         {
@@ -298,34 +237,12 @@
         },
         {
           "lemma": "あげる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "あげる"
         }
       ],
       "id": "suru_te_ageru",
       "input": "説明してあげる",
-      "suzume_expected": [
-        {
-          "lemma": "説明",
-          "pos": "Noun",
-          "surface": "説明"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "あげる",
-          "pos": "Auxiliary",
-          "surface": "あげる"
-        }
-      ],
       "tags": [
         "suru",
         "subsidiary",
@@ -429,36 +346,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "説明してくれる - MeCab互換分割",
       "expected": [
-        {
-          "lemma": "説明",
-          "pos": "Noun",
-          "surface": "説明"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くれる",
-          "pos": "Verb",
-          "surface": "くれる"
-        }
-      ],
-      "id": "suru_te_kureru_plain",
-      "input": "説明してくれる",
-      "suzume_expected": [
         {
           "lemma": "説明",
           "pos": "Noun",
@@ -480,6 +369,8 @@
           "surface": "くれる"
         }
       ],
+      "id": "suru_te_kureru_plain",
+      "input": "説明してくれる",
       "tags": [
         "suru",
         "subsidiary",
@@ -1466,8 +1357,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+        "category": "lemma-normalization",
+        "reason": "漢語サ変述語の標準lemmaを「する」形へ正規化するため"
       },
       "description": "確認に反して進める - regression test",
       "expected": [
@@ -1529,8 +1420,8 @@
     },
     {
       "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
+        "category": "lemma-normalization",
+        "reason": "漢語サ変述語の標準lemmaを「する」形へ正規化するため"
       },
       "description": "意図に反した - regression test",
       "expected": [

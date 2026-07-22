@@ -326,7 +326,7 @@
     {
       "accepted_diff": {
         "category": "lemma-ambiguity",
-        "reason": "表層「降り」は「降る」「降りる」の連用形に同形で、文脈だけではlemmaを一意に復元できない。境界・POS・後続は正しい。"
+        "reason": "同形の連用形からは五段・一段のlemmaを一意に決められず、境界とPOSは正しいため"
       },
       "description": "同形連用形「降り」の語義曖昧性を許容し、動詞境界を維持する",
       "expected": [

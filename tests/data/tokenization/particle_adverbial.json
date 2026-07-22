@@ -55,10 +55,6 @@
       "input": "三個ずつ配った"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "やるしかない - auto-generated",
       "expected": [
         {
@@ -73,35 +69,14 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
       "id": "yarushikanai",
-      "input": "やるしかない",
-      "suzume_expected": [
-        {
-          "lemma": "やる",
-          "pos": "Verb",
-          "surface": "やる"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "やるしかない"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "みるしかない - auto-generated",
       "expected": [
         {
@@ -116,35 +91,14 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
       "id": "mirushikanai",
-      "input": "みるしかない",
-      "suzume_expected": [
-        {
-          "lemma": "みる",
-          "pos": "Verb",
-          "surface": "みる"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "みるしかない"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "いるしかない - auto-generated",
       "expected": [
         {
@@ -159,35 +113,14 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
       "id": "irushikanai",
-      "input": "いるしかない",
-      "suzume_expected": [
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "いる"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "いるしかない"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "水しかない - auto-generated",
       "expected": [
         {
@@ -202,35 +135,14 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
       "id": "shikanai",
-      "input": "水しかない",
-      "suzume_expected": [
-        {
-          "lemma": "水",
-          "pos": "Noun",
-          "surface": "水"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "水しかない"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "時間しかない - auto-generated",
       "expected": [
         {
@@ -245,35 +157,14 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
       "id": "shikanai_2",
-      "input": "時間しかない",
-      "suzume_expected": [
-        {
-          "lemma": "時間",
-          "pos": "Noun",
-          "surface": "時間"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "時間しかない"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "お金しかない - auto-generated",
       "expected": [
         {
@@ -288,29 +179,12 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
       "id": "o_shikanai",
-      "input": "お金しかない",
-      "suzume_expected": [
-        {
-          "lemma": "お金",
-          "pos": "Noun",
-          "surface": "お金"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "お金しかない"
     },
     {
       "description": "時間さえない - auto-generated",

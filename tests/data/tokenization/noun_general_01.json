@@ -64,26 +64,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "文頭「でも」は逆接接続詞「しかし」と、省略された名詞句に付く係助詞「（それ）でも」の両解釈が文脈なしで成立する。SuzumeのParticle解析は文法的で、表層境界と後続も正しい。"
-      },
       "description": "でも大丈夫 (but it's okay)",
       "expected": [
-        {
-          "lemma": "でも",
-          "pos": "Conjunction",
-          "surface": "でも"
-        },
-        {
-          "lemma": "大丈夫",
-          "pos": "Adjective",
-          "surface": "大丈夫"
-        }
-      ],
-      "id": "conjunction_demo",
-      "input": "でも大丈夫",
-      "suzume_expected": [
         {
           "lemma": "でも",
           "pos": "Particle",
@@ -95,6 +77,8 @@
           "surface": "大丈夫"
         }
       ],
+      "id": "conjunction_demo",
+      "input": "でも大丈夫",
       "tags": [
         "grammar",
         "conjunction"
@@ -1902,32 +1886,16 @@
       "input": "こども"
     },
     {
-      "accepted_diff": {
-        "category": "noun-search-unit",
-        "reason": "普通名詞「たまご」は一検索単位で、接頭辞同形「ご」を語中から切り出さない"
-      },
       "description": "Isolated hiragana noun (卵) kept whole; MeCab splits たま/ご, suzume keeps one search unit",
       "expected": [
-        {
-          "lemma": "たま",
-          "pos": "Adverb",
-          "surface": "たま"
-        },
-        {
-          "lemma": "ご",
-          "pos": "Prefix",
-          "surface": "ご"
-        }
-      ],
-      "id": "tamago",
-      "input": "たまご",
-      "suzume_expected": [
         {
           "lemma": "たまご",
           "pos": "Noun",
           "surface": "たまご"
         }
-      ]
+      ],
+      "id": "tamago",
+      "input": "たまご"
     },
     {
       "accepted_diff": {
@@ -1953,37 +1921,16 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "noun-search-unit",
-        "reason": "普通名詞「ひこうき」は一検索単位で、意志助動詞同形「う」を語中から切り出さない"
-      },
       "description": "Isolated hiragana noun kept whole; the EOS penalty on bare renyokei き prevents an ひこう+き split (き cannot end a sentence)",
       "expected": [
-        {
-          "lemma": "ひく",
-          "pos": "Verb",
-          "surface": "ひこ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        },
-        {
-          "lemma": "き",
-          "pos": "Auxiliary",
-          "surface": "き"
-        }
-      ],
-      "id": "hikouki",
-      "input": "ひこうき",
-      "suzume_expected": [
         {
           "lemma": "ひこうき",
           "pos": "Noun",
           "surface": "ひこうき"
         }
-      ]
+      ],
+      "id": "hikouki",
+      "input": "ひこうき"
     },
     {
       "description": "東京かな - auto-generated",

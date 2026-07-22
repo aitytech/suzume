@@ -490,10 +490,6 @@
       "input": "幾度となく繰り返される議論に辟易していた"
     },
     {
-      "accepted_diff": {
-        "category": "grammar-pos",
-        "reason": "「困難を」の「困難」は格助詞「を」を取る名詞用法であり、SuzumeのNoun分類が文法的に正しい。独立形容詞「ない」の仮定形「なけれ」は実装修正済み。"
-      },
       "description": "literary-volitional-n-split normalization (乗り越え+ん)",
       "expected": [
         {
@@ -503,7 +499,7 @@
         },
         {
           "lemma": "困難",
-          "pos": "Adjective",
+          "pos": "Noun",
           "surface": "困難"
         },
         {
@@ -568,79 +564,7 @@
         }
       ],
       "id": "ikanaru_womo_ri_entosuru_ganakerebanaranai",
-      "input": "いかなる困難をも乗り越えんとする気概がなければならない",
-      "suzume_expected": [
-        {
-          "lemma": "いかなる",
-          "pos": "Determiner",
-          "surface": "いかなる"
-        },
-        {
-          "lemma": "困難",
-          "pos": "Noun",
-          "surface": "困難"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "乗り越える",
-          "pos": "Verb",
-          "surface": "乗り越え"
-        },
-        {
-          "lemma": "ん",
-          "pos": "Auxiliary",
-          "surface": "ん"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        },
-        {
-          "lemma": "気概",
-          "pos": "Noun",
-          "surface": "気概"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "なけれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "なる",
-          "pos": "Verb",
-          "surface": "なら"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "いかなる困難をも乗り越えんとする気概がなければならない"
     },
     {
       "description": "移り変わり compound verb fix",
@@ -1690,61 +1614,8 @@
       "input": "予てから予定していた"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "擬態語・和語数量表現は内部を恣意的に分断せず、後続助詞との境界を保つ現行検索単位が妥当"
-      },
       "description": "文学調品質回帰",
       "expected": [
-        {
-          "lemma": "みつ",
-          "pos": "Verb",
-          "surface": "みっ"
-        },
-        {
-          "lemma": "つ",
-          "pos": "Auxiliary",
-          "surface": "つ"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "星",
-          "pos": "Noun",
-          "surface": "星"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "雲間",
-          "pos": "Noun",
-          "surface": "雲間"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "見える",
-          "pos": "Verb",
-          "surface": "見え"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "literary_r05_native_counter",
-      "input": "みっつの星が雲間に見えた。",
-      "suzume_expected": [
         {
           "lemma": "みっつ",
           "pos": "Noun",
@@ -1785,49 +1656,13 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "literary_r05_native_counter",
+      "input": "みっつの星が雲間に見えた。"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
-      },
       "description": "文学調品質回帰",
       "expected": [
-        {
-          "lemma": "ほど",
-          "pos": "Particle",
-          "surface": "ほど"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "なく"
-        },
-        {
-          "lemma": "鐘",
-          "pos": "Noun",
-          "surface": "鐘"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "鳴る",
-          "pos": "Verb",
-          "surface": "鳴っ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "literary_r11_temporal_adverb",
-      "input": "ほどなく、鐘が鳴った。",
-      "suzume_expected": [
         {
           "lemma": "ほどなく",
           "pos": "Adverb",
@@ -1853,49 +1688,13 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "literary_r11_temporal_adverb",
+      "input": "ほどなく、鐘が鳴った。"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
-      },
       "description": "文学調品質回帰",
       "expected": [
-        {
-          "lemma": "更",
-          "pos": "Adjective",
-          "surface": "更"
-        },
-        {
-          "lemma": "なり",
-          "pos": "Auxiliary",
-          "surface": "なる"
-        },
-        {
-          "lemma": "説明",
-          "pos": "Noun",
-          "surface": "説明"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "求める",
-          "pos": "Verb",
-          "surface": "求め"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "literary_r13_formal_determiner",
-      "input": "更なる説明を求めた。",
-      "suzume_expected": [
         {
           "lemma": "更なる",
           "pos": "Determiner",
@@ -1921,7 +1720,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "literary_r13_formal_determiner",
+      "input": "更なる説明を求めた。"
     },
     {
       "description": "文学調品質回帰",
@@ -2176,76 +1977,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "文学調品質回帰",
       "expected": [
-        {
-          "lemma": "静けさ",
-          "pos": "Noun",
-          "surface": "静けさ"
-        },
-        {
-          "lemma": "のみ",
-          "pos": "Particle",
-          "surface": "のみ"
-        },
-        {
-          "lemma": "なら",
-          "pos": "Particle",
-          "surface": "なら"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ず"
-        },
-        {
-          "lemma": "適度",
-          "pos": "Adjective",
-          "surface": "適度"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "光",
-          "pos": "Noun",
-          "surface": "光"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "また",
-          "pos": "Conjunction",
-          "surface": "また"
-        },
-        {
-          "lemma": "必要",
-          "pos": "Adjective",
-          "surface": "必要"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        }
-      ],
-      "id": "kesanominarazu_na_momata_dearu",
-      "input": "静けさのみならず、適度な光もまた必要である。",
-      "suzume_expected": [
         {
           "lemma": "静けさ",
           "pos": "Noun",
@@ -2306,7 +2039,9 @@
           "pos": "Verb",
           "surface": "ある"
         }
-      ]
+      ],
+      "id": "kesanominarazu_na_momata_dearu",
+      "input": "静けさのみならず、適度な光もまた必要である。"
     },
     {
       "description": "文学調品質回帰",
@@ -2575,10 +2310,6 @@
       "input": "彼は疲れていたらしい。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "文学調品質回帰",
       "expected": [
         {
@@ -2613,7 +2344,7 @@
         },
         {
           "lemma": "もらう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "もらっ"
         },
         {
@@ -2623,49 +2354,7 @@
         }
       ],
       "id": "ni_wo_etemorattta",
-      "input": "友人に道を教えてもらった。",
-      "suzume_expected": [
-        {
-          "lemma": "友人",
-          "pos": "Noun",
-          "surface": "友人"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "道",
-          "pos": "Noun",
-          "surface": "道"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "教える",
-          "pos": "Verb",
-          "surface": "教え"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "もらう",
-          "pos": "Auxiliary",
-          "surface": "もらっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "友人に道を教えてもらった。"
     },
     {
       "description": "文学調品質回帰",
@@ -2710,10 +2399,6 @@
       "input": "明らかに違う答えを選んだ。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "文学調品質回帰",
       "expected": [
         {
@@ -2733,7 +2418,7 @@
         },
         {
           "lemma": "いる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "い"
         },
         {
@@ -2743,40 +2428,9 @@
         }
       ],
       "id": "tesaeinai",
-      "input": "見てさえいない。",
-      "suzume_expected": [
-        {
-          "lemma": "見る",
-          "pos": "Verb",
-          "surface": "見"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "さえ",
-          "pos": "Particle",
-          "surface": "さえ"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "い"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "見てさえいない。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "副助詞「しか」に呼応する「なかっ」は否定助動詞「ない」で、現行Auxiliary解析が妥当。"
-      },
       "description": "文学調品質回帰",
       "expected": [
         {
@@ -2791,7 +2445,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "なかっ"
         },
         {
@@ -2801,29 +2455,7 @@
         }
       ],
       "id": "kushikanakattta",
-      "input": "歩くしかなかった。",
-      "suzume_expected": [
-        {
-          "lemma": "歩く",
-          "pos": "Verb",
-          "surface": "歩く"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "歩くしかなかった。"
     },
     {
       "description": "ことのほか冷たい風が吹いていた。 - regression test",
@@ -3458,10 +3090,6 @@
       "input": "木の幹が雨に黒々と濡れていた。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "花を摘んであげた。 - regression test",
       "expected": [
         {
@@ -3486,7 +3114,7 @@
         },
         {
           "lemma": "あげる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "あげ"
         },
         {
@@ -3496,45 +3124,9 @@
         }
       ],
       "id": "wo_ndeageta",
-      "input": "花を摘んであげた。",
-      "suzume_expected": [
-        {
-          "lemma": "花",
-          "pos": "Noun",
-          "surface": "花"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "摘む",
-          "pos": "Verb",
-          "surface": "摘ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "あげる",
-          "pos": "Auxiliary",
-          "surface": "あげ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "花を摘んであげた。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "門を開けてくれた。 - regression test",
       "expected": [
         {
@@ -3559,7 +3151,7 @@
         },
         {
           "lemma": "くれる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "くれ"
         },
         {
@@ -3569,39 +3161,7 @@
         }
       ],
       "id": "wo_ketekureta",
-      "input": "門を開けてくれた。",
-      "suzume_expected": [
-        {
-          "lemma": "門",
-          "pos": "Noun",
-          "surface": "門"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "開ける",
-          "pos": "Verb",
-          "surface": "開け"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くれる",
-          "pos": "Auxiliary",
-          "surface": "くれ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "門を開けてくれた。"
     },
     {
       "description": "彼に知らせていただいた。 - regression test",

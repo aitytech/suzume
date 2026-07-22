@@ -1342,10 +1342,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "本でしかない、水でしかない、紙でしかない、学生でしかない、本でこそある、水でさえある、紙ですらある、本しかない - auto-generated",
       "expected": [
         {
@@ -1365,7 +1361,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1385,7 +1381,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1405,7 +1401,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1425,7 +1421,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -1500,175 +1496,14 @@
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         }
       ],
       "id": "copula_binding_particle_negative",
-      "input": "本でしかない、水でしかない、紙でしかない、学生でしかない、本でこそある、水でさえある、紙ですらある、本しかない",
-      "suzume_expected": [
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "水",
-          "pos": "Noun",
-          "surface": "水"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "紙",
-          "pos": "Noun",
-          "surface": "紙"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "学生",
-          "pos": "Noun",
-          "surface": "学生"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "こそ",
-          "pos": "Particle",
-          "surface": "こそ"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        },
-        {
-          "lemma": "水",
-          "pos": "Noun",
-          "surface": "水"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "さえ",
-          "pos": "Particle",
-          "surface": "さえ"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        },
-        {
-          "lemma": "紙",
-          "pos": "Noun",
-          "surface": "紙"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "すら",
-          "pos": "Particle",
-          "surface": "すら"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        },
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "本でしかない、水でしかない、紙でしかない、学生でしかない、本でこそある、水でさえある、紙ですらある、本しかない"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "読んでさえいればよい、書いてさえいればよい、食べてさえいればよい、見てさえいればよい、読んでさえいる、読んでこそいればよい、読んでもいればよい、読んでしかいない、読んでなどいない、名詞さえあればよい - auto-generated",
       "expected": [
         {
@@ -1808,7 +1643,7 @@
         },
         {
           "lemma": "いる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いる"
         },
         {
@@ -1888,7 +1723,7 @@
         },
         {
           "lemma": "いる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "い"
         },
         {
@@ -1948,284 +1783,7 @@
         }
       ],
       "id": "binding_particle_iru_boundary",
-      "input": "読んでさえいればよい、書いてさえいればよい、食べてさえいればよい、見てさえいればよい、読んでさえいる、読んでこそいればよい、読んでもいればよい、読んでしかいない、読んでなどいない、名詞さえあればよい",
-      "suzume_expected": [
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "さえ",
-          "pos": "Particle",
-          "surface": "さえ"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "いれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書い"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "さえ",
-          "pos": "Particle",
-          "surface": "さえ"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "いれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "さえ",
-          "pos": "Particle",
-          "surface": "さえ"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "いれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        },
-        {
-          "lemma": "見る",
-          "pos": "Verb",
-          "surface": "見"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "さえ",
-          "pos": "Particle",
-          "surface": "さえ"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "いれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "さえ",
-          "pos": "Particle",
-          "surface": "さえ"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "いる"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "こそ",
-          "pos": "Particle",
-          "surface": "こそ"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "いれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "いれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "い"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "など",
-          "pos": "Particle",
-          "surface": "など"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "い"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "名詞",
-          "pos": "Noun",
-          "surface": "名詞"
-        },
-        {
-          "lemma": "さえ",
-          "pos": "Particle",
-          "surface": "さえ"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あれ"
-        },
-        {
-          "lemma": "ば",
-          "pos": "Particle",
-          "surface": "ば"
-        },
-        {
-          "lemma": "よい",
-          "pos": "Adjective",
-          "surface": "よい"
-        }
-      ]
+      "input": "読んでさえいればよい、書いてさえいればよい、食べてさえいればよい、見てさえいればよい、読んでさえいる、読んでこそいればよい、読んでもいればよい、読んでしかいない、読んでなどいない、名詞さえあればよい"
     },
     {
       "description": "読むことさえない、書くことさえない、食べることさえない、本さえない、水さえない - auto-generated",
@@ -2895,36 +2453,8 @@
       "input": "これだけは守る"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "「多く」はイ形容詞「多い」の連用形で、上限を表す「とも」へ接続する現行Adjective解析が妥当。"
-      },
       "description": "上限表現の形容詞連用形「多く」と副助詞「とも」を分割する",
       "expected": [
-        {
-          "lemma": "多く",
-          "pos": "Noun",
-          "surface": "多く"
-        },
-        {
-          "lemma": "とも",
-          "pos": "Particle",
-          "surface": "とも"
-        },
-        {
-          "lemma": "三つ",
-          "pos": "Noun",
-          "surface": "三つ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "ooku_tomo_upper_bound_particle_boundary",
-      "input": "多くとも三つだ",
-      "suzume_expected": [
         {
           "lemma": "多い",
           "pos": "Adjective",
@@ -2945,7 +2475,9 @@
           "pos": "Auxiliary",
           "surface": "だ"
         }
-      ]
+      ],
+      "id": "ooku_tomo_upper_bound_particle_boundary",
+      "input": "多くとも三つだ"
     },
     {
       "description": "程度表現を連体詞・名詞・限定助詞の検索単位で分割する",

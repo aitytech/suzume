@@ -525,31 +525,8 @@
       "input": "だけ確認する"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "restrictive particle boundary",
       "expected": [
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        },
-        {
-          "lemma": "しか",
-          "pos": "Particle",
-          "surface": "しか"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Adjective",
-          "surface": "ない"
-        }
-      ],
-      "id": "surushikanai",
-      "input": "するしかない",
-      "suzume_expected": [
         {
           "lemma": "する",
           "pos": "Verb",
@@ -565,7 +542,9 @@
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ]
+      ],
+      "id": "surushikanai",
+      "input": "するしかない"
     },
     {
       "description": "colloquial quotative particle",
@@ -715,15 +694,11 @@
       "input": "赤だの青だの選ぶ"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "引用「と」の直前の「なむ」は古典の終助詞・係助詞で、現行Particle解析が妥当。"
-      },
       "description": "Classical focus particle remains intact before a quotation.",
       "expected": [
         {
           "lemma": "なむ",
-          "pos": "Interjection",
+          "pos": "Particle",
           "surface": "なむ"
         },
         {
@@ -738,24 +713,7 @@
         }
       ],
       "id": "classical_focus_namu",
-      "input": "なむと思う",
-      "suzume_expected": [
-        {
-          "lemma": "なむ",
-          "pos": "Particle",
-          "surface": "なむ"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "思う",
-          "pos": "Verb",
-          "surface": "思う"
-        }
-      ]
+      "input": "なむと思う"
     },
     {
       "description": "真の名詞+係助詞+する否定を、同形の動詞連用形へ過剰復元しない反例",

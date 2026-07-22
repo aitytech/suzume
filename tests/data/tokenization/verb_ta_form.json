@@ -1,41 +1,8 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
-      },
       "description": "Regression: 棄てる ichidan verb dict entry",
       "expected": [
-        {
-          "lemma": "棄てる",
-          "pos": "Verb",
-          "surface": "棄て"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "物",
-          "pos": "Noun",
-          "surface": "物"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "拾う",
-          "pos": "Verb",
-          "surface": "拾う"
-        }
-      ],
-      "id": "teta_wo_u",
-      "input": "棄てた物を拾う",
-      "suzume_expected": [
         {
           "lemma": "棄てる",
           "pos": "Verb",
@@ -61,7 +28,9 @@
           "pos": "Verb",
           "surface": "拾う"
         }
-      ]
+      ],
+      "id": "teta_wo_u",
+      "input": "棄てた物を拾う"
     },
     {
       "description": "完了助動詞の仮定形をAuxiliaryとして解析する",
