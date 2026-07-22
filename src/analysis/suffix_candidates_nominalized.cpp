@@ -22,26 +22,6 @@ namespace suzume::analysis {
 
 namespace {
 
-// A one-mora particle can also begin a longer registered derivational form
-// (使い+やす+さ, 読み+にく+さ). In that situation it does not license a
-// nominalized-noun particle bonus for the preceding continuative stem.
-bool startsLongerNonParticleEntry(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                  const dictionary::DictionaryManager* dict_manager) {
-  if (dict_manager == nullptr || start_pos >= codepoints.size()) {
-    return false;
-  }
-
-  const size_t probe_end = std::min(codepoints.size(), start_pos + static_cast<size_t>(4));
-  const std::string probe = extractSubstring(codepoints, start_pos, probe_end);
-  for (const auto& match : dict_manager->lookup(probe, 0)) {
-    if (match.entry != nullptr && match.entry->pos != core::PartOfSpeech::Particle &&
-        normalize::utf8Length(match.entry->surface) > 1) {
-      return true;
-    }
-  }
-  return false;
-}
-
 bool hasNominalizedNounParticleContinuation(const std::vector<char32_t>& codepoints, size_t end_pos,
                                             const dictionary::DictionaryManager* dict_manager) {
   return end_pos < codepoints.size() && normalize::isParticleCodepoint(codepoints[end_pos]) &&

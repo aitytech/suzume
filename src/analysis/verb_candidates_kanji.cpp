@@ -151,32 +151,7 @@ bool hasNominalizedNounParticleContinuation(const std::vector<char32_t>& codepoi
   // Only case, topic, and nominalizer particles make the preceding
   // continuative an object-like noun phrase. Conjunctive particles such as
   // ながら and つつ instead retain the verbal reading.
-  bool starts_nominal_particle = false;
-  switch (codepoints[end_pos]) {
-    case U'を':
-    case U'が':
-    case U'に':
-    case U'で':
-    case U'と':
-    case U'へ':
-    case U'は':
-    case U'も':
-    case U'の':
-      starts_nominal_particle = true;
-      break;
-    case U'か':
-      starts_nominal_particle = end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'ら';
-      break;
-    case U'ま':
-      starts_nominal_particle = end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'で';
-      break;
-    case U'よ':
-      starts_nominal_particle = end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'り';
-      break;
-    default:
-      break;
-  }
-  if (!starts_nominal_particle) {
+  if (!startsNominalForcingParticle(codepoints, end_pos)) {
     return false;
   }
 

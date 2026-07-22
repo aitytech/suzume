@@ -120,6 +120,13 @@ size_t advanceCharsToBytePos(const std::vector<char32_t>& codepoints, size_t sta
  */
 std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t start, size_t end);
 
+/** Whether a position begins a case/topic/nominalizer particle sequence. */
+bool startsNominalForcingParticle(const std::vector<char32_t>& codepoints, size_t pos);
+
+/** Whether a position begins a multi-character non-particle dictionary entry. */
+bool startsLongerNonParticleEntry(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  const dictionary::DictionaryManager* dict_manager);
+
 /** Whether an edge with one of the requested parts of speech ends at a boundary. */
 bool hasPrecedingPartOfSpeech(const core::Lattice& lattice, size_t end_pos, PartOfSpeechMask pos_mask);
 

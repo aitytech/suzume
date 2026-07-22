@@ -10,49 +10,7 @@ namespace suzume::analysis::compound_verb_detail {
 
 bool beginsNominalForcingParticle(const std::vector<char32_t>& codepoints, size_t pos,
                                   const dictionary::DictionaryManager& dict_manager) {
-  if (pos >= codepoints.size()) {
-    return false;
-  }
-  bool starts_nominal_particle = false;
-  switch (codepoints[pos]) {
-    case U'を':
-    case U'が':
-    case U'に':
-    case U'で':
-    case U'と':
-    case U'へ':
-    case U'は':
-    case U'も':
-    case U'の':
-      starts_nominal_particle = true;
-      break;
-    case U'か':
-      starts_nominal_particle = pos + 1 < codepoints.size() && codepoints[pos + 1] == U'ら';
-      break;
-    case U'ま':
-      starts_nominal_particle = pos + 1 < codepoints.size() && codepoints[pos + 1] == U'で';
-      break;
-    case U'よ':
-      starts_nominal_particle = pos + 1 < codepoints.size() && codepoints[pos + 1] == U'り';
-      break;
-    default:
-      break;
-  }
-  if (!starts_nominal_particle) {
-    return false;
-  }
-
-  // Do not reinterpret the initial kana of a longer derivational form as a
-  // case particle (受け入れ+がたい, 引きこもり+がち, 読み+にくい).
-  const size_t probe_end = std::min(codepoints.size(), pos + static_cast<size_t>(4));
-  const std::string probe = extractSubstring(codepoints, pos, probe_end);
-  for (const auto& match : dict_manager.lookup(probe, 0)) {
-    if (match.entry != nullptr && match.entry->pos != core::PartOfSpeech::Particle &&
-        normalize::utf8Length(match.entry->surface) > 1) {
-      return false;
-    }
-  }
-  return true;
+  return startsNominalForcingParticle(codepoints, pos) && !startsLongerNonParticleEntry(codepoints, pos, &dict_manager);
 }
 
 namespace {

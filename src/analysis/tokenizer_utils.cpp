@@ -54,6 +54,48 @@ std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t sta
   return normalize::encodeRange(codepoints, start, end);
 }
 
+bool startsNominalForcingParticle(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos >= codepoints.size()) {
+    return false;
+  }
+  switch (codepoints[pos]) {
+    case U'を':
+    case U'が':
+    case U'に':
+    case U'で':
+    case U'と':
+    case U'へ':
+    case U'は':
+    case U'も':
+    case U'の':
+      return true;
+    case U'か':
+      return pos + 1 < codepoints.size() && codepoints[pos + 1] == U'ら';
+    case U'ま':
+      return pos + 1 < codepoints.size() && codepoints[pos + 1] == U'で';
+    case U'よ':
+      return pos + 1 < codepoints.size() && codepoints[pos + 1] == U'り';
+    default:
+      return false;
+  }
+}
+
+bool startsLongerNonParticleEntry(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos >= codepoints.size()) {
+    return false;
+  }
+  const size_t probe_end = std::min(codepoints.size(), start_pos + static_cast<size_t>(4));
+  const std::string probe = extractSubstring(codepoints, start_pos, probe_end);
+  for (const auto& match : dict_manager->lookup(probe, 0)) {
+    if (match.entry != nullptr && match.entry->pos != core::PartOfSpeech::Particle &&
+        normalize::utf8Length(match.entry->surface) > 1) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool hasExactPartOfSpeech(const dictionary::DictionaryManager& dict_manager, std::string_view surface,
                           PartOfSpeechMask pos_mask) {
   for (uint8_t pos_value = 0; pos_mask != 0; ++pos_value, pos_mask >>= 1) {
