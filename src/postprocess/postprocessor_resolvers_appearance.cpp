@@ -153,11 +153,8 @@ void resolveProgressiveContractionNominalizer(std::vector<core::Morpheme>& resul
          continuation.extended_pos != core::ExtendedPOS::AuxCopulaDa)) {
       continue;
     }
-    contraction.pos = core::PartOfSpeech::Particle;
-    contraction.extended_pos = core::ExtendedPOS::ParticleNo;
-    contraction.lemma = "の";
-    contraction.conj_type = dictionary::ConjugationType::None;
-    contraction.conj_form = grammar::ConjForm::Base;
+    retag(contraction, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleNo, "の",
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
   }
 }
 
@@ -182,11 +179,7 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
         grammar::isAllKanji(predicate.surface) && utf8::endsWith(predicate.lemma, "る")) {
       const auto& marker = result[idx - 2];
       if (marker.extended_pos == core::ExtendedPOS::ParticleCase && marker.surface == "に") {
-        predicate.pos = core::PartOfSpeech::Noun;
-        predicate.extended_pos = core::ExtendedPOS::Noun;
-        predicate.lemma = predicate.surface;
-        predicate.conj_type = dictionary::ConjugationType::None;
-        predicate.conj_form = grammar::ConjForm::Base;
+        retagNounSurface(predicate);
       }
     }
 
@@ -292,11 +285,8 @@ void resolveNaAdjectiveCopularPast(std::vector<core::Morpheme>& result) {
         de.extended_pos != core::ExtendedPOS::AuxCopulaDa || aru.surface != "あっ") {
       continue;
     }
-    aru.pos = core::PartOfSpeech::Auxiliary;
-    aru.extended_pos = core::ExtendedPOS::AuxCopulaDa;
-    aru.lemma = "ある";
-    aru.conj_type = dictionary::ConjugationType::GodanRa;
-    aru.conj_form = grammar::ConjForm::Onbinkei;
+    retag(aru, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxCopulaDa, "ある",
+          dictionary::ConjugationType::GodanRa, grammar::ConjForm::Onbinkei);
   }
 }
 
@@ -310,11 +300,8 @@ void resolveCopularPastConditional(std::vector<core::Morpheme>& result) {
         conditional.surface != "たら" || conditional.extended_pos != core::ExtendedPOS::ParticleConj) {
       continue;
     }
-    conditional.pos = core::PartOfSpeech::Auxiliary;
-    conditional.extended_pos = core::ExtendedPOS::AuxTenseTa;
-    conditional.lemma = "た";
-    conditional.conj_type = dictionary::ConjugationType::None;
-    conditional.conj_form = grammar::ConjForm::Base;
+    retag(conditional, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxTenseTa, "た",
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
   }
 }
 
@@ -338,11 +325,8 @@ void resolveTendencySuffixCopula(std::vector<core::Morpheme>& result) {
     if (tendency.surface != "がち" || de.surface != "で" || adjective.extended_pos != core::ExtendedPOS::AdjBasic) {
       continue;
     }
-    tendency.pos = core::PartOfSpeech::Suffix;
-    tendency.extended_pos = core::ExtendedPOS::SuffixTendency;
-    tendency.lemma = "がち";
-    tendency.conj_type = dictionary::ConjugationType::None;
-    tendency.conj_form = grammar::ConjForm::Base;
+    retag(tendency, core::PartOfSpeech::Suffix, core::ExtendedPOS::SuffixTendency, "がち",
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
     retagCopulaDa(de);
   }
 }
@@ -496,16 +480,10 @@ void resolveNegativeAppearanceChain(std::vector<core::Morpheme>& result) {
     if (na.surface != "な" || sa.surface != "さ" || sou.surface != "そう") {
       continue;
     }
-    na.pos = core::PartOfSpeech::Adjective;
-    na.extended_pos = core::ExtendedPOS::AdjStem;
-    na.lemma = "ない";
-    na.conj_type = dictionary::ConjugationType::IAdjective;
-    na.conj_form = grammar::ConjForm::Renyokei;
-    sa.pos = core::PartOfSpeech::Suffix;
-    sa.extended_pos = core::ExtendedPOS::Suffix;
-    sa.lemma = "さ";
-    sa.conj_type = dictionary::ConjugationType::None;
-    sa.conj_form = grammar::ConjForm::Base;
+    retag(na, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjStem, "ない",
+          dictionary::ConjugationType::IAdjective, grammar::ConjForm::Renyokei);
+    retag(sa, core::PartOfSpeech::Suffix, core::ExtendedPOS::Suffix, "さ", dictionary::ConjugationType::None,
+          grammar::ConjForm::Base);
     retagAppearanceSou(sou);
   }
 }
@@ -561,11 +539,8 @@ void resolveNegativeRenyokei(std::vector<core::Morpheme>& result) {
     if (follows_double_negative) {
       continue;
     }
-    negative.pos = core::PartOfSpeech::Adjective;
-    negative.extended_pos = core::ExtendedPOS::AdjRenyokei;
-    negative.lemma = "ない";
-    negative.conj_type = dictionary::ConjugationType::IAdjective;
-    negative.conj_form = grammar::ConjForm::Renyokei;
+    retag(negative, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjRenyokei, "ない",
+          dictionary::ConjugationType::IAdjective, grammar::ConjForm::Renyokei);
   }
 }
 
@@ -610,11 +585,8 @@ void resolveSimilitudeYou(std::vector<core::Morpheme>& result) {
     if (!copula_follows && (!ni_follows || renyokei_noun)) {
       continue;
     }
-    similitude.pos = core::PartOfSpeech::Auxiliary;
-    similitude.extended_pos = core::ExtendedPOS::AuxSimilitudeYou;
-    similitude.lemma = "よう";
-    similitude.conj_type = dictionary::ConjugationType::None;
-    similitude.conj_form = grammar::ConjForm::Base;
+    retag(similitude, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxSimilitudeYou, "よう",
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
     if (attributive_na_follows) {
       retagCopulaDa(result[idx + 1]);
     }

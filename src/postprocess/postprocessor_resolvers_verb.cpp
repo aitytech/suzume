@@ -171,11 +171,8 @@ void resolvePreparatoryVolitional(std::vector<core::Morpheme>& result) {
         volitional.extended_pos != core::ExtendedPOS::AuxVolitional) {
       continue;
     }
-    oku.pos = core::PartOfSpeech::Auxiliary;
-    oku.extended_pos = core::ExtendedPOS::AuxAspectOku;
-    oku.lemma = "おく";
-    oku.conj_type = dictionary::ConjugationType::GodanKa;
-    oku.conj_form = grammar::ConjForm::Mizenkei;
+    retag(oku, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxAspectOku, "おく",
+          dictionary::ConjugationType::GodanKa, grammar::ConjForm::Mizenkei);
   }
 }
 
@@ -473,16 +470,10 @@ void resolveKuruwaPoliteAru(std::vector<core::Morpheme>& result) {
         n.surface != "ん" || su.surface != "す" || su.lemma != "する") {
       continue;
     }
-    aru.pos = core::PartOfSpeech::Verb;
-    aru.extended_pos = core::ExtendedPOS::VerbRenyokei;
-    aru.lemma = "ある";
-    aru.conj_type = dictionary::ConjugationType::GodanRa;
-    aru.conj_form = grammar::ConjForm::Renyokei;
-    n.pos = core::PartOfSpeech::Auxiliary;
-    n.extended_pos = core::ExtendedPOS::AuxNegativeNu;
-    n.lemma = "ん";
-    n.conj_type = dictionary::ConjugationType::None;
-    n.conj_form = grammar::ConjForm::Base;
+    retag(aru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "ある", dictionary::ConjugationType::GodanRa,
+          grammar::ConjForm::Renyokei);
+    retag(n, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxNegativeNu, "ん", dictionary::ConjugationType::None,
+          grammar::ConjForm::Base);
   }
 }
 
@@ -499,16 +490,10 @@ void resolveParticleAruOnbin(std::vector<core::Morpheme>& result) {
         te.extended_pos != core::ExtendedPOS::AuxAspectIru) {
       continue;
     }
-    aru.pos = core::PartOfSpeech::Verb;
-    aru.extended_pos = core::ExtendedPOS::VerbOnbinkei;
-    aru.lemma = "ある";
-    aru.conj_type = dictionary::ConjugationType::GodanRa;
-    aru.conj_form = grammar::ConjForm::Onbinkei;
-    te.pos = core::PartOfSpeech::Particle;
-    te.extended_pos = core::ExtendedPOS::ParticleConj;
-    te.lemma = "て";
-    te.conj_type = dictionary::ConjugationType::None;
-    te.conj_form = grammar::ConjForm::Base;
+    retag(aru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbOnbinkei, "ある", dictionary::ConjugationType::GodanRa,
+          grammar::ConjForm::Onbinkei);
+    retag(te, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleConj, "て", dictionary::ConjugationType::None,
+          grammar::ConjForm::Base);
   }
 }
 
@@ -531,11 +516,8 @@ void resolveVerbTeParticle(std::vector<core::Morpheme>& result) {
     if (contracted_progressive_before_past) {
       continue;
     }
-    te.pos = core::PartOfSpeech::Particle;
-    te.extended_pos = core::ExtendedPOS::ParticleConj;
-    te.lemma = te.surface;
-    te.conj_type = dictionary::ConjugationType::None;
-    te.conj_form = grammar::ConjForm::Base;
+    retag(te, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleConj, te.surface,
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
   }
 }
 
@@ -594,11 +576,8 @@ void resolveCompoundAdjectiveRenyokei(std::vector<core::Morpheme>& result) {
     }
 
     if (suffix.surface == "やす") {
-      suffix.pos = core::PartOfSpeech::Auxiliary;
-      suffix.extended_pos = core::ExtendedPOS::Unknown;
-      suffix.lemma = "やす";
-      suffix.conj_type = dictionary::ConjugationType::None;
-      suffix.conj_form = grammar::ConjForm::Base;
+      retag(suffix, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::Unknown, "やす",
+            dictionary::ConjugationType::None, grammar::ConjForm::Base);
       if (idx + 3 < result.size() && isPredicativeCopula(result[idx + 3])) {
         sou.pos = core::PartOfSpeech::Adjective;
         sou.extended_pos = core::ExtendedPOS::AdjNaAdj;
@@ -606,11 +585,8 @@ void resolveCompoundAdjectiveRenyokei(std::vector<core::Morpheme>& result) {
       continue;
     }
 
-    suffix.pos = core::PartOfSpeech::Noun;
-    suffix.extended_pos = core::ExtendedPOS::Noun;
-    suffix.lemma = "にく";
-    suffix.conj_type = dictionary::ConjugationType::None;
-    suffix.conj_form = grammar::ConjForm::Base;
+    retag(suffix, core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, "にく", dictionary::ConjugationType::None,
+          grammar::ConjForm::Base);
     if (idx + 3 < result.size() && result[idx + 3].surface == "な") {
       retagAppearanceSou(sou);
       auto& na = result[idx + 3];
@@ -638,11 +614,8 @@ void resolveSahenRenyokei(std::vector<core::Morpheme>& result) {
         !completes_sahen) {
       continue;
     }
-    suru.pos = core::PartOfSpeech::Verb;
-    suru.extended_pos = core::ExtendedPOS::VerbRenyokei;
-    suru.lemma = "する";
-    suru.conj_type = dictionary::ConjugationType::Suru;
-    suru.conj_form = grammar::ConjForm::Renyokei;
+    retag(suru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "する", dictionary::ConjugationType::Suru,
+          grammar::ConjForm::Renyokei);
     if (negative_follows && following.surface == "ない") {
       retagNegativeNai(following);
     }
@@ -663,11 +636,8 @@ void resolveDemonstrativeQuotativeOnbin(std::vector<core::Morpheme>& result) {
         !grammar::isDemonstrativeUAdverb(demonstrative.surface) || verb.surface != "いっ" || !is_te_or_past) {
       continue;
     }
-    verb.pos = core::PartOfSpeech::Verb;
-    verb.extended_pos = core::ExtendedPOS::VerbOnbinkei;
-    verb.lemma = "いう";
-    verb.conj_type = dictionary::ConjugationType::GodanWa;
-    verb.conj_form = grammar::ConjForm::Onbinkei;
+    retag(verb, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbOnbinkei, "いう", dictionary::ConjugationType::GodanWa,
+          grammar::ConjForm::Onbinkei);
   }
 }
 
@@ -685,11 +655,8 @@ void resolvePoliteSuruRenyokei(std::vector<core::Morpheme>& result) {
         masu.extended_pos != core::ExtendedPOS::AuxTenseMasu) {
       continue;
     }
-    suru.pos = core::PartOfSpeech::Verb;
-    suru.extended_pos = core::ExtendedPOS::VerbRenyokei;
-    suru.lemma = "する";
-    suru.conj_type = dictionary::ConjugationType::Suru;
-    suru.conj_form = grammar::ConjForm::Renyokei;
+    retag(suru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "する", dictionary::ConjugationType::Suru,
+          grammar::ConjForm::Renyokei);
   }
 }
 
@@ -707,11 +674,8 @@ void resolveIndefiniteExistentialIru(std::vector<core::Morpheme>& result) {
         iru.extended_pos != core::ExtendedPOS::AuxAspectIru || masu.extended_pos != core::ExtendedPOS::AuxTenseMasu) {
       continue;
     }
-    iru.pos = core::PartOfSpeech::Verb;
-    iru.extended_pos = core::ExtendedPOS::VerbRenyokei;
-    iru.lemma = "いる";
-    iru.conj_type = dictionary::ConjugationType::Ichidan;
-    iru.conj_form = grammar::ConjForm::Renyokei;
+    retag(iru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "いる", dictionary::ConjugationType::Ichidan,
+          grammar::ConjForm::Renyokei);
   }
 }
 

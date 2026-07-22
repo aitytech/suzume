@@ -53,6 +53,11 @@ void retagBasicNegativeAdjective(core::Morpheme& negative) {
         dictionary::ConjugationType::IAdjective, grammar::ConjForm::Base);
 }
 
+void retagNounSurface(core::Morpheme& morpheme) {
+  retag(morpheme, core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, morpheme.surface,
+        dictionary::ConjugationType::None, grammar::ConjForm::Base);
+}
+
 // Recover a Godan dictionary form from an i-row continuative stem.  Some
 // callers intentionally preserve the lattice-provided conjugation form while
 // others require an explicit renyokei form, so that policy stays at the call

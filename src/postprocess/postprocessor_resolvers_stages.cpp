@@ -30,11 +30,8 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
     if (morpheme.pos == core::PartOfSpeech::Adjective &&
         grammar::inflection::isValidKanjiIStemException(morpheme.surface) &&
         result[idx + 1].extended_pos == core::ExtendedPOS::AuxPassive) {
-      morpheme.pos = core::PartOfSpeech::Verb;
-      morpheme.extended_pos = core::ExtendedPOS::VerbRenyokei;
-      morpheme.lemma = morpheme.surface + "る";
-      morpheme.conj_type = dictionary::ConjugationType::Ichidan;
-      morpheme.conj_form = grammar::ConjForm::Renyokei;
+      resolver::retag(morpheme, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, morpheme.surface + "る",
+                      dictionary::ConjugationType::Ichidan, grammar::ConjForm::Renyokei);
     }
   }
 
@@ -69,11 +66,8 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   if (result.size() >= 2 && utf8::equalsAny(result[0].surface, {"なり"}) &&
       result[0].extended_pos == core::ExtendedPOS::AuxClassicalNari &&
       result[1].extended_pos == core::ExtendedPOS::AuxClassicalKeri && utf8::equalsAny(result[1].surface, {"ける"})) {
-    result[0].pos = core::PartOfSpeech::Verb;
-    result[0].extended_pos = core::ExtendedPOS::VerbRenyokei;
-    result[0].lemma = "なる";
-    result[0].conj_type = dictionary::ConjugationType::GodanRa;
-    result[0].conj_form = grammar::ConjForm::Renyokei;
+    resolver::retag(result[0], core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "なる",
+                    dictionary::ConjugationType::GodanRa, grammar::ConjForm::Renyokei);
   }
 
   resolver::resolveParticleAruOnbin(result);
@@ -101,21 +95,14 @@ void resolvePostPrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   for (size_t i = 0; i + 1 < result.size(); ++i) {
     if (result[i].surface == "付け" && result[i].pos == core::PartOfSpeech::Verb && result[i + 1].surface == "で" &&
         result[i + 1].pos == core::PartOfSpeech::Particle) {
-      result[i].pos = core::PartOfSpeech::Noun;
-      result[i].extended_pos = core::ExtendedPOS::Noun;
-      result[i].lemma = result[i].surface;
-      result[i].conj_type = dictionary::ConjugationType::None;
-      result[i].conj_form = grammar::ConjForm::Base;
+      resolver::retagNounSurface(result[i]);
     }
   }
   for (size_t i = 1; i + 1 < result.size(); ++i) {
     if (result[i - 1].surface == "あり" && result[i].surface == "ん" && result[i + 1].surface == "す") {
       auto& suru = result[i + 1];
-      suru.pos = core::PartOfSpeech::Verb;
-      suru.extended_pos = core::ExtendedPOS::VerbShuushikei;
-      suru.lemma = "する";
-      suru.conj_type = dictionary::ConjugationType::Suru;
-      suru.conj_form = grammar::ConjForm::Base;
+      resolver::retag(suru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "する",
+                      dictionary::ConjugationType::Suru, grammar::ConjForm::Base);
     }
   }
 
@@ -182,11 +169,8 @@ void resolvePostPrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
     if (result[i].pos == core::PartOfSpeech::Verb && result[i].extended_pos == core::ExtendedPOS::VerbRenyokei &&
         ((resolver::isCompoundRenyokeiShape(result[i].surface) && direct_nominal_context) ||
          parallel_nominal_context)) {
-      result[i].pos = core::PartOfSpeech::Noun;
-      result[i].extended_pos = core::ExtendedPOS::NounVerbal;
-      result[i].lemma = result[i].surface;
-      result[i].conj_type = dictionary::ConjugationType::None;
-      result[i].conj_form = grammar::ConjForm::Base;
+      resolver::retag(result[i], core::PartOfSpeech::Noun, core::ExtendedPOS::NounVerbal, result[i].surface,
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
     }
   }
 }
@@ -353,17 +337,11 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
                                previous.pos == core::PartOfSpeech::Auxiliary;
     if (final_context) {
       if (stacked_particles) {
-        previous.pos = core::PartOfSpeech::Particle;
-        previous.extended_pos = core::ExtendedPOS::ParticleFinal;
-        previous.lemma = previous.surface;
-        previous.conj_type = dictionary::ConjugationType::None;
-        previous.conj_form = grammar::ConjForm::Base;
+        resolver::retag(previous, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleFinal, previous.surface,
+                        dictionary::ConjugationType::None, grammar::ConjForm::Base);
       }
-      final_ne.pos = core::PartOfSpeech::Particle;
-      final_ne.extended_pos = core::ExtendedPOS::ParticleFinal;
-      final_ne.lemma = "ね";
-      final_ne.conj_type = dictionary::ConjugationType::None;
-      final_ne.conj_form = grammar::ConjForm::Base;
+      resolver::retag(final_ne, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleFinal, "ね",
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
     }
   }
 
@@ -391,11 +369,8 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
   }
   if (result.size() >= 2 && result[0].surface == "どう" && result[0].pos == core::PartOfSpeech::Adverb &&
       result[1].extended_pos == core::ExtendedPOS::ParticleCase && result[1].surface == "に") {
-    result[0].pos = core::PartOfSpeech::Adjective;
-    result[0].extended_pos = core::ExtendedPOS::AdjNaAdj;
-    result[0].lemma = "どう";
-    result[0].conj_type = dictionary::ConjugationType::None;
-    result[0].conj_form = grammar::ConjForm::Base;
+    resolver::retag(result[0], core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjNaAdj, "どう",
+                    dictionary::ConjugationType::None, grammar::ConjForm::Base);
   }
   for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
     if (result[idx].surface == "どう" && result[idx + 1].surface == "か") {
@@ -414,11 +389,7 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
     }
     resolver::retagAppearanceSou(sou);
     resolver::retagCopulaDa(na);
-    noun.pos = core::PartOfSpeech::Noun;
-    noun.extended_pos = core::ExtendedPOS::Noun;
-    noun.lemma = noun.surface;
-    noun.conj_type = dictionary::ConjugationType::None;
-    noun.conj_form = grammar::ConjForm::Base;
+    resolver::retagNounSurface(noun);
   }
 
   // A one-kanji Ichidan stem has the same visible form before the negative
@@ -458,8 +429,7 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
     auto& head = result[idx];
     const auto& quantity = result[idx + 1];
     if (head.pos == core::PartOfSpeech::Other && quantity.extended_pos == core::ExtendedPOS::NounNumber) {
-      resolver::retag(head, core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, head.surface,
-                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+      resolver::retagNounSurface(head);
     }
   }
 

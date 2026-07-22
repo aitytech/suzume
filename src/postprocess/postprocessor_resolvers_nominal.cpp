@@ -24,11 +24,8 @@ void resolveDurationPredicateKakaru(std::vector<core::Morpheme>& result) {
         kakaru.surface != "かかる" || kakaru.pos != core::PartOfSpeech::Determiner) {
       continue;
     }
-    kakaru.pos = core::PartOfSpeech::Verb;
-    kakaru.extended_pos = core::ExtendedPOS::VerbShuushikei;
-    kakaru.lemma = "かかる";
-    kakaru.conj_type = dictionary::ConjugationType::GodanRa;
-    kakaru.conj_form = grammar::ConjForm::Base;
+    retag(kakaru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "かかる",
+          dictionary::ConjugationType::GodanRa, grammar::ConjForm::Base);
   }
 }
 
@@ -153,19 +150,13 @@ void resolveNominalCaseDe(std::vector<core::Morpheme>& result) {
       }
       if (successor != nullptr && successor->surface == "ござる") {
         auto& gozaru = *successor;
-        gozaru.pos = core::PartOfSpeech::Auxiliary;
-        gozaru.extended_pos = core::ExtendedPOS::AuxGozaru;
-        gozaru.lemma = "ござる";
-        gozaru.conj_type = dictionary::ConjugationType::GodanRa;
-        gozaru.conj_form = grammar::ConjForm::Base;
+        retag(gozaru, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxGozaru, "ござる",
+              dictionary::ConjugationType::GodanRa, grammar::ConjForm::Base);
       }
       continue;
     }
-    de.pos = core::PartOfSpeech::Particle;
-    de.extended_pos = core::ExtendedPOS::ParticleCase;
-    de.lemma = "で";
-    de.conj_type = dictionary::ConjugationType::None;
-    de.conj_form = grammar::ConjForm::Base;
+    retag(de, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleCase, "で", dictionary::ConjugationType::None,
+          grammar::ConjForm::Base);
   }
 }
 
@@ -205,11 +196,8 @@ void resolveNominalConditionalNara(std::vector<core::Morpheme>& result) {
         nara.extended_pos != core::ExtendedPOS::VerbMizenkei || obligation_chain) {
       continue;
     }
-    nara.pos = core::PartOfSpeech::Particle;
-    nara.extended_pos = core::ExtendedPOS::ParticleConj;
-    nara.lemma = "なら";
-    nara.conj_type = dictionary::ConjugationType::None;
-    nara.conj_form = grammar::ConjForm::Base;
+    retag(nara, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleConj, "なら",
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
   }
 }
 
@@ -226,11 +214,8 @@ void resolveNominalDeAru(std::vector<core::Morpheme>& result) {
         tense.extended_pos != core::ExtendedPOS::AuxTenseTa) {
       continue;
     }
-    aru.pos = core::PartOfSpeech::Verb;
-    aru.extended_pos = core::ExtendedPOS::VerbOnbinkei;
-    aru.lemma = "ある";
-    aru.conj_type = dictionary::ConjugationType::GodanRa;
-    aru.conj_form = grammar::ConjForm::Onbinkei;
+    retag(aru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbOnbinkei, "ある", dictionary::ConjugationType::GodanRa,
+          grammar::ConjForm::Onbinkei);
   }
 }
 
@@ -251,11 +236,8 @@ void resolveComparisonNoun(std::vector<core::Morpheme>& result) {
     if (morpheme.surface != "以上") {
       continue;
     }
-    morpheme.pos = core::PartOfSpeech::Noun;
-    morpheme.extended_pos = core::ExtendedPOS::Noun;
-    morpheme.lemma = "以上";
-    morpheme.conj_type = dictionary::ConjugationType::None;
-    morpheme.conj_form = grammar::ConjForm::Base;
+    retag(morpheme, core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, "以上", dictionary::ConjugationType::None,
+          grammar::ConjForm::Base);
   }
 }
 
@@ -273,18 +255,12 @@ void resolveGozaruPoliteAuxiliary(std::vector<core::Morpheme>& result) {
     const bool lexical_existence = idx == 0 || (result[idx - 1].surface == "に" &&
                                                 result[idx - 1].extended_pos == core::ExtendedPOS::ParticleCase);
     if (lexical_existence) {
-      gozai.pos = core::PartOfSpeech::Verb;
-      gozai.extended_pos = core::ExtendedPOS::VerbRenyokei;
-      gozai.lemma = "ござる";
-      gozai.conj_type = dictionary::ConjugationType::GodanRa;
-      gozai.conj_form = grammar::ConjForm::Renyokei;
+      retag(gozai, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "ござる",
+            dictionary::ConjugationType::GodanRa, grammar::ConjForm::Renyokei);
       continue;
     }
-    gozai.pos = core::PartOfSpeech::Auxiliary;
-    gozai.extended_pos = core::ExtendedPOS::AuxGozaru;
-    gozai.lemma = "ござる";
-    gozai.conj_type = dictionary::ConjugationType::None;
-    gozai.conj_form = grammar::ConjForm::Base;
+    retag(gozai, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxGozaru, "ござる",
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
   }
 }
 
@@ -301,11 +277,8 @@ void resolveAdjectiveNominalizerSa(std::vector<core::Morpheme>& result) {
     if (idx + 1 < result.size() && result[idx + 1].extended_pos == core::ExtendedPOS::AuxPassive) {
       continue;
     }
-    suffix.pos = core::PartOfSpeech::Suffix;
-    suffix.extended_pos = core::ExtendedPOS::Suffix;
-    suffix.lemma = "さ";
-    suffix.conj_type = dictionary::ConjugationType::None;
-    suffix.conj_form = grammar::ConjForm::Base;
+    retag(suffix, core::PartOfSpeech::Suffix, core::ExtendedPOS::Suffix, "さ", dictionary::ConjugationType::None,
+          grammar::ConjForm::Base);
     if (idx + 1 < result.size() && result[idx + 1].surface == "そう") {
       auto& sou = result[idx + 1];
       retagAppearanceSou(sou);
@@ -366,11 +339,7 @@ void resolveNominalizedRenyokeiPredicate(std::vector<core::Morpheme>& result) {
                                    stem.extended_pos == core::ExtendedPOS::VerbMeireikei)) ||
          (next.surface == "から" && stem.extended_pos == core::ExtendedPOS::VerbMeireikei));
     if (case_forces_nominal) {
-      stem.pos = core::PartOfSpeech::Noun;
-      stem.extended_pos = core::ExtendedPOS::Noun;
-      stem.lemma = stem.surface;
-      stem.conj_type = dictionary::ConjugationType::None;
-      stem.conj_form = grammar::ConjForm::Base;
+      retagNounSurface(stem);
       continue;
     }
 
@@ -403,11 +372,7 @@ void resolveNominalizedRenyokeiPredicate(std::vector<core::Morpheme>& result) {
       continue;
     }
 
-    stem.pos = core::PartOfSpeech::Noun;
-    stem.extended_pos = core::ExtendedPOS::Noun;
-    stem.lemma = stem.surface;
-    stem.conj_type = dictionary::ConjugationType::None;
-    stem.conj_form = grammar::ConjForm::Base;
+    retagNounSurface(stem);
   }
 }
 
