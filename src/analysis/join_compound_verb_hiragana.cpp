@@ -9,6 +9,85 @@ namespace suzume::analysis {
 
 using namespace compound_verb_detail;
 
+namespace {
+
+// A particle-like first mora normally owns the boundary (も+上がる).  The
+// narrow exception is a complete V1+V2 onbin construction whose two verbs are
+// independently evidenced: an exact Ichidan V1 analysis and a dictionary-
+// attested closed V2 followed by its promised た/て form.  Returning the split
+// position lets both particle guards use the same proof instead of weakening
+// particle handling for an entire word or lemma.
+size_t findParticleInitialClosedOnbinSplit(std::string_view text, const std::vector<char32_t>& codepoints,
+                                           const ByteOffsets& byte_offsets, size_t start_pos,
+                                           const std::vector<normalize::CharType>& char_types,
+                                           const dictionary::DictionaryManager& dict_manager,
+                                           const grammar::Inflection& inflection, bool has_left_predicate_boundary) {
+  if (!has_left_predicate_boundary || start_pos >= codepoints.size()) {
+    return codepoints.size();
+  }
+
+  const std::string first_surface = extractSubstring(codepoints, start_pos, start_pos + 1);
+  if (dict_manager.lookupExact(first_surface, core::PartOfSpeech::Particle) == nullptr) {
+    return codepoints.size();
+  }
+
+  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  for (size_t v1_len = 3; v1_len <= 4; ++v1_len) {
+    const size_t v2_start = start_pos + v1_len;
+    if (v2_start >= codepoints.size()) {
+      break;
+    }
+    bool all_hiragana = true;
+    for (size_t pos = start_pos; pos < v2_start; ++pos) {
+      if (char_types[pos] != CharType::Hiragana) {
+        all_hiragana = false;
+        break;
+      }
+    }
+    if (!all_hiragana || !grammar::isERowCodepoint(codepoints[v2_start - 1])) {
+      continue;
+    }
+
+    const size_t v2_start_byte = byteOffsetAt(byte_offsets, v2_start);
+    const std::string_view v1_surface = text.substr(start_byte, v2_start_byte - start_byte);
+    if (verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, v1_surface)) {
+      continue;
+    }
+    const std::string v1_base = std::string(v1_surface) + "る";
+    bool has_exact_ichidan = false;
+    for (const auto& analysis : inflection.analyze(v1_surface)) {
+      if (analysis.verb_type == grammar::VerbType::Ichidan && analysis.base_form == v1_base &&
+          analysis.confidence >= candidate::verb_cost::kClosedOnbinCompoundV1MinConfidence) {
+        has_exact_ichidan = true;
+        break;
+      }
+    }
+    if (!has_exact_ichidan) {
+      continue;
+    }
+
+    for (const auto& v2_verb : subsidiaryVerbs()) {
+      if (!v2_verb.joins_general || v2_verb.reading == nullptr || v2_verb.verb_type != V2VerbType::Godan ||
+          dict_manager.lookupExact(v2_verb.reading, core::PartOfSpeech::Verb) == nullptr) {
+        continue;
+      }
+      const auto [te_stem, uses_de] = generateTeFormStem(v2_verb.reading, "", v2_verb.verb_type, v2_verb.base_ending);
+      if (te_stem.size() <= core::kJapaneseCharBytes ||
+          v2_start_byte + te_stem.size() + core::kJapaneseCharBytes > text.size() ||
+          text.substr(v2_start_byte, te_stem.size()) != te_stem) {
+        continue;
+      }
+      const std::string_view next = text.substr(v2_start_byte + te_stem.size(), core::kJapaneseCharBytes);
+      if (uses_de ? (next == "で" || next == "だ") : (next == "て" || next == "た")) {
+        return v2_start;
+      }
+    }
+  }
+  return codepoints.size();
+}
+
+}  // namespace
+
 void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text,
                                            const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                            size_t start_pos, const std::vector<normalize::CharType>& char_types,
@@ -23,8 +102,23 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
     return;
   }
 
-  if (verb_helpers::startsInsideDictionaryParticle(codepoints, start_pos, &dict_manager) ||
-      verb_helpers::startsWithMultiMoraDictionaryParticle(codepoints, start_pos, &dict_manager)) {
+  // The irregular サ変 continuative し may begin a hiragana compound at a
+  // real boundary (し続ける). Directly after kanji, however, starting at し
+  // would begin inside the preceding predicate's okurigana and fabricate a
+  // competing suffix compound (押し下げ -> 押 + し下げ). The kanji-starting
+  // compound generator owns the complete span in that context.
+  if (codepoints[start_pos] == U'し' && start_pos > 0 && char_types[start_pos - 1] == CharType::Kanji) {
+    return;
+  }
+
+  const bool has_left_predicate_boundary = start_pos == 0 ||
+                                           normalize::classifyChar(codepoints[start_pos - 1]) == CharType::Symbol ||
+                                           normalize::isExtendedParticle(codepoints[start_pos - 1]);
+  const size_t particle_initial_onbin_split = findParticleInitialClosedOnbinSplit(
+      text, codepoints, byte_offsets, start_pos, char_types, dict_manager, inflection, has_left_predicate_boundary);
+  if ((verb_helpers::startsInsideDictionaryParticle(codepoints, start_pos, &dict_manager) ||
+       verb_helpers::startsWithMultiMoraDictionaryParticle(codepoints, start_pos, &dict_manager)) &&
+      particle_initial_onbin_split == codepoints.size()) {
     return;
   }
 
@@ -139,19 +233,33 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       // and the single-char で stem of 出る is particle-ambiguous.
       bool matched_v2_te_stem = false;
       if (matched_v2_len == 0 && v2_verb.verb_type == V2VerbType::Godan) {
-        auto [v2_te_stem, v2_te_uses_de] =
-            generateTeFormStem(v2_surface, v2_reading, v2_verb.verb_type, v2_verb.base_ending);
-        if (v2_te_stem.size() > core::kJapaneseCharBytes &&
-            v2_start_byte + v2_te_stem.size() + core::kJapaneseCharBytes <= text.size() &&
-            text.substr(v2_start_byte, v2_te_stem.size()) == v2_te_stem) {
-          std::string_view next_char = text.substr(v2_start_byte + v2_te_stem.size(), core::kJapaneseCharBytes);
-          bool next_matches_te_form =
-              v2_te_uses_de ? (next_char == "で" || next_char == "だ") : (next_char == "て" || next_char == "た");
-          if (next_matches_te_form) {
-            matched_v2_len = v2_te_stem.size();
-            matched_v2_te_stem = true;
-            matched_v2_via_reading = true;
+        const auto match_te_stem = [&](std::string_view stem, bool uses_de, bool via_reading) {
+          if (stem.size() <= core::kJapaneseCharBytes ||
+              v2_start_byte + stem.size() + core::kJapaneseCharBytes > text.size() ||
+              text.substr(v2_start_byte, stem.size()) != stem) {
+            return false;
           }
+          const std::string_view next_char = text.substr(v2_start_byte + stem.size(), core::kJapaneseCharBytes);
+          const bool next_matches_te_form =
+              uses_de ? (next_char == "で" || next_char == "だ") : (next_char == "て" || next_char == "た");
+          if (!next_matches_te_form) {
+            return false;
+          }
+          matched_v2_len = stem.size();
+          matched_v2_te_stem = true;
+          matched_v2_via_reading = via_reading;
+          return true;
+        };
+
+        // Generate the written stem and the reading stem independently. Using
+        // only the reading turns 着く into つい and misses the productive mixed-
+        // script form たどり着い+た; all-hiragana compounds still use つい+た.
+        const auto [surface_te_stem, surface_te_uses_de] =
+            generateTeFormStem(v2_surface, "", v2_verb.verb_type, v2_verb.base_ending);
+        if (!match_te_stem(surface_te_stem, surface_te_uses_de, false)) {
+          const auto [reading_te_stem, reading_te_uses_de] =
+              generateTeFormStem(v2_reading, "", v2_verb.verb_type, v2_verb.base_ending);
+          match_te_stem(reading_te_stem, reading_te_uses_de, true);
         }
       }
 
@@ -162,15 +270,25 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       // Extract V1 portion and determine its base form
       std::string_view v1_surface = text.substr(start_byte, v2_start_byte - start_byte);
 
+      // V2 entries can opt out of joining the independent サ変 continuative
+      // (提出+し+忘れる), while remaining available for lexical compounds
+      // with ordinary V1 stems (置き忘れる, 言い忘れる).
+      if (grammar::isSuruRenyokeiSurface(v1_surface) && !v2_verb.joins_suru) {
+        continue;
+      }
+
       // Skip V1 starting with case/binding particles (not や/か/と which can be verb stems)
       // E.g., をかきたてる should be を + かきたてる, not をかく + 立てる
       // But やり直す (やる), かき回す (かく), とりあげる (とる) should match
       // Note: と excluded from filter because とる is a common V1 verb,
       // and V1 minimum length of 2 chars prevents particle と (1 char) from matching
       char32_t first_char = codepoints[start_pos];
+      const bool closed_onbin_compound_context = matched_v2_te_stem && has_left_predicate_boundary;
       if (first_char == U'を' || first_char == U'が' || first_char == U'は' || first_char == U'に' ||
           first_char == U'で' || first_char == U'へ' || first_char == U'の' || first_char == U'も') {
-        continue;
+        if (!(closed_onbin_compound_context && v2_start == particle_initial_onbin_split)) {
+          continue;
+        }
       }
 
       // Get the last character of V1 to determine verb type
@@ -239,8 +357,13 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
       // Fallback: use inflection analysis for unknown V1 verbs
       if (!v1_verified) {
         auto infl_result = inflection.getBest(std::string(v1_surface));
+        const bool normally_verified = infl_result.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence;
+        const bool closed_onbin_verified =
+            closed_onbin_compound_context && is_ichidan && grammar::isERowCodepoint(last_char) &&
+            infl_result.confidence >= candidate::verb_cost::kClosedOnbinCompoundV1MinConfidence &&
+            !verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, v1_surface);
 
-        if (infl_result.confidence >= 0.5F && infl_result.base_form == v1_base) {
+        if ((normally_verified || closed_onbin_verified) && infl_result.base_form == v1_base) {
           v1_verified = true;
         }
       }
@@ -315,8 +438,8 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
         // e.g., とりあげ (from とりあげる) for とりあげない
         lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
                         core::PartOfSpeech::Verb, final_cost, flags, compound_base, compound_conj_type,
-                        core::CandidateOrigin::Unknown, 0.0F, "hira_compound_renyokei", core::ExtendedPOS::VerbRenyokei,
-                        "hira_compound_renyokei");
+                        core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "hira_compound_renyokei",
+                        core::ExtendedPOS::VerbRenyokei, "hira_compound_renyokei");
         if (beginsNominalForcingParticle(codepoints, compound_end_pos, dict_manager)) {
           const float noun_cost = scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus;
           lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),

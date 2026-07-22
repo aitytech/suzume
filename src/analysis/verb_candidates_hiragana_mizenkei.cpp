@@ -40,7 +40,9 @@ bool endsWithParticleAfterVerb(const dictionary::DictionaryManager* dict_manager
     size_t split = start_pos + prefix_len;
     std::string suffix = extractSubstring(codepoints, split, end_pos);
     const dictionary::DictionaryEntry* suffix_entry = dict_manager->lookupExact(suffix);
-    if (suffix_entry == nullptr || suffix_entry->extended_pos != core::ExtendedPOS::ParticleBinding) {
+    if (suffix_entry == nullptr || suffix_entry->pos != core::PartOfSpeech::Particle ||
+        (suffix_entry->extended_pos != core::ExtendedPOS::ParticleBinding &&
+         suffix_entry->extended_pos != core::ExtendedPOS::ParticleAdverbial)) {
       continue;
     }
     if (prefix_len == 1) {
@@ -274,14 +276,33 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
     // For pure hiragana like いる, check the dictionary
     bool is_valid_ichidan = vh::isVerbInDictionary(dict_manager, base_form);
 
+    // The complete passive form is stronger evidence than the ambiguous bare
+    // base. A long unknown hiragana stem may have a low-confidence Ichidan
+    // reading by itself (たくわえる), while stem+られる still traces back to
+    // that exact stem and lemma. Project that observed analysis instead of
+    // selecting only the highest-scoring homographic Godan interpretation.
+    if (!is_valid_ichidan && normalize::utf8Length(stem) >= 3) {
+      const std::string observed_surface = extractSubstring(codepoints, start_pos, hiragana_end);
+      for (const auto& observed : inflection.analyze(observed_surface)) {
+        if (observed.verb_type == grammar::VerbType::Ichidan && observed.base_form == base_form &&
+            observed.stem == stem && utf8::startsWith(observed.suffix, "られ")) {
+          is_valid_ichidan = true;
+          break;
+        }
+      }
+    }
+
     // Special case: common hiragana ichidan verbs (いる, おきる, みる, etc.)
     // These may not always be in the L2 dictionary but are valid
     if (!is_valid_ichidan) {
       // Check if inflection analysis recognizes base_form as ichidan
       const auto& analysis = inflection.analyze(base_form);
-      if (!analysis.empty() && analysis[0].verb_type == grammar::VerbType::Ichidan &&
-          analysis[0].confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) {
-        is_valid_ichidan = true;
+      for (const auto& inflected : analysis) {
+        if (inflected.verb_type == grammar::VerbType::Ichidan && inflected.base_form == base_form &&
+            inflected.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) {
+          is_valid_ichidan = true;
+          break;
+        }
       }
     }
 

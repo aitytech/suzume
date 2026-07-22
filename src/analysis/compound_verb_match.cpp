@@ -22,8 +22,8 @@ bool beginsMizenkeiAuxiliary(std::string_view text, size_t start_byte, std::stri
     return false;
   }
   const std::string_view suffix = text.substr(start_byte + mizenkei.size());
-  const std::string_view following = suffix.substr(0, core::kJapaneseCharBytes);
-  if (following == "れ" || following == "せ" || following == "な" || following == "ず") {
+  size_t following_pos = start_byte + mizenkei.size();
+  if (isMizenkeiAuxiliaryStarter(normalize::decodeUtf8(text, following_pos))) {
     return true;
   }
 
@@ -47,6 +47,23 @@ bool isCompoundVerbOrNominalizationAttested(const dictionary::DictionaryManager&
   }
   const std::string nominalized = generateRenyokei(base, "", verb_type);
   return !nominalized.empty() && dict_manager.lookupExact(nominalized, core::PartOfSpeech::Noun) != nullptr;
+}
+
+bool startsInsideRegisteredNoun(std::string_view text, const ByteOffsets& byte_offsets, size_t start_pos,
+                                const dictionary::DictionaryManager& dict_manager) {
+  if (start_pos == 0) {
+    return false;
+  }
+  const size_t scan_start = start_pos > 8 ? start_pos - 8 : 0;
+  for (size_t noun_start = scan_start; noun_start < start_pos; ++noun_start) {
+    for (const auto& result : dict_manager.lookup(text, byteOffsetAt(byte_offsets, noun_start))) {
+      if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun &&
+          noun_start + result.length > start_pos) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 }  // namespace
@@ -459,6 +476,9 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // inflection-only V1 in that position can instead fabricate a compound
     // across the noun/verb boundary (生+涯忘れる).
     const bool starts_inside_kanji_run = start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]);
+    if (starts_inside_kanji_run && startsInsideRegisteredNoun(text, byte_offsets, start_pos, dict_manager)) {
+      continue;
+    }
     if (starts_inside_kanji_run && !v1.dict_verified && !dict_compound_v1) {
       continue;
     }
@@ -486,8 +506,13 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
 
       // Check if full surface could be an i-adjective
       auto full_infl = inflection.getBest(full_surface);
-      if (full_infl.confidence >= 0.5F && full_infl.verb_type == grammar::VerbType::IAdjective) {
-        // Full surface is likely an adjective, skip compound verb
+      if (full_infl.confidence >= 0.5F && full_infl.verb_type == grammar::VerbType::IAdjective && !v1.dict_verified &&
+          !dict_compound_v1) {
+        // With no independently verified V1, the whole adjective analysis is
+        // stronger evidence (美しかった). A dictionary-backed continuative V1
+        // followed by an allowed V2 remains a productive compound even when
+        // the inflection analyzer fabricates an i-adjective homograph from its
+        // shared かった ending (差し掛かった).
         continue;
       }
     }
@@ -499,13 +524,16 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     std::string compound_base;
     size_t v1_renyokei_end = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end + 1);
     compound_base = std::string(text.substr(start_byte, v1_renyokei_end - start_byte));
+    std::string compound_source_base = compound_base;
     const bool v2_is_hiragana = char_types[v2_start] == CharType::Hiragana;
     if (matched_potential) {
       std::string potential = generateGodanPotential(v2_surface, "", v2_verb.verb_type);
       compound_base +=
           v2_is_hiragana && !v2_reading.empty() ? generateGodanPotential(v2_reading, "", v2_verb.verb_type) : potential;
+      compound_source_base += v2_is_hiragana && !v2_reading.empty() ? v2_reading : v2_surface;
     } else {
       compound_base += v2_is_hiragana && !v2_reading.empty() ? v2_reading : v2_surface;
+      compound_source_base = compound_base;
     }
 
     // Compare with best match and update if this is better
@@ -584,6 +612,7 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     if (should_update) {
       best_match.matched_len = matched_len;
       best_match.compound_base = compound_base;
+      best_match.compound_source_base = compound_source_base;
       best_match.is_renyokei = is_renyokei_entry && (matched_kanji || matched_reading);
       best_match.renyokei_form = matched_renyokei;
       best_match.is_mizenkei = matched_mizenkei;

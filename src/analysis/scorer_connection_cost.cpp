@@ -29,10 +29,25 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
   // AuxAspectIru requires a te-form; regional ておる / でおる contractions
   // are the productive direct-attachment exception.
   const bool is_dialectal_oru_contraction = grammar::isDialectalOruContractionLemma(next.lemma);
-  if (next.extended_pos == core::ExtendedPOS::AuxAspectIru && !grammar::isContractedProgressiveSurface(next.surface) &&
+  const bool invalid_aspect_iru_attachment =
+      next.extended_pos == core::ExtendedPOS::AuxAspectIru && !grammar::isContractedProgressiveSurface(next.surface) &&
       !is_dialectal_oru_contraction &&
       (prev.extended_pos == core::ExtendedPOS::ParticleConj || prev.extended_pos == core::ExtendedPOS::VerbRenyokei) &&
-      !grammar::isTeDeSurface(prev.surface)) {
+      !grammar::isTeDeSurface(prev.surface);
+  // The directional aspect auxiliary いく likewise requires the connective
+  // て/で.  A generic ParticleConj→AuxAspectIku bonus must not license an
+  // unrelated connective such as し followed by the one-mora verb homograph
+  // く inside an adjective.
+  const bool invalid_aspect_iku_attachment = prev.extended_pos == core::ExtendedPOS::ParticleConj &&
+                                             next.extended_pos == core::ExtendedPOS::AuxAspectIku &&
+                                             !grammar::isTeDeSurface(prev.surface);
+  // A one-mora potential auxiliary is a nonterminal stem.  Before punctuation
+  // it is usually the tail of a complete lexical renyokei (踏まえ、), not an
+  // independent auxiliary following a fabricated mizenkei (踏ま+え、).
+  const bool incomplete_potential_before_symbol = prev.extended_pos == core::ExtendedPOS::AuxPotential &&
+                                                  normalize::utf8Length(prev.surface) == 1 &&
+                                                  next.extended_pos == core::ExtendedPOS::Symbol;
+  if (invalid_aspect_iru_attachment || invalid_aspect_iku_attachment || incomplete_potential_before_symbol) {
     bonus += cost::kAlmostNever;
   }
   if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
@@ -86,8 +101,15 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
       grammar::containsKanji(next.surface)) {
     bonus += cost::kStrong;
   }
-  if (prev.extended_pos == core::ExtendedPOS::NounFormal && next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
-      normalize::utf8Length(next.surface) >= 2) {
+  // Binding particles productively follow the connective て/で (読んで+さえ,
+  // 見て+こそ). Other ParticleConj homographs do not inherit the bonus.
+  const bool te_de_before_binding = prev.extended_pos == core::ExtendedPOS::ParticleConj &&
+                                    next.extended_pos == core::ExtendedPOS::ParticleBinding &&
+                                    grammar::isTeDeSurface(prev.surface);
+  const bool formal_noun_before_mizenkei = prev.extended_pos == core::ExtendedPOS::NounFormal &&
+                                           next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
+                                           normalize::utf8Length(next.surface) >= 2;
+  if (te_de_before_binding || formal_noun_before_mizenkei) {
     bonus += cost::kVeryStrongBonus;
   }
 
@@ -99,13 +121,20 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
 
   // Keep the colloquial sa-row contract, duration-counter predicate, and
   // generated past-marked noun guards separate from ordinary lexical edges.
-  if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && utf8::endsWith(prev.surface, "しゃ") &&
-      next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.lemma == "する") {
-    bonus += cost::kStrongBonus;
-  }
+  const bool colloquial_sa_row_boundary = prev.extended_pos == core::ExtendedPOS::VerbMizenkei &&
+                                          utf8::endsWith(prev.surface, "しゃ") &&
+                                          next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.lemma == "する";
   if (prev.extended_pos == core::ExtendedPOS::NounNumber && prev.origin == core::CandidateOrigin::Counter &&
       utf8::endsWith(prev.surface, "間") && next.pos == core::PartOfSpeech::Verb) {
     bonus += cost::kModerateBonus;
+  }
+  const bool generated_nominal_before_particle =
+      prev.pos == core::PartOfSpeech::Noun && prev.origin == core::CandidateOrigin::KanjiHiraganaNominalCompound &&
+      next.pos == core::PartOfSpeech::Particle &&
+      (next.extended_pos == core::ExtendedPOS::ParticleCase || next.extended_pos == core::ExtendedPOS::ParticleTopic ||
+       next.extended_pos == core::ExtendedPOS::ParticleNo);
+  if (colloquial_sa_row_boundary || generated_nominal_before_particle) {
+    bonus += cost::kStrongBonus;
   }
   if (next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun &&
       prev.origin == core::CandidateOrigin::KanjiHiraganaCompound &&
@@ -126,7 +155,12 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // This pair adds to its existing static BigramTable bonus, so it cannot be
   // represented as a replacement table entry without changing the total.
   float surface_bonus = 0.0F;
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxExcessive) {
+  const bool renyokei_before_excessive =
+      prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxExcessive;
+  const bool na_adjective_before_adverbial_ni = prev.extended_pos == core::ExtendedPOS::AdjNaAdj &&
+                                                next.extended_pos == core::ExtendedPOS::ParticleCase &&
+                                                grammar::isSingleHiragana(next.surface, U'に');
+  if (renyokei_before_excessive || na_adjective_before_adverbial_ni) {
     surface_bonus = cost::kVeryStrongBonus;
   }
 
@@ -176,8 +210,21 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // particle で. This otherwise lets た+で+す outrank the closed-class polite
   // copula た+です because the general past→conjunction bonus is intentionally
   // strong for forms such as たものの.
-  if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && next.extended_pos == core::ExtendedPOS::ParticleConj &&
-      utf8::equalsAny(next.surface, {"で"})) {
+  bool invalid_closed_conjunctive = prev.extended_pos == core::ExtendedPOS::AuxTenseTa &&
+                                    next.extended_pos == core::ExtendedPOS::ParticleConj &&
+                                    utf8::equalsAny(next.surface, {"で"});
+
+  // The polite auxiliary has only two productive conjunctive continuations:
+  // まし+て and the literary conditional ますれ+ば.  The POS-level bigram is
+  // deliberately strong for those forms, so reject homographic particles in
+  // every other surface pairing (ございます+でしょ must not become
+  // ございます+で+しょう).
+  if (prev.extended_pos == core::ExtendedPOS::AuxTenseMasu && next.extended_pos == core::ExtendedPOS::ParticleConj) {
+    const bool polite_te = utf8::equalsAny(prev.surface, {"まし"}) && utf8::equalsAny(next.surface, {"て"});
+    const bool polite_conditional = utf8::equalsAny(prev.surface, {"ますれ"}) && utf8::equalsAny(next.surface, {"ば"});
+    invalid_closed_conjunctive = invalid_closed_conjunctive || (!polite_te && !polite_conditional);
+  }
+  if (invalid_closed_conjunctive) {
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -233,7 +280,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       prev.surface.size() <= 9 &&  // ≤3 hiragana chars (9 bytes)
       next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
       !(prev.extended_pos == core::ExtendedPOS::VerbMizenkei && prev.lemma == "する") && prev.lemma != "ある" &&
-      !utf8::equalsAny(next.surface, {"ん", "ぬ", "ざる", "ざれ", "ね"})) {
+      prev.lemma != "なる" && !utf8::equalsAny(next.surface, {"ん", "ぬ", "ざる", "ざれ", "ね"})) {
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -270,7 +317,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       is_ichidan_causative = verb_helpers::isSingleKanjiIchidanSurface(prev.surface);
     }
     if (!is_ichidan_causative) {
-      surface_bonus += cost::kVeryRare;
+      surface_bonus += cost::kSevere;
     }
   }
 

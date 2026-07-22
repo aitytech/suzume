@@ -66,7 +66,10 @@ constexpr float kBonusCompoundParticle = -3.2F;
 constexpr float kBonusMitaiDict = -1.0F;
 
 // Bonus for hiragana+kanji mixed nouns from dictionary (なし崩し, みじん切り, お茶)
-constexpr float kBonusMixedNoun = -0.5F;
+constexpr float kBonusMixedNoun = -2.5F;
+// Closed two-mora adverbial particles such as だけ must outrank the
+// accidental copula+final-particle path (だ+け).
+constexpr float kBonusTwoMoraAdverbialParticle = -2.0F;
 
 // Length-scaled bonus for long mixed nouns (4+ chars, e.g. お兄ちゃん, お父さん)
 // Split paths accumulate PREFIX→NOUN→SUFFIX connection bonuses (~-1.7 advantage)
@@ -84,6 +87,13 @@ constexpr float kBonusLongSuffix = -1.5F;
 
 // Bonus for short hiragana verbs from dictionary (なる, ある, いる, する)
 constexpr float kBonusShortHiraganaVerb = -0.3F;
+// A verified multi-mora dictionary verb must retain its lexical search unit
+// against accidental internal function-word and renyokei paths.  Scale by
+// length because every extra internal boundary can otherwise add a bonus.
+constexpr float kBonusLongDictionaryVerbBase = -2.0F;
+constexpr float kBonusLongDictionaryVerbPerChar = -0.35F;
+constexpr float kBonusLongDictionaryPotentialStem = -2.0F;
+constexpr float kBonusLongDictionaryVerb = -1.0F;
 
 // A pure-hiragana sokuonbin stem of this length has enough lexical evidence
 // to attach its following te-form particle without reopening a shorter stem.
@@ -98,6 +108,7 @@ constexpr float kPenaltySpuriousVerbRenyokei = scale::kStrong;
 // ordinary kanji stems, an 音便 surface leaves too little evidence to license
 // this fallback without lexical support.
 constexpr float kPenaltySpuriousKanjiOnbin = scale::kSevere;
+constexpr float kPenaltyShiiConditionalVerb = scale::kNever;
 
 // Penalty for short/long pure-hiragana hatsuonbin verb forms
 constexpr float kPenaltyHatsuonbinShort = scale::kRare;   // 2-4 chars
@@ -224,11 +235,12 @@ constexpr float kPenaltyHiraganaNounToSuruTip = 0.08F;
 // Pure-hiragana i-adjective from dictionary (つめたい, はなはだしい)
 // Base for ≤3 chars, plus per-char beyond 3 (prevents verb+たい / adv+verb+aux splits)
 constexpr float kBonusHiraganaAdjBase = -2.5F;
-constexpr float kBonusHiraganaAdjPerChar = 0.5F;
+constexpr float kBonusHiraganaAdjPerChar = 0.6F;
 
 // Kanji+okurigana i-adjective from dictionary (情けない), 4+ chars
 constexpr float kBonusKanjiOkuriganaAdjBase = -1.5F;
 constexpr float kBonusKanjiOkuriganaAdjPerChar = 0.3F;
+constexpr float kBonusDictionaryNaAdjective = -1.0F;
 
 // Closed pronouns of three or more morae can otherwise lose to a pronoun plus
 // particle sequence (何かしら, あれこれ). Keep the registered lexical unit.
@@ -241,22 +253,22 @@ constexpr float kBonusHiraganaAdverbShort = -1.0F;
 // forms. Their lexical reading must outrank a fabricated stem plus volitional
 // auxiliary path before a quotation particle.
 constexpr float kBonusHiraganaUFinalAdverb = -1.6F;
-constexpr float kBonusHiraganaAdverbBase = -2.5F;
-constexpr float kBonusHiraganaAdverbPerChar = 0.5F;
+constexpr float kBonusHiraganaAdverbBase = -3.0F;
+constexpr float kBonusHiraganaAdverbPerChar = 0.85F;
 
 // Non-hiragana (kanji-containing) adverb from dictionary (初めて, 大して), 3+ chars
-constexpr float kBonusNonHiraganaAdverbBase = -1.8F;
+constexpr float kBonusNonHiraganaAdverbBase = -3.5F;
 constexpr float kBonusNonHiraganaAdverbPerChar = 0.3F;
 
 // Kanji-containing determiner/adnominal from dictionary (小さな, 大きな), 3+ chars
-constexpr float kBonusKanjiDeterminerBase = -1.5F;
+constexpr float kBonusKanjiDeterminerBase = -2.3F;
 constexpr float kBonusKanjiDeterminerPerChar = 0.3F;
 // Closed pure-hiragana determiners (こういう, そういう) compete with a
 // demonstrative adverb plus the lexical verb いう.
-constexpr float kBonusHiraganaDeterminer = -2.0F;
+constexpr float kBonusHiraganaDeterminer = -3.5F;
 
-// Longer pure-hiragana noun from dictionary (ふともも, ひとつ), 4+ chars
-constexpr float kBonusLongHiraganaNoun = -1.5F;
+// Multi-mora pure-hiragana noun from dictionary (向こう, かすみ, ふともも).
+constexpr float kBonusLongHiraganaNoun = -3.0F;
 
 // Pure-hiragana interjection/greeting from dictionary (さようなら, ありがとう)
 // Tiered: ≤2 chars, ≤3 chars, then base + per-char beyond 3

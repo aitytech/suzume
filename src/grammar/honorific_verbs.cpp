@@ -12,9 +12,11 @@ namespace suzume::grammar {
 namespace {
 
 constexpr std::string_view kHumbleHonorificRenyokei[] = {"いたし", "くださ", "いただき"};
-constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "くださる", "いただく", "なさる", "はする"};
+constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "くださる", "いただく",
+                                                       "なさる", "はする",   "申し上げる"};
 constexpr std::string_view kBenefactiveRenyokei[] = {"もらい", "あげ"};
-constexpr std::string_view kPotentialBenefactiveLemmas[] = {"いただける"};
+constexpr std::string_view kBenefactiveLemmas[] = {"もらう", "もらえる", "くれる", "あげる"};
+constexpr std::string_view kPotentialBenefactiveLemmas[] = {"いただける", "もらえる"};
 constexpr std::string_view kModalSubsidiaryRenyokei[] = {"かね"};
 
 bool contains(const std::string_view* entries, size_t count, std::string_view value) {
@@ -41,6 +43,10 @@ bool isHumbleHonorificLemma(std::string_view lemma) {
 bool isPotentialBenefactiveLemma(std::string_view lemma) {
   return contains(kPotentialBenefactiveLemmas,
                   sizeof(kPotentialBenefactiveLemmas) / sizeof(kPotentialBenefactiveLemmas[0]), lemma);
+}
+
+bool isBenefactiveLemma(std::string_view lemma) {
+  return contains(kBenefactiveLemmas, sizeof(kBenefactiveLemmas) / sizeof(kBenefactiveLemmas[0]), lemma);
 }
 
 bool isSubsidiaryHonorificRenyokei(std::string_view surface) {

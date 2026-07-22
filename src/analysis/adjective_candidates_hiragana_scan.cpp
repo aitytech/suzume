@@ -173,6 +173,18 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
       continue;
     }
 
+    // Negative-conjectural まい is an independent auxiliary after a terminal
+    // verb form (ある+まい, 行く+まい).  The generic i-adjective analyzer can
+    // otherwise reconstruct the whole chain as a fabricated adjective ending
+    // in い.  Preserve genuine adjectives such as うまい by requiring the
+    // prefix itself to be a dictionary-attested verb.
+    if (utf8::endsWith(surface, "まい") && surface.size() > core::kTwoJapaneseCharBytes) {
+      const std::string verb_prefix = surface.substr(0, surface.size() - core::kTwoJapaneseCharBytes);
+      if (isVerbInDictionary(dict_manager, verb_prefix)) {
+        continue;
+      }
+    }
+
     // Skip patterns ending with verb passive/potential/causative negative renyokei
     // 〜られなく, 〜れなく, 〜させなく, 〜せなく, 〜されなく are all verb forms,
     // not i-adjectives. E.g., けられなく = ける + られ + ない
@@ -188,8 +200,12 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
     // A bare -く is normally an adverbial connective.  The two productive
     // i-adjective continuatives -なく and -しく are recovered below only
     // after their reconstructed base has passed the adjective/verb checks.
+    const bool bounded_long_ku_form = utf8::endsWith(surface, "く") && end_pos - start_pos >= 4 &&
+                                      end_pos < codepoints.size() &&
+                                      (normalize::isKanjiCodepoint(codepoints[end_pos]) ||
+                                       normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Katakana);
     if (utf8::endsWith(surface, "く") && !utf8::endsWith(surface, "くない") && !utf8::endsWith(surface, "なく") &&
-        !utf8::endsWith(surface, "しく")) {
+        !utf8::endsWith(surface, "しく") && !bounded_long_ku_form) {
       continue;
     }
 
@@ -246,9 +262,15 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
       // Multiple consecutive marks (すごーーい) result in even lower confidence
       // For particle-starting sequences, lower threshold (0.50) since these have
       // already been validated as forming valid adjectives (はなはだしい, かわいい)
-      float confidence_threshold = has_prolonged          ? candidate::kHiraAdjConfProlonged
-                                   : starts_with_particle ? candidate::kHiraAdjConfParticle
-                                                          : candidate::kHiraAdjConfMin;
+      // Four-or-more-character dictionary forms carry enough stem-length
+      // evidence to use the same threshold as particle-headed adjectives.
+      // This admits regular long forms such as まばゆい without weakening the
+      // highly ambiguous three-character hiragana pattern.
+      const bool has_long_dictionary_form = utf8::endsWith(surface, "い") && end_pos - start_pos >= 4;
+      float confidence_threshold = has_prolonged ? candidate::kHiraAdjConfProlonged
+                                   : starts_with_particle || has_long_dictionary_form || bounded_long_ku_form
+                                       ? candidate::kHiraAdjConfParticle
+                                       : candidate::kHiraAdjConfMin;
       const bool is_unverified_adverbial_i_adjective =
           !starts_with_particle && !has_verified_verb_reading &&
           ((utf8::endsWith(surface, "なく") && utf8::endsWith(cand.base_form, "ない")) ||
@@ -399,6 +421,10 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
           }
           // No bonus for 3-4 char sequences (につい, でやばい) - likely particle + adjective split
         }
+        if (bounded_long_ku_form) {
+          cost += candidate::kBoundedHiraganaKuAdjBonus;
+          SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" -0.5 (bounded_ku_adj_bonus)\n");
+        }
         // Set lemma to base form from inflection analysis
         // For prolonged sound mark patterns, normalize the base form
         // e.g., すごおい → すごい, やばあい → やばい
@@ -411,8 +437,12 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
           lemma = surface;
         }
         const char* pattern = has_prolonged ? "i_adjective_hira_choon" : "i_adjective_hira";
-        candidates.push_back(makeIAdjCandidate(surface, start_pos, end_pos, lemma, cost,
-                                               CandidateOrigin::AdjectiveIHiragana, cand.confidence, pattern));
+        auto adjective = makeIAdjCandidate(surface, start_pos, end_pos, lemma, cost,
+                                           CandidateOrigin::AdjectiveIHiragana, cand.confidence, pattern);
+        if (bounded_long_ku_form) {
+          adjective.has_suffix = true;
+        }
+        candidates.push_back(std::move(adjective));
         break;  // Only add one adjective candidate per surface
       }
     }

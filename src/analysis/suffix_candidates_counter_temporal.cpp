@@ -190,6 +190,8 @@ void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, si
       }
     }
     bool followed_by_hiragana = scan < char_types.size() && char_types[scan] == normalize::CharType::Hiragana;
+    const bool followed_by_extent_suffix =
+        scan + 1 < codepoints.size() && codepoints[scan] == U'が' && codepoints[scan + 1] == U'け';
     bool followed_by_quantity_particle = false;
     constexpr size_t kMaxQuantityParticleLength = 4;
     const size_t max_particle_end = std::min(codepoints.size(), scan + kMaxQuantityParticleLength);
@@ -211,6 +213,17 @@ void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, si
         cand.pattern = "temporal_quantity_hiragana_split";
 #endif
         candidates.push_back(cand);
+      }
+      if (followed_by_extent_suffix) {
+        const std::string suffix_surface = extractSubstring(codepoints, scan, scan + 2);
+        auto suffix = makeCandidate(suffix_surface, scan, scan + 2, core::PartOfSpeech::Suffix,
+                                    candidate::kCounterExtentSuffixCost, true, CandidateOrigin::SuffixPattern,
+                                    core::ExtendedPOS::Suffix);
+        suffix.lemma = suffix_surface;
+#ifdef SUZUME_DEBUG_INFO
+        suffix.pattern = "temporal_quantity_extent_suffix";
+#endif
+        candidates.push_back(std::move(suffix));
       }
     }
   }

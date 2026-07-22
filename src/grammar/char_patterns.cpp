@@ -146,6 +146,10 @@ bool isSuruBaseForm(std::string_view surface) {
   return surface == "する";
 }
 
+bool isSuruVolitionalStemSurface(std::string_view surface) {
+  return surface == "しよ";
+}
+
 bool isSuruImperativeSurface(std::string_view surface) {
   return surface == "せよ" || surface == "しろ";
 }
@@ -202,12 +206,32 @@ bool isTeDeSurface(std::string_view surface) {
   return surface == "て" || surface == "で";
 }
 
+bool formsPoliteCopulaDesu(std::string_view left, std::string_view right) {
+  return left == "で" && right == "す";
+}
+
+bool isDirectAttachmentTemporalSuffix(std::string_view surface) {
+  return surface == "後";
+}
+
 bool isContractedProgressiveSurface(std::string_view surface) {
   return isTeDeSurface(surface) || surface == "てる";
 }
 
 bool isDialectalOruContractionLemma(std::string_view lemma) {
   return lemma == "とる" || lemma == "どる";
+}
+
+bool isRenyokeiPotentialAuxiliaryLemma(std::string_view lemma) {
+  return lemma == "える" || lemma == "うる" || lemma == "得る";
+}
+
+bool isTeFormCompletiveAuxiliaryLemma(std::string_view lemma) {
+  return lemma == "しまう" || lemma == "仕舞う" || lemma == "ちゃう" || lemma == "じゃう";
+}
+
+bool isPassiveAuxiliaryLemma(std::string_view lemma) {
+  return lemma == "られる";
 }
 
 bool isAccusativeParticleWoSurface(std::string_view surface) {
@@ -243,8 +267,9 @@ bool isDurationPredicateKakaru(std::string_view surface) {
 }
 
 bool isFinalParticleStack(std::string_view first, std::string_view second) {
-  return (first == "か" && second == "な") || (first == "よ" && (second == "ね" || second == "な")) ||
-         (first == "わ" && second == "ね") || (first == "ぜ" && second == "よ");
+  return (first == "か" && (second == "な" || second == "ね")) ||
+         (first == "よ" && (second == "ね" || second == "な")) || (first == "わ" && second == "ね") ||
+         (first == "ぜ" && second == "よ");
 }
 
 bool endsWithAdministrativeSuffix(std::string_view surface) {
@@ -309,6 +334,10 @@ bool startsInterrogativeQuoteIntroduction(std::string_view surface) {
 
 bool startsClassicalConjecturalAuxiliary(std::string_view surface) {
   return utf8::startsWith(surface, "けむ");
+}
+
+bool startsClosedTemporalNominal(std::string_view surface) {
+  return utf8::startsWithAny(surface, {"前", "後", "時", "頃", "ころ", "ごろ", "どき"});
 }
 
 std::string_view longFinalParticleBeforeQuote(std::string_view surface) {

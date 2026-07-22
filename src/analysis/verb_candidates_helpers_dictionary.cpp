@@ -62,6 +62,25 @@ bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manage
   return dict_manager != nullptr && dict_manager->lookupExact(surface, core::PartOfSpeech::Particle) != nullptr;
 }
 
+bool hasCaseParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  const auto* entry = dict_manager->lookupExact(surface, core::PartOfSpeech::Particle);
+  return entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleCase;
+}
+
+bool isCommaClauseChainingRenyokei(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                   const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0 || end_pos >= codepoints.size() || codepoints[end_pos] != U'、') {
+    return false;
+  }
+  const std::string particle_surface = extractSubstring(codepoints, start_pos - 1, start_pos);
+  const auto* particle = dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle);
+  return particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleCase && particle_surface != "と" &&
+         particle_surface != "で";
+}
+
 bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
                                     const dictionary::DictionaryManager* dict_manager) {
   if (dict_manager == nullptr || start_pos == 0) {

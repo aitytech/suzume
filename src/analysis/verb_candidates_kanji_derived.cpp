@@ -26,6 +26,33 @@
 namespace suzume::analysis::kanji_verb_detail {
 namespace vh = verb_helpers;
 
+namespace {
+
+bool hasAttestedInternalGodanConditional(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                         size_t particle_pos, const grammar::InflectionCandidate& whole,
+                                         const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || vh::isVerbInDictionary(dict_manager, whole.base_form) || kanji_end <= start_pos + 1) {
+    return false;
+  }
+  const std::string base_suffix = vh::baseFormSuffix(whole.verb_type);
+  if (base_suffix.empty()) {
+    return false;
+  }
+  // Only adjacent kanji can hide a particleless noun + predicate boundary
+  // here.  Mixed-script compounds have already exposed their V1/V2 boundary
+  // to the compound-verb generator and must not be reopened by this guard.
+  for (size_t predicate_start = start_pos + 1; predicate_start < kanji_end; ++predicate_start) {
+    std::string internal_base = extractSubstring(codepoints, predicate_start, particle_pos - 1);
+    internal_base += base_suffix;
+    if (vh::isVerbInDictionary(dict_manager, internal_base)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
 // Try Ichidan verb kateikei (conditional) + volitional stem patterns.
 // Kateikei: renyokei + れ + ば (食べれば → 食べれ + ば).
 // Volitional: renyokei + よ + う (食べよう → 食べよ + う).
@@ -35,6 +62,132 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
                                                const grammar::Inflection& inflection,
                                                const dictionary::DictionaryManager* dict_manager,
                                                std::vector<UnknownCandidate>& candidates) {
+  // Literary ～んずる verbs (軽んずる, 重んずる) use a productive zuru
+  // terminal that is not the ordinary noun+する paradigm.  Preserve the
+  // complete finite form instead of reopening ん as a nominalizer particle.
+  if (kanji_end + 3 <= codepoints.size() && codepoints[kanji_end] == U'ん' && codepoints[kanji_end + 1] == U'ず' &&
+      codepoints[kanji_end + 2] == U'る') {
+    const size_t zuru_end = kanji_end + 3;
+    const std::string zuru_surface = extractSubstring(codepoints, start_pos, zuru_end);
+    auto zuru_candidate =
+        makeVerbCandidate(zuru_surface, start_pos, zuru_end, candidate::verb_cost::kStrongBonus, zuru_surface,
+                          dictionary::ConjugationType::Suru, true, CandidateOrigin::VerbKanji,
+                          candidate::kVerifiedConfidence, "literary_zuru_terminal", core::ExtendedPOS::VerbShuushikei);
+    zuru_candidate.lemma_verified = true;
+    candidates.push_back(std::move(zuru_candidate));
+  }
+
+  // Productive Godan volitional: o-row mizenkei + う (飾ろ+う, 書こ+う).
+  // The full inflected surface identifies the Godan row even when the open-
+  // class lemma is absent from L2.  Select only the best confident analysis
+  // and require its row's actual o-row mora, so an i-adjective conjectural
+  // form (高かろう) or an ordinary dictionary-form verb is not manufactured
+  // into this path.
+  if (kanji_end + 1 < codepoints.size() && grammar::isORowCodepoint(codepoints[kanji_end]) &&
+      codepoints[kanji_end + 1] == U'う') {
+    const size_t full_end = kanji_end + 2;
+    const std::string full_surface = extractSubstring(codepoints, start_pos, full_end);
+    const auto& analyses = inflection.analyze(full_surface);
+    if (!analyses.empty()) {
+      const std::string stem_surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
+      const grammar::InflectionCandidate* selected = nullptr;
+      bool selected_from_dictionary = false;
+
+      // The dictionary compiler already expands every L2 Godan lemma to its
+      // o-row mizenkei. Match that exact surface/EPOS/lemma relation against
+      // every inflection analysis instead of trusting analyses.front(), which
+      // can choose a shorter internal stem for multi-kanji verbs.
+      if (dict_manager != nullptr) {
+        for (const auto& result : dict_manager->lookup(stem_surface, 0)) {
+          if (result.entry == nullptr || result.entry->surface.compare(stem_surface) != 0 ||
+              result.entry->pos != core::PartOfSpeech::Verb ||
+              result.entry->extended_pos != core::ExtendedPOS::VerbMizenkei) {
+            continue;
+          }
+          for (const auto& analysis : analyses) {
+            const auto* row = grammar::Conjugation::getGodanRow(analysis.verb_type);
+            if (row != nullptr && row->o_row == codepoints[kanji_end] && analysis.base_form == result.entry->lemma &&
+                (selected == nullptr || analysis.confidence > selected->confidence)) {
+              selected = &analysis;
+              selected_from_dictionary = true;
+            }
+          }
+        }
+      }
+
+      if (selected == nullptr) {
+        selected = &analyses.front();
+      }
+      const auto& best = *selected;
+      const auto* godan_row = grammar::Conjugation::getGodanRow(best.verb_type);
+      if ((selected_from_dictionary || best.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) &&
+          godan_row != nullptr && godan_row->o_row == codepoints[kanji_end] && best.base_form != full_surface) {
+        const size_t stem_end = kanji_end + 1;
+        auto volitional =
+            makeVerbCandidate(stem_surface, start_pos, stem_end, candidate::verb_cost::kStrongBonus, best.base_form,
+                              grammar::verbTypeToConjType(best.verb_type), true, CandidateOrigin::VerbKanji,
+                              best.confidence, "godan_volitional", core::ExtendedPOS::VerbMizenkei);
+        volitional.lemma_verified = true;
+        candidates.push_back(std::move(volitional));
+      }
+    }
+  }
+
+  // Productive Godan conditional: e-row 仮定形 + ば (伸ばせ+ば,
+  // くぐれ+ば).  The full span supplies the verb row and lemma even when the
+  // open-class base is absent from L2; keep the closed particle as its own
+  // search unit.  Checking the selected row's e-mora excludes the identical
+  // surface shape of i-adjective conditionals (高けれ+ば).
+  for (size_t particle_pos = kanji_end + 1; particle_pos < hiragana_end; ++particle_pos) {
+    if (codepoints[particle_pos] != U'ば') {
+      continue;
+    }
+    bool has_negative_conditional = false;
+    const bool has_classical_negative_conditional =
+        particle_pos >= kanji_end + 2 && codepoints[particle_pos - 2] == U'ざ' && codepoints[particle_pos - 1] == U'れ';
+    constexpr size_t kNakereLength = 3;
+    for (size_t negative_pos = kanji_end; negative_pos + kNakereLength <= particle_pos; ++negative_pos) {
+      if (negative_pos > start_pos && vh::naiConditionalFollowsAt(codepoints, negative_pos) &&
+          (grammar::isARowCodepoint(codepoints[negative_pos - 1]) ||
+           grammar::isERowCodepoint(codepoints[negative_pos - 1]))) {
+        has_negative_conditional = true;
+        break;
+      }
+    }
+    if (has_negative_conditional) {
+      continue;
+    }
+    const size_t full_end = particle_pos + 1;
+    const std::string full_surface = extractSubstring(codepoints, start_pos, full_end);
+    const auto& analyses = inflection.analyze(full_surface);
+    if (analyses.empty()) {
+      continue;
+    }
+    const auto& best = analyses.front();
+    // The classical negative auxiliary has its own kateikei ざれ before ば
+    // (担わ+ざれ+ば). Do not reinterpret the whole open-class span as the
+    // conditional of a fabricated verb ending in ざる. A dictionary-attested
+    // lexical verb such as ござる retains its genuine ござれ+ば paradigm.
+    if (has_classical_negative_conditional && !vh::isVerbInDictionary(dict_manager, best.base_form)) {
+      continue;
+    }
+    const auto* godan_row = grammar::Conjugation::getGodanRow(best.verb_type);
+    if (best.confidence < candidate::verb_cost::kConstructedVerbMinConfidence || godan_row == nullptr ||
+        godan_row->e_row != codepoints[particle_pos - 1] || best.base_form == full_surface) {
+      continue;
+    }
+    if (hasAttestedInternalGodanConditional(codepoints, start_pos, kanji_end, particle_pos, best, dict_manager)) {
+      continue;
+    }
+    auto conditional = makeVerbCandidate(extractSubstring(codepoints, start_pos, particle_pos), start_pos, particle_pos,
+                                         candidate::verb_cost::kStrongBonus, best.base_form,
+                                         grammar::verbTypeToConjType(best.verb_type), true, CandidateOrigin::VerbKanji,
+                                         best.confidence, "godan_kateikei", core::ExtendedPOS::VerbKateikei);
+    conditional.lemma_verified = vh::isVerbInDictionary(dict_manager, best.base_form);
+    candidates.push_back(std::move(conditional));
+    break;
+  }
+
   // Dictionary-backed single-kanji する verbs form 仮定形 with すれ+ば
   // (反する→反すれ+ば).  The generic analyzer can otherwise detach the
   // lexical kanji and select the standalone する paradigm.
@@ -140,6 +293,30 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
       // the literary imperative (食べよ) from renyokei + よ.
       if (renyokei_end < codepoints.size() && codepoints[renyokei_end] == U'よ') {
         const bool is_volitional = renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end + 1] == U'う';
+        const size_t you_end = renyokei_end + 2;
+        bool has_formal_method_continuation = false;
+        if (is_volitional && dict_manager != nullptr && you_end <= codepoints.size()) {
+          const auto* formal_you =
+              dict_manager->lookupExact(extractSubstring(codepoints, renyokei_end, you_end), core::PartOfSpeech::Noun);
+          const bool no_way_continuation = formal_you != nullptr &&
+                                           formal_you->extended_pos == core::ExtendedPOS::NounFormal &&
+                                           you_end < codepoints.size() && codepoints[you_end] == U'が' &&
+                                           vh::naiNegativeFollowsAt(codepoints, you_end + 1);
+          bool nominal_case_continuation = false;
+          if (formal_you != nullptr && formal_you->extended_pos == core::ExtendedPOS::NounFormal &&
+              you_end < codepoints.size() && codepoints[you_end] == U'に') {
+            const size_t probe_end = std::min(codepoints.size(), you_end + static_cast<size_t>(5));
+            const std::string probe = extractSubstring(codepoints, you_end, probe_end);
+            for (const auto& following : dict_manager->lookup(probe, 0)) {
+              if (following.entry != nullptr && following.length > 1 &&
+                  following.entry->extended_pos == core::ExtendedPOS::ParticleCase) {
+                nominal_case_continuation = true;
+                break;
+              }
+            }
+          }
+          has_formal_method_continuation = no_way_continuation || nominal_case_continuation;
+        }
         // Skip suru-verb pattern: 漢字 + し + よう
         // Suru-verbs (勉強しよう, 説明しよう) should be split as: 漢字|しよ|う
         // Check if renyokei ends with し preceded by kanji
@@ -156,7 +333,7 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
           is_suru_pattern = has_kanji_before;
         }
 
-        if (!is_suru_pattern) {
+        if (!is_suru_pattern && !has_formal_method_continuation) {
           // E.g., 食べ + よ + う → 食べよ is volitional stem;
           //       食べ + よ → 食べよ is the literary imperative.
           size_t volitional_end = renyokei_end + 1;  // renyokei + よ
@@ -350,7 +527,12 @@ void appendGodanPassiveRenyokeiCandidates(const std::vector<char32_t>& codepoint
             // renyokei followed directly by させる. Preserve the same rule as
             // the existing classical べき boundary.
             const bool is_passive_causative_chain = vh::causativeSaseFollowsAt(codepoints, renyokei_end);
-            if (!is_beki_pattern && !is_passive_causative_chain) {
+            // A following ない-family form must also keep the productive
+            // voice boundary (読ま+れ+なく, 書か+れ+ない). Lexical Ichidan
+            // verbs such as 生まれる use the dictionary/Ichidan path above
+            // and do not reach this Godan-passive fallback.
+            const bool is_passive_negative_chain = vh::naiNegativeFollowsAt(codepoints, renyokei_end);
+            if (!is_beki_pattern && !is_passive_causative_chain && !is_passive_negative_chain) {
               candidates.push_back(makeVerbCandidate(
                   surface, start_pos, renyokei_end, base_cost, base_lemma, dictionary::ConjugationType::Ichidan, false,
                   CandidateOrigin::VerbKanji, ichidan_confidence, "godan_passive_renyokei"));

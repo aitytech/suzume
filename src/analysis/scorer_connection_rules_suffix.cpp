@@ -42,6 +42,15 @@ bool isGodanRenyokeiOfLemma(std::string_view surface, std::string_view lemma) {
 float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // Nominalizing さ cannot attach to a verb continuative.  This blocks
+  // fabricated predicates such as 静ける from exploiting the general
+  // VERB_連用→SUFFIX bonus; causative さ is a Verb/Auxiliary candidate and is
+  // therefore outside this rule.
+  if (next.pos == core::PartOfSpeech::Suffix && grammar::isSingleHiragana(next.surface, U'さ') &&
+      (prev.pos == core::PartOfSpeech::Verb || prev.origin == core::CandidateOrigin::NominalizedNoun)) {
+    return cost::kProhibitive;
+  }
+
   // A generated nominalized-noun reading of an i-row stem competes with the
   // productive verb-continuative reading before a bound suffix.  In that
   // context the latter is grammatically licensed (置き+っぱなし, 書き+方),
@@ -77,6 +86,15 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kAlmostNever;
   }
 
+  // The closed polite copula です must not be reopened at its internal
+  // boundary.  The first mora has particle, copula, and lexical-verb
+  // homographs while す is independently a terminal verb candidate, but no
+  // such shorter edge may consume only the prefix of the complete auxiliary.
+  // A following も remains outside this rule (それほど+で+も+ない).
+  if (grammar::formsPoliteCopulaDesu(prev.surface, next.surface)) {
+    return cost::kAlmostNever;
+  }
+
   // The sentence-final particle ったら attaches to a completed predicate
   // (困ったら), never directly to a noun. This blocks a high-scoring false
   // parse such as 行 + ったら while leaving ordinary noun-final questions
@@ -100,14 +118,6 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(prev.surface, {"たら"}) &&
       next.pos == core::PartOfSpeech::Verb) {
     bonus += cost::kTripleVeryStrongBonus;
-  }
-
-  // The enumerative particle だの follows a noun directly. Keep its
-  // closed-class analysis ahead of the unrelated copula-plus-nominalizer
-  // sequence in noun lists.
-  if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::ParticleConj &&
-      utf8::equalsAny(next.surface, {"だの"})) {
-    bonus += cost::kStrongBonus;
   }
 
   // Classical focus なむ can precede a quotative と. The fused particle
@@ -200,7 +210,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // ordinary predicate. Keep this complete verb ahead of a fabricated
   // one-mora causative plus polite-auxiliary chain. The quotative と is
   // excluded because its following いう boundary is intentionally ambiguous.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && !utf8::equalsAny(prev.surface, {"と"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && !utf8::equalsAny(prev.surface, {"と", "で"}) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface.size() > core::kJapaneseCharBytes) {
     bonus += cost::kStrongBonus;
   }
@@ -365,8 +375,17 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // The concessive とも can directly introduce an adjective predicate
   // (読まずともよい). Keep that closed grammatical connection ahead of the
   // unrelated quotative-particle path.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(prev.surface) &&
-      next.pos == core::PartOfSpeech::Adjective) {
+  const bool concessive_before_adjective = prev.extended_pos == core::ExtendedPOS::ParticleConj &&
+                                           grammar::isConcessiveParticleTomoSurface(prev.surface) &&
+                                           next.pos == core::PartOfSpeech::Adjective;
+
+  // The conditional of an i-adjective is its けれ-form plus ば. Prefer that
+  // productive inflection over unrelated short verb and classical-auxiliary
+  // fragments inside a pure-hiragana adjective.
+  const bool adjective_conditional = prev.extended_pos == core::ExtendedPOS::AdjKeForm &&
+                                     next.extended_pos == core::ExtendedPOS::ParticleConj &&
+                                     grammar::isSingleHiragana(next.surface, U'ば');
+  if (concessive_before_adjective || adjective_conditional) {
     bonus += cost::kStrongBonus;
   }
 
@@ -376,7 +395,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.pos == core::PartOfSpeech::Adverb && utf8::endsWith(prev.surface, "て") &&
       (next.extended_pos == core::ExtendedPOS::AuxAspectIru ||
        (next.pos == core::PartOfSpeech::Verb && next.lemma == "いる"))) {
-    bonus += cost::kStrong;
+    bonus += cost::kSevere;
   }
 
   // The directional particle sequence へ+と is productive (次へと進む,
@@ -385,6 +404,18 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.extended_pos == core::ExtendedPOS::ParticleCase &&
       utf8::equalsAny(prev.surface, {"へ"}) && utf8::equalsAny(next.surface, {"と"})) {
     bonus += cost::kVeryStrongBonus;
+  }
+
+  // A multi-mora delimitative/source/comparative particle can itself be
+  // selected as the scope of が (誰まで+が, 誰から+が, 誰より+が).  This is
+  // distinct from an invalid stack of two ordinary one-mora case markers.
+  // Require the complete dictionary particle and the subject marker on the
+  // right; sequences such as に+を and を+に remain under the general
+  // ParticleCase→ParticleCase penalty.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.extended_pos == core::ExtendedPOS::ParticleCase &&
+      prev.fromDictionary() && prev.surface.size() >= core::kTwoJapaneseCharBytes &&
+      grammar::isSingleHiragana(next.surface, U'が')) {
+    bonus += cost::kStrongBonus;
   }
 
   // 向け is a productive audience suffix after a nominal (読者+向けに,

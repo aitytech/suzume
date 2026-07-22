@@ -102,6 +102,9 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // take a predicate connective. Case-marked nominalizations such as
       // 高さ+で remain governed by Suffix -> ParticleCase.
       {EPOS::Suffix, EPOS::ParticleConj, cost::kAlmostNever},
+      {EPOS::SuffixRecentCompletion, EPOS::ParticleConj, cost::kAlmostNever},
+      {EPOS::SuffixRecentCompletion, EPOS::AuxAspectIru, cost::kAlmostNever},
+      {EPOS::SuffixRecentCompletion, EPOS::AuxTenseTa, cost::kAlmostNever},
 
       // The aspectual いく auxiliary follows a te-form, not a bare renyokei.
       {EPOS::VerbRenyokei, EPOS::AuxAspectIku, cost::kAlmostNever},
@@ -204,10 +207,16 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // unknown noun that absorbs the particle sequence.
       {EPOS::ParticleBinding, EPOS::VerbShuushikei, cost::kVeryStrongBonus},
 
-      // Connective て/で → binding particle (読んで+さえ, 見て+こそ).
-      // The binding particle follows a verb te-form; treating で as a copula
-      // would require a nominal predicate and is grammatically impossible here.
-      {EPOS::ParticleConj, EPOS::ParticleBinding, cost::kVeryStrongBonus},
+      // Whether a conjunctive particle may take a binding particle depends on
+      // its surface: productive て/で combinations are rewarded by the
+      // surface-aware scorer.  Keep the category pair neutral here so short
+      // homographs such as や+すら do not split ordinary lexical words.
+      {EPOS::ParticleConj, EPOS::ParticleBinding, cost::kNeutral},
+
+      // A connective particle can be topicalized productively (て+は,
+      // て+も). Preserve the predicate boundary instead of preferring an
+      // overlapping compound case-particle candidate.
+      {EPOS::ParticleConj, EPOS::ParticleTopic, cost::kStrongBonus},
 
       // ParticleConj → AuxAspectIru (て+いる) - strong bonus for the aspectual construction
       // Allows 食べ+て+いる to beat unified 食べて+いる path
@@ -412,7 +421,7 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::VerbRenyokei, EPOS::AuxAppearanceSou, cost::kAppearanceAuxiliaryBonus},
 
       // Na-adjective stems take appearance そう directly (静か+そう).
-      {EPOS::AdjNaAdj, EPOS::AuxAppearanceSou, cost::kStrongBonus},
+      {EPOS::AdjNaAdj, EPOS::AuxAppearanceSou, cost::kAppearanceAuxiliaryBonus},
 
       // AuxAspectShimau → AuxAppearanceSou (しまい+そう) - very strong bonus
       // しまいそう (about to end up doing) is natural; AUX chain must beat ADJ+ADV path
@@ -486,6 +495,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::AuxAspectIru, EPOS::AuxConjectureRashii, cost::kModerateBonus},
       {EPOS::AuxAspectIru, EPOS::AuxConjectureMitai, cost::kStrongBonus},
 
+      // AuxTenseTa → AuxConjectureRashii (疲れてい+た+らしい) retains the
+      // past predicate before the conjectural auxiliary.  Without this
+      // connection, the lattice can split らしい into unrelated fragments.
+      {EPOS::AuxTenseTa, EPOS::AuxConjectureRashii, cost::kExtremeBonus},
+
       // AuxConjectureMitai → AuxCopulaDa (みたい+な) - strong bonus because な is
       // the attributive form of the following copula.
       {EPOS::AuxConjectureMitai, EPOS::AuxCopulaDa, cost::kStrongBonus},
@@ -543,6 +557,7 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // な(AdjStem of ない) should only connect to さ(nominalization) or そう(appearance)
       // Also prevents 高+すぎた winning over 高+すぎ+た
       {EPOS::AdjStem, EPOS::VerbRenyokei, cost::kAlmostNever},
+      {EPOS::AdjStem, EPOS::VerbOnbinkei, cost::kAlmostNever},
       {EPOS::AdjStem, EPOS::VerbShuushikei, cost::kAlmostNever},
       {EPOS::AdjStem, EPOS::VerbMizenkei, cost::kAlmostNever},
       {EPOS::AdjStem, EPOS::VerbTaForm, cost::kAlmostNever},
@@ -584,6 +599,12 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::VerbRenyokei, EPOS::AuxClassicalKeri, cost::kVeryStrongBonus},
       {EPOS::AuxClassicalKeri, EPOS::ParticleConj, cost::kVeryStrongBonus},
 
+      // Classical perfect り attaches to a verbal inflection, never directly
+      // to a noun or numeral. Blocking that impossible path prevents manner
+      // mimetics such as AっBり from becoming a numeral plus auxiliary.
+      {EPOS::Noun, EPOS::AuxClassicalPerfect, cost::kNever},
+      {EPOS::NounNumber, EPOS::AuxClassicalPerfect, cost::kNever},
+
       // 連体形 なる (壮大なる計画): a na-adjective stem + なる is the classical adnominal 断定, not
       // the verb 成る. Only the left context (AdjNaAdj→なる) is rewarded: a right-context なる→Noun
       // bonus would misfire on the 終助詞 なり (鳴るなり法隆寺), and 〜になる/〜となる keep the verb
@@ -601,6 +622,12 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // keeps the nominalizer さ as a Suffix in 美しさ+たる (…さたるや).
       {EPOS::Suffix, EPOS::AuxClassicalTari, cost::kStrongBonus},
       {EPOS::AuxClassicalTari, EPOS::Noun, cost::kStrongBonus},
+      // A productive deverbal noun is still a nominal head under adnominal
+      // たる (暗澹たる気持ち).  Treating NOUN_転成 differently from an
+      // ordinary noun lets an internal shorter nominalization restart inside
+      // the same search unit (気+持ち), even though both are selected by the
+      // same closed adnominal auxiliary.
+      {EPOS::AuxClassicalTari, EPOS::NounVerbal, cost::kStrongBonus},
       {EPOS::AuxClassicalTari, EPOS::ParticleBinding, cost::kStrongBonus},
       {EPOS::AuxClassicalTari, EPOS::ParticleCase, cost::kStrongBonus},
 
@@ -619,7 +646,9 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::AuxPassive, EPOS::AuxClassicalBeshi, cost::kStrongBonus},
       {EPOS::AuxNegativeNu, EPOS::AuxClassicalBeshi, cost::kStrongBonus},
       {EPOS::ParticleConj, EPOS::AuxHonorific, cost::kStrongBonus},
-      {EPOS::AuxHonorific, EPOS::ParticleConj, cost::kVeryStrongBonus},
+      // Closed honorific inflections retain the auxiliary reading before
+      // their connective (なされ+ば), ahead of the homographic lexical verb.
+      {EPOS::AuxHonorific, EPOS::ParticleConj, cost::kDoubleVeryStrongBonus},
   };
   applyRules(table, kClassicalRules, sizeof(kClassicalRules) / sizeof(kClassicalRules[0]));
 }

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <utility>
 
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
@@ -16,6 +17,44 @@ using namespace lemmatizer_detail;
 void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
   for (size_t i = 0; i < morphemes.size(); ++i) {
     auto& morpheme = morphemes[i];
+
+    // A continuative immediately governing 始め is verbal even when the
+    // dictionary-free lattice selected a homographic noun/adjective. Recover
+    // the productive base from its final kana: e-row and じ stems are ichidan;
+    // the remaining i-row endings use the shared Godan table.
+    if (i + 1 < morphemes.size() && morphemes[i + 1].surface == "始め" && morpheme.pos != core::PartOfSpeech::Verb) {
+      const char32_t final_cp = utf8::decodeFirstChar(utf8::lastChar(morpheme.surface));
+      std::string reconstructed;
+      if (grammar::endsWithERow(morpheme.surface) || final_cp == U'じ') {
+        reconstructed = morpheme.surface + "る";
+      } else if (const std::string_view suffix = grammar::godanBaseSuffixFromIRow(final_cp); !suffix.empty()) {
+        reconstructed = std::string(utf8::dropLastChar(morpheme.surface)) + std::string(suffix);
+      }
+      if (!reconstructed.empty()) {
+        morpheme.pos = core::PartOfSpeech::Verb;
+        morpheme.extended_pos = core::ExtendedPOS::VerbRenyokei;
+        morpheme.lemma = std::move(reconstructed);
+      }
+    }
+
+    // The polite auxiliary selects a verbal continuative. This resolves
+    // homographic adjective/noun candidates such as 伺い+ます without a
+    // surface lexicon; registered kami-ichidan i-stems retain +る.
+    if (i + 1 < morphemes.size() && morphemes[i + 1].extended_pos == core::ExtendedPOS::AuxTenseMasu &&
+        morpheme.pos != core::PartOfSpeech::Verb && morpheme.pos != core::PartOfSpeech::Auxiliary) {
+      const char32_t final_cp = utf8::decodeFirstChar(utf8::lastChar(morpheme.surface));
+      std::string reconstructed;
+      if (grammar::inflection::isValidKanjiIStemException(morpheme.surface)) {
+        reconstructed = morpheme.surface + "る";
+      } else if (const std::string_view suffix = grammar::godanBaseSuffixFromIRow(final_cp); !suffix.empty()) {
+        reconstructed = std::string(utf8::dropLastChar(morpheme.surface)) + std::string(suffix);
+      }
+      if (!reconstructed.empty()) {
+        morpheme.pos = core::PartOfSpeech::Verb;
+        morpheme.extended_pos = core::ExtendedPOS::VerbRenyokei;
+        morpheme.lemma = std::move(reconstructed);
+      }
+    }
     // B45: Special fix for ない adjective + さ + そう pattern
     // The adjective candidate generator sets lemma to なさい, but correct is ない
     // なさそう = ない + さそう (looks like there isn't)
@@ -176,21 +215,30 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
     // Fix onbin lemma using next morpheme context
     // イ音便: 書い+た/て → lemma should be 書く (not 書う)
     // 連用形: 使い+ます/にくい → lemma should be 使う (correct)
-    // Pattern: surface ends with い, lemma ends with う, next is た/て/だ/で
+    // Pattern: surface ends with い and is followed by the unvoiced/voiced
+    // past-conjunctive series. Reconstruct from the visible surface rather
+    // than a speculative candidate lemma: unknown verbs may arrive as
+    // つまずいる or 泣う, but the sound change itself still determines く/ぐ.
+    const bool has_i_onbin_follower =
+        utf8::equalsAny(next_surface, {"た", "て", "たり", "たら", "ちゃ", "だ", "で", "だり", "だら"});
+    if (!morpheme.is_from_dictionary && morpheme.pos != core::PartOfSpeech::Verb &&
+        utf8::endsWith(morpheme.surface, "い") && has_i_onbin_follower) {
+      morpheme.pos = core::PartOfSpeech::Verb;
+      morpheme.extended_pos = core::ExtendedPOS::VerbOnbinkei;
+    }
     if (morpheme.pos == core::PartOfSpeech::Verb && utf8::endsWith(morpheme.surface, "い") &&
-        utf8::endsWith(morpheme.lemma, "う") && morpheme.lemma.size() >= core::kTwoJapaneseCharBytes &&
-        utf8::equalsAny(next_surface, {"た", "て", "だ", "で"})) {
+        morpheme.surface.size() >= core::kTwoJapaneseCharBytes && has_i_onbin_follower) {
       // This is onbin form - fix lemma from 〜う to 〜く or 〜ぐ.
       // The tiebreak here is the following token's voicing (だ/で ⇒ ガ行), which is
       // deterministic and dictionary-free — do NOT route this through the dict-order
       // helper (getGodanTypesByOnbin is Ka-first and dict-gated): voicing correctly
       // handles out-of-dict verbs (凪いだ→凪ぐ) and voiced ties (ついだ→つぐ).
-      std::string stem(utf8::dropLastChar(morpheme.lemma));
+      std::string stem(utf8::dropLastChar(morpheme.surface));
       // Check if next is voiced (だ/で) → 〜ぐ, otherwise → 〜く
       if (grammar::inflection::isValidKanjiIStemException(morpheme.surface)) {
         // Kami-ichidan renyokei (率い, 老い, ...) - dictionary form is surface + る
         morpheme.lemma = morpheme.surface + "る";
-      } else if (utf8::equalsAny(next_surface, {"だ", "で"})) {
+      } else if (utf8::equalsAny(next_surface, {"だ", "で", "だり", "だら"})) {
         morpheme.lemma = stem + "ぐ";  // GodanGa: 泳い+だ → 泳ぐ
       } else {
         morpheme.lemma = stem + "く";  // GodanKa: 書い+た → 書く

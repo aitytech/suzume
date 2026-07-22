@@ -13,6 +13,11 @@ void setNominalParticleCosts(BigramMatrix& table) {
       {EPOS::NounNumber, EPOS::Suffix, cost::kStrongBonus},
       {EPOS::NounNumber, EPOS::ParticleAdverbial, cost::kStrongBonus},
       {EPOS::Noun, EPOS::ParticleTopic, cost::kStrongBonus},
+      // A lexicalized/derived continuative noun takes nominal particles just
+      // like an ordinary noun (答え+は, 読み+を).  Without this entry the
+      // homographic verb continuative inherits the topic bonus while the
+      // explicitly generated NounVerbal edge does not.
+      {EPOS::NounVerbal, EPOS::ParticleTopic, cost::kStrongBonus},
       {EPOS::NounProperFamily, EPOS::NounProperGiven, cost::kStrongBonus},
       {EPOS::Noun, EPOS::Conjunction, cost::kDoubleVeryStrongBonus},
       {EPOS::Conjunction, EPOS::Noun, cost::kStrongBonus},

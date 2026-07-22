@@ -77,6 +77,16 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
     bonus += cost::kAlmostNever;
   }
 
+  // A compound candidate emitted directly in mizenkei has already verified
+  // both the V1 renyokei and the V2 conjugation (誘い合わ+せる).  Preserve that
+  // closed inflectional chain ahead of the surface-identical alternative that
+  // splits before a dictionary verb ending in せる (誘い+合わせる).  The
+  // specialized origin keeps ordinary lexical verb sequences unaffected.
+  if (prev.origin == core::CandidateOrigin::VerbCompound && prev.extended_pos == core::ExtendedPOS::VerbMizenkei &&
+      next.extended_pos == core::ExtendedPOS::AuxCausative) {
+    return cost::kStrongBonus;
+  }
+
   // The classical causative す attaches to an a-row irrealis stem
   // (いら+し+て). A non-a-row homograph cannot supply that inflectional
   // context, so it must not create a fabricated voice chain such as
@@ -148,7 +158,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
       prev.pos == core::PartOfSpeech::Noun;
   if (can_precede_humble_subsidiary && next.pos == core::PartOfSpeech::Verb &&
       grammar::isHumbleHonorificLemma(next.lemma)) {
-    bonus += cost::kVeryStrongBonus;
+    bonus += cost::kVeryStrongBonus + cost::kModerateBonus;
   }
 
   // Penalty for splitting unknown words after youon (拗音: ょ, ゃ, ゅ)
@@ -209,12 +219,17 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
     }
   }
 
-  // Bonus for Noun → VerbMizenkei "さ" (サ変動詞の未然形)
+  // Bonus for Noun → the passive or volitional mizenkei of する.
   // E.g., 反映される should be 反映+さ+れる (not 反映+される)
   // MeCab treats サ変動詞 passive as Noun + さ(suru_mizen) + れる(passive)
   // This enables the split: 反映+さ+れ+ます
+  // The modern volitional (実現+しよ+う) needs the same support so formal noun
+  // よう cannot steal the middle of the chain.
+  const bool is_suru_passive_stem = grammar::isSingleHiragana(next.surface, U'さ');
+  const bool is_suru_volitional_stem =
+      grammar::isSuruVolitionalStemSurface(next.surface) && grammar::isSuruBaseForm(next.lemma);
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
-      next.surface == "さ") {
+      (is_suru_passive_stem || is_suru_volitional_stem)) {
     bonus += cost::kStrongBonus;
   }
 

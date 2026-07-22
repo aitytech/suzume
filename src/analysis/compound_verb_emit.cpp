@@ -3,6 +3,7 @@
  * @brief Post-match validation, scoring, and edge emission for compound verbs
  */
 
+#include "grammar/honorific_verbs.h"
 #include "join_compound_verb_internal.h"
 
 namespace suzume::analysis::compound_verb_detail {
@@ -65,6 +66,44 @@ bool containsNegativeAuxiliary(const std::vector<char32_t>& codepoints, size_t s
   return false;
 }
 
+bool startsInsideRegisteredNoun(std::string_view text, const ByteOffsets& byte_offsets, size_t start_pos,
+                                const dictionary::DictionaryManager& dict_manager) {
+  if (start_pos == 0) {
+    return false;
+  }
+  const size_t scan_start = start_pos > 8 ? start_pos - 8 : 0;
+  for (size_t noun_start = scan_start; noun_start < start_pos; ++noun_start) {
+    for (const auto& result : dict_manager.lookup(text, byteOffsetAt(byte_offsets, noun_start))) {
+      if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun &&
+          noun_start + result.length > start_pos) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool consumesSahenConditional(const std::vector<char32_t>& codepoints, size_t start_pos, size_t compound_end_pos,
+                              const dictionary::DictionaryManager& dict_manager) {
+  if (compound_end_pos <= start_pos + 2 || compound_end_pos + 1 >= codepoints.size() ||
+      codepoints[compound_end_pos - 1] != U'す' || codepoints[compound_end_pos] != U'れ' ||
+      codepoints[compound_end_pos + 1] != U'ば') {
+    return false;
+  }
+  const std::string nominal_stem = extractSubstring(codepoints, start_pos, compound_end_pos - 1);
+  if (normalize::utf8Length(nominal_stem) < 2 || !grammar::isAllKanji(nominal_stem)) {
+    return false;
+  }
+  const std::string conditional = extractSubstring(codepoints, compound_end_pos - 1, compound_end_pos + 1);
+  for (const auto& match : dict_manager.lookup(conditional, 0)) {
+    if (match.entry != nullptr && match.length == 2 && match.entry->pos == core::PartOfSpeech::Verb &&
+        match.entry->lemma == "する") {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
@@ -76,6 +115,14 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
   const size_t v2_start_byte = byteOffsetAt(byte_offsets, v2_start);
   // After checking all V2 entries, use the best match if found
   if (best_match.matched_len > 0) {
+    if (verb_helpers::startsInsideKanjiRunBeforeShi(codepoints, start_pos) &&
+        !grammar::isHumbleHonorificLemma(best_match.compound_base)) {
+      return;
+    }
+    if (start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]) &&
+        startsInsideRegisteredNoun(text, byte_offsets, start_pos, dict_manager)) {
+      return;
+    }
     const SubsidiaryVerb& matched_v2 = *best_match.v2_verb;
     const std::string_view matched_v2_reading =
         matched_v2.joins_reading && matched_v2.reading != nullptr ? matched_v2.reading : "";
@@ -86,8 +133,22 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     // Find character position for compound end
     size_t compound_end_pos = advanceCharsToBytePos(codepoints, v2_start, v2_start_byte, compound_end_byte);
 
+    const std::string v2_surface = extractSubstring(codepoints, v2_start, compound_end_pos);
+    const auto* closed_auxiliary = dict_manager.lookupExact(v2_surface, core::PartOfSpeech::Auxiliary);
+    const bool v2_is_closed_particle = dict_manager.lookupExact(v2_surface, core::PartOfSpeech::Particle) != nullptr;
+    if (closed_auxiliary != nullptr && closed_auxiliary->extended_pos == core::ExtendedPOS::AuxAppearanceSou) {
+      return;
+    }
+
     // Build the compound verb surface
     std::string compound_surface(text.substr(start_byte, compound_end_byte - start_byte));
+
+    // A multi-kanji Sahen stem followed by すれば is noun + する仮定形.
+    // A V2 such as 出す must not consume only the initial す and leave れ+ば
+    // behind (提出+すれ+ば, not 提出す+れ+ば).
+    if (consumesSahenConditional(codepoints, start_pos, compound_end_pos, dict_manager)) {
+      return;
+    }
 
     // Causative endings are auxiliary chains, not V2 compound verbs. This
     // also covers a passive followed by causative (書か+れ+させる), where the
@@ -101,6 +162,16 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     // compositional (見+て+あげる), not a lexical V1+V2 compound. The helper
     // preserves ordinary compounds such as 取り上げる, which have no te-form.
     if (verb_helpers::embedsTeFormAuxiliary(compound_surface)) {
+      return;
+    }
+
+    // A ka/ga-row i-onbin followed by で is a conjunctive te-form, not a
+    // compound with the homographic V2 でる (急い+で+も). The following
+    // particle supplies the closed right boundary for this distinction.
+    if (v2_start > start_pos && v2_start < codepoints.size() && codepoints[v2_start] == U'で' &&
+        codepoints[v2_start - 1] == U'い' && compound_end_pos < codepoints.size() &&
+        dict_manager.lookupExact(extractSubstring(codepoints, compound_end_pos, compound_end_pos + 1),
+                                 core::PartOfSpeech::Particle) != nullptr) {
       return;
     }
 
@@ -138,7 +209,10 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
       std::string v1_renyokei_text(text.substr(start_byte, v2_start_byte - start_byte));
       std::string hira_v2_compound = v1_renyokei_text + std::string(matched_v2_reading);
       if (hira_v2_compound != best_match.compound_base) {
-        if (dict_manager.lookupExact(hira_v2_compound, core::PartOfSpeech::Verb) != nullptr) {
+        const char32_t input_v2_initial = v2_start < codepoints.size() ? codepoints[v2_start] : 0;
+        const char32_t reading_initial = utf8::decodeFirstChar(matched_v2_reading);
+        if (input_v2_initial == reading_initial &&
+            dict_manager.lookupExact(hira_v2_compound, core::PartOfSpeech::Verb) != nullptr) {
           SUZUME_DEBUG_LOG("[COMPOUND_SKIP] kanji compound \""
                            << best_match.compound_base << "\" yields to dict verb \"" << hira_v2_compound << "\"\n");
           return;
@@ -185,14 +259,22 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     // lexical search unit.  Prefer it over a coincidental noun + する or
     // verb + verb decomposition, while leaving productive, unregistered
     // compounds to their ordinary compositional scoring.
-    const bool compound_lemma_verified =
+    const bool compound_lemma_in_dictionary =
         dict_manager.lookupExact(best_match.compound_base, core::PartOfSpeech::Verb) != nullptr;
+    const bool compound_source_in_dictionary =
+        best_match.is_potential &&
+        dict_manager.lookupExact(best_match.compound_source_base, core::PartOfSpeech::Verb) != nullptr;
+    const bool compound_honorific_verified = grammar::isHumbleHonorificLemma(best_match.compound_base);
+    const bool compound_lemma_verified =
+        compound_lemma_in_dictionary || compound_source_in_dictionary || compound_honorific_verified;
     const std::string nominalized_compound = generateRenyokei(best_match.compound_base, "", matched_v2.verb_type);
     const bool compound_nominalization_verified =
         !nominalized_compound.empty() &&
         dict_manager.lookupExact(nominalized_compound, core::PartOfSpeech::Noun) != nullptr;
-    if (compound_lemma_verified ||
-        (compound_nominalization_verified && !best_match.includes_aux && !best_match.is_mizenkei)) {
+    if (compound_honorific_verified) {
+      final_cost += bigram_cost::kVeryStrongBonus;
+    } else if (compound_lemma_verified ||
+               (compound_nominalization_verified && !best_match.includes_aux && !best_match.is_mizenkei)) {
       final_cost += bigram_cost::kStrongBonus;
     }
 
@@ -215,6 +297,9 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     }
 
     uint8_t flags = core::LatticeEdge::kFromDictionary;
+    // Only direct registration of the complete compound lemma grants lexical
+    // boundary ownership. A nominalized continuative is useful scoring
+    // evidence above, but must not suppress productive te-form boundaries.
     if (compound_lemma_verified) {
       flags |= core::LatticeEdge::kLemmaVerified;
     }
@@ -231,7 +316,7 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     if (best_match.is_mizenkei) {
       lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
                       core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, compound_conj_type,
-                      core::CandidateOrigin::Unknown, 0.0F, "compound_mizenkei", core::ExtendedPOS::VerbMizenkei,
+                      core::CandidateOrigin::VerbCompound, 0.0F, "compound_mizenkei", core::ExtendedPOS::VerbMizenkei,
                       "compound_mizenkei");
       return;
     }
@@ -248,17 +333,20 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     core::ExtendedPOS compound_epos =
         best_match.is_kateikei ? core::ExtendedPOS::VerbKateikei
                                : (renyokei_multichar ? core::ExtendedPOS::VerbRenyokei : core::ExtendedPOS::Unknown);
-    lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
-                    core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, compound_conj_type,
-                    core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "compound", compound_epos,
-                    "compound");
+    const bool fuses_past_auxiliary = best_match.includes_aux && utf8::endsWithAny(compound_surface, {"た", "だ"});
+    if (!fuses_past_auxiliary) {
+      lattice.addEdge(compound_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(compound_end_pos),
+                      core::PartOfSpeech::Verb, final_cost, flags, compound_lemma, compound_conj_type,
+                      core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "compound", compound_epos,
+                      "compound");
+    }
 
     // A verified compound continuative directly marked by a case, topic, or
     // nominalizer particle heads a nominal phrase.  Emit its deverbal-noun
     // reading alongside the verbal edge so the particle does not force an
     // artificial split inside the compound (押し下げを, 押し付けは).
     const bool starts_inside_kanji_run = start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]);
-    if (v1_is_verified && !starts_inside_kanji_run &&
+    if (v1_is_verified && !starts_inside_kanji_run && !v2_is_closed_particle &&
         !containsNegativeAuxiliary(codepoints, start_pos, compound_end_pos) &&
         compound_epos == core::ExtendedPOS::VerbRenyokei &&
         beginsNominalForcingParticle(codepoints, compound_end_pos, dict_manager)) {
@@ -348,8 +436,10 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
         epos = core::ExtendedPOS::VerbOnbinkei;  // 書い, 買っ, 読ん, etc.
       }
 
+      const std::string stem_lemma = best_match.is_potential ? stem + "る" : compound_lemma;
+
       lattice.addEdge(stem, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(stem_end_pos),
-                      core::PartOfSpeech::Verb, te_stem_cost, flags, compound_lemma, compound_conj_type,
+                      core::PartOfSpeech::Verb, te_stem_cost, flags, stem_lemma, compound_conj_type,
                       core::CandidateOrigin::VerbCompound, 0.0F, "compound_te_stem", epos, "compound_te_stem");
       return true;
     };
@@ -413,7 +503,7 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
         // 話し合わ|なけれ|ば).
         if (stem_end_pos < codepoints.size()) {
           char32_t next_char = codepoints[stem_end_pos];
-          if (next_char != U'れ' && next_char != U'せ' && next_char != U'な' && next_char != U'ず')
+          if (!isMizenkeiAuxiliaryStarter(next_char))
             return false;
         }
 

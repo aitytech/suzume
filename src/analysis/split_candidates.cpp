@@ -57,9 +57,9 @@ bool hasSuruContinuation(const std::vector<char32_t>& codepoints, size_t suffix_
   }
 
   char32_t next_char = codepoints[suffix_start + 1];
-  return next_char == U'ち' || next_char == U'て' || next_char == U'た' || next_char == U'な' || next_char == U'ま' ||
-         next_char == U'よ' || next_char == U'ろ' || next_char == U'そ' || next_char == U'と' || next_char == U'か' ||
-         next_char == U'つ';
+  return normalize::isKanjiCodepoint(next_char) || next_char == U'ち' || next_char == U'て' || next_char == U'た' ||
+         next_char == U'な' || next_char == U'ま' || next_char == U'よ' || next_char == U'ろ' || next_char == U'そ' ||
+         next_char == U'と' || next_char == U'か' || next_char == U'つ';
 }
 
 bool hasDictionaryLexicalPrefix(const std::vector<dictionary::LookupResult>& results, size_t full_length) {
@@ -391,6 +391,15 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
 
   // Try different noun lengths
   for (size_t noun_len = 1; noun_len < kanji_end - start_pos; ++noun_len) {
+    // A contiguous kanji run followed by an inflected する is either a
+    // productive verbal noun (提出+し, 頻出+する) or a lexical verb stem
+    // (見直し).  In both cases, fabricating a noun+verb boundary inside the
+    // kanji run is grammatically unsupported (提+出し, 見+直し).  Preserve
+    // the complete run; the ordinary noun/verb candidates decide its POS.
+    if (kanji_end < codepoints.size() && codepoints[kanji_end] == U'し') {
+      continue;
+    }
+
     size_t verb_start = start_pos + noun_len;
     size_t verb_start_byte = byteOffsetAt(byte_offsets, verb_start);
 

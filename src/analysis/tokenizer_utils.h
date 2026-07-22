@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "core/lattice.h"
 #include "normalize/char_type.h"
 
 namespace suzume::analysis {
@@ -85,6 +86,23 @@ size_t advanceCharsToBytePos(const std::vector<char32_t>& codepoints, size_t sta
  * @brief Encode a codepoint range as UTF-8.
  */
 std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t start, size_t end);
+
+/**
+ * @brief Find the end of a dictionary-evidenced compound verb covering pos.
+ *
+ * Only the explicit LemmaVerified flag counts. Compound candidates also use
+ * FromDictionary for their component evidence, which is not sufficient to
+ * establish the complete lexical compound.
+ */
+size_t verifiedCompoundEndCovering(const core::Lattice& lattice, size_t pos);
+
+/** Find a dictionary-derived verb onbin form spanning an interior boundary. */
+size_t dictionarySokuonbinEndCovering(const core::Lattice& lattice, size_t pos);
+
+/**
+ * @brief Find the end of any structurally generated compound verb covering pos.
+ */
+size_t compoundVerbEndCovering(const core::Lattice& lattice, size_t pos);
 
 }  // namespace suzume::analysis
 

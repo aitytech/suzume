@@ -3,6 +3,9 @@
  * @brief Suffix-based unknown word candidate generation
  */
 
+#include <algorithm>
+
+#include "adjective_candidates.h"
 #include "candidate_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
@@ -22,19 +25,315 @@ namespace suzume::analysis {
 
 namespace {
 
-bool hasNominalPhraseParticleAt(const dictionary::DictionaryManager* dict_manager,
+bool hasNominalPhraseSelectorAt(const dictionary::DictionaryManager* dict_manager,
                                 const std::vector<char32_t>& codepoints, size_t pos) {
   if (dict_manager == nullptr || pos >= codepoints.size()) {
     return false;
   }
-  const auto* entry =
+  const auto* particle =
       dict_manager->lookupExact(extractSubstring(codepoints, pos, pos + 1), core::PartOfSpeech::Particle);
-  return entry != nullptr && (entry->extended_pos == core::ExtendedPOS::ParticleCase ||
-                              entry->extended_pos == core::ExtendedPOS::ParticleTopic ||
-                              entry->extended_pos == core::ExtendedPOS::ParticleNo);
+  if (particle != nullptr && (particle->extended_pos == core::ExtendedPOS::ParticleCase ||
+                              particle->extended_pos == core::ExtendedPOS::ParticleTopic ||
+                              particle->extended_pos == core::ExtendedPOS::ParticleNo)) {
+    return true;
+  }
+  const auto* auxiliary =
+      dict_manager->lookupExact(extractSubstring(codepoints, pos, pos + 1), core::PartOfSpeech::Auxiliary);
+  return auxiliary != nullptr && auxiliary->extended_pos == core::ExtendedPOS::AuxCopulaDa;
+}
+
+bool isAdjectiveNominalizationSa(const dictionary::DictionaryManager* dict_manager,
+                                 const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 1 || codepoints[end_pos - 1] != U'さ') {
+    return false;
+  }
+  const std::string stem = extractSubstring(codepoints, start_pos, end_pos - 1);
+  if (normalize::utf8Length(stem) >= 2 && utf8::endsWith(stem, "し")) {
+    return true;
+  }
+  return dict_manager->lookupExact(stem, core::PartOfSpeech::Adjective) != nullptr ||
+         dict_manager->lookupExact(stem + "い", core::PartOfSpeech::Adjective) != nullptr;
+}
+
+bool isNominalClosingParticle(const dictionary::DictionaryEntry& entry) {
+  return entry.pos == core::PartOfSpeech::Particle && (entry.extended_pos == core::ExtendedPOS::ParticleCase ||
+                                                       entry.extended_pos == core::ExtendedPOS::ParticleTopic ||
+                                                       entry.extended_pos == core::ExtendedPOS::ParticleBinding);
+}
+
+bool isNominalBoundaryParticle(const dictionary::DictionaryEntry& entry) {
+  return entry.pos == core::PartOfSpeech::Particle && (entry.extended_pos == core::ExtendedPOS::ParticleCase ||
+                                                       entry.extended_pos == core::ExtendedPOS::ParticleTopic ||
+                                                       entry.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+                                                       entry.extended_pos == core::ExtendedPOS::ParticleNo ||
+                                                       entry.extended_pos == core::ExtendedPOS::ParticleBinding);
+}
+
+bool hasInternalNominalParticleBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                        const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 1) {
+    return false;
+  }
+  for (size_t particle_start = start_pos + 1; particle_start < end_pos; ++particle_start) {
+    const size_t probe_end = std::min(codepoints.size(), particle_start + static_cast<size_t>(4));
+    const std::string probe = extractSubstring(codepoints, particle_start, probe_end);
+    for (const auto& match : dict_manager->lookup(probe, 0)) {
+      if (match.entry == nullptr || !isNominalBoundaryParticle(*match.entry)) {
+        continue;
+      }
+      const size_t particle_end = particle_start + match.length;
+      if (particle_end >= end_pos) {
+        return true;
+      }
+      const std::string remainder = extractSubstring(codepoints, particle_end, end_pos);
+      if (dict_manager->lookupExact(remainder, core::PartOfSpeech::Verb) != nullptr ||
+          dict_manager->lookupExact(remainder, core::PartOfSpeech::Adjective) != nullptr ||
+          dict_manager->lookupExact(remainder, core::PartOfSpeech::Auxiliary) != nullptr) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool hasNominalClosingParticleAt(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                 const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos >= codepoints.size()) {
+    return false;
+  }
+  const size_t probe_end = std::min(codepoints.size(), start_pos + static_cast<size_t>(4));
+  const std::string probe = extractSubstring(codepoints, start_pos, probe_end);
+  for (const auto& match : dict_manager->lookup(probe, 0)) {
+    if (match.entry != nullptr && isNominalClosingParticle(*match.entry)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool hasGenitiveNominalSelector(const std::vector<char32_t>& codepoints,
+                                const std::vector<normalize::CharType>& char_types, size_t start_pos,
+                                const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos < 2 || codepoints[start_pos - 1] != U'の') {
+    return false;
+  }
+  const auto* genitive = dict_manager->lookupExact("の", core::PartOfSpeech::Particle);
+  if (genitive == nullptr || genitive->extended_pos != core::ExtendedPOS::ParticleNo) {
+    return false;
+  }
+  if (char_types[start_pos - 2] != normalize::CharType::Hiragana) {
+    return true;
+  }
+
+  // A case-marked nominal may itself select a head through の
+  // (土地+へ+の+あこがれ). Require the complete case particle and a visible
+  // non-hiragana host rather than treating every hiragana の as genitive.
+  const size_t max_particle_length = std::min(start_pos - 1, static_cast<size_t>(4));
+  for (size_t length = 1; length <= max_particle_length; ++length) {
+    const size_t particle_start = start_pos - 1 - length;
+    if (particle_start == 0 || char_types[particle_start - 1] == normalize::CharType::Hiragana) {
+      continue;
+    }
+    const std::string particle_surface = extractSubstring(codepoints, particle_start, start_pos - 1);
+    const auto* particle = dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle);
+    if (particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleCase) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool hasAttributiveNominalSelector(const std::vector<char32_t>& codepoints,
+                                   const std::vector<normalize::CharType>& char_types, size_t start_pos,
+                                   const grammar::Inflection& inflection,
+                                   const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0) {
+    return false;
+  }
+  constexpr size_t kMaximumSelectorLength = 6;
+  const size_t first_selector = start_pos > kMaximumSelectorLength ? start_pos - kMaximumSelectorLength : 0;
+  const auto* attributive_copula =
+      codepoints[start_pos - 1] == U'な' ? dict_manager->lookupExact("な", core::PartOfSpeech::Auxiliary) : nullptr;
+  for (size_t selector_start = first_selector; selector_start < start_pos; ++selector_start) {
+    // A na-adjective selects a nominal head through its explicit attributive
+    // copula (AdjNa+な+X).  The existing adjective probe only recognizes a
+    // single AdjBasic edge ending at the head, so inspect this closed two-edge
+    // selector separately.  Requiring both AdjNaAdj and AuxCopulaDa leaves
+    // ordinary i-adjective attribution (美しい+人) on its existing path.
+    if (attributive_copula != nullptr && attributive_copula->extended_pos == core::ExtendedPOS::AuxCopulaDa &&
+        selector_start + 1 < start_pos) {
+      const std::string adjective_stem = extractSubstring(codepoints, selector_start, start_pos - 1);
+      const auto* na_adjective = dict_manager->lookupExact(adjective_stem, core::PartOfSpeech::Adjective);
+      if (na_adjective != nullptr && na_adjective->extended_pos == core::ExtendedPOS::AdjNaAdj) {
+        return true;
+      }
+      const auto na_adjective_candidates =
+          generateNaAdjectiveCandidates(codepoints, selector_start, char_types, UnknownOptions{}, dict_manager);
+      if (std::any_of(
+              na_adjective_candidates.begin(), na_adjective_candidates.end(), [start_pos](const auto& adjective) {
+                return adjective.end == start_pos - 1 && adjective.pos == core::PartOfSpeech::Adjective &&
+                       adjective.extended_pos == core::ExtendedPOS::AdjNaAdj &&
+                       adjective.origin == CandidateOrigin::AdjectiveNa && adjective.cost <= candidate::kNaAdjStemCost;
+              })) {
+        return true;
+      }
+    }
+    const std::string selector_surface = extractSubstring(codepoints, selector_start, start_pos);
+    if (dict_manager->lookupExact(selector_surface, core::PartOfSpeech::Determiner) != nullptr) {
+      return true;
+    }
+    const auto* exact_adjective = dict_manager->lookupExact(selector_surface, core::PartOfSpeech::Adjective);
+    if (exact_adjective != nullptr && exact_adjective->extended_pos == core::ExtendedPOS::AdjBasic) {
+      return true;
+    }
+    std::vector<UnknownCandidate> adjective_candidates;
+    if (char_types[selector_start] == normalize::CharType::Kanji) {
+      adjective_candidates =
+          generateAdjectiveCandidates(codepoints, selector_start, char_types, inflection, dict_manager);
+    } else if (char_types[selector_start] == normalize::CharType::Hiragana) {
+      adjective_candidates =
+          generateHiraganaAdjectiveCandidates(codepoints, selector_start, char_types, inflection, dict_manager);
+    }
+    if (std::any_of(adjective_candidates.begin(), adjective_candidates.end(), [start_pos](const auto& adjective) {
+          return adjective.end == start_pos && adjective.pos == core::PartOfSpeech::Adjective &&
+                 adjective.extended_pos == core::ExtendedPOS::AdjBasic &&
+                 adjective.cost <= candidate::kAttributiveSelectorMaxCost;
+        })) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool isSelectedNominalHeadShape(const std::vector<normalize::CharType>& char_types, size_t start_pos, size_t end_pos,
+                                bool has_attributive_selector) {
+  const size_t length = end_pos - start_pos;
+  const bool all_hiragana = std::all_of(char_types.begin() + static_cast<std::ptrdiff_t>(start_pos),
+                                        char_types.begin() + static_cast<std::ptrdiff_t>(end_pos),
+                                        [](normalize::CharType type) { return type == normalize::CharType::Hiragana; });
+  if (all_hiragana) {
+    return length >= (has_attributive_selector ? 2U : 3U);
+  }
+  // Both an explicit attributive and genitive の select a nominal head.  A
+  // mixed kanji-hiragana head (谷の向こうに) is therefore as well evidenced
+  // as the existing attributive case; exact predicate readings and internal
+  // auxiliary/particle decompositions are rejected by the caller.
+  if (length < 2 || char_types[start_pos] != normalize::CharType::Kanji ||
+      char_types[start_pos + 1] != normalize::CharType::Hiragana) {
+    return false;
+  }
+  return std::all_of(char_types.begin() + static_cast<std::ptrdiff_t>(start_pos + 1),
+                     char_types.begin() + static_cast<std::ptrdiff_t>(end_pos),
+                     [](normalize::CharType type) { return type == normalize::CharType::Hiragana; });
 }
 
 }  // namespace
+
+bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                       const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 1) {
+    return false;
+  }
+  const std::string whole = extractSubstring(codepoints, start_pos, end_pos);
+  if (dict_manager->lookupExact(whole, core::PartOfSpeech::Noun) != nullptr ||
+      dict_manager->lookupExact(whole, core::PartOfSpeech::Verb) != nullptr ||
+      dict_manager->lookupExact(whole, core::PartOfSpeech::Adjective) != nullptr ||
+      dict_manager->lookupExact(whole, core::PartOfSpeech::Adverb) != nullptr) {
+    return false;
+  }
+  for (size_t split = start_pos + 1; split < end_pos; ++split) {
+    const std::string left = extractSubstring(codepoints, start_pos, split);
+    const std::string right = extractSubstring(codepoints, split, end_pos);
+    if (dict_manager->lookupExact(left, core::PartOfSpeech::Auxiliary) != nullptr &&
+        dict_manager->lookupExact(right, core::PartOfSpeech::Particle) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::vector<UnknownCandidate> generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoints,
+                                                                    size_t start_pos,
+                                                                    const std::vector<normalize::CharType>& char_types,
+                                                                    const grammar::Inflection& inflection,
+                                                                    const dictionary::DictionaryManager* dict_manager) {
+  std::vector<UnknownCandidate> candidates;
+  if (dict_manager == nullptr || start_pos >= codepoints.size()) {
+    return candidates;
+  }
+
+  const bool has_genitive_selector = hasGenitiveNominalSelector(codepoints, char_types, start_pos, dict_manager);
+  const bool has_attributive_selector =
+      hasAttributiveNominalSelector(codepoints, char_types, start_pos, inflection, dict_manager);
+  if (!has_genitive_selector && !has_attributive_selector) {
+    return candidates;
+  }
+
+  constexpr size_t kMaximumSelectedHeadLength = 4;
+  const auto* head_initial_particle =
+      dict_manager->lookupExact(extractSubstring(codepoints, start_pos, start_pos + 1), core::PartOfSpeech::Particle);
+  if (has_attributive_selector && head_initial_particle != nullptr &&
+      isNominalBoundaryParticle(*head_initial_particle)) {
+    return candidates;
+  }
+  for (size_t length = 2; length <= kMaximumSelectedHeadLength; ++length) {
+    const size_t head_end = start_pos + length;
+    if (head_end > codepoints.size() ||
+        !isSelectedNominalHeadShape(char_types, start_pos, head_end, has_attributive_selector) ||
+        !hasNominalClosingParticleAt(codepoints, head_end, dict_manager)) {
+      continue;
+    }
+
+    const std::string head_surface = extractSubstring(codepoints, start_pos, head_end);
+    const bool mixed_head = char_types[start_pos] == normalize::CharType::Kanji;
+    bool has_productive_adjective_nominalization = false;
+    if (codepoints[head_end - 1] == U'さ') {
+      const auto adjective_candidates =
+          generateAdjectiveStemCandidates(codepoints, start_pos, char_types, inflection, dict_manager);
+      has_productive_adjective_nominalization =
+          std::any_of(adjective_candidates.begin(), adjective_candidates.end(), [head_end](const auto& adjective) {
+            return adjective.end == head_end - 1 && adjective.pos == core::PartOfSpeech::Adjective;
+          });
+    }
+    if (isAdjectiveNominalizationSa(dict_manager, codepoints, start_pos, head_end) ||
+        has_productive_adjective_nominalization ||
+        (mixed_head && hasInternalNominalParticleBoundary(codepoints, start_pos, head_end, dict_manager))) {
+      continue;
+    }
+    bool has_exact_noun = false;
+    bool has_exact_renyokei = false;
+    bool has_blocking_exact_reading = false;
+    for (const auto& match : dict_manager->lookup(head_surface, 0)) {
+      if (match.entry == nullptr || match.length != length) {
+        continue;
+      }
+      if (match.entry->pos == core::PartOfSpeech::Noun) {
+        has_exact_noun = true;
+      } else if (match.entry->pos == core::PartOfSpeech::Verb &&
+                 match.entry->extended_pos == core::ExtendedPOS::VerbRenyokei) {
+        has_exact_renyokei = true;
+      } else {
+        has_blocking_exact_reading = true;
+      }
+    }
+    if (has_exact_noun || has_blocking_exact_reading ||
+        (!has_attributive_selector &&
+         hasAuxiliaryParticleDecomposition(codepoints, start_pos, head_end, dict_manager))) {
+      continue;
+    }
+
+    const float noun_cost = length == kMaximumSelectedHeadLength ? candidate::kSelectedNominalFourMoraHeadCost
+                                                                 : candidate::kSelectedNominalShortHeadCost;
+    auto noun_candidate = makeCandidate(head_surface, start_pos, head_end, core::PartOfSpeech::Noun, noun_cost,
+                                        /*has_suffix=*/true, CandidateOrigin::SelectedNominalHead);
+    noun_candidate.extended_pos = has_exact_renyokei ? core::ExtendedPOS::NounVerbal : core::ExtendedPOS::Noun;
+#ifdef SUZUME_DEBUG_INFO
+    noun_candidate.pattern = has_genitive_selector ? "genitive_selected_noun" : "attributive_selected_noun";
+#endif
+    candidates.push_back(std::move(noun_candidate));
+  }
+  return candidates;
+}
 
 std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types,
@@ -50,6 +349,32 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   // E.g., in 魔法少女まどか, skip generating 女まど at pos=3.
   // Dictionary entries (玉ねぎ etc.) are handled separately as dict candidates.
   if (start_pos > 0 && char_types[start_pos - 1] == normalize::CharType::Kanji) {
+    return candidates;
+  }
+
+  // A non-quantity nominal stem plus the closed comparison bound 以上/以下
+  // forms one search unit (必要以上, 期待以下). Numeral+counter phrases retain
+  // their compositional boundary (三名|以上, 百倍|以下), which is owned by the
+  // counter generator. A following nominal selector proves the right edge.
+  size_t comparison_end = start_pos;
+  while (comparison_end < char_types.size() && char_types[comparison_end] == normalize::CharType::Kanji) {
+    ++comparison_end;
+  }
+  if (comparison_end >= start_pos + 4 &&
+      ((codepoints[comparison_end - 2] == U'以' && codepoints[comparison_end - 1] == U'上') ||
+       (codepoints[comparison_end - 2] == U'以' && codepoints[comparison_end - 1] == U'下')) &&
+      !normalize::isNumeralCodepoint(codepoints[comparison_end - 3]) &&
+      !normalize::isCounterKanji(codepoints[comparison_end - 3]) &&
+      hasNominalPhraseSelectorAt(dict_manager, codepoints, comparison_end)) {
+    const std::string surface = extractSubstring(codepoints, start_pos, comparison_end);
+    auto comparison = makeCandidate(surface, start_pos, comparison_end, core::PartOfSpeech::Noun,
+                                    candidate::kComparisonCompoundNounCost, false, CandidateOrigin::SuffixPattern);
+    comparison.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+    comparison.confidence = candidate::kDictionaryOriginConfidence;
+    comparison.pattern = "comparison_bound_compound";
+#endif
+    candidates.push_back(std::move(comparison));
     return candidates;
   }
 
@@ -77,7 +402,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     for (std::string_view suffix : {kGakari, kGake}) {
       const size_t suffix_end = suffix_start + normalize::utf8Length(suffix);
       if (suffix_end > codepoints.size() || extractSubstring(codepoints, suffix_start, suffix_end) != suffix ||
-          !hasNominalPhraseParticleAt(dict_manager, codepoints, suffix_end)) {
+          !hasNominalPhraseSelectorAt(dict_manager, codepoints, suffix_end)) {
         continue;
       }
       const std::string surface = extractSubstring(codepoints, start_pos, suffix_end);
@@ -442,6 +767,20 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     looks_like_aux = true;
   }
 
+  // A terminal copular だ is always a separate grammatical boundary after a
+  // nominal or na-adjective stem (平ら+だ), never part of an unknown mixed-
+  // script compound noun.
+  if (last_hira == U'だ') {
+    return candidates;
+  }
+
+  // X+さ is an adjective nominalization when X is a verified adjective stem;
+  // keep that morpheme boundary instead of treating the mixed-script span as
+  // an opaque noun merely because a case particle follows it.
+  if (isAdjectiveNominalizationSa(dict_manager, codepoints, start_pos, hiragana_end)) {
+    looks_like_aux = true;
+  }
+
   // Skip NOUN generation for pure auxiliary patterns
   // These should always be verb stem + auxiliary, never a compound noun
   // e.g., 寝ます should be 寝(VERB) + ます(AUX), not 寝ます(NOUN)
@@ -488,11 +827,13 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   std::string surface = extractSubstring(codepoints, start_pos, hiragana_end);
   if (!surface.empty()) {
     float cost = looks_like_aux ? 3.5F : 1.0F;
-    auto cand = makeCandidate(surface, start_pos, hiragana_end, core::PartOfSpeech::Noun, cost, false,
-                              CandidateOrigin::KanjiHiraganaCompound);
+    const bool nominal_context = !looks_like_aux && hasNominalPhraseSelectorAt(dict_manager, codepoints, hiragana_end);
+    auto cand = makeCandidate(
+        surface, start_pos, hiragana_end, core::PartOfSpeech::Noun, cost, false,
+        nominal_context ? CandidateOrigin::KanjiHiraganaNominalCompound : CandidateOrigin::KanjiHiraganaCompound);
 #ifdef SUZUME_DEBUG_INFO
     cand.confidence = looks_like_aux ? 0.3F : 0.8F;
-    cand.pattern = looks_like_aux ? "aux_like" : "compound";
+    cand.pattern = looks_like_aux ? "aux_like" : (nominal_context ? "nominal_compound" : "compound");
 #endif
     candidates.push_back(cand);
   }

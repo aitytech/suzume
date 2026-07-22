@@ -50,6 +50,21 @@ void resolveAppearanceSouPredicate(std::vector<core::Morpheme>& result) {
     retagAppearanceSou(sou);
   }
 
+  // A productive -しい adjective loses its final い before appearance そう.
+  // The remaining ...し stem can be selected as a plain noun homograph, but
+  // NounVerbal (話し+そう) must keep its verbal reading.  The closed そう
+  // follower resolves only the plain-noun homograph without enumerating
+  // adjective lexemes.
+  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
+    auto& stem = result[idx];
+    const auto& sou = result[idx + 1];
+    if (stem.extended_pos != core::ExtendedPOS::Noun || !utf8::endsWith(stem.surface, "し") || sou.surface != "そう") {
+      continue;
+    }
+    retag(stem, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjStem, stem.surface + "い",
+          dictionary::ConjugationType::IAdjective, grammar::ConjForm::Base);
+  }
+
   for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
     auto& sou = result[idx];
     auto& predicate = result[idx - 1];
@@ -66,13 +81,17 @@ void resolveAppearanceSouPredicate(std::vector<core::Morpheme>& result) {
       retagNaAdjectivalSou(sou);
       continue;
     }
-    if (predicate.extended_pos == core::ExtendedPOS::VerbRenyokei && sou.extended_pos == core::ExtendedPOS::AdjNaAdj) {
+    if ((predicate.extended_pos == core::ExtendedPOS::VerbRenyokei ||
+         predicate.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+         predicate.extended_pos == core::ExtendedPOS::AuxAspectIru) &&
+        sou.extended_pos == core::ExtendedPOS::AdjNaAdj) {
       retagAppearanceSou(sou);
     }
     if (sou.pos == core::PartOfSpeech::Adverb) {
       const bool verbal_predicate = predicate.extended_pos == core::ExtendedPOS::VerbRenyokei ||
                                     predicate.extended_pos == core::ExtendedPOS::VerbShuushikei ||
-                                    predicate.extended_pos == core::ExtendedPOS::AuxAspectShimau;
+                                    predicate.extended_pos == core::ExtendedPOS::AuxAspectShimau ||
+                                    predicate.extended_pos == core::ExtendedPOS::AuxAspectIru;
       if (verbal_predicate) {
         retagAppearanceSou(sou);
       } else {
@@ -88,7 +107,8 @@ void resolveAppearanceSouPredicate(std::vector<core::Morpheme>& result) {
     const bool has_lexical_predicate = preceding.extended_pos == core::ExtendedPOS::VerbRenyokei ||
                                        preceding.extended_pos == core::ExtendedPOS::VerbShuushikei ||
                                        preceding.extended_pos == core::ExtendedPOS::AdjStem ||
-                                       preceding.extended_pos == core::ExtendedPOS::AuxAspectShimau;
+                                       preceding.extended_pos == core::ExtendedPOS::AuxAspectShimau ||
+                                       preceding.extended_pos == core::ExtendedPOS::AuxAspectIru;
     if (sou.surface != "そう" || sou.pos != core::PartOfSpeech::Adverb || na.surface != "な" || has_lexical_predicate) {
       continue;
     }
@@ -102,7 +122,8 @@ void resolveAppearanceSouPredicate(std::vector<core::Morpheme>& result) {
     auto& sou = result[idx];
     auto& na = result[idx + 1];
     if (sou.surface != "そう" || na.surface != "な" ||
-        (stem.pos != core::PartOfSpeech::Noun && stem.pos != core::PartOfSpeech::Adjective)) {
+        (stem.pos != core::PartOfSpeech::Noun && stem.pos != core::PartOfSpeech::Verb &&
+         stem.pos != core::PartOfSpeech::Adjective)) {
       continue;
     }
     retagAppearanceSou(sou);
@@ -170,6 +191,15 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
     }
 
     if (predicate.pos != core::PartOfSpeech::Noun) {
+      continue;
+    }
+
+    // In an attributive nominal-negative expression (頼り+ない+返事,
+    // 問題+ない+方法), ない is the independent basic adjective modifying the
+    // following nominal, not a dependent verbal auxiliary.
+    if (idx + 1 < result.size() && result[idx + 1].pos == core::PartOfSpeech::Noun &&
+        negative.extended_pos == core::ExtendedPOS::AuxNegativeNai) {
+      retagBasicNegativeAdjective(negative);
       continue;
     }
 
@@ -381,24 +411,75 @@ void resolveInitialNegativeAdjective(std::vector<core::Morpheme>& result) {
   retagBasicNegativeAdjective(negative);
 }
 
-// The negative conditional + ならない is the obligation construction
-// (見なけりゃならない, 読まなきゃならない).  Its middle token is the mizenkei
-// of なる and the final ない is the negative auxiliary, not a conditional
-// particle followed by the independent adjective.
+bool isObligationVerbStem(const core::Morpheme& morpheme) {
+  // The complete right-hand chain supplies the form evidence. Ichidan
+  // mizenkei/renyokei homographs and some generated Godan stems do not yet
+  // carry a stable ExtendedPOS at this resolver stage.
+  return morpheme.pos == core::PartOfSpeech::Verb;
+}
+
+// Contracted obligation/prohibition chains contain several lexical
+// homographs. Resolve their roles only when the complete closed construction
+// and its selecting verb stem are present. This leaves independent ない,
+// conditional なら, and lexical いける untouched.
 void resolveObligationNaranai(std::vector<core::Morpheme>& result) {
-  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
-    const auto& conditional = result[idx - 1];
-    auto& naru = result[idx];
-    auto& negative = result[idx + 1];
-    if (!utf8::equalsAny(conditional.surface, {"なきゃ", "なけりゃ"}) || naru.surface != "なら" ||
+  // V未然 + なきゃ/なけりゃ + なら + ない.
+  for (size_t idx = 1; idx + 2 < result.size(); ++idx) {
+    const auto& verb = result[idx - 1];
+    auto& conditional_negative = result[idx];
+    auto& naru = result[idx + 1];
+    auto& negative = result[idx + 2];
+    if (!isObligationVerbStem(verb) || !utf8::equalsAny(conditional_negative.surface, {"なきゃ", "なけりゃ"}) ||
+        !utf8::equalsAny(naru.surface, {"いけ", "なら"}) || negative.surface != "ない") {
+      continue;
+    }
+    retagNegativeNai(conditional_negative);
+    if (naru.surface == "いけ") {
+      retag(naru, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxPotential, "いける",
+            dictionary::ConjugationType::Ichidan, grammar::ConjForm::Mizenkei);
+    } else {
+      retag(naru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbMizenkei, "なる",
+            dictionary::ConjugationType::GodanRa, grammar::ConjForm::Mizenkei);
+    }
+    retagNegativeNai(negative);
+  }
+
+  // V未然 + なく + ちゃ + いけ/なら + ない.
+  for (size_t idx = 1; idx + 3 < result.size(); ++idx) {
+    const auto& verb = result[idx - 1];
+    auto& negative_continuative = result[idx];
+    const auto& contracted_te = result[idx + 1];
+    auto& obligation = result[idx + 2];
+    auto& negative = result[idx + 3];
+    if (!isObligationVerbStem(verb) || negative_continuative.surface != "なく" || contracted_te.surface != "ちゃ" ||
+        !utf8::equalsAny(obligation.surface, {"いけ", "なら"}) || negative.surface != "ない") {
+      continue;
+    }
+    retagNegativeNai(negative_continuative);
+    if (obligation.surface == "いけ") {
+      retag(obligation, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxPotential, "いける",
+            dictionary::ConjugationType::Ichidan, grammar::ConjForm::Mizenkei);
+    } else {
+      retag(obligation, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbMizenkei, "なる",
+            dictionary::ConjugationType::GodanRa, grammar::ConjForm::Mizenkei);
+    }
+    retagNegativeNai(negative);
+  }
+
+  // V音便 + て/で + は + いけ + ない.
+  for (size_t idx = 1; idx + 3 < result.size(); ++idx) {
+    const auto& verb = result[idx - 1];
+    const auto& connective = result[idx];
+    const auto& topic = result[idx + 1];
+    auto& obligation = result[idx + 2];
+    auto& negative = result[idx + 3];
+    if (!isObligationVerbStem(verb) || connective.extended_pos != core::ExtendedPOS::ParticleConj ||
+        !grammar::isTeDeSurface(connective.surface) || topic.surface != "は" || obligation.surface != "いけ" ||
         negative.surface != "ない") {
       continue;
     }
-    naru.pos = core::PartOfSpeech::Verb;
-    naru.extended_pos = core::ExtendedPOS::VerbMizenkei;
-    naru.lemma = "なる";
-    naru.conj_type = dictionary::ConjugationType::GodanRa;
-    naru.conj_form = grammar::ConjForm::Mizenkei;
+    retag(obligation, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxPotential, "いける",
+          dictionary::ConjugationType::Ichidan, grammar::ConjForm::Mizenkei);
     retagNegativeNai(negative);
   }
 }
@@ -521,8 +602,9 @@ void resolveSimilitudeYou(std::vector<core::Morpheme>& result) {
     if (similitude.surface != "よう" || similitude.extended_pos != core::ExtendedPOS::NounFormal) {
       continue;
     }
-    const bool copula_follows =
-        next.extended_pos == core::ExtendedPOS::AuxCopulaDa || next.extended_pos == core::ExtendedPOS::AuxCopulaDesu;
+    const bool attributive_na_follows = next.surface == "な" && next.pos == core::PartOfSpeech::Particle;
+    const bool copula_follows = next.extended_pos == core::ExtendedPOS::AuxCopulaDa ||
+                                next.extended_pos == core::ExtendedPOS::AuxCopulaDesu || attributive_na_follows;
     const bool ni_follows = next.extended_pos == core::ExtendedPOS::ParticleCase && next.surface == "に";
     const bool renyokei_noun = idx > 0 && result[idx - 1].extended_pos == core::ExtendedPOS::VerbRenyokei;
     if (!copula_follows && (!ni_follows || renyokei_noun)) {
@@ -533,6 +615,9 @@ void resolveSimilitudeYou(std::vector<core::Morpheme>& result) {
     similitude.lemma = "よう";
     similitude.conj_type = dictionary::ConjugationType::None;
     similitude.conj_form = grammar::ConjForm::Base;
+    if (attributive_na_follows) {
+      retagCopulaDa(result[idx + 1]);
+    }
   }
 }
 

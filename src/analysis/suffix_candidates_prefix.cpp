@@ -165,6 +165,47 @@ std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
     const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types) {
   std::vector<UnknownCandidate> candidates;
 
+  // A lexicalized 間もなく begins at the final 間 of a 3+-kanji run
+  // (終了|間もなく).  Preserve the noun boundary before it.  Requiring two
+  // kanji before 間 excludes ordinary one-kanji compounds followed by
+  // も+なく (時間|も|なく), where 間 belongs to the noun on the left.
+  size_t kanji_end = start_pos;
+  while (kanji_end < char_types.size() && char_types[kanji_end] == normalize::CharType::Kanji) {
+    ++kanji_end;
+  }
+  if (kanji_end >= start_pos + 3 && codepoints[kanji_end - 1] == U'間' && kanji_end + 2 < codepoints.size() &&
+      extractSubstring(codepoints, kanji_end - 1, kanji_end + 3) == "間もなく") {
+    const size_t noun_end = kanji_end - 1;
+    const std::string noun = extractSubstring(codepoints, start_pos, noun_end);
+    auto boundary = makeCandidate(noun, start_pos, noun_end, core::PartOfSpeech::Noun,
+                                  candidate::kTemporalNounBoundarySplitBonus, false, CandidateOrigin::PrefixCompound);
+    boundary.lemma = noun;
+#ifdef SUZUME_DEBUG_INFO
+    boundary.confidence = candidate::kHighOriginConfidence;
+    boundary.pattern = "before_ma_mo_naku";
+#endif
+    candidates.push_back(std::move(boundary));
+    return candidates;
+  }
+
+  // A standalone temporal 今 followed by an explicit numeral+counter starts a
+  // new quantity phrase (今|一度, 今|三回).  This differs from prefix compounds
+  // such as 今回, which have no intervening numeral.  Emit only the temporal
+  // head; the counter generator owns the complete quantity on the right.
+  if (start_pos + 2 < codepoints.size() && start_pos + 2 < char_types.size() && codepoints[start_pos] == U'今' &&
+      normalize::isNumeralCodepoint(codepoints[start_pos + 1]) &&
+      normalize::isCounterKanji(codepoints[start_pos + 2])) {
+    auto temporal = makeCandidate("今", start_pos, start_pos + 1, core::PartOfSpeech::Noun,
+                                  candidate::kTemporalNounBoundarySplitBonus, false, CandidateOrigin::PrefixCompound);
+    temporal.lemma = "今";
+#ifdef SUZUME_DEBUG_INFO
+    temporal.confidence = candidate::kHighOriginConfidence;
+    temporal.pattern = "temporal_before_number_counter";
+#endif
+    candidates.push_back(std::move(temporal));
+    return candidates;
+  }
+
   // Need temporal 2-kanji + at least 2 more trailing kanji (gate against lexical
   // 1-kanji suffixes: 現在地/将来性 must stay whole).
   if (start_pos + 3 >= codepoints.size() || start_pos + 3 >= char_types.size()) {

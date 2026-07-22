@@ -25,6 +25,18 @@ namespace suzume::analysis::connection_rules {
 float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};
 
+  // The focus particle も attaches to a complete lexical adverb or
+  // conjunction (あまりに+も, だけど+も).  Its dictionary EPOS is
+  // ParticleTopic, so rules for ParticleBinding cannot express this
+  // connection.  Require a complete dictionary modifier on the left; noun
+  // case stacks (本+に+も) and generated adjectival adverbials remain outside
+  // this preference.
+  if (next.extended_pos == core::ExtendedPOS::ParticleTopic && grammar::isSingleHiragana(next.surface, U'も') &&
+      prev.fromDictionary() &&
+      (prev.pos == core::PartOfSpeech::Adverb || prev.pos == core::PartOfSpeech::Conjunction)) {
+    return cost::kMinorBonus;
+  }
+
   // The comparative case particle follows an adverbial reference point
   // (かねて+より, 以前+より). Keep this relation ahead of its homographic
   // continuative verb without changing other adverb-to-case boundaries.
@@ -131,9 +143,21 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // A dictionary noun that carries a particle-like extended POS is a surface
   // homograph, not a grammatical binding particle. Do not let it replace the
   // topic-particle boundary in nominal predicates such as 本|は|ない.
-  if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Noun &&
-      next.extended_pos == core::ExtendedPOS::ParticleBinding) {
-    bonus += cost::kStrong;
+  const bool noun_before_binding_homograph = prev.pos == core::PartOfSpeech::Noun &&
+                                             next.pos == core::PartOfSpeech::Noun &&
+                                             next.extended_pos == core::ExtendedPOS::ParticleBinding;
+
+  // A complete dictionary noun followed by another nominal head is a normal
+  // compound-noun connection.  Do not charge it the generic unknown
+  // Noun→Noun penalty: otherwise a shorter internal number/formal-noun path
+  // can win merely by summing two negative lexical costs (一人+ひとり versus
+  // the exact search unit 一人ひとり).
+  const bool long_dictionary_noun_compound =
+      prev.origin == core::CandidateOrigin::Dictionary && prev.pos == core::PartOfSpeech::Noun &&
+      next.pos == core::PartOfSpeech::Noun && normalize::utf8Length(prev.surface) >= 4;
+  if (noun_before_binding_homograph || long_dictionary_noun_compound) {
+    bonus += (noun_before_binding_homograph ? cost::kStrong : float{}) +
+             (long_dictionary_noun_compound ? cost::kModerateBonus + cost::kMinorBonus : float{});
   }
 
   // A contracted negative ん cannot be followed by an independent かっ verb.
@@ -221,7 +245,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // NOUN→VERB_連用 has bonus from bigram table, which can beat ADJ_NA path
   // This helps dictionary ADJ_NA entries beat unknown NOUN candidates
   if (prev.extended_pos == core::ExtendedPOS::AdjNaAdj && utf8::startsWith(next.surface, "すぎ")) {
-    bonus += cost::kStrongBonus;
+    bonus += cost::kVeryStrongBonus;
   }
 
   // Surface-based bonus for all-kanji NOUN → すぎ pattern
@@ -361,12 +385,15 @@ float computeExistentialAruNominalPredicateBonus(const core::LatticeEdge& prev, 
 }
 
 float computeCompletionAuxiliaryBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
-  // A lexical renyokei can take the completion subsidiary 終わる in its
-  // irrealis form before negation (読み+終わら+ない). This is distinct from
-  // an arbitrary renyokei-to-verb sequence, which remains discouraged.
+  // A lexical renyokei can productively precede another lexical predicate in
+  // a compound or coordinate verb (読み+終わら+ない, 聞き+逃さ+ない).  Keep the
+  // search-unit boundary between the two verbs, but do not make the generated
+  // mixed-script mizenkei lose to a spurious noun + one-mora verb split.
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
-      utf8::equalsAny(next.lemma, {"終わる"})) {
-    return cost::kDoubleVeryStrongBonus;
+      grammar::containsKanji(next.surface) && next.surface.size() >= core::kTwoJapaneseCharBytes) {
+    // Cancel the generic rare verb-to-verb transition without overwhelming a
+    // complete joined compound edge when one is independently generated.
+    return cost::kVeryStrongBonus;
   }
   return {};
 }

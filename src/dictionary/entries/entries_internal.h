@@ -67,6 +67,11 @@ constexpr EntrySpec noun(const char* s, const char* lemma = "") {
   return {s, POS::Noun, EPOS::Noun, lemma};
 }
 
+// Closed native numeral expressions (ひとつ, みっつ, …).
+constexpr EntrySpec noun_number(const char* s, const char* lemma = "") {
+  return {s, POS::Noun, EPOS::NounNumber, lemma};
+}
+
 // Conjunction helper: creates CONJUNCTION entry
 // Usage: conj("しかし")
 constexpr EntrySpec conj(const char* s, const char* lemma = "") {

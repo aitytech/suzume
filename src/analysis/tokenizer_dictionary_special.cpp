@@ -50,16 +50,6 @@ void appendSpecialGrammarCandidates(core::Lattice& lattice, std::string_view tex
                     core::ExtendedPOS::Conjunction, "contrastive_ippou");
   }
 
-  // The formal copular topic では remains a single search unit before ある
-  // (ではあるまいか, ではあるが).  Other では contexts retain the productive
-  // で+は boundary used by copular negation.
-  if (grammar::startsCopularTopicAru(text.substr(byte_pos))) {
-    lattice.addEdge("では", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 2),
-                    core::PartOfSpeech::Conjunction, candidate::kCopularTopicAruCandidateCost, 0, "では",
-                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
-                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::Conjunction, "copular_topic_aru");
-  }
-
   // The result expression ことに+なる is lexicalized at the formal-noun
   // boundary.  Keep its closed grammatical head searchable without changing
   // ordinary clause nominalization (読むことにする).

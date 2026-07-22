@@ -139,6 +139,7 @@ extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount] = {
     {"落とす", "おとす", "す", V2VerbType::Godan},                   // 切り落とす, 打ち落とす
     {"落ちる", "おちる", "ちる", V2VerbType::Ichidan},               // 転げ落ちる
     {"掛ける", "かける", "ける", V2VerbType::Ichidan},               // 呼び掛ける, 働き掛ける
+    {"掛ける", "がける", "ける", V2VerbType::Ichidan},               // Compound-internal rendaku reading
     {"付ける", "つける", "ける", V2VerbType::Ichidan},               // 押し付ける, 決め付ける
     {"当てる", "あてる", "てる", V2VerbType::Ichidan},               // 振り当てる
     {"向ける", "むける", "ける", V2VerbType::Ichidan},               // 差し向ける
@@ -155,28 +156,28 @@ extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount] = {
     {"締める", "しめる", "める", V2VerbType::Ichidan},               // 抱きしめる, 締め締める
     {"止める", "とめる", "める", V2VerbType::Ichidan},               // 受け止める, 食い止める
     {"入る", "いる", "る", V2VerbType::Godan},                       // 飛び入る, 立ち入る
-    {"止まる", "とまる", "る", V2VerbType::Godan},          // 立ち止まる, 踏み止まる, 思い止まる
-    {"留める", "とめる", "める", V2VerbType::Ichidan},      // 書き留める
-    {"寄せる", "よせる", "せる", V2VerbType::Ichidan},      // 取り寄せる, 引き寄せる
-    {"伸べる", "のべる", "べる", V2VerbType::Ichidan},      // 差し伸べる
-    {"控える", "ひかえる", "える", V2VerbType::Ichidan},    // 差し控える
-    {"逃れる", "のがれる", "れる", V2VerbType::Ichidan},    // 言い逃れる
-    {"聞かせる", "きかせる", "せる", V2VerbType::Ichidan},  // 言い聞かせる
-    {"伏せる", "ふせる", "せる", V2VerbType::Ichidan},      // 組み伏せる
-    {"混ぜる", "まぜる", "ぜる", V2VerbType::Ichidan},      // 取り混ぜる
-    {"詰める", "つめる", "める", V2VerbType::Ichidan},      // 追い詰める, 追いつめる
-    {"求める", "もとめる", "める", V2VerbType::Ichidan},    // 追い求める
-    {"捨てる", "すてる", "てる", V2VerbType::Ichidan},      // 見捨てる
-    {"届ける", "とどける", "ける", V2VerbType::Ichidan},    // 聞き届ける
-    {"添える", "そえる", "える", V2VerbType::Ichidan},      // 書き添える
-    {"押さえる", "おさえる", "える", V2VerbType::Ichidan},  // 取り押さえる
-    {"調べる", "しらべる", "べる", V2VerbType::Ichidan},    // 取り調べる
-    {"違える", "ちがえる", "える", V2VerbType::Ichidan},    // 取り違える
-    {"退ける", "のける", "ける", V2VerbType::Ichidan},      // 押し退ける
-    {"遅れる", "おくれる", "れる", V2VerbType::Ichidan},    // 乗り遅れる
-    {"忘れる", "わすれる", "れる", V2VerbType::Ichidan},    // 置き忘れる, 言い忘れる
-    {"起きる", "おきる", "きる", V2VerbType::Ichidan},      // 飛び起きる
-    {"下りる", "おりる", "りる", V2VerbType::Ichidan},      // 飛び下りる
+    {"止まる", "とまる", "る", V2VerbType::Godan},               // 立ち止まる, 踏み止まる, 思い止まる
+    {"留める", "とめる", "める", V2VerbType::Ichidan},           // 書き留める
+    {"寄せる", "よせる", "せる", V2VerbType::Ichidan},           // 取り寄せる, 引き寄せる
+    {"伸べる", "のべる", "べる", V2VerbType::Ichidan},           // 差し伸べる
+    {"控える", "ひかえる", "える", V2VerbType::Ichidan},         // 差し控える
+    {"逃れる", "のがれる", "れる", V2VerbType::Ichidan},         // 言い逃れる
+    {"聞かせる", "きかせる", "せる", V2VerbType::Ichidan},       // 言い聞かせる
+    {"伏せる", "ふせる", "せる", V2VerbType::Ichidan},           // 組み伏せる
+    {"混ぜる", "まぜる", "ぜる", V2VerbType::Ichidan},           // 取り混ぜる
+    {"詰める", "つめる", "める", V2VerbType::Ichidan},           // 追い詰める, 追いつめる
+    {"求める", "もとめる", "める", V2VerbType::Ichidan},         // 追い求める
+    {"捨てる", "すてる", "てる", V2VerbType::Ichidan},           // 見捨てる
+    {"届ける", "とどける", "ける", V2VerbType::Ichidan},         // 聞き届ける
+    {"添える", "そえる", "える", V2VerbType::Ichidan},           // 書き添える
+    {"押さえる", "おさえる", "える", V2VerbType::Ichidan},       // 取り押さえる
+    {"調べる", "しらべる", "べる", V2VerbType::Ichidan},         // 取り調べる
+    {"違える", "ちがえる", "える", V2VerbType::Ichidan},         // 取り違える
+    {"退ける", "のける", "ける", V2VerbType::Ichidan},           // 押し退ける
+    {"遅れる", "おくれる", "れる", V2VerbType::Ichidan},         // 乗り遅れる
+    {"忘れる", "わすれる", "れる", V2VerbType::Ichidan, false},  // 置き忘れる, 言い忘れる
+    {"起きる", "おきる", "きる", V2VerbType::Ichidan},           // 飛び起きる
+    {"下りる", "おりる", "りる", V2VerbType::Ichidan},           // 飛び下りる
     {"そこなう", "そこなう", "う", V2VerbType::Godan, true, false},  // 確認しそこなう
     {"損じる", "そんじる", "じる", V2VerbType::Ichidan},             // 書き損じる, 読み損じる
     {"渡る", "わたる", "る", V2VerbType::Godan},                     // 飛び渡る, 歩き渡る

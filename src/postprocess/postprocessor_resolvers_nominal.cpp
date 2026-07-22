@@ -119,13 +119,16 @@ void resolveNominalCaseDe(std::vector<core::Morpheme>& result) {
          (successor->surface == "も" && ((is_na_adjective && idx + 2 < result.size() &&
                                           utf8::equalsAny(result[idx + 2].surface, {"ない", "なく", "なかっ"})) ||
                                          is_adverbial_predicate || is_contracted_negative)));
+    const bool topic_starts_copular_aru =
+        successor != nullptr && successor->extended_pos == core::ExtendedPOS::ParticleTopic &&
+        idx + 2 < result.size() && utf8::equalsAny(result[idx + 2].surface, {"ある", "あり", "あろ", "あれ"});
     const bool binding_is_copular = successor != nullptr &&
                                     successor->extended_pos == core::ExtendedPOS::ParticleBinding &&
                                     (successor->surface != "も" || is_adverbial_predicate || is_contracted_negative);
     const bool is_copular_continuation =
         successor != nullptr &&
         (successor->extended_pos == core::ExtendedPOS::AuxGozaru || follows_negative || topic_starts_copular_negative ||
-         binding_is_copular ||
+         topic_starts_copular_aru || binding_is_copular ||
          (successor->extended_pos == core::ExtendedPOS::AuxCopulaDa && successor->surface != "あっ") ||
          (is_na_adjective && successor->surface == "あっ") ||
          utf8::equalsAny(successor->surface, {"ある", "あり", "あろ", "あれ", "ござい", "ござる"}));
@@ -141,6 +144,13 @@ void resolveNominalCaseDe(std::vector<core::Morpheme>& result) {
         tendency.lemma = "がち";
       }
       retagCopulaDa(de);
+      if (topic_starts_copular_aru) {
+        auto& aru = result[idx + 2];
+        aru.pos = core::PartOfSpeech::Auxiliary;
+        aru.extended_pos = core::ExtendedPOS::AuxCopulaDa;
+        aru.lemma = "ある";
+        aru.conj_type = dictionary::ConjugationType::GodanRa;
+      }
       if (successor != nullptr && successor->surface == "ござる") {
         auto& gozaru = *successor;
         gozaru.pos = core::PartOfSpeech::Auxiliary;
@@ -183,8 +193,16 @@ void resolveNominalConditionalNara(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx < result.size(); ++idx) {
     const auto& predecessor = result[idx - 1];
     auto& nara = result[idx];
-    if (predecessor.pos != core::PartOfSpeech::Noun || nara.surface != "なら" ||
-        nara.extended_pos != core::ExtendedPOS::VerbMizenkei) {
+    const bool follows_nominal_or_finite =
+        predecessor.pos == core::PartOfSpeech::Noun || predecessor.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+        predecessor.extended_pos == core::ExtendedPOS::AdjBasic || predecessor.pos == core::PartOfSpeech::Auxiliary;
+    const bool limiting_chain = predecessor.surface == "のみ" && idx + 1 < result.size() &&
+                                result[idx + 1].extended_pos == core::ExtendedPOS::AuxNegativeNu;
+    const bool obligation_chain = predecessor.extended_pos == core::ExtendedPOS::AuxNegativeNai &&
+                                  utf8::equalsAny(predecessor.surface, {"なきゃ", "なけりゃ"}) &&
+                                  idx + 1 < result.size() && result[idx + 1].surface == "ない";
+    if ((!follows_nominal_or_finite && !limiting_chain) || nara.surface != "なら" ||
+        nara.extended_pos != core::ExtendedPOS::VerbMizenkei || obligation_chain) {
       continue;
     }
     nara.pos = core::PartOfSpeech::Particle;
@@ -220,7 +238,16 @@ void resolveNominalDeAru(std::vector<core::Morpheme>& result) {
 // 以上、十倍以上). The lattice also emits an adverbial homograph, so restore the
 // nominal category after token boundaries have been selected.
 void resolveComparisonNoun(std::vector<core::Morpheme>& result) {
-  for (auto& morpheme : result) {
+  for (size_t idx = 0; idx < result.size(); ++idx) {
+    auto& morpheme = result[idx];
+    // Quantity+近く is the approximate-count noun (百件+近く), whereas
+    // predicate/adjective contexts keep the ordinary adjective 近い
+    // (駅の近く, 近くない). The numeric ExtendedPOS supplies the local gate.
+    if (morpheme.surface == "近く" && idx > 0 && result[idx - 1].extended_pos == core::ExtendedPOS::NounNumber) {
+      retag(morpheme, core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, "近く", dictionary::ConjugationType::None,
+            grammar::ConjForm::Base);
+      continue;
+    }
     if (morpheme.surface != "以上") {
       continue;
     }
@@ -269,6 +296,9 @@ void resolveAdjectiveNominalizerSa(std::vector<core::Morpheme>& result) {
     auto& suffix = result[idx];
     const auto& adjective = result[idx - 1];
     if (suffix.surface != "さ" || adjective.pos != core::PartOfSpeech::Adjective) {
+      continue;
+    }
+    if (idx + 1 < result.size() && result[idx + 1].extended_pos == core::ExtendedPOS::AuxPassive) {
       continue;
     }
     suffix.pos = core::PartOfSpeech::Suffix;
@@ -321,13 +351,38 @@ void resolveIndefiniteCaseDe(std::vector<core::Morpheme>& result) {
 void resolveNominalizedRenyokeiPredicate(std::vector<core::Morpheme>& result) {
   for (size_t idx = 0; idx < result.size(); ++idx) {
     auto& stem = result[idx];
-    if (stem.pos != core::PartOfSpeech::Verb || stem.extended_pos != core::ExtendedPOS::VerbRenyokei ||
-        idx + 1 >= result.size()) {
+    if (stem.pos != core::PartOfSpeech::Verb || idx + 1 >= result.size()) {
       continue;
     }
 
     const auto& next = result[idx + 1];
-    const bool before_copula = next.extended_pos == core::ExtendedPOS::AuxCopulaDa;
+    // A case particle can expose an impossible generated verb reading without
+    // any lexical knowledge: a finite predicate cannot govern directional へ,
+    // and an imperative cannot be followed directly by case から.  The same
+    // surfaces remain verbal before conjunctive から or across punctuation.
+    const bool case_forces_nominal =
+        next.extended_pos == core::ExtendedPOS::ParticleCase &&
+        ((next.surface == "へ" && (stem.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+                                   stem.extended_pos == core::ExtendedPOS::VerbMeireikei)) ||
+         (next.surface == "から" && stem.extended_pos == core::ExtendedPOS::VerbMeireikei));
+    if (case_forces_nominal) {
+      stem.pos = core::PartOfSpeech::Noun;
+      stem.extended_pos = core::ExtendedPOS::Noun;
+      stem.lemma = stem.surface;
+      stem.conj_type = dictionary::ConjugationType::None;
+      stem.conj_form = grammar::ConjForm::Base;
+      continue;
+    }
+
+    if (stem.extended_pos != core::ExtendedPOS::VerbRenyokei) {
+      continue;
+    }
+
+    // Keep every plain-copula form handled by the existing resolver (な/なら/
+    // だろ included), and add the polite copula class.  isPredicativeCopula()
+    // is intentionally narrower and would drop attributive/conjectural forms.
+    const bool before_copula =
+        next.extended_pos == core::ExtendedPOS::AuxCopulaDa || next.extended_pos == core::ExtendedPOS::AuxCopulaDesu;
     const bool before_nominalizing_suffix =
         next.pos == core::PartOfSpeech::Suffix && grammar::isRenyokeiNominalizingSuffix(next.surface);
     const bool before_naru = next.extended_pos == core::ExtendedPOS::ParticleCase && next.surface == "に" &&

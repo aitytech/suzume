@@ -54,6 +54,7 @@ EntrySpecRange getDeterminerEntries() {
 
       // Classical possessive determiner (我が家, 我が子, 我が国)
       det("我が", ""),
+      det("わが", ""),
 
       // Classical/literary determiner (斯かる = such, this kind of)
       // Note: shares hiragana surface with godan-ra verb 掛かる/懸かる (L2: かかる).
@@ -67,6 +68,15 @@ EntrySpecRange getDeterminerEntries() {
 
       // Fixed literary determiner (大いなる希望).
       det("大いなる", ""),
+
+      // Fixed formal determiner (更なる説明).
+      det("更なる", ""),
+      det("しかるべき", ""),
+
+      // Residual formal determiners form a closed attributive class.
+      det("さる", ""),
+      det("きたる", ""),
+      det("こうした", ""),
   };
   return makeEntrySpecRange(kEntries);
 }

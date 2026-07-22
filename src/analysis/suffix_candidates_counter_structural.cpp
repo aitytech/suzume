@@ -35,10 +35,73 @@ bool isObjectCounterKanji(char32_t code_point) {
 }
 }  // namespace
 
+}  // namespace suzume::analysis::counter_detail
+
+namespace suzume::analysis {
+
+bool isRepeatedNumeralNounUnitAt(const std::vector<char32_t>& codepoints,
+                                 const std::vector<normalize::CharType>& char_types, size_t start_pos) {
+  return start_pos + 3 < codepoints.size() && normalize::isNumeralCodepoint(codepoints[start_pos]) &&
+         !normalize::isNumeralCodepoint(codepoints[start_pos + 1]) &&
+         char_types[start_pos + 1] == normalize::CharType::Kanji &&
+         codepoints[start_pos] == codepoints[start_pos + 2] && codepoints[start_pos + 1] == codepoints[start_pos + 3];
+}
+
+}  // namespace suzume::analysis
+
+namespace suzume::analysis::counter_detail {
+
 void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                        const std::vector<normalize::CharType>& char_types,
                                        const dictionary::DictionaryManager* dict_manager,
                                        std::vector<UnknownCandidate>& candidates) {
+  // Kana quantity readings are a finite composition of the closed NounNumber
+  // and quantitative Suffix classes (いち+まい, よん+にん).  MeCab may split
+  // these at arbitrary syllable boundaries, but Suzume already owns both
+  // grammatical components in L1; emit the complete quantity search unit
+  // without registering any open-class word.
+  if (dict_manager != nullptr) {
+    for (size_t number_end = start_pos + 1; number_end < codepoints.size(); ++number_end) {
+      const std::string number_surface = extractSubstring(codepoints, start_pos, number_end);
+      const auto* number_entry = dict_manager->lookupExact(number_surface, core::PartOfSpeech::Noun);
+      if (number_entry == nullptr || number_entry->extended_pos != core::ExtendedPOS::NounNumber) {
+        continue;
+      }
+      for (size_t suffix_end = number_end + 1; suffix_end <= codepoints.size(); ++suffix_end) {
+        const std::string suffix_surface = extractSubstring(codepoints, number_end, suffix_end);
+        if (dict_manager->lookupExact(suffix_surface, core::PartOfSpeech::Suffix) == nullptr) {
+          continue;
+        }
+        std::string surface = extractSubstring(codepoints, start_pos, suffix_end);
+        auto cand = makeCandidate(surface, start_pos, suffix_end, core::PartOfSpeech::Noun,
+                                  candidate::kKanaNumeralCounterMergeBonus, true, CandidateOrigin::Counter,
+                                  core::ExtendedPOS::NounNumber);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "kana_numeral_counter";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+  }
+
+  // Indefinite approximate duration: 数+か+temporal counter (数か月,
+  // 数か年).  数 supplies the quantity and か is the counter linker, so the
+  // three-character quantity remains one search unit even before a following
+  // kanji noun such as 後.
+  if (start_pos + 2 < codepoints.size() && codepoints[start_pos] == U'数' && codepoints[start_pos + 1] == U'か' &&
+      normalize::isTemporalCounterKanji(codepoints[start_pos + 2])) {
+    std::string surface = extractSubstring(codepoints, start_pos, start_pos + 3);
+    auto cand =
+        makeCandidate(surface, start_pos, start_pos + 3, core::PartOfSpeech::Noun, candidate::kNumeralCounterMergeBonus,
+                      false, CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
+    cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+    cand.pattern = "indefinite_approximate_duration";
+#endif
+    candidates.push_back(cand);
+  }
+
   // Repeated numeral-counter units are distributive quantity expressions
   // (一人一人, 一日一日). Keep two identical units as one search unit rather
   // than allowing each discounted counter candidate to split the expression.
@@ -77,11 +140,18 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
   // inventory: ordinary nouns such as 語 and 歩 productively form this shape.
   // Requiring a complete kanji+する predicate keeps lexical kanji compounds
   // and standalone repetitions outside this boundary rule.
-  if (start_pos + 5 < codepoints.size() && normalize::isNumeralCodepoint(codepoints[start_pos]) &&
-      !normalize::isNumeralCodepoint(codepoints[start_pos + 1]) && codepoints[start_pos] == codepoints[start_pos + 2] &&
-      codepoints[start_pos + 1] == codepoints[start_pos + 3] &&
-      char_types[start_pos + 1] == normalize::CharType::Kanji) {
-    if (hasKanjiSuruPredicateAt(codepoints, char_types, start_pos + 4, 2)) {
+  if (start_pos + 5 < codepoints.size() && isRepeatedNumeralNounUnitAt(codepoints, char_types, start_pos)) {
+    const std::string following = extractSubstring(codepoints, start_pos + 4, codepoints.size());
+    bool has_registered_predicate = false;
+    if (dict_manager != nullptr) {
+      for (const auto& result : dict_manager->lookup(following, 0)) {
+        if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Verb) {
+          has_registered_predicate = true;
+          break;
+        }
+      }
+    }
+    if (hasKanjiSuruPredicateAt(codepoints, char_types, start_pos + 4, 2) || has_registered_predicate) {
       std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
       if (!surface.empty()) {
         auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Noun,

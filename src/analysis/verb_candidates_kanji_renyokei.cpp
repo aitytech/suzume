@@ -40,6 +40,19 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
                                      size_t hiragana_end, const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,
                                      const VerbCandidateOptions& verb_opts, std::vector<UnknownCandidate>& candidates) {
+  // A numeral followed by a temporal counter establishes a quantity boundary
+  // (十年|余り, 三日|余り).  An unknown Ichidan proposal must not absorb that
+  // quantity and reinterpret it as a verb merely because the following kana
+  // happens to be an e/i-row continuative.
+  size_t numeral_end = start_pos;
+  while (numeral_end < kanji_end && normalize::isNumeralCodepoint(codepoints[numeral_end])) {
+    ++numeral_end;
+  }
+  if (numeral_end > start_pos && numeral_end < kanji_end &&
+      normalize::isTemporalCounterKanji(codepoints[numeral_end])) {
+    return;
+  }
+
   if (kanji_end < hiragana_end) {
     char32_t first_hira = codepoints[kanji_end];
     // E-row hiragana: え, け, せ, て, ね, へ, め, れ, げ, ぜ, で, べ, ぺ
@@ -189,10 +202,18 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
           adj_homograph_blocked = !(next_cp == U'た' || next_cp == U'て' || next_cp == U'ら' || next_cp == U'さ' ||
                                     next_cp == U'る' || next_cp == U'れ');
         }
+        // A bare, unverified multi-kanji Ichidan continuative immediately
+        // before a closed temporal nominal is itself a deverbal temporal noun
+        // (夜明け+前, 夕暮れ+どき), not evidence for a fabricated predicate such
+        // as 夜明ける. Dictionary-attested verbs and single-kanji predicates
+        // retain their ordinary continuative candidates.
+        const bool unverified_before_temporal_nominal =
+            !ichidan_base_is_dict && kanji_end > start_pos + 1 &&
+            grammar::startsClosedTemporalNominal(extractSubstring(codepoints, renyokei_end, codepoints.size()));
         if (!prefer_suru && !prefer_godan && ichidan_cand.confidence > conf_threshold && !surface_is_dict_noun &&
             !single_kanji_te_form && !suffix_is_dict_verb && !trailing_span_is_dict_suffix &&
             !suffix_is_godan_before_classical_auxiliary && !adj_homograph_blocked &&
-            !unverified_multi_kanji_suru_mizen) {
+            !unverified_multi_kanji_suru_mizen && !unverified_before_temporal_nominal) {
           // Negative cost to strongly favor split over combined analysis
           // Combined forms get optimal_length bonus (-0.5), so we need to be lower
           float base_cost = (causative_follows || passive_follows)
@@ -256,13 +277,26 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
       const bool passive_follows = renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end] == U'ら' &&
                                    codepoints[renyokei_end + 1] == U'れ' &&
                                    vh::isPassiveAuxContinuation(codepoints, renyokei_end + 2, /*strict_masu=*/true);
-      bool has_ichidan_continuation = renyokei_end < codepoints.size() &&
-                                      (codepoints[renyokei_end] == U'る' || codepoints[renyokei_end] == U'て' ||
-                                       codepoints[renyokei_end] == U'た' || codepoints[renyokei_end] == U'ま' ||
-                                       codepoints[renyokei_end] == U'な' ||
-                                       (codepoints[renyokei_end] == U'れ' && renyokei_end + 1 < codepoints.size() &&
-                                        codepoints[renyokei_end + 1] == U'ば') ||
-                                       follows_kanji_sahen_predicate || causative_follows || passive_follows);
+      const bool classical_negative_follows =
+          renyokei_end < codepoints.size() && (codepoints[renyokei_end] == U'ず' || codepoints[renyokei_end] == U'ぬ');
+      bool follows_symbol_after_case_particle = false;
+      if (renyokei_end < codepoints.size() &&
+          normalize::classifyChar(codepoints[renyokei_end]) == normalize::CharType::Symbol && start_pos > 0 &&
+          dict_manager != nullptr) {
+        const auto* preceding_particle = dict_manager->lookupExact(
+            extractSubstring(codepoints, start_pos - 1, start_pos), core::PartOfSpeech::Particle);
+        follows_symbol_after_case_particle =
+            preceding_particle != nullptr && preceding_particle->extended_pos == core::ExtendedPOS::ParticleCase;
+      }
+      bool has_ichidan_continuation =
+          renyokei_end < codepoints.size() &&
+          (codepoints[renyokei_end] == U'る' || codepoints[renyokei_end] == U'て' ||
+           codepoints[renyokei_end] == U'た' || codepoints[renyokei_end] == U'ま' ||
+           codepoints[renyokei_end] == U'な' || codepoints[renyokei_end] == U'ず' ||
+           codepoints[renyokei_end] == U'ぬ' ||
+           (codepoints[renyokei_end] == U'れ' && renyokei_end + 1 < codepoints.size() &&
+            codepoints[renyokei_end + 1] == U'ば') ||
+           follows_kanji_sahen_predicate || causative_follows || passive_follows || follows_symbol_after_case_particle);
       if (!first_is_single_stem_ending && has_ichidan_continuation &&
           (grammar::isERowCodepoint(second_hira) || grammar::isIRowCodepoint(second_hira))) {
         std::string surface = extractSubstring(codepoints, start_pos, renyokei_end);
@@ -300,11 +334,12 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
                                   ? candidate::verb_cost::kStrongBonus
                                   : candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
                                                                     verb_opts.confidence_cost_scale_small);
-            auto renyokei_candidate = makeVerbCandidate(
-                surface, start_pos, renyokei_end, base_cost, ichidan_cand.base_form,
-                grammar::verbTypeToConjType(ichidan_cand.verb_type), true, CandidateOrigin::VerbKanji,
-                ichidan_cand.confidence, "ichidan_renyokei_multi",
-                causative_follows ? core::ExtendedPOS::VerbMizenkei : core::ExtendedPOS::VerbRenyokei);
+            auto renyokei_candidate =
+                makeVerbCandidate(surface, start_pos, renyokei_end, base_cost, ichidan_cand.base_form,
+                                  grammar::verbTypeToConjType(ichidan_cand.verb_type), true, CandidateOrigin::VerbKanji,
+                                  ichidan_cand.confidence, "ichidan_renyokei_multi",
+                                  (causative_follows || classical_negative_follows) ? core::ExtendedPOS::VerbMizenkei
+                                                                                    : core::ExtendedPOS::VerbRenyokei);
             renyokei_candidate.lemma_verified = base_is_dict_verb;
             candidates.push_back(std::move(renyokei_candidate));
 
@@ -391,6 +426,13 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
       if (best_sa.confidence <= 0.5F)
         continue;
 
+      if (utf8::endsWith(surface, "くし")) {
+        const std::string adjective_base = std::string(utf8::dropLast2Chars(surface)) + "い";
+        if (vh::isAdjectiveInDictionary(dict_manager, adjective_base)) {
+          continue;
+        }
+      }
+
       if (isInterrogativeKanji(codepoints[start_pos])) {
         continue;
       }
@@ -413,14 +455,24 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
           // and 本+とした without suppressing real stems such as 話し or 尽くし.
           if (hira_chars == 2 && renyokei_end < codepoints.size() &&
               (codepoints[renyokei_end] == U'て' || codepoints[renyokei_end] == U'た') &&
-              vh::hasParticleDictionaryEntry(dict_manager, extractSubstring(codepoints, kanji_end, kanji_end + 1))) {
+              vh::hasCaseParticleDictionaryEntry(dict_manager,
+                                                 extractSubstring(codepoints, kanji_end, kanji_end + 1))) {
             SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" godan_sa case-particle+する pattern\n");
             continue;
           }
           if (hira_chars <= 1) {
+            const std::string preceding_surface =
+                start_pos > 0 ? extractSubstring(codepoints, start_pos - 1, start_pos) : std::string();
+            const auto* preceding_particle =
+                dict_manager != nullptr && !preceding_surface.empty()
+                    ? dict_manager->lookupExact(preceding_surface, core::PartOfSpeech::Particle)
+                    : nullptr;
+            const bool follows_case_particle =
+                preceding_particle != nullptr && preceding_particle->extended_pos == core::ExtendedPOS::ParticleCase;
             const bool sahen_past_after_ichidan_stem =
                 hira_chars == 1 && codepoints[kanji_end] == U'し' && renyokei_end < codepoints.size() &&
-                codepoints[renyokei_end] == U'た' && vh::isSingleKanjiIchidan(codepoints[start_pos]);
+                codepoints[renyokei_end] == U'た' && vh::isSingleKanjiIchidan(codepoints[start_pos]) &&
+                !follows_case_particle;
             if (sahen_past_after_ichidan_stem) {
               continue;
             }
@@ -441,7 +493,7 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
           } else {
             // Block kanji+まし pattern (false godan-sa from verb+ます renyoukei)
             // E.g., 来まし → 来ます (false), 出まし → 出ます (false)
-            if (codepoints[kanji_end] == U'ま') {
+            if (codepoints[kanji_end] == U'ま' && vh::isSingleKanjiPoliteStem(codepoints[start_pos])) {
               SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" godan_sa kanji+まし pattern (likely verb+ます)\n");
               continue;
             }

@@ -18,6 +18,19 @@
 
 namespace suzume::analysis::verb_helpers {
 
+bool startsInsideKanjiRunBeforeShi(const std::vector<char32_t>& codepoints, size_t start_pos) {
+  if (start_pos == 0 || start_pos >= codepoints.size() || !normalize::isKanjiCodepoint(codepoints[start_pos - 1]) ||
+      !normalize::isKanjiCodepoint(codepoints[start_pos])) {
+    return false;
+  }
+
+  size_t kanji_end = start_pos + 1;
+  while (kanji_end < codepoints.size() && normalize::isKanjiCodepoint(codepoints[kanji_end])) {
+    ++kanji_end;
+  }
+  return kanji_end < codepoints.size() && codepoints[kanji_end] == U'し';
+}
+
 bool embedsTeFormAuxiliary(std::string_view surface) {
   static constexpr std::string_view kPatterns[] = {
       "ていく", "ていっ", "ていけ", "ていか",                // 〜ていく directional aspect
@@ -86,20 +99,35 @@ bool isSuruAuxiliaryStarter(char32_t next_char) {
          next_char == U'つ';
 }
 
-bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+size_t naiNegativeFormLengthAt(const std::vector<char32_t>& codepoints, size_t pos) {
   if (pos + 1 >= codepoints.size() || codepoints[pos] != U'な') {
-    return false;
+    return 0;
   }
   const char32_t second = codepoints[pos + 1];
-  if (second == U'い' || second == U'く') {
-    return true;
+  if (second == U'い') {
+    return 2;
+  }
+  if (second == U'く') {
+    return pos + 2 < codepoints.size() && codepoints[pos + 2] == U'て' ? 3 : 2;
   }
   if (pos + 2 >= codepoints.size()) {
-    return false;
+    return 0;
   }
   const char32_t third = codepoints[pos + 2];
-  return (second == U'か' && third == U'っ') || (second == U'け' && (third == U'れ' || third == U'り')) ||
-         (second == U'き' && third == U'ゃ');
+  if (second == U'か' && third == U'っ') {
+    return pos + 3 < codepoints.size() && codepoints[pos + 3] == U'た' ? 4 : 3;
+  }
+  if (second == U'け' && third == U'れ') {
+    return pos + 3 < codepoints.size() && codepoints[pos + 3] == U'ば' ? 4 : 3;
+  }
+  if (second == U'け' && third == U'り') {
+    return pos + 3 < codepoints.size() && codepoints[pos + 3] == U'ゃ' ? 4 : 3;
+  }
+  return second == U'き' && third == U'ゃ' ? 3 : 0;
+}
+
+bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  return naiNegativeFormLengthAt(codepoints, pos) != 0;
 }
 
 bool naiConditionalFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
@@ -188,6 +216,10 @@ bool isSingleKanjiIchidan(char32_t c) {
       return true;
   }
   return false;
+}
+
+bool isSingleKanjiPoliteStem(char32_t c) {
+  return isSingleKanjiIchidan(c) || c == U'来';
 }
 
 bool isSingleKanjiIchidanSurface(std::string_view surface) {
@@ -337,8 +369,8 @@ bool isPassiveAuxContinuation(const std::vector<char32_t>& codepoints, size_t po
   if (after_re == U'る' || after_re == U'た' || after_re == U'て') {
     return true;
   }
-  // れな (れない, れなかった)
-  if (after_re == U'な' && pos_after_re + 1 < codepoints.size() && codepoints[pos_after_re + 1] == U'い') {
+  // れ + ない family (れない, れなかった, れなくて, れなければ, ...)
+  if (naiNegativeFollowsAt(codepoints, pos_after_re)) {
     return true;
   }
   // れま (れます, れました); the strict form requires す/せ (excludes bare ま)
@@ -419,6 +451,12 @@ bool shouldSkipSuruVerbAuxPattern(std::string_view surface, size_t kanji_count, 
   // する-auxiliary chain (勉強して, 空回りして) — ends-with semantics
   size_t tail_start = normalize::charToByteOffset(surface, kanji_count);
   std::string_view tail = surface.substr(std::min(tail_start, surface.size()));
+  // Plain する is itself the productive サ変 predicate following the nominal
+  // stem.  Preserve that search boundary even without a further auxiliary;
+  // one-kanji lexical verbs such as 愛する are excluded by kanji_count above.
+  if (tail == "する") {
+    return true;
+  }
   for (size_t pos = 0; pos < tail.size(); normalize::decodeUtf8(tail, pos)) {
     if (isSuruAuxChainTail(tail.substr(pos), inflection)) {
       return true;

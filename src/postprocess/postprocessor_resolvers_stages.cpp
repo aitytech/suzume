@@ -18,6 +18,10 @@ namespace suzume::postprocess {
 // second stage follows PREFIX+VERB nominalization because its rules inspect
 // the resulting noun/verb category.
 void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
+  resolver::resolveDeverbalStemBeforeDependentAuxiliary(result);
+  resolver::resolveQuotedConjecture(result);
+  resolver::resolveAmbiguousInflections(result);
+
   // A small closed class of kanji+i surfaces is an Ichidan continuative stem
   // (強いる, 用いる, 率いる, ...), while some members are also i-adjectives.
   // The passive auxiliary makes the verbal reading unambiguous.
@@ -43,7 +47,6 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::mergeSplitCopularNegative(result);
   resolver::mergeSplitFormalNounNegativeRenyokei(result);
   resolver::resolveInitialNegativeAdjective(result);
-  resolver::resolveObligationNaranai(result);
   resolver::resolveHonorificVerbInflection(result);
   resolver::resolvePreparatoryVolitional(result);
   resolver::resolveCopularForms(result);
@@ -56,6 +59,7 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::resolveComparisonNoun(result);
   resolver::resolveNegativeRenyokei(result);
   resolver::resolveVerbTeParticle(result);
+  resolver::resolveObligationNaranai(result);
   resolver::resolveTearuAuxiliary(result);
   resolver::resolveKuruwaPoliteAru(result);
 
@@ -75,8 +79,10 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::resolveParticleAruOnbin(result);
   resolver::resolveDemonstrativeMiseru(result);
   resolver::resolveBenefactivePotential(result);
+  resolver::resolveBindingParticleNegative(result);
   resolver::resolveInitialInabilityVerb(result);
   resolver::resolveTeBenefactiveNegativePotential(result);
+  resolver::resolveDependentVerbHomographs(result);
   resolver::resolveProgressiveIru(result);
   resolver::resolveSahenRenyokei(result);
   resolver::resolveDemonstrativeQuotativeOnbin(result);
@@ -190,6 +196,191 @@ void resolvePostPrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
 // each resolver observes.
 void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::resolveDurationPredicateKakaru(result);
+  resolver::resolveClosedInflectionalChains(result);
+
+  // Resolve productive homographs from their closed grammatical follower.
+  // These are inflectional patterns, not word lists: 形容詞語幹+げ/すぎる,
+  // 形容詞仮定形+ば, and nominal+的+な are locally unambiguous.
+  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
+    auto& current = result[idx];
+    auto& next = result[idx + 1];
+    // A non-lexical noun candidate ending in い cannot take conjectural だろ
+    // as an attributive noun marker. The closed follower licenses the finite
+    // i-adjective reading (遠い+だろ+う) without touching lexical nouns.
+    if (!current.is_from_dictionary && current.pos == core::PartOfSpeech::Noun &&
+        utf8::endsWith(current.surface, "い") && next.extended_pos == core::ExtendedPOS::AuxCopulaDa &&
+        next.surface == "だろ") {
+      resolver::retag(current, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjBasic, current.surface,
+                      dictionary::ConjugationType::IAdjective, grammar::ConjForm::Base);
+    }
+    if (next.surface == "なき" && current.pos == core::PartOfSpeech::Adjective) {
+      resolver::retag(current, core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, current.surface,
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    }
+    // Once Viterbi has selected 的 as an independent token after a noun, its
+    // role is the productive derivational suffix.  Whole words containing 的
+    // are untouched because they have no separate boundary.
+    if (current.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Noun && next.surface == "的") {
+      resolver::retag(next, core::PartOfSpeech::Suffix, core::ExtendedPOS::Suffix, "的",
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    }
+    if (current.pos != core::PartOfSpeech::Suffix && utf8::endsWith(current.surface, "的") && next.surface == "な") {
+      resolver::retag(current, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjNaAdj, current.surface,
+                      dictionary::ConjugationType::NaAdjective, grammar::ConjForm::Base);
+      resolver::retagCopulaDa(next);
+    }
+    // A kanji predicate selected by attributive copular な is a productive
+    // na-adjective reading, even when its dictionary homograph is an adverb.
+    // The script feature keeps lexical hiragana adverbs such as さすが in
+    // their established role while avoiding an open-class word list.
+    if (idx + 2 < result.size() && current.pos == core::PartOfSpeech::Adverb && grammar::isAllKanji(current.surface) &&
+        next.surface == "な" && next.extended_pos == core::ExtendedPOS::AuxCopulaDa &&
+        (result[idx + 2].pos == core::PartOfSpeech::Noun ||
+         result[idx + 2].extended_pos == core::ExtendedPOS::NounFormal)) {
+      resolver::retag(current, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjNaAdj, current.surface,
+                      dictionary::ConjugationType::NaAdjective, grammar::ConjForm::Base);
+    }
+    if (!current.is_from_dictionary && current.pos == core::PartOfSpeech::Adverb &&
+        utf8::endsWith(current.surface, "く") && next.pos == core::PartOfSpeech::Adjective) {
+      resolver::retag(current, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjRenyokei,
+                      std::string(utf8::dropLastChar(current.surface)) + "い", dictionary::ConjugationType::IAdjective,
+                      grammar::ConjForm::Renyokei);
+    }
+  }
+
+  // Sentence-initial demonstratives are also interjections, but before a
+  // nominal head only the attributive reading is grammatical.
+  if (result.size() >= 2 && result[0].pos == core::PartOfSpeech::Interjection &&
+      utf8::equalsAny(result[0].surface, {"あの", "その"}) &&
+      (result[1].pos == core::PartOfSpeech::Noun || result[1].features.is_formal_noun || result[0].surface == "その")) {
+    resolver::retag(result[0], core::PartOfSpeech::Determiner, core::ExtendedPOS::Determiner, result[0].surface,
+                    dictionary::ConjugationType::None, grammar::ConjForm::Base);
+  }
+
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    auto& current = result[idx];
+    const auto& previous = result[idx - 1];
+    if (current.surface == "たく" && current.lemma == "たい" && current.pos == core::PartOfSpeech::Adjective &&
+        (previous.pos == core::PartOfSpeech::Verb || previous.pos == core::PartOfSpeech::Auxiliary)) {
+      resolver::retag(current, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxDesireTai, "たい",
+                      dictionary::ConjugationType::IAdjective, grammar::ConjForm::Renyokei);
+    }
+    if (current.surface == "より" && previous.pos == core::PartOfSpeech::Verb) {
+      resolver::retag(current, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleCase, "より",
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    }
+    if (current.surface == "が" && previous.surface == "まで") {
+      resolver::retag(current, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleCase, "が",
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    }
+    if (current.surface == "て" && previous.surface == "と") {
+      resolver::retag(current, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleConj, "て",
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    }
+    if (current.surface == "らしく") {
+      resolver::retag(current, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxConjectureRashii, "らしい",
+                      dictionary::ConjugationType::IAdjective, grammar::ConjForm::Renyokei);
+    }
+    if ((current.surface == "はじめ" || current.surface == "そこね") &&
+        previous.extended_pos == core::ExtendedPOS::VerbRenyokei) {
+      const auto epos =
+          current.surface == "はじめ" ? core::ExtendedPOS::AuxAspectHajimeru : core::ExtendedPOS::AuxInability;
+      resolver::retag(current, core::PartOfSpeech::Auxiliary, epos, current.surface + "る",
+                      dictionary::ConjugationType::Ichidan, grammar::ConjForm::Renyokei);
+    }
+    if (current.surface == "な" && previous.pos == core::PartOfSpeech::Adjective &&
+        (previous.conj_type == dictionary::ConjugationType::NaAdjective ||
+         previous.extended_pos == core::ExtendedPOS::AdjNaAdj)) {
+      resolver::retagCopulaDa(current);
+    }
+  }
+
+  if (!result.empty() && result[0].surface == "より") {
+    resolver::retag(result[0], core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleCase, "より",
+                    dictionary::ConjugationType::None, grammar::ConjForm::Base);
+  }
+
+  if (!result.empty() && result[0].surface == "何ら") {
+    resolver::retag(result[0], core::PartOfSpeech::Adverb, core::ExtendedPOS::Adverb, "何ら",
+                    dictionary::ConjugationType::None, grammar::ConjForm::Base);
+  }
+
+  // An i-adjective renyokei keeps its lexical lemma before the independent
+  // negative auxiliary (明るく+なかっ), rather than acquiring a synthetic
+  // compound lemma 明るくない.
+  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
+    auto& current = result[idx];
+    if (current.pos == core::PartOfSpeech::Adjective && utf8::endsWith(current.surface, "く") &&
+        result[idx + 1].surface == "なかっ") {
+      current.lemma = std::string(utf8::dropLastChar(current.surface)) + "い";
+      current.extended_pos = core::ExtendedPOS::AdjRenyokei;
+      current.conj_type = dictionary::ConjugationType::IAdjective;
+      current.conj_form = grammar::ConjForm::Renyokei;
+    }
+    if (current.pos == core::PartOfSpeech::Verb && grammar::endsWithERow(current.surface) &&
+        result[idx + 1].extended_pos == core::ExtendedPOS::AuxNegativeNai) {
+      current.lemma = current.surface + "る";
+      current.conj_type = dictionary::ConjugationType::Ichidan;
+      current.conj_form = grammar::ConjForm::Mizenkei;
+    }
+  }
+
+  // When an adjective renyokei is independently focused by は, the following
+  // ない is the lexical negative adjective rather than a predicate-attached
+  // negative auxiliary (強く+は+なかっ+た).  Preserve the past-stem
+  // inflection selected for なかっ so its POS agrees with that syntax.
+  for (size_t idx = 2; idx < result.size(); ++idx) {
+    auto& negative = result[idx];
+    const auto& focus = result[idx - 1];
+    const auto& adjective = result[idx - 2];
+    if (negative.surface == "なかっ" && negative.extended_pos == core::ExtendedPOS::AuxNegativeNai &&
+        focus.surface == "は" && adjective.pos == core::PartOfSpeech::Adjective &&
+        adjective.extended_pos == core::ExtendedPOS::AdjRenyokei) {
+      resolver::retag(negative, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjKatt, "ない",
+                      dictionary::ConjugationType::IAdjective, grammar::ConjForm::Renyokei);
+    }
+  }
+
+  // Sentence-final ね is the final particle after a completed predicate or
+  // another final particle, not the homographic verb/negative auxiliary.
+  if (result.size() >= 2 && result.back().surface == "ね") {
+    auto& previous = result[result.size() - 2];
+    auto& final_ne = result.back();
+    const bool stacked_particles = grammar::isFinalParticleStack(previous.surface, final_ne.surface);
+    const bool final_context = stacked_particles || previous.extended_pos == core::ExtendedPOS::ParticleFinal ||
+                               previous.pos == core::PartOfSpeech::Verb ||
+                               previous.pos == core::PartOfSpeech::Adjective ||
+                               previous.pos == core::PartOfSpeech::Auxiliary;
+    if (final_context) {
+      if (stacked_particles) {
+        previous.pos = core::PartOfSpeech::Particle;
+        previous.extended_pos = core::ExtendedPOS::ParticleFinal;
+        previous.lemma = previous.surface;
+        previous.conj_type = dictionary::ConjugationType::None;
+        previous.conj_form = grammar::ConjForm::Base;
+      }
+      final_ne.pos = core::PartOfSpeech::Particle;
+      final_ne.extended_pos = core::ExtendedPOS::ParticleFinal;
+      final_ne.lemma = "ね";
+      final_ne.conj_type = dictionary::ConjugationType::None;
+      final_ne.conj_form = grammar::ConjForm::Base;
+    }
+  }
+
+  // A clause-final e-row verb after an argument particle is the Godan
+  // imperative (急げ→急ぐ), not an Ichidan potential stem.  The shared row
+  // table handles every Godan class without lexical enumeration.
+  if (!result.empty()) {
+    auto& final = result.back();
+    const char32_t tail = utf8::decodeFirstChar(utf8::lastChar(final.surface));
+    const std::string_view base_suffix = grammar::godanBaseSuffixFromERow(tail);
+    if (final.pos == core::PartOfSpeech::Verb && !base_suffix.empty() && result.size() >= 2 &&
+        result[result.size() - 2].pos == core::PartOfSpeech::Particle) {
+      final.lemma = std::string(utf8::dropLastChar(final.surface)) + std::string(base_suffix);
+      final.extended_pos = core::ExtendedPOS::VerbMeireikei;
+      final.conj_form = grammar::ConjForm::Meireikei;
+    }
+  }
 
   // Resolve the sentence-initial demonstrative after all compound candidates
   // have been filtered, so retagging cannot alter a copular boundary.
@@ -205,6 +396,12 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
     result[0].lemma = "どう";
     result[0].conj_type = dictionary::ConjugationType::None;
     result[0].conj_form = grammar::ConjForm::Base;
+  }
+  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
+    if (result[idx].surface == "どう" && result[idx + 1].surface == "か") {
+      resolver::retag(result[idx], core::PartOfSpeech::Adverb, core::ExtendedPOS::Adverb, "どう",
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    }
   }
   for (size_t idx = 0; idx + 3 < result.size(); ++idx) {
     const auto& stem = result[idx];
@@ -236,6 +433,36 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
     }
   }
 
+  // Surface たっ is ambiguous between the past auxiliary and the onbin form
+  // of たつ.  The auxiliary reading requires a predicate immediately on its
+  // left; after a case particle (いつまで+たっ+て, 朝から+たっ+て) it is
+  // grammatically impossible, so restore the independent verb.  Predicate+
+  // たって (昨日来+たっ+て) and copular だって never satisfy this gate.
+  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
+    auto& onbin = result[idx];
+    const auto& previous = result[idx - 1];
+    const auto& connective = result[idx + 1];
+    if (onbin.surface == "たっ" && onbin.extended_pos == core::ExtendedPOS::AuxTenseTa &&
+        previous.extended_pos == core::ExtendedPOS::ParticleCase && connective.surface == "て" &&
+        connective.extended_pos == core::ExtendedPOS::ParticleConj) {
+      resolver::retag(onbin, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbOnbinkei, "たつ",
+                      dictionary::ConjugationType::GodanTa, grammar::ConjForm::Onbinkei);
+    }
+  }
+
+  // An otherwise unresolved lexical item directly quantified by a complete
+  // native number phrase is the nominal head of that phrase (まばたき+
+  // ひとつ).  Resolve only Other here; established adverbs, predicates, and
+  // pronouns keep their own readings, and verbal まばたき+する is untouched.
+  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
+    auto& head = result[idx];
+    const auto& quantity = result[idx + 1];
+    if (head.pos == core::PartOfSpeech::Other && quantity.extended_pos == core::ExtendedPOS::NounNumber) {
+      resolver::retag(head, core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, head.surface,
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    }
+  }
+
   // A kanji-plus-て continuative before the past auxiliary or connective
   // particle is an Ichidan stem (立て+て, 棄て+た). The lattice also has a
   // homographic analysis that drops the e-row mora from the lemma; restore
@@ -263,7 +490,9 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
     auto& candidate = result[idx];
     const auto& previous = result[idx - 1];
     const auto& next = result[idx + 1];
-    if (candidate.pos == core::PartOfSpeech::Suffix && previous.extended_pos == core::ExtendedPOS::ParticleNo &&
+    if (candidate.pos == core::PartOfSpeech::Suffix &&
+        (previous.extended_pos == core::ExtendedPOS::ParticleNo ||
+         previous.extended_pos == core::ExtendedPOS::ParticleCase || previous.pos == core::PartOfSpeech::Particle) &&
         next.extended_pos == core::ExtendedPOS::ParticleCase) {
       candidate.pos = core::PartOfSpeech::Noun;
       candidate.extended_pos = core::ExtendedPOS::Noun;

@@ -97,8 +97,9 @@ void adj_detail::appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& 
         // Mark existing candidates with has_suffix if they fit the compound pattern
         for (auto& cand : candidates) {
           size_t hira_len = cand.end - kanji_end;
-          if (hira_len <= kMaxHiraganaLen) {
+          if (cand.pos == core::PartOfSpeech::Adjective && hira_len <= kMaxHiraganaLen) {
             cand.has_suffix = true;
+            cand.cost += candidate::kCompoundIAdjectiveLexicalBonus;
           }
         }
         // Generate new compound candidate if main loop didn't produce one.

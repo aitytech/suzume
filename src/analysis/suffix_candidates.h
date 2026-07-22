@@ -48,6 +48,10 @@ const std::array<SuffixEntry, 22>& getSuffixEntries();
  */
 const std::array<std::string_view, 1>& getNaAdjSuffixes();
 
+/** Return true when four codepoints form a repeated numeral+noun unit (一語一語). */
+bool isRepeatedNumeralNounUnitAt(const std::vector<char32_t>& codepoints,
+                                 const std::vector<normalize::CharType>& char_types, size_t start_pos);
+
 /**
  * @brief Generate candidates with suffix separation
  *
@@ -101,6 +105,23 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(
 std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types,
     const dictionary::DictionaryManager* dict_manager = nullptr);
+
+/**
+ * @brief Generate a short noun head selected by a verified left modifier and
+ * closed by a nominal particle on the right.
+ *
+ * Left evidence is either genitive の or a complete determiner/i-adjective.
+ * The generated span contains the head only; it never absorbs the selector.
+ */
+std::vector<UnknownCandidate> generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoints,
+                                                                    size_t start_pos,
+                                                                    const std::vector<normalize::CharType>& char_types,
+                                                                    const grammar::Inflection& inflection,
+                                                                    const dictionary::DictionaryManager* dict_manager);
+
+/** Return true when a span is exactly a closed auxiliary+particle chain. */
+bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                       const dictionary::DictionaryManager* dict_manager);
 
 /**
  * @brief Generate productive suffix candidates for hiragana sequences

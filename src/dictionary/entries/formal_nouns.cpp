@@ -16,6 +16,7 @@ EntrySpecRange getFormalNounEntries() {
       // ひらがな「ところ」のみ残す
       formal_noun("ところ", ""),
       formal_noun("どころ", ""),
+      formal_noun("ころ", ""),
       formal_noun("時", ""),
       formal_noun("内", ""),
       // Bound temporal/spatial suffix after a nominal stem (期間内、期限内).
@@ -40,6 +41,7 @@ EntrySpecRange getFormalNounEntries() {
       formal_noun("以降", ""),
       // Approximate temporal point (中旬ごろ、夕方ごろに).
       formal_noun("ごろ", ""),
+      formal_noun("どき", ""),
       formal_noun("通り", ""),
       formal_noun("とおり", ""),
       formal_noun("限り", ""),

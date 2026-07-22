@@ -83,6 +83,11 @@ constexpr float kSuffixWholeCandidateCost = 1.2F;
 // It is a complete search unit and must compete with the stem + suffix path,
 // which receives a strong Noun→Suffix connection bonus.
 constexpr float kDerivedSuffixCompoundNounCost = -0.2F;
+// A non-quantity nominal stem plus the closed comparison bound 以上/以下 is a
+// single search unit (必要以上, 期待以下). The strong local cost compensates
+// for the lexical adverb bonus carried by the homographic standalone 以上;
+// generation is gated away from numeral+counter phrases.
+constexpr float kComparisonCompoundNounCost = -3.6F;
 
 // Productive nominal-base suffix verbs such as 春めく and 謎めく. The
 // derivational ending identifies a verbal predicate while keeping ordinary
@@ -218,6 +223,11 @@ constexpr float kCounterComparisonSplitBonus = -1.2F;
 // noun in front of a hiragana verb (三時間|半|かかった).
 constexpr float kCounterHalfSuffixCost = 0.0F;
 
+// Closed extent suffix after a temporal quantity (一日|がけ).  The candidate
+// is emitted only together with a verified NounNumber duration, so lexicalized
+// continuative compounds such as 通りがけ retain their whole-word path.
+constexpr float kCounterExtentSuffixCost = 0.5F;
+
 // Native numeral counters ending in つ (一つ, 二つ) are closed-class quantity
 // expressions. Keep their nominal reading ahead of accidental short-verb
 // analyses before a following content word.
@@ -277,6 +287,12 @@ constexpr float kDurationSpanSplitBonus = -2.6F;
 // kanji→non-kanji boundary, so a following kanji (五度目, 五度見た) keeps its boundary.
 constexpr float kNumeralCounterMergeBonus = -0.5F;
 
+// Closed kana NounNumber + quantitative Suffix composition (いち+まい,
+// よん+にん).  Both split components receive strong dictionary/bigram bonuses,
+// so the complete quantity search unit needs a correspondingly stronger cost.
+// The candidate generator requires exact L1 class evidence on both halves.
+constexpr float kKanaNumeralCounterMergeBonus = -2.0F;
+
 // Fraction merge cost (三分の一, 十分の三). A numerator, the denominator
 // marker 分の, and a numeral denominator form one quantity search unit. The
 // structure is unambiguous and this cost keeps it ahead of the individual
@@ -314,6 +330,13 @@ constexpr float kSuruVerbalNounContextBonus = -0.2F;
 // when nothing better spans the bracket, never shattering (た|ば|こ).
 constexpr float kPostParticleNounPenalty = 0.4F;
 
+// A short unknown nominal head selected on the left by a genitive or verified
+// attributive modifier, and closed on the right by a nominal particle. These
+// reproduce the ordinary hiragana length costs plus the two-sided bracket
+// bonus without granting the same preference to unbounded unknown spans.
+constexpr float kSelectedNominalShortHeadCost = -1.4F;
+constexpr float kSelectedNominalFourMoraHeadCost = -0.8F;
+
 // A pure-hiragana reading enclosed in brackets is metadata for the preceding
 // written form. Keep it as one content token without allowing an unbounded
 // unknown-word merge.
@@ -337,10 +360,21 @@ constexpr float kAdverbExplanatoryCopulaBonus = -0.5F;
 // Hiragana manner adverb ending in んと (きちんと, ちゃんと). This is a
 // productive mimetic shape that otherwise degrades into an unknown noun plus
 // the quotative particle.
-constexpr float kMimeticNtoAdverbBonus = -0.6F;
+constexpr float kMimeticNtoAdverbBonus = -0.8F;
+
+// Four-mora mimetic adverbs followed by the quotative particle (ちくたくと).
+constexpr float kMimeticHeterogeneousAdverbCost = -0.5F;
+
+// ABんCDん+と has two fixed nasal closures and an explicit quotative boundary,
+// making it substantially stronger than an arbitrary heterogeneous kana run.
+constexpr float kMimeticAlternatingNasalAdverbCost = -5.8F;
+
+// Exact repeated halves followed by quotative と are a high-confidence
+// prosodic unit; the bonus must beat one-mora verb/auxiliary homographs.
+constexpr float kMimeticExactReduplicationAdverbCost = -3.5F;
 
 // Four-character sokuon mimetics ending in り/ら (ぐったり, ふっくら).
-constexpr float kMimeticSokuonMannerAdverbCost = 0.2F;
+constexpr float kMimeticSokuonMannerAdverbCost = -0.4F;
 constexpr float kMimeticSokuonMannerConfidence = 0.8F;
 
 // Verified verb in split bonus
@@ -414,6 +448,18 @@ constexpr float kPrefixCompoundVerbStemConf = 0.5F;
 // Compound adjective (2-kanji stem: 薄暗い, 物悲しく)
 constexpr float kCompoundAdjConfMin = 0.3F;   // minimum inflection confidence
 constexpr float kCompoundAdjBaseCost = 0.5F;  // base cost for generated candidate
+// A generated attributive selector must remain on an unpenalized adjective
+// path.  Structurally rejected whole-span hypotheses receive additional cost
+// before this gate, while the weakest regular compound adjective still passes.
+constexpr float kAttributiveSelectorMaxCost =
+    confidenceScaledCost(kCompoundAdjBaseCost, kCompoundAdjConfMin, kKanjiAdjConfScale);
+// A morphologically complete two-kanji i-adjective is a lexical compound
+// rather than a noun followed by a shorter adjective (物悲しく, 薄暗い).
+constexpr float kCompoundIAdjectiveLexicalBonus = -2.0F;
+// A kana-prefixed kanji adjective beginning at a verified post-particle word
+// boundary must beat the accidental particle-chain reading of its prefix
+// (が+も+の+悲しく).
+constexpr float kPrefixedIAdjectiveAfterParticleBonus = -1.6F;
 // Productive 連用形 + っぽい adjective (忘れっぽい, 飽きっぽい). The
 // complete derived adjective competes with a very cheap stem + suffix path.
 constexpr float kProductivePpoiAdjCost = -3.0F;
@@ -423,6 +469,7 @@ constexpr float kProductivePpoiAdjCost = -3.0F;
 // confidence-scaled path.
 constexpr float kDerivedSuffixAdjectiveCost = -1.2F;
 constexpr float kHiraganaNaAdjNariConfidence = 0.9F;
+constexpr float kNaAdjPredicateConfidence = 0.8F;
 // Context-gated lexicalized adverbial adjective (間もなく). Its boundary must
 // compete with the strong noun-to-suffix connection for the preceding 間.
 constexpr float kLexicalizedAdverbialAdjCost = -0.8F;
@@ -443,6 +490,9 @@ constexpr float kDerivedSuffixAdjectiveConfidence = 0.30F;
 // Hiragana i-adjective cost adjustments
 constexpr float kProlongedSoundBonus = -0.1F;   // colloquial すごーい, やばーい
 constexpr float kLongParticleAdjBonus = -0.5F;  // 5+ char particle-starting (はなはだしい)
+// A complete long -く form before a kanji/katakana head has both inflectional
+// and right-boundary evidence (たやすく+答え, いちじるしく+空).
+constexpr float kBoundedHiraganaKuAdjBonus = -0.5F;
 
 // Full-reduplication 〜しい adjective bonus (馬鹿馬鹿しい, バカバカしい, ばかばかしい)
 // A spelled-out doubled stem is otherwise pre-empted by onomatopoeia ADV candidates
@@ -450,7 +500,10 @@ constexpr float kLongParticleAdjBonus = -0.5F;  // 5+ char particle-starting (�
 // adjective needs a strong bonus to win. Applied only when the surface matches the
 // reduplicated head (see verb_helpers::isReduplicatedShiiAdjectiveHead), where the
 // adjective reading is decisively correct across all three scripts.
-constexpr float kReduplicatedShiiAdjBonus = -0.8F;
+// Must beat the otherwise valid reduplicated-adverb + fragmentary しい path;
+// the exact AABB+しい structural gate makes this bonus local to complete
+// adjective candidates rather than to arbitrary lexical surfaces.
+constexpr float kReduplicatedShiiAdjBonus = -4.5F;
 
 // Garu-connection adjective stem (高すぎる, 怖がる)
 constexpr float kGaruAdjConfMin = 0.35F;            // minimum stem+い validity confidence
@@ -497,6 +550,11 @@ constexpr float kImperativeFinalBonus = -0.8F;
 constexpr float kConstructedVerbMinConfidence = 0.5F;
 // Compound V1 context resolves the usual Ichidan/Godan ambiguity.
 constexpr float kCompoundVerbIchidanMinConfidence = 0.25F;
+// A closed, allowlisted V2 sokuonbin followed immediately by た/て supplies
+// stronger compound evidence than a bare V1+V2 adjacency.  Keep this relaxed
+// V1 floor local to that construction; ordinary hiragana compounds retain the
+// general 0.5 threshold.
+constexpr float kClosedOnbinCompoundV1MinConfidence = 0.3F;
 // Stricter bar for WA-row passive base forms, which match spuriously more often.
 constexpr float kConstructedVerbPassiveMinConfidence = 0.6F;
 // Minimum inflection evidence for an unattested short hiragana sokuonbin
@@ -589,6 +647,10 @@ constexpr float kContractedNegativeAuxCost = -0.5F;
 // ない-family form follows. Prefer the productive で(AUX)+も(PARTICLE) path;
 // ordinary adverbial でも before a predicate (本でも読む) stays untouched.
 constexpr float kFusedDemoNegativePenalty = 2.0F;
+
+// Minimum inflection confidence for treating a lexical adverb ending in
+// て/で as a productive verb te-form homograph before progressive いる.
+constexpr float kAdverbVerbTeHomographMinConfidence = 0.65F;
 
 }  // namespace suzume::analysis::candidate
 

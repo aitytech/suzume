@@ -182,7 +182,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // adjective plus nominalizer in ないんだ.
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && grammar::isAttributiveCopulaNa(prev.surface)) {
     if (next.extended_pos == core::ExtendedPOS::AuxAspectIru || next.extended_pos == core::ExtendedPOS::AuxNegativeNu ||
-        next.pos == core::PartOfSpeech::Verb) {
+        next.extended_pos == core::ExtendedPOS::AuxVolitional || next.pos == core::PartOfSpeech::Verb) {
       bonus += cost::kAlmostNever;
     }
   }

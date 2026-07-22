@@ -462,6 +462,13 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
     } else {
       conf_threshold = verb_opts.confidence_standard;
     }
+    const bool comma_clause_chaining_renyokei =
+        best.morphemes.empty() && best.suffix.size() == core::kJapaneseCharBytes &&
+        grammar::isIRowCodepoint(codepoints[end_pos - 1]) &&
+        vh::isCommaClauseChainingRenyokei(codepoints, start_pos, end_pos, dict_manager);
+    if (comma_clause_chaining_renyokei) {
+      conf_threshold = std::min(conf_threshold, verb_opts.confidence_ichidan_dict);
+    }
     if (best.confidence > conf_threshold && best.verb_type != grammar::VerbType::IAdjective) {
       // Skip long particle-starting verb candidates when remainder is a valid verb form
       // e.g., "になっております" should be "に" + "なっております", not a single verb
@@ -679,11 +686,44 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
         base_cost += bigram_cost::kStrong;
       }
 
+      // A confident Godan analysis of e-row + ば identifies the productive
+      // conditional boundary even when the pure-hiragana open-class lemma is
+      // absent from L2 (くぐれ+ば). Keep the connective particle separate;
+      // the row check prevents an arbitrary final えば sequence from being
+      // promoted to a predicate.
+      const auto* godan_row = grammar::Conjugation::getGodanRow(best.verb_type);
+      if (is_conditional && godan_row != nullptr && end_pos >= start_pos + 3 &&
+          godan_row->e_row == codepoints[end_pos - 2]) {
+        const size_t stem_end = end_pos - 1;
+        candidates.push_back(makeVerbCandidate(
+            extractSubstring(codepoints, start_pos, stem_end), start_pos, stem_end, candidate::verb_cost::kStrongBonus,
+            best.base_form, grammar::verbTypeToConjType(best.verb_type), true, CandidateOrigin::VerbHiragana,
+            best.confidence, "hiragana_godan_kateikei", core::ExtendedPOS::VerbKateikei));
+        continue;
+      }
+
+      // The classical negative construction V未然形+ずに keeps the negative
+      // auxiliary searchable. Inflection analysis also offers a fused
+      // adverbial verb candidate, so replace it with the reconstructed stem
+      // only when the following に closes this productive chain.
+      if (end_pos < codepoints.size() && codepoints[end_pos] == U'に' && utf8::endsWith(surface, "ず") &&
+          end_pos > start_pos + 1) {
+        const size_t stem_end = end_pos - 1;
+        const std::string stem_surface = extractSubstring(codepoints, start_pos, stem_end);
+        candidates.push_back(makeVerbCandidate(stem_surface, start_pos, stem_end, candidate::verb_cost::kStrongBonus,
+                                               best.base_form, grammar::verbTypeToConjType(best.verb_type), true,
+                                               CandidateOrigin::VerbHiragana, best.confidence,
+                                               "hiragana_mizenkei_before_zuni", core::ExtendedPOS::VerbMizenkei));
+        continue;
+      }
+
       // Set lemma from inflection analysis for pure hiragana verbs
       // This is essential for P4 (ひらがな動詞活用展開) to work without dictionary
       // The lemmatizer can't derive lemma accurately for unknown verbs
-      const core::ExtendedPOS explicit_form =
-          looks_like_short_godan_base ? core::ExtendedPOS::VerbShuushikei : core::ExtendedPOS::Unknown;
+      const bool is_godan_dictionary_form = best.base_form == surface && grammar::isGodanVerbType(best.verb_type);
+      const core::ExtendedPOS explicit_form = (looks_like_short_godan_base || is_godan_dictionary_form)
+                                                  ? core::ExtendedPOS::VerbShuushikei
+                                                  : core::ExtendedPOS::Unknown;
       candidates.push_back(makeVerbCandidate(
           surface, start_pos, end_pos, base_cost, best.base_form, grammar::verbTypeToConjType(best.verb_type), false,
           CandidateOrigin::VerbHiragana, best.confidence, grammar::verbTypeToString(best.verb_type).data(),

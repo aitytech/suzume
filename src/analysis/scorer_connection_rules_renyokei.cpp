@@ -60,7 +60,7 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
       grammar::isSingleHiragana(next.surface, U'て') && grammar::isPureHiragana(prev.surface) &&
       prev.surface.size() >= sc::kLongPureHiraganaOnbinMinChars * core::kJapaneseCharBytes) {
-    bonus += cost::kVeryStrongBonus;
+    bonus += cost::kVeryStrongBonus + (prev.lemmaVerified() ? cost::kStrongBonus : cost::kNeutral);
   }
 
   // A multi-mora continuative predicate can be topicalized before an
@@ -84,9 +84,13 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
                                       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.lemma == "する";
   const bool sahen_lexical_v2 = prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.lemma == "する" &&
                                 next.extended_pos == core::ExtendedPOS::VerbShuushikei && next.fromDictionary();
-  if (renyokei_suru_compound || sahen_lexical_v2) {
+  const bool verified_v1_v2_mizenkei = prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+                                       next.extended_pos == core::ExtendedPOS::VerbMizenkei && prev.lemmaVerified() &&
+                                       next.lemmaVerified();
+  if (renyokei_suru_compound || sahen_lexical_v2 || verified_v1_v2_mizenkei) {
     bonus += (renyokei_suru_compound ? cost::kMinorBonus : cost::kNeutral) +
-             (sahen_lexical_v2 ? cost::kVeryStrongBonus : cost::kNeutral);
+             (sahen_lexical_v2 ? cost::kStrongBonus : cost::kNeutral) +
+             (verified_v1_v2_mizenkei ? cost::kStrongBonus : cost::kNeutral);
   }
 
   // Demonstrative manner adverbs form closed compound adverbs with して
@@ -366,13 +370,32 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kVeryStrongBonus;
   }
 
-  // VerbRenyokei → AdjBasic bonus for kanji-containing verb + adjective,
-  // or for the closed compound-adjective suffixes にくい/やすい/がたい.
-  // The latter also covers a one-mora サ変連用形 (検索+し+やすい) without
-  // opening the rule to unrelated hiragana adjective sequences.
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AdjBasic &&
-      (grammar::containsKanji(prev.surface) || utf8::equalsAny(next.surface, {"にくい", "やすい", "がたい"}))) {
-    bonus += cost::kVeryStrongBonus;
+  // A bare continuative verb cannot directly modify an arbitrary adjective.
+  // The productive exception is the closed derivational suffix class
+  // にくい/やすい/がたい/づらい (including the kanji spelling 難い).
+  // Matching the lemma rather than only the terminal surface covers every
+  // inflection in the finite paradigm, including literary がたき. Restricting
+  // the bonus to that class keeps valid
+  // compound adjectives (読み+やすい, 検索し+にくい) while preventing a
+  // homographic verb candidate from stealing an adverbial-noun reading before
+  // an unrelated adjective.
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AdjBasic) {
+    if (utf8::equalsAny(next.lemma, {"にくい", "やすい", "がたい", "づらい", "難い"})) {
+      bonus += cost::kVeryStrongBonus;
+    } else {
+      bonus += cost::kAlmostNever;
+    }
+  }
+
+  // An unverified Godan-wa continuative ending in い is locally homographic
+  // with an i-adjective.  It cannot form an unmarked noun+predicate or
+  // verb+predicate sequence merely by adjacency; productive compound verbs
+  // have their own verified V2 rules below. Penalize only those unsupported
+  // left connections so the adjective/nominal readings remain available.
+  if (next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.conj_type == dictionary::ConjugationType::GodanWa &&
+      !next.lemmaVerified() &&
+      (prev.pos == core::PartOfSpeech::Noun || prev.extended_pos == core::ExtendedPOS::VerbRenyokei)) {
+    bonus += cost::kStrong;
   }
 
   // An attested euphonic lexical verb followed by the past auxiliary remains
@@ -485,28 +508,47 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // would swallow the quotative と and following verb (書こ+う+として). Keep the
   // one-mora と connection licensed, but reject compound-particle attachment so
   // the productive う+と+し+て boundary remains available.
-  if (prev.extended_pos == core::ExtendedPOS::AuxVolitional && next.extended_pos == core::ExtendedPOS::ParticleCase &&
-      next.surface.size() >= core::kTwoJapaneseCharBytes) {
-    bonus += cost::kStrong;
-  }
+  const bool volitional_before_compound_case = prev.extended_pos == core::ExtendedPOS::AuxVolitional &&
+                                               next.extended_pos == core::ExtendedPOS::ParticleCase &&
+                                               next.surface.size() >= core::kTwoJapaneseCharBytes;
 
   // A volitional auxiliary followed by the quotative particle is the productive
   // intent construction (食べよう+とする). Keep it ahead of the homographic
   // renyokei + formal-noun よう path, whose case-particle continuations are
   // instead が/に (読みようがない, 書きようによって).
-  if (prev.extended_pos == core::ExtendedPOS::AuxVolitional && next.extended_pos == core::ExtendedPOS::ParticleCase &&
-      grammar::isSingleHiragana(next.surface, core::hiragana::kTo) && utf8::equalsAny(prev.surface, {"う", "よう"})) {
-    bonus += cost::kDoubleVeryStrongBonus;
-  }
+  const bool volitional_before_quotative =
+      prev.extended_pos == core::ExtendedPOS::AuxVolitional && next.extended_pos == core::ExtendedPOS::ParticleCase &&
+      grammar::isSingleHiragana(next.surface, core::hiragana::kTo) && utf8::equalsAny(prev.surface, {"う", "よう"});
+
+  // A finite volitional clause can be followed by a closed conjunctive
+  // particle (行こう+とも, 遠かろう+とも). Prefer the complete particle over
+  // reopening it as the independently valid one-mora と + も sequence.
+  const bool volitional_before_concessive = prev.extended_pos == core::ExtendedPOS::AuxVolitional &&
+                                            next.extended_pos == core::ExtendedPOS::ParticleConj &&
+                                            grammar::isConcessiveParticleTomoSurface(next.surface);
+
+  // The quotative determiner remains a single search unit after a volitional
+  // auxiliary (だろ+う+という+見込み), just as it does after a finite verb.
+  // Without this connection, the very productive intent sequence う+と gives
+  // the competing と+いう path an unrelated advantage.
+  const bool volitional_before_quotative_determiner = prev.extended_pos == core::ExtendedPOS::AuxVolitional &&
+                                                      next.extended_pos == core::ExtendedPOS::DeterminerQuotative;
 
   // The one-mora literary volitional ん is selected only in the quotative
   // construction ～んとする. Elsewhere the homographic contracted negative
   // remains the productive modern analysis (読まん、食べん).
-  if (prev.extended_pos == core::ExtendedPOS::AuxVolitional &&
-      grammar::isSingleHiragana(prev.surface, core::hiragana::kN) &&
-      !(next.extended_pos == core::ExtendedPOS::ParticleCase &&
-        grammar::isSingleHiragana(next.surface, core::hiragana::kTo))) {
-    bonus += cost::kSevere;
+  const bool literary_volitional_outside_quotative = prev.extended_pos == core::ExtendedPOS::AuxVolitional &&
+                                                     grammar::isSingleHiragana(prev.surface, core::hiragana::kN) &&
+                                                     !(next.extended_pos == core::ExtendedPOS::ParticleCase &&
+                                                       grammar::isSingleHiragana(next.surface, core::hiragana::kTo));
+  if (volitional_before_compound_case || volitional_before_quotative || volitional_before_concessive ||
+      volitional_before_quotative_determiner || literary_volitional_outside_quotative) {
+    bonus +=
+        (volitional_before_compound_case ? cost::kSevere : cost::kNeutral) +
+        (volitional_before_quotative ? cost::kDoubleVeryStrongBonus : cost::kNeutral) +
+        (volitional_before_concessive ? cost::kDoubleVeryStrongBonus + cost::kDoubleVeryStrongBonus : cost::kNeutral) +
+        (volitional_before_quotative_determiner ? cost::kDoubleVeryStrongBonus + cost::kMinorBonus : cost::kNeutral) +
+        (literary_volitional_outside_quotative ? cost::kSevere : cost::kNeutral);
   }
 
   // The conjunctive-particle homograph なり cannot follow an i-adjective's

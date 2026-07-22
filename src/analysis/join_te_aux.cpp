@@ -154,7 +154,7 @@ void addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
 void addTaruAdjectiveJoinCandidates(core::Lattice& lattice, std::string_view text,
                                     const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                     size_t start_pos, const std::vector<normalize::CharType>& char_types,
-                                    const Scorer& scorer) {
+                                    const dictionary::DictionaryManager& dict_manager, const Scorer& scorer) {
   if (start_pos >= codepoints.size()) {
     return;
   }
@@ -192,6 +192,21 @@ void addTaruAdjectiveJoinCandidates(core::Lattice& lattice, std::string_view tex
     return;
   }
 
+  // In a genitive-selected nominal frame (Xの N とは), と is the quotative
+  // particle and は is the topic particle; joining Nと as a taru-style adverb
+  // would erase both grammatical boundaries.  This structural frame is
+  // distinct from an ordinary adverbial use such as 毅然と進む.
+  if (start_pos > 0 && kanji_end + 1 < codepoints.size() && codepoints[kanji_end + 1] == U'は') {
+    const auto* left_no =
+        dict_manager.lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos), core::PartOfSpeech::Particle);
+    const auto* right_wa = dict_manager.lookupExact(extractSubstring(codepoints, kanji_end + 1, kanji_end + 2),
+                                                    core::PartOfSpeech::Particle);
+    if (left_no != nullptr && left_no->extended_pos == core::ExtendedPOS::ParticleNo && right_wa != nullptr &&
+        right_wa->extended_pos == core::ExtendedPOS::ParticleTopic) {
+      return;
+    }
+  }
+
   // Build the surface: X然と
   size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
   size_t end_pos = kanji_end + 1;  // Include と
@@ -202,6 +217,9 @@ void addTaruAdjectiveJoinCandidates(core::Lattice& lattice, std::string_view tex
   // X然 without と is the lemma
   size_t zen_end_byte = byteOffsetAt(byte_offsets, kanji_end);
   std::string lemma(text.substr(start_byte, zen_end_byte - start_byte));
+  if (dict_manager.lookupExact(lemma, core::PartOfSpeech::Noun) != nullptr) {
+    return;
+  }
 
   // Calculate cost with bonus for this pattern
   float base_cost = scorer.posPrior(core::PartOfSpeech::Adverb);

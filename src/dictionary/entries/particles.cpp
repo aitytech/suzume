@@ -54,18 +54,19 @@ EntrySpecRange getParticleEntries() {
       particle("けども", EPOS::ParticleConj),
       particle("けれども", EPOS::ParticleConj),
       particle("ものの", EPOS::ParticleConj),
-      particle("し", EPOS::ParticleConj),    // 列挙・理由 (接続助詞)
-      particle("たり", EPOS::ParticleConj),  // 並立助詞 (食べたり飲んだり)
-      particle("だり", EPOS::ParticleConj),  // 並立助詞 (voiced: 飲んだり)
-      particle("なり", EPOS::ParticleConj),  // 動作直後: 鳴るなり
-      particle("や", EPOS::ParticleConj),    // 並立助詞 (AやB)
-      particle("だの", EPOS::ParticleConj),  // 列挙: 赤だの青だの
+      particle("し", EPOS::ParticleConj),         // 列挙・理由 (接続助詞)
+      particle("たり", EPOS::ParticleConj),       // 並立助詞 (食べたり飲んだり)
+      particle("だり", EPOS::ParticleConj),       // 並立助詞 (voiced: 飲んだり)
+      particle("なり", EPOS::ParticleConj),       // 動作直後: 鳴るなり
+      particle("や", EPOS::ParticleConj),         // 並立助詞 (AやB)
+      particle("だの", EPOS::ParticleAdverbial),  // 列挙・並立: 赤だの青だの
 
       // Quotation particles (引用助詞)
       particle("って", EPOS::ParticleQuote),
 
       // Final particles (終助詞)
       particle("か", EPOS::ParticleFinal),
+      particle("かい", EPOS::ParticleFinal),
       particle("け", EPOS::ParticleFinal),  // colloquial variant (こんだけ → こん+だ+け)
       particle("な", EPOS::ParticleFinal),
       particle("なあ", EPOS::ParticleFinal),

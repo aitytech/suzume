@@ -22,6 +22,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Both appearance and hearsay そう can take the polite copula
       // (降りそうです, 来るそうです). Preserve the auxiliary chain over the
       // homographic na-adjective followed by です.
+      // Appearance そう takes the copula in both predicative and attributive
+      // forms (高そう+だ/です、高そう+な山).  Without the な connection, a
+      // noun homograph before adjectival そう can win after the correct
+      // adjective-stem path has already been generated.
+      {EPOS::AuxAppearanceSou, EPOS::AuxCopulaDa, cost::kVeryStrongBonus},
       {EPOS::AuxAppearanceSou, EPOS::AuxCopulaDesu, cost::kTripleVeryStrongBonus},
 
       // The negative ending after the polite auxiliary is always the
@@ -34,7 +39,7 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // A polite predicate may be followed by the conjectural polite copula
       // (ございます+でしょ+うか). Keep that inflectional boundary ahead of
       // the unrelated connective-particle plus fabricated verb route.
-      {EPOS::AuxTenseMasu, EPOS::AuxCopulaDesu, cost::kStrongBonus},
+      {EPOS::AuxTenseMasu, EPOS::AuxCopulaDesu, cost::kVeryStrongBonus},
 
       // Past predicate → concessive particle (読んだものの進まない).
       {EPOS::AuxTenseTa, EPOS::ParticleConj, cost::kDoubleVeryStrongBonus},
@@ -45,12 +50,15 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::AuxTenseTa, EPOS::AuxAspectIku, cost::kAlmostNever},
       {EPOS::VerbTaForm, EPOS::AuxAspectIku, cost::kAlmostNever},
 
-      // AuxTenseMasu → ParticleConj (まし+て, ますれ+ば) - very strong bonus for the
-      // formal conditional of the polite auxiliary.
-      {EPOS::AuxTenseMasu, EPOS::ParticleConj, cost::kVeryStrongBonus},
+      // AuxTenseMasu → ParticleConj (まし+て, ますれ+ば) - decisive bonus
+      // for the closed polite paradigm.  In ますれ+ば it must beat the
+      // homographic fabricated lexical verb まする in 仮定形.
+      {EPOS::AuxTenseMasu, EPOS::ParticleConj, cost::kDoubleVeryStrongBonus},
 
-      // AuxCopulaDesu → AuxVolitional (でしょ+う) - strong bonus for the volitional boundary
-      {EPOS::AuxCopulaDesu, EPOS::AuxVolitional, cost::kStrongBonus},
+      // AuxCopulaDesu → AuxVolitional (でしょ+う) - very strong bonus for the
+      // inflectional boundary.  This must beat the fabricated で+しょう
+      // (case particle + unknown godan verb) path.
+      {EPOS::AuxCopulaDesu, EPOS::AuxVolitional, cost::kVeryStrongBonus},
 
       // AuxCopulaDesu → AuxTenseTa (でし+た/たら) - very-strong bonus for the
       // past and conditional forms of the polite copula.
@@ -143,6 +151,7 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Prefer that productive boundary over an unrelated hiragana adverb that
       // happens to begin at the final い of ない.
       {EPOS::AuxNegativeNai, EPOS::NounFormal, cost::kStrongBonus},
+      {EPOS::AuxNegativeNai, EPOS::Noun, cost::kStrongBonus},
 
       // Classical negation also retains its attributive boundary before a
       // formal noun (行か+ぬ+わけ、知ら+ぬ+ふり).
@@ -212,6 +221,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // 走り出したくなかった → 走り出し+たく+なかっ+た (not 走り+出したく+なかっ+た)
       {EPOS::AuxDesireTai, EPOS::AuxNegativeNai, cost::kModerateBonus},
 
+      // A desiderative predicate can modify a formal noun (確かめ+たい+こと).
+      // Without this connection, the lattice can reinterpret the final mora
+      // of the lexical verb as the start of an unrelated hiragana predicate.
+      {EPOS::AuxDesireTai, EPOS::NounFormal, cost::kStrongBonus},
+
       // AuxTenseTa → verb forms - prohibit. A completed predicate cannot take a
       // second bare verb without a connective boundary. Cover every verb form;
       // limiting this to onbin/past shapes permits fragments such as た+だく.
@@ -247,9 +261,10 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Its written variants share this grammar: 仕舞っ+た, 仕舞わ+ない,
       // 仕舞い+ます, 仕舞え+ば, and 仕舞お+う.
       {EPOS::AuxAspectShimau, EPOS::AuxTenseTa, cost::kVeryStrongBonus},
-      {EPOS::AuxAspectShimau, EPOS::AuxNegativeNai, cost::kStrongBonus},
+      {EPOS::AuxAspectShimau, EPOS::AuxNegativeNai, cost::kVeryStrongBonus},
       {EPOS::AuxAspectShimau, EPOS::AuxTenseMasu, cost::kStrongBonus},
       {EPOS::AuxAspectShimau, EPOS::AuxDesireTai, cost::kStrongBonus},
+      {EPOS::AuxAspectHajimeru, EPOS::AuxTenseTa, cost::kStrongBonus},
       // The completive auxiliary can take the volitional ending (しまお+う).
       // Prefer this auxiliary sequence over a homographic lexical godan verb.
       {EPOS::AuxAspectShimau, EPOS::AuxVolitional, cost::kCompletiveVolitionalBonus},
@@ -326,6 +341,15 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::AuxAspectMiru, EPOS::AuxTenseTa, cost::kModerateBonus},
       {EPOS::AuxAspectMiru, EPOS::AuxVolitional, cost::kModerateBonus},
       {EPOS::AuxAspectMiru, EPOS::ParticleConj, cost::kStrongBonus},
+
+      // A dependency-marked trial auxiliary is itself the predicate stem. It
+      // cannot hand off to an unrelated bare lexical irrealis form (て+み+せ+ない).
+      // Longer closed subsidiary predicates such as て+みせ+ない remain valid.
+      {EPOS::AuxAspectMiru, EPOS::VerbMizenkei, cost::kAlmostNever},
+
+      // The dependent copular ござる keeps its classical negative boundary:
+      // で+ござら+ぬ, parallel to the polite で+ござい+ます chain.
+      {EPOS::AuxGozaru, EPOS::AuxNegativeNu, cost::kStrongBonus},
 
       // The preparative subsidiary おく and benefactive やる both take the
       // desiderative auxiliary directly in 〜ておきたい / 〜てやりたい.
@@ -486,10 +510,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::Determiner, EPOS::NounFormal, kDeterminerNounBonus},
       {EPOS::Determiner, EPOS::NounProper, kDeterminerNounBonus},
 
-      // A noun can introduce the attributive quotative determiner (名称+という
-      // の). Keep this closed grammatical unit ahead of と+言う when its
-      // following context is nominal.
-      {EPOS::Noun, EPOS::DeterminerQuotative, cost::kDoubleVeryStrongBonus},
+      // A lexical noun followed by と+いう retains the quotative particle and
+      // predicate boundary (希望+と+いう+より).  The fused attributive entry
+      // is selected from contexts that can actually follow a determiner, not
+      // by rewarding it immediately after every noun.
+      {EPOS::Noun, EPOS::DeterminerQuotative, cost::kStrongBonus},
 
       // Formal nouns can take a sentence-final particle directly in colloquial
       // nominal predicates (どういうこと+だい, そんなこと+さ). Prefer this
@@ -651,7 +676,7 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::ParticleTopic, EPOS::AuxAspectIru, cost::kSevere},
 
       // NaAdj → AuxCopulaDa (静か+だ) - strong bonus
-      {EPOS::AdjNaAdj, EPOS::AuxCopulaDa, cost::kStrongBonus},
+      {EPOS::AdjNaAdj, EPOS::AuxCopulaDa, cost::kVeryStrongBonus},
 
       // NaAdj → AuxCopulaDesu (静か+です) - strong bonus
       {EPOS::AdjNaAdj, EPOS::AuxCopulaDesu, cost::kVeryStrongBonus},

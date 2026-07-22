@@ -99,6 +99,8 @@ bool isQuotativeSuruTeCompoundParticle(std::string_view surface);
 bool isSuruRenyokeiSurface(std::string_view surface);
 /** @brief Whether a surface is the base form of the irregular verb する */
 bool isSuruBaseForm(std::string_view surface);
+/** @brief Whether a surface is the modern volitional stem しよ of する */
+bool isSuruVolitionalStemSurface(std::string_view surface);
 bool isSuruImperativeSurface(std::string_view surface);
 
 /** @brief Whether a surface is the conjunctive particle し */
@@ -144,11 +146,26 @@ bool isContractedNegativeAuxiliaryLemma(std::string_view lemma);
 /** @brief Whether a surface is either connective-form marker て or で */
 bool isTeDeSurface(std::string_view surface);
 
+// Returns true when two lexical-verb surfaces would split the closed polite
+// copula です at its internal boundary (で + す).
+bool formsPoliteCopulaDesu(std::string_view left, std::string_view right);
+
+/** @brief Whether a temporal suffix is written directly after its nominal base. */
+bool isDirectAttachmentTemporalSuffix(std::string_view surface);
+
 /** @brief Whether an aspect auxiliary has a contracted progressive surface */
 bool isContractedProgressiveSurface(std::string_view surface);
 
 /** @brief Whether a lemma is a regional contraction of the aspect verb おる */
 bool isDialectalOruContractionLemma(std::string_view lemma);
+
+// Closed subsidiary-verb homographs whose public POS depends on the selected
+// grammatical predecessor rather than on their lexical lemma alone.
+bool isRenyokeiPotentialAuxiliaryLemma(std::string_view lemma);
+bool isTeFormCompletiveAuxiliaryLemma(std::string_view lemma);
+
+/** @brief Whether a lemma is the passive/potential auxiliary られる */
+bool isPassiveAuxiliaryLemma(std::string_view lemma);
 
 /** @brief Whether a case-particle surface is the accusative を */
 bool isAccusativeParticleWoSurface(std::string_view surface);
@@ -285,6 +302,13 @@ bool startsInterrogativeQuoteIntroduction(std::string_view surface);
  * @return True when the classical continuative auxiliary follows
  */
 bool startsClassicalConjecturalAuxiliary(std::string_view surface);
+
+/**
+ * @brief Whether text begins with a closed temporal relation/formal noun
+ * @param surface Text immediately after a nominalized predicate stem
+ * @return True for 前/後/時/頃 and the hiragana temporal formal-noun forms
+ */
+bool startsClosedTemporalNominal(std::string_view surface);
 
 /**
  * @brief Find a long final particle immediately followed by quote particle と

@@ -68,6 +68,27 @@ bool shouldSkipSimplePatterns(const std::string& surface, const std::string& hir
     return true;
   }
 
+  // A terminal ない preceded by an a-row mora is a productive verb
+  // mizenkei + negative auxiliary (止ま+ない), not one i-adjective. Likewise,
+  // a closed case-particle mora inside the pre-negative tail proves that the
+  // candidate crosses a grammatical boundary (今+まで+に+ない).
+  if (utf8::endsWith(hiragana_part, "ない") && hiragana_part.size() > core::kTwoJapaneseCharBytes) {
+    const std::string_view pre_negative =
+        std::string_view(hiragana_part).substr(0, hiragana_part.size() - core::kTwoJapaneseCharBytes);
+    const char32_t pre_negative_tail = utf8::decodeFirstChar(utf8::lastChar(pre_negative));
+    if (grammar::isARowCodepoint(pre_negative_tail) ||
+        utf8::containsAny(pre_negative, {"に", "を", "が", "の", "へ"})) {
+      return true;
+    }
+  }
+
+  // Once ない has completed, following particles/nominalizers are separate
+  // morphemes (止ま+ない+の+か), never part of a longer adjective surface.
+  const size_t negative_pos = hiragana_part.find("ない");
+  if (negative_pos != std::string::npos && negative_pos + core::kTwoJapaneseCharBytes < hiragana_part.size()) {
+    return true;
+  }
+
   // Single-kanji + single hiragana い patterns - likely godan verb renyokei
   // Real single-kanji i-adjectives (怖い, 酸い) should be in dictionary
   if (kanji_end == start_pos + 1 && end_pos == kanji_end + 1) {
@@ -151,6 +172,13 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   }
 
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
+    return candidates;
+  }
+
+  // The ideographic iteration mark always belongs to the preceding kanji
+  // (時々, 人々).  It cannot start an adjective stem, even when the following
+  // kana look like an i-adjective ending.
+  if (normalize::isIterationMark(codepoints[start_pos])) {
     return candidates;
   }
 
@@ -270,9 +298,20 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     const auto& all_candidates = inflection.analyze(surface);
 
     for (const auto& cand : all_candidates) {
+      const bool long_attributive_base =
+          cand.verb_type == grammar::VerbType::IAdjective && cand.base_form == surface &&
+          normalize::utf8Length(surface) >= 4 && end_pos < codepoints.size() &&
+          (normalize::isKanjiCodepoint(codepoints[end_pos]) ||
+           normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Katakana);
+      const bool complete_past_form =
+          cand.verb_type == grammar::VerbType::IAdjective && utf8::endsWith(surface, "かった") &&
+          cand.confidence >= candidate::kCompoundAdjConfMin &&
+          (!utf8::endsWith(cand.base_form, "ない") || isAdjectiveInDictionary(dict_manager, cand.base_form));
       // Require confidence >= 0.5 for i-adjectives
       // Base forms like 寒い get exactly 0.5, conjugated forms like 美しかった get 0.68+
-      if (cand.confidence >= candidate::kIAdjConfMin && cand.verb_type == grammar::VerbType::IAdjective) {
+      if ((cand.confidence >= candidate::kIAdjConfMin || complete_past_form ||
+           (long_attributive_base && cand.confidence >= candidate::kCompoundAdjConfMin)) &&
+          cand.verb_type == grammar::VerbType::IAdjective) {
         // Filter out false positives: いたす honorific pattern
         // Invalid patterns (all have た after the candidate):
         //   - サ変名詞 + いたす: 検討いたします, 勉強いたしました
@@ -338,6 +377,9 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         // ADJ prior (0.3) is higher than VERB prior (0.2), so we need lower edge cost
         float cost = candidate::confidenceScaledCost(candidate::kKanjiAdjBaseCost, cand.confidence,
                                                      candidate::kKanjiAdjConfScale);
+        if (verb_helpers::isReduplicatedShiiAdjectiveHead(codepoints, start_pos) && kanji_end == start_pos + 4) {
+          cost += candidate::kReduplicatedShiiAdjBonus;
+        }
         const bool ga_mashii_derivation = utf8::endsWith(surface, "がましい");
         bool meka_shii_derivation = utf8::endsWith(surface, "めかしい");
         if (meka_shii_derivation) {
@@ -351,12 +393,14 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
         if (ga_mashii_derivation || meka_shii_derivation) {
           cost = std::min(cost, candidate::kDerivedSuffixAdjectiveCost);
         }
-        // Penalty for non-dictionary i-adjective nominalization (さ ending)
-        // This prevents false positives like 勉強さ (from non-existent 勉強い)
-        // from beating suru-verb split path (勉強 + さ + れる)
-        if (surface.size() >= 3 && utf8::endsWith(surface, "さ")) {
-          cost += candidate::kAdjModeratePenalty;  // Unconfirmed さ nominalization
-          SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +1.5 (unconfirmed_sa_nom)\n");
+        // A bare さ ending is not an inflected i-adjective form.  The generic
+        // inflection analyzer can still hypothesize a fake Xい base for it
+        // (語りぐさ -> 語りぐい), which lets a whole-span adjective edge beat
+        // the noun/nominalizer analyses.  No dictionary exception is needed:
+        // さ is a nominalizing suffix, never a finite i-adjective ending.
+        if (utf8::endsWith(surface, "さ")) {
+          SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" bare sa ending is not an i-adjective form\n");
+          continue;
         }
         // Penalty for compound adjective patterns (verb renyokei + やすい/にくい/がたい)
         // MeCab splits these: 使いにくい → 使い + にくい

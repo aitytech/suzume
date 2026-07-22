@@ -51,12 +51,40 @@ bool hasStandaloneVerbTail(const dictionary::DictionaryManager* dict_manager, co
   }
   return vh::isVerbInDictionary(dict_manager, extractSubstring(codepoints, tail_start, tail_end));
 }
+
+bool hasClosedAuxiliaryTail(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                            size_t tail_start, size_t tail_end) {
+  return dict_manager != nullptr && tail_start < tail_end &&
+         dict_manager->lookupExact(extractSubstring(codepoints, tail_start, tail_end), core::PartOfSpeech::Auxiliary) !=
+             nullptr;
+}
+
+bool hasVerifiedInternalOnbinPredicate(const grammar::Inflection& inflection,
+                                       const dictionary::DictionaryManager* dict_manager,
+                                       const std::vector<char32_t>& codepoints, size_t tail_start, size_t onbin_pos,
+                                       size_t tense_end) {
+  if (dict_manager == nullptr || tail_start >= onbin_pos) {
+    return false;
+  }
+  for (size_t boundary = tail_start + 1; boundary < onbin_pos; ++boundary) {
+    const std::string tail = extractSubstring(codepoints, boundary, tense_end);
+    for (const auto& result : inflection.analyze(tail)) {
+      if (result.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
+          vh::isVerbInDictionary(dict_manager, result.base_form)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 // Fallback verification for a 促音便 base when it is not in the dictionary:
-// only for single-char stems, accept a GodanRa inflection analysis of
-// onbin_surface + た with sufficient confidence.
+// accept only a GodanRa analysis of the complete closed past form whose
+// reconstructed base is exactly the candidate base.  This extends the
+// existing one-okurigana fallback to the same bounded two-okurigana shape,
+// without turning arbitrary long auxiliary chains into one predicate.
 bool sokuonbinInflVerified(const grammar::Inflection& inflection, const std::string& onbin_surface,
                            const std::string& potential_base, size_t hiragana_before_onbin) {
-  if (hiragana_before_onbin != 1) {
+  if (hiragana_before_onbin == 0) {
     return false;
   }
   for (const auto& result : inflection.analyze(onbin_surface + "た")) {
@@ -87,7 +115,9 @@ void appendExtendedSokuonbinCandidates(const std::vector<char32_t>& codepoints, 
     char32_t second_last = codepoints[hiragana_end - 2];
     char32_t last_char = codepoints[hiragana_end - 1];
     bool is_sokuonbin_te_ta = (second_last == U'っ' && (last_char == U'た' || last_char == U'て'));
-    // Hiragana between kanji and っ should be 1-2 chars
+    // Hiragana between kanji and っ should be 1-2 chars. Longer spans can
+    // contain productive auxiliary or compound boundaries and are handled by
+    // their dedicated generators.
     // hiragana_end - kanji_end = total hiragana chars (including っ and た/て)
     // So hiragana before っ = (hiragana_end - kanji_end) - 2
     size_t hiragana_before_onbin = (hiragana_end - kanji_end) - 2;
@@ -102,7 +132,12 @@ void appendExtendedSokuonbinCandidates(const std::vector<char32_t>& codepoints, 
       // This prevents false positives like 来なかった → 来なかっ+た (来なかる doesn't exist)
       // The correct split is 来 + なかっ + た (kuru + negative aux + past)
       std::string hiragana_part = extractSubstring(codepoints, kanji_end, onbin_end);
-      if (hiragana_part == "なかっ") {
+      if (hasClosedAuxiliaryTail(dict_manager, codepoints, kanji_end, onbin_end) ||
+          hasVerifiedInternalOnbinPredicate(inflection, dict_manager, codepoints, kanji_end, onbin_end - 1,
+                                            hiragana_end)) {
+        // Preserve an already complete auxiliary or embedded dictionary verb
+        // boundary (見+たがっ, 早く+いっ) instead of absorbing it into X...る.
+      } else if (hiragana_part == "なかっ") {
         // This is negative past, not extended sokuonbin - skip
       } else if (hiragana_part == "であっ") {
         // This is copula である pattern (重要であった = 重要 + で + あっ + た)
@@ -152,10 +187,17 @@ void appendExtendedSokuonbinCandidates(const std::vector<char32_t>& codepoints, 
             // Check dictionary first
             bool in_dict = vh::isVerbInDictionary(dict_manager, potential_base);
 
-            // Fallback: inflection analysis for common patterns like 閉まる
-            // (single-char stems only; longer となっ may be noun+particle+verb).
+            // Fallback: exact full-form inflection evidence for productive
+            // verbs absent from the dictionary.  Initial particle-like morae
+            // have already been rejected by generateVerbCandidates(), so a
+            // phrase such as N+が+V cannot enter through this path.
+            // 〜かっ is shared by Godan-ra sokuonbin and i-adjective past.
+            // Without lexical evidence the row is not recoverable, so do not
+            // let a mechanical verb analysis steal the adjective path.
+            const bool ambiguous_katt = char_before_sokuon == U'か';
             bool infl_verified =
-                !in_dict && sokuonbinInflVerified(inflection, onbin_surface, potential_base, hiragana_before_onbin);
+                !in_dict && !ambiguous_katt &&
+                sokuonbinInflVerified(inflection, onbin_surface, potential_base, hiragana_before_onbin);
             const bool standalone_verb_tail = hasStandaloneVerbTail(dict_manager, codepoints, kanji_end, onbin_end);
 
             // Skip if this is an i-adjective katt-form (美しかっ → 美しい, 高かっ → 高い)
@@ -222,7 +264,9 @@ void appendExtendedSokuonbinCandidates(const std::vector<char32_t>& codepoints, 
 
       // Check hiragana part for known false patterns
       std::string hiragana_part = extractSubstring(codepoints, kanji_end, onbin_end);
-      if (hiragana_part == "なかっ" || hiragana_part == "であっ" || utf8::startsWith(hiragana_part, "といっ") ||
+      if (hasClosedAuxiliaryTail(dict_manager, codepoints, kanji_end, onbin_end) ||
+          hasVerifiedInternalOnbinPredicate(inflection, dict_manager, codepoints, kanji_end, pos, pos + 2) ||
+          hiragana_part == "なかっ" || hiragana_part == "であっ" || utf8::startsWith(hiragana_part, "といっ") ||
           hiragana_part == "くなっ") {
         continue;
       }

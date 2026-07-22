@@ -55,6 +55,7 @@ struct SubsidiaryVerb {
 struct CompoundVerbMatch {
   size_t matched_len = 0;
   std::string compound_base;
+  std::string compound_source_base;
   bool is_renyokei = false;
   bool renyokei_form = false;
   bool is_mizenkei = false;
@@ -114,11 +115,18 @@ struct SubsidiaryVerbRange {
   const SubsidiaryVerb* end() const { return last; }
 };
 
-inline constexpr size_t kSubsidiaryVerbCount = 169;
+inline constexpr size_t kSubsidiaryVerbCount = 170;
 extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount];
 
 inline SubsidiaryVerbRange subsidiaryVerbs() {
   return {kSubsidiaryVerbs, kSubsidiaryVerbs + kSubsidiaryVerbCount};
+}
+
+// Closed auxiliary classes that attach to a verb mizenkei. Keep matcher and
+// emitter on one predicate so classical negative variants cannot drift.
+inline bool isMizenkeiAuxiliaryStarter(char32_t codepoint) {
+  return codepoint == U'れ' || codepoint == U'せ' || codepoint == U'な' || codepoint == U'ず' || codepoint == U'ぬ' ||
+         codepoint == U'ね';
 }
 
 // Emits the verified passive-continuative tail (れ続ける and its inflections)

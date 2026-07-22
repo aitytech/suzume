@@ -12,7 +12,9 @@
 #include "analysis/scorer_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
+#include "grammar/auxiliaries.h"
 #include "grammar/char_patterns.h"
+#include "grammar/connection.h"
 #include "grammar/patterns.h"
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
@@ -31,6 +33,178 @@ using verb_helpers::isVerbInDictionary;
 
 using adj_detail::makeIAdjCandidate;
 using adj_detail::makeIAdjStemCandidate;
+
+namespace {
+
+bool hasNaAdjectiveStemEvidence(const std::string& stem, const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager != nullptr) {
+    const auto* entry = dict_manager->lookupExact(stem, core::PartOfSpeech::Adjective);
+    if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::AdjNaAdj) {
+      return true;
+    }
+  }
+  // -やか is a productive na-adjective head (軽やか、華やか、健やか).
+  // Do not extend this to -らか: 柔らか+さ is the stem of 柔らかい.
+  return utf8::endsWith(stem, "やか");
+}
+
+bool hasInternalNominalDerivationalBoundary(const std::string& stem,
+                                            const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || isAdjectiveInDictionary(dict_manager, stem + "い")) {
+    return false;
+  }
+
+  const auto stem_codepoints = normalize::toCodepoints(stem);
+  for (size_t boundary = 1; boundary < stem_codepoints.size(); ++boundary) {
+    const std::string left = extractSubstring(stem_codepoints, 0, boundary);
+    if (isAdjectiveInDictionary(dict_manager, left + "い")) {
+      continue;
+    }
+
+    const std::string right = extractSubstring(stem_codepoints, boundary, stem_codepoints.size());
+    const auto* adjective = dict_manager->lookupExact(right, core::PartOfSpeech::Adjective);
+    if (adjective != nullptr && adjective->extended_pos == core::ExtendedPOS::AdjStem) {
+      return true;
+    }
+    const auto* auxiliary = dict_manager->lookupExact(right, core::PartOfSpeech::Auxiliary);
+    if (auxiliary != nullptr && auxiliary->extended_pos == core::ExtendedPOS::AuxConjectureRashii) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool isPossibleUnknownIAdjectiveStem(const std::string& stem, const std::string& base_form,
+                                     const dictionary::DictionaryManager* dict_manager) {
+  if (isAdjectiveInDictionary(dict_manager, base_form)) {
+    return true;
+  }
+
+  // Native i-adjectives do not form an unknown base by appending い to an
+  // e-row okurigana (静け+い).  This is a conjugational shape constraint, not
+  // a lexical whitelist; kanji-final stems and the a/i/u/o rows remain open.
+  const char32_t stem_last = utf8::decodeFirstChar(utf8::lastChar(stem));
+  if (grammar::isERowCodepoint(stem_last)) {
+    return false;
+  }
+
+  // Do not absorb a complete dictionary-verified verb continuative into a
+  // fabricated adjective stem (語り+ぐ+い, 読み+やす+い).  Productive derived
+  // adjectives retain their own morpheme boundary and are emitted elsewhere.
+  const auto stem_codepoints = normalize::toCodepoints(stem);
+  for (size_t boundary = 1; boundary < stem_codepoints.size(); ++boundary) {
+    const std::string left = extractSubstring(stem_codepoints, 0, boundary);
+    const auto* verb = dict_manager == nullptr ? nullptr : dict_manager->lookupExact(left, core::PartOfSpeech::Verb);
+    if (verb != nullptr && verb->extended_pos == core::ExtendedPOS::VerbRenyokei) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// A derived i-adjective can contain a complete predicate plus a productive
+// auxiliary chain (書い+て+ほしい, 読み+やすい, 書き+にくい).  When that parse
+// has a dictionary-verified predicate base and multiple inflectional
+// morphemes, its internal boundaries are stronger evidence than the competing
+// hypothesis that the entire surface is one unknown adjective stem.
+bool hasVerifiedPredicateDerivedAdjective(const std::string& base_form, const grammar::Inflection& inflection,
+                                          const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  for (const auto& analysis : inflection.analyze(base_form)) {
+    if (analysis.verb_type == grammar::VerbType::IAdjective || !utf8::endsWith(analysis.suffix, "い")) {
+      continue;
+    }
+    bool has_derived_adjective_attachment = false;
+    for (const auto& auxiliary : grammar::getAuxiliaries()) {
+      if (!auxiliary.surface.empty() && utf8::endsWith(analysis.suffix, auxiliary.surface) &&
+          (auxiliary.required_conn == grammar::conn::kVerbRenyokei ||
+           auxiliary.required_conn == grammar::conn::kAuxOutTe)) {
+        has_derived_adjective_attachment = true;
+        break;
+      }
+    }
+    if (!has_derived_adjective_attachment) {
+      continue;
+    }
+    const bool productive_predicate =
+        analysis.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
+        (analysis.verb_type == grammar::VerbType::Ichidan || grammar::isGodanVerbType(analysis.verb_type));
+    if (isVerbInDictionary(dict_manager, analysis.base_form) || productive_predicate) {
+      return true;
+    }
+  }
+  return false;
+}
+
+float productiveIAdjectiveStemConfidence(const std::string& stem, const std::string& base_form,
+                                         const grammar::Inflection& inflection,
+                                         const dictionary::DictionaryManager* dict_manager) {
+  if (isAdjectiveInDictionary(dict_manager, base_form)) {
+    return candidate::kDictionaryOriginConfidence;
+  }
+
+  // A generated stem cannot end by swallowing a completed grammatical
+  // boundary from its left context (問題+を、彼+は、資料+の).  Restrict this to
+  // case/topic/nominalizing particles: sentence-final か is homographic with
+  // the genuine i-adjective stem in 暖か+さ and must remain available.
+  if (dict_manager != nullptr) {
+    const std::string final_mora(utf8::lastChar(stem));
+    const auto* particle = dict_manager->lookupExact(final_mora, core::PartOfSpeech::Particle);
+    if (particle != nullptr && (particle->extended_pos == core::ExtendedPOS::ParticleCase ||
+                                particle->extended_pos == core::ExtendedPOS::ParticleTopic ||
+                                particle->extended_pos == core::ExtendedPOS::ParticleNo)) {
+      return candidate::kNoOriginConfidence;
+    }
+  }
+
+  const float confidence = adj_detail::firstConfidenceAtLeast(
+      inflection.analyze(base_form), grammar::VerbType::IAdjective, candidate::kCompoundAdjConfMin);
+  if (confidence == candidate::kNoOriginConfidence) {
+    return candidate::kNoOriginConfidence;
+  }
+
+  // An i-row ending can instead be a productive godan continuative.  Lexical
+  // evidence for that verb wins (書き/話し/積もり), while stems without a
+  // competing predicate retain the adjective analysis.
+  const char32_t final_codepoint = utf8::decodeFirstChar(utf8::lastChar(stem));
+  const std::string_view godan_suffix = grammar::godanBaseSuffixFromIRow(final_codepoint);
+  if (!godan_suffix.empty()) {
+    const std::string verb_base = std::string(utf8::dropLastChar(stem)) + std::string(godan_suffix);
+    if (isVerbInDictionary(dict_manager, verb_base)) {
+      return candidate::kNoOriginConfidence;
+    }
+    // Outside the productive -しい class, an unregistered i-row ending is
+    // much stronger evidence for a godan continuative (積もり/書き) than for
+    // a fictitious adjective ending in りい/きい.  Established forms such as
+    // 大きい are accepted by the dictionary branch above.
+    if (final_codepoint != U'し') {
+      return candidate::kNoOriginConfidence;
+    }
+  }
+
+  const auto stem_codepoints = normalize::toCodepoints(stem);
+  if (!stem_codepoints.empty() && normalize::isKanjiCodepoint(stem_codepoints.back())) {
+    // An all-kanji compound adjective can inherit a productive adjectival head
+    // (心+細い).  Requiring the final head prevents arbitrary nouns such as
+    // 子供 from becoming fictitious 子供い adjectives before げ/さ.
+    const std::string head_base = std::string(utf8::lastChar(stem)) + "い";
+    return isAdjectiveInDictionary(dict_manager, head_base) ? confidence : candidate::kNoOriginConfidence;
+  }
+
+  // One-kanji+るい is a productive shape already recognized for complete
+  // adjectives (明るい/明るく), whose generic inflection confidence is low
+  // because of the homographic godan analysis.
+  const bool single_kanji_rui_stem =
+      stem_codepoints.size() == 2 && normalize::isKanjiCodepoint(stem_codepoints[0]) && stem_codepoints[1] == U'る';
+  if (single_kanji_rui_stem || utf8::endsWith(stem, "し") || confidence >= candidate::kIAdjConfMin) {
+    return confidence;
+  }
+  return candidate::kNoOriginConfidence;
+}
+
+}  // namespace
 
 std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                               const std::vector<normalize::CharType>& char_types,
@@ -263,24 +437,49 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
           std::string stem = kanji_part + ext_okurigana;
           std::string base_form = stem + "い";
 
-          bool is_verified_adjective = isAdjectiveInDictionary(dict_manager, base_form);
-          float adjective_confidence =
-              is_verified_adjective ? candidate::kDictionaryOriginConfidence : candidate::kNoOriginConfidence;
-          // -げ takes the stem of an i-adjective (頼もし+げ, 怪し+げ).  The
-          // inflection engine recognizes productive -しい adjectives that are
-          // intentionally absent from the lexical dictionary, but an ordinary
-          // sa-row verb continuative such as 話し must remain a verb.  Require
-          // the adjective analysis and reject that competing dictionary verb.
-          const bool is_shii_stem = pattern == "げ" && utf8::endsWith(stem, "し");
-          if (!is_verified_adjective && is_shii_stem) {
-            adjective_confidence = adj_detail::firstConfidenceAtLeast(
-                inflection.analyze(base_form), grammar::VerbType::IAdjective, candidate::kIAdjConfMin);
-            const std::string verb_form = stem.substr(0, stem.size() - core::kJapaneseCharBytes) + "す";
-            if (isVerbInDictionary(dict_manager, verb_form)) {
-              adjective_confidence = candidate::kNoOriginConfidence;
+          // A productive kanji suffix followed by the independent Sahen
+          // continuative has a complete nominal analysis (簡素+化+し+すぎ).
+          // Do not reinterpret that suffix plus し as an unattested extended
+          // i-adjective stem (化しい).  Require actual material to the left of
+          // the suffix, either in this kanji span or immediately before it.
+          bool has_nominal_sahen_suffix_boundary = false;
+          if (ext_okurigana == "し") {
+            for (const auto& suffix_entry : getSuffixEntries()) {
+              if (!utf8::endsWith(kanji_part, suffix_entry.suffix)) {
+                continue;
+              }
+              const bool has_local_base = kanji_part.size() > suffix_entry.suffix.size();
+              const bool has_left_kanji = start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]);
+              if (has_local_base || has_left_kanji) {
+                has_nominal_sahen_suffix_boundary = true;
+                break;
+              }
             }
-            is_verified_adjective = adjective_confidence != candidate::kNoOriginConfidence;
           }
+          if (has_nominal_sahen_suffix_boundary) {
+            continue;
+          }
+
+          if (std::string_view(pattern) == "さ") {
+            if (!isPossibleUnknownIAdjectiveStem(stem, base_form, dict_manager) ||
+                hasNaAdjectiveStemEvidence(stem, dict_manager) ||
+                hasInternalNominalDerivationalBoundary(stem, dict_manager)) {
+              continue;
+            }
+          }
+          if (std::string_view(pattern) == "そう" && dict_manager != nullptr) {
+            const auto* adjective = dict_manager->lookupExact(stem, core::PartOfSpeech::Adjective);
+            const bool is_complete_na_adjective =
+                adjective != nullptr && adjective->extended_pos == core::ExtendedPOS::AdjNaAdj;
+            if (isVerbInDictionary(dict_manager, stem) || is_complete_na_adjective ||
+                hasVerifiedPredicateDerivedAdjective(base_form, inflection, dict_manager)) {
+              continue;
+            }
+          }
+
+          const float adjective_confidence =
+              productiveIAdjectiveStemConfidence(stem, base_form, inflection, dict_manager);
+          const bool is_verified_adjective = adjective_confidence != candidate::kNoOriginConfidence;
           if (is_verified_adjective) {
             // Count hiragana chars in okurigana for stem_end calculation
             size_t okurigana_chars = byte_pos / 3;
@@ -356,6 +555,13 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
       bool is_dict_adjective = isAdjectiveInDictionary(dict_manager, base_form);
       SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   is_dict_adj=" << is_dict_adjective << "\n");
 
+      // A single-kanji Xしい reconstruction is too permissive without lexical
+      // evidence (化し+すぎ must not invent 化しい). Established adjectives
+      // such as 難しい and 美しい are dictionary-verified and remain covered.
+      if (!is_dict_adjective && normalize::utf8Length(kanji_part) == 1) {
+        continue;
+      }
+
       // Confidence-based fallback when adjective is not in dictionary
       // Only generate adjective stem if adjective confidence is SIGNIFICANTLY higher
       // than verb confidence. This prevents generating stems for verb renyokei
@@ -385,6 +591,25 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
     }
   }
 
+  // A dictionary i-adjective may attach the productive appearance suffix げ
+  // directly to its kanji stem (心細い → 心細+げ).  Unlike the しい/さ paths
+  // below, this construction has no hiragana from the adjective itself, so
+  // reconstruct the base from the complete kanji run.  Dictionary validation
+  // keeps unrelated noun+げ sequences on the ordinary nominal path.
+  if (hiragana_part.size() >= core::kJapaneseCharBytes && utf8::startsWith(hiragana_part, "げ")) {
+    const std::string base_form = kanji_part + "い";
+    const bool starts_inside_kanji_run = start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]);
+    const float adjective_confidence =
+        (hasNaAdjectiveStemEvidence(kanji_part, dict_manager) || scorer::startsWithNegationPrefix(kanji_part))
+            ? candidate::kNoOriginConfidence
+            : productiveIAdjectiveStemConfidence(kanji_part, base_form, inflection, dict_manager);
+    if (!starts_inside_kanji_run && adjective_confidence != candidate::kNoOriginConfidence) {
+      candidates.push_back(makeIAdjStemCandidate(kanji_part, start_pos, kanji_end, base_form,
+                                                 candidate::kAdjStemDictionaryCost, CandidateOrigin::AdjectiveI,
+                                                 adjective_confidence, "adj_stem_kanji_ge"));
+    }
+  }
+
   // =============================================================================
   // Pattern 3: Extended stem (kanji + hiragana) + さ nominalization
   // =============================================================================
@@ -405,22 +630,24 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
     std::string stem = kanji_part + stem_suffix;
     std::string base_form = stem + "い";
 
+    if (hasNaAdjectiveStemEvidence(stem, dict_manager)) {
+      continue;
+    }
+    if (hasInternalNominalDerivationalBoundary(stem, dict_manager)) {
+      continue;
+    }
+
     SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   ext_stem pattern: stem=\"" << stem << "\" base=\"" << base_form << "\"\n");
 
-    // A dictionary entry is authoritative.  For the productive -しい class,
-    // inflection can also verify a lexical adjective that is intentionally not
-    // listed in L1: 頼もしさ, 好ましさ, and 望ましさ must retain their
-    // adjective-stem boundary before the nominalizer.  Keep this fallback
-    // narrow: arbitrary kanji+hira+さ remains rejected, a サ変 stem (確認し)
-    // is not an adjective, and ～らし is the conjecture auxiliary (本らしさ).
-    bool is_dict_adj = isAdjectiveInDictionary(dict_manager, base_form);
-    float adj_confidence = is_dict_adj ? candidate::kDictionaryOriginConfidence : candidate::kNoOriginConfidence;
-    const bool is_shii_stem = stem_suffix.size() >= 2 * core::kJapaneseCharBytes && utf8::endsWith(stem, "し") &&
-                              !utf8::endsWith(stem, "らし");
-    if (!is_dict_adj && is_shii_stem) {
-      adj_confidence = adj_detail::firstConfidenceAtLeast(inflection.analyze(base_form), grammar::VerbType::IAdjective,
-                                                          candidate::kIAdjConfMin);
+    // Dictionary entries are authoritative; unknown stems remain productive
+    // when their conjugational shape is possible and no internal predicate or
+    // derivational boundary provides the stronger analysis.
+    const bool is_dict_adj = isAdjectiveInDictionary(dict_manager, base_form);
+    if (!isPossibleUnknownIAdjectiveStem(stem, base_form, dict_manager)) {
+      SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   ext_stem: skip (unverified stem before さ)\n");
+      continue;
     }
+    float adj_confidence = productiveIAdjectiveStemConfidence(stem, base_form, inflection, dict_manager);
     if (adj_confidence == candidate::kNoOriginConfidence) {
       SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   ext_stem: skip (not verified adjective)\n");
       continue;
@@ -473,12 +700,23 @@ bool isModernIAdjective(const std::string& lemma, const grammar::Inflection& inf
   if (isAdjectiveInDictionary(dict_manager, lemma)) {
     return true;
   }
+  const float minimum_confidence =
+      grammar::containsKanji(lemma) ? candidate::kCompoundAdjConfMin : candidate::kHiraAdjConfMin;
   for (const auto& cand : inflection.analyze(lemma)) {
-    if (cand.verb_type == grammar::VerbType::IAdjective && cand.confidence >= candidate::kHiraAdjConfMin) {
+    if (cand.verb_type == grammar::VerbType::IAdjective && cand.confidence >= minimum_confidence) {
       return true;
     }
   }
   return false;
+}
+
+bool hasDictionaryVerifiedVerbAnalysis(const std::string& surface, const grammar::Inflection& inflection,
+                                       const dictionary::DictionaryManager* dict_manager) {
+  const auto& analyses = inflection.analyze(surface);
+  return std::any_of(analyses.begin(), analyses.end(), [&](const auto& candidate) {
+    return candidate.verb_type != grammar::VerbType::IAdjective &&
+           isVerbInDictionary(dict_manager, candidate.base_form);
+  });
 }
 
 void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
@@ -502,6 +740,10 @@ void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t st
     // (〜ではなかろうか) the auxiliary reading dominates, so leave なかろ to the
     // auxiliary path rather than tagging it Adjective.
     if (lemma == "ない") {
+      continue;
+    }
+    const std::string whole_surface = extractSubstring(codepoints, start_pos, karo_pos + 3);
+    if (hasDictionaryVerifiedVerbAnalysis(whole_surface, inflection, dict_manager)) {
       continue;
     }
     // Decisive lexical signal: the reconstructed base is a dictionary adjective,
@@ -536,15 +778,27 @@ void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t 
                                 std::vector<UnknownCandidate>& candidates) {
   for (size_t kara_pos = scan_start; kara_pos + 2 < scan_end; ++kara_pos) {
     if (kara_pos <= start_pos || codepoints[kara_pos] != U'か' || codepoints[kara_pos + 1] != U'ら' ||
-        codepoints[kara_pos + 2] != U'ず') {
+        (codepoints[kara_pos + 2] != U'ず' && codepoints[kara_pos + 2] != U'ぬ')) {
       continue;
     }
     std::string lemma = extractSubstring(codepoints, start_pos, kara_pos) + "い";
     if (!isModernIAdjective(lemma, inflection, dict_manager)) {
       continue;
     }
+    // 〜からず/ぬ is also the ordinary godan-ra irrealis plus a
+    // classical negative auxiliary.  A complete analysis whose reconstructed
+    // verb lemma is dictionary-attested is stronger than the weak, generic
+    // i-adjective hypothesis (分からぬ -> 分かる, not fictitious 分い).
+    const std::string whole_surface = extractSubstring(codepoints, start_pos, kara_pos + 3);
+    if (hasDictionaryVerifiedVerbAnalysis(whole_surface, inflection, dict_manager)) {
+      continue;
+    }
+    const std::string surface = extractSubstring(codepoints, start_pos, kara_pos + 2);
+    if (dict_manager != nullptr && dict_manager->lookupExact(surface, core::PartOfSpeech::Auxiliary) != nullptr) {
+      continue;
+    }
     UnknownCandidate miz_cand;
-    miz_cand.surface = extractSubstring(codepoints, start_pos, kara_pos + 2);
+    miz_cand.surface = surface;
     miz_cand.start = start_pos;
     miz_cand.end = kara_pos + 2;
     miz_cand.pos = core::PartOfSpeech::Adjective;

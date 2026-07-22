@@ -254,10 +254,17 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
 
   size_t seq_len = seq_end - start_pos;
 
+  // A quotative と commonly follows a mimetic adverb (ぷうぷうと、ちくたくと).
+  // It is hiragana too, so exclude it from the shape check while leaving the
+  // particle available as a separate morpheme.
+  const bool has_trailing_quotative = seq_len > 4 && codepoints[seq_end - 1] == U'と';
+  const size_t mimetic_end = has_trailing_quotative ? seq_end - 1 : seq_end;
+  const size_t mimetic_len = mimetic_end - start_pos;
+
   // Try AA pattern: first half equals second half (ニャーニャー, ワンワン)
   // Sequence must have even length and be at least 4 chars
-  if (seq_len >= 4 && seq_len % 2 == 0) {
-    size_t half_len = seq_len / 2;
+  if (mimetic_len >= 4 && mimetic_len % 2 == 0) {
+    size_t half_len = mimetic_len / 2;
     bool is_aa = true;
 
     // Check if first half equals second half
@@ -272,10 +279,11 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
       // Verify the first char of each half is not small kana
       // (small kana should be part of previous mora, not start a unit)
       if (!isSmallKanaAt(start_pos) && !isSmallKanaAt(start_pos + half_len)) {
-        std::string surface = extractSubstring(codepoints, start_pos, seq_end);
+        std::string surface = extractSubstring(codepoints, start_pos, mimetic_end);
         if (!surface.empty()) {
-          auto cand = makeCandidate(surface, start_pos, seq_end, core::PartOfSpeech::Adverb, -1.0F, true,
-                                    CandidateOrigin::Onomatopoeia);
+          auto cand =
+              makeCandidate(surface, start_pos, mimetic_end, core::PartOfSpeech::Adverb,
+                            candidate::kMimeticExactReduplicationAdverbCost, true, CandidateOrigin::Onomatopoeia);
 #ifdef SUZUME_DEBUG_INFO
           cand.confidence = 1.0F;
           cand.pattern = "aa_doubled";
@@ -288,7 +296,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
   }
 
   // Try ABAB pattern for exactly 4 chars (traditional pattern)
-  if (seq_len >= 4) {
+  if (mimetic_len >= 4) {
     // Check if all 4 chars are the expected type
     bool valid = true;
     for (size_t i = 0; i < 4; ++i) {
@@ -321,6 +329,68 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
     }
   }
 
+  // A heterogeneous four-mora form followed by quotative と is another
+  // productive mimetic shape (ちくたくと).  The particle gate prevents a
+  // generic four-hiragana run from becoming an adverb without syntactic
+  // evidence, while the earlier AA/ABAB branches retain their stronger costs.
+  bool heterogeneous_has_small_kana = false;
+  for (size_t offset = 0; offset < mimetic_len; ++offset) {
+    heterogeneous_has_small_kana = heterogeneous_has_small_kana || isSmallKanaAt(start_pos + offset);
+  }
+  if (has_trailing_quotative && seq_end < codepoints.size() && mimetic_len == 4 &&
+      start_type == normalize::CharType::Hiragana && !normalize::isParticleCodepoint(codepoints[start_pos]) &&
+      !heterogeneous_has_small_kana) {
+    std::string surface = extractSubstring(codepoints, start_pos, mimetic_end);
+    if (!surface.empty()) {
+      auto cand = makeCandidate(surface, start_pos, mimetic_end, core::PartOfSpeech::Adverb,
+                                candidate::kMimeticHeterogeneousAdverbCost, true, CandidateOrigin::Onomatopoeia);
+#ifdef SUZUME_DEBUG_INFO
+      cand.confidence = candidate::kHighOriginConfidence;
+      cand.pattern = "heterogeneous_four_mora_quotative";
+#endif
+      candidates.push_back(cand);
+    }
+  }
+
+  // Nasal manner mimetics: Xんと (しんと) and XんYり (しんみり,
+  // すんなり). The fixed nasal position plus the adverbial ending supplies
+  // stronger evidence than an arbitrary hiragana run.
+  if (start_type == normalize::CharType::Hiragana && seq_len >= 3 && codepoints[start_pos + 1] == U'ん') {
+    size_t pattern_end = start_pos;
+    const char* pattern = nullptr;
+    if (codepoints[start_pos + 2] == U'と') {
+      pattern_end = start_pos + 3;
+      pattern = "x_nto_pattern";
+    } else if (seq_len >= 4 && codepoints[start_pos + 3] == U'り') {
+      pattern_end = start_pos + 4;
+      pattern = "x_ny_ri_pattern";
+    }
+    if (pattern != nullptr) {
+      auto cand = makeCandidate(extractSubstring(codepoints, start_pos, pattern_end), start_pos, pattern_end,
+                                core::PartOfSpeech::Adverb, candidate::kMimeticNtoAdverbBonus, true,
+                                CandidateOrigin::Onomatopoeia);
+#ifdef SUZUME_DEBUG_INFO
+      cand.confidence = candidate::kHighOriginConfidence;
+      cand.pattern = pattern;
+#endif
+      candidates.push_back(std::move(cand));
+    }
+  }
+
+  // Alternating nasal compound mimetics such as ABんCDん followed by the
+  // quotative と form one search unit even when the two halves differ.
+  if (has_trailing_quotative && mimetic_len == 6 && codepoints[start_pos + 2] == U'ん' &&
+      codepoints[start_pos + 5] == U'ん') {
+    auto cand = makeCandidate(extractSubstring(codepoints, start_pos, mimetic_end), start_pos, mimetic_end,
+                              core::PartOfSpeech::Adverb, candidate::kMimeticAlternatingNasalAdverbCost, true,
+                              CandidateOrigin::Onomatopoeia);
+#ifdef SUZUME_DEBUG_INFO
+    cand.confidence = candidate::kHighOriginConfidence;
+    cand.pattern = "abn_cdn_quotative";
+#endif
+    candidates.push_back(std::move(cand));
+  }
+
   // Try ABり / AっBり patterns (e.g., どさり, ばたり, ぐったり,
   // じっくり). The same-script run can continue through quotative と (and the
   // four-character form can precede a hiragana predicate), so recognize the
@@ -348,8 +418,19 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
 
     // Four-character patterns like ぐったり and じっくり.
     if (seq_len >= 4 && isSmallKanaAt(start_pos + 1) && codepoints[start_pos + 3] == U'り') {
+      const std::string inflectional_tail = extractSubstring(codepoints, start_pos + 2, start_pos + 4);
+      const auto* tail_particle = dict_manager_ != nullptr
+                                      ? dict_manager_->lookupExact(inflectional_tail, core::PartOfSpeech::Particle)
+                                      : nullptr;
+      const std::string predicate_stem = extractSubstring(codepoints, start_pos, start_pos + 2);
+      const bool has_exact_predicate_stem =
+          dict_manager_ != nullptr &&
+          (dict_manager_->lookupExact(predicate_stem, core::PartOfSpeech::Verb) != nullptr ||
+           dict_manager_->lookupExact(predicate_stem, core::PartOfSpeech::Auxiliary) != nullptr);
+      const bool is_conjunctive_auxiliary_tail = has_exact_predicate_stem && tail_particle != nullptr &&
+                                                 tail_particle->extended_pos == core::ExtendedPOS::ParticleConj;
       std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
-      if (!surface.empty()) {
+      if (!surface.empty() && !is_conjunctive_auxiliary_tail) {
         auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Adverb,
                                   candidate::kMimeticSokuonMannerAdverbCost, true, CandidateOrigin::Onomatopoeia);
 #ifdef SUZUME_DEBUG_INFO
@@ -412,9 +493,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
         if (stem_len >= 1 && stem_len <= 4) {
           // Skip if stem starts with a particle character (e.g., にもっと = に+もっと)
           char32_t first_cp = codepoints[start_pos];
-          if (stem_len >= 2 &&
-              (first_cp == U'に' || first_cp == U'は' || first_cp == U'も' || first_cp == U'を' || first_cp == U'が' ||
-               first_cp == U'で' || first_cp == U'と' || first_cp == U'か' || first_cp == U'の' || first_cp == U'へ')) {
+          const bool particle_start = first_cp == U'に' || first_cp == U'は' || first_cp == U'も' ||
+                                      first_cp == U'を' || first_cp == U'が' || first_cp == U'で' ||
+                                      first_cp == U'と' || first_cp == U'か' || first_cp == U'の' || first_cp == U'へ';
+          if (stem_len >= 2 && particle_start && stem_len != 2) {
             break;
           }
           std::string surface = extractSubstring(codepoints, start_pos, adv_end);

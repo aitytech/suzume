@@ -211,6 +211,31 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
     return candidates;
   }
 
+  // A productive suffix verb may attach after a repeated quantity unit, but
+  // it cannot begin inside that already-complete unit and cross its right
+  // boundary. Share the same ABAB numeral+noun evidence used by the counter
+  // generator, so candidates start at the predicate rather than the second
+  // half of 一語一語-like expressions.
+  bool crosses_repeated_quantity_boundary = false;
+  const size_t possible_unit_start = start_pos > 3 ? start_pos - 3 : 0;
+  for (size_t unit_start = possible_unit_start; unit_start < start_pos; ++unit_start) {
+    constexpr size_t kRepeatedUnitLength = 4;
+    const size_t unit_end = unit_start + kRepeatedUnitLength;
+    if (unit_end < base_end && isRepeatedNumeralNounUnitAt(codepoints, char_types, unit_start)) {
+      crosses_repeated_quantity_boundary = true;
+      break;
+    }
+  }
+  if (crosses_repeated_quantity_boundary) {
+    return candidates;
+  }
+
+  // A numeral-led kanji sequence before ～づく is an independent quantity or
+  // repeated-count noun followed by a lexical verb (一歩一歩+近づく), not the
+  // nominal base of a productive suffix verb.  Without this boundary the
+  // suffix fallback can absorb the whole preceding count expression.
+  const bool numeral_led_base = normalize::isNumeralCodepoint(codepoints[start_pos]);
+
   struct IchidanSuffixForm {
     std::string_view inflection;
     core::ExtendedPOS extended_pos;
@@ -309,6 +334,9 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
   }
 
   for (const auto& suffix_stem : kNominalSuffixVerbStems) {
+    if (numeral_led_base) {
+      break;
+    }
     for (const auto& form : kGodanKaForms) {
       constexpr size_t kSuffixVerbFormLength = 2;
       const size_t candidate_end = base_end + kSuffixVerbFormLength;

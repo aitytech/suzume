@@ -169,13 +169,15 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
 
     // Default to the ichidan interpretation (stem + る). For the +ます follower a
     // godan renyokei reading is equally licensed (泳ぎ→泳ぐ, 踊り→踊る), so prefer it
-    // when at least as confident: emit the systematic verb base instead of a
-    // fabricated 泳ぎる/踊りる. て/た/ない/れば stay ichidan-only — there a bare
-    // i-row stem is genuinely ichidan (godan would need onbin or an a-row mizenkei).
+    // when at least as confident. Godan-sa is the sole row whose ordinary
+    // continuative also attaches directly to て/た (話し+た); preserve that
+    // analysis instead of fabricating 話しる. Other godan rows require onbin or
+    // an a-row mizenkei in the corresponding contexts.
     std::string chosen_base = base_form;
     dictionary::ConjugationType chosen_conj = dictionary::ConjugationType::Ichidan;
     float chosen_confidence = ichidan_confidence;
-    if (is_followed_by_masu || is_followed_by_renyokei_conj) {
+    const bool godan_sa_before_te_ta = is_followed_by_te_ta && stem_end_char == U'し';
+    if (is_followed_by_masu || is_followed_by_renyokei_conj || godan_sa_before_te_ta) {
       grammar::VerbType godan_type = grammar::verbTypeFromIRowCodepoint(stem_end_char);
       if (godan_type != grammar::VerbType::Unknown) {
         std::string godan_base = extractSubstring(codepoints, start_pos, end_pos - 1) +
@@ -286,10 +288,18 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     // the ambiguous Ichidan stem is mizenkei (さけ+ない, かけ+ない).
     const bool is_lexical_negative_continuation =
         is_negative_continuation && !isClearTeFormBeforeSubsidiary(codepoints, start_pos, true);
-    const core::CandidateOrigin origin = is_lexical_negative_continuation
-                                             ? CandidateOrigin::VerbHiraganaNegativeRenyokei
-                                         : is_followed_by_te_ta ? CandidateOrigin::VerbHiraganaInflectedRenyokei
-                                                                : CandidateOrigin::VerbHiragana;
+    // A following て/た validates the inflectional shape, but it does not prove
+    // a word boundary when the candidate begins immediately after kanji. In
+    // that position the hiragana can instead be the okurigana tail of a
+    // kanji-starting predicate. Keep the ordinary candidate, but reserve the
+    // context-validated origin (and its strong auxiliary-connection evidence)
+    // for starts that are not inside that mixed-script predicate shape.
+    const bool has_kanji_immediately_before = start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]);
+    const core::CandidateOrigin origin =
+        is_lexical_negative_continuation
+            ? CandidateOrigin::VerbHiraganaNegativeRenyokei
+            : (is_followed_by_te_ta && !has_kanji_immediately_before ? CandidateOrigin::VerbHiraganaInflectedRenyokei
+                                                                     : CandidateOrigin::VerbHiragana);
     // Ichidan stems share their surface in renyokei and mizenkei. A following
     // negative auxiliary determines the latter, which must receive the normal
     // VerbMizenkei → AuxNegativeNai connection instead of competing as a
@@ -344,8 +354,6 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
         std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
         std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
 
-        const auto& sokuonbin_types = vh::getGodanTypesByOnbin("っ");
-
         auto sokuonbin_match = vh::firstGodanOnbinDictBase(dict_manager, stem, "っ");
         if (sokuonbin_match.matched &&
             (grammar::isSuruBaseForm(sokuonbin_match.base_form) ||
@@ -368,53 +376,10 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
           sokuonbin_cand.lemma_verified = true;
           candidates.push_back(std::move(sokuonbin_cand));
         }
-        // Phase 2: Inflection analysis fallback for short hiragana stems (e.g., やっ)
-        // Only for stems of 1-2 characters (e.g., や, やる → やっ)
-        if (!found_dict_match && stem.size() <= 6) {  // 2 chars * 3 bytes max
-          std::string full_surface = extractSubstring(codepoints, start_pos, hira_extent_end);
-          const auto& infl_results = inflection.analyze(full_surface);
-          for (const auto& result : infl_results) {
-            // Short pure-hiragana stems receive a single-stem confidence
-            // deduction, so retain the same threshold as the earlier tense
-            // fallback (e.g., あらっ + た from あらう).
-            if (result.confidence >= candidate::verb_cost::kShortHiraganaSokuonbinMinConfidence) {
-              for (const auto& [verb_type, base_suffix] : sokuonbin_types) {
-                std::string potential_base = stem + std::string(base_suffix);
-                if (result.base_form == potential_base && result.verb_type == verb_type) {
-                  // Without a dictionary attestation, a pure-hiragana
-                  // sokuonbin is ambiguous among several godan rows. Follow
-                  // the tokenizer's ordinary hiragana preference for the
-                  // productive wa-row (あらっ + た → あらう).
-                  grammar::VerbType selected_type = verb_type;
-                  std::string_view selected_suffix = base_suffix;
-                  for (const auto& [fallback_type, fallback_suffix] : sokuonbin_types) {
-                    if (fallback_type == grammar::VerbType::GodanWa) {
-                      selected_type = fallback_type;
-                      selected_suffix = fallback_suffix;
-                      break;
-                    }
-                  }
-                  std::string selected_base = stem + std::string(selected_suffix);
-                  constexpr float kHiraganaSokuonbinCost = candidate::verb_cost::kModerateBonus;
-                  SUZUME_DEBUG_VERBOSE_BLOCK {
-                    SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface
-                                        << " hiragana_sokuonbin_infl lemma=" << selected_base
-                                        << " type=" << grammar::verbTypeToString(selected_type)
-                                        << " cost=" << kHiraganaSokuonbinCost << "\n";
-                  }
-                  candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaSokuonbinCost,
-                                                         selected_base, grammar::verbTypeToConjType(selected_type),
-                                                         true, CandidateOrigin::VerbHiragana, 0.8F,
-                                                         "hiragana_sokuonbin_infl", core::ExtendedPOS::VerbOnbinkei));
-                  found_dict_match = true;
-                  break;
-                }
-              }
-              if (found_dict_match)
-                break;
-            }
-          }
-        }
+        // The general onbin generator already emits the first inflection-
+        // verified Godan row for unregistered hiragana stems.  Do not add a
+        // second fallback with a different row preference here: duplicate
+        // candidates for the same っ-form otherwise disagree on the lemma.
       }
     }
   }

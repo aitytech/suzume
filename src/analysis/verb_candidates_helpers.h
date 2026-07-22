@@ -36,6 +36,9 @@ namespace suzume::analysis::verb_helpers {
  */
 bool isSingleKanjiIchidan(char32_t c);
 
+/** Return true for a one-kanji stem that takes the polite auxiliary directly. */
+bool isSingleKanjiPoliteStem(char32_t c);
+
 /**
  * @brief Check if a surface form is exactly one single-kanji Ichidan verb
  *
@@ -105,6 +108,16 @@ bool hasNonVerbDictionaryEntry(const dictionary::DictionaryManager* dict_manager
  */
 bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
 
+// Exact one-token case-particle lookup.  Conjunctive particles such as ば are
+// valid syllables inside inflected lexical stems and must not trigger the
+// noun+case-particle+する guard.
+bool hasCaseParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
+
+// A bare continuative can chain clauses before the literal Japanese comma
+// when a non-quotative case particle licenses a predicate on its left.
+bool isCommaClauseChainingRenyokei(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                   const dictionary::DictionaryManager* dict_manager);
+
 // True when start_pos is strictly inside a dictionary particle. Candidate
 // generators use this to avoid manufacturing a verb from the tail of a
 // compound particle (から + やり直す, not か + らやり直す).
@@ -115,6 +128,12 @@ bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, siz
 // closed-class prefix cannot be the first half of a productive compound verb.
 bool startsWithMultiMoraDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
                                            const dictionary::DictionaryManager* dict_manager);
+
+// True when start_pos is strictly inside a contiguous kanji run immediately
+// followed by し. Such an internal position cannot begin a separate lexical
+// candidate: the complete run is a productive verbal noun (提出+し) or the
+// kanji portion of a lexical verb stem (見直し).
+bool startsInsideKanjiRunBeforeShi(const std::vector<char32_t>& codepoints, size_t start_pos);
 
 // =============================================================================
 // Fabricated closed-class absorption guards
@@ -408,8 +427,8 @@ bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType ver
  * @brief Check whether the codepoint after passive れ continues an auxiliary chain
  *
  * Matches the passive/potential continuation set after れ (or られ):
- * る/た/て immediately, な only when followed by い (れない, れなかった), and
- * ま (れます, れました). With @p strict_masu the ま branch additionally
+ * る/た/て immediately, the closed ない-family paradigm via
+ * naiNegativeFollowsAt(), and ま (れます, れました). With @p strict_masu the ま branch additionally
  * requires a following す or せ (れます/れません), excluding bare ま.
  *
  * @param codepoints Full input codepoints
@@ -510,6 +529,14 @@ bool isSuruAuxiliaryStarter(char32_t next_char);
  *
  * @param codepoints Full input codepoints
  * @param pos Index expected to hold the leading な
+ */
+size_t naiNegativeFormLengthAt(const std::vector<char32_t>& codepoints, size_t pos);
+
+/**
+ * @brief Check whether a ない-family negative begins at @p pos.
+ *
+ * Boolean facade over naiNegativeFormLengthAt() for callers that only need
+ * boundary evidence rather than the exact closed-paradigm span.
  */
 bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 

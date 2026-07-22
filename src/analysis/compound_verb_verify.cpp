@@ -169,6 +169,23 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
       }
     }
 
+    // A particle inside the proposed V1 is a compositional boundary. Check it
+    // before accepting the productive single-kanji Ichidan fallback: that
+    // otherwise treats adjectival adverbs such as 静かに+続く as compounds.
+    if (use_inflection_fallback && is_ichidan && kanji_count == 1) {
+      const std::string v1_renyokei(text.substr(start_byte, v2_start_byte - start_byte));
+      for (size_t split = core::kJapaneseCharBytes; split < v1_renyokei.size(); split += core::kJapaneseCharBytes) {
+        if (normalize::utf8Length(std::string_view(v1_renyokei).substr(0, split)) < 2) {
+          continue;
+        }
+        const std::string_view suffix(v1_renyokei.data() + split, v1_renyokei.size() - split);
+        if (dict_manager.lookupExact(suffix, core::PartOfSpeech::Particle) != nullptr) {
+          use_inflection_fallback = false;
+          break;
+        }
+      }
+    }
+
     // A single-kanji Ichidan stem followed by a verified V2 is productive,
     // except at known copular, hatsuonbin, and formal-noun boundaries.
     bool starts_inside_formal_noun = false;
@@ -182,7 +199,8 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
       const bool bare_ichidan_stem = v2_start == kanji_end;
       if (bare_ichidan_stem && !verb_helpers::isSingleKanjiIchidan(codepoints[start_pos])) {
         use_inflection_fallback = false;
-      } else if (renyokei_char == U'で' || renyokei_char == U'ん' || starts_inside_formal_noun) {
+      } else if (renyokei_char == U'で' || (renyokei_char == U'ん' && v2_start == kanji_end) ||
+                 starts_inside_formal_noun) {
         use_inflection_fallback = false;
       } else {
         v1_verified = true;
@@ -241,6 +259,17 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
         }
       }
     }
+  }
+
+  // A ka/ga-row verb's i-onbin followed by で is its conjunctive te-form,
+  // not a compound whose V2 happens to be the verb でる (急い+で+も).
+  if (v1_verified && v2_start < codepoints.size() && v2_start > start_pos && codepoints[v2_start] == U'で' &&
+      codepoints[v2_start - 1] == U'い' && utf8::endsWithAny(v1_base, {"く", "ぐ"})) {
+    v1_verified = false;
+    v1_dict_verified = false;
+    v1_embedded_verified = false;
+    v1_ichidan_inflection = false;
+    v1_godan_inflection = false;
   }
 
   return result;

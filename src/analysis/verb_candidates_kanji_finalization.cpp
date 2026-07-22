@@ -55,8 +55,14 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
   // 紙+に+し+て). Registered lexical verbs remain available.
   bool is_unregistered_godan_sa =
       best.verb_type == grammar::VerbType::GodanSa && !vh::isVerbInDictionary(dict_manager, best.base_form);
+  if (is_unregistered_godan_sa && utf8::endsWith(best.stem, "く")) {
+    const std::string adjective_base = std::string(utf8::dropLastChar(best.stem)) + "い";
+    if (vh::isAdjectiveInDictionary(dict_manager, adjective_base)) {
+      return;
+    }
+  }
   if (is_unregistered_godan_sa && stem_end == kanji_end + 1 && (best.suffix == "して" || best.suffix == "した") &&
-      vh::hasParticleDictionaryEntry(dict_manager, normalize::encodeUtf8(codepoints[stem_end - 1]))) {
+      vh::hasCaseParticleDictionaryEntry(dict_manager, normalize::encodeUtf8(codepoints[stem_end - 1]))) {
     SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" godan_sa case-particle+する pattern\n");
     return;
   }
@@ -434,7 +440,9 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
       // Pattern (b): hiragana-only portion of base form is a 2+ char dict AUX/VERB.
       // Restricted to 2+ chars to avoid false matches with single-char endings
       // (う = AuxVolitional, but all real godan-wa verbs end in う: 思う, 戦う etc.)
-      if (!penalized && !best.base_form.empty()) {
+      const bool has_attributive_content_follower =
+          end_pos < codepoints.size() && normalize::isKanjiCodepoint(codepoints[end_pos]);
+      if (!penalized && !best.base_form.empty() && !has_attributive_content_follower) {
         auto base_cps = normalize::utf8::decode(best.base_form);
         if (base_cps.size() >= 3 && normalize::isKanjiCodepoint(base_cps[0])) {
           std::vector<char32_t> hira_only(base_cps.begin() + 1, base_cps.end());

@@ -67,8 +67,9 @@ bool isRightBoundaryParticle(char32_t code_point) {
 
 // Hiragana that reads as a particle when it appears WORD-INTERNALLY during a
 // bracketed-noun scan. A native noun may span at most one of these (こども, ともだち);
-// a second one marks a genuine particle chain and stops the scan. を/が/の are
-// handled as hard stops separately (they never sit inside a native hiragana noun).
+// a second one marks a genuine particle chain and stops the scan. を remains a
+// hard stop; が/の may occur inside native words (つながり, かけがえ) and are
+// admitted only under the same one-internal-particle cap.
 bool isInternalParticleChar(char32_t code_point) {
   switch (code_point) {
     case U'は':
@@ -78,6 +79,8 @@ bool isInternalParticleChar(char32_t code_point) {
     case U'と':
     case U'も':
     case U'か':
+    case U'が':
+    case U'の':
       return true;
     default:
       return false;
@@ -129,7 +132,7 @@ bool hasHiraganaNominalNakuEnding(const std::vector<char32_t>& codepoints, size_
 }  // namespace
 
 std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
-    std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
+    std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
     const std::vector<normalize::CharType>& char_types) const {
   std::vector<UnknownCandidate> candidates;
 
@@ -150,6 +153,14 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
   // Note: よ, わ are excluded - they are sentence-final particles
   if (start_type == normalize::CharType::Hiragana) {
     char32_t first_char = codepoints[start_pos];
+    // Case particles を/が are valid standalone dictionary tokens, but they
+    // cannot begin a multi-character native unknown word.  Returning here
+    // prevents same-type fallbacks such as をよぎった from swallowing the
+    // particle and predicate together; dictionary lookup still supplies the
+    // one-character particle candidate.
+    if (first_char == U'を' || first_char == U'が') {
+      return candidates;
+    }
     // Only は, に, へ, の can start hiragana nouns
     if (first_char == U'は' || first_char == U'に' || first_char == U'へ' || first_char == U'の') {
       started_with_particle = true;  // Generate but with penalty
@@ -479,13 +490,26 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
   // left boundary here (genitive marks a compound boundary).
   bool left_particle_bracket = start_pos >= 2 && isLeftBoundaryParticle(codepoints[start_pos - 1]) &&
                                char_types[start_pos - 2] != normalize::CharType::Hiragana;
+  bool left_determiner_bracket = false;
+  if (dict_manager_ != nullptr) {
+    const size_t lookback = std::min(start_pos, static_cast<size_t>(4));
+    for (size_t length = 1; length <= lookback; ++length) {
+      const std::string preceding = extractSubstring(codepoints, start_pos - length, start_pos);
+      const auto* entry = dict_manager_->lookupExact(preceding, core::PartOfSpeech::Determiner);
+      if (entry != nullptr) {
+        left_determiner_bracket = true;
+        break;
+      }
+    }
+  }
   bool left_clause_bracket =
       (start_pos == 0) || (start_pos >= 1 && char_types[start_pos - 1] == normalize::CharType::Symbol);
-  if (start_type == normalize::CharType::Hiragana && (left_particle_bracket || left_clause_bracket) &&
+  if (start_type == normalize::CharType::Hiragana &&
+      (left_particle_bracket || left_determiner_bracket || left_clause_bracket) &&
       !isImpossibleHiraganaStart(codepoints[start_pos])) {
     bool particle_initial =
         (codepoints[start_pos] == U'は' || codepoints[start_pos] == U'に' || codepoints[start_pos] == U'へ');
-    size_t max_internal = particle_initial ? 0 : 1;
+    size_t max_internal = particle_initial ? 0 : 2;
     size_t internal_particles = 0;
     // A multi-char L1 particle (ながら, まで, から, だけ, …) beginning at a position is a
     // real right boundary: terminate the run there rather than swallowing its head into
@@ -503,17 +527,76 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
       }
       return false;
     };
+    auto lies_inside_formal_noun_negative_predicate = [&](size_t pos) -> bool {
+      if (dict_manager_ == nullptr) {
+        return false;
+      }
+      for (size_t predicate_start = start_pos + 1; predicate_start < pos; ++predicate_start) {
+        const std::string prefix = extractSubstring(codepoints, start_pos, predicate_start);
+        const auto* noun = dict_manager_->lookupExact(prefix, core::PartOfSpeech::Noun);
+        if (noun == nullptr || noun->extended_pos != core::ExtendedPOS::NounFormal) {
+          continue;
+        }
+        const auto predicates = generateHiraganaVerbCandidates(text, codepoints, predicate_start, char_types);
+        for (const auto& predicate : predicates) {
+          if (predicate.extended_pos != core::ExtendedPOS::VerbMizenkei || predicate.end <= pos ||
+              predicate.end >= codepoints.size()) {
+            continue;
+          }
+          const size_t probe_end = std::min(codepoints.size(), predicate.end + static_cast<size_t>(2));
+          const std::string following = extractSubstring(codepoints, predicate.end, probe_end);
+          for (const auto& match : dict_manager_->lookup(following, 0)) {
+            if (match.entry != nullptr && (match.entry->extended_pos == core::ExtendedPOS::AuxNegativeNu ||
+                                           match.entry->extended_pos == core::ExtendedPOS::AuxNegativeNai)) {
+              return true;
+            }
+          }
+        }
+        const size_t auxiliary_limit = std::min(codepoints.size(), pos + static_cast<size_t>(5));
+        for (size_t auxiliary_start = pos + 1; auxiliary_start < auxiliary_limit; ++auxiliary_start) {
+          const std::string window = extractSubstring(codepoints, auxiliary_start, auxiliary_limit);
+          for (const auto& match : dict_manager_->lookup(window, 0)) {
+            if (match.entry == nullptr || (match.entry->extended_pos != core::ExtendedPOS::AuxNegativeNu &&
+                                           match.entry->extended_pos != core::ExtendedPOS::AuxNegativeNai)) {
+              continue;
+            }
+            const std::string full_predicate =
+                extractSubstring(codepoints, predicate_start, auxiliary_start + match.length);
+            for (const auto& analysis : inflection_.analyze(full_predicate)) {
+              if (analysis.verb_type != grammar::VerbType::Unknown &&
+                  analysis.verb_type != grammar::VerbType::IAdjective && !analysis.morphemes.empty() &&
+                  analysis.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+      return false;
+    };
+    bool crossed_verified_predicate = false;
     size_t scan = start_pos + 1;
     while (scan < codepoints.size() && scan - start_pos < 4 && char_types[scan] == normalize::CharType::Hiragana) {
       char32_t curr = codepoints[scan];
-      if (curr == U'を' || curr == U'が' || curr == U'の') {
-        break;  // hard stops: never sit inside a native hiragana noun
+      if (curr == U'を') {
+        break;  // accusative を does not sit inside a native hiragana noun
+      }
+      // Once a substantive three-mora run has formed, a case/topic particle
+      // starts the right bracket even when the next word is also hiragana
+      // (あたり|は|すっかり). Shorter offsets remain eligible as genuine
+      // word-internal homographs.
+      if (scan - start_pos >= 3 && isRightBoundaryParticle(curr)) {
+        break;
       }
       // A multi-character particle immediately after the first mora can be
       // part of a native hiragana noun (こども).  Require a substantive
       // preceding run before treating it as an internal word boundary.
       if (scan - start_pos >= 2 && multi_char_particle_at(scan)) {
-        break;  // stop before a multi-char particle boundary
+        if (lies_inside_formal_noun_negative_predicate(scan)) {
+          crossed_verified_predicate = true;
+        } else {
+          break;  // stop before a multi-char particle boundary
+        }
       }
       if (isInternalParticleChar(curr)) {
         // A particle char followed by a fresh (non-hiragana) word is a trailing case
@@ -530,8 +613,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
     size_t len = scan - start_pos;
     // Right bracket: a single boundary particle, a multi-char particle start, or a
     // clause boundary (sentence end / symbol).
-    bool right_particle =
-        (scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan])) || multi_char_particle_at(scan);
+    const bool right_genitive_after_internal_particle =
+        scan < codepoints.size() && codepoints[scan] == U'の' && internal_particles > 0;
+    bool right_particle = (scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan])) ||
+                          multi_char_particle_at(scan) || right_genitive_after_internal_particle;
     bool right_clause =
         (scan == codepoints.size()) || (scan < codepoints.size() && char_types[scan] == normalize::CharType::Symbol);
     // Whole-run candidate is safe at length 2 only when both sides are real particles
@@ -539,10 +624,49 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
     // isolated hiragana — usually adverbs/particles (もう, すぐ, ため) — are not promoted.
     bool fully_particle_bracketed = left_particle_bracket && right_particle;
     size_t min_len = fully_particle_bracketed ? 2 : 3;
-    if (len >= min_len && (right_particle || right_clause)) {
-      std::string surface = extractSubstring(codepoints, start_pos, scan);
+    const std::string promoted_surface = extractSubstring(codepoints, start_pos, scan);
+    const auto& promoted_inflections = inflection_.analyze(promoted_surface);
+    const bool has_inflected_predicate_reading =
+        right_clause &&
+        std::any_of(promoted_inflections.begin(), promoted_inflections.end(),
+                    [](const grammar::InflectionCandidate& inflection_candidate) {
+                      return !inflection_candidate.suffix.empty() &&
+                             inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence;
+                    });
+    if (len >= min_len && (right_particle || right_clause) && !crossed_verified_predicate &&
+        !has_inflected_predicate_reading &&
+        !hasAuxiliaryParticleDecomposition(codepoints, start_pos, scan, dict_manager_)) {
       float noun_cost = getCostForType(start_type, len) + candidate::kPostParticleNounPenalty;
-      auto noun_cand = makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun, noun_cost,
+      const bool selected_nominal = right_particle && (left_determiner_bracket || left_clause_bracket ||
+                                                       (start_pos > 0 && codepoints[start_pos - 1] == U'の'));
+      // This is an unknown-noun rescue path.  Keep the homographic noun
+      // candidate when an exact lexical reading exists, but do not give it
+      // the rescue bonus that would erase the dictionary POS (きれい, しかれ,
+      // かしら).  Grammatical right context can then select either reading.
+      const auto* exact_dictionary_reading =
+          dict_manager_ != nullptr ? dict_manager_->lookupExact(promoted_surface) : nullptr;
+      const bool has_exact_noun =
+          dict_manager_ != nullptr && dict_manager_->lookupExact(promoted_surface, core::PartOfSpeech::Noun) != nullptr;
+      const bool has_competing_exact_predicate =
+          dict_manager_ != nullptr &&
+          (dict_manager_->lookupExact(promoted_surface, core::PartOfSpeech::Verb) != nullptr ||
+           dict_manager_->lookupExact(promoted_surface, core::PartOfSpeech::Adjective) != nullptr ||
+           dict_manager_->lookupExact(promoted_surface, core::PartOfSpeech::Auxiliary) != nullptr);
+      const bool quoted_final_particle = exact_dictionary_reading != nullptr &&
+                                         exact_dictionary_reading->extended_pos == core::ExtendedPOS::ParticleFinal &&
+                                         scan < codepoints.size() &&
+                                         grammar::isSingleHiragana(extractSubstring(codepoints, scan, scan + 1), U'と');
+      const bool exact_reading_owns_context =
+          exact_dictionary_reading != nullptr &&
+          (exact_dictionary_reading->pos != core::PartOfSpeech::Particle || quoted_final_particle) &&
+          !(has_exact_noun && has_competing_exact_predicate);
+      if (selected_nominal && !exact_reading_owns_context) {
+        noun_cost += scorer::kBonusDoubleVeryStrong;
+      }
+      if (right_genitive_after_internal_particle) {
+        noun_cost += scorer::scale::kStrongBonus;
+      }
+      auto noun_cand = makeCandidate(promoted_surface, start_pos, scan, core::PartOfSpeech::Noun, noun_cost,
                                      /*has_suffix=*/true, CandidateOrigin::SameType);
 #ifdef SUZUME_DEBUG_INFO
       noun_cand.pattern = "bracketed_hira_noun";

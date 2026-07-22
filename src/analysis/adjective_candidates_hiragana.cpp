@@ -36,6 +36,60 @@ using adj_detail::makeNaAdjCandidate;
 
 namespace {
 
+// Closed adjectival intensifiers that are particle-homographic.  They license
+// a whole i-adjective candidate only when the lexical head is independently
+// verified below; no standalone prefix edge is emitted, so the ordinary
+// particle reading remains intact in frames such as か+どう+か.
+constexpr std::array<std::string_view, 1> kParticleHomographicAdjectivalPrefixes = {"か"};
+
+bool startsInsideMultiMoraParticle(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                   const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0 || end_pos <= start_pos) {
+    return false;
+  }
+  constexpr size_t kMaxParticleChars = 4;
+  const size_t earliest_start = start_pos > kMaxParticleChars ? start_pos - kMaxParticleChars : 0;
+  for (size_t particle_start = earliest_start; particle_start < start_pos; ++particle_start) {
+    if (end_pos - particle_start < 2) {
+      continue;
+    }
+    const std::string particle_surface = extractSubstring(codepoints, particle_start, end_pos);
+    if (dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool isParticleSequenceWithoutLexicalReading(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                             const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos >= end_pos) {
+    return false;
+  }
+  const std::string whole_surface = extractSubstring(codepoints, start_pos, end_pos);
+  for (const auto pos : {core::PartOfSpeech::Noun, core::PartOfSpeech::Verb, core::PartOfSpeech::Adjective,
+                         core::PartOfSpeech::Adverb}) {
+    if (dict_manager->lookupExact(whole_surface, pos) != nullptr) {
+      return false;
+    }
+  }
+
+  std::vector<bool> reachable(end_pos - start_pos + 1, false);
+  reachable[0] = true;
+  for (size_t relative_start = 0; relative_start < end_pos - start_pos; ++relative_start) {
+    if (!reachable[relative_start]) {
+      continue;
+    }
+    for (size_t relative_end = relative_start + 1; relative_end <= end_pos - start_pos; ++relative_end) {
+      const std::string part = extractSubstring(codepoints, start_pos + relative_start, start_pos + relative_end);
+      if (dict_manager->lookupExact(part, core::PartOfSpeech::Particle) != nullptr) {
+        reachable[relative_end] = true;
+      }
+    }
+  }
+  return reachable.back();
+}
+
 // Emit a whole-word i-adjective candidate for a spelled-out reduplicated 〜しい
 // adjective (バカバカしい, ばかばかしくない). The doubled stem is otherwise pre-empted
 // by an onomatopoeia ADV candidate (aa_doubled / abab_pattern) plus a split-off しい
@@ -82,13 +136,44 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
   // an attached particle within a sentence (いまだ+に続く).  Restrict this
   // recovery path to a lexical word boundary; ordinary kanji adjective and
   // particle candidates retain responsibility inside a clause.
-  if (start_pos > 0 && char_types[start_pos - 1] != normalize::CharType::Symbol) {
+  const bool follows_particle = start_pos > 0 && dict_manager != nullptr &&
+                                dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos),
+                                                          core::PartOfSpeech::Particle) != nullptr;
+  if (start_pos > 0 && char_types[start_pos - 1] != normalize::CharType::Symbol && !follows_particle) {
     return;
   }
-  const size_t prefix_end = findCharRegionEnd(char_types, start_pos, 1, normalize::CharType::Hiragana);
+  const size_t prefix_end = findCharRegionEnd(char_types, start_pos, 3, normalize::CharType::Hiragana);
   if (prefix_end == start_pos || prefix_end >= char_types.size() ||
       char_types[prefix_end] != normalize::CharType::Kanji) {
     return;
+  }
+  // A multi-mora closed particle owns its complete span.  A kana prefix that
+  // begins inside that span cannot start a new compound adjective (から+早く,
+  // ながら+歩く, なら+置く).
+  if (startsInsideMultiMoraParticle(codepoints, start_pos, prefix_end, dict_manager)) {
+    return;
+  }
+  const std::string prefix_surface = extractSubstring(codepoints, start_pos, prefix_end);
+  if (start_pos > 0 && isParticleSequenceWithoutLexicalReading(codepoints, start_pos, prefix_end, dict_manager)) {
+    return;
+  }
+  if (dict_manager != nullptr) {
+    // Honorific お/ご is an independent closed prefix.  It must not be folded
+    // into a fabricated whole i-adjective spanning the following verb and the
+    // beginning of its dependent auxiliary (お+答え+ください).  Lexical kana
+    // adjective prefixes remain handled by the evidence checks below.
+    if (dict_manager->lookupExact(prefix_surface, core::PartOfSpeech::Prefix) != nullptr) {
+      return;
+    }
+    const bool is_closed_particle_or_auxiliary =
+        dict_manager->lookupExact(prefix_surface, core::PartOfSpeech::Particle) != nullptr ||
+        dict_manager->lookupExact(prefix_surface, core::PartOfSpeech::Auxiliary) != nullptr;
+    const bool is_adjectival_prefix =
+        std::find(kParticleHomographicAdjectivalPrefixes.begin(), kParticleHomographicAdjectivalPrefixes.end(),
+                  prefix_surface) != kParticleHomographicAdjectivalPrefixes.end();
+    if (is_closed_particle_or_auxiliary && !is_adjectival_prefix) {
+      return;
+    }
   }
   const size_t kanji_end = findCharRegionEnd(char_types, prefix_end, 2, normalize::CharType::Kanji);
   if (kanji_end == prefix_end || kanji_end >= char_types.size() ||
@@ -99,15 +184,19 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
   for (size_t end_pos = hiragana_end; end_pos > kanji_end; --end_pos) {
     const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
     const std::string tail_observed_surface = extractSubstring(codepoints, prefix_end, end_pos);
-    // This path recovers an observed adverbial -く form such as か弱く.
-    // Let the ordinary adjective paths handle dictionary-form and negative
-    // endings: otherwise a leading case particle can be absorbed into a
-    // kanji-containing sequence (に関係ない, は根拠がない).
-    if (!utf8::endsWith(tail_observed_surface, "く")) {
+    // Recover both the adverbial -く form and a complete attributive form
+    // before its lexical head.  A leading particle/auxiliary prefix was
+    // rejected above, so compositional phrases such as から+美しい are not
+    // absorbed into the compound candidate.
+    const bool is_renyokei = utf8::endsWith(tail_observed_surface, "く");
+    const bool is_attributive = utf8::endsWith(tail_observed_surface, "い") && end_pos < codepoints.size() &&
+                                (normalize::isKanjiCodepoint(codepoints[end_pos]) ||
+                                 normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Katakana);
+    if (!is_renyokei && !is_attributive) {
       continue;
     }
     std::string tail_surface = tail_observed_surface;
-    if (utf8::endsWith(tail_surface, "く")) {
+    if (is_renyokei) {
       tail_surface.replace(tail_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
     }
     const auto& tail_candidates = inflection.analyze(tail_surface);
@@ -132,7 +221,7 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
       continue;
     }
     std::string analysis_surface = surface;
-    if (utf8::endsWith(analysis_surface, "く")) {
+    if (is_renyokei) {
       analysis_surface.replace(analysis_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
     }
     const auto& inflection_candidates = inflection.analyze(analysis_surface);
@@ -150,8 +239,12 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
           inflection_candidate.confidence < candidate::kCompoundAdjConfMin) {
         continue;
       }
-      const float cost = candidate::confidenceScaledCost(
-          candidate::kCompoundAdjBaseCost, inflection_candidate.confidence, candidate::kKanjiAdjConfScale);
+      float cost = candidate::confidenceScaledCost(candidate::kCompoundAdjBaseCost, inflection_candidate.confidence,
+                                                   candidate::kKanjiAdjConfScale) +
+                   candidate::kCompoundIAdjectiveLexicalBonus;
+      if (follows_particle) {
+        cost += candidate::kPrefixedIAdjectiveAfterParticleBonus;
+      }
       auto adjective = makeIAdjCandidate(surface, start_pos, end_pos, inflection_candidate.base_form, cost,
                                          CandidateOrigin::AdjectiveI, inflection_candidate.confidence,
                                          "hiragana_prefixed_kanji_i_adjective");
@@ -276,10 +369,12 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   appendIAdjKaroCandidates(codepoints, start_pos, start_pos, max_hiragana_end, inflection, dict_manager, candidates);
   appendIAdjKaraZuCandidates(codepoints, start_pos, start_pos, max_hiragana_end, inflection, dict_manager, candidates);
 
-  // -げ derives a na-adjective from an i-adjective stem (おくゆかしげ,
-  // はかなげ).  The base adjective is checked by the same inflection engine
-  // as ordinary hiragana adjectives; a verified verb reading blocks the
-  // derivation so a verb continuative plus the lexical suffix is preserved.
+  // -げ derives from an i-adjective stem while retaining the morpheme boundary
+  // before the closed suffix.  The base adjective is checked by the same
+  // inflection engine as ordinary hiragana adjectives; a verified verb reading
+  // blocks the derivation so a verb continuative plus the lexical suffix is
+  // preserved.  A following ない-family belongs to a lexical ...げない form,
+  // not to the derivational suffix construction.
   const std::string full_hiragana_surface = extractSubstring(codepoints, start_pos, max_hiragana_end);
   const size_t ge_pos = full_hiragana_surface.find("げ");
   const size_t derived_end = ge_pos == std::string::npos ? 0 : ge_pos + core::kJapaneseCharBytes;
@@ -290,7 +385,9 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
       derived_end_pos < codepoints.size() &&
       (codepoints[derived_end_pos] == U'に' || codepoints[derived_end_pos] == U'な' ||
        codepoints[derived_end_pos] == U'だ' || codepoints[derived_end_pos] == U'さ');
-  if (ge_pos != std::string::npos && ge_pos >= core::kTwoJapaneseCharBytes && has_na_adjective_continuation) {
+  const bool has_lexical_ge_nai = derived_end != 0 && verb_helpers::naiNegativeFollowsAt(codepoints, derived_end_pos);
+  if (ge_pos != std::string::npos && ge_pos >= core::kTwoJapaneseCharBytes && has_na_adjective_continuation &&
+      !has_lexical_ge_nai) {
     const std::string stem = full_hiragana_surface.substr(0, ge_pos);
     const std::string base_form = stem + "い";
     const auto& base_candidates = inflection.analyze(base_form);
@@ -302,13 +399,9 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
                  isVerbInDictionary(dict_manager, inflection_candidate.base_form);
         });
     if (adjective_confidence != candidate::kNoOriginConfidence && !has_verified_verb_reading) {
-      auto derived_candidate =
-          makeNaAdjCandidate(full_hiragana_surface.substr(0, derived_end), start_pos,
-                             start_pos + normalize::utf8Length(full_hiragana_surface.substr(0, derived_end)),
-                             candidate::kDerivedSuffixAdjectiveCost, true, CandidateOrigin::AdjectiveIHiragana,
-                             adjective_confidence, "i_adjective_ge_derivation");
-      derived_candidate.lemma = derived_candidate.surface;
-      candidates.push_back(std::move(derived_candidate));
+      candidates.push_back(makeIAdjStemCandidate(
+          stem, start_pos, start_pos + normalize::utf8Length(stem), base_form, candidate::kDerivedSuffixAdjectiveCost,
+          CandidateOrigin::AdjectiveIHiragana, adjective_confidence, "i_adjective_ge_stem"));
     }
   }
 
@@ -331,8 +424,15 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
       std::string test_surface = extractSubstring(codepoints, start_pos, end);
 
       // A bare -く is an adverbial connective, not an adjective terminal.
-      // It is handled only by the bounded, morphology-specific paths above.
-      if (utf8::endsWith(test_surface, "く") && !utf8::endsWith(test_surface, "くない")) {
+      // A long full-run form immediately before a lexical head is the regular
+      // i-adjective continuative (たやすく+答え); allow the inflection analyzer
+      // below to validate that bounded form instead of splitting its initial
+      // mora as a homographic particle.
+      const bool bounded_long_ku_form = utf8::endsWith(test_surface, "く") && end - start_pos >= 4 &&
+                                        end < codepoints.size() &&
+                                        (normalize::isKanjiCodepoint(codepoints[end]) ||
+                                         normalize::classifyChar(codepoints[end]) == normalize::CharType::Katakana);
+      if (utf8::endsWith(test_surface, "く") && !utf8::endsWith(test_surface, "くない") && !bounded_long_ku_form) {
         continue;
       }
 
@@ -374,8 +474,25 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   } else if (!starts_with_particle) {
     // For non-particle-starting sequences, apply particle boundary breaking
     // This handles cases like おいしい where we don't want to extend past particles
-    hiragana_end = start_pos;
-    while (hiragana_end < max_hiragana_end) {
+    const bool bounded_long_ku_form =
+        utf8::endsWith(full_hiragana_surface, "く") && max_hiragana_end - start_pos >= 4 &&
+        max_hiragana_end < codepoints.size() &&
+        (normalize::isKanjiCodepoint(codepoints[max_hiragana_end]) ||
+         normalize::classifyChar(codepoints[max_hiragana_end]) == normalize::CharType::Katakana);
+    std::string bounded_analysis_surface = full_hiragana_surface;
+    if (bounded_long_ku_form) {
+      bounded_analysis_surface.replace(bounded_analysis_surface.size() - core::kJapaneseCharBytes,
+                                       core::kJapaneseCharBytes, "い");
+    }
+    const auto& bounded_candidates = inflection.analyze(bounded_analysis_surface);
+    const bool has_bounded_i_adjective =
+        bounded_long_ku_form && std::any_of(bounded_candidates.begin(), bounded_candidates.end(),
+                                            [](const grammar::InflectionCandidate& inflection_candidate) {
+                                              return inflection_candidate.verb_type == grammar::VerbType::IAdjective &&
+                                                     inflection_candidate.confidence >= candidate::kHiraAdjConfParticle;
+                                            });
+    hiragana_end = has_bounded_i_adjective ? max_hiragana_end : start_pos;
+    while (!has_bounded_i_adjective && hiragana_end < max_hiragana_end) {
       char32_t curr_char = codepoints[hiragana_end];
 
       // Only break at strong particle boundaries after minimum stem length
@@ -500,6 +617,50 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
                                                  "adj_stem_hira_sou"));
       break;  // Only one stem candidate per pattern
     }
+  }
+
+  // A complete i-adjective paradigm exposes its stem before the productive
+  // nominalizer さ (やさし+さ, うれし+さ).  The ordinary hiragana scanner only
+  // recognizes い/く/かっ forms. Reconstruct the base form and require both a
+  // valid adjective analysis and a real boundary after さ; this admits open
+  // adjective vocabulary without mistaking さん/さま inside nouns for the
+  // nominalizer.
+  for (size_t stem_end = start_pos + 2; stem_end < max_hiragana_end; ++stem_end) {
+    if (codepoints[stem_end] != U'さ') {
+      continue;
+    }
+    const size_t after_sa = stem_end + 1;
+    const bool bounded_nominalizer =
+        after_sa >= codepoints.size() || normalize::isExtendedParticle(codepoints[after_sa]) ||
+        (after_sa < char_types.size() && char_types[after_sa] == normalize::CharType::Symbol);
+    if (!bounded_nominalizer) {
+      continue;
+    }
+
+    const std::string stem = extractSubstring(codepoints, start_pos, stem_end);
+    const std::string base_form = stem + "い";
+    const bool is_dict_adjective = isAdjectiveInDictionary(dict_manager, base_form);
+    if (!is_dict_adjective && grammar::isERowCodepoint(codepoints[stem_end - 1])) {
+      continue;
+    }
+    const float adjective_confidence =
+        is_dict_adjective ? candidate::kDictionaryOriginConfidence
+                          : adj_detail::firstConfidenceAtLeast(inflection.analyze(base_form),
+                                                               grammar::VerbType::IAdjective, candidate::kIAdjConfMin);
+    if (adjective_confidence == candidate::kNoOriginConfidence) {
+      continue;
+    }
+
+    const float cost = is_dict_adjective
+                           ? candidate::kAdjStemDictionaryCost
+                           : candidate::confidenceScaledCost(candidate::kAdjStemBaseCost, adjective_confidence,
+                                                             candidate::kAdjStemConfScale);
+    auto adjective =
+        makeIAdjStemCandidate(stem, start_pos, stem_end, base_form, cost, CandidateOrigin::AdjectiveIHiragana,
+                              adjective_confidence, "adj_stem_hira_nominalizer_sa");
+    adjective.lemma_verified = is_dict_adjective;
+    candidates.push_back(std::move(adjective));
+    break;
   }
 
   // Sort by cost

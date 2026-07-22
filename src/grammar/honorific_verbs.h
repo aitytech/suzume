@@ -28,6 +28,9 @@ bool isHumbleHonorificLemma(std::string_view lemma);
 /** Return true for a potential benefactive subsidiary verb lemma. */
 bool isPotentialBenefactiveLemma(std::string_view lemma);
 
+/** Return true for an ordinary te-form benefactive subsidiary verb lemma. */
+bool isBenefactiveLemma(std::string_view lemma);
+
 /**
  * @brief Check whether a surface is the renyokei of any honorific or
  *        benefactive subsidiary verb (いたす・くださる・いただく・もらう・あげる)

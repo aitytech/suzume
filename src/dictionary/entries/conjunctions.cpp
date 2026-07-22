@@ -6,9 +6,9 @@ EntrySpecRange getConjunctionEntries() {
   static constexpr EntrySpec kEntries[] = {
       // Sequential (順接)
       conj("従って", ""), conj("故に", ""), conj("ゆえに", ""), conj("そして", ""), conj("そうして", ""),
-      conj("そうすると", ""), conj("それから", ""), conj("それで", ""), conj("だから", ""), conj("そのため", ""),
-      conj("したがって", ""), conj("ついては", ""), conj("もって", ""), conj("よって", ""), conj("だからといって", ""),
-      conj("だからこそ", ""),
+      conj("そうすると", ""), conj("すると", ""), conj("それから", ""), conj("それで", ""), conj("だから", ""),
+      conj("そのため", ""), conj("したがって", ""), conj("ついては", ""), conj("もって", ""), conj("よって", ""),
+      conj("だからといって", ""), conj("だからこそ", ""),
 
       // Adversative (逆接)
       conj("しかし", ""), conj("然し", ""), conj("しかしながら", ""), conj("だが", ""), conj("けれども", ""),
@@ -43,8 +43,9 @@ EntrySpecRange getConjunctionEntries() {
       // Additional conjunctions
       conj("いわば", "言わば"), conj("言わば", ""), conj("さもないと", ""), conj("さもなければ", ""),
       conj("とすれば", ""),
-      // そんなら removed: MeCab splits as そん+なら
-      conj("それにしても", ""), adv("ともかく", ""),
+      // Colloquial conditional conjunction. Keep the closed search unit
+      // rather than following MeCab's non-lexical そん+なら split.
+      conj("そんなら", ""), conj("それにしても", ""), adv("ともかく", ""),
       // Keep productive particle/auxiliary sequences searchable as their
       // constituent morphemes (いずれ + に + し + て + も), rather than
       // treating the whole sequence as a fixed conjunction.
@@ -54,22 +55,25 @@ EntrySpecRange getConjunctionEntries() {
       // are function adverbs kept in L1 to beat the spurious verb decompositions. Kanji-initial
       // 決して is intentionally NOT registered here: it would swallow the 決 of 解決して
       // (解決|し|て → 解|決して); its 決し(非語 VERB)+て over-split needs a candidate-side fix.
-      adv("もとより", ""),                      // 追加・強調: 本はもとより水を読む
-      adv("いとも", ""),                        // 文語の程度副詞
-      adv("たえず", ""),                        // 文語の頻度副詞
-      adv("あまねく", ""),                      // 文語の範囲副詞
-      na_adj("もっとも", ""),                   // 評価用法: もっともな理由
-      noun("すべて", ""),                       // 全称の閉じた名詞用法
-      conj("ともあれ", ""),                     // 譲歩・話題転換: ともあれ始める
-      adv("とりわけ", ""),                      // Focus adverb
-      adv("取り分け", ""),                      // Orthographic variant
-      adv("目の当たり", ""),                    // Fixed evidential adverb
+      adv("もとより", ""),                                            // 追加・強調: 本はもとより水を読む
+      adv("いとも", ""),                                              // 文語の程度副詞
+      adv("たえず", ""),                                              // 文語の頻度副詞
+      adv("あまねく", ""),                                            // 文語の範囲副詞
+      na_adj("もっとも", ""),                                         // 評価用法: もっともな理由
+      noun("すべて", ""),                                             // 全称の閉じた名詞用法
+      conj("ともあれ", ""),                                           // 譲歩・話題転換: ともあれ始める
+      conj("いっぽう", ""), conj("そこで", ""), adv("とりわけ", ""),  // Focus adverb
+      conj("なかんずく", ""),                                         // Literary additive conjunction
+      adv("取り分け", ""),                                            // Orthographic variant
+      adv("目の当たり", ""),                                          // Fixed evidential adverb
       adv("めったに", ""),                      // 滅多に〜ない - prevent めった(非語 VERB める)+に split
       adv("めちゃ", ""),                        // Colloquial degree adverb
       na_adj("めった", ""),                     // めったなことではない
       adv("どうぞ", ""),                        // 陳述副詞 - prevent どう(ADJ)+ぞ split
       adv("あえて", ""),                        // 意図的選択: あえ(非語一段動詞)+て を防ぐ
       adv("あくまで", ""),                      // 限定・強調: あく(動詞)+まで を防ぐ
+      adv("あくまでも", ""),                    // 強調形: 閉じた限定副詞として最大一致
+      adv("はっきり", ""),                      // 固定した様態副詞
       adv("飽くまで", ""),                      // Orthographic variant
       adv("いたって", ""),                      // 程度: いたっ(動詞音便)+て を防ぐ
       adv("すこぶる", ""),                      // 程度: す+こぶる の非語分解を防ぐ
@@ -110,7 +114,6 @@ EntrySpecRange getConjunctionEntries() {
       adv("あいにく", ""),                      // 逆接副詞
       adv("生憎", ""),                          // Orthographic variant
       adv("つねに", ""),                        // 恒常副詞
-      adv("思いがけず", ""),                    // Fixed adverbial expression
       adv("おそらくは", ""),                    // Fixed probability adverb
       particle("ものの", EPOS::ParticleConj),   // 譲歩接続助詞
       particle("がてら", EPOS::ParticleConj),   // purpose-combining conjunctive expression

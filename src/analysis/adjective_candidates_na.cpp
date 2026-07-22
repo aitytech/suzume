@@ -9,6 +9,7 @@
 #include "adjective_candidates_internal.h"
 #include "analysis/candidate_constants.h"
 #include "core/utf8_constants.h"
+#include "grammar/char_patterns.h"
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
@@ -47,7 +48,8 @@ std::vector<UnknownCandidate> generateHiraganaNariNaAdjectiveCandidates(
     const bool has_classical_attributive =
         stem_end + 2 <= codepoints.size() && extractSubstring(codepoints, stem_end, stem_end + 2) == "なる";
     const bool has_na_adjective_continuation = codepoints[stem_end] == U'に' || codepoints[stem_end] == U'な' ||
-                                               codepoints[stem_end] == U'だ' || codepoints[stem_end] == U'さ';
+                                               codepoints[stem_end] == U'だ' || codepoints[stem_end] == U'で' ||
+                                               codepoints[stem_end] == U'さ';
     if (!has_classical_attributive && !has_na_adjective_continuation) {
       continue;
     }
@@ -67,7 +69,8 @@ std::vector<UnknownCandidate> generateHiraganaNariNaAdjectiveCandidates(
 
 std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                             const std::vector<normalize::CharType>& char_types,
-                                                            const UnknownOptions& /*options*/) {
+                                                            const UnknownOptions& /*options*/,
+                                                            const dictionary::DictionaryManager* dict_manager) {
   std::vector<UnknownCandidate> candidates;
 
   if (start_pos >= char_types.size()) {
@@ -80,8 +83,11 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
     return candidates;
   }
 
-  // Find kanji sequence (max 3 chars for na-adjectives: 獰猛, 不器用)
-  constexpr size_t kMaxNaAdjKanjiLength = 3;
+  // The attributive copula can license a productive compound stem longer than
+  // three kanji (非現実的な, 再利用可能な).  Keep the scan bounded to one
+  // content-word-sized run, but do not truncate the very evidence needed to
+  // recognize the right boundary.
+  constexpr size_t kMaxNaAdjKanjiLength = 6;
   size_t kanji_end = findCharRegionEnd(char_types, start_pos, kMaxNaAdjKanjiLength, normalize::CharType::Kanji);
 
   size_t kanji_len = kanji_end - start_pos;
@@ -94,8 +100,9 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
     if (stem_end < codepoints.size()) {
       std::string stem_suffix = extractSubstring(codepoints, kanji_end, stem_end);
       bool is_yaka_pattern = utf8::equalsAny(stem_suffix, {"やか", "らか"});
-      bool has_na_adj_continuation =
-          codepoints[stem_end] == U'な' || codepoints[stem_end] == U'に' || codepoints[stem_end] == U'だ';
+      bool has_na_adj_continuation = codepoints[stem_end] == U'な' || codepoints[stem_end] == U'に' ||
+                                     codepoints[stem_end] == U'だ' || codepoints[stem_end] == U'で' ||
+                                     codepoints[stem_end] == U'さ';
       if (is_yaka_pattern && has_na_adj_continuation) {
         std::string stem = extractSubstring(codepoints, start_pos, stem_end);
         candidates.push_back(makeNaAdjCandidate(stem, start_pos, stem_end, candidate::kNaAdjYakaCost, true,
@@ -106,16 +113,112 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
     }
   }
 
-  // Most productive patterns need at least two kanji.  A single-kanji stem
-  // is also useful immediately before だ: the competing noun analysis stays
-  // available, and the surrounding connection rules resolve the ambiguity.
-  // A copular だ cannot be followed directly by る. That shape belongs to a
-  // kanji-hiragana lexical noun such as 火+だるま, not an open-class
-  // single-kanji na-adjective predicate.
-  const bool single_kanji_before_copula = kanji_len == 1 && kanji_end < codepoints.size() &&
-                                          codepoints[kanji_end] == U'だ' &&
-                                          (kanji_end + 1 >= codepoints.size() || codepoints[kanji_end + 1] != U'る');
-  if (kanji_len < 2 && !single_kanji_before_copula) {
+  // A mixed kanji-hiragana stem immediately followed by attributive な has
+  // the same grammatical evidence as a kanji-only stem.  Preserve the maximum
+  // stem (気まぐれ+な, 気まま+な), while rejecting an internal particle such
+  // as 山+の+よう+な.  Bare copula だ is deliberately excluded because it
+  // cannot distinguish an ordinary nominal predicate from a na-adjective.
+  if (kanji_end < char_types.size() && char_types[kanji_end] == normalize::CharType::Hiragana) {
+    // The productive plural suffix ら and the na-adjective stem ending ら are
+    // homographic before the copula (彼らだ / 平らだ).  A pronoun host licenses
+    // the suffix reading; otherwise the explicit copula supplies the missing
+    // predicative evidence for the mixed na-adjective stem.
+    if (kanji_end + 1 < codepoints.size() && codepoints[kanji_end] == U'ら' && codepoints[kanji_end + 1] == U'だ') {
+      const std::string host = extractSubstring(codepoints, start_pos, kanji_end);
+      const auto* pronoun =
+          dict_manager == nullptr ? nullptr : dict_manager->lookupExact(host, core::PartOfSpeech::Pronoun);
+      const auto* copula =
+          dict_manager == nullptr ? nullptr : dict_manager->lookupExact("だ", core::PartOfSpeech::Auxiliary);
+      if (pronoun == nullptr && copula != nullptr && copula->extended_pos == core::ExtendedPOS::AuxCopulaDa) {
+        const size_t stem_end = kanji_end + 1;
+        const std::string stem = extractSubstring(codepoints, start_pos, stem_end);
+        candidates.push_back(makeNaAdjCandidate(stem, start_pos, stem_end, candidate::kNaAdjStemCost, true,
+                                                CandidateOrigin::AdjectiveNa, candidate::kNaAdjPredicateConfidence,
+                                                "mixed_ra_na_adjective_predicate"));
+      }
+    }
+    constexpr size_t kMaxMixedNaAdjHiraganaLength = 4;
+    size_t stem_end = kanji_end;
+    bool has_internal_particle = false;
+    while (stem_end < codepoints.size() && stem_end - kanji_end < kMaxMixedNaAdjHiraganaLength &&
+           char_types[stem_end] == normalize::CharType::Hiragana) {
+      if (codepoints[stem_end] == U'な') {
+        bool starts_longer_closed_form = false;
+        if (dict_manager != nullptr) {
+          const std::string continuation =
+              extractSubstring(codepoints, stem_end, std::min(codepoints.size(), stem_end + static_cast<size_t>(3)));
+          for (const auto& match : dict_manager->lookup(continuation, 0)) {
+            if (match.entry != nullptr && match.length > 1 &&
+                (match.entry->pos == core::PartOfSpeech::Adjective ||
+                 match.entry->pos == core::PartOfSpeech::Auxiliary ||
+                 match.entry->pos == core::PartOfSpeech::Particle || match.entry->pos == core::PartOfSpeech::Suffix)) {
+              starts_longer_closed_form = true;
+              break;
+            }
+          }
+        }
+        const bool is_bare_attributive = stem_end > kanji_end && !starts_longer_closed_form &&
+                                         (stem_end + 1 >= codepoints.size() ||
+                                          (codepoints[stem_end + 1] != U'ら' && codepoints[stem_end + 1] != U'の' &&
+                                           codepoints[stem_end + 1] != U'い' && codepoints[stem_end + 1] != U'く' &&
+                                           codepoints[stem_end + 1] != U'か' && codepoints[stem_end + 1] != U'さ'));
+        bool contains_closed_suffix = false;
+        bool starts_closed_tail = false;
+        if (dict_manager != nullptr) {
+          const std::string stem_tail = extractSubstring(codepoints, kanji_end, stem_end);
+          for (const auto& match : dict_manager->lookup(stem_tail, 0)) {
+            if (match.entry != nullptr &&
+                (match.entry->pos == core::PartOfSpeech::Auxiliary || match.entry->pos == core::PartOfSpeech::Suffix ||
+                 match.entry->pos == core::PartOfSpeech::Particle)) {
+              contains_closed_suffix = contains_closed_suffix || match.length == stem_end - kanji_end;
+              starts_closed_tail = starts_closed_tail || match.entry->extended_pos == core::ExtendedPOS::AuxCopulaDa ||
+                                   match.entry->extended_pos == core::ExtendedPOS::AuxCopulaDesu;
+            }
+          }
+        }
+        const std::string stem = extractSubstring(codepoints, start_pos, stem_end);
+        const bool is_exact_verb_stem =
+            dict_manager != nullptr && dict_manager->lookupExact(stem, core::PartOfSpeech::Verb) != nullptr;
+        bool contains_passive_boundary = false;
+        if (dict_manager != nullptr) {
+          for (size_t auxiliary_start = kanji_end + 1; auxiliary_start < stem_end; ++auxiliary_start) {
+            if (!grammar::isARowCodepoint(codepoints[auxiliary_start - 1])) {
+              continue;
+            }
+            const std::string right = extractSubstring(codepoints, auxiliary_start, stem_end);
+            const auto* auxiliary = dict_manager->lookupExact(right, core::PartOfSpeech::Auxiliary);
+            if (auxiliary != nullptr && auxiliary->extended_pos == core::ExtendedPOS::AuxPassive) {
+              contains_passive_boundary = true;
+              break;
+            }
+          }
+        }
+        const bool starts_naru_after_ku =
+            stem_end > start_pos && codepoints[stem_end - 1] == U'く' && stem_end + 1 < codepoints.size() &&
+            utf8::equalsAny(extractSubstring(codepoints, stem_end + 1, stem_end + 2), {"る", "っ", "り", "れ", "ろ"});
+        if (is_bare_attributive && !has_internal_particle && !contains_closed_suffix && !starts_closed_tail &&
+            !is_exact_verb_stem && !contains_passive_boundary && !starts_naru_after_ku) {
+          std::string first_char_str;
+          normalize::encodeUtf8(codepoints[start_pos], first_char_str);
+          if (!normalize::isFormalNounSurface(first_char_str)) {
+            candidates.push_back(makeNaAdjCandidate(stem, start_pos, stem_end, candidate::kNaAdjStemCost, true,
+                                                    CandidateOrigin::AdjectiveNa, candidate::kNaAdjPredicateConfidence,
+                                                    "mixed_na_adjective_stem"));
+          }
+        }
+        break;
+      }
+      has_internal_particle = has_internal_particle || normalize::isParticleCodepoint(codepoints[stem_end]);
+      ++stem_end;
+    }
+  }
+
+  // Productive kanji-only patterns need at least two kanji.  A bare copula
+  // does not distinguish a one-kanji na-adjective from an ordinary nominal
+  // predicate, so generating an adjective there would turn 本だ, 水だ, and
+  // other common noun predicates into adjectives.  Mixed stems such as
+  // 平らだ are handled by the preceding kanji+hiragana rule.
+  if (kanji_len < 2) {
     return candidates;
   }
 
@@ -149,7 +252,24 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
                                (codepoints[kanji_end + 1] != U'ら' && codepoints[kanji_end + 1] != U'の'));
   const bool followed_by_sou =
       kanji_end + 1 < codepoints.size() && codepoints[kanji_end] == U'そ' && codepoints[kanji_end + 1] == U'う';
-  if (followed_by_na || followed_by_sou || single_kanji_before_copula) {
+  // Productive X+可能 is a capability noun compound whose following な is
+  // the attributive copula (再利用可能な, 使用可能な).  Preserve an exact
+  // lexical adjective such as 不可能, but do not let the generic "all-kanji
+  // before な" fallback reclassify every open left-hand compound as AdjNa.
+  const bool is_unlexicalized_capability_compound =
+      kanji_len > 2 && utf8::endsWith(kanji_seq, "可能") &&
+      (dict_manager == nullptr || dict_manager->lookupExact(kanji_seq, core::PartOfSpeech::Adjective) == nullptr);
+  if (is_unlexicalized_capability_compound) {
+    auto capability_noun = makeCandidate(kanji_seq, start_pos, kanji_end, core::PartOfSpeech::Noun,
+                                         candidate::kNaAdjStemCost, true, CandidateOrigin::SuffixPattern);
+    capability_noun.lemma = kanji_seq;
+#ifdef SUZUME_DEBUG_INFO
+    capability_noun.confidence = candidate::kDictionaryOriginConfidence;
+    capability_noun.pattern = "capability_noun_compound";
+#endif
+    candidates.push_back(std::move(capability_noun));
+  }
+  if ((followed_by_na || followed_by_sou) && !is_unlexicalized_capability_compound) {
     // Skip if first character is a formal noun (形式名詞)
     // e.g., 時妙な should be 時+妙な, not 時妙(ADJ)+な
     // Formal nouns (時, 事, 所, etc.) are standalone grammatical words
@@ -181,9 +301,7 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
 
     // Found kanji compound + な - potential na-adjective stem
     // Cost similar to dictionary na-adjectives but with small penalty for unknown
-    const float stem_cost =
-        single_kanji_before_copula ? candidate::kNaAdjSingleKanjiCopulaCost : candidate::kNaAdjStemCost;
-    candidates.push_back(makeNaAdjCandidate(kanji_seq, start_pos, kanji_end, stem_cost, true,
+    candidates.push_back(makeNaAdjCandidate(kanji_seq, start_pos, kanji_end, candidate::kNaAdjStemCost, true,
                                             CandidateOrigin::AdjectiveNa, 0.8F, "na_adjective_stem"));
   }
 

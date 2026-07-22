@@ -58,6 +58,8 @@ EntrySpecRange getAuxiliaryEntries() {
       // Negation - ぬ/ず (文語否定)
       aux("ぬ", "ぬ", EPOS::AuxNegativeNu),
       aux("ず", "ぬ", EPOS::AuxNegativeNu),  // lemma is ぬ per MeCab
+      adj("なき", "ない", EPOS::AdjBasic),
+      adj("がたき", "がたい", EPOS::AdjBasic),
       // Contracted negative-conjunctive form. Keep its displayed lemma as ず
       // because the tokenizer emits ずに as one auxiliary token.
       aux("ずに", "ず", EPOS::AuxNegativeNu),
@@ -153,6 +155,8 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("られ", "られる", EPOS::AuxPassive),
       aux("られる", "られる", EPOS::AuxPassive),
       aux("られれ", "られる", EPOS::AuxPassive),  // 仮定形 (食べ+られれ+ば)
+      aux("れよ", "れる", EPOS::AuxPassive),      // 意志形語幹 (書か+れよ+う)
+      aux("られよ", "られる", EPOS::AuxPassive),  // 意志形語幹 (食べ+られよ+う)
 
       // Potential auxiliary - 得る (える/うる)
       // Literary potential: し+え+ない (cannot do), し+える (can do)
@@ -166,6 +170,7 @@ EntrySpecRange getAuxiliaryEntries() {
       // terminal form follow a verb renyokei: 読みかねる, 言いかねます.
       aux("かね", "かねる", EPOS::AuxInability),
       aux("かねる", "かねる", EPOS::AuxInability),
+      aux("たまえ", "たまう", EPOS::AuxHonorific),
       // Failure subsidiary - そびれる. Like かねる, it follows a verb
       // renyokei and expresses an unfulfilled action (読みそびれる).
       aux("そびれ", "そびれる", EPOS::AuxInability),
@@ -366,8 +371,13 @@ EntrySpecRange getAuxiliaryEntries() {
       suffix("以下", "以下"),
       suffix("程度", "程度"),
       suffix("間", "間"),
+      suffix("余り", "余り"),
+      suffix("まい", "まい"),
+      suffix("にん", "にん"),
+      suffix("向き", "向き"),
       // Productive nominal suffixes keep their search boundary before a
-      // following copula or case particle (終了+後、記録+用).
+      // following copula or case particle (終了+後、記録+用). 後 is
+      // context-gated to direct orthographic attachment by the tokenizer.
       suffix("後", "後"),
       suffix("用", "用"),
       // Naming suffix after a nominal base (ファイル+名、利用者+名).
@@ -494,6 +504,9 @@ EntrySpecRange getAuxiliaryEntries() {
       // Polite existence - ございます (丁重)
       // MeCab splits: ござい + ます (renyokei + polite)
       aux("ござい", "ござる", EPOS::AuxGozaru),
+      // The classical negative retains the same dependent copular role
+      // (で+ござら+ぬ).
+      aux("ござら", "ござる", EPOS::AuxGozaru),
       // ござっ is onbinkei (促音便形) for ござった
       // MeCab splits: ござっ + た (onbinkei + ta)
       verb("ござっ", "ござる", EPOS::VerbOnbinkei),
@@ -587,6 +600,13 @@ EntrySpecRange getAuxiliaryEntries() {
 
       // Inceptive subsidiary verb: 読みはじめる, 食べはじめる.
       aux("はじめる", "はじめる", EPOS::AuxAspectHajimeru),
+      aux("はじめ", "はじめる", EPOS::AuxAspectHajimeru),
+      // The kanji spelling is the same closed inceptive use. Keep POS=Verb to
+      // preserve the lexical-verb surface category while ExtendedPOS carries
+      // the dependent, renyokei-selecting grammar used by the scorer.
+      verb("始める", "始める", EPOS::AuxAspectHajimeru),
+      verb("始め", "始める", EPOS::AuxAspectHajimeru),
+      aux("そこね", "そこねる", EPOS::AuxInability),
 
       // Completive subsidiary verb: 読み尽くす, 食べ尽くした.  This is
       // a closed aspectual use after a verb continuative; the lexical verb

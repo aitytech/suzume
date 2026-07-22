@@ -21,13 +21,17 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // subsidiary reading must outrank a homographic lexical honorific verb.
       {EPOS::VerbRenyokei, EPOS::AuxHonorific, cost::kDoubleVeryStrongBonus},
 
-      // VerbMizenkei → AuxNegativeNai (食べ+ない for ichidan) - moderate bonus
-      {EPOS::VerbMizenkei, EPOS::AuxNegativeNai, cost::kModerateBonus},
+      // VerbMizenkei → AuxNegativeNai (食べ+ない, 行か+なけれ) - very
+      // strong grammatical connection.  In particular, なけれ before ば
+      // must remain the negative auxiliary instead of a fabricated
+      // standalone conditional verb.
+      {EPOS::VerbMizenkei, EPOS::AuxNegativeNai, cost::kVeryStrongBonus},
 
-      // VerbRenyokei → AuxNegativeNai (しれ+ない for ichidan same-form mizen/renyokei)
-      // Ichidan verbs have same form for mizen and renyokei (e.g., しれ from しれる).
-      // This helps かもしれない → かも+しれ+ない over かも+し+れ+ない.
-      {EPOS::VerbRenyokei, EPOS::AuxNegativeNai, cost::kStrongBonus},
+      // VerbRenyokei → AuxNegativeNai (食べ+ない/なけれ for ichidan
+      // same-form mizen/renyokei).  Keep this parallel with the explicit
+      // mizenkei connection because the stem label is ambiguous but the
+      // following negative auxiliary is not.
+      {EPOS::VerbRenyokei, EPOS::AuxNegativeNai, cost::kVeryStrongBonus},
 
       // VerbRenyokei → AdjStem (食べ+な, 読み+にく, 使い+やす) - strong bonus. The negative ない is stored
       // as an adjective stem (な/ない) and attaches to a verb 未然形, which shares the ichidan
@@ -94,6 +98,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbMizenkei → AuxVolitional (食べ+よう) - moderate bonus
       {EPOS::VerbMizenkei, EPOS::AuxVolitional, cost::kModerateBonus},
 
+      // A Godan e-row form before ない is the stem of its productive
+      // potential Ichidan predicate (見つけ出せ+ない). It is represented by
+      // the same lattice class as the conditional form, so license negation.
+      {EPOS::VerbKateikei, EPOS::AuxNegativeNai, cost::kStrongBonus},
+
       // Predicates introduce quotative determiners: 読む+という,
       // 読んだ+という, 読む+っていう.
       // The contracted っていう competes with a spurious っ+て+い+う
@@ -108,10 +117,12 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // Prevents さ(mizenkei)+まして(CONJ) over さまし(renyokei)+て
       {EPOS::VerbMizenkei, EPOS::Conjunction, cost::kVeryRare},
 
-      // VerbMizenkei → ParticleFinal: very rare
+      // An irrealis stem cannot take a sentence-final particle. The
+      // prohibitive な attaches to the terminal form (読む+な), while negative
+      // ない is an auxiliary (読ま+ない).
       // Mizenkei never directly connects to sentence-ending particles
       // Prevents 勉強+せ(mizenkei)+よ(final) over 勉強+せよ(imperative dict entry)
-      {EPOS::VerbMizenkei, EPOS::ParticleFinal, cost::kVeryRare},
+      {EPOS::VerbMizenkei, EPOS::ParticleFinal, cost::kAlmostNever},
 
       // Suffix → Conjunction: rare (without punctuation, suffix+conj is unusual)
       // Prevents さ(suffix)+まして(CONJ) over さまし(verb renyokei)+て
@@ -269,6 +280,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // i-adjective attributive form + noun is fundamental Japanese grammar
       // Without this, long unknown NOUN candidates (一番美しい) beat split paths
       {EPOS::AdjBasic, EPOS::Noun, cost::kModerateBonus},
+
+      // An attributive i-adjective can modify a bound nominal suffix
+      // (長い+間). Keep that grammatical suffix reading ahead of the
+      // homographic unrestricted noun fallback.
+      {EPOS::AdjBasic, EPOS::Suffix, cost::kStrongBonus},
 
       // An i-adjective directly modifies a formal noun (難い+もの,
       // 美しい+こと). Keep this productive adnominal boundary ahead of a

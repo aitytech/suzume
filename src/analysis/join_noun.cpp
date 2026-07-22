@@ -338,8 +338,8 @@ void addPronounPluralJoinCandidates(core::Lattice& lattice, std::string_view tex
 void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
                                      const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                      size_t start_pos, const std::vector<normalize::CharType>& char_types,
-                                     [[maybe_unused]] const dictionary::DictionaryManager& dict_manager,
-                                     const Scorer& scorer, [[maybe_unused]] const grammar::Inflection& inflection) {
+                                     const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
+                                     [[maybe_unused]] const grammar::Inflection& inflection) {
   if (start_pos >= codepoints.size()) {
     return;
   }
@@ -355,6 +355,13 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
       return;
     }
     if (char_types[start_pos + 1] != CharType::Hiragana) {
+      return;
+    }
+    // A complete adjective (including adjectival ない) before 方 is an
+    // attributive predicate, not a pure-hiragana verb continuative
+    // (ない+方法, not ない方+法).
+    const std::string stem = extractSubstring(codepoints, start_pos, start_pos + 2);
+    if (dict_manager.lookupExact(stem, core::PartOfSpeech::Adjective) != nullptr) {
       return;
     }
     // Allow godan-ra renyokei (り: やる→やり, ある→あり) and godan-wa renyokei
@@ -454,6 +461,10 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
   if (utf8::equalsAny(hiragana_portion, {"から", "より", "まで"})) {
     return;
   }
+  if (hiragana_end > kanji_end && !grammar::isIRowCodepoint(codepoints[hiragana_end - 1]) &&
+      !grammar::isERowCodepoint(codepoints[hiragana_end - 1])) {
+    return;
+  }
 
   // Check for suffix kanji: 物, 方, 所, 手, 場
   if (hiragana_end >= codepoints.size()) {
@@ -473,10 +484,11 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
   }
 
   // One-mora -い can be a godan-wa continuative (言い方), but an attested
-  // i-adjective such as 高い must retain its attributive boundary before the
-  // ordinary noun 方. Longer -い adjective tails were rejected above; consult
-  // the dictionary here for the ambiguous one-mora case.
-  if (is_kata_suffix && hiragana_end == kanji_end + 1 && codepoints[hiragana_end - 1] == U'い') {
+  // i-adjective such as 古い/高い must retain its attributive boundary before
+  // every ordinary suffix-homograph noun (古い物, 高い所, 高い方). Longer -い
+  // adjective tails were rejected above; consult the dictionary here for the
+  // ambiguous one-mora case.
+  if (hiragana_end == kanji_end + 1 && codepoints[hiragana_end - 1] == U'い') {
     const std::string potential_adjective = extractSubstring(codepoints, start_pos, hiragana_end);
     if (verb_helpers::isAdjectiveInDictionary(&dict_manager, potential_adjective)) {
       return;
@@ -499,6 +511,12 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
       return;
     }
     const std::string renyokei = extractSubstring(codepoints, start_pos, hiragana_end);
+    const bool has_verb_reading = dict_manager.lookupExact(renyokei, core::PartOfSpeech::Verb) != nullptr;
+    const bool is_closed_modifier = dict_manager.lookupExact(renyokei, core::PartOfSpeech::Determiner) != nullptr ||
+                                    dict_manager.lookupExact(renyokei, core::PartOfSpeech::Adjective) != nullptr;
+    if (is_closed_modifier && !has_verb_reading) {
+      return;
+    }
     const char32_t final_kana = codepoints[hiragana_end - 1];
     const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(final_kana);
     if (!godan_ending.empty()) {

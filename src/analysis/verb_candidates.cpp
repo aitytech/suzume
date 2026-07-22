@@ -135,10 +135,15 @@ std::vector<UnknownCandidate> generateCompoundVerbCandidates(const std::vector<c
       if (verb_helpers::isVerbInDictionary(dict_manager, infl_cand.base_form)) {
         // v0.8: conj_type removed - just verify verb exists in dictionary
         // Note: Don't set lemma here - let lemmatizer derive it more accurately
-        candidates.push_back(makeVerbCandidate(surface, start_pos, end_pos, verb_opts.base_cost_low, "",
-                                               dictionary::ConjugationType::None,  // v0.8: conj_type no longer used
-                                               false, CandidateOrigin::VerbCompound, infl_cand.confidence,
-                                               grammar::verbTypeToString(infl_cand.verb_type).data()));
+        auto compound = makeVerbCandidate(surface, start_pos, end_pos, verb_opts.base_cost_low, "",
+                                          dictionary::ConjugationType::None,  // v0.8: conj_type no longer used
+                                          false, CandidateOrigin::VerbCompound, infl_cand.confidence,
+                                          grammar::verbTypeToString(infl_cand.verb_type).data());
+        // The complete inflection lemma was just verified above. Preserve that
+        // evidence even though the public lemma is deferred to the lemmatizer,
+        // so internal homograph candidates cannot reopen this compound span.
+        compound.lemma_verified = true;
+        candidates.push_back(std::move(compound));
         return candidates;  // Return first valid match
       }
     }

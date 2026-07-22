@@ -240,6 +240,8 @@ enum class CandidateOrigin : uint8_t {
   Split,                          // 分割候補 (NOUN+VERB)
   Join,                           // 結合候補 (複合動詞結合)
   KanjiHiraganaCompound,          // 漢字+ひらがな複合名詞 (玉ねぎ)
+  KanjiHiraganaNominalCompound,   // 右の名詞句助詞で検証された漢字+ひらがな名詞
+  SelectedNominalHead,            // 左の名詞選択要素と右助詞で境界検証された名詞主要部
   Counter,                        // 数量詞パターン (一つ〜九つ)
   PrefixCompound,                 // 接頭的複合語 (今日, 本日, 全国)
 };

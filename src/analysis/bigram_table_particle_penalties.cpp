@@ -49,6 +49,18 @@ void setParticleAndLexicalPenaltyCosts(BigramMatrix& table) {
       {EPOS::ParticleFinal, EPOS::Other, cost::kRare},
       {EPOS::ParticleConj, EPOS::Other, cost::kUncommon},
 
+      // A sentence-final particle cannot serve as an attributive marker for
+      // a following nominal.  In X+な+名詞, this blocks the homographic final
+      // particle path and lets the copular attributive form compete instead.
+      {EPOS::ParticleFinal, EPOS::Noun, cost::kProhibitive},
+      {EPOS::ParticleFinal, EPOS::NounFormal, cost::kProhibitive},
+      {EPOS::ParticleFinal, EPOS::NounProper, cost::kProhibitive},
+
+      // An aspectual くる is introduced by a conjunctive te/de-form, never by
+      // an adverbial particle.  Reject paths such as 手+ほど+き while keeping
+      // lexical verbs after particles (これ+だけ+来た) as ordinary verbs.
+      {EPOS::ParticleAdverbial, EPOS::AuxAspectKuru, cost::kProhibitive},
+
       // =========================================================================
       // Conjunction → auxiliary and predicate rules
       // =========================================================================

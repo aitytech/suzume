@@ -10,6 +10,7 @@ EntrySpecRange getInterjectionEntries() {
       intj("あっ"),    // Realization
       intj("ああ"),    // Agreement/Sigh
       intj("おお"),    // Amazement
+      intj("おや"),    // Mild surprise or notice
       intj("うわ"),    // Surprise
       intj("うわっ"),  // Surprise (emphatic)
       intj("わあ"),    // Amazement

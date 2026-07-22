@@ -49,6 +49,17 @@ bool hasNominalizedNounParticleContinuation(const std::vector<char32_t>& codepoi
          !startsLongerNonParticleEntry(codepoints, end_pos, dict_manager);
 }
 
+// A genitive/adnominal の followed by a continuative-shaped word that closes
+// at a clause boundary forms a complete noun phrase (雨の匂い。). Requiring
+// both sides keeps attributive predicates such as 父の残した手紙 verbal.
+bool isGenitiveClauseFinalNominal(const std::vector<char32_t>& codepoints,
+                                  const std::vector<normalize::CharType>& char_types, size_t start_pos,
+                                  size_t end_pos) {
+  return start_pos > 0 && codepoints[start_pos - 1] == U'の' &&
+         (end_pos == codepoints.size() ||
+          (end_pos < char_types.size() && char_types[end_pos] == normalize::CharType::Symbol));
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints,
@@ -193,7 +204,8 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
           float nom2_cost = 0.8F;
           const bool has_particle_continuation =
               hasNominalizedNounParticleContinuation(codepoints, hiragana_end + 1, dict_manager);
-          if (has_particle_continuation) {
+          if (has_particle_continuation ||
+              isGenitiveClauseFinalNominal(codepoints, char_types, start_pos, hiragana_end + 1)) {
             nom2_cost += candidate::kNominalizedNounParticleBonus;
           }
           auto cand = makeCandidate(surface, start_pos, hiragana_end + 1, core::PartOfSpeech::Noun, nom2_cost,
@@ -275,7 +287,10 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       // a finite-verb candidate whose continuation is grammatically absent.
       const bool has_particle_continuation =
           hasNominalizedNounParticleContinuation(codepoints, kanji_end + 1, dict_manager);
-      if (has_particle_continuation) {
+      const bool has_temporal_nominal_continuation =
+          grammar::startsClosedTemporalNominal(extractSubstring(codepoints, kanji_end + 1, codepoints.size()));
+      if (has_particle_continuation || isGenitiveClauseFinalNominal(codepoints, char_types, start_pos, kanji_end + 1) ||
+          has_temporal_nominal_continuation) {
         nom1_cost += candidate::kNominalizedNounParticleBonus;
       }
       // Deverbal compound noun bonus (連用形転成名詞の複合):

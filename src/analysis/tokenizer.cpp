@@ -154,7 +154,8 @@ void Tokenizer::addTaruAdjectiveJoinCandidates(core::Lattice& lattice, std::stri
                                                const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                                size_t start_pos,
                                                const std::vector<normalize::CharType>& char_types) const {
-  analysis::addTaruAdjectiveJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types, scorer_);
+  analysis::addTaruAdjectiveJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types,
+                                           dict_manager_, scorer_);
 }
 
 void Tokenizer::addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,

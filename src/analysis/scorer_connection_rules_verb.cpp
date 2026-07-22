@@ -4,6 +4,7 @@
 #include "analysis/category_cost.h"
 #include "analysis/scorer.h"
 #include "analysis/scorer_connection_rules.h"
+#include "analysis/scorer_connection_rules_internal.h"
 #include "analysis/scorer_constants.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "core/debug.h"
@@ -45,6 +46,27 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
       (grammar::containsKanji(prev.surface) || prev.fromDictionary() ||
        prev.origin == core::CandidateOrigin::VerbHiraganaInflectedRenyokei)) {
     bonus += cost::kVeryStrongBonus;
+  }
+
+  // Except for s-row godan verbs (話し+た), a godan continuative form cannot
+  // take the past auxiliary directly: the past attaches to its euphonic form
+  // (取り→取っ+た, 書き→書い+た).  Rejecting that impossible shortcut also
+  // preserves a verified compound continuative before a following て.
+  const grammar::VerbType prev_verb_type = grammar::conjTypeToVerbType(prev.conj_type);
+  const bool non_sa_godan_renyokei =
+      (grammar::isGodanVerbType(prev_verb_type) && prev_verb_type != grammar::VerbType::GodanSa) ||
+      (isGodanRenyokeiOfLemma(prev.surface, prev.lemma) && !utf8::endsWith(prev.lemma, "す"));
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
+      non_sa_godan_renyokei) {
+    bonus += cost::kSevere;
+  }
+
+  // An onbin form is selected precisely for て/た attachment and cannot be
+  // followed directly by a case particle.  Penalize that impossible sequence
+  // so a registered nominal search unit wins in overlaps such as a particle
+  // followed by a noun whose suffix is also a dictionary verb form.
+  if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && next.extended_pos == core::ExtendedPOS::ParticleCase) {
+    bonus += cost::kSevere;
   }
 
   // Bonus for VerbRenyokei/VerbOnbinkei → たり/だり (parallel listing particle)
@@ -100,30 +122,42 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   // (つかう/使う, あらう/洗う, すう/吸う). Penalize so the whole-verb reading wins.
   // This applies only to the bare う surface. The literary volitional ん is
   // likewise one mora, but follows an a-row irrealis stem in 読まんとする.
-  if (next.extended_pos == core::ExtendedPOS::AuxVolitional &&
-      grammar::isSingleHiragana(next.surface, core::hiragana::kU) && prev.pos == core::PartOfSpeech::Verb &&
-      !grammar::endsWithORow(prev.surface)) {
-    bonus += cost::kSevere;
-  }
+  const bool bare_volitional_after_non_o_row = next.extended_pos == core::ExtendedPOS::AuxVolitional &&
+                                               grammar::isSingleHiragana(next.surface, core::hiragana::kU) &&
+                                               prev.pos == core::PartOfSpeech::Verb &&
+                                               !grammar::endsWithORow(prev.surface);
 
   // An o-row irrealis form followed by bare う is the productive modern
   // volitional (書こ+う, 泳ご+う, しよ+う). Prefer it over a homographic
   // continuative-form plus formal-noun path.
-  if (next.extended_pos == core::ExtendedPOS::AuxVolitional &&
+  const bool modern_volitional =
+      next.extended_pos == core::ExtendedPOS::AuxVolitional &&
       grammar::isSingleHiragana(next.surface, core::hiragana::kU) &&
       prev.extended_pos == core::ExtendedPOS::VerbMizenkei && grammar::endsWithORow(prev.surface) &&
       prev.lemma != "いく" &&
       (grammar::isGodanVerbType(grammar::conjTypeToVerbType(prev.conj_type)) ||
-       prev.conj_type == dictionary::ConjugationType::Suru || prev.lemma == "する")) {
-    bonus += cost::kVeryStrongBonus + cost::kStrongBonus;
-  }
+       prev.conj_type == dictionary::ConjugationType::Suru || prev.lemma == "する" ||
+       (prev.conj_type == dictionary::ConjugationType::Ichidan && utf8::endsWith(prev.surface, "よ")));
 
   // The directional subsidiary retains the same volitional boundary after a
   // connective form (読んで+いこ+う), rather than yielding to the
   // demonstrative adverb こう.
-  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIku && next.extended_pos == core::ExtendedPOS::AuxVolitional &&
-      grammar::isSingleHiragana(next.surface, core::hiragana::kU)) {
-    bonus += cost::kVeryStrongBonus;
+  const bool directional_volitional = prev.extended_pos == core::ExtendedPOS::AuxAspectIku &&
+                                      next.extended_pos == core::ExtendedPOS::AuxVolitional &&
+                                      grammar::isSingleHiragana(next.surface, core::hiragana::kU);
+
+  // Passive auxiliaries have an explicit o-row volitional stem
+  // (書か+れよ+う, 食べ+られよ+う).  Prefer that registered form over
+  // reinterpreting よう as a formal noun before a final particle.
+  const bool passive_volitional = prev.extended_pos == core::ExtendedPOS::AuxPassive &&
+                                  utf8::endsWith(prev.surface, "よ") &&
+                                  next.extended_pos == core::ExtendedPOS::AuxVolitional &&
+                                  grammar::isSingleHiragana(next.surface, core::hiragana::kU);
+  if (bare_volitional_after_non_o_row || modern_volitional || directional_volitional || passive_volitional) {
+    bonus += (bare_volitional_after_non_o_row ? cost::kSevere : cost::kNeutral) +
+             (modern_volitional ? cost::kVeryStrongBonus + cost::kStrongBonus : cost::kNeutral) +
+             (directional_volitional ? cost::kVeryStrongBonus : cost::kNeutral) +
+             (passive_volitional ? cost::kDoubleVeryStrongBonus : cost::kNeutral);
   }
 
   return bonus;

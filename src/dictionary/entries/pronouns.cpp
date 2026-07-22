@@ -83,6 +83,7 @@ EntrySpecRange getPronounEntries() {
       pronoun("あれ", ""),
       pronoun("あそこ", ""),
       pronoun("あちら", ""),
+      pronoun("かなた", ""),
       // Fixed demonstrative collection: keep the closed expression as one
       // search unit instead of two independent demonstratives.
       pronoun("あれこれ", ""),
@@ -161,11 +162,72 @@ EntrySpecRange getPronounEntries() {
       adv("まだ", ""),
       adv("まだしも", ""),
 
+      // Native Japanese numeral counters form a finite closed class.
+      noun_number("ひとつ", ""),
+      noun_number("ふたつ", ""),
+      noun_number("みっつ", ""),
+      noun_number("よっつ", ""),
+      noun_number("いつつ", ""),
+      noun_number("むっつ", ""),
+      noun_number("ななつ", ""),
+      noun_number("やっつ", ""),
+      noun_number("ここのつ", ""),
+      noun_number("とお", ""),
+      noun_number("ひとり", ""),
+      noun_number("いち", ""),
+      noun_number("よん", ""),
+      noun_number("ひと月", ""),
+      noun_number("ふた月", ""),
+
+      // Deictic calendar nouns are a finite temporal class. Keep their full
+      // kana spelling rather than reopening internal verb/particle readings.
+      noun("おととい", ""),
+      noun("きのう", ""),
+      noun("あした", ""),
+      noun("あさって", ""),
+      formal_noun("おいで", ""),
+
       // Fixed temporal and frequency adverbs. These are closed lexical
       // function words, not productive pronoun-plus-particle sequences.
       adv("いつか", ""),
       adv("まもなく", ""),
       adv("ときどき", ""),
+      adv("ときおり", ""),
+      adv("ほどなく", ""),
+
+      // Fixed formal and literary adverbs. These are a finite function-word
+      // class; their endings otherwise attract productive particle and verb
+      // candidates that do not reflect their synchronic use.
+      adv("かならずしも", ""),
+      adv("ことに", ""),
+      adv("必ずや", ""),
+      adv("いたく", ""),
+      na_adj("むやみ", "むやみ"),
+      adv("よもや", ""),
+      adv("いと", ""),
+      adv("しだいに", ""),
+      adv("わざと", ""),
+      adv("ところどころ", ""),
+      adv("もしや", ""),
+      adv("いたずらに", ""),
+      adv("とみに", ""),
+      adv("いまや", ""),
+      adv("ひるがえって", ""),
+      adv("いよいよ", ""),
+      adv("やや", ""),
+      adv("おもに", ""),
+      adv("余りに", ""),
+      adv("何ら", ""),
+      na_adj("あらた", "あらた"),
+      adv("引続き", ""),
+      adv("一層", ""),
+      adv("たちまち", ""),
+      adv("つねづね", ""),
+      adv("ひととおり", ""),
+      adv("言わずもがな", ""),
+      adv("ひじょうに", ""),
+      adv("たしかに", ""),
+      adv("ただちに", ""),
 
       // Fixed degree and discourse adverbs. Their surface endings otherwise
       // attract unrelated verb, particle, and auxiliary candidates.
@@ -205,6 +267,9 @@ EntrySpecRange getPronounEntries() {
       adv("あまつさえ", ""),
       adv("たかだか", ""),
       adv("わずか", ""),
+      // Fixed degree adverb. Unlike productive X+的 modifiers (相対的安全),
+      // 比較的 selects the following predicate as an independent adverbial.
+      adv("比較的", ""),
       adv("何しろ", ""),
       adj("やむを得ない", "やむを得ない", EPOS::AdjBasic),
       adj("ろくでもない", "ろくでもない", EPOS::AdjBasic),

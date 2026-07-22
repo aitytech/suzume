@@ -109,6 +109,15 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
       // the dedicated hatsuonbin generator), never from an inflection guess.
       // Exception: skip short particle-starting stems (となっ should be と+なっ);
       // longer stems like はじまっ (3+ chars) are allowed.
+      // For an unattested short stem, the final vowel supplies productive
+      // phonotactic evidence: an a-row stem before っ naturally reconstructs
+      // a wa-row base (あらっ→あらう, かっ→かう). Other vowel rows must retain
+      // the ra-row alternative (たどっ→たどる, くぐっ→くぐる).
+      const bool prefer_wa_row_fallback = !is_valid_verb && is_sokuonbin && stem_char_count <= 2 &&
+                                          grammar::endsWithARow(stem) && verb_type != grammar::VerbType::GodanWa;
+      if (prefer_wa_row_fallback) {
+        continue;
+      }
       if (!is_valid_verb && (is_tense_pattern || is_contraction_pattern) && is_sokuonbin &&
           !starts_with_short_particle_stem) {
         // A contraction is validated through its uncontracted te-form
@@ -127,6 +136,19 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
             break;
           }
         }
+      }
+
+      // A long pure-hiragana stem followed by the closed ん+だ/で tail is a
+      // constructed hatsuonbin predicate even when its open-class lemma is
+      // absent from L2. The ma/ba/na rows are surface-identical here; use the
+      // productive ma-row fallback only in a predicate slot and retain
+      // dictionary evidence whenever any row is attested.
+      const bool has_left_predicate_boundary =
+          start_pos == 0 || normalize::classifyChar(codepoints[start_pos - 1]) == normalize::CharType::Symbol ||
+          normalize::isExtendedParticle(codepoints[start_pos - 1]);
+      if (!is_valid_verb && is_hatsuonbin && is_tense_pattern && stem_char_count >= 3 &&
+          verb_type == grammar::VerbType::GodanMa && has_left_predicate_boundary) {
+        is_valid_verb = true;
       }
 
       if (!is_valid_verb) {

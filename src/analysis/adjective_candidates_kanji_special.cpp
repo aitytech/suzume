@@ -97,11 +97,19 @@ bool appendKanjiIAdjSpecialCandidates(const std::vector<char32_t>& codepoints, s
     bool is_adj_context = false;
     if (adj_end < codepoints.size()) {
       char32_t next = codepoints[adj_end];
+      // なら immediately after a terminal godan-ka form is the conditional
+      // particle (届く+なら), not evidence that the preceding く is an
+      // adjective continuative.  Keep the change-of-state sequence only when
+      // なら is itself followed by a negative form (高く+なら+ない/ぬ/ず/ん).
+      const bool starts_nara = next == U'な' && adj_end + 1 < codepoints.size() && codepoints[adj_end + 1] == U'ら';
+      const bool nara_is_negative_change = starts_nara && adj_end + 2 < codepoints.size() &&
+                                           (codepoints[adj_end + 2] == U'な' || codepoints[adj_end + 2] == U'ぬ' ||
+                                            codepoints[adj_end + 2] == U'ず' || codepoints[adj_end + 2] == U'ん');
       // A bare も is ambiguous with the first character of the formal noun
       // もの (動くもの). Treat it as adjective evidence only when it opens a
       // negative continuation such as 高くもない.
       bool is_mo_negative = next == U'も' && adj_end + 1 < codepoints.size() && codepoints[adj_end + 1] == U'な';
-      is_adj_context = (next == U'て' || next == U'な' || is_mo_negative);
+      is_adj_context = next == U'て' || (next == U'な' && (!starts_nara || nara_is_negative_change)) || is_mo_negative;
     }
     std::string surface = extractSubstring(codepoints, start_pos, adj_end);
     std::string lemma = extractSubstring(codepoints, start_pos, kanji_end) + "い";

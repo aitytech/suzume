@@ -34,14 +34,31 @@ namespace suzume::analysis::connection_rules {
 float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // The classical/contracted negative ん cannot be followed by the plain
+  // copula だ. In an apparent …んだ sequence after a ma/ba/na-row verb, ん is
+  // the verb's hatsuonbin and だ is the past auxiliary (膨らん+だ).
+  const bool contracted_negative_before_copula =
+      prev.extended_pos == core::ExtendedPOS::AuxNegativeNu && grammar::isSingleHiragana(prev.surface, U'ん') &&
+      next.extended_pos == core::ExtendedPOS::AuxCopulaDa && grammar::isSingleHiragana(next.surface, U'だ');
+
+  // A shape-verified mimetic adverb may follow a case/topic-marked nominal
+  // directly (水滴が+ぽつり, 地図を+じっくり). Prefer that reading over
+  // unrelated short verb and auxiliary fragments inside the mimetic.
+  const bool marked_nominal_before_mimetic =
+      (prev.extended_pos == core::ExtendedPOS::ParticleCase || prev.extended_pos == core::ExtendedPOS::ParticleTopic) &&
+      prev.start > 0 && next.pos == core::PartOfSpeech::Adverb && next.origin == core::CandidateOrigin::Onomatopoeia;
+
   // A multi-character nominal compound ending in 中 can modify a predicate or
   // take a case particle as one searchable unit. Keep that reading ahead of
   // a stem-plus-suffix path; short two-character temporal forms remain split.
-  if (prev.extended_pos == core::ExtendedPOS::Noun && utf8::endsWith(prev.surface, "中") &&
+  const bool long_chuu_nominal =
+      prev.extended_pos == core::ExtendedPOS::Noun && utf8::endsWith(prev.surface, "中") &&
       prev.surface.size() >= core::kThreeJapaneseCharBytes &&
-      (next.extended_pos == core::ExtendedPOS::ParticleCase ||
-       next.extended_pos == core::ExtendedPOS::VerbShuushikei)) {
-    bonus += cost::kStrongBonus + cost::kModerateBonus;
+      (next.extended_pos == core::ExtendedPOS::ParticleCase || next.extended_pos == core::ExtendedPOS::VerbShuushikei);
+  if (contracted_negative_before_copula || marked_nominal_before_mimetic || long_chuu_nominal) {
+    bonus += (contracted_negative_before_copula ? cost::kAlmostNever : cost::kNeutral) +
+             (marked_nominal_before_mimetic ? cost::kDoubleVeryStrongBonus : cost::kNeutral) +
+             (long_chuu_nominal ? cost::kStrongBonus + cost::kModerateBonus : cost::kNeutral);
   }
 
   // A topic particle cannot directly select the classical negative auxiliary.

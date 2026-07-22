@@ -50,7 +50,8 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
  */
 std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                             const std::vector<normalize::CharType>& char_types,
-                                                            const UnknownOptions& options);
+                                                            const UnknownOptions& options,
+                                                            const dictionary::DictionaryManager* dict_manager);
 
 /**
  * @brief Generate hiragana i-adjective candidates (pure hiragana like まずい)
