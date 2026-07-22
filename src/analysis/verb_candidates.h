@@ -48,13 +48,12 @@ std::vector<UnknownCandidate> generateCompoundVerbCandidates(const std::vector<c
  * @param char_types Character types for each position
  * @param inflection Inflection analyzer for conjugation detection
  * @param dict_manager Dictionary manager for suffix checking
- * @return Vector of candidates
+ * @param candidates Output candidates, appended in generation order
  */
-std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                     const std::vector<normalize::CharType>& char_types,
-                                                     const grammar::Inflection& inflection,
-                                                     const dictionary::DictionaryManager* dict_manager,
-                                                     const VerbCandidateOptions& verb_opts = {});
+void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                            const std::vector<normalize::CharType>& char_types, const grammar::Inflection& inflection,
+                            const dictionary::DictionaryManager* dict_manager, const VerbCandidateOptions& verb_opts,
+                            std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate hiragana verb candidates (pure hiragana verbs like いく, くる)

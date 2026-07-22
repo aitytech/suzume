@@ -111,14 +111,12 @@ const std::array<std::string_view, 1>& getNaAdjSuffixes() {
 // Productive Hiragana Suffix Patterns (生産的接尾辞)
 // =============================================================================
 
-std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vector<char32_t>& codepoints,
-                                                                 size_t start_pos,
-                                                                 const std::vector<normalize::CharType>& char_types) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateProductiveSuffixCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                        const std::vector<normalize::CharType>& char_types,
+                                        std::vector<UnknownCandidate>& candidates) {
   // Only for hiragana sequences
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
 
   constexpr size_t kPpoiLen = 9;  // "っぽい" = 3 chars * 3 bytes
@@ -155,7 +153,7 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
       if (stem.size() >= 3) {  // At least 1 character stem
         candidates.push_back(makeSuffixCandidate(surface, start_pos, candidate_end, core::PartOfSpeech::Adjective, 0.4F,
                                                  surface, 0.85F, "stem_ppoi", dictionary::ConjugationType::IAdjective));
-        return candidates;  // Found valid っぽい candidate
+        return;  // Found valid っぽい candidate
       }
     }
 
@@ -185,22 +183,19 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
           float cost = starts_with_honorific_prefix ? -1.5F : -0.5F;
           candidates.push_back(makeSuffixCandidate(surface, start_pos, candidate_end, core::PartOfSpeech::Noun, cost,
                                                    surface, 0.9F, "hira_nickname"));
-          return candidates;
+          return;
         }
         break;
       }
     }
   }
-
-  return candidates;
 }
 
-std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateProductiveSuffixVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                            const std::vector<normalize::CharType>& char_types,
+                                            std::vector<UnknownCandidate>& candidates) {
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   size_t base_end = start_pos;
@@ -208,7 +203,7 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
     ++base_end;
   }
   if (base_end == start_pos) {
-    return candidates;
+    return;
   }
 
   // A productive suffix verb may attach after a repeated quantity unit, but
@@ -227,7 +222,7 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
     }
   }
   if (crosses_repeated_quantity_boundary) {
-    return candidates;
+    return;
   }
 
   // A numeral-led kanji sequence before ～づく is an independent quantity or
@@ -269,7 +264,7 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
                             candidate::kDictionaryOriginConfidence, "nominal_ichidan_suffix", form.extended_pos);
       candidate.lemma_verified = true;
       candidates.push_back(std::move(candidate));
-      return candidates;
+      return;
     }
   }
 
@@ -330,7 +325,7 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
                           candidate::kDictionaryOriginConfidence, "nominal_ichidan_zukeru_suffix", form.extended_pos);
     candidate.lemma_verified = true;
     candidates.push_back(std::move(candidate));
-    return candidates;
+    return;
   }
 
   for (const auto& suffix_stem : kNominalSuffixVerbStems) {
@@ -367,11 +362,9 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
       // this is not an unconstrained kanji onbin candidate.
       candidate.lemma_verified = true;
       candidates.push_back(std::move(candidate));
-      return candidates;
+      return;
     }
   }
-
-  return candidates;
 }
 
 // Administrative suffix codepoints for intermediate boundary detection

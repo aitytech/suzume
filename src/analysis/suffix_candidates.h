@@ -80,11 +80,12 @@ std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& co
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
  * @param dict_manager Dictionary manager for deverbal compound verification (may be null)
- * @return Vector of candidates
+ * @param candidates Output candidates, appended in generation order
  */
-std::vector<UnknownCandidate> generateNominalizedNounCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types,
-    const dictionary::DictionaryManager* dict_manager = nullptr);
+void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                       const std::vector<normalize::CharType>& char_types,
+                                       const dictionary::DictionaryManager* dict_manager,
+                                       std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate kanji + hiragana compound noun candidates
@@ -102,9 +103,10 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(
  * @param char_types Character types for each position
  * @return Vector of candidates
  */
-std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types,
-    const dictionary::DictionaryManager* dict_manager = nullptr);
+void generateKanjiHiraganaCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                             const std::vector<normalize::CharType>& char_types,
+                                             const dictionary::DictionaryManager* dict_manager,
+                                             std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate a short noun head selected by a verified left modifier and
@@ -113,11 +115,11 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
  * Left evidence is either genitive の or a complete determiner/i-adjective.
  * The generated span contains the head only; it never absorbs the selector.
  */
-std::vector<UnknownCandidate> generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoints,
-                                                                    size_t start_pos,
-                                                                    const std::vector<normalize::CharType>& char_types,
-                                                                    const grammar::Inflection& inflection,
-                                                                    const dictionary::DictionaryManager* dict_manager);
+void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                           const std::vector<normalize::CharType>& char_types,
+                                           const grammar::Inflection& inflection,
+                                           const dictionary::DictionaryManager* dict_manager,
+                                           std::vector<UnknownCandidate>& candidates);
 
 /** Return true when a span is exactly a closed auxiliary+particle chain. */
 bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
@@ -135,11 +137,11 @@ bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, 
  * @param codepoints Text as codepoints
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
- * @return Vector of candidates
+ * @param candidates Output candidates, appended in generation order
  */
-std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vector<char32_t>& codepoints,
-                                                                 size_t start_pos,
-                                                                 const std::vector<normalize::CharType>& char_types);
+void generateProductiveSuffixCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                        const std::vector<normalize::CharType>& char_types,
+                                        std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate productive suffix-verb candidates from nominal bases.
@@ -147,8 +149,9 @@ std::vector<UnknownCandidate> generateProductiveSuffixCandidates(const std::vect
  * Detects the Godan-ka suffix verb めく and its inflections:
  *   - 春めく、謎めいた、色めいて
  */
-std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types);
+void generateProductiveSuffixVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                            const std::vector<normalize::CharType>& char_types,
+                                            std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate counter candidates for numeral + つ patterns
@@ -162,11 +165,12 @@ std::vector<UnknownCandidate> generateProductiveSuffixVerbCandidates(
  * @param codepoints Text as codepoints
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
- * @return Vector of candidates
+ * @param candidates Output candidates, appended in generation order
  */
-std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                        const std::vector<normalize::CharType>& char_types,
-                                                        const dictionary::DictionaryManager* dict_manager = nullptr);
+void generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                               const std::vector<normalize::CharType>& char_types,
+                               const dictionary::DictionaryManager* dict_manager,
+                               std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate prefix + single kanji compound candidates
@@ -184,12 +188,11 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
  * @param inflection Inflection analyzer, used to suppress the compound when the
  *        second kanji heads a verb continuing into the following hiragana
  *        (今食べてる → 今|食べ|てる, not 今食|べてる)
- * @return Vector of candidates
+ * @param candidates Output candidates, appended in generation order
  */
-std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints,
-                                                               size_t start_pos,
-                                                               const std::vector<normalize::CharType>& char_types,
-                                                               const grammar::Inflection& inflection);
+void generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                      const std::vector<normalize::CharType>& char_types,
+                                      const grammar::Inflection& inflection, std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate a temporal-noun boundary split candidate
@@ -202,10 +205,11 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
  * @param codepoints Text as codepoints
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
- * @return Vector of candidates
+ * @param candidates Output candidates, appended in generation order
  */
-std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types);
+void generateTemporalNounBoundaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                            const std::vector<normalize::CharType>& char_types,
+                                            std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Check if a codepoint is a prefix-like kanji

@@ -253,21 +253,20 @@ bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, 
   return false;
 }
 
-std::vector<UnknownCandidate> generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoints,
-                                                                    size_t start_pos,
-                                                                    const std::vector<normalize::CharType>& char_types,
-                                                                    const grammar::Inflection& inflection,
-                                                                    const dictionary::DictionaryManager* dict_manager) {
-  std::vector<UnknownCandidate> candidates;
+void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                           const std::vector<normalize::CharType>& char_types,
+                                           const grammar::Inflection& inflection,
+                                           const dictionary::DictionaryManager* dict_manager,
+                                           std::vector<UnknownCandidate>& candidates) {
   if (dict_manager == nullptr || start_pos >= codepoints.size()) {
-    return candidates;
+    return;
   }
 
   const bool has_genitive_selector = hasGenitiveNominalSelector(codepoints, char_types, start_pos, dict_manager);
   const bool has_attributive_selector =
       hasAttributiveNominalSelector(codepoints, char_types, start_pos, inflection, dict_manager);
   if (!has_genitive_selector && !has_attributive_selector) {
-    return candidates;
+    return;
   }
 
   constexpr size_t kMaximumSelectedHeadLength = 4;
@@ -275,7 +274,7 @@ std::vector<UnknownCandidate> generateSelectedNominalHeadCandidates(const std::v
       dict_manager->lookupExact(extractSubstring(codepoints, start_pos, start_pos + 1), core::PartOfSpeech::Particle);
   if (has_attributive_selector && head_initial_particle != nullptr &&
       isNominalBoundaryParticle(*head_initial_particle)) {
-    return candidates;
+    return;
   }
   for (size_t length = 2; length <= kMaximumSelectedHeadLength; ++length) {
     const size_t head_end = start_pos + length;
@@ -333,16 +332,15 @@ std::vector<UnknownCandidate> generateSelectedNominalHeadCandidates(const std::v
 #endif
     candidates.push_back(std::move(noun_candidate));
   }
-  return candidates;
+  return;
 }
 
-std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types,
-    const dictionary::DictionaryManager* dict_manager) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateKanjiHiraganaCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                             const std::vector<normalize::CharType>& char_types,
+                                             const dictionary::DictionaryManager* dict_manager,
+                                             std::vector<UnknownCandidate>& candidates) {
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   // Skip if this kanji is preceded by another kanji - it's likely the tail end
@@ -350,7 +348,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   // E.g., in 魔法少女まどか, skip generating 女まど at pos=3.
   // Dictionary entries (玉ねぎ etc.) are handled separately as dict candidates.
   if (start_pos > 0 && char_types[start_pos - 1] == normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   // A non-quantity nominal stem plus the closed comparison bound 以上/以下
@@ -376,7 +374,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     comparison.pattern = "comparison_bound_compound";
 #endif
     candidates.push_back(std::move(comparison));
-    return candidates;
+    return;
   }
 
   // Find kanji portion (1 character only for compound nouns)
@@ -384,7 +382,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
 
   size_t kanji_len = kanji_end - start_pos;
   if (kanji_len == 0) {
-    return candidates;
+    return;
   }
 
   // -がかり and -がけ are nominal suffixes after a noun or a verb
@@ -415,13 +413,13 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
       candidate.pattern = "nominal_gakari_gake";
 #endif
       candidates.push_back(std::move(candidate));
-      return candidates;
+      return;
     }
   }
 
   // Find hiragana portion (2-4 characters)
   if (kanji_end >= char_types.size() || char_types[kanji_end] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
   size_t hiragana_end = kanji_end;
   while (hiragana_end < char_types.size() && hiragana_end - kanji_end < 4 &&
@@ -441,7 +439,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   // when another hiragana word follows (一つ|ひとつ), because the counter
   // generator emits the natural boundary separately.
   if (normalize::isNumeralCodepoint(codepoints[start_pos]) && first_hira == U'つ') {
-    return candidates;
+    return;
   }
 
   // Handle sokuon (っ) pattern FIRST, before the hiragana_len check
@@ -503,7 +501,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
         // e.g., 減った, 勝って are verb forms, not compound nouns
         char32_t next_hira = codepoints[sokuon_pos + 1];
         if (next_hira == U'た' || next_hira == U'て') {
-          return candidates;  // Skip - this is a verb conjugation, not a compound noun
+          return;  // Skip - this is a verb conjugation, not a compound noun
         }
         size_t hira2_end = sokuon_pos + 1;
         while (hira2_end < char_types.size() && hira2_end - (sokuon_pos + 1) < 4 &&
@@ -541,7 +539,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
                     candidates.push_back(std::move(stem));
                   }
                 }
-                return candidates;
+                return;
               }
             }
           }
@@ -560,11 +558,11 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
       }
     }
     // Return after handling sokuon - don't continue to normal hiragana logic
-    return candidates;
+    return;
   }
 
   if (hiragana_len < 2) {
-    return candidates;
+    return;
   }
   char32_t second_hira = (hiragana_len >= 2) ? codepoints[kanji_end + 1] : 0;
 
@@ -582,7 +580,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     adjective.lemma = derived;
     adjective.conj_type = dictionary::ConjugationType::IAdjective;
     candidates.push_back(std::move(adjective));
-    return candidates;
+    return;
   }
 
   // Skip small kana at start - morphologically invalid
@@ -590,7 +588,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   // These are valid words where kanji + っ + (kanji or hiragana) forms a compound
   if (first_hira == U'ゃ' || first_hira == U'ゅ' || first_hira == U'ょ' || first_hira == U'ぁ' || first_hira == U'ぃ' ||
       first_hira == U'ぅ' || first_hira == U'ぇ' || first_hira == U'ぉ') {
-    return candidates;
+    return;
   }
 
   // Skip patterns ending with ん - likely honorific suffixes
@@ -600,7 +598,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   if (kanji_len == 1 && hiragana_len >= 2) {
     char32_t last_hira = codepoints[hiragana_end - 1];
     if (last_hira == U'ん') {
-      return candidates;
+      return;
     }
   }
 
@@ -767,7 +765,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   // nominal or na-adjective stem (平ら+だ), never part of an unknown mixed-
   // script compound noun.
   if (last_hira == U'だ') {
-    return candidates;
+    return;
   }
 
   // X+さ is an adjective nominalization when X is a verified adjective stem;
@@ -786,7 +784,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     char32_t h2 = codepoints[kanji_end + 1];
     // ます, ない - pure polite/negative auxiliaries
     if ((h1 == kMa && h2 == kSu) || (h1 == kNa && h2 == kI)) {
-      return candidates;  // Skip NOUN generation entirely
+      return;  // Skip NOUN generation entirely
     }
   }
 
@@ -797,7 +795,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   std::string hiragana_portion = extractSubstring(codepoints, kanji_end, hiragana_end);
   if (dict_manager != nullptr && dict_manager->lookupExact(hiragana_portion) != nullptr) {
     // This allows split like 火+だるま to win.
-    return candidates;
+    return;
   }
 
   // Skip compound generation if the full surface is a known verb in dictionary
@@ -805,7 +803,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   {
     std::string full_surface = extractSubstring(codepoints, start_pos, hiragana_end);
     if (verb_helpers::isVerbInDictionary(dict_manager, full_surface)) {
-      return candidates;  // Skip - dict verb should win
+      return;  // Skip - dict verb should win
     }
   }
 
@@ -816,7 +814,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
   // check above, so this only rejects particle + negative absorption blobs.
   // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
   if (verb_helpers::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, hiragana_end)) {
-    return candidates;  // Skip - noun + focus particle split should win
+    return;  // Skip - noun + focus particle split should win
   }
 
   // Generate candidate with cost based on pattern
@@ -834,7 +832,7 @@ std::vector<UnknownCandidate> generateKanjiHiraganaCompoundCandidates(
     candidates.push_back(cand);
   }
 
-  return candidates;
+  return;
 }
 
 }  // namespace suzume::analysis

@@ -62,14 +62,12 @@ bool isGenitiveClauseFinalNominal(const std::vector<char32_t>& codepoints,
 
 }  // namespace
 
-std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints,
-                                                                size_t start_pos,
-                                                                const std::vector<normalize::CharType>& char_types,
-                                                                const dictionary::DictionaryManager* dict_manager) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                       const std::vector<normalize::CharType>& char_types,
+                                       const dictionary::DictionaryManager* dict_manager,
+                                       std::vector<UnknownCandidate>& candidates) {
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   // Find kanji portion (typically 1-3 characters for nominalized nouns)
@@ -77,19 +75,19 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
 
   // Need at least 1 kanji
   if (kanji_end == start_pos) {
-    return candidates;
+    return;
   }
 
   // Look for 1-2 hiragana after kanji (nominalization endings)
   if (kanji_end >= char_types.size() || char_types[kanji_end] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
 
   char32_t first_hiragana = codepoints[kanji_end];
 
   // Skip particles that never form nominalizations
   if (normalize::isParticleCodepoint(first_hiragana)) {
-    return candidates;
+    return;
   }
 
   // Common nominalization endings (renyokei stems)
@@ -100,7 +98,7 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
        first_hiragana == U'え' || first_hiragana == U'れ' || first_hiragana == U'め');
 
   if (!is_nominalization_ending) {
-    return candidates;
+    return;
   }
 
   // Do not turn the first mora of a dictionary particle into a nominalized
@@ -118,7 +116,7 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
     }
   }
   if (begins_particle) {
-    return candidates;
+    return;
   }
 
   // Skip potential suru-verb patterns: 漢字2字+し followed by suru-auxiliary
@@ -133,7 +131,7 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       char32_t next_char = codepoints[next_pos];
       // せ followed by imperative よ, passive ら/れ, causative ら, etc.
       if (next_char == U'よ' || next_char == U'ら' || next_char == U'れ' || next_char == U'ず') {
-        return candidates;
+        return;
       }
     }
   }
@@ -144,12 +142,12 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
       char32_t next_char = codepoints[next_pos];
       if (verb_helpers::isSuruAuxiliaryStarter(next_char)) {
         // This looks like a suru-verb pattern - skip nominalization
-        return candidates;
+        return;
       }
       // Kanji after し indicates suru-verb renyoukei + kanji verb/noun
       // e.g., 解決し得ない → 解決+し+得+ない (not 解決し+得ない)
       if (next_pos < char_types.size() && char_types[next_pos] == normalize::CharType::Kanji) {
-        return candidates;
+        return;
       }
     }
   }
@@ -165,7 +163,7 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
     std::string_view base_ending = grammar::godanBaseSuffixFromIRow(first_hiragana);
     std::string verb_base = normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending);
     if (!verb_helpers::isVerbInDictionary(dict_manager, verb_base)) {
-      return candidates;
+      return;
     }
   }
 
@@ -352,7 +350,7 @@ std::vector<UnknownCandidate> generateNominalizedNounCandidates(const std::vecto
     }
   }
 
-  return candidates;
+  return;
 }
 
 }  // namespace suzume::analysis

@@ -603,7 +603,8 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
   // Generate verb candidates (kanji + hiragana conjugation endings)
   if (char_types[start_pos] == normalize::CharType::Kanji) {
-    appendCandidates(candidates, generateVerbCandidates(text, codepoints, start_pos, char_types));
+    analysis::generateVerbCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
+                                     options_.verb_candidate_options, candidates);
 
     // Generate compound verb candidates (kanji + hiragana + kanji + hiragana)
     // e.g., 恐れ入ります, 差し上げます, 申し上げます
@@ -617,31 +618,30 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
     appendCandidates(candidates, generateAdjectiveStemCandidates(text, codepoints, start_pos, char_types));
 
     // Generate productive nominal-base suffix verbs (春めく、謎めく).
-    appendCandidates(candidates, generateProductiveSuffixVerbCandidates(codepoints, start_pos, char_types));
+    generateProductiveSuffixVerbCandidates(codepoints, start_pos, char_types, candidates);
 
     // Generate na-adjective candidates (〜的 patterns)
     appendCandidates(candidates, generateNaAdjectiveCandidates(text, codepoints, start_pos, char_types));
 
     // Generate nominalized noun candidates (kanji + short hiragana)
     // e.g., 手助け, 片付け, 引き上げ
-    appendCandidates(candidates, generateNominalizedNounCandidates(text, codepoints, start_pos, char_types));
+    analysis::generateNominalizedNounCandidates(codepoints, start_pos, char_types, dict_manager_, candidates);
 
     // Generate kanji + hiragana compound noun candidates
     // e.g., 玉ねぎ, 水たまり
     // Pass dict_manager to skip compounds when hiragana portion is a known word
-    appendCandidates(candidates,
-                     generateKanjiHiraganaCompoundCandidates(codepoints, start_pos, char_types, dict_manager_));
+    generateKanjiHiraganaCompoundCandidates(codepoints, start_pos, char_types, dict_manager_, candidates);
 
     // Generate counter candidates for numeral + つ patterns
     // e.g., 一つ, 二つ, ..., 九つ (closed class)
-    appendCandidates(candidates, generateCounterCandidates(codepoints, start_pos, char_types, dict_manager_));
+    generateCounterCandidates(codepoints, start_pos, char_types, dict_manager_, candidates);
 
     // Generate prefix + single kanji compound candidates
     // e.g., 今日, 今週, 本日, 全国 (prefix-like compounds)
-    appendCandidates(candidates, generatePrefixCompoundCandidates(codepoints, start_pos, char_types, inflection_));
+    generatePrefixCompoundCandidates(codepoints, start_pos, char_types, inflection_, candidates);
 
     // Generate temporal-noun boundary split candidates (現在|担当者, 昨日|会議)
-    appendCandidates(candidates, generateTemporalNounBoundaryCandidates(codepoints, start_pos, char_types));
+    generateTemporalNounBoundaryCandidates(codepoints, start_pos, char_types, candidates);
   }
 
   // Generate hiragana verb candidates (pure hiragana verbs like いく, くる)
@@ -653,10 +653,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
     appendCandidates(candidates, generateHiraganaAdjectiveCandidates(text, codepoints, start_pos, char_types));
 
     // Generate productive suffix candidates (ありがち, 忘れっぽい, etc.)
-    appendCandidates(candidates, generateProductiveSuffixCandidates(codepoints, start_pos, char_types));
+    generateProductiveSuffixCandidates(codepoints, start_pos, char_types, candidates);
 
     // Generate finite kana NounNumber + quantitative Suffix search units.
-    appendCandidates(candidates, generateCounterCandidates(codepoints, start_pos, char_types, dict_manager_));
+    generateCounterCandidates(codepoints, start_pos, char_types, dict_manager_, candidates);
   }
 
   // Generate katakana verb/adjective candidates (slang: バズる, エモい, etc.)
@@ -669,7 +669,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
   // Generate counter candidates for digit + つ patterns (e.g., 3つ, 10個)
   if (char_types[start_pos] == normalize::CharType::Digit) {
-    appendCandidates(candidates, generateCounterCandidates(codepoints, start_pos, char_types, dict_manager_));
+    generateCounterCandidates(codepoints, start_pos, char_types, dict_manager_, candidates);
   }
 
   // Generate by same type
@@ -677,8 +677,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
   // Generate only the noun head selected by a verified genitive, determiner,
   // or attributive i-adjective and closed by a nominal particle.
-  appendCandidates(
-      candidates, generateSelectedNominalHeadCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_));
+  generateSelectedNominalHeadCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_, candidates);
 
   // Generate alphanumeric sequences
   appendCandidates(candidates, generateAlphanumeric(text, codepoints, start_pos, char_types));
@@ -819,14 +818,6 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateCompoundVerbCandidat
                                                   options_.verb_candidate_options);
 }
 
-std::vector<UnknownCandidate> UnknownWordGenerator::generateVerbCandidates(
-    std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
-    const std::vector<normalize::CharType>& char_types) const {
-  // Delegate to the standalone function
-  return analysis::generateVerbCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
-                                          options_.verb_candidate_options);
-}
-
 std::vector<UnknownCandidate> UnknownWordGenerator::generateHiraganaVerbCandidates(
     std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
     const std::vector<normalize::CharType>& char_types) const {
@@ -861,13 +852,6 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateNaAdjectiveCandidate
     const std::vector<normalize::CharType>& char_types) const {
   // Delegate to the standalone function
   return analysis::generateNaAdjectiveCandidates(codepoints, start_pos, char_types, options_, dict_manager_);
-}
-
-std::vector<UnknownCandidate> UnknownWordGenerator::generateNominalizedNounCandidates(
-    std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
-    const std::vector<normalize::CharType>& char_types) const {
-  // Delegate to the standalone function
-  return analysis::generateNominalizedNounCandidates(codepoints, start_pos, char_types, dict_manager_);
 }
 
 }  // namespace suzume::analysis

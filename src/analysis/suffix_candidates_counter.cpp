@@ -21,21 +21,20 @@
 
 namespace suzume::analysis {
 
-std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                        const std::vector<normalize::CharType>& char_types,
-                                                        const dictionary::DictionaryManager* dict_manager) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                               const std::vector<normalize::CharType>& char_types,
+                               const dictionary::DictionaryManager* dict_manager,
+                               std::vector<UnknownCandidate>& candidates) {
   // Need at least 2 characters (numeral + counter suffix)
   if (start_pos + 1 >= codepoints.size()) {
-    return candidates;
+    return;
   }
 
   counter_detail::appendStructuralCounterCandidates(codepoints, start_pos, char_types, dict_manager, candidates);
 
   // First character(s) must be numeral(s)
   if (!normalize::isNumeralCodepoint(codepoints[start_pos])) {
-    return candidates;
+    return;
   }
 
   // Find the end of the numeral sequence
@@ -46,7 +45,7 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
 
   // Must have at least one character after numerals
   if (numeral_end >= codepoints.size()) {
-    return candidates;
+    return;
   }
 
   counter_detail::appendBasicNumeralCounterCandidates(codepoints, start_pos, numeral_end, char_types, dict_manager,
@@ -88,7 +87,7 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
       // MeCab treats number + katakana as one quantity token, so there is no
       // curated unit list. (ヶ/ケ + kanji surfaces are mixed-script and fall through.)
       if (!normalize::isAllKatakana(unit_surface)) {
-        return candidates;
+        return;
       }
       std::string surface = extractSubstring(codepoints, start_pos, unit_end);
       if (!surface.empty()) {
@@ -113,8 +112,6 @@ std::vector<UnknownCandidate> generateCounterCandidates(const std::vector<char32
       }
     }
   }
-
-  return candidates;
 }
 
 }  // namespace suzume::analysis

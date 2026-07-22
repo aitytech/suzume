@@ -50,19 +50,27 @@ bool allCharsAre(const std::vector<normalize::CharType>& char_types, const std::
   return true;
 }
 
+std::string_view textRange(std::string_view text, const ByteOffsets& byte_offsets, size_t start, size_t end) {
+  if (start >= end || end >= byte_offsets.size()) {
+    return {};
+  }
+  const size_t byte_start = byte_offsets[start];
+  return text.substr(byte_start, byte_offsets[end] - byte_start);
+}
+
 // A copular irrealis form followed by the volitional auxiliary is a
 // grammatical auxiliary sequence, not an unknown lexical verb.  Keeping the
 // sequence visible prevents a short pure-hiragana verb candidate from hiding
 // a dictionary-backed copula + volitional analysis.
-bool isCopulaVolitionalSequence(const dictionary::DictionaryManager& dict_manager,
-                                const std::vector<char32_t>& codepoints, size_t start, size_t end) {
+bool isCopulaVolitionalSequence(const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                const ByteOffsets& byte_offsets, size_t start, size_t end) {
   constexpr size_t kMinimumMorphemeCount = 2;
   if (end - start < kMinimumMorphemeCount) {
     return false;
   }
 
-  const std::string prefix = extractSubstring(codepoints, start, end - 1);
-  const std::string suffix = extractSubstring(codepoints, end - 1, end);
+  const std::string_view prefix = textRange(text, byte_offsets, start, end - 1);
+  const std::string_view suffix = textRange(text, byte_offsets, end - 1, end);
   const auto* copula = dict_manager.lookupExact(prefix, core::PartOfSpeech::Auxiliary);
   const auto* volitional = dict_manager.lookupExact(suffix, core::PartOfSpeech::Auxiliary);
   return copula != nullptr && copula->extended_pos == core::ExtendedPOS::AuxCopulaDa && volitional != nullptr &&
@@ -75,12 +83,12 @@ bool isCopulaVolitionalSequence(const dictionary::DictionaryManager& dict_manage
 // absorb its following particle.  Require the actual lattice predecessor, so
 // lexical homographs ending in the same kana remain available elsewhere.
 bool overlapsPredicativeNegativeConjecture(const core::Lattice& lattice,
-                                           const dictionary::DictionaryManager& dict_manager,
-                                           const std::vector<char32_t>& codepoints, size_t candidate_start,
-                                           size_t candidate_end) {
+                                           const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                           const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                           size_t candidate_start, size_t candidate_end) {
   for (size_t aux_start = candidate_start; aux_start < candidate_end; ++aux_start) {
     const size_t probe_end = std::min(codepoints.size(), aux_start + static_cast<size_t>(3));
-    const std::string probe = extractSubstring(codepoints, aux_start, probe_end);
+    const std::string_view probe = textRange(text, byte_offsets, aux_start, probe_end);
     for (const auto& match : dict_manager.lookup(probe, 0)) {
       if (match.entry == nullptr || match.entry->extended_pos != core::ExtendedPOS::AuxNegativeMai) {
         continue;
@@ -111,7 +119,8 @@ bool overlapsPredicativeNegativeConjecture(const core::Lattice& lattice,
 // substring: both the closed suffix and its licensed predecessor are proven,
 // while exact lexical homographs remain exempt.
 bool absorbsVerifiedClassicalNegative(const core::Lattice& lattice, const dictionary::DictionaryManager& dict_manager,
-                                      const std::vector<char32_t>& codepoints, const UnknownCandidate& candidate) {
+                                      std::string_view text, const ByteOffsets& byte_offsets,
+                                      const UnknownCandidate& candidate) {
   const auto* exact_verb = dict_manager.lookupExact(candidate.surface, core::PartOfSpeech::Verb);
   if (candidate.pos != core::PartOfSpeech::Verb || candidate.lemma.empty() ||
       (exact_verb != nullptr && exact_verb->lemma == exact_verb->surface)) {
@@ -119,7 +128,7 @@ bool absorbsVerifiedClassicalNegative(const core::Lattice& lattice, const dictio
   }
 
   for (size_t auxiliary_start = candidate.start + 1; auxiliary_start < candidate.end; ++auxiliary_start) {
-    const std::string suffix = extractSubstring(codepoints, auxiliary_start, candidate.end);
+    const std::string_view suffix = textRange(text, byte_offsets, auxiliary_start, candidate.end);
     const auto* auxiliary = dict_manager.lookupExact(suffix, core::PartOfSpeech::Auxiliary);
     if (auxiliary == nullptr || auxiliary->extended_pos != core::ExtendedPOS::AuxNegativeNu) {
       continue;
@@ -142,7 +151,8 @@ bool absorbsVerifiedClassicalNegative(const core::Lattice& lattice, const dictio
 // Requiring the right-hand negative as well as the dictionary predecessor
 // avoids treating incidental れ inside ordinary lexical stems as passive.
 bool absorbsPassiveBeforeNegative(const core::Lattice& lattice, const dictionary::DictionaryManager& dict_manager,
-                                  const std::vector<char32_t>& codepoints, const UnknownCandidate& candidate) {
+                                  std::string_view text, const std::vector<char32_t>& codepoints,
+                                  const ByteOffsets& byte_offsets, const UnknownCandidate& candidate) {
   if (candidate.pos != core::PartOfSpeech::Verb || candidate.extended_pos != core::ExtendedPOS::VerbMizenkei ||
       candidate.end >= codepoints.size() ||
       dict_manager.lookupExact(candidate.surface, core::PartOfSpeech::Verb) != nullptr) {
@@ -150,7 +160,7 @@ bool absorbsPassiveBeforeNegative(const core::Lattice& lattice, const dictionary
   }
 
   const size_t probe_end = std::min(codepoints.size(), candidate.end + static_cast<size_t>(3));
-  const std::string following = extractSubstring(codepoints, candidate.end, probe_end);
+  const std::string_view following = textRange(text, byte_offsets, candidate.end, probe_end);
   const bool followed_by_negative =
       lookupResultsHaveExtendedPOS(dict_manager.lookup(following, 0), core::ExtendedPOS::AuxNegativeNai);
   if (!followed_by_negative) {
@@ -158,7 +168,7 @@ bool absorbsPassiveBeforeNegative(const core::Lattice& lattice, const dictionary
   }
 
   for (size_t auxiliary_start = candidate.start + 1; auxiliary_start < candidate.end; ++auxiliary_start) {
-    const std::string suffix = extractSubstring(codepoints, auxiliary_start, candidate.end);
+    const std::string_view suffix = textRange(text, byte_offsets, auxiliary_start, candidate.end);
     const auto* auxiliary = dict_manager.lookupExact(suffix, core::PartOfSpeech::Auxiliary);
     if (auxiliary == nullptr || auxiliary->extended_pos != core::ExtendedPOS::AuxPassive) {
       continue;
@@ -181,14 +191,13 @@ bool absorbsPassiveBeforeNegative(const core::Lattice& lattice, const dictionary
 // kanji together with する (勉強+すれ+ば, not 勉+強すれ+ば). This is the
 // productive Sahen boundary, so the noun itself need not be registered.
 bool startsInsideVerifiedNounAndAbsorbsSuru(const core::Lattice& lattice,
-                                            const dictionary::DictionaryManager& dict_manager,
-                                            const std::vector<char32_t>& codepoints,
-                                            const UnknownCandidate& candidate) {
+                                            const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                            const ByteOffsets& byte_offsets, const UnknownCandidate& candidate) {
   if (candidate.pos != core::PartOfSpeech::Verb || candidate.start == 0) {
     return false;
   }
   for (size_t suru_start = candidate.start + 1; suru_start < candidate.end; ++suru_start) {
-    const std::string suffix = extractSubstring(codepoints, suru_start, candidate.end);
+    const std::string_view suffix = textRange(text, byte_offsets, suru_start, candidate.end);
     if (!hasCompleteVerbLemma(dict_manager, suffix, candidate.end - suru_start, "する")) {
       continue;
     }
@@ -209,18 +218,18 @@ bool startsInsideVerifiedNounAndAbsorbsSuru(const core::Lattice& lattice,
 // only the initial す of the conditional すれ (提出す+れ+ば). Confirm the
 // multi-kanji nominal alternative in the current generation batch and the
 // complete closed する form on the right before discarding that path.
-bool consumesInitialSuruConditional(const dictionary::DictionaryManager& dict_manager,
-                                    const std::vector<char32_t>& codepoints,
+bool consumesInitialSuruConditional(const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                    const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                     const std::vector<UnknownCandidate>& batch_candidates,
                                     const UnknownCandidate& candidate) {
   if (candidate.pos != core::PartOfSpeech::Verb || candidate.end <= candidate.start ||
       candidate.end + 1 >= codepoints.size() || codepoints[candidate.end - 1] != U'す') {
     return false;
   }
-  const std::string conditional = extractSubstring(codepoints, candidate.end - 1, candidate.end + 1);
+  const std::string_view conditional = textRange(text, byte_offsets, candidate.end - 1, candidate.end + 1);
   const bool is_suru_conditional = hasCompleteVerbLemma(dict_manager, conditional, 2, "する");
   const auto* conditional_particle = dict_manager.lookupExact(
-      extractSubstring(codepoints, candidate.end + 1, candidate.end + 2), core::PartOfSpeech::Particle);
+      textRange(text, byte_offsets, candidate.end + 1, candidate.end + 2), core::PartOfSpeech::Particle);
   if (!is_suru_conditional || conditional_particle == nullptr ||
       conditional_particle->extended_pos != core::ExtendedPOS::ParticleConj) {
     return false;
@@ -248,14 +257,14 @@ bool verbFormLicensesAuxiliary(core::ExtendedPOS verb_epos, core::ExtendedPOS au
 // required, so an incidental auxiliary homograph does not suppress a lexical
 // verb elsewhere.
 bool reopensObservedVerbAuxiliaryBoundary(const core::Lattice& lattice,
-                                          const dictionary::DictionaryManager& dict_manager,
-                                          const std::vector<char32_t>& codepoints, const UnknownCandidate& candidate) {
+                                          const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                          const ByteOffsets& byte_offsets, const UnknownCandidate& candidate) {
   if (candidate.pos != core::PartOfSpeech::Verb || candidate.lemma_verified || candidate.start == 0) {
     return false;
   }
   for (size_t split = candidate.start + 1; split < candidate.end; ++split) {
     const auto* auxiliary =
-        dict_manager.lookupExact(extractSubstring(codepoints, split, candidate.end), core::PartOfSpeech::Auxiliary);
+        dict_manager.lookupExact(textRange(text, byte_offsets, split, candidate.end), core::PartOfSpeech::Auxiliary);
     if (auxiliary == nullptr) {
       continue;
     }
@@ -275,8 +284,8 @@ bool reopensObservedVerbAuxiliaryBoundary(const core::Lattice& lattice,
 // A head proven nominal by both a left selector and a right nominal particle
 // owns its complete span. Do not let an internal predicate plus a homographic
 // closed auxiliary reopen that head (谷の向こうに → 向こう, not 向こ+う).
-bool isInternalPredicateOfSelectedNominalHead(const dictionary::DictionaryManager& dict_manager,
-                                              const std::vector<char32_t>& codepoints,
+bool isInternalPredicateOfSelectedNominalHead(const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                              const ByteOffsets& byte_offsets,
                                               const std::vector<UnknownCandidate>& batch_candidates,
                                               const UnknownCandidate& candidate) {
   if (candidate.pos != core::PartOfSpeech::Verb) {
@@ -288,7 +297,7 @@ bool isInternalPredicateOfSelectedNominalHead(const dictionary::DictionaryManage
       return false;
     }
     const auto* auxiliary =
-        dict_manager.lookupExact(extractSubstring(codepoints, candidate.end, head.end), core::PartOfSpeech::Auxiliary);
+        dict_manager.lookupExact(textRange(text, byte_offsets, candidate.end, head.end), core::PartOfSpeech::Auxiliary);
     return auxiliary != nullptr && verbFormLicensesAuxiliary(candidate.extended_pos, auxiliary->extended_pos);
   });
 }
@@ -299,12 +308,12 @@ bool isInternalPredicateOfSelectedNominalHead(const dictionary::DictionaryManage
 // The ordinary productive nominalizations 隔たり+を and 読み+が have no such
 // internal two-edge proof and remain eligible.
 bool hasCompleteInternalConstituentBoundary(const core::Lattice& lattice,
-                                            const dictionary::DictionaryManager& dict_manager,
-                                            const std::vector<char32_t>& codepoints,
+                                            const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                            const ByteOffsets& byte_offsets,
                                             const std::vector<UnknownCandidate>& batch_candidates,
                                             const UnknownCandidate& candidate) {
   for (size_t split = candidate.start + 1; split < candidate.end; ++split) {
-    const std::string right_surface = extractSubstring(codepoints, split, candidate.end);
+    const std::string_view right_surface = textRange(text, byte_offsets, split, candidate.end);
     bool complete_right = false;
     bool right_is_auxiliary = false;
     bool right_is_adjective = false;
@@ -390,7 +399,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     }
     if (reading_end > start_pos && reading_end < codepoints.size() &&
         normalize::isClosingBracket(codepoints[reading_end])) {
-      lattice.addEdge(extractSubstring(codepoints, start_pos, reading_end), static_cast<uint32_t>(start_pos),
+      lattice.addEdge(textRange(text, byte_offsets, start_pos, reading_end), static_cast<uint32_t>(start_pos),
                       static_cast<uint32_t>(reading_end), core::PartOfSpeech::Noun,
                       candidate::kParentheticalReadingCandidateCost, core::LatticeEdge::kIsUnknown, {},
                       dictionary::ConjugationType::None, core::CandidateOrigin::Unknown, candidate::kNoOriginConfidence,
@@ -417,25 +426,26 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
         joinsParticleToDictionaryAdverb(lattice, dict_manager_, text, byte_offsets, candidate.start, candidate.end)) {
       continue;
     }
-    if (overlapsPredicativeNegativeConjecture(lattice, dict_manager_, codepoints, candidate.start, candidate.end)) {
+    if (overlapsPredicativeNegativeConjecture(lattice, dict_manager_, text, codepoints, byte_offsets, candidate.start,
+                                              candidate.end)) {
       continue;
     }
-    if (absorbsVerifiedClassicalNegative(lattice, dict_manager_, codepoints, candidate)) {
+    if (absorbsVerifiedClassicalNegative(lattice, dict_manager_, text, byte_offsets, candidate)) {
       continue;
     }
-    if (absorbsPassiveBeforeNegative(lattice, dict_manager_, codepoints, candidate)) {
+    if (absorbsPassiveBeforeNegative(lattice, dict_manager_, text, codepoints, byte_offsets, candidate)) {
       continue;
     }
-    if (startsInsideVerifiedNounAndAbsorbsSuru(lattice, dict_manager_, codepoints, candidate)) {
+    if (startsInsideVerifiedNounAndAbsorbsSuru(lattice, dict_manager_, text, byte_offsets, candidate)) {
       continue;
     }
-    if (consumesInitialSuruConditional(dict_manager_, codepoints, candidates, candidate)) {
+    if (consumesInitialSuruConditional(dict_manager_, text, codepoints, byte_offsets, candidates, candidate)) {
       continue;
     }
-    if (reopensObservedVerbAuxiliaryBoundary(lattice, dict_manager_, codepoints, candidate)) {
+    if (reopensObservedVerbAuxiliaryBoundary(lattice, dict_manager_, text, byte_offsets, candidate)) {
       continue;
     }
-    if (isInternalPredicateOfSelectedNominalHead(dict_manager_, codepoints, candidates, candidate)) {
+    if (isInternalPredicateOfSelectedNominalHead(dict_manager_, text, byte_offsets, candidates, candidate)) {
       continue;
     }
     // A mixed-script unknown noun cannot cover a fully evidenced inflectional
@@ -445,11 +455,11 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     // two-constituent proof and remain eligible.
     if (candidate.pos == core::PartOfSpeech::Noun &&
         candidate.origin == core::CandidateOrigin::KanjiHiraganaNominalCompound &&
-        hasCompleteInternalConstituentBoundary(lattice, dict_manager_, codepoints, candidates, candidate)) {
+        hasCompleteInternalConstituentBoundary(lattice, dict_manager_, text, byte_offsets, candidates, candidate)) {
       continue;
     }
     if (candidate.pos == core::PartOfSpeech::Verb && !candidate.lemma_verified && candidate.start > 0 &&
-        hasCompleteInternalConstituentBoundary(lattice, dict_manager_, codepoints, candidates, candidate)) {
+        hasCompleteInternalConstituentBoundary(lattice, dict_manager_, text, byte_offsets, candidates, candidate)) {
       if (hasPrecedingExtendedPOS(lattice, candidate.start, core::ExtendedPOS::AuxNegativeMai)) {
         continue;
       }
@@ -463,7 +473,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     if (compound_end != 0) {
       bool conflicts_with_compound = candidate.end <= compound_end;
       if (!conflicts_with_compound && candidate.end > compound_end) {
-        const std::string outside_suffix = extractSubstring(codepoints, compound_end, candidate.end);
+        const std::string_view outside_suffix = textRange(text, byte_offsets, compound_end, candidate.end);
         constexpr PartOfSpeechMask kFunctionWordMask =
             partOfSpeechMask(core::PartOfSpeech::Auxiliary) | partOfSpeechMask(core::PartOfSpeech::Particle);
         conflicts_with_compound = hasExactPartOfSpeech(dict_manager_, outside_suffix, kFunctionWordMask);
@@ -593,7 +603,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
           if (result.length <= 2 && candidate.end - candidate.start >= 3) {
             if (allCharsAre(char_types, codepoints, candidate.start, candidate.end, normalize::CharType::Hiragana,
                             /*allow_choon=*/true) &&
-                !isCopulaVolitionalSequence(dict_manager_, codepoints, candidate.start, candidate.end)) {
+                !isCopulaVolitionalSequence(dict_manager_, text, byte_offsets, candidate.start, candidate.end)) {
               skip_penalty = true;
               skip_reason = "pure_hiragana_verb";
               break;
@@ -730,7 +740,8 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
               // generic dict-prefix penalty here.
               if (result.entry->pos == core::PartOfSpeech::Adjective &&
                   result.entry->extended_pos == core::ExtendedPOS::AdjNaAdj) {
-                std::string tail_surface = extractSubstring(codepoints, candidate.start + result.length, candidate.end);
+                const std::string_view tail_surface =
+                    textRange(text, byte_offsets, candidate.start + result.length, candidate.end);
                 bool tail_is_productive_suffix = false;
                 for (const auto& suffix_entry : getSuffixEntries()) {
                   if (tail_surface == suffix_entry.suffix) {
@@ -806,11 +817,11 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       const bool is_short_form = candidate_length <= 4;
       const bool has_left_predicate_boundary =
           candidate.start == 0 || char_types[candidate.start - 1] == normalize::CharType::Symbol ||
-          dict_manager_.lookupExact(extractSubstring(codepoints, candidate.start - 1, candidate.start),
+          dict_manager_.lookupExact(textRange(text, byte_offsets, candidate.start - 1, candidate.start),
                                     core::PartOfSpeech::Particle) != nullptr;
       const bool has_right_predicate_boundary =
           candidate.end == codepoints.size() || char_types[candidate.end] == normalize::CharType::Symbol ||
-          dict_manager_.lookupExact(extractSubstring(codepoints, candidate.end, candidate.end + 1),
+          dict_manager_.lookupExact(textRange(text, byte_offsets, candidate.end, candidate.end + 1),
                                     core::PartOfSpeech::Particle) != nullptr;
       const bool is_bounded_terminal_form = candidate_length <= 8 && candidate.surface.compare(candidate.lemma) == 0 &&
                                             has_left_predicate_boundary && has_right_predicate_boundary;
@@ -821,7 +832,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       }
     }
     if (is_pure_hiragana_verb &&
-        isCopulaVolitionalSequence(dict_manager_, codepoints, candidate.start, candidate.end)) {
+        isCopulaVolitionalSequence(dict_manager_, text, byte_offsets, candidate.start, candidate.end)) {
       is_pure_hiragana_verb = false;
     }
 
@@ -846,7 +857,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
                          /*allow_choon=*/false)) {
           continue;
         }
-        if (grammar::isSuruImperativeSurface(extractSubstring(codepoints, split_pos, candidate.end))) {
+        if (grammar::isSuruImperativeSurface(textRange(text, byte_offsets, split_pos, candidate.end))) {
           absorbs_suru_imperative = true;
           break;
         }
@@ -939,7 +950,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     // that POS alternative without registering each open-class nominalization.
     if (candidate.pos == core::PartOfSpeech::Verb && candidate.extended_pos == core::ExtendedPOS::VerbRenyokei &&
         candidate.end < codepoints.size()) {
-      const std::string following_surface = extractSubstring(codepoints, candidate.end, candidate.end + 1);
+      const std::string_view following_surface = textRange(text, byte_offsets, candidate.end, candidate.end + 1);
       const auto* following_particle = dict_manager_.lookupExact(following_surface, core::PartOfSpeech::Particle);
       const bool nominal_particle =
           following_particle != nullptr && (following_particle->extended_pos == core::ExtendedPOS::ParticleCase ||
@@ -953,7 +964,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       // renyokei alternative; a standalone が/を still licenses it.
       bool longer_dependent_follows = false;
       const size_t probe_end = std::min(codepoints.size(), candidate.end + static_cast<size_t>(4));
-      const std::string following_probe = extractSubstring(codepoints, candidate.end, probe_end);
+      const std::string_view following_probe = textRange(text, byte_offsets, candidate.end, probe_end);
       for (const auto& result : dict_manager_.lookup(following_probe, 0)) {
         if (result.entry != nullptr && result.length > 1 &&
             (result.entry->pos == core::PartOfSpeech::Adjective || result.entry->pos == core::PartOfSpeech::Auxiliary ||
@@ -964,7 +975,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       }
       const bool is_lexical_noun = dict_manager_.lookupExact(surface_str, core::PartOfSpeech::Noun) != nullptr;
       const bool crosses_complete_internal_boundary =
-          hasCompleteInternalConstituentBoundary(lattice, dict_manager_, codepoints, candidates, candidate);
+          hasCompleteInternalConstituentBoundary(lattice, dict_manager_, text, byte_offsets, candidates, candidate);
       if (nominal_particle && !longer_dependent_follows && !is_lexical_noun && !crosses_complete_internal_boundary) {
         lattice.addEdge(surface_str, static_cast<uint32_t>(candidate.start), static_cast<uint32_t>(candidate.end),
                         core::PartOfSpeech::Noun,

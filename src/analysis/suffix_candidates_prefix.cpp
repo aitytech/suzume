@@ -47,20 +47,18 @@ bool isNominalUsePrefix(char32_t cp) {
   return cp == U'再' || cp == U'未' || cp == U'不';
 }
 
-std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints,
-                                                               size_t start_pos,
-                                                               const std::vector<normalize::CharType>& char_types,
-                                                               const grammar::Inflection& inflection) {
-  std::vector<UnknownCandidate> candidates;
-
+void generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                      const std::vector<normalize::CharType>& char_types,
+                                      const grammar::Inflection& inflection,
+                                      std::vector<UnknownCandidate>& candidates) {
   // Need at least 2 kanji characters
   if (start_pos + 1 >= codepoints.size()) {
-    return candidates;
+    return;
   }
 
   // First character must be kanji
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   // Check if first character is a prefix-like kanji
@@ -76,11 +74,11 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
     std::string surface = extractSubstring(codepoints, start_pos, start_pos + 3);
     candidates.push_back(makeCandidate(surface, start_pos, start_pos + 3, core::PartOfSpeech::Noun,
                                        candidate::kPrefixNominalUseBonus, false, CandidateOrigin::PrefixCompound));
-    return candidates;
+    return;
   }
 
   if (!isPrefixLikeKanji(first_char)) {
-    return candidates;
+    return;
   }
 
   // Suppress the compound when it would strand a LONE preceding kanji: that kanji
@@ -91,19 +89,19 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
   // off — so only bail when exactly one kanji precedes.
   if (start_pos > 0 && char_types[start_pos - 1] == normalize::CharType::Kanji &&
       (start_pos < 2 || char_types[start_pos - 2] != normalize::CharType::Kanji)) {
-    return candidates;
+    return;
   }
 
   // Second character must also be kanji
   if (start_pos + 1 >= char_types.size() || char_types[start_pos + 1] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   // Skip if second character is an interrogative (何, 誰, etc.)
   // These act as anchors and should not form compounds with prefix
   char32_t second_char = codepoints[start_pos + 1];
   if (isInterrogativeKanji(second_char)) {
-    return candidates;  // Don't generate compound, let dictionary anchor win
+    return;  // Don't generate compound, let dictionary anchor win
   }
 
   // Generate 2-character compound (prefix + single kanji) ONLY when:
@@ -133,7 +131,7 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
       std::string verb_probe = extractSubstring(codepoints, start_pos + 1, probe_end);
       grammar::InflectionCandidate best = inflection.getBest(verb_probe);
       if (best.verb_type != grammar::VerbType::Unknown && best.confidence >= candidate::kPrefixCompoundVerbStemConf) {
-        return candidates;
+        return;
       }
     }
   }
@@ -157,14 +155,11 @@ std::vector<UnknownCandidate> generatePrefixCompoundCandidates(const std::vector
   // Note: N中 compounds (今日中, 一日中, 世界中) are now split per MeCab:
   // 今日中 → 今日 + 中 (noun + suffix)
   // The 中 suffix is registered in L1 dictionary (entries.cpp)
-
-  return candidates;
 }
 
-std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateTemporalNounBoundaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                            const std::vector<normalize::CharType>& char_types,
+                                            std::vector<UnknownCandidate>& candidates) {
   // A lexicalized 間もなく begins at the final 間 of a 3+-kanji run
   // (終了|間もなく).  Preserve the noun boundary before it.  Requiring two
   // kanji before 間 excludes ordinary one-kanji compounds followed by
@@ -185,7 +180,7 @@ std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
     boundary.pattern = "before_ma_mo_naku";
 #endif
     candidates.push_back(std::move(boundary));
-    return candidates;
+    return;
   }
 
   // A standalone temporal 今 followed by an explicit numeral+counter starts a
@@ -203,17 +198,17 @@ std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
     temporal.pattern = "temporal_before_number_counter";
 #endif
     candidates.push_back(std::move(temporal));
-    return candidates;
+    return;
   }
 
   // Need temporal 2-kanji + at least 2 more trailing kanji (gate against lexical
   // 1-kanji suffixes: 現在地/将来性 must stay whole).
   if (start_pos + 3 >= codepoints.size() || start_pos + 3 >= char_types.size()) {
-    return candidates;
+    return;
   }
   for (size_t offset = 0; offset < 4; ++offset) {
     if (char_types[start_pos + offset] != normalize::CharType::Kanji) {
-      return candidates;
+      return;
     }
   }
 
@@ -221,14 +216,14 @@ std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
       codepoints[start_pos + 2] == U'以' && (codepoints[start_pos + 3] == U'来' || codepoints[start_pos + 3] == U'降');
   if (!normalize::isTemporalAdverbialNounPair(codepoints[start_pos], codepoints[start_pos + 1]) &&
       !has_temporal_reference_suffix) {
-    return candidates;
+    return;
   }
 
   // The 3rd kanji being a span/relation suffix is handled elsewhere (今月|中/末,
   // …後/前) — don't compete there.
   if (normalize::isTemporalSpanSuffixKanji(codepoints[start_pos + 2]) ||
       normalize::isTemporalRelationSuffixKanji(codepoints[start_pos + 2])) {
-    return candidates;
+    return;
   }
 
   const size_t candidate_end = has_temporal_reference_suffix ? start_pos + 4 : start_pos + 2;
@@ -242,8 +237,6 @@ std::vector<UnknownCandidate> generateTemporalNounBoundaryCandidates(
 #endif
     candidates.push_back(cand);
   }
-
-  return candidates;
 }
 
 }  // namespace suzume::analysis

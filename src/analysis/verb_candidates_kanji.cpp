@@ -343,27 +343,24 @@ void appendNiLimitedIchidanCandidates(const std::vector<char32_t>& codepoints, s
 
 }  // namespace
 
-std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                     const std::vector<normalize::CharType>& char_types,
-                                                     const grammar::Inflection& inflection,
-                                                     const dictionary::DictionaryManager* dict_manager,
-                                                     const VerbCandidateOptions& verb_opts) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                            const std::vector<normalize::CharType>& char_types, const grammar::Inflection& inflection,
+                            const dictionary::DictionaryManager* dict_manager, const VerbCandidateOptions& verb_opts,
+                            std::vector<UnknownCandidate>& candidates) {
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   // Find kanji portion (typically 1-2 characters for verbs)
   size_t kanji_end = vh::findCharRegionEnd(char_types, start_pos, 3, normalize::CharType::Kanji);
 
   if (kanji_end == start_pos) {
-    return candidates;
+    return;
   }
 
   // Look for hiragana after kanji
   if (kanji_end >= char_types.size() || char_types[kanji_end] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
 
   // Sokuonbin-prefixed verb stem: single kanji + っ + kanji run (突っ走, 引っ掻).
@@ -507,7 +504,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
       }
     }
     if (!is_verb_pattern) {
-      return candidates;  // Not a verb - these particles follow nouns
+      return;  // Not a verb - these particles follow nouns
     }
   }
 
@@ -518,7 +515,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   // where "が" is part of the auxiliary "ながら", not a standalone particle.
   // Need at least some hiragana for a conjugated verb
   if (hiragana_end <= kanji_end) {
-    return candidates;
+    return;
   }
 
   // Penalize verb candidates that start in the middle of a kanji run when
@@ -566,7 +563,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         cand.cost += mid_compound_penalty;
       }
     }
-    return candidates;
+    return;
   }
 
   // A closed auxiliary that selects a verb continuative licenses the complete
@@ -695,7 +692,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
         cand.cost += mid_compound_penalty;
       }
     }
-    return candidates;
+    return;
   }
 
   // Godan mizenkei pattern: single-kanji + A-row + れ/せ (passive/causative)
@@ -816,7 +813,7 @@ std::vector<UnknownCandidate> generateVerbCandidates(const std::vector<char32_t>
   // Sort by cost and return best candidates
   vh::sortCandidatesByCost(candidates);
 
-  return candidates;
+  return;
 }
 
 }  // namespace suzume::analysis
