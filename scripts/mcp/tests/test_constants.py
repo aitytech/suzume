@@ -57,7 +57,7 @@ def test_nai_adjectives_end_with_nai():
 
 
 def test_slang_adj_stems_nonempty():
-    assert len(SLANG_ADJ_STEMS) >= 6
+    assert len(SLANG_ADJ_STEMS) >= 5
 
 
 def test_slang_verb_stems_nonempty():

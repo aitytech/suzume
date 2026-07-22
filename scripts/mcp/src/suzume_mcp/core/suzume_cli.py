@@ -41,6 +41,7 @@ def get_suzume_surfaces(text: str, cli_path: Path | None = None, skip_user_dict:
         cmd,
         capture_output=True,
         text=True,
+        cwd=PROJECT_ROOT,
     )
     if result.returncode != 0:
         raise RuntimeError(f"Suzume CLI failed: {result.stderr.strip() or 'non-zero exit'}")
@@ -71,6 +72,7 @@ async def get_suzume_surfaces_async(text: str, cli_path: Path | None = None, ski
         *args,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        cwd=PROJECT_ROOT,
     )
     stdout, stderr = await proc.communicate()
     if proc.returncode != 0:
@@ -109,6 +111,7 @@ async def get_suzume_debug_info(text: str, cli_path: Path | None = None, skip_us
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         env=env,
+        cwd=PROJECT_ROOT,
     )
     stdout, stderr = await proc.communicate()
     if proc.returncode != 0:
@@ -177,6 +180,7 @@ async def recompile_dic(glob_pattern: str, output_path: str) -> bool:
         output_path,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        cwd=PROJECT_ROOT,
     )
     _, _ = await proc.communicate()
     return proc.returncode == 0

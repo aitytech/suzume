@@ -5,7 +5,6 @@ import regex
 from .constants import (
     COUNTER_UNITS,
     EMPHATIC_SOKUON,
-    INTERROGATIVES,
     QUANTITY_BOUND_SUFFIXES,
     SLANG_ADJ_STEMS,
     SLANG_VERB_STEMS,
@@ -13,6 +12,7 @@ from .constants import (
     WORD_EXCEPTIONS,
 )
 from .pos_mapping import _is_katakana_onomatopoeia
+from .split_rules import base_from_renyokei
 
 
 def preprocess_for_mecab(text: str) -> tuple[str, dict[tuple[int, str], dict]]:
@@ -133,22 +133,38 @@ def postprocess_sou(tokens: list[dict]) -> None:
             if i < len(tokens) - 1 and i > 0:
                 nxt = tokens[i + 1].get("surface", "")
                 prev_pos = tokens[i - 1].get("pos", "")
-                if regex.match(r"^(?:だ|です|でし|じゃ|じゃろ)", nxt) and prev_pos != "Verb":
+                if (regex.match(r"^(?:だ|です|でし|じゃ|じゃろ)", nxt) and prev_pos != "Verb") or (
+                    nxt == "な" and i + 2 < len(tokens) and tokens[i + 2].get("surface") == "の"
+                ):
                     t["pos"] = "Adjective"
-                # そう before で+ある (copula である)
-                elif nxt == "で" and i < len(tokens) - 2:
-                    nxt2 = tokens[i + 2].get("surface", "")
-                    if nxt2 in ("ある", "あり", "あれ", "あっ"):
+                elif nxt == "で" and i + 2 < len(tokens):
+                    following = tokens[i + 2].get("surface", "")
+                    after_topic = tokens[i + 3].get("surface", "") if i + 3 < len(tokens) else ""
+                    if following in ("ある", "あり", "あれ", "あっ", "ない", "なく", "なかっ", "なけれ", "なかろ") or (
+                        following == "は" and after_topic in ("ない", "なく", "なかっ", "なけれ", "なかろ")
+                    ):
                         t["pos"] = "Adjective"
             elif i == 0:  # Sentence-initial そう before copula
                 if i < len(tokens) - 1:
                     nxt = tokens[i + 1].get("surface", "")
-                    if regex.match(r"^(?:だ|です|でし|じゃ|じゃろ)", nxt):
+                    if regex.match(r"^(?:だ|です|でし|じゃ|じゃろ)", nxt) or (
+                        nxt == "な" and i + 2 < len(tokens) and tokens[i + 2].get("surface") == "の"
+                    ):
                         t["pos"] = "Adjective"
-                    # そう before で+ある (copula である)
-                    elif nxt == "で" and i < len(tokens) - 2:
-                        nxt2 = tokens[i + 2].get("surface", "")
-                        if nxt2 in ("ある", "あり", "あれ", "あっ"):
+                    elif nxt == "で" and i + 2 < len(tokens):
+                        following = tokens[i + 2].get("surface", "")
+                        after_topic = tokens[i + 3].get("surface", "") if i + 3 < len(tokens) else ""
+                        if following in (
+                            "ある",
+                            "あり",
+                            "あれ",
+                            "あっ",
+                            "ない",
+                            "なく",
+                            "なかっ",
+                            "なけれ",
+                            "なかろ",
+                        ) or (following == "は" and after_topic in ("ない", "なく", "なかっ", "なけれ", "なかろ")):
                             t["pos"] = "Adjective"
 
         # Katakana adjective stem + そう: Noun -> Adjective
@@ -179,13 +195,82 @@ def postprocess_ikaga(tokens: list[dict]) -> None:
 
 
 def postprocess_demo(tokens: list[dict]) -> None:
-    """Context-dependent でも normalization."""
-    for i, t in enumerate(tokens):
-        if t.get("surface") != "でも" or t.get("pos") != "Particle":
+    """Use Suzume's ambiguity policy: homographic でも is a bound particle."""
+    for t in tokens:
+        if t.get("surface") != "でも":
             continue
-        if i > 0 and tokens[i - 1].get("surface", "") in INTERROGATIVES:
-            continue  # Keep as Particle
-        t["pos"] = "Conjunction"
+        t["pos"] = "Particle"
+        t["lemma"] = "でも"
+
+
+def postprocess_closed_function_words(tokens: list[dict]) -> bool:
+    """Normalize finite conjunction and pronoun classes mislabelled by MeCab."""
+    conjunctions = frozenset({"しかるに", "もって"})
+    pronouns = frozenset({"各々", "各自", "あれこれ", "何かしら"})
+    adverbial_ambiguities = frozenset({"また"})
+    changed = False
+    for token in tokens:
+        surface = token.get("surface", "")
+        target_pos = (
+            "Conjunction"
+            if surface in conjunctions
+            else "Pronoun"
+            if surface in pronouns
+            else "Adverb"
+            if surface in adverbial_ambiguities
+            else ""
+        )
+        if not target_pos or token.get("pos") == target_pos:
+            continue
+        token["pos"] = target_pos
+        token["lemma"] = surface
+        changed = True
+    return changed
+
+
+def postprocess_classical_focus_namu(tokens: list[dict]) -> bool:
+    """Classify classical なむ before a quotation boundary as a particle."""
+    changed = False
+    for idx, token in enumerate(tokens[:-1]):
+        if token.get("surface") != "なむ" or tokens[idx + 1].get("surface") != "と":
+            continue
+        if token.get("pos") != "Particle":
+            token["pos"] = "Particle"
+            token["lemma"] = "なむ"
+            changed = True
+    return changed
+
+
+def postprocess_honorific_i_adjective(tokens: list[dict]) -> bool:
+    """Restore an i-adjective ending in -しい after honorific prefix お."""
+    changed = False
+    for idx in range(1, len(tokens)):
+        token = tokens[idx]
+        if (
+            tokens[idx - 1].get("surface") == "お"
+            and tokens[idx - 1].get("pos") == "Prefix"
+            and token.get("pos") == "Noun"
+            and token.get("surface", "").endswith("しい")
+        ):
+            token["pos"] = "Adjective"
+            token["lemma"] = token["surface"]
+            changed = True
+    return changed
+
+
+def postprocess_i_adjective_upper_bound(tokens: list[dict]) -> bool:
+    """Restore an i-adjective continuative before the upper-bound particle とも."""
+    changed = False
+    for idx, token in enumerate(tokens[:-1]):
+        surface = token.get("surface", "")
+        if token.get("pos") != "Noun" or not surface.endswith("く"):
+            continue
+        if tokens[idx + 1].get("surface") != "とも":
+            continue
+        token["pos"] = "Adjective"
+        token["lemma"] = surface[:-1] + "い"
+        changed = True
+    return changed
 
 
 def postprocess_kadouka_adverb(tokens: list[dict]) -> bool:
@@ -220,7 +305,8 @@ def postprocess_ii(tokens: list[dict]) -> None:
 
 
 def postprocess_iru_aux(tokens: list[dict]) -> None:
-    """Fix い/いる after て: Verb -> Auxiliary."""
+    """Fix dependent い/いる after a te-form: Verb -> Auxiliary."""
+    focus_particles = frozenset({"さえ", "しか", "こそ", "も"})
     for i in range(1, len(tokens)):
         t = tokens[i]
         surface = t.get("surface", "")
@@ -229,9 +315,32 @@ def postprocess_iru_aux(tokens: list[dict]) -> None:
         if t.get("pos") != "Verb":
             continue
         prev_surface = tokens[i - 1].get("surface", "")
-        if prev_surface in ("て", "で"):
+        direct_te_form = prev_surface in ("て", "で")
+        focused_te_form = (
+            surface in ("い", "いる")
+            and prev_surface in focus_particles
+            and i >= 2
+            and tokens[i - 2].get("surface") in ("て", "で")
+        )
+        if direct_te_form or focused_te_form:
             t["pos"] = "Auxiliary"
             t["lemma"] = "いる"
+
+
+def postprocess_giving_aux(tokens: list[dict]) -> bool:
+    """Classify productive て/で + giving/receiving verbs as auxiliaries."""
+    auxiliary_lemmas = frozenset({"あげる", "くれる", "もらう"})
+    changed = False
+    for idx in range(1, len(tokens)):
+        token = tokens[idx]
+        if token.get("lemma") not in auxiliary_lemmas:
+            continue
+        if tokens[idx - 1].get("surface") not in ("て", "で"):
+            continue
+        if token.get("pos") != "Auxiliary":
+            token["pos"] = "Auxiliary"
+            changed = True
+    return changed
 
 
 def postprocess_contracted_progressive_aux(tokens: list[dict]) -> bool:
@@ -352,6 +461,26 @@ def postprocess_state_suffix(tokens: list[dict]) -> bool:
     return changed
 
 
+def postprocess_productive_verb_suffix_stem(tokens: list[dict]) -> bool:
+    """Restore a verb continuative before a productive derivational suffix."""
+    verb_suffixes = frozenset({"がち", "っぱなし"})
+    changed = False
+    for idx in range(len(tokens) - 1):
+        stem = tokens[idx]
+        suffix = tokens[idx + 1]
+        if suffix.get("surface") not in verb_suffixes or suffix.get("pos") != "Suffix":
+            continue
+        if stem.get("pos") == "Verb" and stem.get("lemma") != stem.get("surface"):
+            continue
+        lemma = base_from_renyokei(stem.get("surface", ""))
+        if lemma is None:
+            continue
+        stem["pos"] = "Verb"
+        stem["lemma"] = lemma
+        changed = True
+    return changed
+
+
 def postprocess_teki_na_adjective(tokens: list[dict]) -> bool:
     """Classify X的 before な/に as a derived na-adjective."""
     changed = False
@@ -409,17 +538,19 @@ def postprocess_renyokei_compound_particle(tokens: list[dict]) -> bool:
 
 
 def postprocess_to_areba_conditional(tokens: list[dict]) -> bool:
-    """Keep the fixed conditional construction とあれば as a verb inflection."""
+    """Preserve the verb inflection and conditional-particle boundary in とあれば."""
     changed = False
     index = 0
-    while index + 2 < len(tokens):
-        surfaces = tuple(tokens[index + offset].get("surface") for offset in range(3))
-        if surfaces != ("と", "あれ", "ば"):
-            index += 1
+    while index + 1 < len(tokens):
+        if tokens[index].get("surface") == "と" and tokens[index + 1].get("surface") == "あれば":
+            tokens[index + 1 : index + 2] = [
+                {"surface": "あれ", "pos": "Verb", "lemma": "ある"},
+                {"surface": "ば", "pos": "Particle", "lemma": "ば"},
+            ]
+            changed = True
+            index += 3
             continue
-        tokens[index + 1 : index + 3] = [{"surface": "あれば", "pos": "Verb", "lemma": "ある"}]
-        changed = True
-        index += 2
+        index += 1
     return changed
 
 
@@ -715,16 +846,36 @@ def postprocess_onaji_predicate(tokens: list[dict]) -> bool:
     for idx in range(len(tokens) - 1):
         token = tokens[idx]
         following = tokens[idx + 1]
-        if token.get("surface") == "同じ" and token.get("pos") == "Determiner" and following.get("surface") == "だ":
+        if (
+            token.get("surface") == "同じ"
+            and token.get("pos") == "Determiner"
+            and following.get("surface") in ("だ", "で")
+        ):
             token["pos"] = "Adjective"
             token["lemma"] = "同じ"
             changed = True
     return changed
 
 
-def postprocess_na_adj_noun(tokens: list[dict]) -> None:
-    """No-op: kept for import compatibility. Adjective stems before すぎる stay Adjective."""
-    pass
+def postprocess_na_adj_noun(tokens: list[dict]) -> bool:
+    """Treat a bare na-adjective stem before accusative を as a noun use.
+
+    An i-adjective cannot directly take を, while a na-adjective stem can be
+    used nominally (for example, 平静を保つ).  This is a syntactic correction,
+    not a lexical exception; adjective readings before な/に/すぎる remain
+    untouched.
+    """
+    changed = False
+    for idx, token in enumerate(tokens[:-1]):
+        if token.get("pos") != "Adjective" or tokens[idx + 1].get("surface") != "を":
+            continue
+        lemma = token.get("lemma", token.get("surface", ""))
+        if lemma.endswith("い"):
+            continue
+        token["pos"] = "Noun"
+        token["lemma"] = token.get("surface", "")
+        changed = True
+    return changed
 
 
 def postprocess_tsuke_noun(tokens: list[dict]) -> None:
@@ -825,18 +976,8 @@ def postprocess_taihen(tokens: list[dict]) -> None:
                 t["pos"] = "Adjective"
 
 
-def postprocess_gozai_verb(tokens: list[dict]) -> None:
-    """Fix ござい after おめでとう: Auxiliary -> Verb."""
-    for i in range(1, len(tokens)):
-        t = tokens[i]
-        if t.get("surface") == "ござい" and t.get("pos") == "Auxiliary":
-            if tokens[i - 1].get("surface") == "おめでとう":
-                t["pos"] = "Verb"
-                t["lemma"] = "ござる"
-
-
 def postprocess_you_noun(tokens: list[dict]) -> None:
-    """Normalize よう according to its grammatical context."""
+    """Distinguish formal-noun よう from the true volitional auxiliary."""
     for idx, t in enumerate(tokens):
         if t.get("surface") != "よう":
             continue
@@ -853,8 +994,13 @@ def postprocess_you_noun(tokens: list[dict]) -> None:
                 t["pos"] = "Auxiliary"
             else:
                 t["pos"] = "Noun"
-        elif t.get("pos") == "Noun":
-            t["pos"] = "Auxiliary"
+        else:
+            previous_surface = tokens[idx - 1].get("surface", "") if idx > 0 else ""
+            following_surface = tokens[idx + 1].get("surface", "") if idx + 1 < len(tokens) else ""
+            formal_context = previous_surface == "の" or following_surface in ("だ", "です", "で", "な", "に")
+            if formal_context:
+                t["pos"] = "Noun"
+                t["lemma"] = "よう"
 
 
 def postprocess_classical_conjecture_aux(tokens: list[dict]) -> None:
@@ -987,11 +1133,71 @@ def postprocess_itadakeru_aux(tokens: list[dict]) -> None:
 
 
 def postprocess_monono_conjunction(tokens: list[dict]) -> None:
-    """Normalize concessive ものの after a past auxiliary to Conjunction."""
+    """Normalize concessive ものの as a closed connective particle."""
     for idx, token in enumerate(tokens):
-        if token.get("surface") == "ものの" and token.get("pos") == "Particle" and idx > 0:
-            if tokens[idx - 1].get("pos") == "Auxiliary":
-                token["pos"] = "Conjunction"
+        if token.get("surface") == "ものの" and idx > 0:
+            if tokens[idx - 1].get("pos") in ("Verb", "Auxiliary", "Adjective"):
+                token["pos"] = "Particle"
+                token["lemma"] = "ものの"
+
+
+def postprocess_formal_noun_lemma(tokens: list[dict]) -> bool:
+    """Use canonical kana lemmas for 事/物 in productive formal-noun contexts."""
+    canonical = {"事": "こと", "物": "もの"}
+    changed = False
+    for idx, token in enumerate(tokens):
+        lemma = canonical.get(token.get("surface"))
+        if lemma is None or token.get("pos") != "Noun" or idx == 0:
+            continue
+        previous = tokens[idx - 1]
+        if previous.get("surface") != "の" and previous.get("pos") not in (
+            "Verb",
+            "Auxiliary",
+            "Adjective",
+            "Determiner",
+        ):
+            continue
+        if token.get("lemma") != lemma:
+            token["lemma"] = lemma
+            changed = True
+    return changed
+
+
+def postprocess_adjective_nominalizer(tokens: list[dict]) -> bool:
+    """Classify productive adjective + さ nominalization as a suffix."""
+    changed = False
+    for idx in range(1, len(tokens)):
+        token = tokens[idx]
+        previous = tokens[idx - 1]
+        following_surface = tokens[idx + 1].get("surface", "") if idx + 1 < len(tokens) else ""
+        if (
+            token.get("surface") != "さ"
+            or previous.get("pos") not in ("Adjective", "Auxiliary")
+            or not previous.get("lemma", "").endswith("い")
+            or following_surface.startswith(("れ", "せ"))
+        ):
+            continue
+        if token.get("pos") != "Suffix":
+            token["pos"] = "Suffix"
+            token["lemma"] = "さ"
+            changed = True
+    return changed
+
+
+def postprocess_binding_negative_aux(tokens: list[dict]) -> bool:
+    """Keep the closed しか + negative predicate chain in auxiliary POS."""
+    changed = False
+    for idx in range(1, len(tokens)):
+        token = tokens[idx]
+        if token.get("surface") not in ("ない", "なく", "なかっ"):
+            continue
+        if tokens[idx - 1].get("surface") != "しか":
+            continue
+        if token.get("pos") != "Auxiliary":
+            token["pos"] = "Auxiliary"
+            token["lemma"] = "ない"
+            changed = True
+    return changed
 
 
 def postprocess_difficulty_adjective_stem(tokens: list[dict]) -> bool:

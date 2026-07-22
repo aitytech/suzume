@@ -3,6 +3,7 @@
 import regex
 
 from .constants import (
+    FIXED_LEADING_SEARCH_UNITS,
     LITERARY_VOLITIONAL_PARTICLE_COMPOUNDS,
     TTARA_STEMS,
     TTEBA_STEMS,
@@ -47,6 +48,27 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
 
     for t in tokens:
         surface = t.get("surface", "")
+
+        # A closed leading modifier/adverb can be swallowed by a following
+        # noun in the reference dictionary. Restore the grammatical search
+        # boundary without enumerating the open-class noun on the right.
+        leading_unit = next(
+            (unit for unit in sorted(FIXED_LEADING_SEARCH_UNITS, key=len, reverse=True) if surface.startswith(unit)),
+            "",
+        )
+        if leading_unit and len(surface) > len(leading_unit):
+            remainder = surface[len(leading_unit) :]
+            result.append(
+                {
+                    "surface": leading_unit,
+                    "pos": FIXED_LEADING_SEARCH_UNITS[leading_unit],
+                    "lemma": leading_unit,
+                }
+            )
+            result.append({"surface": remainder, "pos": "名詞", "lemma": remainder})
+            if applied_rule is None:
+                applied_rule = "fixed-leading-search-unit"
+            continue
 
         # 0a. Split MeCab single-token kanji adverbs ending in に
         # e.g., 次に → 次+に, 滅多に → 滅多+に

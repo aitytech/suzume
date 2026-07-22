@@ -520,13 +520,22 @@ async def test_diff_mecab(file: str = "") -> str:
 
 
 @mcp.tool()
-async def test_needs_suzume_update(file: str = "", apply: bool = False) -> str:
+async def test_needs_suzume_update(
+    file: str = "",
+    apply: bool = False,
+    test_ids: list[str] | None = None,
+) -> str:
     """Find tests where expected doesn't match MeCab+SuzumeRules.
 
     Args:
         file: Optional test file (without .json), or empty for all.
         apply: If True, update test expectations. Default is dry-run.
+        test_ids: Optional stable basename/id selectors for a safe partial sync.
     """
+    selected_ids = set(test_ids or [])
+    if file and selected_ids:
+        return _json_error("file and test_ids cannot be combined")
+
     files = _get_test_files_filtered(file)
     if not files:
         return _json_error("No test files found")
@@ -551,6 +560,10 @@ async def test_needs_suzume_update(file: str = "", apply: bool = False) -> str:
             inp = case.get("input", "")
             if not inp:
                 continue
+            case_id = case.get("id", str(idx))
+            qualified_id = f"{basename}/{case_id}"
+            if selected_ids and qualified_id not in selected_ids:
+                continue
             all_cases_meta.append(
                 {
                     "path": path,
@@ -563,6 +576,12 @@ async def test_needs_suzume_update(file: str = "", apply: bool = False) -> str:
                 }
             )
             all_inputs.append(inp)
+
+    if selected_ids:
+        found_ids = {f"{meta['basename']}/{meta['case'].get('id', str(meta['idx']))}" for meta in all_cases_meta}
+        missing_ids = sorted(selected_ids - found_ids)
+        if missing_ids:
+            return _json_error(f"No tests found for ids: {', '.join(missing_ids)}")
 
     # Batch subprocess call: one process for all inputs
     if all_inputs:

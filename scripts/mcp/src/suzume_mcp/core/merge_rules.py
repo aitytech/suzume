@@ -8,6 +8,7 @@ from .constants import (
     COMPOUND_VERB_V2_ICHIDAN,
     FAMILY_TERMS,
     FIXED_ADVERB_LEMMAS,
+    FIXED_FUNCTION_SEARCH_UNITS,
     HIRAGANA_COMPOUNDS,
     KANA_COUNTER_SUFFIXES,
     KANA_NUMBER_STEMS,
@@ -45,6 +46,7 @@ _NOMINALIZING_PARTICLES = frozenset({"を", "は", "が", "の", "に", "で", "
 _KANA_NUMBER_COUNTERS = tuple(
     sorted((stem + suffix for stem in KANA_NUMBER_STEMS for suffix in KANA_COUNTER_SUFFIXES), key=len, reverse=True)
 )
+_FIXED_FUNCTION_SEARCH_UNITS = tuple(sorted(FIXED_FUNCTION_SEARCH_UNITS, key=len, reverse=True))
 
 
 def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str | None]:
@@ -64,6 +66,31 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # Calculate position in text
         pos_in_text = sum(len(tokens[k].get("surface", "")) for k in range(i))
         remaining = text[pos_in_text:] if pos_in_text < len(text) else ""
+
+        # Closed function words and formal nouns remain one search unit even
+        # when the reference dictionary splits them into homographic pieces
+        # (そん+なら, お+それ, が+てら). Consume an exact source-text span so the
+        # rule never absorbs a partial token or crosses the fixed word's end.
+        if not merged:
+            fixed_word = next((word for word in _FIXED_FUNCTION_SEARCH_UNITS if remaining.startswith(word)), "")
+            if fixed_word:
+                consumed = ""
+                j = i
+                while j < len(tokens) and len(consumed) < len(fixed_word):
+                    consumed += tokens[j].get("surface", "")
+                    j += 1
+                if consumed == fixed_word:
+                    result.append(
+                        {
+                            "surface": fixed_word,
+                            "pos": FIXED_FUNCTION_SEARCH_UNITS[fixed_word],
+                            "lemma": fixed_word,
+                        }
+                    )
+                    i = j
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = "fixed-function-search-unit"
 
         # 0. Kana number + counter.  Raw MeCab can split these closed quantity
         # readings at arbitrary syllables (い|ちまい, よ|ん|に|ん), so consume

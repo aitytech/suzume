@@ -44,6 +44,7 @@ jobs:
       # Ratchet on hardcoded word tests / raw score literals / file length,
       # plus WASM-core purity (no unguarded file-I/O headers). See CLAUDE.md.
       - run: scripts/check_code_guardrails.sh
+      - run: python3 scripts/check_oracle_overrides.py
       # Version must stay in lockstep across every binding manifest.
       - run: scripts/check_version_mirror.sh
 

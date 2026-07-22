@@ -54,7 +54,7 @@ class TestClassifyDiff:
 
     def test_under_split(self):
         # Suzume has fewer tokens than expected
-        assert classify_diff("二次 エロ 画像", "二次エロ 画像") == "under-split"
+        assert classify_diff("東京 テスト 画像", "東京テスト 画像") == "under-split"
 
     def test_boundary(self):
         # Same count but different boundaries

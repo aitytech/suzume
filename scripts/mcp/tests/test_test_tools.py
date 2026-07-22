@@ -53,6 +53,12 @@ class TestTestShow:
         assert isinstance(data, list)
         assert all("surface" in t and "pos" in t for t in data)
 
+    def test_core_dictionary_is_independent_of_caller_cwd(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        data = parse(run(_tt.test_show("教えてもらった")))
+        assert "もらっ" in data["suzume"]
+        assert "も" not in data["suzume"]
+
 
 class TestTestList:
     def test_list(self):

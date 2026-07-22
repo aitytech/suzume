@@ -67,6 +67,30 @@ def find_test_by_input(project_root: Path, input_text: str) -> dict | None:
     return None
 
 
+def find_tests_by_input(project_root: Path, input_text: str) -> list[dict]:
+    """Find every test case matching an input across all test files."""
+    matches = []
+    for path in get_test_files(project_root):
+        try:
+            data = load_json(path)
+        except Exception as exc:
+            raise RuntimeError(f"Failed to parse JSON file: {path}") from exc
+
+        cases = data.get("cases") or data.get("test_cases") or []
+        for index, case in enumerate(cases):
+            if case.get("input") == input_text:
+                matches.append(
+                    {
+                        "file": path,
+                        "basename": path.stem,
+                        "index": index,
+                        "case": case,
+                        "data": data,
+                    }
+                )
+    return matches
+
+
 def find_test_by_id(project_root: Path, test_id: str) -> dict | None:
     """Find a test case by ID (format: basename/index or basename/id_string).
 

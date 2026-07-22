@@ -4,11 +4,17 @@ import re
 from pathlib import Path
 
 from ..core.suzume_cli import (
+    get_expected_tokens_batch_subprocess,
+)
+from ..core.suzume_cli import (
     get_expected_tokens_subprocess as get_expected_tokens,
 )
+from ..core.suzume_utils import tokens_match
 from ..core.test_file_suggestions import suggest_test_files
 from ..core.test_file_utils import (
+    find_test_by_id,
     find_test_by_input,
+    find_tests_by_input,
     generate_id,
     get_failures_from_test_output,
     load_json,
@@ -24,6 +30,30 @@ from ._test_tools_common import (
 )
 
 
+def _case_location(found: dict) -> str:
+    case_id = found["case"].get("id", str(found["index"]))
+    return f"{found['basename']}/{case_id}"
+
+
+def _resolve_single_test(input_text: str, test_id: str) -> tuple[dict | None, str]:
+    """Resolve a test case without silently choosing among duplicate inputs."""
+    if test_id:
+        found = find_test_by_id(PROJECT_ROOT, test_id)
+        if not found:
+            return None, f"No test found for id: {test_id}"
+        if input_text and found["case"].get("input") != input_text:
+            return None, f"Input does not match test id: {test_id}"
+        return found, ""
+
+    matches = find_tests_by_input(PROJECT_ROOT, input_text)
+    if not matches:
+        return None, f"No test found for input: {input_text}"
+    if len(matches) > 1:
+        locations = ", ".join(_case_location(found) for found in matches)
+        return None, f"Input matches multiple tests; specify test_id: {locations}"
+    return matches[0], ""
+
+
 @mcp.tool()
 async def test_accept_diff(
     input_text: str = "",
@@ -32,6 +62,7 @@ async def test_accept_diff(
     all_failed: bool = False,
     test_output_file: str = "/tmp/test.txt",
     apply: bool = False,
+    test_id: str = "",
 ) -> str:
     """Accept Suzume's current output as valid by adding suzume_expected field.
 
@@ -40,6 +71,7 @@ async def test_accept_diff(
 
     Args:
         input_text: Input text to accept diff for (mutually exclusive with all_failed).
+        test_id: Stable basename/id selector. Required when input_text is duplicated.
         reason: Reason for accepting the diff (required).
         category: Diff category (default: pos-limitation).
         all_failed: If True, process all failed tests from test output file.
@@ -49,8 +81,11 @@ async def test_accept_diff(
     if not reason:
         return _json_error("reason is required. Explain why this diff is acceptable.")
 
-    if not input_text and not all_failed:
-        return _json_error("Either input_text or all_failed=True is required.")
+    if not input_text and not test_id and not all_failed:
+        return _json_error("Either input_text or all_failed=True, or test_id is required.")
+
+    if all_failed and test_id:
+        return _json_error("test_id cannot be combined with all_failed=True.")
 
     to_update = []
 
@@ -68,16 +103,18 @@ async def test_accept_diff(
             )
 
         for failure in failures:
-            found = find_test_by_input(PROJECT_ROOT, failure["input"])
-            if not found:
+            matches = find_tests_by_input(PROJECT_ROOT, failure["input"])
+            if len(matches) != 1:
                 continue
+            found = matches[0]
             if found["case"].get("suzume_expected"):
                 continue
             to_update.append({"input": failure["input"], "found": found})
     else:
-        found = find_test_by_input(PROJECT_ROOT, input_text)
+        found, error = _resolve_single_test(input_text, test_id)
         if not found:
-            return _json_error(f"No test found for input: {input_text}")
+            return _json_error(error)
+        input_text = found["case"].get("input", "")
         if found["case"].get("suzume_expected"):
             return _json_error(f"Test already has suzume_expected: {found['basename']}/{found['index']}")
         to_update.append({"input": input_text, "found": found})
@@ -142,6 +179,8 @@ async def test_reset_suzume(
     all_tests: bool = False,
     file: str = "",
     apply: bool = False,
+    test_id: str = "",
+    only_if_matches_oracle: bool = True,
 ) -> str:
     """Remove stale suzume_expected field from test cases.
 
@@ -149,8 +188,10 @@ async def test_reset_suzume(
 
     Args:
         input_text: Input text to reset (mutually exclusive with all_tests).
+        test_id: Stable basename/id selector. Required when input_text is duplicated.
         all_tests: If True, find all tests with suzume_expected.
         file: Optional test file filter (without .json).
+        only_if_matches_oracle: Require JSON expected and current Suzume to match the latest oracle.
         apply: If True, apply changes. Default is dry-run.
     """
     to_reset = []
@@ -166,7 +207,7 @@ async def test_reset_suzume(
             cases_key = "cases" if "cases" in data else "test_cases"
             cases = data.get(cases_key) or []
             for idx, case in enumerate(cases):
-                if case.get("suzume_expected"):
+                if case.get("suzume_expected") or case.get("accepted_diff"):
                     to_reset.append(
                         {
                             "input": case.get("input", ""),
@@ -179,15 +220,15 @@ async def test_reset_suzume(
                             },
                         }
                     )
-    elif input_text:
-        found = find_test_by_input(PROJECT_ROOT, input_text)
+    elif input_text or test_id:
+        found, error = _resolve_single_test(input_text, test_id)
         if not found:
-            return _json_error(f"No test found for input: {input_text}")
-        if not found["case"].get("suzume_expected"):
-            return _json_error(f"Test has no suzume_expected: {found['basename']}/{found['index']}")
-        to_reset.append({"input": input_text, "found": found})
+            return _json_error(error)
+        if not found["case"].get("suzume_expected") and not found["case"].get("accepted_diff"):
+            return _json_error(f"Test has no Suzume override metadata: {_case_location(found)}")
+        to_reset.append({"input": found["case"].get("input", ""), "found": found})
     else:
-        return _json_error("Either input_text or all_tests=True is required.")
+        return _json_error("Either input_text or all_tests=True, or test_id is required.")
 
     if not to_reset:
         return _json_result(
@@ -200,13 +241,36 @@ async def test_reset_suzume(
         )
 
     reset_entries = []
+    skipped_entries = []
     files_to_save: dict[Path, dict] = {}
-    removed = 0
 
-    for item in to_reset:
+    oracle_results = get_expected_tokens_batch_subprocess([item["input"] for item in to_reset])
+
+    for item, (oracle_tokens, _source, rule) in zip(to_reset, oracle_results, strict=True):
         found = item["found"]
+        expected = found["case"].get("expected") or []
+        try:
+            suzume_tokens = _get_suzume_tokens(item["input"])
+        except RuntimeError as exc:
+            return _json_error(str(exc))
+
+        expected_matches_oracle = tokens_match(expected, oracle_tokens)
+        suzume_matches_oracle = tokens_match(suzume_tokens, oracle_tokens)
+        if only_if_matches_oracle and not (expected_matches_oracle and suzume_matches_oracle):
+            skipped_entries.append(
+                {
+                    "id": _case_location(found),
+                    "input": item["input"],
+                    "expected_matches_oracle": expected_matches_oracle,
+                    "suzume_matches_oracle": suzume_matches_oracle,
+                    "rule": rule or "mecab-only",
+                }
+            )
+            continue
+
         reset_entries.append(
             {
+                "id": _case_location(found),
                 "file": found["basename"],
                 "index": found["index"],
                 "input": item["input"],
@@ -219,7 +283,6 @@ async def test_reset_suzume(
             case.pop("suzume_expected", None)
             case.pop("accepted_diff", None)
             files_to_save[found["file"]] = found["data"]
-            removed += 1
 
     if apply:
         for path, data in files_to_save.items():
@@ -229,8 +292,103 @@ async def test_reset_suzume(
         {
             "status": "ok",
             "reset": reset_entries,
-            "total": len(to_reset),
+            "skipped": skipped_entries,
+            "total": len(reset_entries),
             "applied": apply,
+        }
+    )
+
+
+@mcp.tool()
+async def test_audit_oracle_overrides(
+    file: str = "",
+    limit: int = 100,
+) -> str:
+    """Audit JSON-local Suzume overrides against the latest oracle and implementation."""
+    files = _get_test_files_filtered(file or "all")
+    if not files:
+        return _json_error("No test files found")
+
+    candidates = []
+    for path in files:
+        try:
+            data = load_json(path)
+        except Exception as exc:
+            return _json_error(f"Failed to parse JSON file {path}: {exc}")
+        cases = data.get("cases") or data.get("test_cases") or []
+        for index, case in enumerate(cases):
+            if not case.get("suzume_expected") and not case.get("accepted_diff"):
+                continue
+            candidates.append(
+                {
+                    "found": {
+                        "file": path,
+                        "basename": path.stem,
+                        "index": index,
+                        "case": case,
+                        "data": data,
+                    },
+                    "input": case.get("input", ""),
+                }
+            )
+
+    oracle_results = get_expected_tokens_batch_subprocess([item["input"] for item in candidates])
+    entries = []
+    counts = {
+        "active_override": 0,
+        "safe_to_reset": 0,
+        "orphan_accepted_diff": 0,
+        "override_without_accepted_diff": 0,
+        "redundant_override": 0,
+    }
+
+    for item, (oracle_tokens, _source, rule) in zip(candidates, oracle_results, strict=True):
+        found = item["found"]
+        case = found["case"]
+        expected = case.get("expected") or []
+        override = case.get("suzume_expected") or []
+        try:
+            suzume_tokens = _get_suzume_tokens(item["input"])
+        except RuntimeError as exc:
+            return _json_error(str(exc))
+
+        has_override = bool(override)
+        has_reason = bool(case.get("accepted_diff"))
+        expected_matches_oracle = tokens_match(expected, oracle_tokens)
+        suzume_matches_oracle = tokens_match(suzume_tokens, oracle_tokens)
+        override_matches_expected = has_override and tokens_match(override, expected)
+
+        if has_reason and not has_override:
+            status = "orphan_accepted_diff"
+        elif has_override and not has_reason:
+            status = "override_without_accepted_diff"
+        elif expected_matches_oracle and suzume_matches_oracle:
+            status = "safe_to_reset"
+        else:
+            status = "active_override"
+        counts[status] += 1
+        if override_matches_expected:
+            counts["redundant_override"] += 1
+
+        entries.append(
+            {
+                "id": _case_location(found),
+                "input": item["input"],
+                "status": status,
+                "category": (case.get("accepted_diff") or {}).get("category", ""),
+                "rule": rule or "mecab-only",
+                "expected_matches_oracle": expected_matches_oracle,
+                "suzume_matches_oracle": suzume_matches_oracle,
+                "override_matches_expected": override_matches_expected,
+            }
+        )
+
+    output_limit = max(0, limit)
+    return _json_result(
+        {
+            "entries": entries[:output_limit],
+            "summary": {"total": len(entries), **counts},
+            "truncated": len(entries) > output_limit,
         }
     )
 

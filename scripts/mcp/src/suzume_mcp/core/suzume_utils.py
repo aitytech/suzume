@@ -7,13 +7,17 @@ from .mecab import mecab_analyze
 from .merge_rules import apply_suzume_merge
 from .pos_mapping import correct_mecab_pos, map_mecab_pos, normalize_pos
 from .postprocessors import (
+    postprocess_adjective_nominalizer,
+    postprocess_binding_negative_aux,
     postprocess_chigai_negative_adjective,
     postprocess_classical_conjecture_aux,
     postprocess_classical_desiderative_aux,
+    postprocess_classical_focus_namu,
     postprocess_classical_honorific_aux,
     postprocess_classical_kere_aux,
     postprocess_classical_perfect_aux,
     postprocess_classical_ramu_boundary,
+    postprocess_closed_function_words,
     postprocess_contracted_progressive_aux,
     postprocess_copula_neg,
     postprocess_dai_final_particle,
@@ -22,12 +26,15 @@ from .postprocessors import (
     postprocess_demo,
     postprocess_difficulty_adjective_stem,
     postprocess_exclusion_suffix,
+    postprocess_formal_noun_lemma,
     postprocess_fuu_formal_noun,
-    postprocess_gozai_verb,
+    postprocess_giving_aux,
     postprocess_hiragana_godan_wa_terminal,
     postprocess_hiragana_purpose_noun,
+    postprocess_honorific_i_adjective,
     postprocess_honorific_oki_aux,
     postprocess_honorific_request,
+    postprocess_i_adjective_upper_bound,
     postprocess_ii,
     postprocess_ikaga,
     postprocess_indefinite_ka,
@@ -46,6 +53,7 @@ from .postprocessors import (
     postprocess_nanka_particle,
     postprocess_nara_verb,
     postprocess_onaji_predicate,
+    postprocess_productive_verb_suffix_stem,
     postprocess_prolonged_sound_noun,
     postprocess_quantity_bound_suffix,
     postprocess_renyokei_compound_particle,
@@ -129,15 +137,29 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     postprocess_sou(tokens)
     postprocess_ikaga(tokens)
     postprocess_demo(tokens)
+    if postprocess_closed_function_words(tokens) and applied_rule is None:
+        applied_rule = "closed-function-word-pos"
+    if postprocess_classical_focus_namu(tokens) and applied_rule is None:
+        applied_rule = "classical-focus-namu"
+    if postprocess_honorific_i_adjective(tokens) and applied_rule is None:
+        applied_rule = "honorific-i-adjective"
+    if postprocess_i_adjective_upper_bound(tokens) and applied_rule is None:
+        applied_rule = "i-adjective-upper-bound"
     if postprocess_kadouka_adverb(tokens) and applied_rule is None:
         applied_rule = "kadouka-adverb"
     postprocess_ii(tokens)
     postprocess_iru_aux(tokens)
+    if postprocess_giving_aux(tokens) and applied_rule is None:
+        applied_rule = "giving-receiving-aux"
     if postprocess_contracted_progressive_aux(tokens) and applied_rule is None:
         applied_rule = "contracted-progressive-aux"
     postprocess_itadakeru_aux(tokens)
     postprocess_miru_aux(tokens)
     postprocess_monono_conjunction(tokens)
+    if postprocess_formal_noun_lemma(tokens) and applied_rule is None:
+        applied_rule = "formal-noun-lemma"
+    if postprocess_adjective_nominalizer(tokens) and applied_rule is None:
+        applied_rule = "adjective-nominalizer"
     postprocess_shimau_aux(tokens)
     if postprocess_quantity_bound_suffix(tokens) and applied_rule is None:
         applied_rule = "quantity-bound-suffix"
@@ -145,6 +167,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "exclusion-suffix"
     if postprocess_state_suffix(tokens) and applied_rule is None:
         applied_rule = "state-suffix"
+    if postprocess_productive_verb_suffix_stem(tokens) and applied_rule is None:
+        applied_rule = "productive-verb-suffix-stem"
     if postprocess_teki_na_adjective(tokens) and applied_rule is None:
         applied_rule = "teki-na-adjective"
     if postprocess_difficulty_adjective_stem(tokens) and applied_rule is None:
@@ -184,10 +208,10 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     if postprocess_onaji_predicate(tokens) and applied_rule is None:
         applied_rule = "onaji-predicative-na-adjective"
     postprocess_de_aru(tokens)
-    postprocess_gozai_verb(tokens)
     postprocess_ka_suru_noun(tokens)
     postprocess_taihen(tokens)
-    postprocess_na_adj_noun(tokens)
+    if postprocess_na_adj_noun(tokens) and applied_rule is None:
+        applied_rule = "na-adjective-noun-use"
     postprocess_tsuke_noun(tokens)
     if postprocess_copula_neg(tokens) and applied_rule is None:
         applied_rule = "copular-negative-pos"
@@ -207,6 +231,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     postprocess_nara_verb(tokens)
     postprocess_n_kuruwa(tokens)
     postprocess_nai_context(tokens)
+    if postprocess_binding_negative_aux(tokens) and applied_rule is None:
+        applied_rule = "binding-negative-aux"
 
     # Normalize full-width alphanumeric to half-width
     fullwidth_applied = False

@@ -33,6 +33,7 @@ def _get_suzume_tokens(text: str) -> list[dict]:
         capture_output=True,
         text=True,
         timeout=30,
+        cwd=PROJECT_ROOT,
     )
     if result.returncode != 0:
         raise RuntimeError(f"Suzume CLI failed: {result.stderr.strip() or 'non-zero exit'}")

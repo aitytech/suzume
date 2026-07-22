@@ -107,7 +107,6 @@ SLANG_ADJ_STEMS: dict[str, str] = {
     "ウザ": "赤",
     "ダサ": "赤",
     "イタ": "赤",
-    "エロ": "赤",
 }
 
 # Slang verb stems -> standard replacement for MeCab preprocessing
@@ -314,8 +313,41 @@ PARTICLE_CORRECTIONS: dict[str, str] = {
 # Hiragana compounds that MeCab splits but should stay together
 HIRAGANA_COMPOUNDS: dict[str, str] = {
     "ふともも": "名詞",
-    "えっち": "名詞",
     "おもち": "名詞",
+    "おかし": "名詞",
+    "おととい": "名詞",
+    "たまご": "名詞",
+    "ひこうき": "名詞",
+    "みっつ": "名詞",
+    "よっつ": "名詞",
+}
+
+# Closed function words and fixed formal/search units whose internal split in
+# the reference analyzer is not a Suzume morpheme boundary.  Open-class words
+# do not belong here; this table is intentionally limited to finite lexical
+# classes that can be normalized without inspecting the current Suzume output.
+FIXED_FUNCTION_SEARCH_UNITS: dict[str, str] = {
+    "然程": "副詞",
+    "更なる": "連体詞",
+    "どのみち": "副詞",
+    "ふいに": "副詞",
+    "ほどなく": "副詞",
+    "そんなら": "接続詞",
+    "ありさま": "名詞",
+    "おそれ": "名詞",
+    "おかげ": "名詞",
+    "おのれ": "代名詞",
+    "だけ": "助詞",
+    "だに": "助詞",
+    "がてら": "助詞",
+}
+
+# Closed units that a reference dictionary can absorb into a following noun.
+# The normalizer splits only the leading unit and leaves the productive noun
+# boundary intact (わが|国, ひととおり|目).
+FIXED_LEADING_SEARCH_UNITS: dict[str, str] = {
+    "ひととおり": "副詞",
+    "わが": "連体詞",
 }
 
 # Search-unit compounds: kanji+okurigana words MeCab splits but Suzume keeps as one token
@@ -391,8 +423,11 @@ PREFIX_EXCEPTIONS: set[str] = _PREFIXED_FAMILY_TERMS | {
     "おかず",
     "おでん",
     "おもち",
+    "おそれ",
+    "おかし",
+    "おととい",
+    "おかげ",
     "おいら",
-    "おっぱい",
     "おしっこ",
     "おもらし",
     # Fixed particle, not the honorific prefix お plus a noun.
@@ -400,7 +435,7 @@ PREFIX_EXCEPTIONS: set[str] = _PREFIXED_FAMILY_TERMS | {
 }
 
 # User-dict registered kanji+katakana compounds (skip splitting)
-USER_DICT_COMPOUNDS: set[str] = {"二次エロ"}
+USER_DICT_COMPOUNDS: set[str] = {"東京テスト"}
 
 # POS normalization map (uppercase/variations -> canonical form)
 POS_NORM_MAP: dict[str, str] = {

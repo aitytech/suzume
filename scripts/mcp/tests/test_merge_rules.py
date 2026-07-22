@@ -3,6 +3,40 @@
 from suzume_mcp.core.merge_rules import apply_suzume_merge
 
 
+def _token(surface: str, pos: str) -> dict:
+    return {"surface": surface, "pos": pos, "lemma": surface}
+
+
+class TestFixedFunctionSearchUnits:
+    def test_merges_closed_words_split_by_reference_analyzer(self):
+        cases = [
+            ("然程", [_token("然", "副詞"), _token("程", "名詞")], "副詞"),
+            ("更なる", [_token("更", "名詞"), _token("なる", "動詞")], "連体詞"),
+            ("どのみち", [_token("どの", "連体詞"), _token("みち", "名詞")], "副詞"),
+            ("ふいに", [_token("ふい", "動詞"), _token("に", "助詞")], "副詞"),
+            ("ほどなく", [_token("ほど", "助詞"), _token("なく", "形容詞")], "副詞"),
+            ("そんなら", [_token("そん", "動詞"), _token("なら", "助動詞")], "接続詞"),
+            ("ありさま", [_token("あり", "動詞"), _token("さま", "名詞")], "名詞"),
+            ("おそれ", [_token("お", "接頭詞"), _token("それ", "代名詞")], "名詞"),
+            ("おかげ", [_token("お", "接頭詞"), _token("かげ", "名詞")], "名詞"),
+            ("おのれ", [_token("お", "接頭詞"), _token("のれ", "名詞")], "代名詞"),
+            ("だけ", [_token("だ", "助動詞"), _token("け", "助詞")], "助詞"),
+            ("だに", [_token("だ", "助動詞"), _token("に", "助詞")], "助詞"),
+            ("がてら", [_token("が", "助詞"), _token("てら", "動詞")], "助詞"),
+        ]
+
+        for text, tokens, pos in cases:
+            merged, rule = apply_suzume_merge(tokens, text)
+            assert merged == [{"surface": text, "pos": pos, "lemma": text}]
+            assert rule == "fixed-function-search-unit"
+
+    def test_does_not_absorb_a_longer_token(self):
+        tokens = [_token("おそれる", "動詞")]
+        merged, rule = apply_suzume_merge(tokens, "おそれる")
+        assert [token["surface"] for token in merged] == ["おそれる"]
+        assert rule is None
+
+
 def _tok(surface, pos="名詞", **kw):
     """Helper to create a token dict."""
     t = {"surface": surface, "pos": pos, "lemma": surface}
