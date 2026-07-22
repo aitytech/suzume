@@ -69,7 +69,6 @@ jobs:
         uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          gcov: true
       - name: Build WASM binding
         working-directory: bindings/wasm
         run: |
