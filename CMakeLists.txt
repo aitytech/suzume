@@ -203,9 +203,11 @@ file(GLOB USER_TSV_FILES "${DICT_DATA_DIR}/user/*.tsv")
 
 # Custom target: build-dict - Compile all TSV dictionaries to core.dic and user.dic
 # Output goes to data/ directory so that tests and CLI can find them via ./data/core.dic
-# The full dictionary is shipped to every target (native, WASM/npm, PyPI). The WASM
-# link embeds exactly this data/*.dic, so native, CI, and local `make wasm` builds all
-# carry an identical dictionary — no build-path-dependent trivial filtering.
+# This native target globs every local TSV, so it includes any gitignored,
+# local-only user dictionary. The public WASM build instead regenerates
+# data/user.dic from git-tracked TSVs only (see the wasm-dict target in the
+# Makefile), so local-only dictionaries never reach the shipped binary; CI has
+# no ignored files checked out, so its native and WASM dictionaries coincide.
 add_custom_target(build-dict
   COMMAND ${CMAKE_COMMAND} -E echo "Building dictionaries..."
   COMMAND ${CMAKE_BINARY_DIR}/bin/suzume-cli dict compile

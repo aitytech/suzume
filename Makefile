@@ -207,9 +207,12 @@ wasm-dict:
 		echo "Native CLI not found. Run 'make build' first."; \
 		exit 1; \
 	fi
-	@echo "Building dictionaries for WASM..."
+	@echo "Building dictionaries for WASM (git-tracked entries only)..."
 	$(BUILD_DIR)/bin/suzume-cli dict compile data/core/*.tsv data/core.dic
-	$(BUILD_DIR)/bin/suzume-cli dict compile data/user/*.tsv data/user.dic
+	@# The WASM binary ships publicly, so embed only git-tracked user
+	@# dictionaries. Any gitignored, local-only dictionary is excluded here
+	@# without being named, matching the CI checkout (which lacks ignored files).
+	$(BUILD_DIR)/bin/suzume-cli dict compile $$(git ls-files 'data/user/*.tsv') data/user.dic
 
 # Build WASM module
 wasm: wasm-dict wasm-configure
