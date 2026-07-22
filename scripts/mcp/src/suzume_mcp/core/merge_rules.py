@@ -9,6 +9,8 @@ from .constants import (
     FAMILY_TERMS,
     FIXED_ADVERB_LEMMAS,
     HIRAGANA_COMPOUNDS,
+    KANA_COUNTER_SUFFIXES,
+    KANA_NUMBER_STEMS,
     NAI_ADJECTIVES,
     TARI_ADVERB_STEMS,
 )
@@ -31,11 +33,18 @@ from .merge_postprocessors import (
     _postprocess_search_unit_split,
     _postprocess_totomoni,
 )
+from .split_rules import base_from_renyokei
 
 # Numeric-approximation/aggregation prefixes that modify a whole quantity and split
 # off the following number+counter (約|二時間, 計|五名), unlike ordinal 第 which binds
 # to its number (第三十四|回). Mirrors normalize::isNumericApproxPrefixKanji in the core.
 _APPROX_NUMERIC_PREFIXES = {"約", "計", "総"}
+_PRODUCTIVE_COMPOUND_V2 = frozenset(COMPOUND_VERB_V2_GODAN + COMPOUND_VERB_V2_ICHIDAN)
+_PRODUCTIVE_ICHIDAN_COMPOUND_V2 = frozenset(COMPOUND_VERB_V2_ICHIDAN)
+_NOMINALIZING_PARTICLES = frozenset({"を", "は", "が", "の", "に", "で", "へ", "と", "も"})
+_KANA_NUMBER_COUNTERS = tuple(
+    sorted((stem + suffix for stem in KANA_NUMBER_STEMS for suffix in KANA_COUNTER_SUFFIXES), key=len, reverse=True)
+)
 
 
 def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str | None]:
@@ -55,6 +64,24 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # Calculate position in text
         pos_in_text = sum(len(tokens[k].get("surface", "")) for k in range(i))
         remaining = text[pos_in_text:] if pos_in_text < len(text) else ""
+
+        # 0. Kana number + counter.  Raw MeCab can split these closed quantity
+        # readings at arbitrary syllables (い|ちまい, よ|ん|に|ん), so consume
+        # exactly one finite L1 composition by source-text length.
+        if not merged:
+            kana_quantity = next((quantity for quantity in _KANA_NUMBER_COUNTERS if remaining.startswith(quantity)), "")
+            if kana_quantity:
+                consumed = ""
+                j = i
+                while j < len(tokens) and len(consumed) < len(kana_quantity):
+                    consumed += tokens[j].get("surface", "")
+                    j += 1
+                if consumed == kana_quantity:
+                    result.append({"surface": kana_quantity, "pos": "名詞", "pos_sub1": "数", "lemma": kana_quantity})
+                    i = j
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = "kana-number+unit"
 
         # 1. Full date pattern
         if not merged:
@@ -711,6 +738,35 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                         merged = True
                         if applied_rule is None:
                             applied_rule = "compound-verb"
+
+        # 9a. A productive V1+V2 continuative directly nominalized by a
+        # particle is one deverbal compound search unit. MeCab often tags V2
+        # as a noun in this context (押し/下げ/を), so the finite-verb rule above
+        # cannot see it. Reconstruct V2 through the conjugation table and
+        # require both the closed V2 class and the nominalizing follower.
+        v1_surface = t.get("surface", "")
+        v1_renyokei = t.get("pos") == "動詞" and "連用" in (t.get("conj_form") or "")
+        v1_nominal_renyokei = t.get("pos") == "名詞" and base_from_renyokei(v1_surface) is not None
+        if not merged and (v1_renyokei or v1_nominal_renyokei):
+            if i + 2 < len(tokens):
+                nxt = tokens[i + 1]
+                follower = tokens[i + 2]
+                v2_base = base_from_renyokei(nxt.get("surface", ""))
+                nominalizing_particle = (
+                    follower.get("pos") == "助詞" and follower.get("surface") in _NOMINALIZING_PARTICLES
+                )
+                if (
+                    nxt.get("pos") in {"名詞", "接尾辞"}
+                    and v2_base in _PRODUCTIVE_COMPOUND_V2
+                    and (v1_surface.endswith("し") or v2_base in _PRODUCTIVE_ICHIDAN_COMPOUND_V2)
+                    and nominalizing_particle
+                ):
+                    combined = v1_surface + nxt.get("surface", "")
+                    result.append({"surface": combined, "pos": "名詞", "lemma": combined})
+                    i += 2
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = "compound-renyokei-nominal"
 
         # 9b. Lexicalized こもる compounds MeCab fails to merge because the
         # renyokei prefix (引き) is highly productive and tagged as a noun.

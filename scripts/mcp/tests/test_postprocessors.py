@@ -13,10 +13,12 @@ from suzume_mcp.core.postprocessors import (
     postprocess_indefinite_ka,
     postprocess_iru_aux,
     postprocess_itadakeru_aux,
+    postprocess_kadouka_adverb,
     postprocess_miru_aux,
     postprocess_na_adj_noun,
     postprocess_nara_verb,
     postprocess_quantity_bound_suffix,
+    postprocess_renyokei_compound_particle,
     postprocess_shimau_aux,
     postprocess_short_hiragana_onbin,
     postprocess_sou,
@@ -24,7 +26,6 @@ from suzume_mcp.core.postprocessors import (
     postprocess_tagaru_aux,
     postprocess_te,
     postprocess_tsuke_noun,
-    postprocess_tsurete_particle,
     postprocess_you_noun,
     preprocess_for_mecab,
 )
@@ -192,12 +193,12 @@ class TestPostprocessQuantityBoundSuffix:
 class TestPostprocessTsureteParticle:
     def test_hiragana_compound_particle(self):
         tokens = [_tok("年", "Noun"), _tok("に", "Particle"), _tok("つれ", "Verb"), _tok("て", "Particle")]
-        assert postprocess_tsurete_particle(tokens)
+        assert postprocess_renyokei_compound_particle(tokens)
         assert tokens == [_tok("年", "Noun"), _tok("につれて", "Particle")]
 
     def test_kanji_verb_is_not_compound_particle(self):
         tokens = [_tok("年", "Noun"), _tok("に", "Particle"), _tok("連れ", "Verb"), _tok("て", "Particle")]
-        assert not postprocess_tsurete_particle(tokens)
+        assert not postprocess_renyokei_compound_particle(tokens)
 
 
 class TestPostprocessNaraVerb:
@@ -255,6 +256,20 @@ class TestPostprocessHonorificRequest:
 
 
 class TestTokenizerSearchUnitNormalizers:
+    def test_kadouka_keeps_dou_adverbial(self):
+        tokens = [
+            _tok("か", "Particle"),
+            _tok("どう", "Adjective"),
+            _tok("か", "Particle"),
+        ]
+        assert postprocess_kadouka_adverb(tokens)
+        assert tokens[1]["pos"] == "Adverb"
+
+    def test_dou_outside_kadouka_is_unchanged(self):
+        tokens = [_tok("どう", "Adjective"), _tok("考える", "Verb")]
+        assert not postprocess_kadouka_adverb(tokens)
+        assert tokens[0]["pos"] == "Adjective"
+
     def test_tagaru_forms_one_auxiliary(self):
         tokens = [_tok("食べ", "Verb"), _tok("た", "Auxiliary"), _tok("がる", "Verb")]
         assert postprocess_tagaru_aux(tokens)

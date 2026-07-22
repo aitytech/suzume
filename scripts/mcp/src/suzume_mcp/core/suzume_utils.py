@@ -34,6 +34,7 @@ from .postprocessors import (
     postprocess_iru_aux,
     postprocess_itadakeru_aux,
     postprocess_ka_suru_noun,
+    postprocess_kadouka_adverb,
     postprocess_kiri_limited_particle,
     postprocess_kuru_causative,
     postprocess_mecab_tokens,
@@ -128,6 +129,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     postprocess_sou(tokens)
     postprocess_ikaga(tokens)
     postprocess_demo(tokens)
+    if postprocess_kadouka_adverb(tokens) and applied_rule is None:
+        applied_rule = "kadouka-adverb"
     postprocess_ii(tokens)
     postprocess_iru_aux(tokens)
     if postprocess_contracted_progressive_aux(tokens) and applied_rule is None:

@@ -188,6 +188,22 @@ def postprocess_demo(tokens: list[dict]) -> None:
         t["pos"] = "Conjunction"
 
 
+def postprocess_kadouka_adverb(tokens: list[dict]) -> bool:
+    """Keep どう adverbial in the closed interrogative frame か+どう+か."""
+    changed = False
+    for idx in range(1, len(tokens) - 1):
+        token = tokens[idx]
+        if (
+            token.get("surface") == "どう"
+            and token.get("pos") == "Adjective"
+            and tokens[idx - 1].get("surface") == "か"
+            and tokens[idx + 1].get("surface") == "か"
+        ):
+            token["pos"] = "Adverb"
+            changed = True
+    return changed
+
+
 def postprocess_ii(tokens: list[dict]) -> None:
     """Fix いい: Verb(いう) -> Adjective when not followed by verb."""
     for i, t in enumerate(tokens):

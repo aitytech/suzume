@@ -73,6 +73,15 @@ class TestCopulaNegationSplit:
 
 
 class TestNoSplit:
+    def test_godan_sa_mizenkei_before_passive_is_preserved(self):
+        tokens = [
+            _tok("果たさ", pos="動詞", lemma="果たす", conj_form="未然形"),
+            _tok("れ", pos="動詞", lemma="れる", pos_sub1="接尾"),
+        ]
+        result, rule = apply_suzume_split(tokens)
+        assert [token["surface"] for token in result] == ["果たさ", "れ"]
+        assert rule is None
+
     def test_passthrough(self):
         tokens = [_tok("食べ", pos="動詞"), _tok("た", pos="助動詞")]
         result, rule = apply_suzume_split(tokens)

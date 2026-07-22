@@ -89,6 +89,13 @@ COUNTER_UNITS: list[str] = [
     "カ月",
 ]
 
+# Productive kana quantity readings owned by Suzume's finite L1 classes.  The
+# stems are NounNumber entries and the tails are quantitative Suffix entries;
+# their Cartesian product is closed and can therefore repair MeCab's arbitrary
+# syllable splits without enumerating open-class nouns.
+KANA_NUMBER_STEMS: frozenset[str] = frozenset({"いち", "よん"})
+KANA_COUNTER_SUFFIXES: frozenset[str] = frozenset({"まい", "にん"})
+
 # Closed-class construction/composition suffixes that remain independent search
 # units after a numeral+counter phrase (二階|建て, 二本|立て).
 QUANTITY_BOUND_SUFFIXES: frozenset[str] = frozenset({"建て", "立て"})
@@ -191,6 +198,8 @@ COMPOUND_VERB_V2_GODAN: list[str] = [
     "こもる",
     "籠る",
     "籠もる",
+    "開く",
+    "ひらく",
 ]
 
 COMPOUND_VERB_V2_ICHIDAN: list[str] = [

@@ -42,6 +42,18 @@ class TestNumberUnit:
         assert len(result) == 1
         assert result[0]["surface"] == "100万円"
 
+    def test_kana_counter_from_arbitrary_mecab_split(self):
+        tokens = [_tok("い", pos="動詞"), _tok("ちまい", pos="動詞")]
+        result, rule = apply_suzume_merge(tokens, "いちまい")
+        assert result == [{"surface": "いちまい", "pos": "名詞", "pos_sub1": "数", "lemma": "いちまい"}]
+        assert rule == "kana-number+unit"
+
+    def test_kana_counter_from_syllable_tokens(self):
+        tokens = [_tok("よ", pos="形容詞"), _tok("ん", pos="助詞"), _tok("に", pos="助詞"), _tok("ん", pos="助詞")]
+        result, rule = apply_suzume_merge(tokens, "よんにん")
+        assert result == [{"surface": "よんにん", "pos": "名詞", "pos_sub1": "数", "lemma": "よんにん"}]
+        assert rule == "kana-number+unit"
+
 
 class TestKanjiCompound:
     def test_two_kanji(self):
@@ -108,6 +120,37 @@ class TestCompoundVerb:
         assert len(result) == 1
         assert result[0]["surface"] == "読み続ける"
         assert rule == "compound-verb"
+
+    def test_merge_compound_renyokei_nominal(self):
+        tokens = [
+            _tok("押し", pos="動詞", lemma="押す", conj_form="連用形"),
+            _tok("下げ", pos="名詞"),
+            _tok("を", pos="助詞"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "押し下げを")
+        assert [token["surface"] for token in result] == ["押し下げ", "を"]
+        assert result[0]["pos"] == "名詞"
+        assert rule == "compound-renyokei-nominal"
+
+    def test_merge_nominal_s_row_v1_with_godan_v2(self):
+        tokens = [
+            _tok("押し", pos="名詞"),
+            _tok("返し", pos="接尾辞"),
+            _tok("を", pos="助詞"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "押し返しを")
+        assert [token["surface"] for token in result] == ["押し返し", "を"]
+        assert rule == "compound-renyokei-nominal"
+
+    def test_keep_parallel_godan_renyokei_split(self):
+        tokens = [
+            _tok("上がり", pos="名詞"),
+            _tok("下がり", pos="名詞"),
+            _tok("を", pos="助詞"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "上がり下がりを")
+        assert [token["surface"] for token in result] == ["上がり", "下がり", "を"]
+        assert rule != "compound-renyokei-nominal"
 
 
 class TestURLMerge:
