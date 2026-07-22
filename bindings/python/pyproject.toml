@@ -7,14 +7,28 @@ name = "suzume"
 # Mirror of the version in the root CMakeLists.txt (single source of truth).
 # scripts/check_version_mirror.sh gates drift.
 version = "0.9.6"
-description = "Lightweight dictionary-independent Japanese morphological analyzer"
+description = "Lightweight Japanese tokenizer with POS tagging, lemmatization, and keyword extraction for Python"
 requires-python = ">=3.10"
 license = "Apache-2.0"
 authors = [
     { name = "libraz", email = "libraz@libraz.net" },
 ]
 readme = "README.md"
-keywords = ["japanese", "morphological-analysis", "nlp", "tokenizer", "pos-tagging"]
+keywords = [
+    "japanese",
+    "japanese-tokenizer",
+    "japanese-nlp",
+    "morphological-analysis",
+    "mecab",
+    "tokenization",
+    "nlp",
+    "tokenizer",
+    "pos-tagger",
+    "part-of-speech",
+    "lemmatization",
+    "keyword-extraction",
+    "search",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -32,6 +46,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://suzume.libraz.net"
+Documentation = "https://suzume.libraz.net/docs/python"
 Repository = "https://github.com/libraz/suzume"
 Issues = "https://github.com/libraz/suzume/issues"
 

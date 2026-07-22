@@ -3,7 +3,7 @@
   "version": "0.9.6",
   "type": "module",
   "packageManager": "yarn@4.17.1",
-  "description": "Lightweight Japanese morphological analyzer for browser and Node.js",
+  "description": "Lightweight Japanese tokenizer with POS tagging, lemmatization, and keyword extraction for browser and Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -34,11 +34,22 @@
   },
   "keywords": [
     "japanese",
+    "japanese-tokenizer",
+    "japanese-nlp",
     "morphological-analysis",
+    "mecab",
+    "tokenization",
     "nlp",
     "tokenizer",
+    "pos-tagger",
+    "part-of-speech",
+    "lemmatization",
+    "keyword-extraction",
+    "search",
     "wasm",
-    "webassembly"
+    "webassembly",
+    "browser",
+    "nodejs"
   ],
   "author": "libraz <libraz@libraz.net>",
   "license": "Apache-2.0",

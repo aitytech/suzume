@@ -2,13 +2,29 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/libraz/suzume/ci.yml?branch=main&label=CI)](https://github.com/libraz/suzume/actions)
 [![npm](https://img.shields.io/npm/v/@libraz/suzume)](https://www.npmjs.com/package/@libraz/suzume)
-[![codecov](https://codecov.io/gh/libraz/suzume/branch/main/graph/badge.svg)](https://codecov.io/gh/libraz/suzume)
+[![npm downloads](https://img.shields.io/npm/dm/@libraz/suzume)](https://www.npmjs.com/package/@libraz/suzume)
+[![types](https://img.shields.io/npm/types/@libraz/suzume)](https://www.npmjs.com/package/@libraz/suzume)
 [![License](https://img.shields.io/github/license/libraz/suzume)](https://github.com/libraz/suzume/blob/main/LICENSE)
-[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue?logo=c%2B%2B)](https://en.cppreference.com/w/cpp/17)
+[![Docs](https://img.shields.io/badge/docs-suzume.libraz.net-2563eb)](https://suzume.libraz.net)
+[![PyPI](https://img.shields.io/pypi/v/suzume?label=PyPI)](https://pypi.org/project/suzume/)
 
-A lightweight Japanese tokenizer that runs in the browser via WebAssembly. Uses feature-based analysis instead of large dictionary files (<150KB gzipped vs 20-50MB+).
+**Japanese tokenization for browser and Node.js applications.** Suzume is not a
+full morphological analyzer like MeCab: it prioritizes useful search units while
+still providing part-of-speech tags, lemmas, and keyword extraction in one
+WebAssembly package.
 
-## Usage
+📖 **[Documentation & getting started](https://suzume.libraz.net/docs/getting-started)** &nbsp;·&nbsp; 🧪 **[Live Demo](https://suzume.libraz.net/#demo)**
+
+See the [MeCab comparison](https://suzume.libraz.net/docs/mecab-comparison) for
+concrete examples of token boundaries, lemmatization, and trade-offs.
+
+## Installation
+
+```bash
+npm install @libraz/suzume
+```
+
+## Quick Start
 
 ```typescript
 import { Suzume } from '@libraz/suzume'
@@ -16,68 +32,33 @@ import { Suzume } from '@libraz/suzume'
 const suzume = await Suzume.create()
 
 const tokens = suzume.analyze('すもももももももものうち')
-for (const t of tokens) {
-  console.log(`${t.surface} [${t.posJa}]`)
-}
+const tags = suzume.generateTags('東京の公園に行きました')
 
-// Tag extraction (returns { tag, pos } objects)
-const tags = suzume.generateTags('東京スカイツリーに行きました')
-// → [{ tag: '東京', pos: 'NOUN' }, { tag: 'スカイツリー', pos: 'NOUN' }, { tag: '行く', pos: 'VERB' }]
-
-// Nouns only
-suzume.generateTags('美味しいラーメンを食べた', { pos: ['noun'] })
-// → [{ tag: 'ラーメン', pos: 'NOUN' }]
-
-// Exclude basic words (hiragana-only lemma like する, ある, いい)
-suzume.generateTags('今日はいい天気ですね', { excludeBasic: true })
-// → [{ tag: '今日', pos: 'NOUN' }, { tag: '天気', pos: 'NOUN' }]
+suzume.destroy() // optional immediate cleanup
 ```
 
-### Browser (CDN)
+## Loading the `.wasm` file
 
-```html
-<script type="module">
-  import { Suzume } from 'https://esm.sh/@libraz/suzume'
-
-  const suzume = await Suzume.create()
-  console.log(suzume.analyze('こんにちは'))
-</script>
-```
-
-### Bundlers (webpack, Next.js, etc.)
-
-If your bundler doesn't automatically resolve the `.wasm` file, you can specify its path manually:
+Bundlers that do not resolve the WebAssembly asset automatically can pass its
+URL explicitly:
 
 ```typescript
 import wasmUrl from '@libraz/suzume/wasm?url' // Vite
+
 const suzume = await Suzume.create({ wasmPath: wasmUrl })
 ```
 
-Or specify the path directly:
+For CDN usage, user dictionaries, and the full API, see the
+[JavaScript / TypeScript guide](https://suzume.libraz.net/docs/api).
 
-```typescript
-const suzume = await Suzume.create({
-  wasmPath: new URL('@libraz/suzume/wasm', import.meta.url).href
-})
+## Also available
+
+```bash
+pip install suzume  # Native Python bindings
 ```
 
-## Error handling
-
-Analysis and tag-generation methods throw an `Error` (carrying the C API's last
-error message) when the underlying call fails.
-
-Note that the error contract differs from the native and Python bindings on one
-point: under the WebAssembly build, a memory-allocation failure aborts the
-module instead of returning `NULL`. The C++ code path that maps an allocation
-failure to a `NULL` return is therefore effectively unreachable in WASM, so you
-will observe an abort rather than a thrown `Error` in that specific case.
-
-## Documentation
-
-- [Getting Started](https://suzume.libraz.net/docs/getting-started)
-- [API Reference](https://suzume.libraz.net/docs/api)
-- [User Dictionary](https://suzume.libraz.net/docs/user-dictionary)
-- [How It Works](https://suzume.libraz.net/docs/how-it-works)
+The C and C++ library is documented at
+[suzume.libraz.net/docs/cpp](https://suzume.libraz.net/docs/cpp).
 
 ## License
 

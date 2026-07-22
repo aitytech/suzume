@@ -6,144 +6,78 @@
 [![codecov](https://codecov.io/gh/libraz/suzume/branch/main/graph/badge.svg)](https://codecov.io/gh/libraz/suzume)
 [![License](https://img.shields.io/github/license/libraz/suzume)](https://github.com/libraz/suzume/blob/main/LICENSE)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue?logo=c%2B%2B)](https://en.cppreference.com/w/cpp/17)
+[![Platform](https://img.shields.io/badge/platform-Browser%20%7C%20Node.js%20%7C%20Python%20%7C%20C%2B%2B-lightgrey)](https://github.com/libraz/suzume)
+[![Docs](https://img.shields.io/badge/docs-suzume.libraz.net-2563eb)](https://suzume.libraz.net)
 
-A lightweight Japanese tokenizer that runs in the browser via WebAssembly. Uses feature-based analysis instead of large dictionary files.
+**Suzume is a lightweight Japanese tokenizer for browsers and native apps.** It
+is not a full morphological analyzer like MeCab: its primary goal is to split
+text into useful units for search, display, and application code. Unlike a
+boundary-only tokenizer, it also returns part-of-speech tags and lemmas.
 
-[Documentation](https://suzume.libraz.net) | [Live Demo](https://suzume.libraz.net/#demo)
+**Reach for it when you need to:**
 
-## Overview
+- **Tokenize Japanese anywhere** — use the same tokenizer in a browser, serverless function, Python process, or C/C++ application.
+- **Extract search terms** — generate keyword tags with POS filtering, lemmas, and duplicate removal.
+- **Add your vocabulary** — load application-specific words through a user dictionary.
 
-Suzume tokenizes Japanese text using character patterns, connection rules, and a small dictionary, rather than the large dictionaries (20-50MB+) used by traditional dictionary-based morphological analyzers. The WASM build is around 140KB gzipped.
+📖 **[Documentation](https://suzume.libraz.net)** &nbsp;·&nbsp; 🧪 **[Live Demo](https://suzume.libraz.net/#demo)** &nbsp;·&nbsp; **[Getting Started](https://suzume.libraz.net/docs/getting-started)**
 
-| | Traditional Analyzers | Suzume |
-|---|---|---|
-| **Bundle Size** | 20-50MB+ (dictionary) | <150KB gzipped |
-| **Browser Support** | Limited or none | Supported (WASM) |
-| **Server Required** | Usually yes | No |
-| **POS Tagging** | Yes | Yes |
-| **Lemmatization** | Yes | Yes |
+## How is it different from MeCab?
 
-### How the output differs
+MeCab is a morphological analyzer designed for detailed, dictionary-based
+analysis. Suzume is a tokenizer designed around practical token boundaries. It
+uses character patterns and compact rules, keeping compounds and quantities
+together when that produces a more useful search unit.
 
-The difference isn't accuracy — it's the *unit*. Suzume splits text into search-friendly tokens (merging compounds, numbers, and dates) rather than minimal morphemes:
-
+```text
+Input:  経済成長     3人
+MeCab:  経済 / 成長  3 / 人
+Suzume: 経済成長     3人
 ```
-Input:            データベースで3人が検索する
-Dictionary-based: データ / ベース / で / 3 / 人 / が / 検索 / する
-Suzume:           データベース / で / 3人 / が / 検索 / する
-```
 
-See [Tokenization Differences](https://suzume.libraz.net/docs/mecab-comparison) for the full list of intentional design differences and known limitations.
+Suzume still provides POS tagging and lemmatization, so applications can
+normalize inflected verbs and adjectives without adopting MeCab-style output.
+The outputs are intentionally different rather than drop-in compatible. See
+[Differences from MeCab](https://suzume.libraz.net/docs/mecab-comparison) for
+examples, trade-offs, and known constraints.
 
-### Trade-offs
-
-- **Smaller footprint** — No large dictionary download; suitable for frontend, edge, and serverless environments
-- **Handles unknown words** — Feature-based analysis doesn't fail on words missing from a dictionary
-- **Compounds stay merged** — Without a full dictionary, Suzume cannot split kanji/katakana compounds into their parts (e.g. `東京都庁前` stays one token); register specific split points via the user dictionary
-
-## Installation
-
-JavaScript / TypeScript (browser + Node.js, via WebAssembly):
+## Install
 
 ```bash
-npm install @libraz/suzume
-# or: yarn add / pnpm add / bun add @libraz/suzume
+npm install @libraz/suzume  # JavaScript / TypeScript
+pip install suzume          # Python
 ```
 
-Python (native, via a bundled shared library — no other dependencies):
-
-```bash
-pip install suzume
-```
-
-C / C++ (native library, embeddable) — build and install from source; see
-[C / C++ (native, embeddable)](#c--c-native-embeddable) below and the
-[C / C++ guide](https://suzume.libraz.net/docs/cpp).
+For C/C++ installation, native builds, user dictionaries, and all runtime
+options, see the [documentation](https://suzume.libraz.net/docs/getting-started).
 
 ## Quick Start
-
-### JavaScript / TypeScript
 
 ```typescript
 import { Suzume } from '@libraz/suzume'
 
 const suzume = await Suzume.create()
-
 const tokens = suzume.analyze('すもももももももものうち')
-for (const t of tokens) {
-  console.log(`${t.surface} [${t.posJa}]`)
-}
+const tags = suzume.generateTags('東京の公園に行きました')
 
-// Tag extraction (returns { tag, pos } objects)
-const tags = suzume.generateTags('東京スカイツリーに行きました')
-// → [{ tag: '東京', pos: 'NOUN' }, { tag: 'スカイツリー', pos: 'NOUN' }, { tag: '行く', pos: 'VERB' }]
-
-// Nouns only
-suzume.generateTags('美味しいラーメンを食べた', { pos: ['noun'] })
-// → [{ tag: 'ラーメン', pos: 'NOUN' }]
-
-// Exclude basic words (hiragana-only lemma like する, ある, いい)
-suzume.generateTags('今日はいい天気ですね', { excludeBasic: true })
-// → [{ tag: '今日', pos: 'NOUN' }, { tag: '天気', pos: 'NOUN' }]
+suzume.destroy() // optional immediate cleanup
 ```
-
-### Python
 
 ```python
 from suzume import Suzume
 
 with Suzume() as sz:
-    for m in sz.analyze('すもももももももものうち'):
-        print(m.surface, m.pos_ja)
-
-    # Tag extraction (returns Tag objects with .tag / .pos)
-    tags = sz.generate_tags('東京に行きました')
-    print([(t.tag, t.pos) for t in tags])
+    tokens = sz.analyze("すもももももももものうち")
+    tags = sz.generate_tags("東京の公園に行きました")
 ```
-
-See [bindings/python/README.md](bindings/python/README.md) for the full Python API.
-
-### Browser (CDN)
-
-```html
-<script type="module">
-  import { Suzume } from 'https://esm.sh/@libraz/suzume'
-
-  const suzume = await Suzume.create()
-  console.log(suzume.analyze('こんにちは'))
-</script>
-```
-
-### C / C++ (native, embeddable)
-
-Install the library, headers, and CMake/pkg-config integration (C++17, CMake 3.15+):
-
-```bash
-make install                 # into /usr/local (override with PREFIX=/opt/suzume)
-```
-
-```cpp
-#include "suzume/suzume.hpp"                 // header-only RAII wrapper over the C ABI
-
-suzume::Tokenizer tokenizer;
-auto tags = tokenizer.generateTags("東京スカイツリーに行きました");
-```
-
-The stable C ABI (`suzume/suzume_c.h`), `find_package(suzume)` / pkg-config linking,
-and an optional no-filesystem embedded build (`-DSUZUME_EMBED_DICT=ON`) are covered in
-the [C / C++ guide](https://suzume.libraz.net/docs/cpp) and
-[Native Build](https://suzume.libraz.net/docs/native-build). Runnable programs are in
-[`examples/`](examples/).
 
 ## Documentation
 
-- [Getting Started](https://suzume.libraz.net/docs/getting-started) — Installation and basic usage
-- [API Reference](https://suzume.libraz.net/docs/api) — API documentation
-- [Python Bindings](https://suzume.libraz.net/docs/python) — Python API
-- [C / C++ Library](https://suzume.libraz.net/docs/cpp) — Native linking and embedding
-- [User Dictionary](https://suzume.libraz.net/docs/user-dictionary) — Adding custom words
-- [How It Works](https://suzume.libraz.net/docs/how-it-works) — Technical details
-- [Tokenization Differences](https://suzume.libraz.net/docs/mecab-comparison) — How Suzume differs from dictionary-based analyzers
+- [Getting Started](https://suzume.libraz.net/docs/getting-started)
+- [JavaScript / TypeScript API](https://suzume.libraz.net/docs/api)
+- [Python API](https://suzume.libraz.net/docs/python)
+- [C / C++ Library](https://suzume.libraz.net/docs/cpp)
+- [User Dictionary](https://suzume.libraz.net/docs/user-dictionary)
 
 ## License
 
