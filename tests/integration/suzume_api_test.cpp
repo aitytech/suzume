@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <string_view>
 
 #include "normalize/utf8.h"
 #include "suzume.h"
@@ -193,6 +195,48 @@ TEST_F(SuzumeApiTest, PretokenizedMorphemesHaveExtendedPos) {
   ASSERT_EQ(results.size(), 1u);
   EXPECT_EQ(results[0].pos, core::PartOfSpeech::Noun);
   EXPECT_EQ(results[0].extended_pos, core::ExtendedPOS::Noun);
+}
+
+TEST_F(SuzumeApiTest, SimilitudeYouRemainsAFormalNoun) {
+  Suzume instance(makeTestOptions());
+
+  for (const std::string_view text : {"夢のようだ", "読むようにする", "このような方法"}) {
+    auto results = instance.analyze(text);
+    auto iter = std::find_if(results.begin(), results.end(),
+                             [](const core::Morpheme& morpheme) { return morpheme.surface == "よう"; });
+    ASSERT_NE(iter, results.end()) << text;
+    EXPECT_EQ(iter->pos, core::PartOfSpeech::Noun) << text;
+    EXPECT_EQ(iter->extended_pos, core::ExtendedPOS::NounFormal) << text;
+    EXPECT_TRUE(iter->features.is_formal_noun) << text;
+  }
+
+  auto volitional = instance.analyze("見よう");
+  auto iter = std::find_if(volitional.begin(), volitional.end(),
+                           [](const core::Morpheme& morpheme) { return morpheme.surface == "う"; });
+  ASSERT_NE(iter, volitional.end());
+  EXPECT_EQ(iter->pos, core::PartOfSpeech::Auxiliary);
+  EXPECT_EQ(iter->extended_pos, core::ExtendedPOS::AuxVolitional);
+  EXPECT_FALSE(iter->features.is_formal_noun);
+}
+
+TEST_F(SuzumeApiTest, DemonstrativeIdentificationEndsInNoun) {
+  Suzume instance(makeTestOptions());
+
+  for (const std::string_view text : {"これが答え。", "それが答え。"}) {
+    auto results = instance.analyze(text);
+    ASSERT_FALSE(results.empty()) << text;
+    const auto& answer = results.back();
+    EXPECT_EQ(answer.surface, "答え") << text;
+    EXPECT_EQ(answer.pos, core::PartOfSpeech::Noun) << text;
+    EXPECT_EQ(answer.lemma, "答え") << text;
+  }
+
+  auto imperative = instance.analyze("君が急げ。");
+  ASSERT_FALSE(imperative.empty());
+  const auto& hurry = imperative.back();
+  EXPECT_EQ(hurry.surface, "急げ");
+  EXPECT_EQ(hurry.pos, core::PartOfSpeech::Verb);
+  EXPECT_EQ(hurry.lemma, "急ぐ");
 }
 
 TEST_F(SuzumeApiTest, GenerateTagsReturnsResults) {

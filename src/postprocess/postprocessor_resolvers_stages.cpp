@@ -73,9 +73,9 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::resolveParticleAruOnbin(result);
   resolver::resolveDemonstrativeMiseru(result);
   resolver::resolveBenefactivePotential(result);
+  resolver::resolveTeHonorificBenefactiveNegative(result);
   resolver::resolveBindingParticleNegative(result);
   resolver::resolveInitialInabilityVerb(result);
-  resolver::resolveTeBenefactiveNegativePotential(result);
   resolver::resolveDependentVerbHomographs(result);
   resolver::resolveProgressiveIru(result);
   resolver::resolveSahenRenyokei(result);
@@ -188,6 +188,13 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
   for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
     auto& current = result[idx];
     auto& next = result[idx + 1];
+    // A bare na-adjective stem cannot directly govern accusative を as an
+    // adjective.  In this closed syntactic context it is the nominal use
+    // (平静を保つ, 困難を乗り越える), while adjectival uses retain な/に/だ.
+    if (current.pos == core::PartOfSpeech::Adjective && current.extended_pos == core::ExtendedPOS::AdjNaAdj &&
+        next.extended_pos == core::ExtendedPOS::ParticleCase && next.surface == "を") {
+      resolver::retagNounSurface(current);
+    }
     // A non-lexical noun candidate ending in い cannot take conjectural だろ
     // as an attributive noun marker. The closed follower licenses the finite
     // i-adjective reading (遠い+だろ+う) without touching lexical nouns.
@@ -345,9 +352,34 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
     }
   }
 
+  // A demonstrative identification with an omitted copula ends in a noun:
+  // これが答え。  The lattice can select the homographic Ichidan continuative
+  // 答え, so resolve the closed demonstrative + case-particle frame before the
+  // clause-final imperative repair below.  This is deliberately narrower than
+  // a generic PARTICLE+e-row rule: 君が急げ remains a possible imperative.
+  if (result.size() >= 3) {
+    auto& final = result.back();
+    const auto& case_particle = result[result.size() - 2];
+    const auto& demonstrative = result[result.size() - 3];
+    const auto demonstrative_codepoints = normalize::toCodepoints(demonstrative.surface);
+    const bool is_demonstrative =
+        demonstrative.pos == core::PartOfSpeech::Pronoun && demonstrative_codepoints.size() >= 2 &&
+        normalize::isDemonstrativeStart(demonstrative_codepoints[0], demonstrative_codepoints[1]);
+    const bool is_ga_case =
+        case_particle.extended_pos == core::ExtendedPOS::ParticleCase && case_particle.surface == "が";
+    const bool is_bare_ichidan = final.pos == core::PartOfSpeech::Verb &&
+                                 final.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+                                 final.lemma == final.surface + "る";
+    if (is_demonstrative && is_ga_case && is_bare_ichidan) {
+      resolver::retag(final, core::PartOfSpeech::Noun, core::ExtendedPOS::NounVerbal, final.surface,
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    }
+  }
+
   // A clause-final e-row verb after an argument particle is the Godan
   // imperative (急げ→急ぐ), not an Ichidan potential stem.  The shared row
-  // table handles every Godan class without lexical enumeration.
+  // table handles every Godan class without lexical enumeration. The
+  // demonstrative nominal frame above has already been removed from this gate.
   if (!result.empty()) {
     auto& final = result.back();
     const char32_t tail = utf8::decodeFirstChar(utf8::lastChar(final.surface));

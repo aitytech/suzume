@@ -245,23 +245,19 @@ void resolveInitialInabilityVerb(std::vector<core::Morpheme>& result) {
   }
 }
 
-// A negative e-row receiving form after て is generally exposed as a finite
-// verb in the public token contract (して+あげ+ない, して+いただけ+ない).
-// The productive potential of a core benefactive is the exception: it remains
-// a dependent auxiliary just as it does after で. Express that distinction as
-// the intersection of the closed benefactive and potential-benefactive
-// classes, rather than as a surface-specific branch.
-void resolveTeBenefactiveNegativePotential(std::vector<core::Morpheme>& result) {
+// Core giving/receiving verbs remain benefactive auxiliaries throughout their
+// negative paradigm (して+あげ+ない, して+くれ+ない).  The e-row
+// potential honorific outside that core class retains the established finite-
+// verb contract (して+いただけ+ない).
+void resolveTeHonorificBenefactiveNegative(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
     const auto& connective = result[idx - 1];
     auto& benefactive = result[idx];
     const auto& negative = result[idx + 1];
     if (connective.surface != "て" || connective.extended_pos != core::ExtendedPOS::ParticleConj ||
-        benefactive.extended_pos != core::ExtendedPOS::AuxBenefactive || !grammar::endsWithERow(benefactive.surface) ||
+        benefactive.extended_pos != core::ExtendedPOS::AuxBenefactive ||
+        grammar::isBenefactiveLemma(benefactive.lemma) || !grammar::endsWithERow(benefactive.surface) ||
         negative.extended_pos != core::ExtendedPOS::AuxNegativeNai) {
-      continue;
-    }
-    if (grammar::isBenefactiveLemma(benefactive.lemma) && grammar::isPotentialBenefactiveLemma(benefactive.lemma)) {
       continue;
     }
     benefactive.pos = core::PartOfSpeech::Verb;

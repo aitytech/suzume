@@ -566,29 +566,20 @@ void resolveAdverbExplanatoryCopula(std::vector<core::Morpheme>& result) {
   }
 }
 
-// Formal よう is auxiliary-like in similitude/purpose constructions
-// (読む+よう+だ, 次+の+よう+に, この+よう+な), but remains a formal noun in
-// the productive renyokei noun 読み+よう+がない/による.  Resolve that
-// contextual category after the lattice has preserved the shared boundary.
+// Formal よう remains a noun in similitude/purpose constructions
+// (読む+よう+だ, 次+の+よう+に, この+よう+な).  The lattice already
+// distinguishes it from the true volitional auxiliary (見+よう).  Only the
+// homographic following な may still need its copular role restored here.
 void resolveSimilitudeYou(std::vector<core::Morpheme>& result) {
   for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
     auto& similitude = result[idx];
-    const auto& next = result[idx + 1];
+    auto& next = result[idx + 1];
     if (similitude.surface != "よう" || similitude.extended_pos != core::ExtendedPOS::NounFormal) {
       continue;
     }
     const bool attributive_na_follows = next.surface == "な" && next.pos == core::PartOfSpeech::Particle;
-    const bool copula_follows = next.extended_pos == core::ExtendedPOS::AuxCopulaDa ||
-                                next.extended_pos == core::ExtendedPOS::AuxCopulaDesu || attributive_na_follows;
-    const bool ni_follows = next.extended_pos == core::ExtendedPOS::ParticleCase && next.surface == "に";
-    const bool renyokei_noun = idx > 0 && result[idx - 1].extended_pos == core::ExtendedPOS::VerbRenyokei;
-    if (!copula_follows && (!ni_follows || renyokei_noun)) {
-      continue;
-    }
-    retag(similitude, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxSimilitudeYou, "よう",
-          dictionary::ConjugationType::None, grammar::ConjForm::Base);
     if (attributive_na_follows) {
-      retagCopulaDa(result[idx + 1]);
+      retagCopulaDa(next);
     }
   }
 }
