@@ -332,97 +332,42 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     }
   }
 
-  // Generate Godan sokuonbin (っ) candidates for hiragana verbs
-  // E.g., しまった → しまっ (onbin of しまう) + た (auxiliary)
-  //       なくなった → なくなっ (onbin of なくなる) + た (auxiliary)
-  // This separates the verb's onbin stem from the tense auxiliary.
-  {
-    // Find the complete hiragana run from start_pos.
-    const size_t remaining_chars = char_types.size() - start_pos;
-    const size_t hira_extent_end =
-        vh::findCharRegionEnd(char_types, start_pos, remaining_chars, normalize::CharType::Hiragana);
-    size_t hira_len = hira_extent_end - start_pos;
-
-    // Need at least 3 chars: stem(1+) + っ + た/て
-    if (hira_len >= 3) {
-      char32_t second_last = codepoints[hira_extent_end - 2];
-      char32_t last_char = codepoints[hira_extent_end - 1];
-      bool is_sokuonbin_te_ta = (second_last == U'っ' && (last_char == U'た' || last_char == U'て'));
-      if (is_sokuonbin_te_ta) {
-        // Generate candidate for stem + っ (without the た/て)
-        size_t onbin_end = hira_extent_end - 1;  // Position after っ
-        std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
-        std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
-
-        auto sokuonbin_match = vh::firstGodanOnbinDictBase(dict_manager, stem, "っ");
-        if (sokuonbin_match.matched &&
-            (grammar::isSuruBaseForm(sokuonbin_match.base_form) ||
-             !hasMatchingGodanInflection(inflection, sokuonbin_match.base_form, sokuonbin_match.verb_type))) {
-          sokuonbin_match.matched = false;
-        }
-        bool found_dict_match = sokuonbin_match.matched;
-        if (found_dict_match) {
-          constexpr float kHiraganaSokuonbinCost = candidate::verb_cost::kStandardBonus;
-          SUZUME_DEBUG_VERBOSE_BLOCK {
-            SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface
-                                << " hiragana_sokuonbin lemma=" << sokuonbin_match.base_form
-                                << " type=" << grammar::verbTypeToString(sokuonbin_match.verb_type)
-                                << " cost=" << kHiraganaSokuonbinCost << "\n";
-          }
-          auto sokuonbin_cand = makeVerbCandidate(
-              onbin_surface, start_pos, onbin_end, kHiraganaSokuonbinCost, sokuonbin_match.base_form,
-              grammar::verbTypeToConjType(sokuonbin_match.verb_type), true, CandidateOrigin::VerbHiragana, 0.9F,
-              "hiragana_sokuonbin", core::ExtendedPOS::VerbOnbinkei);
-          sokuonbin_cand.lemma_verified = true;
-          candidates.push_back(std::move(sokuonbin_cand));
-        }
-        // The general onbin generator already emits the first inflection-
-        // verified Godan row for unregistered hiragana stems.  Do not add a
-        // second fallback with a different row preference here: duplicate
-        // candidates for the same っ-form otherwise disagree on the lemma.
+  // Generate dictionary-verified Godan っ/ん onbin candidates before their
+  // respective te/past continuations.  The general onbin generator owns all
+  // unregistered-stem fallbacks, so this path emits only a verified lemma.
+  const size_t remaining_chars = char_types.size() - start_pos;
+  const size_t hira_extent_end =
+      vh::findCharRegionEnd(char_types, start_pos, remaining_chars, normalize::CharType::Hiragana);
+  if (hira_extent_end - start_pos >= 3) {
+    const char32_t onbin_char = codepoints[hira_extent_end - 2];
+    const char32_t continuation = codepoints[hira_extent_end - 1];
+    const bool is_sokuonbin = onbin_char == U'っ' && (continuation == U'た' || continuation == U'て');
+    const bool is_hatsuonbin = onbin_char == U'ん' && (continuation == U'だ' || continuation == U'で');
+    if (is_sokuonbin || is_hatsuonbin) {
+      const size_t onbin_end = hira_extent_end - 1;
+      const std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
+      const std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
+      const std::string_view onbin = is_sokuonbin ? "っ" : "ん";
+      auto onbin_match = vh::firstGodanOnbinDictBase(dict_manager, stem, onbin);
+      if (is_sokuonbin && onbin_match.matched &&
+          (grammar::isSuruBaseForm(onbin_match.base_form) ||
+           !hasMatchingGodanInflection(inflection, onbin_match.base_form, onbin_match.verb_type))) {
+        onbin_match.matched = false;
       }
-    }
-  }
-
-  // Generate Godan hatsuonbin (ん) candidates for hiragana verbs
-  // E.g., こんだ → こん (onbin of こむ) + だ (auxiliary)
-  //       こんで → こん (onbin of こむ) + で (particle)
-  //       よんだ → よん (onbin of よむ) + だ (auxiliary)
-  // This separates the onbin stem of godan-ma/ba/na verbs from the auxiliary.
-  {
-    // Find the complete hiragana run from start_pos.
-    const size_t remaining_chars = char_types.size() - start_pos;
-    const size_t hira_extent_end =
-        vh::findCharRegionEnd(char_types, start_pos, remaining_chars, normalize::CharType::Hiragana);
-    size_t hira_len = hira_extent_end - start_pos;
-
-    // Need at least 3 chars: stem(1+) + ん + だ/で
-    if (hira_len >= 3) {
-      char32_t second_last = codepoints[hira_extent_end - 2];
-      char32_t last_char = codepoints[hira_extent_end - 1];
-      bool is_hatsuonbin_de_da = (second_last == U'ん' && (last_char == U'だ' || last_char == U'で'));
-      if (is_hatsuonbin_de_da) {
-        // Generate candidate for stem + ん (without the だ/で)
-        size_t onbin_end = hira_extent_end - 1;  // Position after ん
-        std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
-        std::string stem = extractSubstring(codepoints, start_pos, onbin_end - 1);
-
-        auto hatsuonbin_match = vh::firstGodanOnbinDictBase(dict_manager, stem, "ん");
-        if (hatsuonbin_match.matched) {
-          constexpr float kHiraganaHatsuonbinCost = candidate::verb_cost::kStandardBonus;
-          SUZUME_DEBUG_VERBOSE_BLOCK {
-            SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface
-                                << " hiragana_hatsuonbin lemma=" << hatsuonbin_match.base_form
-                                << " type=" << grammar::verbTypeToString(hatsuonbin_match.verb_type)
-                                << " cost=" << kHiraganaHatsuonbinCost << "\n";
-          }
-          auto hatsuonbin_cand = makeVerbCandidate(
-              onbin_surface, start_pos, onbin_end, kHiraganaHatsuonbinCost, hatsuonbin_match.base_form,
-              grammar::verbTypeToConjType(hatsuonbin_match.verb_type), true, CandidateOrigin::VerbHiragana, 0.9F,
-              "hiragana_hatsuonbin", core::ExtendedPOS::VerbOnbinkei);
-          hatsuonbin_cand.lemma_verified = true;
-          candidates.push_back(std::move(hatsuonbin_cand));
+      if (onbin_match.matched) {
+        constexpr float kHiraganaOnbinCost = candidate::verb_cost::kStandardBonus;
+        const char* origin = is_sokuonbin ? "hiragana_sokuonbin" : "hiragana_hatsuonbin";
+        SUZUME_DEBUG_VERBOSE_BLOCK {
+          SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << ' ' << origin << " lemma=" << onbin_match.base_form
+                              << " type=" << grammar::verbTypeToString(onbin_match.verb_type)
+                              << " cost=" << kHiraganaOnbinCost << "\n";
         }
+        auto onbin_candidate =
+            makeVerbCandidate(onbin_surface, start_pos, onbin_end, kHiraganaOnbinCost, onbin_match.base_form,
+                              grammar::verbTypeToConjType(onbin_match.verb_type), true, CandidateOrigin::VerbHiragana,
+                              0.9F, origin, core::ExtendedPOS::VerbOnbinkei);
+        onbin_candidate.lemma_verified = true;
+        candidates.push_back(std::move(onbin_candidate));
       }
     }
   }

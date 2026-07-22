@@ -53,12 +53,6 @@ void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, siz
     return !form.empty() && pos + normalize::utf8Length(form) <= codepoints.size() &&
            extractSubstring(codepoints, pos, pos + normalize::utf8Length(form)) == form;
   };
-  const auto followsRenyokeiAuxiliary = [&](size_t pos) {
-    return pos < codepoints.size() &&
-           (codepoints[pos] == U'た' || codepoints[pos] == U'て' || codepoints[pos] == U'で' ||
-            codepoints[pos] == U'ま' || codepoints[pos] == U'な' || codepoints[pos] == U'ず');
-  };
-
   for (const auto& subsidiary : compound_verb_detail::subsidiaryVerbs()) {
     if (!subsidiary.joins_suru) {
       continue;
@@ -87,42 +81,37 @@ void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, siz
                    "suru_subsidiary_base");
     }
 
-    const auto tryRenyokei = [&](const std::string& form, std::string_view lemma_base) {
+    const auto tryConjugatedForm = [&](const std::string& form, std::string_view lemma_base, core::ExtendedPOS epos,
+                                       const char* origin) {
       if (matchesAt(v2_start, form)) {
         const size_t end_pos = v2_start + normalize::utf8Length(form);
-        if (followsRenyokeiAuxiliary(end_pos)) {
-          addCandidate(end_pos, lemma_base, core::ExtendedPOS::VerbRenyokei, "suru_subsidiary_renyokei");
+        if (end_pos >= codepoints.size()) {
+          return;
+        }
+        const char32_t follower = codepoints[end_pos];
+        const bool is_allowed = (epos == core::ExtendedPOS::VerbRenyokei &&
+                                 (follower == U'た' || follower == U'て' || follower == U'で' || follower == U'ま' ||
+                                  follower == U'な' || follower == U'ず')) ||
+                                (epos == core::ExtendedPOS::VerbMizenkei &&
+                                 (follower == U'な' || follower == U'ず' || follower == U'ら')) ||
+                                (epos == core::ExtendedPOS::VerbKateikei && follower == U'ば');
+        if (is_allowed) {
+          addCandidate(end_pos, lemma_base, epos, origin);
         }
       }
     };
-    tryRenyokei(compound_verb_detail::generateKanjiRenyokei(subsidiary.surface, reading, subsidiary.verb_type),
-                subsidiary.surface);
-    tryRenyokei(compound_verb_detail::generateRenyokei(reading, "", subsidiary.verb_type), reading);
-
-    const auto tryMizenkei = [&](const std::string& form, std::string_view lemma_base) {
-      if (matchesAt(v2_start, form)) {
-        const size_t end_pos = v2_start + normalize::utf8Length(form);
-        if (end_pos < codepoints.size() &&
-            (codepoints[end_pos] == U'な' || codepoints[end_pos] == U'ず' || codepoints[end_pos] == U'ら')) {
-          addCandidate(end_pos, lemma_base, core::ExtendedPOS::VerbMizenkei, "suru_subsidiary_mizenkei");
-        }
-      }
-    };
-    tryMizenkei(compound_verb_detail::generateMizenkei(subsidiary.surface, "", subsidiary.verb_type),
-                subsidiary.surface);
-    tryMizenkei(compound_verb_detail::generateMizenkei(reading, "", subsidiary.verb_type), reading);
-
-    const auto tryKateikei = [&](const std::string& form, std::string_view lemma_base) {
-      if (matchesAt(v2_start, form)) {
-        const size_t end_pos = v2_start + normalize::utf8Length(form);
-        if (end_pos < codepoints.size() && codepoints[end_pos] == U'ば') {
-          addCandidate(end_pos, lemma_base, core::ExtendedPOS::VerbKateikei, "suru_subsidiary_kateikei");
-        }
-      }
-    };
-    tryKateikei(compound_verb_detail::generateKateikei(subsidiary.surface, "", subsidiary.verb_type),
-                subsidiary.surface);
-    tryKateikei(compound_verb_detail::generateKateikei(reading, "", subsidiary.verb_type), reading);
+    tryConjugatedForm(compound_verb_detail::generateKanjiRenyokei(subsidiary.surface, reading, subsidiary.verb_type),
+                      subsidiary.surface, core::ExtendedPOS::VerbRenyokei, "suru_subsidiary_renyokei");
+    tryConjugatedForm(compound_verb_detail::generateRenyokei(reading, "", subsidiary.verb_type), reading,
+                      core::ExtendedPOS::VerbRenyokei, "suru_subsidiary_renyokei");
+    tryConjugatedForm(compound_verb_detail::generateMizenkei(subsidiary.surface, "", subsidiary.verb_type),
+                      subsidiary.surface, core::ExtendedPOS::VerbMizenkei, "suru_subsidiary_mizenkei");
+    tryConjugatedForm(compound_verb_detail::generateMizenkei(reading, "", subsidiary.verb_type), reading,
+                      core::ExtendedPOS::VerbMizenkei, "suru_subsidiary_mizenkei");
+    tryConjugatedForm(compound_verb_detail::generateKateikei(subsidiary.surface, "", subsidiary.verb_type),
+                      subsidiary.surface, core::ExtendedPOS::VerbKateikei, "suru_subsidiary_kateikei");
+    tryConjugatedForm(compound_verb_detail::generateKateikei(reading, "", subsidiary.verb_type), reading,
+                      core::ExtendedPOS::VerbKateikei, "suru_subsidiary_kateikei");
 
     if (subsidiary.verb_type == compound_verb_detail::V2VerbType::Godan) {
       if (compound_verb_detail::getTeFormType(subsidiary.base_ending) == compound_verb_detail::TeFormType::Renyokei) {

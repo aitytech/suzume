@@ -1,6 +1,10 @@
 #ifndef SUZUME_ANALYSIS_VERB_CANDIDATES_HIRAGANA_INTERNAL_H_
 #define SUZUME_ANALYSIS_VERB_CANDIDATES_HIRAGANA_INTERNAL_H_
 
+#include <string>
+#include <string_view>
+#include <vector>
+
 #include "analysis/verb_candidates.h"
 #include "normalize/char_type.h"
 
@@ -19,6 +23,19 @@ bool pronounEndsAt(const dictionary::DictionaryManager* dict_manager, const std:
                    size_t pos);
 bool hasMatchingGodanInflection(const grammar::Inflection& inflection, std::string_view base_form,
                                 grammar::VerbType expected_type);
+
+struct GodanMizenkeiForms {
+  char32_t a_row_char;
+  grammar::VerbType verb_type;
+  std::string_view base_suffix;
+  std::string mizenkei_surface;
+  std::string stem;
+  std::string base_form;
+};
+
+bool deriveGodanMizenkeiForms(const std::vector<char32_t>& codepoints, size_t start_pos, size_t mizenkei_end,
+                              GodanMizenkeiForms& out);
+
 void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                      const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,

@@ -26,37 +26,6 @@
 namespace suzume::analysis::hiragana_verb_detail {
 namespace vh = verb_helpers;
 
-// Godan mizenkei forms derived from an a-row (未然形) ending. Shared by the
-// ん / ない / なきゃ mizenkei candidate loops, which each add their own
-// validation, cost, and skip rules on top of this common derivation.
-struct GodanMizenkeiForms {
-  char32_t a_row_char;
-  grammar::VerbType verb_type;
-  std::string_view base_suffix;
-  std::string mizenkei_surface;
-  std::string stem;
-  std::string base_form;
-};
-
-// Derive the godan mizenkei forms for the a-row char at codepoints[mizenkei_end-1].
-// Returns false when that char is not a recognized a-row godan mizenkei ending.
-bool deriveGodanMizenkeiForms(const std::vector<char32_t>& codepoints, size_t start_pos, size_t mizenkei_end,
-                              GodanMizenkeiForms& out) {
-  out.a_row_char = codepoints[mizenkei_end - 1];
-  if (!grammar::isARowCodepoint(out.a_row_char)) {
-    return false;
-  }
-  out.verb_type = grammar::verbTypeFromARowCodepoint(out.a_row_char);
-  out.base_suffix = grammar::godanBaseSuffixFromARow(out.a_row_char);
-  if (out.verb_type == grammar::VerbType::Unknown || out.base_suffix.empty()) {
-    return false;
-  }
-  out.mizenkei_surface = extractSubstring(codepoints, start_pos, mizenkei_end);
-  out.stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
-  out.base_form = out.stem + std::string(out.base_suffix);
-  return true;
-}
-
 // Detect a formal-noun prefix boundary inside an unverified hiragana verb stem.
 // A stem that begins with a dictionary formal noun (わけ, こと, もの, ところ, ...)
 // followed by a remainder of two or more characters is usually a noun + verb

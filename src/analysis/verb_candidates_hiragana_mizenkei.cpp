@@ -86,6 +86,23 @@ bool pronounEndsAt(const dictionary::DictionaryManager* dict_manager, const std:
   return false;
 }
 
+bool deriveGodanMizenkeiForms(const std::vector<char32_t>& codepoints, size_t start_pos, size_t mizenkei_end,
+                              GodanMizenkeiForms& out) {
+  out.a_row_char = codepoints[mizenkei_end - 1];
+  if (!grammar::isARowCodepoint(out.a_row_char)) {
+    return false;
+  }
+  out.verb_type = grammar::verbTypeFromARowCodepoint(out.a_row_char);
+  out.base_suffix = grammar::godanBaseSuffixFromARow(out.a_row_char);
+  if (out.verb_type == grammar::VerbType::Unknown || out.base_suffix.empty()) {
+    return false;
+  }
+  out.mizenkei_surface = extractSubstring(codepoints, start_pos, mizenkei_end);
+  out.stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
+  out.base_form = out.stem + std::string(out.base_suffix);
+  return true;
+}
+
 // Passive mizenkei candidates for pure-hiragana verbs (いわれる → いわ + れる).
 // Preserve the boundary between the A-row mizenkei and passive れ.
 void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
@@ -100,11 +117,11 @@ void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, si
     if (mizenkei_end <= start_pos)
       continue;
 
-    char32_t a_row_char = codepoints[mizenkei_end - 1];  // The A-row character
-    char32_t next_char = codepoints[mizenkei_end];       // Should be れ
+    const char32_t next_char = codepoints[mizenkei_end];  // Should be れ
 
-    // Check for A-row followed by passive pattern (れる, れた, れて, etc.)
-    if (!grammar::isARowCodepoint(a_row_char) || next_char != U'れ') {
+    // Check for passive pattern start (れる, れた, れて, etc.). The shared
+    // reconstruction below validates the preceding A-row mizenkei ending.
+    if (next_char != U'れ') {
       continue;
     }
 
@@ -117,23 +134,14 @@ void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, si
       continue;
     }
 
-    // Derive VerbType from the A-row ending (e.g., わ → GodanWa)
-    grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(a_row_char);
-    if (verb_type == grammar::VerbType::Unknown) {
+    GodanMizenkeiForms forms;
+    if (!deriveGodanMizenkeiForms(codepoints, start_pos, mizenkei_end, forms)) {
       continue;
     }
-
-    // Get base suffix (e.g., わ → う for GodanWa)
-    std::string_view base_suffix = grammar::godanBaseSuffixFromARow(a_row_char);
-    if (base_suffix.empty()) {
-      continue;
-    }
-
-    // Construct base form and mizenkei surface
-    // E.g., for いわれる: mizenkei = いわ, stem = い, base_suffix = う → base_form = いう
-    std::string mizenkei_surface = extractSubstring(codepoints, start_pos, mizenkei_end);
-    std::string stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
-    std::string base_form = stem + std::string(base_suffix);
+    const grammar::VerbType verb_type = forms.verb_type;
+    const std::string& mizenkei_surface = forms.mizenkei_surface;
+    const std::string& stem = forms.stem;
+    const std::string& base_form = forms.base_form;
 
     // Check if mizenkei surface exists in dictionary as a verb
     // This handles cases like いわ which is registered with lemma いう
