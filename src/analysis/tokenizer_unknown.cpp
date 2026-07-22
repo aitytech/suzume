@@ -194,15 +194,7 @@ bool startsInsideVerifiedNounAndAbsorbsSuru(const core::Lattice& lattice,
   }
   for (size_t suru_start = candidate.start + 1; suru_start < candidate.end; ++suru_start) {
     const std::string suffix = extractSubstring(codepoints, suru_start, candidate.end);
-    bool is_complete_suru_form = false;
-    for (const auto& match : dict_manager.lookup(suffix, 0)) {
-      if (match.entry != nullptr && match.length == candidate.end - suru_start &&
-          match.entry->pos == core::PartOfSpeech::Verb && match.entry->lemma == "する") {
-        is_complete_suru_form = true;
-        break;
-      }
-    }
-    if (!is_complete_suru_form) {
+    if (!hasCompleteVerbLemma(dict_manager, suffix, candidate.end - suru_start, "する")) {
       continue;
     }
     for (size_t noun_start = 0; noun_start < candidate.start; ++noun_start) {
@@ -231,14 +223,7 @@ bool consumesInitialSuruConditional(const dictionary::DictionaryManager& dict_ma
     return false;
   }
   const std::string conditional = extractSubstring(codepoints, candidate.end - 1, candidate.end + 1);
-  bool is_suru_conditional = false;
-  for (const auto& match : dict_manager.lookup(conditional, 0)) {
-    if (match.entry != nullptr && match.length == 2 && match.entry->pos == core::PartOfSpeech::Verb &&
-        match.entry->lemma == "する") {
-      is_suru_conditional = true;
-      break;
-    }
-  }
+  const bool is_suru_conditional = hasCompleteVerbLemma(dict_manager, conditional, 2, "する");
   const auto* conditional_particle = dict_manager.lookupExact(
       extractSubstring(codepoints, candidate.end + 1, candidate.end + 2), core::PartOfSpeech::Particle);
   if (!is_suru_conditional || conditional_particle == nullptr ||
@@ -470,20 +455,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     }
     if (candidate.pos == core::PartOfSpeech::Verb && !candidate.lemma_verified && candidate.start > 0 &&
         hasCompleteInternalConstituentBoundary(lattice, dict_manager_, codepoints, candidates, candidate)) {
-      bool follows_negative_conjecture = false;
-      for (size_t edge_start = 0; edge_start < candidate.start; ++edge_start) {
-        for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-          const auto& previous = lattice.getEdge(edge_id);
-          if (previous.end == candidate.start && previous.extended_pos == core::ExtendedPOS::AuxNegativeMai) {
-            follows_negative_conjecture = true;
-            break;
-          }
-        }
-        if (follows_negative_conjecture) {
-          break;
-        }
-      }
-      if (follows_negative_conjecture) {
+      if (hasPrecedingExtendedPOS(lattice, candidate.start, core::ExtendedPOS::AuxNegativeMai)) {
         continue;
       }
     }
@@ -497,8 +469,9 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       bool conflicts_with_compound = candidate.end <= compound_end;
       if (!conflicts_with_compound && candidate.end > compound_end) {
         const std::string outside_suffix = extractSubstring(codepoints, compound_end, candidate.end);
-        conflicts_with_compound = dict_manager_.lookupExact(outside_suffix, core::PartOfSpeech::Auxiliary) != nullptr ||
-                                  dict_manager_.lookupExact(outside_suffix, core::PartOfSpeech::Particle) != nullptr;
+        constexpr PartOfSpeechMask kFunctionWordMask =
+            partOfSpeechMask(core::PartOfSpeech::Auxiliary) | partOfSpeechMask(core::PartOfSpeech::Particle);
+        conflicts_with_compound = hasExactPartOfSpeech(dict_manager_, outside_suffix, kFunctionWordMask);
       }
       if (conflicts_with_compound) {
         continue;

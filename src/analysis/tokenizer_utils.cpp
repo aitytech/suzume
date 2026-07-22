@@ -54,6 +54,69 @@ std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t sta
   return normalize::encodeRange(codepoints, start, end);
 }
 
+bool hasExactPartOfSpeech(const dictionary::DictionaryManager& dict_manager, std::string_view surface,
+                          PartOfSpeechMask pos_mask) {
+  for (uint8_t pos_value = 0; pos_mask != 0; ++pos_value, pos_mask >>= 1) {
+    if ((pos_mask & 1U) != 0 &&
+        dict_manager.lookupExact(surface, static_cast<core::PartOfSpeech>(pos_value)) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool hasCompleteVerbLemma(const dictionary::DictionaryManager& dict_manager, std::string_view surface,
+                          size_t char_length, std::string_view lemma) {
+  for (const auto& match : dict_manager.lookup(surface, 0)) {
+    if (match.entry != nullptr && match.length == char_length && match.entry->pos == core::PartOfSpeech::Verb &&
+        match.entry->lemma == lemma) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool startsInsideRegisteredNoun(const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                const ByteOffsets& byte_offsets, size_t start_pos) {
+  if (start_pos == 0) {
+    return false;
+  }
+  const size_t scan_start = start_pos > 8 ? start_pos - 8 : 0;
+  for (size_t noun_start = scan_start; noun_start < start_pos; ++noun_start) {
+    for (const auto& result : dict_manager.lookup(text, byteOffsetAt(byte_offsets, noun_start))) {
+      if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun &&
+          noun_start + result.length > start_pos) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool hasPrecedingPartOfSpeech(const core::Lattice& lattice, size_t end_pos, PartOfSpeechMask pos_mask) {
+  for (size_t edge_start = 0; edge_start < end_pos; ++edge_start) {
+    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.end == end_pos && (pos_mask & partOfSpeechMask(edge.pos)) != 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool hasPrecedingExtendedPOS(const core::Lattice& lattice, size_t end_pos, core::ExtendedPOS extended_pos) {
+  for (size_t edge_start = 0; edge_start < end_pos; ++edge_start) {
+    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.end == end_pos && edge.extended_pos == extended_pos) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 namespace {
 
 size_t compoundEndCovering(const core::Lattice& lattice, size_t pos, bool require_lexical_evidence) {
@@ -106,25 +169,11 @@ bool joinsParticleToDictionaryAdverb(const core::Lattice& lattice, const diction
     return false;
   }
 
-  bool has_grammatical_left_context = false;
-  for (size_t edge_start = 0; edge_start < candidate_start; ++edge_start) {
-    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-      const auto& edge = lattice.getEdge(edge_id);
-      if (edge.end != candidate_start) {
-        continue;
-      }
-      if (edge.pos == core::PartOfSpeech::Noun || edge.pos == core::PartOfSpeech::Pronoun ||
-          edge.pos == core::PartOfSpeech::Verb || edge.pos == core::PartOfSpeech::Adjective ||
-          edge.pos == core::PartOfSpeech::Auxiliary) {
-        has_grammatical_left_context = true;
-        break;
-      }
-    }
-    if (has_grammatical_left_context) {
-      break;
-    }
-  }
-  if (!has_grammatical_left_context) {
+  constexpr PartOfSpeechMask kLeftContextMask =
+      partOfSpeechMask(core::PartOfSpeech::Noun) | partOfSpeechMask(core::PartOfSpeech::Pronoun) |
+      partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Adjective) |
+      partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+  if (!hasPrecedingPartOfSpeech(lattice, candidate_start, kLeftContextMask)) {
     return false;
   }
 

@@ -249,11 +249,7 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
     // Check all candidates for IAdjective, not just the best one
     // This handles cases where Suru interpretation may have higher confidence
     const auto& all_candidates = inflection.analyze(analysis_surface);
-    const bool has_verified_verb_reading =
-        std::any_of(all_candidates.begin(), all_candidates.end(), [&](const grammar::InflectionCandidate& candidate) {
-          return candidate.verb_type != grammar::VerbType::IAdjective &&
-                 isVerbInDictionary(dict_manager, candidate.base_form);
-        });
+    const bool has_verified_verb_reading = adj_detail::hasDictionaryVerbAnalysis(all_candidates, dict_manager);
     for (const auto& cand : all_candidates) {
       // For hiragana-only adjectives, require higher confidence (0.55) than
       // kanji+hiragana adjectives (0.50) to avoid false positives like しそう → しい

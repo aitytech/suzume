@@ -61,6 +61,17 @@ float maxConfidenceFor(const std::vector<grammar::InflectionCandidate>& candidat
   return confidence;
 }
 
+bool hasDictionaryVerbAnalysis(const std::vector<grammar::InflectionCandidate>& candidates,
+                               const dictionary::DictionaryManager* dict_manager) {
+  for (const auto& candidate : candidates) {
+    if (candidate.verb_type != grammar::VerbType::IAdjective &&
+        verb_helpers::isVerbInDictionary(dict_manager, candidate.base_form)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool isVerbOnbinContextAfterI(const std::vector<char32_t>& codepoints, size_t pos) {
   if (pos >= codepoints.size()) {
     return false;

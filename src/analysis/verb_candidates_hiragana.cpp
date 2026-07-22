@@ -40,9 +40,10 @@ bool hasInternalPredicateBoundary(const std::vector<char32_t>& codepoints, size_
   }
   for (size_t boundary = start_pos + 1; boundary < onbin_pos; ++boundary) {
     const std::string tail = extractSubstring(codepoints, boundary, onbin_pos + 1);
-    if (dict_manager->lookupExact(tail, core::PartOfSpeech::Verb) != nullptr ||
-        dict_manager->lookupExact(tail, core::PartOfSpeech::Adjective) != nullptr ||
-        dict_manager->lookupExact(tail, core::PartOfSpeech::Auxiliary) != nullptr) {
+    constexpr PartOfSpeechMask kPredicateMask = partOfSpeechMask(core::PartOfSpeech::Verb) |
+                                                partOfSpeechMask(core::PartOfSpeech::Adjective) |
+                                                partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+    if (hasExactPartOfSpeech(*dict_manager, tail, kPredicateMask)) {
       return true;
     }
   }
@@ -75,9 +76,9 @@ size_t closedOnbinTenseEnd(const std::vector<char32_t>& codepoints, size_t start
       continue;
     }
     const std::string closed_surface = extractSubstring(codepoints, start_pos, onbin_pos + 2);
-    if (dict_manager != nullptr &&
-        (dict_manager->lookupExact(closed_surface, core::PartOfSpeech::Particle) != nullptr ||
-         dict_manager->lookupExact(closed_surface, core::PartOfSpeech::Conjunction) != nullptr)) {
+    constexpr PartOfSpeechMask kClosedSurfaceMask =
+        partOfSpeechMask(core::PartOfSpeech::Particle) | partOfSpeechMask(core::PartOfSpeech::Conjunction);
+    if (dict_manager != nullptr && hasExactPartOfSpeech(*dict_manager, closed_surface, kClosedSurfaceMask)) {
       continue;
     }
     if (onbin == U'っ' && (tense == U'た' || tense == U'て')) {
@@ -139,11 +140,12 @@ bool hasInternalLexicalParticleBoundary(const std::vector<char32_t>& codepoints,
         continue;
       }
       const std::string left = extractSubstring(codepoints, lexical_start, split);
-      for (const auto pos : {core::PartOfSpeech::Pronoun, core::PartOfSpeech::Noun, core::PartOfSpeech::Adverb,
-                             core::PartOfSpeech::Determiner, core::PartOfSpeech::Conjunction}) {
-        if (dict_manager->lookupExact(left, pos) != nullptr) {
-          return true;
-        }
+      constexpr PartOfSpeechMask kLexicalMask =
+          partOfSpeechMask(core::PartOfSpeech::Pronoun) | partOfSpeechMask(core::PartOfSpeech::Noun) |
+          partOfSpeechMask(core::PartOfSpeech::Adverb) | partOfSpeechMask(core::PartOfSpeech::Determiner) |
+          partOfSpeechMask(core::PartOfSpeech::Conjunction);
+      if (hasExactPartOfSpeech(*dict_manager, left, kLexicalMask)) {
+        return true;
       }
     }
   }

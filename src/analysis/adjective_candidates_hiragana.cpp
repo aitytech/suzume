@@ -67,11 +67,11 @@ bool isParticleSequenceWithoutLexicalReading(const std::vector<char32_t>& codepo
     return false;
   }
   const std::string whole_surface = extractSubstring(codepoints, start_pos, end_pos);
-  for (const auto pos : {core::PartOfSpeech::Noun, core::PartOfSpeech::Verb, core::PartOfSpeech::Adjective,
-                         core::PartOfSpeech::Adverb}) {
-    if (dict_manager->lookupExact(whole_surface, pos) != nullptr) {
-      return false;
-    }
+  constexpr PartOfSpeechMask kLexicalMask =
+      partOfSpeechMask(core::PartOfSpeech::Noun) | partOfSpeechMask(core::PartOfSpeech::Verb) |
+      partOfSpeechMask(core::PartOfSpeech::Adjective) | partOfSpeechMask(core::PartOfSpeech::Adverb);
+  if (hasExactPartOfSpeech(*dict_manager, whole_surface, kLexicalMask)) {
+    return false;
   }
 
   std::vector<bool> reachable(end_pos - start_pos + 1, false);
@@ -165,9 +165,9 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
     if (dict_manager->lookupExact(prefix_surface, core::PartOfSpeech::Prefix) != nullptr) {
       return;
     }
-    const bool is_closed_particle_or_auxiliary =
-        dict_manager->lookupExact(prefix_surface, core::PartOfSpeech::Particle) != nullptr ||
-        dict_manager->lookupExact(prefix_surface, core::PartOfSpeech::Auxiliary) != nullptr;
+    constexpr PartOfSpeechMask kFunctionWordMask =
+        partOfSpeechMask(core::PartOfSpeech::Particle) | partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+    const bool is_closed_particle_or_auxiliary = hasExactPartOfSpeech(*dict_manager, prefix_surface, kFunctionWordMask);
     const bool is_adjectival_prefix =
         std::find(kParticleHomographicAdjectivalPrefixes.begin(), kParticleHomographicAdjectivalPrefixes.end(),
                   prefix_surface) != kParticleHomographicAdjectivalPrefixes.end();
@@ -200,23 +200,12 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
       tail_surface.replace(tail_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
     }
     const auto& tail_candidates = inflection.analyze(tail_surface);
-    const bool tail_has_i_adjective = std::any_of(
-        tail_candidates.begin(), tail_candidates.end(), [](const grammar::InflectionCandidate& inflection_candidate) {
-          return inflection_candidate.verb_type == grammar::VerbType::IAdjective &&
-                 inflection_candidate.confidence >= candidate::kCompoundAdjConfMin;
-        });
-    const bool tail_has_verified_verb = std::any_of(
-        tail_candidates.begin(), tail_candidates.end(), [&](const grammar::InflectionCandidate& inflection_candidate) {
-          return inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
-                 isVerbInDictionary(dict_manager, inflection_candidate.base_form);
-        });
+    const bool tail_has_i_adjective = adj_detail::firstConfidenceAtLeast(tail_candidates, grammar::VerbType::IAdjective,
+                                                                         candidate::kCompoundAdjConfMin) != float{};
+    const bool tail_has_verified_verb = adj_detail::hasDictionaryVerbAnalysis(tail_candidates, dict_manager);
     const auto& observed_tail_candidates = inflection.analyze(tail_observed_surface);
     const bool observed_tail_has_verified_verb =
-        std::any_of(observed_tail_candidates.begin(), observed_tail_candidates.end(),
-                    [&](const grammar::InflectionCandidate& inflection_candidate) {
-                      return inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
-                             isVerbInDictionary(dict_manager, inflection_candidate.base_form);
-                    });
+        adj_detail::hasDictionaryVerbAnalysis(observed_tail_candidates, dict_manager);
     if (!tail_has_i_adjective || tail_has_verified_verb || observed_tail_has_verified_verb) {
       continue;
     }
@@ -225,12 +214,7 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
       analysis_surface.replace(analysis_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
     }
     const auto& inflection_candidates = inflection.analyze(analysis_surface);
-    const bool has_verified_verb_reading =
-        std::any_of(inflection_candidates.begin(), inflection_candidates.end(),
-                    [&](const grammar::InflectionCandidate& inflection_candidate) {
-                      return inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
-                             isVerbInDictionary(dict_manager, inflection_candidate.base_form);
-                    });
+    const bool has_verified_verb_reading = adj_detail::hasDictionaryVerbAnalysis(inflection_candidates, dict_manager);
     if (has_verified_verb_reading) {
       continue;
     }
@@ -393,11 +377,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
     const auto& base_candidates = inflection.analyze(base_form);
     const float adjective_confidence = adj_detail::firstConfidenceAtLeast(
         base_candidates, grammar::VerbType::IAdjective, candidate::kDerivedSuffixAdjectiveConfidence);
-    const bool has_verified_verb_reading = std::any_of(
-        base_candidates.begin(), base_candidates.end(), [&](const grammar::InflectionCandidate& inflection_candidate) {
-          return inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
-                 isVerbInDictionary(dict_manager, inflection_candidate.base_form);
-        });
+    const bool has_verified_verb_reading = adj_detail::hasDictionaryVerbAnalysis(base_candidates, dict_manager);
     if (adjective_confidence != candidate::kNoOriginConfidence && !has_verified_verb_reading) {
       candidates.push_back(makeIAdjStemCandidate(
           stem, start_pos, start_pos + normalize::utf8Length(stem), base_form, candidate::kDerivedSuffixAdjectiveCost,
@@ -486,11 +466,8 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
     }
     const auto& bounded_candidates = inflection.analyze(bounded_analysis_surface);
     const bool has_bounded_i_adjective =
-        bounded_long_ku_form && std::any_of(bounded_candidates.begin(), bounded_candidates.end(),
-                                            [](const grammar::InflectionCandidate& inflection_candidate) {
-                                              return inflection_candidate.verb_type == grammar::VerbType::IAdjective &&
-                                                     inflection_candidate.confidence >= candidate::kHiraAdjConfParticle;
-                                            });
+        bounded_long_ku_form && adj_detail::firstConfidenceAtLeast(bounded_candidates, grammar::VerbType::IAdjective,
+                                                                   candidate::kHiraAdjConfParticle) != float{};
     hiragana_end = has_bounded_i_adjective ? max_hiragana_end : start_pos;
     while (!has_bounded_i_adjective && hiragana_end < max_hiragana_end) {
       char32_t curr_char = codepoints[hiragana_end];

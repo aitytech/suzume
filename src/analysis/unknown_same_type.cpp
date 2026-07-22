@@ -696,11 +696,11 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
           dict_manager_ != nullptr ? dict_manager_->lookupExact(promoted_surface) : nullptr;
       const bool has_exact_noun =
           dict_manager_ != nullptr && dict_manager_->lookupExact(promoted_surface, core::PartOfSpeech::Noun) != nullptr;
+      constexpr PartOfSpeechMask kPredicateMask = partOfSpeechMask(core::PartOfSpeech::Verb) |
+                                                  partOfSpeechMask(core::PartOfSpeech::Adjective) |
+                                                  partOfSpeechMask(core::PartOfSpeech::Auxiliary);
       const bool has_competing_exact_predicate =
-          dict_manager_ != nullptr &&
-          (dict_manager_->lookupExact(promoted_surface, core::PartOfSpeech::Verb) != nullptr ||
-           dict_manager_->lookupExact(promoted_surface, core::PartOfSpeech::Adjective) != nullptr ||
-           dict_manager_->lookupExact(promoted_surface, core::PartOfSpeech::Auxiliary) != nullptr);
+          dict_manager_ != nullptr && hasExactPartOfSpeech(*dict_manager_, promoted_surface, kPredicateMask);
       const bool quoted_final_particle = exact_dictionary_reading != nullptr &&
                                          exact_dictionary_reading->extended_pos == core::ExtendedPOS::ParticleFinal &&
                                          scan < codepoints.size() &&

@@ -66,23 +66,6 @@ bool containsNegativeAuxiliary(const std::vector<char32_t>& codepoints, size_t s
   return false;
 }
 
-bool startsInsideRegisteredNoun(std::string_view text, const ByteOffsets& byte_offsets, size_t start_pos,
-                                const dictionary::DictionaryManager& dict_manager) {
-  if (start_pos == 0) {
-    return false;
-  }
-  const size_t scan_start = start_pos > 8 ? start_pos - 8 : 0;
-  for (size_t noun_start = scan_start; noun_start < start_pos; ++noun_start) {
-    for (const auto& result : dict_manager.lookup(text, byteOffsetAt(byte_offsets, noun_start))) {
-      if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun &&
-          noun_start + result.length > start_pos) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 bool consumesSahenConditional(const std::vector<char32_t>& codepoints, size_t start_pos, size_t compound_end_pos,
                               const dictionary::DictionaryManager& dict_manager) {
   if (compound_end_pos <= start_pos + 2 || compound_end_pos + 1 >= codepoints.size() ||
@@ -95,13 +78,7 @@ bool consumesSahenConditional(const std::vector<char32_t>& codepoints, size_t st
     return false;
   }
   const std::string conditional = extractSubstring(codepoints, compound_end_pos - 1, compound_end_pos + 1);
-  for (const auto& match : dict_manager.lookup(conditional, 0)) {
-    if (match.entry != nullptr && match.length == 2 && match.entry->pos == core::PartOfSpeech::Verb &&
-        match.entry->lemma == "する") {
-      return true;
-    }
-  }
-  return false;
+  return hasCompleteVerbLemma(dict_manager, conditional, 2, "する");
 }
 
 }  // namespace
@@ -120,7 +97,7 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
       return;
     }
     if (start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]) &&
-        startsInsideRegisteredNoun(text, byte_offsets, start_pos, dict_manager)) {
+        startsInsideRegisteredNoun(dict_manager, text, byte_offsets, start_pos)) {
       return;
     }
     const SubsidiaryVerb& matched_v2 = *best_match.v2_verb;

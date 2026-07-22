@@ -246,15 +246,7 @@ bool startsLiteraryNitsukeAt(const core::Lattice& lattice, const std::vector<cha
       codepoints[start_pos + kNitsukeLength] != U'、') {
     return false;
   }
-  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
-    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-      const auto& edge = lattice.getEdge(edge_id);
-      if (edge.end == start_pos && edge.extended_pos == core::ExtendedPOS::VerbShuushikei) {
-        return true;
-      }
-    }
-  }
-  return false;
+  return hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::VerbShuushikei);
 }
 
 // The method suffix 方 attaches to a kanji-containing deverbal noun
@@ -278,18 +270,6 @@ bool hasPrecedingDeverbalNoun(const core::Lattice& lattice, size_t start_pos) {
     }
   }
   return has_noun && has_renyokei;
-}
-
-bool hasPrecedingExtendedPOS(const core::Lattice& lattice, size_t start_pos, core::ExtendedPOS extended_pos) {
-  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
-    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-      const auto& edge = lattice.getEdge(edge_id);
-      if (edge.end == start_pos && edge.extended_pos == extended_pos) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 // A polite-auxiliary homograph is not a real boundary when it begins inside a
@@ -333,32 +313,17 @@ bool hasPrecedingVerbVolitionalChain(const core::Lattice& lattice, size_t start_
 }
 
 bool hasPrecedingNominal(const core::Lattice& lattice, size_t start_pos) {
-  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
-    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-      const auto& edge = lattice.getEdge(edge_id);
-      if (edge.end == start_pos && (edge.pos == core::PartOfSpeech::Noun || edge.pos == core::PartOfSpeech::Pronoun)) {
-        return true;
-      }
-    }
-  }
-  return false;
+  constexpr PartOfSpeechMask kNominalMask =
+      partOfSpeechMask(core::PartOfSpeech::Noun) | partOfSpeechMask(core::PartOfSpeech::Pronoun);
+  return hasPrecedingPartOfSpeech(lattice, start_pos, kNominalMask);
 }
 
 bool startsFormalNounParticleAfterPredicate(const core::Lattice& lattice,
                                             const dictionary::DictionaryManager& dict_manager,
                                             const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
-  bool predicate_precedes = false;
-  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
-    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-      const auto& edge = lattice.getEdge(edge_id);
-      if (edge.end == start_pos &&
-          (edge.pos == core::PartOfSpeech::Verb || edge.pos == core::PartOfSpeech::Adjective)) {
-        predicate_precedes = true;
-        break;
-      }
-    }
-  }
-  if (!predicate_precedes) {
+  constexpr PartOfSpeechMask kPredicateMask =
+      partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Adjective);
+  if (!hasPrecedingPartOfSpeech(lattice, start_pos, kPredicateMask)) {
     return false;
   }
   for (size_t split = start_pos + 1; split < end_pos; ++split) {

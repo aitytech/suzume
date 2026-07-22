@@ -25,6 +25,23 @@ class DictionaryManager;
 namespace suzume::analysis {
 
 using ByteOffsets = std::vector<size_t>;
+using PartOfSpeechMask = uint32_t;
+
+constexpr PartOfSpeechMask partOfSpeechMask(core::PartOfSpeech pos) {
+  return 1U << static_cast<uint8_t>(pos);
+}
+
+/** Whether an exact dictionary surface has any of the requested parts of speech. */
+bool hasExactPartOfSpeech(const dictionary::DictionaryManager& dict_manager, std::string_view surface,
+                          PartOfSpeechMask pos_mask);
+
+/** Whether a complete dictionary match is a verb with the requested lemma. */
+bool hasCompleteVerbLemma(const dictionary::DictionaryManager& dict_manager, std::string_view surface,
+                          size_t char_length, std::string_view lemma);
+
+/** Whether a character boundary starts inside a registered noun. */
+bool startsInsideRegisteredNoun(const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                const ByteOffsets& byte_offsets, size_t start_pos);
 
 /**
  * @brief Find end position of consecutive characters of a given type
@@ -93,6 +110,12 @@ size_t advanceCharsToBytePos(const std::vector<char32_t>& codepoints, size_t sta
  * @brief Encode a codepoint range as UTF-8.
  */
 std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t start, size_t end);
+
+/** Whether an edge with one of the requested parts of speech ends at a boundary. */
+bool hasPrecedingPartOfSpeech(const core::Lattice& lattice, size_t end_pos, PartOfSpeechMask pos_mask);
+
+/** Whether an edge with the requested extended part of speech ends at a boundary. */
+bool hasPrecedingExtendedPOS(const core::Lattice& lattice, size_t end_pos, core::ExtendedPOS extended_pos);
 
 /**
  * @brief Find the end of a dictionary-evidenced compound verb covering pos.

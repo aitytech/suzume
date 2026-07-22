@@ -185,20 +185,19 @@ bool startsWithParticleBeforeRegisteredPredicate(const suzume::analysis::Unknown
   // the start of an ordinary native word as a boundary.
   for (size_t split = candidate.start + 2; split < candidate.end; ++split) {
     const std::string content = suzume::analysis::extractSubstring(codepoints, candidate.start + 1, split);
-    bool content_verified = false;
-    for (const auto pos :
-         {suzume::core::PartOfSpeech::Noun, suzume::core::PartOfSpeech::Pronoun, suzume::core::PartOfSpeech::Adverb}) {
-      if (dict_manager->lookupExact(content, pos) != nullptr) {
-        content_verified = true;
-        break;
-      }
-    }
+    constexpr suzume::analysis::PartOfSpeechMask kContentMask =
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Noun) |
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Pronoun) |
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adverb);
+    const bool content_verified = suzume::analysis::hasExactPartOfSpeech(*dict_manager, content, kContentMask);
     if (!content_verified) {
       continue;
     }
     const std::string tail = suzume::analysis::extractSubstring(codepoints, split, candidate.end);
-    if (dict_manager->lookupExact(tail, suzume::core::PartOfSpeech::Verb) != nullptr ||
-        dict_manager->lookupExact(tail, suzume::core::PartOfSpeech::Adjective) != nullptr) {
+    constexpr suzume::analysis::PartOfSpeechMask kPredicateMask =
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Verb) |
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adjective);
+    if (suzume::analysis::hasExactPartOfSpeech(*dict_manager, tail, kPredicateMask)) {
       return true;
     }
     const auto best = inflection.getBest(tail);
@@ -219,12 +218,14 @@ bool hasDictionaryContentEndingAt(const std::vector<char32_t>& codepoints, size_
   const size_t first = boundary > kContentLookback ? boundary - kContentLookback : 0;
   for (size_t start = first; start < boundary; ++start) {
     const std::string surface = suzume::analysis::extractSubstring(codepoints, start, boundary);
-    for (const auto pos :
-         {suzume::core::PartOfSpeech::Noun, suzume::core::PartOfSpeech::Pronoun, suzume::core::PartOfSpeech::Adverb,
-          suzume::core::PartOfSpeech::Adjective, suzume::core::PartOfSpeech::Verb}) {
-      if (dict_manager->lookupExact(surface, pos) != nullptr) {
-        return true;
-      }
+    constexpr suzume::analysis::PartOfSpeechMask kContentMask =
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Noun) |
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Pronoun) |
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adverb) |
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adjective) |
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Verb);
+    if (suzume::analysis::hasExactPartOfSpeech(*dict_manager, surface, kContentMask)) {
+      return true;
     }
   }
   return false;
@@ -237,8 +238,10 @@ bool isGeneratedPredicate(const std::vector<char32_t>& codepoints, size_t start,
     return false;
   }
   const std::string surface = suzume::analysis::extractSubstring(codepoints, start, end);
-  if (dict_manager->lookupExact(surface, suzume::core::PartOfSpeech::Verb) != nullptr ||
-      dict_manager->lookupExact(surface, suzume::core::PartOfSpeech::Adjective) != nullptr) {
+  constexpr suzume::analysis::PartOfSpeechMask kPredicateMask =
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Verb) |
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adjective);
+  if (suzume::analysis::hasExactPartOfSpeech(*dict_manager, surface, kPredicateMask)) {
     return true;
   }
   const auto best = inflection.getBest(surface);
@@ -369,13 +372,11 @@ bool fusesPastAuxiliary(const suzume::analysis::UnknownCandidate& candidate, con
     return true;
   }
   const std::string prefix = suzume::analysis::extractSubstring(codepoints, candidate.start, candidate.end - 1);
-  for (const auto pos : {suzume::core::PartOfSpeech::Verb, suzume::core::PartOfSpeech::Adjective,
-                         suzume::core::PartOfSpeech::Auxiliary}) {
-    if (dict_manager->lookupExact(prefix, pos) != nullptr) {
-      return true;
-    }
-  }
-  return false;
+  constexpr suzume::analysis::PartOfSpeechMask kPredicateMask =
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Verb) |
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adjective) |
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Auxiliary);
+  return suzume::analysis::hasExactPartOfSpeech(*dict_manager, prefix, kPredicateMask);
 }
 
 bool fusesPassivePastAsNoun(const suzume::analysis::UnknownCandidate& candidate) {

@@ -512,8 +512,9 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     }
     const std::string renyokei = extractSubstring(codepoints, start_pos, hiragana_end);
     const bool has_verb_reading = dict_manager.lookupExact(renyokei, core::PartOfSpeech::Verb) != nullptr;
-    const bool is_closed_modifier = dict_manager.lookupExact(renyokei, core::PartOfSpeech::Determiner) != nullptr ||
-                                    dict_manager.lookupExact(renyokei, core::PartOfSpeech::Adjective) != nullptr;
+    constexpr PartOfSpeechMask kModifierMask =
+        partOfSpeechMask(core::PartOfSpeech::Determiner) | partOfSpeechMask(core::PartOfSpeech::Adjective);
+    const bool is_closed_modifier = hasExactPartOfSpeech(dict_manager, renyokei, kModifierMask);
     if (is_closed_modifier && !has_verb_reading) {
       return;
     }

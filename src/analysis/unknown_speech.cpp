@@ -346,9 +346,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
       for (size_t split = start_pos + 1; split < mimetic_end; ++split) {
         const std::string left = extractSubstring(codepoints, start_pos, split);
         const std::string right = extractSubstring(codepoints, split, mimetic_end);
-        const bool left_is_predicate = dict_manager_->lookupExact(left, core::PartOfSpeech::Verb) != nullptr ||
-                                       dict_manager_->lookupExact(left, core::PartOfSpeech::Adjective) != nullptr ||
-                                       dict_manager_->lookupExact(left, core::PartOfSpeech::Auxiliary) != nullptr;
+        constexpr PartOfSpeechMask kPredicateMask = partOfSpeechMask(core::PartOfSpeech::Verb) |
+                                                    partOfSpeechMask(core::PartOfSpeech::Adjective) |
+                                                    partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+        const bool left_is_predicate = hasExactPartOfSpeech(*dict_manager_, left, kPredicateMask);
         if (left_is_predicate && dict_manager_->lookupExact(right, core::PartOfSpeech::Particle) != nullptr) {
           decomposes_as_predicate_particle = true;
           break;
@@ -437,10 +438,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
                                       ? dict_manager_->lookupExact(inflectional_tail, core::PartOfSpeech::Particle)
                                       : nullptr;
       const std::string predicate_stem = extractSubstring(codepoints, start_pos, start_pos + 2);
+      constexpr PartOfSpeechMask kPredicateMask =
+          partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Auxiliary);
       const bool has_exact_predicate_stem =
-          dict_manager_ != nullptr &&
-          (dict_manager_->lookupExact(predicate_stem, core::PartOfSpeech::Verb) != nullptr ||
-           dict_manager_->lookupExact(predicate_stem, core::PartOfSpeech::Auxiliary) != nullptr);
+          dict_manager_ != nullptr && hasExactPartOfSpeech(*dict_manager_, predicate_stem, kPredicateMask);
       const bool is_conjunctive_auxiliary_tail = has_exact_predicate_stem && tail_particle != nullptr &&
                                                  tail_particle->extended_pos == core::ExtendedPOS::ParticleConj;
       std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);

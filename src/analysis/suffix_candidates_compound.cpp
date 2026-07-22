@@ -86,9 +86,10 @@ bool hasInternalNominalParticleBoundary(const std::vector<char32_t>& codepoints,
         return true;
       }
       const std::string remainder = extractSubstring(codepoints, particle_end, end_pos);
-      if (dict_manager->lookupExact(remainder, core::PartOfSpeech::Verb) != nullptr ||
-          dict_manager->lookupExact(remainder, core::PartOfSpeech::Adjective) != nullptr ||
-          dict_manager->lookupExact(remainder, core::PartOfSpeech::Auxiliary) != nullptr) {
+      constexpr PartOfSpeechMask kPredicateMask = partOfSpeechMask(core::PartOfSpeech::Verb) |
+                                                  partOfSpeechMask(core::PartOfSpeech::Adjective) |
+                                                  partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+      if (hasExactPartOfSpeech(*dict_manager, remainder, kPredicateMask)) {
         return true;
       }
     }
@@ -235,10 +236,10 @@ bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, 
     return false;
   }
   const std::string whole = extractSubstring(codepoints, start_pos, end_pos);
-  if (dict_manager->lookupExact(whole, core::PartOfSpeech::Noun) != nullptr ||
-      dict_manager->lookupExact(whole, core::PartOfSpeech::Verb) != nullptr ||
-      dict_manager->lookupExact(whole, core::PartOfSpeech::Adjective) != nullptr ||
-      dict_manager->lookupExact(whole, core::PartOfSpeech::Adverb) != nullptr) {
+  constexpr PartOfSpeechMask kLexicalMask =
+      partOfSpeechMask(core::PartOfSpeech::Noun) | partOfSpeechMask(core::PartOfSpeech::Verb) |
+      partOfSpeechMask(core::PartOfSpeech::Adjective) | partOfSpeechMask(core::PartOfSpeech::Adverb);
+  if (hasExactPartOfSpeech(*dict_manager, whole, kLexicalMask)) {
     return false;
   }
   for (size_t split = start_pos + 1; split < end_pos; ++split) {

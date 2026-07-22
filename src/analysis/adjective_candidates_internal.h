@@ -78,6 +78,10 @@ float firstConfidenceAtLeast(const std::vector<grammar::InflectionCandidate>& ca
 float maxConfidenceFor(const std::vector<grammar::InflectionCandidate>& candidates,
                        std::initializer_list<grammar::VerbType> types);
 
+/** Whether any non-adjective analysis has a dictionary-verified verb lemma. */
+bool hasDictionaryVerbAnalysis(const std::vector<grammar::InflectionCandidate>& candidates,
+                               const dictionary::DictionaryManager* dict_manager);
+
 /**
  * @brief Whether the character after い makes it a Godan onbin surface.
  */

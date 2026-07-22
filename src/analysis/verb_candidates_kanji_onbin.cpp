@@ -451,9 +451,10 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
       // explanatory (食べる+ん+だ, 高い+ん+だ), not a nasal-euphonic verb.
       // Genuine hatsuonbin has an incomplete stem before ん (読+ん+だ,
       // 汗ば+ん+だ), so exact predicate evidence separates the two shapes.
-      const bool exact_predicate = dict_manager != nullptr &&
-                                   (dict_manager->lookupExact(lexical_stem, core::PartOfSpeech::Verb) != nullptr ||
-                                    dict_manager->lookupExact(lexical_stem, core::PartOfSpeech::Adjective) != nullptr);
+      constexpr PartOfSpeechMask kPredicateMask =
+          partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Adjective);
+      const bool exact_predicate =
+          dict_manager != nullptr && hasExactPartOfSpeech(*dict_manager, lexical_stem, kPredicateMask);
       const auto& predicate_analyses = inflection.analyze(lexical_stem);
       const bool analyzed_complete_predicate =
           std::any_of(predicate_analyses.begin(), predicate_analyses.end(), [&](const auto& analysis) {

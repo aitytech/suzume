@@ -713,10 +713,7 @@ bool isModernIAdjective(const std::string& lemma, const grammar::Inflection& inf
 bool hasDictionaryVerifiedVerbAnalysis(const std::string& surface, const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager) {
   const auto& analyses = inflection.analyze(surface);
-  return std::any_of(analyses.begin(), analyses.end(), [&](const auto& candidate) {
-    return candidate.verb_type != grammar::VerbType::IAdjective &&
-           isVerbInDictionary(dict_manager, candidate.base_form);
-  });
+  return adj_detail::hasDictionaryVerbAnalysis(analyses, dict_manager);
 }
 
 void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,

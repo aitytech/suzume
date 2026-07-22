@@ -49,23 +49,6 @@ bool isCompoundVerbOrNominalizationAttested(const dictionary::DictionaryManager&
   return !nominalized.empty() && dict_manager.lookupExact(nominalized, core::PartOfSpeech::Noun) != nullptr;
 }
 
-bool startsInsideRegisteredNoun(std::string_view text, const ByteOffsets& byte_offsets, size_t start_pos,
-                                const dictionary::DictionaryManager& dict_manager) {
-  if (start_pos == 0) {
-    return false;
-  }
-  const size_t scan_start = start_pos > 8 ? start_pos - 8 : 0;
-  for (size_t noun_start = scan_start; noun_start < start_pos; ++noun_start) {
-    for (const auto& result : dict_manager.lookup(text, byteOffsetAt(byte_offsets, noun_start))) {
-      if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun &&
-          noun_start + result.length > start_pos) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 }  // namespace
 
 CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector<char32_t>& codepoints,
@@ -514,7 +497,7 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // inflection-only V1 in that position can instead fabricate a compound
     // across the noun/verb boundary (生+涯忘れる).
     const bool starts_inside_kanji_run = start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]);
-    if (starts_inside_kanji_run && startsInsideRegisteredNoun(text, byte_offsets, start_pos, dict_manager)) {
+    if (starts_inside_kanji_run && startsInsideRegisteredNoun(dict_manager, text, byte_offsets, start_pos)) {
       continue;
     }
     if (starts_inside_kanji_run && !v1.dict_verified && !dict_compound_v1) {
@@ -528,8 +511,9 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // dictionary-verified.
     if (!v1.dict_verified && !dict_compound_v1 && !is_sokuonbin && kanji_end < codepoints.size()) {
       const std::string v2_form = extractSubstring(codepoints, v2_start, kanji_end + 1);
-      if (dict_manager.lookupExact(v2_form, core::PartOfSpeech::Suffix) != nullptr ||
-          dict_manager.lookupExact(v2_form, core::PartOfSpeech::Noun) != nullptr) {
+      constexpr PartOfSpeechMask kNominalSuffixMask =
+          partOfSpeechMask(core::PartOfSpeech::Suffix) | partOfSpeechMask(core::PartOfSpeech::Noun);
+      if (hasExactPartOfSpeech(dict_manager, v2_form, kNominalSuffixMask)) {
         continue;
       }
     }
