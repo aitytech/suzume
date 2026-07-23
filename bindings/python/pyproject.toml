@@ -50,6 +50,9 @@ Documentation = "https://suzume.libraz.net/docs/python"
 Repository = "https://github.com/libraz/suzume"
 Issues = "https://github.com/libraz/suzume/issues"
 
+[project.scripts]
+suzume = "suzume.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
@@ -66,14 +69,6 @@ artifacts = [
     "src/suzume/*.so",
     "src/suzume/*.dic",
     "src/suzume/py.typed",
-]
-
-[tool.hatch.build.targets.sdist]
-include = [
-    "src/",
-    "tests/",
-    "README.md",
-    "pyproject.toml",
 ]
 
 [tool.pytest.ini_options]

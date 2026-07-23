@@ -21,6 +21,12 @@ concrete examples of token boundaries, lemmatization, and trade-offs.
 pip install suzume
 ```
 
+PyPI publishes binary wheels for Linux x86_64
+(`manylinux2014`/`manylinux_2_17`) and macOS arm64 (macOS 11 or newer).
+Windows, macOS x86_64, Linux arm64, and other platforms or architectures are
+not supported. Suzume does not publish or support a source distribution; an
+installation succeeds only when a compatible wheel is available.
+
 ## Quick Start
 
 ```python
@@ -30,6 +36,19 @@ with Suzume() as sz:
     tokens = sz.analyze("すもももももももものうち")
     tags = sz.generate_tags("東京の公園に行きました")
 ```
+
+Installing the wheel also provides the `suzume` command:
+
+```bash
+suzume "東京へ行く"
+suzume analyze --mode search --format json "東京の公園"
+printf 'りんごを食べる\n' | suzume --format tags
+```
+
+Run `suzume --help` for analysis modes, normalization controls, output formats,
+tag filters, and repeatable `--dict` options. Dictionary compilation,
+validation, and test commands remain part of the separate native developer
+tool, `suzume-cli`.
 
 See the [Python API](https://suzume.libraz.net/docs/python) for the complete
 interface, including user dictionaries and tag-generation options.
