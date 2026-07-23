@@ -21,6 +21,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(BUILD_TESTING "Build tests" ON)
 option(BUILD_WASM "Build for WebAssembly" OFF)
 option(BUILD_SHARED "Build the shared C-ABI library (libsuzume) for ctypes bindings" OFF)
+option(BUILD_CLI "Build the native developer CLI" ON)
 option(SUZUME_EMBED_DICT "Embed the compiled dictionaries into the library (no filesystem access at runtime)" OFF)
 option(SUZUME_LIB_SOVERSION "Attach VERSION/SOVERSION to the shared library (off for the flat wheel build)" ON)
 option(SUZUME_INSTALL "Generate install/export rules (find_package, pkg-config)" ON)
@@ -143,6 +144,12 @@ include(GNUInstallDirs)
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+# Dictionary paths are defined independently of BUILD_CLI so library-only
+# configurations remain coherent. Compiling and installing these generated
+# runtime files still requires the native CLI and is guarded below.
+set(DICT_DATA_DIR "${CMAKE_SOURCE_DIR}/data")
+file(GLOB CORE_TSV_FILES "${DICT_DATA_DIR}/core/*.tsv")
+file(GLOB USER_TSV_FILES "${DICT_DATA_DIR}/user/*.tsv")
 
 # Include directories: src/ for internal headers, include/ for the public C ABI header
 include_directories(${SOURCE_DIR} ${INCLUDE_DIR})
@@ -190,57 +197,53 @@ endif()
 # Add subdirectories
 add_subdirectory(src)
 
+if(BUILD_CLI AND NOT BUILD_WASM)
+  add_subdirectory(tools)
+endif()
+
 if(BUILD_TESTING AND NOT BUILD_WASM)
   add_subdirectory(tests)
 endif()
 
-# Dictionary build targets
-set(DICT_DATA_DIR "${CMAKE_SOURCE_DIR}/data")
-
-# Collect TSV files for dictionary build
-file(GLOB CORE_TSV_FILES "${DICT_DATA_DIR}/core/*.tsv")
-file(GLOB USER_TSV_FILES "${DICT_DATA_DIR}/user/*.tsv")
-
-# Custom target: build-dict - Compile all TSV dictionaries to core.dic and user.dic
-# Output goes to data/ directory so that tests and CLI can find them via ./data/core.dic
-# This native target globs every local TSV, so it includes any gitignored,
-# local-only user dictionary. The public WASM build instead regenerates
-# data/user.dic from git-tracked TSVs only (see the wasm-dict target in the
-# Makefile), so local-only dictionaries never reach the shipped binary; CI has
-# no ignored files checked out, so its native and WASM dictionaries coincide.
-add_custom_target(build-dict
-  COMMAND ${CMAKE_COMMAND} -E echo "Building dictionaries..."
-  COMMAND ${CMAKE_BINARY_DIR}/bin/suzume-cli dict compile
-          ${CORE_TSV_FILES} ${DICT_DATA_DIR}/core.dic
-  COMMAND ${CMAKE_BINARY_DIR}/bin/suzume-cli dict compile
-          ${USER_TSV_FILES} ${DICT_DATA_DIR}/user.dic
-  COMMAND ${CMAKE_COMMAND} -E echo "Dictionary build complete: ${DICT_DATA_DIR}"
-  DEPENDS suzume-cli
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  COMMENT "Compiling TSV dictionaries to binary format"
-)
-
-# Custom target: validate-dict - Validate all TSV dictionaries
-add_custom_target(validate-dict
-  COMMAND ${CMAKE_COMMAND} -E echo "Validating core dictionaries..."
-  DEPENDS suzume-cli
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  COMMENT "Validating TSV dictionary files"
-)
-
-# Add validation command for each TSV file
-foreach(TSV_FILE ${CORE_TSV_FILES})
-  get_filename_component(TSV_NAME ${TSV_FILE} NAME)
-  add_custom_command(TARGET validate-dict POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "  Validating ${TSV_NAME}..."
-    COMMAND ${CMAKE_BINARY_DIR}/bin/suzume-cli dict validate ${TSV_FILE}
+if(BUILD_CLI AND NOT BUILD_WASM)
+  # Dictionary build targets use the native developer CLI compiler.
+  # This native target globs every local TSV, so it includes any gitignored,
+  # local-only user dictionary. The public WASM build instead regenerates
+  # data/user.dic from git-tracked TSVs only (see the wasm-dict target in the
+  # Makefile), so local-only dictionaries never reach the shipped binary; CI has
+  # no ignored files checked out, so its native and WASM dictionaries coincide.
+  add_custom_target(build-dict
+    COMMAND ${CMAKE_COMMAND} -E echo "Building dictionaries..."
+    COMMAND $<TARGET_FILE:suzume-cli> dict compile
+            ${CORE_TSV_FILES} ${DICT_DATA_DIR}/core.dic
+    COMMAND $<TARGET_FILE:suzume-cli> dict compile
+            ${USER_TSV_FILES} ${DICT_DATA_DIR}/user.dic
+    COMMAND ${CMAKE_COMMAND} -E echo "Dictionary build complete: ${DICT_DATA_DIR}"
+    DEPENDS suzume-cli
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Compiling TSV dictionaries to binary format"
   )
-endforeach()
 
-add_custom_command(TARGET validate-dict POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E echo "All dictionaries validated successfully"
-)
+  add_custom_target(validate-dict
+    COMMAND ${CMAKE_COMMAND} -E echo "Validating core dictionaries..."
+    DEPENDS suzume-cli
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Validating TSV dictionary files"
+  )
+
+  foreach(TSV_FILE ${CORE_TSV_FILES})
+    get_filename_component(TSV_NAME ${TSV_FILE} NAME)
+    add_custom_command(TARGET validate-dict POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E echo "  Validating ${TSV_NAME}..."
+      COMMAND $<TARGET_FILE:suzume-cli> dict validate ${TSV_FILE}
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+  endforeach()
+
+  add_custom_command(TARGET validate-dict POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "All dictionaries validated successfully"
+  )
+endif()
 
 # ---------------------------------------------------------------------------
 # Install & export: find_package(suzume) + pkg-config
@@ -302,9 +305,10 @@ if(SUZUME_INSTALL AND NOT BUILD_WASM)
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
   )
 
-  # Ship the compiled dictionaries for non-embedded builds so the runtime search
-  # path (<prefix>/share/suzume) resolves them with no extra configuration.
-  if(NOT SUZUME_EMBED_DICT)
+  # Compiled dictionaries are produced by the native CLI. BUILD_CLI=OFF is a
+  # coherent library-only install, so it intentionally omits these generated
+  # runtime files while still installing libraries, headers, and package metadata.
+  if(NOT SUZUME_EMBED_DICT AND BUILD_CLI)
     install(FILES
       ${DICT_DATA_DIR}/core.dic
       ${DICT_DATA_DIR}/user.dic

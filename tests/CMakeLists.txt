@@ -25,9 +25,9 @@ set(TEST_COMMON_SOURCES
 
 # CLI source files needed for CLI tests
 set(CLI_SOURCES_FOR_TESTS
-  ${CMAKE_SOURCE_DIR}/src/suzume-cli/dict_compiler.cpp
-  ${CMAKE_SOURCE_DIR}/src/suzume-cli/tsv_parser.cpp
-  ${CMAKE_SOURCE_DIR}/src/suzume-cli/cli_common.cpp
+  ${CMAKE_SOURCE_DIR}/tools/cli/dict_compiler.cpp
+  ${CMAKE_SOURCE_DIR}/tools/cli/tsv_parser.cpp
+  ${CMAKE_SOURCE_DIR}/tools/cli/cli_common.cpp
 )
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -98,11 +98,16 @@ set(TEST_SOURCES
 # Create test executable
 add_executable(suzume_test ${TEST_SOURCES})
 target_compile_definitions(suzume_test PRIVATE SUZUME_VERSION="${PROJECT_VERSION}")
+if(BUILD_CLI)
+  # Keep the Python CLI contract test reliable even when callers build only the
+  # main test target before invoking CTest.
+  add_dependencies(suzume_test suzume-cli)
+endif()
 
 # Include directories
 target_include_directories(suzume_test PRIVATE
   ${CMAKE_SOURCE_DIR}/src
-  ${CMAKE_SOURCE_DIR}/src/suzume-cli
+  ${CMAKE_SOURCE_DIR}/tools/cli
   ${CMAKE_CURRENT_SOURCE_DIR}/common
 )
 
@@ -117,3 +122,15 @@ target_link_libraries(suzume_test PRIVATE
 gtest_discover_tests(suzume_test
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
+
+if(BUILD_CLI)
+  add_test(
+    NAME native_cli_contract
+    COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_SOURCE_DIR}/tests/cli/native_cli_contract_test.py
+            $<TARGET_FILE:suzume-cli>
+  )
+  set_tests_properties(native_cli_contract PROPERTIES
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  )
+endif()

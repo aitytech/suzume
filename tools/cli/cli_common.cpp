@@ -1,47 +1,80 @@
 #include "cli_common.h"
 
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 
+#include <cstdio>
 #include <cstring>
 #include <iomanip>
 #include <limits>
 #include <sstream>
 
+#include "postprocess/tag_generator.h"
 #include "suzume.h"
 
 namespace suzume::cli {
 
-OutputFormat parseOutputFormat(std::string_view str) {
-  if (str == "tags") {
-    return OutputFormat::Tags;
-  }
-  if (str == "json") {
-    return OutputFormat::Json;
-  }
-  if (str == "tsv") {
-    return OutputFormat::Tsv;
-  }
-  if (str == "chasen") {
-    return OutputFormat::Chasen;
-  }
-  return OutputFormat::Morpheme;
+namespace {
+
+bool isKnownCommand(std::string_view value) {
+  return value == "analyze" || value == "dict" || value == "test" || value == "version" || value == "help";
 }
 
-std::string_view outputFormatToString(OutputFormat fmt) {
-  switch (fmt) {
-    case OutputFormat::Morpheme:
-      return "morpheme";
-    case OutputFormat::Tags:
-      return "tags";
-    case OutputFormat::Json:
-      return "json";
-    case OutputFormat::Tsv:
-      return "tsv";
-    case OutputFormat::Chasen:
-      return "chasen";
-  }
-  return "morpheme";
+bool isValidMode(std::string_view value) {
+  return value == "normal" || value == "search" || value == "split";
 }
+
+bool tryParseOutputFormat(std::string_view value, OutputFormat* output) {
+  if (output == nullptr) {
+    return false;
+  }
+  if (value == "morpheme") {
+    *output = OutputFormat::Morpheme;
+  } else if (value == "tags") {
+    *output = OutputFormat::Tags;
+  } else if (value == "json") {
+    *output = OutputFormat::Json;
+  } else if (value == "tsv") {
+    *output = OutputFormat::Tsv;
+  } else if (value == "chasen") {
+    *output = OutputFormat::Chasen;
+  } else {
+    return false;
+  }
+  return true;
+}
+
+bool takeOptionValue(int argc, char* argv[], int* index, std::string_view option, std::string* value,
+                     std::string* error) {
+  if (*index + 1 >= argc || argv[*index + 1][0] == '-') {
+    *error = "Missing value for " + std::string(option);
+    return false;
+  }
+  *value = argv[++(*index)];
+  return true;
+}
+
+bool parseTagPos(std::string_view value, uint8_t* filter) {
+  uint8_t bit = 0;
+  if (value == "noun") {
+    bit = postprocess::kTagPosNoun;
+  } else if (value == "verb") {
+    bit = postprocess::kTagPosVerb;
+  } else if (value == "adjective") {
+    bit = postprocess::kTagPosAdjective;
+  } else if (value == "adverb") {
+    bit = postprocess::kTagPosAdverb;
+  } else {
+    return false;
+  }
+  *filter = static_cast<uint8_t>(*filter | bit);  // NOLINT(hicpp-signed-bitwise): bit flag operation
+  return true;
+}
+
+}  // namespace
 
 void printError(std::string_view message) {
   std::cerr << "error: " << message << "\n";
@@ -134,15 +167,19 @@ std::string jsonEscape(std::string_view value) {
     // Multi-byte UTF-8: determine the expected sequence length from the lead
     // byte, then verify every continuation byte before passing it through.
     size_t seq_len = 0;
-    if ((chr & 0xE0) == 0xC0) {
+    bool scalar_prefix_valid = false;
+    if (chr >= 0xC2 && chr <= 0xDF) {
       seq_len = 2;
-    } else if ((chr & 0xF0) == 0xE0) {
+      scalar_prefix_valid = true;
+    } else if (chr >= 0xE0 && chr <= 0xEF) {
       seq_len = 3;
-    } else if ((chr & 0xF8) == 0xF0) {
+      scalar_prefix_valid = true;
+    } else if (chr >= 0xF0 && chr <= 0xF4) {
       seq_len = 4;
+      scalar_prefix_valid = true;
     }
 
-    bool valid = seq_len != 0 && idx + seq_len <= value.size();
+    bool valid = scalar_prefix_valid && idx + seq_len <= value.size();
     if (valid) {
       for (size_t off = 1; off < seq_len; ++off) {
         if ((static_cast<unsigned char>(value[idx + off]) & 0xC0) != 0x80) {
@@ -150,6 +187,14 @@ std::string jsonEscape(std::string_view value) {
           break;
         }
       }
+    }
+    if (valid && seq_len == 3) {
+      const auto second = static_cast<unsigned char>(value[idx + 1]);
+      valid = !((chr == 0xE0 && second < 0xA0) || (chr == 0xED && second >= 0xA0));
+    }
+    if (valid && seq_len == 4) {
+      const auto second = static_cast<unsigned char>(value[idx + 1]);
+      valid = !((chr == 0xF0 && second < 0x90) || (chr == 0xF4 && second > 0x8F));
     }
 
     if (valid) {
@@ -207,7 +252,11 @@ std::string wildcardToRegex(std::string_view pattern) {
 }
 
 bool isTerminal() {
+#ifdef _WIN32
+  return _isatty(_fileno(stdin)) != 0;
+#else
   return isatty(STDIN_FILENO) != 0;
+#endif
 }
 
 std::string getVersionString() {
@@ -227,8 +276,7 @@ CommandArgs parseArgs(int argc, char* argv[]) {
   while (idx < argc) {
     std::string arg = argv[idx];
 
-    // After a literal "--", every remaining argument is positional text and is
-    // never interpreted as a subcommand or flag.
+    // After a literal "--", every remaining argument is positional.
     if (positional_only) {
       if (args.command.empty()) {
         args.command = "analyze";
@@ -238,27 +286,27 @@ CommandArgs parseArgs(int argc, char* argv[]) {
       continue;
     }
 
-    // End-of-options marker.
     if (arg == "--") {
+      if (args.command.empty()) {
+        args.command = "analyze";
+      }
       positional_only = true;
       ++idx;
       continue;
     }
 
-    // Help flags
     if (arg == "-h" || arg == "--help") {
       args.help = true;
       ++idx;
       continue;
     }
 
-    // Version
     if (arg == "-v" || arg == "--version") {
-      printVersion();
-      exit(0);
+      args.version = true;
+      ++idx;
+      continue;
     }
 
-    // Verbose
     if (arg == "-V" || arg == "--verbose") {
       args.verbose = true;
       ++idx;
@@ -273,70 +321,144 @@ CommandArgs parseArgs(int argc, char* argv[]) {
       continue;
     }
 
-    // Debug mode (show lattice candidates and scores)
+    // Dict and test own their remaining option grammar. Keep their flags and
+    // values intact, except for the common test dictionary option.
+    if (args.command == "dict" || args.command == "test") {
+      if (args.command == "test" && (arg == "-d" || arg == "--dict")) {
+        std::string value;
+        if (!takeOptionValue(argc, argv, &idx, arg, &value, &args.parse_error)) {
+          return args;
+        }
+        args.dict_paths.push_back(std::move(value));
+      } else if (args.command == "test" && arg.rfind("--dict=", 0) == 0) {
+        std::string value = arg.substr(std::strlen("--dict="));
+        if (value.empty()) {
+          args.parse_error = "Missing value for --dict";
+          return args;
+        }
+        args.dict_paths.push_back(std::move(value));
+      } else {
+        args.args.push_back(arg);
+      }
+      ++idx;
+      continue;
+    }
+
+    if (arg[0] != '-') {
+      if (args.command.empty() && isKnownCommand(arg)) {
+        args.command = arg;
+      } else {
+        if (args.command.empty()) {
+          args.command = "analyze";
+        }
+        args.args.push_back(arg);
+      }
+      ++idx;
+      continue;
+    }
+
     if (arg == "--debug") {
       args.debug = true;
       ++idx;
       continue;
     }
 
-    // Dictionary path
-    if ((arg == "-d" || arg == "--dict") && idx + 1 < argc) {
-      args.dict_paths.emplace_back(argv[++idx]);
+    if (arg == "-d" || arg == "--dict") {
+      std::string value;
+      if (!takeOptionValue(argc, argv, &idx, arg, &value, &args.parse_error)) {
+        return args;
+      }
+      args.dict_paths.push_back(std::move(value));
+      ++idx;
+      continue;
+    }
+    if (arg.rfind("--dict=", 0) == 0) {
+      std::string value = arg.substr(std::strlen("--dict="));
+      if (value.empty()) {
+        args.parse_error = "Missing value for --dict";
+        return args;
+      }
+      args.dict_paths.push_back(std::move(value));
       ++idx;
       continue;
     }
 
-    // Mode
-    if ((arg == "-m" || arg == "--mode") && idx + 1 < argc) {
-      args.mode = argv[++idx];
+    if (arg == "-m" || arg == "--mode") {
+      std::string value;
+      if (!takeOptionValue(argc, argv, &idx, arg, &value, &args.parse_error)) {
+        return args;
+      }
+      if (!isValidMode(value)) {
+        args.parse_error = "Invalid mode: " + value + " (expected normal, search, or split)";
+        return args;
+      }
+      args.mode = std::move(value);
+      ++idx;
+      continue;
+    }
+    if (arg.rfind("--mode=", 0) == 0) {
+      std::string value = arg.substr(std::strlen("--mode="));
+      if (!isValidMode(value)) {
+        args.parse_error = "Invalid mode: " + value + " (expected normal, search, or split)";
+        return args;
+      }
+      args.mode = std::move(value);
       ++idx;
       continue;
     }
 
-    // Format
-    if ((arg == "-f" || arg == "--format") && idx + 1 < argc) {
-      args.format = parseOutputFormat(argv[++idx]);
+    if (arg == "-f" || arg == "--format") {
+      std::string value;
+      if (!takeOptionValue(argc, argv, &idx, arg, &value, &args.parse_error)) {
+        return args;
+      }
+      if (!tryParseOutputFormat(value, &args.format)) {
+        args.parse_error = "Invalid format: " + value + " (expected morpheme, tags, json, tsv, or chasen)";
+        return args;
+      }
+      ++idx;
+      continue;
+    }
+    if (arg.rfind("--format=", 0) == 0) {
+      std::string value = arg.substr(std::strlen("--format="));
+      if (!tryParseOutputFormat(value, &args.format)) {
+        args.parse_error = "Invalid format: " + value + " (expected morpheme, tags, json, tsv, or chasen)";
+        return args;
+      }
       ++idx;
       continue;
     }
 
-    // No user dict
     if (arg == "--no-user-dict") {
       args.no_user_dict = true;
       ++idx;
       continue;
     }
 
-    // No core dict
     if (arg == "--no-core-dict") {
       args.no_core_dict = true;
       ++idx;
       continue;
     }
 
-    // Compare mode
     if (arg == "--compare") {
       args.compare = true;
       ++idx;
       continue;
     }
 
-    // Normalization: convert ヴ→ビ
     if (arg == "--normalize-vu") {
       args.normalize_vu = true;
       ++idx;
       continue;
     }
 
-    // Normalization: convert to lowercase
     if (arg == "--lowercase") {
       args.lowercase = true;
       ++idx;
       continue;
     }
 
-    // Postprocess: preserve symbols
     if (arg == "--preserve-symbols") {
       args.preserve_symbols = true;
       ++idx;
@@ -391,51 +513,87 @@ CommandArgs parseArgs(int argc, char* argv[]) {
       continue;
     }
 
-    if (arg == "--tag-min-length" && idx + 1 < argc) {
-      if (!parseSizeOption(argv[++idx], &args.tag_min_length)) {
-        printError("Invalid --tag-min-length value");
-        exit(1);
+    if (arg == "--tag-pos") {
+      std::string value;
+      if (!takeOptionValue(argc, argv, &idx, arg, &value, &args.parse_error)) {
+        return args;
+      }
+      if (!parseTagPos(value, &args.tag_pos_filter)) {
+        args.parse_error = "Invalid --tag-pos value: " + value + " (expected noun, verb, adjective, or adverb)";
+        return args;
+      }
+      ++idx;
+      continue;
+    }
+    if (arg.rfind("--tag-pos=", 0) == 0) {
+      std::string value = arg.substr(std::strlen("--tag-pos="));
+      if (!parseTagPos(value, &args.tag_pos_filter)) {
+        args.parse_error = "Invalid --tag-pos value: " + value + " (expected noun, verb, adjective, or adverb)";
+        return args;
       }
       ++idx;
       continue;
     }
 
-    if (arg == "--tag-max-tags" && idx + 1 < argc) {
-      if (!parseSizeOption(argv[++idx], &args.tag_max_tags)) {
-        printError("Invalid --tag-max-tags value");
-        exit(1);
+    if (arg == "--tag-exclude-basic") {
+      args.tag_exclude_basic = true;
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--tag-min-length") {
+      std::string value;
+      if (!takeOptionValue(argc, argv, &idx, arg, &value, &args.parse_error)) {
+        return args;
+      }
+      if (!parseSizeOption(value, &args.tag_min_length)) {
+        args.parse_error = "Invalid --tag-min-length value: " + value;
+        return args;
+      }
+      ++idx;
+      continue;
+    }
+    if (arg.rfind("--tag-min-length=", 0) == 0) {
+      std::string value = arg.substr(std::strlen("--tag-min-length="));
+      if (!parseSizeOption(value, &args.tag_min_length)) {
+        args.parse_error = "Invalid --tag-min-length value: " + value;
+        return args;
       }
       ++idx;
       continue;
     }
 
-    // Command or positional argument
-    if (arg[0] != '-') {
-      if (args.command.empty()) {
-        // Check if it's a known command
-        if (arg == "analyze" || arg == "dict" || arg == "test" || arg == "version" || arg == "help") {
-          args.command = arg;
-        } else {
-          // Not a command, treat as text input (implicit analyze)
-          args.command = "analyze";
-          args.args.push_back(arg);
-        }
-      } else {
-        args.args.push_back(arg);
+    if (arg == "--tag-max-tags") {
+      std::string value;
+      if (!takeOptionValue(argc, argv, &idx, arg, &value, &args.parse_error)) {
+        return args;
       }
-    } else if (args.command.empty()) {
+      if (!parseSizeOption(value, &args.tag_max_tags)) {
+        args.parse_error = "Invalid --tag-max-tags value: " + value;
+        return args;
+      }
+      ++idx;
+      continue;
+    }
+    if (arg.rfind("--tag-max-tags=", 0) == 0) {
+      std::string value = arg.substr(std::strlen("--tag-max-tags="));
+      if (!parseSizeOption(value, &args.tag_max_tags)) {
+        args.parse_error = "Invalid --tag-max-tags value: " + value;
+        return args;
+      }
+      ++idx;
+      continue;
+    }
+
+    if (args.command.empty()) {
       args.command = "analyze";
-      args.args.push_back(arg);
-    } else {
-      // Pass through unknown options to subcommands (e.g., dict -i)
-      args.args.push_back(arg);
     }
-
-    ++idx;
+    args.parse_error = "Unknown analysis option: " + arg;
+    return args;
   }
 
   // Default command is analyze
-  if (args.command.empty()) {
+  if (args.command.empty() && !args.help) {
     args.command = "analyze";
   }
 
@@ -475,6 +633,8 @@ Global Options:
   --include-low-info     Include low-information words in tag output
   --tag-keep-duplicates  Keep duplicate tags
   --tag-use-surface      Use surface instead of lemma for tags
+  --tag-pos POS          Include noun, verb, adjective, or adverb (repeatable)
+  --tag-exclude-basic    Exclude hiragana-only basic words
   --tag-min-length N     Minimum tag length (default: 2)
   --tag-max-tags N       Maximum tags (default: 0, unlimited)
   -h, --help             Show help
@@ -516,6 +676,8 @@ Options:
   --include-low-info     Include low-information words in tag output
   --tag-keep-duplicates  Keep duplicate tags
   --tag-use-surface      Use surface instead of lemma for tags
+  --tag-pos POS          Include noun, verb, adjective, or adverb (repeatable)
+  --tag-exclude-basic    Exclude hiragana-only basic words
   --tag-min-length N     Minimum tag length (default: 2)
   --tag-max-tags N       Maximum tags (default: 0, unlimited)
   -h, --help             Show this help

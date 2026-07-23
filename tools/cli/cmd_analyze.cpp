@@ -1,17 +1,23 @@
 #include "cmd_analyze.h"
 
+#include <cctype>
 #include <cstdlib>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
+#include <vector>
 
 #include "grammar/conjugation.h"
+#include "normalize/utf8.h"
 #include "suzume.h"
 
 namespace suzume::cli {
 
 namespace {
 
-void outputMorpheme(const std::vector<core::Morpheme>& morphemes) {
+void outputMorphemes(const std::vector<core::Morpheme>& morphemes) {
   for (const auto& morpheme : morphemes) {
     std::cout << morpheme.surface << "\t" << core::posToString(morpheme.pos) << "\t" << morpheme.lemma << "\t"
               << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
@@ -43,7 +49,7 @@ void outputJson(const std::string& input, const std::vector<core::Morpheme>& mor
     std::cout << R"("is_low_info": )" << (mor.features.is_low_info ? "true" : "false") << ", ";
     std::cout << R"("is_unknown": )" << (mor.is_unknown ? "true" : "false") << ", ";
     std::cout << R"("is_from_dictionary": )" << (mor.is_from_dictionary ? "true" : "false") << ", ";
-    std::cout << R"("score": )" << mor.features.score;
+    std::cout << R"("score": )" << std::setprecision(std::numeric_limits<float>::max_digits10) << mor.features.score;
     std::cout << "}";
     if (idx + 1 < morphemes.size()) {
       std::cout << ",";
@@ -53,13 +59,6 @@ void outputJson(const std::string& input, const std::vector<core::Morpheme>& mor
 
   std::cout << "  ]\n";
   std::cout << "}\n";
-}
-
-void outputTsv(const std::vector<core::Morpheme>& morphemes) {
-  for (const auto& mor : morphemes) {
-    std::cout << mor.surface << "\t" << core::posToString(mor.pos) << "\t" << mor.lemma << "\t" << mor.start_pos << "\t"
-              << mor.end_pos << "\n";
-  }
 }
 
 void outputChasen(const std::vector<core::Morpheme>& morphemes) {
@@ -99,6 +98,36 @@ core::AnalysisMode parseMode(const std::string& mode_str) {
   return core::AnalysisMode::Normal;
 }
 
+bool isBinaryDictionaryPath(std::string_view path) {
+  constexpr std::string_view kExtension = ".dic";
+  if (path.size() < kExtension.size()) {
+    return false;
+  }
+  const std::string_view suffix = path.substr(path.size() - kExtension.size());
+  for (size_t idx = 0; idx < kExtension.size(); ++idx) {
+    const auto actual = static_cast<unsigned char>(suffix[idx]);
+    if (static_cast<char>(std::tolower(actual)) != kExtension[idx]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+core::Expected<size_t, core::Error> loadBinaryDictionaryFile(Suzume* analyzer, const std::string& path) {
+  std::ifstream file(path, std::ios::binary);
+  if (!file) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::FileNotFound, "Failed to open binary dictionary file: " + path));
+  }
+
+  std::vector<char> data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  if (file.bad()) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::DictionaryLoadFailed, "Failed to read binary dictionary file: " + path));
+  }
+  return analyzer->loadBinaryDictionaryResult(reinterpret_cast<const uint8_t*>(data.data()), data.size());
+}
+
 }  // namespace
 
 int cmdAnalyze(const CommandArgs& args) {
@@ -120,18 +149,27 @@ int cmdAnalyze(const CommandArgs& args) {
     }
     text = oss.str();
   } else if (!isTerminal()) {
-    // Read from stdin
+    // Read stdin byte-for-byte so embedded newlines are preserved.
     std::ostringstream oss;
-    std::string line;
-    while (std::getline(std::cin, line)) {
-      if (!oss.str().empty()) {
-        oss << "\n";
-      }
-      oss << line;
-    }
+    oss << std::cin.rdbuf();
     text = oss.str();
   }
   stripUtf8Bom(&text);
+  // Match one std::getline-style EOF boundary: remove one final LF (and its CR
+  // in CRLF input), while preserving all preceding newlines.
+  if (text.empty() == false && text.back() == '\n') {
+    text.pop_back();
+    if (text.empty() == false && text.back() == '\r') {
+      text.pop_back();
+    }
+  }
+
+  // Validate once before analysis or any format-specific output. This keeps
+  // malformed scalar sequences away from both the tokenizer and JSON output.
+  if (!normalize::isValidUtf8(text)) {
+    printError("Invalid UTF-8 input");
+    return 1;
+  }
 
   if (text.empty()) {
     printError("No input text provided");
@@ -167,9 +205,22 @@ int cmdAnalyze(const CommandArgs& args) {
     printWarning(warning);
   }
 
-  // Load dictionaries
+  size_t binary_dictionary_count = 0;
   for (const auto& dict_path : args.dict_paths) {
-    auto load_result = analyzer.loadUserDictionaryResult(dict_path);
+    if (isBinaryDictionaryPath(dict_path)) {
+      ++binary_dictionary_count;
+    }
+  }
+  if (binary_dictionary_count > 1) {
+    printError("Only one binary .dic dictionary may be loaded; additional binary dictionaries would replace it");
+    return 1;
+  }
+
+  // Text dictionaries are additive. The core has one replaceable binary user
+  // dictionary slot, so the count check above prevents silent replacement.
+  for (const auto& dict_path : args.dict_paths) {
+    auto load_result = isBinaryDictionaryPath(dict_path) ? loadBinaryDictionaryFile(&analyzer, dict_path)
+                                                         : analyzer.loadUserDictionaryResult(dict_path);
     if (!load_result.hasValue()) {
       printError("Failed to load dictionary: " + dict_path + ": " + load_result.error().message);
       return 1;
@@ -190,14 +241,14 @@ int cmdAnalyze(const CommandArgs& args) {
     auto base_morphemes = base_analyzer.analyze(text);
 
     std::cout << "[Without user dictionary]\n";
-    outputMorpheme(base_morphemes);
+    outputMorphemes(base_morphemes);
     std::cout << "\n";
 
     // Analyze with user dictionary
     auto morphemes = analyzer.analyze(text);
 
     std::cout << "[With user dictionary]\n";
-    outputMorpheme(morphemes);
+    outputMorphemes(morphemes);
     std::cout << "\n";
 
     // Show diff (simplified)
@@ -248,15 +299,16 @@ int cmdAnalyze(const CommandArgs& args) {
     }
 
     std::cout << "\n=== Result ===\n";
-    outputMorpheme(morphemes);
+    outputMorphemes(morphemes);
     return 0;
   }
 
   // Normal analysis
   switch (args.format) {
-    case OutputFormat::Morpheme: {
+    case OutputFormat::Morpheme:
+    case OutputFormat::Tsv: {
       auto morphemes = analyzer.analyze(text);
-      outputMorpheme(morphemes);
+      outputMorphemes(morphemes);
       break;
     }
     case OutputFormat::Tags: {
@@ -269,6 +321,8 @@ int cmdAnalyze(const CommandArgs& args) {
       tag_options.use_lemma = !args.tag_use_surface;
       tag_options.min_tag_length = args.tag_min_length;
       tag_options.max_tags = args.tag_max_tags;
+      tag_options.pos_filter = args.tag_pos_filter;
+      tag_options.exclude_basic = args.tag_exclude_basic;
       auto tags = analyzer.generateTags(text, tag_options);
       outputTags(tags);
       break;
@@ -276,11 +330,6 @@ int cmdAnalyze(const CommandArgs& args) {
     case OutputFormat::Json: {
       auto morphemes = analyzer.analyze(text);
       outputJson(text, morphemes);
-      break;
-    }
-    case OutputFormat::Tsv: {
-      auto morphemes = analyzer.analyze(text);
-      outputTsv(morphemes);
       break;
     }
     case OutputFormat::Chasen: {

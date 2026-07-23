@@ -1,6 +1,7 @@
 #ifndef SUZUME_CLI_CLI_COMMON_H_
 #define SUZUME_CLI_CLI_COMMON_H_
 
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -18,18 +19,6 @@ enum class OutputFormat {
   Tsv,       // TSV with all fields
   Chasen     // ChaSen-like format (Japanese POS, conjugation info)
 };
-
-/**
- * @brief Parse output format from string
- * @param str Format string (morpheme, tags, json, tsv)
- * @return OutputFormat enum value
- */
-OutputFormat parseOutputFormat(std::string_view str);
-
-/**
- * @brief Convert OutputFormat to string
- */
-std::string_view outputFormatToString(OutputFormat fmt);
 
 /**
  * @brief Print error message to stderr
@@ -108,9 +97,11 @@ struct CommandArgs {
   bool very_verbose = false;
   bool debug = false;
   bool help = false;
+  bool version = false;
   bool no_user_dict = false;
   bool no_core_dict = false;
   bool compare = false;
+  std::string parse_error;
 
   // Normalization options (defaults preserve original)
   bool normalize_vu = false;  // --normalize-vu: convert ヴ→ビ
@@ -128,6 +119,8 @@ struct CommandArgs {
   bool tag_include_low_info = false;
   bool tag_keep_duplicates = false;
   bool tag_use_surface = false;
+  uint8_t tag_pos_filter = 0;
+  bool tag_exclude_basic = false;
   size_t tag_min_length = 2;
   size_t tag_max_tags = 0;
 };

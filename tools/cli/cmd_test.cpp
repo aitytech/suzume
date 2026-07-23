@@ -8,7 +8,7 @@
 #include <sstream>
 #include <vector>
 
-#ifndef __EMSCRIPTEN__
+#if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
 #include <sys/resource.h>
 #endif
 
@@ -46,7 +46,7 @@ double medianMilliseconds(std::vector<double> samples) {
 }
 
 size_t peakResidentSetBytes() {
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(_WIN32)
   return 0;
 #else
   rusage usage{};

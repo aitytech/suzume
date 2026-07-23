@@ -170,8 +170,3 @@ if(BUILD_SHARED AND NOT BUILD_WASM)
     target_link_options(suzume_shared PRIVATE "LINKER:--gc-sections")
   endif()
 endif()
-
-# Independent CLI tool (suzume-cli)
-if(NOT BUILD_WASM)
-  add_subdirectory(suzume-cli)
-endif()

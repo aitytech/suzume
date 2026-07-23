@@ -11,6 +11,16 @@ int main(int argc, char* argv[]) {
   // Parse arguments
   auto args = parseArgs(argc, argv);
 
+  if (args.version) {
+    printVersion();
+    return 0;
+  }
+
+  if (!args.parse_error.empty()) {
+    printError(args.parse_error);
+    return 2;
+  }
+
   // Handle help and version
   if (args.help && args.command.empty()) {
     printHelp();

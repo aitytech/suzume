@@ -1,10 +1,10 @@
 # Suzume Makefile
 # Convenience wrapper for CMake build system
 
-.PHONY: help build test clean rebuild format format-check configure \
-        wasm wasm-dict wasm-test wasm-clean wasm-rebuild dict \
+.PHONY: help build test clean rebuild format format-check lint configure \
+        wasm wasm-configure wasm-dict wasm-test wasm-clean wasm-rebuild dict \
         python-build python-test python-wheel version-check \
-        install examples embedded consumer-smoke
+        install examples embedded consumer-smoke cmake-smoke
 
 # Build directories
 BUILD_DIR := build
@@ -27,8 +27,10 @@ help:
 	@echo "  make rebuild      - Clean and rebuild"
 	@echo "  make format       - Auto-fix format/lint: C++, MCP, WASM, Python bindings"
 	@echo "  make format-check - Check formatting across all languages"
+	@echo "  make lint         - Run read-only MCP, WASM, and Python static checks"
 	@echo "  make configure    - Configure CMake"
 	@echo "  make version-check - Verify version is consistent across binding manifests"
+	@echo "  make cmake-smoke  - Verify supported CMake build/install configurations"
 	@echo ""
 	@echo "C/C++ integration targets:"
 	@echo "  make install      - Install libs + headers + find_package/pkg-config (PREFIX=/usr/local)"
@@ -42,6 +44,7 @@ help:
 	@echo "  make python-wheel - Build a platform-tagged wheel"
 	@echo ""
 	@echo "WASM targets (debug info disabled for smaller binary):"
+	@echo "  make wasm-configure - Configure the Emscripten build"
 	@echo "  make wasm         - Build WASM module (includes wasm-dict)"
 	@echo "  make wasm-dict    - Build dictionaries for the WASM link"
 	@echo "  make wasm-test    - Run WASM tests"
@@ -137,30 +140,45 @@ consumer-smoke:
 	ctest --test-dir build-smoke-consumer --output-on-failure
 	@echo "Consumer smoke test passed."
 
+# Reproducible build/install matrix covering library-only, no-install, and
+# multi-config dictionary builds without touching the shared build directories.
+cmake-smoke:
+	scripts/check_cmake_configurations.sh
+
 # Auto-fix formatting/lint across every language in the repo:
 # C++ core (clang-format), MCP server (ruff), WASM binding (biome), Python binding (ruff).
 format:
 	@echo "Formatting C++ (clang-format)..."
-	@find src include tests examples -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \) | xargs $(CLANG_FORMAT) -i
+	@find src include tools tests examples -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \) | xargs $(CLANG_FORMAT) -i
 	@echo "Formatting MCP server (ruff)..."
 	cd scripts/mcp && uv run ruff format . && uv run ruff check --fix .
 	@echo "Formatting WASM binding (biome)..."
 	cd bindings/wasm && yarn lint:fix
 	@echo "Formatting Python binding (ruff)..."
 	cd bindings/python && uv run --extra dev ruff format . && uv run --extra dev ruff check --fix .
+	$(MAKE) lint
 	@echo "Format complete!"
 
 # Check-only counterpart for CI (same language fan-out, no writes).
 format-check:
 	@echo "Checking C++ formatting (clang-format)..."
-	@find src include tests examples -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \) | xargs $(CLANG_FORMAT) --dry-run --Werror
+	@find src include tools tests examples -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \) | xargs $(CLANG_FORMAT) --dry-run --Werror
 	@echo "Checking MCP server formatting (ruff)..."
-	cd scripts/mcp && uv run ruff format --check . && uv run ruff check .
-	@echo "Checking WASM binding formatting (biome)..."
-	cd bindings/wasm && yarn lint
+	cd scripts/mcp && uv run ruff format --check .
 	@echo "Checking Python binding formatting (ruff)..."
-	cd bindings/python && uv run --extra dev ruff format --check . && uv run --extra dev ruff check .
+	cd bindings/python && uv run --extra dev ruff format --check .
+	$(MAKE) lint
 	@echo "Format check passed!"
+
+# Read-only static analysis. This repository does not configure clang-tidy, so
+# C++ is covered by clang-format in format-check rather than a nominal lint step.
+lint:
+	@echo "Linting MCP server (ruff)..."
+	cd scripts/mcp && uv run ruff check .
+	@echo "Linting WASM binding (biome)..."
+	cd bindings/wasm && yarn lint
+	@echo "Linting Python binding (ruff)..."
+	cd bindings/python && uv run --extra dev ruff check .
 
 # ============================================
 # Python binding targets

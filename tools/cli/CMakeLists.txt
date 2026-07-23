@@ -1,5 +1,4 @@
-# suzume-cli CMakeLists.txt
-# Independent CLI tool (not WASM compatible)
+# Native developer CLI (not WASM compatible).
 
 add_executable(suzume-cli
   main.cpp
@@ -29,7 +28,10 @@ set_target_properties(suzume-cli PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
-# Install target
-install(TARGETS suzume-cli
-  RUNTIME DESTINATION bin
-)
+# The developer CLI follows the root install/export switch. Library and wheel
+# builds use SUZUME_INSTALL=OFF to avoid creating any installable CLI artifact.
+if(SUZUME_INSTALL)
+  install(TARGETS suzume-cli
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
+endif()
