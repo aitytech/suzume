@@ -6,6 +6,7 @@ from pathlib import Path
 from ..core.file_utils import append_lines_atomic as _append_lines_atomic  # noqa: F401
 from ..core.file_utils import atomic_write_text as _atomic_write_text  # noqa: F401
 from ..core.json_utils import json_result as _json_result  # noqa: F401
+from ..core.suzume_cli import get_cli_path
 from ..server import PROJECT_ROOT
 
 # User dictionary categories
@@ -232,7 +233,7 @@ async def _recompile_core_dic() -> str:
     """Recompile core dictionary."""
     import subprocess
 
-    cli = PROJECT_ROOT / "build" / "bin" / "suzume-cli"
+    cli = get_cli_path()
     if not cli.exists():
         return "not_found"
 
@@ -264,7 +265,7 @@ async def _recompile_user_dic() -> str:
     """Recompile user dictionary."""
     import subprocess
 
-    cli = PROJECT_ROOT / "build" / "bin" / "suzume-cli"
+    cli = get_cli_path()
     if not cli.exists():
         return "not_found"
 

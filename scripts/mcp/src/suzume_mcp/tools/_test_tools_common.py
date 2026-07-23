@@ -10,6 +10,7 @@ from ..core.pos_mapping import normalize_pos
 from ..core.suzume_cli import (
     format_expected_from_tokens as format_expected,
 )
+from ..core.suzume_cli import get_cli_path
 from ..core.test_file_utils import (
     get_test_data_dir,
     get_test_files,
@@ -22,7 +23,7 @@ def _get_suzume_tokens(text: str) -> list[dict]:
 
     Uses --no-user-dict to match the C++ tokenization test runner oracle.
     """
-    cli = PROJECT_ROOT / "build" / "bin" / "suzume-cli"
+    cli = get_cli_path()
     if not cli.exists():
         raise RuntimeError(f"Suzume CLI not found: {cli}")
 

@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from ..core.mecab import mecab_analyze
+from ..core.suzume_cli import get_cli_path
 from ..core.suzume_utils import get_char_types
 from ..server import PROJECT_ROOT, mcp
 from ._dict_tools_common import (
@@ -391,7 +392,7 @@ async def dict_cleanup(
     if not filepath.exists():
         return _json_result({"status": "error", "message": f"File not found: {input_file}"})
 
-    cli = PROJECT_ROOT / "build" / "bin" / "suzume-cli"
+    cli = get_cli_path()
     if not cli.exists():
         return _json_result({"status": "error", "message": "suzume-cli not found (build first)"})
 

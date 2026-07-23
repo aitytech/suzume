@@ -15,10 +15,29 @@ from pathlib import Path
 
 from ..config import PROJECT_ROOT
 
+_CLI_ENV_VAR = "SUZUME_CLI_PATH"
+_MULTI_CONFIG_NAMES = ("Debug", "Release", "RelWithDebInfo", "MinSizeRel")
 
-def _get_cli_path() -> Path:
-    """Get path to suzume-cli binary."""
-    return PROJECT_ROOT / "build" / "bin" / "suzume-cli"
+
+def get_cli_path(project_root: Path | None = None) -> Path:
+    """Locate the native Suzume CLI across single- and multi-config builds.
+
+    ``SUZUME_CLI_PATH`` is authoritative when set. Relative override paths are
+    resolved from the project root so the MCP server behaves consistently
+    regardless of its current working directory.
+    """
+    root = project_root or PROJECT_ROOT
+    if override := os.environ.get(_CLI_ENV_VAR):
+        override_path = Path(override).expanduser()
+        return override_path if override_path.is_absolute() else root / override_path
+
+    build_dir = root / "build"
+    cli_name = "suzume-cli.exe" if os.name == "nt" else "suzume-cli"
+    candidates = [build_dir / "bin" / cli_name]
+    candidates.extend(build_dir / "bin" / config / cli_name for config in _MULTI_CONFIG_NAMES)
+    candidates.extend(build_dir / config / "bin" / cli_name for config in _MULTI_CONFIG_NAMES)
+
+    return next((candidate for candidate in candidates if candidate.is_file()), candidates[0])
 
 
 def get_suzume_surfaces(text: str, cli_path: Path | None = None, skip_user_dict: bool = False) -> list[str]:
@@ -32,7 +51,7 @@ def get_suzume_surfaces(text: str, cli_path: Path | None = None, skip_user_dict:
     """
     import subprocess
 
-    cli = cli_path or _get_cli_path()
+    cli = cli_path or get_cli_path()
     if not cli.exists():
         raise RuntimeError(f"Suzume CLI not found: {cli}")
 
@@ -62,7 +81,7 @@ async def get_suzume_surfaces_async(text: str, cli_path: Path | None = None, ski
         skip_user_dict: When True, pass --no-user-dict to match the C++ tokenization
             test runner oracle. When False (default), the CLI auto-loads user.dic.
     """
-    cli = cli_path or _get_cli_path()
+    cli = cli_path or get_cli_path()
     if not cli.exists():
         raise RuntimeError(f"Suzume CLI not found: {cli}")
 
@@ -97,7 +116,7 @@ async def get_suzume_debug_info(text: str, cli_path: Path | None = None, skip_us
     """
     import re
 
-    cli = cli_path or _get_cli_path()
+    cli = cli_path or get_cli_path()
     if not cli.exists():
         raise RuntimeError(f"Suzume CLI not found: {cli}")
 
@@ -168,7 +187,7 @@ async def get_suzume_debug_info(text: str, cli_path: Path | None = None, skip_us
 
 async def recompile_dic(glob_pattern: str, output_path: str) -> bool:
     """Recompile dictionary using suzume-cli dict compile."""
-    cli = _get_cli_path()
+    cli = get_cli_path()
     if not cli.exists():
         return False
 
