@@ -34,31 +34,30 @@ bool isBareVowelMora(char32_t codepoint) {
 
 }  // namespace
 
-std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandidates(
-    std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
-    const std::vector<normalize::CharType>& char_types) const {
-  std::vector<UnknownCandidate> candidates;
-
+void UnknownWordGenerator::generateCharacterSpeechCandidates(std::string_view /*text*/,
+                                                             const std::vector<char32_t>& codepoints, size_t start_pos,
+                                                             const std::vector<normalize::CharType>& char_types,
+                                                             std::vector<UnknownCandidate>& candidates) const {
   if (start_pos >= char_types.size()) {
-    return candidates;
+    return;
   }
 
   normalize::CharType start_type = char_types[start_pos];
 
   // Only for hiragana or katakana starting positions
   if (start_type != normalize::CharType::Hiragana && start_type != normalize::CharType::Katakana) {
-    return candidates;
+    return;
   }
 
   // Skip if starting with common particles (these are handled by dictionary)
   if (start_type == normalize::CharType::Hiragana) {
     char32_t first_char = codepoints[start_pos];
     if (normalize::isExtendedParticle(first_char)) {
-      return candidates;
+      return;
     }
     // Skip small kana (ゃゅょぁぃぅぇぉっ) - these don't start words
     if (kana::isSmallKanaCodepoint(first_char)) {
-      return candidates;
+      return;
     }
   }
 
@@ -66,7 +65,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandi
   if (start_type == normalize::CharType::Katakana) {
     char32_t first_char = codepoints[start_pos];
     if (kana::isSmallKanaCodepoint(first_char)) {
-      return candidates;
+      return;
     }
   }
 
@@ -86,7 +85,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandi
                          first_char == U'も' || first_char == U'み' || first_char == U'ん' || first_char == U'そ' ||
                          first_char == U'と' || first_char == U'お' || first_char == U'は' || first_char == U'へ';
     if (!valid_starter) {
-      return candidates;
+      return;
     }
   }
 
@@ -217,18 +216,14 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandi
       candidates.push_back(cand);
     }
   }
-
-  return candidates;
 }
 
-std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos,
-    const std::vector<normalize::CharType>& char_types) const {
-  std::vector<UnknownCandidate> candidates;
-
+void UnknownWordGenerator::generateOnomatopoeiaCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                                          const std::vector<normalize::CharType>& char_types,
+                                                          std::vector<UnknownCandidate>& candidates) const {
   // Need at least 3 characters for ABり pattern (4 for ABAB/AA patterns)
   if (start_pos + 2 >= codepoints.size()) {
-    return candidates;
+    return;
   }
 
   normalize::CharType start_type = char_types[start_pos];
@@ -299,7 +294,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
           cand.pattern = "aa_doubled";
 #endif
           candidates.push_back(cand);
-          return candidates;  // Found a match, return early
+          return;  // Found a match, return early
         }
       }
     }
@@ -542,8 +537,6 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateOnomatopoeiaCandidat
       }
     }
   }
-
-  return candidates;
 }
 
 }  // namespace suzume::analysis

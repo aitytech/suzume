@@ -234,14 +234,14 @@ bool isSingleKanjiIchidanSurface(std::string_view surface) {
 // Candidate Sorting
 // =============================================================================
 
-void sortCandidatesByCost(std::vector<UnknownCandidate>& candidates) {
+void sortCandidatesByCost(std::vector<UnknownCandidate>& candidates, size_t first_index) {
   // Candidate lists are small and already close to generation order. A stable
   // insertion sort avoids pulling the generic introsort implementation into
   // WASM while keeping equal-cost candidates deterministic.
-  for (size_t idx = 1; idx < candidates.size(); ++idx) {
+  for (size_t idx = first_index + 1; idx < candidates.size(); ++idx) {
     UnknownCandidate candidate = std::move(candidates[idx]);
     size_t insert_at = idx;
-    while (insert_at > 0 && candidates[insert_at - 1].cost > candidate.cost) {
+    while (insert_at > first_index && candidates[insert_at - 1].cost > candidate.cost) {
       candidates[insert_at] = std::move(candidates[insert_at - 1]);
       --insert_at;
     }

@@ -27,11 +27,11 @@ constexpr std::array<std::string_view, 1> kNaAdjSuffixes = {
     "的",
 };
 
-std::vector<UnknownCandidate> generateHiraganaNariNaAdjectiveCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types) {
-  std::vector<UnknownCandidate> candidates;
+void generateHiraganaNariNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                               const std::vector<normalize::CharType>& char_types,
+                                               std::vector<UnknownCandidate>& candidates) {
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
 
   // -やか/-らか are productive na-adjective endings.  Before a na-adjective
@@ -60,27 +60,26 @@ std::vector<UnknownCandidate> generateHiraganaNariNaAdjectiveCandidates(
     candidates.push_back(makeNaAdjCandidate(stem, start_pos, stem_end, candidate::kNaAdjYakaCost, true,
                                             CandidateOrigin::AdjectiveNa, candidate::kHiraganaNaAdjNariConfidence,
                                             "hira_na_adj_yaka_raka_nari"));
-    return candidates;
+    return;
   }
-  return candidates;
+  return;
 }
 
 }  // namespace
 
-std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                            const std::vector<normalize::CharType>& char_types,
-                                                            const UnknownOptions& /*options*/,
-                                                            const dictionary::DictionaryManager* dict_manager) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                   const std::vector<normalize::CharType>& char_types,
+                                   const UnknownOptions& /*options*/, const dictionary::DictionaryManager* dict_manager,
+                                   std::vector<UnknownCandidate>& candidates) {
   if (start_pos >= char_types.size()) {
-    return candidates;
+    return;
   }
   if (char_types[start_pos] == normalize::CharType::Hiragana) {
-    return generateHiraganaNariNaAdjectiveCandidates(codepoints, start_pos, char_types);
+    generateHiraganaNariNaAdjectiveCandidates(codepoints, start_pos, char_types, candidates);
+    return;
   }
   if (char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   // The attributive copula can license a productive compound stem longer than
@@ -108,7 +107,7 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
         candidates.push_back(makeNaAdjCandidate(stem, start_pos, stem_end, candidate::kNaAdjYakaCost, true,
                                                 CandidateOrigin::AdjectiveNa, candidate::kHiraganaNaAdjNariConfidence,
                                                 "na_adj_yaka_raka"));
-        return candidates;
+        return;
       }
     }
   }
@@ -219,7 +218,7 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
   // other common noun predicates into adjectives.  Mixed stems such as
   // 平らだ are handled by the preceding kanji+hiragana rule.
   if (kanji_len < 2) {
-    return candidates;
+    return;
   }
 
   std::string kanji_seq = extractSubstring(codepoints, start_pos, kanji_end);
@@ -276,13 +275,13 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
     std::string first_char_str;
     normalize::encodeUtf8(codepoints[start_pos], first_char_str);
     if (normalize::isFormalNounSurface(first_char_str)) {
-      return candidates;
+      return;
     }
 
     // Skip if kanji ends with 的 - MeCab splits as NOUN + 的(SUFFIX) + な
     // e.g., 論理的な should be 論理+的+な, not 論理的+な
     if (codepoints[kanji_end - 1] == U'的') {
-      return candidates;
+      return;
     }
 
     // Skip if な is followed by く/い/か — these indicate ない (auxiliary/adjective)
@@ -295,7 +294,7 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
     if (followed_by_na && kanji_end + 1 < codepoints.size()) {
       char32_t after_na = codepoints[kanji_end + 1];
       if (after_na == U'く' || after_na == U'い' || after_na == U'か') {
-        return candidates;
+        return;
       }
     }
 
@@ -305,7 +304,7 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
                                             CandidateOrigin::AdjectiveNa, 0.8F, "na_adjective_stem"));
   }
 
-  return candidates;
+  return;
 }
 
 }  // namespace suzume::analysis

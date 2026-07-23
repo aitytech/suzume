@@ -176,13 +176,11 @@ bool hasHiraganaNominalNakuEnding(const std::vector<char32_t>& codepoints, size_
 
 }  // namespace
 
-std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
-    std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-    const std::vector<normalize::CharType>& char_types) const {
-  std::vector<UnknownCandidate> candidates;
-
+void UnknownWordGenerator::generateBySameType(std::string_view text, const std::vector<char32_t>& codepoints,
+                                              size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                              std::vector<UnknownCandidate>& candidates) const {
   if (start_pos >= char_types.size()) {
-    return candidates;
+    return;
   }
 
   normalize::CharType start_type = char_types[start_pos];
@@ -204,7 +202,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
     // particle and predicate together; dictionary lookup still supplies the
     // one-character particle candidate.
     if (first_char == U'を' || first_char == U'が') {
-      return candidates;
+      return;
     }
     // Only は, に, へ, の can start hiragana nouns
     if (first_char == U'は' || first_char == U'に' || first_char == U'へ' || first_char == U'の') {
@@ -214,7 +212,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
     // Skip small kana (拗音・促音) - Japanese words don't start with these
     // ゃゅょぁぃぅぇぉっ are always part of compound sounds (e.g., きょう not ょう)
     if (kana::isSmallKanaCodepoint(first_char)) {
-      return candidates;  // Phonologically impossible word start
+      return;  // Phonologically impossible word start
     }
 
     // Skip if starting with demonstrative pronouns (これ, それ, あれ, どれ, etc.)
@@ -222,7 +220,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
     if (start_pos + 1 < codepoints.size()) {
       char32_t second_char = codepoints[start_pos + 1];
       if (normalize::isDemonstrativeStart(first_char, second_char)) {
-        return candidates;
+        return;
       }
     }
   }
@@ -723,8 +721,6 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateBySameType(
       candidates.push_back(noun_cand);
     }
   }
-
-  return candidates;
 }
 
 }  // namespace suzume::analysis

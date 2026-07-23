@@ -149,11 +149,12 @@ bool shouldSkipSimplePatterns(const std::string& surface, const std::string& hir
 
 }  // namespace
 
-std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                          const std::vector<normalize::CharType>& char_types,
-                                                          const grammar::Inflection& inflection,
-                                                          const dictionary::DictionaryManager* dict_manager) {
-  std::vector<UnknownCandidate> candidates;
+void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                 const std::vector<normalize::CharType>& char_types,
+                                 const grammar::Inflection& inflection,
+                                 const dictionary::DictionaryManager* dict_manager,
+                                 std::vector<UnknownCandidate>& candidates) {
+  const size_t candidate_start = candidates.size();
 
   // Lexicalized adverbial adjective 間もなく (連用形 of 間もない, "soon"). A single
   // preceding kanji forms a compact noun with 間 (時間 / 居間), while a longer kanji
@@ -172,14 +173,14 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   }
 
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   // The ideographic iteration mark always belongs to the preceding kanji
   // (時々, 人々).  It cannot start an adjective stem, even when the following
   // kana look like an i-adjective ending.
   if (normalize::isIterationMark(codepoints[start_pos])) {
-    return candidates;
+    return;
   }
 
   // Find kanji portion (1-2 characters for i-adjectives; no 3-char kanji stems exist).
@@ -193,14 +194,14 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
   }
 
   if (kanji_end == start_pos) {
-    return candidates;
+    return;
   }
 
   // Look for hiragana after kanji (adjective endings like い, かった, くない)
   // Note: Some adjectives have hiragana in the stem (美しい, 楽しい, 涼しい, etc.)
   // so we allow any hiragana and let the inflection module decide
   if (kanji_end >= char_types.size() || char_types[kanji_end] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
 
   // Check if first hiragana is a particle that can NEVER be part of an adjective
@@ -216,19 +217,19 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
     bool medial_mo_adjective = first_hiragana == U'も' && kanji_end == start_pos + 1 &&
                                kanji_end + 1 < codepoints.size() && codepoints[kanji_end + 1] == U'し';
     if (!medial_mo_adjective) {
-      return candidates;  // These particles follow nouns/verbs, not adjective stems
+      return;  // These particles follow nouns/verbs, not adjective stems
     }
   }
 
   size_t hiragana_end = findCharRegionEnd(char_types, kanji_end, 8, normalize::CharType::Hiragana);
 
   if (hiragana_end <= kanji_end) {
-    return candidates;
+    return;
   }
 
   if (adj_detail::appendKanjiIAdjSpecialCandidates(codepoints, start_pos, kanji_end, hiragana_end, char_types,
                                                    inflection, dict_manager, candidates)) {
-    return candidates;
+    return;
   }
 
   // Try different ending lengths
@@ -569,9 +570,9 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
 
   adj_detail::appendKanjiIAdjPostVariants(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager,
                                           candidates);
-  verb_helpers::sortCandidatesByCost(candidates);
+  verb_helpers::sortCandidatesByCost(candidates, candidate_start);
 
-  return candidates;
+  return;
 }
 
 }  // namespace suzume::analysis

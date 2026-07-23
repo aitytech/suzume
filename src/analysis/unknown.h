@@ -186,44 +186,44 @@ class UnknownWordGenerator {
   /**
    * @brief Generate i-adjective candidates (kanji + conjugation endings)
    */
-  std::vector<UnknownCandidate> generateAdjectiveCandidates(std::string_view text,
-                                                            const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                            const std::vector<normalize::CharType>& char_types) const;
+  void generateAdjectiveCandidates(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
+                                   const std::vector<normalize::CharType>& char_types,
+                                   std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Generate i-adjective stem candidates (難し, 美し before auxiliaries)
    */
-  std::vector<UnknownCandidate> generateAdjectiveStemCandidates(
-      std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-      const std::vector<normalize::CharType>& char_types) const;
+  void generateAdjectiveStemCandidates(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
+                                       const std::vector<normalize::CharType>& char_types,
+                                       std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Generate hiragana i-adjective candidates (pure hiragana like まずい)
    */
-  std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(
-      std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-      const std::vector<normalize::CharType>& char_types) const;
+  void generateHiraganaAdjectiveCandidates(std::string_view text, const std::vector<char32_t>& codepoints,
+                                           size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                           std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Generate na-adjective candidates (〜的 patterns)
    */
-  std::vector<UnknownCandidate> generateNaAdjectiveCandidates(std::string_view text,
-                                                              const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                              const std::vector<normalize::CharType>& char_types) const;
+  void generateNaAdjectiveCandidates(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     const std::vector<normalize::CharType>& char_types,
+                                     std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Generate candidates for same-type sequences
    */
-  std::vector<UnknownCandidate> generateBySameType(std::string_view text, const std::vector<char32_t>& codepoints,
-                                                   size_t start_pos,
-                                                   const std::vector<normalize::CharType>& char_types) const;
+  void generateBySameType(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
+                          const std::vector<normalize::CharType>& char_types,
+                          std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Generate alphanumeric sequence candidates
    */
-  std::vector<UnknownCandidate> generateAlphanumeric(std::string_view text, const std::vector<char32_t>& codepoints,
-                                                     size_t start_pos,
-                                                     const std::vector<normalize::CharType>& char_types) const;
+  void generateAlphanumeric(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
+                            const std::vector<normalize::CharType>& char_types,
+                            std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Generate candidates with suffix separation
@@ -241,9 +241,9 @@ class UnknownWordGenerator {
    *
    * Examples: ナリ, ござる, だわ, etc.
    */
-  std::vector<UnknownCandidate> generateCharacterSpeechCandidates(
-      std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-      const std::vector<normalize::CharType>& char_types) const;
+  void generateCharacterSpeechCandidates(std::string_view text, const std::vector<char32_t>& codepoints,
+                                         size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                         std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Generate ABAB-type onomatopoeia candidates
@@ -252,9 +252,9 @@ class UnknownWordGenerator {
    * match characters 3-4, like わくわく, きらきら, どきどき.
    * These are recognized as adverbs.
    */
-  std::vector<UnknownCandidate> generateOnomatopoeiaCandidates(
-      const std::vector<char32_t>& codepoints, size_t start_pos,
-      const std::vector<normalize::CharType>& char_types) const;
+  void generateOnomatopoeiaCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                      const std::vector<normalize::CharType>& char_types,
+                                      std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Get max length for character type

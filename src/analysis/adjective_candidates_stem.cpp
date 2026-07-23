@@ -206,34 +206,33 @@ float productiveIAdjectiveStemConfidence(const std::string& stem, const std::str
 
 }  // namespace
 
-std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                              const std::vector<normalize::CharType>& char_types,
-                                                              const grammar::Inflection& inflection,
-                                                              const dictionary::DictionaryManager* dict_manager) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     const std::vector<normalize::CharType>& char_types,
+                                     const grammar::Inflection& inflection,
+                                     const dictionary::DictionaryManager* dict_manager,
+                                     std::vector<UnknownCandidate>& candidates) {
   // Must start with kanji
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   // Find kanji portion (1-2 characters for adjective stem)
   size_t kanji_end = findCharRegionEnd(char_types, start_pos, 2, normalize::CharType::Kanji);
 
   if (kanji_end == start_pos) {
-    return candidates;
+    return;
   }
 
   // Look for hiragana after kanji
   if (kanji_end >= char_types.size() || char_types[kanji_end] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
 
   // Find hiragana ending with し + auxiliary pattern (そう, すぎ, etc.)
   size_t hiragana_end = findCharRegionEnd(char_types, kanji_end, 8, normalize::CharType::Hiragana);
 
   if (hiragana_end <= kanji_end) {
-    return candidates;
+    return;
   }
 
   std::string hiragana_part = extractSubstring(codepoints, kanji_end, hiragana_end);
@@ -692,7 +691,7 @@ std::vector<UnknownCandidate> generateAdjectiveStemCandidates(const std::vector<
     }
   }
 
-  return candidates;
+  return;
 }
 
 bool isModernIAdjective(const std::string& lemma, const grammar::Inflection& inflection,

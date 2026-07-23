@@ -168,8 +168,9 @@ bool hasAttributiveNominalSelector(const std::vector<char32_t>& codepoints,
       if (na_adjective != nullptr && na_adjective->extended_pos == core::ExtendedPOS::AdjNaAdj) {
         return true;
       }
-      const auto na_adjective_candidates =
-          generateNaAdjectiveCandidates(codepoints, selector_start, char_types, UnknownOptions{}, dict_manager);
+      std::vector<UnknownCandidate> na_adjective_candidates;
+      generateNaAdjectiveCandidates(codepoints, selector_start, char_types, UnknownOptions{}, dict_manager,
+                                    na_adjective_candidates);
       if (std::any_of(
               na_adjective_candidates.begin(), na_adjective_candidates.end(), [start_pos](const auto& adjective) {
                 return adjective.end == start_pos - 1 && adjective.pos == core::PartOfSpeech::Adjective &&
@@ -189,11 +190,11 @@ bool hasAttributiveNominalSelector(const std::vector<char32_t>& codepoints,
     }
     std::vector<UnknownCandidate> adjective_candidates;
     if (char_types[selector_start] == normalize::CharType::Kanji) {
-      adjective_candidates =
-          generateAdjectiveCandidates(codepoints, selector_start, char_types, inflection, dict_manager);
+      generateAdjectiveCandidates(codepoints, selector_start, char_types, inflection, dict_manager,
+                                  adjective_candidates);
     } else if (char_types[selector_start] == normalize::CharType::Hiragana) {
-      adjective_candidates =
-          generateHiraganaAdjectiveCandidates(codepoints, selector_start, char_types, inflection, dict_manager);
+      generateHiraganaAdjectiveCandidates(codepoints, selector_start, char_types, inflection, dict_manager,
+                                          adjective_candidates);
     }
     if (std::any_of(adjective_candidates.begin(), adjective_candidates.end(), [start_pos](const auto& adjective) {
           return adjective.end == start_pos && adjective.pos == core::PartOfSpeech::Adjective &&
@@ -288,8 +289,9 @@ void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoin
     const bool mixed_head = char_types[start_pos] == normalize::CharType::Kanji;
     bool has_productive_adjective_nominalization = false;
     if (codepoints[head_end - 1] == U'さ') {
-      const auto adjective_candidates =
-          generateAdjectiveStemCandidates(codepoints, start_pos, char_types, inflection, dict_manager);
+      std::vector<UnknownCandidate> adjective_candidates;
+      generateAdjectiveStemCandidates(codepoints, start_pos, char_types, inflection, dict_manager,
+                                      adjective_candidates);
       has_productive_adjective_nominalization =
           std::any_of(adjective_candidates.begin(), adjective_candidates.end(), [head_end](const auto& adjective) {
             return adjective.end == head_end - 1 && adjective.pos == core::PartOfSpeech::Adjective;

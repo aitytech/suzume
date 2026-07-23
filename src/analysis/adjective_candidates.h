@@ -29,12 +29,12 @@ struct UnknownOptions;
  * @param char_types Character types for each position
  * @param inflection Inflection analyzer for conjugation detection
  * @param dict_manager Dictionary manager for base form validation (optional)
- * @return Vector of candidates
  */
-std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                          const std::vector<normalize::CharType>& char_types,
-                                                          const grammar::Inflection& inflection,
-                                                          const dictionary::DictionaryManager* dict_manager = nullptr);
+void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                 const std::vector<normalize::CharType>& char_types,
+                                 const grammar::Inflection& inflection,
+                                 const dictionary::DictionaryManager* dict_manager,
+                                 std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate na-adjective candidates (〜的 patterns)
@@ -46,12 +46,11 @@ std::vector<UnknownCandidate> generateAdjectiveCandidates(const std::vector<char
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
  * @param options Unknown word generation options
- * @return Vector of candidates
  */
-std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                            const std::vector<normalize::CharType>& char_types,
-                                                            const UnknownOptions& options,
-                                                            const dictionary::DictionaryManager* dict_manager);
+void generateNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                   const std::vector<normalize::CharType>& char_types, const UnknownOptions& options,
+                                   const dictionary::DictionaryManager* dict_manager,
+                                   std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate hiragana i-adjective candidates (pure hiragana like まずい)
@@ -65,13 +64,12 @@ std::vector<UnknownCandidate> generateNaAdjectiveCandidates(const std::vector<ch
  * @param inflection Inflection analyzer for conjugation detection
  * @param dict_manager Dictionary, used to reject particle + verb sequences
  *        misread as adjectives (にかかった → に + かかる, not にかい)
- * @return Vector of candidates
  */
-std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints,
-                                                                  size_t start_pos,
-                                                                  const std::vector<normalize::CharType>& char_types,
-                                                                  const grammar::Inflection& inflection,
-                                                                  const dictionary::DictionaryManager* dict_manager);
+void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                         const std::vector<normalize::CharType>& char_types,
+                                         const grammar::Inflection& inflection,
+                                         const dictionary::DictionaryManager* dict_manager,
+                                         std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate katakana i-adjective candidates (e.g., エモい, キモい, ウザい)
@@ -84,12 +82,11 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
  * @param inflection Inflection analyzer for conjugation detection
- * @return Vector of candidates
  */
-std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vector<char32_t>& codepoints,
-                                                                  size_t start_pos,
-                                                                  const std::vector<normalize::CharType>& char_types,
-                                                                  const grammar::Inflection& inflection);
+void generateKatakanaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                         const std::vector<normalize::CharType>& char_types,
+                                         const grammar::Inflection& inflection,
+                                         std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate i-adjective STEM candidates (e.g., 難し, 美し, 楽し)
@@ -108,11 +105,12 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
  * @param char_types Character types for each position
  * @param inflection Inflection analyzer for stem validation
  * @param dict_manager Dictionary manager for verb lookup (to filter verb renyokei)
- * @return Vector of candidates (adjective stems only)
  */
-std::vector<UnknownCandidate> generateAdjectiveStemCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types,
-    const grammar::Inflection& inflection, const dictionary::DictionaryManager* dict_manager = nullptr);
+void generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     const std::vector<normalize::CharType>& char_types,
+                                     const grammar::Inflection& inflection,
+                                     const dictionary::DictionaryManager* dict_manager,
+                                     std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Append i-adjective 未然形 conjectural candidates (stem + かろ + う)

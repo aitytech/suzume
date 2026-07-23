@@ -241,15 +241,15 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
 
 }  // namespace
 
-std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints,
-                                                                  size_t start_pos,
-                                                                  const std::vector<normalize::CharType>& char_types,
-                                                                  const grammar::Inflection& inflection,
-                                                                  const dictionary::DictionaryManager* dict_manager) {
-  std::vector<UnknownCandidate> candidates;
+void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                         const std::vector<normalize::CharType>& char_types,
+                                         const grammar::Inflection& inflection,
+                                         const dictionary::DictionaryManager* dict_manager,
+                                         std::vector<UnknownCandidate>& candidates) {
+  const size_t candidate_start = candidates.size();
 
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
 
   char32_t first_char = codepoints[start_pos];
@@ -258,14 +258,14 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   // Unlike other particles (は, か, わ, etc.) that can start valid adjectives,
   // を is exclusively an object marker and never begins a Japanese adjective
   if (first_char == U'を') {
-    return candidates;
+    return;
   }
 
   // Skip if starting with a small kana (拗音・促音: ゃ/ゅ/ょ/っ/ぁ…). No Japanese
   // word starts with a small kana, so an adjective candidate here would cut
   // through the preceding digraph.
   if (kana::isSmallKanaCodepoint(first_char)) {
-    return candidates;
+    return;
   }
 
   // Fully spelled-out reduplicated 〜しい adjective (ばかばかしい): the doubled stem is
@@ -299,7 +299,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
 
   // Need at least 3 characters for an i-adjective (e.g., あつい)
   if (max_hiragana_end <= start_pos + 2) {
-    return candidates;
+    return;
   }
 
   // A closed-class particle immediately followed by a registered auxiliary
@@ -338,7 +338,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
                                    normalize::utf8Length(inflection_candidate.stem) >= 2;
                           });
           if (!has_full_i_adjective) {
-            return candidates;
+            return;
           }
         }
       }
@@ -447,7 +447,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
     // If no valid adjective found, skip this sequence
     // (the lattice will find a better split with the particle)
     if (valid_adj_min_end == start_pos) {
-      return candidates;
+      return;
     }
     // Use the valid adjective length as hiragana_end
     hiragana_end = valid_adj_min_end;
@@ -499,7 +499,7 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
 
   // Need at least 3 characters after determining hiragana_end
   if (hiragana_end <= start_pos + 2) {
-    return candidates;
+    return;
   }
 
   adj_detail::appendHiraganaIAdjSurfaceCandidates(codepoints, start_pos, hiragana_end, starts_with_particle, inflection,
@@ -641,20 +641,20 @@ std::vector<UnknownCandidate> generateHiraganaAdjectiveCandidates(const std::vec
   }
 
   // Sort by cost
-  verb_helpers::sortCandidatesByCost(candidates);
+  verb_helpers::sortCandidatesByCost(candidates, candidate_start);
 
-  return candidates;
+  return;
 }
 
-std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vector<char32_t>& codepoints,
-                                                                  size_t start_pos,
-                                                                  const std::vector<normalize::CharType>& char_types,
-                                                                  const grammar::Inflection& inflection) {
-  std::vector<UnknownCandidate> candidates;
+void generateKatakanaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                         const std::vector<normalize::CharType>& char_types,
+                                         const grammar::Inflection& inflection,
+                                         std::vector<UnknownCandidate>& candidates) {
+  const size_t candidate_start = candidates.size();
 
   // Only process katakana-starting positions
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Katakana) {
-    return candidates;
+    return;
   }
 
   // Find katakana portion (1-6 characters for slang adjective stems)
@@ -663,7 +663,7 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
 
   // Need at least 1 katakana character
   if (kata_end == start_pos) {
-    return candidates;
+    return;
   }
 
   // Fully spelled-out reduplicated 〜しい adjective (バカバカしい): the doubled katakana
@@ -734,9 +734,9 @@ std::vector<UnknownCandidate> generateKatakanaAdjectiveCandidates(const std::vec
   adj_detail::appendTrimmedAdjVariants(candidates, kKatakanaTrimRules.data(), kKatakanaTrimRules.size());
 
   // Sort by cost
-  verb_helpers::sortCandidatesByCost(candidates);
+  verb_helpers::sortCandidatesByCost(candidates, candidate_start);
 
-  return candidates;
+  return;
 }
 
 }  // namespace suzume::analysis

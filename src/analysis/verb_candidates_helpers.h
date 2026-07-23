@@ -241,7 +241,7 @@ bool isVerifiedVerbBase(const dictionary::DictionaryManager* dict_manager, const
 /**
  * @brief Sort candidates by cost (lowest cost first)
  */
-void sortCandidatesByCost(std::vector<UnknownCandidate>& candidates);
+void sortCandidatesByCost(std::vector<UnknownCandidate>& candidates, size_t first_index = 0);
 
 // =============================================================================
 // Emphatic Pattern Helpers (口語強調パターン)
