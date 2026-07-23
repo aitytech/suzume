@@ -48,7 +48,13 @@ constexpr std::array<ConjTypeAlias, 18> kConjTypeAliases = {{
     {ConjugationType::ProperGiven, "GIVEN", "ProperGiven", "PROPER_GIVEN"},
 }};
 
-void appendLookupResults(std::vector<LookupResult>& destination, std::vector<LookupResult>&& source) {
+void appendLookupResults(std::vector<LookupResult>& destination, std::vector<LookupResult>&& source,
+                         bool from_user_dict = false) {
+  if (from_user_dict) {
+    for (auto& result : source) {
+      result.from_user_dict = true;
+    }
+  }
   destination.insert(destination.end(), std::make_move_iterator(source.begin()), std::make_move_iterator(source.end()));
 }
 
@@ -126,16 +132,12 @@ std::vector<LookupResult> DictionaryManager::lookup(std::string_view text, size_
 
   // Lookup in user binary dictionary (Layer 3: user.dic)
   if (user_binary_dict_ && user_binary_dict_->isLoaded()) {
-    appendLookupResults(results, user_binary_dict_->lookup(text, start_pos));
+    appendLookupResults(results, user_binary_dict_->lookup(text, start_pos), true);
   }
 
   // Lookup in custom user dictionaries (Layer 4: CSV/TSV files)
   for (const auto& user_dict : user_dicts_) {
-    auto user_results = user_dict->lookup(text, start_pos);
-    for (auto& r : user_results) {
-      r.from_user_dict = true;
-    }
-    appendLookupResults(results, std::move(user_results));
+    appendLookupResults(results, user_dict->lookup(text, start_pos), true);
   }
 
   return results;

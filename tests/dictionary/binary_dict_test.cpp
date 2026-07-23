@@ -870,9 +870,33 @@ TEST_F(BinaryDictTest, DictionaryManagerLoadUserBinaryDictionaryFromMemory) {
     if (res.entry->surface == "りんご") {
       found = true;
       EXPECT_EQ(res.entry->pos, core::PartOfSpeech::Noun);
+      EXPECT_TRUE(res.from_user_dict);
     }
   }
   EXPECT_TRUE(found);
+}
+
+TEST_F(BinaryDictTest, DictionaryManagerPreservesBinaryDictionaryProvenance) {
+  auto core_data = buildTestDict("coretestentry", core::PartOfSpeech::Noun);
+  auto user_data = buildTestDict("usertestentry", core::PartOfSpeech::Noun);
+
+  DictionaryManager manager;
+  ASSERT_TRUE(manager.loadCoreDictionaryFromMemoryResult(core_data.data(), core_data.size()).hasValue());
+  ASSERT_TRUE(manager.loadUserBinaryDictionaryFromMemory(user_data.data(), user_data.size()));
+
+  const auto core_results = manager.lookup("coretestentry", 0);
+  const auto core_result = std::find_if(core_results.begin(), core_results.end(), [](const LookupResult& result) {
+    return result.entry->surface == "coretestentry";
+  });
+  ASSERT_NE(core_result, core_results.end());
+  EXPECT_FALSE(core_result->from_user_dict);
+
+  const auto user_results = manager.lookup("usertestentry", 0);
+  const auto user_result = std::find_if(user_results.begin(), user_results.end(), [](const LookupResult& result) {
+    return result.entry->surface == "usertestentry";
+  });
+  ASSERT_NE(user_result, user_results.end());
+  EXPECT_TRUE(user_result->from_user_dict);
 }
 
 TEST_F(BinaryDictTest, DictionaryManagerLookupExactChecksSurfaceAndPos) {
