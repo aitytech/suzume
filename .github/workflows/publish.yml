@@ -71,33 +71,59 @@ jobs:
             npm publish --access public --provenance
           fi
 
-  build-wheels:
+  build-linux-wheel:
     needs: verify-version
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-          - os: macos-14   # arm64
-          # macOS x86_64 omitted: hosted Intel macOS runners are no longer
-          # reliably provisioned, so the leg queues indefinitely.
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build and smoke-test manylinux2014 x86_64 wheel
+        run: |
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --volume "$GITHUB_WORKSPACE:/project" \
+            --workdir /project \
+            quay.io/pypa/manylinux2014_x86_64@sha256:0d25b049964b2549b83384036abdff06789a8c0b1e9ff003ec80f0d531f79e50 \
+            /bin/bash -euxo pipefail -c '
+              /opt/python/cp312-cp312/bin/python -m venv /tmp/suzume-wheel-build
+              source /tmp/suzume-wheel-build/bin/activate
+              python -m pip install --no-cache-dir \
+                "auditwheel==6.4.2" \
+                "cmake==3.31.6" \
+                "wheel==0.45.1"
+              bindings/python/build_wheel.sh
+              for wheel in bindings/python/dist/*.whl; do
+                bindings/python/smoke_wheel.sh "$wheel"
+              done
+            '
+      - uses: actions/upload-artifact@v5
+        with:
+          name: wheels-linux-x86_64
+          path: bindings/python/dist/*.whl
+
+  build-macos-wheel:
+    needs: verify-version
+    runs-on: macos-15  # arm64
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - run: pip install wheel
-      - name: Build platform wheel
+      - run: pip install 'wheel==0.45.1'
+      - name: Build macOS arm64 wheel
         working-directory: bindings/python
         run: ./build_wheel.sh
+      - name: Smoke-test wheel outside the checkout
+        run: |
+          for wheel in bindings/python/dist/*.whl; do
+            bindings/python/smoke_wheel.sh "$wheel"
+          done
       - uses: actions/upload-artifact@v5
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels-macos-arm64
           path: bindings/python/dist/*.whl
 
   publish-pypi:
-    needs: build-wheels
+    needs: [build-linux-wheel, build-macos-wheel]
     runs-on: ubuntu-latest
     environment:
       name: pypi
