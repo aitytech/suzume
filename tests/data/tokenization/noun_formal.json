@@ -1271,329 +1271,6 @@
       "input": "利用者当たりに配る"
     },
     {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "冒頭「本」は接頭辞用法と名詞用法が文脈上両立する。SuzumeのNounは文法的で、全表層境界と形式名詞鎖は正しい。"
-      },
-      "description": "Formal wake remains a noun after affirmative clauses before dewa-nai.",
-      "expected": [
-        {
-          "lemma": "本",
-          "pos": "Prefix",
-          "surface": "本"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読む"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書く"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べる"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "高い",
-          "pos": "Adjective",
-          "surface": "高い"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "静か",
-          "pos": "Adjective",
-          "surface": "静か"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ],
-      "id": "affirmative_clause_wake_boundary",
-      "input": "本わけではない。読むわけではない。書くわけではない。食べるわけではない。高いわけではない。静かなわけではない。",
-      "suzume_expected": [
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読む"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書く"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べる"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "高い",
-          "pos": "Adjective",
-          "surface": "高い"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "静か",
-          "pos": "Adjective",
-          "surface": "静か"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "わけ",
-          "pos": "Noun",
-          "surface": "わけ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
-    },
-    {
       "description": "Causal formal noun sei remains intact after noun and attributive clauses.",
       "expected": [
         {
@@ -3350,36 +3027,8 @@
       "input": "引き受け手を探す"
     },
     {
-      "accepted_diff": {
-        "category": "lexicalized-deverbal-noun-pos",
-        "reason": "既存の語彙的名詞「組み合わせ」に生産的接尾辞「方」が接続する解析で、検索境界と後続構文は参照解析と一致する。"
-      },
       "description": "compound verb nominalizer",
       "expected": [
-        {
-          "lemma": "組み合わせる",
-          "pos": "Verb",
-          "surface": "組み合わせ"
-        },
-        {
-          "lemma": "方",
-          "pos": "Suffix",
-          "surface": "方"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "試す",
-          "pos": "Verb",
-          "surface": "試す"
-        }
-      ],
-      "id": "kumiawasekata_nominalizer",
-      "input": "組み合わせ方を試す",
-      "suzume_expected": [
         {
           "lemma": "組み合わせ",
           "pos": "Noun",
@@ -3400,18 +3049,16 @@
           "pos": "Verb",
           "surface": "試す"
         }
-      ]
+      ],
+      "id": "kumiawasekata_nominalizer",
+      "input": "組み合わせ方を試す"
     },
     {
-      "accepted_diff": {
-        "category": "lexicalized-deverbal-noun-pos",
-        "reason": "既存の語彙的名詞「組み合わせ」に生産的接尾辞「方」が接続する解析で、検索境界と後続構文は参照解析と一致する。"
-      },
       "description": "compound verb nominalizer variant",
       "expected": [
         {
-          "lemma": "組み合わせる",
-          "pos": "Verb",
+          "lemma": "組み合わせ",
+          "pos": "Noun",
           "surface": "組み合わせ"
         },
         {
@@ -3436,34 +3083,7 @@
         }
       ],
       "id": "kumiawasekata_nominalizer_variant",
-      "input": "組み合わせ方を確認する",
-      "suzume_expected": [
-        {
-          "lemma": "組み合わせ",
-          "pos": "Noun",
-          "surface": "組み合わせ"
-        },
-        {
-          "lemma": "方",
-          "pos": "Suffix",
-          "surface": "方"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ]
+      "input": "組み合わせ方を確認する"
     },
     {
       "description": "agentive suffix variant",
@@ -3862,6 +3482,173 @@
       ],
       "id": "formal_you_similitude",
       "input": "夢のようだ"
+    },
+    {
+      "description": "形式名詞「わけ」が名詞述語・動詞・形容詞の適切な連体形に続く。",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "affirmative_clause_wake_boundary",
+      "input": "本なわけではない。読むわけではない。書くわけではない。食べるわけではない。高いわけではない。静かなわけではない。"
     }
   ],
   "description": "Formal nouns (こと、もの、ところ)",

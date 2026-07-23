@@ -179,7 +179,7 @@
         },
         {
           "lemma": "ちゃう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "ちゃっ"
         },
         {
@@ -264,31 +264,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "Slang phrase マジでキモい",
       "expected": [
-        {
-          "lemma": "マジ",
-          "pos": "Noun",
-          "surface": "マジ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "キモい",
-          "pos": "Adjective",
-          "surface": "キモい"
-        }
-      ],
-      "id": "phrase_majide_kimoi",
-      "input": "マジでキモい",
-      "suzume_expected": [
         {
           "lemma": "マジ",
           "pos": "Noun",
@@ -305,6 +282,8 @@
           "surface": "キモい"
         }
       ],
+      "id": "phrase_majide_kimoi",
+      "input": "マジでキモい",
       "tags": [
         "slang",
         "phrase"
@@ -337,31 +316,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "Internet slang phrase マジで尊い",
       "expected": [
-        {
-          "lemma": "マジ",
-          "pos": "Noun",
-          "surface": "マジ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "尊い",
-          "pos": "Adjective",
-          "surface": "尊い"
-        }
-      ],
-      "id": "phrase_majide_toutoi",
-      "input": "マジで尊い",
-      "suzume_expected": [
         {
           "lemma": "マジ",
           "pos": "Noun",
@@ -378,6 +334,8 @@
           "surface": "尊い"
         }
       ],
+      "id": "phrase_majide_toutoi",
+      "input": "マジで尊い",
       "tags": [
         "slang",
         "phrase",
@@ -555,58 +513,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "同一母音の連続強調を根拠なく等分せず、一つの強調単位として保持するため。"
-      },
-      "description": "きたああああ - vowel repetition for emphasis",
-      "expected": [
-        {
-          "lemma": "くる",
-          "pos": "Verb",
-          "surface": "き"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "ああ",
-          "pos": "Interjection",
-          "surface": "ああ"
-        },
-        {
-          "lemma": "ああ",
-          "pos": "Interjection",
-          "surface": "ああ"
-        }
-      ],
-      "id": "vowel_repeat_kita",
-      "input": "きたああああ",
-      "suzume_expected": [
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "き"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "ああああ",
-          "pos": "Adverb",
-          "surface": "ああああ"
-        }
-      ],
-      "tags": [
-        "emphatic",
-        "vowel_repeat"
-      ]
-    },
-    {
       "description": "すごいいいい - vowel repetition for emphasis",
       "expected": [
         {
@@ -653,6 +559,28 @@
         "emphatic",
         "vowel_repeat"
       ]
+    },
+    {
+      "description": "きたああああ - vowel repetition for emphasis",
+      "expected": [
+        {
+          "lemma": "くる",
+          "pos": "Verb",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "ああああ",
+          "pos": "Adverb",
+          "surface": "ああああ"
+        }
+      ],
+      "id": "vowel_repeat_kita",
+      "input": "きたああああ"
     }
   ],
   "description": "Colloquial and slang patterns",

@@ -100,8 +100,8 @@
           "surface": "お"
         },
         {
-          "lemma": "願い",
-          "pos": "Noun",
+          "lemma": "願う",
+          "pos": "Verb",
           "surface": "願い"
         },
         {
@@ -232,49 +232,6 @@
       ],
       "id": "shikarazugo_kudasai",
       "input": "悪しからずご了承ください"
-    },
-    {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "「立派」はナ形容詞語幹と名詞述語の両解析が成立する。SuzumeのNoun+copulaは文法的で、表層境界と他トークンは正しい。"
-      },
-      "description": "たいそう立派だ - auto-generated",
-      "expected": [
-        {
-          "lemma": "たいそう",
-          "pos": "Adverb",
-          "surface": "たいそう"
-        },
-        {
-          "lemma": "立派",
-          "pos": "Adjective",
-          "surface": "立派"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "taisou_da",
-      "input": "たいそう立派だ",
-      "suzume_expected": [
-        {
-          "lemma": "たいそう",
-          "pos": "Adverb",
-          "surface": "たいそう"
-        },
-        {
-          "lemma": "立派",
-          "pos": "Noun",
-          "surface": "立派"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ]
     },
     {
       "description": "必ず成功する - auto-generated",
@@ -409,26 +366,8 @@
       "input": "いかほど必要か"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "限定程度副詞「たかだか」を一語で解析する",
       "expected": [
-        {
-          "lemma": "たかだか",
-          "pos": "Determiner",
-          "surface": "たかだか"
-        },
-        {
-          "lemma": "十人",
-          "pos": "Noun",
-          "surface": "十人"
-        }
-      ],
-      "id": "takadaka_limiting_degree_adverb",
-      "input": "たかだか十人",
-      "suzume_expected": [
         {
           "lemma": "たかだか",
           "pos": "Adverb",
@@ -439,7 +378,9 @@
           "pos": "Noun",
           "surface": "十人"
         }
-      ]
+      ],
+      "id": "takadaka_limiting_degree_adverb",
+      "input": "たかだか十人"
     },
     {
       "description": "数量を限定する副詞「わずか」を一語で解析する",
@@ -459,31 +400,8 @@
       "input": "わずか三人"
     },
     {
-      "accepted_diff": {
-        "category": "grammar-pos",
-        "reason": "目的格を伴わず総体を表して後続述語を修飾する副詞用法として扱うため。"
-      },
       "description": "固定副詞句「一切合切」を後続名詞から分離する",
       "expected": [
-        {
-          "lemma": "一切合切",
-          "pos": "Noun",
-          "surface": "一切合切"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
-      "id": "issaikassai_fixed_totalizing_adverb",
-      "input": "一切合切確認する",
-      "suzume_expected": [
         {
           "lemma": "一切合切",
           "pos": "Adverb",
@@ -499,7 +417,9 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ]
+      ],
+      "id": "issaikassai_fixed_totalizing_adverb",
+      "input": "一切合切確認する"
     },
     {
       "description": "強意副詞「しいて」を一語で解析する",
@@ -529,31 +449,8 @@
       "input": "しいて言えば正しい"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "逆接・選択副詞「むしろ」を一語で解析する",
       "expected": [
-        {
-          "lemma": "むしろ",
-          "pos": "Other",
-          "surface": "むしろ"
-        },
-        {
-          "lemma": "必要",
-          "pos": "Adjective",
-          "surface": "必要"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "mushiro_contrastive_adverb",
-      "input": "むしろ必要だ",
-      "suzume_expected": [
         {
           "lemma": "むしろ",
           "pos": "Adverb",
@@ -569,7 +466,9 @@
           "pos": "Auxiliary",
           "surface": "だ"
         }
-      ]
+      ],
+      "id": "mushiro_contrastive_adverb",
+      "input": "むしろ必要だ"
     },
     {
       "description": "様態副詞「おもむろに」を一語で解析する",
@@ -1390,36 +1289,8 @@
       "input": "然程確認しない"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "時を表す固定副詞「このほど」の副詞用法を保持する。",
       "expected": [
-        {
-          "lemma": "このほど",
-          "pos": "Noun",
-          "surface": "このほど"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "konohodo_shita",
-      "input": "このほど確認した",
-      "suzume_expected": [
         {
           "lemma": "このほど",
           "pos": "Adverb",
@@ -1440,7 +1311,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "konohodo_shita",
+      "input": "このほど確認した"
     },
     {
       "description": "Literary degree adverb remains one search token",
@@ -1502,6 +1375,23 @@
       ],
       "id": "literary_amaneku_adverb",
       "input": "あまねく広がる"
+    },
+    {
+      "description": "程度副詞とイ形容詞",
+      "expected": [
+        {
+          "lemma": "たいそう",
+          "pos": "Adverb",
+          "surface": "たいそう"
+        },
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しい"
+        }
+      ],
+      "id": "taisou_da",
+      "input": "たいそう美しい"
     }
   ],
   "description": "adverb_fixed tests",

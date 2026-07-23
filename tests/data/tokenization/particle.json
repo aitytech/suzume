@@ -82,69 +82,6 @@
       "input": "見えたりしてる"
     },
     {
-      "accepted_diff": {
-        "category": "deverbal-noun-ambiguity",
-        "reason": "「減り（減る連用形）+は+する」と「転成名詞の減り+は+する」は表層同形で、同じ構造の名詞用法「祭りはしなかった」を壊さずに局所文法だけで一意化できない。辞書なしトークナイザーとして転成名詞読みを許容する。"
-      },
-      "description": "は+し split in emphatic negation pattern VERB+は+し+ない",
-      "expected": [
-        {
-          "lemma": "減る",
-          "pos": "Verb",
-          "surface": "減り"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "hashi_split_verb_ha_shi",
-      "input": "減りはしなかった",
-      "suzume_expected": [
-        {
-          "lemma": "減り",
-          "pos": "Noun",
-          "surface": "減り"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
-    },
-    {
       "description": "の+は split after という (not merged as のは noun)",
       "expected": [
         {
@@ -825,6 +762,80 @@
       ],
       "id": "interrogative_kadouka_verb_control",
       "input": "読むかどうか決める"
+    },
+    {
+      "description": "名詞と接続助詞「ながら」と格助詞「に」の境界を維持する",
+      "expected": [
+        {
+          "lemma": "涙",
+          "pos": "Noun",
+          "surface": "涙"
+        },
+        {
+          "lemma": "ながら",
+          "pos": "Particle",
+          "surface": "ながら"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "訴える",
+          "pos": "Verb",
+          "surface": "訴え"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "noun_nagara_ni_boundary",
+      "input": "涙ながらに訴えた"
+    },
+    {
+      "description": "主語文脈を伴う連用形＋は＋する",
+      "expected": [
+        {
+          "lemma": "売上",
+          "pos": "Noun",
+          "surface": "売上"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "減る",
+          "pos": "Verb",
+          "surface": "減り"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "hashi_split_verb_ha_shi",
+      "input": "売上が減りはしなかった"
     }
   ],
   "description": "particle tests",

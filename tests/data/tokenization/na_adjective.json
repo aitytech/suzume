@@ -180,36 +180,8 @@
       "input": "ほぼ同じだ"
     },
     {
-      "accepted_diff": {
-        "category": "na-adjective-boundary",
-        "reason": "形容動詞語幹「みやびやか」+格助詞「に」が文法境界で、語中分割は不適切"
-      },
       "description": "ひらがなやか形容詞の連用用法",
       "expected": [
-        {
-          "lemma": "みや",
-          "pos": "Noun",
-          "surface": "みや"
-        },
-        {
-          "lemma": "びやかに",
-          "pos": "Noun",
-          "surface": "びやかに"
-        },
-        {
-          "lemma": "話す",
-          "pos": "Verb",
-          "surface": "話し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "literary_miyabiyaka_ni",
-      "input": "みやびやかに話した",
-      "suzume_expected": [
         {
           "lemma": "みやびやか",
           "pos": "Adjective",
@@ -230,7 +202,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "literary_miyabiyaka_ni",
+      "input": "みやびやかに話した"
     },
     {
       "description": "ひらがならか形容詞の連用用法",

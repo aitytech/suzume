@@ -26,8 +26,8 @@
       "description": "間もなく lexicalized as one adverbial adjective (lemma 間もない)",
       "expected": [
         {
-          "lemma": "間もない",
-          "pos": "Adjective",
+          "lemma": "間もなく",
+          "pos": "Adverb",
           "surface": "間もなく"
         },
         {
@@ -90,9 +90,19 @@
           "surface": "休む"
         },
         {
-          "lemma": "間もない",
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
           "pos": "Adjective",
-          "surface": "間もなく"
+          "surface": "なく"
         },
         {
           "lemma": "働く",

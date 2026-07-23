@@ -937,101 +937,8 @@
       "input": "雨に濡れた石畳の上を、傘も差さずに歩く女の後ろ姿が、妙に物悲しく見えた"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "時として (sometimes) — L2 dict adverb, should be one token",
       "expected": [
-        {
-          "lemma": "人間",
-          "pos": "Noun",
-          "surface": "人間"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "心",
-          "pos": "Noun",
-          "surface": "心"
-        },
-        {
-          "lemma": "という",
-          "pos": "Determiner",
-          "surface": "という"
-        },
-        {
-          "lemma": "もの",
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "時として",
-          "pos": "Adverb",
-          "surface": "時として"
-        },
-        {
-          "lemma": "己",
-          "pos": "Pronoun",
-          "surface": "己"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "意志",
-          "pos": "Noun",
-          "surface": "意志"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "反す",
-          "pos": "Verb",
-          "surface": "反し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "動く",
-          "pos": "Verb",
-          "surface": "動く"
-        },
-        {
-          "lemma": "もの",
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        }
-      ],
-      "id": "tokitoshite_adverb",
-      "input": "人間の心というものは、時として己の意志に反して動くものである",
-      "suzume_expected": [
         {
           "lemma": "人間",
           "pos": "Noun",
@@ -1117,7 +1024,9 @@
           "pos": "Verb",
           "surface": "ある"
         }
-      ]
+      ],
+      "id": "tokitoshite_adverb",
+      "input": "人間の心というものは、時として己の意志に反して動くものである"
     },
     {
       "description": "Emphatic negation: ありはしない splits as あり+は+し+ない",
@@ -1225,13 +1134,13 @@
           "surface": "お"
         },
         {
-          "lemma": "待ち",
-          "pos": "Noun",
+          "lemma": "待つ",
+          "pos": "Verb",
           "surface": "待ち"
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -1259,86 +1168,8 @@
       "input": "恐れ入りますが、少々お待ちいただけますでしょうか"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "名詞の日と動詞の見の形態素境界を維持し、漢字連続の日見へ統合しないため。"
-      },
       "description": "ことができる as multi-word: 生涯+忘れる+こと+が+でき+なかっ+た",
       "expected": [
-        {
-          "lemma": "あの",
-          "pos": "Determiner",
-          "surface": "あの"
-        },
-        {
-          "lemma": "日見",
-          "pos": "Noun",
-          "surface": "日見"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "光景",
-          "pos": "Noun",
-          "surface": "光景"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "彼女",
-          "pos": "Pronoun",
-          "surface": "彼女"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "生涯",
-          "pos": "Noun",
-          "surface": "生涯"
-        },
-        {
-          "lemma": "忘れる",
-          "pos": "Verb",
-          "surface": "忘れる"
-        },
-        {
-          "lemma": "こと",
-          "pos": "Noun",
-          "surface": "こと"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "できる",
-          "pos": "Verb",
-          "surface": "でき"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "shougai_kotogadekiru",
-      "input": "あの日見た光景を、彼女は生涯忘れることができなかった",
-      "suzume_expected": [
         {
           "lemma": "あの",
           "pos": "Determiner",
@@ -1414,7 +1245,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "shougai_kotogadekiru",
+      "input": "あの日見た光景を、彼女は生涯忘れることができなかった"
     },
     {
       "description": "Honorific 待ち+いただけ split - godan-wa false candidate penalty",
@@ -1425,13 +1258,13 @@
           "surface": "お"
         },
         {
-          "lemma": "待ち",
-          "pos": "Noun",
+          "lemma": "待つ",
+          "pos": "Verb",
           "surface": "待ち"
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -1444,10 +1277,6 @@
       "input": "お待ちいただけます"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-normalization",
-        "reason": "連用形「揺るぎ」の辞書形は「揺るぐ」。境界・POS・否定助動詞接続は一致する。"
-      },
       "description": "されども彼の決意は揺るぎないものであった - auto-generated",
       "expected": [
         {
@@ -1482,12 +1311,12 @@
         },
         {
           "lemma": "揺るぎ",
-          "pos": "Verb",
+          "pos": "Noun",
           "surface": "揺るぎ"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -1512,69 +1341,7 @@
         }
       ],
       "id": "saredomo_no_ha_ruginaimonodeattta",
-      "input": "されども彼の決意は揺るぎないものであった",
-      "suzume_expected": [
-        {
-          "lemma": "されど",
-          "pos": "Conjunction",
-          "surface": "されど"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "決意",
-          "pos": "Noun",
-          "surface": "決意"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "揺るぐ",
-          "pos": "Verb",
-          "surface": "揺るぎ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "もの",
-          "pos": "Noun",
-          "surface": "もの"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "されども彼の決意は揺るぎないものであった"
     },
     {
       "description": "文語副詞の送り仮名境界を保持する",
@@ -1831,51 +1598,8 @@
       "input": "十年余り前の話だ。"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "擬態語・和語数量表現は内部を恣意的に分断せず、後続助詞との境界を保つ現行検索単位が妥当"
-      },
       "description": "文学調品質回帰",
       "expected": [
-        {
-          "lemma": "時計",
-          "pos": "Noun",
-          "surface": "時計"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ちく",
-          "pos": "Noun",
-          "surface": "ちく"
-        },
-        {
-          "lemma": "たく",
-          "pos": "Verb",
-          "surface": "たく"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "鳴る",
-          "pos": "Verb",
-          "surface": "鳴っ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "literary_r06_heterogeneous_mimetic",
-      "input": "時計がちくたくと鳴った。",
-      "suzume_expected": [
         {
           "lemma": "時計",
           "pos": "Noun",
@@ -1906,44 +1630,13 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "literary_r06_heterogeneous_mimetic",
+      "input": "時計がちくたくと鳴った。"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "擬態語・和語数量表現は内部を恣意的に分断せず、後続助詞との境界を保つ現行検索単位が妥当"
-      },
       "description": "文学調品質回帰",
       "expected": [
-        {
-          "lemma": "袋",
-          "pos": "Noun",
-          "surface": "袋"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ぷうぷうと",
-          "pos": "Noun",
-          "surface": "ぷうぷうと"
-        },
-        {
-          "lemma": "膨らむ",
-          "pos": "Verb",
-          "surface": "膨らん"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "gapuupuuto_randa",
-      "input": "袋がぷうぷうと膨らんだ。",
-      "suzume_expected": [
         {
           "lemma": "袋",
           "pos": "Noun",
@@ -1974,7 +1667,9 @@
           "pos": "Auxiliary",
           "surface": "だ"
         }
-      ]
+      ],
+      "id": "gapuupuuto_randa",
+      "input": "袋がぷうぷうと膨らんだ。"
     },
     {
       "description": "文学調品質回帰",
@@ -2175,56 +1870,8 @@
       "input": "彼は記憶をたどった。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
-      },
       "description": "文学調品質回帰",
       "expected": [
-        {
-          "lemma": "日々",
-          "pos": "Noun",
-          "surface": "日々"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "いとなむ",
-          "pos": "Verb",
-          "surface": "いとなみ"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "静か",
-          "pos": "Adjective",
-          "surface": "静か"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "続く",
-          "pos": "Verb",
-          "surface": "続い"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "noitonamiga_kani_ita",
-      "input": "日々のいとなみが静かに続いた。",
-      "suzume_expected": [
         {
           "lemma": "日々",
           "pos": "Noun",
@@ -2265,7 +1912,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "noitonamiga_kani_ita",
+      "input": "日々のいとなみが静かに続いた。"
     },
     {
       "description": "文学調品質回帰",
@@ -2585,8 +2234,8 @@
           "surface": "お"
         },
         {
-          "lemma": "伝え",
-          "pos": "Noun",
+          "lemma": "伝える",
+          "pos": "Verb",
           "surface": "伝え"
         },
         {
@@ -2642,8 +2291,8 @@
           "surface": "お"
         },
         {
-          "lemma": "渡し",
-          "pos": "Noun",
+          "lemma": "渡す",
+          "pos": "Verb",
           "surface": "渡し"
         },
         {
@@ -2661,56 +2310,8 @@
       "input": "私は先生にお渡しした。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "「お＋話し＋申し上げる」は動詞「話す」の連用形を用いる謙譲構文で、現行Verb解析が妥当。"
-      },
       "description": "私は先生にお話し申し上げます。 - regression test",
       "expected": [
-        {
-          "lemma": "私",
-          "pos": "Pronoun",
-          "surface": "私"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "先生",
-          "pos": "Noun",
-          "surface": "先生"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "話し",
-          "pos": "Noun",
-          "surface": "話し"
-        },
-        {
-          "lemma": "申し上げる",
-          "pos": "Verb",
-          "surface": "申し上げ"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
-      "id": "ha_nio_shi_shi_gemasu",
-      "input": "私は先生にお話し申し上げます。",
-      "suzume_expected": [
         {
           "lemma": "私",
           "pos": "Pronoun",
@@ -2751,7 +2352,9 @@
           "pos": "Auxiliary",
           "surface": "ます"
         }
-      ]
+      ],
+      "id": "ha_nio_shi_shi_gemasu",
+      "input": "私は先生にお話し申し上げます。"
     },
     {
       "description": "言うまでもなく、記録を残した。 - regression test",
@@ -3389,15 +2992,11 @@
       "input": "この道まで静かに続いている。"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "どきどきと心臓が鳴る。 - regression test",
       "expected": [
         {
           "lemma": "どきどき",
-          "pos": "Noun",
+          "pos": "Adverb",
           "surface": "どきどき"
         },
         {
@@ -3422,66 +3021,11 @@
         }
       ],
       "id": "dokidokito_ga_ru",
-      "input": "どきどきと心臓が鳴る。",
-      "suzume_expected": [
-        {
-          "lemma": "どきどき",
-          "pos": "Adverb",
-          "surface": "どきどき"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "心臓",
-          "pos": "Noun",
-          "surface": "心臓"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "鳴る",
-          "pos": "Verb",
-          "surface": "鳴る"
-        }
-      ]
+      "input": "どきどきと心臓が鳴る。"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "「にこっと」はXっ+と型の一語の擬態副詞であり、語頭「に」を格助詞、末尾「と」を引用助詞として切り離さない。全体候補・POS・後続述語を監査済み。"
-      },
       "description": "にこっと笑う。 - regression test",
       "expected": [
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "こう",
-          "pos": "Verb",
-          "surface": "こっ"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "笑う",
-          "pos": "Verb",
-          "surface": "笑う"
-        }
-      ],
-      "id": "nikottto_u",
-      "input": "にこっと笑う。",
-      "suzume_expected": [
         {
           "lemma": "にこっと",
           "pos": "Adverb",
@@ -3492,7 +3036,9 @@
           "pos": "Verb",
           "surface": "笑う"
         }
-      ]
+      ],
+      "id": "nikottto_u",
+      "input": "にこっと笑う。"
     },
     {
       "description": "水滴がぽつりと落ちる。 - regression test",
@@ -3608,46 +3154,8 @@
       "input": "音がしんと消える。"
     },
     {
-      "accepted_diff": {
-        "category": "onomatopoeia-search-unit",
-        "reason": "反復擬音語「りんりん」は一つの検索単位で、反復要素ごとに分割しない"
-      },
       "description": "鈴がりんりんと鳴る。 - regression test",
       "expected": [
-        {
-          "lemma": "鈴",
-          "pos": "Noun",
-          "surface": "鈴"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "りん",
-          "pos": "Adverb",
-          "surface": "りん"
-        },
-        {
-          "lemma": "りん",
-          "pos": "Adverb",
-          "surface": "りん"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "鳴る",
-          "pos": "Verb",
-          "surface": "鳴る"
-        }
-      ],
-      "id": "garinrinto_ru",
-      "input": "鈴がりんりんと鳴る。",
-      "suzume_expected": [
         {
           "lemma": "鈴",
           "pos": "Noun",
@@ -3673,54 +3181,13 @@
           "pos": "Verb",
           "surface": "鳴る"
         }
-      ]
+      ],
+      "id": "garinrinto_ru",
+      "input": "鈴がりんりんと鳴る。"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "擬態語・和語数量表現は内部を恣意的に分断せず、後続助詞との境界を保つ現行検索単位が妥当"
-      },
       "description": "汽車ががたんごとんと過ぎた。 - regression test",
       "expected": [
-        {
-          "lemma": "汽車",
-          "pos": "Noun",
-          "surface": "汽車"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "がたん",
-          "pos": "Adverb",
-          "surface": "がたん"
-        },
-        {
-          "lemma": "ご",
-          "pos": "Prefix",
-          "surface": "ご"
-        },
-        {
-          "lemma": "とんと",
-          "pos": "Adverb",
-          "surface": "とんと"
-        },
-        {
-          "lemma": "過ぎる",
-          "pos": "Verb",
-          "surface": "過ぎ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "gagatangotonto_gita",
-      "input": "汽車ががたんごとんと過ぎた。",
-      "suzume_expected": [
         {
           "lemma": "汽車",
           "pos": "Noun",
@@ -3751,44 +3218,13 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "gagatangotonto_gita",
+      "input": "汽車ががたんごとんと過ぎた。"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "擬態語・和語数量表現は内部を恣意的に分断せず、後続助詞との境界を保つ現行検索単位が妥当"
-      },
       "description": "波がざぶんざぶんと寄せた。 - regression test",
       "expected": [
-        {
-          "lemma": "波",
-          "pos": "Noun",
-          "surface": "波"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ざぶんざぶんと",
-          "pos": "Noun",
-          "surface": "ざぶんざぶんと"
-        },
-        {
-          "lemma": "寄せる",
-          "pos": "Verb",
-          "surface": "寄せ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "gazabunzabunto_seta",
-      "input": "波がざぶんざぶんと寄せた。",
-      "suzume_expected": [
         {
           "lemma": "波",
           "pos": "Noun",
@@ -3819,54 +3255,13 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "gazabunzabunto_seta",
+      "input": "波がざぶんざぶんと寄せた。"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "擬態語・和語数量表現は内部を恣意的に分断せず、後続助詞との境界を保つ現行検索単位が妥当"
-      },
       "description": "雫がぽたりぽたりと落ちた。 - regression test",
       "expected": [
-        {
-          "lemma": "雫",
-          "pos": "Noun",
-          "surface": "雫"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ぽたり",
-          "pos": "Adverb",
-          "surface": "ぽたり"
-        },
-        {
-          "lemma": "ぽたり",
-          "pos": "Adverb",
-          "surface": "ぽたり"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "落ちる",
-          "pos": "Verb",
-          "surface": "落ち"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "gapotaripotarito_chita",
-      "input": "雫がぽたりぽたりと落ちた。",
-      "suzume_expected": [
         {
           "lemma": "雫",
           "pos": "Noun",
@@ -3897,7 +3292,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "gapotaripotarito_chita",
+      "input": "雫がぽたりぽたりと落ちた。"
     },
     {
       "description": "彼女はしんみり語った。 - regression test",

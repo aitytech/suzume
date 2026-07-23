@@ -714,7 +714,7 @@
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -750,13 +750,13 @@
           "surface": "お"
         },
         {
-          "lemma": "待ち",
-          "pos": "Noun",
+          "lemma": "待つ",
+          "pos": "Verb",
           "surface": "待ち"
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {

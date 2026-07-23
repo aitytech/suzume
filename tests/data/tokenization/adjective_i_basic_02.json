@@ -354,7 +354,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -1398,6 +1398,150 @@
       ],
       "id": "independent_nai_conditional_before_ba",
       "input": "理由がなければ戻る"
+    },
+    {
+      "description": "ありきたりな話だ。 - regression test",
+      "expected": [
+        {
+          "lemma": "ありきたり",
+          "pos": "Adjective",
+          "surface": "ありきたり"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "arikitarina_da",
+      "input": "ありきたりな話だ。"
+    },
+    {
+      "description": "ありきたりの話だ。 - regression test",
+      "expected": [
+        {
+          "lemma": "ありきたり",
+          "pos": "Adjective",
+          "surface": "ありきたり"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "arikitarino_da",
+      "input": "ありきたりの話だ。"
+    },
+    {
+      "description": "ありきたりに見える。 - regression test",
+      "expected": [
+        {
+          "lemma": "ありきたり",
+          "pos": "Adjective",
+          "surface": "ありきたり"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "見える",
+          "pos": "Verb",
+          "surface": "見える"
+        }
+      ],
+      "id": "arikitarini_eru",
+      "input": "ありきたりに見える。"
+    },
+    {
+      "description": "ありきたり。 - regression test",
+      "expected": [
+        {
+          "lemma": "ありきたり",
+          "pos": "Adjective",
+          "surface": "ありきたり"
+        }
+      ],
+      "id": "arikitari",
+      "input": "ありきたり。"
+    },
+    {
+      "description": "未知イ形容詞の終止形を引用助詞前でも維持する",
+      "expected": [
+        {
+          "lemma": "惜しい",
+          "pos": "Adjective",
+          "surface": "惜しい"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "shiito_u",
+      "input": "惜しいと思う"
+    },
+    {
+      "description": "形容詞語幹＋すぎる",
+      "expected": [
+        {
+          "lemma": "うれしい",
+          "pos": "Adjective",
+          "surface": "うれし"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "sugiru_hiragana_adjective",
+      "input": "うれしすぎる。"
+    },
+    {
+      "description": "形容詞語幹＋すぎる",
+      "expected": [
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美し"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "sugiru_explicit_adjective_stem",
+      "input": "美しすぎる。"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",

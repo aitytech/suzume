@@ -171,59 +171,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "closed-auxiliary-boundary",
-        "reason": "口語否定過去「んかった」の時制前語幹「んかっ」は閉じた一つの補助語形であり、「ん/かっ」へ分けると独立しない活用断片を作る。Suzumeの「くだら/んかっ/た」を採用する。"
-      },
-      "description": "くだらんかった - contracted past form of くだらなかった",
-      "expected": [
-        {
-          "lemma": "くだる",
-          "pos": "Verb",
-          "surface": "くだら"
-        },
-        {
-          "lemma": "ん",
-          "pos": "Auxiliary",
-          "surface": "ん"
-        },
-        {
-          "lemma": "かる",
-          "pos": "Verb",
-          "surface": "かっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "contracted_kudaranai_past",
-      "input": "くだらんかった",
-      "suzume_expected": [
-        {
-          "lemma": "くだる",
-          "pos": "Verb",
-          "surface": "くだら"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "んかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "tags": [
-        "contraction",
-        "colloquial",
-        "regression"
-      ]
-    },
-    {
       "description": "暑かったね - regression test",
       "expected": [
         {

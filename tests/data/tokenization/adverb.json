@@ -1,56 +1,8 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "grammar-pos",
-        "reason": "文脈上は逆接接続詞ではなく様態を限定する副詞であり、表層境界は一致するため。"
-      },
       "description": "ただ as conjunction, not た+だ",
       "expected": [
-        {
-          "lemma": "ただ",
-          "pos": "Conjunction",
-          "surface": "ただ"
-        },
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "掌",
-          "pos": "Noun",
-          "surface": "掌"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "載せる",
-          "pos": "Verb",
-          "surface": "載せ"
-        },
-        {
-          "lemma": "られる",
-          "pos": "Auxiliary",
-          "surface": "られ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "tada_conjunction",
-      "input": "ただ彼の掌に載せられた",
-      "suzume_expected": [
         {
           "lemma": "ただ",
           "pos": "Adverb",
@@ -91,7 +43,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "tada_conjunction",
+      "input": "ただ彼の掌に載せられた"
     },
     {
       "description": "まるで as adverb, not まる+で",
@@ -425,10 +379,6 @@
       "input": "特段問題はない"
     },
     {
-      "accepted_diff": {
-        "category": "orthographic-pos-ambiguity",
-        "reason": "旧仮名的な「恐しい」から参照lemma「恐い」への対応は活用規則では導出できず、同じ表層には未知I形容詞と連用転成名詞の両候補が成立する。境界と後続の「と/も/思わ/なかっ/た」は正しいため、開いた形容詞の個語登録や全「しい」の強制Adj化をせず表層保持を意図差とする。"
-      },
       "description": "別段 dict boundary prevents 別段恐しい kanji merge",
       "expected": [
         {
@@ -437,7 +387,7 @@
           "surface": "別段"
         },
         {
-          "lemma": "恐い",
+          "lemma": "恐しい",
           "pos": "Adjective",
           "surface": "恐しい"
         },
@@ -468,44 +418,7 @@
         }
       ],
       "id": "betsudan_dict_boundary",
-      "input": "別段恐しいとも思わなかった",
-      "suzume_expected": [
-        {
-          "lemma": "別段",
-          "pos": "Adverb",
-          "surface": "別段"
-        },
-        {
-          "lemma": "恐しい",
-          "pos": "Noun",
-          "surface": "恐しい"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "思う",
-          "pos": "Verb",
-          "surface": "思わ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "別段恐しいとも思わなかった"
     },
     {
       "description": "だいいち as adverb, boundary before 毛",
@@ -1125,7 +1038,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         }
       ],

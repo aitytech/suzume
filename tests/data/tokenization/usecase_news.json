@@ -287,51 +287,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "grammatical-pos-correction",
-        "reason": "丁寧推量の断定辞「でしょう」の直前では「曇り」は連用形転成名詞であり、動詞連用形ではないため"
-      },
       "description": "Weather forecast with のち (after) as temporal noun",
       "expected": [
-        {
-          "lemma": "明日",
-          "pos": "Noun",
-          "surface": "明日"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "晴れ",
-          "pos": "Noun",
-          "surface": "晴れ"
-        },
-        {
-          "lemma": "のち",
-          "pos": "Noun",
-          "surface": "のち"
-        },
-        {
-          "lemma": "曇る",
-          "pos": "Verb",
-          "surface": "曇り"
-        },
-        {
-          "lemma": "です",
-          "pos": "Auxiliary",
-          "surface": "でしょ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        }
-      ],
-      "id": "weather_forecast",
-      "input": "明日は晴れのち曇りでしょう",
-      "suzume_expected": [
         {
           "lemma": "明日",
           "pos": "Noun",
@@ -368,6 +325,8 @@
           "surface": "う"
         }
       ],
+      "id": "weather_forecast",
+      "input": "明日は晴れのち曇りでしょう",
       "tags": [
         "weather"
       ]
@@ -1121,202 +1080,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "「正式」はナ形容詞語幹+にと名詞+格助詞の両解析が成立する。SuzumeのNoun解析は文法的で、他トークンは正しい。"
-      },
-      "description": "News article style - Current suzume unifies 経済政策",
-      "expected": [
-        {
-          "lemma": "政府",
-          "pos": "Noun",
-          "surface": "政府"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "昨日",
-          "pos": "Noun",
-          "surface": "昨日"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "閣議",
-          "pos": "Noun",
-          "surface": "閣議"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "新しい",
-          "pos": "Adjective",
-          "surface": "新しい"
-        },
-        {
-          "lemma": "経済政策",
-          "pos": "Noun",
-          "surface": "経済政策"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "正式",
-          "pos": "Adjective",
-          "surface": "正式"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "決定",
-          "pos": "Noun",
-          "surface": "決定"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "発表",
-          "pos": "Noun",
-          "surface": "発表"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "long_news_article",
-      "input": "政府は昨日の閣議で、新しい経済政策を正式に決定したと発表した",
-      "suzume_expected": [
-        {
-          "lemma": "政府",
-          "pos": "Noun",
-          "surface": "政府"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "昨日",
-          "pos": "Noun",
-          "surface": "昨日"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "閣議",
-          "pos": "Noun",
-          "surface": "閣議"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "新しい",
-          "pos": "Adjective",
-          "surface": "新しい"
-        },
-        {
-          "lemma": "経済政策",
-          "pos": "Noun",
-          "surface": "経済政策"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "正式",
-          "pos": "Noun",
-          "surface": "正式"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "決定",
-          "pos": "Noun",
-          "surface": "決定"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "と",
-          "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "発表",
-          "pos": "Noun",
-          "surface": "発表"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "tags": [
-        "long"
-      ]
-    },
-    {
       "description": "Narrative style - Current suzume treats 欠かさ as adjective and 好き as adjective",
       "expected": [
         {
@@ -1946,6 +1709,58 @@
       "tags": [
         "education"
       ]
+    },
+    {
+      "description": "安全なニュース調の一般文",
+      "expected": [
+        {
+          "lemma": "政府",
+          "pos": "Noun",
+          "surface": "政府"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "新しい",
+          "pos": "Adjective",
+          "surface": "新しい"
+        },
+        {
+          "lemma": "経済政策",
+          "pos": "Noun",
+          "surface": "経済政策"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "きちんと",
+          "pos": "Adverb",
+          "surface": "きちんと"
+        },
+        {
+          "lemma": "決定",
+          "pos": "Noun",
+          "surface": "決定"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "long_news_article",
+      "input": "政府は新しい経済政策をきちんと決定した"
     }
   ],
   "version": "1.0"

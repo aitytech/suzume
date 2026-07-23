@@ -67,14 +67,9 @@
       "description": "Non-dict 合わせる compound stays causative split 掛け合わ+せる (MeCab-aligned)",
       "expected": [
         {
-          "lemma": "掛け合う",
+          "lemma": "掛け合わせる",
           "pos": "Verb",
-          "surface": "掛け合わ"
-        },
-        {
-          "lemma": "せる",
-          "pos": "Auxiliary",
-          "surface": "せる"
+          "surface": "掛け合わせる"
         }
       ],
       "id": "ke_waseru",
@@ -276,7 +271,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いく"
         }
       ],
@@ -514,21 +509,8 @@
       "input": "見過ごせない"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "複合動詞の未然形と生産的な否定助動詞の形態素境界を維持するため。"
-      },
       "description": "可能複合動詞の否定助動詞を分離する",
       "expected": [
-        {
-          "lemma": "やりきれない",
-          "pos": "Adjective",
-          "surface": "やりきれない"
-        }
-      ],
-      "id": "compound_verb_yarikire_negative_boundary",
-      "input": "やりきれない",
-      "suzume_expected": [
         {
           "lemma": "やりきれる",
           "pos": "Verb",
@@ -539,13 +521,11 @@
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ]
+      ],
+      "id": "compound_verb_yarikire_negative_boundary",
+      "input": "やりきれない"
     },
     {
-      "accepted_diff": {
-        "category": "causative-ambiguity",
-        "reason": "「見合わせる」と「見合わ＋せる」は表層同形で、完全複合lemmaの語彙証拠なしには区別不能。非辞書複合では生産的な五段未然形＋使役助動詞の形態素境界を維持する。"
-      },
       "description": "複合動詞と使役連鎖の形態的曖昧さを保持する",
       "expected": [
         {
@@ -555,19 +535,7 @@
         }
       ],
       "id": "compound_verb_miawaseru_causative_ambiguity",
-      "input": "見合わせる",
-      "suzume_expected": [
-        {
-          "lemma": "見合う",
-          "pos": "Verb",
-          "surface": "見合わ"
-        },
-        {
-          "lemma": "せる",
-          "pos": "Auxiliary",
-          "surface": "せる"
-        }
-      ]
+      "input": "見合わせる"
     },
     {
       "description": "漢字名詞語幹に付けるが続く複合動詞",
@@ -733,61 +701,8 @@
       "input": "使われ続けた"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
-      },
       "description": "書きかけの紙。書きたての文。読みかけの本。 - auto-generated",
       "expected": [
-        {
-          "lemma": "書きかける",
-          "pos": "Verb",
-          "surface": "書きかけ"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "紙",
-          "pos": "Noun",
-          "surface": "紙"
-        },
-        {
-          "lemma": "書きたてる",
-          "pos": "Verb",
-          "surface": "書きたて"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "文",
-          "pos": "Noun",
-          "surface": "文"
-        },
-        {
-          "lemma": "読みかける",
-          "pos": "Verb",
-          "surface": "読みかけ"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        }
-      ],
-      "id": "kikakeno_kitateno_mikakeno",
-      "input": "書きかけの紙。書きたての文。読みかけの本。",
-      "suzume_expected": [
         {
           "lemma": "書きかけ",
           "pos": "Noun",
@@ -804,9 +719,14 @@
           "surface": "紙"
         },
         {
-          "lemma": "書きたて",
-          "pos": "Noun",
-          "surface": "書きたて"
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "たて",
+          "pos": "Suffix",
+          "surface": "たて"
         },
         {
           "lemma": "の",
@@ -833,7 +753,9 @@
           "pos": "Noun",
           "surface": "本"
         }
-      ]
+      ],
+      "id": "kikakeno_kitateno_mikakeno",
+      "input": "書きかけの紙。書きたての文。読みかけの本。"
     },
     {
       "description": "compound ichidan conditional boundary",

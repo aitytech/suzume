@@ -1270,7 +1270,7 @@
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -2037,7 +2037,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -2291,6 +2291,28 @@
       ],
       "id": "no_hitamukini_meru",
       "input": "確認の後ひたむきに進める"
+    },
+    {
+      "description": "ありきたりな答え - auto-generated",
+      "expected": [
+        {
+          "lemma": "ありきたり",
+          "pos": "Adjective",
+          "surface": "ありきたり"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "答え",
+          "pos": "Noun",
+          "surface": "答え"
+        }
+      ],
+      "id": "arikitarina_e",
+      "input": "ありきたりな答え"
     }
   ],
   "description": "Na-adjectives (ナ形容詞)",

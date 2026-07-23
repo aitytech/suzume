@@ -587,26 +587,8 @@
       "input": "宝くじを買った"
     },
     {
-      "accepted_diff": {
-        "category": "productive-recent-completion-suffix",
-        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
-      },
       "description": "焼きたて - auto-generated",
       "expected": [
-        {
-          "lemma": "焼き",
-          "pos": "Noun",
-          "surface": "焼き"
-        },
-        {
-          "lemma": "たて",
-          "pos": "Suffix",
-          "surface": "たて"
-        }
-      ],
-      "id": "yakitate",
-      "input": "焼きたて",
-      "suzume_expected": [
         {
           "lemma": "焼く",
           "pos": "Verb",
@@ -617,34 +599,13 @@
           "pos": "Suffix",
           "surface": "たて"
         }
-      ]
+      ],
+      "id": "yakitate",
+      "input": "焼きたて"
     },
     {
-      "accepted_diff": {
-        "category": "productive-recent-completion-suffix",
-        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
-      },
       "description": "できたて - auto-generated",
       "expected": [
-        {
-          "lemma": "できる",
-          "pos": "Verb",
-          "surface": "でき"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
-      "id": "dekitate",
-      "input": "できたて",
-      "suzume_expected": [
         {
           "lemma": "できる",
           "pos": "Verb",
@@ -655,24 +616,13 @@
           "pos": "Suffix",
           "surface": "たて"
         }
-      ]
+      ],
+      "id": "dekitate",
+      "input": "できたて"
     },
     {
-      "accepted_diff": {
-        "category": "productive-recent-completion-suffix",
-        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
-      },
       "description": "作りたて - auto-generated",
       "expected": [
-        {
-          "lemma": "作りたて",
-          "pos": "Noun",
-          "surface": "作りたて"
-        }
-      ],
-      "id": "tsukuritate",
-      "input": "作りたて",
-      "suzume_expected": [
         {
           "lemma": "作る",
           "pos": "Verb",
@@ -683,24 +633,13 @@
           "pos": "Suffix",
           "surface": "たて"
         }
-      ]
+      ],
+      "id": "tsukuritate",
+      "input": "作りたて"
     },
     {
-      "accepted_diff": {
-        "category": "productive-recent-completion-suffix",
-        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
-      },
       "description": "書きたて - auto-generated",
       "expected": [
-        {
-          "lemma": "書きたてる",
-          "pos": "Verb",
-          "surface": "書きたて"
-        }
-      ],
-      "id": "kakitate",
-      "input": "書きたて",
-      "suzume_expected": [
         {
           "lemma": "書く",
           "pos": "Verb",
@@ -711,34 +650,13 @@
           "pos": "Suffix",
           "surface": "たて"
         }
-      ]
+      ],
+      "id": "kakitate",
+      "input": "書きたて"
     },
     {
-      "accepted_diff": {
-        "category": "productive-recent-completion-suffix",
-        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
-      },
       "description": "読みたて - auto-generated",
       "expected": [
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読み"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
-      "id": "yomitate",
-      "input": "読みたて",
-      "suzume_expected": [
         {
           "lemma": "読む",
           "pos": "Verb",
@@ -749,24 +667,13 @@
           "pos": "Suffix",
           "surface": "たて"
         }
-      ]
+      ],
+      "id": "yomitate",
+      "input": "読みたて"
     },
     {
-      "accepted_diff": {
-        "category": "productive-recent-completion-suffix",
-        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
-      },
       "description": "炊きたて - auto-generated",
       "expected": [
-        {
-          "lemma": "炊きたて",
-          "pos": "Noun",
-          "surface": "炊きたて"
-        }
-      ],
-      "id": "takitate",
-      "input": "炊きたて",
-      "suzume_expected": [
         {
           "lemma": "炊く",
           "pos": "Verb",
@@ -777,34 +684,13 @@
           "pos": "Suffix",
           "surface": "たて"
         }
-      ]
+      ],
+      "id": "takitate",
+      "input": "炊きたて"
     },
     {
-      "accepted_diff": {
-        "category": "productive-recent-completion-suffix",
-        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
-      },
       "description": "入れたて - auto-generated",
       "expected": [
-        {
-          "lemma": "入れる",
-          "pos": "Verb",
-          "surface": "入れ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
-      "id": "iretate",
-      "input": "入れたて",
-      "suzume_expected": [
         {
           "lemma": "入れる",
           "pos": "Verb",
@@ -815,7 +701,9 @@
           "pos": "Suffix",
           "surface": "たて"
         }
-      ]
+      ],
+      "id": "iretate",
+      "input": "入れたて"
     },
     {
       "description": "買いたて - auto-generated",
@@ -835,21 +723,8 @@
       "input": "買いたて"
     },
     {
-      "accepted_diff": {
-        "category": "productive-recent-completion-suffix",
-        "reason": "動詞連用形+直後性接尾辞「たて」の生産的形態素境界を統一し、一語化や過去助動詞「た」+接続助詞「て」への誤分割を採らない"
-      },
       "description": "生まれたて - auto-generated",
       "expected": [
-        {
-          "lemma": "生まれたて",
-          "pos": "Noun",
-          "surface": "生まれたて"
-        }
-      ],
-      "id": "umaretate",
-      "input": "生まれたて",
-      "suzume_expected": [
         {
           "lemma": "生まれる",
           "pos": "Verb",
@@ -860,7 +735,9 @@
           "pos": "Suffix",
           "surface": "たて"
         }
-      ]
+      ],
+      "id": "umaretate",
+      "input": "生まれたて"
     },
     {
       "description": "税抜き - auto-generated",

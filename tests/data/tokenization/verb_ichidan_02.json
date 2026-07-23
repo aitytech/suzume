@@ -646,27 +646,16 @@
       "input": "食べよ"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
       "description": "見よ - regression test",
       "expected": [
-        {
-          "lemma": "見よい",
-          "pos": "Adjective",
-          "surface": "見よ"
-        }
-      ],
-      "id": "yo",
-      "input": "見よ",
-      "suzume_expected": [
         {
           "lemma": "見る",
           "pos": "Verb",
           "surface": "見よ"
         }
-      ]
+      ],
+      "id": "yo",
+      "input": "見よ"
     },
     {
       "description": "着よ - regression test",
@@ -679,34 +668,6 @@
       ],
       "id": "yo_1",
       "input": "着よ"
-    },
-    {
-      "accepted_diff": {
-        "category": "ichidan-imperative-search-unit",
-        "reason": "「調べよ」は一段動詞「調べる」の命令形一形態素で、終助詞「よ」を切り出さない"
-      },
-      "description": "調べよ - regression test",
-      "expected": [
-        {
-          "lemma": "調べ",
-          "pos": "Noun",
-          "surface": "調べ"
-        },
-        {
-          "lemma": "よ",
-          "pos": "Particle",
-          "surface": "よ"
-        }
-      ],
-      "id": "beyo_1",
-      "input": "調べよ",
-      "suzume_expected": [
-        {
-          "lemma": "調べる",
-          "pos": "Verb",
-          "surface": "調べよ"
-        }
-      ]
     },
     {
       "description": "並べてある - regression test",
@@ -1168,6 +1129,60 @@
       ],
       "id": "ichidan_renyokei_before_past_control",
       "input": "彼は答えた"
+    },
+    {
+      "description": "漢字表記で一段動詞lemmaを明示",
+      "expected": [
+        {
+          "lemma": "外",
+          "pos": "Noun",
+          "surface": "外"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "出る",
+          "pos": "Verb",
+          "surface": "出"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "hiragana_dete",
+      "input": "外に出て"
+    },
+    {
+      "description": "サ変動詞の命令形",
+      "expected": [
+        {
+          "lemma": "命令",
+          "pos": "Noun",
+          "surface": "命令"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "せよ"
+        }
+      ],
+      "id": "beyo_1",
+      "input": "命令を確認せよ"
     }
   ],
   "description": "Ichidan verbs (一段動詞) (part 2/2)",

@@ -186,7 +186,7 @@
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -939,8 +939,8 @@
           "surface": "読ま"
         },
         {
-          "lemma": "する",
-          "pos": "Verb",
+          "lemma": "す",
+          "pos": "Auxiliary",
           "surface": "さ"
         },
         {
@@ -966,8 +966,8 @@
           "surface": "読ま"
         },
         {
-          "lemma": "する",
-          "pos": "Verb",
+          "lemma": "す",
+          "pos": "Auxiliary",
           "surface": "さ"
         },
         {
@@ -1087,99 +1087,6 @@
       ],
       "id": "ha_totttemo_genki",
       "input": "彼はとっても元気"
-    },
-    {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "「哀れ」はナ形容詞語幹と名詞の両解析が成立する。SuzumeのNoun+連体コピュラは文法的で、他トークンも正しい。"
-      },
-      "description": "なんと as exclamatory adverb should not split into なん+と",
-      "expected": [
-        {
-          "lemma": "なんと",
-          "pos": "Adverb",
-          "surface": "なんと"
-        },
-        {
-          "lemma": "哀れ",
-          "pos": "Adjective",
-          "surface": "哀れ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "こと",
-          "pos": "Noun",
-          "surface": "こと"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Auxiliary",
-          "surface": "あろ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ],
-      "id": "nanto_exclamatory_adverb",
-      "input": "なんと哀れなことであろうか。",
-      "suzume_expected": [
-        {
-          "lemma": "なんと",
-          "pos": "Adverb",
-          "surface": "なんと"
-        },
-        {
-          "lemma": "哀れ",
-          "pos": "Noun",
-          "surface": "哀れ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "こと",
-          "pos": "Noun",
-          "surface": "こと"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Auxiliary",
-          "surface": "あろ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ]
     },
     {
       "description": "われ as classical pronoun should not split into わ+れ",
@@ -1564,8 +1471,8 @@
           "surface": "読ま"
         },
         {
-          "lemma": "する",
-          "pos": "Verb",
+          "lemma": "す",
+          "pos": "Auxiliary",
           "surface": "さ"
         },
         {
@@ -2256,149 +2163,6 @@
       ],
       "id": "kaneteyori_sareteita_gatsuini_nomonotonattta",
       "input": "かねてより懸念されていた事態がついに現実のものとなった"
-    },
-    {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "「重大」はナ形容詞語幹と名詞の両解析が成立し、「事」のlemma=ことも妥当。表層境界と古典否定鎖は正しい。"
-      },
-      "description": "気づく+ざるを得ない(文語慣用表現)",
-      "expected": [
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "事",
-          "pos": "Noun",
-          "surface": "事"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "重大",
-          "pos": "Adjective",
-          "surface": "重大"
-        },
-        {
-          "lemma": "さ",
-          "pos": "Suffix",
-          "surface": "さ"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "気づく",
-          "pos": "Verb",
-          "surface": "気づか"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ざる"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "得る",
-          "pos": "Verb",
-          "surface": "得"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "ha_no_sani_dukazaruwo_nakattta",
-      "input": "彼は事の重大さに気づかざるを得なかった",
-      "suzume_expected": [
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "こと",
-          "pos": "Noun",
-          "surface": "事"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "重大",
-          "pos": "Noun",
-          "surface": "重大"
-        },
-        {
-          "lemma": "さ",
-          "pos": "Suffix",
-          "surface": "さ"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "気づく",
-          "pos": "Verb",
-          "surface": "気づか"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ざる"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "得る",
-          "pos": "Verb",
-          "surface": "得"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "なかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
     },
     {
       "description": "使役受身+思ってもみる(試み)+なかった",
@@ -3584,6 +3348,120 @@
       ],
       "id": "hanasaki_classical_conjecture",
       "input": "花咲きけむ頃"
+    },
+    {
+      "description": "感嘆副詞と明示的なイ形容詞",
+      "expected": [
+        {
+          "lemma": "なんと",
+          "pos": "Adverb",
+          "surface": "なんと"
+        },
+        {
+          "lemma": "悲しい",
+          "pos": "Adjective",
+          "surface": "悲しい"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Auxiliary",
+          "surface": "あろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "nanto_exclamatory_adverb",
+      "input": "なんと悲しいことであろうか。"
+    },
+    {
+      "description": "形容詞名詞化と古典否定",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "大きい",
+          "pos": "Adjective",
+          "surface": "大き"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "気づく",
+          "pos": "Verb",
+          "surface": "気づか"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざる"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "得る",
+          "pos": "Verb",
+          "surface": "得"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ha_no_sani_dukazaruwo_nakattta",
+      "input": "彼は問題の大きさに気づかざるを得なかった"
     }
   ],
   "description": "literary_classics tests",

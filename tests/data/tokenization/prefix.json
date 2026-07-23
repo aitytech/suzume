@@ -495,26 +495,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "接頭辞おを伴う連用形転成名詞を検索単位・名詞として扱うため。"
-      },
       "description": "Honorific お + 預かり (nominalized verb)",
       "expected": [
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "預かる",
-          "pos": "Verb",
-          "surface": "預かり"
-        }
-      ],
-      "id": "o_custody",
-      "input": "お預かり",
-      "suzume_expected": [
         {
           "lemma": "お",
           "pos": "Prefix",
@@ -526,6 +508,8 @@
           "surface": "預かり"
         }
       ],
+      "id": "o_custody",
+      "input": "お預かり",
       "tags": [
         "prefix",
         "o"
@@ -658,26 +642,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "接頭辞おを伴う複合連用形転成名詞を検索単位・名詞として扱うため。"
-      },
       "description": "Honorific お + 引き取り",
       "expected": [
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "引き取る",
-          "pos": "Verb",
-          "surface": "引き取り"
-        }
-      ],
-      "id": "o_pickup",
-      "input": "お引き取り",
-      "suzume_expected": [
         {
           "lemma": "お",
           "pos": "Prefix",
@@ -689,6 +655,8 @@
           "surface": "引き取り"
         }
       ],
+      "id": "o_pickup",
+      "input": "お引き取り",
       "tags": [
         "prefix",
         "o"

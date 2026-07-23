@@ -85,10 +85,6 @@
       "input": "読みはじめる、書きはじめる、食べはじめる"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "縮約完了助動詞「じゃう」は先行動詞に依存せず同じ閉じた形態素であり、遊ん/じゃう・選ん/じゃうも読ん/じゃう等と同じ一助動詞検索単位に統一する。実装修正後は読ん/じゃわ/ないを含む全補助鎖が文法境界どおり。"
-      },
       "description": "鼻音便後の縮約完了補助動詞じゃうの活用",
       "expected": [
         {
@@ -117,14 +113,9 @@
           "surface": "遊ん"
         },
         {
-          "lemma": "だ",
+          "lemma": "じゃう",
           "pos": "Auxiliary",
-          "surface": "じゃ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Interjection",
-          "surface": "う"
+          "surface": "じゃう"
         },
         {
           "lemma": "選ぶ",
@@ -132,14 +123,9 @@
           "surface": "選ん"
         },
         {
-          "lemma": "だ",
+          "lemma": "じゃう",
           "pos": "Auxiliary",
-          "surface": "じゃ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Interjection",
-          "surface": "う"
+          "surface": "じゃう"
         },
         {
           "lemma": "住む",
@@ -228,134 +214,7 @@
         }
       ],
       "id": "nasal_onbin_contracted_shimau",
-      "input": "読んじゃう、飲んじゃう、遊んじゃう、選んじゃう、住んじゃう、読んじゃった、飲んじゃった、読んじゃわない、読んでしまう、飲んでしまう",
-      "suzume_expected": [
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "じゃう",
-          "pos": "Auxiliary",
-          "surface": "じゃう"
-        },
-        {
-          "lemma": "飲む",
-          "pos": "Verb",
-          "surface": "飲ん"
-        },
-        {
-          "lemma": "じゃう",
-          "pos": "Auxiliary",
-          "surface": "じゃう"
-        },
-        {
-          "lemma": "遊ぶ",
-          "pos": "Verb",
-          "surface": "遊ん"
-        },
-        {
-          "lemma": "じゃう",
-          "pos": "Auxiliary",
-          "surface": "じゃう"
-        },
-        {
-          "lemma": "選ぶ",
-          "pos": "Verb",
-          "surface": "選ん"
-        },
-        {
-          "lemma": "じゃう",
-          "pos": "Auxiliary",
-          "surface": "じゃう"
-        },
-        {
-          "lemma": "住む",
-          "pos": "Verb",
-          "surface": "住ん"
-        },
-        {
-          "lemma": "じゃう",
-          "pos": "Auxiliary",
-          "surface": "じゃう"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "じゃう",
-          "pos": "Auxiliary",
-          "surface": "じゃっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "飲む",
-          "pos": "Verb",
-          "surface": "飲ん"
-        },
-        {
-          "lemma": "じゃう",
-          "pos": "Auxiliary",
-          "surface": "じゃっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "じゃう",
-          "pos": "Auxiliary",
-          "surface": "じゃわ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "しまう",
-          "pos": "Auxiliary",
-          "surface": "しまう"
-        },
-        {
-          "lemma": "飲む",
-          "pos": "Verb",
-          "surface": "飲ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "しまう",
-          "pos": "Auxiliary",
-          "surface": "しまう"
-        }
-      ]
+      "input": "読んじゃう、飲んじゃう、遊んじゃう、選んじゃう、住んじゃう、読んじゃった、飲んじゃった、読んじゃわない、読んでしまう、飲んでしまう"
     },
     {
       "description": "試行補助動詞みるの連用形と願望助動詞たくの境界を保つ",
@@ -604,10 +463,6 @@
       "input": "読んでやりたくない。書いてやりたくない。食べてやりたくない。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "未遂補助動詞あぐねるの連用形と過去助動詞の境界を保つ",
       "expected": [
         {
@@ -617,7 +472,7 @@
         },
         {
           "lemma": "あぐねる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "あぐね"
         },
         {
@@ -632,7 +487,7 @@
         },
         {
           "lemma": "あぐねる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "あぐね"
         },
         {
@@ -647,7 +502,7 @@
         },
         {
           "lemma": "あぐねる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "あぐね"
         },
         {
@@ -657,54 +512,7 @@
         }
       ],
       "id": "aguneru_hesitation_past",
-      "input": "読みあぐねた。書きあぐねた。食べあぐねた。",
-      "suzume_expected": [
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読み"
-        },
-        {
-          "lemma": "あぐねる",
-          "pos": "Auxiliary",
-          "surface": "あぐね"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書き"
-        },
-        {
-          "lemma": "あぐねる",
-          "pos": "Auxiliary",
-          "surface": "あぐね"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "あぐねる",
-          "pos": "Auxiliary",
-          "surface": "あぐね"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "読みあぐねた。書きあぐねた。食べあぐねた。"
     },
     {
       "description": "五段動詞の願望様態形で連用形lemmaを原形として復元する",
@@ -881,10 +689,6 @@
       "input": "本でなくなる。水でなくなる。静かでなくなる。高くなくなる。本でなくなった。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の補助動詞・助動詞として現行の依存用法が文法的に妥当で、表層境界は一致"
-      },
       "description": "移動補助動詞いくの意志形で未然形と意志助動詞の境界を保つ",
       "expected": [
         {
@@ -899,7 +703,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いこ"
         },
         {
@@ -919,7 +723,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いこ"
         },
         {
@@ -939,7 +743,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いこ"
         },
         {
@@ -949,69 +753,7 @@
         }
       ],
       "id": "iku_directional_volitional_boundary",
-      "input": "読んでいこう。書いていこう。食べていこう。",
-      "suzume_expected": [
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "いく",
-          "pos": "Auxiliary",
-          "surface": "いこ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        },
-        {
-          "lemma": "書く",
-          "pos": "Verb",
-          "surface": "書い"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "いく",
-          "pos": "Auxiliary",
-          "surface": "いこ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        },
-        {
-          "lemma": "食べる",
-          "pos": "Verb",
-          "surface": "食べ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "いく",
-          "pos": "Auxiliary",
-          "surface": "いこ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        }
-      ]
+      "input": "読んでいこう。書いていこう。食べていこう。"
     },
     {
       "description": "イ音便テ形後の移動補助動詞いく未然形を非語の複合動詞に融合しない",
@@ -1028,7 +770,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いか"
         },
         {
@@ -1048,7 +790,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いか"
         },
         {
@@ -1068,7 +810,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いか"
         },
         {
@@ -1088,7 +830,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いか"
         },
         {
@@ -1108,7 +850,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いか"
         },
         {
@@ -3846,7 +3588,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いく"
         }
       ],
@@ -3894,6 +3636,45 @@
       ],
       "id": "tari_inflectional_homograph_control",
       "input": "本だったり水だったりする"
+    },
+    {
+      "description": "縮約完了の「ちゃう」を閉じた助動詞として扱う",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ちゃう",
+          "pos": "Auxiliary",
+          "surface": "ちゃう"
+        }
+      ],
+      "id": "contracted_completive_chau_auxiliary",
+      "input": "食べちゃう"
+    },
+    {
+      "description": "縮約完了助動詞の連用形と丁寧助動詞の境界を維持する",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ちゃう",
+          "pos": "Auxiliary",
+          "surface": "ちゃい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "contracted_completive_before_polite_auxiliary",
+      "input": "食べちゃいます"
     }
   ],
   "description": "auxiliary tests",

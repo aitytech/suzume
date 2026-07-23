@@ -870,41 +870,8 @@
       "input": "確認の言い換えを示す"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
-      },
       "description": "格助詞に支配された複合動詞連用形の名詞化",
       "expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "振り返る",
-          "pos": "Verb",
-          "surface": "振り返り"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "行う",
-          "pos": "Verb",
-          "surface": "行う"
-        }
-      ],
-      "id": "noun_compound_furikaeri_nominal",
-      "input": "確認の振り返りを行う",
-      "suzume_expected": [
         {
           "lemma": "確認",
           "pos": "Noun",
@@ -930,7 +897,9 @@
           "pos": "Verb",
           "surface": "行う"
         }
-      ]
+      ],
+      "id": "noun_compound_furikaeri_nominal",
+      "input": "確認の振り返りを行う"
     },
     {
       "description": "複合動詞連用形の名詞句",
@@ -1039,41 +1008,8 @@
       "input": "確認の仕上がりを確認する"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
-      },
       "description": "Keep the lexicalized nominal compound as one search token.",
       "expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "折れ曲がる",
-          "pos": "Verb",
-          "surface": "折れ曲がり"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "直す",
-          "pos": "Verb",
-          "surface": "直す"
-        }
-      ],
-      "id": "noun_compound_oremagari_nominal",
-      "input": "確認の折れ曲がりを直す",
-      "suzume_expected": [
         {
           "lemma": "確認",
           "pos": "Noun",
@@ -1099,7 +1035,9 @@
           "pos": "Verb",
           "surface": "直す"
         }
-      ]
+      ],
+      "id": "noun_compound_oremagari_nominal",
+      "input": "確認の折れ曲がりを直す"
     },
     {
       "description": "Keep the fixed compound noun as one search token.",
@@ -1230,41 +1168,8 @@
       "input": "確認の抜け殻を調べる"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
-      },
       "description": "Keep the lexicalized nominalized compound as one search token.",
       "expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "見比べる",
-          "pos": "Verb",
-          "surface": "見比べ"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "進める",
-          "pos": "Verb",
-          "surface": "進める"
-        }
-      ],
-      "id": "noun_compound_mikurabe_nominal",
-      "input": "確認の見比べを進める",
-      "suzume_expected": [
         {
           "lemma": "確認",
           "pos": "Noun",
@@ -1290,44 +1195,13 @@
           "pos": "Verb",
           "surface": "進める"
         }
-      ]
+      ],
+      "id": "noun_compound_mikurabe_nominal",
+      "input": "確認の見比べを進める"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "格助詞「を」を取る「乗り越え」は動詞連用形からの転成名詞で、現行Noun解析が検索単位に適合。"
-      },
       "description": "Keep the nominalized compound and following lexical verb as separate search tokens.",
       "expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "乗り越える",
-          "pos": "Verb",
-          "surface": "乗り越え"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "目指す",
-          "pos": "Verb",
-          "surface": "目指す"
-        }
-      ],
-      "id": "noun_compound_norikoe_mezasu",
-      "input": "確認の乗り越えを目指す",
-      "suzume_expected": [
         {
           "lemma": "確認",
           "pos": "Noun",
@@ -1353,7 +1227,9 @@
           "pos": "Verb",
           "surface": "目指す"
         }
-      ]
+      ],
+      "id": "noun_compound_norikoe_mezasu",
+      "input": "確認の乗り越えを目指す"
     },
     {
       "description": "Keep the fixed compound noun as one search token.",
@@ -1964,46 +1840,8 @@
       "input": "確認の返し縫いを行う"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
-      },
       "description": "Keep the fixed compound noun as one search token.",
       "expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "出し",
-          "pos": "Noun",
-          "surface": "出し"
-        },
-        {
-          "lemma": "惜しみ",
-          "pos": "Noun",
-          "surface": "惜しみ"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "避ける",
-          "pos": "Verb",
-          "surface": "避ける"
-        }
-      ],
-      "id": "noun_compound_dashioshimi",
-      "input": "確認の出し惜しみを避ける",
-      "suzume_expected": [
         {
           "lemma": "確認",
           "pos": "Noun",
@@ -2029,7 +1867,9 @@
           "pos": "Verb",
           "surface": "避ける"
         }
-      ]
+      ],
+      "id": "noun_compound_dashioshimi",
+      "input": "確認の出し惜しみを避ける"
     },
     {
       "description": "確認の立て役者を決める - auto-generated",
@@ -2834,6 +2674,28 @@
       ],
       "id": "formal_noun_before_gatera",
       "input": "買い物がてら訪ねる"
+    },
+    {
+      "description": "目的地接尾辞は個別地名辞書なしで名詞ホストと一検索単位にする",
+      "expected": [
+        {
+          "lemma": "学校行き",
+          "pos": "Noun",
+          "surface": "学校行き"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "便",
+          "pos": "Noun",
+          "surface": "便"
+        }
+      ],
+      "id": "destination_suffix_productive_noun",
+      "input": "学校行きの便"
     }
   ],
   "description": "Compound nouns",

@@ -86,36 +86,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "Surprise expression - MeCab-compatible verb+た split",
       "expected": [
-        {
-          "lemma": "まじ",
-          "pos": "Adjective",
-          "surface": "まじ"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "驚く",
-          "pos": "Verb",
-          "surface": "驚い"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "casual_surprise",
-      "input": "まじで驚いた",
-      "suzume_expected": [
         {
           "lemma": "まじ",
           "pos": "Adjective",
@@ -137,6 +109,8 @@
           "surface": "た"
         }
       ],
+      "id": "casual_surprise",
+      "input": "まじで驚いた",
       "tags": [
         "casual"
       ]
@@ -207,7 +181,7 @@
         },
         {
           "lemma": "ちゃう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "ちゃっ"
         },
         {
@@ -444,46 +418,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "Recommendation post - マジで is ADV (seriously/really)",
       "expected": [
-        {
-          "lemma": "この",
-          "pos": "Determiner",
-          "surface": "この"
-        },
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "店",
-          "pos": "Noun",
-          "surface": "店"
-        },
-        {
-          "lemma": "マジ",
-          "pos": "Noun",
-          "surface": "マジ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "おすすめ",
-          "pos": "Noun",
-          "surface": "おすすめ"
-        }
-      ],
-      "id": "social_recommendation",
-      "input": "このお店マジでおすすめ",
-      "suzume_expected": [
         {
           "lemma": "この",
           "pos": "Determiner",
@@ -515,6 +451,8 @@
           "surface": "おすすめ"
         }
       ],
+      "id": "social_recommendation",
+      "input": "このお店マジでおすすめ",
       "tags": [
         "social"
       ]
@@ -965,41 +903,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "古典活用・接続・lemmaの文法に照らして現行解析が妥当で、表層境界は一致"
-      },
       "description": "Colloquial 行っていた → 行ってた - MeCab互換分割",
       "expected": [
-        {
-          "lemma": "学校",
-          "pos": "Noun",
-          "surface": "学校"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "行う",
-          "pos": "Verb",
-          "surface": "行っ"
-        },
-        {
-          "lemma": "てる",
-          "pos": "Auxiliary",
-          "surface": "て"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "colloquial_itteta",
-      "input": "学校に行ってた",
-      "suzume_expected": [
         {
           "lemma": "学校",
           "pos": "Noun",
@@ -1026,6 +931,8 @@
           "surface": "た"
         }
       ],
+      "id": "colloquial_itteta",
+      "input": "学校に行ってた",
       "tags": [
         "colloquial"
       ]

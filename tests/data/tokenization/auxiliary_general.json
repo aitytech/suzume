@@ -72,36 +72,8 @@
       "input": "べきだと思う"
     },
     {
-      "accepted_diff": {
-        "category": "morpheme-boundary",
-        "reason": "断定助動詞連用形で＋係助詞は＋存在動詞ある＋打消推量まい＋終助詞かの形態素境界を維持する"
-      },
       "description": "Formal copular topic retains rhetorical auxiliary boundary",
       "expected": [
-        {
-          "lemma": "では",
-          "pos": "Conjunction",
-          "surface": "では"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "ある"
-        },
-        {
-          "lemma": "まい",
-          "pos": "Auxiliary",
-          "surface": "まい"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ],
-      "id": "dewaaru_rhetorical_boundary",
-      "input": "ではあるまいか",
-      "suzume_expected": [
         {
           "lemma": "だ",
           "pos": "Auxiliary",
@@ -127,7 +99,9 @@
           "pos": "Particle",
           "surface": "か"
         }
-      ]
+      ],
+      "id": "dewaaru_rhetorical_boundary",
+      "input": "ではあるまいか"
     },
     {
       "description": "Colloquial explanatory negative contraction retains auxiliary boundaries",

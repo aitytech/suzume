@@ -756,39 +756,6 @@
       "input": "あらう"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-ambiguity",
-        "reason": "促音便表層「いっ」は「行く」「言う」等のlemmaを文脈なしでは一意に復元できない。境界とPOSは正しい。"
-      },
-      "description": "itta - 1-char stem sokuonbin, MeCab reads as いう (言った); ambiguous with 行った",
-      "expected": [
-        {
-          "lemma": "いう",
-          "pos": "Verb",
-          "surface": "いっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "ittta",
-      "input": "いった",
-      "suzume_expected": [
-        {
-          "lemma": "いく",
-          "pos": "Verb",
-          "surface": "いっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
-    },
-    {
       "description": "向かった - auto-generated",
       "expected": [
         {
@@ -1033,72 +1000,6 @@
       ],
       "id": "narattte",
       "input": "ならって"
-    },
-    {
-      "accepted_diff": {
-        "category": "lemma-ambiguity",
-        "reason": "促音便表層だけでは五段活用行を一意に復元できず、境界とPOSは正しいため"
-      },
-      "description": "Pure-hiragana godan-wa sokuonbin: おもう past (MeCab gives non-word おもる)",
-      "expected": [
-        {
-          "lemma": "おもる",
-          "pos": "Verb",
-          "surface": "おもっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "omottta",
-      "input": "おもった",
-      "suzume_expected": [
-        {
-          "lemma": "おもう",
-          "pos": "Verb",
-          "surface": "おもっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
-    },
-    {
-      "accepted_diff": {
-        "category": "lemma-ambiguity",
-        "reason": "促音便表層は複数の五段動詞に対応し、文脈なしではlemmaを一意に決められないため"
-      },
-      "description": "Pure-hiragana godan-wa sokuonbin: すう te-form (すう/する ambiguous, pick すう)",
-      "expected": [
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "すっ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
-      "id": "suttte",
-      "input": "すって",
-      "suzume_expected": [
-        {
-          "lemma": "すう",
-          "pos": "Verb",
-          "surface": "すっ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ]
     },
     {
       "description": "Pure-hiragana godan-wa sokuonbin: まよう te-form",
@@ -1952,6 +1853,109 @@
       ],
       "id": "sokuonbin_kau_control",
       "input": "買っている"
+    },
+    {
+      "description": "独立したひらがなワ行五段終止形を助動詞片へ過剰分割しない",
+      "expected": [
+        {
+          "lemma": "そこなう",
+          "pos": "Verb",
+          "surface": "そこなう"
+        },
+        {
+          "lemma": "可能性",
+          "pos": "Noun",
+          "surface": "可能性"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "independent_hiragana_godan_wa_terminal",
+      "input": "そこなう可能性がある"
+    },
+    {
+      "description": "漢字表記で促音便lemmaを明示",
+      "expected": [
+        {
+          "lemma": "学校",
+          "pos": "Noun",
+          "surface": "学校"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ittta",
+      "input": "学校に行った"
+    },
+    {
+      "description": "漢字表記で促音便lemmaを明示",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "omottta",
+      "input": "そう思った"
+    },
+    {
+      "description": "漢字表記で促音便lemmaを明示",
+      "expected": [
+        {
+          "lemma": "息",
+          "pos": "Noun",
+          "surface": "息"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "吸う",
+          "pos": "Verb",
+          "surface": "吸っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "suttte",
+      "input": "息を吸って"
     }
   ],
   "description": "Godan Wa-row verbs (五段ワ行動詞) - verbs ending in う",

@@ -35,10 +35,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "移動を表す本動詞「行く」の連用形であり、現行Verb分類が文法的に妥当で表層境界も一致"
-      },
       "expected": [
         {
           "lemma": "駅",
@@ -83,48 +79,6 @@
       ],
       "id": "conv_directions",
       "input": "駅までどうやって行きますか",
-      "suzume_expected": [
-        {
-          "lemma": "駅",
-          "pos": "Noun",
-          "surface": "駅"
-        },
-        {
-          "lemma": "まで",
-          "pos": "Particle",
-          "surface": "まで"
-        },
-        {
-          "lemma": "どう",
-          "pos": "Adjective",
-          "surface": "どう"
-        },
-        {
-          "lemma": "やる",
-          "pos": "Verb",
-          "surface": "やっ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "行く",
-          "pos": "Verb",
-          "surface": "行き"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ],
       "tags": [
         "conversation"
       ]
@@ -743,46 +697,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "「お+願い+する」は名詞「願い」+サ変と動詞「願う」連用形を用いる敬語構文の双方が成立する。SuzumeのVerb/lemma=願うは文法的に妥当で、表層境界と他トークンも正しい。"
-      },
       "description": "MeCab互換分割",
       "expected": [
-        {
-          "lemma": "袋",
-          "pos": "Noun",
-          "surface": "袋"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "願い",
-          "pos": "Noun",
-          "surface": "願い"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
-      "id": "shop_bag",
-      "input": "袋をお願いします",
-      "suzume_expected": [
         {
           "lemma": "袋",
           "pos": "Noun",
@@ -814,6 +730,8 @@
           "surface": "ます"
         }
       ],
+      "id": "shop_bag",
+      "input": "袋をお願いします",
       "tags": [
         "shopping"
       ]
@@ -916,50 +834,7 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
-      },
       "expected": [
-        {
-          "lemma": "他",
-          "pos": "Noun",
-          "surface": "他"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "色",
-          "pos": "Noun",
-          "surface": "色"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Verb",
-          "surface": "あり"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ],
-      "id": "shop_color",
-      "input": "他の色はありますか",
-      "suzume_expected": [
         {
           "lemma": "ほか",
           "pos": "Noun",
@@ -996,6 +871,8 @@
           "surface": "か"
         }
       ],
+      "id": "shop_color",
+      "input": "他の色はありますか",
       "tags": [
         "shopping"
       ]
@@ -1156,45 +1033,7 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
-      },
       "expected": [
-        {
-          "lemma": "東京",
-          "pos": "Noun",
-          "surface": "東京"
-        },
-        {
-          "lemma": "行き",
-          "pos": "Noun",
-          "surface": "行き"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "何番線",
-          "pos": "Noun",
-          "surface": "何番線"
-        },
-        {
-          "lemma": "です",
-          "pos": "Auxiliary",
-          "surface": "です"
-        },
-        {
-          "lemma": "か",
-          "pos": "Particle",
-          "surface": "か"
-        }
-      ],
-      "id": "travel_platform",
-      "input": "東京行きは何番線ですか",
-      "suzume_expected": [
         {
           "lemma": "東京行き",
           "pos": "Noun",
@@ -1221,6 +1060,8 @@
           "surface": "か"
         }
       ],
+      "id": "travel_platform",
+      "input": "東京行きは何番線ですか",
       "tags": [
         "travel"
       ]
@@ -1337,8 +1178,8 @@
           "surface": "お"
         },
         {
-          "lemma": "願い",
-          "pos": "Noun",
+          "lemma": "願う",
+          "pos": "Verb",
           "surface": "願い"
         },
         {
@@ -1471,51 +1312,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "「お+願い+する」は名詞「願い」+サ変と動詞「願う」連用形を用いる敬語構文の双方が成立する。SuzumeのVerb/lemma=願うは文法的に妥当で、表層境界と他トークンも正しい。"
-      },
       "description": "MeCab互換分割",
       "expected": [
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "会計",
-          "pos": "Noun",
-          "surface": "会計"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "願い",
-          "pos": "Noun",
-          "surface": "願い"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
-      "id": "restaurant_bill",
-      "input": "お会計をお願いします",
-      "suzume_expected": [
         {
           "lemma": "お",
           "pos": "Prefix",
@@ -1552,6 +1350,8 @@
           "surface": "ます"
         }
       ],
+      "id": "restaurant_bill",
+      "input": "お会計をお願いします",
       "tags": [
         "restaurant"
       ]

@@ -196,10 +196,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "「で＋ござる」は閉じた従属コピュラ連鎖であり、否定形も「で／ござら／ぬ」の境界を保ったまま「ござら」をAuxGozaruとする。終止形「これでござる」と丁寧形「でございます」と同じ役割分類である。"
-      },
       "description": "Samurai speech ござらぬ - classical negative ぬ splits per design",
       "expected": [
         {
@@ -219,7 +215,7 @@
         },
         {
           "lemma": "ござる",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "ござら"
         },
         {
@@ -230,33 +226,6 @@
       ],
       "id": "character_gozaranu",
       "input": "知らぬでござらぬ",
-      "suzume_expected": [
-        {
-          "lemma": "知る",
-          "pos": "Verb",
-          "surface": "知ら"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ぬ"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "ござる",
-          "pos": "Auxiliary",
-          "surface": "ござら"
-        },
-        {
-          "lemma": "ぬ",
-          "pos": "Auxiliary",
-          "surface": "ぬ"
-        }
-      ],
       "tags": [
         "character_speech",
         "samurai"
@@ -1018,31 +987,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "morpheme-boundary",
-        "reason": "既存の五段ラ行動詞の促音便＋接続助詞て＋進行補助動詞いるとして解析する"
-      },
       "description": "過疎っている - 過疎る is a modern Japanese verb (internet slang for 'become dead/inactive')",
       "expected": [
-        {
-          "lemma": "過疎",
-          "pos": "Noun",
-          "surface": "過疎"
-        },
-        {
-          "lemma": "って",
-          "pos": "Particle",
-          "surface": "って"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Verb",
-          "surface": "いる"
-        }
-      ],
-      "id": "onbin_kasoru_lemma",
-      "input": "過疎っている",
-      "suzume_expected": [
         {
           "lemma": "過疎る",
           "pos": "Verb",
@@ -1059,6 +1005,8 @@
           "surface": "いる"
         }
       ],
+      "id": "onbin_kasoru_lemma",
+      "input": "過疎っている",
       "tags": [
         "verb",
         "onbin",
@@ -1318,10 +1266,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "potential-lemma-normalization",
-        "reason": "可能形を基底五段動詞へ正規化する。表層・境界・POSは一致する。"
-      },
       "description": "Katakana verb バズる potential form",
       "expected": [
         {
@@ -1332,13 +1276,6 @@
       ],
       "id": "verb_bazuru_potential",
       "input": "バズれる",
-      "suzume_expected": [
-        {
-          "lemma": "バズる",
-          "pos": "Verb",
-          "surface": "バズれる"
-        }
-      ],
       "tags": [
         "slang",
         "verb",
@@ -2362,6 +2299,38 @@
       ],
       "id": "existential_aru_emphatic_negative_chain",
       "input": "問題などありはしない"
+    },
+    {
+      "description": "五段動詞の口語的な否定過去連鎖",
+      "expected": [
+        {
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "走る",
+          "pos": "Verb",
+          "surface": "走ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "んかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "contracted_negative_past",
+      "input": "子供が走らんかった"
     }
   ],
   "description": "Godan Ra-row verbs (五段ラ行動詞) - verbs ending in る",

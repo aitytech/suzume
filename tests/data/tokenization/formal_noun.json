@@ -1355,7 +1355,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -1375,7 +1375,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -1395,7 +1395,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -1415,7 +1415,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -1435,7 +1435,7 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         }
       ],
@@ -2122,6 +2122,75 @@
       ],
       "id": "literary_evaluative_kotoni",
       "input": "ことに重要だ"
+    },
+    {
+      "description": "Attributive predicate keeps temporal 間 as an independent formal noun",
+      "expected": [
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        },
+        {
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "休む",
+          "pos": "Verb",
+          "surface": "休む"
+        }
+      ],
+      "id": "attributive_verb_temporal_ma",
+      "input": "待つ間休む"
+    },
+    {
+      "description": "属格に続く結果形式名詞「あまり」と副詞用法を区別する",
+      "expected": [
+        {
+          "lemma": "喜び",
+          "pos": "Noun",
+          "surface": "喜び"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "あまり",
+          "pos": "Noun",
+          "surface": "あまり"
+        },
+        {
+          "lemma": "声",
+          "pos": "Noun",
+          "surface": "声"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "出る",
+          "pos": "Verb",
+          "surface": "出"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "binoamari_ga_nakattta",
+      "input": "喜びのあまり、声が出なかった。"
     }
   ],
   "description": "formal_noun tests",

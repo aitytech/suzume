@@ -373,41 +373,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "search-unit-compound",
-        "reason": "助詞を含まない連用転成複合名詞「恩着せ」は一つの検索単位であり、後続の生産的形容詞接辞境界「が/ましい」は維持されている。NounVerbalの全体候補を採用する。"
-      },
       "description": "派生形容詞と形容詞語幹の接尾辞境界を保つ",
       "expected": [
-        {
-          "lemma": "恩",
-          "pos": "Noun",
-          "surface": "恩"
-        },
-        {
-          "lemma": "着せる",
-          "pos": "Verb",
-          "surface": "着せ"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ましいる",
-          "pos": "Verb",
-          "surface": "ましい"
-        },
-        {
-          "lemma": "態度",
-          "pos": "Noun",
-          "surface": "態度"
-        }
-      ],
-      "id": "derived_gamashii_adjective",
-      "input": "恩着せがましい態度",
-      "suzume_expected": [
         {
           "lemma": "恩着せ",
           "pos": "Noun",
@@ -428,7 +395,9 @@
           "pos": "Noun",
           "surface": "態度"
         }
-      ]
+      ],
+      "id": "derived_gamashii_adjective",
+      "input": "恩着せがましい態度"
     },
     {
       "description": "派生形容詞と形容詞語幹の接尾辞境界を保つ",

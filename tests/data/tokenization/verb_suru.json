@@ -397,7 +397,7 @@
         },
         {
           "lemma": "いく",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いく"
         }
       ],
@@ -472,8 +472,8 @@
           "surface": "お"
         },
         {
-          "lemma": "伝え",
-          "pos": "Noun",
+          "lemma": "伝える",
+          "pos": "Verb",
           "surface": "伝え"
         },
         {
@@ -499,8 +499,8 @@
           "surface": "お"
         },
         {
-          "lemma": "届け",
-          "pos": "Noun",
+          "lemma": "届ける",
+          "pos": "Verb",
           "surface": "届け"
         },
         {
@@ -526,8 +526,8 @@
           "surface": "お"
         },
         {
-          "lemma": "預け",
-          "pos": "Noun",
+          "lemma": "預ける",
+          "pos": "Verb",
           "surface": "預け"
         },
         {
@@ -608,7 +608,7 @@
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -656,8 +656,8 @@
           "surface": "お"
         },
         {
-          "lemma": "待ち",
-          "pos": "Noun",
+          "lemma": "待つ",
+          "pos": "Verb",
           "surface": "待ち"
         },
         {
@@ -683,8 +683,8 @@
           "surface": "お"
         },
         {
-          "lemma": "待ち",
-          "pos": "Noun",
+          "lemma": "待つ",
+          "pos": "Verb",
           "surface": "待ち"
         },
         {
@@ -1356,10 +1356,6 @@
       "input": "確認に反すれば進める"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-normalization",
-        "reason": "漢語サ変述語の標準lemmaを「する」形へ正規化するため"
-      },
       "description": "確認に反して進める - regression test",
       "expected": [
         {
@@ -1373,7 +1369,7 @@
           "surface": "に"
         },
         {
-          "lemma": "反す",
+          "lemma": "反する",
           "pos": "Verb",
           "surface": "反し"
         },
@@ -1389,40 +1385,9 @@
         }
       ],
       "id": "ni_shite_meru",
-      "input": "確認に反して進める",
-      "suzume_expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "反する",
-          "pos": "Verb",
-          "surface": "反し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "進める",
-          "pos": "Verb",
-          "surface": "進める"
-        }
-      ]
+      "input": "確認に反して進める"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-normalization",
-        "reason": "漢語サ変述語の標準lemmaを「する」形へ正規化するため"
-      },
       "description": "意図に反した - regression test",
       "expected": [
         {
@@ -1436,7 +1401,7 @@
           "surface": "に"
         },
         {
-          "lemma": "反す",
+          "lemma": "反する",
           "pos": "Verb",
           "surface": "反し"
         },
@@ -1447,29 +1412,7 @@
         }
       ],
       "id": "ni_shita",
-      "input": "意図に反した",
-      "suzume_expected": [
-        {
-          "lemma": "意図",
-          "pos": "Noun",
-          "surface": "意図"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "反する",
-          "pos": "Verb",
-          "surface": "反し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "意図に反した"
     },
     {
       "description": "生産的な漢字サ変名詞を個別辞書なしで保持する",

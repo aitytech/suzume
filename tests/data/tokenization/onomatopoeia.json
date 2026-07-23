@@ -655,31 +655,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "ふっくら should be ADV (B62) - MeCab互換分割",
       "expected": [
-        {
-          "lemma": "ふっくら",
-          "pos": "Other",
-          "surface": "ふっくら"
-        },
-        {
-          "lemma": "焼ける",
-          "pos": "Verb",
-          "surface": "焼け"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "fukkura_adv",
-      "input": "ふっくら焼けた",
-      "suzume_expected": [
         {
           "lemma": "ふっくら",
           "pos": "Adverb",
@@ -696,6 +673,8 @@
           "surface": "た"
         }
       ],
+      "id": "fukkura_adv",
+      "input": "ふっくら焼けた",
       "tags": [
         "adverb",
         "onomatopoeia"

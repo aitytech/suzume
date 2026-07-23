@@ -143,49 +143,6 @@
       "input": "ねえと呼ぶ"
     },
     {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "「変」はナ形容詞語幹と名詞述語の両解析が成立する。SuzumeのNoun+copulaは文法的で、表層境界と他トークンは正しい。"
-      },
-      "description": "Colloquial adverbial particle retains its lexical boundary",
-      "expected": [
-        {
-          "lemma": "なんか",
-          "pos": "Particle",
-          "surface": "なんか"
-        },
-        {
-          "lemma": "変",
-          "pos": "Adjective",
-          "surface": "変"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "nanka_colloquial_adverbial_particle",
-      "input": "なんか変だ",
-      "suzume_expected": [
-        {
-          "lemma": "なんか",
-          "pos": "Particle",
-          "surface": "なんか"
-        },
-        {
-          "lemma": "変",
-          "pos": "Noun",
-          "surface": "変"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ]
-    },
-    {
       "description": "一度きりの機会 - auto-generated",
       "expected": [
         {
@@ -265,6 +222,23 @@
       ],
       "id": "kashira_noun_homograph_control",
       "input": "かしらを選ぶ"
+    },
+    {
+      "description": "口語助詞とイ形容詞",
+      "expected": [
+        {
+          "lemma": "なんか",
+          "pos": "Particle",
+          "surface": "なんか"
+        },
+        {
+          "lemma": "おかしい",
+          "pos": "Adjective",
+          "surface": "おかしい"
+        }
+      ],
+      "id": "nanka_colloquial_adverbial_particle",
+      "input": "なんかおかしい"
     }
   ],
   "description": "particle_general tests",

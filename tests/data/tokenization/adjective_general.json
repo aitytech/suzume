@@ -183,8 +183,8 @@
           "surface": "終了"
         },
         {
-          "lemma": "間もない",
-          "pos": "Adjective",
+          "lemma": "間もなく",
+          "pos": "Adverb",
           "surface": "間もなく"
         },
         {
@@ -318,33 +318,6 @@
       ],
       "id": "shii_ga_ita",
       "input": "美しい人が歩いた。"
-    },
-    {
-      "description": "先行助詞をかな接頭部として漢字形容詞へ吸収しない",
-      "expected": [
-        {
-          "lemma": "から",
-          "pos": "Particle",
-          "surface": "から"
-        },
-        {
-          "lemma": "美しい",
-          "pos": "Adjective",
-          "surface": "美しい"
-        },
-        {
-          "lemma": "景色",
-          "pos": "Noun",
-          "surface": "景色"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "particle_before_kanji_adjective_control",
-      "input": "から美しい景色だ"
     },
     {
       "description": "生産的な動詞未然形と否定助動詞を語彙形容詞へ統合しない",
@@ -581,6 +554,43 @@
       ],
       "id": "shiinode_mu",
       "input": "美しいので休む"
+    },
+    {
+      "description": "先行助詞をかな接頭部として漢字形容詞へ吸収しない",
+      "expected": [
+        {
+          "lemma": "ここ",
+          "pos": "Pronoun",
+          "surface": "ここ"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しい"
+        },
+        {
+          "lemma": "景色",
+          "pos": "Noun",
+          "surface": "景色"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "見える",
+          "pos": "Verb",
+          "surface": "見える"
+        }
+      ],
+      "id": "particle_before_kanji_adjective_control",
+      "input": "ここから美しい景色が見える"
     }
   ],
   "description": "adjective_general tests",

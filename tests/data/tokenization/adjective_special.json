@@ -17,27 +17,16 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
-      },
       "description": "平然と (calmly)",
       "expected": [
-        {
-          "lemma": "平然と",
-          "pos": "Adverb",
-          "surface": "平然と"
-        }
-      ],
-      "id": "taru_adj_heizento",
-      "input": "平然と",
-      "suzume_expected": [
         {
           "lemma": "平然",
           "pos": "Adverb",
           "surface": "平然と"
         }
       ],
+      "id": "taru_adj_heizento",
+      "input": "平然と",
       "tags": [
         "grammar",
         "taru-adjective"
@@ -97,27 +86,16 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
-      },
       "description": "悠然と (leisurely)",
       "expected": [
-        {
-          "lemma": "悠然と",
-          "pos": "Adverb",
-          "surface": "悠然と"
-        }
-      ],
-      "id": "taru_adj_yuuzento",
-      "input": "悠然と",
-      "suzume_expected": [
         {
           "lemma": "悠然",
           "pos": "Adverb",
           "surface": "悠然と"
         }
       ],
+      "id": "taru_adj_yuuzento",
+      "input": "悠然と",
       "tags": [
         "grammar",
         "taru-adjective"

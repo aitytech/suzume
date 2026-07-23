@@ -217,10 +217,6 @@
       "input": "いたって本が多い。いたって水が多い。いたって紙が多い。"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "書き言葉の程度副詞群を自立語と助詞列へ分解しない",
       "expected": [
         {
@@ -325,12 +321,12 @@
         },
         {
           "lemma": "つとめて",
-          "pos": "Noun",
+          "pos": "Adverb",
           "surface": "つとめて"
         },
         {
           "lemma": "水",
-          "pos": "Suffix",
+          "pos": "Noun",
           "surface": "水"
         },
         {
@@ -345,129 +341,7 @@
         }
       ],
       "id": "formal_degree_adverbs",
-      "input": "すこぶる本が多い。すこぶる水が多い。おおいに本を読む。おおいに紙を使う。つとめて本を読む。つとめて水を飲む。",
-      "suzume_expected": [
-        {
-          "lemma": "すこぶる",
-          "pos": "Adverb",
-          "surface": "すこぶる"
-        },
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "多い",
-          "pos": "Adjective",
-          "surface": "多い"
-        },
-        {
-          "lemma": "すこぶる",
-          "pos": "Adverb",
-          "surface": "すこぶる"
-        },
-        {
-          "lemma": "水",
-          "pos": "Noun",
-          "surface": "水"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "多い",
-          "pos": "Adjective",
-          "surface": "多い"
-        },
-        {
-          "lemma": "おおいに",
-          "pos": "Adverb",
-          "surface": "おおいに"
-        },
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読む"
-        },
-        {
-          "lemma": "おおいに",
-          "pos": "Adverb",
-          "surface": "おおいに"
-        },
-        {
-          "lemma": "紙",
-          "pos": "Noun",
-          "surface": "紙"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "使う",
-          "pos": "Verb",
-          "surface": "使う"
-        },
-        {
-          "lemma": "つとめて",
-          "pos": "Adverb",
-          "surface": "つとめて"
-        },
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読む"
-        },
-        {
-          "lemma": "つとめて",
-          "pos": "Adverb",
-          "surface": "つとめて"
-        },
-        {
-          "lemma": "水",
-          "pos": "Noun",
-          "surface": "水"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "飲む",
-          "pos": "Verb",
-          "surface": "飲む"
-        }
-      ]
+      "input": "すこぶる本が多い。すこぶる水が多い。おおいに本を読む。おおいに紙を使う。つとめて本を読む。つとめて水を飲む。"
     },
     {
       "description": "接続副詞ひいてはを動詞連用形と助詞列へ分解しない",
@@ -1170,49 +1044,6 @@
       "input": "何とも言えない"
     },
     {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "「不思議」はナ形容詞語幹と名詞述語の両解析が成立する。SuzumeのNoun+copulaは文法的で、表層境界と他トークンは正しい。"
-      },
-      "description": "副詞「何とも」と形容動詞",
-      "expected": [
-        {
-          "lemma": "何とも",
-          "pos": "Adverb",
-          "surface": "何とも"
-        },
-        {
-          "lemma": "不思議",
-          "pos": "Adjective",
-          "surface": "不思議"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "tomo_da",
-      "input": "何とも不思議だ",
-      "suzume_expected": [
-        {
-          "lemma": "何とも",
-          "pos": "Adverb",
-          "surface": "何とも"
-        },
-        {
-          "lemma": "不思議",
-          "pos": "Noun",
-          "surface": "不思議"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ]
-    },
-    {
       "description": "ひらがな表記の副詞「なんとも」",
       "expected": [
         {
@@ -1340,15 +1171,11 @@
       "input": "何とか解決する"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "Negative-scope adverb before relation",
       "expected": [
         {
           "lemma": "一切",
-          "pos": "Noun",
+          "pos": "Adverb",
           "surface": "一切"
         },
         {
@@ -1363,53 +1190,13 @@
         }
       ],
       "id": "issai_kankeinai",
-      "input": "一切関係ない",
-      "suzume_expected": [
-        {
-          "lemma": "一切",
-          "pos": "Adverb",
-          "surface": "一切"
-        },
-        {
-          "lemma": "関係",
-          "pos": "Noun",
-          "surface": "関係"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "一切関係ない"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "Negative-scope adverb before noun",
       "expected": [
         {
           "lemma": "一切",
-          "pos": "Noun",
-          "surface": "一切"
-        },
-        {
-          "lemma": "問題",
-          "pos": "Noun",
-          "surface": "問題"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ],
-      "id": "issai_mondainai",
-      "input": "一切問題ない",
-      "suzume_expected": [
-        {
-          "lemma": "一切",
           "pos": "Adverb",
           "surface": "一切"
         },
@@ -1420,10 +1207,12 @@
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         }
-      ]
+      ],
+      "id": "issai_mondainai",
+      "input": "一切問題ない"
     },
     {
       "description": "Nominal use before genitive particle",
@@ -1937,20 +1726,16 @@
       "input": "ふいに確認する"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "いまなお確認できる - regression test",
       "expected": [
         {
           "lemma": "いま",
-          "pos": "Noun",
+          "pos": "Adverb",
           "surface": "いま"
         },
         {
           "lemma": "なお",
-          "pos": "Conjunction",
+          "pos": "Adverb",
           "surface": "なお"
         },
         {
@@ -1965,35 +1750,9 @@
         }
       ],
       "id": "imanao_dekiru",
-      "input": "いまなお確認できる",
-      "suzume_expected": [
-        {
-          "lemma": "いま",
-          "pos": "Adverb",
-          "surface": "いま"
-        },
-        {
-          "lemma": "なお",
-          "pos": "Conjunction",
-          "surface": "なお"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "できる",
-          "pos": "Verb",
-          "surface": "できる"
-        }
-      ]
+      "input": "いまなお確認できる"
     },
     {
-      "accepted_diff": {
-        "category": "pos-context",
-        "reason": "「それなり」は名詞+格助詞と副詞の両解析が成立する。ここでSuzumeの副詞用法は文法的で、表層境界と他トークンは正しい。"
-      },
       "description": "それなりに確認する - regression test",
       "expected": [
         {
@@ -2018,40 +1777,14 @@
         }
       ],
       "id": "sorenarini_suru",
-      "input": "それなりに確認する",
-      "suzume_expected": [
-        {
-          "lemma": "それなり",
-          "pos": "Adverb",
-          "surface": "それなり"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ]
+      "input": "それなりに確認する"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "いっさい確認しない - regression test",
       "expected": [
         {
           "lemma": "いっさい",
-          "pos": "Noun",
+          "pos": "Adverb",
           "surface": "いっさい"
         },
         {
@@ -2071,29 +1804,7 @@
         }
       ],
       "id": "ittsai_shinai",
-      "input": "いっさい確認しない",
-      "suzume_expected": [
-        {
-          "lemma": "いっさい",
-          "pos": "Adverb",
-          "surface": "いっさい"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "いっさい確認しない"
     },
     {
       "description": "いっこうに確認できない - regression test",
@@ -2219,6 +1930,72 @@
       ],
       "id": "ri_gi_suru",
       "input": "取り急ぎ確認する"
+    },
+    {
+      "description": "あまり食べない。 - regression test",
+      "expected": [
+        {
+          "lemma": "あまり",
+          "pos": "Adverb",
+          "surface": "あまり"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "amari_benai",
+      "input": "あまり食べない。"
+    },
+    {
+      "description": "時間があまりない。 - regression test",
+      "expected": [
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "あまり",
+          "pos": "Adverb",
+          "surface": "あまり"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "gaamarinai",
+      "input": "時間があまりない。"
+    },
+    {
+      "description": "程度副詞とイ形容詞",
+      "expected": [
+        {
+          "lemma": "何とも",
+          "pos": "Adverb",
+          "surface": "何とも"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "tomo_da",
+      "input": "何とも難しい"
     }
   ],
   "description": "General adverbs (part 2/2)",

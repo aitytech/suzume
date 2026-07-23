@@ -1640,36 +1640,8 @@
       "input": "三時間ほどかかる"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "分配数量の反復部全体を一検索単位とする既存の一歩一歩・一人ひとり規則と統一する"
-      },
       "description": "一語一語確認する - auto-generated",
       "expected": [
-        {
-          "lemma": "一語",
-          "pos": "Noun",
-          "surface": "一語"
-        },
-        {
-          "lemma": "一語",
-          "pos": "Noun",
-          "surface": "一語"
-        },
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
-      "id": "suru_2",
-      "input": "一語一語確認する",
-      "suzume_expected": [
         {
           "lemma": "一語一語",
           "pos": "Noun",
@@ -1685,7 +1657,9 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ]
+      ],
+      "id": "suru_2",
+      "input": "一語一語確認する"
     },
     {
       "description": "一歩一歩確認する - auto-generated",
@@ -1759,31 +1733,8 @@
       "input": "百件近く確認する"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "数量範囲の以下とサ変名詞の確認は独立した検索単位であり、以下確認へ統合しないため。"
-      },
       "description": "十件以下確認する - auto-generated",
       "expected": [
-        {
-          "lemma": "十件",
-          "pos": "Noun",
-          "surface": "十件"
-        },
-        {
-          "lemma": "以下確認",
-          "pos": "Noun",
-          "surface": "以下確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
-      "id": "suru_5",
-      "input": "十件以下確認する",
-      "suzume_expected": [
         {
           "lemma": "十件",
           "pos": "Noun",
@@ -1804,34 +1755,13 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ]
+      ],
+      "id": "suru_5",
+      "input": "十件以下確認する"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit",
-        "reason": "概数量の程度とサ変名詞の確認は独立した検索単位であり、程度確認へ統合しないため。"
-      },
       "description": "十件程度確認する - auto-generated",
       "expected": [
-        {
-          "lemma": "十件",
-          "pos": "Noun",
-          "surface": "十件"
-        },
-        {
-          "lemma": "程度確認",
-          "pos": "Suffix",
-          "surface": "程度確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "する"
-        }
-      ],
-      "id": "suru_6",
-      "input": "十件程度確認する",
-      "suzume_expected": [
         {
           "lemma": "十件",
           "pos": "Noun",
@@ -1852,7 +1782,31 @@
           "pos": "Verb",
           "surface": "する"
         }
-      ]
+      ],
+      "id": "suru_6",
+      "input": "十件程度確認する"
+    },
+    {
+      "description": "数詞と漢字単位の同一反復を構造的に一検索単位にする",
+      "expected": [
+        {
+          "lemma": "一件一件",
+          "pos": "Noun",
+          "surface": "一件一件"
+        },
+        {
+          "lemma": "点検",
+          "pos": "Noun",
+          "surface": "点検"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "distributive_quantity_repetition",
+      "input": "一件一件点検する"
     }
   ],
   "description": "number_counter tests",

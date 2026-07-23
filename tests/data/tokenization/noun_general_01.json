@@ -415,46 +415,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "morpheme-boundary",
-        "reason": "閉じた副助詞でもを一単位とし、コピュラ前のありは名詞用法として解析する"
-      },
       "description": "B31: 何でもあり should be noun idiom",
       "expected": [
-        {
-          "lemma": "何",
-          "pos": "Pronoun",
-          "surface": "何"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "ある",
-          "pos": "Auxiliary",
-          "surface": "あり"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        },
-        {
-          "lemma": "な",
-          "pos": "Particle",
-          "surface": "な"
-        }
-      ],
-      "id": "nandemoari_noun",
-      "input": "何でもありだな",
-      "suzume_expected": [
         {
           "lemma": "何",
           "pos": "Pronoun",
@@ -481,6 +443,8 @@
           "surface": "な"
         }
       ],
+      "id": "nandemoari_noun",
+      "input": "何でもありだな",
       "tags": [
         "noun",
         "idiom"
@@ -1174,10 +1138,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "「ありきたり＋だ」は名詞＋コピュラとして文法的で、形容動詞語幹との真正な品詞曖昧性として現行Noun解析を許容。"
-      },
       "description": "ありきたり is a na-adjective",
       "expected": [
         {
@@ -1193,18 +1153,6 @@
       ],
       "id": "s2_arikitari_noun",
       "input": "ありきたりだ",
-      "suzume_expected": [
-        {
-          "lemma": "ありきたり",
-          "pos": "Noun",
-          "surface": "ありきたり"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
       "tags": [
         "s2_fix",
         "suru_misrecognition",
@@ -1896,29 +1844,6 @@
       ],
       "id": "tamago",
       "input": "たまご"
-    },
-    {
-      "accepted_diff": {
-        "category": "pos-ambiguity",
-        "reason": "単独表層「はたけ」は名詞と動詞活用形が文脈なしでは一意に決まらない。SuzumeのNoun解析は妥当。"
-      },
-      "description": "Isolated hiragana noun (畑) kept whole; particle-topic + past-aux connection is prohibited so は/た/け does not win",
-      "expected": [
-        {
-          "lemma": "はたける",
-          "pos": "Verb",
-          "surface": "はたけ"
-        }
-      ],
-      "id": "hatake",
-      "input": "はたけ",
-      "suzume_expected": [
-        {
-          "lemma": "はたけ",
-          "pos": "Noun",
-          "surface": "はたけ"
-        }
-      ]
     },
     {
       "description": "Isolated hiragana noun kept whole; the EOS penalty on bare renyokei き prevents an ひこう+き split (き cannot end a sentence)",

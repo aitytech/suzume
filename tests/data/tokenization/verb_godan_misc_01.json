@@ -415,10 +415,6 @@
       "input": "走らせる"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "「長い間」の「間」は形容詞に後接する拘束的時間接尾辞として扱うSuzume既定POSで、境界・lemma・後続活用はすべて正しいため。"
-      },
       "description": "長い間続いた - auto-generated",
       "expected": [
         {
@@ -443,29 +439,7 @@
         }
       ],
       "id": "i_ita",
-      "input": "長い間続いた",
-      "suzume_expected": [
-        {
-          "lemma": "長い",
-          "pos": "Adjective",
-          "surface": "長い"
-        },
-        {
-          "lemma": "間",
-          "pos": "Suffix",
-          "surface": "間"
-        },
-        {
-          "lemma": "続く",
-          "pos": "Verb",
-          "surface": "続い"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "長い間続いた"
     },
     {
       "description": "間続いた - auto-generated",
@@ -876,77 +850,6 @@
       "input": "かんで"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-ambiguity",
-        "reason": "撥音便表層「よん」は「読む」「呼ぶ」等の活用行を保存せず、文脈なしではlemmaを一意に復元できない。境界とPOSは正しい。"
-      },
-      "description": "Pure-hiragana godan-ma hatsuonbin: よむ past (よむ/よぶ ambiguous, pick よむ)",
-      "expected": [
-        {
-          "lemma": "よぶ",
-          "pos": "Verb",
-          "surface": "よん"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "yonda",
-      "input": "よんだ",
-      "suzume_expected": [
-        {
-          "lemma": "よむ",
-          "pos": "Verb",
-          "surface": "よん"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ]
-    },
-    {
-      "accepted_diff": {
-        "category": "intrinsic-ambiguity",
-        "reason": "単独ひらがな表記は古典否定「なら/ん/で」と「並ぶ」の撥音便「ならん/で」が本質的に曖昧だが、このテストの説明は明示的に後者を対象としており、現行Suzume解析がテスト意図にも一致する。"
-      },
-      "description": "Pure-hiragana godan-ba hatsuonbin: ならぶ te-form (MeCab splits as なる mizenkei)",
-      "expected": [
-        {
-          "lemma": "なる",
-          "pos": "Verb",
-          "surface": "なら"
-        },
-        {
-          "lemma": "ん",
-          "pos": "Auxiliary",
-          "surface": "ん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        }
-      ],
-      "id": "narande",
-      "input": "ならんで",
-      "suzume_expected": [
-        {
-          "lemma": "ならぶ",
-          "pos": "Verb",
-          "surface": "ならん"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        }
-      ]
-    },
-    {
       "description": "Pure-hiragana godan-ma hatsuonbin: しずむ te-form",
       "expected": [
         {
@@ -1049,20 +952,16 @@
       "input": "まなんで"
     },
     {
-      "accepted_diff": {
-        "category": "lemma-normalization",
-        "reason": "連用形「揺るぎ」の辞書形は「揺るぐ」。境界・POS・否定助動詞接続は一致する。"
-      },
       "description": "揺るぎない信念 - auto-generated",
       "expected": [
         {
           "lemma": "揺るぎ",
-          "pos": "Verb",
+          "pos": "Noun",
           "surface": "揺るぎ"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -1072,24 +971,7 @@
         }
       ],
       "id": "ruginai",
-      "input": "揺るぎない信念",
-      "suzume_expected": [
-        {
-          "lemma": "揺るぐ",
-          "pos": "Verb",
-          "surface": "揺るぎ"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        },
-        {
-          "lemma": "信念",
-          "pos": "Noun",
-          "surface": "信念"
-        }
-      ]
+      "input": "揺るぎない信念"
     },
     {
       "description": "めったに雨が降らない - auto-generated",

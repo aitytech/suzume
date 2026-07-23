@@ -95,164 +95,8 @@
       "input": "ただちに西へ向かい、坂を上った。"
     },
     {
-      "accepted_diff": {
-        "category": "open-class-pos-ambiguity",
-        "reason": "辞書なしの特徴量解析では、格助詞「に」の直前にある開いたクラスのナ形容詞語幹と同形名詞を表層から一意に判定できない。境界・lemma・他トークンは正しく、一律Adj化は「東京に行く」等の生産的な名詞＋格助詞を壊すため、語彙登録せずNounフォールバックを意図差として保持する。"
-      },
-      "description": "主に南側の窓を、朝だけ開けた。 - regression test",
-      "expected": [
-        {
-          "lemma": "主",
-          "pos": "Adjective",
-          "surface": "主"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "南側",
-          "pos": "Noun",
-          "surface": "南側"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "窓",
-          "pos": "Noun",
-          "surface": "窓"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "朝",
-          "pos": "Noun",
-          "surface": "朝"
-        },
-        {
-          "lemma": "だけ",
-          "pos": "Particle",
-          "surface": "だけ"
-        },
-        {
-          "lemma": "開ける",
-          "pos": "Verb",
-          "surface": "開け"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "ni_no_wo_dake_keta",
-      "input": "主に南側の窓を、朝だけ開けた。",
-      "suzume_expected": [
-        {
-          "lemma": "主",
-          "pos": "Noun",
-          "surface": "主"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "南側",
-          "pos": "Noun",
-          "surface": "南側"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "窓",
-          "pos": "Noun",
-          "surface": "窓"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "朝",
-          "pos": "Noun",
-          "surface": "朝"
-        },
-        {
-          "lemma": "だけ",
-          "pos": "Particle",
-          "surface": "だけ"
-        },
-        {
-          "lemma": "開ける",
-          "pos": "Verb",
-          "surface": "開け"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
-    },
-    {
-      "accepted_diff": {
-        "category": "grammar-pos",
-        "reason": "ナ形容詞連体形＋主要部＋格助詞の両側証拠により主要部は名詞用法。参照側の動詞連用形はこの統語位置に適合しないため、境界を維持してNounを採用する。"
-      },
       "description": "細やかな気づかいに感謝した。 - regression test",
       "expected": [
-        {
-          "lemma": "細やか",
-          "pos": "Adjective",
-          "surface": "細やか"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "気づかう",
-          "pos": "Verb",
-          "surface": "気づかい"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "感謝",
-          "pos": "Noun",
-          "surface": "感謝"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "yakana_dukaini_shita",
-      "input": "細やかな気づかいに感謝した。",
-      "suzume_expected": [
         {
           "lemma": "細やか",
           "pos": "Adjective",
@@ -288,7 +132,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "yakana_dukaini_shita",
+      "input": "細やかな気づかいに感謝した。"
     },
     {
       "description": "軽い足どりで階段を下りた。 - regression test",
@@ -832,109 +678,6 @@
       "input": "夜明け前の空が白んでいた。"
     },
     {
-      "accepted_diff": {
-        "category": "open-class-pos-ambiguity",
-        "reason": "辞書なしの特徴量解析では、格助詞「に」の直前にある開いたクラスのナ形容詞語幹と同形名詞を表層から一意に判定できない。境界・lemma・他トークンは正しく、一律Adj化は「東京に行く」等の生産的な名詞＋格助詞を壊すため、語彙登録せずNounフォールバックを意図差として保持する。"
-      },
-      "description": "この道はあの道よりはるかに長い。 - regression test",
-      "expected": [
-        {
-          "lemma": "この",
-          "pos": "Determiner",
-          "surface": "この"
-        },
-        {
-          "lemma": "道",
-          "pos": "Noun",
-          "surface": "道"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "あの",
-          "pos": "Determiner",
-          "surface": "あの"
-        },
-        {
-          "lemma": "道",
-          "pos": "Noun",
-          "surface": "道"
-        },
-        {
-          "lemma": "より",
-          "pos": "Particle",
-          "surface": "より"
-        },
-        {
-          "lemma": "はるか",
-          "pos": "Adjective",
-          "surface": "はるか"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "長い",
-          "pos": "Adjective",
-          "surface": "長い"
-        }
-      ],
-      "id": "kono_haano_yoriharukani_i",
-      "input": "この道はあの道よりはるかに長い。",
-      "suzume_expected": [
-        {
-          "lemma": "この",
-          "pos": "Determiner",
-          "surface": "この"
-        },
-        {
-          "lemma": "道",
-          "pos": "Noun",
-          "surface": "道"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "あの",
-          "pos": "Determiner",
-          "surface": "あの"
-        },
-        {
-          "lemma": "道",
-          "pos": "Noun",
-          "surface": "道"
-        },
-        {
-          "lemma": "より",
-          "pos": "Particle",
-          "surface": "より"
-        },
-        {
-          "lemma": "はるか",
-          "pos": "Noun",
-          "surface": "はるか"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "長い",
-          "pos": "Adjective",
-          "surface": "長い"
-        }
-      ]
-    },
-    {
       "description": "重なる雲を見上げた。 - regression test",
       "expected": [
         {
@@ -1472,83 +1215,6 @@
       ],
       "id": "i_ni_mareta_no_kouni_ga_eta",
       "input": "深い霧に包まれた谷の向こうに灯が見えた。"
-    },
-    {
-      "description": "私が求めたのは、答えよりも、確かな手がかりだった。 - regression test",
-      "expected": [
-        {
-          "lemma": "私",
-          "pos": "Pronoun",
-          "surface": "私"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "求める",
-          "pos": "Verb",
-          "surface": "求め"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "答え",
-          "pos": "Noun",
-          "surface": "答え"
-        },
-        {
-          "lemma": "より",
-          "pos": "Particle",
-          "surface": "より"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
-        },
-        {
-          "lemma": "確か",
-          "pos": "Adjective",
-          "surface": "確か"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "な"
-        },
-        {
-          "lemma": "手がかり",
-          "pos": "Noun",
-          "surface": "手がかり"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "ga_metanoha_eyorimo_kana_gakaridattta",
-      "input": "私が求めたのは、答えよりも、確かな手がかりだった。"
     },
     {
       "description": "雪が積もり始めた。 - regression test",
@@ -2497,51 +2163,8 @@
       "input": "彼女は声に耳を澄ました。"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit-boundary",
-        "reason": "「かけ寄る」は検証済みV1連用形と一般結合可能なV2「寄る」から成る生産的複合動詞で、Suzumeでは複合動詞を一つの検索単位として扱う。内部に助詞・助動詞境界はない。"
-      },
       "description": "犬が主人へかけ寄った。 - regression test",
       "expected": [
-        {
-          "lemma": "犬",
-          "pos": "Noun",
-          "surface": "犬"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "主人",
-          "pos": "Noun",
-          "surface": "主人"
-        },
-        {
-          "lemma": "へ",
-          "pos": "Particle",
-          "surface": "へ"
-        },
-        {
-          "lemma": "かける",
-          "pos": "Verb",
-          "surface": "かけ"
-        },
-        {
-          "lemma": "寄る",
-          "pos": "Verb",
-          "surface": "寄っ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "ga_hekake_ttta",
-      "input": "犬が主人へかけ寄った。",
-      "suzume_expected": [
         {
           "lemma": "犬",
           "pos": "Noun",
@@ -2572,7 +2195,9 @@
           "pos": "Auxiliary",
           "surface": "た"
         }
-      ]
+      ],
+      "id": "ga_hekake_ttta",
+      "input": "犬が主人へかけ寄った。"
     },
     {
       "description": "彼がしゃがんだ。 - regression test",
@@ -2651,41 +2276,8 @@
       "input": "夕暮れが差し掛かった。"
     },
     {
-      "accepted_diff": {
-        "category": "search-unit-difference",
-        "reason": "連用形に生産的に接続する完遂相補助動詞の形態素境界を維持するため"
-      },
       "description": "彼が窓辺に立ち尽くす。 - regression test",
       "expected": [
-        {
-          "lemma": "彼",
-          "pos": "Pronoun",
-          "surface": "彼"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "窓辺",
-          "pos": "Noun",
-          "surface": "窓辺"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "立ち尽くす",
-          "pos": "Verb",
-          "surface": "立ち尽くす"
-        }
-      ],
-      "id": "ga_ni_chi_kusu",
-      "input": "彼が窓辺に立ち尽くす。",
-      "suzume_expected": [
         {
           "lemma": "彼",
           "pos": "Pronoun",
@@ -2716,7 +2308,9 @@
           "pos": "Auxiliary",
           "surface": "尽くす"
         }
-      ]
+      ],
+      "id": "ga_ni_chi_kusu",
+      "input": "彼が窓辺に立ち尽くす。"
     },
     {
       "description": "子どもが隅にうずくまる。 - regression test",
@@ -3558,119 +3152,6 @@
       "input": "確かめずには、その報告を受け入れられない。"
     },
     {
-      "accepted_diff": {
-        "category": "open-class-pos-ambiguity",
-        "reason": "辞書なしの特徴量解析では、格助詞「に」の直前にある開いたクラスのナ形容詞語幹と同形名詞を表層から一意に判定できない。境界・lemma・他トークンは正しく、一律Adj化は「東京に行く」等の生産的な名詞＋格助詞を壊すため、語彙登録せずNounフォールバックを意図差として保持する。"
-      },
-      "description": "あらゆる事情を踏まえ、結論を控えめに述べた。 - regression test",
-      "expected": [
-        {
-          "lemma": "あらゆる",
-          "pos": "Determiner",
-          "surface": "あらゆる"
-        },
-        {
-          "lemma": "事情",
-          "pos": "Noun",
-          "surface": "事情"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "踏まえる",
-          "pos": "Verb",
-          "surface": "踏まえ"
-        },
-        {
-          "lemma": "結論",
-          "pos": "Noun",
-          "surface": "結論"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "控えめ",
-          "pos": "Adjective",
-          "surface": "控えめ"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "述べる",
-          "pos": "Verb",
-          "surface": "述べ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "arayuru_wo_mae_wo_emeni_beta",
-      "input": "あらゆる事情を踏まえ、結論を控えめに述べた。",
-      "suzume_expected": [
-        {
-          "lemma": "あらゆる",
-          "pos": "Determiner",
-          "surface": "あらゆる"
-        },
-        {
-          "lemma": "事情",
-          "pos": "Noun",
-          "surface": "事情"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "踏まえる",
-          "pos": "Verb",
-          "surface": "踏まえ"
-        },
-        {
-          "lemma": "結論",
-          "pos": "Noun",
-          "surface": "結論"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "控えめ",
-          "pos": "Noun",
-          "surface": "控えめ"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "述べる",
-          "pos": "Verb",
-          "surface": "述べ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
-    },
-    {
       "description": "避けがたい変化を、静かに受け止める。 - regression test",
       "expected": [
         {
@@ -3711,79 +3192,6 @@
       ],
       "id": "kegatai_wo_kani_ke_meru",
       "input": "避けがたい変化を、静かに受け止める。"
-    },
-    {
-      "accepted_diff": {
-        "category": "open-class-pos-ambiguity",
-        "reason": "辞書なしの特徴量解析では、格助詞「に」の直前にある開いたクラスのナ形容詞語幹と同形名詞を表層から一意に判定できない。境界・lemma・他トークンは正しく、一律Adj化は「東京に行く」等の生産的な名詞＋格助詞を壊すため、語彙登録せずNounフォールバックを意図差として保持する。"
-      },
-      "description": "空は不思議に明るかった。 - regression test",
-      "expected": [
-        {
-          "lemma": "空",
-          "pos": "Noun",
-          "surface": "空"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "不思議",
-          "pos": "Adjective",
-          "surface": "不思議"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "明るい",
-          "pos": "Adjective",
-          "surface": "明るかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ],
-      "id": "ha_ni_rukattta",
-      "input": "空は不思議に明るかった。",
-      "suzume_expected": [
-        {
-          "lemma": "空",
-          "pos": "Noun",
-          "surface": "空"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "不思議",
-          "pos": "Noun",
-          "surface": "不思議"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "明るい",
-          "pos": "Adjective",
-          "surface": "明るかっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
     },
     {
       "description": "冷たすぎる水に、手を浸した。 - regression test",

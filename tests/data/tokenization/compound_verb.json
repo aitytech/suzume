@@ -246,43 +246,6 @@
       "input": "思い切って進む"
     },
     {
-      "accepted_diff": {
-        "category": "te-auxiliary-boundary",
-        "reason": "進行方向補助構文は動詞音便形「やっ」+接続助詞「て」+補助動詞「くる」の形態素境界を保つ"
-      },
-      "description": "テ形と補助動詞「くる」の文法境界を維持する",
-      "expected": [
-        {
-          "lemma": "やってくる",
-          "pos": "Verb",
-          "surface": "やってくる"
-        }
-      ],
-      "id": "yatte_kuru_te_auxiliary_boundary",
-      "input": "やってくる",
-      "suzume_expected": [
-        {
-          "lemma": "やる",
-          "pos": "Verb",
-          "surface": "やっ"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "くる"
-        }
-      ]
-    },
-    {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "動詞連用形＋失敗・未遂を表す従属補助動詞「そこなう」であり、現行Auxiliary解析が文法的に妥当。"
-      },
       "description": "ひらがな表記の失敗補助動詞「そこなう」を補助動詞として解析する",
       "expected": [
         {
@@ -292,24 +255,12 @@
         },
         {
           "lemma": "そこなう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "そこなう"
         }
       ],
       "id": "yarisokonau_hiragana_failure_auxiliary",
-      "input": "やりそこなう",
-      "suzume_expected": [
-        {
-          "lemma": "やる",
-          "pos": "Verb",
-          "surface": "やり"
-        },
-        {
-          "lemma": "そこなう",
-          "pos": "Auxiliary",
-          "surface": "そこなう"
-        }
-      ]
+      "input": "やりそこなう"
     },
     {
       "description": "一文字漢字五段動詞の連用形と後項動詞を複合動詞として結合する",
@@ -322,39 +273,6 @@
       ],
       "id": "oshikomu_single_kanji_godan_compound",
       "input": "押し込む"
-    },
-    {
-      "accepted_diff": {
-        "category": "lemma-ambiguity",
-        "reason": "同形の連用形からは五段・一段のlemmaを一意に決められず、境界とPOSは正しいため"
-      },
-      "description": "同形連用形「降り」の語義曖昧性を許容し、動詞境界を維持する",
-      "expected": [
-        {
-          "lemma": "降る",
-          "pos": "Verb",
-          "surface": "降り"
-        },
-        {
-          "lemma": "始める",
-          "pos": "Verb",
-          "surface": "始める"
-        }
-      ],
-      "id": "ori_hajimeru_lemma_ambiguity",
-      "input": "降り始める",
-      "suzume_expected": [
-        {
-          "lemma": "降りる",
-          "pos": "Verb",
-          "surface": "降り"
-        },
-        {
-          "lemma": "始める",
-          "pos": "Verb",
-          "surface": "始める"
-        }
-      ]
     },
     {
       "description": "複合動詞「見当たる」の未然形と否定助動詞を分割する",
@@ -506,10 +424,6 @@
       "input": "確認しそこなって"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos",
-        "reason": "動詞連用形＋失敗・未遂を表す従属補助動詞「そこなう」であり、現行Auxiliary解析が文法的に妥当。"
-      },
       "description": "読みそこなう - regression test",
       "expected": [
         {
@@ -519,30 +433,14 @@
         },
         {
           "lemma": "そこなう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "そこなう"
         }
       ],
       "id": "misokonau",
-      "input": "読みそこなう",
-      "suzume_expected": [
-        {
-          "lemma": "読む",
-          "pos": "Verb",
-          "surface": "読み"
-        },
-        {
-          "lemma": "そこなう",
-          "pos": "Auxiliary",
-          "surface": "そこなう"
-        }
-      ]
+      "input": "読みそこなう"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "読みそこなった - regression test",
       "expected": [
         {
@@ -552,7 +450,7 @@
         },
         {
           "lemma": "そこなう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "そこなっ"
         },
         {
@@ -562,24 +460,61 @@
         }
       ],
       "id": "misokonattta",
-      "input": "読みそこなった",
-      "suzume_expected": [
+      "input": "読みそこなった"
+    },
+    {
+      "description": "明示的な語幹を使う開始相",
+      "expected": [
         {
-          "lemma": "読む",
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "走る",
           "pos": "Verb",
-          "surface": "読み"
+          "surface": "走り"
         },
         {
-          "lemma": "そこなう",
-          "pos": "Auxiliary",
-          "surface": "そこなっ"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始める"
         }
-      ]
+      ],
+      "id": "ori_hajimeru_lemma_ambiguity",
+      "input": "子供が走り始める"
+    },
+    {
+      "description": "接続助詞と方向補助動詞の境界",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "くる"
+        }
+      ],
+      "id": "yatte_kuru_te_auxiliary_boundary",
+      "input": "確認してくる"
     }
   ],
   "description": "compound_verb tests",

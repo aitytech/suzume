@@ -488,10 +488,6 @@
       "input": "初心者向けの本"
     },
     {
-      "accepted_diff": {
-        "category": "compound-noun-search-unit",
-        "reason": "用途を表す複合名詞「家庭向け」は一検索単位で、後続の属格「の」との境界を保持する"
-      },
       "description": "家庭向けの製品 - regression test",
       "expected": [
         {
@@ -516,24 +512,7 @@
         }
       ],
       "id": "keno_1",
-      "input": "家庭向けの製品",
-      "suzume_expected": [
-        {
-          "lemma": "家庭向け",
-          "pos": "Noun",
-          "surface": "家庭向け"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "製品",
-          "pos": "Noun",
-          "surface": "製品"
-        }
-      ]
+      "input": "家庭向けの製品"
     },
     {
       "description": "子供向けだ - regression test",
@@ -862,26 +841,8 @@
       "input": "途中経過が重要だ"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
       "description": "Productive nominalizer before potential verb",
       "expected": [
-        {
-          "lemma": "簡単化",
-          "pos": "Adjective",
-          "surface": "簡単化"
-        },
-        {
-          "lemma": "できる",
-          "pos": "Verb",
-          "surface": "できる"
-        }
-      ],
-      "id": "kantanka_dekiru",
-      "input": "簡単化できる",
-      "suzume_expected": [
         {
           "lemma": "簡単化",
           "pos": "Noun",
@@ -892,18 +853,16 @@
           "pos": "Verb",
           "surface": "できる"
         }
-      ]
+      ],
+      "id": "kantanka_dekiru",
+      "input": "簡単化できる"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
       "description": "Productive nominalizer before potential verb",
       "expected": [
         {
           "lemma": "簡単化",
-          "pos": "Adjective",
+          "pos": "Noun",
           "surface": "簡単化"
         },
         {
@@ -918,24 +877,7 @@
         }
       ],
       "id": "kantanka_dekita",
-      "input": "簡単化できた",
-      "suzume_expected": [
-        {
-          "lemma": "簡単化",
-          "pos": "Noun",
-          "surface": "簡単化"
-        },
-        {
-          "lemma": "できる",
-          "pos": "Verb",
-          "surface": "でき"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        }
-      ]
+      "input": "簡単化できた"
     },
     {
       "description": "Productive evaluation suffix before suru",
@@ -1396,10 +1338,6 @@
       "input": "度外視"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "古典活用・接続・lemmaの文法に照らして現行解析が妥当で、表層境界は一致"
-      },
       "description": "nominal predicate negative adjective",
       "expected": [
         {
@@ -1414,19 +1352,7 @@
         }
       ],
       "id": "shinobinai_nominal_negative",
-      "input": "忍びない",
-      "suzume_expected": [
-        {
-          "lemma": "忍ぶ",
-          "pos": "Verb",
-          "surface": "忍び"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ]
+      "input": "忍びない"
     },
     {
       "description": "lexical deverbal noun",
@@ -1441,41 +1367,8 @@
       "input": "見逃し"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "固定語・閉じた機能語・検索単位として現行Suzume境界が参照解析より妥当"
-      },
       "description": "Voiced all-over suffix after nominal base",
       "expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "づく",
-          "pos": "Verb",
-          "surface": "づく"
-        },
-        {
-          "lemma": "め",
-          "pos": "Noun",
-          "surface": "め"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "手順",
-          "pos": "Noun",
-          "surface": "手順"
-        }
-      ],
-      "id": "voiced_all_over_suffix",
-      "input": "確認づくめの手順",
-      "suzume_expected": [
         {
           "lemma": "確認",
           "pos": "Noun",
@@ -1496,7 +1389,9 @@
           "pos": "Noun",
           "surface": "手順"
         }
-      ]
+      ],
+      "id": "voiced_all_over_suffix",
+      "input": "確認づくめの手順"
     },
     {
       "description": "複合動詞連用形の格助詞直結を名詞句として保持",
@@ -1627,46 +1522,8 @@
       "input": "確認の押し開きを行う"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
-      },
       "description": "連用形が格助詞前で推定助動詞へ分割されないこと",
       "expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "打つ",
-          "pos": "Verb",
-          "surface": "打ち"
-        },
-        {
-          "lemma": "鳴らす",
-          "pos": "Verb",
-          "surface": "鳴らし"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "聞く",
-          "pos": "Verb",
-          "surface": "聞く"
-        }
-      ],
-      "id": "no_chi_rashiwo_ku",
-      "input": "確認の打ち鳴らしを聞く",
-      "suzume_expected": [
         {
           "lemma": "確認",
           "pos": "Noun",
@@ -1692,7 +1549,9 @@
           "pos": "Verb",
           "surface": "聞く"
         }
-      ]
+      ],
+      "id": "no_chi_rashiwo_ku",
+      "input": "確認の打ち鳴らしを聞く"
     },
     {
       "description": "子どもらしさを示す - auto-generated",
@@ -1906,36 +1765,8 @@
       "input": "人から手紙を受ける"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
       "description": "Kanji verb nominalization remains intact before case particle rather than exposing fixed adverb interior",
       "expected": [
-        {
-          "lemma": "作業",
-          "pos": "Noun",
-          "surface": "作業"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "終わる",
-          "pos": "Verb",
-          "surface": "終わり"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        }
-      ],
-      "id": "literary_nominalized_renyokei_before_case",
-      "input": "作業の終わりに",
-      "suzume_expected": [
         {
           "lemma": "作業",
           "pos": "Noun",
@@ -1956,7 +1787,9 @@
           "pos": "Particle",
           "surface": "に"
         }
-      ]
+      ],
+      "id": "literary_nominalized_renyokei_before_case",
+      "input": "作業の終わりに"
     },
     {
       "description": "全称名詞 すべて の格助詞接続",
@@ -2471,6 +2304,60 @@
       ],
       "id": "demonstrative_identification_answer",
       "input": "それが答え。"
+    },
+    {
+      "description": "内容はありきたりだった。 - regression test",
+      "expected": [
+        {
+          "lemma": "内容",
+          "pos": "Noun",
+          "surface": "内容"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ありきたり",
+          "pos": "Adjective",
+          "surface": "ありきたり"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "haarikitaridattta",
+      "input": "内容はありきたりだった。"
+    },
+    {
+      "description": "漢字表記で名詞を明示",
+      "expected": [
+        {
+          "lemma": "畑",
+          "pos": "Noun",
+          "surface": "畑"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "耕す",
+          "pos": "Verb",
+          "surface": "耕す"
+        }
+      ],
+      "id": "hatake",
+      "input": "畑を耕す"
     }
   ],
   "description": "General nouns (part 2/2)",

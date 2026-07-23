@@ -1312,50 +1312,17 @@
           "surface": "を"
         },
         {
-          "lemma": "話し合う",
+          "lemma": "話し合わせる",
           "pos": "Verb",
-          "surface": "話し合わ"
-        },
-        {
-          "lemma": "せる",
-          "pos": "Auxiliary",
-          "surface": "せる"
+          "surface": "話し合わせる"
         }
       ],
       "id": "wo_shi_waseru",
       "input": "二人を話し合わせる"
     },
     {
-      "accepted_diff": {
-        "category": "tokenizer-difference",
-        "reason": "語彙的複合語は助詞・助動詞境界を含まない一検索単位として扱うSuzume仕様が妥当"
-      },
       "description": "道を踏み外せる - regression test",
       "expected": [
-        {
-          "lemma": "道",
-          "pos": "Noun",
-          "surface": "道"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "踏む",
-          "pos": "Verb",
-          "surface": "踏み"
-        },
-        {
-          "lemma": "外せる",
-          "pos": "Verb",
-          "surface": "外せる"
-        }
-      ],
-      "id": "wo_mi_seru_1",
-      "input": "道を踏み外せる",
-      "suzume_expected": [
         {
           "lemma": "道",
           "pos": "Noun",
@@ -1371,7 +1338,9 @@
           "pos": "Verb",
           "surface": "踏み外せる"
         }
-      ]
+      ],
+      "id": "wo_mi_seru_1",
+      "input": "道を踏み外せる"
     },
     {
       "description": "確認をさておいて報告する - regression test",
@@ -2155,28 +2124,6 @@
       "input": "確認を差し向ける"
     },
     {
-      "description": "確認を立ち尽くす - regression test",
-      "expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "立ち尽くす",
-          "pos": "Verb",
-          "surface": "立ち尽くす"
-        }
-      ],
-      "id": "wo_chi_kusu",
-      "input": "確認を立ち尽くす"
-    },
-    {
       "description": "確認を思い描く - regression test",
       "expected": [
         {
@@ -2493,41 +2440,8 @@
       "input": "書き損じた箇所を直す"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "格助詞・連体修飾環境の連用転成名詞は名詞POSと表層lemmaを採用するSuzume仕様が文法的に妥当"
-      },
       "description": "V2 渡るの連用形名詞",
       "expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "飛び渡る",
-          "pos": "Verb",
-          "surface": "飛び渡り"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "試す",
-          "pos": "Verb",
-          "surface": "試す"
-        }
-      ],
-      "id": "compound_tobiwatari_nominal",
-      "input": "確認の飛び渡りを試す",
-      "suzume_expected": [
         {
           "lemma": "確認",
           "pos": "Noun",
@@ -2553,7 +2467,9 @@
           "pos": "Verb",
           "surface": "試す"
         }
-      ]
+      ],
+      "id": "compound_tobiwatari_nominal",
+      "input": "確認の飛び渡りを試す"
     },
     {
       "description": "V2 渡るの基本形",

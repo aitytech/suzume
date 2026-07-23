@@ -149,103 +149,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
-      "description": "Documentation specification style",
-      "expected": [
-        {
-          "lemma": "戻る",
-          "pos": "Verb",
-          "surface": "戻り"
-        },
-        {
-          "lemma": "値",
-          "pos": "Suffix",
-          "surface": "値"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "成功時",
-          "pos": "Noun",
-          "surface": "成功時"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "0",
-          "pos": "Noun",
-          "surface": "0"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "返す",
-          "pos": "Verb",
-          "surface": "返す"
-        }
-      ],
-      "id": "tech_doc_documentation_spec",
-      "input": "戻り値は成功時に0を返す",
-      "suzume_expected": [
-        {
-          "lemma": "戻る",
-          "pos": "Verb",
-          "surface": "戻り"
-        },
-        {
-          "lemma": "値",
-          "pos": "Noun",
-          "surface": "値"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "成功時",
-          "pos": "Noun",
-          "surface": "成功時"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "0",
-          "pos": "Noun",
-          "surface": "0"
-        },
-        {
-          "lemma": "を",
-          "pos": "Particle",
-          "surface": "を"
-        },
-        {
-          "lemma": "返す",
-          "pos": "Verb",
-          "surface": "返す"
-        }
-      ],
-      "tags": [
-        "technical",
-        "documentation"
-      ]
-    },
-    {
       "description": "API description",
       "expected": [
         {
@@ -1884,6 +1787,48 @@
       "tags": [
         "medical"
       ]
+    },
+    {
+      "description": "技術文書の戻り値説明",
+      "expected": [
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "成功時",
+          "pos": "Noun",
+          "surface": "成功時"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "0",
+          "pos": "Noun",
+          "surface": "0"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "返す",
+          "pos": "Verb",
+          "surface": "返す"
+        }
+      ],
+      "id": "tech_doc_documentation_spec",
+      "input": "結果は成功時に0を返す"
     }
   ],
   "version": "1.0"

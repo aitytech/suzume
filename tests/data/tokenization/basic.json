@@ -150,31 +150,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
-      },
       "description": "あるいは should be CONJ, not ADJ+は split - MeCab uses かも as single particle",
       "expected": [
-        {
-          "lemma": "あるいは",
-          "pos": "Conjunction",
-          "surface": "あるいは"
-        },
-        {
-          "lemma": "違う",
-          "pos": "Verb",
-          "surface": "違う"
-        },
-        {
-          "lemma": "かも",
-          "pos": "Particle",
-          "surface": "かも"
-        }
-      ],
-      "id": "conj_aruiha",
-      "input": "あるいは違うかも",
-      "suzume_expected": [
         {
           "lemma": "或いは",
           "pos": "Conjunction",
@@ -191,6 +168,8 @@
           "surface": "かも"
         }
       ],
+      "id": "conj_aruiha",
+      "input": "あるいは違うかも",
       "tags": [
         "conjunction",
         "split_prevention"

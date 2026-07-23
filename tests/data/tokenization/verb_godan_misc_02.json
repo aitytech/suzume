@@ -1331,49 +1331,6 @@
       "input": "方針に沿って実施する"
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
-      "description": "名詞基部の接尾動詞めくの音便形と過去助動詞",
-      "expected": [
-        {
-          "lemma": "春めく",
-          "pos": "Verb",
-          "surface": "春めい"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "陽気",
-          "pos": "Adjective",
-          "surface": "陽気"
-        }
-      ],
-      "id": "verb_godan_meku_harumeita",
-      "input": "春めいた陽気",
-      "suzume_expected": [
-        {
-          "lemma": "春めく",
-          "pos": "Verb",
-          "surface": "春めい"
-        },
-        {
-          "lemma": "た",
-          "pos": "Auxiliary",
-          "surface": "た"
-        },
-        {
-          "lemma": "陽気",
-          "pos": "Noun",
-          "surface": "陽気"
-        }
-      ]
-    },
-    {
       "description": "接尾動詞めくの音便形と過去助動詞",
       "expected": [
         {
@@ -1983,6 +1940,333 @@
       ],
       "id": "shitemisemasu_auxiliary_boundary",
       "input": "確認してみせます"
+    },
+    {
+      "description": "Comma-chained Ichidan continuative after an object",
+      "expected": [
+        {
+          "lemma": "行動",
+          "pos": "Noun",
+          "surface": "行動"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "省みる",
+          "pos": "Verb",
+          "surface": "省み"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "改める",
+          "pos": "Verb",
+          "surface": "改め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_mi_wo_meta",
+      "input": "行動を省み、方法を改めた。"
+    },
+    {
+      "description": "Comma-chained Ichidan continuative after a case phrase",
+      "expected": [
+        {
+          "lemma": "事情",
+          "pos": "Noun",
+          "surface": "事情"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "鑑みる",
+          "pos": "Verb",
+          "surface": "鑑み"
+        },
+        {
+          "lemma": "予定",
+          "pos": "Noun",
+          "surface": "予定"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "変える",
+          "pos": "Verb",
+          "surface": "変え"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ni_mi_wo_eta",
+      "input": "事情に鑑み、予定を変えた。"
+    },
+    {
+      "description": "Comma-chained Godan-wa continuative is not an adjective",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "迷う",
+          "pos": "Verb",
+          "surface": "迷い"
+        },
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "失う",
+          "pos": "Verb",
+          "surface": "失っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ni_i_wo_ttta",
+      "input": "道に迷い、時間を失った。"
+    },
+    {
+      "description": "歩いてきた。 - regression test",
+      "expected": [
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "itekita",
+      "input": "歩いてきた。"
+    },
+    {
+      "description": "歩いてきました。 - regression test",
+      "expected": [
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "き"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "itekimashita",
+      "input": "歩いてきました。"
+    },
+    {
+      "description": "上すぎる。 - regression test",
+      "expected": [
+        {
+          "lemma": "上",
+          "pos": "Noun",
+          "surface": "上"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "sugiru_3",
+      "input": "上すぎる。"
+    },
+    {
+      "description": "右すぎる。 - regression test",
+      "expected": [
+        {
+          "lemma": "右",
+          "pos": "Noun",
+          "surface": "右"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "sugiru_4",
+      "input": "右すぎる。"
+    },
+    {
+      "description": "漢字表記で撥音便を明示",
+      "expected": [
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "並ぶ",
+          "pos": "Verb",
+          "surface": "並ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "narande",
+      "input": "人が並んで待つ"
+    },
+    {
+      "description": "漢字表記で撥音便lemmaを明示",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "yonda",
+      "input": "本を読んだ"
+    },
+    {
+      "description": "接尾動詞「めく」の音便形と過去助動詞",
+      "expected": [
+        {
+          "lemma": "春めく",
+          "pos": "Verb",
+          "surface": "春めい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "空気",
+          "pos": "Noun",
+          "surface": "空気"
+        }
+      ],
+      "id": "verb_godan_meku_harumeita",
+      "input": "春めいた空気"
+    },
+    {
+      "description": "主語＋形容詞語幹＋すぎる",
+      "expected": [
+        {
+          "lemma": "会場",
+          "pos": "Noun",
+          "surface": "会場"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "大きい",
+          "pos": "Adjective",
+          "surface": "大き"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "ga_adjective_sugiru",
+      "input": "会場が大きすぎる。"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 2/2)",

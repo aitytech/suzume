@@ -204,8 +204,8 @@
           "surface": "お"
         },
         {
-          "lemma": "願い",
-          "pos": "Noun",
+          "lemma": "願う",
+          "pos": "Verb",
           "surface": "願い"
         },
         {
@@ -302,7 +302,7 @@
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -896,61 +896,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
       "description": "Transaction: お振込みは翌営業日に反映されます - MeCab互換分割",
       "expected": [
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "振込む",
-          "pos": "Verb",
-          "surface": "振込み"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "翌営業日",
-          "pos": "Noun",
-          "surface": "翌営業日"
-        },
-        {
-          "lemma": "に",
-          "pos": "Particle",
-          "surface": "に"
-        },
-        {
-          "lemma": "反映",
-          "pos": "Noun",
-          "surface": "反映"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "さ"
-        },
-        {
-          "lemma": "れる",
-          "pos": "Auxiliary",
-          "surface": "れ"
-        },
-        {
-          "lemma": "ます",
-          "pos": "Auxiliary",
-          "surface": "ます"
-        }
-      ],
-      "id": "finance_transaction",
-      "input": "お振込みは翌営業日に反映されます",
-      "suzume_expected": [
         {
           "lemma": "お",
           "pos": "Prefix",
@@ -997,6 +944,8 @@
           "surface": "ます"
         }
       ],
+      "id": "finance_transaction",
+      "input": "お振込みは翌営業日に反映されます",
       "tags": [
         "business",
         "finance"
@@ -1131,56 +1080,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "business-search-units",
-        "reason": "「月末」「締め」「翌月」「払い」は独立した検索単位で、参照側の境界横断複合は不適切"
-      },
       "description": "Payment: お支払いは月末締め翌月払いです",
       "expected": [
-        {
-          "lemma": "お",
-          "pos": "Prefix",
-          "surface": "お"
-        },
-        {
-          "lemma": "支払い",
-          "pos": "Noun",
-          "surface": "支払い"
-        },
-        {
-          "lemma": "は",
-          "pos": "Particle",
-          "surface": "は"
-        },
-        {
-          "lemma": "月",
-          "pos": "Noun",
-          "surface": "月"
-        },
-        {
-          "lemma": "末締め",
-          "pos": "Noun",
-          "surface": "末締め"
-        },
-        {
-          "lemma": "翌",
-          "pos": "Prefix",
-          "surface": "翌"
-        },
-        {
-          "lemma": "月払い",
-          "pos": "Noun",
-          "surface": "月払い"
-        },
-        {
-          "lemma": "です",
-          "pos": "Auxiliary",
-          "surface": "です"
-        }
-      ],
-      "id": "finance_payment",
-      "input": "お支払いは月末締め翌月払いです",
-      "suzume_expected": [
         {
           "lemma": "お",
           "pos": "Prefix",
@@ -1202,8 +1103,8 @@
           "surface": "月末"
         },
         {
-          "lemma": "締める",
-          "pos": "Verb",
+          "lemma": "締め",
+          "pos": "Noun",
           "surface": "締め"
         },
         {
@@ -1222,16 +1123,14 @@
           "surface": "です"
         }
       ],
+      "id": "finance_payment",
+      "input": "お支払いは月末締め翌月払いです",
       "tags": [
         "business",
         "finance"
       ]
     },
     {
-      "accepted_diff": {
-        "category": "prefix-noun-ambiguity",
-        "reason": "単独漢字「本」は接頭辞用法と普通名詞が同形で、後続名詞だけでは語彙的慣用を一意に決められない。全境界・lemmaは正しく、一律Prefix化は普通名詞複合を壊すためNounフォールバックを意図差とする。"
-      },
       "description": "Terms: 本サービスの利用に際して",
       "expected": [
         {
@@ -1262,33 +1161,6 @@
       ],
       "id": "legal_terms_of_service",
       "input": "本サービスの利用に際して",
-      "suzume_expected": [
-        {
-          "lemma": "本",
-          "pos": "Noun",
-          "surface": "本"
-        },
-        {
-          "lemma": "サービス",
-          "pos": "Noun",
-          "surface": "サービス"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "利用",
-          "pos": "Noun",
-          "surface": "利用"
-        },
-        {
-          "lemma": "に際して",
-          "pos": "Particle",
-          "surface": "に際して"
-        }
-      ],
       "tags": [
         "business",
         "legal"

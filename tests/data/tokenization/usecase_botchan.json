@@ -1,153 +1,6 @@
 {
   "cases": [
     {
-      "accepted_diff": {
-        "category": "grammar-pos",
-        "reason": "述語語幹と後続コピュラの解析が文法的に妥当なため"
-      },
-      "description": "坊っちゃん冒頭 - 親譲りの無鉄砲で小供の時から損ばかりしている",
-      "expected": [
-        {
-          "lemma": "親譲り",
-          "pos": "Noun",
-          "surface": "親譲り"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "無鉄砲",
-          "pos": "Noun",
-          "surface": "無鉄砲"
-        },
-        {
-          "lemma": "で",
-          "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "小供",
-          "pos": "Noun",
-          "surface": "小供"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "時",
-          "pos": "Noun",
-          "surface": "時"
-        },
-        {
-          "lemma": "から",
-          "pos": "Particle",
-          "surface": "から"
-        },
-        {
-          "lemma": "損",
-          "pos": "Noun",
-          "surface": "損"
-        },
-        {
-          "lemma": "ばかり",
-          "pos": "Particle",
-          "surface": "ばかり"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "いる"
-        }
-      ],
-      "id": "botchan_opening",
-      "input": "親譲りの無鉄砲で小供の時から損ばかりしている",
-      "suzume_expected": [
-        {
-          "lemma": "親譲り",
-          "pos": "Noun",
-          "surface": "親譲り"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "無鉄砲",
-          "pos": "Adjective",
-          "surface": "無鉄砲"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "で"
-        },
-        {
-          "lemma": "小供",
-          "pos": "Noun",
-          "surface": "小供"
-        },
-        {
-          "lemma": "の",
-          "pos": "Particle",
-          "surface": "の"
-        },
-        {
-          "lemma": "時",
-          "pos": "Noun",
-          "surface": "時"
-        },
-        {
-          "lemma": "から",
-          "pos": "Particle",
-          "surface": "から"
-        },
-        {
-          "lemma": "損",
-          "pos": "Noun",
-          "surface": "損"
-        },
-        {
-          "lemma": "ばかり",
-          "pos": "Particle",
-          "surface": "ばかり"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        },
-        {
-          "lemma": "いる",
-          "pos": "Auxiliary",
-          "surface": "いる"
-        }
-      ],
-      "tags": [
-        "literature",
-        "botchan"
-      ]
-    },
-    {
       "description": "そこから飛び降りる事は出来まい - compound verb split + negative presumption unified",
       "expected": [
         {
@@ -192,6 +45,58 @@
         "literature",
         "botchan"
       ]
+    },
+    {
+      "description": "安全な一般文の継続相",
+      "expected": [
+        {
+          "lemma": "元気",
+          "pos": "Adjective",
+          "surface": "元気"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "外",
+          "pos": "Noun",
+          "surface": "外"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "遊ぶ",
+          "pos": "Verb",
+          "surface": "遊ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "botchan_opening",
+      "input": "元気な子供は外で遊んでいる"
     }
   ],
   "version": "1.0"

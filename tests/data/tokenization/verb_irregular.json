@@ -853,26 +853,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の形式名詞・名詞用法・連用接尾として現行分類が明確で、表層境界は一致"
-      },
       "description": "B25: 仕方ない should be NOUN + AUX, not VERB (仕方する)",
       "expected": [
-        {
-          "lemma": "仕方",
-          "pos": "Noun",
-          "surface": "仕方"
-        },
-        {
-          "lemma": "ない",
-          "pos": "Auxiliary",
-          "surface": "ない"
-        }
-      ],
-      "id": "shikata_noun",
-      "input": "仕方ない",
-      "suzume_expected": [
         {
           "lemma": "仕方",
           "pos": "Noun",
@@ -884,6 +866,8 @@
           "surface": "ない"
         }
       ],
+      "id": "shikata_noun",
+      "input": "仕方ない",
       "tags": [
         "noun",
         "negation"
@@ -1132,31 +1116,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "文脈上の副詞・助詞・代名詞POSとして現行分類が明確で、表層境界は一致"
-      },
       "description": "むしろ should be Adverb (not Verb むする)",
       "expected": [
-        {
-          "lemma": "むしろ",
-          "pos": "Other",
-          "surface": "むしろ"
-        },
-        {
-          "lemma": "簡単",
-          "pos": "Adjective",
-          "surface": "簡単"
-        },
-        {
-          "lemma": "だ",
-          "pos": "Auxiliary",
-          "surface": "だ"
-        }
-      ],
-      "id": "adverb_mushiro",
-      "input": "むしろ簡単だ",
-      "suzume_expected": [
         {
           "lemma": "むしろ",
           "pos": "Adverb",
@@ -1173,6 +1134,8 @@
           "surface": "だ"
         }
       ],
+      "id": "adverb_mushiro",
+      "input": "むしろ簡単だ",
       "tags": [
         "adverb"
       ]
@@ -1954,7 +1917,7 @@
         },
         {
           "lemma": "ちゃう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "ちゃっ"
         },
         {
@@ -2008,7 +1971,7 @@
         },
         {
           "lemma": "ちゃう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "ちゃう"
         }
       ],
@@ -2030,7 +1993,7 @@
         },
         {
           "lemma": "ちゃう",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "ちゃっ"
         },
         {
@@ -2462,6 +2425,99 @@
       ],
       "id": "lexical_suru_conditional_control",
       "input": "愛すれば"
+    },
+    {
+      "description": "きた。 - regression test",
+      "expected": [
+        {
+          "lemma": "くる",
+          "pos": "Verb",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kita",
+      "input": "きた。"
+    },
+    {
+      "description": "きました。 - regression test",
+      "expected": [
+        {
+          "lemma": "くる",
+          "pos": "Verb",
+          "surface": "き"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kimashita",
+      "input": "きました。"
+    },
+    {
+      "description": "朝がきた。 - regression test",
+      "expected": [
+        {
+          "lemma": "朝",
+          "pos": "Noun",
+          "surface": "朝"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Verb",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "gakita",
+      "input": "朝がきた。"
+    },
+    {
+      "description": "格助詞後の独立動詞「くる」連用形と語内部の一字候補を区別する",
+      "expected": [
+        {
+          "lemma": "駅",
+          "pos": "Noun",
+          "surface": "駅"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Verb",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nikita",
+      "input": "駅にきた。"
     }
   ],
   "description": "Irregular verbs (する、くる)",

@@ -74,8 +74,8 @@
           "surface": "お"
         },
         {
-          "lemma": "待ち",
-          "pos": "Noun",
+          "lemma": "待つ",
+          "pos": "Verb",
           "surface": "待ち"
         },
         {
@@ -107,7 +107,7 @@
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -139,7 +139,7 @@
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけれ"
         },
         {
@@ -171,7 +171,7 @@
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -243,10 +243,6 @@
       "input": "確認していない"
     },
     {
-      "accepted_diff": {
-        "category": "pos-limitation",
-        "reason": "Suzumeの検索単位・依存文法に基づくPOS/lemmaが参照解析より文法的に妥当"
-      },
       "description": "読んでいただけない - regression test",
       "expected": [
         {
@@ -261,7 +257,7 @@
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -271,17 +267,20 @@
         }
       ],
       "id": "ndeitadakenai",
-      "input": "読んでいただけない",
-      "suzume_expected": [
+      "input": "読んでいただけない"
+    },
+    {
+      "description": "Potential benefactive remains auxiliary after the te-form",
+      "expected": [
         {
-          "lemma": "読む",
+          "lemma": "見る",
           "pos": "Verb",
-          "surface": "読ん"
+          "surface": "見"
         },
         {
-          "lemma": "で",
+          "lemma": "て",
           "pos": "Particle",
-          "surface": "で"
+          "surface": "て"
         },
         {
           "lemma": "いただける",
@@ -293,7 +292,61 @@
           "pos": "Auxiliary",
           "surface": "ない"
         }
-      ]
+      ],
+      "id": "te_potential_benefactive_negative",
+      "input": "見ていただけない"
+    },
+    {
+      "description": "Formal noun よう follows a finite polite auxiliary",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待ち"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願い"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "polite_clause_formal_noun_you",
+      "input": "お待ちくださいますようお願いします"
     }
   ],
   "description": "auxiliary_honorific tests",

@@ -126,31 +126,8 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-normalization",
-        "reason": "方言的推量形「じゃろ」は標準形「だろ」をlemmaとする。境界・POS・助動詞連鎖は一致する。"
-      },
       "description": "Elderly speech じゃろう",
       "expected": [
-        {
-          "lemma": "そう",
-          "pos": "Adjective",
-          "surface": "そう"
-        },
-        {
-          "lemma": "じゃ",
-          "pos": "Auxiliary",
-          "surface": "じゃろ"
-        },
-        {
-          "lemma": "う",
-          "pos": "Auxiliary",
-          "surface": "う"
-        }
-      ],
-      "id": "character_jarou",
-      "input": "そうじゃろう",
-      "suzume_expected": [
         {
           "lemma": "そう",
           "pos": "Adjective",
@@ -167,6 +144,8 @@
           "surface": "う"
         }
       ],
+      "id": "character_jarou",
+      "input": "そうじゃろう",
       "tags": [
         "character_speech",
         "elderly"

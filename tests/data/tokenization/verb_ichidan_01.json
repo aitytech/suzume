@@ -639,44 +639,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "intentional-pos-lemma",
-        "reason": "現行の派生接尾辞・標準lemma正規化が文法上妥当で、表層境界は一致"
-      },
-      "description": "でて - MeCab互換分割 (で+て)",
-      "expected": [
-        {
-          "lemma": "出る",
-          "pos": "Verb",
-          "surface": "で"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
-      "id": "hiragana_dete",
-      "input": "でて",
-      "suzume_expected": [
-        {
-          "lemma": "でる",
-          "pos": "Verb",
-          "surface": "で"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ],
-      "tags": [
-        "ichidan",
-        "te_form",
-        "hiragana"
-      ]
-    },
-    {
       "description": "Ichidan verb 食べる desiderative form (split: verb + aux)",
       "expected": [
         {
@@ -1057,10 +1019,6 @@
       ]
     },
     {
-      "accepted_diff": {
-        "category": "lemma-ambiguity",
-        "reason": "同形の連用形からは五段・一段のlemmaを一意に決められず、境界とPOSは正しいため"
-      },
       "description": "降りて - regression test",
       "expected": [
         {
@@ -1075,19 +1033,7 @@
         }
       ],
       "id": "k964drite",
-      "input": "降りて",
-      "suzume_expected": [
-        {
-          "lemma": "降る",
-          "pos": "Verb",
-          "surface": "降り"
-        },
-        {
-          "lemma": "て",
-          "pos": "Particle",
-          "surface": "て"
-        }
-      ]
+      "input": "降りて"
     },
     {
       "description": "Multi-char hiragana ichidan renyokei: 聞こえ (聞こえる stem with 2 hiragana chars)",

@@ -78,13 +78,13 @@
           "surface": "お"
         },
         {
-          "lemma": "使い",
-          "pos": "Noun",
+          "lemma": "使う",
+          "pos": "Verb",
           "surface": "使い"
         },
         {
           "lemma": "いただける",
-          "pos": "Verb",
+          "pos": "Auxiliary",
           "surface": "いただけ"
         },
         {
@@ -348,6 +348,38 @@
       ],
       "id": "o_kiki_ni_naru_honorific_renyokei",
       "input": "お聞きになる"
+    },
+    {
+      "description": "敬語接頭辞に続く名詞・格助詞・述語の形態素境界を維持する",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "役",
+          "pos": "Noun",
+          "surface": "役"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "立つ",
+          "pos": "Verb",
+          "surface": "立っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "honorific_noun_ni_predicate_boundary",
+      "input": "お役に立った。"
     }
   ],
   "description": "honorific tests",
