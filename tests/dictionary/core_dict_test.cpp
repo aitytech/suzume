@@ -61,5 +61,31 @@ TEST(CoreDictionaryTest, MaterializesEveryStaticEntryWithStableMetadata) {
   EXPECT_EQ(dict.getEntry(static_cast<uint32_t>(expected.size())), nullptr);
 }
 
+TEST(CoreDictionaryTest, ContractedCompletiveParadigmsRemainAuxiliaries) {
+  constexpr std::string_view kChauForms[] = {"ちゃう", "ちゃわ", "ちゃい", "ちゃっ", "ちゃえ", "ちゃお"};
+  constexpr std::string_view kJauForms[] = {"じゃう", "じゃわ", "じゃい", "じゃっ", "じゃえ", "じゃお"};
+  const auto entries = entries::getAuxiliaryEntries();
+  CoreDictionary dict;
+
+  const auto expect_auxiliary_paradigm = [&entries, &dict](const auto& forms, std::string_view lemma) {
+    for (const auto form : forms) {
+      const auto entry = std::find_if(entries.begin(), entries.end(), [form, lemma](const auto& candidate) {
+        return std::string_view(candidate.surface) == form && std::string_view(candidate.lemma) == lemma &&
+               candidate.extended_pos == core::ExtendedPOS::AuxAspectShimau;
+      });
+      ASSERT_NE(entry, entries.end()) << "missing contracted form: " << form;
+      EXPECT_EQ(entry->pos, core::PartOfSpeech::Auxiliary) << "contracted form: " << form;
+
+      const auto* materialized = dict.lookupExact(form, core::PartOfSpeech::Auxiliary);
+      ASSERT_NE(materialized, nullptr) << "missing materialized contracted form: " << form;
+      EXPECT_EQ(materialized->extended_pos, core::ExtendedPOS::AuxAspectShimau) << "contracted form: " << form;
+      EXPECT_EQ(materialized->lemma, lemma) << "contracted form: " << form;
+    }
+  };
+
+  expect_auxiliary_paradigm(kChauForms, "ちゃう");
+  expect_auxiliary_paradigm(kJauForms, "じゃう");
+}
+
 }  // namespace
 }  // namespace suzume::dictionary

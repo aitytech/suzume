@@ -200,7 +200,8 @@ TEST_F(SuzumeApiTest, PretokenizedMorphemesHaveExtendedPos) {
 TEST_F(SuzumeApiTest, SimilitudeYouRemainsAFormalNoun) {
   Suzume instance(makeTestOptions());
 
-  for (const std::string_view text : {"夢のようだ", "読むようにする", "このような方法"}) {
+  for (const std::string_view text :
+       {"夢のようだ", "読むようにする", "このような方法", "お待ちくださいますようお願いします"}) {
     auto results = instance.analyze(text);
     auto iter = std::find_if(results.begin(), results.end(),
                              [](const core::Morpheme& morpheme) { return morpheme.surface == "よう"; });
@@ -217,6 +218,111 @@ TEST_F(SuzumeApiTest, SimilitudeYouRemainsAFormalNoun) {
   EXPECT_EQ(iter->pos, core::PartOfSpeech::Auxiliary);
   EXPECT_EQ(iter->extended_pos, core::ExtendedPOS::AuxVolitional);
   EXPECT_FALSE(iter->features.is_formal_noun);
+}
+
+TEST_F(SuzumeApiTest, FinalParticleQuotationUsesQuotativeExtendedPos) {
+  Suzume instance(makeTestOptions());
+
+  auto quotation = instance.analyze("行くかと尋ねた");
+  auto quote = std::find_if(quotation.begin(), quotation.end(),
+                            [](const core::Morpheme& morpheme) { return morpheme.surface == "と"; });
+  ASSERT_NE(quote, quotation.end());
+  EXPECT_EQ(quote->extended_pos, core::ExtendedPOS::ParticleQuote);
+
+  auto companion = instance.analyze("誰かと話す");
+  auto case_particle = std::find_if(companion.begin(), companion.end(),
+                                    [](const core::Morpheme& morpheme) { return morpheme.surface == "と"; });
+  ASSERT_NE(case_particle, companion.end());
+  EXPECT_EQ(case_particle->extended_pos, core::ExtendedPOS::ParticleCase);
+}
+
+TEST_F(SuzumeApiTest, AttributivePredicateKeepsTemporalMaAsNoun) {
+  Suzume instance(makeTestOptions());
+
+  for (const std::string_view text : {"長い間続いた", "短い間休む", "待つ間休む", "休む間もなく働いた"}) {
+    auto results = instance.analyze(text);
+    auto interval = std::find_if(results.begin(), results.end(),
+                                 [](const core::Morpheme& morpheme) { return morpheme.surface == "間"; });
+    ASSERT_NE(interval, results.end()) << text;
+    EXPECT_EQ(interval->pos, core::PartOfSpeech::Noun) << text;
+  }
+
+  auto lexical_compound = instance.analyze("期間を確認する");
+  ASSERT_FALSE(lexical_compound.empty());
+  EXPECT_EQ(lexical_compound.front().surface, "期間");
+}
+
+TEST_F(SuzumeApiTest, LexicalMamonakuRemainsAnAdverb) {
+  Suzume instance(makeTestOptions());
+
+  for (const std::string_view text : {"間もなく到着する", "終了間もなく報告する"}) {
+    auto results = instance.analyze(text);
+    auto temporal_adverb = std::find_if(results.begin(), results.end(),
+                                        [](const core::Morpheme& morpheme) { return morpheme.surface == "間もなく"; });
+    ASSERT_NE(temporal_adverb, results.end()) << text;
+    EXPECT_EQ(temporal_adverb->pos, core::PartOfSpeech::Adverb) << text;
+    EXPECT_EQ(temporal_adverb->lemma, "間もなく") << text;
+  }
+
+  auto duration = instance.analyze("時間もなく終わった");
+  ASSERT_GE(duration.size(), 2U);
+  EXPECT_EQ(duration[0].surface, "時間");
+  EXPECT_EQ(duration[1].surface, "も");
+}
+
+TEST_F(SuzumeApiTest, AdverbHomographsRespectNominalFrames) {
+  Suzume instance(makeTestOptions());
+
+  for (const std::string_view text : {"一切を任せる", "一切合切を確認する", "むしろを使う"}) {
+    auto results = instance.analyze(text);
+    ASSERT_FALSE(results.empty()) << text;
+    EXPECT_EQ(results.front().pos, core::PartOfSpeech::Noun) << text;
+  }
+
+  auto adverbial_genitive = instance.analyze("まったくの偶然");
+  ASSERT_FALSE(adverbial_genitive.empty());
+  EXPECT_EQ(adverbial_genitive.front().pos, core::PartOfSpeech::Adverb);
+
+  for (const std::string_view text : {"一切確認する", "一切合切確認する", "このほど確認した", "むしろ必要だ"}) {
+    auto results = instance.analyze(text);
+    ASSERT_FALSE(results.empty()) << text;
+    EXPECT_EQ(results.front().pos, core::PartOfSpeech::Adverb) << text;
+  }
+}
+
+TEST_F(SuzumeApiTest, BareNominalNegativeUsesIndependentAdjective) {
+  Suzume instance(makeTestOptions());
+
+  for (const std::string_view text : {"問題ない", "関係ない", "本にちがいない"}) {
+    auto results = instance.analyze(text);
+    ASSERT_GE(results.size(), 2U) << text;
+    const auto& negative = results.back();
+    EXPECT_EQ(negative.surface, "ない") << text;
+    EXPECT_EQ(negative.pos, core::PartOfSpeech::Adjective) << text;
+    EXPECT_EQ(negative.lemma, "ない") << text;
+  }
+
+  auto attributive = instance.analyze("頼りない返事");
+  ASSERT_GE(attributive.size(), 3U);
+  EXPECT_EQ(attributive[0].surface, "頼り");
+  EXPECT_EQ(attributive[0].pos, core::PartOfSpeech::Noun);
+  EXPECT_EQ(attributive[1].surface, "ない");
+  EXPECT_EQ(attributive[1].pos, core::PartOfSpeech::Adjective);
+}
+
+TEST_F(SuzumeApiTest, TemporalNaoIsAdverbial) {
+  Suzume instance(makeTestOptions());
+
+  auto temporal = instance.analyze("いまなお確認できる");
+  ASSERT_GE(temporal.size(), 2U);
+  EXPECT_EQ(temporal[0].pos, core::PartOfSpeech::Adverb);
+  EXPECT_EQ(temporal[1].surface, "なお");
+  EXPECT_EQ(temporal[1].pos, core::PartOfSpeech::Adverb);
+
+  auto connective = instance.analyze("なお確認する");
+  ASSERT_FALSE(connective.empty());
+  EXPECT_EQ(connective.front().surface, "なお");
+  EXPECT_EQ(connective.front().pos, core::PartOfSpeech::Conjunction);
 }
 
 TEST_F(SuzumeApiTest, DemonstrativeIdentificationEndsInNoun) {

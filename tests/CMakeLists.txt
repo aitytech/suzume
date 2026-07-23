@@ -77,7 +77,14 @@ set(TEST_SOURCES
   pretokenizer/pretokenizer_text_test.cpp
   analysis/scorer_options_loader_test.cpp
   analysis/bigram_table_test.cpp
+  analysis/contracted_completive_boundary_test.cpp
+  analysis/dependent_grammar_roles_test.cpp
+  analysis/destination_suffix_test.cpp
+  analysis/deverbal_noun_naku_test.cpp
+  analysis/hiragana_godan_terminal_test.cpp
+  analysis/noun_nagara_ni_test.cpp
   analysis/scorer_word_cost_test.cpp
+  analysis/suffix_candidates_counter_test.cpp
   analysis/verb_guard_family_test.cpp
   output/japanese_format_test.cpp
   postprocess/tag_generator_test.cpp
