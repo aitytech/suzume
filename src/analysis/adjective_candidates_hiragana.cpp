@@ -506,7 +506,7 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
                                                   dict_manager, candidates);
 
   // Add emphatic variants (まずい → まずいっ, etc.)
-  addEmphaticVariants(candidates, codepoints);
+  addEmphaticVariants(candidates, codepoints, candidate_start);
 
   // Preserve adjective/auxiliary boundaries. The contracted んかった guard is
   // intentionally specific to this pure-hiragana path.
@@ -518,7 +518,8 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
       {"かった", 1, candidate::kAdjKattSplitBonus, core::ExtendedPOS::AdjKatt, 2, "i_adjective_hira_katt", true},
       {"ければ", 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm, 3, "i_adjective_hira_kere"},
   }};
-  adj_detail::appendTrimmedAdjVariants(candidates, kHiraganaTrimRules.data(), kHiraganaTrimRules.size());
+  adj_detail::appendTrimmedAdjVariants(candidates, kHiraganaTrimRules.data(), kHiraganaTrimRules.size(),
+                                       candidate_start);
 
   // Add stem candidates for pure hiragana adjective + auxiliary patterns
   // This handles patterns like おいしそう → おいし (stem) + そう (aux)
@@ -718,7 +719,7 @@ void generateKatakanaAdjectiveCandidates(const std::vector<char32_t>& codepoints
   }
 
   // Add emphatic variants (エグい → エグいっ, etc.)
-  addEmphaticVariants(candidates, codepoints);
+  addEmphaticVariants(candidates, codepoints, candidate_start);
 
   // Preserve katakana adjective connection boundaries. Unlike the hiragana
   // path, negative-past spans historically only derive the intermediate かっ
@@ -731,7 +732,8 @@ void generateKatakanaAdjectiveCandidates(const std::vector<char32_t>& codepoints
       {"そう", 2, candidate::kAdjStemSplitBonus, core::ExtendedPOS::AdjStem, 4, "i_adjective_kata_stem_sou", false,
        true},
   }};
-  adj_detail::appendTrimmedAdjVariants(candidates, kKatakanaTrimRules.data(), kKatakanaTrimRules.size());
+  adj_detail::appendTrimmedAdjVariants(candidates, kKatakanaTrimRules.data(), kKatakanaTrimRules.size(),
+                                       candidate_start);
 
   // Sort by cost
   verb_helpers::sortCandidatesByCost(candidates, candidate_start);

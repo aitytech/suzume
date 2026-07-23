@@ -58,7 +58,7 @@ void adj_detail::appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& 
                                                    size_t kanji_end, size_t hiragana_end,
                                                    const grammar::Inflection& inflection,
                                                    const dictionary::DictionaryManager* dict_manager,
-                                                   std::vector<UnknownCandidate>& candidates) {
+                                                   std::vector<UnknownCandidate>& candidates, size_t candidate_start) {
   // Compound adjective: set has_suffix on existing 2-kanji stem ADJ candidates
   // to skip exceeds_dict_length penalty in tokenizer (薄暗い, 物悲しく, etc.)
   // Guards prevent false positives on suru-verb patterns (遅刻しそう, 確認して):
@@ -94,19 +94,22 @@ void adj_detail::appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& 
       }
       if (valid_adj_start) {
         constexpr size_t kMaxHiraganaLen = 5;
-        // Mark existing candidates with has_suffix if they fit the compound pattern
-        for (auto& cand : candidates) {
+        // Mark this generator's candidates with has_suffix if they fit the
+        // compound pattern. Only the [candidate_start, size) sub-range belongs
+        // to this generator; earlier generators may have shared the buffer.
+        for (size_t idx = candidate_start; idx < candidates.size(); ++idx) {
+          UnknownCandidate& cand = candidates[idx];
           size_t hira_len = cand.end - kanji_end;
           if (cand.pos == core::PartOfSpeech::Adjective && hira_len <= kMaxHiraganaLen) {
             cand.has_suffix = true;
             cand.cost += candidate::kCompoundIAdjectiveLexicalBonus;
           }
         }
-        // Generate new compound candidate if main loop didn't produce one.
-        // The 2-kanji penalty drops inflection confidence below the main loop's
-        // 0.5 threshold for compound adjectives like 薄暗い, 物悲しく.
+        // Generate new compound candidate if this generator's main loop did not
+        // produce one. The 2-kanji penalty drops inflection confidence below the
+        // main loop's 0.5 threshold for compound adjectives like 薄暗い, 物悲しく.
         // Use tighter hiragana limits for い/く/か/け (max 2) to prevent
-        if (candidates.empty()) {
+        if (candidates.size() == candidate_start) {
           size_t hira_limit = (first_hira == U'し') ? kMaxHiraganaLen : 2;
           size_t max_end = std::min(hiragana_end, kanji_end + hira_limit);
           for (size_t end_pos = max_end; end_pos > kanji_end; --end_pos) {

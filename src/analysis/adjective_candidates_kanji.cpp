@@ -566,10 +566,10 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
   }
 
   adj_detail::appendKanjiCompoundIAdjCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection,
-                                                dict_manager, candidates);
+                                                dict_manager, candidates, candidate_start);
 
   adj_detail::appendKanjiIAdjPostVariants(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager,
-                                          candidates);
+                                          candidates, candidate_start);
   verb_helpers::sortCandidatesByCost(candidates, candidate_start);
 
   return;

@@ -142,10 +142,15 @@ float emphaticCostAdjustment(const EmphaticSuffixMatch& match) {
   return candidate::kEmphaticCharacterPenalty * static_cast<float>(match.standard_char_count);
 }
 
-void addEmphaticVariants(std::vector<UnknownCandidate>& candidates, const std::vector<char32_t>& codepoints) {
+void addEmphaticVariants(std::vector<UnknownCandidate>& candidates, const std::vector<char32_t>& codepoints,
+                         size_t first_index) {
   std::vector<UnknownCandidate> emphatic_variants;
 
-  for (const auto& cand : candidates) {
+  // Only the sub-range appended by the current generator is inspected; earlier
+  // generators may have shared this buffer with unrelated verb/adjective
+  // candidates that must not spawn emphatic variants here.
+  for (size_t idx = first_index; idx < candidates.size(); ++idx) {
+    const UnknownCandidate& cand = candidates[idx];
     // Only extend verb and adjective candidates
     if (cand.pos != core::PartOfSpeech::Verb && cand.pos != core::PartOfSpeech::Adjective) {
       continue;

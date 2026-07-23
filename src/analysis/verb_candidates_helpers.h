@@ -329,7 +329,8 @@ bool embedsTeFormMiruAuxiliary(const std::vector<char32_t>& codepoints, size_t s
  * For each verb/adjective candidate, checks if input continues with emphatic
  * characters and creates an extended variant.
  */
-void addEmphaticVariants(std::vector<UnknownCandidate>& candidates, const std::vector<char32_t>& codepoints);
+void addEmphaticVariants(std::vector<UnknownCandidate>& candidates, const std::vector<char32_t>& codepoints,
+                         size_t first_index = 0);
 
 // =============================================================================
 // Pattern Skip Helpers

@@ -25,9 +25,9 @@ void adj_detail::appendKanjiIAdjPostVariants(const std::vector<char32_t>& codepo
                                              size_t kanji_end, size_t hiragana_end,
                                              const grammar::Inflection& inflection,
                                              const dictionary::DictionaryManager* dict_manager,
-                                             std::vector<UnknownCandidate>& candidates) {
+                                             std::vector<UnknownCandidate>& candidates, size_t candidate_start) {
   // Add emphatic variants (すごい → すごいっっ, etc.)
-  addEmphaticVariants(candidates, codepoints);
+  addEmphaticVariants(candidates, codepoints, candidate_start);
 
   // Preserve inflection and auxiliary/particle boundaries. Rules remain
   // path-local because the kanji path uses stronger negative splitting and a
@@ -41,21 +41,24 @@ void adj_detail::appendKanjiIAdjPostVariants(const std::vector<char32_t>& codepo
       {"ければ", 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm, 3, "i_adjective_kere", false, false,
        true},
   }};
-  adj_detail::appendTrimmedAdjVariants(candidates, kTrimRules.data(), kTrimRules.size(), dict_manager);
+  adj_detail::appendTrimmedAdjVariants(candidates, kTrimRules.data(), kTrimRules.size(), candidate_start, dict_manager);
 
   // The past た is always a separate auxiliary: an i-adjective past never stands
   // as one かった token (難しかっ|た, 良くなかっ|た). Every span ending in かった
   // produced its trimmed かっ variant above, so drop the merged span itself —
   // it only ever wins over the split when a preceding modifier's connection
   // bonus favors the terminal-form EPOS, which is exactly the wrong parse.
-  candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
+  // Restrict removal to this generator's own [candidate_start, size) sub-range:
+  // earlier generators may have shared the buffer and their candidates must not
+  // be dropped here.
+  candidates.erase(std::remove_if(candidates.begin() + candidate_start, candidates.end(),
                                   [](const UnknownCandidate& cand) { return utf8::endsWith(cand.surface, "かった"); }),
                    candidates.end());
 
   // The conjunctive くて is never an adjective terminal form. Its trimmed
   // continuative candidate is emitted above, so remove the whole-span
   // alternative that would otherwise hide the connective particle.
-  candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
+  candidates.erase(std::remove_if(candidates.begin() + candidate_start, candidates.end(),
                                   [](const UnknownCandidate& cand) {
                                     return cand.pos == core::PartOfSpeech::Adjective &&
                                            utf8::endsWith(cand.surface, "くて");

@@ -140,11 +140,14 @@ UnknownCandidate makeTrimmedAdjVariant(const UnknownCandidate& cand, size_t char
  * @brief Append table-driven connection-form variants without temporary vectors.
  *
  * Rule groups are evaluated outermost to retain the historical candidate ordering.
- * Only candidates present on entry are inspected, so derived variants are never
- * recursively reprocessed.
+ * Only candidates in the [first_index, size) sub-range appended by the current
+ * generator are inspected, so unrelated candidates left in a shared buffer by
+ * earlier generators are ignored and derived variants are never recursively
+ * reprocessed.
  */
 void appendTrimmedAdjVariants(std::vector<UnknownCandidate>& candidates, const TrimmedAdjVariantRule* rules,
-                              size_t rule_count, const dictionary::DictionaryManager* dict_manager = nullptr);
+                              size_t rule_count, size_t first_index,
+                              const dictionary::DictionaryManager* dict_manager = nullptr);
 
 /**
  * @brief Append post-scan inflection variants for a kanji i-adjective path.
@@ -155,7 +158,7 @@ void appendTrimmedAdjVariants(std::vector<UnknownCandidate>& candidates, const T
 void appendKanjiIAdjPostVariants(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                  size_t hiragana_end, const grammar::Inflection& inflection,
                                  const dictionary::DictionaryManager* dict_manager,
-                                 std::vector<UnknownCandidate>& candidates);
+                                 std::vector<UnknownCandidate>& candidates, size_t candidate_start);
 
 /**
  * @brief Append compound i-adjective candidates for a two-kanji stem.
@@ -163,7 +166,7 @@ void appendKanjiIAdjPostVariants(const std::vector<char32_t>& codepoints, size_t
 void appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                        size_t hiragana_end, const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
-                                       std::vector<UnknownCandidate>& candidates);
+                                       std::vector<UnknownCandidate>& candidates, size_t candidate_start);
 
 /**
  * @brief Append surface-qualified pure-hiragana i-adjective candidates.

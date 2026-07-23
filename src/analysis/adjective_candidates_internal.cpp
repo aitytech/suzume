@@ -144,7 +144,8 @@ UnknownCandidate makeTrimmedAdjVariant(const UnknownCandidate& candidate, size_t
 }
 
 void appendTrimmedAdjVariants(std::vector<UnknownCandidate>& candidates, const TrimmedAdjVariantRule* rules,
-                              size_t rule_count, const dictionary::DictionaryManager* dict_manager) {
+                              size_t rule_count, size_t first_index,
+                              const dictionary::DictionaryManager* dict_manager) {
   const size_t source_count = candidates.size();
   size_t group_begin = 0;
   while (group_begin < rule_count) {
@@ -152,7 +153,7 @@ void appendTrimmedAdjVariants(std::vector<UnknownCandidate>& candidates, const T
     while (group_end < rule_count && rules[group_end].group == rules[group_begin].group) {
       ++group_end;
     }
-    for (size_t candidate_idx = 0; candidate_idx < source_count; ++candidate_idx) {
+    for (size_t candidate_idx = first_index; candidate_idx < source_count; ++candidate_idx) {
       for (size_t rule_idx = group_begin; rule_idx < group_end; ++rule_idx) {
         const TrimmedAdjVariantRule& rule = rules[rule_idx];
         const std::string& surface = candidates[candidate_idx].surface;
