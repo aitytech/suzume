@@ -10,6 +10,7 @@
 #include "core/debug.h"
 #include "dictionary/dictionary.h"
 #include "normalize/char_type.h"
+#include "suffix_candidates.h"
 #include "suffix_candidates_counter_internal.h"
 #include "tokenizer_utils.h"
 #include "unknown.h"
@@ -167,7 +168,8 @@ void appendBasicNumeralCounterCandidates(const std::vector<char32_t>& codepoints
   // 一回戦 must remain available; requiring the complete nominal+する
   // predicate distinguishes the productive quantity construction.
   if (numeral_end < char_types.size() && normalize::isCounterKanji(codepoints[numeral_end])) {
-    if (hasKanjiSuruPredicateAt(codepoints, char_types, numeral_end + 1)) {
+    const bool repeated_predicate_unit = isRepeatedNumeralNounPredicateUnitAt(codepoints, char_types, start_pos);
+    if (!repeated_predicate_unit && hasKanjiSuruPredicateAt(codepoints, char_types, numeral_end + 1)) {
       std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 1);
       if (!surface.empty()) {
         auto cand = makeCandidate(surface, start_pos, numeral_end + 1, core::PartOfSpeech::Noun,

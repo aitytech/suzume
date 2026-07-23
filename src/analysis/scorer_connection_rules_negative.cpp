@@ -34,6 +34,15 @@ namespace suzume::analysis::connection_rules {
 float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // The e-row irrealis form of the polite auxiliary selects contracted
+  // negation (ませ+ん). The homographic literary volitional ん requires a
+  // lexical irrealis stem and cannot follow this polite inflectional form.
+  // Gate on the auxiliary type and vowel row so the o-row polite volitional
+  // (ましょ+う) and ordinary lexical volitionals remain available.
+  const bool invalid_polite_hatsuon_volitional = prev.extended_pos == core::ExtendedPOS::AuxTenseMasu &&
+                                                 grammar::endsWithERow(prev.surface) &&
+                                                 next.extended_pos == core::ExtendedPOS::AuxVolitional &&
+                                                 grammar::isSingleHiragana(next.surface, core::hiragana::kN);
   // The classical/contracted negative ん cannot be followed by the plain
   // copula だ. In an apparent …んだ sequence after a ma/ba/na-row verb, ん is
   // the verb's hatsuonbin and だ is the past auxiliary (膨らん+だ).
@@ -55,8 +64,10 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
       prev.extended_pos == core::ExtendedPOS::Noun && utf8::endsWith(prev.surface, "中") &&
       prev.surface.size() >= core::kThreeJapaneseCharBytes &&
       (next.extended_pos == core::ExtendedPOS::ParticleCase || next.extended_pos == core::ExtendedPOS::VerbShuushikei);
-  if (contracted_negative_before_copula || marked_nominal_before_mimetic || long_chuu_nominal) {
-    bonus += (contracted_negative_before_copula ? cost::kAlmostNever : cost::kNeutral) +
+  if (invalid_polite_hatsuon_volitional || contracted_negative_before_copula || marked_nominal_before_mimetic ||
+      long_chuu_nominal) {
+    bonus += (invalid_polite_hatsuon_volitional ? cost::kAlmostNever : cost::kNeutral) +
+             (contracted_negative_before_copula ? cost::kAlmostNever : cost::kNeutral) +
              (marked_nominal_before_mimetic ? cost::kDoubleVeryStrongBonus : cost::kNeutral) +
              (long_chuu_nominal ? cost::kStrongBonus + cost::kModerateBonus : cost::kNeutral);
   }

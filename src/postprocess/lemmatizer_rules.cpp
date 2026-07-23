@@ -18,8 +18,9 @@ bool endsWithPotentialVerbSuffix(std::string_view surface) {
   if (surface.size() < core::kThreeJapaneseCharBytes || !utf8::endsWith(surface, "れる")) {
     return false;
   }
-  const std::string_view a_row = utf8::lastChar(utf8::dropLast2Chars(surface));
-  return !grammar::godanBaseSuffixFromARow(utf8::decodeFirstChar(a_row)).empty();
+  const std::string_view stem = utf8::dropLast2Chars(surface);
+  const std::string_view a_row = utf8::lastChar(stem);
+  return !grammar::godanBaseSuffixFromARow(utf8::decodeFirstChar(a_row)).empty() || grammar::isPureKatakana(stem);
 }
 
 // Verb endings and their base forms
@@ -414,6 +415,14 @@ std::string fixGodanRenyokeiBeforeLiteraryTe(std::string_view surface, std::stri
                                              std::string_view next_surface,
                                              const dictionary::DictionaryManager* dict_manager) {
   if (dict_manager == nullptr || next_surface != "て" || lemma != std::string(surface) + "る") {
+    return "";
+  }
+  // The same surface can be an ordinary modern Ichidan continuative and a
+  // literary Godan continuative: 降り+て is modern 降りる, while 読み+て is
+  // literary 読む.  When the candidate's Ichidan lemma is independently
+  // attested, retain it; otherwise the dictionary-confirmed Godan lemma below
+  // supplies the missing literary interpretation.
+  if (hasExactVerbEntry(dict_manager, lemma)) {
     return "";
   }
   const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(utf8::decodeLastChar(surface));

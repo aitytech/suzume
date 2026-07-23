@@ -612,6 +612,11 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
       // Renyokei exact match beats inflection match that includes aux
       // This makes 食べすぎ (renyokei) beat 食べすぎた (inflection+aux)
       should_update = true;
+    } else if (inflection_includes_aux && best_match.includes_aux && matched_len > best_match.matched_len) {
+      // Competing closed V2 readings can share an onbin prefix (たつ vs
+      // たたむ in 折りたたんで).  When both consume an inflectional tail, the
+      // longer complete V2 is the structurally stronger analysis.
+      should_update = true;
     } else if (!inflection_includes_aux && best_match.includes_aux) {
       // Usually a lexical match without auxiliaries beats a candidate that
       // absorbed an auxiliary. The 合う+使役せる / 合わせる overlap is the
@@ -625,14 +630,10 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     } else if (best_match.is_mizenkei && (matched_kanji || matched_reading)) {
       // A full V2 base-form match (組み合わせる via ichidan 合わせる) competes
       // with a shorter V2-mizenkei causative/passive reading of another table
-      // entry (組み合わ + せる via godan 合う). Prefer the whole compound only
-      // when the dictionary attests it as an established lexeme — as a verb, or
-      // via its nominalized renyokei (組み合わせ, 問い合わせ are dict nouns).
-      // Otherwise the mizenkei reading is the grammatically correct one
-      // (話し合わせる = 話し合う + せる causative).
-      if (isCompoundVerbOrNominalizationAttested(dict_manager, compound_base, v2_verb.verb_type)) {
-        should_update = true;
-      }
+      // entry (組み合わ + せる via godan 合う). Prefer the complete, longer
+      // member of the closed V2 class. This is a consistent ambiguity policy
+      // for arbitrary V1 hosts and does not require registering each compound.
+      should_update = matched_len > best_match.matched_len;
     }
 
     if (should_update) {
@@ -658,6 +659,23 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
 
   SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND] best_match.len=" << best_match.matched_len
                                                         << " base=" << best_match.compound_base << "\n");
+
+  // A closed V2 reading must not override a dictionary-verified inflected
+  // verb that consumes the same tail with a different lemma.  This resolves
+  // arbitrary lexical tails from the existing dictionary (for example an
+  // n-onbin Godan-ma form) without copying open-class verbs into the closed
+  // compound-V2 table.
+  if (best_match.v2_verb != nullptr && best_match.matched_via_reading && best_match.matched_len > 0) {
+    const size_t matched_chars = normalize::utf8Length(text.substr(v2_start_byte, best_match.matched_len));
+    const std::string_view matched_v2_base =
+        best_match.v2_verb->reading != nullptr ? best_match.v2_verb->reading : best_match.v2_verb->surface;
+    for (const auto& result : dict_manager.lookup(text, v2_start_byte)) {
+      if (result.entry != nullptr && result.length == matched_chars && result.entry->pos == core::PartOfSpeech::Verb &&
+          result.entry->lemma != matched_v2_base) {
+        return {};
+      }
+    }
+  }
 
   return best_match;
 }

@@ -91,8 +91,8 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // (いら+し+て). A non-a-row homograph cannot supply that inflectional
   // context, so it must not create a fabricated voice chain such as
   // かも+し+れ+ない.
-  if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && next.extended_pos == core::ExtendedPOS::AuxCausative &&
-      grammar::isClassicalCausativeAuxiliaryLemma(next.lemma) && !grammar::endsWithARow(prev.surface)) {
+  if (next.extended_pos == core::ExtendedPOS::AuxCausative && grammar::isClassicalCausativeAuxiliaryLemma(next.lemma) &&
+      (prev.extended_pos != core::ExtendedPOS::VerbMizenkei || !grammar::endsWithARow(prev.surface))) {
     bonus += cost::kAlmostNever;
   }
 

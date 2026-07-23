@@ -109,6 +109,11 @@ constexpr float kHighOriginConfidence = 0.9F;
 // E.g., 読み+終わる, 書き+始める
 constexpr float kCompoundVerbBonus = -0.8F;
 
+// A verified V1 continuative plus a complete closed-class V2 is one
+// productive search unit.  This small category-level preference prevents the
+// independently valid V1+V2 path from winning on dictionary word priors alone.
+constexpr float kCompleteCompoundVerbBonus = -0.2F;
+
 // A compound verb in renyokei followed by a deverbal noun suffix is one
 // searchable nominal unit (組み合わせ方, 引き受け手).
 constexpr float kCompoundVerbSuffixNounBonus = -1.0F;
@@ -529,6 +534,20 @@ constexpr float kSingleKanjiNegativeConditionalBonus = -1.6F;
 constexpr float kModerateBonus = -0.3F;
 // Strong bonus for verb candidates (ichidan renyokei, te/ta forms)
 constexpr float kStrongBonus = -0.8F;
+// Context-gated one-mora 来る renyokei.  It must overcome the generic
+// case-particle-to-short-hiragana-verb guard once both its left boundary and
+// following tense/polite continuation have been proven.
+constexpr float kKuruRenyokeiBonus = -1.05F;
+// A bare continuative between a licensed left argument/focus phrase and a
+// Japanese comma is a clause predicate, not a homographic deverbal noun or
+// i-adjective. This structural evidence is intentionally independent of the
+// open-class lemma and therefore applies equally to unknown Godan/Ichidan
+// candidates.
+constexpr float kCommaClauseRenyokeiBonus = -1.2F;
+// The context-gated shortened causative candidate (読ま+さ+れる)
+// must remain cheaper than the homographic suru mizenkei before both paths
+// converge on the same passive lattice state.
+constexpr float kShortenedCausativePassiveBonus = -0.3F;
 // Weak penalty for uncertain verb patterns (passive, causative, zu-form)
 constexpr float kWeakPenalty = 0.1F;
 // Minor penalty for a tense candidate with less evidence than a contracted

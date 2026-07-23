@@ -318,6 +318,46 @@ void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, si
                                          core::ExtendedPOS::VerbMizenkei));
 }
 
+void appendKuruRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  std::vector<UnknownCandidate>& candidates) {
+  // The one-mora renyokei き is lexical 来る at an ordinary predicate
+  // boundary, but becomes the directional/aspectual auxiliary only after a
+  // completed て/で-form (歩いて+き+た).  Generate that auxiliary
+  // homograph at its licensed left boundary instead of assigning auxiliary
+  // POS to sentence-initial and case-marked lexical uses (きた, 朝がきた).
+  if (start_pos >= codepoints.size() || codepoints[start_pos] != U'き') {
+    return;
+  }
+  if (isClearTeFormBeforeSubsidiary(codepoints, start_pos, false)) {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, start_pos + 1, "くる", dictionary::ConjugationType::Kuru,
+                                        core::ExtendedPOS::AuxAspectKuru, "hiragana_kuru_renyokei_auxiliary",
+                                        candidate::verb_cost::kStandardBonus, candidates);
+    return;
+  }
+
+  // Independent 来る is admitted only when both sides license the one-mora
+  // irregular stem.  In particular, do not treat a preceding て/で as an
+  // ordinary particle boundary: those codepoints also occur inside でき and
+  // the subsidiary case was handled above using a verified te-form.
+  const bool right_continuation =
+      start_pos + 1 < codepoints.size() && (codepoints[start_pos + 1] == U'た' || codepoints[start_pos + 1] == U'て' ||
+                                            vh::finiteMasuFormLengthAt(codepoints, start_pos + 1) > 0);
+  if (!right_continuation) {
+    return;
+  }
+  const bool left_boundary = start_pos == 0 ||
+                             normalize::classifyChar(codepoints[start_pos - 1]) == normalize::CharType::Symbol ||
+                             (normalize::isExtendedParticle(codepoints[start_pos - 1]) &&
+                              codepoints[start_pos - 1] != U'て' && codepoints[start_pos - 1] != U'で');
+  if (!left_boundary) {
+    return;
+  }
+  candidates.push_back(makeVerbCandidate("き", start_pos, start_pos + 1, candidate::verb_cost::kKuruRenyokeiBonus,
+                                         "くる", dictionary::ConjugationType::Kuru, true, CandidateOrigin::VerbHiragana,
+                                         candidate::kHighOriginConfidence, "hiragana_kuru_renyokei",
+                                         core::ExtendedPOS::VerbRenyokei));
+}
+
 // 1-char ichidan renyokei before て/た (ねて → ね + て). Requires the base form
 // (stem + る) in the dictionary. Contextual subsidiary verbs are generated
 // separately with their auxiliary ExtendedPOS.

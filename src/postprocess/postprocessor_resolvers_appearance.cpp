@@ -170,6 +170,21 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
       continue;
     }
 
+    const bool is_godan_renyokei = predicate.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+                                   predicate.conj_type >= dictionary::ConjugationType::GodanKa &&
+                                   predicate.conj_type <= dictionary::ConjugationType::GodanWa &&
+                                   grammar::endsWithIRow(predicate.surface);
+    // A Godan continuative stem cannot select the negative auxiliary; Godan
+    // negation requires the a-row mizenkei (頼ら+ない, not 頼り+ない). When
+    // that impossible path is selected, the homographic stem is a deverbal
+    // noun followed by the independent adjective.
+    if (predicate.pos == core::PartOfSpeech::Verb && is_godan_renyokei &&
+        negative.extended_pos == core::ExtendedPOS::AuxNegativeNai) {
+      retagNounSurface(predicate);
+      retagBasicNegativeAdjective(negative);
+      continue;
+    }
+
     // The open-class kanji candidate generator can occasionally create an
     // unattested 〜る verb from a nominal predicate (相違→相違る). In XにYない,
     // its all-kanji, non-dictionary renyokei shape is unambiguously nominal.
@@ -184,6 +199,15 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
     }
 
     if (predicate.pos != core::PartOfSpeech::Noun) {
+      continue;
+    }
+
+    // The negative auxiliary attaches to inflecting predicates, never
+    // directly to a noun. Bare nominal negatives therefore use the
+    // independent adjective ない (問題+ない, 関係+ない).
+    if (negative.extended_pos == core::ExtendedPOS::AuxNegativeNai &&
+        predicate.extended_pos != core::ExtendedPOS::ParticleBinding) {
+      retagBasicNegativeAdjective(negative);
       continue;
     }
 
@@ -216,20 +240,6 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
       continue;
     }
     retagBasicNegativeAdjective(negative);
-  }
-}
-
-// The certainty predicate にちがいない keeps ない as a dependent negative
-// auxiliary; it is not the independent adjective used in ordinary noun
-// predicates.
-void resolveCertaintyChigaiNai(std::vector<core::Morpheme>& result) {
-  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
-    const auto& chigai = result[idx];
-    auto& negative = result[idx + 1];
-    if (chigai.surface != "ちがい" || negative.surface != "ない") {
-      continue;
-    }
-    retagNegativeNai(negative);
   }
 }
 
@@ -571,6 +581,21 @@ void resolveAdverbExplanatoryCopula(std::vector<core::Morpheme>& result) {
 // distinguishes it from the true volitional auxiliary (見+よう).  Only the
 // homographic following な may still need its copular role restored here.
 void resolveSimilitudeYou(std::vector<core::Morpheme>& result) {
+  // The polite auxiliary is already finite, so a following よう cannot be the
+  // homographic volitional ending. It is the formal noun introducing a wished-
+  // for state (お待ちくださいます+よう+お願いします).
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    const auto& polite = result[idx - 1];
+    auto& purpose = result[idx];
+    if (polite.extended_pos != core::ExtendedPOS::AuxTenseMasu || purpose.surface != "よう" ||
+        purpose.extended_pos != core::ExtendedPOS::AuxVolitional) {
+      continue;
+    }
+    retag(purpose, core::PartOfSpeech::Noun, core::ExtendedPOS::NounFormal, "よう", dictionary::ConjugationType::None,
+          grammar::ConjForm::Base);
+    purpose.features.is_formal_noun = true;
+  }
+
   for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
     auto& similitude = result[idx];
     auto& next = result[idx + 1];

@@ -104,6 +104,39 @@ size_t closedOnbinTenseEnd(const std::vector<char32_t>& codepoints, size_t start
   return 0;
 }
 
+size_t completeIndependentGodanWaTerminalEnd(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                             const std::vector<normalize::CharType>& char_types,
+                                             const grammar::Inflection& inflection,
+                                             const VerbCandidateOptions& verb_opts) {
+  const bool has_left_predicate_boundary =
+      start_pos == 0 || normalize::classifyChar(codepoints[start_pos - 1]) == normalize::CharType::Symbol ||
+      normalize::isExtendedParticle(codepoints[start_pos - 1]);
+  if (!has_left_predicate_boundary) {
+    return 0;
+  }
+
+  size_t end_pos = start_pos;
+  while (end_pos < char_types.size() && end_pos - start_pos < 12 &&
+         char_types[end_pos] == normalize::CharType::Hiragana) {
+    ++end_pos;
+  }
+  // A long, complete kana run has enough structure to distinguish a lexical
+  // wa-row terminal from a short closed-class sequence.  Requiring the run to
+  // end here also keeps this gate out of dependent verb/auxiliary chains.
+  if (end_pos - start_pos < 4) {
+    return 0;
+  }
+
+  const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+  for (const auto& candidate : inflection.analyze(surface)) {
+    if (candidate.verb_type == grammar::VerbType::GodanWa && candidate.base_form == surface &&
+        candidate.morphemes.empty() && candidate.confidence >= verb_opts.confidence_low) {
+      return end_pos;
+    }
+  }
+  return 0;
+}
+
 bool hasLongGodanWaNegativeEvidence(const std::vector<char32_t>& codepoints, size_t start_pos, size_t current_pos,
                                     const std::vector<normalize::CharType>& char_types) {
   for (size_t negative_pos = current_pos + 1; negative_pos + 2 < codepoints.size() && negative_pos - start_pos < 12;
@@ -216,6 +249,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
 
   const size_t closed_onbin_tense_end =
       closedOnbinTenseEnd(codepoints, start_pos, char_types, inflection, dict_manager);
+  const size_t complete_godan_wa_terminal_end =
+      completeIndependentGodanWaTerminalEnd(codepoints, start_pos, char_types, inflection, verb_opts);
 
   if (vh::startsInsideDictionaryParticle(codepoints, start_pos, dict_manager)) {
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " inside_dictionary_particle\n");
@@ -227,6 +262,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   appendSuruInabilityCandidates(codepoints, start_pos, candidates);
   appendEruObligationCandidates(codepoints, start_pos, candidates);
   appendKuruMizenkeiNaiCandidates(codepoints, start_pos, candidates);
+  appendKuruRenyokeiCandidates(codepoints, start_pos, candidates);
 
   // Context-gated directional いく inflections after a clear te-form.
   appendIkuAuxiliaryCandidates(codepoints, start_pos, candidates);
@@ -259,7 +295,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   // is independent Godan inflectional evidence.  Admit that structurally
   // verified path so kana-written verbs are not cut through their onbin stem.
   bool crossed_particle_guard = normalize::isNeverVerbStemAtStart(first_char);
-  if (crossed_particle_guard && closed_onbin_tense_end == 0) {
+  if (crossed_particle_guard && closed_onbin_tense_end == 0 && complete_godan_wa_terminal_end == 0) {
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_BLACKLIST] pos=" << start_pos << " char=U+" << std::hex
                                                      << static_cast<uint32_t>(first_char) << std::dec
                                                      << " blocked (isNeverVerbStemAtStart)\n");
@@ -275,7 +311,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       // Check if followed by conditional ば - if so, it might be verb conditional form
       // E.g., あれば = ある (verb) + ば, not あれ (pronoun) + ば
       bool is_conditional_form = (start_pos + 2 < codepoints.size() && codepoints[start_pos + 2] == U'ば');
-      if (!is_conditional_form) {
+      if (!is_conditional_form && complete_godan_wa_terminal_end == 0) {
         SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos
                                                     << " demonstrative_pronoun (これ/それ/あれ/どれ pattern)\n");
         return candidates;
@@ -514,6 +550,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     }
     ++hiragana_end;
   }
+  if (complete_godan_wa_terminal_end != 0) {
+    hiragana_end = complete_godan_wa_terminal_end;
+  }
 
   // Log final hiragana sequence bounds
   SUZUME_DEBUG_LOG_TRACE("[HIRA_SEQ] final: start=" << start_pos << " end=" << hiragana_end
@@ -528,8 +567,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     return candidates;
   }
 
-  const bool has_inflected_candidate = appendInflectedHiraganaVerbCandidates(
-      codepoints, start_pos, hiragana_end, first_char, char_types, inflection, dict_manager, verb_opts, candidates);
+  const bool has_inflected_candidate =
+      appendInflectedHiraganaVerbCandidates(codepoints, start_pos, hiragana_end, first_char, char_types, inflection,
+                                            dict_manager, verb_opts, complete_godan_wa_terminal_end != 0, candidates);
   if (!has_inflected_candidate && closed_onbin_tense_end == 0) {
     return candidates;
   }

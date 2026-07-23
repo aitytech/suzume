@@ -4,6 +4,7 @@
  */
 
 #include "core/debug.h"
+#include "normalize/char_type.h"
 #include "normalize/utf8.h"
 #include "verb_candidates_helpers.h"
 
@@ -77,8 +78,16 @@ bool isCommaClauseChainingRenyokei(const std::vector<char32_t>& codepoints, size
   }
   const std::string particle_surface = extractSubstring(codepoints, start_pos - 1, start_pos);
   const auto* particle = dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle);
-  return particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleCase && particle_surface != "と" &&
-         particle_surface != "で";
+  const bool follows_argument = particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleCase &&
+                                particle_surface != "と" && particle_surface != "で";
+  if (follows_argument) {
+    return true;
+  }
+
+  // A quantified focus phrase also supplies a predicate boundary
+  // (何度も+試み、). Restrict this to the closed counter property so a
+  // noun in an enumerated …も、 sequence does not become verbal evidence.
+  return start_pos >= 2 && codepoints[start_pos - 1] == U'も' && normalize::isCounterKanji(codepoints[start_pos - 2]);
 }
 
 bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,

@@ -335,6 +335,161 @@ void addPronounPluralJoinCandidates(core::Lattice& lattice, std::string_view tex
   }
 }
 
+void addDestinationSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
+                                            const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                            size_t start_pos, const dictionary::DictionaryManager& dict_manager,
+                                            const Scorer& scorer) {
+  constexpr size_t kDestinationSuffixLength = 2;
+  const size_t end_pos = start_pos + kDestinationSuffixLength;
+  if (start_pos == 0 || end_pos > codepoints.size() || codepoints[start_pos] != U'行' ||
+      codepoints[start_pos + 1] != U'き') {
+    return;
+  }
+
+  const size_t suffix_byte_start = byteOffsetAt(byte_offsets, start_pos);
+  const size_t suffix_byte_end = byteOffsetAt(byte_offsets, end_pos);
+  const std::string_view suffix_surface = text.substr(suffix_byte_start, suffix_byte_end - suffix_byte_start);
+  const auto* suffix_entry = dict_manager.lookupExact(suffix_surface, core::PartOfSpeech::Verb);
+  if (suffix_entry == nullptr || suffix_entry->extended_pos != core::ExtendedPOS::VerbRenyokei ||
+      suffix_entry->lemma != "行く") {
+    return;
+  }
+
+  // The bound destination reading is nominal. At the end of input or before a
+  // non-hiragana token it is complete by construction. Before hiragana, require
+  // a following particle or a noun-selecting auxiliary; polite/desiderative
+  // continuations instead prove the independent verb reading (学校行きます).
+  bool nominal_right_context = end_pos == codepoints.size();
+  if (!nominal_right_context) {
+    nominal_right_context = normalize::classifyChar(codepoints[end_pos]) != normalize::CharType::Hiragana;
+  }
+  if (!nominal_right_context) {
+    const size_t following_byte = byteOffsetAt(byte_offsets, end_pos);
+    for (const auto& result : dict_manager.lookup(text, following_byte)) {
+      if (result.entry == nullptr) {
+        continue;
+      }
+      const auto extended_pos = result.entry->extended_pos;
+      if (result.entry->pos == core::PartOfSpeech::Particle || extended_pos == core::ExtendedPOS::AuxCopulaDa ||
+          extended_pos == core::ExtendedPOS::AuxCopulaDesu || extended_pos == core::ExtendedPOS::AuxConjectureRashii ||
+          extended_pos == core::ExtendedPOS::AuxConjectureMitai) {
+        nominal_right_context = true;
+        break;
+      }
+    }
+  }
+  if (!nominal_right_context) {
+    return;
+  }
+
+  // Keep the best noun analysis for each possible host start. The host can be
+  // dictionary-backed or productively generated; this is what makes the rule
+  // apply to arbitrary destinations without a place-name list.
+  struct HostCandidate {
+    size_t start;
+    float cost;
+  };
+  std::vector<HostCandidate> hosts;
+  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
+    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.end != start_pos || edge.pos != core::PartOfSpeech::Noun || edge.isFormalNoun()) {
+        continue;
+      }
+      const float host_cost = scorer.wordCost(edge);
+      auto host = std::find_if(hosts.begin(), hosts.end(),
+                               [edge_start](const HostCandidate& candidate) { return candidate.start == edge_start; });
+      if (host == hosts.end()) {
+        hosts.push_back({edge_start, host_cost});
+      } else {
+        host->cost = std::min(host->cost, host_cost);
+      }
+    }
+  }
+
+  for (const HostCandidate& host : hosts) {
+    const size_t host_byte_start = byteOffsetAt(byte_offsets, host.start);
+    const std::string_view surface = text.substr(host_byte_start, suffix_byte_end - host_byte_start);
+    const float cost = host.cost + bigram_cost::kVeryStrongBonus;
+    lattice.addEdge(surface, static_cast<uint32_t>(host.start), static_cast<uint32_t>(end_pos),
+                    core::PartOfSpeech::Noun, cost, core::LatticeEdge::kIsUnknown | core::LatticeEdge::kHasCustomCost,
+                    surface, dictionary::ConjugationType::None, core::CandidateOrigin::Join,
+                    candidate::kNoOriginConfidence, "destination_suffix_noun", core::ExtendedPOS::Noun,
+                    "destination_suffix_noun");
+  }
+}
+
+void addDeverbalNounBeforeIndependentNakuCandidates(core::Lattice& lattice, std::string_view text,
+                                                    const std::vector<char32_t>& codepoints,
+                                                    const ByteOffsets& byte_offsets, size_t start_pos,
+                                                    const dictionary::DictionaryManager& dict_manager,
+                                                    const Scorer& scorer) {
+  if (start_pos == 0 || start_pos >= codepoints.size()) {
+    return;
+  }
+
+  // Select the adjective entry by grammatical identity rather than treating
+  // every なく surface as independent; the homographic auxiliary remains a
+  // separate candidate in the lattice.
+  size_t naku_end = start_pos;
+  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  for (const auto& result : dict_manager.lookup(text, start_byte)) {
+    if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Adjective &&
+        result.entry->extended_pos == core::ExtendedPOS::AdjRenyokei &&
+        grammar::isIndependentNegativeAdjective(result.entry->lemma)) {
+      naku_end = start_pos + result.length;
+      break;
+    }
+  }
+  if (naku_end == start_pos) {
+    return;
+  }
+
+  // A following particle/auxiliary belongs to the inflectional negative chain
+  // (食べ + なく + て). With no such dependent continuation, the adjective is
+  // the independent adverbial predicate in the "without X" construction.
+  if (naku_end < codepoints.size()) {
+    const size_t following_byte = byteOffsetAt(byte_offsets, naku_end);
+    for (const auto& result : dict_manager.lookup(text, following_byte)) {
+      if (result.entry != nullptr &&
+          (result.entry->pos == core::PartOfSpeech::Particle || result.entry->pos == core::PartOfSpeech::Auxiliary)) {
+        return;
+      }
+    }
+  }
+
+  struct DeverbalNounCandidate {
+    size_t start;
+    std::string_view surface;
+  };
+  std::vector<DeverbalNounCandidate> candidates;
+  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
+    bool has_noun = false;
+    const core::LatticeEdge* renyokei = nullptr;
+    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.end != start_pos) {
+        continue;
+      }
+      has_noun = has_noun || edge.pos == core::PartOfSpeech::Noun;
+      if (edge.pos == core::PartOfSpeech::Verb && edge.extended_pos == core::ExtendedPOS::VerbRenyokei) {
+        renyokei = &edge;
+      }
+    }
+    if (!has_noun && renyokei != nullptr) {
+      candidates.push_back({edge_start, renyokei->surface});
+    }
+  }
+
+  for (const DeverbalNounCandidate& nominal : candidates) {
+    lattice.addEdge(nominal.surface, static_cast<uint32_t>(nominal.start), static_cast<uint32_t>(start_pos),
+                    core::PartOfSpeech::Noun, scorer.posPrior(core::PartOfSpeech::Noun), core::LatticeEdge::kIsUnknown,
+                    nominal.surface, dictionary::ConjugationType::None, core::CandidateOrigin::NominalizedNoun,
+                    candidate::kNoOriginConfidence, "renyokei_nominal_before_independent_naku",
+                    core::ExtendedPOS::NounVerbal, "renyokei_nominal_before_independent_naku");
+  }
+}
+
 void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
                                      const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                      size_t start_pos, const std::vector<normalize::CharType>& char_types,

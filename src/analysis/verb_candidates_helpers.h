@@ -114,7 +114,8 @@ bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manage
 bool hasCaseParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
 
 // A bare continuative can chain clauses before the literal Japanese comma
-// when a non-quotative case particle licenses a predicate on its left.
+// when a non-quotative case particle or quantified focus phrase licenses a
+// predicate on its left.
 bool isCommaClauseChainingRenyokei(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                    const dictionary::DictionaryManager* dict_manager);
 

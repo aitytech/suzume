@@ -45,10 +45,29 @@ void resolveDeverbalStemBeforeDependentAuxiliary(std::vector<core::Morpheme>& re
   }
 }
 
-// A finite conjecture can head a quoted clause even when its omitted subject
-// leaves it at sentence start (らしい+と聞く).  The following quotation
-// particle and reporting predicate disambiguate it from the noun homograph.
-void resolveQuotedConjecture(std::vector<core::Morpheme>& result) {
+// Assign quotation roles that require the selected clause context. A final
+// particle after a finite predicate closes a quoted clause (行く+か+と+尋ねる),
+// whereas an interrogative pronoun remains a case phrase (誰+か+と+話す).
+// A finite conjecture can likewise head a quoted clause even when its omitted
+// subject leaves it at sentence start (らしい+と+聞く).
+void resolveQuotativeParticleRoles(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 2; idx + 1 < result.size(); ++idx) {
+    const auto& predicate_tail = result[idx - 2];
+    const auto& final_particle = result[idx - 1];
+    auto& quote = result[idx];
+    const auto& reporting_predicate = result[idx + 1];
+    const bool finite_predicate_tail = predicate_tail.pos == core::PartOfSpeech::Verb ||
+                                       predicate_tail.pos == core::PartOfSpeech::Adjective ||
+                                       predicate_tail.pos == core::PartOfSpeech::Auxiliary;
+    if (!finite_predicate_tail || final_particle.extended_pos != core::ExtendedPOS::ParticleFinal ||
+        quote.surface != "と" || quote.extended_pos != core::ExtendedPOS::ParticleCase ||
+        reporting_predicate.pos != core::PartOfSpeech::Verb) {
+      continue;
+    }
+    retag(quote, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleQuote, "と",
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
+  }
+
   for (size_t idx = 0; idx + 2 < result.size(); ++idx) {
     auto& conjecture = result[idx];
     auto& quote = result[idx + 1];
@@ -178,35 +197,32 @@ void resolvePreparatoryVolitional(std::vector<core::Morpheme>& result) {
 
 // The potential humble receiving verb is a benefactive auxiliary after a
 // te-form or honorific renyokei (読んで+いただける, お待ち+いただける).
-// Its continuative form before polite ます remains a verb (ご覧+いただけ+ます),
-// which is a distinct finite inflection rather than the base-form auxiliary.
+// Its inflection does not change that dependent role: いただけ+ます/ない and
+// いただけれ+ば remain auxiliary uses. An object-marked independent use has
+// neither licensed predecessor and therefore remains a lexical verb.
 void resolveBenefactivePotential(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx < result.size(); ++idx) {
     const auto& predecessor = result[idx - 1];
     auto& benefactive = result[idx];
     const bool follows_te_form =
         predecessor.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(predecessor.surface);
+    const bool potential_benefactive = grammar::isPotentialBenefactiveLemma(benefactive.lemma);
     if (follows_te_form && benefactive.pos == core::PartOfSpeech::Verb &&
-        grammar::isBenefactiveLemma(benefactive.lemma)) {
+        (grammar::isBenefactiveLemma(benefactive.lemma) || potential_benefactive)) {
       benefactive.pos = core::PartOfSpeech::Auxiliary;
       benefactive.extended_pos = core::ExtendedPOS::AuxBenefactive;
       continue;
     }
     const bool dependent_predecessor =
-        predecessor.extended_pos == core::ExtendedPOS::ParticleConj ||
         predecessor.extended_pos == core::ExtendedPOS::VerbRenyokei ||
-        (idx >= 2 && result[idx - 2].pos == core::PartOfSpeech::Prefix && predecessor.pos == core::PartOfSpeech::Noun);
-    const bool followed_by_polite =
-        idx + 1 < result.size() && result[idx + 1].extended_pos == core::ExtendedPOS::AuxTenseMasu;
-    const bool conditional_form = benefactive.extended_pos == core::ExtendedPOS::VerbKateikei;
-    if (!dependent_predecessor || followed_by_polite || conditional_form ||
-        !grammar::isPotentialBenefactiveLemma(benefactive.lemma)) {
+        (idx >= 2 && result[idx - 2].pos == core::PartOfSpeech::Prefix &&
+         grammar::isHonorificPrefix(result[idx - 2].surface) && predecessor.pos == core::PartOfSpeech::Noun);
+    if (!dependent_predecessor || !potential_benefactive) {
       continue;
     }
     benefactive.pos = core::PartOfSpeech::Auxiliary;
     benefactive.extended_pos = core::ExtendedPOS::AuxBenefactive;
     benefactive.conj_type = dictionary::ConjugationType::Ichidan;
-    benefactive.conj_form = grammar::ConjForm::Base;
   }
 }
 
@@ -242,28 +258,6 @@ void resolveInitialInabilityVerb(std::vector<core::Morpheme>& result) {
     inability.pos = core::PartOfSpeech::Verb;
     inability.extended_pos = core::ExtendedPOS::VerbMizenkei;
     inability.conj_form = grammar::ConjForm::Mizenkei;
-  }
-}
-
-// Core giving/receiving verbs remain benefactive auxiliaries throughout their
-// negative paradigm (して+あげ+ない, して+くれ+ない).  The e-row
-// potential honorific outside that core class retains the established finite-
-// verb contract (して+いただけ+ない).
-void resolveTeHonorificBenefactiveNegative(std::vector<core::Morpheme>& result) {
-  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
-    const auto& connective = result[idx - 1];
-    auto& benefactive = result[idx];
-    const auto& negative = result[idx + 1];
-    if (connective.surface != "て" || connective.extended_pos != core::ExtendedPOS::ParticleConj ||
-        benefactive.extended_pos != core::ExtendedPOS::AuxBenefactive ||
-        grammar::isBenefactiveLemma(benefactive.lemma) || !grammar::endsWithERow(benefactive.surface) ||
-        negative.extended_pos != core::ExtendedPOS::AuxNegativeNai) {
-      continue;
-    }
-    benefactive.pos = core::PartOfSpeech::Verb;
-    benefactive.extended_pos = core::ExtendedPOS::VerbMizenkei;
-    benefactive.conj_type = dictionary::ConjugationType::Ichidan;
-    benefactive.conj_form = grammar::ConjForm::Mizenkei;
   }
 }
 
@@ -697,7 +691,8 @@ void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphem
         // お+知らせ+いたす, お+使い+いただく. This mirrors the preservation
         // rule below for stems that already reached the lattice as verbs.
         if (morpheme.pos == core::PartOfSpeech::Noun && i + 1 < morphemes.size() &&
-            grammar::isHumbleHonorificLemma(morphemes[i + 1].lemma)) {
+            (grammar::isHumbleHonorificLemma(morphemes[i + 1].lemma) ||
+             grammar::isPotentialBenefactiveLemma(morphemes[i + 1].lemma))) {
           const char32_t morpheme_last = utf8::decodeLastChar(morpheme.surface);
           if (grammar::isIRowCodepoint(morpheme_last)) {
             resolver::retagGodanRenyokeiFromIRow(morpheme, false);
@@ -708,12 +703,15 @@ void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphem
             morpheme.extended_pos = core::ExtendedPOS::VerbRenyokei;
           }
         }
-        if (morpheme.pos == core::PartOfSpeech::Noun && i + 2 < morphemes.size() &&
+        if (morpheme.pos == core::PartOfSpeech::Noun && i + 1 < morphemes.size() &&
             morphemes[i + 1].extended_pos == core::ExtendedPOS::VerbRenyokei && morphemes[i + 1].surface == "し" &&
-            morphemes[i + 2].extended_pos == core::ExtendedPOS::AuxTenseMasu && i >= 2 &&
-            morphemes[i - 2].extended_pos == core::ExtendedPOS::ParticleCase && morphemes[i - 2].surface == "を") {
-          if (grammar::isIRowCodepoint(utf8::decodeLastChar(morpheme.surface))) {
+            morphemes[i + 1].lemma == "する") {
+          const char32_t stem_last = utf8::decodeLastChar(morpheme.surface);
+          if (grammar::isIRowCodepoint(stem_last)) {
             resolver::retagGodanRenyokeiFromIRow(morpheme, true);
+          } else if (grammar::isERowCodepoint(stem_last)) {
+            resolver::retag(morpheme, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei,
+                            morpheme.surface + "る", dictionary::ConjugationType::Ichidan, grammar::ConjForm::Renyokei);
           }
         }
         // Convert VERB to NOUN (renyoukei nominalization)
@@ -731,8 +729,9 @@ void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphem
           bool preserves_verbal_reading = false;
           if (i + 1 < morphemes.size()) {
             const auto& next = morphemes[i + 1];
-            preserves_verbal_reading =
-                grammar::isHumbleHonorificLemma(next.lemma) || next.extended_pos == core::ExtendedPOS::AuxCausative;
+            preserves_verbal_reading = grammar::isHumbleHonorificLemma(next.lemma) ||
+                                       grammar::isPotentialBenefactiveLemma(next.lemma) ||
+                                       next.extended_pos == core::ExtendedPOS::AuxCausative;
 
             // An actual hypothetical e-row form keeps its verbal analysis
             // before ば (お届け+ば). Without ば, the same dictionary edge is
@@ -741,16 +740,13 @@ void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphem
                                        (morpheme.extended_pos == core::ExtendedPOS::VerbKateikei &&
                                         next.extended_pos == core::ExtendedPOS::ParticleConj && next.surface == "ば");
 
-            // In the productive service construction object+お+連用形+する,
-            // the stem remains a verb (荷物をお預かりします). The direct
-            // object distinguishes this from nominalized forms such as
-            // お待ちします, where 待ち remains a noun before する.
-            bool follows_suru = next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface == "し" &&
-                                i + 2 < morphemes.size() &&
-                                morphemes[i + 2].extended_pos == core::ExtendedPOS::AuxTenseMasu;
-            bool has_direct_object = i >= 2 && morphemes[i - 2].extended_pos == core::ExtendedPOS::ParticleCase &&
-                                     morphemes[i - 2].surface == "を";
-            preserves_verbal_reading = preserves_verbal_reading || (has_direct_object && follows_suru);
+            // In the productive honorific construction お/ご+連用形+する,
+            // the stem remains a verb.  The closed continuation する supplies
+            // the grammatical evidence; requiring a particular open-class
+            // argument or stem would turn this into an unbounded word list.
+            bool follows_suru =
+                next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface == "し" && next.lemma == "する";
+            preserves_verbal_reading = preserves_verbal_reading || follows_suru;
 
             // An e-row continuative before する is an ichidan verb in the
             // productive honorific construction (お見せする), not a nominal

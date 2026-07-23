@@ -182,6 +182,11 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     }
     float final_cost = base_cost + opts.compound_verb_bonus + v1_bonus;
 
+    if (!best_match.is_renyokei && !best_match.is_mizenkei && !best_match.is_volitional && !best_match.is_kateikei &&
+        !best_match.includes_aux) {
+      final_cost += candidate::kCompleteCompoundVerbBonus;
+    }
+
     // A closed-set bare one-kanji ichidan V1 followed by an allowlisted kanji
     // V2 is a strongly constrained productive compound. This matters when
     // the V2 appears in renyokei before an auxiliary (見回し+た): without the

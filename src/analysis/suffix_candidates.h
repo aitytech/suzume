@@ -48,9 +48,19 @@ const std::array<SuffixEntry, 22>& getSuffixEntries();
  */
 const std::array<std::string_view, 1>& getNaAdjSuffixes();
 
-/** Return true when four codepoints form a repeated numeral+noun unit (一語一語). */
-bool isRepeatedNumeralNounUnitAt(const std::vector<char32_t>& codepoints,
-                                 const std::vector<normalize::CharType>& char_types, size_t start_pos);
+/**
+ * Return the end of an identical repeated numeral+one-kanji unit, or zero.
+ *
+ * The numeral may contain multiple codepoints (十一件十一件), while the unit
+ * must be a non-numeral kanji. This excludes pure numeral repetition such as
+ * 十一十一.
+ */
+size_t repeatedNumeralNounUnitEndAt(const std::vector<char32_t>& codepoints,
+                                    const std::vector<normalize::CharType>& char_types, size_t start_pos);
+
+/** Return true when the unit at start_pos is either half of a repeated unit before a kanji+する predicate. */
+bool isRepeatedNumeralNounPredicateUnitAt(const std::vector<char32_t>& codepoints,
+                                          const std::vector<normalize::CharType>& char_types, size_t start_pos);
 
 /**
  * @brief Generate candidates with suffix separation

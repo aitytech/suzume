@@ -128,7 +128,6 @@ EntrySpecRange getFormalNounEntries() {
       // Abstract nouns that don't form suru-verbs
       formal_noun("仕方", ""),
       formal_noun("しかた", ""),
-      formal_noun("ありきたり", "ありきたり"),  // Low cost to prevent あり+き+たり split, na-adjective stem
       formal_noun("たたずまい", "たたずまい"),  // noun, not suru-verb
       // Bound suffix in the negative-completion construction (見+ず+じまい).
       suffix("じまい", "じまい"),

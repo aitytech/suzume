@@ -190,6 +190,7 @@ EntrySpecRange getPronounEntries() {
       // Fixed temporal and frequency adverbs. These are closed lexical
       // function words, not productive pronoun-plus-particle sequences.
       adv("いつか", ""),
+      adv("間もなく", ""),
       adv("まもなく", ""),
       adv("ときどき", ""),
       adv("ときおり", ""),
@@ -216,6 +217,10 @@ EntrySpecRange getPronounEntries() {
       adv("いよいよ", ""),
       adv("やや", ""),
       adv("おもに", ""),
+      // Closed negative-polarity degree adverb (あまり食べない,
+      // あまり明るくない).  The homographic result formal noun remains
+      // available after an attributive past clause (考えすぎた+あまり).
+      adv("あまり", ""),
       adv("余りに", ""),
       adv("何ら", ""),
       na_adj("あらた", "あらた"),

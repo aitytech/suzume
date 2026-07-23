@@ -778,6 +778,18 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
           }),
       candidates.end());
 
+  // A case-marked argument or quantified focus phrase followed by a bare
+  // continuative and comma is strong clause-level evidence. Candidate
+  // generation already preserves unknown verbs in this context; discount the
+  // verbal path as well so noun/adjective homographs do not win merely through
+  // cheaper local connections.
+  for (auto& cand : candidates) {
+    if (cand.pos == core::PartOfSpeech::Verb && cand.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+        vh::isCommaClauseChainingRenyokei(codepoints, cand.start, cand.end, dict_manager)) {
+      cand.cost += candidate::verb_cost::kCommaClauseRenyokeiBonus;
+    }
+  }
+
   // Apply mid-kanji-run dictionary compound penalty (see comment above)
   if (mid_compound_penalty != 0.0F) {
     for (auto& cand : candidates) {

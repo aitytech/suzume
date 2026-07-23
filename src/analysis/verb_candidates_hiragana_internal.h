@@ -64,6 +64,8 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
                                       std::vector<UnknownCandidate>& candidates);
 void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                      std::vector<UnknownCandidate>& candidates);
+void appendKuruRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  std::vector<UnknownCandidate>& candidates);
 void appendKkoNegativeConjectureCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                            std::vector<UnknownCandidate>& candidates);
 void appendSuruInabilityCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -107,7 +109,7 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
                                            const std::vector<normalize::CharType>& char_types,
                                            const grammar::Inflection& inflection,
                                            const dictionary::DictionaryManager* dict_manager,
-                                           const VerbCandidateOptions& verb_opts,
+                                           const VerbCandidateOptions& verb_opts, bool has_complete_godan_wa_terminal,
                                            std::vector<UnknownCandidate>& candidates);
 
 }  // namespace suzume::analysis::hiragana_verb_detail

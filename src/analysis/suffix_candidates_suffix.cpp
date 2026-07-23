@@ -208,15 +208,13 @@ void generateProductiveSuffixVerbCandidates(const std::vector<char32_t>& codepoi
 
   // A productive suffix verb may attach after a repeated quantity unit, but
   // it cannot begin inside that already-complete unit and cross its right
-  // boundary. Share the same ABAB numeral+noun evidence used by the counter
-  // generator, so candidates start at the predicate rather than the second
-  // half of 一語一語-like expressions.
+  // boundary. Share the same identical numeral+noun-unit evidence used by the
+  // counter generator, so candidates start at the predicate rather than the
+  // second half of 一語一語-like expressions.
   bool crosses_repeated_quantity_boundary = false;
-  const size_t possible_unit_start = start_pos > 3 ? start_pos - 3 : 0;
-  for (size_t unit_start = possible_unit_start; unit_start < start_pos; ++unit_start) {
-    constexpr size_t kRepeatedUnitLength = 4;
-    const size_t unit_end = unit_start + kRepeatedUnitLength;
-    if (unit_end < base_end && isRepeatedNumeralNounUnitAt(codepoints, char_types, unit_start)) {
+  for (size_t unit_start = 0; unit_start < start_pos; ++unit_start) {
+    const size_t unit_end = repeatedNumeralNounUnitEndAt(codepoints, char_types, unit_start);
+    if (unit_end > start_pos && unit_end < base_end) {
       crosses_repeated_quantity_boundary = true;
       break;
     }

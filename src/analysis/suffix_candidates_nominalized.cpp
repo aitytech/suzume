@@ -40,6 +40,29 @@ bool isGenitiveClauseFinalNominal(const std::vector<char32_t>& codepoints,
           (end_pos < char_types.size() && char_types[end_pos] == normalize::CharType::Symbol));
 }
 
+// A closed suffix beginning inside a mixed kanji+hiragana span is a stronger
+// morpheme boundary than the generic one-hiragana nominalization candidate.
+// The host is deliberately unrestricted: audience and derivational suffixes
+// attach to an open class of nouns.  A lexical noun registered for the whole
+// span remains intact.
+bool hasClosedSuffixBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                             const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  const std::string whole = extractSubstring(codepoints, start_pos, end_pos);
+  if (dict_manager->lookupExact(whole, core::PartOfSpeech::Noun) != nullptr) {
+    return false;
+  }
+  for (size_t split = start_pos + 1; split < end_pos; ++split) {
+    const std::string suffix = extractSubstring(codepoints, split, end_pos);
+    if (dict_manager->lookupExact(suffix, core::PartOfSpeech::Suffix) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -318,7 +341,8 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
           skip_nom_single_kanji_shi = true;
         }
       }
-      if (!skip_nom_single_kanji_shi) {
+      const bool crosses_closed_suffix = hasClosedSuffixBoundary(codepoints, start_pos, kanji_end + 1, dict_manager);
+      if (!skip_nom_single_kanji_shi && !crosses_closed_suffix) {
         auto cand = makeCandidate(surface, start_pos, kanji_end + 1, core::PartOfSpeech::Noun, nom1_cost,
                                   has_particle_continuation, CandidateOrigin::NominalizedNoun);
 #ifdef SUZUME_DEBUG_INFO

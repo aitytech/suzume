@@ -55,7 +55,10 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // - Godan 終止形 + まい (行く+まい, なる+まい)
       // - Ichidan 未然形 + まい (食べ+まい; surfaces carry VerbRenyokei EPOS)
       // - する/来る 未然形 + まい (し+まい, こ+まい)
-      {EPOS::VerbShuushikei, EPOS::AuxNegativeMai, cost::kModerateBonus},
+      // A terminal-form verb followed by まい is a fully licensed negative
+      // intent chain.  Make this strong enough to beat a dictionary adjective
+      // that happens to begin at the verb's final kana (言う+まい vs 言+うまい).
+      {EPOS::VerbShuushikei, EPOS::AuxNegativeMai, cost::kVeryStrongBonus},
       // Attributive/terminal verb forms precede concessive and causal
       // conjunctive particles (いう+ものの, 読む+ので). This favors the
       // closed-class particle over a formal-noun plus nominalizer split.

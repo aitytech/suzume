@@ -6,6 +6,7 @@
 #include "candidate_constants.h"
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
+#include "suffix_candidates.h"
 #include "suffix_candidates_counter_internal.h"
 #include "tokenizer_utils.h"
 #include "unknown.h"
@@ -39,12 +40,57 @@ bool isObjectCounterKanji(char32_t code_point) {
 
 namespace suzume::analysis {
 
-bool isRepeatedNumeralNounUnitAt(const std::vector<char32_t>& codepoints,
-                                 const std::vector<normalize::CharType>& char_types, size_t start_pos) {
-  return start_pos + 3 < codepoints.size() && normalize::isNumeralCodepoint(codepoints[start_pos]) &&
-         !normalize::isNumeralCodepoint(codepoints[start_pos + 1]) &&
-         char_types[start_pos + 1] == normalize::CharType::Kanji &&
-         codepoints[start_pos] == codepoints[start_pos + 2] && codepoints[start_pos + 1] == codepoints[start_pos + 3];
+size_t repeatedNumeralNounUnitEndAt(const std::vector<char32_t>& codepoints,
+                                    const std::vector<normalize::CharType>& char_types, size_t start_pos) {
+  if (start_pos >= codepoints.size() || start_pos >= char_types.size() ||
+      !normalize::isNumeralCodepoint(codepoints[start_pos])) {
+    return 0;
+  }
+
+  size_t numeral_end = start_pos;
+  while (numeral_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[numeral_end])) {
+    ++numeral_end;
+  }
+  if (numeral_end >= codepoints.size() || numeral_end >= char_types.size() ||
+      char_types[numeral_end] != normalize::CharType::Kanji) {
+    return 0;
+  }
+
+  const size_t unit_end = numeral_end + 1;
+  const size_t unit_length = unit_end - start_pos;
+  const size_t repeated_end = unit_end + unit_length;
+  if (repeated_end > codepoints.size()) {
+    return 0;
+  }
+  for (size_t offset = 0; offset < unit_length; ++offset) {
+    if (codepoints[start_pos + offset] != codepoints[unit_end + offset]) {
+      return 0;
+    }
+  }
+  return repeated_end;
+}
+
+bool isRepeatedNumeralNounPredicateUnitAt(const std::vector<char32_t>& codepoints,
+                                          const std::vector<normalize::CharType>& char_types, size_t start_pos) {
+  size_t repeated_end = repeatedNumeralNounUnitEndAt(codepoints, char_types, start_pos);
+  if (repeated_end == 0 && start_pos < codepoints.size() && normalize::isNumeralCodepoint(codepoints[start_pos])) {
+    size_t numeral_end = start_pos;
+    while (numeral_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[numeral_end])) {
+      ++numeral_end;
+    }
+    if (numeral_end < char_types.size() && char_types[numeral_end] == normalize::CharType::Kanji) {
+      const size_t unit_end = numeral_end + 1;
+      const size_t unit_length = unit_end - start_pos;
+      if (start_pos >= unit_length) {
+        const size_t repeated_start = start_pos - unit_length;
+        const size_t preceding_repeated_end = repeatedNumeralNounUnitEndAt(codepoints, char_types, repeated_start);
+        if (preceding_repeated_end == unit_end) {
+          repeated_end = preceding_repeated_end;
+        }
+      }
+    }
+  }
+  return repeated_end != 0 && hasKanjiSuruPredicateAt(codepoints, char_types, repeated_end, 2);
 }
 
 }  // namespace suzume::analysis
@@ -111,14 +157,8 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
       ++numeral_end;
     }
     if (numeral_end < codepoints.size() && normalize::isCounterKanji(codepoints[numeral_end])) {
-      size_t unit_end = numeral_end + 1;
-      size_t unit_length = unit_end - start_pos;
-      bool is_repeated_unit = unit_end + unit_length <= codepoints.size();
-      for (size_t offset = 0; is_repeated_unit && offset < unit_length; ++offset) {
-        is_repeated_unit = codepoints[start_pos + offset] == codepoints[unit_end + offset];
-      }
-      if (is_repeated_unit) {
-        size_t repeated_end = unit_end + unit_length;
+      const size_t repeated_end = repeatedNumeralNounUnitEndAt(codepoints, char_types, start_pos);
+      if (repeated_end != 0) {
         std::string surface = extractSubstring(codepoints, start_pos, repeated_end);
         if (!surface.empty()) {
           auto cand = makeCandidate(surface, start_pos, repeated_end, core::PartOfSpeech::Noun,
@@ -136,19 +176,20 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
 
   // A repeated numeral+noun unit before a kanji サ変 predicate is a
   // distributive quantity phrase (一語一語|確認する, 一件一件|点検する).
-  // Its second character is intentionally not limited to the closed counter
-  // inventory: ordinary nouns such as 語 and 歩 productively form this shape.
+  // Its unit kanji is intentionally not limited to the closed counter inventory:
+  // ordinary nouns such as 語 and 歩 productively form this shape.
   // Requiring a complete kanji+する predicate keeps lexical kanji compounds
   // and standalone repetitions outside this boundary rule.
-  if (start_pos + 5 < codepoints.size() && isRepeatedNumeralNounUnitAt(codepoints, char_types, start_pos)) {
-    const std::string following = extractSubstring(codepoints, start_pos + 4, codepoints.size());
+  const size_t repeated_noun_end = repeatedNumeralNounUnitEndAt(codepoints, char_types, start_pos);
+  if (repeated_noun_end != 0) {
+    const std::string following = extractSubstring(codepoints, repeated_noun_end, codepoints.size());
     const bool has_registered_predicate =
         dict_manager != nullptr &&
         lookupResultsHavePartOfSpeech(dict_manager->lookup(following, 0), partOfSpeechMask(core::PartOfSpeech::Verb));
-    if (hasKanjiSuruPredicateAt(codepoints, char_types, start_pos + 4, 2) || has_registered_predicate) {
-      std::string surface = extractSubstring(codepoints, start_pos, start_pos + 4);
+    if (hasKanjiSuruPredicateAt(codepoints, char_types, repeated_noun_end, 2) || has_registered_predicate) {
+      std::string surface = extractSubstring(codepoints, start_pos, repeated_noun_end);
       if (!surface.empty()) {
-        auto cand = makeCandidate(surface, start_pos, start_pos + 4, core::PartOfSpeech::Noun,
+        auto cand = makeCandidate(surface, start_pos, repeated_noun_end, core::PartOfSpeech::Noun,
                                   candidate::kRepeatedNumeralNounPredicateSplitBonus, false, CandidateOrigin::Counter,
                                   core::ExtendedPOS::NounNumber);
         cand.lemma = surface;
@@ -288,7 +329,8 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
       bool trailing_is_reduplication =
           trailing_two_kanji && (normalize::isNumeralCodepoint(codepoints[counter_end]) ||
                                  normalize::isQuantityPrefixKanji(codepoints[counter_end]));
-      if (trailing_two_kanji && run_ends_after_pair && !trailing_is_reduplication) {
+      const bool repeated_predicate_unit = isRepeatedNumeralNounPredicateUnitAt(codepoints, char_types, start_pos);
+      if (trailing_two_kanji && run_ends_after_pair && !trailing_is_reduplication && !repeated_predicate_unit) {
         std::string surface = extractSubstring(codepoints, start_pos, counter_end);
         if (!surface.empty()) {
           auto cand = makeCandidate(surface, start_pos, counter_end, core::PartOfSpeech::Noun,

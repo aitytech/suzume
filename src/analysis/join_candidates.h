@@ -110,6 +110,32 @@ void addPronounPluralJoinCandidates(core::Lattice& lattice, std::string_view tex
                                     const Scorer& scorer);
 
 /**
+ * @brief Add noun + destination 行き join candidates
+ *
+ * Combines a noun host directly followed by the bound destination use of 行き
+ * into one noun search unit, e.g. 学校行き and 東京行き. A following verbal
+ * continuation such as ます prevents the join, so 東京へ行きます and colloquial
+ * 学校行きます retain the independent verb reading.
+ */
+void addDestinationSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
+                                            const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                            size_t start_pos, const dictionary::DictionaryManager& dict_manager,
+                                            const Scorer& scorer);
+
+/**
+ * @brief Add a deverbal-noun reading before independent adjective なく
+ *
+ * A verb continuative can productively function as a noun in the adverbial
+ * absence construction (休み + なく). A particle or auxiliary immediately
+ * after なく instead proves the ordinary negative-auxiliary chain.
+ */
+void addDeverbalNounBeforeIndependentNakuCandidates(core::Lattice& lattice, std::string_view text,
+                                                    const std::vector<char32_t>& codepoints,
+                                                    const ByteOffsets& byte_offsets, size_t start_pos,
+                                                    const dictionary::DictionaryManager& dict_manager,
+                                                    const Scorer& scorer);
+
+/**
  * @brief Add te-form + auxiliary verb split candidates
  *
  * Detects patterns where a verb in te-form is followed by auxiliary verbs

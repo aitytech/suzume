@@ -370,17 +370,19 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kVeryStrongBonus;
   }
 
-  // A bare continuative verb cannot directly modify an arbitrary adjective.
-  // The productive exception is the closed derivational suffix class
-  // にくい/やすい/がたい/づらい (including the kanji spelling 難い).
-  // Matching the lemma rather than only the terminal surface covers every
-  // inflection in the finite paradigm, including literary がたき. Restricting
-  // the bonus to that class keeps valid
-  // compound adjectives (読み+やすい, 検索し+にくい) while preventing a
-  // homographic verb candidate from stealing an adverbial-noun reading before
-  // an unrelated adjective.
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AdjBasic) {
-    if (utf8::equalsAny(next.lemma, {"にくい", "やすい", "がたい", "づらい", "難い"})) {
+  // Unsupported continuative attachments lose to their grammatical
+  // homographs. A bare continuative verb cannot directly modify an arbitrary
+  // adjective, except for the closed derivational suffix class
+  // にくい/やすい/がたい/づらい (including the kanji spelling 難い). Likewise,
+  // directional へ selects a nominal goal, so an apparent i-adjective
+  // continuative before it is the spatial/temporal noun (近く+へ, 遠く+へ).
+  const bool verb_before_adjective =
+      prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AdjBasic;
+  const bool adjective_before_directional_case = prev.extended_pos == core::ExtendedPOS::AdjRenyokei &&
+                                                 next.extended_pos == core::ExtendedPOS::ParticleCase &&
+                                                 utf8::equalsAny(next.surface, {"へ"});
+  if (verb_before_adjective || adjective_before_directional_case) {
+    if (verb_before_adjective && utf8::equalsAny(next.lemma, {"にくい", "やすい", "がたい", "づらい", "難い"})) {
       bonus += cost::kVeryStrongBonus;
     } else {
       bonus += cost::kAlmostNever;

@@ -19,7 +19,7 @@ namespace suzume::postprocess {
 // the resulting noun/verb category.
 void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::resolveDeverbalStemBeforeDependentAuxiliary(result);
-  resolver::resolveQuotedConjecture(result);
+  resolver::resolveQuotativeParticleRoles(result);
   resolver::resolveAmbiguousInflections(result);
 
   // A small closed class of kanji+i surfaces is an Ichidan continuative stem
@@ -40,7 +40,6 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::resolveAppearanceSouPredicate(result);
   resolver::resolveProgressiveContractionNominalizer(result);
   resolver::resolveNominalPredicateNai(result);
-  resolver::resolveCertaintyChigaiNai(result);
   resolver::mergeSplitCopularNegative(result);
   resolver::mergeSplitFormalNounNegativeRenyokei(result);
   resolver::resolveInitialNegativeAdjective(result);
@@ -73,7 +72,6 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::resolveParticleAruOnbin(result);
   resolver::resolveDemonstrativeMiseru(result);
   resolver::resolveBenefactivePotential(result);
-  resolver::resolveTeHonorificBenefactiveNegative(result);
   resolver::resolveBindingParticleNegative(result);
   resolver::resolveInitialInabilityVerb(result);
   resolver::resolveDependentVerbHomographs(result);
@@ -182,12 +180,94 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::resolveDurationPredicateKakaru(result);
   resolver::resolveClosedInflectionalChains(result);
 
+  // A pure-hiragana n-onbin V2 can carry inflection evidence that contradicts
+  // an overlapping closed V2 reading (折り+たたん, not the fabricated
+  // 折りたつ). Direct adjacency to V1 licenses the compound search unit
+  // without registering that open-class V2 in the closed table.
+  for (size_t idx = 0; idx + 1 < result.size();) {
+    auto& v1 = result[idx];
+    const auto& v2 = result[idx + 1];
+    if (v1.pos != core::PartOfSpeech::Verb || v1.extended_pos != core::ExtendedPOS::VerbRenyokei ||
+        v2.pos != core::PartOfSpeech::Verb || v2.extended_pos != core::ExtendedPOS::VerbOnbinkei ||
+        !grammar::isPureHiragana(v2.surface) || !utf8::endsWith(v2.surface, "ん") ||
+        !utf8::endsWithAny(v2.lemma, {"む", "ぶ", "ぬ"}) || v1.end != v2.start) {
+      ++idx;
+      continue;
+    }
+    const std::string v1_surface = v1.surface;
+    v1.surface += v2.surface;
+    v1.lemma = v1_surface + v2.lemma;
+    v1.end = v2.end;
+    v1.pos = v2.pos;
+    v1.extended_pos = v2.extended_pos;
+    v1.conj_type = v2.conj_type;
+    v1.conj_form = v2.conj_form;
+    v1.features.is_dictionary = false;
+    v1.is_from_dictionary = false;
+    v1.syncPositions();
+    result.erase(result.begin() + static_cast<std::ptrdiff_t>(idx + 1));
+  }
+
+  // A continuative between a period-end noun and the closed following-period
+  // modifier is a deverbal schedule noun (月末+締め+翌月).  Both anchors are
+  // grammatical/temporal classes, so arbitrary open-class continuatives are
+  // handled without registering individual payment terms.
+  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
+    auto& current = result[idx];
+    if (result[idx - 1].pos == core::PartOfSpeech::Noun && utf8::endsWith(result[idx - 1].surface, "末") &&
+        current.pos == core::PartOfSpeech::Verb && current.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+        result[idx + 1].pos == core::PartOfSpeech::Noun && utf8::startsWith(result[idx + 1].surface, "翌")) {
+      resolver::retagNounSurface(current);
+    }
+  }
+
+  // After the connective て/で, the deictic motion verb is the productive
+  // directional subsidiary (進んで+いく), not an independent predicate.
+  // The lattice intentionally keeps its verbal inflection shape; the closed
+  // local connection supplies the public auxiliary role without host words.
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    auto& previous = result[idx - 1];
+    auto& current = result[idx];
+    if (previous.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(previous.surface, {"て", "で"}) &&
+        current.pos == core::PartOfSpeech::Verb && utf8::equalsAny(current.lemma, {"いく", "行く"})) {
+      current.pos = core::PartOfSpeech::Auxiliary;
+      current.extended_pos = core::ExtendedPOS::AuxAspectIku;
+    }
+  }
+
+  // Conditional たら/だら is the inflected past auxiliary after a predicate,
+  // even when its homographic particle edge wins before a following noun
+  // clause (泣い+たら+子供が...).
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    auto& previous = result[idx - 1];
+    auto& current = result[idx];
+    if (previous.pos == core::PartOfSpeech::Verb && current.pos == core::PartOfSpeech::Particle &&
+        utf8::equalsAny(current.surface, {"たら", "だら"})) {
+      current.pos = core::PartOfSpeech::Auxiliary;
+      current.extended_pos = core::ExtendedPOS::AuxTenseTa;
+      current.lemma = current.surface == "だら" ? "だ" : "た";
+    }
+  }
+
   // Resolve productive homographs from their closed grammatical follower.
   // These are inflectional patterns, not word lists: 形容詞語幹+げ/すぎる,
   // 形容詞仮定形+ば, and nominal+的+な are locally unambiguous.
   for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
     auto& current = result[idx];
     auto& next = result[idx + 1];
+    // A finite i-adjective modifies the independent temporal noun 間
+    // (長い+間, 短い+間). The suffix reading is reserved for direct nominal
+    // duration attachment and cannot follow an attributive predicate.
+    if (current.extended_pos == core::ExtendedPOS::AdjBasic && next.surface == "間" &&
+        next.pos == core::PartOfSpeech::Suffix) {
+      resolver::retagNounSurface(next);
+    }
+    // A lexical adverb homograph followed by accusative を is in nominal use
+    // (一切を). Genitive の is not included: Japanese also permits fixed
+    // adverbial expressions such as まったくの and いつかの.
+    if (current.pos == core::PartOfSpeech::Adverb && next.pos == core::PartOfSpeech::Particle && next.surface == "を") {
+      resolver::retagNounSurface(current);
+    }
     // A bare na-adjective stem cannot directly govern accusative を as an
     // adjective.  In this closed syntactic context it is the nominal use
     // (平静を保つ, 困難を乗り越える), while adjectival uses retain な/に/だ.
@@ -239,6 +319,44 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
     }
   }
 
+  // A focused continuative in V-連用形+は+する remains verbal (減りはしない),
+  // unlike a deverbal noun independently marked by は.  Reconstruct the Godan
+  // base from the i-row ending instead of registering open-class verbs.
+  for (size_t idx = 1; idx + 2 < result.size(); ++idx) {
+    auto& stem = result[idx];
+    const auto& focus = result[idx + 1];
+    const auto& suru = result[idx + 2];
+    const char32_t stem_last = utf8::decodeLastChar(stem.surface);
+    const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(stem_last);
+    const grammar::VerbType verb_type = grammar::verbTypeFromIRowCodepoint(stem_last);
+    const auto& left_context = result[idx - 1];
+    if (stem.pos == core::PartOfSpeech::Noun && !stem.features.is_dictionary && grammar::containsKanji(stem.surface) &&
+        !base_suffix.empty() && left_context.pos == core::PartOfSpeech::Particle && focus.surface == "は" &&
+        focus.pos == core::PartOfSpeech::Particle && suru.pos == core::PartOfSpeech::Verb && suru.lemma == "する") {
+      resolver::retag(stem, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei,
+                      std::string(utf8::dropLastChar(stem.surface)) + std::string(base_suffix),
+                      grammar::verbTypeToConjType(verb_type), grammar::ConjForm::Renyokei);
+    }
+  }
+
+  // 本 is the closed demonstrative prefix before a katakana product/service
+  // head.  The rule depends on the following script class, not on product
+  // names, so arbitrary open-class heads remain supported.
+  if (result.size() >= 2 && result[0].surface == "本" && result[0].pos == core::PartOfSpeech::Noun &&
+      result[1].pos == core::PartOfSpeech::Noun && grammar::isPureKatakana(result[1].surface)) {
+    resolver::retag(result[0], core::PartOfSpeech::Prefix, core::ExtendedPOS::Prefix, "本",
+                    dictionary::ConjugationType::None, grammar::ConjForm::Base);
+  }
+
+  // The registered formal noun 他 carries its kana lemma in the productive
+  // adnominal frame 他+の, even if an unknown noun edge won the lattice.
+  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
+    if (result[idx].surface == "他" && result[idx].pos == core::PartOfSpeech::Noun && result[idx + 1].surface == "の") {
+      result[idx].lemma = "ほか";
+      result[idx].extended_pos = core::ExtendedPOS::NounFormal;
+    }
+  }
+
   // Sentence-initial demonstratives are also interjections, but before a
   // nominal head only the attributive reading is grammatical.
   if (result.size() >= 2 && result[0].pos == core::PartOfSpeech::Interjection &&
@@ -251,6 +369,13 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx < result.size(); ++idx) {
     auto& current = result[idx];
     const auto& previous = result[idx - 1];
+    // In the temporal chain いま+なお, なお means "still" and is adverbial,
+    // not the clause-linking conjunction used sentence-initially.
+    if (previous.pos == core::PartOfSpeech::Adverb && current.pos == core::PartOfSpeech::Conjunction &&
+        current.surface == "なお") {
+      resolver::retag(current, core::PartOfSpeech::Adverb, core::ExtendedPOS::Adverb, "なお",
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    }
     if (current.surface == "たく" && current.lemma == "たい" && current.pos == core::PartOfSpeech::Adjective &&
         (previous.pos == core::PartOfSpeech::Verb || previous.pos == core::PartOfSpeech::Auxiliary)) {
       resolver::retag(current, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxDesireTai, "たい",

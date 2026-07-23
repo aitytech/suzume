@@ -60,6 +60,13 @@ float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
   // following copula or particle still decides its inflectional role.
   if (isCompleteDictionaryAdjective(edge) && edge.extended_pos == core::ExtendedPOS::AdjNaAdj) {
     complete_adjective_bonus = sc::kBonusDictionaryNaAdjective;
+    // A longer pure-hiragana lexical stem otherwise loses narrowly to a
+    // fabricated verb/auxiliary or deverbal-noun decomposition before a
+    // neutral boundary.  The length evidence belongs to the whole registered
+    // adjective, independent of its individual surface.
+    if (grammar::isPureHiragana(edge.surface) && normalize::utf8Length(edge.surface) >= 4) {
+      complete_adjective_bonus += cost::kMinorBonus;
+    }
   } else if (isCompleteDictionaryAdjective(edge) && grammar::isPureHiragana(edge.surface) &&
              !utf8::endsWith(edge.surface, "ければ") && edge.surface != "ない" && edge.surface != "なく" &&
              edge.surface != "なかっ" && edge.surface != "そう") {

@@ -20,7 +20,7 @@ EntrySpecRange getConjunctionEntries() {
 
       // Parallel/Addition (並列・添加)
       conj("又", ""), conj("及び", ""), conj("および", ""), conj("並びに", ""), conj("ならびに", ""), conj("且つ", ""),
-      conj("かつ", "かつ"), conj("更に", ""), conj("次いで", ""),
+      conj("かつ", "かつ"), adv("更に", ""), conj("次いで", ""),
       // 次に is 次(noun)+に(particle), not a closed-class conjunction — the oracle
       // splits it, so keep it out of L1 to avoid a spurious single-token merge.
       conj("しかも", ""), conj("そのうえ", ""),
@@ -85,7 +85,7 @@ EntrySpecRange getConjunctionEntries() {
       adv("どうにか", ""),                      // 様態副詞
       adv("ふいに", ""),                        // 突発の様態副詞
       adv("いま", ""),                          // 時間副詞（いまなお は いま + なお）
-      adv("それなり", ""),                      // 程度を表す固定表現
+      noun("それなり", ""),                     // 指示的な程度名詞: それなり+に/の/だ
       adv("いっさい", ""),                      // 否定呼応の限定副詞
       adv("いっこうに", ""),                    // 否定呼応の程度副詞
       adv("ゆっくり", ""),                      // 様態副詞

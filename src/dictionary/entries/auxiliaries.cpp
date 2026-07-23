@@ -521,8 +521,9 @@ EntrySpecRange getAuxiliaryEntries() {
       // Must be registered to prevent い+た+だき split
       verb("いただき", "いただく", EPOS::VerbRenyokei),
       verb("いただい", "いただく", EPOS::VerbOnbinkei),
-      // Potential form of the humble receiving verb. This remains a dependent
-      // verb in the token stream, including after an honorific renyokei.
+      // Potential form of the humble receiving verb. Dictionary candidates
+      // retain a verbal shape; postprocessing assigns the benefactive
+      // auxiliary role after a te-form or honorific renyokei.
       verb("いただけ", "いただける", EPOS::VerbKateikei),
       verb("いただける", "いただける", EPOS::VerbShuushikei),
       verb("いただけれ", "いただける", EPOS::VerbKateikei),
@@ -661,21 +662,21 @@ EntrySpecRange getAuxiliaryEntries() {
       verb("仕舞え", "仕舞う", EPOS::VerbKateikei),
       verb("仕舞お", "仕舞う", EPOS::VerbMizenkei),
 
-      // Contracted forms: ちゃう/じゃう (completion)
-      verb("ちゃう", "ちゃう", EPOS::AuxAspectShimau),
-      verb("ちゃっ", "ちゃう", EPOS::AuxAspectShimau),
-      verb("ちゃい", "ちゃう", EPOS::AuxAspectShimau),
-      // じゃう is the voiced contraction after an n-onbin (読んじゃう). It
-      // remains an aspect auxiliary through its Godan-wa inflection.
+      // Contracted forms: ちゃう/じゃう (completion). Both are closed-class
+      // contractions of て/で+しまう and remain aspect auxiliaries throughout
+      // their Godan-wa inflection.
+      aux("ちゃう", "ちゃう", EPOS::AuxAspectShimau),
+      aux("ちゃわ", "ちゃう", EPOS::AuxAspectShimau),
+      aux("ちゃい", "ちゃう", EPOS::AuxAspectShimau),
+      aux("ちゃっ", "ちゃう", EPOS::AuxAspectShimau),
+      aux("ちゃえ", "ちゃう", EPOS::AuxAspectShimau),
+      aux("ちゃお", "ちゃう", EPOS::AuxAspectShimau),
+      // じゃう is the voiced contraction after an n-onbin (読んじゃう).
       aux("じゃう", "じゃう", EPOS::AuxAspectShimau),
       aux("じゃわ", "じゃう", EPOS::AuxAspectShimau),
       aux("じゃい", "じゃう", EPOS::AuxAspectShimau),
       aux("じゃっ", "じゃう", EPOS::AuxAspectShimau),
       aux("じゃえ", "じゃう", EPOS::AuxAspectShimau),
-      // Volitional stems (mizenkei before う): 食べちゃおう, 読んじゃおう. ちゃお is a
-      // lexicalized verb (like ちゃう) but じゃお follows the で+contraction reading and
-      // is tagged as an auxiliary, mirroring MeCab's ちゃう=Verb / じゃ=Auxiliary split.
-      verb("ちゃお", "ちゃう", EPOS::AuxAspectShimau),
       aux("じゃお", "じゃう", EPOS::AuxAspectShimau),
 
       // Contracted forms: てる/とく (progressive/preparation)
@@ -709,8 +710,8 @@ EntrySpecRange getAuxiliaryEntries() {
       // the productive prefix boundary お + はす.
       verb("はす", "はする", EPOS::VerbShuushikei),
       aux("くる", "くる", EPOS::AuxAspectKuru),
-      // MeCab compat: split き+た/て/ます separately
-      aux("き", "くる", EPOS::AuxAspectKuru),
+      // The one-mora renyokei き is generated contextually.  A global entry
+      // reopens ordinary words ending in き (でき, 抜き, 咲き).
       aux("く", "", EPOS::AuxAspectIku),
       // Note: no unconditional こ (来る mizenkei) entry — the surface is far too
       // frequent as a word fragment (こと, これ, きのこ, ...). こ is generated

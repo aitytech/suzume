@@ -97,9 +97,13 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         // e.g., 勉強し has suru conf=0.82 vs ichidan conf=0.3 - prefer suru
         // e.g., 走り has godan conf=0.61 vs ichidan conf=0.3 - prefer godan
         const bool ichidan_base_is_dict = vh::isVerbInDictionary(dict_manager, ichidan_cand.base_form);
+        const bool godan_base_is_dict = vh::isVerbInDictionary(dict_manager, godan_cand.base_form);
+        const bool comma_clause_chaining =
+            vh::isCommaClauseChainingRenyokei(codepoints, start_pos, renyokei_end, dict_manager);
         bool prefer_suru = !causative_follows && !passive_follows && !ichidan_base_is_dict &&
                            (suru_cand.confidence > ichidan_cand.confidence);
         bool prefer_godan = !causative_follows && !passive_follows && !ichidan_base_is_dict &&
+                            (!comma_clause_chaining || godan_base_is_dict) &&
                             (godan_cand.confidence > ichidan_cand.confidence);
         // Use different thresholds for e-row vs i-row patterns:
         // - I-row (じ, み, etc.): lower threshold (0.28) - these are distinctively verb stems

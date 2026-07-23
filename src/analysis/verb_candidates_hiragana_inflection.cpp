@@ -107,7 +107,7 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
                                            const std::vector<normalize::CharType>& char_types,
                                            const grammar::Inflection& inflection,
                                            const dictionary::DictionaryManager* dict_manager,
-                                           const VerbCandidateOptions& verb_opts,
+                                           const VerbCandidateOptions& verb_opts, bool has_complete_godan_wa_terminal,
                                            std::vector<UnknownCandidate>& candidates) {
   // A closed-class particle followed by a dictionary-verified verb inflection
   // is a grammatical boundary, never the stem of an unknown hiragana verb.
@@ -263,9 +263,13 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
     // Note: Common adverbs/onomatopoeia (ぴったり, はっきり, etc.) are filtered
     // by the dictionary lookup below - they are registered as Adverb in L1 dictionary.
 
-    // Filter out words that exist in dictionary as non-verb entries
-    // e.g., あなた (pronoun), わたし (pronoun) should not be verb candidates
-    if (vh::hasNonVerbDictionaryEntry(dict_manager, surface)) {
+    // Filter out words that exist in dictionary as non-verb entries.  A complete
+    // independent terminal may still be the lexical reading of an auxiliary
+    // homograph; dependent uses remain on the ordinary auxiliary path.
+    const bool is_independent_auxiliary_homograph =
+        has_complete_godan_wa_terminal && end_pos == hiragana_end &&
+        vh::hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Auxiliary);
+    if (vh::hasNonVerbDictionaryEntry(dict_manager, surface) && !is_independent_auxiliary_homograph) {
       continue;  // Skip - dictionary has non-verb entry for this surface
     }
 
@@ -475,6 +479,9 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       conf_threshold = verb_opts.confidence_ichidan_dict;
     } else if (looks_like_short_godan_base) {
       conf_threshold = verb_opts.confidence_short_godan_base;
+    } else if (has_complete_godan_wa_terminal && end_pos == hiragana_end &&
+               best.verb_type == grammar::VerbType::GodanWa && best.base_form == surface) {
+      conf_threshold = verb_opts.confidence_low;
     } else {
       conf_threshold = verb_opts.confidence_standard;
     }

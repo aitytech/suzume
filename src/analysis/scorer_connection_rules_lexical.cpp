@@ -22,6 +22,14 @@ namespace sc = suzume::analysis::scorer;
 
 namespace suzume::analysis::connection_rules {
 
+namespace {
+
+bool isRecentCompletionCompoundNounVerbal(std::string_view surface) {
+  return utf8::endsWith(surface, "たて") || utf8::endsWith(surface, "済み");
+}
+
+}  // namespace
+
 float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};
 
@@ -83,7 +91,20 @@ float computeCompoundNominalizationBonus(const core::LatticeEdge& prev, const co
   // discard that grammatical category while keeping the same search unit.
   if (prev.origin == core::CandidateOrigin::VerbCompound && prev.extended_pos == core::ExtendedPOS::NounVerbal &&
       next.extended_pos == core::ExtendedPOS::ParticleNo && utf8::equalsAny(next.surface, {"の"})) {
+    if (isRecentCompletionCompoundNounVerbal(prev.surface)) {
+      return cost::kAlmostNever;
+    }
     return cost::kTripleVeryStrongBonus + cost::kModerateBonus;
+  }
+
+  // A productive renyokei+suffix nominalization before the accusative marker
+  // should remain split as verb + suffix + を, rather than collapsing to a
+  // closed deverbal noun.
+  if (prev.origin == core::CandidateOrigin::VerbCompound && prev.extended_pos == core::ExtendedPOS::NounVerbal &&
+      next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"を"})) {
+    if (isRecentCompletionCompoundNounVerbal(prev.surface)) {
+      return cost::kAlmostNever;
+    }
   }
 
   // がてら attaches to a complete noun (買い物がてら、仕事がてら). A formal

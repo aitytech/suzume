@@ -158,6 +158,16 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generateCharacterSpeechCandi
         continue;  // Skip - let dictionary entry handle it
       }
 
+      // A generic character-speech auxiliary defaults to the past-tense
+      // connection class. Do not emit that lossy homograph when the same span
+      // is already a closed auxiliary form: its dictionary candidate carries
+      // the precise inflectional type and the same coarse Auxiliary POS.
+      const auto* precise_auxiliary =
+          dict_manager_ != nullptr ? dict_manager_->lookupExact(surface, core::PartOfSpeech::Auxiliary) : nullptr;
+      if (precise_auxiliary != nullptr) {
+        continue;
+      }
+
       // Calculate character count (not byte count)
       size_t char_count = surface.size() / core::kJapaneseCharBytes;
 
