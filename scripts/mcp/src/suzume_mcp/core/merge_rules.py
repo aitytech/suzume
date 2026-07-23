@@ -7,8 +7,9 @@ from .constants import (
     COMPOUND_VERB_V2_GODAN,
     COMPOUND_VERB_V2_ICHIDAN,
     FAMILY_TERMS,
-    FIXED_ADVERB_LEMMAS,
+    FIXED_FUNCTION_LEMMAS,
     FIXED_FUNCTION_SEARCH_UNITS,
+    FIXED_INFLECTED_FUNCTION_UNITS,
     HIRAGANA_COMPOUNDS,
     KANA_COUNTER_SUFFIXES,
     KANA_NUMBER_STEMS,
@@ -20,6 +21,7 @@ from .merge_postprocessors import (
     _postprocess_ascii_dot_merge,
     _postprocess_atode,
     _postprocess_dialectal,
+    _postprocess_distributive_quantity,
     _postprocess_epenthetic_sa,
     _postprocess_filler_split,
     _postprocess_honorific_split,
@@ -31,6 +33,7 @@ from .merge_postprocessors import (
     _postprocess_noni,
     _postprocess_onomatopoeia_tto_merge,
     _postprocess_prefix_split,
+    _postprocess_productive_mimetics,
     _postprocess_search_unit_split,
     _postprocess_totomoni,
 )
@@ -47,6 +50,7 @@ _KANA_NUMBER_COUNTERS = tuple(
     sorted((stem + suffix for stem in KANA_NUMBER_STEMS for suffix in KANA_COUNTER_SUFFIXES), key=len, reverse=True)
 )
 _FIXED_FUNCTION_SEARCH_UNITS = tuple(sorted(FIXED_FUNCTION_SEARCH_UNITS, key=len, reverse=True))
+_FIXED_INFLECTED_FUNCTION_UNITS = tuple(sorted(FIXED_INFLECTED_FUNCTION_UNITS, key=len, reverse=True))
 
 
 def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str | None]:
@@ -66,6 +70,27 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # Calculate position in text
         pos_in_text = sum(len(tokens[k].get("surface", "")) for k in range(i))
         remaining = text[pos_in_text:] if pos_in_text < len(text) else ""
+
+        # A closed subsidiary inflection may be split into arbitrary pieces
+        # by the reference dictionary (い+た+だけ+ませ).  Consume the exact
+        # source span only when its next token is a licensed auxiliary follower,
+        # before the generic V1+V2 compound rule can absorb the initial piece.
+        if not merged:
+            fixed_form = next((form for form in _FIXED_INFLECTED_FUNCTION_UNITS if remaining.startswith(form)), "")
+            if fixed_form:
+                consumed = ""
+                j = i
+                while j < len(tokens) and len(consumed) < len(fixed_form):
+                    consumed += tokens[j].get("surface", "")
+                    j += 1
+                pos, lemma, followers = FIXED_INFLECTED_FUNCTION_UNITS[fixed_form]
+                following = tokens[j].get("surface", "") if j < len(tokens) else ""
+                if consumed == fixed_form and any(following.startswith(follower) for follower in followers):
+                    result.append({"surface": fixed_form, "pos": pos, "lemma": lemma})
+                    i = j
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = "fixed-inflected-function-unit"
 
         # Closed function words and formal nouns remain one search unit even
         # when the reference dictionary splits them into homographic pieces
@@ -497,6 +522,28 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
 
         # 5. タリ活用副詞
         if not merged:
+            derived_tari = regex.match(r"^\p{Han}+然と", remaining)
+            if derived_tari is not None:
+                adverb = derived_tari.group(0)
+                previous_surface = result[-1].get("surface", "") if result else ""
+                following_surface = remaining[len(adverb) : len(adverb) + 1]
+                if previous_surface == "の" and following_surface == "は":
+                    derived_tari = None
+            if derived_tari is not None:
+                adverb = derived_tari.group(0)
+                length = 0
+                j = i
+                while j < len(tokens) and length < len(adverb):
+                    length += len(tokens[j].get("surface", ""))
+                    j += 1
+                if length == len(adverb):
+                    result.append({"surface": adverb, "pos": "副詞", "lemma": adverb[:-1]})
+                    i = j
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = "tari-adverb"
+
+        if not merged:
             for stem in TARI_ADVERB_STEMS:
                 adverb = stem + "と"
                 if remaining.startswith(adverb):
@@ -547,6 +594,20 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                         applied_rule = "verb-renyokei+kata"
 
         # 5b. Proper noun + region suffix
+        # A destination suffix is one productive search unit with its nominal
+        # host (東京行き, 学校行き).  The 接尾 feature supplies the boundary
+        # evidence; no place-name or ordinary-noun list is needed.
+        if not merged and t.get("pos") == "名詞" and i + 1 < len(tokens):
+            nxt = tokens[i + 1]
+            if nxt.get("surface") == "行き" and nxt.get("pos") == "名詞" and nxt.get("pos_sub1") == "接尾":
+                combined = t.get("surface", "") + "行き"
+                result.append({"surface": combined, "pos": "名詞", "lemma": combined})
+                i += 2
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "destination-suffix"
+
+        # 5c. Proper noun + region suffix
         if not merged and t.get("pos") == "名詞" and t.get("pos_sub1") == "固有名詞" and t.get("pos_sub2") == "地域":
             j = i + 1
             combined = t.get("surface", "")
@@ -746,7 +807,16 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     applied_rule = "character-speech"
 
         # 9. Compound verbs
-        if not merged and t.get("pos") == "動詞" and "連用" in (t.get("conj_form") or ""):
+        following_source = remaining[len(t.get("surface", "")) :]
+        begins_fixed_subsidiary = any(following_source.startswith(form) for form in _FIXED_INFLECTED_FUNCTION_UNITS)
+        v1_surface = t.get("surface", "")
+        v1_verb_renyokei = t.get("pos") == "動詞" and "連用" in (t.get("conj_form") or "")
+        # MeCab frequently lexicalizes a bare renyokei as a noun (座り, 入り).
+        # Reconstructing its base is a productive morphology check; the closed
+        # V2 class below prevents this from becoming an unrestricted noun+verb
+        # merge rule.
+        v1_nominal_renyokei = t.get("pos") == "名詞" and base_from_renyokei(v1_surface) is not None
+        if not merged and not begins_fixed_subsidiary and (v1_verb_renyokei or v1_nominal_renyokei):
             j = i + 1
             if j < len(tokens):
                 nxt = tokens[j]
@@ -771,7 +841,6 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # as a noun in this context (押し/下げ/を), so the finite-verb rule above
         # cannot see it. Reconstruct V2 through the conjugation table and
         # require both the closed V2 class and the nominalizing follower.
-        v1_surface = t.get("surface", "")
         v1_renyokei = t.get("pos") == "動詞" and "連用" in (t.get("conj_form") or "")
         v1_nominal_renyokei = t.get("pos") == "名詞" and base_from_renyokei(v1_surface) is not None
         if not merged and (v1_renyokei or v1_nominal_renyokei):
@@ -785,7 +854,11 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 if (
                     nxt.get("pos") in {"名詞", "接尾辞"}
                     and v2_base in _PRODUCTIVE_COMPOUND_V2
-                    and (v1_surface.endswith("し") or v2_base in _PRODUCTIVE_ICHIDAN_COMPOUND_V2)
+                    and (
+                        v1_surface.endswith("し")
+                        or v2_base in _PRODUCTIVE_ICHIDAN_COMPOUND_V2
+                        or nxt.get("pos_sub1") == "接尾"
+                    )
                     and nominalizing_particle
                 ):
                     combined = v1_surface + nxt.get("surface", "")
@@ -847,6 +920,33 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 if applied_rule is None:
                     applied_rule = "zu-ni-merge"
 
+        # 11bb. Productive renyokei + たて suffix.  MeCab sometimes reads
+        # the closed freshness suffix as the unrelated past auxiliary + te
+        # particle (e.g. でき+た+て).  The raw token stream still contains
+        # punctuation, so doing this before symbol filtering cannot join across
+        # sentence boundaries.
+        if (
+            not merged
+            and t.get("pos") == "動詞"
+            and i + 2 < len(tokens)
+            and tokens[i + 1].get("surface") == "た"
+            and tokens[i + 1].get("pos") == "助動詞"
+            and tokens[i + 2].get("surface") == "て"
+            and tokens[i + 2].get("pos") == "助詞"
+        ):
+            result.append(
+                {
+                    "surface": t.get("surface", ""),
+                    "pos": "動詞",
+                    "lemma": t.get("lemma") or base_from_renyokei(t.get("surface", "")) or t.get("surface", ""),
+                }
+            )
+            result.append({"surface": "たて", "pos": "接尾辞", "pos_sub1": "接尾", "lemma": "たて"})
+            i += 3
+            merged = True
+            if applied_rule is None:
+                applied_rule = "productive-tate-suffix"
+
         # 11c. Resultative 〜てある retains the te-particle boundary.  MeCab
         # may emit an ichidan te-form as one token (並べて), while Suzume keeps
         # the productive verb stem + て + ある chain for its grammar model.
@@ -871,7 +971,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # No merge: pass through
         if not merged:
             lemma = t.get("lemma") or t.get("surface", "")
-            lemma = FIXED_ADVERB_LEMMAS.get(t.get("surface", ""), lemma)
+            lemma = FIXED_FUNCTION_LEMMAS.get(t.get("surface", ""), lemma)
             result.append(
                 {
                     "surface": t.get("surface", ""),
@@ -901,6 +1001,8 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_nickname_merge(result, applied_rule)
     result, applied_rule = _postprocess_search_unit_split(result, applied_rule)
     result, applied_rule = _postprocess_onomatopoeia_tto_merge(result, applied_rule)
+    result, applied_rule = _postprocess_productive_mimetics(result, applied_rule)
+    result, applied_rule = _postprocess_distributive_quantity(result, applied_rule)
     result, applied_rule = _postprocess_ascii_dot_merge(result, applied_rule)
     _postprocess_dialectal(result)
 

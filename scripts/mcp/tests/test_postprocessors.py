@@ -2,17 +2,24 @@
 
 from suzume_mcp.core.postprocessors import (
     postprocess_adjective_nominalizer,
+    postprocess_adverb_nominal_context,
+    postprocess_attributive_mamonaku,
     postprocess_binding_negative_aux,
     postprocess_classical_focus_namu,
+    postprocess_classical_perfect_aux,
     postprocess_closed_function_words,
+    postprocess_closed_subsidiary_aux,
     postprocess_copula_neg,
     postprocess_de_particle,
     postprocess_demo,
+    postprocess_deverbal_noun_context,
+    postprocess_dewa_aru_boundary,
     postprocess_formal_noun_lemma,
     postprocess_fuu_formal_noun,
     postprocess_giving_aux,
     postprocess_hiragana_godan_wa_terminal,
     postprocess_hiragana_purpose_noun,
+    postprocess_hiragana_yaka_adverbial,
     postprocess_honorific_i_adjective,
     postprocess_honorific_request,
     postprocess_i_adjective_upper_bound,
@@ -24,16 +31,20 @@ from suzume_mcp.core.postprocessors import (
     postprocess_kadouka_adverb,
     postprocess_miru_aux,
     postprocess_na_adj_noun,
+    postprocess_nai_context,
     postprocess_nara_verb,
+    postprocess_productive_search_unit_boundaries,
     postprocess_productive_verb_suffix_stem,
     postprocess_quantity_bound_suffix,
     postprocess_renyokei_compound_particle,
     postprocess_shimau_aux,
     postprocess_short_hiragana_onbin,
+    postprocess_shortened_causative_passive,
     postprocess_sou,
     postprocess_subsidiary_yuku,
     postprocess_tagaru_aux,
     postprocess_te,
+    postprocess_temporal_nao,
     postprocess_to_areba_conditional,
     postprocess_tsuke_noun,
     postprocess_you_noun,
@@ -157,9 +168,34 @@ class TestPostprocessClosedFunctionWords:
         assert postprocess_closed_function_words(tokens)
         assert tokens[0] == _tok("また", "Adverb")
 
+    def test_formal_adverb_and_following_content_noun(self):
+        tokens = [_tok("つとめて", "Noun"), _tok("水", "Suffix"), _tok("を", "Particle")]
+        assert postprocess_closed_function_words(tokens)
+        assert tokens == [_tok("つとめて", "Adverb"), _tok("水", "Noun"), _tok("を", "Particle")]
+
+    def test_existing_l1_adverbs_override_reference_pos(self):
+        for surface, source_pos in (("やや", "Noun"), ("およそ", "Adnominal")):
+            tokens = [_tok(surface, source_pos)]
+            assert postprocess_closed_function_words(tokens)
+            assert tokens == [_tok(surface, "Adverb")]
+
     def test_ordinary_noun_is_unchanged(self):
         tokens = [_tok("確認", "Noun")]
         assert not postprocess_closed_function_words(tokens)
+
+
+class TestPostprocessClosedSubsidiaryAux:
+    def test_retags_finite_subsidiary_forms_after_renyokei(self):
+        cases = (("たまえ", "たまう"), ("あぐね", "あぐねる"), ("そこなっ", "そこなう"))
+        for surface, lemma in cases:
+            tokens = [_tok("読み", "Verb", lemma="読む"), _tok(surface, "Verb")]
+            assert postprocess_closed_subsidiary_aux(tokens)
+            assert tokens[1] == _tok(surface, "Auxiliary", lemma=lemma)
+
+    def test_sentence_initial_lexical_homograph_is_unchanged(self):
+        tokens = [_tok("そこなう", "Verb")]
+        assert not postprocess_closed_subsidiary_aux(tokens)
+        assert tokens == [_tok("そこなう", "Verb")]
 
 
 class TestPostprocessStructuralFunctionWords:
@@ -225,6 +261,33 @@ class TestPostprocessGivingAux:
         assert tokens[2]["pos"] == "Verb"
 
 
+class TestPostprocessClosedAuxiliaryParadigms:
+    def test_dialectal_copula_has_canonical_lemma(self):
+        tokens = [_tok("そう", "Adverb"), _tok("じゃろ", "Auxiliary", lemma="じゃ")]
+        assert postprocess_closed_subsidiary_aux(tokens)
+        assert tokens[1] == _tok("じゃろ", "Auxiliary", lemma="だろ")
+
+    def test_gozaru_after_copular_de_is_auxiliary(self):
+        tokens = [_tok("で", "Auxiliary", lemma="だ"), _tok("ござら", "Verb", lemma="ござる")]
+        assert postprocess_closed_subsidiary_aux(tokens)
+        assert tokens[1]["pos"] == "Auxiliary"
+
+
+class TestPostprocessClassicalPerfectAux:
+    def test_deverbal_noun_reading_is_restored_before_tari_keri(self):
+        tokens = [
+            _tok("語り", "Noun"),
+            _tok("たり", "Auxiliary"),
+            _tok("けり", "Auxiliary"),
+        ]
+        assert postprocess_classical_perfect_aux(tokens)
+        assert tokens[0] == _tok("語り", "Verb", lemma="語る")
+
+    def test_ordinary_deverbal_noun_is_unchanged(self):
+        tokens = [_tok("語り", "Noun"), _tok("を", "Particle")]
+        assert not postprocess_classical_perfect_aux(tokens)
+
+
 class TestPostprocessMiruAux:
     def test_miru_after_te(self):
         tokens = [_tok("て", "Particle"), _tok("み", "Verb", lemma="みる")]
@@ -254,8 +317,64 @@ class TestPostprocessShimauAux:
 
     def test_kanji_shimau_standalone(self):
         tokens = [_tok("物", "Noun"), _tok("を", "Particle"), _tok("仕舞う", "Verb")]
-        postprocess_shimau_aux(tokens)
+        assert not postprocess_shimau_aux(tokens)
         assert tokens[2] == _tok("仕舞う", "Verb")
+
+    def test_split_juu_after_nasal_onbin_is_merged(self):
+        tokens = [
+            _tok("遊ん", "Verb", lemma="遊ぶ"),
+            _tok("じゃ", "Auxiliary", lemma="だ"),
+            _tok("う", "Interjection"),
+        ]
+        assert postprocess_shimau_aux(tokens)
+        assert tokens == [
+            _tok("遊ん", "Verb", lemma="遊ぶ"),
+            _tok("じゃう", "Auxiliary", lemma="じゃう"),
+        ]
+
+    def test_whole_chau_inflection_is_auxiliary_after_verb(self):
+        tokens = [_tok("食べ", "Verb", lemma="食べる"), _tok("ちゃっ", "Verb", lemma="ちゃう")]
+        assert postprocess_shimau_aux(tokens)
+        assert tokens[1] == _tok("ちゃっ", "Auxiliary", lemma="ちゃう")
+
+    def test_chau_after_voice_auxiliary_is_still_completive(self):
+        tokens = [
+            _tok("壊さ", "Verb", lemma="壊す"),
+            _tok("れ", "Auxiliary", lemma="れる"),
+            _tok("ちゃう", "Verb", lemma="ちゃう"),
+        ]
+        assert postprocess_shimau_aux(tokens)
+        assert tokens[2] == _tok("ちゃう", "Auxiliary", lemma="ちゃう")
+
+    def test_split_chau_imperative_is_merged(self):
+        tokens = [
+            _tok("食べ", "Verb", lemma="食べる"),
+            _tok("ちゃ", "Particle"),
+            _tok("え", "Interjection"),
+        ]
+        assert postprocess_shimau_aux(tokens)
+        assert tokens == [
+            _tok("食べ", "Verb", lemma="食べる"),
+            _tok("ちゃえ", "Auxiliary", lemma="ちゃう"),
+        ]
+
+    def test_split_chai_before_polite_auxiliary_is_merged(self):
+        tokens = [
+            _tok("食べ", "Verb", lemma="食べる"),
+            _tok("ちゃ", "Particle"),
+            _tok("い", "Verb"),
+            _tok("ます", "Auxiliary"),
+        ]
+        assert postprocess_shimau_aux(tokens)
+        assert tokens[1] == _tok("ちゃい", "Auxiliary", lemma="ちゃう")
+
+    def test_copula_and_utterance_are_not_merged_without_onbin_verb(self):
+        tokens = [
+            _tok("それ", "Pronoun"),
+            _tok("じゃ", "Auxiliary", lemma="だ"),
+            _tok("う", "Interjection"),
+        ]
+        assert not postprocess_shimau_aux(tokens)
 
 
 class TestPostprocessQuantityBoundSuffix:
@@ -328,6 +447,11 @@ class TestPostprocessProductiveVerbSuffixStem:
         tokens = [_tok("読み", "Noun"), _tok("を", "Particle")]
         assert not postprocess_productive_verb_suffix_stem(tokens)
 
+    def test_makuri_is_a_productive_suffix(self):
+        tokens = [_tok("走り", "Verb", lemma="走る"), _tok("まくり", "Auxiliary", lemma="まくる")]
+        assert postprocess_productive_verb_suffix_stem(tokens)
+        assert tokens[1] == _tok("まくり", "Suffix", lemma="まくり")
+
 
 class TestPostprocessNaraVerb:
     def test_nara_before_classical_negative(self):
@@ -337,6 +461,21 @@ class TestPostprocessNaraVerb:
 
 
 class TestPostprocessHonorificRequest:
+    def test_standalone_honorific_continuative_is_nominal(self):
+        tokens = [_tok("お", "Prefix"), _tok("預かり", "Verb", lemma="預かる")]
+        assert postprocess_honorific_request(tokens)
+        assert tokens[1] == _tok("預かり", "Noun", lemma="預かり")
+
+    def test_topic_marked_honorific_continuative_is_nominal(self):
+        tokens = [_tok("お", "Prefix"), _tok("振込み", "Verb", lemma="振込む"), _tok("は", "Particle")]
+        assert postprocess_honorific_request(tokens)
+        assert tokens[1] == _tok("振込み", "Noun", lemma="振込み")
+
+    def test_classical_hiragana_verb_is_not_nominalized(self):
+        tokens = [_tok("お", "Prefix"), _tok("はす", "Verb", lemma="はする")]
+        assert not postprocess_honorific_request(tokens)
+        assert tokens[1]["pos"] == "Verb"
+
     def test_godan_renyokei_before_kudasaru(self):
         tokens = [
             _tok("お", "Prefix"),
@@ -372,6 +511,34 @@ class TestPostprocessHonorificRequest:
         ]
         assert postprocess_honorific_request(tokens)
         assert tokens[1] == _tok("使い", "Verb", lemma="使う")
+
+    def test_godan_renyokei_before_potential_itadaku(self):
+        tokens = [
+            _tok("お", "Prefix"),
+            _tok("待ち", "Noun"),
+            _tok("いただけ", "Auxiliary", lemma="いただける"),
+        ]
+        assert postprocess_honorific_request(tokens)
+        assert tokens[1] == _tok("待ち", "Verb", lemma="待つ")
+
+    def test_godan_renyokei_before_honorific_naru_auxiliary_reading(self):
+        tokens = [
+            _tok("お", "Prefix"),
+            _tok("読み", "Noun"),
+            _tok("に", "Particle"),
+            _tok("なる", "Auxiliary", lemma="なる"),
+        ]
+        assert postprocess_honorific_request(tokens)
+        assert tokens[1] == _tok("読み", "Verb", lemma="読む")
+
+    def test_godan_renyokei_before_moushiageru(self):
+        tokens = [
+            _tok("お", "Prefix"),
+            _tok("願い", "Noun"),
+            _tok("申し上げ", "Verb", lemma="申し上げる"),
+        ]
+        assert postprocess_honorific_request(tokens)
+        assert tokens[1] == _tok("願い", "Verb", lemma="願う")
 
     def test_object_noun_is_not_changed(self):
         tokens = [
@@ -427,6 +594,16 @@ class TestTokenizerSearchUnitNormalizers:
         tokens = [_tok("散り", "Verb", lemma="散る"), _tok("ゆく", "Auxiliary")]
         assert postprocess_subsidiary_yuku(tokens)
         assert tokens[1]["pos"] == "Verb"
+
+    def test_te_form_yuku_is_auxiliary(self):
+        tokens = [_tok("て", "Particle"), _tok("いこ", "Verb", lemma="行く")]
+        assert postprocess_subsidiary_yuku(tokens)
+        assert tokens[1]["pos"] == "Auxiliary"
+
+    def test_case_de_keeps_independent_motion_verb(self):
+        tokens = [_tok("三人", "Noun"), _tok("で", "Particle"), _tok("行く", "Verb", lemma="行く")]
+        assert not postprocess_subsidiary_yuku(tokens)
+        assert tokens[2]["pos"] == "Verb"
 
     def test_hiragana_purpose_is_nominal_search_unit(self):
         tokens = [_tok("およぎ", "Verb", lemma="およぐ"), _tok("に", "Particle"), _tok("行く", "Verb")]
@@ -488,6 +665,115 @@ class TestPostprocessNaAdjNoun:
         assert tokens[0] == _tok("平静", "Noun")
 
 
+class TestPostprocessHiraganaYakaAdverbial:
+    def test_repairs_reference_word_internal_split(self):
+        tokens = [_tok("みや", "Noun"), _tok("びやかに", "Adverb"), _tok("話し", "Verb")]
+        assert postprocess_hiragana_yaka_adverbial(tokens)
+        assert tokens[:2] == [_tok("みやびやか", "Adjective"), _tok("に", "Particle")]
+
+    def test_unrelated_hiragana_sequence_is_unchanged(self):
+        tokens = [_tok("しずか", "Adjective"), _tok("に", "Particle")]
+        assert not postprocess_hiragana_yaka_adverbial(tokens)
+
+
+class TestPostprocessDewaAruBoundary:
+    def test_splits_copula_and_binding_particle(self):
+        tokens = [_tok("では", "Particle"), _tok("ある", "Verb"), _tok("まい", "Auxiliary")]
+        assert postprocess_dewa_aru_boundary(tokens)
+        assert tokens[:3] == [_tok("で", "Auxiliary", lemma="だ"), _tok("は", "Particle"), _tok("ある", "Verb")]
+
+    def test_discourse_conjunction_is_unchanged(self):
+        tokens = [_tok("では", "Conjunction"), _tok("始める", "Verb")]
+        assert not postprocess_dewa_aru_boundary(tokens)
+
+
+class TestPostprocessDeverbalNounContext:
+    def test_renyokei_before_accusative_is_noun(self):
+        tokens = [_tok("やすらぎ", "Verb", lemma="やすらぐ"), _tok("を", "Particle"), _tok("求め", "Verb")]
+        assert postprocess_deverbal_noun_context(tokens)
+        assert tokens[0] == _tok("やすらぎ", "Noun")
+
+    def test_compound_renyokei_before_no_is_noun(self):
+        tokens = [_tok("書きかけ", "Verb", lemma="書きかける"), _tok("の", "Particle"), _tok("紙", "Noun")]
+        assert postprocess_deverbal_noun_context(tokens)
+        assert tokens[0] == _tok("書きかけ", "Noun")
+
+    def test_renyokei_before_polite_conjecture_is_noun(self):
+        tokens = [_tok("曇り", "Verb", lemma="曇る"), _tok("でしょ", "Auxiliary"), _tok("う", "Auxiliary")]
+        assert postprocess_deverbal_noun_context(tokens)
+        assert tokens[0] == _tok("曇り", "Noun")
+
+    def test_renyokei_before_independent_naku_is_noun(self):
+        tokens = [_tok("たゆみ", "Verb", lemma="たゆむ"), _tok("なく", "Adjective", lemma="ない")]
+        assert postprocess_deverbal_noun_context(tokens)
+        assert tokens[0] == _tok("たゆみ", "Noun")
+
+    def test_renyokei_before_negative_auxiliary_is_unchanged(self):
+        tokens = [_tok("食べ", "Verb", lemma="食べる"), _tok("なく", "Auxiliary", lemma="ない")]
+        assert not postprocess_deverbal_noun_context(tokens)
+
+    def test_finite_verb_before_nominalizer_is_unchanged(self):
+        tokens = [_tok("読む", "Verb", lemma="読む"), _tok("の", "Particle")]
+        assert not postprocess_deverbal_noun_context(tokens)
+
+    def test_renyokei_before_binding_particle_is_unchanged(self):
+        tokens = [_tok("減り", "Verb", lemma="減る"), _tok("は", "Particle"), _tok("し", "Verb")]
+        assert not postprocess_deverbal_noun_context(tokens)
+
+
+class TestPostprocessAttributiveMamonaku:
+    def test_splits_after_finite_predicate(self):
+        tokens = [_tok("休む", "Verb"), _tok("間もなく", "Adverb"), _tok("働い", "Verb")]
+        assert postprocess_attributive_mamonaku(tokens)
+        assert tokens[1:4] == [
+            _tok("間", "Noun"),
+            _tok("も", "Particle"),
+            _tok("なく", "Adjective", lemma="ない"),
+        ]
+
+    def test_clause_initial_adverb_is_unchanged(self):
+        tokens = [_tok("間もなく", "Adverb"), _tok("到着", "Noun")]
+        assert not postprocess_attributive_mamonaku(tokens)
+
+
+class TestPostprocessAdverbNominalContext:
+    def test_accusative_restores_noun(self):
+        tokens = [_tok("一切", "Adverb"), _tok("を", "Particle")]
+        assert postprocess_adverb_nominal_context(tokens)
+        assert tokens[0] == _tok("一切", "Noun")
+
+    def test_genitive_can_follow_adverb(self):
+        tokens = [_tok("まったく", "Adverb"), _tok("の", "Particle")]
+        assert not postprocess_adverb_nominal_context(tokens)
+
+    def test_homograph_before_genitive_restores_noun(self):
+        tokens = [_tok("一切", "Adverb"), _tok("の", "Particle")]
+        assert postprocess_adverb_nominal_context(tokens)
+        assert tokens[0] == _tok("一切", "Noun")
+
+    def test_predicate_modifier_stays_adverb(self):
+        tokens = [_tok("一切", "Adverb"), _tok("確認", "Noun")]
+        assert not postprocess_adverb_nominal_context(tokens)
+
+
+class TestPostprocessTemporalNao:
+    def test_nao_after_temporal_adverb(self):
+        tokens = [_tok("いま", "Adverb"), _tok("なお", "Conjunction")]
+        assert postprocess_temporal_nao(tokens)
+        assert tokens[1] == _tok("なお", "Adverb")
+
+    def test_clause_initial_conjunction_is_unchanged(self):
+        tokens = [_tok("なお", "Conjunction"), _tok("確認", "Noun")]
+        assert not postprocess_temporal_nao(tokens)
+
+
+class TestPostprocessNaiContext:
+    def test_bare_nominal_negative_is_adjective(self):
+        tokens = [_tok("問題", "Noun"), _tok("ない", "Auxiliary")]
+        postprocess_nai_context(tokens)
+        assert tokens[1] == _tok("ない", "Adjective")
+
+
 class TestPostprocessTsukeNoun:
     def test_tsuke(self):
         tokens = [_tok("付け", "Suffix")]
@@ -522,6 +808,11 @@ class TestClosedGrammarNormalizers:
         tokens = [_tok("物", "Noun")]
         assert not postprocess_formal_noun_lemma(tokens)
 
+    def test_ga_tame_is_formal_noun_not_verb(self):
+        tokens = [_tok("が", "Particle"), _tok("ため", "Verb", lemma="ためる")]
+        assert postprocess_formal_noun_lemma(tokens)
+        assert tokens[1] == {"surface": "ため", "pos": "Noun", "lemma": "ため"}
+
     def test_adjective_sa_is_suffix(self):
         tokens = [_tok("らし", "Auxiliary", lemma="らしい"), _tok("さ", "Particle")]
         assert postprocess_adjective_nominalizer(tokens)
@@ -535,10 +826,83 @@ class TestClosedGrammarNormalizers:
         ]
         assert not postprocess_adjective_nominalizer(tokens)
 
+    def test_shortened_causative_sa_is_auxiliary(self):
+        tokens = [
+            _tok("読ま", "Verb", lemma="読む"),
+            _tok("さ", "Verb", lemma="する"),
+            _tok("れ", "Auxiliary", lemma="れる"),
+        ]
+        assert postprocess_shortened_causative_passive(tokens)
+        assert tokens[1] == {"surface": "さ", "pos": "Auxiliary", "lemma": "す"}
+
+    def test_suru_passive_sa_stays_verbal(self):
+        tokens = [
+            _tok("反映", "Noun"),
+            _tok("さ", "Verb", lemma="する"),
+            _tok("れ", "Auxiliary", lemma="れる"),
+        ]
+        assert not postprocess_shortened_causative_passive(tokens)
+        assert tokens[1]["pos"] == "Verb"
+
     def test_shika_nai_is_auxiliary(self):
         tokens = [_tok("しか", "Particle"), _tok("ない", "Adjective")]
         assert postprocess_binding_negative_aux(tokens)
         assert tokens[1]["pos"] == "Auxiliary"
+
+    def test_honorific_naru_stem_is_not_nominalized(self):
+        tokens = [
+            _tok("お", "Prefix"),
+            _tok("読み", "Verb", lemma="読む"),
+            _tok("に", "Particle"),
+            _tok("なる", "Verb", lemma="なる"),
+        ]
+        assert not postprocess_deverbal_noun_context(tokens)
+        assert tokens[1] == _tok("読み", "Verb", lemma="読む")
+
+
+class TestProductiveSearchUnitBoundaries:
+    def test_formal_noun_you_is_not_volitional(self):
+        tokens = [_tok("読む", "Verb", lemma="読む"), _tok("よう", "Noun"), _tok("だ", "Auxiliary")]
+        assert not postprocess_productive_search_unit_boundaries(tokens)
+        assert [token["surface"] for token in tokens] == ["読む", "よう", "だ"]
+
+    def test_volitional_auxiliary_keeps_morpheme_boundary(self):
+        tokens = [_tok("見", "Verb", lemma="見る"), _tok("よう", "Auxiliary", lemma="よう")]
+        assert postprocess_productive_search_unit_boundaries(tokens)
+        assert tokens == [
+            {"surface": "見よ", "pos": "Verb", "lemma": "見る"},
+            {"surface": "う", "pos": "Auxiliary", "lemma": "う"},
+        ]
+
+    def test_sentence_final_yo_is_not_imperative(self):
+        tokens = [_tok("帰る", "Verb", lemma="帰る"), _tok("よ", "Particle")]
+        assert not postprocess_productive_search_unit_boundaries(tokens)
+
+    def test_regular_sa_row_passive_is_not_shortened_causative(self):
+        tokens = [_tok("果たさ", "Verb", lemma="果たす"), _tok("れ", "Auxiliary", lemma="れる")]
+        assert not postprocess_productive_search_unit_boundaries(tokens)
+
+    def test_shortened_causative_is_split_by_inflectional_mismatch(self):
+        tokens = [_tok("やらさ", "Verb", lemma="やる"), _tok("れ", "Auxiliary", lemma="れる")]
+        assert postprocess_productive_search_unit_boundaries(tokens)
+        assert tokens == [
+            {"surface": "やら", "pos": "Verb", "lemma": "やる"},
+            {"surface": "さ", "pos": "Auxiliary", "lemma": "す"},
+            {"surface": "れ", "pos": "Auxiliary", "lemma": "れる"},
+        ]
+
+    def test_terminal_verb_before_closed_v2_is_not_compounded(self):
+        tokens = [_tok("あれ", "Verb", lemma="ある"), _tok("続ける", "Verb", lemma="続ける")]
+        assert not postprocess_productive_search_unit_boundaries(tokens)
+
+    def test_i_adjective_negative_chain_stays_adjective(self):
+        tokens = [_tok("高く", "Adjective", lemma="高い"), _tok("なく", "Adjective", lemma="ない")]
+        assert not postprocess_productive_search_unit_boundaries(tokens)
+
+    def test_indefinite_ari_before_copula_is_nominal(self):
+        tokens = [_tok("でも", "Particle"), _tok("あり", "Auxiliary", lemma="ある"), _tok("だ", "Auxiliary")]
+        assert postprocess_productive_search_unit_boundaries(tokens)
+        assert tokens[1] == _tok("あり", "Noun")
 
 
 class TestPostprocessItadakeruAux:
@@ -546,6 +910,16 @@ class TestPostprocessItadakeruAux:
         tokens = [_tok("て", "Particle"), _tok("いただける", "Verb")]
         postprocess_itadakeru_aux(tokens)
         assert tokens[1]["pos"] == "Auxiliary"
+
+    def test_inflected_form_after_honorific_nominal_is_auxiliary(self):
+        tokens = [_tok("お", "Prefix"), _tok("待ち", "Noun"), _tok("いただけ", "Verb", lemma="いただける")]
+        postprocess_itadakeru_aux(tokens)
+        assert tokens[2]["pos"] == "Auxiliary"
+
+    def test_object_marked_lexical_verb_is_unchanged(self):
+        tokens = [_tok("本", "Noun"), _tok("を", "Particle"), _tok("いただけ", "Verb", lemma="いただける")]
+        postprocess_itadakeru_aux(tokens)
+        assert tokens[2]["pos"] == "Verb"
 
 
 class TestPostprocessCopulaNeg:

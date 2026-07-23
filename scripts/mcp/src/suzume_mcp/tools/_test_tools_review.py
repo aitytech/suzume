@@ -115,8 +115,6 @@ async def test_accept_diff(
         if not found:
             return _json_error(error)
         input_text = found["case"].get("input", "")
-        if found["case"].get("suzume_expected"):
-            return _json_error(f"Test already has suzume_expected: {found['basename']}/{found['index']}")
         to_update.append({"input": input_text, "found": found})
 
     if not to_update:

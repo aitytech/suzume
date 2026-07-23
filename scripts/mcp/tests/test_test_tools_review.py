@@ -92,6 +92,37 @@ def test_reset_skips_active_override(tmp_path, monkeypatch):
     assert "suzume_expected" in stored["cases"][0]
 
 
+def test_accept_diff_refreshes_existing_override(tmp_path, monkeypatch):
+    case = make_case(
+        "active",
+        "対象",
+        suzume_expected=[token("旧値")],
+        accepted_diff={"reason": "old", "category": "old-category"},
+    )
+    write_suite(tmp_path, "sample", [case])
+    monkeypatch.setattr(review, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(review, "_get_suzume_tokens", lambda _text: [token("新値")])
+
+    data = parse(
+        run(
+            review.test_accept_diff(
+                test_id="sample/active",
+                reason="updated",
+                category="grammar-boundary",
+                apply=True,
+            )
+        )
+    )
+
+    assert data["status"] == "ok"
+    stored = json.loads((tmp_path / "tests/data/tokenization/sample.json").read_text(encoding="utf-8"))
+    assert stored["cases"][0]["suzume_expected"] == [token("新値")]
+    assert stored["cases"][0]["accepted_diff"] == {
+        "reason": "updated",
+        "category": "grammar-boundary",
+    }
+
+
 def test_audit_classifies_override_integrity(tmp_path, monkeypatch):
     cases = [
         make_case(

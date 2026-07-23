@@ -8,6 +8,8 @@ from .merge_rules import apply_suzume_merge
 from .pos_mapping import correct_mecab_pos, map_mecab_pos, normalize_pos
 from .postprocessors import (
     postprocess_adjective_nominalizer,
+    postprocess_adverb_nominal_context,
+    postprocess_attributive_mamonaku,
     postprocess_binding_negative_aux,
     postprocess_chigai_negative_adjective,
     postprocess_classical_conjecture_aux,
@@ -18,12 +20,15 @@ from .postprocessors import (
     postprocess_classical_perfect_aux,
     postprocess_classical_ramu_boundary,
     postprocess_closed_function_words,
+    postprocess_closed_subsidiary_aux,
     postprocess_contracted_progressive_aux,
     postprocess_copula_neg,
     postprocess_dai_final_particle,
     postprocess_de_aru,
     postprocess_de_particle,
     postprocess_demo,
+    postprocess_deverbal_noun_context,
+    postprocess_dewa_aru_boundary,
     postprocess_difficulty_adjective_stem,
     postprocess_exclusion_suffix,
     postprocess_formal_noun_lemma,
@@ -31,6 +36,7 @@ from .postprocessors import (
     postprocess_giving_aux,
     postprocess_hiragana_godan_wa_terminal,
     postprocess_hiragana_purpose_noun,
+    postprocess_hiragana_yaka_adverbial,
     postprocess_honorific_i_adjective,
     postprocess_honorific_oki_aux,
     postprocess_honorific_request,
@@ -53,12 +59,14 @@ from .postprocessors import (
     postprocess_nanka_particle,
     postprocess_nara_verb,
     postprocess_onaji_predicate,
+    postprocess_productive_search_unit_boundaries,
     postprocess_productive_verb_suffix_stem,
     postprocess_prolonged_sound_noun,
     postprocess_quantity_bound_suffix,
     postprocess_renyokei_compound_particle,
     postprocess_shimau_aux,
     postprocess_short_hiragana_onbin,
+    postprocess_shortened_causative_passive,
     postprocess_sou,
     postprocess_sou_aux,
     postprocess_state_suffix,
@@ -66,6 +74,7 @@ from .postprocessors import (
     postprocess_tagaru_aux,
     postprocess_taihen,
     postprocess_teki_na_adjective,
+    postprocess_temporal_nao,
     postprocess_to_areba_conditional,
     postprocess_tsuke_noun,
     postprocess_yoshi_formal_noun,
@@ -137,8 +146,12 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     postprocess_sou(tokens)
     postprocess_ikaga(tokens)
     postprocess_demo(tokens)
+    if postprocess_hiragana_yaka_adverbial(tokens) and applied_rule is None:
+        applied_rule = "hiragana-yaka-adverbial"
     if postprocess_closed_function_words(tokens) and applied_rule is None:
         applied_rule = "closed-function-word-pos"
+    if postprocess_closed_subsidiary_aux(tokens) and applied_rule is None:
+        applied_rule = "closed-subsidiary-aux"
     if postprocess_classical_focus_namu(tokens) and applied_rule is None:
         applied_rule = "classical-focus-namu"
     if postprocess_honorific_i_adjective(tokens) and applied_rule is None:
@@ -160,7 +173,10 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "formal-noun-lemma"
     if postprocess_adjective_nominalizer(tokens) and applied_rule is None:
         applied_rule = "adjective-nominalizer"
-    postprocess_shimau_aux(tokens)
+    if postprocess_shortened_causative_passive(tokens) and applied_rule is None:
+        applied_rule = "shortened-causative-passive"
+    if postprocess_shimau_aux(tokens) and applied_rule is None:
+        applied_rule = "contracted-shimau-aux"
     if postprocess_quantity_bound_suffix(tokens) and applied_rule is None:
         applied_rule = "quantity-bound-suffix"
     if postprocess_exclusion_suffix(tokens) and applied_rule is None:
@@ -208,10 +224,20 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     if postprocess_onaji_predicate(tokens) and applied_rule is None:
         applied_rule = "onaji-predicative-na-adjective"
     postprocess_de_aru(tokens)
+    if postprocess_dewa_aru_boundary(tokens) and applied_rule is None:
+        applied_rule = "dewa-aru-boundary"
     postprocess_ka_suru_noun(tokens)
     postprocess_taihen(tokens)
     if postprocess_na_adj_noun(tokens) and applied_rule is None:
         applied_rule = "na-adjective-noun-use"
+    if postprocess_deverbal_noun_context(tokens) and applied_rule is None:
+        applied_rule = "deverbal-noun-context"
+    if postprocess_attributive_mamonaku(tokens) and applied_rule is None:
+        applied_rule = "attributive-mamonaku"
+    if postprocess_adverb_nominal_context(tokens) and applied_rule is None:
+        applied_rule = "adverb-nominal-context"
+    if postprocess_temporal_nao(tokens) and applied_rule is None:
+        applied_rule = "temporal-nao-adverb"
     postprocess_tsuke_noun(tokens)
     if postprocess_copula_neg(tokens) and applied_rule is None:
         applied_rule = "copular-negative-pos"
@@ -224,7 +250,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     postprocess_classical_conjecture_aux(tokens)
     if postprocess_classical_kere_aux(tokens) and applied_rule is None:
         applied_rule = "classical-kere-aux"
-    postprocess_classical_perfect_aux(tokens)
+    if postprocess_classical_perfect_aux(tokens) and applied_rule is None:
+        applied_rule = "classical-perfect-aux"
     postprocess_prolonged_sound_noun(tokens)
     postprocess_yoshi_formal_noun(tokens)
     postprocess_sou_aux(tokens)
@@ -233,6 +260,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     postprocess_nai_context(tokens)
     if postprocess_binding_negative_aux(tokens) and applied_rule is None:
         applied_rule = "binding-negative-aux"
+    if postprocess_productive_search_unit_boundaries(tokens) and applied_rule is None:
+        applied_rule = "productive-search-unit-boundaries"
 
     # Normalize full-width alphanumeric to half-width
     fullwidth_applied = False
@@ -328,6 +357,8 @@ def get_suzume_rule(text: str) -> str:
     if regex.search(r"やばい|やばかっ|やばく", text):
         return "slang-adjective"
 
+    if regex.search(r"\p{Han}+然と", text):
+        return "tari-adverb"
     for stem in TARI_ADVERB_STEMS:
         if stem + "と" in text:
             return "tari-adverb"

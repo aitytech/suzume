@@ -180,10 +180,6 @@ def map_mecab_pos(token: dict | str) -> str:
         token["lemma"] = "言わば"
         return "Conjunction"
 
-    # ふっくら: -> Other
-    if surface == "ふっくら" and pos == "副詞":
-        return "Other"
-
     # 畳語副詞 (刻々, アア etc.): -> Noun (except 少々)
     if pos == "副詞":
         if len(surface) == 2 and surface[0] == surface[1]:
@@ -192,10 +188,6 @@ def map_mecab_pos(token: dict | str) -> str:
         if len(surface) == 2 and surface[1] == "\u3005":
             if surface != "少々":
                 return "Noun"
-
-    # むしろ: -> Other
-    if surface == "むしろ" and pos == "副詞":
-        return "Other"
 
     # 何時: 代名詞 -> Noun
     if surface == "何時" and pos == "名詞" and pos_sub1 == "代名詞":
@@ -307,7 +299,7 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
         # Fix adjective 連用形 (〜く): always 形容詞, not 副詞
         # Only when lemma ends in い, or surface contains kanji (正しく etc.)
         # Excludes pure hiragana adverbs: わくわく, せっかく, とにかく, etc.
-        if surface.endswith("く") and pos == "副詞":
+        if surface.endswith("く") and pos == "副詞" and surface not in ADVERB_OVERRIDES:
             lemma = t.get("lemma", "")
             if lemma.endswith("い"):
                 t["pos"] = "形容詞"

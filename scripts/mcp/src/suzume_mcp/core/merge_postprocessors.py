@@ -123,12 +123,53 @@ def _postprocess_epenthetic_sa(result: list[dict]) -> None:
 
 
 def _postprocess_honorific_split(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
-    """Split honorific patterns like 皆様 -> 皆+様."""
+    """Restore productive honorific boundaries hidden by lexicalized tokens."""
     honorific_re = "|".join(regex.escape(s) for s in HONORIFIC_SUFFIXES)
 
     new_result = []
     for t in result:
         surface = t.get("surface", "")
+        if t.get("pos") == "動詞":
+            predicate = regex.match(r"^(お|ご)([\p{Han}]+)(に)([\p{Hiragana}]+)$", surface)
+            if predicate:
+                prefix, noun, particle, verb_surface = predicate.groups()
+                lemma_match = regex.match(
+                    rf"^{regex.escape(prefix + noun + particle)}([\p{{Hiragana}}]+)$",
+                    t.get("lemma", ""),
+                )
+                verb_lemma = lemma_match.group(1) if lemma_match else verb_surface
+                new_result.extend(
+                    [
+                        {"surface": prefix, "pos": "接頭詞", "lemma": prefix},
+                        {"surface": noun, "pos": "名詞", "lemma": noun},
+                        {"surface": particle, "pos": "助詞", "lemma": particle},
+                        {"surface": verb_surface, "pos": "動詞", "lemma": verb_lemma},
+                    ]
+                )
+                if applied_rule is None:
+                    applied_rule = "honorific-predicate-split"
+                continue
+            separated_predicate = regex.match(r"^([\p{Han}]+)(に)([\p{Han}\p{Hiragana}]+)$", surface)
+            has_honorific_prefix = (
+                new_result and new_result[-1].get("pos") == "接頭詞" and new_result[-1].get("surface") in {"お", "ご"}
+            )
+            if separated_predicate and has_honorific_prefix:
+                noun, particle, verb_surface = separated_predicate.groups()
+                lemma_match = regex.match(
+                    rf"^{regex.escape(noun + particle)}([\p{{Han}}\p{{Hiragana}}]+)$",
+                    t.get("lemma", ""),
+                )
+                verb_lemma = lemma_match.group(1) if lemma_match else verb_surface
+                new_result.extend(
+                    [
+                        {"surface": noun, "pos": "名詞", "lemma": noun},
+                        {"surface": particle, "pos": "助詞", "lemma": particle},
+                        {"surface": verb_surface, "pos": "動詞", "lemma": verb_lemma},
+                    ]
+                )
+                if applied_rule is None:
+                    applied_rule = "honorific-predicate-split"
+                continue
         if surface not in HONORIFIC_EXCEPTIONS:
             m = regex.match(rf"^(お)?([\p{{Han}}]+)({honorific_re})$", surface)
             if m:
@@ -237,12 +278,13 @@ def _postprocess_adj_bungo(result: list[dict], applied_rule: str | None) -> tupl
         if curr.get("pos") == "形容詞" and curr.get("conj_form") == "文語基本形" and j + 1 < len(result):
             nxt = result[j + 1]
             ns = nxt.get("surface", "")
-            if ns.startswith("い") and len(ns) > 1:
+            if ns.startswith("い"):
                 adj_surface = curr["surface"] + "い"
-                lemma = curr.get("lemma", "")
-                if not lemma or lemma == curr["surface"]:
-                    lemma = adj_surface
-                new_result.append({"surface": adj_surface, "pos": "形容詞", "lemma": lemma})
+                # The reference analyzer may normalize the lemma to another
+                # modern spelling.  Suzume preserves the observed productive
+                # -しい base, so the oracle must do the same after restoring
+                # the split terminal い.
+                new_result.append({"surface": adj_surface, "pos": "形容詞", "lemma": adj_surface})
                 rest = ns[1:]
                 for ch in rest:
                     new_result.append({"surface": ch, "pos": "助詞", "lemma": ch})
@@ -322,7 +364,7 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
         # merges via kanji-merge.
         #   家/力/化/法/論/員/式/感/的 — productive but one search unit
         # 様/氏 keep splitting (honorific separates from name).
-        is_merge_allowed_suffix = surface in ("家", "力", "化", "法", "論", "員", "式", "感", "的")
+        is_merge_allowed_suffix = surface in ("家", "力", "化", "法", "論", "員", "式", "感", "的", "風")
         # Suzume design: 御 is a productive prefix that always splits off
         # (御 + 尽力, 御 + 挨拶, 御 + 協力). Skip kanji-merge after 御 prefix tokens.
         prev_is_go_prefix = merged and merged[-1].get("surface", "") == "御" and merged[-1].get("pos", "") == "接頭詞"
@@ -347,8 +389,14 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
             (
                 regex.match(r"^[\p{Han}]+$", surface)
                 and regex.match(r"^[\p{Han}]+$", merged[-1].get("surface", ""))
+                # Kanji adjacency alone is not a compound boundary.  In
+                # particular, a temporal noun followed by a one-kanji verb
+                # stem (the pattern 日+見+た) must retain the predicate
+                # boundary.  Restrict this recovery pass to nominal pieces.
+                and curr.get("pos", "") == "名詞"
+                and merged[-1].get("pos", "") == "名詞"
                 and "々" not in merged[-1].get("surface", "")
-                and merged[-1].get("pos_sub1", "") not in ("副詞可能", "固有名詞", "数")
+                and (merged[-1].get("pos_sub1", "") not in ("副詞可能", "固有名詞", "数") or is_merge_allowed_suffix)
                 and merged[-1].get("pos", "") != "副詞"
                 and (curr.get("pos_sub1", "") != "接尾" or is_merge_allowed_suffix)
                 # A number+counter unit (五分, 二時間, 五名) is its own search unit and
@@ -357,6 +405,7 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
                 and not prev_is_go_prefix
                 and not formal_noun_na_adjective_boundary
             )
+            or (surface == "々" and regex.match(r"^[\p{Han}]+$", merged[-1].get("surface", "")))
             or (
                 merged[-1].get("surface", "") in _KANJI_HIRA_MERGES
                 and surface in _KANJI_HIRA_MERGES[merged[-1]["surface"]]
@@ -463,6 +512,123 @@ def _postprocess_onomatopoeia_tto_merge(result: list[dict], applied_rule: str | 
         else:
             merged.append(curr)
     return merged, applied_rule
+
+
+def _is_productive_mimetic_stem(surface: str) -> bool:
+    """Recognize productive hiragana mimetic shapes without a word list."""
+    if not regex.fullmatch(r"[\p{Hiragana}ー]{3,12}", surface):
+        return False
+    length = len(surface)
+    if length % 2 == 0 and surface[: length // 2] == surface[length // 2 :]:
+        return True
+    if regex.fullmatch(r".{2,4}ん.{2,4}ん", surface):
+        return True
+    if regex.fullmatch(r".っ.[らり]", surface):
+        return True
+    # Alternating two-mora mimetics such as ちくたく share their closing
+    # mora even when the two halves are not identical.
+    return length == 4 and surface[1] == surface[3]
+
+
+def _postprocess_productive_mimetics(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Rebuild productive mimetic search units from arbitrary MeCab splits.
+
+    Repetition and fixed phonological shapes are lexical content; a following
+    adverbial と remains its own particle.  The productive Xっと shape instead
+    includes と in the mimetic itself.
+    """
+    normalized: list[dict] = []
+    idx = 0
+    while idx < len(result):
+        matched = False
+        max_end = min(len(result), idx + 4)
+        for end in range(max_end, idx, -1):
+            combined = "".join(token.get("surface", "") for token in result[idx:end])
+            starts_at_real_boundary = (
+                result[idx].get("pos") != "助詞" or idx == 0 or result[idx - 1].get("pos") == "記号"
+            )
+            if (
+                starts_at_real_boundary
+                and combined.endswith("っと")
+                and regex.fullmatch(r"[\p{Hiragana}ー]{3,12}", combined)
+            ):
+                normalized.append({"surface": combined, "pos": "副詞", "lemma": combined})
+                idx = end
+                matched = True
+            elif (
+                result[idx].get("pos") != "助詞"
+                and combined.endswith("と")
+                and _is_productive_mimetic_stem(combined[:-1])
+            ):
+                stem = combined[:-1]
+                normalized.append({"surface": stem, "pos": "副詞", "lemma": stem})
+                normalized.append({"surface": "と", "pos": "助詞", "lemma": "と"})
+                idx = end
+                matched = True
+            elif (
+                end == idx + 1
+                and result[idx].get("pos") in {"その他", "副詞", "感動詞"}
+                and _is_productive_mimetic_stem(combined)
+            ):
+                normalized.append({"surface": combined, "pos": "副詞", "lemma": combined})
+                idx = end
+                matched = True
+            if matched:
+                if applied_rule is None:
+                    applied_rule = "productive-mimetic"
+                break
+        if not matched:
+            normalized.append(result[idx])
+            idx += 1
+    return normalized, applied_rule
+
+
+def _is_quantity_unit(surface: str) -> bool:
+    """Return whether surface is a productive numeral+kanji unit."""
+    numeric = regex.match(r"^[0-9０-９一二三四五六七八九十百千万億兆]+", surface)
+    if numeric is None:
+        return False
+    unit = surface[numeric.end() :]
+    return bool(unit and regex.fullmatch(r"[\p{Han}]+", unit))
+
+
+def _postprocess_distributive_quantity(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Merge repeated numeral+unit phrases such as 一語一語 structurally."""
+    normalized: list[dict] = []
+    idx = 0
+    while idx < len(result):
+        surface = result[idx].get("surface", "")
+        split_prefix = ""
+        for width in range(2, len(surface) // 2 + 1):
+            unit = surface[:width]
+            if surface.startswith(unit + unit) and _is_quantity_unit(unit):
+                split_prefix = unit + unit
+                break
+        if result[idx].get("pos") == "名詞" and split_prefix:
+            normalized.append({"surface": split_prefix, "pos": "名詞", "lemma": split_prefix})
+            remainder = surface[len(split_prefix) :]
+            if remainder:
+                normalized.append({"surface": remainder, "pos": "名詞", "lemma": remainder})
+            idx += 1
+            if applied_rule is None:
+                applied_rule = "distributive-quantity"
+            continue
+        if (
+            idx + 1 < len(result)
+            and result[idx].get("pos") == "名詞"
+            and result[idx + 1].get("pos") == "名詞"
+            and result[idx + 1].get("surface") == surface
+            and _is_quantity_unit(surface)
+        ):
+            combined = surface + surface
+            normalized.append({"surface": combined, "pos": "名詞", "lemma": combined})
+            idx += 2
+            if applied_rule is None:
+                applied_rule = "distributive-quantity"
+            continue
+        normalized.append(result[idx])
+        idx += 1
+    return normalized, applied_rule
 
 
 def _postprocess_dialectal(result: list[dict]) -> None:

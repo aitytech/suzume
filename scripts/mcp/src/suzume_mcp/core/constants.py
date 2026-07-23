@@ -39,11 +39,9 @@ NAI_ADJECTIVES: list[str] = [
     "こころもとない",
 ]
 
-# Compound adjectives that MeCab merges as single tokens but Suzume
-# correctly splits as verb renyokei + ない.
-# These are open-class (verb+ない is productive), so Suzume's split is correct.
-# MeCab has them as dictionary entries, but Suzume analyzes structurally.
-VERB_NAI_COMPOUND_ADJECTIVES: list[str] = [
+# Lexical adjectives that MeCab merges even though Suzume preserves the
+# productive nominal + independent ない boundary.
+NOUN_NAI_COMPOUND_ADJECTIVES: list[str] = [
     "揺るぎない",
 ]
 
@@ -93,8 +91,8 @@ COUNTER_UNITS: list[str] = [
 # stems are NounNumber entries and the tails are quantitative Suffix entries;
 # their Cartesian product is closed and can therefore repair MeCab's arbitrary
 # syllable splits without enumerating open-class nouns.
-KANA_NUMBER_STEMS: frozenset[str] = frozenset({"いち", "よん"})
-KANA_COUNTER_SUFFIXES: frozenset[str] = frozenset({"まい", "にん"})
+KANA_NUMBER_STEMS: frozenset[str] = frozenset({"いち", "ふた", "よん"})
+KANA_COUNTER_SUFFIXES: frozenset[str] = frozenset({"まい", "にん", "月"})
 
 # Closed-class construction/composition suffixes that remain independent search
 # units after a numeral+counter phrase (二階|建て, 二本|立て).
@@ -199,6 +197,31 @@ COMPOUND_VERB_V2_GODAN: list[str] = [
     "籠もる",
     "開く",
     "ひらく",
+    # Keep the oracle aligned with the core's closed V2 candidate class. These
+    # are not dictionary entries for individual compounds: each V2 licenses
+    # productive V1+V2 combinations such as 書き+置く and 付け+足す.
+    "置く",
+    "おく",
+    "足す",
+    "たす",
+    "直る",
+    "なおる",
+    "下す",
+    "くだす",
+    "交わす",
+    "かわす",
+    "添う",
+    "そう",
+    "混じる",
+    "まじる",
+    "寄る",
+    "よる",
+    "外す",
+    "はずす",
+    "鳴らす",
+    "ならす",
+    "惜しむ",
+    "おしむ",
 ]
 
 COMPOUND_VERB_V2_ICHIDAN: list[str] = [
@@ -238,6 +261,8 @@ COMPOUND_VERB_V2_ICHIDAN: list[str] = [
     "ひろげる",
     "降りる",
     "おりる",
+    "乱れる",
+    "みだれる",
 ]
 
 # Fictional/unusual proper nouns -> standard name for MeCab preprocessing
@@ -328,6 +353,7 @@ HIRAGANA_COMPOUNDS: dict[str, str] = {
 # classes that can be normalized without inspecting the current Suzume output.
 FIXED_FUNCTION_SEARCH_UNITS: dict[str, str] = {
     "然程": "副詞",
+    "更に": "副詞",
     "更なる": "連体詞",
     "どのみち": "副詞",
     "ふいに": "副詞",
@@ -342,10 +368,19 @@ FIXED_FUNCTION_SEARCH_UNITS: dict[str, str] = {
     "がてら": "助詞",
 }
 
+# Closed inflected function forms that the reference analyzer can split into
+# pieces before a following auxiliary.  The follower gate prevents consuming
+# the same prefix from a longer finite lexical form.
+FIXED_INFLECTED_FUNCTION_UNITS: dict[str, tuple[str, str, tuple[str, ...]]] = {
+    "いただけ": ("動詞", "いただける", ("ます", "ませ", "ない", "なかっ")),
+}
+
 # Closed units that a reference dictionary can absorb into a following noun.
 # The normalizer splits only the leading unit and leaves the productive noun
 # boundary intact (わが|国, ひととおり|目).
 FIXED_LEADING_SEARCH_UNITS: dict[str, str] = {
+    "以下": "接尾辞",
+    "程度": "接尾辞",
     "ひととおり": "副詞",
     "わが": "連体詞",
 }
@@ -479,6 +514,14 @@ EMPHATIC_SOKUON: dict[str, str] = {
 # Adverb overrides (words MeCab misclassifies)
 ADVERB_OVERRIDES: set[str] = {
     "全く",
+    "間もなく",
+    "一切",
+    "一切合切",
+    "いっさい",
+    "いま",
+    "このほど",
+    "たかだか",
+    "むしろ",
     "いずれ",
     "いつか",
     "しどろもどろ",
@@ -490,10 +533,16 @@ ADVERB_OVERRIDES: set[str] = {
     "めちゃ",
 }
 
+# Adverb/noun homographs whose nominal reading is selected by an overt case,
+# topic, or genitive particle. This finite set mirrors closed lexical entries;
+# ordinary adverbs such as まったく remain adverbs before の.
+ADVERB_NOMINAL_HOMOGRAPHS: frozenset[str] = frozenset({"一切", "一切合切", "いっさい", "いま", "このほど", "むしろ"})
+
 # Fixed function-word lemmas that differ from a reference analyzer's legacy
 # inflectional analysis.  These are lexical entries, not productive rules.
-FIXED_ADVERB_LEMMAS: dict[str, str] = {
+FIXED_FUNCTION_LEMMAS: dict[str, str] = {
     "全く": "全く",
+    "あるいは": "或いは",
 }
 
 # Pronoun overrides (名詞 -> Pronoun)

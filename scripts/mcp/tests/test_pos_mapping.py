@@ -1,6 +1,6 @@
 """Tests for POS mapping logic."""
 
-from suzume_mcp.core.pos_mapping import map_mecab_pos, normalize_pos
+from suzume_mcp.core.pos_mapping import correct_mecab_pos, map_mecab_pos, normalize_pos
 
 
 class TestMapMecabPos:
@@ -31,6 +31,17 @@ class TestMapMecabPos:
     def test_adverb_override_izure(self):
         token = {"surface": "いずれ", "pos": "名詞", "pos_sub1": "副詞可能", "pos_sub2": ""}
         assert map_mecab_pos(token) == "Adverb"
+
+    def test_lexical_mamonaku_stays_adverb(self):
+        token = {"surface": "間もなく", "pos": "副詞", "lemma": "間もなく"}
+        correct_mecab_pos([token])
+        assert token == {"surface": "間もなく", "pos": "副詞", "lemma": "間もなく"}
+        assert map_mecab_pos(token) == "Adverb"
+
+    def test_fixed_adverb_overrides(self):
+        for surface in ("一切", "一切合切", "いっさい", "いま", "このほど", "たかだか", "むしろ"):
+            token = {"surface": surface, "pos": "名詞", "pos_sub1": "", "pos_sub2": ""}
+            assert map_mecab_pos(token) == "Adverb"
 
     def test_pronoun_override_anata(self):
         token = {"surface": "あなた", "pos": "名詞", "pos_sub1": "", "pos_sub2": ""}

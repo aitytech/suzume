@@ -3,12 +3,14 @@
 import regex
 
 from .constants import (
+    COMPOUND_VERB_V2_ICHIDAN,
+    FIXED_FUNCTION_SEARCH_UNITS,
     FIXED_LEADING_SEARCH_UNITS,
     LITERARY_VOLITIONAL_PARTICLE_COMPOUNDS,
+    NOUN_NAI_COMPOUND_ADJECTIVES,
     TTARA_STEMS,
     TTEBA_STEMS,
     USER_DICT_COMPOUNDS,
-    VERB_NAI_COMPOUND_ADJECTIVES,
 )
 
 _GODAN_RENYOKEI_TO_BASE: dict[str, str] = {
@@ -22,7 +24,19 @@ _GODAN_RENYOKEI_TO_BASE: dict[str, str] = {
     "み": "む",
     "り": "る",
 }
+_GODAN_MIZENKEI_TO_BASE: dict[str, str] = {
+    "わ": "う",
+    "か": "く",
+    "が": "ぐ",
+    "さ": "す",
+    "た": "つ",
+    "な": "ぬ",
+    "ば": "ぶ",
+    "ま": "む",
+    "ら": "る",
+}
 _ICHIDAN_RENYOKEI_ENDINGS = frozenset("えけげせぜてでねへべめれ")
+_COMPLETIVE_TSUKUSU_FORMS = frozenset({"尽くさ", "尽くし", "尽くす", "尽くせ", "尽くそ"})
 
 
 def base_from_renyokei(stem: str) -> str | None:
@@ -37,6 +51,14 @@ def base_from_renyokei(stem: str) -> str | None:
     return None
 
 
+def base_from_mizenkei(stem: str) -> str | None:
+    """Reconstruct a Godan dictionary form from an a-row irrealis stem."""
+    if not stem:
+        return None
+    ending = _GODAN_MIZENKEI_TO_BASE.get(stem[-1])
+    return stem[:-1] + ending if ending is not None else None
+
+
 def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
     """Apply Suzume split rules to MeCab tokens.
 
@@ -46,8 +68,95 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
     result: list[dict] = []
     applied_rule: str | None = None
 
-    for t in tokens:
+    for token_index, t in enumerate(tokens):
         surface = t.get("surface", "")
+
+        # Productive negative auxiliaries keep their boundary even when a
+        # reference dictionary lexicalizes the entire compound.  Restrict the
+        # reconstruction to the closed V2 class, leaving ordinary lexical
+        # adjectives ending in ない untouched.
+        if t.get("pos") == "形容詞" and surface.endswith("ない"):
+            negative_stem = surface[:-2]
+            split_compound_negative = False
+            for v2_base in COMPOUND_VERB_V2_ICHIDAN:
+                v2_stem = v2_base[:-1] if v2_base.endswith("る") else ""
+                if v2_stem and negative_stem.endswith(v2_stem) and len(negative_stem) > len(v2_stem):
+                    result.append({"surface": negative_stem, "pos": "動詞", "lemma": negative_stem + "る"})
+                    result.append({"surface": "ない", "pos": "助動詞", "lemma": "ない"})
+                    if applied_rule is None:
+                        applied_rule = "productive-compound-negative"
+                    split_compound_negative = True
+                    break
+            if split_compound_negative:
+                continue
+
+        # Classical negative ぬ is a separate auxiliary after a derivable
+        # Godan irrealis stem, including lexicalized attributive spellings.
+        if surface.endswith("ぬ") and len(surface) > 1:
+            negative_stem = surface[:-1]
+            base = base_from_mizenkei(negative_stem)
+            if base is not None:
+                result.append({"surface": negative_stem, "pos": "動詞", "lemma": base})
+                result.append({"surface": "ぬ", "pos": "助動詞", "lemma": "ぬ"})
+                if applied_rule is None:
+                    applied_rule = "classical-negative-boundary"
+                continue
+
+        # In the closed ずに+は frame, a reference adjective ending in ない is
+        # the productive verb mizenkei + negative auxiliary chain.  Derive the
+        # host from its inflection instead of naming the open-class verb.
+        if (
+            t.get("pos") == "形容詞"
+            and surface.endswith("ない")
+            and token_index >= 2
+            and tokens[token_index - 1].get("surface") == "は"
+            and tokens[token_index - 2].get("surface") == "ずに"
+        ):
+            stem = surface[: -len("ない")]
+            lemma = base_from_mizenkei(stem)
+            if lemma is not None:
+                result.append({"surface": stem, "pos": "動詞", "lemma": lemma})
+                result.append({"surface": "ない", "pos": "助動詞", "lemma": "ない"})
+                if applied_rule is None:
+                    applied_rule = "zu-ni-wa-negative-auxiliary"
+                continue
+
+        # Productive renyokei + 尽くす keeps the subsidiary-verb boundary.
+        # Reference dictionaries may lexicalize the whole expression, but the
+        # same closed completive paradigm attaches to arbitrary verb stems.
+        completive_form = next(
+            (form for form in _COMPLETIVE_TSUKUSU_FORMS if surface.endswith(form) and len(surface) > len(form)),
+            "",
+        )
+        if completive_form:
+            stem = surface[: -len(completive_form)]
+            lemma = base_from_renyokei(stem)
+            if lemma is not None:
+                result.append({"surface": stem, "pos": "動詞", "lemma": lemma})
+                result.append({"surface": completive_form, "pos": "助動詞", "lemma": "尽くす"})
+                if applied_rule is None:
+                    applied_rule = "productive-completive-tsukusu"
+                continue
+
+        # Productive renyokei + たて (freshly completed).  Reference
+        # dictionaries inconsistently lexicalize the whole expression as a
+        # noun or as a compound verb.  Recover the same grammatical boundary
+        # for any derivable continuative stem instead of listing host verbs.
+        following_surface = tokens[token_index + 1].get("surface", "") if token_index + 1 < len(tokens) else ""
+        verb_inflection_followers = frozenset({"て", "た", "たり", "ない", "なかっ", "ぬ", "ます", "まし"})
+        if (
+            surface.endswith("たて")
+            and len(surface) > len("たて")
+            and following_surface not in verb_inflection_followers
+        ):
+            stem = surface[: -len("たて")]
+            lemma = base_from_renyokei(stem)
+            if lemma is not None:
+                result.append({"surface": stem, "pos": "動詞", "lemma": lemma})
+                result.append({"surface": "たて", "pos": "接尾辞", "pos_sub1": "接尾", "lemma": "たて"})
+                if applied_rule is None:
+                    applied_rule = "productive-tate-suffix"
+                continue
 
         # A closed leading modifier/adverb can be swallowed by a following
         # noun in the reference dictionary. Restore the grammatical search
@@ -72,7 +181,7 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
 
         # 0a. Split MeCab single-token kanji adverbs ending in に
         # e.g., 次に → 次+に, 滅多に → 滅多+に
-        if t.get("pos") == "副詞":
+        if t.get("pos") == "副詞" and surface not in FIXED_FUNCTION_SEARCH_UNITS:
             m = regex.match(r"^([\p{Han}]+)(に)$", surface)
             if m:
                 base = m.group(1)
@@ -165,12 +274,23 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             m = regex.match(r"^([\p{Han}]{2,}と)(して)$", surface)
             if m:
                 adv_part = m.group(1)
-                result.append({"surface": adv_part, "pos": "副詞", "lemma": adv_part})
+                result.append({"surface": adv_part, "pos": "副詞", "lemma": adv_part[:-1]})
                 result.append({"surface": "し", "pos": "動詞", "lemma": "する"})
                 result.append({"surface": "て", "pos": "助詞", "lemma": "て"})
                 if applied_rule is None:
                     applied_rule = "kango-toshite-split"
                 continue
+
+        # The productive quotative + する te-form keeps all grammatical
+        # boundaries even when the reference dictionary emits として as one
+        # particle token (考えよう+と+し+て+も).
+        if surface == "として" and token_index > 0 and tokens[token_index - 1].get("surface") in ("う", "よう", "まい"):
+            result.append({"surface": "と", "pos": "助詞", "lemma": "と"})
+            result.append({"surface": "し", "pos": "動詞", "lemma": "する"})
+            result.append({"surface": "て", "pos": "助詞", "lemma": "て"})
+            if applied_rule is None:
+                applied_rule = "quotative-suru-te-split"
+            continue
 
         # 8. Copula negation: じゃない -> じゃ|ない
         if surface == "じゃない" and t.get("pos") == "助動詞":
@@ -178,6 +298,17 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             result.append({"surface": "ない", "pos": "助動詞", "lemma": "ない"})
             if applied_rule is None:
                 applied_rule = "copula-negation-split"
+            continue
+
+        # Productive na-adjective nominalization.  The reference dictionary
+        # may lexicalize the result as a noun, but the suffix boundary remains
+        # visible for arbitrary stems with the characteristic -か ending.
+        if t.get("pos") == "名詞" and surface.endswith("かさ") and len(surface) > len("かさ"):
+            stem = surface[:-1]
+            result.append({"surface": stem, "pos": "形容詞", "lemma": stem})
+            result.append({"surface": "さ", "pos": "接尾辞", "pos_sub1": "接尾", "lemma": "さ"})
+            if applied_rule is None:
+                applied_rule = "na-adjective-sa-suffix"
             continue
 
         # 9. Onomatopoeia + っと + する conjugation (single MeCab token)
@@ -212,15 +343,14 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
                 applied_rule = "onomatopoeia-tto-suru-split"
             continue
 
-        # 10. Verb+ない compound adjective split
-        # MeCab merges verb renyokei + ない as single adjective token
-        # (e.g., 揺るぎない, 何気ない), but Suzume correctly splits them
-        if t.get("pos") == "形容詞" and surface in VERB_NAI_COMPOUND_ADJECTIVES:
-            verb_part = surface[: -len("ない")]
-            result.append({"surface": verb_part, "pos": "動詞", "lemma": verb_part})
-            result.append({"surface": "ない", "pos": "助動詞", "lemma": "ない"})
+        # 10. Nominal + ない lexical adjective split. A Godan negative would
+        # require the a-row mizenkei, so the i-row surface is a deverbal noun.
+        if t.get("pos") == "形容詞" and surface in NOUN_NAI_COMPOUND_ADJECTIVES:
+            noun_part = surface[: -len("ない")]
+            result.append({"surface": noun_part, "pos": "名詞", "lemma": noun_part})
+            result.append({"surface": "ない", "pos": "形容詞", "lemma": "ない"})
             if applied_rule is None:
-                applied_rule = "verb-nai-compound-split"
+                applied_rule = "noun-nai-compound-split"
             continue
 
         # 11. Literary volitional ん: verb+ん → verb + ん
