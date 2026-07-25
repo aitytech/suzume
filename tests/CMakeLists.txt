@@ -121,8 +121,21 @@ target_link_libraries(suzume_test PRIVATE
 
 # Register tests with working directory set to project root
 # This allows tests to access data files via relative paths (e.g., "data/core/verbs.tsv")
+#
+# Tokenization cases are discovered from tests/data/tokenization/*.json when the
+# binary runs, and those files change without relinking it (they are added through
+# the MCP test tools). The default POST_BUILD discovery would therefore freeze the
+# ctest list at the last link: newly added cases go unrun, and a renamed or removed
+# case leaves ctest invoking a filter that matches nothing. Discover at test time
+# instead so the list always matches the corpus on disk.
+set(SUZUME_TEST_DISCOVERY_ARGS "")
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+  list(APPEND SUZUME_TEST_DISCOVERY_ARGS DISCOVERY_MODE PRE_TEST)
+endif()
+
 gtest_discover_tests(suzume_test
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  ${SUZUME_TEST_DISCOVERY_ARGS}
 )
 
 if(BUILD_CLI)
