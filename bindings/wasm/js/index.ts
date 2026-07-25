@@ -30,11 +30,13 @@ interface EmscriptenModule {
   _free: (ptr: number) => void;
   HEAPU32: Uint32Array;
   _suzume_create: () => number;
+  _suzume_init_extended_options: (optionsPtr: number) => void;
   _suzume_create_with_extended_options: (optionsPtr: number) => number;
   _suzume_destroy: (handle: number) => void;
   _suzume_analyze: (handle: number, textPtr: number) => number;
   _suzume_result_free: (resultPtr: number) => void;
   _suzume_generate_tags: (handle: number, textPtr: number) => number;
+  _suzume_init_tag_options: (optionsPtr: number) => void;
   _suzume_generate_tags_with_options: (
     handle: number,
     textPtr: number,
@@ -231,6 +233,11 @@ export class Suzume {
       const optionsPtr = module._malloc(OPTIONS_SIZE);
 
       try {
+        // _malloc hands back uninitialized heap, so seed the struct with the C
+        // defaults before overriding fields. Every field below is written today,
+        // but a field added to the C struct would otherwise be read as garbage.
+        module._suzume_init_extended_options(optionsPtr);
+
         const heap = new Uint8Array(module.HEAPU32.buffer);
         const modeMap: Record<NonNullable<SuzumeOptions['mode']>, number> = {
           normal: 0,
@@ -326,6 +333,10 @@ export class Suzume {
         const optionsPtr = this.module._malloc(this.layouts.tagOptions.size);
 
         try {
+          // Same reason as create(): seed the C defaults into freshly malloc'd
+          // memory, including the struct padding the field writes never touch.
+          this.module._suzume_init_tag_options(optionsPtr);
+
           const heapU32 = this.module.HEAPU32;
           const heapU8 = new Uint8Array(heapU32.buffer);
           const layout = this.layouts.tagOptions;

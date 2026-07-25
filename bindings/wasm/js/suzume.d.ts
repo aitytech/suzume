@@ -17,11 +17,13 @@ interface EmscriptenModule {
   _free: (ptr: number) => void;
   HEAPU32: Uint32Array;
   _suzume_create: () => number;
+  _suzume_init_extended_options: (optionsPtr: number) => void;
   _suzume_create_with_extended_options: (optionsPtr: number) => number;
   _suzume_destroy: (handle: number) => void;
   _suzume_analyze: (handle: number, textPtr: number) => number;
   _suzume_result_free: (resultPtr: number) => void;
   _suzume_generate_tags: (handle: number, textPtr: number) => number;
+  _suzume_init_tag_options: (optionsPtr: number) => void;
   _suzume_generate_tags_with_options: (
     handle: number,
     textPtr: number,

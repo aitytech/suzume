@@ -65,6 +65,7 @@ describe('JS API: struct layout compatibility', () => {
       '_suzume_generate_tags',
       '_suzume_generate_tags_with_options',
       '_suzume_init_extended_options',
+      '_suzume_init_tag_options',
       '_suzume_last_error',
       '_suzume_load_binary_dict',
       '_suzume_load_user_dict',

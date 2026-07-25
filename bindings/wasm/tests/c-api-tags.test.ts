@@ -215,4 +215,34 @@ describe('C API: generate_tags', () => {
       tagsFree(tagsPtr);
     });
   });
+
+  describe('init_tag_options', () => {
+    it('writes the documented defaults over dirty heap memory', () => {
+      const initTagOptions = module.cwrap('suzume_init_tag_options', null, ['number']) as (
+        optionsPtr: number,
+      ) => void;
+
+      const optionsPtr = module._malloc(TAG_OPTIONS_LAYOUT.size);
+      const heapU8 = new Uint8Array(module.HEAPU32.buffer);
+      // Poison the whole struct so a field the initializer forgets shows up as
+      // 0xFF rather than an accidental zero.
+      heapU8.fill(0xff, optionsPtr, optionsPtr + TAG_OPTIONS_LAYOUT.size);
+
+      initTagOptions(optionsPtr);
+
+      const heapU32 = module.HEAPU32;
+      expect(heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.posFilter]).toBe(0);
+      expect(heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.excludeBasic]).toBe(0);
+      expect(heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.useLemma]).toBe(1);
+      expect(heapU32[(optionsPtr + TAG_OPTIONS_LAYOUT.minLength) >> 2]).toBe(2);
+      expect(heapU32[(optionsPtr + TAG_OPTIONS_LAYOUT.maxTags) >> 2]).toBe(0);
+      expect(heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.excludeParticles]).toBe(1);
+      expect(heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.excludeAuxiliaries]).toBe(1);
+      expect(heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.excludeFormalNouns]).toBe(1);
+      expect(heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.excludeLowInfo]).toBe(1);
+      expect(heapU8[optionsPtr + TAG_OPTIONS_LAYOUT.removeDuplicates]).toBe(1);
+
+      module._free(optionsPtr);
+    });
+  });
 });
