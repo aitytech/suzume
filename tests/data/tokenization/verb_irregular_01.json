@@ -2540,8 +2540,40 @@
       ],
       "id": "kara_ru",
       "input": "東京から来る"
+    },
+    {
+      "description": "秋来ぬと知る - regression test",
+      "expected": [
+        {
+          "lemma": "秋",
+          "pos": "Noun",
+          "surface": "秋"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知る"
+        }
+      ],
+      "id": "nuto_ru",
+      "input": "秋来ぬと知る"
     }
   ],
-  "description": "Irregular verbs (する、くる)",
+  "description": "Irregular verbs (する、くる) (part 1/2)",
   "version": "1.0"
 }

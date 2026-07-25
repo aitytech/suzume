@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "description": "春来ぬと思ふ - regression test",
+      "expected": [
+        {
+          "lemma": "春",
+          "pos": "Noun",
+          "surface": "春"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思ふ",
+          "pos": "Verb",
+          "surface": "思ふ"
+        }
+      ],
+      "id": "nuto_fu",
+      "input": "春来ぬと思ふ"
+    },
+    {
+      "description": "花が来ぬ - regression test",
+      "expected": [
+        {
+          "lemma": "花",
+          "pos": "Noun",
+          "surface": "花"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "ga_nu",
+      "input": "花が来ぬ"
+    }
+  ],
+  "description": "Irregular verbs (する、くる) (part 2/2)",
+  "version": "1.0"
+}
