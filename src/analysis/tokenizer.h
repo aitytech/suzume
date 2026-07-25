@@ -183,6 +183,22 @@ class Tokenizer {
   void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view text,
                                        const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                        size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
+
+  /**
+   * @brief Drop shape-derived lexical bonuses inside user dictionary spans
+   *
+   * A user dictionary entry states that a span is one token, and it is the
+   * most specific evidence the analyser has. Shape-derived unknown-word
+   * candidates carry bonuses stronger than any dictionary edge — an exact
+   * reduplication scores as a mimetic adverb on shape alone — so a guess
+   * confined to the registered span can outscore the registration, which has
+   * no cost of its own to tune. Inside a registered span those candidates fall
+   * back to their category cost: they stay selectable on grammatical grounds
+   * but no longer override the user. Lexically grounded candidates (counters,
+   * conjugation paradigms, dictionary-backed joins and splits) are untouched,
+   * so a competing reading assembled from real entries still wins on merit.
+   */
+  static void clampHeuristicBonusesInUserDictSpans(core::Lattice& lattice);
 };
 
 }  // namespace suzume::analysis

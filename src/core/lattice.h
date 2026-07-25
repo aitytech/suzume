@@ -148,6 +148,15 @@ class Lattice {
   const LatticeEdge& getEdge(size_t edge_id) const;
 
   /**
+   * @brief Overwrite an edge's cost after generation
+   * @param edge_id Edge ID (ignored when out of range)
+   * @param cost New cost
+   * @note Marks the edge as carrying a deliberately tuned cost so the scorer
+   *       honours the value instead of falling back to the category cost.
+   */
+  void setEdgeCost(size_t edge_id, float cost);
+
+  /**
    * @brief Check if lattice is valid (path exists from start to end)
    */
   bool isValid() const;

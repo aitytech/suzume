@@ -11,6 +11,9 @@
 
 #include "analysis/tokenizer.h"
 
+#include <algorithm>
+#include <utility>
+
 #include "analysis/category_cost.h"
 #include "candidate_constants.h"
 #include "core/debug.h"
@@ -25,6 +28,19 @@
 #include "verb_candidates_helpers.h"
 
 namespace suzume::analysis {
+
+namespace {
+
+/// Candidate families derived from surface shape alone, with no lexical
+/// attestation behind them: repeated-mora and character-speech runs, and the
+/// same-script / alphanumeric fallbacks. Every other origin is grounded in a
+/// dictionary entry, a conjugation paradigm or a counter lexicon.
+bool isShapeDerivedOrigin(core::CandidateOrigin origin) {
+  return origin == core::CandidateOrigin::Onomatopoeia || origin == core::CandidateOrigin::CharacterSpeech ||
+         origin == core::CandidateOrigin::SameType || origin == core::CandidateOrigin::Alphanumeric;
+}
+
+}  // namespace
 
 Tokenizer::Tokenizer(const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
                      const UnknownWordGenerator& unknown_gen, core::AnalysisMode mode)
@@ -92,7 +108,49 @@ core::Lattice Tokenizer::buildLattice(std::string_view text, const std::vector<c
     }
   }
 
+  clampHeuristicBonusesInUserDictSpans(lattice);
+
   return lattice;
+}
+
+void Tokenizer::clampHeuristicBonusesInUserDictSpans(core::Lattice& lattice) {
+  // Collect the registered spans first; most texts contain none and then this
+  // pass is a single scan with no allocation.
+  std::vector<std::pair<uint32_t, uint32_t>> user_spans;
+  for (size_t pos = 0; pos <= lattice.textLength(); ++pos) {
+    for (uint32_t edge_id : lattice.edgeIdsAt(pos)) {
+      const core::LatticeEdge& edge = lattice.getEdge(edge_id);
+      if (edge.fromUserDict()) {
+        user_spans.emplace_back(edge.start, edge.end);
+      }
+    }
+  }
+  if (user_spans.empty()) {
+    return;
+  }
+
+  auto isInsideRegistration = [&user_spans](const core::LatticeEdge& edge) {
+    return std::any_of(user_spans.begin(), user_spans.end(), [&edge](const std::pair<uint32_t, uint32_t>& span) {
+      return edge.start >= span.first && edge.end <= span.second;
+    });
+  };
+
+  for (size_t pos = 0; pos <= lattice.textLength(); ++pos) {
+    for (uint32_t edge_id : lattice.edgeIdsAt(pos)) {
+      const core::LatticeEdge& edge = lattice.getEdge(edge_id);
+      if (!isShapeDerivedOrigin(edge.origin) || edge.fromDictionary() || !isInsideRegistration(edge)) {
+        continue;
+      }
+      // Back to the plain category cost: the shape bonus is dropped, no penalty
+      // is added, and the candidate stays selectable on grammatical grounds.
+      const float category_cost = getCategoryCost(edge.extended_pos);
+      if (edge.cost < category_cost) {
+        SUZUME_DEBUG_LOG("[USERDICT] clamp \"" << edge.surface << "\" " << edge.cost << " -> " << category_cost
+                                               << "\n");
+        lattice.setEdgeCost(edge_id, category_cost);
+      }
+    }
+  }
 }
 
 void Tokenizer::addMixedScriptCandidates(core::Lattice& lattice, std::string_view text,

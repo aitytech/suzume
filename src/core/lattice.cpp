@@ -123,6 +123,14 @@ const LatticeEdge& Lattice::getEdge(size_t edge_id) const {
   return empty_edge;
 }
 
+void Lattice::setEdgeCost(size_t edge_id, float cost) {
+  if (edge_id >= all_edges_.size()) {
+    return;
+  }
+  all_edges_[edge_id].cost = cost;
+  all_edges_[edge_id].flags = all_edges_[edge_id].flags | EdgeFlags::HasCustomCost;
+}
+
 bool Lattice::isValid() const {
   if (text_length_ == 0) {
     return true;

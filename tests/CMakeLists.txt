@@ -85,6 +85,7 @@ set(TEST_SOURCES
   analysis/noun_nagara_ni_test.cpp
   analysis/scorer_word_cost_test.cpp
   analysis/suffix_candidates_counter_test.cpp
+  analysis/user_dict_precedence_test.cpp
   analysis/verb_guard_family_test.cpp
   output/japanese_format_test.cpp
   postprocess/tag_generator_test.cpp
