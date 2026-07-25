@@ -28,6 +28,7 @@ add_library(suzume_analysis OBJECT
   join_noun.cpp
   join_te_aux.cpp
   scorer.cpp
+  scorer_boundary_cost.cpp
   scorer_connection_cost.cpp
   scorer_connection_rules_renyokei.cpp
   scorer_connection_rules_voice.cpp

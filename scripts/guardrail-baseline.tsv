@@ -26,6 +26,7 @@ src/analysis/join_compound_verb_lexicon.cpp	0	0	0
 src/analysis/join_noun.cpp	0	0	0
 src/analysis/join_te_aux.cpp	0	2	0
 src/analysis/scorer.cpp	0	170	0
+src/analysis/scorer_boundary_cost.cpp	0	2	0
 src/analysis/scorer_connection_cost.cpp	45	4	74
 src/analysis/scorer_connection_rules_honorific.cpp	13	0	35
 src/analysis/scorer_connection_rules_lexical.cpp	8	0	23
@@ -76,3 +77,11 @@ src/analysis/verb_candidates_kanji_mizenkei.cpp	0	16	0
 src/analysis/verb_candidates_kanji_onbin.cpp	0	8	0
 src/analysis/verb_candidates_kanji_onbin_extended.cpp	0	2	0
 src/analysis/verb_candidates_kanji_renyokei.cpp	0	5	0
+src/core/debug.h	0	0	0
+src/core/error.h	0	0	0
+src/core/kana_constants.h	0	0	0
+src/core/lattice.h	0	3	0
+src/core/morpheme.h	0	1	0
+src/core/types.h	0	0	0
+src/core/utf8_constants.h	0	0	0
+src/core/viterbi.h	1	6	0

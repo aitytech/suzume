@@ -39,7 +39,11 @@ metrics_for() {
   printf '%s\t%s\t%s\t%s\n' "$f" "$surf" "$floats" "$additions"
 }
 
+# Analysis translation units plus the core headers that carry lattice/Viterbi
+# scoring. Core is scanned because a scoring literal parked in a header there
+# would otherwise sit permanently outside the ratchet.
 FILES=$(find src/analysis -name '*.cpp' | sort)
+FILES="$FILES $(find src/core -name '*.h' | sort)"
 
 gen_baseline() {
   printf '# file\tsurface_cmp\tscore_literals\tscore_additions\n'
@@ -79,7 +83,7 @@ for f in $FILES; do
   s=$(echo "$cur" | cut -f2); fl=$(echo "$cur" | cut -f3); add=$(echo "$cur" | cut -f4)
   base=$(grep -F "$(printf '%s\t' "$f")" "$BASELINE" || true)
   if [ -z "$base" ]; then
-    echo "❌ new analysis file not in baseline: $f (run: update)"; fail=1; continue
+    echo "❌ new scanned file not in baseline: $f (run: update)"; fail=1; continue
   fi
   bs=$(echo "$base" | cut -f2); bf=$(echo "$base" | cut -f3); ba=$(echo "$base" | cut -f4)
   [ "$s"  -gt "$bs" ] && { echo "❌ $f surface comparisons $s > baseline $bs (generalize with grammar rules; don't add word tests)"; fail=1; } || true

@@ -20,23 +20,10 @@ namespace suzume::core {
 
 inline constexpr size_t kNumExtendedPosTypes = static_cast<size_t>(ExtendedPOS::Count_);
 
-// BOS (beginning-of-sentence) connection-cost adjustments. A morpheme that
-// cannot naturally start a sentence is penalized; a conjunction is rewarded.
-inline constexpr float kBosSuffixPenalty = 3.0F;         // Suffix cannot lead a sentence
-inline constexpr float kBosConjunctionBonus = -0.5F;     // でも / しかし are natural at BOS
-inline constexpr float kBosAppearanceSouPenalty = 0.5F;  // 様態そう should be demonstrative at BOS
-inline constexpr float kBosAspectIkuPenalty = 1.0F;      // いく aspect needs a preceding て-form
-inline constexpr float kBosAspectKuruPenalty = 3.0F;     // くる aspect (き) needs a preceding て-form
-inline constexpr float kBosTensePenalty = 2.0F;          // た/だ needs a preceding verb/adj stem
-inline constexpr float kBosFinalParticlePenalty = 2.0F;  // Sentence-final particle cannot lead
-inline constexpr float kBosTopicParticlePenalty = 1.0F;  // 係助詞 は/も cannot lead a sentence
-inline constexpr float kBosHonorificAuxPenalty = 0.3F;   // Honorific auxiliary needs a preceding renyokei
-
-// EOS (end-of-sentence) cost adjustments, symmetric to the BOS set above. A
-// morpheme that cannot naturally END a sentence is penalized, so an isolated
-// hiragana word is not carved into a stem plus a dangling auxiliary/aspect.
-inline constexpr float kEosAspectKuruPenalty = 3.0F;  // き (来 aspect) needs a following stem (ひこうき → ひこう+き)
-inline constexpr float kEosListingParticlePenalty = 2.0F;  // たり listing particle needs a parallel predicate
+// Sentence-boundary costs are linguistic, so they belong to the scorer: a
+// Scorer supplies bosCost(edge) for an edge that opens the sentence and
+// eosCost(edge) for one that closes it. Keeping them out of core also keeps
+// them inside the guardrail ratchet's named-constant rule.
 
 // Per-transition tie-break: slightly prefer fewer, longer morphemes.
 inline constexpr float kTransitionCost = 0.001F;
@@ -178,17 +165,8 @@ class Viterbi {
         const float word_cost = scorer.wordCost(edge);
 
         // EOS penalty: an edge that terminates the sentence but cannot naturally
-        // end one (mirror of the BOS penalties below). Added once per edge.
-        // Restricted to the bare renyokei き (a single codepoint): it needs a
-        // following た/て/ます, whereas the 終止形 くる/くれる legitimately ends a
-        // sentence (勉強してくる) and must not be penalized.
-        float eos_cost = 0.0F;
-        if (edge.end == text_len && edge.extended_pos == ExtendedPOS::AuxAspectKuru && edge.end - pos == 1) {
-          eos_cost += kEosAspectKuruPenalty;
-        }
-        if (edge.end == text_len && edge.extended_pos == ExtendedPOS::ParticleConj && edge.surface == "たり") {
-          eos_cost += kEosListingParticlePenalty;
-        }
+        // end one (mirror of the BOS cost below). Added once per edge.
+        const float eos_cost = edge.end == text_len ? scorer.eosCost(edge) : 0.0F;
 
         // Find the cheapest predecessor for this edge across all retained
         // states at this position.
@@ -206,42 +184,7 @@ class Viterbi {
               conn_cost = scorer.connectionCost(lattice.getEdge(entry.edge_id), edge);
             } else {
               // BOS (beginning of sentence) connection cost
-              if (edge.pos == PartOfSpeech::Suffix) {
-                conn_cost = kBosSuffixPenalty;
-              }
-              if (edge.pos == PartOfSpeech::Conjunction) {
-                conn_cost = kBosConjunctionBonus;
-              }
-              // At BOS, そう should be a demonstrative na-adjective, not appearance aux
-              // (e.g. "そうかもしれません").
-              if (edge.extended_pos == ExtendedPOS::AuxAppearanceSou) {
-                conn_cost += kBosAppearanceSouPenalty;
-              }
-              // いく aspect is only valid after a て-form (食べていく); at BOS it is the
-              // verb 行く or part of a pronoun (いくつ).
-              if (edge.extended_pos == ExtendedPOS::AuxAspectIku) {
-                conn_cost += kBosAspectIkuPenalty;
-              }
-              // くる aspect (き) is only valid after a て-form; at BOS it is 来る
-              // or part of a noun (きもの).
-              if (edge.extended_pos == ExtendedPOS::AuxAspectKuru) {
-                conn_cost += kBosAspectKuruPenalty;
-              }
-              if (edge.extended_pos == ExtendedPOS::AuxTenseTa) {
-                conn_cost += kBosTensePenalty;
-              }
-              if (edge.extended_pos == ExtendedPOS::AuxHonorific) {
-                conn_cost += kBosHonorificAuxPenalty;
-              }
-              if (edge.extended_pos == ExtendedPOS::ParticleFinal) {
-                conn_cost += kBosFinalParticlePenalty;
-              }
-              // A 係助詞 (は/も) marks a topic against a preceding phrase; it cannot
-              // open a sentence. Keeps はいった → はいっ (入る) from splitting into
-              // は + いっ (言う) at BOS.
-              if (edge.extended_pos == ExtendedPOS::ParticleTopic) {
-                conn_cost += kBosTopicParticlePenalty;
-              }
+              conn_cost = scorer.bosCost(edge);
             }
 
             const float total = entry.cost + word_cost + conn_cost + eos_cost + kTransitionCost;

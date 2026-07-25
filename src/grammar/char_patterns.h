@@ -183,6 +183,9 @@ bool isAccusativeParticleWoSurface(std::string_view surface);
 /** @brief Whether a conjunctive-particle surface is the concessive とも */
 bool isConcessiveParticleTomoSurface(std::string_view surface);
 
+/** @brief Whether a conjunctive-particle surface is the listing たり */
+bool isListingParticleTariSurface(std::string_view surface);
+
 /** @brief Whether a negative auxiliary surface is a colloquial conditional form */
 bool isColloquialConditionalNegativeSurface(std::string_view surface);
 

@@ -247,6 +247,10 @@ bool isConcessiveParticleTomoSurface(std::string_view surface) {
   return surface == "とも";
 }
 
+bool isListingParticleTariSurface(std::string_view surface) {
+  return surface == "たり";
+}
+
 bool isColloquialConditionalNegativeSurface(std::string_view surface) {
   return surface == "なきゃ" || surface == "なけりゃ";
 }

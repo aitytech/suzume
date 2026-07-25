@@ -97,6 +97,29 @@ class Scorer {
   float connectionCost(const core::LatticeEdge& prev, const core::LatticeEdge& next) const;
 
   /**
+   * @brief Calculate the connection cost of an edge that opens the sentence
+   *
+   * Mirror of connectionCost() for the BOS state, which has no arriving edge.
+   * Penalizes a morpheme that cannot naturally lead a sentence.
+   *
+   * @param edge Edge starting at position 0
+   * @return BOS connection cost
+   */
+  float bosCost(const core::LatticeEdge& edge) const;
+
+  /**
+   * @brief Calculate the extra cost of an edge that closes the sentence
+   *
+   * Symmetric to bosCost(): penalizes a morpheme that cannot naturally END a
+   * sentence, so an isolated hiragana word is not carved into a stem plus a
+   * dangling auxiliary/aspect.
+   *
+   * @param edge Edge ending at the last position
+   * @return EOS cost
+   */
+  float eosCost(const core::LatticeEdge& edge) const;
+
+  /**
    * @brief Get POS prior
    * @param pos Part of speech
    * @return Prior cost

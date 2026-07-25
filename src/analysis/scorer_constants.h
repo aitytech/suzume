@@ -357,6 +357,27 @@ constexpr std::string_view kNegationPrefixKanji[] = {"非", "不", "無", "未"}
   return false;
 }
 
+// =============================================================================
+// Sentence-Boundary Costs (scorer_boundary_cost.cpp)
+// =============================================================================
+// BOS (beginning-of-sentence) connection-cost adjustments. A morpheme that
+// cannot naturally start a sentence is penalized; a conjunction is rewarded.
+constexpr float kBosSuffixPenalty = 3.0F;         // Suffix cannot lead a sentence
+constexpr float kBosConjunctionBonus = -0.5F;     // でも / しかし are natural at BOS
+constexpr float kBosAppearanceSouPenalty = 0.5F;  // 様態そう should be demonstrative at BOS
+constexpr float kBosAspectIkuPenalty = 1.0F;      // いく aspect needs a preceding て-form
+constexpr float kBosAspectKuruPenalty = 3.0F;     // くる aspect (き) needs a preceding て-form
+constexpr float kBosTensePenalty = 2.0F;          // た/だ needs a preceding verb/adj stem
+constexpr float kBosFinalParticlePenalty = 2.0F;  // Sentence-final particle cannot lead
+constexpr float kBosTopicParticlePenalty = 1.0F;  // 係助詞 は/も cannot lead a sentence
+constexpr float kBosHonorificAuxPenalty = 0.3F;   // Honorific auxiliary needs a preceding renyokei
+
+// EOS (end-of-sentence) cost adjustments, symmetric to the BOS set above. A
+// morpheme that cannot naturally END a sentence is penalized, so an isolated
+// hiragana word is not carved into a stem plus a dangling auxiliary/aspect.
+constexpr float kEosAspectKuruPenalty = 3.0F;  // き (来 aspect) needs a following stem (ひこうき → ひこう+き)
+constexpr float kEosListingParticlePenalty = 2.0F;  // たり listing particle needs a parallel predicate
+
 }  // namespace suzume::analysis::scorer
 
 #endif  // SUZUME_ANALYSIS_SCORER_CONSTANTS_H_
