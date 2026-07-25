@@ -263,6 +263,12 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Contracted ~ておく form + past tense: 見とい+た, 読んどい+た
       {EPOS::AuxAspectOku, EPOS::AuxTenseTa, cost::kStrongBonus},
 
+      // AuxAspectOku → AuxNegativeNai (とか+ない, どか+なきゃ) - decisive bonus
+      // Only the mizenkei cell of the contracted preparation auxiliary can
+      // precede the negative, and its surface とか also spells the adverbial
+      // particle, whose dictionary anchor is otherwise cheaper.
+      {EPOS::AuxAspectOku, EPOS::AuxNegativeNai, cost::kVeryStrongBonus},
+
       // The completive subsidiary しまう conjugates as a Godan-wa auxiliary.
       // Its written variants share this grammar: 仕舞っ+た, 仕舞わ+ない,
       // 仕舞い+ます, 仕舞え+ば, and 仕舞お+う.

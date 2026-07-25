@@ -707,6 +707,12 @@ EntrySpecRange getAuxiliaryEntries() {
       // Godan-ka kateikei and its colloquial conditional (書い+とけ+ば,
       // 書い+ときゃ). The volitional cell とこ/どこ is left out: it collides with
       // the interrogative どこ and the formal noun とこ.
+      // Godan-ka mizenkei, which the negative and the contracted obligation
+      // chains select (書い+とか+ない, 飲ん+どか+なきゃ+いけ+ない). とか also
+      // spells the adverbial particle, so its subsidiary reading is admitted
+      // only after a te-form onbin by the connection scorer.
+      aux("とか", "とく", EPOS::AuxAspectOku),
+      aux("どか", "どく", EPOS::AuxAspectOku),
       aux("とけ", "とく", EPOS::AuxAspectOku),
       aux("どけ", "どく", EPOS::AuxAspectOku),
       aux("ときゃ", "とく", EPOS::AuxAspectOku),
