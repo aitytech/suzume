@@ -2118,6 +2118,102 @@
       ],
       "id": "shimashita",
       "input": "増しました"
+    },
+    {
+      "description": "紙を書かなあかん - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "あかん",
+          "pos": "Auxiliary",
+          "surface": "あかん"
+        }
+      ],
+      "id": "wo_kanaakan",
+      "input": "紙を書かなあかん"
+    },
+    {
+      "description": "本を読まなあかん - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "あかん",
+          "pos": "Auxiliary",
+          "surface": "あかん"
+        }
+      ],
+      "id": "wo_manaakan",
+      "input": "本を読まなあかん"
+    },
+    {
+      "description": "紙を書いたらあかん - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "たら"
+        },
+        {
+          "lemma": "あかん",
+          "pos": "Auxiliary",
+          "surface": "あかん"
+        }
+      ],
+      "id": "wo_itaraakan",
+      "input": "紙を書いたらあかん"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

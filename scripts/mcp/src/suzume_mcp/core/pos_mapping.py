@@ -69,6 +69,12 @@ def map_mecab_pos(token: dict | str) -> str:
     if surface == "おめでとう":
         return "Adverb"
 
+    # あかん: the Kansai counterpart of いけない. It is absent from the
+    # reference dictionary, which falls back to an interjection, but it closes
+    # an obligation or prohibition chain as a predicate.
+    if surface == "あかん":
+        return "Auxiliary"
+
     # 遥か: 副詞 -> Adjective (na-adjective used adverbially)
     if surface == "遥か" and pos == "副詞":
         return "Adjective"

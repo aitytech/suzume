@@ -443,7 +443,14 @@ struct ObligationPattern {
 // Every obligation/prohibition chain has the same shape: a selecting verb stem
 // followed by a fixed run of closed-class slots. Adding a construction is a
 // row here, never another hand-written scan.
-constexpr std::array<ObligationPattern, 4> kObligationPatterns{{
+constexpr std::array<ObligationPattern, 5> kObligationPatterns{{
+    // V未然 + な + あかん — the Kansai chain, whose な is the contracted
+    // negative rather than the homographic copula or final particle.
+    {2,
+     {{{"な", nullptr, false, ObligationRole::kNegativeNai},
+       {"あかん", nullptr, false, ObligationRole::kKeep},
+       {nullptr, nullptr, false, ObligationRole::kKeep},
+       {nullptr, nullptr, false, ObligationRole::kKeep}}}},
     // V未然 + なきゃ/なけりゃ + いけ/なら + ない
     {3,
      {{{"なきゃ", "なけりゃ", false, ObligationRole::kNegativeNai},
