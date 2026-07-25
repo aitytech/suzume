@@ -82,6 +82,35 @@
       ],
       "id": "kemasu",
       "input": "見分けます"
+    },
+    {
+      "description": "Single-kanji stem must stay one verb, not noun plus passive auxiliary",
+      "expected": [
+        {
+          "lemma": "揺れる",
+          "pos": "Verb",
+          "surface": "揺れる"
+        }
+      ],
+      "id": "reru",
+      "input": "揺れる"
+    },
+    {
+      "description": "Single-kanji mizenkei plus passive auxiliary keeps its boundary",
+      "expected": [
+        {
+          "lemma": "叱る",
+          "pos": "Verb",
+          "surface": "叱ら"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れる"
+        }
+      ],
+      "id": "rareru",
+      "input": "叱られる"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

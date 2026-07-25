@@ -1618,6 +1618,28 @@
       ],
       "id": "ha_sakarishi",
       "input": "水は小さかりし。"
+    },
+    {
+      "description": "Negation prefix and single kanji stay one noun before the particle",
+      "expected": [
+        {
+          "lemma": "非常",
+          "pos": "Adjective",
+          "surface": "非常"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "ni_shii",
+      "input": "非常に難しい"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",
