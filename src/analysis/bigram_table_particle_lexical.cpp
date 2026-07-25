@@ -673,6 +673,10 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Predicative obligation keeps the formal boundary (べき+だ), rather
       // than being swallowed by an unrelated hiragana verb candidate.
       {EPOS::AuxClassicalBeshi, EPOS::AuxCopulaDa, cost::kStrongBonus},
+      // The classical copula is the literary member of that same predicative
+      // slot (読むべき+なり), where the conjunctive particle of the same kana
+      // would have nothing to attach to.
+      {EPOS::AuxClassicalBeshi, EPOS::AuxClassicalNari, cost::kStrongBonus},
       {EPOS::VerbShuushikei, EPOS::AuxClassicalBeshi, cost::kStrongBonus},
       {EPOS::AuxPassive, EPOS::AuxClassicalBeshi, cost::kStrongBonus},
       {EPOS::AuxNegativeNu, EPOS::AuxClassicalBeshi, cost::kStrongBonus},

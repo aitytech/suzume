@@ -4902,8 +4902,40 @@
       ],
       "id": "wo_sengatame_ha_shita",
       "input": "問題を解決せんがため、担当者は努力した。"
+    },
+    {
+      "description": "本を読むべきなり。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なり"
+        }
+      ],
+      "id": "wo_mubekinari",
+      "input": "本を読むべきなり。"
     }
   ],
-  "description": "literary_classic tests",
+  "description": "literary_classic tests (part 1/2)",
   "version": "1.0"
 }
