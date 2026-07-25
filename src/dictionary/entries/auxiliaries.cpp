@@ -243,6 +243,13 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("させれ", "させる", EPOS::AuxCausative),
       aux("させろ", "させる", EPOS::AuxCausative),  // imperative
       aux("させよ", "させる", EPOS::AuxCausative),  // imperative (literary)
+      // Classical causative しむ (下二段): attaches to the same 未然形 as せる.
+      // Without it the irrealis kana is read as the modern causative
+      // continuative (書かし + む) instead of 書か + しむ.
+      aux("しむ", "しむ", EPOS::AuxCausative),    // 終止/連体形
+      aux("しめ", "しむ", EPOS::AuxCausative),    // 未然/連用形
+      aux("しむる", "しむ", EPOS::AuxCausative),  // 連体形
+      aux("しむれ", "しむ", EPOS::AuxCausative),  // 已然形
 
       // Desiderative - たい (願望)
       aux("たい", "たい", EPOS::AuxDesireTai),
