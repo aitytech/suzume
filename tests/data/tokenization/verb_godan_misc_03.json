@@ -2687,6 +2687,154 @@
       ],
       "id": "kushinaitodamedayo",
       "input": "早くしないとだめだよ"
+    },
+    {
+      "description": "紙を書いとけばよかった。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "とく",
+          "pos": "Auxiliary",
+          "surface": "とけ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_itokebayokattta",
+      "input": "紙を書いとけばよかった。"
+    },
+    {
+      "description": "水を飲んどけばよかった。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "どく",
+          "pos": "Auxiliary",
+          "surface": "どけ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_ndokebayokattta",
+      "input": "水を飲んどけばよかった。"
+    },
+    {
+      "description": "紙を書いときゃよい。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "とく",
+          "pos": "Auxiliary",
+          "surface": "ときゃ"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "wo_itoki_yoi",
+      "input": "紙を書いときゃよい。"
+    },
+    {
+      "description": "水を飲んどきゃよい。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "どく",
+          "pos": "Auxiliary",
+          "surface": "どきゃ"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "wo_ndoki_yoi",
+      "input": "水を飲んどきゃよい。"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 3/3)",

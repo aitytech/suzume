@@ -81,6 +81,33 @@ bool hasAttestedInternalGodanConditional(const std::vector<char32_t>& codepoints
   return false;
 }
 
+/**
+ * @brief Whether the span ends in a subsidiary auxiliary sitting on an onbin stem.
+ *
+ * The ておく contraction leaves no て behind (書い+とけ, 飲ん+どけ), so the
+ * internal boundary the te-form guards look for is gone and the whole run reads
+ * as one fabricated godan verb. The auxiliary is still a complete dictionary
+ * word standing directly on an onbin kana, which is evidence enough.
+ * @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+ */
+bool endsWithContractedSubsidiaryAuxiliary(const std::vector<char32_t>& codepoints, size_t kanji_end, size_t end_pos,
+                                           const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos <= kanji_end + 1) {
+    return false;
+  }
+  for (size_t aux_start = kanji_end + 1; aux_start < end_pos; ++aux_start) {
+    const char32_t onbin = codepoints[aux_start - 1];
+    if (onbin != U'い' && onbin != U'ん' && onbin != U'っ') {
+      continue;
+    }
+    if (dict_manager->lookupExact(extractSubstring(codepoints, aux_start, end_pos), core::PartOfSpeech::Auxiliary) !=
+        nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 // Try Ichidan verb kateikei (conditional) + volitional stem patterns.
@@ -207,6 +234,9 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
       continue;
     }
     if (hasAttestedInternalGodanConditional(codepoints, start_pos, kanji_end, particle_pos, best, dict_manager)) {
+      continue;
+    }
+    if (endsWithContractedSubsidiaryAuxiliary(codepoints, kanji_end, particle_pos, dict_manager)) {
       continue;
     }
     auto conditional = makeVerbCandidate(extractSubstring(codepoints, start_pos, particle_pos), start_pos, particle_pos,

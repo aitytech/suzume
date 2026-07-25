@@ -704,6 +704,13 @@ EntrySpecRange getAuxiliaryEntries() {
       // MeCab compat: とい/どい (renyokei) + た/て instead of といた/どいた
       aux("とい", "とく", EPOS::AuxAspectOku),
       aux("どい", "どく", EPOS::AuxAspectOku),
+      // Godan-ka kateikei and its colloquial conditional (書い+とけ+ば,
+      // 書い+ときゃ). The volitional cell とこ/どこ is left out: it collides with
+      // the interrogative どこ and the formal noun とこ.
+      aux("とけ", "とく", EPOS::AuxAspectOku),
+      aux("どけ", "どく", EPOS::AuxAspectOku),
+      aux("ときゃ", "とく", EPOS::AuxAspectOku),
+      aux("どきゃ", "どく", EPOS::AuxAspectOku),
 
       // Directional auxiliaries - いく/くる (方向補助動詞)
       // MeCab tags as 動詞 (Verb), not 助動詞, even in subsidiary use
