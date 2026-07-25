@@ -212,13 +212,28 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
     if (!is_dictionary_verb && end_pos == hiragana_end && end_pos - start_pos >= 3 &&
         codepoints[end_pos - 1] == U'く' &&
         (best.verb_type == grammar::VerbType::IAdjective ||
-         best.confidence < candidate::verb_cost::kTerminalHiraganaGodanKaConfidence)) {
+         best.confidence < candidate::verb_cost::kTerminalHiraganaGodanConfidence)) {
       best.base_form = surface;
       best.stem = surface.substr(0, surface.size() - core::kJapaneseCharBytes);
       best.suffix.clear();
       best.verb_type = grammar::VerbType::GodanKa;
-      best.confidence = candidate::verb_cost::kTerminalHiraganaGodanKaConfidence;
+      best.confidence = candidate::verb_cost::kTerminalHiraganaGodanConfidence;
       best.morphemes.clear();
+    }
+
+    // A terminal hiragana run that the analyzer already reads as a Godan
+    // dictionary form is an open-class verb with no dictionary entry
+    // (くつろぐ, なごむ, たしなむ). The row's own paradigm supplying the finite
+    // ending is the strongest evidence available for such a word, so it must not
+    // be discarded as a low-confidence fragment. The reading is taken from the
+    // analyzer rather than imposed, so ichidan and i-adjective readings of the
+    // same run are unaffected. The GodanWa row is excluded because its terminal
+    // う is also the volitional auxiliary and a frequent noun ending
+    // (とうきょう, でしょう); that row keeps its own scanner-verified gate below.
+    if (!is_dictionary_verb && end_pos == hiragana_end && end_pos - start_pos >= 3 &&
+        grammar::isGodanVerbType(best.verb_type) && best.verb_type != grammar::VerbType::GodanWa &&
+        best.base_form == surface && best.confidence < candidate::verb_cost::kTerminalHiraganaGodanConfidence) {
+      best.confidence = candidate::verb_cost::kTerminalHiraganaGodanConfidence;
     }
 
     // A fabricated verb must not cross a productive te-form boundary between

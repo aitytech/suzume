@@ -1693,6 +1693,50 @@
       ],
       "id": "tsuketa",
       "input": "見つけた"
+    },
+    {
+      "description": "ソファーでくつろぐ - regression test",
+      "expected": [
+        {
+          "lemma": "ソファー",
+          "pos": "Noun",
+          "surface": "ソファー"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "くつろぐ",
+          "pos": "Verb",
+          "surface": "くつろぐ"
+        }
+      ],
+      "id": "dekutsurogu",
+      "input": "ソファーでくつろぐ"
+    },
+    {
+      "description": "部屋でくつろぐ - regression test",
+      "expected": [
+        {
+          "lemma": "部屋",
+          "pos": "Noun",
+          "surface": "部屋"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "くつろぐ",
+          "pos": "Verb",
+          "surface": "くつろぐ"
+        }
+      ],
+      "id": "dekutsurogu_2",
+      "input": "部屋でくつろぐ"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 3/3)",

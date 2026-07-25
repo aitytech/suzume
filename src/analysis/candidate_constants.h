@@ -582,9 +582,10 @@ constexpr float kShortHiraganaSokuonbinMinConfidence = 0.25F;
 // Minimum inflection evidence for a kanji sokuonbin whose base is absent
 // from the dictionary.
 constexpr float kKanjiSokuonbinMinConfidence = 0.3F;
-// Confidence assigned to a terminal pure-hiragana Godan-ka base that the
-// inflection analyzer misclassifies only as an i-adjective.
-constexpr float kTerminalHiraganaGodanKaConfidence = 0.6F;
+// Confidence assigned to a terminal pure-hiragana Godan base form: either one
+// the inflection analyzer misclassifies as an i-adjective fragment, or one it
+// reads correctly but scores as an open-class word with no dictionary entry.
+constexpr float kTerminalHiraganaGodanConfidence = 0.6F;
 // Minimum evidence for a rule-derived Ichidan conditional stem (…れ + ば).
 constexpr float kIchidanKateikeiMinConfidence = 0.3F;
 
