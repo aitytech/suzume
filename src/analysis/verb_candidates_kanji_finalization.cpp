@@ -400,6 +400,28 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
       base_cost += bigram_cost::kRare;
       SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +1.0 (two_kanji_non_dict_penalty)\n");
     }
+    // A terminal hypothesis must not absorb a classical auxiliary that a
+    // dictionary-attested irrealis already licenses: 読ま+む is the irrealis of
+    // 読む plus the conjectural, not a verb 読まむ.  Both halves come from the
+    // dictionary, so the fabricated one-word reading has no evidence of its own.
+    // Lexical verbs ending in the same kana (悩む, 死ぬ) keep no irrealis entry
+    // for their own prefix and are unaffected.
+    if (!in_dict && dict_manager != nullptr && best.base_form == surface &&
+        surface.size() > core::kTwoJapaneseCharBytes) {
+      const auto* tail_entry =
+          dict_manager->lookupExact(std::string(utf8::lastChar(surface)), core::PartOfSpeech::Auxiliary);
+      const auto* head_entry =
+          dict_manager->lookupExact(std::string(utf8::dropLastChar(surface)), core::PartOfSpeech::Verb);
+      const bool classical_irrealis_tail =
+          tail_entry != nullptr && (tail_entry->extended_pos == core::ExtendedPOS::AuxVolitional ||
+                                    tail_entry->extended_pos == core::ExtendedPOS::AuxNegativeNu);
+      if (classical_irrealis_tail && head_entry != nullptr &&
+          head_entry->extended_pos == core::ExtendedPOS::VerbMizenkei) {
+        base_cost += bigram_cost::kRare;
+        SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kRare
+                                                 << " (classical_irrealis_auxiliary_absorbed)\n");
+      }
+    }
     // A multi-kanji stem followed by the classical サ変 terminal す is
     // compositional for search: 前進+す, 説明+す. The inflection analyzer can
     // also hypothesize an unregistered GodanSa word spanning the boundary;
