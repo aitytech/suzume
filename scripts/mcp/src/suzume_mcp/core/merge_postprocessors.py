@@ -362,6 +362,80 @@ def _postprocess_adj_kari(result: list[dict], applied_rule: str | None) -> tuple
     return merged, applied_rule
 
 
+_A_ROW_TO_U_ROW = {
+    "か": "く",
+    "が": "ぐ",
+    "さ": "す",
+    "た": "つ",
+    "な": "ぬ",
+    "ば": "ぶ",
+    "ま": "む",
+    "ら": "る",
+    "わ": "う",
+}
+_CLASSICAL_IRREALIS_AUX = "む"
+
+
+def _is_single_verb(surface: str) -> bool:
+    """Whether the reference dictionary reads a surface as exactly one verb."""
+    from .mecab import mecab_analyze
+
+    tokens = mecab_analyze(surface)
+    return len(tokens) == 1 and tokens[0].get("pos") == "動詞" and tokens[0].get("surface") == surface
+
+
+def _postprocess_classical_mu(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Restore the boundary of the classical conjectural む.
+
+    む attaches to a verb's 未然形 (読ま+む, 書か+む), but the reference dictionary
+    carries no such auxiliary. It therefore either hands the irrealis kana to a
+    lexical verb spanning the boundary (書+かむ, read as 噛む) or swallows む into
+    a longer idiom (読ま+むとする). Rebuild 未然形 + む and re-analyze the rest.
+    """
+    from .mecab import mecab_analyze
+
+    merged: list[dict] = []
+    idx = 0
+    while idx < len(result):
+        token = result[idx]
+        surface = token.get("surface", "")
+        previous = merged[-1] if merged else None
+        # The irrealis kana was handed to the following verb (書 + かむ).
+        if (
+            previous is not None
+            and token.get("pos") == "動詞"
+            and len(surface) == 2
+            and surface[0] in _A_ROW_TO_U_ROW
+            and surface[1] == _CLASSICAL_IRREALIS_AUX
+        ):
+            stem = previous.get("surface", "")
+            lemma = stem + _A_ROW_TO_U_ROW[surface[0]]
+            if stem and _is_single_verb(lemma):
+                merged[-1] = {"surface": stem + surface[0], "pos": "動詞", "lemma": lemma}
+                merged.append({"surface": surface[1], "pos": "助動詞", "lemma": surface[1]})
+                idx += 1
+                if applied_rule is None:
+                    applied_rule = "classical-mu-boundary"
+                continue
+        # む opened a longer idiom the dictionary lists as one word (むとする).
+        if (
+            previous is not None
+            and previous.get("pos") == "動詞"
+            and previous.get("surface", "")[-1:] in _A_ROW_TO_U_ROW
+            and len(surface) > 1
+            and surface[0] == _CLASSICAL_IRREALIS_AUX
+        ):
+            merged.append({"surface": surface[0], "pos": "助動詞", "lemma": surface[0]})
+            merged.extend(mecab_analyze(surface[1:]))
+            idx += 1
+            if applied_rule is None:
+                applied_rule = "classical-mu-boundary"
+            continue
+        merged.append(token)
+        idx += 1
+    return merged, applied_rule
+
+
 _HA_ROW_TAILS = ("は", "ひ", "ふ", "へ")
 _HA_ROW_DETACHED_TAILS = ("ひ", "ふ", "へ")
 _HA_ROW_STEM_POS = ("名詞", "動詞", "形容詞", "副詞", "接尾辞")
