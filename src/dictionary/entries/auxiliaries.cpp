@@ -857,6 +857,13 @@ EntrySpecRange getAuxiliaryEntries() {
       // connection bonuses would outrank.
       aux("や", "だ", EPOS::Unknown),
       aux("やねん", "だ", EPOS::AuxCopulaDa),
+      // Conjectural and confirmative cells of the same Kansai copula
+      // (書く+やろ, 読む+やん). やろ is homographic with the volitional stem of
+      // やる, which keeps its verb reading before う (紙をやろう).
+      aux("やろ", "や", EPOS::AuxCopulaDa),
+      // やん is a fused confirmative rather than a cell of や, so it keeps its
+      // own dictionary form.
+      aux("やん", "やん", EPOS::AuxCopulaDa),
       aux("だっちゃ", "だ", EPOS::AuxCopulaDa),
 
       // Robot/Mechanical (ロボット・機械)

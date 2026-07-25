@@ -2543,6 +2543,50 @@
       ],
       "id": "munen",
       "input": "本読むねん"
+    },
+    {
+      "description": "紙書くやろ - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "や",
+          "pos": "Auxiliary",
+          "surface": "やろ"
+        }
+      ],
+      "id": "kuyaro",
+      "input": "紙書くやろ"
+    },
+    {
+      "description": "本読むやん - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "やん",
+          "pos": "Auxiliary",
+          "surface": "やん"
+        }
+      ],
+      "id": "muyan",
+      "input": "本読むやん"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",
