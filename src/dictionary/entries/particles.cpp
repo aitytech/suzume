@@ -32,6 +32,9 @@ EntrySpecRange getParticleEntries() {
       particle("ば", EPOS::ParticleConj),
       particle("たら", EPOS::ParticleConj),
       particle("なら", EPOS::ParticleConj),
+      // Causal から after a predicate (食べたから, 読むからといって). The case
+      // reading above marks a nominal source (東京から), so both are needed.
+      particle("から", EPOS::ParticleConj),
 
       // Binding particles (係助詞)
       particle("しも", EPOS::ParticleBinding),

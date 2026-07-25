@@ -221,17 +221,35 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
     }
   }
 
-  // After the connective て/で, the deictic motion verb is the productive
-  // directional subsidiary (進んで+いく), not an independent predicate.
+  // After the connective て/で, an aspect verb is the productive subsidiary
+  // (進んで+いく, 読んで+いれば, 読んで+おいた), not an independent predicate.
   // The lattice intentionally keeps its verbal inflection shape; the closed
   // local connection supplies the public auxiliary role without host words.
+  // Match on the lemma so every inflected form takes that role — the terminal
+  // form must not be the only one that reads as an auxiliary.
+  struct TeFormSubsidiary {
+    std::string_view lemma;
+    core::ExtendedPOS extended_pos;
+  };
+  static const TeFormSubsidiary kTeFormSubsidiaries[] = {
+      {"いく", core::ExtendedPOS::AuxAspectIku},
+      {"行く", core::ExtendedPOS::AuxAspectIku},
+      {"いる", core::ExtendedPOS::AuxAspectIru},
+      {"おく", core::ExtendedPOS::AuxAspectOku},
+  };
   for (size_t idx = 1; idx < result.size(); ++idx) {
     auto& previous = result[idx - 1];
     auto& current = result[idx];
-    if (previous.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(previous.surface, {"て", "で"}) &&
-        current.pos == core::PartOfSpeech::Verb && utf8::equalsAny(current.lemma, {"いく", "行く"})) {
-      current.pos = core::PartOfSpeech::Auxiliary;
-      current.extended_pos = core::ExtendedPOS::AuxAspectIku;
+    if (previous.extended_pos != core::ExtendedPOS::ParticleConj || !utf8::equalsAny(previous.surface, {"て", "で"}) ||
+        current.pos != core::PartOfSpeech::Verb) {
+      continue;
+    }
+    for (const auto& subsidiary : kTeFormSubsidiaries) {
+      if (current.lemma == subsidiary.lemma) {
+        current.pos = core::PartOfSpeech::Auxiliary;
+        current.extended_pos = subsidiary.extended_pos;
+        break;
+      }
     }
   }
 

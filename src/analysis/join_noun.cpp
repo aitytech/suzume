@@ -23,6 +23,30 @@ namespace {
 
 using CharType = normalize::CharType;
 
+// Bound nouns that head a verb-continuative compound (使い道, 待ち時間, 読み方).
+// This is a closed class, so it lives in a table: a new head is data, not another
+// comparison branch. `requires_verified_renyokei` admits only a dictionary-backed
+// continuative form before the head, which keeps a coincidental kanji+hiragana run
+// from being absorbed; the looser heads predate that check and keep their behavior.
+struct DeverbalHeadNoun {
+  std::string_view surface;
+  bool requires_verified_renyokei;
+};
+
+const DeverbalHeadNoun kDeverbalHeadNouns[] = {
+    {"物", false},   // 食べ物, 飲み物
+    {"方", false},   // 読み方, やり方
+    {"所", false},   // 居場所
+    {"目", false},   // 割れ目, 切れ目, 裂け目
+    {"手", true},    // 読み手, 書き手, 受け手
+    {"場", true},    // 売り場, 買い場
+    {"道", true},    // 使い道, 帰り道
+    {"時間", true},  // 待ち時間
+};
+
+// Longest head in the table, in codepoints.
+constexpr size_t kMaxDeverbalHeadLength = 2;
+
 // Productive prefixes for prefix+noun joining
 struct ProductivePrefix {
   char32_t codepoint;
@@ -621,20 +645,32 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     return;
   }
 
-  // Check for suffix kanji: 物, 方, 所, 手, 場
+  // Match the bound noun that heads the compound. Longest match first, so a
+  // multi-kanji head (待ち時間) wins over a prefix of it.
   if (hiragana_end >= codepoints.size()) {
     return;
   }
 
-  char32_t suffix_char = codepoints[hiragana_end];
-  bool is_mono_suffix = (suffix_char == U'物');
-  bool is_kata_suffix = (suffix_char == U'方');
-  bool is_tokoro_suffix = (suffix_char == U'所');
-  bool is_me_suffix = (suffix_char == U'目');  // 割れ目, 切れ目, 裂け目
-  bool is_te_suffix = (suffix_char == U'手');  // 読み手, 書き手, 受け手
-  bool is_ba_suffix = (suffix_char == U'場');  // 売り場, 買い場
+  const DeverbalHeadNoun* head_noun = nullptr;
+  size_t head_length = 0;
+  for (size_t length = kMaxDeverbalHeadLength; length >= 1; --length) {
+    if (hiragana_end + length > codepoints.size()) {
+      continue;
+    }
+    const std::string candidate_head = extractSubstring(codepoints, hiragana_end, hiragana_end + length);
+    for (const auto& entry : kDeverbalHeadNouns) {
+      if (candidate_head == entry.surface) {
+        head_noun = &entry;
+        head_length = length;
+        break;
+      }
+    }
+    if (head_noun != nullptr) {
+      break;
+    }
+  }
 
-  if (!is_mono_suffix && !is_kata_suffix && !is_tokoro_suffix && !is_me_suffix && !is_te_suffix && !is_ba_suffix) {
+  if (head_noun == nullptr) {
     return;
   }
 
@@ -656,12 +692,12 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     return;  // Too short without hiragana
   }
 
-  // 手 and 場 form productive deverbal nouns only after a dictionary-backed
+  // A strict head forms a productive deverbal noun only after a dictionary-backed
   // continuative verb form. Verify the reconstructed terminal form before
   // adding the joined search unit, so a coincidental kanji+hira sequence (for
   // example an adjective stem) cannot be absorbed merely because it is
-  // followed by either suffix.
-  if (is_te_suffix || is_ba_suffix) {
+  // followed by such a head.
+  if (head_noun->requires_verified_renyokei) {
     if (hiragana_end == kanji_end) {
       return;
     }
@@ -695,7 +731,7 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
   }
 
   // Build the compound noun surface
-  size_t end_pos = hiragana_end + 1;  // Include suffix
+  size_t end_pos = hiragana_end + head_length;  // Include the bound noun head
   size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
   size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
 

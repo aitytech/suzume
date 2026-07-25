@@ -259,12 +259,15 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
     }
   }
 
-  // A long kanji sequence ending in an attested godan stem before a particle
-  // normally contains a nominal boundary (東京+行き, 翌月+払い), rather than
-  // one unknown nominalization. Two-kanji deverbal compounds are handled by
-  // the verified compound path below.
+  // A long kanji sequence ending in an attested godan stem normally contains a
+  // nominal boundary (東京+行き, 翌月+払い, ご確認+願い), rather than one unknown
+  // nominalization. The boundary shows up both before a particle and before a
+  // verbal continuation, so the trailing hiragana carries the verb: 確認願います
+  // is 確認 + 願い + ます, never a 確認願い noun. Copula だ and a non-hiragana or
+  // final position leave the nominal reading intact (翌月払いだ). Two-kanji
+  // deverbal compounds are handled by the verified compound path below.
   if (kanji_count >= 3 && dict_manager != nullptr && kanji_end + 1 < codepoints.size() &&
-      normalize::isParticleCodepoint(codepoints[kanji_end + 1])) {
+      char_types[kanji_end + 1] == normalize::CharType::Hiragana && codepoints[kanji_end + 1] != U'だ') {
     const std::string_view base_ending = grammar::godanBaseSuffixFromIRow(first_hiragana);
     if (!base_ending.empty()) {
       const std::string verb_base = normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending);

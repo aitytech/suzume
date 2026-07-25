@@ -2358,6 +2358,28 @@
       ],
       "id": "hatake",
       "input": "畑を耕す"
+    },
+    {
+      "description": "待ち時間が長い - regression test",
+      "expected": [
+        {
+          "lemma": "待ち時間",
+          "pos": "Noun",
+          "surface": "待ち時間"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "長い",
+          "pos": "Adjective",
+          "surface": "長い"
+        }
+      ],
+      "id": "chi_ga_i",
+      "input": "待ち時間が長い"
     }
   ],
   "description": "General nouns (part 2/2)",

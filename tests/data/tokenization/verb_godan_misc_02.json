@@ -2267,8 +2267,425 @@
       ],
       "id": "ga_adjective_sugiru",
       "input": "会場が大きすぎる。"
+    },
+    {
+      "description": "売り場を探す - regression test",
+      "expected": [
+        {
+          "lemma": "売り場",
+          "pos": "Noun",
+          "surface": "売り場"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "探す",
+          "pos": "Verb",
+          "surface": "探す"
+        }
+      ],
+      "id": "ri_wo_su",
+      "input": "売り場を探す"
+    },
+    {
+      "description": "遊び場を作る - regression test",
+      "expected": [
+        {
+          "lemma": "遊び場",
+          "pos": "Noun",
+          "surface": "遊び場"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "作る",
+          "pos": "Verb",
+          "surface": "作る"
+        }
+      ],
+      "id": "bi_wo_ru",
+      "input": "遊び場を作る"
+    },
+    {
+      "description": "書き方を読む - regression test",
+      "expected": [
+        {
+          "lemma": "書き方",
+          "pos": "Noun",
+          "surface": "書き方"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "ki_wo_mu",
+      "input": "書き方を読む"
+    },
+    {
+      "description": "作業時間を減らす - regression test",
+      "expected": [
+        {
+          "lemma": "作業時間",
+          "pos": "Noun",
+          "surface": "作業時間"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "減らす",
+          "pos": "Verb",
+          "surface": "減らす"
+        }
+      ],
+      "id": "wo_rasu",
+      "input": "作業時間を減らす"
+    },
+    {
+      "description": "読んでいる - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "ndeiru",
+      "input": "読んでいる"
+    },
+    {
+      "description": "お待ち願います - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "待ち",
+          "pos": "Noun",
+          "surface": "待ち"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願い"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "o_chi_imasu",
+      "input": "お待ち願います"
+    },
+    {
+      "description": "本だからといって必要ではない - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "dakaratoittte_dehanai_2",
+      "input": "本だからといって必要ではない"
+    },
+    {
+      "description": "北海道に行く - regression test",
+      "expected": [
+        {
+          "lemma": "北海道",
+          "pos": "Noun",
+          "surface": "北海道"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "ni_ku_2",
+      "input": "北海道に行く"
+    },
+    {
+      "description": "使い道を考える - regression test",
+      "expected": [
+        {
+          "lemma": "使い道",
+          "pos": "Noun",
+          "surface": "使い道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "考える",
+          "pos": "Verb",
+          "surface": "考える"
+        }
+      ],
+      "id": "i_wo_eru",
+      "input": "使い道を考える"
+    },
+    {
+      "description": "帰り道を歩く - regression test",
+      "expected": [
+        {
+          "lemma": "帰り道",
+          "pos": "Noun",
+          "surface": "帰り道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩く"
+        }
+      ],
+      "id": "ri_wo_ku",
+      "input": "帰り道を歩く"
+    },
+    {
+      "description": "待ち時間を減らす - regression test",
+      "expected": [
+        {
+          "lemma": "待ち時間",
+          "pos": "Noun",
+          "surface": "待ち時間"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "減らす",
+          "pos": "Verb",
+          "surface": "減らす"
+        }
+      ],
+      "id": "chi_wo_rasu",
+      "input": "待ち時間を減らす"
+    },
+    {
+      "description": "ご確認願います - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願い"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "go_imasu",
+      "input": "ご確認願います"
+    },
+    {
+      "description": "ご利用願います - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "利用",
+          "pos": "Noun",
+          "surface": "利用"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願い"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "go_imasu_2",
+      "input": "ご利用願います"
+    },
+    {
+      "description": "ご連絡願います - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "連絡",
+          "pos": "Noun",
+          "surface": "連絡"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願い"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "go_imasu_3",
+      "input": "ご連絡願います"
+    },
+    {
+      "description": "ご記入願います - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "記入",
+          "pos": "Noun",
+          "surface": "記入"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願い"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "go_imasu_4",
+      "input": "ご記入願います"
+    },
+    {
+      "description": "読んでいれば - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "ndeireba",
+      "input": "読んでいれば"
     }
   ],
-  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 2/2)",
+  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 2/3)",
   "version": "1.0"
 }
