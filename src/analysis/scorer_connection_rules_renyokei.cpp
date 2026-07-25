@@ -277,10 +277,13 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   }
 
   // A modern hypothetical verb form is followed by the conditional particle
-  // ば (食べれ+ば, 書け+ば). Other conjunctive particles cannot complete this
-  // inflection, so they must not receive the conditional connection bonus.
+  // ば (食べれ+ば, 書け+ば), and the classical concessive ど/ども selects the
+  // 已然形 the same paradigm slot spells (飲め+ど, 読め+ども). Other conjunctive
+  // particles cannot complete this inflection, so they must not receive the
+  // bonus: without it the continuative of a homographic potential verb
+  // (飲める) takes the span and the lemma with it.
   if (prev.extended_pos == core::ExtendedPOS::VerbKateikei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
-      utf8::equalsAny(next.surface, {"ば"})) {
+      utf8::equalsAny(next.surface, {"ば", "ど", "ども"})) {
     bonus += cost::kVeryStrongBonus;
   }
 
