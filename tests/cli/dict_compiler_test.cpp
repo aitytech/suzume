@@ -5,6 +5,7 @@
 #include <fstream>
 #include <set>
 #include <string_view>
+#include <vector>
 
 // Include the header directly since we add the CLI source dir to includes
 #include "dict_compiler.h"
@@ -165,6 +166,75 @@ TEST_F(DictCompilerTest, NaAdjectiveStoresSpecificExtendedPos) {
   const auto* entry = dict.lookupExact("穏やか");
   ASSERT_NE(entry, nullptr);
   EXPECT_EQ(entry->extended_pos, core::ExtendedPOS::AdjNaAdj);
+}
+
+// A compiled dictionary holds expanded conjugations, so a decompiled dump can
+// never be compiler input. The dump has to carry the information the binary
+// really has, and compile() has to say why it refuses the dump.
+TEST_F(DictCompilerTest, DecompiledDumpCarriesExtendedPosAndLemmaOfEachExpandedForm) {
+  auto input = writeFile("verb.tsv", "黙る\tVERB\tGODAN_RA\n");
+  auto output = temp_dir_ / "verb.dic";
+  auto dump = temp_dir_ / "verb.dump.tsv";
+
+  DictCompiler compiler;
+  ASSERT_TRUE(compiler.compile(input.string(), output.string()).hasValue());
+
+  auto decompile_result = compiler.decompile(output.string(), dump.string());
+  ASSERT_TRUE(decompile_result.hasValue()) << decompile_result.error().message;
+  EXPECT_GT(decompile_result.value(), 1U) << "compilation expands one source row into many forms";
+
+  std::ifstream file(dump);
+  ASSERT_TRUE(file.is_open());
+  std::string header;
+  ASSERT_TRUE(std::getline(file, header));
+  EXPECT_EQ(header.rfind("# suzume dictionary dump", 0), 0U);
+
+  bool saw_terminal_form = false;
+  std::string line;
+  while (std::getline(file, line)) {
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
+    // surface, pos, extended_pos, lemma
+    std::vector<std::string> fields;
+    size_t start = 0;
+    for (size_t tab = line.find('\t'); tab != std::string::npos; tab = line.find('\t', start)) {
+      fields.push_back(line.substr(start, tab - start));
+      start = tab + 1;
+    }
+    fields.push_back(line.substr(start));
+
+    ASSERT_EQ(fields.size(), 4U) << line;
+    EXPECT_EQ(fields[1], "VERB");
+    EXPECT_FALSE(fields[2].empty()) << "extended POS must survive the dump";
+    EXPECT_EQ(fields[3], "黙る") << "lemma must survive the dump";
+    if (fields[0] == "黙る") {
+      saw_terminal_form = true;
+    }
+  }
+  EXPECT_TRUE(saw_terminal_form);
+}
+
+TEST_F(DictCompilerTest, CompileRefusesADecompiledDumpWithAnExplanation) {
+  auto input = writeFile("verb.tsv", "黙る\tVERB\tGODAN_RA\n");
+  auto output = temp_dir_ / "verb.dic";
+  auto dump = temp_dir_ / "verb.dump.tsv";
+  auto round = temp_dir_ / "round.dic";
+
+  DictCompiler compiler;
+  ASSERT_TRUE(compiler.compile(input.string(), output.string()).hasValue());
+  ASSERT_TRUE(compiler.decompile(output.string(), dump.string()).hasValue());
+
+  auto single = compiler.compile(dump.string(), round.string());
+  ASSERT_FALSE(single.hasValue());
+  EXPECT_NE(single.error().message.find("decompiled dump"), std::string::npos);
+
+  // compileMultiple takes a separate parse path and needs the same guard.
+  auto multiple = compiler.compileMultiple({dump.string()}, round.string());
+  ASSERT_FALSE(multiple.hasValue());
+  EXPECT_NE(multiple.error().message.find("decompiled dump"), std::string::npos);
+
+  EXPECT_FALSE(std::filesystem::exists(round));
 }
 
 }  // namespace

@@ -719,7 +719,8 @@ Subcommands:
   compile <in.tsv> [out.dic]
                          Compile to binary format (default: in.dic)
   decompile <in.dic> [out.tsv]
-                         Decompile binary to TSV (default: in.tsv)
+                         Dump expanded entries to TSV (default: in.tsv).
+                         A dump is for inspection, not compiler input.
   -i, --interactive [file.tsv]
                          Interactive mode
 

@@ -1,9 +1,11 @@
 #include "dict_compiler.h"
 
+#include <fstream>
 #include <iostream>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 
 #include "cli_common.h"
 #include "core/utf8_constants.h"
@@ -15,6 +17,25 @@
 namespace suzume::cli {
 
 namespace {
+
+// Marker written at the top of a decompiled dump and recognized by compile().
+// Compiling a dump is a category error rather than a syntax error: see
+// writeDecompiledDump() for why the two formats cannot be the same.
+constexpr std::string_view kDumpMarker = "# suzume dictionary dump";
+
+// Reject a decompiled dump before parsing: parsing it yields one "invalid
+// conjugation type" error per expanded form, which buries the real problem.
+core::Expected<std::monostate, core::Error> rejectDecompiledDump(const std::string& tsv_path) {
+  std::ifstream probe(tsv_path);
+  std::string first_line;
+  if (probe && std::getline(probe, first_line) && first_line.rfind(kDumpMarker, 0) == 0) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::InvalidInput, tsv_path + " is a decompiled dump, not dictionary source. "
+                                                              "Compilation expands conjugations, so a dump cannot be "
+                                                              "recompiled; edit the source TSV under data/ instead."));
+  }
+  return std::monostate{};
+}
 
 // I-adjective conjugation suffixes for dictionary expansion
 // Store only forms that are lexical units; compound auxiliary forms stay split.
@@ -180,6 +201,11 @@ bool isTrivialEntry(std::string_view surface) {
 DictCompiler::DictCompiler() = default;
 
 core::Expected<size_t, core::Error> DictCompiler::compile(const std::string& tsv_path, const std::string& dic_path) {
+  auto dump_check = rejectDecompiledDump(tsv_path);
+  if (!dump_check.hasValue()) {
+    return core::makeUnexpected(dump_check.error());
+  }
+
   TsvParser parser;
   auto parse_result = parser.parseFile(tsv_path);
 
@@ -386,6 +412,11 @@ core::Expected<size_t, core::Error> DictCompiler::compileMultiple(const std::vec
 
   // Parse all TSV files
   for (const auto& tsv_path : tsv_paths) {
+    auto dump_check = rejectDecompiledDump(tsv_path);
+    if (!dump_check.hasValue()) {
+      return core::makeUnexpected(dump_check.error());
+    }
+
     auto parse_result = parser.parseFile(tsv_path);
     if (!parse_result.hasValue()) {
       return core::makeUnexpected(core::Error(core::ErrorCode::ParseError,
@@ -430,30 +461,42 @@ core::Expected<size_t, core::Error> DictCompiler::decompile(const std::string& d
     return core::makeUnexpected(load_result.error());
   }
 
-  std::vector<TsvEntry> entries;
-  entries.reserve(dict.size());
-
-  for (size_t idx = 0; idx < dict.size(); ++idx) {
-    const auto* entry = dict.getEntry(static_cast<uint32_t>(idx));
-    if (entry != nullptr) {
-      TsvEntry tsv_entry;
-      tsv_entry.surface = entry->surface;
-      tsv_entry.pos = entry->pos;
-      tsv_entry.conj_type = dictionary::ConjugationType::None;
-      entries.push_back(std::move(tsv_entry));
-    }
+  std::ofstream file(tsv_path);
+  if (!file) {
+    return core::makeUnexpected(core::Error(core::ErrorCode::InternalError, "Failed to create file: " + tsv_path));
   }
 
-  auto write_result = writeTsvFile(tsv_path, entries);
-  if (!write_result.hasValue()) {
-    return core::makeUnexpected(write_result.error());
+  // A compiled dictionary holds the EXPANDED entries: one source row such as
+  // "黙る VERB GODAN_RA" becomes 黙ら/黙り/黙る/黙れ/黙ろ/…, each with its own
+  // extended POS and lemma, and the source row itself is not kept. There is
+  // therefore no source TSV to recover — writing one would re-expand every
+  // conjugated form on the next compile. This dump reports what the binary
+  // actually contains, and compile() refuses to read it back.
+  file << kDumpMarker << " (expanded entries, not compiler input)\n";
+  file << "# Source rows are not recoverable: compilation expands conjugations.\n";
+  file << "# Format: surface<TAB>pos<TAB>extended_pos<TAB>lemma\n";
+  file << "\n";
+
+  size_t written = 0;
+  for (size_t idx = 0; idx < dict.size(); ++idx) {
+    const auto* entry = dict.getEntry(static_cast<uint32_t>(idx));
+    if (entry == nullptr) {
+      continue;
+    }
+    file << entry->surface << "\t" << core::posToString(entry->pos) << "\t"
+         << core::extendedPosToString(entry->extended_pos) << "\t" << entry->lemma << "\n";
+    ++written;
+  }
+
+  if (!file) {
+    return core::makeUnexpected(core::Error(core::ErrorCode::InternalError, "Failed to write file: " + tsv_path));
   }
 
   if (verbose_) {
-    printInfo("Decompiled " + std::to_string(entries.size()) + " entries to " + tsv_path);
+    printInfo("Decompiled " + std::to_string(written) + " entries to " + tsv_path);
   }
 
-  return entries.size();
+  return written;
 }
 
 }  // namespace suzume::cli
