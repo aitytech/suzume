@@ -2229,6 +2229,65 @@
       ],
       "id": "wo_kishi",
       "input": "紙を書きし人。"
+    },
+    {
+      "description": "classical honorific subsidiary imperative as one verb",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "給ふ",
+          "pos": "Verb",
+          "surface": "給へ"
+        }
+      ],
+      "id": "wo_ki_he",
+      "input": "紙を書き給へ。"
+    },
+    {
+      "description": "honorific subsidiary after the causative auxiliary",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "給ふ",
+          "pos": "Verb",
+          "surface": "給へ"
+        }
+      ],
+      "id": "wo_mase_he",
+      "input": "本を読ませ給へ。"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 3/3)",

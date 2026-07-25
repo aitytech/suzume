@@ -515,6 +515,22 @@ def _postprocess_ha_row_godan(result: list[dict], applied_rule: str | None) -> t
             if applied_rule is None:
                 applied_rule = "ha-row-godan-conjugation"
             continue
+        # The classical honorific stem is tagged as a suffix, and its imperative
+        # cell then falls out as the direction particle (給+へ). A suffix never
+        # takes that particle, so the pair is one 命令形 of the ハ行四段 verb.
+        if (
+            following is not None
+            and token.get("pos") == "名詞"
+            and token.get("pos_sub1") == "接尾"
+            and following.get("surface") in _HA_ROW_DETACHED_TAILS
+            and following.get("pos") == "助詞"
+        ):
+            stem = token.get("surface", "")
+            merged.append({"surface": stem + following["surface"], "pos": "動詞", "lemma": stem + "ふ"})
+            idx += 2
+            if applied_rule is None:
+                applied_rule = "ha-row-godan-conjugation"
+            continue
         surface = token.get("surface", "")
         if len(surface) > 1 and surface.endswith(_HA_ROW_TAILS) and _ha_row_fabricated_ichidan(token):
             merged.append({**token, "lemma": surface[:-1] + "ふ"})
