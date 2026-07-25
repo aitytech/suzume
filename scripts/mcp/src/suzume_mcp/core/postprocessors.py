@@ -929,6 +929,30 @@ def postprocess_de_particle(tokens: list[dict]) -> None:
         token["lemma"] = "だ"
 
 
+def postprocess_te_form_contraction(tokens: list[dict]) -> bool:
+    """Tag じゃ after an onbin verb as the te-form contraction, like ちゃ.
+
+    ちゃ (= ては) and じゃ (= では) are one paradigm; only the voicing of the
+    conjunctive particle differs, selected by the onbin stem in front of it
+    (書い+ちゃ, 読ん+じゃ, 泳い+じゃ). MeCab already reads ちゃ as a particle but
+    reads じゃ as the copula だ, which would put a copula straight onto a verb
+    continuative. The copula reading stays untouched after a nominal (本じゃない).
+    """
+    changed = False
+    onbin_tails = ("ん", "い")
+    for idx in range(1, len(tokens)):
+        token = tokens[idx]
+        if token.get("surface") != "じゃ" or token.get("pos") != "Auxiliary":
+            continue
+        previous = tokens[idx - 1]
+        if previous.get("pos") != "Verb" or not previous.get("surface", "").endswith(onbin_tails):
+            continue
+        token["pos"] = "Particle"
+        token["lemma"] = "じゃ"
+        changed = True
+    return changed
+
+
 def postprocess_dai_final_particle(tokens: list[dict]) -> None:
     """Normalize closed sentence-final particles that MeCab labels as nouns."""
     if not tokens:

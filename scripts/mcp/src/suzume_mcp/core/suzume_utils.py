@@ -73,6 +73,7 @@ from .postprocessors import (
     postprocess_subsidiary_yuku,
     postprocess_tagaru_aux,
     postprocess_taihen,
+    postprocess_te_form_contraction,
     postprocess_teki_na_adjective,
     postprocess_temporal_nao,
     postprocess_to_areba_conditional,
@@ -212,6 +213,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     if postprocess_honorific_oki_aux(tokens) and applied_rule is None:
         applied_rule = "honorific-oki-aux"
     postprocess_de_particle(tokens)
+    if postprocess_te_form_contraction(tokens) and applied_rule is None:
+        applied_rule = "te-form-contraction-particle"
     postprocess_dai_final_particle(tokens)
     if postprocess_chigai_negative_adjective(tokens) and applied_rule is None:
         applied_rule = "chigai-negative-adjective"
