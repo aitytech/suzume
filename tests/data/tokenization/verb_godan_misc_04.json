@@ -2521,6 +2521,28 @@
       ],
       "id": "wo_ndekure",
       "input": "本を読んでくれ"
+    },
+    {
+      "description": "本読むねん - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "ねん",
+          "pos": "Particle",
+          "surface": "ねん"
+        }
+      ],
+      "id": "munen",
+      "input": "本読むねん"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

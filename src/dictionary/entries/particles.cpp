@@ -94,6 +94,7 @@ EntrySpecRange getParticleEntries() {
       // standard ones above, unlike the dialect copulas in the auxiliary table.
       particle("ばい", EPOS::ParticleFinal),
       particle("やんけ", EPOS::ParticleFinal),
+      particle("ねん", EPOS::ParticleFinal),  // Kansai explanatory (読む+ねん)
 
       // Adverbial particles (副助詞)
       particle("かも", EPOS::ParticleAdverbial),  // prevent か+も split in かもしれない
