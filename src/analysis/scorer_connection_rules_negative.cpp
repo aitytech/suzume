@@ -167,7 +167,8 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
       bonus += cost::kDoubleVeryStrongBonus;
     }
   }
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"ちゃ"}) &&
+  // じゃ is the voiced member of the same contracted pair as ちゃ (読ん+じゃ+いけ+ない).
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"ちゃ", "じゃ"}) &&
       ((next.extended_pos == core::ExtendedPOS::AuxPotential && utf8::equalsAny(next.surface, {"いけ"})) ||
        (next.extended_pos == core::ExtendedPOS::VerbMizenkei && utf8::equalsAny(next.surface, {"なら"})))) {
     bonus += cost::kDoubleVeryStrongBonus;

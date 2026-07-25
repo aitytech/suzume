@@ -40,6 +40,10 @@ EntrySpecRange getParticleEntries() {
       particle("しも", EPOS::ParticleBinding),
       // Contracted conditional ちゃ (= ては): なく+ちゃ+いけない.
       particle("ちゃ", EPOS::ParticleConj),
+      // Voiced counterpart じゃ (= では), selected by the same 撥音便 stem that
+      // takes で: 読ん+じゃ+だめ, 飲ん+じゃ+いけない. The copula reading of じゃ
+      // is a separate entry among the auxiliaries.
+      particle("じゃ", EPOS::ParticleConj),
       // Note: ら removed - たら handles conditional, ら suffix is in L2 as SUFFIX
       particle("ながら", EPOS::ParticleConj),
       particle("つつ", EPOS::ParticleConj),  // 反復・並行の接続助詞 (連用形接続): 重ね+つつ, 増加し+つつ+ある

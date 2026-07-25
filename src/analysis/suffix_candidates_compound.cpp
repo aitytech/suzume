@@ -67,6 +67,34 @@ bool boundarySplitsDictionaryParticle(const dictionary::DictionaryManager* dict_
   return false;
 }
 
+/**
+ * @brief Whether the hiragana portion opens with a multi-mora conjunctive particle.
+ *
+ * A 接続助詞 attaches to a predicate, so a kanji run immediately followed by one
+ * is a verb or adjective stem, not the head of a compound noun (見+ちゃ+だめ,
+ * 読ん+じゃ+だめ). This is the head-side counterpart of the て/で tail check
+ * below; single-mora members are left out because their kana are also ordinary
+ * word-internal morae (手しごと, 雨やどり).
+ * @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+ */
+bool startsWithConjunctiveParticle(const dictionary::DictionaryManager* dict_manager,
+                                   const std::vector<char32_t>& codepoints, size_t kanji_end, size_t end_pos) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  constexpr size_t kMinimumParticleLength = 2;
+  constexpr size_t kParticleProbe = 4;
+  const size_t probe_end = std::min(end_pos, kanji_end + kParticleProbe);
+  for (size_t particle_end = kanji_end + kMinimumParticleLength; particle_end <= probe_end; ++particle_end) {
+    const auto* entry =
+        dict_manager->lookupExact(extractSubstring(codepoints, kanji_end, particle_end), core::PartOfSpeech::Particle);
+    if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleConj) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool isAdjectiveNominalizationSa(const dictionary::DictionaryManager* dict_manager,
                                  const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
   if (dict_manager == nullptr || end_pos <= start_pos + 1 || codepoints[end_pos - 1] != U'さ') {
@@ -777,6 +805,11 @@ void generateKanjiHiraganaCompoundCandidates(const std::vector<char32_t>& codepo
   // Patterns ending with て/で (verb te-form)
   // e.g., 基づいて, 考えて - these are verb conjugations, not compound nouns
   if ((last_hira == U'て' || last_hira == U'で') && hiragana_len >= 2) {
+    looks_like_aux = true;
+  }
+
+  // Patterns opening with a conjunctive particle (見ちゃだめ, 読んじゃだめ)
+  if (startsWithConjunctiveParticle(dict_manager, codepoints, kanji_end, hiragana_end)) {
     looks_like_aux = true;
   }
 
