@@ -337,6 +337,18 @@ bool embedsAuxiliaryOnOnbinStem(const std::vector<char32_t>& codepoints, size_t 
                                 const dictionary::DictionaryManager* dict_manager);
 
 /**
+ * @brief True when a dictionary auxiliary that selects a predicate starts at
+ *        @p pos.
+ *
+ * Such an auxiliary attaches to an inflected verb form, so the span in front of
+ * it is verbal and the only open question is where the verb begins (花散り+ぬ,
+ * 見送り+けむ). The copula is deliberately excluded: it follows a deverbal noun
+ * just as readily (足取り+だっ+た), so it carries no such evidence.
+ */
+bool predicateAuxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manager,
+                                 const std::vector<char32_t>& codepoints, size_t pos);
+
+/**
  * @brief Extend candidates with emphatic suffix variants
  *
  * For each verb/adjective candidate, checks if input continues with emphatic

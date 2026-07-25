@@ -180,18 +180,40 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
           }
         }
         // An unverified multi-kanji Ichidan proposal must not hide a
-        // noun + Godan continuative boundary before the classical
-        // conjectural auxiliary. The auxiliary supplies grammatical evidence
-        // for the final-kanji verb without requiring either open-class word
-        // to be registered in the compact dictionary.
-        bool suffix_is_godan_before_classical_auxiliary = false;
+        // noun + Godan continuative boundary before an auxiliary. The auxiliary
+        // supplies grammatical evidence for the final-kanji verb without
+        // requiring either open-class word to be registered in the compact
+        // dictionary (花散り+ぬ is 花 + 散り + ぬ, 見送り+けむ is 見送り + けむ).
+        // The copula is excluded: it follows a deverbal noun just as readily
+        // (足取りだった), so it is no evidence for a verbal reading.
+        bool suffix_is_godan_before_auxiliary = false;
         if (!ichidan_base_is_dict && kanji_end > start_pos + 1 &&
-            grammar::startsClassicalConjecturalAuxiliary(
-                extractSubstring(codepoints, renyokei_end, codepoints.size()))) {
+            vh::predicateAuxiliaryFollowsAt(dict_manager, codepoints, renyokei_end)) {
           const std::string suffix_surface = extractSubstring(codepoints, kanji_end - 1, renyokei_end);
           for (const auto& suffix_candidate : inflection.analyze(suffix_surface)) {
             if (grammar::isGodanVerbType(suffix_candidate.verb_type)) {
-              suffix_is_godan_before_classical_auxiliary = true;
+              suffix_is_godan_before_auxiliary = true;
+              break;
+            }
+          }
+        }
+        // The okurigana of an unverified Ichidan proposal must not be the head of
+        // a dictionary auxiliary that starts at the same position: 見けむ is the
+        // continuative of 見る plus けむ, not a fabricated 見ける. The shorter
+        // reading needs its own evidence, so require the kanji run to be a
+        // dictionary verb on its own.
+        // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+        bool okurigana_opens_auxiliary = false;
+        if (!ichidan_base_is_dict && dict_manager != nullptr && renyokei_end < codepoints.size() &&
+            vh::isVerbInDictionary(dict_manager, extractSubstring(codepoints, start_pos, kanji_end) + "る")) {
+          constexpr size_t kAuxiliaryProbe = 4;
+          const size_t max_aux_end = std::min(codepoints.size(), kanji_end + kAuxiliaryProbe);
+          for (size_t aux_end = renyokei_end + 1; aux_end <= max_aux_end; ++aux_end) {
+            if (dict_manager->lookupExact(extractSubstring(codepoints, kanji_end, aux_end),
+                                          core::PartOfSpeech::Auxiliary) != nullptr) {
+              okurigana_opens_auxiliary = true;
+              SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" okurigana opens an auxiliary, "
+                                                << "skipping ichidan_renyokei\n");
               break;
             }
           }
@@ -216,7 +238,7 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
             grammar::startsClosedTemporalNominal(extractSubstring(codepoints, renyokei_end, codepoints.size()));
         if (!prefer_suru && !prefer_godan && ichidan_cand.confidence > conf_threshold && !surface_is_dict_noun &&
             !single_kanji_te_form && !suffix_is_dict_verb && !trailing_span_is_dict_suffix &&
-            !suffix_is_godan_before_classical_auxiliary && !adj_homograph_blocked &&
+            !suffix_is_godan_before_auxiliary && !adj_homograph_blocked && !okurigana_opens_auxiliary &&
             !unverified_multi_kanji_suru_mizen && !unverified_before_temporal_nominal) {
           // Negative cost to strongly favor split over combined analysis
           // Combined forms get optimal_length bonus (-0.5), so we need to be lower

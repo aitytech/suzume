@@ -204,6 +204,9 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
       std::string following_hiragana = extractSubstring(codepoints, kanji_end, hiragana_end);
       // Classical desiderative まほしき also follows a bare ichidan renyokei.
       bool is_classical_desiderative = grammar::startsClassicalDesiderativeSequence(following_hiragana);
+      // The classical past-conjectural auxiliary attaches to the same bare
+      // continuative as the classical past does (見けむ, 寝けむ).
+      bool is_classical_conjectural = grammar::startsClassicalConjecturalAuxiliary(following_hiragana);
       // The classical negative-conjectural auxiliary attaches to the bare
       // irrealis stem in its attributive form as well (見まじき姿).
       const auto* classical_negative_mai = dict_manager->lookupExact(following_hiragana, core::PartOfSpeech::Auxiliary);
@@ -235,7 +238,7 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
 
       if (is_polite_aux || is_negative_aux || is_classical_negative_aux || is_literary_volitional_n ||
           is_classical_volitional_mu || is_classical_desiderative || is_classical_negative_mai ||
-          is_conjunctive_particle || is_classical_past_aux) {
+          is_conjunctive_particle || is_classical_past_aux || is_classical_conjectural) {
         std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
         // A one-kanji stem followed by して can instead be the continuative
         // form of a dictionary-confirmed Godan-sa verb. Keep that lexical
@@ -261,8 +264,9 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
               (is_negative_conditional || is_literary_volitional_n || is_classical_volitional_mu ||
                is_classical_negative_mai)
                   ? core::ExtendedPOS::VerbMizenkei
-              : (is_conjunctive_particle || is_classical_past_aux) ? core::ExtendedPOS::VerbRenyokei
-                                                                   : core::ExtendedPOS::Unknown));
+              : (is_conjunctive_particle || is_classical_past_aux || is_classical_conjectural)
+                  ? core::ExtendedPOS::VerbRenyokei
+                  : core::ExtendedPOS::Unknown));
         }
       }
 

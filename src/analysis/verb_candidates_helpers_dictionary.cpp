@@ -148,6 +148,24 @@ bool embedsAuxiliaryOnOnbinStem(const std::vector<char32_t>& codepoints, size_t 
   return false;
 }
 
+bool predicateAuxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manager,
+                                 const std::vector<char32_t>& codepoints, size_t pos) {
+  if (dict_manager == nullptr || pos >= codepoints.size()) {
+    return false;
+  }
+  constexpr size_t kAuxiliaryProbe = 4;
+  const size_t max_end = std::min(codepoints.size(), pos + kAuxiliaryProbe);
+  for (size_t aux_end = pos + 1; aux_end <= max_end; ++aux_end) {
+    const auto* entry =
+        dict_manager->lookupExact(extractSubstring(codepoints, pos, aux_end), core::PartOfSpeech::Auxiliary);
+    if (entry != nullptr && entry->extended_pos != core::ExtendedPOS::AuxCopulaDa &&
+        entry->extended_pos != core::ExtendedPOS::AuxCopulaDesu) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager,
                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                core::ExtendedPOS particle_pos) {
