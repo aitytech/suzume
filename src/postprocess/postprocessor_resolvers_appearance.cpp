@@ -1,3 +1,5 @@
+#include <array>
+#include <cstdint>
 #include <string_view>
 #include <utility>
 
@@ -408,8 +410,93 @@ void resolveInitialNegativeAdjective(std::vector<core::Morpheme>& result) {
 bool isObligationVerbStem(const core::Morpheme& morpheme) {
   // The complete right-hand chain supplies the form evidence. Ichidan
   // mizenkei/renyokei homographs and some generated Godan stems do not yet
-  // carry a stable ExtendedPOS at this resolver stage.
-  return morpheme.pos == core::PartOfSpeech::Verb;
+  // carry a stable ExtendedPOS at this resolver stage.  A subsidiary verb
+  // carries the stem just as a lexical one does (書いて+おか+ないといけない), so
+  // its auxiliary reading selects the chain too.
+  return morpheme.pos == core::PartOfSpeech::Verb || morpheme.pos == core::PartOfSpeech::Auxiliary;
+}
+
+// The role a slot of an obligation chain plays once the whole construction is
+// confirmed. Only the homographic slots carry a resolution.
+enum class ObligationRole : std::uint8_t {
+  kKeep,         // closed-class filler with no competing reading
+  kNegativeNai,  // negative auxiliary homographic with the adjective ない
+  kObligation,   // いけ/なら, homographic with lexical いける/なる
+};
+
+// A slot accepts one or two fixed surfaces, or — when te_connective is set —
+// て/で in its conjunctive-particle reading.
+struct ObligationSlot {
+  const char* first;
+  const char* second;
+  bool te_connective;
+  ObligationRole role;
+};
+
+constexpr size_t kMaxObligationSlots = 4;
+
+struct ObligationPattern {
+  size_t length;
+  std::array<ObligationSlot, kMaxObligationSlots> slots;
+};
+
+// Every obligation/prohibition chain has the same shape: a selecting verb stem
+// followed by a fixed run of closed-class slots. Adding a construction is a
+// row here, never another hand-written scan.
+constexpr std::array<ObligationPattern, 4> kObligationPatterns{{
+    // V未然 + なきゃ/なけりゃ + いけ/なら + ない
+    {3,
+     {{{"なきゃ", "なけりゃ", false, ObligationRole::kNegativeNai},
+       {"いけ", "なら", false, ObligationRole::kObligation},
+       {"ない", nullptr, false, ObligationRole::kNegativeNai},
+       {nullptr, nullptr, false, ObligationRole::kKeep}}}},
+    // V未然 + なく + ちゃ + いけ/なら + ない
+    {4,
+     {{{"なく", nullptr, false, ObligationRole::kNegativeNai},
+       {"ちゃ", nullptr, false, ObligationRole::kKeep},
+       {"いけ", "なら", false, ObligationRole::kObligation},
+       {"ない", nullptr, false, ObligationRole::kNegativeNai}}}},
+    // V未然 + ない + と + いけ/なら + ない
+    {4,
+     {{{"ない", nullptr, false, ObligationRole::kNegativeNai},
+       {"と", nullptr, false, ObligationRole::kKeep},
+       {"いけ", "なら", false, ObligationRole::kObligation},
+       {"ない", nullptr, false, ObligationRole::kNegativeNai}}}},
+    // V音便 + て/で + は + いけ + ない
+    {4,
+     {{{nullptr, nullptr, true, ObligationRole::kKeep},
+       {"は", nullptr, false, ObligationRole::kKeep},
+       {"いけ", nullptr, false, ObligationRole::kObligation},
+       {"ない", nullptr, false, ObligationRole::kNegativeNai}}}},
+}};
+
+bool matchesObligationSlot(const ObligationSlot& slot, const core::Morpheme& morpheme) {
+  if (slot.te_connective) {
+    return morpheme.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(morpheme.surface);
+  }
+  if (slot.first != nullptr && morpheme.surface == slot.first) {
+    return true;
+  }
+  return slot.second != nullptr && morpheme.surface == slot.second;
+}
+
+void applyObligationRole(const ObligationSlot& slot, core::Morpheme& morpheme) {
+  switch (slot.role) {
+    case ObligationRole::kNegativeNai:
+      retagNegativeNai(morpheme);
+      break;
+    case ObligationRole::kObligation:
+      if (morpheme.surface == "いけ") {
+        retag(morpheme, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxPotential, "いける",
+              dictionary::ConjugationType::Ichidan, grammar::ConjForm::Mizenkei);
+      } else {
+        retag(morpheme, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbMizenkei, "なる",
+              dictionary::ConjugationType::GodanRa, grammar::ConjForm::Mizenkei);
+      }
+      break;
+    case ObligationRole::kKeep:
+      break;
+  }
 }
 
 // Contracted obligation/prohibition chains contain several lexical
@@ -417,64 +504,25 @@ bool isObligationVerbStem(const core::Morpheme& morpheme) {
 // and its selecting verb stem are present. This leaves independent ない,
 // conditional なら, and lexical いける untouched.
 void resolveObligationNaranai(std::vector<core::Morpheme>& result) {
-  // V未然 + なきゃ/なけりゃ + なら + ない.
-  for (size_t idx = 1; idx + 2 < result.size(); ++idx) {
-    const auto& verb = result[idx - 1];
-    auto& conditional_negative = result[idx];
-    auto& naru = result[idx + 1];
-    auto& negative = result[idx + 2];
-    if (!isObligationVerbStem(verb) || !utf8::equalsAny(conditional_negative.surface, {"なきゃ", "なけりゃ"}) ||
-        !utf8::equalsAny(naru.surface, {"いけ", "なら"}) || negative.surface != "ない") {
-      continue;
+  for (const auto& pattern : kObligationPatterns) {
+    for (size_t idx = 1; idx + pattern.length <= result.size(); ++idx) {
+      if (!isObligationVerbStem(result[idx - 1])) {
+        continue;
+      }
+      bool complete = true;
+      for (size_t slot = 0; slot < pattern.length; ++slot) {
+        if (!matchesObligationSlot(pattern.slots[slot], result[idx + slot])) {
+          complete = false;
+          break;
+        }
+      }
+      if (!complete) {
+        continue;
+      }
+      for (size_t slot = 0; slot < pattern.length; ++slot) {
+        applyObligationRole(pattern.slots[slot], result[idx + slot]);
+      }
     }
-    retagNegativeNai(conditional_negative);
-    if (naru.surface == "いけ") {
-      retag(naru, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxPotential, "いける",
-            dictionary::ConjugationType::Ichidan, grammar::ConjForm::Mizenkei);
-    } else {
-      retag(naru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbMizenkei, "なる",
-            dictionary::ConjugationType::GodanRa, grammar::ConjForm::Mizenkei);
-    }
-    retagNegativeNai(negative);
-  }
-
-  // V未然 + なく + ちゃ + いけ/なら + ない.
-  for (size_t idx = 1; idx + 3 < result.size(); ++idx) {
-    const auto& verb = result[idx - 1];
-    auto& negative_continuative = result[idx];
-    const auto& contracted_te = result[idx + 1];
-    auto& obligation = result[idx + 2];
-    auto& negative = result[idx + 3];
-    if (!isObligationVerbStem(verb) || negative_continuative.surface != "なく" || contracted_te.surface != "ちゃ" ||
-        !utf8::equalsAny(obligation.surface, {"いけ", "なら"}) || negative.surface != "ない") {
-      continue;
-    }
-    retagNegativeNai(negative_continuative);
-    if (obligation.surface == "いけ") {
-      retag(obligation, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxPotential, "いける",
-            dictionary::ConjugationType::Ichidan, grammar::ConjForm::Mizenkei);
-    } else {
-      retag(obligation, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbMizenkei, "なる",
-            dictionary::ConjugationType::GodanRa, grammar::ConjForm::Mizenkei);
-    }
-    retagNegativeNai(negative);
-  }
-
-  // V音便 + て/で + は + いけ + ない.
-  for (size_t idx = 1; idx + 3 < result.size(); ++idx) {
-    const auto& verb = result[idx - 1];
-    const auto& connective = result[idx];
-    const auto& topic = result[idx + 1];
-    auto& obligation = result[idx + 2];
-    auto& negative = result[idx + 3];
-    if (!isObligationVerbStem(verb) || connective.extended_pos != core::ExtendedPOS::ParticleConj ||
-        !grammar::isTeDeSurface(connective.surface) || topic.surface != "は" || obligation.surface != "いけ" ||
-        negative.surface != "ない") {
-      continue;
-    }
-    retag(obligation, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxPotential, "いける",
-          dictionary::ConjugationType::Ichidan, grammar::ConjForm::Mizenkei);
-    retagNegativeNai(negative);
   }
 }
 
@@ -498,9 +546,20 @@ void resolveNegativeAppearanceChain(std::vector<core::Morpheme>& result) {
   }
 }
 
-// The surface なく is the continuative adjective form of ない in the public
-// token contract (なくては, なくとも, 食べ+なく+て, 読ま+れ+なく+て). A
-// copular topic predicate (ではなく) instead retains the auxiliary reading.
+// A predicate stem is what the negative auxiliary can attach to: a verb or a
+// verbal auxiliary. The copula is not one — its negation takes the
+// supplementary adjective instead.
+bool followsPredicateStem(const core::Morpheme& morpheme) {
+  if (morpheme.extended_pos == core::ExtendedPOS::AuxCopulaDa ||
+      morpheme.extended_pos == core::ExtendedPOS::AuxCopulaDesu) {
+    return false;
+  }
+  return morpheme.pos == core::PartOfSpeech::Verb || morpheme.pos == core::PartOfSpeech::Auxiliary;
+}
+
+// The surface なく is the continuative adjective form of ない wherever it
+// follows a nominal or an adjective continuative (なくとも, 休み+なく,
+// 明るく+なく). After a predicate stem it stays the negative auxiliary.
 // The lattice shares those categories while scoring, so resolve the inflected
 // surface after boundaries have been selected.
 void resolveNegativeRenyokei(std::vector<core::Morpheme>& result) {
@@ -519,34 +578,20 @@ void resolveNegativeRenyokei(std::vector<core::Morpheme>& result) {
     if (negative.surface != "なく" || negative.extended_pos != core::ExtendedPOS::AuxNegativeNai) {
       continue;
     }
-    // The aspectual change construction ～なくなる retains the negative
-    // auxiliary reading; the independent adjective form applies to its
-    // conjunction and adverbial continuations (なくて、なくとも).
-    if (idx + 1 < result.size() && result[idx + 1].lemma == "なる") {
+    // The negative auxiliary attaches to a predicate stem, so なく keeps that
+    // reading after a verb or a verbal auxiliary whatever follows it
+    // (飲ま+なく+ちゃ, 食べ+なく+て, 読ま+なく+は+ない, れ+なく+なる).  The
+    // copula is excluded: its negation uses the supplementary adjective
+    // (本+で+なく).  Everything else here follows a nominal or an adjective
+    // continuative and takes the independent adjective (休み+なく、明るく+なく).
+    if (idx >= 1 && followsPredicateStem(result[idx - 1])) {
       continue;
     }
-    // The colloquial negative-conjecture chain V連用形+っ+こ+なく keeps
-    // なく as a verbal negative auxiliary. The preceding two tokens are
-    // context-gated candidates for this construction, so this exemption does
-    // not affect ordinary adverbial uses of the independent adjective.
-    const bool follows_negative_conjecture = idx >= 2 &&
-                                             result[idx - 1].extended_pos == core::ExtendedPOS::AuxAspectKuru &&
-                                             result[idx - 2].extended_pos == core::ExtendedPOS::AuxNegativeMai;
-    if (follows_negative_conjecture) {
-      continue;
-    }
+    // ではなく keeps the auxiliary reading even though the topical particle
+    // separates it from the copula it negates.
     const bool follows_copular_topic = idx >= 2 && result[idx - 1].extended_pos == core::ExtendedPOS::ParticleTopic &&
                                        result[idx - 2].extended_pos == core::ExtendedPOS::AuxCopulaDa;
     if (follows_copular_topic) {
-      continue;
-    }
-    // In the double-negative predicate ～なくはない, the first なく remains
-    // the negative auxiliary of the preceding verb. The final ない retains
-    // its independent adjective reading after the topical particle.
-    const bool follows_double_negative = idx + 2 < result.size() &&
-                                         result[idx + 1].extended_pos == core::ExtendedPOS::ParticleTopic &&
-                                         result[idx + 1].surface == "は" && result[idx + 2].surface == "ない";
-    if (follows_double_negative) {
       continue;
     }
     retag(negative, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjRenyokei, "ない",

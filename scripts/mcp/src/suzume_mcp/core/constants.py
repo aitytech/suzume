@@ -511,6 +511,10 @@ EMPHATIC_SOKUON: dict[str, str] = {
     "行くっ": "行く",
 }
 
+# Inflected forms of the copula. Its negation takes the supplementary
+# adjective, unlike a verbal auxiliary's, so the two are told apart by surface.
+COPULA_SURFACES: frozenset[str] = frozenset({"だ", "だっ", "で", "です", "でし", "な", "なら"})
+
 # Adverb overrides (words MeCab misclassifies)
 ADVERB_OVERRIDES: set[str] = {
     "全く",

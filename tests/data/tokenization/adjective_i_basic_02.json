@@ -1640,6 +1640,197 @@
       ],
       "id": "ni_shii",
       "input": "非常に難しい"
+    },
+    {
+      "description": "大変な話 - regression test",
+      "expected": [
+        {
+          "lemma": "大変",
+          "pos": "Adjective",
+          "surface": "大変"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "na_3",
+      "input": "大変な話"
+    },
+    {
+      "description": "好きな本 - regression test",
+      "expected": [
+        {
+          "lemma": "好き",
+          "pos": "Adjective",
+          "surface": "好き"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        }
+      ],
+      "id": "kina_2",
+      "input": "好きな本"
+    },
+    {
+      "description": "大きい紙 - regression test",
+      "expected": [
+        {
+          "lemma": "大きい",
+          "pos": "Adjective",
+          "surface": "大きい"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        }
+      ],
+      "id": "kii",
+      "input": "大きい紙"
+    },
+    {
+      "description": "危険な作業 - regression test",
+      "expected": [
+        {
+          "lemma": "危険",
+          "pos": "Adjective",
+          "surface": "危険"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        }
+      ],
+      "id": "na_4",
+      "input": "危険な作業"
+    },
+    {
+      "description": "寒さを感じる - regression test",
+      "expected": [
+        {
+          "lemma": "寒い",
+          "pos": "Adjective",
+          "surface": "寒"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じる"
+        }
+      ],
+      "id": "sawo_jiru",
+      "input": "寒さを感じる"
+    },
+    {
+      "description": "安い紙を買う - regression test",
+      "expected": [
+        {
+          "lemma": "安い",
+          "pos": "Adjective",
+          "surface": "安い"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "i_wo_u",
+      "input": "安い紙を買う"
+    },
+    {
+      "description": "そうなんだ - regression test",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "sounanda",
+      "input": "そうなんだ"
+    },
+    {
+      "description": "静かなんだ - regression test",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kananda",
+      "input": "静かなんだ"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",

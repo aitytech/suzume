@@ -476,15 +476,16 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
   }
 
   // Sentence-final ね is the final particle after a completed predicate or
-  // another final particle, not the homographic verb/negative auxiliary.
+  // after any particle, not the homographic verb/negative auxiliary.  No
+  // particle licenses a following predicate stem, so a trailing ね behind one
+  // is clause-final regardless of the particle's own class (本だがね, 東京にね).
   if (result.size() >= 2 && result.back().surface == "ね") {
     auto& previous = result[result.size() - 2];
     auto& final_ne = result.back();
     const bool stacked_particles = grammar::isFinalParticleStack(previous.surface, final_ne.surface);
-    const bool final_context = stacked_particles || previous.extended_pos == core::ExtendedPOS::ParticleFinal ||
-                               previous.pos == core::PartOfSpeech::Verb ||
-                               previous.pos == core::PartOfSpeech::Adjective ||
-                               previous.pos == core::PartOfSpeech::Auxiliary;
+    const bool final_context =
+        stacked_particles || previous.pos == core::PartOfSpeech::Particle || previous.pos == core::PartOfSpeech::Verb ||
+        previous.pos == core::PartOfSpeech::Adjective || previous.pos == core::PartOfSpeech::Auxiliary;
     if (final_context) {
       if (stacked_particles) {
         resolver::retag(previous, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleFinal, previous.surface,

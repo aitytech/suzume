@@ -184,6 +184,12 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Ensures ませんでした → ませ+ん+でし+た (negative aux ん)
       {EPOS::AuxNegativeNu, EPOS::AuxCopulaDesu, cost::kDoubleVeryStrongBonus},
 
+      // AuxNegativeNai → AuxCopulaDesu (ない+でしょ/です) - the polite copula
+      // follows the terminal negative just as it follows the classical ん.
+      // Without it the competing ない+で conjunctive connection above wins and
+      // でしょ is re-cut as で plus a fabricated verb (ないでしょうか).
+      {EPOS::AuxNegativeNai, EPOS::AuxCopulaDesu, cost::kVeryStrongBonus},
+
       // The classical/contracted negative ん attaches to a verb form, not to
       // the already negative auxiliary ない. In ないんだ the ん is the
       // nominalizer の, followed by the copula.

@@ -53,6 +53,82 @@
       ],
       "id": "ha_karou",
       "input": "本は高かろう。"
+    },
+    {
+      "description": "記念の本 - regression test",
+      "expected": [
+        {
+          "lemma": "記念",
+          "pos": "Noun",
+          "surface": "記念"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        }
+      ],
+      "id": "no_4",
+      "input": "記念の本"
+    },
+    {
+      "description": "東京にね - regression test",
+      "expected": [
+        {
+          "lemma": "東京",
+          "pos": "Noun",
+          "surface": "東京"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "nine",
+      "input": "東京にね"
+    },
+    {
+      "description": "空が明るくなくて - regression test",
+      "expected": [
+        {
+          "lemma": "空",
+          "pos": "Noun",
+          "surface": "空"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "明るい",
+          "pos": "Adjective",
+          "surface": "明るく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "ga_rukunakute",
+      "input": "空が明るくなくて"
     }
   ],
   "description": "General nouns (part 3/3)",

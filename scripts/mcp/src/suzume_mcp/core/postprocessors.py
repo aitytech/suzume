@@ -6,6 +6,7 @@ from .constants import (
     ADVERB_NOMINAL_HOMOGRAPHS,
     COMPOUND_VERB_V2_GODAN,
     COMPOUND_VERB_V2_ICHIDAN,
+    COPULA_SURFACES,
     COUNTER_UNITS,
     EMPHATIC_SOKUON,
     INTERROGATIVES,
@@ -139,8 +140,12 @@ def postprocess_sou(tokens: list[dict]) -> None:
             if i < len(tokens) - 1 and i > 0:
                 nxt = tokens[i + 1].get("surface", "")
                 prev_pos = tokens[i - 1].get("pos", "")
-                if (regex.match(r"^(?:だ|です|でし|じゃ|じゃろ)", nxt) and prev_pos != "Verb") or (
-                    nxt == "な" and i + 2 < len(tokens) and tokens[i + 2].get("surface") in ("の", "ん")
+                # The explanatory な+の/ん chain takes the same reading as the
+                # bare copula: after a terminal verb, そう is the hearsay
+                # auxiliary in both (読む+そう+だ, 読む+そう+な+ん+だ).
+                if prev_pos != "Verb" and (
+                    regex.match(r"^(?:だ|です|でし|じゃ|じゃろ)", nxt)
+                    or (nxt == "な" and i + 2 < len(tokens) and tokens[i + 2].get("surface") in ("の", "ん"))
                 ):
                     t["pos"] = "Adjective"
                 elif nxt == "で" and i + 2 < len(tokens):
@@ -1899,13 +1904,37 @@ def postprocess_nai_context(tokens: list[dict]) -> None:
     MeCab classifies it as 助動詞 in all contexts, but when ない follows
     particles like が/は/も, it's an existence adjective, not a negative auxiliary.
 
-    Also handles sentence-initial ない and なく before て (adjective renyokei).
+    Also handles sentence-initial ない and the continuative なく, whose reading
+    follows from what it attaches to rather than from what follows it.
     """
     for idx, tok in enumerate(tokens):
         surface = tok.get("surface", "")
         pos = tok.get("pos", "")
 
         if surface not in ("ない", "なく", "なかっ") or pos != "Auxiliary":
+            continue
+
+        # The negative auxiliary attaches to a predicate stem, so its
+        # continuative keeps that reading after a verb or a verbal auxiliary
+        # whatever follows (飲ま+なく+ちゃ, 食べ+なく+て, れ+なく+なる). The
+        # copula is excluded because its negation uses the supplementary
+        # adjective (本+で+なく), except when the topical particle separates
+        # the two (本+で+は+なく). Everything else follows a nominal or an
+        # adjective continuative and takes the adjective (休み+なく, 明るく+なく).
+        if surface == "なく" and idx > 0:
+            prev_pos = tokens[idx - 1].get("pos", "")
+            prev_surface = tokens[idx - 1].get("surface", "")
+            is_copular_topic = (
+                prev_pos == "Particle"
+                and prev_surface == "は"
+                and idx >= 2
+                and tokens[idx - 2].get("surface") == "で"
+                and tokens[idx - 2].get("pos") == "Auxiliary"
+            )
+            is_predicate_stem = prev_pos == "Verb" or (prev_pos == "Auxiliary" and prev_surface not in COPULA_SURFACES)
+            if not (is_predicate_stem or is_copular_topic):
+                tok["pos"] = "Adjective"
+                tok["lemma"] = "ない"
             continue
 
         should_fix = False
@@ -1932,12 +1961,6 @@ def postprocess_nai_context(tokens: list[dict]) -> None:
             # an omitted nominative marker (問題ない, 関係ない).
             elif prev_pos == "Noun":
                 should_fix = True
-
-            # なく before て → Adjective (renyokei of ない-adjective)
-            elif surface == "なく" and idx + 1 < len(tokens):
-                next_surface = tokens[idx + 1].get("surface", "")
-                if next_surface == "て":
-                    should_fix = True
 
         if should_fix:
             tok["pos"] = "Adjective"
