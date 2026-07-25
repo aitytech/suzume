@@ -32,7 +32,8 @@ constexpr size_t kOkuriganaProbeChars = 2;
  * ワ行五段 row (思ふ/思う, 移ろふ/移ろう): only the tail kana differs, so the
  * paradigm needs no conjugation table of its own.  The tail names the cell and
  * the base form keeps the historical terminal ふ.  終止形 and 連体形 share one
- * form, and 已然形 occupies the modern conditional slot.
+ * form; 已然形 and 命令形 also share one, taken here as the modern conditional
+ * slot and narrowed to the imperative when the clause ends there.
  */
 core::ExtendedPOS classicalHaRowCell(char32_t tail) {
   switch (tail) {
@@ -70,6 +71,29 @@ bool dictionaryTailFollowsAt(const std::vector<char32_t>& codepoints, size_t pos
   return false;
 }
 
+/**
+ * @brief Whether a predicate form ends exactly where this span begins.
+ *
+ * A one-kanji ハ行四段 stem that sits on a finished predicate is a subsidiary
+ * verb (書き+給へ, 読ませ+給へ). Requiring that host keeps the imperative cell
+ * away from a bare nominal plus the direction particle (東京+へ).
+ */
+bool predicateEndsAt(const std::vector<char32_t>& codepoints, size_t pos,
+                     const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || pos == 0) {
+    return false;
+  }
+  const size_t probe_start = (pos >= 2) ? pos - 2 : 0;
+  for (size_t start = probe_start; start < pos; ++start) {
+    const std::string host = extractSubstring(codepoints, start, pos);
+    if (dict_manager->lookupExact(host, core::PartOfSpeech::Verb) != nullptr ||
+        dict_manager->lookupExact(host, core::PartOfSpeech::Auxiliary) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool clauseEndsAt(const std::vector<char32_t>& codepoints, size_t pos) {
   if (pos >= codepoints.size()) {
     return true;
@@ -89,11 +113,13 @@ bool clauseEndsAt(const std::vector<char32_t>& codepoints, size_t pos) {
 struct HaRowLicense {
   bool licensed = false;
   bool closed_class_tail = false;
+  core::ExtendedPOS cell = core::ExtendedPOS::Unknown;
 };
 
-HaRowLicense haRowCellLicense(core::ExtendedPOS cell, const std::vector<char32_t>& codepoints, size_t end_pos,
-                              const dictionary::DictionaryManager* dict_manager) {
+HaRowLicense haRowCellLicense(core::ExtendedPOS cell, const std::vector<char32_t>& codepoints, size_t start_pos,
+                              size_t end_pos, const dictionary::DictionaryManager* dict_manager) {
   HaRowLicense license;
+  license.cell = cell;
   switch (cell) {
     case core::ExtendedPOS::VerbMizenkei:
       // 未然形 exists only under a classical irrealis auxiliary (思は+ず).
@@ -117,10 +143,17 @@ HaRowLicense haRowCellLicense(core::ExtendedPOS cell, const std::vector<char32_t
       license.licensed = clauseEndsAt(codepoints, end_pos);
       break;
     case core::ExtendedPOS::VerbKateikei:
-      // 已然形 exists only before a concessive or conditional conjunction
-      // (思へ+ど, 思へ+ば).
+      // 已然形 stands before a concessive or conditional conjunction (思へ+ど,
+      // 思へ+ば). The same form ends an imperative clause (書き給へ。), which is
+      // the only other environment the row kana reaches without a following
+      // closed-class word.
       license.closed_class_tail = dictionaryTailFollowsAt(
           codepoints, end_pos, dict_manager, core::PartOfSpeech::Particle, {core::ExtendedPOS::ParticleConj});
+      if (!license.closed_class_tail && clauseEndsAt(codepoints, end_pos) &&
+          predicateEndsAt(codepoints, start_pos, dict_manager)) {
+        license.licensed = true;
+        license.cell = core::ExtendedPOS::VerbMeireikei;
+      }
       break;
     default:
       return license;
@@ -151,7 +184,7 @@ void appendClassicalHaRowCandidates(const std::vector<char32_t>& codepoints, siz
       continue;
     }
     const size_t end_pos = tail_pos + 1;
-    const HaRowLicense license = haRowCellLicense(cell, codepoints, end_pos, dict_manager);
+    const HaRowLicense license = haRowCellLicense(cell, codepoints, start_pos, end_pos, dict_manager);
     if (!license.licensed) {
       continue;
     }
@@ -159,9 +192,9 @@ void appendClassicalHaRowCandidates(const std::vector<char32_t>& codepoints, siz
     const std::string lemma = extractSubstring(codepoints, start_pos, tail_pos) + "ふ";
     const float cost = license.closed_class_tail ? candidate::verb_cost::kClassicalHaRowLicensedCost
                                                  : candidate::verb_cost::kClassicalHaRowCost;
-    auto candidate = makeVerbCandidate(surface, start_pos, end_pos, cost, lemma,
-                                       grammar::verbTypeToConjType(grammar::VerbType::GodanWa), true,
-                                       CandidateOrigin::VerbKanji, candidate::kNoConfidence, "classical_ha_row", cell);
+    auto candidate = makeVerbCandidate(
+        surface, start_pos, end_pos, cost, lemma, grammar::verbTypeToConjType(grammar::VerbType::GodanWa), true,
+        CandidateOrigin::VerbKanji, candidate::kNoConfidence, "classical_ha_row", license.cell);
     candidates.push_back(std::move(candidate));
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << surface << " classical_ha_row lemma=" << lemma << "\n");
   }

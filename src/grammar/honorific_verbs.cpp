@@ -12,8 +12,10 @@ namespace suzume::grammar {
 namespace {
 
 constexpr std::string_view kHumbleHonorificRenyokei[] = {"いたし", "くださ", "いただき"};
-constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "くださる", "いただく",
-                                                       "なさる", "はする",   "申し上げる"};
+// 給ふ and 候ふ are the classical members of the same class: they follow a
+// continuative or an auxiliary exactly as くださる does (読ませ+給へ, 書かせ+候ふ).
+constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "くださる",   "いただく", "なさる",
+                                                       "はする", "申し上げる", "給ふ",     "候ふ"};
 constexpr std::string_view kBenefactiveRenyokei[] = {"もらい", "あげ"};
 constexpr std::string_view kBenefactiveLemmas[] = {"もらう", "もらえる", "くれる", "あげる"};
 constexpr std::string_view kPotentialBenefactiveLemmas[] = {"いただける", "もらえる"};
