@@ -95,6 +95,15 @@ EntrySpecRange getParticleEntries() {
       particle("ばい", EPOS::ParticleFinal),
       particle("やんけ", EPOS::ParticleFinal),
       particle("ねん", EPOS::ParticleFinal),  // Kansai explanatory (読む+ねん)
+      // Regional causal conjunctions, attaching to a predicate terminal
+      // (飲む+さかい, 読む+けん). Both are homographic with a frequent
+      // standard-language piece — the nominalizer さ, the final particle け —
+      // so they rely on that terminal connection rather than on their own
+      // cost. The Tosa き is deliberately absent: a single mora identical to
+      // the continuative ending has no boundary of its own to stand on, and
+      // registering it pulled き out of ordinary continuatives (解き, 瞬き).
+      particle("さかい", EPOS::ParticleConj),
+      particle("けん", EPOS::ParticleConj),
 
       // Adverbial particles (副助詞)
       particle("かも", EPOS::ParticleAdverbial),  // prevent か+も split in かもしれない

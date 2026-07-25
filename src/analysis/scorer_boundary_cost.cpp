@@ -46,6 +46,12 @@ float Scorer::bosCost(const core::LatticeEdge& edge) const {
   if (edge.extended_pos == core::ExtendedPOS::ParticleTopic) {
     cost += sc::kBosTopicParticlePenalty;
   }
+  // A 接続助詞 joins a clause to the one before it, so it has nothing to
+  // attach to at the start of a sentence. Keeps a short regional conjunction
+  // (けん) from opening a pure-hiragana run.
+  if (edge.extended_pos == core::ExtendedPOS::ParticleConj) {
+    cost += sc::kBosConjunctiveParticlePenalty;
+  }
 
   return cost;
 }

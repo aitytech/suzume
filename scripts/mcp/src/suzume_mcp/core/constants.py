@@ -380,6 +380,7 @@ FIXED_FUNCTION_SEARCH_UNITS: dict[str, str] = {
     # guesses an internal boundary (だ+べ, やん+け), but each is one closed
     # copular or final form.
     "だべ": "助動詞",
+    "けん": "助詞",
     "やんけ": "助詞",
     "やねん": "助動詞",
     "だっちゃ": "助動詞",

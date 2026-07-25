@@ -362,15 +362,16 @@ constexpr std::string_view kNegationPrefixKanji[] = {"非", "不", "無", "未"}
 // =============================================================================
 // BOS (beginning-of-sentence) connection-cost adjustments. A morpheme that
 // cannot naturally start a sentence is penalized; a conjunction is rewarded.
-constexpr float kBosSuffixPenalty = 3.0F;         // Suffix cannot lead a sentence
-constexpr float kBosConjunctionBonus = -0.5F;     // でも / しかし are natural at BOS
-constexpr float kBosAppearanceSouPenalty = 0.5F;  // 様態そう should be demonstrative at BOS
-constexpr float kBosAspectIkuPenalty = 1.0F;      // いく aspect needs a preceding て-form
-constexpr float kBosAspectKuruPenalty = 3.0F;     // くる aspect (き) needs a preceding て-form
-constexpr float kBosTensePenalty = 2.0F;          // た/だ needs a preceding verb/adj stem
-constexpr float kBosFinalParticlePenalty = 2.0F;  // Sentence-final particle cannot lead
-constexpr float kBosTopicParticlePenalty = 1.0F;  // 係助詞 は/も cannot lead a sentence
-constexpr float kBosHonorificAuxPenalty = 0.3F;   // Honorific auxiliary needs a preceding renyokei
+constexpr float kBosSuffixPenalty = 3.0F;               // Suffix cannot lead a sentence
+constexpr float kBosConjunctionBonus = -0.5F;           // でも / しかし are natural at BOS
+constexpr float kBosAppearanceSouPenalty = 0.5F;        // 様態そう should be demonstrative at BOS
+constexpr float kBosAspectIkuPenalty = 1.0F;            // いく aspect needs a preceding て-form
+constexpr float kBosAspectKuruPenalty = 3.0F;           // くる aspect (き) needs a preceding て-form
+constexpr float kBosTensePenalty = 2.0F;                // た/だ needs a preceding verb/adj stem
+constexpr float kBosFinalParticlePenalty = 2.0F;        // Sentence-final particle cannot lead
+constexpr float kBosTopicParticlePenalty = 1.0F;        // 係助詞 は/も cannot lead a sentence
+constexpr float kBosConjunctiveParticlePenalty = 1.0F;  // 接続助詞 joins clauses, so it rarely leads one
+constexpr float kBosHonorificAuxPenalty = 0.3F;         // Honorific auxiliary needs a preceding renyokei
 
 // EOS (end-of-sentence) cost adjustments, symmetric to the BOS set above. A
 // morpheme that cannot naturally END a sentence is penalized, so an isolated

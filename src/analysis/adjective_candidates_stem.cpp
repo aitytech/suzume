@@ -474,6 +474,15 @@ void generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, si
                 hasInternalNominalDerivationalBoundary(stem, dict_manager)) {
               continue;
             }
+            // The さ must be the nominalizer, not the first mora of a longer
+            // closed class beginning with it (飲む+さかい).
+            // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+            if (dict_manager != nullptr && hiragana_part.size() > byte_pos + pattern.size()) {
+              const std::string closed_tail = hiragana_part.substr(byte_pos);
+              if (dict_manager->lookupExact(closed_tail, core::PartOfSpeech::Particle) != nullptr) {
+                continue;
+              }
+            }
           }
           if (std::string_view(pattern) == "そう" && dict_manager != nullptr) {
             const auto* adjective = dict_manager->lookupExact(stem, core::PartOfSpeech::Adjective);
@@ -643,6 +652,17 @@ void generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, si
     }
     if (hasInternalNominalDerivationalBoundary(stem, dict_manager)) {
       continue;
+    }
+    // The さ must be the nominalizer, not the first mora of a longer closed
+    // class that happens to start with it (飲む+さかい). A dictionary particle
+    // covering the rest of the hiragana run supplies that boundary itself.
+    // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+    if (dict_manager != nullptr && hiragana_part.size() > sa_byte + core::kJapaneseCharBytes) {
+      const std::string closed_tail = hiragana_part.substr(sa_byte);
+      if (dict_manager->lookupExact(closed_tail, core::PartOfSpeech::Particle) != nullptr) {
+        SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   ext_stem: skip (さ opens the particle \"" << closed_tail << "\")\n");
+        continue;
+      }
     }
 
     SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   ext_stem pattern: stem=\"" << stem << "\" base=\"" << base_form << "\"\n");
