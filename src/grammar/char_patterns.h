@@ -57,6 +57,16 @@ bool isAllKanji(std::string_view stem);
 bool endsWithKanji(std::string_view stem);
 
 /**
+ * @brief Check if stem starts with a kanji character
+ * @param stem The stem to check
+ * @return True if the first character is kanji
+ *
+ * Used to tell a kana-written compound-verb element (つけ, 出し) from a
+ * kanji-initial content word (散り, 食べ) in the same position.
+ */
+bool startsWithKanji(std::string_view stem);
+
+/**
  * @brief Check if stem contains any kanji character
  * @param stem The stem to check
  * @return True if at least one character is kanji

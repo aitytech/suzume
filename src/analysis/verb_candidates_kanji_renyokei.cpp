@@ -224,12 +224,24 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
                                 ? candidate::verb_cost::kStrongBonus
                                 : candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
                                                                   verb_opts.confidence_cost_scale_small);
+          // An unverified multi-kanji stem is far more often a noun plus a
+          // separate predicate than a real Ichidan verb (花散り is 花 + 散り,
+          // ご飯食べ is ご飯 + 食べ). The terminal path already charges such a
+          // hypothesis; charge the continuative path identically so a negative
+          // cost only ever reaches a dictionary-backed stem.
+          if (!ichidan_base_is_dict && kanji_end - start_pos >= 2) {
+            base_cost += bigram_cost::kRare;
+            SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kRare
+                                                     << " (ichidan_renyokei_multi_kanji_non_dict)\n");
+          }
           // Ichidan renyokei stems are valid morphological units, so mark the
           // candidate as suffixed to avoid the generic length penalty.
-          // Set lemma to the base form (e.g., 入れ → 入れる, 論じ → 論じる)
-          // This is critical for correct lemmatization when the surface is ambiguous
-          // (e.g., 入れ could be godan 入る imperative or ichidan 入れる renyoukei)
-          const std::string lemma = classical_negative_aux_follows ? surface + "る" : ichidan_cand.base_form;
+          // The whole surface is the Ichidan stem by construction here (kanji
+          // run plus one e/i-row kana), so the base form is the stem plus る
+          // regardless of the stem's final row. Asking the standalone analyzer
+          // instead mis-reads a final て/で as a te-form auxiliary and rebuilds
+          // the lemma from the truncated stem (立て → 立る).
+          const std::string lemma = surface + "る";
           auto renyokei_candidate = makeVerbCandidate(
               surface, start_pos, renyokei_end, base_cost, lemma, grammar::verbTypeToConjType(ichidan_cand.verb_type),
               true, CandidateOrigin::VerbKanji, ichidan_cand.confidence, "ichidan_renyokei",
@@ -252,10 +264,10 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
               size_t shuushi_end = renyokei_end + 1;
               std::string shuushi_surface = extractSubstring(codepoints, start_pos, shuushi_end);
               float shuushi_cost = base_cost + 0.1F;  // Slightly higher than renyokei
-              candidates.push_back(
-                  makeVerbCandidate(shuushi_surface, start_pos, shuushi_end, shuushi_cost, ichidan_cand.base_form,
-                                    grammar::verbTypeToConjType(ichidan_cand.verb_type), true,
-                                    CandidateOrigin::VerbKanji, ichidan_cand.confidence, "ichidan_shuushikei"));
+              candidates.push_back(makeVerbCandidate(shuushi_surface, start_pos, shuushi_end, shuushi_cost, lemma,
+                                                     grammar::verbTypeToConjType(ichidan_cand.verb_type), true,
+                                                     CandidateOrigin::VerbKanji, ichidan_cand.confidence,
+                                                     "ichidan_shuushikei"));
             }
           }
         }

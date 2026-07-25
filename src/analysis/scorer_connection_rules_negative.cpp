@@ -244,9 +244,13 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // E.g., 見つけた should be 見つけ+た, not 見+つけ+た
   // Exception: multi-kanji noun + でき should split (外出+でき+ない)
   // Single kanji NOUN often forms compound verbs with following verb stems
+  // A continuative written with its own okurigana is a complete content word,
+  // so a bare noun before it is a separate token (花+散り, 飯+食べ). A bare kanji
+  // carries no such evidence and stays inside the compound (出+来 in 出来事).
+  const bool renyokei_has_okurigana = grammar::startsWithKanji(next.surface) && !grammar::isAllKanji(next.surface);
   if (prev.extended_pos == core::ExtendedPOS::Noun && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       next.surface != "し" && next.surface != "せ" && next.surface.size() <= 6 &&
-      prev.surface.size() == core::kJapaneseCharBytes) {
+      prev.surface.size() == core::kJapaneseCharBytes && !renyokei_has_okurigana) {
     bonus += cost::kRare;  // Cancel the bigram bonus
   }
 

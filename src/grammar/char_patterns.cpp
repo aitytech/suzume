@@ -122,6 +122,11 @@ bool endsWithKanji(std::string_view stem) {
   return cp != 0 && kana::isKanjiCodepoint(cp);
 }
 
+bool startsWithKanji(std::string_view stem) {
+  char32_t cp = utf8::decodeFirstChar(stem);
+  return cp != 0 && kana::isKanjiCodepoint(cp);
+}
+
 bool containsKanji(std::string_view stem) {
   return anyCharMatches(stem, kana::isKanjiCodepoint);
 }
