@@ -26,6 +26,9 @@
 namespace suzume::analysis::hiragana_verb_detail {
 namespace vh = verb_helpers;
 
+// The mora every conjugating class ends in, and the one no verb root starts with.
+constexpr char32_t kVerbEndingMora = U'る';
+
 void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                       const grammar::Inflection& inflection,
                                       const dictionary::DictionaryManager* dict_manager,
@@ -149,6 +152,16 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
       if (!is_valid_verb && is_hatsuonbin && is_tense_pattern && stem_char_count >= 3 &&
           verb_type == grammar::VerbType::GodanMa && has_left_predicate_boundary) {
         is_valid_verb = true;
+      }
+
+      // る is the terminal ending of every conjugating class and the tail of
+      // the contracted subsidiaries (てる, でる, とる); it heads no verb root.
+      // A single-mora る stem therefore reconstructs a base that is nothing
+      // but ending (るる, るつ), and the contracted progressive gets re-cut
+      // around it (書いてるって → て + るっ + て). Other u-row morae do head
+      // roots (つる, うつ), so the guard is specific to this one.
+      if (!lemma_dict_verified && stem_char_count == 1 && codepoints[start_pos] == kVerbEndingMora) {
+        continue;
       }
 
       if (!is_valid_verb) {
