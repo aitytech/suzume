@@ -14,7 +14,10 @@ def test_extended_pos_labels_match_the_serialized_range() -> None:
     assert extended_pos(77) == "SUFFIX_直後"
     assert extended_pos(80) == "AUX_よう"
     assert extended_pos(81) == "AUX_KURUWA_POLITE"
-    assert extended_pos(82) == "UNKNOWN"
+    assert extended_pos(82) == "AUX_文語過去キ"
+    # One past the last label: a code the C ABI has but the table does not must
+    # degrade to UNKNOWN rather than shift every later label by one.
+    assert extended_pos(83) == "UNKNOWN"
 
 
 def test_version_is_nonempty() -> None:
