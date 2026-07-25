@@ -48,7 +48,10 @@ describe('JS API: struct layout compatibility', () => {
     expect(extendedPosLabel(77)).toBe('SUFFIX_直後');
     expect(extendedPosLabel(80)).toBe('AUX_よう');
     expect(extendedPosLabel(81)).toBe('AUX_KURUWA_POLITE');
-    expect(extendedPosLabel(82)).toBe('UNKNOWN');
+    expect(extendedPosLabel(82)).toBe('AUX_文語過去キ');
+    // One past the last label: a code the C ABI has but the table does not must
+    // degrade to UNKNOWN rather than shift every later label by one.
+    expect(extendedPosLabel(83)).toBe('UNKNOWN');
   });
 
   it('exports the complete C ABI surface required by the JS binding', () => {
