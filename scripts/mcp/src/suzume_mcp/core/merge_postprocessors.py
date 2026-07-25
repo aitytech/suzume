@@ -436,6 +436,34 @@ def _postprocess_classical_mu(result: list[dict], applied_rule: str | None) -> t
     return merged, applied_rule
 
 
+_CLASSICAL_CAUSATIVE_FORMS = ("しむ", "しめ", "しむる", "しむれ")
+
+
+def _postprocess_classical_shimu(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Tag the classical causative しむ as an auxiliary.
+
+    しむ conjugates 下二段 and attaches to the same 未然形 as the modern せる, but
+    the reference dictionary has no such auxiliary and falls back to a lexical
+    verb of the same spelling (書か+しむ). After an irrealis there is no verb
+    reading available, so the cell is the auxiliary.
+    """
+    tagged: list[dict] = []
+    for idx, token in enumerate(result):
+        previous = result[idx - 1] if idx > 0 else None
+        if (
+            previous is not None
+            and previous.get("pos") == "動詞"
+            and previous.get("surface", "")[-1:] in _A_ROW_TO_U_ROW
+            and token.get("surface") in _CLASSICAL_CAUSATIVE_FORMS
+        ):
+            tagged.append({**token, "pos": "助動詞", "lemma": "しむ"})
+            if applied_rule is None:
+                applied_rule = "classical-shimu-auxiliary"
+            continue
+        tagged.append(token)
+    return tagged, applied_rule
+
+
 _HA_ROW_TAILS = ("は", "ひ", "ふ", "へ")
 _HA_ROW_DETACHED_TAILS = ("ひ", "ふ", "へ")
 _HA_ROW_STEM_POS = ("名詞", "動詞", "形容詞", "副詞", "接尾辞")

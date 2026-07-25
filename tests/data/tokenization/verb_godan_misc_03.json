@@ -1941,6 +1941,60 @@
       ],
       "id": "wo_kamutosuru",
       "input": "紙を書かむとする。"
+    },
+    {
+      "description": "classical causative shimu after godan irrealis",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "しむ",
+          "pos": "Auxiliary",
+          "surface": "しむ"
+        }
+      ],
+      "id": "wo_kashimu",
+      "input": "紙を書かしむ。"
+    },
+    {
+      "description": "classical causative shimu on the ma-row irrealis",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "しむ",
+          "pos": "Auxiliary",
+          "surface": "しむ"
+        }
+      ],
+      "id": "wo_mashimu",
+      "input": "本を読ましむ。"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 3/3)",

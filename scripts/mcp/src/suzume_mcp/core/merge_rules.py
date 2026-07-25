@@ -22,6 +22,7 @@ from .merge_postprocessors import (
     _postprocess_ascii_dot_merge,
     _postprocess_atode,
     _postprocess_classical_mu,
+    _postprocess_classical_shimu,
     _postprocess_dialectal,
     _postprocess_distributive_quantity,
     _postprocess_epenthetic_sa,
@@ -1003,6 +1004,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_adj_kari(result, applied_rule)
     result, applied_rule = _postprocess_ha_row_godan(result, applied_rule)
     result, applied_rule = _postprocess_classical_mu(result, applied_rule)
+    result, applied_rule = _postprocess_classical_shimu(result, applied_rule)
     result, applied_rule = _postprocess_kanji_merge(result, applied_rule)
     result, applied_rule = _postprocess_nickname_merge(result, applied_rule)
     result, applied_rule = _postprocess_search_unit_split(result, applied_rule)
