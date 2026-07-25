@@ -592,6 +592,16 @@ constexpr float kIchidanKateikeiMinConfidence = 0.3F;
 // Default floor when selecting an Ichidan analysis from ambiguous inflection
 // candidates. More restrictive call sites use their own named thresholds.
 constexpr float kIchidanDefaultMinConfidence = 0.4F;
+
+// Cost of a classical ハ行四段 cell (思ふ, 思ひ, 思へ) resting on a clause
+// boundary alone. The row kana is also a frequent modern particle, so the
+// candidate carries no bonus and wins only where the competing split has to
+// fabricate a reading of its own.
+constexpr float kClassicalHaRowCost = 0.0F;
+// Same cell named outright by the closed-class tail that follows it (思ひ+けり,
+// 思へ+ど). The auxiliary or conjunction is positive evidence for the paradigm,
+// so the cell outranks a fabricated Ichidan reading of the same span.
+constexpr float kClassicalHaRowLicensedCost = kStandardBonus;
 }  // namespace verb_cost
 
 // =============================================================================

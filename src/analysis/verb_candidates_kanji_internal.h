@@ -76,6 +76,9 @@ void appendExtendedSokuonbinCandidates(const std::vector<char32_t>& codepoints, 
                                        size_t hiragana_end, const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
                                        std::vector<UnknownCandidate>& candidates);
+void appendClassicalHaRowCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                    size_t hiragana_end, const dictionary::DictionaryManager* dict_manager,
+                                    std::vector<UnknownCandidate>& candidates);
 void appendVerifiedTailGodanTaCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                  size_t kanji_end, const dictionary::DictionaryManager* dict_manager,
                                                  std::vector<UnknownCandidate>& candidates);

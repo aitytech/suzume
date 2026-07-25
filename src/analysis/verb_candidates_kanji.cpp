@@ -439,6 +439,14 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
       first_hiragana == U'や' && kanji_end + 1 < codepoints.size() && codepoints[kanji_end + 1] == U'す';
   const bool has_complete_particle_initial_verb =
       hasCompleteParticleInitialVerbEvidence(codepoints, start_pos, kanji_end, hiragana_end, inflection, verb_opts);
+
+  // Historical-kana spelling of the wa-row Godan paradigm (思ふ, 思ひけり,
+  // 思へど).  Its row kana は/へ are also the topic and direction particles, so
+  // the generator runs ahead of the particle gate below: each cell carries its
+  // own evidence from the closed class that follows it, which is exactly what
+  // that gate has no way to see.
+  appendClassicalHaRowCandidates(codepoints, start_pos, kanji_end, hiragana_end, dict_manager, candidates);
+
   if (normalize::isNeverVerbStemAfterKanji(first_hiragana) && !is_yasu_godan_shape && !has_excessive_renyokei_tail &&
       !has_following_renyokei_auxiliary && !has_complete_particle_initial_verb) {
     // Exception 1: A-row hiragana followed by れべき may be mizenkei pattern

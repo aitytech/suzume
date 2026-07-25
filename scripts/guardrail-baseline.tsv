@@ -21,7 +21,7 @@ src/analysis/compound_verb_match.cpp	0	3	0
 src/analysis/compound_verb_verify.cpp	0	0	0
 src/analysis/compound_verb_voice.cpp	0	0	0
 src/analysis/join_compound_verb.cpp	0	0	0
-src/analysis/join_compound_verb_hiragana.cpp	0	2	0
+src/analysis/join_compound_verb_hiragana.cpp	0	0	0
 src/analysis/join_compound_verb_lexicon.cpp	0	0	0
 src/analysis/join_noun.cpp	0	0	0
 src/analysis/join_te_aux.cpp	0	2	0
@@ -34,7 +34,7 @@ src/analysis/scorer_connection_rules_particle.cpp	9	0	19
 src/analysis/scorer_connection_rules_renyokei.cpp	10	0	64
 src/analysis/scorer_connection_rules_suffix.cpp	6	0	59
 src/analysis/scorer_connection_rules_verb.cpp	8	0	9
-src/analysis/scorer_connection_rules_voice.cpp	5	0	21
+src/analysis/scorer_connection_rules_voice.cpp	4	0	21
 src/analysis/scorer_options_loader.cpp	0	2	0
 src/analysis/scorer_word_cost.cpp	5	1	22
 src/analysis/split_candidates.cpp	0	7	0
@@ -53,13 +53,13 @@ src/analysis/tokenizer_unknown.cpp	0	6	0
 src/analysis/tokenizer_utils.cpp	0	0	0
 src/analysis/unknown.cpp	0	20	0
 src/analysis/unknown_same_type.cpp	0	13	0
-src/analysis/unknown_speech.cpp	0	12	0
+src/analysis/unknown_speech.cpp	0	11	0
 src/analysis/verb_candidates.cpp	0	7	0
 src/analysis/verb_candidates_helpers.cpp	0	0	0
 src/analysis/verb_candidates_helpers_dictionary.cpp	1	0	0
 src/analysis/verb_candidates_helpers_emphatic.cpp	0	0	0
 src/analysis/verb_candidates_hiragana.cpp	0	0	0
-src/analysis/verb_candidates_hiragana_derived.cpp	0	7	0
+src/analysis/verb_candidates_hiragana_derived.cpp	0	5	0
 src/analysis/verb_candidates_hiragana_inflection.cpp	0	4	0
 src/analysis/verb_candidates_hiragana_mizenkei.cpp	0	3	0
 src/analysis/verb_candidates_hiragana_mizenkei_negative.cpp	0	7	0
@@ -67,6 +67,7 @@ src/analysis/verb_candidates_hiragana_onbin.cpp	0	2	0
 src/analysis/verb_candidates_hiragana_subsidiary.cpp	0	0	0
 src/analysis/verb_candidates_hiragana_suru.cpp	0	0	0
 src/analysis/verb_candidates_kanji.cpp	0	5	0
+src/analysis/verb_candidates_kanji_classical.cpp	0	0	0
 src/analysis/verb_candidates_kanji_derived.cpp	0	6	0
 src/analysis/verb_candidates_kanji_finalization.cpp	1	0	0
 src/analysis/verb_candidates_kanji_ichidan.cpp	0	7	0
