@@ -848,6 +848,13 @@ EntrySpecRange getAuxiliaryEntries() {
       // same continuative before the past auxiliary (紙どし+た).
       aux("どす", "どす", EPOS::AuxCopulaDesu),
       aux("どし", "どす", EPOS::AuxCopulaDesu),
+      // Kansai negative, attaching to a verb irrealis like ない (書か+へん).
+      // Its surface also spells the case particle へ plus ん, so it depends on
+      // the irrealis connection the negative auxiliary already has. The Tohoku
+      // ね is deliberately absent: a single mora shared with the final
+      // particle has no such gate and displaced ね across standard usage.
+      aux("へん", "へん", EPOS::AuxNegativeNai),
+
       // Kansai obligation/prohibition predicate, the regional counterpart of
       // いけない. It closes the chain after the contracted negative な
       // (書か+な+あかん) or a conditional (書いたら+あかん).

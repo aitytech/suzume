@@ -2675,6 +2675,77 @@
       ],
       "id": "kenkawoyameru",
       "input": "けんかをやめる"
+    },
+    {
+      "description": "紙書かへん - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "へん",
+          "pos": "Auxiliary",
+          "surface": "へん"
+        }
+      ],
+      "id": "kahen",
+      "input": "紙書かへん"
+    },
+    {
+      "description": "本を書かへん - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "へん",
+          "pos": "Auxiliary",
+          "surface": "へん"
+        }
+      ],
+      "id": "wo_kahen",
+      "input": "本を書かへん"
+    },
+    {
+      "description": "東京へ行く - regression test",
+      "expected": [
+        {
+          "lemma": "東京",
+          "pos": "Noun",
+          "surface": "東京"
+        },
+        {
+          "lemma": "へ",
+          "pos": "Particle",
+          "surface": "へ"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "he_ku",
+      "input": "東京へ行く"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",
