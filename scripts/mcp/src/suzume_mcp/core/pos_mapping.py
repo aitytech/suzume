@@ -389,7 +389,7 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
         # A regional final particle is outside the reference dictionary, so it
         # arrives as a bare noun. Only a preceding predicate identifies it
         # (飲む+ばい); elsewhere the nominal reading stands.
-        if surface in DIALECT_FINAL_PARTICLES and pos in ("Noun", "名詞") and idx > 0:
+        if surface in DIALECT_FINAL_PARTICLES and pos in ("Noun", "名詞", "Interjection", "感動詞") and idx > 0:
             if tokens[idx - 1].get("pos", "") in (
                 "Verb",
                 "動詞",

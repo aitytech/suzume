@@ -435,6 +435,14 @@ float computeFixedExpressionDictBonus(const core::LatticeEdge& edge) {
     }
   }
 
+  // A multi-mora interjection is a closed fixed expression, so it must not be
+  // re-cut into a homographic predicate plus a final particle (いいえ →
+  // いい + え). Same reasoning as the compound-particle bonus above.
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Interjection &&
+      suzume::normalize::utf8Length(edge.surface) >= 3) {
+    bonus += sc::kBonusClosedInterjection;
+  }
+
   return bonus;
 }
 

@@ -2746,6 +2746,70 @@
       ],
       "id": "he_ku",
       "input": "東京へ行く"
+    },
+    {
+      "description": "本を読みますえ - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        },
+        {
+          "lemma": "え",
+          "pos": "Particle",
+          "surface": "え"
+        }
+      ],
+      "id": "wo_mimasue",
+      "input": "本を読みますえ"
+    },
+    {
+      "description": "紙を書きますえ - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        },
+        {
+          "lemma": "え",
+          "pos": "Particle",
+          "surface": "え"
+        }
+      ],
+      "id": "wo_kimasue",
+      "input": "紙を書きますえ"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

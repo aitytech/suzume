@@ -70,6 +70,9 @@ constexpr float kBonusMixedNoun = -2.5F;
 // Closed two-mora adverbial particles such as だけ must outrank the
 // accidental copula+final-particle path (だ+け).
 constexpr float kBonusTwoMoraAdverbialParticle = -2.0F;
+// A multi-mora interjection is a closed fixed expression and must outrank the
+// homographic predicate-plus-final-particle path (いいえ vs いい+え).
+constexpr float kBonusClosedInterjection = -2.0F;
 
 // Length-scaled bonus for long mixed nouns (4+ chars, e.g. お兄ちゃん, お父さん)
 // Split paths accumulate PREFIX→NOUN→SUFFIX connection bonuses (~-1.7 advantage)

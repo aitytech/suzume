@@ -336,9 +336,9 @@ PARTICLE_CORRECTIONS: dict[str, str] = {
 }
 
 # Regional sentence-final particles. They are absent from the reference
-# dictionary, so they surface as bare nouns and are told apart from a genuine
-# nominal only by the predicate in front of them.
-DIALECT_FINAL_PARTICLES: frozenset[str] = frozenset({"ばい"})
+# dictionary, so they surface as a bare noun or an interjection and are told
+# apart from those only by the predicate in front of them.
+DIALECT_FINAL_PARTICLES: frozenset[str] = frozenset({"ばい", "え"})
 
 # Regional request forms of the benefactive くれる, mapped to the dictionary
 # form Suzume gives them. Each is homographic with an unrelated verb the
