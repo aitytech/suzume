@@ -11,6 +11,7 @@
 #include "adjective_candidates_internal.h"
 #include "analysis/candidate_constants.h"
 #include "core/utf8_constants.h"
+#include "grammar/char_patterns.h"
 #include "normalize/utf8.h"
 #include "unknown.h"
 #include "verb_candidates_helpers.h"
@@ -53,6 +54,18 @@ void adj_detail::appendKanjiIAdjPostVariants(const std::vector<char32_t>& codepo
   // be dropped here.
   candidates.erase(std::remove_if(candidates.begin() + candidate_start, candidates.end(),
                                   [](const UnknownCandidate& cand) { return utf8::endsWith(cand.surface, "かった"); }),
+                   candidates.end());
+
+  // 書か+なく+ない is a verb irrealis followed by the negative auxiliary, not an
+  // adjective continuative. What separates it from a genuine stem is where the
+  // な sits: on the kanji itself in 少+なく and 危+なく, but behind the irrealis
+  // a-row kana that the negative selects in 書か+なく.
+  candidates.erase(std::remove_if(candidates.begin() + candidate_start, candidates.end(),
+                                  [&codepoints](const UnknownCandidate& cand) {
+                                    return cand.pos == core::PartOfSpeech::Adjective && cand.end >= 3 &&
+                                           utf8::endsWith(cand.surface, "なく") &&
+                                           grammar::isARowCodepoint(codepoints[cand.end - 3]);
+                                  }),
                    candidates.end());
 
   // The conjunctive くて is never an adjective terminal form. Its trimmed

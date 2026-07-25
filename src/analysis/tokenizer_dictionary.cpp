@@ -1232,6 +1232,16 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       continue;
     }
 
+    // The contracted directional く is the いく renyokei with its い elided, so
+    // it exists only directly after a te-form (読ん+で+く).  Anywhere else the
+    // same single kana is an adjective continuative or a stem fragment, and
+    // admitting the auxiliary there splits the negative continuative (な+く for
+    // 書か+なく+ない).
+    if (result.entry->extended_pos == core::ExtendedPOS::AuxAspectIku && end_pos - start_pos == 1 &&
+        (start_pos == 0 || (codepoints[start_pos - 1] != U'て' && codepoints[start_pos - 1] != U'で'))) {
+      continue;
+    }
+
     // A 副助詞 attaches to a 体言 and a 接続詞 opens a clause; neither follows a
     // verb onbin stem.  Where one that begins with だ appears to (読ん+だって,
     // 読ん+だから), the だ is the voiced past auxiliary and the rest is its own
