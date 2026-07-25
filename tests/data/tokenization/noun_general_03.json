@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "description": "水は冷たかるべし。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "冷たい",
+          "pos": "Adjective",
+          "surface": "冷たかる"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べし"
+        }
+      ],
+      "id": "ha_takarubeshi",
+      "input": "水は冷たかるべし。"
+    },
+    {
+      "description": "本は高かろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高かろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "ha_karou",
+      "input": "本は高かろう。"
+    }
+  ],
+  "description": "General nouns (part 3/3)",
+  "version": "1.0"
+}

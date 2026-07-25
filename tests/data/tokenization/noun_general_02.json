@@ -2380,8 +2380,62 @@
       ],
       "id": "chi_ga_i",
       "input": "待ち時間が長い"
+    },
+    {
+      "description": "本は美しかりけり。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しかり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "ha_shikarikeri",
+      "input": "本は美しかりけり。"
+    },
+    {
+      "description": "紙は大きからず。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "大きい",
+          "pos": "Adjective",
+          "surface": "大きから"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "ha_kikarazu",
+      "input": "紙は大きからず。"
     }
   ],
-  "description": "General nouns (part 2/2)",
+  "description": "General nouns (part 2/3)",
   "version": "1.0"
 }

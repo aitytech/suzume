@@ -777,24 +777,93 @@ void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t st
   }
 }
 
+namespace {
+
+// The supplementary (カリ) conjugation follows the ラ変 pattern, so the kana
+// after か identifies the cell by its vowel row. Anything else is not a カリ form.
+core::ExtendedPOS classicalKariCell(char32_t after_ka) {
+  switch (after_ka) {
+    case U'ら':
+      return core::ExtendedPOS::AdjMizenkei;
+    case U'り':
+      return core::ExtendedPOS::AdjRenyokei;
+    // The attributive and terminal cells share one form for i-adjectives.
+    // The paradigm has no 已然形 (the plain conjugation supplies けれ) and its
+    // 命令形 かれ is unattested in practice, so that row is deliberately absent:
+    // かれ is overwhelmingly a godan irrealis plus the passive れ (書か+れ).
+    case U'る':
+      return core::ExtendedPOS::AdjBasic;
+    default:
+      return core::ExtendedPOS::Unknown;
+  }
+}
+
+// The supplementary conjugation exists only to carry the classical auxiliaries
+// the plain paradigm cannot take, so require one to start at the given position.
+// Gating on the classical auxiliary class rather than on auxiliaries in general
+// keeps the colloquial homographs out (や, registered as a copula variant, must
+// not license 最初から as an adjective). Probes the longest form so multi-kana
+// auxiliaries (けり, べし) count alongside single-kana ones (ず, き).
+bool classicalAuxiliaryFollowsAt(const std::vector<char32_t>& codepoints, size_t pos, size_t scan_end,
+                                 const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || pos >= codepoints.size()) {
+    return false;
+  }
+  const size_t probe_end = std::min({codepoints.size(), scan_end + 1, pos + 3});
+  for (size_t end = pos + 1; end <= probe_end; ++end) {
+    const auto* entry =
+        dict_manager->lookupExact(extractSubstring(codepoints, pos, end), core::PartOfSpeech::Auxiliary);
+    if (entry == nullptr) {
+      continue;
+    }
+    switch (entry->extended_pos) {
+      case core::ExtendedPOS::AuxNegativeNu:
+      case core::ExtendedPOS::AuxClassicalNari:
+      case core::ExtendedPOS::AuxClassicalKeri:
+      case core::ExtendedPOS::AuxClassicalTari:
+      case core::ExtendedPOS::AuxClassicalPerfect:
+      case core::ExtendedPOS::AuxClassicalBeshi:
+        return true;
+      default:
+        break;
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
 void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
                                 size_t scan_end, const grammar::Inflection& inflection,
                                 const dictionary::DictionaryManager* dict_manager,
                                 std::vector<UnknownCandidate>& candidates) {
   for (size_t kara_pos = scan_start; kara_pos + 2 < scan_end; ++kara_pos) {
-    if (kara_pos <= start_pos || codepoints[kara_pos] != U'か' || codepoints[kara_pos + 1] != U'ら' ||
-        (codepoints[kara_pos + 2] != U'ず' && codepoints[kara_pos + 2] != U'ぬ')) {
+    if (kara_pos <= start_pos || codepoints[kara_pos] != U'か') {
+      continue;
+    }
+    // The supplementary (カリ) conjugation of an i-adjective inflects on the ラ変
+    // pattern: 未然 から, 連用 かり, 連体 かる, 已然/命令 かれ. Select the cell from
+    // the row of the kana after か instead of enumerating the forms.
+    const core::ExtendedPOS cell = classicalKariCell(codepoints[kara_pos + 1]);
+    if (cell == core::ExtendedPOS::Unknown) {
+      continue;
+    }
+    // Only a closed-class follower licenses the supplementary conjugation; it
+    // exists precisely to carry auxiliaries the plain paradigm cannot
+    // (大きから+ず, 高かり+けり, 冷たかる+べし). Without one, the same kana are an
+    // ordinary noun or godan verb (明かり, 見つかる).
+    if (!classicalAuxiliaryFollowsAt(codepoints, kara_pos + 2, scan_end, dict_manager)) {
       continue;
     }
     std::string lemma = extractSubstring(codepoints, start_pos, kara_pos) + "い";
     if (!isModernIAdjective(lemma, inflection, dict_manager)) {
       continue;
     }
-    // 〜からず/ぬ is also the ordinary godan-ra irrealis plus a
-    // classical negative auxiliary.  A complete analysis whose reconstructed
-    // verb lemma is dictionary-attested is stronger than the weak, generic
-    // i-adjective hypothesis (分からぬ -> 分かる, not fictitious 分い).
-    const std::string whole_surface = extractSubstring(codepoints, start_pos, kara_pos + 3);
+    // A カリ form is also an ordinary godan-ra inflection plus a classical
+    // auxiliary. A complete analysis whose reconstructed verb lemma is
+    // dictionary-attested is stronger than the weak, generic i-adjective
+    // hypothesis (分からぬ -> 分かる, not fictitious 分い).
+    const std::string whole_surface = extractSubstring(codepoints, start_pos, std::min(kara_pos + 3, scan_end));
     if (hasDictionaryVerifiedVerbAnalysis(whole_surface, inflection, dict_manager)) {
       continue;
     }
@@ -810,11 +879,11 @@ void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t 
     miz_cand.lemma = lemma;
     miz_cand.cost = candidate::verb_cost::kStrongBonus;
     miz_cand.has_suffix = true;
-    miz_cand.extended_pos = core::ExtendedPOS::AdjMizenkei;
+    miz_cand.extended_pos = cell;
 #ifdef SUZUME_DEBUG_INFO
     miz_cand.origin = CandidateOrigin::AdjectiveI;
     miz_cand.confidence = candidate::kIAdjKaroConfidence;
-    miz_cand.pattern = "i_adjective_kara_zu";
+    miz_cand.pattern = "i_adjective_kari";
 #endif
     candidates.push_back(std::move(miz_cand));
   }

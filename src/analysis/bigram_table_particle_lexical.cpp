@@ -191,6 +191,12 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // verb that absorbs the topic particle.
       {EPOS::ParticleTopic, EPOS::VerbMizenkei, cost::kStrongBonus},
 
+      // A topicalized adjective predicate can likewise begin with its mizenkei
+      // before negation or conjecture (本+は+高から+ず, 本+は+高かろ+う). Without
+      // the counterpart of the verb entry above, the same topic boundary favors
+      // a fabricated godan verb (高かる) over the verified adjective.
+      {EPOS::ParticleTopic, EPOS::AdjMizenkei, cost::kStrongBonus},
+
       // ParticleTopic → AdjBasic (は+良い, も+美しい, は+ない) - very
       // strong bonus. A topic particle can directly introduce a terminal
       // adjective; this prevents the false noun はな + auxiliary い path.
@@ -598,6 +604,13 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // modern ichidan conditional such as 見けれ+ば.
       {EPOS::VerbRenyokei, EPOS::AuxClassicalKeri, cost::kVeryStrongBonus},
       {EPOS::AuxClassicalKeri, EPOS::ParticleConj, cost::kVeryStrongBonus},
+
+      // An adjective reaches the same auxiliary through its supplementary (カリ)
+      // conjugation, whose whole purpose is to carry these forms
+      // (高かり+けり, 美しかり+たり). Without the counterpart of the verb entry
+      // above, the auxiliary favors a fabricated godan verb (高かる) instead.
+      {EPOS::AdjRenyokei, EPOS::AuxClassicalKeri, cost::kVeryStrongBonus},
+      {EPOS::AdjRenyokei, EPOS::AuxClassicalPerfect, cost::kVeryStrongBonus},
 
       // Classical perfect り attaches to a verbal inflection, never directly
       // to a noun or numeral. Blocking that impossible path prevents manner
