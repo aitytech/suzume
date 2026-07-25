@@ -506,6 +506,10 @@ EntrySpecRange getAuxiliaryEntries() {
       // (読んで+おくれ). Only the imperative cell is registered: the rest of
       // the paradigm is homographic with 遅れる.
       aux("おくれ", "おくれる", EPOS::AuxBenefactive),
+      // Tohoku request form of the same benefactive (書いて+けろ). Its first
+      // mora spells the final particle け, so it needs the te-form connection
+      // the benefactives already have.
+      aux("けろ", "けろ", EPOS::AuxBenefactive),
 
       // Kyoto polite request やす, which attaches to a verb continuative after
       // the honorific prefix (お読み+やす, 読んでおくれ+やす). Homographic with

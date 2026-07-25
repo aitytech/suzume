@@ -340,6 +340,11 @@ PARTICLE_CORRECTIONS: dict[str, str] = {
 # nominal only by the predicate in front of them.
 DIALECT_FINAL_PARTICLES: frozenset[str] = frozenset({"ばい"})
 
+# Regional request forms of the benefactive くれる, mapped to the dictionary
+# form Suzume gives them. Each is homographic with an unrelated verb the
+# reference dictionary does know, so only a preceding te-form selects them.
+BENEFACTIVE_REQUEST_LEMMAS: dict[str, str] = {"おくれ": "おくれる", "けろ": "けろ"}
+
 # Hiragana compounds that MeCab splits but should stay together
 HIRAGANA_COMPOUNDS: dict[str, str] = {
     "ふともも": "名詞",

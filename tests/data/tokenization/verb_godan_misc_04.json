@@ -2435,6 +2435,92 @@
       ],
       "id": "gaokureta",
       "input": "返事がおくれた"
+    },
+    {
+      "description": "紙書いてけろ - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "けろ",
+          "pos": "Auxiliary",
+          "surface": "けろ"
+        }
+      ],
+      "id": "itekero",
+      "input": "紙書いてけろ"
+    },
+    {
+      "description": "水飲んでけろ - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "けろ",
+          "pos": "Auxiliary",
+          "surface": "けろ"
+        }
+      ],
+      "id": "ndekero",
+      "input": "水飲んでけろ"
+    },
+    {
+      "description": "本を読んでくれ - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "くれる",
+          "pos": "Auxiliary",
+          "surface": "くれ"
+        }
+      ],
+      "id": "wo_ndekure",
+      "input": "本を読んでくれ"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

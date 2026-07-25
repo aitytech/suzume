@@ -4,6 +4,7 @@ import regex
 
 from .constants import (
     ADVERB_OVERRIDES,
+    BENEFACTIVE_REQUEST_LEMMAS,
     DIALECT_FINAL_PARTICLES,
     KEEP_AS_NOUN_NOT_ADJ,
     NA_ADJ_OVERRIDES,
@@ -376,14 +377,14 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
         if surface in PARTICLE_CORRECTIONS and pos == "Noun":
             t["pos"] = PARTICLE_CORRECTIONS[surface]
 
-        # The request form of the benefactive くれる is read as the unrelated
-        # verb 遅れる by the reference dictionary. A preceding te-form
-        # conjunctive particle identifies the subsidiary reading, which Suzume
-        # tags like every other benefactive (読んで+おくれ).
-        if surface == "おくれ" and idx > 0 and tokens[idx - 1].get("surface") in ("て", "で"):
+        # Regional request forms of the benefactive くれる are read as unrelated
+        # verbs by the reference dictionary (おくれ as 遅れる, けろ as ける). The
+        # te-form conjunctive particle in front identifies the subsidiary
+        # reading, which Suzume tags like every other benefactive.
+        if surface in BENEFACTIVE_REQUEST_LEMMAS and idx > 0 and tokens[idx - 1].get("surface") in ("て", "で"):
             if tokens[idx - 1].get("pos") in ("Particle", "助詞"):
                 t["pos"] = "Auxiliary"
-                t["lemma"] = "おくれる"
+                t["lemma"] = BENEFACTIVE_REQUEST_LEMMAS[surface]
 
         # A regional final particle is outside the reference dictionary, so it
         # arrives as a bare noun. Only a preceding predicate identifies it
