@@ -140,7 +140,7 @@ def postprocess_sou(tokens: list[dict]) -> None:
                 nxt = tokens[i + 1].get("surface", "")
                 prev_pos = tokens[i - 1].get("pos", "")
                 if (regex.match(r"^(?:だ|です|でし|じゃ|じゃろ)", nxt) and prev_pos != "Verb") or (
-                    nxt == "な" and i + 2 < len(tokens) and tokens[i + 2].get("surface") == "の"
+                    nxt == "な" and i + 2 < len(tokens) and tokens[i + 2].get("surface") in ("の", "ん")
                 ):
                     t["pos"] = "Adjective"
                 elif nxt == "で" and i + 2 < len(tokens):
@@ -154,7 +154,7 @@ def postprocess_sou(tokens: list[dict]) -> None:
                 if i < len(tokens) - 1:
                     nxt = tokens[i + 1].get("surface", "")
                     if regex.match(r"^(?:だ|です|でし|じゃ|じゃろ)", nxt) or (
-                        nxt == "な" and i + 2 < len(tokens) and tokens[i + 2].get("surface") == "の"
+                        nxt == "な" and i + 2 < len(tokens) and tokens[i + 2].get("surface") in ("の", "ん")
                     ):
                         t["pos"] = "Adjective"
                     elif nxt == "で" and i + 2 < len(tokens):
