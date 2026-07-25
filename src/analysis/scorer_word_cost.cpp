@@ -422,25 +422,24 @@ float computeFixedExpressionDictBonus(const core::LatticeEdge& edge) {
     bonus += conjunction_bonus;
   }
 
-  // Bonus for compound particles from dictionary (について, によって, として, etc.)
-  // These are multi-character particles that should not be split into verb+て patterns
-  // Helps compound particles compete with high-bonus splits like し+て (-1 connection bonus)
-  // Also applies to kanji-containing particles (において, に関して, に際して, に対して)
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Particle) {
-    size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    const bool is_compound_particle = char_len >= 3;
-    const bool is_two_mora_adverbial = char_len == 2 && edge.extended_pos == core::ExtendedPOS::ParticleAdverbial;
-    if (is_compound_particle || is_two_mora_adverbial) {
-      bonus += is_compound_particle ? sc::kBonusCompoundParticle : sc::kBonusTwoMoraAdverbialParticle;
-    }
-  }
-
-  // A multi-mora interjection is a closed fixed expression, so it must not be
-  // re-cut into a homographic predicate plus a final particle (いいえ →
-  // いい + え). Same reasoning as the compound-particle bonus above.
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Interjection &&
-      suzume::normalize::utf8Length(edge.surface) >= 3) {
-    bonus += sc::kBonusClosedInterjection;
+  // Closed fixed expressions from the dictionary must outrank the homographic
+  // paths that would re-cut them: a compound particle into verb+て (について,
+  // によって), a two-mora adverbial particle into copula+final particle (だけ →
+  // だ+け), a multi-mora interjection into predicate+final particle (いいえ →
+  // いい+え). Compound particles include the kanji-containing ones (において,
+  // に関して).
+  if (edge.fromDictionary()) {
+    const size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    const bool is_particle = edge.pos == core::PartOfSpeech::Particle;
+    const bool is_compound_particle = is_particle && char_len >= 3;
+    const bool is_two_mora_adverbial =
+        is_particle && char_len == 2 && edge.extended_pos == core::ExtendedPOS::ParticleAdverbial;
+    const bool is_closed_interjection = edge.pos == core::PartOfSpeech::Interjection && char_len >= 3;
+    const float closed_expression_bonus = is_compound_particle     ? sc::kBonusCompoundParticle
+                                          : is_two_mora_adverbial  ? sc::kBonusTwoMoraAdverbialParticle
+                                          : is_closed_interjection ? sc::kBonusClosedInterjection
+                                                                   : sc::scale::kNeutral;
+    bonus += closed_expression_bonus;
   }
 
   return bonus;
