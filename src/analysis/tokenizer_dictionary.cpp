@@ -1232,6 +1232,21 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       continue;
     }
 
+    // An interjection is an utterance of its own, closed by punctuation or by a
+    // change of script rather than continued by more kana. Where its surface is
+    // also the irrealis of a dictionary verb, that verb owns the paradigm behind
+    // it (あら、素敵ね keeps the interjection; あらう, あらば, あらゆる stay with
+    // ある). Interjections with no such reading are unaffected.
+    if (result.entry->pos == core::PartOfSpeech::Interjection && end_pos < codepoints.size() &&
+        end_pos > start_pos + 1 && normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Hiragana) {
+      const std::string_view base_suffix = grammar::godanBaseSuffixFromARow(codepoints[end_pos - 1]);
+      if (!base_suffix.empty() &&
+          dict_manager_.lookupExact(extractSubstring(codepoints, start_pos, end_pos - 1) + std::string(base_suffix),
+                                    core::PartOfSpeech::Verb) != nullptr) {
+        continue;
+      }
+    }
+
     // A 終助詞 closes its clause, so the nominalizer cannot follow it. The な in
     // そう+な+ん+です is the copula's attributive form instead; the indefinite
     // stack the bigram favors (いくつ+か+の) uses the の spelling and is untouched.

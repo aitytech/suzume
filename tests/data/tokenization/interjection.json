@@ -160,6 +160,55 @@
       ],
       "id": "saa_memashi_u",
       "input": "さあ、始めましょう"
+    },
+    {
+      "description": "あら、素敵ね - regression test",
+      "expected": [
+        {
+          "lemma": "あら",
+          "pos": "Interjection",
+          "surface": "あら"
+        },
+        {
+          "lemma": "素敵",
+          "pos": "Adjective",
+          "surface": "素敵"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "ara_ne",
+      "input": "あら、素敵ね"
+    },
+    {
+      "description": "彼が微笑んだ - regression test",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "微笑む",
+          "pos": "Verb",
+          "surface": "微笑ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_nda_2",
+      "input": "彼が微笑んだ"
     }
   ],
   "description": "Interjections and greetings (感動詞・挨拶)",

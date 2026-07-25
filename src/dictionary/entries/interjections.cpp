@@ -20,6 +20,7 @@ EntrySpecRange getInterjectionEntries() {
       // Note: ほう removed - formal noun usage (ほうがいい) is more common
       intj("おい"),    // Calling attention
       intj("おーい"),  // Calling from afar
+      intj("あら"),    // Surprise (also the irrealis of ある; context decides)
       intj("あれ"),    // Confusion
       intj("あれっ"),  // Confusion (emphatic)
       intj("まあ"),    // Surprise/Moderation
