@@ -28,6 +28,36 @@ namespace vh = verb_helpers;
 
 namespace {
 
+/**
+ * @brief Whether a classical predicate tail follows the given position.
+ *
+ * The classical past/perfect/copular auxiliaries and the concessive conjunction
+ * all attach to an auxiliary's own inflection, so a voice boundary in front of
+ * them stays open (飲ま+れ+けり, 書か+れ+ども) exactly as it does before べき and
+ * the causative and negative chains.
+ */
+bool classicalPredicateTailFollowsAt(const std::vector<char32_t>& codepoints, size_t pos,
+                                     const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  const size_t probe_end = std::min(codepoints.size(), pos + 3);
+  for (size_t end = pos + 1; end <= probe_end; ++end) {
+    const std::string tail = extractSubstring(codepoints, pos, end);
+    const auto* auxiliary = dict_manager->lookupExact(tail, core::PartOfSpeech::Auxiliary);
+    if (auxiliary != nullptr && (auxiliary->extended_pos == core::ExtendedPOS::AuxClassicalKeri ||
+                                 auxiliary->extended_pos == core::ExtendedPOS::AuxClassicalPerfect ||
+                                 auxiliary->extended_pos == core::ExtendedPOS::AuxClassicalNari)) {
+      return true;
+    }
+    const auto* particle = dict_manager->lookupExact(tail, core::PartOfSpeech::Particle);
+    if (particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleConj) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool hasAttestedInternalGodanConditional(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                          size_t particle_pos, const grammar::InflectionCandidate& whole,
                                          const dictionary::DictionaryManager* dict_manager) {
@@ -532,7 +562,10 @@ void appendGodanPassiveRenyokeiCandidates(const std::vector<char32_t>& codepoint
             // verbs such as 生まれる use the dictionary/Ichidan path above
             // and do not reach this Godan-passive fallback.
             const bool is_passive_negative_chain = vh::naiNegativeFollowsAt(codepoints, renyokei_end);
-            if (!is_beki_pattern && !is_passive_causative_chain && !is_passive_negative_chain) {
+            const bool is_classical_predicate_chain =
+                classicalPredicateTailFollowsAt(codepoints, renyokei_end, dict_manager);
+            if (!is_beki_pattern && !is_passive_causative_chain && !is_passive_negative_chain &&
+                !is_classical_predicate_chain) {
               candidates.push_back(makeVerbCandidate(
                   surface, start_pos, renyokei_end, base_cost, base_lemma, dictionary::ConjugationType::Ichidan, false,
                   CandidateOrigin::VerbKanji, ichidan_confidence, "godan_passive_renyokei"));

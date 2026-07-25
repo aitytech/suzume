@@ -612,6 +612,13 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::AdjRenyokei, EPOS::AuxClassicalKeri, cost::kVeryStrongBonus},
       {EPOS::AdjRenyokei, EPOS::AuxClassicalPerfect, cost::kVeryStrongBonus},
 
+      // A passive predicate reaches the same auxiliaries through the passive's
+      // own continuative (飲ま+れ+けり). Without the counterpart of the verb
+      // entry above, the passive stays inside the preceding verb (飲まれ+けり)
+      // and the auxiliary loses its host.
+      {EPOS::AuxPassive, EPOS::AuxClassicalKeri, cost::kVeryStrongBonus},
+      {EPOS::AuxPassive, EPOS::AuxClassicalPerfect, cost::kVeryStrongBonus},
+
       // Classical perfect り attaches to a verbal inflection, never directly
       // to a noun or numeral. Blocking that impossible path prevents manner
       // mimetics such as AっBり from becoming a numeral plus auxiliary.

@@ -42,6 +42,31 @@ bool hasNominalPhraseSelectorAt(const dictionary::DictionaryManager* dict_manage
   return auxiliary != nullptr && auxiliary->extended_pos == core::ExtendedPOS::AuxCopulaDa;
 }
 
+/**
+ * @brief Whether the span boundary falls inside a dictionary particle.
+ *
+ * A compound noun cannot end part-way through a closed-class word: 読まれども is
+ * 読ま + れ + ども, so a span reaching only 読まれど has cut the concessive
+ * conjunction in half and owes its score to that cut.
+ */
+bool boundarySplitsDictionaryParticle(const dictionary::DictionaryManager* dict_manager,
+                                      const std::vector<char32_t>& codepoints, size_t kanji_end, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos >= codepoints.size()) {
+    return false;
+  }
+  const size_t scan_start = (end_pos > kanji_end + 1) ? end_pos - 2 : kanji_end;
+  const size_t probe_end = std::min(codepoints.size(), end_pos + 2);
+  for (size_t start = scan_start; start < end_pos; ++start) {
+    for (size_t stop = end_pos + 1; stop <= probe_end; ++stop) {
+      if (dict_manager->lookupExact(extractSubstring(codepoints, start, stop), core::PartOfSpeech::Particle) !=
+          nullptr) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool isAdjectiveNominalizationSa(const dictionary::DictionaryManager* dict_manager,
                                  const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
   if (dict_manager == nullptr || end_pos <= start_pos + 1 || codepoints[end_pos - 1] != U'さ') {
@@ -817,6 +842,12 @@ void generateKanjiHiraganaCompoundCandidates(const std::vector<char32_t>& codepo
   // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
   if (verb_helpers::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, hiragana_end)) {
     return;  // Skip - noun + focus particle split should win
+  }
+
+  // Skip when the span boundary cuts a dictionary particle in half
+  // (読まれど|も for 読ま + れ + ども).
+  if (boundarySplitsDictionaryParticle(dict_manager, codepoints, kanji_end, hiragana_end)) {
+    return;
   }
 
   // Generate candidate with cost based on pattern
