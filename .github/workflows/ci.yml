@@ -45,6 +45,9 @@ jobs:
       # plus WASM-core purity (no unguarded file-I/O headers). See CLAUDE.md.
       - run: scripts/check_code_guardrails.sh
       - run: python3 scripts/check_oracle_overrides.py
+      # A POS added to the C ABI must reach both bindings' label tables; the
+      # C++ suite cannot see that gap.
+      - run: python3 scripts/check_binding_labels.py
       # Version must stay in lockstep across every binding manifest.
       - run: scripts/check_version_mirror.sh
 
