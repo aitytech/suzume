@@ -448,6 +448,51 @@ def _postprocess_classical_mu(result: list[dict], applied_rule: str | None) -> t
     return merged, applied_rule
 
 
+_E_ROW_TO_U_ROW = {
+    "え": "う",
+    "け": "く",
+    "げ": "ぐ",
+    "せ": "す",
+    "て": "つ",
+    "ね": "ぬ",
+    "べ": "ぶ",
+    "め": "む",
+    "れ": "る",
+}
+_CONCESSIVE_PARTICLES = ("ど", "ども")
+
+
+def _postprocess_izenkei_concessive(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Give the 已然形 before a concessive conjunction its plain verb lemma.
+
+    ど/ども select the 已然形, which the modern paradigm spells like the
+    hypothetical (書け+ど, 飲め+ど). The potential verb of the same stem reaches
+    that conjunction only through its own 已然形 (書けれ+ど), so a bare e-row form
+    here belongs to the plain verb. The reference dictionary splits the two
+    readings by row, giving 飲む for one and 書ける for the other.
+    """
+    tagged: list[dict] = []
+    for idx, token in enumerate(result):
+        following = result[idx + 1] if idx + 1 < len(result) else None
+        surface = token.get("surface", "")
+        if (
+            following is not None
+            and following.get("surface") in _CONCESSIVE_PARTICLES
+            and following.get("pos") == "助詞"
+            and token.get("pos") == "動詞"
+            and token.get("lemma") == surface + "る"
+            and surface[-1:] in _E_ROW_TO_U_ROW
+        ):
+            plain = surface[:-1] + _E_ROW_TO_U_ROW[surface[-1]]
+            if _is_single_verb(plain):
+                tagged.append({**token, "lemma": plain})
+                if applied_rule is None:
+                    applied_rule = "izenkei-concessive-lemma"
+                continue
+        tagged.append(token)
+    return tagged, applied_rule
+
+
 _CLASSICAL_CAUSATIVE_FORMS = ("しむ", "しめ", "しむる", "しむれ")
 
 

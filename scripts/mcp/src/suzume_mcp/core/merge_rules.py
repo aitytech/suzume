@@ -29,6 +29,7 @@ from .merge_postprocessors import (
     _postprocess_filler_split,
     _postprocess_ha_row_godan,
     _postprocess_honorific_split,
+    _postprocess_izenkei_concessive,
     _postprocess_kamo,
     _postprocess_kanji_merge,
     _postprocess_kuruwa,
@@ -1005,6 +1006,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_ha_row_godan(result, applied_rule)
     result, applied_rule = _postprocess_classical_mu(result, applied_rule)
     result, applied_rule = _postprocess_classical_shimu(result, applied_rule)
+    result, applied_rule = _postprocess_izenkei_concessive(result, applied_rule)
     result, applied_rule = _postprocess_kanji_merge(result, applied_rule)
     result, applied_rule = _postprocess_nickname_merge(result, applied_rule)
     result, applied_rule = _postprocess_search_unit_split(result, applied_rule)
