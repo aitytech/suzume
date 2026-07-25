@@ -147,9 +147,16 @@ class UniversalTokenizationParamTest : public UniversalTokenizationTest,
 
 TEST_P(UniversalTokenizationParamTest, Tokenize) {
   const auto& entry = GetParam();
+  SCOPED_TRACE("Input: " + entry.test_case.input);
+
+  // A per-case oracle override is a design violation, not an expectation.
+  // Fail here so it surfaces as an ordinary case failure (and through test_failed).
+  ASSERT_FALSE(entry.test_case.hasOracleOverride())
+      << "Banned oracle override in " << entry.json_path << " (case id '" << entry.test_case.id << "').\n"
+      << kOracleOverrideRemediation;
+
   auto result = analyzer_.analyze(entry.test_case.input);
-  // Use suzume_expected if available, otherwise use expected
-  verifyMorphemes(entry.test_case.input, result, entry.test_case.getTestExpected());
+  verifyMorphemes(entry.test_case.input, result, entry.test_case.expected);
 }
 
 // Custom name generator that includes suite name for disambiguation

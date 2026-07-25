@@ -134,6 +134,8 @@ inline TestCase JsonLoader::parseTestCase() {
     } else if (tryKey("expected")) {
       expect(':');
       tc.expected = parseMorphemeArray();
+      // Banned oracle overrides. Parsed rather than ignored so the suite can reject
+      // them; the unknown-key branch below would swallow them silently. See TestCase.
     } else if (tryKey("suzume_expected")) {
       expect(':');
       tc.suzume_expected = parseMorphemeArray();
