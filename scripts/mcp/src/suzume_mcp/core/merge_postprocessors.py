@@ -778,6 +778,32 @@ def _postprocess_ascii_dot_merge(result: list[dict], applied_rule: str | None) -
     return merged, applied_rule
 
 
+# Small kana that cannot open a mora, and therefore cannot open a morpheme.
+# The sokuon っ and the moraic ん are excluded: both do stand alone as tokens.
+_NON_INITIAL_SMALL_KANA = "ゃゅょぁぃぅぇぉゎャュョァィゥェォヮ"
+
+
+def _postprocess_small_kana_head_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Reattach a token that opens with a small kana to the one before it.
+
+    A palatalised or small-vowel kana is the second half of a mora, so a token
+    starting with one is a split inside a mora rather than a morpheme boundary.
+    The reference dictionary produces such fragments for surfaces it does not
+    know (読ん+じ+ょる).
+    """
+    merged: list[dict] = []
+    for curr in result:
+        surface = curr.get("surface", "")
+        if merged and surface and surface[0] in _NON_INITIAL_SMALL_KANA:
+            merged[-1]["surface"] += surface
+            merged[-1]["lemma"] = merged[-1]["surface"]
+            if applied_rule is None:
+                applied_rule = "small-kana-head-merge"
+            continue
+        merged.append(curr)
+    return merged, applied_rule
+
+
 def _postprocess_onomatopoeia_tto_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
     """Merge onomatopoeia stem + っと → Xっと (adverb).
 

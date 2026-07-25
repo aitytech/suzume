@@ -672,6 +672,12 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // split into ちゃ + ん + と while retaining verb-irrealis + ん chains.
       {EPOS::ParticleConj, EPOS::AuxVolitional, cost::kAlmostNever},
 
+      // The volitional/conjectural auxiliary attaches to an irrealis form, so
+      // it cannot follow a bare nominal either. Without this a run of kanji
+      // absorbs a following verb stem and leaves its ending behind
+      // (本読む → 本読 + む).
+      {EPOS::Noun, EPOS::AuxVolitional, cost::kStrong},
+
       // A verb irrealis form cannot directly precede an independent onbin
       // form. This rejects fabricated chains such as よろ + こん + で while
       // preserving a single lexical onbin stem (よろこん + で).

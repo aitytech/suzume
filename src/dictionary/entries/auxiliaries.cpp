@@ -598,6 +598,14 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("どり", "どる", EPOS::AuxAspectIru),
       aux("どっ", "どる", EPOS::AuxAspectIru),
       verb("どれ", "どる", EPOS::VerbKateikei),
+      // The Shikoku progressive よる and its voiced form after an n-onbin
+      // (書きよる, 読んじょる) inflect the same way. Without the auxiliary
+      // reading the sequence is taken for a lexical verb and the preceding
+      // noun loses its boundary.
+      aux("よる", "よる", EPOS::AuxAspectIru),
+      aux("よっ", "よる", EPOS::AuxAspectIru),
+      aux("じょる", "じょる", EPOS::AuxAspectIru),
+      aux("じょっ", "じょる", EPOS::AuxAspectIru),
 
       // Benefactive auxiliary - くれる (giving, receiving benefit)
       // Used in subsidiary verb patterns: してくれる, 買ってくれた

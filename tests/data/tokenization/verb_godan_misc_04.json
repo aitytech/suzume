@@ -1908,6 +1908,177 @@
       ],
       "id": "hariwo_su",
       "input": "はりを刺す"
+    },
+    {
+      "description": "本読む - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "mu_2",
+      "input": "本読む"
+    },
+    {
+      "description": "水飲む - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        }
+      ],
+      "id": "mu_3",
+      "input": "水飲む"
+    },
+    {
+      "description": "紙書く - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        }
+      ],
+      "id": "ku",
+      "input": "紙書く"
+    },
+    {
+      "description": "本読んじょる - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "じょる",
+          "pos": "Auxiliary",
+          "surface": "じょる"
+        }
+      ],
+      "id": "nji_ru",
+      "input": "本読んじょる"
+    },
+    {
+      "description": "本を読んじょる - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "じょる",
+          "pos": "Auxiliary",
+          "surface": "じょる"
+        }
+      ],
+      "id": "wo_nji_ru",
+      "input": "本を読んじょる"
+    },
+    {
+      "description": "紙書くだべ - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だべ"
+        }
+      ],
+      "id": "kudabe",
+      "input": "紙書くだべ"
+    },
+    {
+      "description": "紙書くやんけ - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "やんけ",
+          "pos": "Particle",
+          "surface": "やんけ"
+        }
+      ],
+      "id": "kuyanke",
+      "input": "紙書くやんけ"
+    },
+    {
+      "description": "本によると - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "よる",
+          "pos": "Verb",
+          "surface": "よる"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        }
+      ],
+      "id": "niyoruto",
+      "input": "本によると"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

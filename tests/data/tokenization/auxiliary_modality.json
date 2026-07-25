@@ -1936,6 +1936,23 @@
       ],
       "id": "nanda",
       "input": "本なんだ"
+    },
+    {
+      "description": "本やねん - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "やねん"
+        }
+      ],
+      "id": "yanen",
+      "input": "本やねん"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

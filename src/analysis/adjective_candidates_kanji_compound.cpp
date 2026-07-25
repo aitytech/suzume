@@ -130,6 +130,20 @@ void adj_detail::appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& 
                 continue;
               }
             }
+            // The compound stem must not be masking a verb: when its final
+            // kanji plus the hiragana tail is itself a dictionary verb, the
+            // sequence is a noun followed by that verb with the case particle
+            // omitted (紙書く → 紙 + 書く), not a fabricated i-adjective.
+            // A genuine compound adjective's tail is adjectival (力強く,
+            // 薄暗く), so this leaves it alone.
+            // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+            if (dict_manager != nullptr && kanji_end > start_pos) {
+              std::string verb_tail = extractSubstring(codepoints, kanji_end - 1, end_pos);
+              if (dict_manager->lookupExact(verb_tail, core::PartOfSpeech::Verb) != nullptr) {
+                SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" tail \"" << verb_tail << "\" is a verb\n");
+                continue;
+              }
+            }
             const auto& all_cands = inflection.analyze(surface);
             for (const auto& ic : all_cands) {
               if (ic.confidence >= candidate::kCompoundAdjConfMin && ic.verb_type == grammar::VerbType::IAdjective) {

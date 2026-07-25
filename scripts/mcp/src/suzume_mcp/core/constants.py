@@ -371,6 +371,13 @@ FIXED_FUNCTION_SEARCH_UNITS: dict[str, str] = {
     "だけ": "助詞",
     "だに": "助詞",
     "がてら": "助詞",
+    # Regional predicate tails. The reference analyzer has no entry for them and
+    # guesses an internal boundary (だ+べ, やん+け), but each is one closed
+    # copular or final form.
+    "だべ": "助動詞",
+    "やんけ": "助詞",
+    "やねん": "助動詞",
+    "だっちゃ": "助動詞",
 }
 
 # Closed inflected function forms that the reference analyzer can split into
@@ -552,6 +559,11 @@ ADVERB_NOMINAL_HOMOGRAPHS: frozenset[str] = frozenset({"一切", "一切合切",
 FIXED_FUNCTION_LEMMAS: dict[str, str] = {
     "全く": "全く",
     "あるいは": "或いは",
+    # Regional copulas. Their dictionary form is the standard copula they
+    # stand in for, not the regional surface.
+    "だべ": "だ",
+    "やねん": "だ",
+    "だっちゃ": "だ",
 }
 
 # Pronoun overrides (名詞 -> Pronoun)

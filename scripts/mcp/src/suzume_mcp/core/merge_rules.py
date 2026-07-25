@@ -40,6 +40,7 @@ from .merge_postprocessors import (
     _postprocess_prefix_split,
     _postprocess_productive_mimetics,
     _postprocess_search_unit_split,
+    _postprocess_small_kana_head_merge,
     _postprocess_totomoni,
 )
 from .split_rules import base_from_renyokei
@@ -114,7 +115,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                         {
                             "surface": fixed_word,
                             "pos": FIXED_FUNCTION_SEARCH_UNITS[fixed_word],
-                            "lemma": fixed_word,
+                            "lemma": FIXED_FUNCTION_LEMMAS.get(fixed_word, fixed_word),
                         }
                     )
                     i = j
@@ -1014,6 +1015,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_productive_mimetics(result, applied_rule)
     result, applied_rule = _postprocess_distributive_quantity(result, applied_rule)
     result, applied_rule = _postprocess_ascii_dot_merge(result, applied_rule)
+    result, applied_rule = _postprocess_small_kana_head_merge(result, applied_rule)
     _postprocess_dialectal(result)
 
     return result, applied_rule

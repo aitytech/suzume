@@ -795,6 +795,57 @@
       ],
       "id": "kusakattta",
       "input": "面倒くさかった"
+    },
+    {
+      "description": "力強く進む - regression test",
+      "expected": [
+        {
+          "lemma": "力強い",
+          "pos": "Adjective",
+          "surface": "力強く"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "ku_mu",
+      "input": "力強く進む"
+    },
+    {
+      "description": "薄暗くなる - regression test",
+      "expected": [
+        {
+          "lemma": "薄暗い",
+          "pos": "Adjective",
+          "surface": "薄暗く"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "kunaru",
+      "input": "薄暗くなる"
+    },
+    {
+      "description": "物悲しく響く - regression test",
+      "expected": [
+        {
+          "lemma": "物悲しい",
+          "pos": "Adjective",
+          "surface": "物悲しく"
+        },
+        {
+          "lemma": "響く",
+          "pos": "Verb",
+          "surface": "響く"
+        }
+      ],
+      "id": "shiku_ku",
+      "input": "物悲しく響く"
     }
   ],
   "description": "I-adjectives ku-forms (連用形) - adverbial, negative, te-form, ku-naru patterns",
