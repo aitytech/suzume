@@ -158,14 +158,29 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
                                              "kuru_literary_volitional_n", core::ExtendedPOS::VerbMizenkei));
     }
 
-    // The irregular mizenkei of 来る keeps the bare kanji before classical
-    // negative ず (来+ず, 来+ず+じまい), just as it does before ない/ざる.
-    if (kanji_char == U'来' && codepoints[kanji_end] == U'ず') {
+    // The irregular mizenkei of 来る keeps the bare kanji before the classical
+    // negative auxiliary, just as it does before ない. Resolve the cell from the
+    // auxiliary inventory instead of naming one kana, so the whole paradigm is
+    // covered at once (来+ず, 来+ぬ, 来+ざる, 来+ね).
+    bool classical_negative_follows = false;
+    {
+      constexpr size_t kNegativeAuxProbe = 3;
+      const size_t max_aux_end = std::min(codepoints.size(), kanji_end + kNegativeAuxProbe);
+      for (size_t aux_end = kanji_end + 1; aux_end <= max_aux_end; ++aux_end) {
+        const auto* negative_entry =
+            dict_manager->lookupExact(extractSubstring(codepoints, kanji_end, aux_end), core::PartOfSpeech::Auxiliary);
+        if (negative_entry != nullptr && negative_entry->extended_pos == core::ExtendedPOS::AuxNegativeNu) {
+          classical_negative_follows = true;
+          break;
+        }
+      }
+    }
+    if (kanji_char == U'来' && classical_negative_follows) {
       const std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
       candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end, candidate::verb_cost::kStandardBonus,
                                              "来る", dictionary::ConjugationType::Kuru, true,
                                              CandidateOrigin::VerbKanji, candidate::kHighOriginConfidence,
-                                             "kuru_classical_negative_zu", core::ExtendedPOS::VerbMizenkei));
+                                             "kuru_classical_negative", core::ExtendedPOS::VerbMizenkei));
     }
 
     // The irregular irrealis stem of 来る is the bare kanji before every
