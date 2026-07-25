@@ -292,6 +292,18 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
       continue;
     }
 
+    // An unregistered adjective hypothesis must not swallow a dictionary verb
+    // sitting at its tail (一枚+ください, not the fabricated adjective 一枚ください).
+    // Mirrors the equivalent guard on the verb candidate paths. Single-kana tails
+    // are excluded because they are inflectional endings, not lexical verbs.
+    bool tail_is_dict_verb = false;
+    for (size_t split = start_pos + 1; split + 1 < end_pos; ++split) {
+      if (isVerbInDictionary(dict_manager, extractSubstring(codepoints, split, end_pos))) {
+        tail_is_dict_verb = true;
+        break;
+      }
+    }
+
     // Check all candidates for IAdjective, not just the best one
     // This handles cases like 美味しそう where Suru (美味する) may have higher
     // confidence than IAdjective (美味しい), but we still want to generate
@@ -299,11 +311,17 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
     const auto& all_candidates = inflection.analyze(surface);
 
     for (const auto& cand : all_candidates) {
-      const bool long_attributive_base =
-          cand.verb_type == grammar::VerbType::IAdjective && cand.base_form == surface &&
-          normalize::utf8Length(surface) >= 4 && end_pos < codepoints.size() &&
-          (normalize::isKanjiCodepoint(codepoints[end_pos]) ||
-           normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Katakana);
+      // A long unregistered i-adjective in its uninflected form is recognizable
+      // wherever no following kana can continue the inflection: before a content
+      // word (面倒くさい作業) and equally at the end of the sentence (面倒くさい).
+      // A following kana is excluded because it may be an auxiliary that selects
+      // a different analysis (〜いた, 〜いて).
+      const bool uninflected_continuation_follows =
+          end_pos < codepoints.size() && !normalize::isKanjiCodepoint(codepoints[end_pos]) &&
+          normalize::classifyChar(codepoints[end_pos]) != normalize::CharType::Katakana;
+      const bool long_uninflected_base = cand.verb_type == grammar::VerbType::IAdjective && cand.base_form == surface &&
+                                         normalize::utf8Length(surface) >= 4 && !uninflected_continuation_follows &&
+                                         !tail_is_dict_verb;
       const bool complete_past_form =
           cand.verb_type == grammar::VerbType::IAdjective && utf8::endsWith(surface, "かった") &&
           cand.confidence >= candidate::kCompoundAdjConfMin &&
@@ -311,7 +329,7 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
       // Require confidence >= 0.5 for i-adjectives
       // Base forms like 寒い get exactly 0.5, conjugated forms like 美しかった get 0.68+
       if ((cand.confidence >= candidate::kIAdjConfMin || complete_past_form ||
-           (long_attributive_base && cand.confidence >= candidate::kCompoundAdjConfMin)) &&
+           (long_uninflected_base && cand.confidence >= candidate::kCompoundAdjConfMin)) &&
           cand.verb_type == grammar::VerbType::IAdjective) {
         // Filter out false positives: いたす honorific pattern
         // Invalid patterns (all have た after the candidate):

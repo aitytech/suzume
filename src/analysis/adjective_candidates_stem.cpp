@@ -88,6 +88,15 @@ bool isPossibleUnknownIAdjectiveStem(const std::string& stem, const std::string&
     return false;
   }
 
+  // く is the continuative ending of the i-adjective paradigm, so a span ending
+  // in it is already an inflected form and cannot also be a stem awaiting い
+  // (面倒く+い, 古く+い). The compound-adjective suffix that follows it (くさい,
+  // くない) keeps its own boundary. Attested bases ending in く (にくい) are
+  // dictionary entries and returned above.
+  if (stem_last == U'く') {
+    return false;
+  }
+
   // Do not absorb a complete dictionary-verified verb continuative into a
   // fabricated adjective stem (語り+ぐ+い, 読み+やす+い).  Productive derived
   // adjectives retain their own morpheme boundary and are emitted elsewhere.
