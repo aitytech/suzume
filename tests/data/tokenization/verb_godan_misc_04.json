@@ -1714,6 +1714,87 @@
       ],
       "id": "n_ni_tsu",
       "input": "真ん前に立つ"
+    },
+    {
+      "description": "水を飲むばい - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        },
+        {
+          "lemma": "ばい",
+          "pos": "Particle",
+          "surface": "ばい"
+        }
+      ],
+      "id": "wo_mubai",
+      "input": "水を飲むばい"
+    },
+    {
+      "description": "本読んどるばい - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "どる",
+          "pos": "Auxiliary",
+          "surface": "どる"
+        },
+        {
+          "lemma": "ばい",
+          "pos": "Particle",
+          "surface": "ばい"
+        }
+      ],
+      "id": "ndorubai",
+      "input": "本読んどるばい"
+    },
+    {
+      "description": "水飲むぜよ - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        },
+        {
+          "lemma": "ぜ",
+          "pos": "Particle",
+          "surface": "ぜ"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "muzeyo",
+      "input": "水飲むぜよ"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

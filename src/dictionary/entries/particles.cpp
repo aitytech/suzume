@@ -90,6 +90,10 @@ EntrySpecRange getParticleEntries() {
       particle("っけ", EPOS::ParticleFinal),
       particle("かしら", EPOS::ParticleFinal),
       particle("だい", EPOS::ParticleFinal),
+      // Regional final particles. They attach to a predicate terminal like the
+      // standard ones above, unlike the dialect copulas in the auxiliary table.
+      particle("ばい", EPOS::ParticleFinal),
+      particle("やんけ", EPOS::ParticleFinal),
 
       // Adverbial particles (副助詞)
       particle("かも", EPOS::ParticleAdverbial),  // prevent か+も split in かもしれない

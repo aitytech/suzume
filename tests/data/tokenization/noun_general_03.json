@@ -151,6 +151,28 @@
       ],
       "id": "no_5",
       "input": "本の中"
+    },
+    {
+      "description": "本や紙 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "や",
+          "pos": "Particle",
+          "surface": "や"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        }
+      ],
+      "id": "ya",
+      "input": "本や紙"
     }
   ],
   "description": "General nouns (part 3/3)",

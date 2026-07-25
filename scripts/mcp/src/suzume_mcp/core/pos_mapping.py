@@ -4,6 +4,7 @@ import regex
 
 from .constants import (
     ADVERB_OVERRIDES,
+    DIALECT_FINAL_PARTICLES,
     KEEP_AS_NOUN_NOT_ADJ,
     NA_ADJ_OVERRIDES,
     NOUN_AS_PRONOUN,
@@ -368,6 +369,20 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
         # Fix particles misclassified as Noun
         if surface in PARTICLE_CORRECTIONS and pos == "Noun":
             t["pos"] = PARTICLE_CORRECTIONS[surface]
+
+        # A regional final particle is outside the reference dictionary, so it
+        # arrives as a bare noun. Only a preceding predicate identifies it
+        # (飲む+ばい); elsewhere the nominal reading stands.
+        if surface in DIALECT_FINAL_PARTICLES and pos in ("Noun", "名詞") and idx > 0:
+            if tokens[idx - 1].get("pos", "") in (
+                "Verb",
+                "動詞",
+                "Auxiliary",
+                "助動詞",
+                "Adjective",
+                "形容詞",
+            ):
+                t["pos"] = "Particle"
 
         # Fix の (名詞,非自立) as Particle
         if surface == "の" and pos == "名詞" and t.get("pos_sub1") == "非自立":

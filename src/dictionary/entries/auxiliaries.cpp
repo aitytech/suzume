@@ -806,14 +806,20 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("のじゃ", "のだ", EPOS::Unknown),
       aux("じゃろ", "だろ", EPOS::AuxCopulaDa),
 
-      // Regional dialects (方言系)
+      // Regional dialects (方言系). These are copular forms, so they take the
+      // copula's ExtendedPOS: Unknown left them outside every connection rule,
+      // and a fabricated i-adjective swallowed the whole clause instead.
+      // The predicate-final tails ばい/やんけ are final particles and live in
+      // the particle table. ぜよ stays unclassified: ぜ+よ is already the
+      // grammatical reading of that sequence.
       aux("ぜよ", "だ", EPOS::Unknown),
-      aux("だべ", "だ", EPOS::Unknown),
-      aux("やんけ", "だ", EPOS::Unknown),
+      aux("だべ", "だ", EPOS::AuxCopulaDa),
+      // The bare Kansai copula stays unclassified: it is homographic with the
+      // far commoner coordinating particle (本や紙), which the copula's own
+      // connection bonuses would outrank.
       aux("や", "だ", EPOS::Unknown),
-      aux("やねん", "だ", EPOS::Unknown),
-      aux("だっちゃ", "だ", EPOS::Unknown),
-      aux("ばい", "だ", EPOS::Unknown),
+      aux("やねん", "だ", EPOS::AuxCopulaDa),
+      aux("だっちゃ", "だ", EPOS::AuxCopulaDa),
 
       // Robot/Mechanical (ロボット・機械)
       aux("デス", "です", EPOS::Unknown),

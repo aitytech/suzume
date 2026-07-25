@@ -335,6 +335,11 @@ PARTICLE_CORRECTIONS: dict[str, str] = {
     "って": "Particle",
 }
 
+# Regional sentence-final particles. They are absent from the reference
+# dictionary, so they surface as bare nouns and are told apart from a genuine
+# nominal only by the predicate in front of them.
+DIALECT_FINAL_PARTICLES: frozenset[str] = frozenset({"ばい"})
+
 # Hiragana compounds that MeCab splits but should stay together
 HIRAGANA_COMPOUNDS: dict[str, str] = {
     "ふともも": "名詞",
