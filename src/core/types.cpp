@@ -274,6 +274,8 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
       return "AUX_文語断定連体";
     case ExtendedPOS::AuxClassicalPerfect:
       return "AUX_文語完了";
+    case ExtendedPOS::AuxClassicalKi:
+      return "AUX_文語過去キ";
     case ExtendedPOS::AuxClassicalBeshi:
       return "AUX_文語当為";
 

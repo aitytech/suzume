@@ -119,6 +119,7 @@ EXTENDED_POS = (
     "DET_引用",
     "AUX_よう",
     "AUX_KURUWA_POLITE",
+    "AUX_文語過去キ",
 )
 CONJUGATION_TYPES: tuple[str | None, ...] = (
     None,

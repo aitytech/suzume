@@ -99,6 +99,7 @@ constexpr std::array<float, static_cast<size_t>(ExtendedPOS::Count_)> kCategoryC
   // AuxClassicalBeshi (連体形 べき) preserves べき's prior word cost (it used to ride
   // AuxVolitional's 0.3); the adnominal べき→Noun and 終止形/受身→べき bigram bonuses in
   // bigram_table.cpp carry its placement, so the category cost stays neutral at 0.3.
+  table[static_cast<size_t>(ExtendedPOS::AuxClassicalKi)] = 0.4F;     // し/しか (文語過去キ)
   table[static_cast<size_t>(ExtendedPOS::AuxClassicalBeshi)] = 0.3F;  // べき (文語当為)
 
   // Desire/Volition

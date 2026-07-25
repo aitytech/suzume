@@ -250,7 +250,7 @@ class Tokenizer {
   }
 
   static std::string extendedPosLabel(std::uint8_t code) {
-    static constexpr std::array<const char*, 82> labels = {"UNKNOWN",
+    static constexpr std::array<const char*, 83> labels = {"UNKNOWN",
                                                            "VERB_終止",
                                                            "VERB_連用",
                                                            "VERB_未然",
@@ -331,7 +331,8 @@ class Tokenizer {
                                                            "SUFFIX_傾向",
                                                            "DET_引用",
                                                            "AUX_よう",
-                                                           "AUX_KURUWA_POLITE"};
+                                                           "AUX_KURUWA_POLITE",
+                                                           "AUX_文語過去キ"};
     return code < labels.size() ? labels[code] : labels[0];
   }
 

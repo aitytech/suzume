@@ -120,6 +120,7 @@ const EXTENDED_POS = [
   'DET_引用',
   'AUX_よう',
   'AUX_KURUWA_POLITE',
+  'AUX_文語過去キ',
 ] as const;
 
 const CONJUGATION_TYPE_JAPANESE: readonly (string | null)[] = [

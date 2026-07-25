@@ -89,6 +89,10 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("たる", "たり", EPOS::AuxClassicalTari),
       aux("たり", "たり", EPOS::AuxClassicalPerfect),  // 完了 (行きたり)
       aux("り", "り", EPOS::AuxClassicalPerfect),      // 存続 (行けり)
+      // Classical past き: only its 連体形 し and 已然形 しか survive in
+      // ordinary text, and both attach to a continuative (読みし人, 見しかば).
+      aux("し", "き", EPOS::AuxClassicalKi),
+      aux("しか", "き", EPOS::AuxClassicalKi),
 
       // Past/Completion - た (過去・完了)
       aux("た", "た", EPOS::AuxTenseTa),

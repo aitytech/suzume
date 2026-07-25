@@ -8,7 +8,7 @@ from suzume._labels import EXTENDED_POS, extended_pos
 
 
 def test_extended_pos_labels_match_the_serialized_range() -> None:
-    assert len(EXTENDED_POS) == 82
+    assert len(EXTENDED_POS) == 83
     assert extended_pos(32) == "AUX_開始"
     assert extended_pos(73) == "AUX_文語完了"
     assert extended_pos(77) == "SUFFIX_直後"

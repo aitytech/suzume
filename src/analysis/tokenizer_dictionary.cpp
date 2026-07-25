@@ -307,6 +307,46 @@ bool conflictsWithVerifiedCompoundBoundary(const core::Lattice& lattice,
 // (います/いました/いません/…).  At a clause boundary the closed inflectional
 // chain is more specific than the accidental いま+verb path.  Do not apply
 // this inside a longer lexical continuation: いますぐ remains いま+すぐ.
+/**
+ * @brief Whether an adnominal classical past form can end at this position.
+ *
+ * 連体形 し either modifies a nominal (読みし人, 見しこと) or closes the clause,
+ * and 已然形 しか takes the conditional particle. Requiring one of those keeps
+ * the far more frequent サ変 continuative of the same spelling intact.
+ */
+bool classicalPastEnvironmentFollows(const dictionary::DictionaryManager& dict_manager,
+                                     const std::vector<char32_t>& codepoints, size_t end_pos, bool is_izenkei) {
+  constexpr size_t kFollowerProbeChars = 3;
+  const size_t probe_end = std::min(codepoints.size(), end_pos + kFollowerProbeChars);
+  if (is_izenkei) {
+    for (size_t stop = end_pos + 1; stop <= probe_end; ++stop) {
+      const auto* particle =
+          dict_manager.lookupExact(extractSubstring(codepoints, end_pos, stop), core::PartOfSpeech::Particle);
+      if (particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleConj) {
+        return true;
+      }
+    }
+    return false;
+  }
+  if (end_pos >= codepoints.size()) {
+    return true;
+  }
+  const char32_t following = codepoints[end_pos];
+  if (following == U'。' || following == U'、' || following == U'！' || following == U'？' || following == U'」' ||
+      following == U'）') {
+    return true;
+  }
+  if (normalize::isKanjiCodepoint(following) || normalize::classifyChar(following) == normalize::CharType::Katakana) {
+    return true;
+  }
+  for (size_t stop = end_pos + 1; stop <= probe_end; ++stop) {
+    if (dict_manager.lookupExact(extractSubstring(codepoints, end_pos, stop), core::PartOfSpeech::Noun) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool startsIruPoliteFormAt(const std::vector<char32_t>& codepoints, size_t start_pos) {
   if (start_pos >= codepoints.size() || codepoints[start_pos] != U'い') {
     return false;
@@ -1180,6 +1220,16 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       if ((is_marker && !has_honorific_start) || (!is_marker && !follows_honorific_marker)) {
         continue;
       }
+    }
+
+    // The classical past keeps only its 連体形 し and 已然形 しか, so each has
+    // exactly one environment: し modifies a following nominal or closes the
+    // clause (読みし人, 読まざりし。) and しか takes the conditional particle
+    // (見しかば).  Anywhere else the same kana is the サ変 continuative
+    // (消し+ます, 落ち+し+て).
+    if (result.entry->extended_pos == core::ExtendedPOS::AuxClassicalKi &&
+        !classicalPastEnvironmentFollows(dict_manager_, codepoints, end_pos, end_pos - start_pos > 1)) {
+      continue;
     }
 
     // A pure-hiragana adnominal begins with a kana that is also an inflectional

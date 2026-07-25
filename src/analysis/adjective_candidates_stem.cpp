@@ -822,6 +822,7 @@ bool classicalAuxiliaryFollowsAt(const std::vector<char32_t>& codepoints, size_t
       case core::ExtendedPOS::AuxClassicalKeri:
       case core::ExtendedPOS::AuxClassicalTari:
       case core::ExtendedPOS::AuxClassicalPerfect:
+      case core::ExtendedPOS::AuxClassicalKi:
       case core::ExtendedPOS::AuxClassicalBeshi:
         return true;
       default:

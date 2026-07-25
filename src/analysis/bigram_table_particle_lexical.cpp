@@ -612,6 +612,17 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::AdjRenyokei, EPOS::AuxClassicalKeri, cost::kVeryStrongBonus},
       {EPOS::AdjRenyokei, EPOS::AuxClassicalPerfect, cost::kVeryStrongBonus},
 
+      // Only the 連体形 し and 已然形 しか of the classical past survive in
+      // ordinary text, and both attach to a continuative: a verb's own
+      // (読み+し), the negative's (読まざり+し) or the supplementary adjective
+      // conjugation's (小さかり+し). Without these the one-mora surface is read
+      // as the サ変 continuative it shares its spelling with.
+      {EPOS::VerbRenyokei, EPOS::AuxClassicalKi, cost::kVeryStrongBonus},
+      // The negative's continuative ざり needs the wider margin: the サ変
+      // continuative it competes with is the cheapest word in the lattice.
+      {EPOS::AuxNegativeNu, EPOS::AuxClassicalKi, cost::kExtremeBonus},
+      {EPOS::AdjRenyokei, EPOS::AuxClassicalKi, cost::kVeryStrongBonus},
+
       // A passive predicate reaches the same auxiliaries through the passive's
       // own continuative (飲ま+れ+けり). Without the counterpart of the verb
       // entry above, the passive stays inside the preceding verb (飲まれ+けり)

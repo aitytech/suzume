@@ -185,6 +185,7 @@ enum class ExtendedPOS : uint8_t {
   DeterminerQuotative,     // 引用連体: という、っていう
   AuxSimilitudeYou,        // 比況・様態: よう（読むようだ、次のように）
   AuxKuruwaPolite,         // Regional polite auxiliary: なんし
+  AuxClassicalKi,          // 文語過去き連体形: し (読みし人), 已然形: しか
 
   // Count marker (for array sizing)
   Count_  // Total number of categories
@@ -348,7 +349,7 @@ inline bool isAuxiliaryType(ExtendedPOS epos) {
          epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalPerfect ||
          epos == ExtendedPOS::AuxClassicalBeshi || epos == ExtendedPOS::AuxInability ||
          epos == ExtendedPOS::AuxBenefactive || epos == ExtendedPOS::AuxSimilitudeYou ||
-         epos == ExtendedPOS::AuxKuruwaPolite;
+         epos == ExtendedPOS::AuxKuruwaPolite || epos == ExtendedPOS::AuxClassicalKi;
 }
 
 /**
