@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "description": "待っててよ - regression test",
+      "expected": [
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "てる",
+          "pos": "Auxiliary",
+          "surface": "て"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "ttteteyo",
+      "input": "待っててよ"
+    },
+    {
+      "description": "動かないでよ - regression test",
+      "expected": [
+        {
+          "lemma": "動く",
+          "pos": "Verb",
+          "surface": "動か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "kanaideyo",
+      "input": "動かないでよ"
+    }
+  ],
+  "description": "particle_final tests",
+  "version": "1.0"
+}

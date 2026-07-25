@@ -452,6 +452,16 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // AuxCopulaDa → ParticleFinal (だ+ね/よ) - minor bonus
       {EPOS::AuxCopulaDa, EPOS::ParticleFinal, cost::kMinorBonus},
 
+      // Noun → ParticleFinal (素敵+ね, 本+よ) - a nominal predicate closes on the
+      // final particle, which competes with the continuative of a verb spelled
+      // with the same kana.
+      {EPOS::Noun, EPOS::ParticleFinal, cost::kModerateBonus},
+
+      // ParticleConj → ParticleFinal (ない+で+よ, 待って+て+ね) - a request or
+      // prohibition ends on the conjunctive particle, and the closing particle
+      // is the only thing that can follow it there.
+      {EPOS::ParticleConj, EPOS::ParticleFinal, cost::kModerateBonus},
+
   };
   applyRules(table, kRules, sizeof(kRules) / sizeof(kRules[0]));
 

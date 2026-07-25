@@ -126,8 +126,11 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   }
 
   // If contracted-progressive て is followed by ordinary particles or content
-  // words, prefer the connective particle て instead.
+  // words, prefer the connective particle て instead. A final particle is the
+  // exception: it closes the clause that the contraction itself predicates
+  // (待って+て+よ), so it is evidence for the contraction rather than against it.
   if (prev.surface == "て" && prev.extended_pos == core::ExtendedPOS::AuxAspectIru &&
+      next.extended_pos != core::ExtendedPOS::ParticleFinal &&
       (next.pos == core::PartOfSpeech::Particle || next.pos == core::PartOfSpeech::Noun ||
        next.pos == core::PartOfSpeech::Pronoun || next.pos == core::PartOfSpeech::Determiner ||
        next.pos == core::PartOfSpeech::Adverb || next.pos == core::PartOfSpeech::Conjunction ||
