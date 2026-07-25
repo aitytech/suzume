@@ -389,6 +389,21 @@ float computePastConditionalVerbBonus(const core::LatticeEdge& prev, const core:
     return cost::kDoubleVeryStrongBonus;
   }
 
+  // The conditional たら/だら attaches to a predicate, so behind a closed-class
+  // word it is the past auxiliary's own conditional cell instead: the negative's
+  // onbin form takes nothing else (読ま+なかっ+たら) and the te-form carries the
+  // contracted progressive (飲ん+で+たら = 飲んでいたら).
+  if (next.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(next.surface, {"たら", "だら"}) &&
+      prev.pos == core::PartOfSpeech::Particle) {
+    return cost::kVeryStrongBonus;
+  }
+  // The negative's own onbin form admits nothing but that auxiliary, so the
+  // conjunctive reading of the same kana cannot stand behind it.
+  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai && utf8::endsWith(prev.surface, "かっ") &&
+      next.extended_pos == core::ExtendedPOS::ParticleConj) {
+    return cost::kSevere;
+  }
+
   // The concessive たって/だって is the past auxiliary plus って (書い+た+って,
   // 読ん+だ+って). Keep that boundary: without it the っ is read back into the
   // stem as a second onbin (書いたっ+て) or the whole tail becomes the adverbial
