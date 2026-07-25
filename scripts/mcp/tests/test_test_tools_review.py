@@ -34,10 +34,6 @@ def make_case(case_id: str, input_text: str, **extra) -> dict:
     return case
 
 
-def oracle_results(texts: list[str]) -> list[tuple[list[dict], str, str]]:
-    return [([token("正解")], "MeCab", "") for _text in texts]
-
-
 def test_reset_refuses_ambiguous_input(tmp_path, monkeypatch):
     write_suite(tmp_path, "first", [make_case("one", "重複", accepted_diff={"reason": "x"})])
     write_suite(tmp_path, "second", [make_case("two", "重複", accepted_diff={"reason": "x"})])
@@ -51,28 +47,27 @@ def test_reset_refuses_ambiguous_input(tmp_path, monkeypatch):
     assert "second/two" in data["message"]
 
 
-def test_reset_by_id_only_removes_oracle_matches(tmp_path, monkeypatch):
+def test_reset_strips_both_banned_keys(tmp_path, monkeypatch):
     case = make_case(
-        "safe",
+        "stale",
         "対象",
         suzume_expected=[token("旧値")],
         accepted_diff={"reason": "old", "category": "tokenizer-difference"},
     )
     write_suite(tmp_path, "sample", [case])
     monkeypatch.setattr(review, "PROJECT_ROOT", tmp_path)
-    monkeypatch.setattr(review, "get_expected_tokens_batch_subprocess", oracle_results)
-    monkeypatch.setattr(review, "_get_suzume_tokens", lambda _text: [token("正解")])
 
-    data = parse(run(review.test_reset_suzume(test_id="sample/safe", apply=True)))
+    data = parse(run(review.test_reset_suzume(test_id="sample/stale", apply=True)))
 
     assert data["total"] == 1
-    assert data["skipped"] == []
+    assert data["reset"][0]["removed"] == ["suzume_expected", "accepted_diff"]
     stored = json.loads((tmp_path / "tests/data/tokenization/sample.json").read_text(encoding="utf-8"))
     assert "suzume_expected" not in stored["cases"][0]
     assert "accepted_diff" not in stored["cases"][0]
 
 
-def test_reset_skips_active_override(tmp_path, monkeypatch):
+def test_reset_strips_even_while_suzume_still_differs(tmp_path, monkeypatch):
+    """Removal must never be blocked: the override is banned even when it is 'true'."""
     case = make_case(
         "active",
         "対象",
@@ -81,32 +76,36 @@ def test_reset_skips_active_override(tmp_path, monkeypatch):
     )
     write_suite(tmp_path, "sample", [case])
     monkeypatch.setattr(review, "PROJECT_ROOT", tmp_path)
-    monkeypatch.setattr(review, "get_expected_tokens_batch_subprocess", oracle_results)
-    monkeypatch.setattr(review, "_get_suzume_tokens", lambda _text: [token("現状")])
 
     data = parse(run(review.test_reset_suzume(test_id="sample/active", apply=True)))
 
-    assert data["total"] == 0
-    assert data["skipped"][0]["suzume_matches_oracle"] is False
+    assert data["total"] == 1
+    assert "test_needs_suzume_update" in data["next_step"]
     stored = json.loads((tmp_path / "tests/data/tokenization/sample.json").read_text(encoding="utf-8"))
-    assert "suzume_expected" in stored["cases"][0]
+    assert "suzume_expected" not in stored["cases"][0]
 
 
-def test_accept_diff_refreshes_existing_override(tmp_path, monkeypatch):
-    case = make_case(
-        "active",
-        "対象",
-        suzume_expected=[token("旧値")],
-        accepted_diff={"reason": "old", "category": "old-category"},
-    )
+def test_reset_finds_orphan_accepted_diff(tmp_path, monkeypatch):
+    write_suite(tmp_path, "sample", [make_case("orphan", "孤立", accepted_diff={"reason": "old"})])
+    test_file = tmp_path / "tests/data/tokenization/sample.json"
+    monkeypatch.setattr(review, "_get_test_files_filtered", lambda _file: [test_file])
+
+    data = parse(run(review.test_reset_suzume(all_tests=True, apply=True)))
+
+    assert data["reset"][0]["removed"] == ["accepted_diff"]
+    stored = json.loads(test_file.read_text(encoding="utf-8"))
+    assert "accepted_diff" not in stored["cases"][0]
+
+
+def test_accept_diff_refuses_and_writes_nothing(tmp_path, monkeypatch):
+    case = make_case("target", "対象")
     write_suite(tmp_path, "sample", [case])
     monkeypatch.setattr(review, "PROJECT_ROOT", tmp_path)
-    monkeypatch.setattr(review, "_get_suzume_tokens", lambda _text: [token("新値")])
 
     data = parse(
         run(
             review.test_accept_diff(
-                test_id="sample/active",
+                test_id="sample/target",
                 reason="updated",
                 category="grammar-boundary",
                 apply=True,
@@ -114,58 +113,10 @@ def test_accept_diff_refreshes_existing_override(tmp_path, monkeypatch):
         )
     )
 
-    assert data["status"] == "ok"
+    assert data["status"] == "error"
+    assert "disabled by design" in data["message"]
     stored = json.loads((tmp_path / "tests/data/tokenization/sample.json").read_text(encoding="utf-8"))
-    assert stored["cases"][0]["suzume_expected"] == [token("新値")]
-    assert stored["cases"][0]["accepted_diff"] == {
-        "reason": "updated",
-        "category": "grammar-boundary",
-    }
-
-
-def test_audit_classifies_override_integrity(tmp_path, monkeypatch):
-    cases = [
-        make_case(
-            "safe",
-            "安全",
-            suzume_expected=[token("旧値")],
-            accepted_diff={"reason": "old", "category": "tokenizer-difference"},
-        ),
-        make_case(
-            "active",
-            "有効",
-            suzume_expected=[token("現状")],
-            accepted_diff={"reason": "limitation", "category": "pos-limitation"},
-        ),
-        make_case("orphan", "孤立", accepted_diff={"reason": "old", "category": "pos-limitation"}),
-        make_case("missing_reason", "理由なし", suzume_expected=[token("現状")]),
-    ]
-    write_suite(tmp_path, "sample", cases)
-    monkeypatch.setattr(review, "PROJECT_ROOT", tmp_path)
-    test_file = tmp_path / "tests/data/tokenization/sample.json"
-    monkeypatch.setattr(review, "_get_test_files_filtered", lambda _file: [test_file])
-    monkeypatch.setattr(review, "get_expected_tokens_batch_subprocess", oracle_results)
-    current = {
-        "安全": [token("正解")],
-        "有効": [token("現状")],
-        "孤立": [token("正解")],
-        "理由なし": [token("現状")],
-    }
-    monkeypatch.setattr(review, "_get_suzume_tokens", lambda text: current[text])
-
-    data = parse(run(review.test_audit_oracle_overrides(limit=10)))
-
-    assert data["summary"]["total"] == 4
-    assert data["summary"]["safe_to_reset"] == 1
-    assert data["summary"]["active_override"] == 1
-    assert data["summary"]["orphan_accepted_diff"] == 1
-    assert data["summary"]["override_without_accepted_diff"] == 1
-    assert {entry["id"] for entry in data["entries"]} == {
-        "sample/safe",
-        "sample/active",
-        "sample/orphan",
-        "sample/missing_reason",
-    }
+    assert stored["cases"][0] == case
 
 
 def test_partial_oracle_sync_updates_only_selected_id(tmp_path, monkeypatch):

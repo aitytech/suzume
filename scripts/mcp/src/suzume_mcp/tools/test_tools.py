@@ -22,7 +22,6 @@ from ._test_tools_read import (
 )
 from ._test_tools_review import (
     test_accept_diff,
-    test_audit_oracle_overrides,
     test_check_coverage,
     test_reset_suzume,
     test_suggest_file,
@@ -33,7 +32,6 @@ __all__ = [
     "test_accept_diff",
     "test_add",
     "test_audit_layout",
-    "test_audit_oracle_overrides",
     "test_batch_add",
     "test_check_coverage",
     "test_compare",

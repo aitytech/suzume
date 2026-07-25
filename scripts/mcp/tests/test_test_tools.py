@@ -137,23 +137,20 @@ class TestTestListPos:
 
 
 class TestTestAcceptDiff:
-    def test_missing_reason(self):
-        result = run(_tt.test_accept_diff(input_text="食べる"))
-        data = parse(result)
-        assert data["status"] == "error"
-        assert "reason" in data["message"]
+    def test_refuses_regardless_of_arguments(self):
+        for kwargs in (
+            {"input_text": "食べる"},
+            {"reason": "test"},
+            {"input_text": "食べる", "reason": "test", "apply": True},
+        ):
+            data = parse(run(_tt.test_accept_diff(**kwargs)))
+            assert data["status"] == "error"
+            assert "disabled by design" in data["message"]
 
-    def test_missing_input(self):
-        result = run(_tt.test_accept_diff(reason="test"))
-        data = parse(result)
-        assert data["status"] == "error"
-        assert "Either input_text or all_failed" in data["message"]
-
-    def test_not_found(self):
-        result = run(_tt.test_accept_diff(input_text="zzzznonexistent", reason="test"))
-        data = parse(result)
-        assert data["status"] == "error"
-        assert "No test found" in data["message"]
+    def test_points_at_the_normalization_pipeline(self):
+        data = parse(run(_tt.test_accept_diff(input_text="食べる", reason="test")))
+        assert "suzume_mcp/core" in data["message"]
+        assert "test_needs_suzume_update" in data["message"]
 
 
 class TestTestResetSuzume:
