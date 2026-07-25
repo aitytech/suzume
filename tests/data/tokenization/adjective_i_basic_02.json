@@ -1591,6 +1591,33 @@
       ],
       "id": "soudana",
       "input": "そうだな"
+    },
+    {
+      "description": "supplementary adjective conjugation before the classical past",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "小さい",
+          "pos": "Adjective",
+          "surface": "小さかり"
+        },
+        {
+          "lemma": "き",
+          "pos": "Auxiliary",
+          "surface": "し"
+        }
+      ],
+      "id": "ha_sakarishi",
+      "input": "水は小さかりし。"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",

@@ -2133,6 +2133,102 @@
       ],
       "id": "ni_kitaru",
       "input": "紙に書きたる文。"
+    },
+    {
+      "description": "classical past shi after the negative continuative",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざり"
+        },
+        {
+          "lemma": "き",
+          "pos": "Auxiliary",
+          "surface": "し"
+        }
+      ],
+      "id": "wo_mazarishi",
+      "input": "本を読まざりし。"
+    },
+    {
+      "description": "classical past shi on the ka-row negative continuative",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざり"
+        },
+        {
+          "lemma": "き",
+          "pos": "Auxiliary",
+          "surface": "し"
+        }
+      ],
+      "id": "wo_kazarishi",
+      "input": "紙を書かざりし。"
+    },
+    {
+      "description": "classical past shi as an adnominal before a noun",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "き",
+          "pos": "Auxiliary",
+          "surface": "し"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        }
+      ],
+      "id": "wo_kishi",
+      "input": "紙を書きし人。"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 3/3)",

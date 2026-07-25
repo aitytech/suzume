@@ -356,6 +356,18 @@ def _postprocess_adj_kari(result: list[dict], applied_rule: str | None) -> tuple
             idx = matched_end
             if applied_rule is None:
                 applied_rule = "adj-kari-conjugation"
+            # The whole point of the かり cell is to carry a classical auxiliary,
+            # so a lone し behind it is the 連体形 of the past き. The dictionary
+            # never saw the かり token, so it read that し as the サ変
+            # continuative it shares its spelling with.
+            if (
+                surface.endswith("かり")
+                and idx < len(result)
+                and result[idx].get("surface") == "し"
+                and result[idx].get("pos") == "動詞"
+            ):
+                merged.append({"surface": "し", "pos": "助動詞", "lemma": "き"})
+                idx += 1
             continue
         merged.append(result[idx])
         idx += 1
