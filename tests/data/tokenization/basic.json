@@ -642,6 +642,28 @@
       ],
       "id": "conjunction_nimokakawarazu",
       "input": "にもかかわらず"
+    },
+    {
+      "description": "これはよい - regression test",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "korehayoi",
+      "input": "これはよい"
     }
   ],
   "description": "Basic tokenization tests",

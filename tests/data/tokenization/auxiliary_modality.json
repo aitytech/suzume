@@ -1838,6 +1838,23 @@
       ],
       "id": "similitude_you_attributive_copula",
       "input": "夢のような話だ"
+    },
+    {
+      "description": "本なり。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なり"
+        }
+      ],
+      "id": "nari",
+      "input": "本なり。"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

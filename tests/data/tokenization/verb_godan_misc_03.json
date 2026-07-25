@@ -261,6 +261,1438 @@
       ],
       "id": "mukaratoittte_karutoha_ranai",
       "input": "読むからといって分かるとは限らない"
+    },
+    {
+      "description": "本を食べてこう - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "こう",
+          "pos": "Adverb",
+          "surface": "こう"
+        }
+      ],
+      "id": "wo_betekou",
+      "input": "本を食べてこう"
+    },
+    {
+      "description": "花が散る - regression test",
+      "expected": [
+        {
+          "lemma": "花",
+          "pos": "Noun",
+          "surface": "花"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "散る",
+          "pos": "Verb",
+          "surface": "散る"
+        }
+      ],
+      "id": "ga_ru",
+      "input": "花が散る"
+    },
+    {
+      "description": "夢を見る - regression test",
+      "expected": [
+        {
+          "lemma": "夢",
+          "pos": "Noun",
+          "surface": "夢"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "wo_ru_3",
+      "input": "夢を見る"
+    },
+    {
+      "description": "紙を立てる。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "立てる",
+          "pos": "Verb",
+          "surface": "立てる"
+        }
+      ],
+      "id": "wo_teru_2",
+      "input": "紙を立てる。"
+    },
+    {
+      "description": "ひこうきを見る - regression test",
+      "expected": [
+        {
+          "lemma": "ひこうき",
+          "pos": "Noun",
+          "surface": "ひこうき"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "hikoukiwo_ru",
+      "input": "ひこうきを見る"
+    },
+    {
+      "description": "ともだちと話す - regression test",
+      "expected": [
+        {
+          "lemma": "ともだち",
+          "pos": "Noun",
+          "surface": "ともだち"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話す"
+        }
+      ],
+      "id": "tomodachito_su",
+      "input": "ともだちと話す"
+    },
+    {
+      "description": "本を読まざる人。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざる"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        }
+      ],
+      "id": "wo_mazaru",
+      "input": "本を読まざる人。"
+    },
+    {
+      "description": "紙を書くべからず。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べから"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "wo_kubekarazu",
+      "input": "紙を書くべからず。"
+    },
+    {
+      "description": "本を読みたる人。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        }
+      ],
+      "id": "wo_mitaru",
+      "input": "本を読みたる人。"
+    },
+    {
+      "description": "紙を書きたり。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たり"
+        }
+      ],
+      "id": "wo_kitari",
+      "input": "紙を書きたり。"
+    },
+    {
+      "description": "本を読まずに帰る。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "ず",
+          "pos": "Auxiliary",
+          "surface": "ずに"
+        },
+        {
+          "lemma": "帰る",
+          "pos": "Verb",
+          "surface": "帰る"
+        }
+      ],
+      "id": "wo_mazuni_ru",
+      "input": "本を読まずに帰る。"
+    },
+    {
+      "description": "紙を書かぬ人がいる。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "いる"
+        }
+      ],
+      "id": "wo_kanu_gairu",
+      "input": "紙を書かぬ人がいる。"
+    },
+    {
+      "description": "本を読みけり。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "wo_mikeri",
+      "input": "本を読みけり。"
+    },
+    {
+      "description": "紙を書かせ候ふ。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "候",
+          "pos": "Noun",
+          "surface": "候"
+        },
+        {
+          "lemma": "ふる",
+          "pos": "Verb",
+          "surface": "ふ"
+        }
+      ],
+      "id": "wo_kase_fu",
+      "input": "紙を書かせ候ふ。"
+    },
+    {
+      "description": "水を飲みて帰る。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲み"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "帰る",
+          "pos": "Verb",
+          "surface": "帰る"
+        }
+      ],
+      "id": "wo_mite_ru",
+      "input": "水を飲みて帰る。"
+    },
+    {
+      "description": "本を読みたりけり。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "wo_mitarikeri",
+      "input": "本を読みたりけり。"
+    },
+    {
+      "description": "本に読みたる記録。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        },
+        {
+          "lemma": "記録",
+          "pos": "Noun",
+          "surface": "記録"
+        }
+      ],
+      "id": "ni_mitaru",
+      "input": "本に読みたる記録。"
+    },
+    {
+      "description": "本を書かずばよい。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "wo_kazubayoi",
+      "input": "本を書かずばよい。"
+    },
+    {
+      "description": "紙を書くべからざるもの。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べから"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざる"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        }
+      ],
+      "id": "wo_kubekarazarumono",
+      "input": "紙を書くべからざるもの。"
+    },
+    {
+      "description": "本を読み侍り。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "侍る",
+          "pos": "Verb",
+          "surface": "侍り"
+        }
+      ],
+      "id": "wo_mi_ri",
+      "input": "本を読み侍り。"
+    },
+    {
+      "description": "紙を書き侍る。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "侍る",
+          "pos": "Verb",
+          "surface": "侍る"
+        }
+      ],
+      "id": "wo_ki_ru",
+      "input": "紙を書き侍る。"
+    },
+    {
+      "description": "紙を書けど進む。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書ける",
+          "pos": "Verb",
+          "surface": "書け"
+        },
+        {
+          "lemma": "ど",
+          "pos": "Particle",
+          "surface": "ど"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "wo_kedo_mu",
+      "input": "紙を書けど進む。"
+    },
+    {
+      "description": "水を飲めば進む。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲め"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "wo_meba_mu",
+      "input": "水を飲めば進む。"
+    },
+    {
+      "description": "紙を書かねばならぬ。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ね"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "wo_kanebanaranu",
+      "input": "紙を書かねばならぬ。"
+    },
+    {
+      "description": "紙を書いちゃいけない。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "ちゃ",
+          "pos": "Particle",
+          "surface": "ちゃ"
+        },
+        {
+          "lemma": "いける",
+          "pos": "Auxiliary",
+          "surface": "いけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_ichi_ikenai",
+      "input": "紙を書いちゃいけない。"
+    },
+    {
+      "description": "本を読んじゃった。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_nji_ttta",
+      "input": "本を読んじゃった。"
+    },
+    {
+      "description": "紙を書いてはいけない。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "いける",
+          "pos": "Auxiliary",
+          "surface": "いけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_itehaikenai",
+      "input": "紙を書いてはいけない。"
+    },
+    {
+      "description": "水を飲まなきゃいけない。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ま"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なきゃ"
+        },
+        {
+          "lemma": "いける",
+          "pos": "Auxiliary",
+          "surface": "いけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_manaki_ikenai",
+      "input": "水を飲まなきゃいけない。"
+    },
+    {
+      "description": "紙を書かなきゃならない。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なきゃ"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_kanaki_naranai",
+      "input": "紙を書かなきゃならない。"
+    },
+    {
+      "description": "本を読んでおけばよかった。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Auxiliary",
+          "surface": "おけ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_ndeokebayokattta",
+      "input": "本を読んでおけばよかった。"
+    },
+    {
+      "description": "本を読んどく。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "どく",
+          "pos": "Auxiliary",
+          "surface": "どく"
+        }
+      ],
+      "id": "wo_ndoku",
+      "input": "本を読んどく。"
+    },
+    {
+      "description": "本を読んじゃえばいい。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "じゃう",
+          "pos": "Auxiliary",
+          "surface": "じゃえ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "wo_nji_ebaii",
+      "input": "本を読んじゃえばいい。"
+    },
+    {
+      "description": "紙を書いちゃえばいい。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "ちゃう",
+          "pos": "Auxiliary",
+          "surface": "ちゃえ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "wo_ichi_ebaii",
+      "input": "紙を書いちゃえばいい。"
+    },
+    {
+      "description": "紙を書かなくちゃならない。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なく"
+        },
+        {
+          "lemma": "ちゃ",
+          "pos": "Particle",
+          "surface": "ちゃ"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_kanakuchi_naranai",
+      "input": "紙を書かなくちゃならない。"
+    },
+    {
+      "description": "本を読んだら分かる。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だら"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かる"
+        }
+      ],
+      "id": "wo_ndara_karu",
+      "input": "本を読んだら分かる。"
+    },
+    {
+      "description": "水を飲むべし。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べし"
+        }
+      ],
+      "id": "wo_mubeshi",
+      "input": "水を飲むべし。"
+    },
+    {
+      "description": "本を読むらし。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らし"
+        }
+      ],
+      "id": "wo_murashi",
+      "input": "本を読むらし。"
+    },
+    {
+      "description": "行くな - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "な",
+          "pos": "Particle",
+          "surface": "な"
+        }
+      ],
+      "id": "kuna",
+      "input": "行くな"
+    },
+    {
+      "description": "紙を書かないんだよ。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "wo_kanaindayo",
+      "input": "紙を書かないんだよ。"
+    },
+    {
+      "description": "あらゆる方法を試す - regression test",
+      "expected": [
+        {
+          "lemma": "あらゆる",
+          "pos": "Determiner",
+          "surface": "あらゆる"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試す"
+        }
+      ],
+      "id": "arayuru_wo_su",
+      "input": "あらゆる方法を試す"
+    },
+    {
+      "description": "彼は笑む - regression test",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "笑む",
+          "pos": "Verb",
+          "surface": "笑む"
+        }
+      ],
+      "id": "ha_mu",
+      "input": "彼は笑む"
+    },
+    {
+      "description": "微生物を調べる - regression test",
+      "expected": [
+        {
+          "lemma": "微生物",
+          "pos": "Noun",
+          "surface": "微生物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "wo_beru",
+      "input": "微生物を調べる"
+    },
+    {
+      "description": "紙を立てられる。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "立てる",
+          "pos": "Verb",
+          "surface": "立て"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "wo_terareru",
+      "input": "紙を立てられる。"
+    },
+    {
+      "description": "紙を育てられる。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "育てる",
+          "pos": "Verb",
+          "surface": "育て"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "wo_terareru_2",
+      "input": "紙を育てられる。"
+    },
+    {
+      "description": "ご飯食べてこうか - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "飯",
+          "pos": "Noun",
+          "surface": "飯"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "こう",
+          "pos": "Adverb",
+          "surface": "こう"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "go_betekouka",
+      "input": "ご飯食べてこうか"
+    },
+    {
+      "description": "見つけた - regression test",
+      "expected": [
+        {
+          "lemma": "見つける",
+          "pos": "Verb",
+          "surface": "見つけ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tsuketa",
+      "input": "見つけた"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 3/3)",

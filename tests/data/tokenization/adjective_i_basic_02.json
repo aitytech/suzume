@@ -1542,6 +1542,55 @@
       ],
       "id": "sugiru_explicit_adjective_stem",
       "input": "美しすぎる。"
+    },
+    {
+      "description": "嬉しさを感じる - regression test",
+      "expected": [
+        {
+          "lemma": "嬉しい",
+          "pos": "Adjective",
+          "surface": "嬉し"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じる"
+        }
+      ],
+      "id": "shisawo_jiru",
+      "input": "嬉しさを感じる"
+    },
+    {
+      "description": "そうだな - regression test",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "な",
+          "pos": "Particle",
+          "surface": "な"
+        }
+      ],
+      "id": "soudana",
+      "input": "そうだな"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",

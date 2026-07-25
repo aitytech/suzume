@@ -1482,6 +1482,28 @@
       ],
       "id": "shi_reteita",
       "input": "再提出し忘れていた。"
+    },
+    {
+      "description": "手洗いをする - regression test",
+      "expected": [
+        {
+          "lemma": "手洗い",
+          "pos": "Noun",
+          "surface": "手洗い"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "iwosuru",
+      "input": "手洗いをする"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

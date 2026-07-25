@@ -732,6 +732,69 @@
       ],
       "id": "literary_tsutsumashiku",
       "input": "つつましく暮らした"
+    },
+    {
+      "description": "面倒くさい作業 - regression test",
+      "expected": [
+        {
+          "lemma": "面倒くさい",
+          "pos": "Adjective",
+          "surface": "面倒くさい"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        }
+      ],
+      "id": "kusai",
+      "input": "面倒くさい作業"
+    },
+    {
+      "description": "早く寝る - regression test",
+      "expected": [
+        {
+          "lemma": "早い",
+          "pos": "Adjective",
+          "surface": "早く"
+        },
+        {
+          "lemma": "寝る",
+          "pos": "Verb",
+          "surface": "寝る"
+        }
+      ],
+      "id": "ku_ru",
+      "input": "早く寝る"
+    },
+    {
+      "description": "面倒くさい - regression test",
+      "expected": [
+        {
+          "lemma": "面倒くさい",
+          "pos": "Adjective",
+          "surface": "面倒くさい"
+        }
+      ],
+      "id": "kusai_2",
+      "input": "面倒くさい"
+    },
+    {
+      "description": "面倒くさかった - regression test",
+      "expected": [
+        {
+          "lemma": "面倒くさい",
+          "pos": "Adjective",
+          "surface": "面倒くさかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kusakattta",
+      "input": "面倒くさかった"
     }
   ],
   "description": "I-adjectives ku-forms (連用形) - adverbial, negative, te-form, ku-naru patterns",
