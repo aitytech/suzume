@@ -99,6 +99,14 @@ void appendContextualIchidanSubsidiaryForms(const std::vector<char32_t>& codepoi
                                         dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru, pattern,
                                         bigram_cost::kMinor, candidates);
   }
+
+  // Colloquial conditional: the Ichidan れば contracts to りゃ (みれば → みりゃ),
+  // so the cell keeps the same paradigm and loses only the particle.
+  if (ending == U'り' && stem_end + 1 < codepoints.size() && codepoints[stem_end + 1] == U'ゃ') {
+    appendContextualSubsidiaryCandidate(codepoints, start_pos, stem_end + 2, lemma,
+                                        dictionary::ConjugationType::Ichidan, core::ExtendedPOS::AuxAspectMiru, pattern,
+                                        bigram_cost::kMinor, candidates);
+  }
 }
 
 }  // namespace
