@@ -153,6 +153,25 @@ class TestTestAcceptDiff:
         assert "test_needs_suzume_update" in data["message"]
 
 
+class TestUseSuzumeIsRefused:
+    """use_suzume writes Suzume's output into `expected`, leaving no trace in the case."""
+
+    def test_add_refuses(self):
+        data = parse(run(_tt.test_add(input_text="テスト", use_suzume=True)))
+        assert data["status"] == "error"
+        assert "use_suzume is disabled by design" in data["message"]
+
+    def test_update_refuses(self):
+        data = parse(run(_tt.test_update(input_text="テスト", use_suzume=True)))
+        assert data["status"] == "error"
+        assert "use_suzume is disabled by design" in data["message"]
+
+    def test_batch_add_refuses(self):
+        data = parse(run(_tt.test_batch_add(file="", inputs=["テスト"], apply=True, use_suzume=True)))
+        assert data["status"] == "error"
+        assert "use_suzume is disabled by design" in data["message"]
+
+
 class TestTestResetSuzume:
     def test_missing_args(self):
         result = run(_tt.test_reset_suzume())

@@ -18,13 +18,18 @@ from ..core.test_file_utils import (
 )
 from ..server import PROJECT_ROOT, mcp
 from ._test_tools_common import (
+    ORACLE_OVERRIDE_REMEDIATION,
     _format_expected_checked,
-    _get_suzume_tokens,
     _get_test_files_filtered,
     _json_error,
     _json_result,
 )
 from ._test_tools_organization import append_cases_partitioned
+
+# Writing Suzume's own output into `expected` is the same banned per-case oracle as
+# suzume_expected, only harder to see: the stored case keeps no trace of where the
+# expectation came from, so nothing downstream can flag it.
+_USE_SUZUME_REFUSAL = f"use_suzume is disabled by design. {ORACLE_OVERRIDE_REMEDIATION}"
 
 
 def _deduplicate_generated_ids(items: list[dict]) -> None:
@@ -61,8 +66,11 @@ async def test_add(
         file: Optional logical test file name. Empty uses the highest-ranked automatic suggestion.
         case_id: Optional custom ID (auto-generated if empty).
         description: Optional description.
-        use_suzume: If True, use Suzume output instead of MeCab for expected.
+        use_suzume: Rejected. Kept only so the refusal is reached instead of a schema error.
     """
+    if use_suzume:
+        return _json_error(_USE_SUZUME_REFUSAL)
+
     # Check for duplicates
     existing = find_test_by_input(PROJECT_ROOT, input_text)
     if existing:
@@ -74,17 +82,10 @@ async def test_add(
             }
         )
 
-    if use_suzume:
-        try:
-            suzume_tokens = _get_suzume_tokens(input_text)
-            tokens, source, rule = suzume_tokens, "Suzume", "forced"
-        except RuntimeError as exc:
-            return _json_error(str(exc))
-    else:
-        try:
-            tokens, source, rule = get_expected_tokens(input_text)
-        except RuntimeError as exc:
-            return _json_error(str(exc))
+    try:
+        tokens, source, rule = get_expected_tokens(input_text)
+    except RuntimeError as exc:
+        return _json_error(str(exc))
 
     try:
         expected = _format_expected_checked(tokens, source)
@@ -149,8 +150,11 @@ async def test_update(
     Args:
         input_text: Input text to find and update (mutually exclusive with test_id).
         test_id: Test ID to update (format: file/index or file/id_string).
-        use_suzume: If True, use Suzume output for expected.
+        use_suzume: Rejected. Kept only so the refusal is reached instead of a schema error.
     """
+    if use_suzume:
+        return _json_error(_USE_SUZUME_REFUSAL)
+
     if test_id:
         found = find_test_by_id(PROJECT_ROOT, test_id)
         if not found:
@@ -163,17 +167,10 @@ async def test_update(
     else:
         return _json_error("Either input_text or test_id is required.")
 
-    if use_suzume:
-        try:
-            suzume_tokens = _get_suzume_tokens(input_text)
-            tokens, source, rule = suzume_tokens, "Suzume", "forced"
-        except RuntimeError as exc:
-            return _json_error(str(exc))
-    else:
-        try:
-            tokens, source, rule = get_expected_tokens(input_text)
-        except RuntimeError as exc:
-            return _json_error(str(exc))
+    try:
+        tokens, source, rule = get_expected_tokens(input_text)
+    except RuntimeError as exc:
+        return _json_error(str(exc))
 
     try:
         expected = _format_expected_checked(tokens, source)
@@ -255,8 +252,11 @@ async def test_batch_add(
         file: Logical test file name. An empty string groups inputs by their highest-ranked suggestions.
         inputs: List of Japanese input texts to add.
         apply: If True, actually add. Default is dry-run preview.
-        use_suzume: If True, use Suzume output for expected.
+        use_suzume: Rejected. Kept only so the refusal is reached instead of a schema error.
     """
+    if use_suzume:
+        return _json_error(_USE_SUZUME_REFUSAL)
+
     if file:
         try:
             file_name = normalize_test_file_name(file)
@@ -283,22 +283,10 @@ async def test_batch_add(
         new_inputs.append((i, inp))
 
     # Batch get expected tokens for all new inputs
-    if not use_suzume and new_inputs:
-        batch_texts = [inp for _, inp in new_inputs]
-        batch_results = get_expected_tokens_batch_subprocess(batch_texts)
-    else:
-        batch_results = None
+    batch_results = get_expected_tokens_batch_subprocess([inp for _, inp in new_inputs]) if new_inputs else []
 
     for batch_idx, (_orig_idx, inp) in enumerate(new_inputs):
-        if use_suzume:
-            try:
-                suzume_tokens = _get_suzume_tokens(inp)
-                tokens, source, rule = suzume_tokens, "Suzume", "forced"
-            except RuntimeError as exc:
-                skipped.append({"input": inp, "reason": str(exc)})
-                continue
-        else:
-            tokens, source, rule = batch_results[batch_idx]  # type: ignore[index]
+        tokens, source, rule = batch_results[batch_idx]
         try:
             expected = _format_expected_checked(tokens, source)
         except RuntimeError as exc:

@@ -17,6 +17,20 @@ from ..core.test_file_utils import (
 )
 from ..server import PROJECT_ROOT
 
+# Per-case oracle overrides. Banned: a case that carries its own expectation for
+# Suzume silences that one case instead of generalizing the rule.
+BANNED_ORACLE_KEYS = ("suzume_expected", "accepted_diff")
+
+# Mirrored verbatim from kOracleOverrideRemediation in tests/common/test_case.h and
+# scripts/check_oracle_overrides.py so the remediation reads the same in every layer.
+ORACLE_OVERRIDE_REMEDIATION = (
+    "A test case must not carry its own oracle. Encode the intentional MeCab difference as a "
+    "normalization rule under scripts/mcp/src/suzume_mcp/core/ (merge_rules.py, split_rules.py, "
+    "postprocessors.py, pos_mapping.py), then sync expectations with "
+    "test_needs_suzume_update(apply=True) and drop the field with test_reset_suzume(apply=True). "
+    "See AGENTS.md section 7 (Tokenization Design)."
+)
+
 
 def _get_suzume_tokens(text: str) -> list[dict]:
     """Get Suzume CLI tokens with POS and lemma.
