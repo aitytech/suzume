@@ -70,6 +70,7 @@ set(TEST_SOURCES
   grammar/inflection_compound_test.cpp
   grammar/inflection_complex_test.cpp
   grammar/inflection_imperative_test.cpp
+  grammar/inflection_cache_lifetime_test.cpp
   grammar/auxiliary_generator_test.cpp
   grammar/patterns_test.cpp
   pretokenizer/pretokenizer_url_test.cpp

@@ -52,8 +52,20 @@ class Inflection {
    * @brief Analyze surface form and infer base form
    * @param surface Surface form: 住んでいます
    * @return Candidates with possible base forms
+   * @note The reference stays valid until the next rollCache() call. Candidate
+   *       generators routinely hold a result while analysing a related surface,
+   *       so analyze() itself never discards an entry.
    */
   const std::vector<InflectionCandidate>& analyze(std::string_view surface) const;
+
+  /**
+   * @brief Discard the analysis cache when it has grown past its bound
+   *
+   * Call only where no analyze() result is still referenced — the analyzer does
+   * so once per chunk, before candidate generation starts. Rolling over inside
+   * analyze() instead would invalidate references its own callers still hold.
+   */
+  void rollCache() const;
 
   /**
    * @brief Check if surface looks like a conjugated form
@@ -80,9 +92,9 @@ class Inflection {
                                                  uint16_t required_conn) const;
 
   // Cache for analyze() results (mutable for const methods)
-  // Bounded for long-lived browser analyzers. References returned by analyze()
-  // remain valid until the next whole-cache rollover, matching the previous
-  // rollover semantics without retaining tens of thousands of string graphs.
+  // Bounded for long-lived browser analyzers, but only at rollCache() points:
+  // node-based storage keeps references stable across inserts, so within one
+  // chunk every result handed out stays alive.
   // Note: single-threaded only. Add synchronization if multi-threading is needed.
   mutable std::unordered_map<std::string, std::vector<InflectionCandidate>> cache_;
 };

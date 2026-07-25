@@ -508,16 +508,19 @@ const std::vector<InflectionCandidate>& Inflection::analyze(std::string_view sur
     }
   }
 
-  // Evict cache if it grows too large (avoid unbounded memory growth)
+  // Cache the result. Return a reference to the cached entry — safe because
+  // unordered_map references survive later inserts. Growth is bounded at
+  // rollCache() points instead of here: callers commonly hold an earlier result
+  // while analysing a related surface, and evicting mid-analysis would leave
+  // them with a dangling reference.
+  auto [iter, inserted] = cache_.emplace(std::move(key), std::move(candidates));
+  return iter->second;
+}
+
+void Inflection::rollCache() const {
   if (cache_.size() >= kMaxCacheEntries) {
     cache_.clear();
   }
-
-  // Cache the result
-  // Return reference to cached entry — safe because unordered_map references
-  // are not invalidated by subsequent inserts.
-  auto [iter, inserted] = cache_.emplace(std::move(key), std::move(candidates));
-  return iter->second;
 }
 
 bool Inflection::looksConjugated(std::string_view surface) const {

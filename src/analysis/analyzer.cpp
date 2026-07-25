@@ -298,6 +298,10 @@ std::vector<core::Morpheme> Analyzer::analyzeChunk(std::string_view text, size_t
     return {};
   }
 
+  // Chunk boundary: no inflection result from the previous chunk is referenced
+  // any more, so this is the one point where the cache may be discarded.
+  unknown_gen_.inflection().rollCache();
+
   // Text is already normalized by analyze(); decode directly to codepoints.
   std::vector<char32_t> codepoints = normalize::utf8::decode(text);
   if (codepoints.empty()) {
