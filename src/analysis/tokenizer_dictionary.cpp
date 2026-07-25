@@ -1232,6 +1232,14 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       continue;
     }
 
+    // A 終助詞 closes its clause, so the nominalizer cannot follow it. The な in
+    // そう+な+ん+です is the copula's attributive form instead; the indefinite
+    // stack the bigram favors (いくつ+か+の) uses the の spelling and is untouched.
+    if (result.entry->extended_pos == core::ExtendedPOS::ParticleFinal && end_pos < codepoints.size() &&
+        codepoints[end_pos] == U'ん') {
+      continue;
+    }
+
     // The contracted directional く is the いく renyokei with its い elided, so
     // it exists only directly after a te-form (読ん+で+く).  Anywhere else the
     // same single kana is an adjective continuative or a stem fragment, and

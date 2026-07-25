@@ -53,6 +53,38 @@
       ],
       "id": "kanaideyo",
       "input": "動かないでよ"
+    },
+    {
+      "description": "そうなんですか - regression test",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "sounandesuka",
+      "input": "そうなんですか"
     }
   ],
   "description": "particle_final tests",
