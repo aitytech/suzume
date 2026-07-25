@@ -51,6 +51,20 @@ extern "C" {
 #endif
 
 /**
+ * @brief Failure reporting contract
+ *
+ * Every entry point reports failure by return value (NULL, 0, or a false-like
+ * code) and leaves a description in suzume_last_error(). Nothing propagates a
+ * C++ exception across the ABI.
+ *
+ * The one failure this does NOT cover is allocation failure in a build made
+ * without exceptions, which is how the WebAssembly package is compiled: there
+ * the internal guards compile away and an out-of-memory condition terminates
+ * the module instead of returning NULL. A caller cannot distinguish or recover
+ * from it; size the runtime's memory for the largest input instead.
+ */
+
+/**
  * @brief Opaque handle to Suzume instance
  *
  * A handle is NOT thread-safe: the analyzer keeps per-handle mutable state,

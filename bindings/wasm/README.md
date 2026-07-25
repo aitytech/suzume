@@ -51,6 +51,26 @@ const suzume = await Suzume.create({ wasmPath: wasmUrl })
 For CDN usage, user dictionaries, and the full API, see the
 [JavaScript / TypeScript guide](https://suzume.libraz.net/docs/api).
 
+## Error handling
+
+A failing native call throws an `Error` carrying the message from the
+WebAssembly module, so ordinary failures — a rejected user dictionary, use
+after `destroy()` — are catchable:
+
+```typescript
+try {
+  suzume.loadUserDictionaryOrThrow(csv)
+} catch (error) {
+  // message comes from the module
+}
+```
+
+Running out of memory is the exception. The module is compiled without C++
+exceptions, so an allocation failure aborts the WebAssembly instance rather
+than returning an error, and no `catch` can recover from it. The instance is
+unusable afterwards. Analyze long documents in chunks rather than relying on
+error handling to survive a large input.
+
 ## Also available
 
 ```bash
