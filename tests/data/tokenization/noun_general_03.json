@@ -129,6 +129,28 @@
       ],
       "id": "ga_rukunakute",
       "input": "空が明るくなくて"
+    },
+    {
+      "description": "本の中 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "中",
+          "pos": "Noun",
+          "surface": "中"
+        }
+      ],
+      "id": "no_5",
+      "input": "本の中"
     }
   ],
   "description": "General nouns (part 3/3)",

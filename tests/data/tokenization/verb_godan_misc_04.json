@@ -1670,6 +1670,50 @@
       ],
       "id": "wo_mutokashinai",
       "input": "本を読むとかしない"
+    },
+    {
+      "description": "赤ん坊が寝る - regression test",
+      "expected": [
+        {
+          "lemma": "赤ん坊",
+          "pos": "Noun",
+          "surface": "赤ん坊"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "寝る",
+          "pos": "Verb",
+          "surface": "寝る"
+        }
+      ],
+      "id": "n_ga_ru",
+      "input": "赤ん坊が寝る"
+    },
+    {
+      "description": "真ん前に立つ - regression test",
+      "expected": [
+        {
+          "lemma": "真ん前",
+          "pos": "Noun",
+          "surface": "真ん前"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "立つ",
+          "pos": "Verb",
+          "surface": "立つ"
+        }
+      ],
+      "id": "n_ni_tsu",
+      "input": "真ん前に立つ"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

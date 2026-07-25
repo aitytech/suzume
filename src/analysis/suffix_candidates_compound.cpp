@@ -514,8 +514,8 @@ void generateKanjiHiraganaCompoundCandidates(const std::vector<char32_t>& codepo
         for (size_t end_pos = sokuon_pos + 2; end_pos <= kanji2_end; ++end_pos) {
           std::string surface = extractSubstring(codepoints, start_pos, end_pos);
           if (!surface.empty()) {
-            auto cand = makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Noun, 0.5F, false,
-                                      CandidateOrigin::KanjiHiraganaCompound);
+            auto cand = makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Noun,
+                                      candidate::kInfixCompoundNounCost, false, CandidateOrigin::KanjiHiraganaCompound);
 #ifdef SUZUME_DEBUG_INFO
             cand.confidence = 0.9F;
             cand.pattern = "kanji_sokuon_kanji";
@@ -613,6 +613,29 @@ void generateKanjiHiraganaCompoundCandidates(const std::vector<char32_t>& codepo
       }
     }
     // Return after handling sokuon - don't continue to normal hiragana logic
+    return;
+  }
+
+  // Pattern: 単漢字 + ん + 単漢字 — the moraic nasal infixed inside one lexical
+  // compound (真ん前, 真ん丸, 赤ん坊), the phonological sibling of the っ
+  // pattern above. The contracted genitive の spells the same mora (店+ん+中),
+  // so this only adds a candidate: where both flanking kanji are attested
+  // nouns their own dictionary edges keep the split cheaper.
+  if (first_hira == U'ん' && kanji_end - start_pos == 1 && kanji_end + 1 < char_types.size() &&
+      char_types[kanji_end + 1] == normalize::CharType::Kanji) {
+    const size_t end_pos = kanji_end + 2;
+    const bool second_kanji_is_single =
+        end_pos >= char_types.size() || char_types[end_pos] != normalize::CharType::Kanji;
+    std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+    if (second_kanji_is_single && !surface.empty()) {
+      auto cand = makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Noun,
+                                candidate::kInfixCompoundNounCost, false, CandidateOrigin::KanjiHiraganaCompound);
+#ifdef SUZUME_DEBUG_INFO
+      cand.confidence = 0.9F;
+      cand.pattern = "kanji_hatsuon_kanji";
+#endif
+      candidates.push_back(cand);
+    }
     return;
   }
 

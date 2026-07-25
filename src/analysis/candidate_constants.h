@@ -140,6 +140,10 @@ constexpr float kVerifiedV1Bonus = -0.3F;
 // Applied when noun component is verified in dictionary
 constexpr float kVerifiedNounBonus = -0.3F;
 
+// A geminate or moraic nasal infixed between two kanji belongs to one lexical
+// compound (真っ赤, 真ん前, 赤ん坊) rather than to either neighbour.
+constexpr float kInfixCompoundNounCost = 0.5F;
+
 // An honorific prefix followed by a kanji noun and the closed suffix 様 is a
 // single searchable nominal expression (お客様, ご利用者様).
 constexpr float kHonorificSamaNounBonus = -0.8F;
