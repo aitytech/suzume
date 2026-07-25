@@ -1953,6 +1953,45 @@
       ],
       "id": "yanen",
       "input": "本やねん"
+    },
+    {
+      "description": "本どす - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "どす",
+          "pos": "Auxiliary",
+          "surface": "どす"
+        }
+      ],
+      "id": "dosu",
+      "input": "本どす"
+    },
+    {
+      "description": "紙どした - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "どす",
+          "pos": "Auxiliary",
+          "surface": "どし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "doshita",
+      "input": "紙どした"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

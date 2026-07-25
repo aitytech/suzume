@@ -2079,6 +2079,45 @@
       ],
       "id": "niyoruto",
       "input": "本によると"
+    },
+    {
+      "description": "話した - regression test",
+      "expected": [
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shita_6",
+      "input": "話した"
+    },
+    {
+      "description": "増しました - regression test",
+      "expected": [
+        {
+          "lemma": "増す",
+          "pos": "Verb",
+          "surface": "増し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shimashita",
+      "input": "増しました"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

@@ -554,6 +554,24 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         }
       }
 
+      // A fabricated godan-sa stem must not swallow a copula: a copula closes
+      // a predicate, so it cannot sit inside a verb stem. Where the whole
+      // hiragana run is one (紙+どし+た), the sequence is a nominal predicate.
+      // Other auxiliary tails are left alone — まし and らし do continue a
+      // genuine stem (増しました, 荒らした). An attested base still reaches the
+      // dictionary path.
+      // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+      if (dict_manager != nullptr && renyokei_end >= kanji_end + 2 &&
+          !vh::isVerbInDictionary(dict_manager, best_sa.base_form)) {
+        std::string hiragana_tail = extractSubstring(codepoints, kanji_end, renyokei_end);
+        const auto* tail_entry = dict_manager->lookupExact(hiragana_tail, core::PartOfSpeech::Auxiliary);
+        if (tail_entry != nullptr && (tail_entry->extended_pos == core::ExtendedPOS::AuxCopulaDa ||
+                                      tail_entry->extended_pos == core::ExtendedPOS::AuxCopulaDesu)) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" hiragana tail is a copula\n");
+          continue;
+        }
+      }
+
       float base_cost = candidate::confidenceScaledCost(verb_opts.bonus_ichidan, best_sa.confidence,
                                                         verb_opts.confidence_cost_scale_small) +
                         non_dict_penalty;

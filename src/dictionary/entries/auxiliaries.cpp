@@ -830,6 +830,10 @@ EntrySpecRange getAuxiliaryEntries() {
       // grammatical reading of that sequence.
       aux("ぜよ", "だ", EPOS::Unknown),
       aux("だべ", "だ", EPOS::AuxCopulaDa),
+      // Kyoto polite copula, the regional counterpart of です: it takes the
+      // same continuative before the past auxiliary (紙どし+た).
+      aux("どす", "どす", EPOS::AuxCopulaDesu),
+      aux("どし", "どす", EPOS::AuxCopulaDesu),
       // The bare Kansai copula stays unclassified: it is homographic with the
       // far commoner coordinating particle (本や紙), which the copula's own
       // connection bonuses would outrank.
