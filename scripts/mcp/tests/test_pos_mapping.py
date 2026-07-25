@@ -110,6 +110,33 @@ class TestMapMecabPos:
         assert map_mecab_pos(token) == "Adjective"
 
 
+class TestSymbolMisclassification:
+    """IPADIC files anything it does not know under 記号.
+
+    A 記号 token is dropped by the symbol filter, so leaving real text labelled
+    that way loses the character from the expected tokens entirely.
+    """
+
+    def test_supplementary_plane_kanji_becomes_a_noun(self):
+        tokens = [{"surface": "𠮟", "pos": "記号", "pos_sub1": "一般"}]
+        correct_mecab_pos(tokens)
+        assert tokens[0]["pos"] == "名詞"
+
+    def test_standalone_letter_becomes_a_noun(self):
+        tokens = [{"surface": "Ａ", "pos": "記号", "pos_sub1": "アルファベット"}]
+        correct_mecab_pos(tokens)
+        assert tokens[0]["pos"] == "名詞"
+
+    def test_real_punctuation_stays_a_symbol(self):
+        tokens = [
+            {"surface": "。", "pos": "記号", "pos_sub1": "句点"},
+            {"surface": "、", "pos": "記号", "pos_sub1": "読点"},
+            {"surface": "（", "pos": "記号", "pos_sub1": "括弧開"},
+        ]
+        correct_mecab_pos(tokens)
+        assert [t["pos"] for t in tokens] == ["記号", "記号", "記号"]
+
+
 class TestNormalizePos:
     def test_uppercase(self):
         assert normalize_pos("NOUN") == "Noun"

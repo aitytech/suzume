@@ -57,6 +57,33 @@ class TestGetExpectedTokens:
             assert "１" not in s  # Should be half-width
 
 
+class TestSurfaceIsNeverLost:
+    """The expected tokens must cover every non-punctuation character.
+
+    MeCab labels anything outside IPADIC as 記号, and the symbol filter drops
+    記号 tokens, so an unknown character can silently vanish and leave a test
+    asserting a segmentation of text that is not the input.
+    """
+
+    def test_supplementary_plane_kanji_survives(self):
+        tokens, _, _ = get_expected_tokens("𩸽を焼く")
+        assert [t["surface"] for t in tokens] == ["𩸽", "を", "焼く"]
+
+    def test_fullwidth_letter_survives(self):
+        tokens, _, _ = get_expected_tokens("Ａさんに聞く")
+        assert "A" in [t["surface"] for t in tokens]
+
+    def test_punctuation_is_still_dropped(self):
+        tokens, _, _ = get_expected_tokens("東京。")
+        assert [t["surface"] for t in tokens] == ["東京"]
+
+    def test_dropping_real_text_raises_instead_of_losing_it(self):
+        # Hangul is outside IPADIC and has no correct_mecab_pos rule, so the
+        # guard has to fail rather than quietly produce a lossy oracle.
+        with pytest.raises(RuntimeError, match="symbol filter would drop"):
+            get_expected_tokens("한국を見る")
+
+
 class TestTokensMatch:
     def test_match(self):
         a = [{"surface": "食べ", "pos": "Verb"}, {"surface": "た", "pos": "Auxiliary"}]

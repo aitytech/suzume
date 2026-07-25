@@ -644,3 +644,28 @@ TTARA_STEMS: set[str] = {
 
 # ってば split stems
 TTEBA_STEMS: set[str] = {"もう", "いい", "だめ", "ダメ", "嫌", "やだ"}
+
+# Kanji codepoint ranges, mirroring kana::isKanjiCodepoint in
+# src/core/kana_constants.h. The supplementary-plane ranges matter here:
+# IPADIC has no entry for those characters and MeCab labels them 記号,
+# which would otherwise send them through the symbol filter.
+KANJI_RANGES: tuple[tuple[int, int], ...] = (
+    (0x4E00, 0x9FFF),  # CJK Unified Ideographs
+    (0x3400, 0x4DBF),  # CJK Extension A
+    (0x20000, 0x2A6DF),  # CJK Extension B
+    (0x2A700, 0x2B73F),  # CJK Extension C
+    (0x2B740, 0x2B81F),  # CJK Extension D
+    (0xF900, 0xFAFF),  # CJK Compatibility Ideographs
+    (0x2F00, 0x2FDF),  # Kangxi Radicals
+)
+
+
+def is_kanji(char: str) -> bool:
+    """Whether a single character is a kanji."""
+    code = ord(char)
+    return any(low <= code <= high for low, high in KANJI_RANGES)
+
+
+def is_all_kanji(surface: str) -> bool:
+    """Whether a surface is non-empty and made entirely of kanji."""
+    return bool(surface) and all(is_kanji(char) for char in surface)

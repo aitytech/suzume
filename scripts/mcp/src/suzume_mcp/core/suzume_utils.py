@@ -104,6 +104,24 @@ def get_mecab_tokens(text: str) -> list[dict]:
     return tokens
 
 
+def _reject_lossy_symbol_drop(surface: str, text: str) -> None:
+    """Fail when the symbol filter is about to discard real text.
+
+    Dropping punctuation is intended; dropping a word is not. MeCab labels
+    anything IPADIC does not know as 記号, so a character outside its dictionary
+    would silently vanish from the expected tokens and leave a test asserting a
+    segmentation of text that is not the input. Correct the token's POS in
+    correct_mecab_pos instead of letting it reach this filter.
+    """
+    carries_text = [char for char in surface if regex.match(r"[\p{Han}\p{Hiragana}\p{Katakana}\p{L}\p{Nd}]", char)]
+    if carries_text:
+        raise RuntimeError(
+            f"symbol filter would drop {''.join(carries_text)!r} from {text!r} "
+            f"(token {surface!r}): MeCab labelled real text as 記号. "
+            "Add a correct_mecab_pos rule for it rather than losing the surface."
+        )
+
+
 def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> tuple[list[dict], str, str]:
     """Get expected tokens: MeCab + Suzume rule corrections.
 
@@ -134,6 +152,7 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     for t in split_tokens:
         pos = normalize_pos(map_mecab_pos(t))
         if pos == "Symbol":
+            _reject_lossy_symbol_drop(t.get("surface", ""), text)
             continue
         tokens.append(
             {

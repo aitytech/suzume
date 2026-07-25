@@ -15,6 +15,7 @@ from .constants import (
     SUZUME_POS_OVERRIDE,
     VALID_POS,
     VERB_NOT_AUX_LEMMAS,
+    is_all_kanji,
 )
 
 
@@ -290,6 +291,17 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
     for idx, t in enumerate(tokens):
         surface = t.get("surface", "")
         pos = t.get("pos", "")
+
+        # 記号 tokens are dropped by the symbol filter in get_expected_tokens,
+        # so a token that carries real text must not stay labelled 記号 or the
+        # character disappears from the expected tokens entirely. Two cases:
+        # IPADIC has no entry for supplementary-plane kanji (𠮟, 𩸽 …) and calls
+        # them 記号,一般; it also files a standalone full-width letter under
+        # 記号,アルファベット. Neither is a symbol.
+        if pos == "記号" and (t.get("pos_sub1", "") == "アルファベット" or is_all_kanji(surface)):
+            t["pos"] = "名詞"
+            t["pos_sub1"] = "一般"
+            continue
 
         # Fix kanji adverbs MeCab misclassifies as 名詞
         if surface in ("特段", "別段", "格段") and pos == "名詞":
