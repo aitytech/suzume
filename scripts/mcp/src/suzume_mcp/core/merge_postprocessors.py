@@ -362,6 +362,57 @@ def _postprocess_adj_kari(result: list[dict], applied_rule: str | None) -> tuple
     return merged, applied_rule
 
 
+_HA_ROW_TAILS = ("は", "ひ", "ふ", "へ")
+_HA_ROW_DETACHED_TAILS = ("ひ", "ふ", "へ")
+_HA_ROW_STEM_POS = ("名詞", "動詞", "形容詞", "副詞", "接尾辞")
+
+
+def _ha_row_fabricated_ichidan(token: dict) -> bool:
+    """Whether a verb token's lemma is the 一段 reading invented for a ハ行 cell."""
+    surface = token.get("surface", "")
+    return token.get("pos") == "動詞" and token.get("lemma") == surface + "る"
+
+
+def _postprocess_ha_row_godan(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Rebuild the classical ハ行四段 conjugation (候ふ, 移ろひ, 思へ).
+
+    ハ行四段 is the historical-kana spelling of the modern ワ行五段 row, so
+    は/ひ/ふ/へ are cells of one verb whose terminal form is the lemma. The
+    reference dictionary carries the row only for the handful of verbs it
+    happens to list (思ふ); everywhere else the cell kana falls out as a separate
+    one-mora verb with an invented 一段 lemma (候+ふ as ふる, 移ろ+ひ as ひる), or
+    the whole cell keeps such a lemma (思へ as 思へる). Reattach the detached
+    kana to its stem and give both the row's own terminal ふ.
+    """
+    merged: list[dict] = []
+    idx = 0
+    while idx < len(result):
+        token = result[idx]
+        following = result[idx + 1] if idx + 1 < len(result) else None
+        if (
+            following is not None
+            and following.get("surface") in _HA_ROW_DETACHED_TAILS
+            and _ha_row_fabricated_ichidan(following)
+            and token.get("pos") in _HA_ROW_STEM_POS
+        ):
+            stem = token.get("surface", "")
+            merged.append({"surface": stem + following["surface"], "pos": "動詞", "lemma": stem + "ふ"})
+            idx += 2
+            if applied_rule is None:
+                applied_rule = "ha-row-godan-conjugation"
+            continue
+        surface = token.get("surface", "")
+        if len(surface) > 1 and surface.endswith(_HA_ROW_TAILS) and _ha_row_fabricated_ichidan(token):
+            merged.append({**token, "lemma": surface[:-1] + "ふ"})
+            idx += 1
+            if applied_rule is None:
+                applied_rule = "ha-row-godan-conjugation"
+            continue
+        merged.append(token)
+        idx += 1
+    return merged, applied_rule
+
+
 def _postprocess_nickname_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
     """Merge hiragana nickname + honorific into a single token.
 

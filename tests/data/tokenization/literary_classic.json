@@ -4695,14 +4695,9 @@
           "surface": "かく"
         },
         {
-          "lemma": "候",
-          "pos": "Noun",
-          "surface": "候"
-        },
-        {
-          "lemma": "ふる",
+          "lemma": "候ふ",
           "pos": "Verb",
-          "surface": "ふ"
+          "surface": "候ふ"
         }
       ],
       "id": "sourou_classical_terminal_verb",

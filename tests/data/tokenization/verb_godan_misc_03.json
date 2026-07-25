@@ -652,14 +652,9 @@
           "surface": "せ"
         },
         {
-          "lemma": "候",
-          "pos": "Noun",
-          "surface": "候"
-        },
-        {
-          "lemma": "ふる",
+          "lemma": "候ふ",
           "pos": "Verb",
-          "surface": "ふ"
+          "surface": "候ふ"
         }
       ],
       "id": "wo_kase_fu",
@@ -1737,6 +1732,141 @@
       ],
       "id": "dekutsurogu_2",
       "input": "部屋でくつろぐ"
+    },
+    {
+      "description": "classical ha-row terminal form",
+      "expected": [
+        {
+          "lemma": "将来",
+          "pos": "Noun",
+          "surface": "将来"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "思ふ",
+          "pos": "Verb",
+          "surface": "思ふ"
+        }
+      ],
+      "id": "wo_fu",
+      "input": "将来を思ふ。"
+    },
+    {
+      "description": "classical ha-row continuative before keri",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "思ふ",
+          "pos": "Verb",
+          "surface": "思ひ"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "wo_hikeri",
+      "input": "紙を思ひけり。"
+    },
+    {
+      "description": "classical ha-row izenkei before concessive do",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "思ふ",
+          "pos": "Verb",
+          "surface": "思へ"
+        },
+        {
+          "lemma": "ど",
+          "pos": "Particle",
+          "surface": "ど"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "wo_hedo_mu",
+      "input": "本を思へど進む。"
+    },
+    {
+      "description": "classical ha-row irrealis before zu",
+      "expected": [
+        {
+          "lemma": "将来",
+          "pos": "Noun",
+          "surface": "将来"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "思ふ",
+          "pos": "Verb",
+          "surface": "思は"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "wo_hazu",
+      "input": "将来を思はず。"
+    },
+    {
+      "description": "classical honorific subsidiary as one ha-row verb",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "給ふ",
+          "pos": "Verb",
+          "surface": "給ふ"
+        }
+      ],
+      "id": "wo_mi_fu",
+      "input": "本を読み給ふ。"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 3/3)",

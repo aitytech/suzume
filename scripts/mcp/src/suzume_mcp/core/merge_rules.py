@@ -25,6 +25,7 @@ from .merge_postprocessors import (
     _postprocess_distributive_quantity,
     _postprocess_epenthetic_sa,
     _postprocess_filler_split,
+    _postprocess_ha_row_godan,
     _postprocess_honorific_split,
     _postprocess_kamo,
     _postprocess_kanji_merge,
@@ -999,6 +1000,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_kuruwa(result, applied_rule)
     result, applied_rule = _postprocess_adj_bungo(result, applied_rule)
     result, applied_rule = _postprocess_adj_kari(result, applied_rule)
+    result, applied_rule = _postprocess_ha_row_godan(result, applied_rule)
     result, applied_rule = _postprocess_kanji_merge(result, applied_rule)
     result, applied_rule = _postprocess_nickname_merge(result, applied_rule)
     result, applied_rule = _postprocess_search_unit_split(result, applied_rule)
