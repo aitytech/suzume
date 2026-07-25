@@ -1074,6 +1074,24 @@ def postprocess_dewa_aru_boundary(tokens: list[dict]) -> bool:
     return False
 
 
+def _is_irrealis_before_negative(surface: str) -> bool:
+    """Whether a surface is the irrealis stem the negative auxiliary selects.
+
+    書か+なく+ない keeps its verb reading, because the negative attaches to the
+    irrealis; 変わり+なく is the continuative that also serves as a deverbal noun.
+    The reference dictionary names the difference in the probe's conjugated form.
+    """
+    from .mecab import mecab_analyze
+
+    probe = mecab_analyze(surface + "ない")
+    return (
+        len(probe) == 2
+        and probe[0].get("surface") == surface
+        and probe[0].get("pos") == "動詞"
+        and probe[0].get("conj_form") == "未然形"
+    )
+
+
 def postprocess_deverbal_noun_context(tokens: list[dict]) -> bool:
     """Normalize a continuative verb used as the head of a noun phrase.
 
@@ -1115,6 +1133,7 @@ def postprocess_deverbal_noun_context(tokens: list[dict]) -> bool:
             following.get("pos") == "Adjective"
             and following.get("surface") == "なく"
             and following.get("lemma") == "ない"
+            and not _is_irrealis_before_negative(surface)
         )
         if not nominal_particle and not nominal_follower and not predicative_copula and not nominal_negative:
             continue
