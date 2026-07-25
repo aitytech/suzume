@@ -388,6 +388,15 @@ float computePastConditionalVerbBonus(const core::LatticeEdge& prev, const core:
       next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
     return cost::kDoubleVeryStrongBonus;
   }
+
+  // The concessive たって/だって is the past auxiliary plus って (書い+た+って,
+  // 読ん+だ+って). Keep that boundary: without it the っ is read back into the
+  // stem as a second onbin (書いたっ+て) or the whole tail becomes the adverbial
+  // particle だって.
+  if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(prev.surface, {"た", "だ"}) &&
+      next.extended_pos == core::ExtendedPOS::ParticleQuote) {
+    return cost::kVeryStrongBonus;
+  }
   return {};
 }
 

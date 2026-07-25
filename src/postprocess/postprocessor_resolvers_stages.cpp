@@ -583,14 +583,17 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
   // of たつ.  The auxiliary reading requires a predicate immediately on its
   // left; after a case particle (いつまで+たっ+て, 朝から+たっ+て) it is
   // grammatically impossible, so restore the independent verb.  Predicate+
-  // たって (昨日来+たっ+て) and copular だって never satisfy this gate.
+  // たって (昨日来+たっ+て) and copular だって never satisfy this gate.  The
+  // one-mora stem also reaches this slot as the productive wa-row
+  // reconstruction たう, which is not a word; the same gate names its base.
   for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
     auto& onbin = result[idx];
     const auto& previous = result[idx - 1];
     const auto& connective = result[idx + 1];
-    if (onbin.surface == "たっ" && onbin.extended_pos == core::ExtendedPOS::AuxTenseTa &&
-        previous.extended_pos == core::ExtendedPOS::ParticleCase && connective.surface == "て" &&
-        connective.extended_pos == core::ExtendedPOS::ParticleConj) {
+    const bool ambiguous_ta_onbin = onbin.extended_pos == core::ExtendedPOS::AuxTenseTa ||
+                                    (onbin.pos == core::PartOfSpeech::Verb && onbin.lemma == "たう");
+    if (onbin.surface == "たっ" && ambiguous_ta_onbin && previous.extended_pos == core::ExtendedPOS::ParticleCase &&
+        connective.surface == "て" && connective.extended_pos == core::ExtendedPOS::ParticleConj) {
       resolver::retag(onbin, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbOnbinkei, "たつ",
                       dictionary::ConjugationType::GodanTa, grammar::ConjForm::Onbinkei);
     }

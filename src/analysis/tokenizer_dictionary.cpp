@@ -1232,6 +1232,19 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       continue;
     }
 
+    // A 副助詞 attaches to a 体言 and a 接続詞 opens a clause; neither follows a
+    // verb onbin stem.  Where one that begins with だ appears to (読ん+だって,
+    // 読ん+だから), the だ is the voiced past auxiliary and the rest is its own
+    // word (読ん+だ+って).  The hatsuonbin shape is kanji + ん, which keeps an
+    // ordinary noun ending in ん (みかん+だって) and every other left context
+    // untouched.
+    if ((result.entry->extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+         result.entry->pos == core::PartOfSpeech::Conjunction) &&
+        start_pos >= 2 && codepoints[start_pos] == U'だ' && codepoints[start_pos - 1] == U'ん' &&
+        normalize::isKanjiCodepoint(codepoints[start_pos - 2])) {
+      continue;
+    }
+
     // A pure-hiragana adnominal begins with a kana that is also an inflectional
     // ending, so it cannot start where a dictionary verb continuative already
     // straddles the boundary (書き+たる, not 書+きたる).  The kanji spelling of
@@ -1464,11 +1477,15 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
          result.entry->pos == core::PartOfSpeech::Adjective || result.entry->pos == core::PartOfSpeech::Adverb)) {
       // A dictionary irrealis stem cannot absorb っ before て/た as emphasis:
       // 染まっ+て belongs to the GodanRa verb 染まる, not 染ま(染む)+っ+て.
-      const bool irrealis_before_te_or_ta =
-          result.entry->extended_pos == core::ExtendedPOS::VerbMizenkei && end_pos + 1 < codepoints.size() &&
-          codepoints[end_pos] == core::hiragana::kSmallTsu &&
-          (codepoints[end_pos + 1] == core::hiragana::kTe || codepoints[end_pos + 1] == core::hiragana::kTa);
-      const auto emphatic = irrealis_before_te_or_ta
+      // An auxiliary cannot either: っ+て after one is the concessive particle
+      // って (書い+た+って), and every genuine auxiliary onbin cell (だっ, たかっ,
+      // じゃっ) is a dictionary entry in its own right.
+      const bool sokuon_before_te_or_ta =
+          end_pos + 1 < codepoints.size() && codepoints[end_pos] == core::hiragana::kSmallTsu &&
+          (codepoints[end_pos + 1] == core::hiragana::kTe || codepoints[end_pos + 1] == core::hiragana::kTa) &&
+          (result.entry->extended_pos == core::ExtendedPOS::VerbMizenkei ||
+           result.entry->pos == core::PartOfSpeech::Auxiliary);
+      const auto emphatic = sokuon_before_te_or_ta
                                 ? verb_helpers::EmphaticSuffixMatch{}
                                 : verb_helpers::matchEmphaticSuffix(codepoints, end_pos, result.entry->pos,
                                                                     verb_helpers::SokuonOnsetPolicy::DictionaryEntry);

@@ -59,6 +59,40 @@ bool hasClosedAuxiliaryTail(const dictionary::DictionaryManager* dict_manager, c
              nullptr;
 }
 
+/**
+ * @brief Whether the past auxiliary already closes a verified predicate before っ.
+ *
+ * 食べ+た+って and 書い+た+って put the concessive particle って behind a finished
+ * past form, so the っ scanned here belongs to the particle rather than to a
+ * second onbin of one long verb. A genuine stem that merely ends in た before its
+ * own onbin (隔たっ) has no verified predicate in front of that kana.
+ * @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+ */
+bool pastAuxiliaryClosesPredicateBefore(const grammar::Inflection& inflection,
+                                        const dictionary::DictionaryManager* dict_manager,
+                                        const std::vector<char32_t>& codepoints, size_t start_pos, size_t onbin_pos) {
+  // A one-codepoint predicate is a bare kanji, which is the shape of a stem
+  // whose own okurigana happens to be た (隔+たっ+て); require the okurigana to
+  // be present so only a complete predicate counts.
+  if (dict_manager == nullptr || onbin_pos < start_pos + 3) {
+    return false;
+  }
+  const char32_t past = codepoints[onbin_pos - 1];
+  if (past != U'た' && past != U'だ') {
+    return false;
+  }
+  const std::string predicate = extractSubstring(codepoints, start_pos, onbin_pos - 1);
+  if (vh::isVerbInDictionary(dict_manager, predicate)) {
+    return true;
+  }
+  for (const auto& result : inflection.analyze(predicate)) {
+    if (result.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool hasVerifiedInternalOnbinPredicate(const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
                                        const std::vector<char32_t>& codepoints, size_t tail_start, size_t onbin_pos,
@@ -264,7 +298,13 @@ void appendExtendedSokuonbinCandidates(const std::vector<char32_t>& codepoints, 
 
       // Check hiragana part for known false patterns
       std::string hiragana_part = extractSubstring(codepoints, kanji_end, onbin_end);
+      // 書い+た+って: the っ scanned here belongs to the concessive particle, not
+      // to an onbin stem, whenever a complete auxiliary already sits on the
+      // stem's own onbin kana.
+      // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
       if (hasClosedAuxiliaryTail(dict_manager, codepoints, kanji_end, onbin_end) ||
+          vh::embedsAuxiliaryOnOnbinStem(codepoints, kanji_end, pos, dict_manager) ||
+          pastAuxiliaryClosesPredicateBefore(inflection, dict_manager, codepoints, start_pos, pos) ||
           hasVerifiedInternalOnbinPredicate(inflection, dict_manager, codepoints, kanji_end, pos, pos + 2) ||
           hiragana_part == "なかっ" || hiragana_part == "であっ" || utf8::startsWith(hiragana_part, "といっ") ||
           hiragana_part == "くなっ") {

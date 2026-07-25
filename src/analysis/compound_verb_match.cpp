@@ -504,6 +504,23 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
       continue;
     }
 
+    // A hiragana V2 opening with た/だ has the same surface as the past
+    // auxiliary wherever the V1 form in front of it is one the auxiliary
+    // selects: た after an Ichidan continuative or an い/っ onbin (食べ+た,
+    // 書い+た, 買っ+た), だ after an い/ん onbin (読ん+だ, 泳い+だ).  Without
+    // lexical attestation of the compound itself the past reading owns that
+    // boundary.  Elsewhere the V2 stays available (食べ+だす), as does any
+    // kanji-spelled V2 (見+立てる).
+    if (!matched_kanji && !v1.dict_verified && !dict_compound_v1 && v2_start > start_pos &&
+        char_types[v2_start] == CharType::Hiragana) {
+      const char32_t v1_tail = codepoints[v2_start - 1];
+      const bool past_ta = codepoints[v2_start] == U'た' && (is_ichidan || v1_tail == U'い' || v1_tail == U'っ');
+      const bool past_da = codepoints[v2_start] == U'だ' && (v1_tail == U'い' || v1_tail == U'ん');
+      if (past_ta || past_da) {
+        continue;
+      }
+    }
+
     // A nominal base followed by an independently registered suffix form
     // (税+抜き, 水+抜き) is not evidence for a lexical compound verb.  The
     // productive single-kanji V1 fallback is deliberately dictionary-free,

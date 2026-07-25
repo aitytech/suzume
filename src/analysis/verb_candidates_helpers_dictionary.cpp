@@ -128,6 +128,26 @@ bool startsWithMultiMoraDictionaryParticle(const std::vector<char32_t>& codepoin
   return false;
 }
 
+bool embedsAuxiliaryOnOnbinStem(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos > codepoints.size()) {
+    return false;
+  }
+  for (size_t aux_start = start_pos + 1; aux_start < end_pos; ++aux_start) {
+    const char32_t onbin = codepoints[aux_start - 1];
+    if (onbin != U'い' && onbin != U'ん' && onbin != U'っ') {
+      continue;
+    }
+    for (size_t aux_end = aux_start + 1; aux_end <= end_pos; ++aux_end) {
+      if (dict_manager->lookupExact(extractSubstring(codepoints, aux_start, aux_end), core::PartOfSpeech::Auxiliary) !=
+          nullptr) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager,
                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                core::ExtendedPOS particle_pos) {

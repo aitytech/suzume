@@ -324,6 +324,19 @@ bool embedsTeFormAuxiliary(std::string_view surface);
 bool embedsTeFormMiruAuxiliary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);
 
 /**
+ * @brief True when a dictionary auxiliary stands directly on an onbin kana
+ *        inside the span.
+ *
+ * The te-form guards above look for a て/で that the contraction and the past
+ * auxiliary simply do not leave behind: 書い+とけ+ば and 書い+た+って both put a
+ * complete auxiliary straight onto the onbin stem, and the run then reads as one
+ * fabricated verb (書いとける, 書いたる). The onbin kana in front of the auxiliary
+ * is the boundary evidence the surface still carries.
+ */
+bool embedsAuxiliaryOnOnbinStem(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                const dictionary::DictionaryManager* dict_manager);
+
+/**
  * @brief Extend candidates with emphatic suffix variants
  *
  * For each verb/adjective candidate, checks if input continues with emphatic
