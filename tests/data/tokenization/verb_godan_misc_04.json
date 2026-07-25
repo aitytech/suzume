@@ -2214,6 +2214,94 @@
       ],
       "id": "wo_itaraakan",
       "input": "紙を書いたらあかん"
+    },
+    {
+      "description": "お読みやす - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "やす",
+          "pos": "Auxiliary",
+          "surface": "やす"
+        }
+      ],
+      "id": "o_miyasu",
+      "input": "お読みやす"
+    },
+    {
+      "description": "お書きやす - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "やす",
+          "pos": "Auxiliary",
+          "surface": "やす"
+        }
+      ],
+      "id": "o_kiyasu",
+      "input": "お書きやす"
+    },
+    {
+      "description": "お飲みやす - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲み"
+        },
+        {
+          "lemma": "やす",
+          "pos": "Auxiliary",
+          "surface": "やす"
+        }
+      ],
+      "id": "o_miyasu_2",
+      "input": "お飲みやす"
+    },
+    {
+      "description": "お読みなさい - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "なさる",
+          "pos": "Auxiliary",
+          "surface": "なさい"
+        }
+      ],
+      "id": "o_minasai",
+      "input": "お読みなさい"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

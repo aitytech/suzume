@@ -731,7 +731,10 @@ void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphem
             const auto& next = morphemes[i + 1];
             preserves_verbal_reading = grammar::isHumbleHonorificLemma(next.lemma) ||
                                        grammar::isPotentialBenefactiveLemma(next.lemma) ||
-                                       next.extended_pos == core::ExtendedPOS::AuxCausative;
+                                       next.extended_pos == core::ExtendedPOS::AuxCausative ||
+                                       // An honorific subsidiary takes a continuative, not a
+                                       // nominal, so it keeps the stem verbal (お読み+やす).
+                                       next.extended_pos == core::ExtendedPOS::AuxHonorific;
 
             // An actual hypothetical e-row form keeps its verbal analysis
             // before ば (お届け+ば). Without ば, the same dictionary edge is

@@ -502,6 +502,11 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("いらっしゃれ", "いらっしゃる", EPOS::AuxHonorific),
       aux("いらっしゃろ", "いらっしゃる", EPOS::AuxHonorific),
 
+      // Kyoto polite request やす, which attaches to a verb continuative after
+      // the honorific prefix (お読み+やす, 読んでおくれ+やす). Homographic with
+      // the i-adjective stem 安, so it relies on that continuative connection.
+      aux("やす", "やす", EPOS::AuxHonorific),
+
       // Kansai honorific subsidiary はる. It conjugates as a godan-ra verb and
       // attaches to the irrealis of a godan predicate (読ま+はる) or to a
       // te-form (飲んで+はる). Only the terminal cell is registered: the
