@@ -1,0 +1,89 @@
+{
+  "cases": [
+    {
+      "description": "花散りぬ - regression test",
+      "expected": [
+        {
+          "lemma": "花",
+          "pos": "Noun",
+          "surface": "花"
+        },
+        {
+          "lemma": "散る",
+          "pos": "Verb",
+          "surface": "散り"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "rinu",
+      "input": "花散りぬ"
+    },
+    {
+      "description": "夢を見けむ - regression test",
+      "expected": [
+        {
+          "lemma": "夢",
+          "pos": "Noun",
+          "surface": "夢"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "けむ",
+          "pos": "Auxiliary",
+          "surface": "けむ"
+        }
+      ],
+      "id": "wo_kemu",
+      "input": "夢を見けむ"
+    },
+    {
+      "description": "見送ります - regression test",
+      "expected": [
+        {
+          "lemma": "見送る",
+          "pos": "Verb",
+          "surface": "見送り"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "rimasu",
+      "input": "見送ります"
+    },
+    {
+      "description": "見分けます - regression test",
+      "expected": [
+        {
+          "lemma": "見分ける",
+          "pos": "Verb",
+          "surface": "見分け"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "kemasu",
+      "input": "見分けます"
+    }
+  ],
+  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",
+  "version": "1.0"
+}
