@@ -1795,6 +1795,119 @@
       ],
       "id": "muzeyo",
       "input": "水飲むぜよ"
+    },
+    {
+      "description": "水を飲んではる - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "はる",
+          "pos": "Auxiliary",
+          "surface": "はる"
+        }
+      ],
+      "id": "wo_ndeharu",
+      "input": "水を飲んではる"
+    },
+    {
+      "description": "本を読まはる - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "はる",
+          "pos": "Auxiliary",
+          "surface": "はる"
+        }
+      ],
+      "id": "wo_maharu",
+      "input": "本を読まはる"
+    },
+    {
+      "description": "紙を書いてはる - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "はる",
+          "pos": "Auxiliary",
+          "surface": "はる"
+        }
+      ],
+      "id": "wo_iteharu",
+      "input": "紙を書いてはる"
+    },
+    {
+      "description": "はりを刺す - regression test",
+      "expected": [
+        {
+          "lemma": "はり",
+          "pos": "Noun",
+          "surface": "はり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "刺す",
+          "pos": "Verb",
+          "surface": "刺す"
+        }
+      ],
+      "id": "hariwo_su",
+      "input": "はりを刺す"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

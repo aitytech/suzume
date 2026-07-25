@@ -173,6 +173,28 @@
       ],
       "id": "ya",
       "input": "本や紙"
+    },
+    {
+      "description": "はらが痛い - regression test",
+      "expected": [
+        {
+          "lemma": "はら",
+          "pos": "Noun",
+          "surface": "はら"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "痛い",
+          "pos": "Adjective",
+          "surface": "痛い"
+        }
+      ],
+      "id": "haraga_i",
+      "input": "はらが痛い"
     }
   ],
   "description": "General nouns (part 3/3)",

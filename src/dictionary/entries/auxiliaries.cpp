@@ -502,6 +502,14 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("いらっしゃれ", "いらっしゃる", EPOS::AuxHonorific),
       aux("いらっしゃろ", "いらっしゃる", EPOS::AuxHonorific),
 
+      // Kansai honorific subsidiary はる. It conjugates as a godan-ra verb and
+      // attaches to the irrealis of a godan predicate (読ま+はる) or to a
+      // te-form (飲んで+はる). Only the terminal cell is registered: the
+      // irrealis and continuative cells spell common hiragana nouns (はら, はり)
+      // that carry no competing dictionary edge, so they won the sentence-
+      // initial position outright.
+      aux("はる", "はる", EPOS::AuxHonorific),
+
       // Possibility/uncertainty: かも + しれ + ない.
       // かも particle is already defined above (line 157)
       verb("しれ", "しれる", EPOS::VerbRenyokei),
