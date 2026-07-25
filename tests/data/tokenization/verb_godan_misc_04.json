@@ -111,6 +111,55 @@
       ],
       "id": "rareru",
       "input": "叱られる"
+    },
+    {
+      "description": "Supplementary-plane kanji keeps its surface as a noun",
+      "expected": [
+        {
+          "lemma": "𩸽",
+          "pos": "Noun",
+          "surface": "𩸽"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "焼く",
+          "pos": "Verb",
+          "surface": "焼く"
+        }
+      ],
+      "id": "wo_ku_2",
+      "input": "𩸽を焼く"
+    },
+    {
+      "description": "Full-width letter normalizes to half-width and keeps its surface",
+      "expected": [
+        {
+          "lemma": "A",
+          "pos": "Noun",
+          "surface": "A"
+        },
+        {
+          "lemma": "さん",
+          "pos": "Suffix",
+          "surface": "さん"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "sanni_ku",
+      "input": "Ａさんに聞く"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",
