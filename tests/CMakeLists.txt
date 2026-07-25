@@ -92,6 +92,7 @@ set(TEST_SOURCES
   postprocess/tag_generator_test.cpp
   integration/suzume_api_test.cpp
   integration/suzume_c_api_test.cpp
+  integration/suzume_hpp_test.cpp
   # Universal test: auto-discovers all JSON files and cases in tests/data/tokenization/.
   # New regression cases are picked up without creating dedicated C++ files.
   integration/universal_tokenization_test.cpp

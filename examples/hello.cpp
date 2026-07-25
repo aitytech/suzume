@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
 
   const std::vector<suzume::Tag> tags = tokenizer.generateTags(text);
   std::printf("tags:");
-  for (const suzume::Tag& tag : tags) {
-    std::printf(" %s", tag.text.c_str());
+  for (const suzume::Tag& entry : tags) {
+    std::printf(" %s", entry.tag.c_str());
   }
   std::printf("\n");
 

@@ -76,7 +76,7 @@ struct TagOptions {
 
 /** @brief A generated tag (surface/lemma text plus its POS). */
 struct Tag {
-  std::string text;
+  std::string tag;
   std::string pos;
 };
 
@@ -343,10 +343,10 @@ class Tokenizer {
     }
     out.reserve(tags->count);
     for (std::size_t idx = 0; idx < tags->count; ++idx) {
-      Tag tag;
-      tag.text = cstr(tags->tags != nullptr ? tags->tags[idx] : nullptr);
-      tag.pos = tags->pos != nullptr ? posLabel(tags->pos[idx], false) : std::string();
-      out.push_back(std::move(tag));
+      Tag entry;
+      entry.tag = cstr(tags->tags != nullptr ? tags->tags[idx] : nullptr);
+      entry.pos = tags->pos != nullptr ? posLabel(tags->pos[idx], false) : std::string();
+      out.push_back(std::move(entry));
     }
     suzume_tags_free(tags);
     return out;
