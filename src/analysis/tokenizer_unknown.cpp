@@ -1060,8 +1060,15 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
           hasCompleteInternalConstituentBoundary(lattice, dict_manager_, text, byte_offsets, candidates, candidate);
       const bool crosses_noun_nagara_ni_boundary =
           hasNounNagaraNiBoundary(lattice, dict_manager_, text, codepoints, byte_offsets, candidates, candidate);
+      // The nominalization is a POS re-reading of an accepted continuative, not
+      // independent evidence for the span. Once the verb path prices the span
+      // worse than an outright unknown word (秋来ぬ, charged as the fabricated
+      // サ変 秋来する across a clause boundary), there is no continuative left to
+      // re-read, so the bonus must not resurrect it. Ordinary deverbal nouns
+      // (身なり, 足取り) stay well inside the unknown-word band.
+      const bool verb_reading_rejected = adjusted_cost > getCategoryCost(core::ExtendedPOS::Unknown);
       if (nominal_particle && !longer_dependent_follows && !is_lexical_noun && !is_complete_shii_adjective &&
-          !crosses_complete_internal_boundary && !crosses_noun_nagara_ni_boundary) {
+          !crosses_complete_internal_boundary && !crosses_noun_nagara_ni_boundary && !verb_reading_rejected) {
         lattice.addEdge(surface_str, static_cast<uint32_t>(candidate.start), static_cast<uint32_t>(candidate.end),
                         core::PartOfSpeech::Noun,
                         getCategoryCost(core::ExtendedPOS::NounVerbal) + candidate::kNominalizedNounParticleBonus,
