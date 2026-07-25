@@ -296,6 +296,72 @@ def _postprocess_adj_bungo(result: list[dict], applied_rule: str | None) -> tupl
     return new_result, applied_rule
 
 
+_KARI_TAILS = ("かり", "かる", "かれ")
+_KARI_MIZENKEI_TAIL = "から"
+_KARI_MAX_TOKEN_RUN = 4
+
+
+def _kari_adjective_lemma(surface: str) -> str | None:
+    """Return the modern lemma when a surface is a カリ-conjugation adjective form.
+
+    The reference dictionary carries only the 未然形 cell of the supplementary
+    conjugation (高から, 大きから), so that cell is used as the probe: a surface
+    whose カリ ending can be swapped for から and still analyze as one 形容詞 is
+    itself a cell of the same adjective's paradigm.
+    """
+    from .mecab import mecab_analyze
+
+    probe = surface[: -len(_KARI_MIZENKEI_TAIL)] + _KARI_MIZENKEI_TAIL
+    tokens = mecab_analyze(probe)
+    if len(tokens) != 1:
+        return None
+    token = tokens[0]
+    if token.get("pos") != "形容詞" or token.get("surface") != probe:
+        return None
+    return token.get("lemma")
+
+
+def _postprocess_adj_kari(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Rebuild the classical supplementary (カリ) conjugation of an i-adjective.
+
+    から/かり/かる/かれ are cells of the adjective's own inflection table, not a
+    stem plus an auxiliary: there is no 助動詞 かり in the classical inventory.
+    The reference dictionary only carries the 未然形 cell, so the others fall
+    back to unrelated verbs (高+かり as かりる, 冷+たかる as たかる, 小+さかり as
+    さかる). Restore them as one 形容詞 token with the adjective's own lemma,
+    which is what the 未然形 cell already yields.
+    """
+    merged: list[dict] = []
+    idx = 0
+    while idx < len(result):
+        run = ""
+        matched_end = 0
+        matched_lemma = None
+        for end in range(idx, min(idx + _KARI_MAX_TOKEN_RUN, len(result))):
+            run += result[end].get("surface", "")
+            # The rule repairs a split the dictionary got wrong, so a surface it
+            # already analyzes as one word needs no repair (明かり stays a noun).
+            if end == idx:
+                continue
+            if len(run) <= len(_KARI_MIZENKEI_TAIL) or not run.endswith(_KARI_TAILS):
+                continue
+            lemma = _kari_adjective_lemma(run)
+            if lemma is not None:
+                matched_end = end + 1
+                matched_lemma = lemma
+                break
+        if matched_lemma is not None:
+            surface = "".join(result[pos].get("surface", "") for pos in range(idx, matched_end))
+            merged.append({"surface": surface, "pos": "形容詞", "lemma": matched_lemma})
+            idx = matched_end
+            if applied_rule is None:
+                applied_rule = "adj-kari-conjugation"
+            continue
+        merged.append(result[idx])
+        idx += 1
+    return merged, applied_rule
+
+
 def _postprocess_nickname_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
     """Merge hiragana nickname + honorific into a single token.
 

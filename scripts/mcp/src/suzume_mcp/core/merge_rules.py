@@ -18,6 +18,7 @@ from .constants import (
 )
 from .merge_postprocessors import (
     _postprocess_adj_bungo,
+    _postprocess_adj_kari,
     _postprocess_ascii_dot_merge,
     _postprocess_atode,
     _postprocess_dialectal,
@@ -997,6 +998,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_filler_split(result, applied_rule)
     result, applied_rule = _postprocess_kuruwa(result, applied_rule)
     result, applied_rule = _postprocess_adj_bungo(result, applied_rule)
+    result, applied_rule = _postprocess_adj_kari(result, applied_rule)
     result, applied_rule = _postprocess_kanji_merge(result, applied_rule)
     result, applied_rule = _postprocess_nickname_merge(result, applied_rule)
     result, applied_rule = _postprocess_search_unit_split(result, applied_rule)
