@@ -267,9 +267,8 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // Partial cancel for single-kanji NOUN + し pattern
   // E.g., 寒し (archaic adjective) should not split as 寒+し
   // But 得+し (suru-verb renyokei) should still split
-  // Single kanji = 3 bytes in UTF-8
   if (prev.extended_pos == core::ExtendedPOS::Noun && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      next.surface == "し" && prev.surface.size() == 3) {
+      next.surface == "し" && normalize::utf8Length(prev.surface) == 1) {
     bonus += cost::kUncommon;
   }
 

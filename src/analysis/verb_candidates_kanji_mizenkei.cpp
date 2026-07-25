@@ -491,18 +491,20 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
             bool is_suru_verb_pattern = false;
             if (verb_type == grammar::VerbType::GodanSa) {
               std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
-              if (grammar::isAllKanji(kanji_stem) && kanji_stem.size() >= 6) {
+              // Count the kanji run in codepoints, not bytes: the run is carved
+              // out of `codepoints`, so its length is already the character count.
+              const size_t kanji_count = kanji_end - start_pos;
+              if (grammar::isAllKanji(kanji_stem) && kanji_count >= 2) {
                 // This is likely a Suru verb pattern (2+ kanji followed by される)
                 // The connection rules will handle 装飾 + される instead
-                // Note: 6 bytes = 2 kanji characters in UTF-8
                 is_suru_verb_pattern = true;
               }
               // Skip single-kanji GodanSa + causative pattern (likely ichidan verb + させ)
               // E.g., 見させられた = 見 + させ + られ + た (ichidan 見る + causative)
               //       Not: 見さ + せ + られ + た (godan 見す doesn't exist)
               // Real godan-sa verbs (話す, 出す, 消す) have multi-char stems (話さ, 出さ, 消さ)
-              if (is_causative_pattern && kanji_stem.size() == 3) {  // 3 bytes = 1 kanji
-                is_suru_verb_pattern = true;                         // Skip generation
+              if (is_causative_pattern && kanji_count == 1) {
+                is_suru_verb_pattern = true;  // Skip generation
               }
             }
             if (is_suru_verb_pattern) {

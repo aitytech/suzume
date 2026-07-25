@@ -307,7 +307,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // E.g., 揺+れる should be 揺れる (verb), not 揺 (noun) + れる (passive)
   // Single-kanji nouns rarely take verbal auxiliaries directly
   // Exception: Single-kanji ichidan verb stems + causative させ (見+させる, etc.)
-  if (prev.extended_pos == core::ExtendedPOS::Noun && prev.surface.size() == 3 &&  // Single kanji (3 bytes in UTF-8)
+  if (prev.extended_pos == core::ExtendedPOS::Noun && normalize::utf8Length(prev.surface) == 1 &&
       (next.extended_pos == core::ExtendedPOS::AuxVolitional || next.extended_pos == core::ExtendedPOS::AuxPassive ||
        next.extended_pos == core::ExtendedPOS::AuxPotential || next.extended_pos == core::ExtendedPOS::AuxCausative ||
        next.extended_pos == core::ExtendedPOS::AuxClassicalBeshi)) {
@@ -461,7 +461,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // But お|茶, ご|報告 are valid (honorific prefix + noun)
   // Only penalize negation prefixes followed by single kanji
   if (prev.extended_pos == core::ExtendedPOS::Prefix && sc::isNegationPrefix(prev.surface) &&
-      next.extended_pos == core::ExtendedPOS::Noun && next.surface.size() == 3) {  // Single kanji (3 bytes in UTF-8)
+      next.extended_pos == core::ExtendedPOS::Noun && normalize::utf8Length(next.surface) == 1) {
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -554,8 +554,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Single hiragana verb renyokei (し, き, み, etc.) rarely takes を directly
   // Nominalized verb renyokei like 読み, 書き take を (読みを深める) but those
   // are multi-char and should be recognized as NOUN, not single-char VERB_連用
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      prev.surface.size() == 3 &&  // Single char (3 bytes = hiragana/katakana)
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && normalize::utf8Length(prev.surface) == 1 &&
       next.extended_pos == core::ExtendedPOS::ParticleCase && next.surface == "を") {
     // Check if single char is hiragana
     auto decoded = normalize::utf8::decode(prev.surface);
@@ -641,9 +640,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   if (prev.pos == core::PartOfSpeech::Conjunction &&
       (prev.surface == "それで" || prev.surface == "そこで" || prev.surface == "ここで") &&
       (next.extended_pos == core::ExtendedPOS::VerbOnbinkei || next.extended_pos == core::ExtendedPOS::VerbTaForm) &&
-      next.surface.size() >= 3 &&  // At least 1 kanji (3 bytes)
-      grammar::isAllKanji(next.surface.substr(0, 3)) &&
-      !utf8::startsWith(next.surface, "ござ")) {  // Exclude honorific ござる
+      grammar::startsWithKanji(next.surface) && !utf8::startsWith(next.surface, "ござ")) {  // Exclude honorific ござる
     surface_bonus += cost::kAlmostNever;
   }
 
@@ -653,7 +650,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Exception: dict verbs (し=する) are valid after onomatopoeia ADV (じめじめ+し+た)
   // Exception: kanji verbs (見, 寝, 出) are unambiguous and valid after adverbs (初めて+見+た)
   if (prev.pos == core::PartOfSpeech::Adverb && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      next.surface.size() <= 3 &&               // Single kana (3 bytes)
+      normalize::utf8Length(next.surface) == 1 &&
       grammar::isPureHiragana(next.surface) &&  // Only hiragana (で, し), not kanji (見, 出)
       !core::hasFlag(next.flags, core::EdgeFlags::FromDictionary)) {
     surface_bonus += cost::kVeryRare;

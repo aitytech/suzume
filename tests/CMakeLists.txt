@@ -84,6 +84,7 @@ set(TEST_SOURCES
   analysis/deverbal_noun_naku_test.cpp
   analysis/hiragana_godan_terminal_test.cpp
   analysis/noun_nagara_ni_test.cpp
+  analysis/scorer_character_count_test.cpp
   analysis/scorer_word_cost_test.cpp
   analysis/suffix_candidates_counter_test.cpp
   analysis/user_dict_precedence_test.cpp
