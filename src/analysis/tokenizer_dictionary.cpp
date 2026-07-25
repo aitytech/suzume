@@ -1182,6 +1182,18 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       }
     }
 
+    // A pure-hiragana adnominal begins with a kana that is also an inflectional
+    // ending, so it cannot start where a dictionary verb continuative already
+    // straddles the boundary (書き+たる, not 書+きたる).  The kanji spelling of
+    // the same adnominal is unaffected, as is any position where no verb form
+    // spans the split.
+    if (result.entry->pos == core::PartOfSpeech::Determiner && start_pos > 0 &&
+        normalize::isKanjiCodepoint(codepoints[start_pos - 1]) &&
+        dict_manager_.lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos + 1),
+                                  core::PartOfSpeech::Verb) != nullptr) {
+      continue;
+    }
+
     // The historical terminal component ふ is meaningful only after a kanji
     // stem.  The positional gate retains separations such as 候+ふ and 思+ふ
     // without admitting a free one-mora verb in ordinary hiragana text.

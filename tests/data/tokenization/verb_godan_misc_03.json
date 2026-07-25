@@ -2101,6 +2101,38 @@
       ],
       "id": "wo_marekeri",
       "input": "水を飲まれけり。"
+    },
+    {
+      "description": "single-kanji continuative keeps its okurigana before taru",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        },
+        {
+          "lemma": "文",
+          "pos": "Noun",
+          "surface": "文"
+        }
+      ],
+      "id": "ni_kitaru",
+      "input": "紙に書きたる文。"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 3/3)",
