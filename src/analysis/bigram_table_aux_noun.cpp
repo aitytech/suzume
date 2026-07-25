@@ -393,6 +393,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // of the homographic independent-verb reading.
       {EPOS::AuxBenefactive, EPOS::AuxTenseMasu, cost::kDoubleVeryStrongBonus},
 
+      // The same request chain continues into an honorific subsidiary
+      // (読んで+おくれ+やす). Without it the honorific prefix reading of the
+      // benefactive's initial mora wins (お+くれ+やす).
+      {EPOS::AuxBenefactive, EPOS::AuxHonorific, cost::kDoubleVeryStrongBonus},
+
       // AuxAspectIru → AuxPassive (い+られ in potential/passive) - moderate bonus
       // いられる = いる + られる (potential: can stay/be)
       // E.g., はいられない → は + い + られ + ない

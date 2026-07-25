@@ -2302,6 +2302,139 @@
       ],
       "id": "o_minasai",
       "input": "お読みなさい"
+    },
+    {
+      "description": "本を読んでおくれやす - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "おくれる",
+          "pos": "Auxiliary",
+          "surface": "おくれ"
+        },
+        {
+          "lemma": "やす",
+          "pos": "Auxiliary",
+          "surface": "やす"
+        }
+      ],
+      "id": "wo_ndeokureyasu",
+      "input": "本を読んでおくれやす"
+    },
+    {
+      "description": "紙を書いておくれやす - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "おくれる",
+          "pos": "Auxiliary",
+          "surface": "おくれ"
+        },
+        {
+          "lemma": "やす",
+          "pos": "Auxiliary",
+          "surface": "やす"
+        }
+      ],
+      "id": "wo_iteokureyasu",
+      "input": "紙を書いておくれやす"
+    },
+    {
+      "description": "本を読んでおくれ - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "おくれる",
+          "pos": "Auxiliary",
+          "surface": "おくれ"
+        }
+      ],
+      "id": "wo_ndeokure",
+      "input": "本を読んでおくれ"
+    },
+    {
+      "description": "返事がおくれた - regression test",
+      "expected": [
+        {
+          "lemma": "返事",
+          "pos": "Noun",
+          "surface": "返事"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "おくれる",
+          "pos": "Verb",
+          "surface": "おくれ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "gaokureta",
+      "input": "返事がおくれた"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",

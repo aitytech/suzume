@@ -502,6 +502,11 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("いらっしゃれ", "いらっしゃる", EPOS::AuxHonorific),
       aux("いらっしゃろ", "いらっしゃる", EPOS::AuxHonorific),
 
+      // Request form of the benefactive くれる, which takes a te-form
+      // (読んで+おくれ). Only the imperative cell is registered: the rest of
+      // the paradigm is homographic with 遅れる.
+      aux("おくれ", "おくれる", EPOS::AuxBenefactive),
+
       // Kyoto polite request やす, which attaches to a verb continuative after
       // the honorific prefix (お読み+やす, 読んでおくれ+やす). Homographic with
       // the i-adjective stem 安, so it relies on that continuative connection.
