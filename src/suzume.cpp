@@ -260,9 +260,17 @@ const std::vector<std::string>& Suzume::dictionaryWarnings() const {
 }
 
 std::vector<core::Morpheme> Suzume::analyze(std::string_view text) const {
-  auto result = impl_->analyzer.analyze(text);
+  auto result = analyzeResult(text);
   if (!result.hasValue()) {
     return {};
+  }
+  return std::move(result).value();
+}
+
+core::Expected<std::vector<core::Morpheme>, core::Error> Suzume::analyzeResult(std::string_view text) const {
+  auto result = impl_->analyzer.analyze(text);
+  if (!result.hasValue()) {
+    return core::makeUnexpected(result.error());
   }
   return impl_->postprocessor.process(std::move(result.value()));
 }

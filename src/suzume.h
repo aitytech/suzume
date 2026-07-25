@@ -113,11 +113,28 @@ class Suzume {
   const std::vector<std::string>& dictionaryWarnings() const;
 
   /**
-   * @brief Analyze text into morphemes
+   * @brief Analyze text into morphemes, lenient form
+   *
+   * Collapses failure into an empty vector, which is indistinguishable from a
+   * legitimately empty result (empty input, or input that normalizes away).
+   * Use analyzeResult() when the caller has to tell the two apart.
+   *
    * @param text UTF-8 encoded Japanese text
    * @return Vector of morphemes, or empty vector if text is empty or invalid UTF-8
    */
   std::vector<core::Morpheme> analyze(std::string_view text) const;
+
+  /**
+   * @brief Analyze text into morphemes, reporting malformed input
+   *
+   * An empty vector here always means "nothing to segment" — empty input, or
+   * input consisting only of characters the normalizer drops. Malformed UTF-8
+   * is reported as ErrorCode::InvalidUtf8 instead.
+   *
+   * @param text UTF-8 encoded Japanese text
+   * @return Vector of morphemes on success, or the normalizer error
+   */
+  core::Expected<std::vector<core::Morpheme>, core::Error> analyzeResult(std::string_view text) const;
 
   /**
    * @brief Debug analyze - returns lattice for debugging

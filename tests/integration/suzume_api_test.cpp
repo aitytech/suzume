@@ -163,6 +163,45 @@ TEST_F(SuzumeApiTest, AnalyzeInvalidUtf8ReturnsEmpty) {
   EXPECT_TRUE(results.empty());
 }
 
+// analyze() cannot tell "nothing to segment" from "malformed input" — both are
+// an empty vector, as the two tests above show. analyzeResult() is the form that
+// separates them.
+TEST_F(SuzumeApiTest, AnalyzeResultReportsInvalidUtf8) {
+  Suzume instance(makeTestOptions());
+  auto result = instance.analyzeResult(std::string_view("\xE3\x81", 2));
+  ASSERT_FALSE(result.hasValue());
+  EXPECT_EQ(result.error().code, core::ErrorCode::InvalidUtf8);
+}
+
+TEST_F(SuzumeApiTest, AnalyzeResultTreatsEmptyInputAsSuccess) {
+  Suzume instance(makeTestOptions());
+  auto result = instance.analyzeResult("");
+  ASSERT_TRUE(result.hasValue());
+  EXPECT_TRUE(result.value().empty());
+}
+
+TEST_F(SuzumeApiTest, AnalyzeResultTreatsSegmentableFreeInputAsSuccess) {
+  Suzume instance(makeTestOptions());
+  // Valid UTF-8 that carries no segmentable content: an empty result here is a
+  // legitimate answer, not a failure.
+  auto result = instance.analyzeResult("　 ");
+  ASSERT_TRUE(result.hasValue());
+  EXPECT_TRUE(result.value().empty());
+}
+
+TEST_F(SuzumeApiTest, AnalyzeResultMatchesAnalyzeOnValidText) {
+  Suzume instance(makeTestOptions());
+  auto result = instance.analyzeResult("本を読む");
+  ASSERT_TRUE(result.hasValue());
+  EXPECT_FALSE(result.value().empty());
+
+  auto lenient = instance.analyze("本を読む");
+  ASSERT_EQ(result.value().size(), lenient.size());
+  for (size_t idx = 0; idx < lenient.size(); ++idx) {
+    EXPECT_EQ(result.value()[idx].surface, lenient[idx].surface);
+  }
+}
+
 TEST_F(SuzumeApiTest, NumericKatakanaMergesAsQuantity) {
   Suzume instance(makeTestOptions());
 
