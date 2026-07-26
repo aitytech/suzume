@@ -439,6 +439,77 @@
       ],
       "id": "kune",
       "input": "行くね"
+    },
+    {
+      "description": "Dialectal negative auxiliary after a verb irrealis with the case particle dropped",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ま"
+        },
+        {
+          "lemma": "へん",
+          "pos": "Auxiliary",
+          "surface": "へん"
+        }
+      ],
+      "id": "mahen",
+      "input": "水飲まへん"
+    },
+    {
+      "description": "Fossilized a-row nominal before a case particle",
+      "expected": [
+        {
+          "lemma": "傍ら",
+          "pos": "Noun",
+          "surface": "傍ら"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "置く",
+          "pos": "Verb",
+          "surface": "置く"
+        }
+      ],
+      "id": "rani_ku",
+      "input": "傍らに置く"
+    },
+    {
+      "description": "Fossilized a-row adverb before a nominal object",
+      "expected": [
+        {
+          "lemma": "専ら",
+          "pos": "Adverb",
+          "surface": "専ら"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "ra_wo_mu",
+      "input": "専ら本を読む"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
