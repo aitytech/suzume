@@ -7,14 +7,9 @@
 # =============================================================================
 
 # --- Adverbs (副詞) ---
-いつの間にか	ADVERB
 
 # --- Nouns (名詞) ---
-キャミソール	NOUN
 セーラー服	NOUN
-タンクトップ	NOUN
-つめあわせ	NOUN
-ノースリーブ	NOUN
 スクール水着	NOUN
 コーヒー豆	NOUN
 カレー粉	NOUN
@@ -88,14 +83,6 @@
 鶏ガラ	NOUN
 革ジャン	NOUN
 鳥インフルエンザ	NOUN
-Tシャツ	NOUN
-Yシャツ	NOUN
-Gパン	NOUN
-A型	NOUN
-B型	NOUN
-O型	NOUN
-AB型	NOUN
-X線	NOUN
 レトロ風	NOUN
 モダン風	NOUN
 ゴシック風	NOUN
@@ -110,8 +97,6 @@ X線	NOUN
 手帳ケース	NOUN
 水ギョーザ	NOUN
 焼きギョーザ	NOUN
-おうちカフェ	NOUN
-いちごミルク	NOUN
 ウーロン茶	NOUN
 オリーブ油	NOUN
 中トロ	NOUN
@@ -121,9 +106,5 @@ X線	NOUN
 鶏ムネ	NOUN
 牛バラ	NOUN
 湯タンポ	NOUN
-USBメモリ	NOUN
-USBケーブル	NOUN
-LED電球	NOUN
-LEDライト	NOUN
-3Dプリンター	NOUN
-3Dメガネ	NOUN
+病みかわカフェ	NOUN
+ガイドライン違反	NOUN

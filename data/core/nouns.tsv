@@ -15,7 +15,6 @@
 # --- Ichidan verbs (一段動詞) ---
 
 # --- Ichidan verbs (一段動詞) ---
-晴れる	VERB	ICHIDAN
 
 # --- Other ---
 Wi-Fi	NOUN
@@ -37,7 +36,6 @@ Wi-Fi	NOUN
 打ち止め	NOUN
 売り上げ	NOUN
 売上げ	NOUN
-エロ	NOUN
 おかし	NOUN
 お金	NOUN
 推し	NOUN
@@ -180,7 +178,6 @@ Wi-Fi	NOUN
 おしっこ	NOUN
 おしり	NOUN
 おすすめ	NOUN
-おっぱい	NOUN
 おでん	NOUN
 おもち	NOUN
 おもちゃ	NOUN
@@ -209,7 +206,6 @@ Wi-Fi	NOUN
 ひとりごと	NOUN
 ひょっとこ	NOUN
 ぴえん	NOUN
-ふたなり	NOUN
 ふたり	NOUN
 ふともも	NOUN
 もみあげ	NOUN
@@ -337,3 +333,4 @@ Wi-Fi	NOUN
 置き場	NOUN
 出来ばえ	NOUN
 気兼ね	NOUN
+病みかわ	NOUN

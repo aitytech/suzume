@@ -12,7 +12,6 @@
 
 # --- hospitals ---
 大阪みなと中央病院	NOUN
-J&J	NOUN
 
 # --- landmarks ---
 神戸どうぶつ王国	NOUN
@@ -22,22 +21,8 @@ J&J	NOUN
 MIHO MUSEUM	NOUN
 
 # --- nightlife ---
-No.1	NOUN
-大人の関係	NOUN
-お手当て	NOUN
-ドンペリピンク	NOUN
-アルマンドピンク	NOUN
 TOP DANDY	NOUN
-病みかわカフェ	NOUN
-はじめましてさん	NOUN
-アキバ大好き!祭り	NOUN
-Candy Fruit	NOUN
 P.A.R.M.S	NOUN
-病みかわ	NOUN
-BIGO LIVE	NOUN
-Apple Podcast	NOUN
-ガイドライン違反	NOUN
-PPP STUDIO	NOUN
 
 # --- resorts ---
 赤倉温泉スキー場	NOUN
@@ -95,3 +80,4 @@ Zepp Fukuoka	NOUN
 LINE CUBE SHIBUYA	NOUN
 TOKYO DOME CITY HALL	NOUN
 よしもと祇園花月	NOUN
+甲子園	NOUN
