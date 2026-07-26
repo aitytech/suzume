@@ -615,7 +615,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
     // Generate compound verb candidates (kanji + hiragana + kanji + hiragana)
     // e.g., 恐れ入ります, 差し上げます, 申し上げます
-    appendCandidates(candidates, generateCompoundVerbCandidates(text, codepoints, start_pos, char_types));
+    generateCompoundVerbCandidates(text, codepoints, start_pos, char_types, candidates);
 
     // Generate i-adjective candidates (kanji + hiragana conjugation endings)
     generateAdjectiveCandidates(text, codepoints, start_pos, char_types, candidates);
@@ -668,8 +668,8 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
   // Generate katakana verb/adjective candidates (slang: バズる, エモい, etc.)
   if (char_types[start_pos] == normalize::CharType::Katakana) {
-    appendCandidates(candidates, generateKatakanaVerbCandidates(codepoints, start_pos, char_types, inflection_,
-                                                                dict_manager_, options_.verb_candidate_options));
+    analysis::generateKatakanaVerbCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
+                                             options_.verb_candidate_options, candidates);
 
     analysis::generateKatakanaAdjectiveCandidates(codepoints, start_pos, char_types, inflection_, candidates);
   }
@@ -691,7 +691,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
   // Generate with suffix separation for kanji
   if (options_.separate_suffix && char_types[start_pos] == normalize::CharType::Kanji) {
-    appendCandidates(candidates, generateWithSuffix(text, codepoints, start_pos, char_types));
+    generateWithSuffix(text, codepoints, start_pos, char_types, candidates);
   }
 
   // Generate character speech candidates (キャラ語尾)
@@ -806,19 +806,20 @@ void UnknownWordGenerator::generateAlphanumeric(std::string_view /*text*/, const
   }
 }
 
-std::vector<UnknownCandidate> UnknownWordGenerator::generateWithSuffix(
-    std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
-    const std::vector<normalize::CharType>& char_types) const {
+void UnknownWordGenerator::generateWithSuffix(std::string_view /*text*/, const std::vector<char32_t>& codepoints,
+                                              size_t start_pos, const std::vector<normalize::CharType>& char_types,
+                                              std::vector<UnknownCandidate>& candidates) const {
   // Delegate to the standalone function
-  return analysis::generateWithSuffix(codepoints, start_pos, char_types, options_);
+  analysis::generateWithSuffix(codepoints, start_pos, char_types, options_, candidates);
 }
 
-std::vector<UnknownCandidate> UnknownWordGenerator::generateCompoundVerbCandidates(
-    std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
-    const std::vector<normalize::CharType>& char_types) const {
+void UnknownWordGenerator::generateCompoundVerbCandidates(std::string_view /*text*/,
+                                                          const std::vector<char32_t>& codepoints, size_t start_pos,
+                                                          const std::vector<normalize::CharType>& char_types,
+                                                          std::vector<UnknownCandidate>& candidates) const {
   // Delegate to the standalone function
-  return analysis::generateCompoundVerbCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
-                                                  options_.verb_candidate_options);
+  analysis::generateCompoundVerbCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
+                                           options_.verb_candidate_options, candidates);
 }
 
 std::vector<UnknownCandidate> UnknownWordGenerator::generateHiraganaVerbCandidates(

@@ -371,12 +371,11 @@ const std::array<char32_t, 8>& getAdminSuffixCodepoints() {
   return kAdminSuffixes;
 }
 
-std::vector<UnknownCandidate> generateAdminBoundaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                              const std::vector<normalize::CharType>& char_types) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateAdminBoundaryCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     const std::vector<normalize::CharType>& char_types,
+                                     std::vector<UnknownCandidate>& candidates) {
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   const auto& admin_suffixes = getAdminSuffixCodepoints();
@@ -399,19 +398,17 @@ std::vector<UnknownCandidate> generateAdminBoundaryCandidates(const std::vector<
                                                       0.3F, 0.95F, "admin_boundary"));
     }
   }
-
-  return candidates;
 }
 
-std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                 const std::vector<normalize::CharType>& char_types,
-                                                 const UnknownOptions& options) {
+void generateWithSuffix(const std::vector<char32_t>& codepoints, size_t start_pos,
+                        const std::vector<normalize::CharType>& char_types, const UnknownOptions& options,
+                        std::vector<UnknownCandidate>& candidates) {
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return {};
+    return;
   }
 
   // First, generate candidates for administrative boundaries
-  std::vector<UnknownCandidate> candidates = generateAdminBoundaryCandidates(codepoints, start_pos, char_types);
+  generateAdminBoundaryCandidates(codepoints, start_pos, char_types, candidates);
 
   // Find kanji sequence
   size_t end_pos = start_pos;
@@ -421,7 +418,7 @@ std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& co
   }
 
   if (end_pos <= start_pos + 1) {
-    return candidates;
+    return;
   }
 
   std::string kanji_seq = extractSubstring(codepoints, start_pos, end_pos);
@@ -492,8 +489,6 @@ std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& co
       }
     }
   }
-
-  return candidates;
 }
 
 }  // namespace suzume::analysis

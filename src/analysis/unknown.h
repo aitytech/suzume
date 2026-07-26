@@ -169,9 +169,9 @@ class UnknownWordGenerator {
    * Detects patterns like Kanji+Hiragana+Kanji+Hiragana and checks
    * if the base form exists in dictionary.
    */
-  std::vector<UnknownCandidate> generateCompoundVerbCandidates(
-      std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-      const std::vector<normalize::CharType>& char_types) const;
+  void generateCompoundVerbCandidates(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
+                                      const std::vector<normalize::CharType>& char_types,
+                                      std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Generate verb candidates (kanji + conjugation endings)
@@ -228,9 +228,9 @@ class UnknownWordGenerator {
   /**
    * @brief Generate candidates with suffix separation
    */
-  std::vector<UnknownCandidate> generateWithSuffix(std::string_view text, const std::vector<char32_t>& codepoints,
-                                                   size_t start_pos,
-                                                   const std::vector<normalize::CharType>& char_types) const;
+  void generateWithSuffix(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
+                          const std::vector<normalize::CharType>& char_types,
+                          std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Generate character speech pattern candidates (キャラ語尾)

@@ -29,13 +29,13 @@ struct UnknownCandidate;
  * @param char_types Character types for each position
  * @param inflection Inflection analyzer for conjugation detection
  * @param dict_manager Dictionary manager for base form verification
- * @return Vector of candidates
+ * @param candidates Buffer the generated candidates are appended to
  */
-std::vector<UnknownCandidate> generateCompoundVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                             const std::vector<normalize::CharType>& char_types,
-                                                             const grammar::Inflection& inflection,
-                                                             const dictionary::DictionaryManager* dict_manager,
-                                                             const VerbCandidateOptions& verb_opts = {});
+void generateCompoundVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const std::vector<normalize::CharType>& char_types,
+                                    const grammar::Inflection& inflection,
+                                    const dictionary::DictionaryManager* dict_manager,
+                                    const VerbCandidateOptions& verb_opts, std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate verb candidates (kanji + conjugation endings)
@@ -85,12 +85,13 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
  * @param inflection Inflection analyzer for conjugation detection
- * @return Vector of candidates
+ * @param candidates Buffer the generated candidates are appended to
  */
-std::vector<UnknownCandidate> generateKatakanaVerbCandidates(
-    const std::vector<char32_t>& codepoints, size_t start_pos, const std::vector<normalize::CharType>& char_types,
-    const grammar::Inflection& inflection, const dictionary::DictionaryManager* dict_manager = nullptr,
-    const VerbCandidateOptions& verb_opts = {});
+void generateKatakanaVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const std::vector<normalize::CharType>& char_types,
+                                    const grammar::Inflection& inflection,
+                                    const dictionary::DictionaryManager* dict_manager,
+                                    const VerbCandidateOptions& verb_opts, std::vector<UnknownCandidate>& candidates);
 
 }  // namespace suzume::analysis
 

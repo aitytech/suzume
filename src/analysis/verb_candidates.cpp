@@ -26,41 +26,39 @@ namespace suzume::analysis {
 // Alias for helper functions
 namespace vh = verb_helpers;
 
-std::vector<UnknownCandidate> generateCompoundVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                             const std::vector<normalize::CharType>& char_types,
-                                                             const grammar::Inflection& inflection,
-                                                             const dictionary::DictionaryManager* dict_manager,
-                                                             const VerbCandidateOptions& verb_opts) {
-  std::vector<UnknownCandidate> candidates;
-
+void generateCompoundVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const std::vector<normalize::CharType>& char_types,
+                                    const grammar::Inflection& inflection,
+                                    const dictionary::DictionaryManager* dict_manager,
+                                    const VerbCandidateOptions& verb_opts, std::vector<UnknownCandidate>& candidates) {
   // Requires dictionary to verify base forms
   if (dict_manager == nullptr) {
-    return candidates;
+    return;
   }
 
   // Pattern: Kanji+ Hiragana(1-3) Kanji+ Hiragana+
   // e.g., 恐(K)れ(H)入(K)ります(H), 差(K)し(H)上(K)げます(H)
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   // Find first kanji portion (1-2 chars)
   size_t kanji1_end = vh::findCharRegionEnd(char_types, start_pos, 3, normalize::CharType::Kanji);
 
   if (kanji1_end == start_pos || kanji1_end >= char_types.size()) {
-    return candidates;
+    return;
   }
 
   // Find first hiragana portion (1-3 chars, typically verb renyoukei ending)
   if (char_types[kanji1_end] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
 
   size_t hira1_end = vh::findCharRegionEnd(char_types, kanji1_end, 4, normalize::CharType::Hiragana);
 
   // Find second kanji portion (must exist for compound verb)
   if (hira1_end >= char_types.size() || char_types[hira1_end] != normalize::CharType::Kanji) {
-    return candidates;
+    return;
   }
 
   size_t kanji2_end = vh::findCharRegionEnd(char_types, hira1_end, 3, normalize::CharType::Kanji);
@@ -72,13 +70,13 @@ std::vector<UnknownCandidate> generateCompoundVerbCandidates(const std::vector<c
   if (hira1_end < codepoints.size()) {
     char32_t second_kanji = codepoints[hira1_end];
     if (second_kanji == U'終' || second_kanji == U'始' || second_kanji == U'続' || second_kanji == U'過') {
-      return candidates;
+      return;
     }
   }
 
   // Find second hiragana portion (conjugation ending)
   if (kanji2_end >= char_types.size() || char_types[kanji2_end] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
 
   size_t hira2_end = vh::findCharRegionEnd(char_types, kanji2_end, 10, normalize::CharType::Hiragana);
@@ -144,24 +142,24 @@ std::vector<UnknownCandidate> generateCompoundVerbCandidates(const std::vector<c
         // so internal homograph candidates cannot reopen this compound span.
         compound.lemma_verified = true;
         candidates.push_back(std::move(compound));
-        return candidates;  // Return first valid match
+        return;  // Return first valid match
       }
     }
   }
-
-  return candidates;
 }
 
-std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                             const std::vector<normalize::CharType>& char_types,
-                                                             const grammar::Inflection& inflection,
-                                                             const dictionary::DictionaryManager* dict_manager,
-                                                             const VerbCandidateOptions& verb_opts) {
-  std::vector<UnknownCandidate> candidates;
+void generateKatakanaVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const std::vector<normalize::CharType>& char_types,
+                                    const grammar::Inflection& inflection,
+                                    const dictionary::DictionaryManager* dict_manager,
+                                    const VerbCandidateOptions& verb_opts, std::vector<UnknownCandidate>& candidates) {
+  // The buffer is shared with the other generators for this position, so the
+  // variant, cost, and ordering steps below stay inside the appended range.
+  const size_t candidate_start = candidates.size();
 
   // Only process katakana-starting positions
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Katakana) {
-    return candidates;
+    return;
   }
 
   // Find katakana portion (1-8 characters for slang verb stems)
@@ -169,12 +167,12 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
 
   // Need at least 1 katakana character
   if (kata_end == start_pos) {
-    return candidates;
+    return;
   }
 
   // Must be followed by hiragana (conjugation endings)
   if (kata_end >= char_types.size() || char_types[kata_end] != normalize::CharType::Hiragana) {
-    return candidates;
+    return;
   }
 
   // Check if first hiragana could be a verb ending
@@ -182,7 +180,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
   char32_t first_hira = codepoints[kata_end];
   // Skip if it's clearly a particle
   if (normalize::isParticleCodepoint(first_hira)) {
-    return candidates;
+    return;
   }
 
   // Find hiragana portion (conjugation endings, up to 10 chars)
@@ -190,7 +188,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
 
   // Need at least 1 hiragana for conjugation
   if (hira_end <= kata_end) {
-    return candidates;
+    return;
   }
 
   // Reject katakana stem + すぎ pattern (any length)
@@ -201,7 +199,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
   std::string hira_part = extractSubstring(codepoints, kata_end, hira_end);
   // C++17 compatible: check if starts with "すぎ" (6 bytes)
   if (hira_part.size() >= 6 && hira_part.compare(0, 6, "すぎ") == 0) {
-    return candidates;  // Skip this candidate - force split path
+    return;  // Skip this candidate - force split path
   }
 
   // Reject katakana stem + そう pattern (appearance auxiliary)
@@ -211,7 +209,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
   // So we skip verb candidates like キモそう to force split path
   // C++17 compatible: check if starts with "そう" (6 bytes)
   if (hira_part.size() >= 6 && hira_part.compare(0, 6, "そう") == 0) {
-    return candidates;  // Skip this candidate - force split path
+    return;  // Skip this candidate - force split path
   }
 
   // Reject katakana stem + する conjugation patterns for サ変 splitting
@@ -224,7 +222,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
   if (hira_part.size() >= 3 && (hira_part.compare(0, 3, "し") == 0 ||   // している, した, して, しない
                                 hira_part.compare(0, 3, "さ") == 0 ||   // される, させる, さない
                                 hira_part.compare(0, 3, "せ") == 0)) {  // せる (causative short form)
-    return candidates;                                                  // Skip this candidate - force split path
+    return;                                                             // Skip this candidate - force split path
   }
 
   // Reject katakana stem + たい/たく (desiderative auxiliary)
@@ -234,7 +232,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
   // Note: たXX with 2+ hiragana after た triggers skip; ハメた (past) is OK
   if (hira_part.size() >= 6 && (hira_part.compare(0, 6, "たい") == 0 ||   // たい (desiderative)
                                 hira_part.compare(0, 6, "たく") == 0)) {  // たく (desiderative renyokei)
-    return candidates;                                                    // Skip this candidate - force split path
+    return;                                                               // Skip this candidate - force split path
   }
 
   // Try different ending lengths, starting from longest
@@ -274,7 +272,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
   }
 
   // Add emphatic variants (パニくるっ, etc.)
-  vh::addEmphaticVariants(candidates, codepoints);
+  vh::addEmphaticVariants(candidates, codepoints, candidate_start);
 
   // Generate katakana sokuonbin (っ) candidates for ta/te-form splitting
   // E.g., バズった → バズっ (onbin of バズる) + た (auxiliary)
@@ -371,9 +369,7 @@ std::vector<UnknownCandidate> generateKatakanaVerbCandidates(const std::vector<c
   }
 
   // Sort by cost
-  vh::sortCandidatesByCost(candidates);
-
-  return candidates;
+  vh::sortCandidatesByCost(candidates, candidate_start);
 }
 
 }  // namespace suzume::analysis

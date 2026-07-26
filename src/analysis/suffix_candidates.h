@@ -72,11 +72,11 @@ bool isRepeatedNumeralNounPredicateUnitAt(const std::vector<char32_t>& codepoint
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
  * @param options Unknown word generation options
- * @return Vector of candidates
+ * @param candidates Buffer the generated candidates are appended to
  */
-std::vector<UnknownCandidate> generateWithSuffix(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                 const std::vector<normalize::CharType>& char_types,
-                                                 const UnknownOptions& options);
+void generateWithSuffix(const std::vector<char32_t>& codepoints, size_t start_pos,
+                        const std::vector<normalize::CharType>& char_types, const UnknownOptions& options,
+                        std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate nominalized noun candidates
