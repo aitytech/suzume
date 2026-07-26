@@ -195,6 +195,212 @@
       ],
       "id": "haraga_i",
       "input": "はらが痛い"
+    },
+    {
+      "description": "会社帰りに寄る - regression test",
+      "expected": [
+        {
+          "lemma": "会社",
+          "pos": "Noun",
+          "surface": "会社"
+        },
+        {
+          "lemma": "帰り",
+          "pos": "Suffix",
+          "surface": "帰り"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "寄る",
+          "pos": "Verb",
+          "surface": "寄る"
+        }
+      ],
+      "id": "rini_ru",
+      "input": "会社帰りに寄る"
+    },
+    {
+      "description": "学校帰りの道 - regression test",
+      "expected": [
+        {
+          "lemma": "学校",
+          "pos": "Noun",
+          "surface": "学校"
+        },
+        {
+          "lemma": "帰り",
+          "pos": "Suffix",
+          "surface": "帰り"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        }
+      ],
+      "id": "rino",
+      "input": "学校帰りの道"
+    },
+    {
+      "description": "条件付きで許可する - regression test",
+      "expected": [
+        {
+          "lemma": "条件",
+          "pos": "Noun",
+          "surface": "条件"
+        },
+        {
+          "lemma": "付き",
+          "pos": "Suffix",
+          "surface": "付き"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "許可",
+          "pos": "Noun",
+          "surface": "許可"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kide_suru",
+      "input": "条件付きで許可する"
+    },
+    {
+      "description": "写真入りの資料 - regression test",
+      "expected": [
+        {
+          "lemma": "写真",
+          "pos": "Noun",
+          "surface": "写真"
+        },
+        {
+          "lemma": "入り",
+          "pos": "Suffix",
+          "surface": "入り"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        }
+      ],
+      "id": "rino_2",
+      "input": "写真入りの資料"
+    },
+    {
+      "description": "帰りが遅い - regression test",
+      "expected": [
+        {
+          "lemma": "帰り",
+          "pos": "Noun",
+          "surface": "帰り"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "遅い",
+          "pos": "Adjective",
+          "surface": "遅い"
+        }
+      ],
+      "id": "riga_i",
+      "input": "帰りが遅い"
+    },
+    {
+      "description": "家に帰り、休む - regression test",
+      "expected": [
+        {
+          "lemma": "家",
+          "pos": "Noun",
+          "surface": "家"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "帰る",
+          "pos": "Verb",
+          "surface": "帰り"
+        },
+        {
+          "lemma": "休む",
+          "pos": "Verb",
+          "surface": "休む"
+        }
+      ],
+      "id": "ni_ri_mu",
+      "input": "家に帰り、休む"
+    },
+    {
+      "description": "足取りを追う - regression test",
+      "expected": [
+        {
+          "lemma": "足取り",
+          "pos": "Noun",
+          "surface": "足取り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "追う",
+          "pos": "Verb",
+          "surface": "追う"
+        }
+      ],
+      "id": "riwo_u",
+      "input": "足取りを追う"
+    },
+    {
+      "description": "山登りを楽しむ - regression test",
+      "expected": [
+        {
+          "lemma": "山登り",
+          "pos": "Noun",
+          "surface": "山登り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "楽しむ",
+          "pos": "Verb",
+          "surface": "楽しむ"
+        }
+      ],
+      "id": "riwo_shimu",
+      "input": "山登りを楽しむ"
     }
   ],
   "description": "General nouns (part 3/3)",

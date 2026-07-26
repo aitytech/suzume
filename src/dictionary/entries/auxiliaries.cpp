@@ -429,6 +429,15 @@ EntrySpecRange getAuxiliaryEntries() {
       suffix("抜き", "抜き"),
       suffix("ぬき", "ぬき"),
 
+      // Deverbal suffixes that describe the state or origin of a nominal host
+      // (会社帰り, 条件付き, 写真入り). Their host class is open, so only the
+      // suffix side can be named; registering it keeps the morpheme boundary
+      // that the generic nominalizer would otherwise swallow. The homographic
+      // verb continuatives (家に帰り、栓を抜き) stay available as verb candidates.
+      suffix("帰り", "帰り"),
+      suffix("付き", "付き"),
+      suffix("入り", "入り"),
+
       // All-over suffix: 白ずくめ, 欠点ずくめ.  The voiced allomorph is
       // productive after nominal bases (確認づくめ).
       suffix("ずくめ", "ずくめ"),

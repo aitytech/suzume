@@ -745,6 +745,7 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
         cand.extended_pos != core::ExtendedPOS::VerbRenyokei ||
         (!cand.lemma_verified && cand.conj_type != dictionary::ConjugationType::GodanSa) ||
         hasDictionaryAdjectiveTail(codepoints, cand.start, cand.end, dict_manager) ||
+        vh::isBoundSuffixAfterNominalHost(dict_manager, codepoints, cand.start, cand.surface) ||
         !hasNominalizedNounParticleContinuation(codepoints, cand.end, dict_manager)) {
       continue;
     }

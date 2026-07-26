@@ -1067,8 +1067,11 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       // re-read, so the bonus must not resurrect it. Ordinary deverbal nouns
       // (身なり, 足取り) stay well inside the unknown-word band.
       const bool verb_reading_rejected = adjusted_cost > getCategoryCost(core::ExtendedPOS::Unknown);
+      const bool bound_suffix_after_host =
+          verb_helpers::isBoundSuffixAfterNominalHost(&dict_manager_, codepoints, candidate.start, candidate.surface);
       if (nominal_particle && !longer_dependent_follows && !is_lexical_noun && !is_complete_shii_adjective &&
-          !crosses_complete_internal_boundary && !crosses_noun_nagara_ni_boundary && !verb_reading_rejected) {
+          !crosses_complete_internal_boundary && !crosses_noun_nagara_ni_boundary && !verb_reading_rejected &&
+          !bound_suffix_after_host) {
         lattice.addEdge(surface_str, static_cast<uint32_t>(candidate.start), static_cast<uint32_t>(candidate.end),
                         core::PartOfSpeech::Noun,
                         getCategoryCost(core::ExtendedPOS::NounVerbal) + candidate::kNominalizedNounParticleBonus,

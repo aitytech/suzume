@@ -31,6 +31,19 @@ bool isNounOrAdjectiveInDictionary(const dictionary::DictionaryManager* dict_man
          hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Adjective);
 }
 
+bool isBoundSuffixAfterNominalHost(const dictionary::DictionaryManager* dict_manager,
+                                   const std::vector<char32_t>& codepoints, size_t start_pos,
+                                   std::string_view surface) {
+  if (start_pos == 0 || start_pos > codepoints.size()) {
+    return false;
+  }
+  const normalize::CharType host_end = normalize::classifyChar(codepoints[start_pos - 1]);
+  if (host_end != normalize::CharType::Kanji && host_end != normalize::CharType::Katakana) {
+    return false;
+  }
+  return hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Suffix);
+}
+
 bool hasDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface,
                         core::PartOfSpeech pos) {
   if (dict_manager == nullptr || surface.empty()) {

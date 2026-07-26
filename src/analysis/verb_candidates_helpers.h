@@ -102,6 +102,18 @@ bool isNounOrAdjectiveInDictionary(const dictionary::DictionaryManager* dict_man
 bool hasNonVerbDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
 
 /**
+ * @brief Check whether a continuative is a registered suffix bound to a nominal host
+ *
+ * A continuative that is also a closed derivational suffix (会社+帰り, 条件+付き)
+ * is the bound reading whenever it is written directly onto a kanji or katakana
+ * host. In that position the productive deverbal-noun re-reading must not be
+ * offered, or it outbids the suffix and erases the morpheme boundary. Free
+ * occurrences (帰りが遅い, 家に帰り) have no such host and keep the noun reading.
+ */
+bool isBoundSuffixAfterNominalHost(const dictionary::DictionaryManager* dict_manager,
+                                   const std::vector<char32_t>& codepoints, size_t start_pos, std::string_view surface);
+
+/**
  * @brief Check if a surface has a particle entry in dictionary
  *
  * Used to detect compound particles (について, によって, として, etc.)
