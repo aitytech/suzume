@@ -14,8 +14,10 @@
 #include "core/debug.h"
 #include "core/kana_constants.h"
 #include "core/utf8_constants.h"
+#include "grammar/auxiliaries.h"
 #include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
+#include "grammar/connection.h"
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
@@ -25,6 +27,21 @@
 
 namespace suzume::analysis::hiragana_verb_detail {
 namespace vh = verb_helpers;
+
+namespace {
+
+bool startsWithRenyokeiAuxiliary(std::string_view following_surface) {
+  for (const auto& auxiliary : grammar::getAuxiliaries()) {
+    if (auxiliary.required_conn == grammar::conn::kVerbRenyokei &&
+        following_surface.size() >= auxiliary.surface.size() &&
+        following_surface.substr(0, auxiliary.surface.size()) == auxiliary.surface) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
 
 // A dictionary hit alone is insufficient for an euphonic Godan candidate:
 // the reconstructed base must also have the Godan class that licenses the
@@ -89,8 +106,8 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
   //
   // A run that starts with で right after a hatsuonbin ん is the voiced te-form
   // particle of the preceding verb (読ん+で, 飲ん+で), so its でき is
-  // で(particle)+き(くる), never the renyokei of できる. Only the ます-family
-  // licenser is suppressed for this shape (see is_followed_by_masu below) so
+  // で(particle)+き(くる), never the renyokei of できる. The continuative-form
+  // licensers are suppressed for this shape (see the checks below), so
   // 読んできました stays 読ん+で+き+まし+た. The plain て/た path is deliberately
   // left intact — 取り組んできた already resolves to …+で+き+た on its own, and
   // blocking the reading there would instead flip it to でき+た.
@@ -123,12 +140,18 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
           next_char == U'つ' && end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'つ';
     }
     bool is_followed_by_reba = false;
-    // Check for a polite ます-family auxiliary (ます / まし / ませ). All three
-    // attach only to a verb renyokei, so they license the renyokei reading of a
-    // renyokei/aux homograph (つかい→使う, かい→買う before ました/ません). The
-    // ん+で te-form shape is excluded so でき before まし is not mis-read as the
-    // renyokei of できる (読んできました → 読ん+で+き+まし+た).
-    bool is_followed_by_masu = vh::masuAuxFollowsAt(codepoints, end_pos) && !leading_de_after_hatsuonbin;
+    // For Godan-ta, any auxiliary whose declared required connection is
+    // VerbRenyokei licenses the continuative reading (もち+たい, たち+ます).
+    // Derive this from the grammar table instead of enumerating ます/たい/etc.
+    // Other rows retain their established, narrower gates because enabling every
+    // Ichidan-looking stem here would fabricate verbs such as られ+ちゃう.
+    const std::string following_surface = extractSubstring(codepoints, end_pos, hiragana_end);
+    bool is_followed_by_renyokei_aux = startsWithRenyokeiAuxiliary(following_surface);
+    const bool is_followed_by_masu = vh::masuAuxFollowsAt(codepoints, end_pos) && !leading_de_after_hatsuonbin;
+    if (leading_de_after_hatsuonbin) {
+      is_followed_by_renyokei_aux = false;
+    }
+    const bool godan_ta_before_declared_renyokei_aux = stem_end_char == U'ち' && is_followed_by_renyokei_aux;
     // Check for conditional れば pattern (e.g., できれば → でき + れ + ば)
     // This case is handled separately below for kateikei stem generation
     if (next_char == U'れ' && end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'ば') {
@@ -139,8 +162,8 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     if (next_char == U'な' && end_pos + 1 < codepoints.size() && codepoints[end_pos + 1] == U'い') {
       is_followed_by_nai = true;
     }
-    if (!is_followed_by_te_ta && !is_followed_by_masu && !is_followed_by_renyokei_conj && !is_followed_by_reba &&
-        !is_followed_by_nai) {
+    if (!is_followed_by_te_ta && !is_followed_by_masu && !godan_ta_before_declared_renyokei_aux &&
+        !is_followed_by_renyokei_conj && !is_followed_by_reba && !is_followed_by_nai) {
       continue;
     }
 
@@ -167,18 +190,21 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
       continue;
     }
 
-    // Default to the ichidan interpretation (stem + る). For the +ます follower a
-    // godan renyokei reading is equally licensed (泳ぎ→泳ぐ, 踊り→踊る), so prefer it
-    // when at least as confident. Godan-sa is the sole row whose ordinary
-    // continuative also attaches directly to て/た (話し+た); preserve that
-    // analysis instead of fabricating 話しる. Other godan rows require onbin or
-    // an a-row mizenkei in the corresponding contexts.
+    // Default to the ichidan interpretation (stem + る). A following auxiliary
+    // that requires VerbRenyokei licenses the Godan continuative reading
+    // (泳ぎ→泳ぐ, もち→もつ), so prefer it when at least as confident. Godan-sa is
+    // the sole row whose ordinary continuative also attaches directly to て/た
+    // (話し+た); preserve that analysis instead of fabricating 話しる. Other
+    // Godan rows require onbin or an a-row mizenkei in those contexts.
     std::string chosen_base = base_form;
     dictionary::ConjugationType chosen_conj = dictionary::ConjugationType::Ichidan;
     float chosen_confidence = ichidan_confidence;
     const bool godan_sa_before_te_ta = is_followed_by_te_ta && stem_end_char == U'し';
-    if (is_followed_by_masu || is_followed_by_renyokei_conj || godan_sa_before_te_ta) {
-      grammar::VerbType godan_type = grammar::verbTypeFromIRowCodepoint(stem_end_char);
+    const bool stem_is_closed_auxiliary =
+        vh::hasDictionaryEntry(dict_manager, stem_surface, core::PartOfSpeech::Auxiliary);
+    const grammar::VerbType godan_type = grammar::verbTypeFromIRowCodepoint(stem_end_char);
+    if (!stem_is_closed_auxiliary && (is_followed_by_masu || is_followed_by_renyokei_conj || godan_sa_before_te_ta ||
+                                      godan_ta_before_declared_renyokei_aux)) {
       if (godan_type != grammar::VerbType::Unknown) {
         std::string godan_base = extractSubstring(codepoints, start_pos, end_pos - 1) +
                                  std::string(grammar::godanBaseSuffixFromIRow(stem_end_char));

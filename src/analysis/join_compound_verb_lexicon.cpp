@@ -56,6 +56,10 @@ extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount] = {
     {"組む", "くむ", "む", V2VerbType::Godan},                      // 取り組む, 組み組む
     {"上る", "のぼる", "る", V2VerbType::Godan},                    // 立ち上る, 這い上る
     {"こもる", "こもる", "る", V2VerbType::Godan},                  // 閉じこもる, 立てこもる, 引きこもる
+    {"籠る", nullptr, "る", V2VerbType::Godan},                     // 閉じ籠る, 立て籠る
+    {"籠もる", nullptr, "る", V2VerbType::Godan},                   // 閉じ籠もる, 立て籠もる
+    {"鳴らす", "ならす", "す", V2VerbType::Godan},                  // 打ち鳴らす
+    {"惜しむ", "おしむ", "む", V2VerbType::Godan},                  // 出し惜しむ
     {"違う", "ちがう", "う", V2VerbType::Godan},                    // 行き違う
     {"外す", "はずす", "す", V2VerbType::Godan},                    // 踏み外す, 取り外す
     {"計らう", "はからう", "う", V2VerbType::Godan},                // 見計らう, 取り計らう

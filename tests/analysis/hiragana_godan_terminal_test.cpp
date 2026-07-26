@@ -64,5 +64,46 @@ TEST(HiraganaGodanTerminal, PreservesDemonstrativePronounBoundaries) {
   EXPECT_EQ(result[2].pos, core::PartOfSpeech::Verb);
 }
 
+TEST(GodanTaRenyokei, UsesGodanLemmaBeforeDeclaredRenyokeiAuxiliaries) {
+  auto analyzer = makeHiraganaGodanAnalyzer();
+
+  struct Case {
+    const char* input;
+    const char* verb_surface;
+    const char* lemma;
+    const char* auxiliary_surface;
+  };
+  constexpr Case kCases[] = {
+      {"もちたい", "もち", "もつ", "たい"}, {"まちます", "まち", "まつ", "ます"},
+      {"たちたい", "たち", "たつ", "たい"}, {"うちます", "うち", "うつ", "ます"},
+      {"かちたい", "かち", "かつ", "たい"}, {"そだちます", "そだち", "そだつ", "ます"},
+      {"保ちたい", "保ち", "保つ", "たい"},
+  };
+
+  for (const auto& test_case : kCases) {
+    SCOPED_TRACE(test_case.input);
+    const auto result = analyzer.analyze(test_case.input);
+    ASSERT_EQ(result.size(), 2U);
+    EXPECT_EQ(result[0].surface, test_case.verb_surface);
+    EXPECT_EQ(result[0].pos, core::PartOfSpeech::Verb);
+    EXPECT_EQ(result[0].lemma, test_case.lemma);
+    EXPECT_EQ(result[1].surface, test_case.auxiliary_surface);
+    EXPECT_EQ(result[1].pos, core::PartOfSpeech::Auxiliary);
+  }
+}
+
+TEST(GodanTaRenyokei, DoesNotReclassifyClosedAuxiliaryBeforeRenyokeiAuxiliary) {
+  auto analyzer = makeHiraganaGodanAnalyzer();
+  const auto result = analyzer.analyze("食べられちゃう");
+
+  ASSERT_EQ(result.size(), 3U);
+  EXPECT_EQ(result[0].surface, "食べ");
+  EXPECT_EQ(result[0].pos, core::PartOfSpeech::Verb);
+  EXPECT_EQ(result[1].surface, "られ");
+  EXPECT_EQ(result[1].pos, core::PartOfSpeech::Auxiliary);
+  EXPECT_EQ(result[2].surface, "ちゃう");
+  EXPECT_EQ(result[2].pos, core::PartOfSpeech::Auxiliary);
+}
+
 }  // namespace
 }  // namespace suzume::analysis

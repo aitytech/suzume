@@ -23,9 +23,6 @@ struct JoinOptions {
 
   // Verified noun in compound bonus
   float verified_noun_bonus = -0.3F;
-
-  // Te-form + auxiliary bonus
-  float te_form_aux_bonus = -0.8F;
 };
 
 /// Options for verb candidate generation

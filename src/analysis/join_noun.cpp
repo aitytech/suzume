@@ -141,9 +141,7 @@ void addHonorificSamaNounJoinCandidate(core::Lattice& lattice, std::string_view 
     return;
   }
 
-  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
-  const size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
-  std::string surface(text.substr(start_byte, end_byte - start_byte));
+  std::string surface(textRange(text, byte_offsets, start_pos, end_pos));
   const float cost = scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kHonorificSamaNounBonus;
   lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos), core::PartOfSpeech::Noun,
                   cost, core::LatticeEdge::kIsUnknown);
@@ -158,9 +156,7 @@ void addStandaloneHonorificPrefixInterjectionCandidate(core::Lattice& lattice, s
     return;
   }
 
-  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
-  const size_t end_byte = byteOffsetAt(byte_offsets, start_pos + 1);
-  std::string surface(text.substr(start_byte, end_byte - start_byte));
+  std::string surface(textRange(text, byte_offsets, start_pos, start_pos + 1));
   const float cost =
       scorer.posPrior(core::PartOfSpeech::Interjection) + candidate::kStandaloneHonorificPrefixInterjectionBonus;
   lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 1),
@@ -261,9 +257,7 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   }
 
   // Check if the combined form is already in dictionary.
-  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
-  size_t end_byte = byteOffsetAt(byte_offsets, noun_end);
-  std::string surface(text.substr(start_byte, end_byte - start_byte));
+  std::string surface(textRange(text, byte_offsets, start_pos, noun_end));
 
   if (dict_manager.lookupExact(surface) != nullptr) {
     return;
@@ -351,8 +345,7 @@ void addPronounPluralJoinCandidates(core::Lattice& lattice, std::string_view tex
     }
 
     const size_t end_pos = suffix_pos + 1;
-    const size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
-    std::string surface(text.substr(start_byte, end_byte - start_byte));
+    std::string surface(textRange(text, byte_offsets, start_pos, end_pos));
     const float cost = scorer.posPrior(core::PartOfSpeech::Pronoun) + candidate::kVerifiedNounBonus;
     lattice.addEdge(surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
                     core::PartOfSpeech::Pronoun, cost, core::LatticeEdge::kFromDictionary, surface);
@@ -370,9 +363,7 @@ void addDestinationSuffixNounJoinCandidates(core::Lattice& lattice, std::string_
     return;
   }
 
-  const size_t suffix_byte_start = byteOffsetAt(byte_offsets, start_pos);
-  const size_t suffix_byte_end = byteOffsetAt(byte_offsets, end_pos);
-  const std::string_view suffix_surface = text.substr(suffix_byte_start, suffix_byte_end - suffix_byte_start);
+  const std::string_view suffix_surface = textRange(text, byte_offsets, start_pos, end_pos);
   const auto* suffix_entry = dict_manager.lookupExact(suffix_surface, core::PartOfSpeech::Verb);
   if (suffix_entry == nullptr || suffix_entry->extended_pos != core::ExtendedPOS::VerbRenyokei ||
       suffix_entry->lemma != "行く") {
@@ -432,8 +423,7 @@ void addDestinationSuffixNounJoinCandidates(core::Lattice& lattice, std::string_
   }
 
   for (const HostCandidate& host : hosts) {
-    const size_t host_byte_start = byteOffsetAt(byte_offsets, host.start);
-    const std::string_view surface = text.substr(host_byte_start, suffix_byte_end - host_byte_start);
+    const std::string_view surface = textRange(text, byte_offsets, host.start, end_pos);
     const float cost = host.cost + bigram_cost::kVeryStrongBonus;
     lattice.addEdge(surface, static_cast<uint32_t>(host.start), static_cast<uint32_t>(end_pos),
                     core::PartOfSpeech::Noun, cost, core::LatticeEdge::kIsUnknown | core::LatticeEdge::kHasCustomCost,
@@ -551,9 +541,7 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
       return;
     }
     size_t end_pos = start_pos + 3;
-    size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
-    size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
-    std::string surface(text.substr(start_byte, end_byte - start_byte));
+    std::string surface(textRange(text, byte_offsets, start_pos, end_pos));
     float base_cost = scorer.posPrior(core::PartOfSpeech::Noun);
     float final_cost = base_cost + candidate::kVerbSuffixNounJoinBonus;
     uint8_t flags = core::LatticeEdge::kFromDictionary;
@@ -732,10 +720,7 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
 
   // Build the compound noun surface
   size_t end_pos = hiragana_end + head_length;  // Include the bound noun head
-  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
-  size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
-
-  std::string surface(text.substr(start_byte, end_byte - start_byte));
+  std::string surface(textRange(text, byte_offsets, start_pos, end_pos));
 
   // Calculate cost with bonus for compound noun pattern
   float base_cost = scorer.posPrior(core::PartOfSpeech::Noun);

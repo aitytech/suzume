@@ -5,7 +5,6 @@
  * Functions for generating join candidates during tokenization:
  * - Compound verb joining (e.g., 飛び込む = 飛ぶ + 込む)
  * - Prefix+noun joining (e.g., お水 = お + 水)
- * - Te-form+auxiliary joining (e.g., 学んでいく = 学んで + いく)
  */
 
 #ifndef SUZUME_ANALYSIS_JOIN_CANDIDATES_H_
@@ -134,29 +133,6 @@ void addDeverbalNounBeforeIndependentNakuCandidates(core::Lattice& lattice, std:
                                                     const ByteOffsets& byte_offsets, size_t start_pos,
                                                     const dictionary::DictionaryManager& dict_manager,
                                                     const Scorer& scorer);
-
-/**
- * @brief Add te-form + auxiliary verb split candidates
- *
- * Detects patterns where a verb in te-form is followed by auxiliary verbs
- * like いく, くる, みる, おく, しまう and generates split candidates.
- *
- * Examples:
- *   "学んでいきたい" → ["学んで" + "いきたい"]
- *   "食べてみる" → ["食べて" + "みる"]
- *   "書いておく" → ["書いて" + "おく"]
- *
- * @param lattice Lattice to add candidates to
- * @param text Original text
- * @param codepoints Unicode codepoints
- * @param start_pos Starting position in codepoints
- * @param char_types Character types for each position
- * @param scorer Scorer for POS priors
- */
-void addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
-                                  const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
-                                  size_t start_pos, const std::vector<normalize::CharType>& char_types,
-                                  const Scorer& scorer, const grammar::Inflection& inflection);
 
 /**
  * @brief Add taru-adjective adverb join candidates

@@ -9,6 +9,45 @@ namespace suzume::analysis::compound_verb_detail {
 
 namespace {
 
+const grammar::Conjugation::GodanEntry* findGodanRowByEnding(std::string_view base_ending) {
+  if (base_ending.size() != core::kJapaneseCharBytes) {
+    return nullptr;
+  }
+
+  const char32_t ending = utf8::decodeFirstChar(base_ending);
+  for (const auto& entry : grammar::Conjugation::getGodanRows()) {
+    if (entry.second.base_vowel == ending) {
+      return &entry;
+    }
+  }
+  return nullptr;
+}
+
+dictionary::ConjugationType toDictionaryConjugationType(grammar::VerbType verb_type) {
+  switch (verb_type) {
+    case grammar::VerbType::GodanKa:
+      return dictionary::ConjugationType::GodanKa;
+    case grammar::VerbType::GodanGa:
+      return dictionary::ConjugationType::GodanGa;
+    case grammar::VerbType::GodanSa:
+      return dictionary::ConjugationType::GodanSa;
+    case grammar::VerbType::GodanTa:
+      return dictionary::ConjugationType::GodanTa;
+    case grammar::VerbType::GodanNa:
+      return dictionary::ConjugationType::GodanNa;
+    case grammar::VerbType::GodanBa:
+      return dictionary::ConjugationType::GodanBa;
+    case grammar::VerbType::GodanMa:
+      return dictionary::ConjugationType::GodanMa;
+    case grammar::VerbType::GodanRa:
+      return dictionary::ConjugationType::GodanRa;
+    case grammar::VerbType::GodanWa:
+      return dictionary::ConjugationType::GodanWa;
+    default:
+      return dictionary::ConjugationType::None;
+  }
+}
+
 std::string replaceGodanEnding(std::string_view base, bool use_o_row) {
   if (base.size() < core::kJapaneseCharBytes) {
     return "";
@@ -32,23 +71,8 @@ dictionary::ConjugationType compoundConjugationType(V2VerbType verb_type, std::s
   if (verb_type == V2VerbType::Ichidan) {
     return dictionary::ConjugationType::Ichidan;
   }
-  if (base_ending == "く")
-    return dictionary::ConjugationType::GodanKa;
-  if (base_ending == "ぐ")
-    return dictionary::ConjugationType::GodanGa;
-  if (base_ending == "す")
-    return dictionary::ConjugationType::GodanSa;
-  if (base_ending == "つ")
-    return dictionary::ConjugationType::GodanTa;
-  if (base_ending == "ぬ")
-    return dictionary::ConjugationType::GodanNa;
-  if (base_ending == "ぶ")
-    return dictionary::ConjugationType::GodanBa;
-  if (base_ending == "む")
-    return dictionary::ConjugationType::GodanMa;
-  if (base_ending == "る")
-    return dictionary::ConjugationType::GodanRa;
-  return dictionary::ConjugationType::GodanWa;
+  const auto* godan_entry = findGodanRowByEnding(base_ending);
+  return godan_entry == nullptr ? dictionary::ConjugationType::None : toDictionaryConjugationType(godan_entry->first);
 }
 
 std::string generateRenyokei(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
@@ -57,15 +81,16 @@ std::string generateRenyokei(std::string_view surface, std::string_view reading,
     return "";
 
   if (verb_type == V2VerbType::Ichidan) {
-    return base.size() >= 3 ? std::string(base.substr(0, base.size() - 3)) : "";
+    return base.size() >= core::kJapaneseCharBytes ? std::string(base.substr(0, base.size() - core::kJapaneseCharBytes))
+                                                   : "";
   }
 
-  if (base.size() < 3)
+  if (base.size() < core::kJapaneseCharBytes)
     return "";
   const std::string_view i_row = grammar::godanIRowSuffixFromURow(utf8::decodeLastChar(base));
   if (i_row.empty())
     return "";
-  std::string result(base.substr(0, base.size() - 3));
+  std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
   result += i_row;
   return result;
 }
@@ -76,15 +101,16 @@ std::string generateMizenkei(std::string_view surface, std::string_view reading,
     return "";
 
   if (verb_type == V2VerbType::Ichidan) {
-    return base.size() >= 3 ? std::string(base.substr(0, base.size() - 3)) : "";
+    return base.size() >= core::kJapaneseCharBytes ? std::string(base.substr(0, base.size() - core::kJapaneseCharBytes))
+                                                   : "";
   }
 
-  if (base.size() < 3)
+  if (base.size() < core::kJapaneseCharBytes)
     return "";
   const std::string_view a_row = grammar::godanARowSuffixFromURow(utf8::decodeLastChar(base));
   if (a_row.empty())
     return "";
-  std::string result(base.substr(0, base.size() - 3));
+  std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
   result += a_row;
   return result;
 }
@@ -123,28 +149,31 @@ std::string generateGodanPotential(std::string_view surface, std::string_view re
 }
 
 TeFormType getTeFormType(std::string_view base_ending) {
-  if (base_ending == "く" || base_ending == "ぐ")
+  const auto* godan_entry = findGodanRowByEnding(base_ending);
+  if (godan_entry == nullptr) {
+    return TeFormType::Ichidan;
+  }
+  const std::string_view onbin = godan_entry->second.onbin;
+  if (onbin == "い")
     return TeFormType::Ionbin;
-  if (base_ending == "つ" || base_ending == "う" || base_ending == "る")
+  if (onbin == "っ")
     return TeFormType::Sokuonbin;
-  if (base_ending == "む" || base_ending == "ぶ" || base_ending == "ぬ")
+  if (onbin == "ん")
     return TeFormType::Hatsuonbin;
-  if (base_ending == "す")
-    return TeFormType::Renyokei;
-  return TeFormType::Ichidan;
+  return TeFormType::Renyokei;
 }
 
 std::pair<std::string, bool> generateTeFormStem(std::string_view surface, std::string_view reading,
                                                 V2VerbType verb_type, std::string_view base_ending) {
   const std::string_view base = reading.empty() ? surface : reading;
-  if (base.empty() || base.size() < 3)
+  if (base.empty() || base.size() < core::kJapaneseCharBytes)
     return {"", false};
 
   if (verb_type == V2VerbType::Ichidan) {
-    return {std::string(base.substr(0, base.size() - 3)), false};
+    return {std::string(base.substr(0, base.size() - core::kJapaneseCharBytes)), false};
   }
 
-  std::string result(base.substr(0, base.size() - 3));
+  std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
   switch (getTeFormType(base_ending)) {
     case TeFormType::Ionbin:
       result += "い";

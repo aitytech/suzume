@@ -48,6 +48,46 @@ bool hasNaAdjectiveStemEvidence(const std::string& stem, const dictionary::Dicti
   return utf8::endsWith(stem, "やか");
 }
 
+std::vector<std::string_view> iAdjectiveStemFollowers(std::string_view hiragana, size_t byte_pos,
+                                                      const dictionary::DictionaryManager* dict_manager) {
+  std::vector<std::string_view> followers;
+  std::array<bool, 3> seen_auxiliary{};
+  if (dict_manager != nullptr) {
+    for (const auto& result : dict_manager->lookup(hiragana, byte_pos)) {
+      if (result.entry == nullptr) {
+        continue;
+      }
+      size_t auxiliary_index = seen_auxiliary.size();
+      switch (result.entry->extended_pos) {
+        case core::ExtendedPOS::AuxGaru:
+          auxiliary_index = 0;
+          break;
+        case core::ExtendedPOS::AuxExcessive:
+          auxiliary_index = 1;
+          break;
+        case core::ExtendedPOS::AuxAppearanceSou:
+          auxiliary_index = 2;
+          break;
+        default:
+          break;
+      }
+      if (auxiliary_index < seen_auxiliary.size() && !seen_auxiliary[auxiliary_index]) {
+        followers.push_back(result.entry->surface);
+        seen_auxiliary[auxiliary_index] = true;
+      }
+    }
+  }
+
+  const std::string_view remaining = hiragana.substr(byte_pos);
+  static constexpr std::array<std::string_view, 3> kDerivedSuffixes = {"さ", "み", "げ"};
+  for (const std::string_view suffix : kDerivedSuffixes) {
+    if (utf8::startsWith(remaining, suffix)) {
+      followers.push_back(suffix);
+    }
+  }
+  return followers;
+}
+
 bool hasInternalNominalDerivationalBoundary(const std::string& stem,
                                             const dictionary::DictionaryManager* dict_manager) {
   if (dict_manager == nullptr || isAdjectiveInDictionary(dict_manager, stem + "い")) {
@@ -262,18 +302,9 @@ void generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, si
   // - 高がる → 高 (ADJ stem) + がる (VERB)
   // - 高さ → 高 (ADJ stem) + さ (NOUN/SUFFIX)
   // - 高そう → 高 (ADJ stem) + そう (AUX)
-  static constexpr std::array<std::string_view, 7> kIAdjGaruPatterns = {
-      "すぎ",  // excessive: 高すぎる, 高すぎ, 高すぎて
-      "がる",  // emotional verb: 高がる, 怖がる
-      "がり",  // nominalized: 怖がり
-      "がっ",  // te/ta form: 怖がって, 怖がった
-      "さ",    // nominalization: 高さ, 重さ (1 char)
-      "そう",  // appearance: 高そう (2 chars)
-      "み",    // nominalization: 痛み, 深み (1 char)
-  };
-
-  // Check if hiragana starts with a garu-connection pattern
-  for (const auto& pattern : kIAdjGaruPatterns) {
+  // AuxGaru/AuxExcessive/AuxAppearanceSou are discovered from their canonical
+  // dictionary EPOS paradigm. Productive nominal suffixes remain structural.
+  for (const std::string_view pattern : iAdjectiveStemFollowers(hiragana_part, 0, dict_manager)) {
     if (hiragana_part.size() >= pattern.size() && hiragana_part.substr(0, pattern.size()) == pattern) {
       SUZUME_DEBUG_LOG_VERBOSE("[ADJ_STEM]   pattern=\"" << pattern << "\" matched, hiragana=\"" << hiragana_part
                                                          << "\"\n");
@@ -431,14 +462,10 @@ void generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, si
   // Scan hiragana_part for garu patterns at non-zero positions.
   // If kanji + hiragana_prefix + い is a dict adjective, generate stem candidate.
   if (hiragana_part.size() >= 6) {  // Need at least 2 hiragana chars (prefix + pattern)
-    // Garu patterns to look for within hiragana_part
-    static constexpr std::array<std::string_view, 9> kExtGaruPatterns = {
-        "すぎ", "がる", "がり", "がっ", "がれ", "がろ", "そう", "さ", "げ",
-    };
-
-    for (const auto& pattern : kExtGaruPatterns) {
-      // Search for pattern at each hiragana character boundary (3-byte aligned for UTF-8)
-      for (size_t byte_pos = 3; byte_pos + pattern.size() <= hiragana_part.size(); byte_pos += 3) {
+    // Search at each hiragana boundary and query the canonical follower
+    // paradigms there. This includes the AuxGaru mizenkei がら.
+    for (size_t byte_pos = 3; byte_pos < hiragana_part.size(); byte_pos += 3) {
+      for (const std::string_view pattern : iAdjectiveStemFollowers(hiragana_part, byte_pos, dict_manager)) {
         if (hiragana_part.substr(byte_pos, pattern.size()) == pattern) {
           // Found pattern at byte_pos within hiragana_part
           std::string ext_okurigana = hiragana_part.substr(0, byte_pos);
@@ -514,8 +541,8 @@ void generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, si
         }
       }
     }
-  ext_garu_done:;
   }
+ext_garu_done:;
 
   // Check for しそう, しすぎ patterns (adjective stem + auxiliary)
   // The stem ends with し, and is followed by そう/すぎる/etc.

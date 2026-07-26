@@ -28,6 +28,25 @@ namespace vh = verb_helpers;
 
 namespace {
 
+bool immediatelyFollowsParticleHost(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0) {
+    return false;
+  }
+  constexpr size_t kMaxHostChars = 12;
+  const size_t min_host_start = (start_pos > kMaxHostChars) ? start_pos - kMaxHostChars : 0;
+  for (size_t host_start = start_pos; host_start-- > min_host_start;) {
+    const std::string host_surface = extractSubstring(codepoints, host_start, start_pos);
+    if (dict_manager->lookupExact(host_surface, core::PartOfSpeech::Noun) != nullptr ||
+        dict_manager->lookupExact(host_surface, core::PartOfSpeech::Pronoun) != nullptr ||
+        dict_manager->lookupExact(host_surface, core::PartOfSpeech::Verb) != nullptr ||
+        dict_manager->lookupExact(host_surface, core::PartOfSpeech::Adjective) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                         const std::vector<normalize::CharType>& char_types,
                                         const grammar::Inflection& inflection,
@@ -46,6 +65,8 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
   const std::string full_surface = extractSubstring(codepoints, start_pos, probe_end);
   const bool full_surface_is_dictionary_verb =
       dict_manager->lookupExact(full_surface, core::PartOfSpeech::Verb) != nullptr;
+  const auto& full_surface_candidates = inflection.analyze(full_surface);
+  const bool follows_particle_host = immediatelyFollowsParticleHost(codepoints, start_pos, dict_manager);
   for (size_t particle_end = start_pos + 1; particle_end <= max_particle_end; ++particle_end) {
     std::string particle_surface = extractSubstring(codepoints, start_pos, particle_end);
     const auto* particle_entry = dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Particle);
@@ -56,6 +77,28 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
     // following verb inflection. Treating its homographic mora as a boundary
     // would suppress productive open-class verbs such as さける and かける.
     if (particle_entry->extended_pos == core::ExtendedPOS::ParticleFinal) {
+      continue;
+    }
+    // A particle homograph can itself be the complete stem of a productive
+    // open-class inflection (さえ+ない -> さえる). Preserve that lexical
+    // candidate when the whole surface supplies independent morphological
+    // evidence: the analyzed stem exactly covers the apparent particle, the
+    // remainder is a real inflection suffix, and confidence clears the same
+    // boundary threshold used below. A directly preceding noun or other
+    // particle host keeps the closed-class reading (こと+さえ+ない). In
+    // genuine particle chains such as さえ+い+ない, the whole-surface stem
+    // extends beyond the particle and therefore does not receive this
+    // exemption.
+    const bool has_confident_whole_verb =
+        !follows_particle_host &&
+        std::any_of(full_surface_candidates.begin(), full_surface_candidates.end(), [&](const auto& candidate) {
+          return candidate.verb_type != grammar::VerbType::IAdjective &&
+                 candidate.verb_type != grammar::VerbType::Unknown && candidate.stem == particle_surface &&
+                 !candidate.suffix.empty() && candidate.confidence >= candidate::kParticleVerbBoundaryMinConfidence &&
+                 !vh::hasDictionaryEntry(dict_manager, candidate.base_form, core::PartOfSpeech::Auxiliary);
+        });
+    if (has_confident_whole_verb) {
+      SUZUME_DEBUG_LOG_VERBOSE("[VERB_KEEP] \"" << full_surface << "\" confident_particle_homograph_inflection\n");
       continue;
     }
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_PARTICLE] \"" << particle_surface << "\" at pos=" << start_pos << "\n");
@@ -570,16 +613,7 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       // These are 2-char hiragana verbs that need a bonus to beat particle splits
       bool is_short_te_form = false;
       if (candidate_len == 2 && best.confidence >= verb_opts.confidence_high) {
-        // Check last char in bytes (UTF-8)
-        // て = E3 81 A6, で = E3 81 A7
-        if (surface.size() >= 3) {
-          char c1 = surface[surface.size() - 3];
-          char c2 = surface[surface.size() - 2];
-          char c3 = surface[surface.size() - 1];
-          if (c1 == '\xE3' && c2 == '\x81' && (c3 == '\xA6' || c3 == '\xA7')) {
-            is_short_te_form = true;
-          }
-        }
+        is_short_te_form = utf8::endsWithAny(surface, {"て", "で"});
       }
 
       // Check for 3-4 char hiragana verb ending with た/だ (past form)

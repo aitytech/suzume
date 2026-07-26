@@ -16,12 +16,14 @@
 #include <string_view>
 #include <vector>
 
+#include "analysis/join_compound_verb_internal.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "analysis/verb_candidates_hiragana_internal.h"
 #include "core/types.h"
 #include "dictionary/dictionary.h"
 #include "grammar/inflection.h"
 #include "normalize/utf8.h"
+#include "suzume.h"
 
 namespace suzume::analysis {
 namespace {
@@ -127,6 +129,153 @@ TEST(VerbGuardFamilyEmbed, TeFormAuxiliaryPatterns) {
   // te-ending stem (慌て+ている), and the plain split already wins there.
   EXPECT_FALSE(verb_helpers::embedsTeFormAuxiliary("食べている"));
   EXPECT_FALSE(verb_helpers::embedsTeFormAuxiliary("置いておく"));
+}
+
+TEST(VerbGuardFamilyEmbed, PassiveNegativeParadigmIsGuarded) {
+  for (const std::string_view surface : {"書かれない", "書かれなく", "書かれなくて", "書かれなかった", "書かれなけれ",
+                                         "書かれなければ", "書かれなきゃ"}) {
+    EXPECT_TRUE(verb_helpers::shouldSkipPassiveAuxPattern(surface, grammar::VerbType::GodanKa)) << surface;
+  }
+  for (const std::string_view surface :
+       {"検査されない", "検査されなくて", "検査されなかった", "検査されなければ", "検査されなきゃ"}) {
+    EXPECT_TRUE(verb_helpers::shouldSkipPassiveAuxPattern(surface, grammar::VerbType::Suru)) << surface;
+  }
+  EXPECT_FALSE(verb_helpers::shouldSkipPassiveAuxPattern("書かない", grammar::VerbType::GodanKa));
+  EXPECT_FALSE(verb_helpers::shouldSkipPassiveAuxPattern("検査しない", grammar::VerbType::Suru));
+}
+
+TEST(CompoundVerbForms, GodanRowsDriveConjugationAndTeForms) {
+  using compound_verb_detail::TeFormType;
+  using compound_verb_detail::V2VerbType;
+  struct Case {
+    std::string_view base;
+    std::string_view ending;
+    dictionary::ConjugationType conjugation_type;
+    TeFormType te_form_type;
+    std::string_view te_stem;
+    bool uses_de;
+  };
+  constexpr Case cases[] = {
+      {"たたく", "く", dictionary::ConjugationType::GodanKa, TeFormType::Ionbin, "たたい", false},
+      {"つなぐ", "ぐ", dictionary::ConjugationType::GodanGa, TeFormType::Ionbin, "つない", true},
+      {"はなす", "す", dictionary::ConjugationType::GodanSa, TeFormType::Renyokei, "はなし", false},
+      {"まつ", "つ", dictionary::ConjugationType::GodanTa, TeFormType::Sokuonbin, "まっ", false},
+      {"しぬ", "ぬ", dictionary::ConjugationType::GodanNa, TeFormType::Hatsuonbin, "しん", true},
+      {"とぶ", "ぶ", dictionary::ConjugationType::GodanBa, TeFormType::Hatsuonbin, "とん", true},
+      {"よむ", "む", dictionary::ConjugationType::GodanMa, TeFormType::Hatsuonbin, "よん", true},
+      {"かえる", "る", dictionary::ConjugationType::GodanRa, TeFormType::Sokuonbin, "かえっ", false},
+      {"かう", "う", dictionary::ConjugationType::GodanWa, TeFormType::Sokuonbin, "かっ", false},
+  };
+
+  for (const auto& test_case : cases) {
+    EXPECT_EQ(compound_verb_detail::compoundConjugationType(V2VerbType::Godan, test_case.ending),
+              test_case.conjugation_type);
+    EXPECT_EQ(compound_verb_detail::getTeFormType(test_case.ending), test_case.te_form_type);
+    const auto [stem, uses_de] =
+        compound_verb_detail::generateTeFormStem(test_case.base, "", V2VerbType::Godan, test_case.ending);
+    EXPECT_EQ(stem, test_case.te_stem);
+    EXPECT_EQ(uses_de, test_case.uses_de);
+  }
+
+  EXPECT_EQ(compound_verb_detail::compoundConjugationType(V2VerbType::Godan, "い"), dictionary::ConjugationType::None);
+  EXPECT_EQ(compound_verb_detail::getTeFormType("い"), TeFormType::Ichidan);
+}
+
+TEST(CandidateGenerationRegression, IAdjectiveStemUsesCanonicalGaruParadigm) {
+  SuzumeOptions options;
+  options.skip_user_dictionary = true;
+  Suzume analyzer(options);
+
+  const auto result = analyzer.analyze("恥ずかしがらない");
+  ASSERT_EQ(result.size(), 3U);
+  EXPECT_EQ(result[0].surface, "恥ずかし");
+  EXPECT_EQ(result[0].extended_pos, core::ExtendedPOS::AdjStem);
+  EXPECT_EQ(result[0].lemma, "恥ずかしい");
+  EXPECT_EQ(result[1].surface, "がら");
+  EXPECT_EQ(result[1].extended_pos, core::ExtendedPOS::AuxGaru);
+  EXPECT_EQ(result[1].lemma, "がる");
+  EXPECT_EQ(result[2].surface, "ない");
+  EXPECT_EQ(result[2].extended_pos, core::ExtendedPOS::AuxNegativeNai);
+}
+
+TEST(CandidateGenerationRegression, KatakanaIAdjectiveNegativePastKeepsStemBoundary) {
+  SuzumeOptions options;
+  options.skip_user_dictionary = true;
+  Suzume analyzer(options);
+
+  const auto result = analyzer.analyze("エモくなかった");
+  ASSERT_EQ(result.size(), 3U);
+  EXPECT_EQ(result[0].surface, "エモく");
+  EXPECT_EQ(result[0].extended_pos, core::ExtendedPOS::AdjRenyokei);
+  EXPECT_EQ(result[0].lemma, "エモい");
+  EXPECT_EQ(result[1].surface, "なかっ");
+  EXPECT_EQ(result[1].extended_pos, core::ExtendedPOS::AuxNegativeNai);
+  EXPECT_EQ(result[2].surface, "た");
+  EXPECT_EQ(result[2].extended_pos, core::ExtendedPOS::AuxTenseTa);
+}
+
+// =============================================================================
+// Prefix guards (P): a particle homograph may also be a lexical verb stem
+// =============================================================================
+
+TEST(VerbGuardFamilyPrefix, KeepsConfidentLexicalStemMatchingBindingParticle) {
+  SuzumeOptions options;
+  options.skip_user_dictionary = true;
+  Suzume analyzer(options);
+
+  const auto result = analyzer.analyze("さえない映画だった");
+
+  ASSERT_EQ(result.size(), 5U);
+  EXPECT_EQ(result[0].surface, "さえ");
+  EXPECT_EQ(result[0].pos, core::PartOfSpeech::Verb);
+  EXPECT_EQ(result[0].extended_pos, core::ExtendedPOS::VerbMizenkei);
+  EXPECT_EQ(result[0].lemma, "さえる");
+  EXPECT_EQ(result[1].surface, "ない");
+  EXPECT_EQ(result[1].pos, core::PartOfSpeech::Auxiliary);
+  EXPECT_EQ(result[2].surface, "映画");
+  EXPECT_EQ(result[2].pos, core::PartOfSpeech::Noun);
+
+  const auto subject_result = analyzer.analyze("映画がさえない");
+  ASSERT_EQ(subject_result.size(), 4U);
+  EXPECT_EQ(subject_result[2].surface, "さえ");
+  EXPECT_EQ(subject_result[2].pos, core::PartOfSpeech::Verb);
+  EXPECT_EQ(subject_result[2].lemma, "さえる");
+  EXPECT_EQ(subject_result[3].surface, "ない");
+}
+
+TEST(VerbGuardFamilyPrefix, StillSplitsActualBindingParticleBeforeSubsidiaryVerb) {
+  SuzumeOptions options;
+  options.skip_user_dictionary = true;
+  Suzume analyzer(options);
+
+  const auto result = analyzer.analyze("読んでさえいればよい");
+
+  ASSERT_EQ(result.size(), 6U);
+  EXPECT_EQ(result[0].surface, "読ん");
+  EXPECT_EQ(result[1].surface, "で");
+  EXPECT_EQ(result[2].surface, "さえ");
+  EXPECT_EQ(result[2].extended_pos, core::ExtendedPOS::ParticleBinding);
+  EXPECT_EQ(result[3].surface, "いれ");
+  EXPECT_EQ(result[3].lemma, "いる");
+  EXPECT_EQ(result[4].surface, "ば");
+  EXPECT_EQ(result[5].surface, "よい");
+}
+
+TEST(VerbGuardFamilyPrefix, StillKeepsBindingParticleAfterNominalHost) {
+  SuzumeOptions options;
+  options.skip_user_dictionary = true;
+  Suzume analyzer(options);
+
+  const auto result = analyzer.analyze("読むことさえない");
+
+  ASSERT_EQ(result.size(), 4U);
+  EXPECT_EQ(result[0].surface, "読む");
+  EXPECT_EQ(result[1].surface, "こと");
+  EXPECT_EQ(result[2].surface, "さえ");
+  EXPECT_EQ(result[2].extended_pos, core::ExtendedPOS::ParticleBinding);
+  EXPECT_EQ(result[2].lemma, "さえ");
+  EXPECT_EQ(result[3].surface, "ない");
+  EXPECT_EQ(result[3].pos, core::PartOfSpeech::Adjective);
 }
 
 }  // namespace

@@ -552,7 +552,7 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
           // Penalty for single-kanji noun + verb split
           // E.g., 勘+違い should prefer 勘違い (compound noun)
           // Single-kanji nouns rarely form valid noun+verb compounds
-          if (noun_surface.size() == 3) {  // Single kanji (3 bytes UTF-8)
+          if (noun_len == 1) {
             final_noun_cost += bigram_cost::kStrong;
           }
 

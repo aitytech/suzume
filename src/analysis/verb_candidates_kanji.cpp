@@ -148,29 +148,7 @@ bool hasNominalizedNounParticleContinuation(const std::vector<char32_t>& codepoi
     return false;
   }
 
-  // Only case, topic, and nominalizer particles make the preceding
-  // continuative an object-like noun phrase. Conjunctive particles such as
-  // ながら and つつ instead retain the verbal reading.
-  if (!startsNominalForcingParticle(codepoints, end_pos)) {
-    return false;
-  }
-
-  const size_t probe_end = std::min(codepoints.size(), end_pos + static_cast<size_t>(4));
-  const std::string probe = extractSubstring(codepoints, end_pos, probe_end);
-  bool has_particle = false;
-  for (const auto& match : dict_manager->lookup(probe, 0)) {
-    if (match.entry == nullptr) {
-      continue;
-    }
-    if (match.entry->pos == core::PartOfSpeech::Particle) {
-      has_particle = true;
-    } else if (normalize::utf8Length(match.entry->surface) > 1) {
-      // A longer lexical continuation such as -にくい owns this span; its
-      // initial kana must not be treated as a case-particle boundary.
-      return false;
-    }
-  }
-  return has_particle;
+  return hasNominalForcingParticleContinuation(codepoints, end_pos, dict_manager);
 }
 
 bool hasDictionaryAdjectiveTail(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,

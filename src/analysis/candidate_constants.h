@@ -186,10 +186,6 @@ constexpr float kUnverifiedGodanWaExceedsVerbPenalty = 2.0F;
 // dictionary (不十分だ, 不確かではない).
 constexpr float kPredicativeNegationPrefixAdjectiveBonus = -1.2F;
 
-// Te-form + auxiliary bonus
-// E.g., 食べて+いる, 走って+しまう
-constexpr float kTeFormAuxBonus = -0.8F;
-
 // =============================================================================
 // Split Candidate Constants (split_candidates.cpp)
 // =============================================================================
@@ -484,10 +480,9 @@ constexpr float kNaAdjPredicateConfidence = 0.8F;
 constexpr float kLexicalizedAdverbialAdjCost = -0.8F;
 
 // Na-adjective candidate costs
-constexpr float kNaAdjYakaCost = 0.2F;               // やか/らか/か + な (華やかな, 静かな)
-constexpr float kNaAdjTekiCost = 0.4F;               // 的 suffix (論理的) as one na-adjective search unit
-constexpr float kNaAdjStemCost = 0.5F;               // kanji compound + な (獰猛な)
-constexpr float kNaAdjSingleKanjiCopulaCost = 1.5F;  // ambiguous single kanji + だ (変だ)
+constexpr float kNaAdjYakaCost = 0.2F;  // やか/らか/か + な (華やかな, 静かな)
+constexpr float kNaAdjTekiCost = 0.4F;  // 的 suffix (論理的) as one na-adjective search unit
+constexpr float kNaAdjStemCost = 0.5F;  // kanji compound + な (獰猛な)
 
 // Hiragana i-adjective confidence thresholds
 constexpr float kHiraAdjConfMin = 0.55F;        // default hiragana-only

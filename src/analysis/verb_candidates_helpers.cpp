@@ -10,6 +10,7 @@
 #include "analysis/candidate_constants.h"
 #include "analysis/scorer_constants.h"
 #include "core/debug.h"
+#include "core/kana_constants.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
@@ -157,8 +158,7 @@ bool hasInternalVerbChainBoundary(const std::vector<char32_t>& codepoints, size_
         hasDictionaryEntry(dict_manager, form, core::PartOfSpeech::Auxiliary)) {
       return true;
     }
-    if (form_end > form_start + 1 &&
-        (codepoints[form_end - 1] == U'っ' || codepoints[form_end - 1] == U'ん' || codepoints[form_end - 1] == U'い')) {
+    if (form_end > form_start + 1 && kana::isOnbinCodepoint(codepoints[form_end - 1])) {
       const std::string stem = extractSubstring(codepoints, form_start, form_end - 1);
       const std::string onbin = extractSubstring(codepoints, form_end - 1, form_end);
       if (firstGodanOnbinDictBase(dict_manager, stem, onbin).matched) {
@@ -343,10 +343,18 @@ bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType ver
   // mizenkei and passive auxiliary: 勉強+さ+れる. Retaining a unified
   // 勉強される candidate hides that grammatical chain.
   if (verb_type == grammar::VerbType::Suru) {
+    const auto codepoints = normalize::utf8::decode(surface);
+    for (size_t index = 1; index + 1 < codepoints.size(); ++index) {
+      if (codepoints[index - 1] == U'さ' && codepoints[index] == U'れ') {
+        const size_t negative_length = naiNegativeFormLengthAt(codepoints, index + 1);
+        if (negative_length != 0 && index + 1 + negative_length == codepoints.size()) {
+          return true;
+        }
+      }
+    }
     return utf8::endsWith(surface, "される") || utf8::endsWith(surface, "された") ||
-           utf8::endsWith(surface, "されて") || utf8::endsWith(surface, "されない") ||
-           utf8::endsWith(surface, "されます") || utf8::endsWith(surface, "されたい") ||
-           utf8::endsWith(surface, "されたく");
+           utf8::endsWith(surface, "されて") || utf8::endsWith(surface, "されます") ||
+           utf8::endsWith(surface, "されたい") || utf8::endsWith(surface, "されたく");
   }
 
   // Only apply remaining checks to Godan verbs
@@ -354,10 +362,19 @@ bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType ver
     return false;
   }
 
-  // Passive patterns: れる, れた, れて, れない, れます, れたい, れたく
+  const auto codepoints = normalize::utf8::decode(surface);
+  for (size_t index = 1; index + 1 < codepoints.size(); ++index) {
+    if (grammar::isARowCodepoint(codepoints[index - 1]) && codepoints[index] == U'れ') {
+      const size_t negative_length = naiNegativeFormLengthAt(codepoints, index + 1);
+      if (negative_length != 0 && index + 1 + negative_length == codepoints.size()) {
+        return true;
+      }
+    }
+  }
+
+  // Passive forms outside the ない family; desiderative forms stay explicit.
   return utf8::endsWith(surface, "れる") || utf8::endsWith(surface, "れた") || utf8::endsWith(surface, "れて") ||
-         utf8::endsWith(surface, "れない") || utf8::endsWith(surface, "れます") || utf8::endsWith(surface, "れたい") ||
-         utf8::endsWith(surface, "れたく");
+         utf8::endsWith(surface, "れます") || utf8::endsWith(surface, "れたい") || utf8::endsWith(surface, "れたく");
 }
 
 bool isPassiveAuxContinuation(const std::vector<char32_t>& codepoints, size_t pos_after_re, bool strict_masu) {

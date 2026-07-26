@@ -48,14 +48,13 @@ void addDictionaryVerifiedIchidanCompoundNominalCandidate(core::Lattice& lattice
     return;
   }
 
-  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
-  const size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
-  lattice.addEdge(
-      text.substr(start_byte, end_byte - start_byte), static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
-      core::PartOfSpeech::Noun, scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus,
-      core::LatticeEdge::kFromDictionary, surface, dictionary::ConjugationType::None,
-      core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "dictionary_ichidan_compound_nominal",
-      core::ExtendedPOS::NounVerbal, "dictionary_ichidan_compound_nominal");
+  lattice.addEdge(textRange(text, byte_offsets, start_pos, end_pos), static_cast<uint32_t>(start_pos),
+                  static_cast<uint32_t>(end_pos), core::PartOfSpeech::Noun,
+                  scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus,
+                  core::LatticeEdge::kFromDictionary, surface, dictionary::ConjugationType::None,
+                  core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence,
+                  "dictionary_ichidan_compound_nominal", core::ExtendedPOS::NounVerbal,
+                  "dictionary_ichidan_compound_nominal");
 }
 
 void addDictionaryVerifiedGodanCompoundNominalCandidate(core::Lattice& lattice, std::string_view text,
@@ -114,15 +113,14 @@ void addDictionaryVerifiedGodanCompoundNominalCandidate(core::Lattice& lattice, 
     return;
   }
 
-  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
-  const size_t end_byte = byteOffsetAt(byte_offsets, end_pos);
   const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
-  lattice.addEdge(
-      text.substr(start_byte, end_byte - start_byte), static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
-      core::PartOfSpeech::Noun, scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus,
-      core::LatticeEdge::kFromDictionary, surface, dictionary::ConjugationType::None,
-      core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence, "dictionary_godan_compound_nominal",
-      core::ExtendedPOS::NounVerbal, "dictionary_godan_compound_nominal");
+  lattice.addEdge(textRange(text, byte_offsets, start_pos, end_pos), static_cast<uint32_t>(start_pos),
+                  static_cast<uint32_t>(end_pos), core::PartOfSpeech::Noun,
+                  scorer.posPrior(core::PartOfSpeech::Noun) + candidate::kCompoundVerbSuffixNounBonus,
+                  core::LatticeEdge::kFromDictionary, surface, dictionary::ConjugationType::None,
+                  core::CandidateOrigin::VerbCompound, candidate::kNoOriginConfidence,
+                  "dictionary_godan_compound_nominal", core::ExtendedPOS::NounVerbal,
+                  "dictionary_godan_compound_nominal");
 }
 
 }  // namespace
@@ -338,9 +336,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
           char_types[k2_end + 1] == CharType::Kanji) {
         char32_t base2 = godanRenyokeiBaseCp(codepoints[k2_end]);
         if (base2 != 0) {
-          size_t k2_start_byte = byteOffsetAt(byte_offsets, k2_start);
-          size_t k2_end_byte = byteOffsetAt(byte_offsets, k2_end);
-          std::string embedded2(text.substr(k2_start_byte, k2_end_byte - k2_start_byte));
+          std::string embedded2(textRange(text, byte_offsets, k2_start, k2_end));
           embedded2 += normalize::encodeUtf8(base2);
           if (dict_manager.lookupExact(embedded2, core::PartOfSpeech::Verb) != nullptr) {
             v2_start = k2_end + 1;

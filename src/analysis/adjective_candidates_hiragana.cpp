@@ -721,13 +721,14 @@ void generateKatakanaAdjectiveCandidates(const std::vector<char32_t>& codepoints
   // Add emphatic variants (エグい → エグいっ, etc.)
   addEmphaticVariants(candidates, codepoints, candidate_start);
 
-  // Preserve katakana adjective connection boundaries. Unlike the hiragana
-  // path, negative-past spans historically only derive the intermediate かっ
-  // form here; keep that route-specific behavior.
-  static constexpr std::array<adj_detail::TrimmedAdjVariantRule, 5> kKatakanaTrimRules = {{
+  // Preserve the same negative-family boundaries across scripts.
+  static constexpr std::array<adj_detail::TrimmedAdjVariantRule, 7> kKatakanaTrimRules = {{
       {"かった", 1, candidate::kAdjKattSplitBonus, core::ExtendedPOS::AdjKatt, 0, "i_adjective_kata_katt"},
       {"くて", 1, candidate::kAdjKuSplitBonus, core::ExtendedPOS::AdjRenyokei, 1, "i_adjective_kata_ku_te"},
       {"くない", 2, candidate::kAdjKuSplitBonusWeak, core::ExtendedPOS::AdjRenyokei, 2, "i_adjective_kata_ku_nai"},
+      {"くなかった", 4, candidate::kAdjKuSplitBonusWeak, core::ExtendedPOS::AdjRenyokei, 2,
+       "i_adjective_kata_ku_nakatta"},
+      {"くなかっ", 3, candidate::kAdjKuSplitBonusWeak, core::ExtendedPOS::AdjRenyokei, 2, "i_adjective_kata_ku_nakatt"},
       {"ければ", 1, candidate::kAdjKeSplitBonus, core::ExtendedPOS::AdjKeForm, 3, "i_adjective_kata_kere"},
       {"そう", 2, candidate::kAdjStemSplitBonus, core::ExtendedPOS::AdjStem, 4, "i_adjective_kata_stem_sou", false,
        true},
