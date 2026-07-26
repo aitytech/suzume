@@ -286,6 +286,19 @@ class TestFamilyMerge:
 
 
 class TestPostprocessKanjiMerge:
+    def test_kanji_prefix_compound_uses_complete_canonical_paradigm(self):
+        for suffix in ("笑み", "笑む", "笑ん", "笑え", "笑っ", "笑わ", "笑い"):
+            tokens = [_tok("微", pos="接頭詞"), _tok(suffix, pos="名詞")]
+            result, rule = apply_suzume_merge(tokens, f"微{suffix}")
+            assert [token["surface"] for token in result] == [f"微{suffix}"]
+            assert rule == "kanji-merge"
+
+    def test_ascii_dot_merge_has_one_canonical_rule_name(self):
+        tokens = [_tok("tool", pos="名詞"), _tok(".", pos="記号"), _tok("example", pos="名詞")]
+        result, rule = apply_suzume_merge(tokens, "tool.example")
+        assert [token["surface"] for token in result] == ["tool.example"]
+        assert rule == "ascii-dot-merge"
+
     def test_kanji_merge_post(self):
         """Post-process kanji merge after main pass."""
         tokens = [

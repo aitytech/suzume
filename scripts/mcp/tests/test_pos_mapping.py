@@ -1,6 +1,21 @@
 """Tests for POS mapping logic."""
 
+import pytest
+
 from suzume_mcp.core.pos_mapping import correct_mecab_pos, map_mecab_pos, normalize_pos
+
+
+def test_particle_correction_accepts_raw_japanese_noun_tag():
+    tokens = [{"surface": "ぞ", "pos": "名詞", "lemma": "ぞ"}]
+    correct_mecab_pos(tokens)
+    assert tokens[0]["pos"] == "Particle"
+
+
+def test_particle_correction_preserves_suffix_subclassification():
+    tokens = [{"surface": "さ", "pos": "名詞", "pos_sub1": "接尾", "lemma": "さ"}]
+    correct_mecab_pos(tokens)
+    assert tokens[0]["pos"] == "名詞"
+    assert map_mecab_pos(tokens[0]) == "Suffix"
 
 
 class TestMapMecabPos:
@@ -88,8 +103,9 @@ class TestMapMecabPos:
         token = {"surface": "中", "pos": "名詞", "pos_sub1": "接尾", "pos_sub2": ""}
         assert map_mecab_pos(token) == "Noun"
 
-    def test_toiu_determiner(self):
-        token = {"surface": "という", "pos": "助詞", "pos_sub1": "", "pos_sub2": ""}
+    @pytest.mark.parametrize("surface", ["という", "といった"])
+    def test_quotative_determiner(self, surface):
+        token = {"surface": surface, "pos": "助詞", "pos_sub1": "", "pos_sub2": ""}
         assert map_mecab_pos(token) == "Determiner"
 
     def test_yoku_adjective(self):
@@ -119,6 +135,19 @@ class TestSymbolMisclassification:
 
     def test_supplementary_plane_kanji_becomes_a_noun(self):
         tokens = [{"surface": "𠮟", "pos": "記号", "pos_sub1": "一般"}]
+        correct_mecab_pos(tokens)
+        assert tokens[0]["pos"] == "名詞"
+
+    @pytest.mark.parametrize("codepoint", [0x2B820, 0x2CEB0, 0x2EBF0, 0x2F800, 0x30000, 0x31350, 0x323B0])
+    def test_modern_cjk_extensions_become_nouns(self, codepoint):
+        surface = chr(codepoint)
+        tokens = [{"surface": surface, "pos": "記号", "pos_sub1": "一般"}]
+        correct_mecab_pos(tokens)
+        assert tokens[0]["pos"] == "名詞"
+
+    @pytest.mark.parametrize("surface", ["café", "тест", "τεστ", "테스트", "ทดสอบ", "ا"])
+    def test_unicode_text_becomes_a_noun(self, surface):
+        tokens = [{"surface": surface, "pos": "記号", "pos_sub1": "一般"}]
         correct_mecab_pos(tokens)
         assert tokens[0]["pos"] == "名詞"
 

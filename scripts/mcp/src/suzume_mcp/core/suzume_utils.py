@@ -7,6 +7,7 @@ from .mecab import mecab_analyze
 from .merge_rules import apply_suzume_merge
 from .pos_mapping import correct_mecab_pos, map_mecab_pos, normalize_pos
 from .postprocessors import (
+    postprocess_adjective_garu,
     postprocess_adjective_nominalizer,
     postprocess_adverb_nominal_context,
     postprocess_attributive_mamonaku,
@@ -122,6 +123,21 @@ def _reject_lossy_symbol_drop(surface: str, text: str) -> None:
         )
 
 
+def _reject_surface_mismatch(tokens: list[dict], text: str, surface_rule: str | None) -> None:
+    """Fail when normalization duplicates or loses an unexplained surface."""
+    reconstructed = "".join(token.get("surface", "") for token in tokens)
+    expected = "".join(char for char in text if not char.isspace())
+    if surface_rule == "prolonged-sound-merge":
+        # This pre-existing oracle rule deliberately canonicalizes a run of
+        # long-vowel marks. Every other merge/split rule must preserve input.
+        expected = regex.sub(r"ー+", "ー", expected)
+    if reconstructed != expected:
+        raise RuntimeError(
+            f"normalized token surfaces do not reconstruct the input: "
+            f"expected {expected!r}, got {reconstructed!r} for {text!r}"
+        )
+
+
 def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> tuple[list[dict], str, str]:
     """Get expected tokens: MeCab + Suzume rule corrections.
 
@@ -141,6 +157,7 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
 
     # Apply Suzume split rules
     split_tokens, split_rule = apply_suzume_split(merged)
+    _reject_surface_mismatch(split_tokens, text, merge_rule)
 
     # Combine rule names
     applied_rule = merge_rule or split_rule
@@ -215,6 +232,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "to-areba-conditional"
     if postprocess_tagaru_aux(tokens) and applied_rule is None:
         applied_rule = "tagaru-search-unit"
+    if postprocess_adjective_garu(tokens) and applied_rule is None:
+        applied_rule = "adjective-garu-pos"
     if postprocess_fuu_formal_noun(tokens) and applied_rule is None:
         applied_rule = "fuu-formal-noun"
     if postprocess_indefinite_ka(tokens) and applied_rule is None:

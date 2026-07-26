@@ -5,6 +5,24 @@ from pathlib import Path
 
 from .file_utils import atomic_write_text
 
+TEST_CASES_KEY = "cases"
+
+
+def cases_key(data: dict, source: str = "test data") -> str:
+    """Return the canonical test-case key, rejecting schemas C++ cannot load."""
+    if "test_cases" in data:
+        raise ValueError(f"{source} uses unsupported 'test_cases'; rename it to '{TEST_CASES_KEY}'")
+    if TEST_CASES_KEY not in data:
+        raise ValueError(f"{source} is missing required '{TEST_CASES_KEY}' array")
+    if not isinstance(data[TEST_CASES_KEY], list):
+        raise ValueError(f"{source}.{TEST_CASES_KEY} must be an array")
+    return TEST_CASES_KEY
+
+
+def get_cases(data: dict, source: str = "test data") -> list[dict]:
+    """Return the canonical case array after validating its schema."""
+    return data[cases_key(data, source)]
+
 
 def get_test_data_dir(project_root: Path) -> Path:
     """Get the test data directory."""
@@ -53,7 +71,7 @@ def find_test_by_input(project_root: Path, input_text: str) -> dict | None:
         except Exception as exc:
             raise RuntimeError(f"Failed to parse JSON file: {path}") from exc
 
-        cases = data.get("cases") or data.get("test_cases") or []
+        cases = get_cases(data, str(path))
         for i, case in enumerate(cases):
             if case.get("input") == input_text:
                 basename = path.stem
@@ -76,7 +94,7 @@ def find_tests_by_input(project_root: Path, input_text: str) -> list[dict]:
         except Exception as exc:
             raise RuntimeError(f"Failed to parse JSON file: {path}") from exc
 
-        cases = data.get("cases") or data.get("test_cases") or []
+        cases = get_cases(data, str(path))
         for index, case in enumerate(cases):
             if case.get("input") == input_text:
                 matches.append(
@@ -111,7 +129,7 @@ def find_test_by_id(project_root: Path, test_id: str) -> dict | None:
     except Exception as exc:
         raise RuntimeError(f"Failed to parse JSON file: {path}") from exc
 
-    cases = data.get("cases") or data.get("test_cases") or []
+    cases = get_cases(data, str(path))
 
     # Try numeric index first
     if idx.isdigit():

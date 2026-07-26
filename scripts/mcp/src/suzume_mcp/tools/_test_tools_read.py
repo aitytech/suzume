@@ -4,6 +4,7 @@ import json
 import re
 from pathlib import Path
 
+from ..core.diff_utils import classify_surface_diff
 from ..core.pos_mapping import normalize_pos
 from ..core.suzume_cli import (
     format_expected_from_tokens as format_expected,
@@ -15,9 +16,9 @@ from ..core.suzume_cli import (
 from ..core.suzume_cli import (
     get_expected_tokens_subprocess as get_expected_tokens,
 )
-from ..core.suzume_utils import (
-    get_suzume_rule,
-    tokens_match,
+from ..core.suzume_utils import tokens_match
+from ..core.test_file_utils import (
+    cases_key as canonical_cases_key,
 )
 from ..core.test_file_utils import (
     find_test_by_id,
@@ -64,25 +65,19 @@ async def test_show(
     # Diff classification
     surface_match = "|".join(expected_surfaces) == "|".join(suzume_surfaces)
     full_match = surface_match and tokens_match(expected_tokens, suzume_tokens)
-    diff_type = "match"
+    diff_type = classify_surface_diff(expected_surfaces, suzume_surfaces)
     diff_details = []
 
-    if not surface_match and suzume_surfaces:
+    if not surface_match:
         e_count = len(expected_surfaces)
         s_count = len(suzume_surfaces)
-        if s_count < e_count:
-            diff_type = "under-split"
-        elif s_count > e_count:
-            diff_type = "over-split"
-        else:
-            diff_type = "boundary"
         max_len = max(e_count, s_count)
         for idx in range(max_len):
             exp = expected_surfaces[idx] if idx < e_count else ""
             suz = suzume_surfaces[idx] if idx < s_count else ""
             if exp != suz:
                 diff_details.append({"index": idx, "expected": exp, "suzume": suz, "type": "surface"})
-    elif surface_match and not full_match:
+    elif not full_match:
         diff_type = "pos-lemma"
         for idx in range(len(expected_tokens)):
             exp = expected_tokens[idx]
@@ -161,7 +156,7 @@ async def test_list() -> str:
     for path in sorted(test_dir.glob("*.json")):
         try:
             data = load_json(path)
-            cases = data.get("cases") or data.get("test_cases") or []
+            cases = data.get(canonical_cases_key(data, str(path))) or []
             count = len(cases)
         except Exception:
             count = 0
@@ -191,7 +186,7 @@ async def test_search(pattern: str, limit: int = 0) -> str:
         except Exception as exc:
             return _json_error(f"Failed to parse JSON file {path}: {exc}")
         basename = path.stem
-        cases = data.get("cases") or data.get("test_cases") or []
+        cases = data.get(canonical_cases_key(data, str(path))) or []
         for idx, case in enumerate(cases):
             case_id = case.get("id", str(idx))
             inp = case.get("input", "")
@@ -453,20 +448,19 @@ async def test_diff_mecab(file: str = "") -> str:
         except Exception as exc:
             return _json_error(f"Failed to parse JSON file {path}: {exc}")
         basename = path.stem
-        cases = data.get("cases") or data.get("test_cases") or []
+        cases = data.get(canonical_cases_key(data, str(path))) or []
         for idx, case in enumerate(cases):
             inp = case.get("input", "")
             if not inp:
                 continue
             total_cases += 1
             expected = case.get("expected") or []
-            mecab, _source, _rule = get_expected_tokens(inp)
+            mecab, _source, rule = get_expected_tokens(inp)
 
             if tokens_match(expected, mecab):
                 mecab_compatible += 1
                 continue
 
-            rule = get_suzume_rule(inp)
             case_id = case.get("id", str(idx))
             exp_str = "|".join(t.get("surface", "") for t in expected)
             mec_str = "|".join(t["surface"] for t in mecab)
@@ -553,7 +547,7 @@ async def test_needs_suzume_update(
         except Exception as exc:
             return _json_error(f"Failed to parse JSON file {path}: {exc}")
         basename = path.stem
-        cases_key = "cases" if "cases" in data else "test_cases"
+        cases_key = canonical_cases_key(data, str(path))
         cases = data.get(cases_key) or []
 
         for idx, case in enumerate(cases):

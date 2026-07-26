@@ -1,6 +1,8 @@
 """Dictionary lookup and single-entry mutation MCP tools."""
 
 import re
+from collections.abc import Awaitable, Callable
+from pathlib import Path
 
 from ..core.mecab import mecab_analyze
 from ..core.pos_mapping import map_mecab_pos
@@ -24,6 +26,31 @@ from ._dict_tools_common import (
     _token_to_dict,
     _validate_surface,
 )
+
+
+async def _append_entry_and_recompile(
+    target_file: Path,
+    entry_line: str,
+    recompile: Callable[[], Awaitable[str]],
+) -> tuple[str, str | None]:
+    """Append one entry, restoring the source file if compilation fails."""
+    existed = target_file.exists()
+    previous_content = target_file.read_text(encoding="utf-8") if existed else ""
+    _append_lines_atomic(target_file, [entry_line])
+
+    try:
+        recompile_status = await recompile()
+    except Exception as exc:
+        recompile_status = f"exception: {type(exc).__name__}: {exc}"
+
+    if recompile_status == "ok":
+        return recompile_status, None
+
+    if existed:
+        _atomic_write_text(target_file, previous_content)
+    else:
+        target_file.unlink(missing_ok=True)
+    return recompile_status, f"Dictionary recompile failed ({recompile_status}); appended entry was rolled back."
 
 
 @mcp.tool()
@@ -226,9 +253,19 @@ async def dict_add(
                 {"status": "ok", "word": word, "entry": entry_line, "file": target_rel, "dry_run": True}
             )
 
-        _append_lines_atomic(target_file, [entry_line])
-
-        recompile_status = await _recompile_user_dic()
+        recompile_status, error = await _append_entry_and_recompile(target_file, entry_line, _recompile_user_dic)
+        if error:
+            return _json_result(
+                {
+                    "status": "error",
+                    "message": error,
+                    "word": word,
+                    "entry": entry_line,
+                    "file": target_rel,
+                    "recompile": recompile_status,
+                    "rolled_back": True,
+                }
+            )
         return _json_result(
             {"status": "ok", "word": word, "entry": entry_line, "file": target_rel, "recompile": recompile_status}
         )
@@ -242,9 +279,19 @@ async def dict_add(
             {"status": "ok", "word": word, "entry": entry_line, "file": target_file_rel, "dry_run": True}
         )
 
-    _append_lines_atomic(target_file, [entry_line])
-
-    recompile_status = await _recompile_core_dic()
+    recompile_status, error = await _append_entry_and_recompile(target_file, entry_line, _recompile_core_dic)
+    if error:
+        return _json_result(
+            {
+                "status": "error",
+                "message": error,
+                "word": word,
+                "entry": entry_line,
+                "file": target_file_rel,
+                "recompile": recompile_status,
+                "rolled_back": True,
+            }
+        )
     return _json_result(
         {"status": "ok", "word": word, "entry": entry_line, "file": target_file_rel, "recompile": recompile_status}
     )

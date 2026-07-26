@@ -1,6 +1,7 @@
 """Tests for postprocessor functions."""
 
 from suzume_mcp.core.postprocessors import (
+    postprocess_adjective_garu,
     postprocess_adjective_nominalizer,
     postprocess_adverb_nominal_context,
     postprocess_attributive_mamonaku,
@@ -43,7 +44,6 @@ from suzume_mcp.core.postprocessors import (
     postprocess_sou,
     postprocess_subsidiary_yuku,
     postprocess_tagaru_aux,
-    postprocess_te,
     postprocess_temporal_nao,
     postprocess_to_areba_conditional,
     postprocess_tsuke_noun,
@@ -186,7 +186,12 @@ class TestPostprocessClosedFunctionWords:
 
 class TestPostprocessClosedSubsidiaryAux:
     def test_retags_finite_subsidiary_forms_after_renyokei(self):
-        cases = (("たまえ", "たまう"), ("あぐね", "あぐねる"), ("そこなっ", "そこなう"))
+        cases = (
+            ("たまえ", "たまう"),
+            ("あぐね", "あぐねる"),
+            ("そこね", "そこねる"),
+            ("そこなっ", "そこなう"),
+        )
         for surface, lemma in cases:
             tokens = [_tok("読み", "Verb", lemma="読む"), _tok(surface, "Verb")]
             assert postprocess_closed_subsidiary_aux(tokens)
@@ -570,6 +575,12 @@ class TestTokenizerSearchUnitNormalizers:
         assert postprocess_tagaru_aux(tokens)
         assert tokens == [_tok("食べ", "Verb"), _tok("たがる", "Auxiliary", lemma="たがる")]
 
+    def test_productive_garu_after_adjective_stem_is_verb(self):
+        for form in ("がら", "がり", "がる", "がれ", "がろ", "がっ"):
+            tokens = [_tok("恥ずかし", "Adjective", lemma="恥ずかしい"), _tok(form, "Auxiliary")]
+            assert postprocess_adjective_garu(tokens)
+            assert tokens[1] == _tok(form, "Verb", lemma="がる")
+
     def test_past_auxiliary_before_case_particle_is_not_tagaru(self):
         tokens = [_tok("い", "Auxiliary", lemma="いる"), _tok("た", "Auxiliary"), _tok("が", "Particle")]
         assert not postprocess_tagaru_aux(tokens)
@@ -861,6 +872,26 @@ class TestClosedGrammarNormalizers:
 
 
 class TestProductiveSearchUnitBoundaries:
+    def test_hiragana_alignment_compound_before_particle_is_nominal(self):
+        tokens = [
+            _tok("つめあわ", "Verb", lemma="つめあう"),
+            _tok("せ", "Auxiliary", lemma="せる"),
+            _tok("を", "Particle"),
+        ]
+        assert postprocess_productive_search_unit_boundaries(tokens)
+        assert tokens == [
+            {"surface": "つめあわせ", "pos": "Noun", "lemma": "つめあわせ"},
+            _tok("を", "Particle"),
+        ]
+
+    def test_hiragana_alignment_stem_without_nominal_particle_stays_split(self):
+        tokens = [
+            _tok("つめあわ", "Verb", lemma="つめあう"),
+            _tok("せ", "Auxiliary", lemma="せる"),
+            _tok("た", "Auxiliary"),
+        ]
+        assert not postprocess_productive_search_unit_boundaries(tokens)
+
     def test_formal_noun_you_is_not_volitional(self):
         tokens = [_tok("読む", "Verb", lemma="読む"), _tok("よう", "Noun"), _tok("だ", "Auxiliary")]
         assert not postprocess_productive_search_unit_boundaries(tokens)
@@ -927,10 +958,3 @@ class TestPostprocessCopulaNeg:
         tokens = [_tok("じゃ", "Auxiliary"), _tok("なく", "Auxiliary")]
         postprocess_copula_neg(tokens)
         assert tokens[1]["pos"] == "Adjective"
-
-
-class TestPostprocessTe:
-    def test_te_after_verb(self):
-        tokens = [_tok("食べ", "Verb"), _tok("て", "Particle")]
-        postprocess_te(tokens)
-        assert tokens[1]["pos"] == "Auxiliary"

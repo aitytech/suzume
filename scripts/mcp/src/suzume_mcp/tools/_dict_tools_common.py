@@ -6,7 +6,7 @@ from pathlib import Path
 from ..core.file_utils import append_lines_atomic as _append_lines_atomic  # noqa: F401
 from ..core.file_utils import atomic_write_text as _atomic_write_text  # noqa: F401
 from ..core.json_utils import json_result as _json_result  # noqa: F401
-from ..core.suzume_cli import get_cli_path
+from ..core.suzume_cli import get_cli_path, recompile_dic
 from ..server import PROJECT_ROOT
 
 # User dictionary categories
@@ -72,8 +72,7 @@ VALID_POS = [
 ]
 
 VALID_CONJ = [
-    "I_ADJ",
-    "NA_ADJ",
+    "ICHIDAN",
     "GODAN_KA",
     "GODAN_GA",
     "GODAN_SA",
@@ -83,10 +82,12 @@ VALID_CONJ = [
     "GODAN_MA",
     "GODAN_RA",
     "GODAN_WA",
-    "ICHIDAN",
     "SURU",
     "KURU",
-    "IRREGULAR",
+    "I_ADJ",
+    "NA_ADJ",
+    "FAMILY",
+    "GIVEN",
 ]
 
 
@@ -231,62 +232,41 @@ def _token_to_dict(token: dict) -> dict:
 
 async def _recompile_core_dic() -> str:
     """Recompile core dictionary."""
-    import subprocess
-
     cli = get_cli_path()
     if not cli.exists():
         return "not_found"
 
-    # Concatenate all TSV files
     import tempfile
 
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False, encoding="utf-8") as f:
-        for file_rel in ALL_DICT_FILES:
-            filepath = PROJECT_ROOT / file_rel
-            if filepath.exists():
-                f.write(filepath.read_text(encoding="utf-8"))
-        tmp_path = f.name
+    output_path = PROJECT_ROOT / "data/core.dic"
+    with tempfile.NamedTemporaryFile(dir=output_path.parent, suffix=".dic", delete=False) as output:
+        tmp_output_path = Path(output.name)
 
     try:
-        result = subprocess.run(
-            [str(cli), "dict", "compile", tmp_path, str(PROJECT_ROOT / "data/core.dic")],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        if result.returncode == 0:
+        if await recompile_dic("data/core/*.tsv", str(tmp_output_path)):
+            tmp_output_path.replace(output_path)
             return "ok"
         return "failed"
     finally:
-        Path(tmp_path).unlink(missing_ok=True)
+        tmp_output_path.unlink(missing_ok=True)
 
 
 async def _recompile_user_dic() -> str:
     """Recompile user dictionary."""
-    import subprocess
-
     cli = get_cli_path()
     if not cli.exists():
         return "not_found"
 
     import tempfile
 
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False, encoding="utf-8") as f:
-        for cat in USER_CATEGORIES:
-            filepath = PROJECT_ROOT / f"data/user/{cat}.tsv"
-            if filepath.exists():
-                f.write(filepath.read_text(encoding="utf-8"))
-        tmp_path = f.name
+    output_path = PROJECT_ROOT / "data/user.dic"
+    with tempfile.NamedTemporaryFile(dir=output_path.parent, suffix=".dic", delete=False) as output:
+        tmp_output_path = Path(output.name)
 
     try:
-        result = subprocess.run(
-            [str(cli), "dict", "compile", tmp_path, str(PROJECT_ROOT / "data/user.dic")],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        if result.returncode == 0:
+        if await recompile_dic("data/user/*.tsv", str(tmp_output_path)):
+            tmp_output_path.replace(output_path)
             return "ok"
         return "failed"
     finally:
-        Path(tmp_path).unlink(missing_ok=True)
+        tmp_output_path.unlink(missing_ok=True)

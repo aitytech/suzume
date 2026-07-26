@@ -1,6 +1,7 @@
 """Test tools ported from test_tool.pl - MCP tool registration."""
 
 import re
+import subprocess
 from pathlib import Path
 
 from ..core.constants import TARI_ADVERB_STEMS
@@ -41,10 +42,8 @@ def _get_suzume_tokens(text: str) -> list[dict]:
     if not cli.exists():
         raise RuntimeError(f"Suzume CLI not found: {cli}")
 
-    import subprocess
-
     result = subprocess.run(
-        [str(cli), "--no-user-dict", text],
+        [str(cli), "analyze", "--no-user-dict", "--", text],
         capture_output=True,
         text=True,
         timeout=30,

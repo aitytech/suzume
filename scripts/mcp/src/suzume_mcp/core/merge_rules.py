@@ -204,23 +204,6 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     if applied_rule is None:
                         applied_rule = "url"
 
-        # 1.6. ASCII with dots pattern
-        if not merged:
-            m = regex.match(r"^([a-zA-Z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9]+)+)", remaining)
-            if m:
-                ascii_seq = m.group(1)
-                length = 0
-                j = i
-                while j < len(tokens) and length < len(ascii_seq):
-                    length += len(tokens[j].get("surface", ""))
-                    j += 1
-                if length == len(ascii_seq):
-                    result.append({"surface": ascii_seq, "pos": "名詞", "lemma": ascii_seq})
-                    i = j
-                    merged = True
-                    if applied_rule is None:
-                        applied_rule = "ascii-dots"
-
         # 2. Number + counter/katakana
         if not merged and t.get("pos") == "名詞" and t.get("pos_sub1") == "数":
             j = i + 1

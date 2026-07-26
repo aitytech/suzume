@@ -5,6 +5,7 @@ import regex
 from .constants import (
     HONORIFIC_EXCEPTIONS,
     HONORIFIC_SUFFIXES,
+    KANJI_PREFIX_COMPOUNDS,
     PREFIX_EXCEPTIONS,
     SEARCH_UNIT_COMPOUNDS,
 )
@@ -645,9 +646,6 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
     Also merges single-kanji + kanji-starting tokens when MeCab incorrectly
     splits compound words (e.g., 微+笑み → 微笑み).
     """
-    # Specific kanji+hiragana compounds that MeCab splits incorrectly
-    _KANJI_HIRA_MERGES = {"微": {"笑み"}}
-
     merged = []
     for index, curr in enumerate(result):
         surface = curr.get("surface", "")
@@ -699,8 +697,8 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
             )
             or (surface == "々" and regex.match(r"^[\p{Han}]+$", merged[-1].get("surface", "")))
             or (
-                merged[-1].get("surface", "") in _KANJI_HIRA_MERGES
-                and surface in _KANJI_HIRA_MERGES[merged[-1]["surface"]]
+                merged[-1].get("surface", "") in KANJI_PREFIX_COMPOUNDS
+                and surface in KANJI_PREFIX_COMPOUNDS[merged[-1]["surface"]]
             )
         ):
             merged[-1]["surface"] += surface

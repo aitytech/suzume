@@ -7,6 +7,9 @@ import re
 from pathlib import Path
 
 from ..core.test_file_utils import (
+    cases_key as canonical_cases_key,
+)
+from ..core.test_file_utils import (
     get_test_data_dir,
     get_test_files,
     load_json,
@@ -25,10 +28,6 @@ _PART_DESCRIPTION_RE = re.compile(r" \(part [0-9]+/[0-9]+\)$")
 def _serialized_size(data: dict) -> int:
     content = json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     return len(content.encode("utf-8"))
-
-
-def _cases_key(data: dict) -> str:
-    return "cases" if "cases" in data else "test_cases"
 
 
 def _case_digest(cases: list[dict]) -> str:
@@ -212,7 +211,7 @@ def append_cases_partitioned(
         loaded = []
         for _number, path in numbered_paths:
             data = load_json(path)
-            cases_key = _cases_key(data)
+            cases_key = canonical_cases_key(data, str(path))
             cases = data.get(cases_key)
             if not isinstance(cases, list):
                 raise ValueError(f"{path.name} has no test case array")
@@ -255,7 +254,7 @@ def append_cases_partitioned(
             originals[base_path] = load_json(base_path)
         else:
             source_data = {"version": "1.0", "description": f"{family} tests", "cases": []}
-        cases_key = _cases_key(source_data)
+        cases_key = canonical_cases_key(source_data, str(base_path))
         existing_cases = source_data.get(cases_key)
         if not isinstance(existing_cases, list):
             raise ValueError(f"{base_path.name} has no test case array")
@@ -292,7 +291,7 @@ def append_cases_partitioned(
         if path in planned_paths or path == source_to_remove:
             continue
         data = load_json(path)
-        other_cases = data.get(_cases_key(data)) or []
+        other_cases = data.get(canonical_cases_key(data, str(path))) or []
         for parameter_name in sorted(planned_names.intersection(_parameter_names(path, other_cases))):
             problems.append(f"GoogleTest name collides with {path.name}: {parameter_name}")
     if problems:
@@ -335,7 +334,7 @@ async def test_audit_layout(
             data = load_json(path)
         except Exception as exc:
             return _json_error(f"Failed to parse JSON file {path}: {exc}")
-        cases = data.get(_cases_key(data)) or []
+        cases = data.get(canonical_cases_key(data, str(path))) or []
         case_count = len(cases)
         byte_count = path.stat().st_size
         total_cases += case_count
@@ -398,7 +397,7 @@ async def test_split_file(
         source_data = load_json(source_path)
     except Exception as exc:
         return _json_error(f"Failed to parse JSON file {source_path}: {exc}")
-    cases_key = _cases_key(source_data)
+    cases_key = canonical_cases_key(source_data, str(source_path))
     cases = source_data.get(cases_key)
     if not isinstance(cases, list):
         return _json_error(f"{source_path.name} has no test case array")
@@ -441,7 +440,7 @@ async def test_split_file(
         if path == source_path:
             continue
         data = load_json(path)
-        other_cases = data.get(_cases_key(data)) or []
+        other_cases = data.get(canonical_cases_key(data, str(path))) or []
         overlap = planned_names.intersection(_parameter_names(path, other_cases))
         for parameter_name in sorted(overlap):
             problems.append(f"GoogleTest name collides with {path.name}: {parameter_name}")

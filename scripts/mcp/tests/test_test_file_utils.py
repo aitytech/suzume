@@ -3,6 +3,7 @@
 import json
 
 from suzume_mcp.core.test_file_utils import (
+    cases_key,
     find_test_by_id,
     find_test_by_input,
     generate_id,
@@ -12,6 +13,18 @@ from suzume_mcp.core.test_file_utils import (
     normalize_test_file_name,
     save_json,
 )
+
+
+def test_cases_key_accepts_only_cpp_loader_schema():
+    assert cases_key({"cases": []}) == "cases"
+
+    for invalid in ({"test_cases": []}, {}, {"cases": {}}):
+        try:
+            cases_key(invalid)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Expected a non-canonical test schema to be rejected")
 
 
 def test_generate_id_hiragana():

@@ -39,6 +39,15 @@ class TestFixedFunctionSearchUnit:
         assert rule is None
 
 
+class TestInterrogativeNominalAdverb:
+    def test_keeps_productive_morpheme_boundaries(self):
+        result, rule = apply_suzume_split([_tok("いつの間にか", pos="副詞")])
+        assert [token["surface"] for token in result] == ["いつ", "の", "間", "に", "か"]
+        assert [token["pos"] for token in result] == ["名詞", "助詞", "名詞", "助詞", "助詞"]
+        assert result[0]["pos_sub1"] == "代名詞"
+        assert rule == "interrogative-nominal-adverb-boundary"
+
+
 class TestPluralRaSplit:
     def test_karera(self):
         tokens = [_tok("彼ら")]
@@ -209,6 +218,19 @@ class TestNounNaiCompoundSplit:
             {"surface": "ない", "pos": "形容詞", "lemma": "ない"},
         ]
         assert rule == "noun-nai-compound-split"
+
+
+class TestLiteraryVolitionalParticleSplit:
+    def test_does_not_reemit_original_after_an_earlier_rule(self):
+        tokens = [
+            _tok("じゃない", pos="助動詞"),
+            _tok("むと", pos="名詞"),
+        ]
+
+        result, rule = apply_suzume_split(tokens)
+
+        assert [token["surface"] for token in result] == ["じゃ", "ない", "む", "と"]
+        assert rule == "copula-negation-split"
 
 
 class TestNoSplit:

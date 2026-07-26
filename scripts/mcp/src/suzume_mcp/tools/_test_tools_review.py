@@ -8,6 +8,9 @@ from ..core.suzume_cli import (
 )
 from ..core.test_file_suggestions import suggest_test_files
 from ..core.test_file_utils import (
+    cases_key as canonical_cases_key,
+)
+from ..core.test_file_utils import (
     find_test_by_id,
     find_test_by_input,
     find_tests_by_input,
@@ -106,7 +109,7 @@ async def test_reset_suzume(
             except Exception as exc:
                 return _json_error(f"Failed to parse JSON file {path}: {exc}")
             basename = path.stem
-            cases_key = "cases" if "cases" in data else "test_cases"
+            cases_key = canonical_cases_key(data, str(path))
             cases = data.get(cases_key) or []
             for idx, case in enumerate(cases):
                 if _banned_keys_in(case):
@@ -148,7 +151,7 @@ async def test_reset_suzume(
         )
 
         if apply:
-            cases_key = "cases" if "cases" in found["data"] else "test_cases"
+            cases_key = canonical_cases_key(found["data"], str(found["file"]))
             stored = found["data"][cases_key][found["index"]]
             for key in BANNED_ORACLE_KEYS:
                 stored.pop(key, None)
@@ -192,7 +195,7 @@ async def test_validate_ids(
         except Exception as exc:
             return _json_error(f"Failed to parse JSON file {path}: {exc}")
         basename = path.stem
-        cases_key = "cases" if "cases" in data else "test_cases"
+        cases_key = canonical_cases_key(data, str(path))
         cases = data.get(cases_key) or []
         file_ids: dict[str, bool] = {}
 

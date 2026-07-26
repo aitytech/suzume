@@ -1,6 +1,7 @@
 """Integration tests for get_expected_tokens (requires MeCab)."""
 
 import shutil
+from unittest.mock import patch
 
 import pytest
 
@@ -77,11 +78,26 @@ class TestSurfaceIsNeverLost:
         tokens, _, _ = get_expected_tokens("東京。")
         assert [t["surface"] for t in tokens] == ["東京"]
 
-    def test_dropping_real_text_raises_instead_of_losing_it(self):
-        # Hangul is outside IPADIC and has no correct_mecab_pos rule, so the
-        # guard has to fail rather than quietly produce a lossy oracle.
-        with pytest.raises(RuntimeError, match="symbol filter would drop"):
-            get_expected_tokens("한국を見る")
+    def test_declared_prolonged_sound_normalization_is_allowed(self):
+        tokens, _, rule = get_expected_tokens("長いーー音を入力する")
+        assert "".join(token["surface"] for token in tokens) == "長いー音を入力する"
+        assert rule == "prolonged-sound-merge"
+
+    def test_unicode_text_is_reclassified_instead_of_lost(self):
+        tokens, _, _ = get_expected_tokens("테스트を見る")
+        assert "".join(token["surface"] for token in tokens) == "테스트を見る"
+        assert tokens[0]["pos"] == "Noun"
+
+    def test_duplicate_surface_raises_instead_of_poisoning_the_oracle(self):
+        duplicated = [
+            {"surface": "東京", "pos": "名詞", "lemma": "東京"},
+            {"surface": "東京", "pos": "名詞", "lemma": "東京"},
+        ]
+        with (
+            patch("suzume_mcp.core.suzume_utils.apply_suzume_split", return_value=(duplicated, "broken-rule")),
+            pytest.raises(RuntimeError, match="do not reconstruct"),
+        ):
+            get_expected_tokens("東京")
 
 
 class TestTokensMatch:

@@ -367,7 +367,6 @@ COMPOUND_VERB_V2_GODAN: list[str] = [
     "そう",
     "混じる",
     "まじる",
-    # V2s the core reaches through the dictionary rather than the closed lexicon.
     "籠る",
     "籠もる",
     "鳴らす",
@@ -914,7 +913,14 @@ KANJI_RANGES: tuple[tuple[int, int], ...] = (
     (0x20000, 0x2A6DF),  # CJK Extension B
     (0x2A700, 0x2B73F),  # CJK Extension C
     (0x2B740, 0x2B81F),  # CJK Extension D
+    (0x2B820, 0x2CEAF),  # CJK Extension E
+    (0x2CEB0, 0x2EBEF),  # CJK Extension F
+    (0x2EBF0, 0x2EE5F),  # CJK Extension I
+    (0x30000, 0x3134F),  # CJK Extension G
+    (0x31350, 0x323AF),  # CJK Extension H
+    (0x323B0, 0x3347F),  # CJK Extension J
     (0xF900, 0xFAFF),  # CJK Compatibility Ideographs
+    (0x2F800, 0x2FA1F),  # CJK Compatibility Ideographs Supplement
     (0x2F00, 0x2FDF),  # Kangxi Radicals
 )
 

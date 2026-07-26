@@ -280,8 +280,9 @@ def map_mecab_pos(token: dict | str) -> str:
         token["lemma"] = "無い"
         return "Adjective"
 
-    # という: 助詞 -> Determiner
-    if surface == "という" and pos == "助詞":
+    # Fixed quotative determiners: IPADIC files these closed adnominal units
+    # under particles even though they modify the following nominal.
+    if surface in ("という", "といった") and pos == "助詞":
         return "Determiner"
 
     # Default: map from Japanese POS
@@ -303,10 +304,11 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
         # 記号 tokens are dropped by the symbol filter in get_expected_tokens,
         # so a token that carries real text must not stay labelled 記号 or the
         # character disappears from the expected tokens entirely. Two cases:
-        # IPADIC has no entry for supplementary-plane kanji (𠮟, 𩸽 …) and calls
-        # them 記号,一般; it also files a standalone full-width letter under
-        # 記号,アルファベット. Neither is a symbol.
-        if pos == "記号" and (t.get("pos_sub1", "") == "アルファベット" or is_all_kanji(surface)):
+        # IPADIC has no entry for many Unicode scripts and supplementary-plane
+        # kanji, and labels them 記号. A surface made only of Unicode letters,
+        # marks, or decimal digits is text rather than punctuation.
+        carries_only_text = bool(surface) and regex.fullmatch(r"[\p{L}\p{M}\p{Nd}]+", surface) is not None
+        if pos == "記号" and (t.get("pos_sub1", "") == "アルファベット" or is_all_kanji(surface) or carries_only_text):
             t["pos"] = "名詞"
             t["pos_sub1"] = "一般"
             continue
@@ -374,7 +376,11 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
                 t["lemma"] = "得る"
 
         # Fix particles misclassified as Noun
-        if surface in PARTICLE_CORRECTIONS and pos == "Noun":
+        if (
+            surface in PARTICLE_CORRECTIONS
+            and pos in ("名詞", "Noun", "感動詞", "Interjection")
+            and t.get("pos_sub1") != "接尾"
+        ):
             t["pos"] = PARTICLE_CORRECTIONS[surface]
 
         # Regional request forms of the benefactive くれる are read as unrelated

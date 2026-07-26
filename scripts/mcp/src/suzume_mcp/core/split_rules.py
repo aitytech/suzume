@@ -39,6 +39,17 @@ _ICHIDAN_RENYOKEI_ENDINGS = frozenset("えけげせぜてでねへべめれ")
 _COMPLETIVE_TSUKUSU_FORMS = frozenset({"尽くさ", "尽くし", "尽くす", "尽くせ", "尽くそ"})
 
 
+def _emit_split(
+    result: list[dict],
+    split_tokens: tuple[dict, ...],
+    applied_rule: str | None,
+    rule: str,
+) -> str:
+    """Emit a complete split and retain the first rule name for reporting."""
+    result.extend(split_tokens)
+    return applied_rule or rule
+
+
 def base_from_renyokei(stem: str) -> str | None:
     """Reconstruct a dictionary form from a productive renyokei surface."""
     if not stem:
@@ -85,6 +96,23 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
 
     for token_index, t in enumerate(tokens):
         surface = t.get("surface", "")
+
+        # IPADIC lexicalizes this entire interrogative nominal phrase as an
+        # adverb. Suzume keeps its productive pronoun/particle/noun boundaries;
+        # the final か is the indefinite adverbial particle.
+        if t.get("pos") == "副詞" and surface == "いつの間にか":
+            result.extend(
+                [
+                    {"surface": "いつ", "pos": "名詞", "pos_sub1": "代名詞", "lemma": "いつ"},
+                    {"surface": "の", "pos": "助詞", "lemma": "の"},
+                    {"surface": "間", "pos": "名詞", "lemma": "間"},
+                    {"surface": "に", "pos": "助詞", "lemma": "に"},
+                    {"surface": "か", "pos": "助詞", "lemma": "か"},
+                ]
+            )
+            if applied_rule is None:
+                applied_rule = "interrogative-nominal-adverb-boundary"
+            continue
 
         # Productive negative auxiliaries keep their boundary even when a
         # reference dictionary lexicalizes the entire compound.  Restrict the
@@ -392,11 +420,16 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
         compound = LITERARY_VOLITIONAL_PARTICLE_COMPOUNDS.get(surface)
         if compound is not None:
             auxiliary, particle = compound
-            result.append({"surface": auxiliary, "pos": "助動詞", "lemma": auxiliary})
-            result.append({"surface": particle, "pos": "助詞", "lemma": particle})
-            if applied_rule is None:
-                applied_rule = "literary-volitional-particle-split"
-                continue
+            applied_rule = _emit_split(
+                result,
+                (
+                    {"surface": auxiliary, "pos": "助動詞", "lemma": auxiliary},
+                    {"surface": particle, "pos": "助詞", "lemma": particle},
+                ),
+                applied_rule,
+                "literary-volitional-particle-split",
+            )
+            continue
 
         # 13. An excessive auxiliary remains a separate search unit. MeCab can
         # lexicalize a kanji V1 plus 過ぎ into one verb token (行き過ぎ), while

@@ -50,7 +50,7 @@ def parse_json(result_str: str) -> dict:
 class TestClassifyDiff:
     def test_over_split(self):
         # Suzume has more tokens than expected
-        assert classify_diff("デカチンポ 画像", "デカ チンポ 画像") == "over-split"
+        assert classify_diff("東京駅 画像", "東京 駅 画像") == "over-split"
 
     def test_under_split(self):
         # Suzume has fewer tokens than expected
@@ -65,10 +65,7 @@ class TestClassifyDiff:
         assert classify_diff("２次", "2次") == "minor"
 
     def test_exact_match_not_called(self):
-        # classify_diff is only called when there IS a diff, but test edge case
-        result = classify_diff("食べ て いる", "食べ て いる")
-        # Same tokens → same count → boundary (but in practice won't be called)
-        assert result in ("boundary", "minor")
+        assert classify_diff("食べ て いる", "食べ て いる") == "match"
 
     def test_empty(self):
         assert classify_diff("", "foo") == "empty"

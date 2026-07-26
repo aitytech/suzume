@@ -259,6 +259,7 @@ def postprocess_closed_subsidiary_aux(tokens: list[dict]) -> bool:
         "そびれる": "そびれる",
         "あぐね": "あぐねる",
         "あぐねる": "あぐねる",
+        "そこね": "そこねる",
         "そこない": "そこなう",
         "そこなう": "そこなう",
         "そこなっ": "そこなう",
@@ -688,6 +689,21 @@ def postprocess_tagaru_aux(tokens: list[dict]) -> bool:
             tokens[idx : idx + 2] = [{"surface": surface, "pos": "Auxiliary", "lemma": "たがる"}]
             changed = True
         idx += 1
+    return changed
+
+
+def postprocess_adjective_garu(tokens: list[dict]) -> bool:
+    """Mirror the core's verb POS for productive adjective-stem + がる."""
+    garu_forms = frozenset({"がら", "がり", "がる", "がれ", "がろ", "がっ"})
+    changed = False
+    for idx in range(1, len(tokens)):
+        token = tokens[idx]
+        if tokens[idx - 1].get("pos") != "Adjective" or token.get("surface") not in garu_forms:
+            continue
+        if token.get("pos") != "Verb" or token.get("lemma") != "がる":
+            token["pos"] = "Verb"
+            token["lemma"] = "がる"
+            changed = True
     return changed
 
 
@@ -1249,19 +1265,6 @@ def postprocess_copula_neg(tokens: list[dict]) -> bool:
     return changed
 
 
-def postprocess_te(tokens: list[dict]) -> None:
-    """Fix て/で after verb: Particle -> Auxiliary."""
-    for i in range(1, len(tokens)):
-        t = tokens[i]
-        surface = t.get("surface", "")
-        if surface not in ("て", "で") or t.get("pos") != "Particle":
-            continue
-        prev_pos = tokens[i - 1].get("pos", "")
-        if prev_pos in ("Verb", "Auxiliary", "Adjective"):
-            t["pos"] = "Auxiliary"
-            t["lemma"] = "てる" if surface == "て" else "でる"
-
-
 def postprocess_de_aru(tokens: list[dict]) -> None:
     """Fix copula で+ある/あり/あっ pattern based on context."""
     for i in range(len(tokens)):
@@ -1655,13 +1658,32 @@ def postprocess_productive_search_unit_boundaries(tokens: list[dict]) -> bool:
                 continue
 
         # MeCab can analyze productive V1+合わせる as a causative chain
-        # (見合わ+せる).  The internal 合わ boundary recovers the same closed
-        # V2 class without naming V1 hosts.
-        if idx + 1 < len(tokens) and surface.endswith("合わ") and len(surface) > len("合わ"):
+        # (見合わ+せる, つめあわ+せ).  The internal 合わ/あわ boundary
+        # recovers the same closed V2 class without naming V1 hosts.  A bare
+        # continuative directly selected by a nominal particle is a deverbal
+        # compound noun; finite せる remains a compound verb.
+        compound_alignment_stem = next(
+            (ending for ending in ("合わ", "あわ") if surface.endswith(ending) and len(surface) > len(ending)),
+            None,
+        )
+        if idx + 2 < len(tokens) and compound_alignment_stem is not None:
+            following = tokens[idx + 1]
+            nominal_particle = tokens[idx + 2]
+            if (
+                following.get("surface") == "せ"
+                and nominal_particle.get("pos") == "Particle"
+                and nominal_particle.get("surface") in {"を", "は", "が", "の", "に", "で", "へ", "と", "も"}
+            ):
+                combined = surface + "せ"
+                tokens[idx : idx + 2] = [{"surface": combined, "pos": "Noun", "lemma": combined}]
+                changed = True
+                continue
+
+        if idx + 1 < len(tokens) and compound_alignment_stem is not None:
             following = tokens[idx + 1]
             if following.get("surface") == "せる":
                 combined = surface + "せる"
-                lemma = surface[: -len("合わ")] + "合わせる"
+                lemma = surface[: -len(compound_alignment_stem)] + "合わせる"
                 tokens[idx : idx + 2] = [{"surface": combined, "pos": "Verb", "lemma": lemma}]
                 changed = True
                 continue

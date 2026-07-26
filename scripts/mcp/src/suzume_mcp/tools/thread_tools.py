@@ -3,9 +3,9 @@
 import contextlib
 import json
 import re
-import unicodedata
 from pathlib import Path
 
+from ..core.diff_utils import classify_surface_diff, normalize_width
 from ..core.json_utils import json_result as _json_result
 from ..core.suzume_cli import get_expected_tokens_subprocess, get_suzume_surfaces
 from ..server import PROJECT_ROOT, mcp
@@ -37,43 +37,23 @@ def _bugs_dir(source: str = "thread") -> Path:
 # ============================================================================
 
 
+def _normalize_width(text: str) -> str:
+    """Compatibility facade for callers of the former local helper."""
+    return normalize_width(text)
+
+
 def classify_diff(expected: str, suzume: str) -> str:
     """Classify the type of difference between expected and suzume output.
 
     Returns one of:
+        match        : Token surfaces are identical
         over-split   : Suzume splits a token that expected keeps together
         under-split  : Suzume merges tokens that expected splits
         boundary     : Same number of tokens but different boundaries
-        mecab-better : MeCab's split looks more reasonable
-        suzume-better: Suzume's split looks more reasonable
         minor        : Small difference (fullwidth/halfwidth, etc.)
+        empty        : Either side has no tokens
     """
-    exp_tokens = expected.split()
-    suz_tokens = suzume.split()
-
-    if not exp_tokens or not suz_tokens:
-        return "empty"
-
-    # Check fullwidth/halfwidth normalization diff only
-    exp_norm = _normalize_width(expected)
-    suz_norm = _normalize_width(suzume)
-    if exp_norm == suz_norm:
-        return "minor"
-
-    exp_len = len(exp_tokens)
-    suz_len = len(suz_tokens)
-
-    if suz_len > exp_len:
-        return "over-split"
-    elif suz_len < exp_len:
-        return "under-split"
-    else:
-        return "boundary"
-
-
-def _normalize_width(text: str) -> str:
-    """Normalize fullwidth alphanumeric to halfwidth for comparison."""
-    return unicodedata.normalize("NFKC", text)
+    return classify_surface_diff(expected.split(), suzume.split())
 
 
 def summarize_diffs(issues: list[dict]) -> dict[str, int]:

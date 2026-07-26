@@ -8,6 +8,9 @@ from ..core.suzume_cli import (
 )
 from ..core.test_file_suggestions import suggest_test_files
 from ..core.test_file_utils import (
+    cases_key as canonical_cases_key,
+)
+from ..core.test_file_utils import (
     find_test_by_id,
     find_test_by_input,
     generate_id,
@@ -37,7 +40,7 @@ def _deduplicate_generated_ids(items: list[dict]) -> None:
     test_dir = get_test_data_dir(PROJECT_ROOT)
     for path in test_dir.glob("*.json"):
         data = load_json(path)
-        cases_key = "cases" if "cases" in data else "test_cases"
+        cases_key = canonical_cases_key(data, str(path))
         existing_ids.update(str(case.get("id", "")) for case in data.get(cases_key) or [])
 
     for item in items:
@@ -176,7 +179,7 @@ async def test_update(
         expected = _format_expected_checked(tokens, source)
     except RuntimeError as exc:
         return _json_error(str(exc))
-    cases_key = "cases" if "cases" in found["data"] else "test_cases"
+    cases_key = canonical_cases_key(found["data"], str(found["file"]))
     old_expected = found["case"].get("expected", [])
 
     found["data"][cases_key][found["index"]]["expected"] = expected
@@ -224,7 +227,7 @@ async def test_delete(
     case_id = case.get("id", found["index"])
     surfaces = " ".join(t.get("surface", "") for t in (case.get("expected") or []))
 
-    cases_key = "cases" if "cases" in found["data"] else "test_cases"
+    cases_key = canonical_cases_key(found["data"], str(found["file"]))
     del found["data"][cases_key][found["index"]]
     save_json(found["file"], found["data"])
 
@@ -398,7 +401,7 @@ async def test_replace_pos(
             data = load_json(path)
         except Exception as exc:
             return _json_error(f"Failed to parse JSON file {path}: {exc}")
-        cases_key = "cases" if "cases" in data else "test_cases"
+        cases_key = canonical_cases_key(data, str(path))
         cases = data.get(cases_key) or []
         file_changes = 0
 
@@ -462,7 +465,7 @@ async def test_map_pos(
             data = load_json(path)
         except Exception as exc:
             return _json_error(f"Failed to parse JSON file {path}: {exc}")
-        cases_key = "cases" if "cases" in data else "test_cases"
+        cases_key = canonical_cases_key(data, str(path))
         cases = data.get(cases_key) or []
         file_changes = 0
 
@@ -520,7 +523,7 @@ async def test_list_pos(file: str = "") -> str:
             data = load_json(path)
         except Exception as exc:
             return _json_error(f"Failed to parse JSON file {path}: {exc}")
-        cases = data.get("cases") or data.get("test_cases") or []
+        cases = data.get(canonical_cases_key(data, str(path))) or []
         for case in cases:
             for token in case.get("expected") or []:
                 pos = token.get("pos", "UNKNOWN")
