@@ -180,6 +180,7 @@ constexpr float kStandaloneKanjiVerbSplitPenalty = 3.0F;
 constexpr float kSingleKanjiIruVerbSplitPenalty = 2.5F;
 constexpr float kGodanRaIchidanAmbiguityPenalty = 1.0F;
 constexpr float kUnverifiedGodanWaExceedsVerbPenalty = 2.0F;
+constexpr float kUnverifiedVerbExceedsTerminalPenalty = 3.0F;
 
 // A negation-prefix compound with a na-adjective continuation is a productive
 // predicative adjective even when its open-class base is not in the compact

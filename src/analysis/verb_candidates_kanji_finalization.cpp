@@ -676,6 +676,24 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
         }
       }
     }
+    // Japanese builds longer verbs on the continuative stem (読み+始める), never
+    // on a finite form, so a fabricated candidate whose prefix is already a
+    // dictionary 終止形 has no morphological reading: 書くき can only be 書く
+    // plus a following morpheme, not a form of the non-word 書くく. Restricting
+    // this to the terminal form leaves stem-prefix candidates (待ち → 待つ)
+    // to the narrower rule above, and dictionary verbs are exempt throughout.
+    if (!in_dict && dict_manager != nullptr) {
+      const auto prefix_results = dict_manager->lookup(surface, 0);
+      for (const auto& result : prefix_results) {
+        if (result.entry != nullptr && result.entry->extended_pos == core::ExtendedPOS::VerbShuushikei &&
+            result.length < normalize::utf8Length(surface)) {
+          base_cost += candidate::kUnverifiedVerbExceedsTerminalPenalty;
+          SUZUME_DEBUG_LOG("[COST_ADJ] \"" << surface << "\" +" << candidate::kUnverifiedVerbExceedsTerminalPenalty
+                                           << " (fabricated_verb_extends_terminal)\n");
+          break;
+        }
+      }
+    }
     SUZUME_DEBUG_VERBOSE_BLOCK {
       SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " base=" << best.base_form << " cost=" << base_cost
                           << " in_dict=" << in_dict << " has_suffix=" << has_suffix << "\n";
