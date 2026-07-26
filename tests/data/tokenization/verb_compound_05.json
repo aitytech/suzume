@@ -254,6 +254,148 @@
       ],
       "id": "shi_kiwo_suru",
       "input": "差し引きを計算する"
+    },
+    {
+      "description": "見立てが甘い - regression test",
+      "expected": [
+        {
+          "lemma": "見立て",
+          "pos": "Noun",
+          "surface": "見立て"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "甘い",
+          "pos": "Adjective",
+          "surface": "甘い"
+        }
+      ],
+      "id": "tega_i",
+      "input": "見立てが甘い"
+    },
+    {
+      "description": "見立てを聞く - regression test",
+      "expected": [
+        {
+          "lemma": "見立て",
+          "pos": "Noun",
+          "surface": "見立て"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "tewo_ku",
+      "input": "見立てを聞く"
+    },
+    {
+      "description": "病状を見立てる - regression test",
+      "expected": [
+        {
+          "lemma": "病状",
+          "pos": "Noun",
+          "surface": "病状"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見立てる",
+          "pos": "Verb",
+          "surface": "見立てる"
+        }
+      ],
+      "id": "wo_teru_3",
+      "input": "病状を見立てる"
+    },
+    {
+      "description": "写真を見比べる - regression test",
+      "expected": [
+        {
+          "lemma": "写真",
+          "pos": "Noun",
+          "surface": "写真"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見比べる",
+          "pos": "Verb",
+          "surface": "見比べる"
+        }
+      ],
+      "id": "wo_beru_2",
+      "input": "写真を見比べる"
+    },
+    {
+      "description": "二本立てで行く - regression test",
+      "expected": [
+        {
+          "lemma": "二本",
+          "pos": "Noun",
+          "surface": "二本"
+        },
+        {
+          "lemma": "立て",
+          "pos": "Suffix",
+          "surface": "立て"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "tede_ku",
+      "input": "二本立てで行く"
+    },
+    {
+      "description": "二階建ての家 - regression test",
+      "expected": [
+        {
+          "lemma": "二階",
+          "pos": "Noun",
+          "surface": "二階"
+        },
+        {
+          "lemma": "建て",
+          "pos": "Suffix",
+          "surface": "建て"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "家",
+          "pos": "Noun",
+          "surface": "家"
+        }
+      ],
+      "id": "teno",
+      "input": "二階建ての家"
     }
   ],
   "description": "Compound verbs (part 5/5)",

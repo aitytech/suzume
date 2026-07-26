@@ -18,6 +18,15 @@ void addDictionaryVerifiedIchidanCompoundNominalCandidate(core::Lattice& lattice
                                                           const std::vector<normalize::CharType>& char_types,
                                                           const dictionary::DictionaryManager& dict_manager,
                                                           const Scorer& scorer) {
+  // A single-kanji Ichidan V1 may be written without its stem vowel before a kanji
+  // V2 (見+立てる), so a lexicalized compound of that shape carries no medial
+  // hiragana at all. Its minimum length is one character shorter for the same
+  // reason. The dictionary lemma required below is what licenses either shape.
+  constexpr size_t kMinBareIchidanV1Length = 3;
+  constexpr size_t kMinRenyokeiV1Length = 4;
+  const bool bare_ichidan_v1_shape = start_pos + 1 < char_types.size() && char_types[start_pos + 1] == CharType::Kanji;
+  const size_t min_length = bare_ichidan_v1_shape ? kMinBareIchidanV1Length : kMinRenyokeiV1Length;
+
   size_t end_pos = start_pos + 1;
   bool has_hiragana = false;
   bool has_kanji_after_hiragana = false;
@@ -36,8 +45,8 @@ void addDictionaryVerifiedIchidanCompoundNominalCandidate(core::Lattice& lattice
     ++end_pos;
   }
 
-  if (end_pos >= codepoints.size() || end_pos - start_pos < 4 || !has_kanji_after_hiragana ||
-      !grammar::isERowCodepoint(codepoints[end_pos - 1]) ||
+  if (end_pos >= codepoints.size() || end_pos - start_pos < min_length ||
+      !(has_kanji_after_hiragana || bare_ichidan_v1_shape) || !grammar::isERowCodepoint(codepoints[end_pos - 1]) ||
       !beginsNominalForcingParticle(codepoints, end_pos, dict_manager)) {
     return;
   }
