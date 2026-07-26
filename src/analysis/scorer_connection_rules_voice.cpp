@@ -69,12 +69,23 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
     bonus += cost::kAlmostNever;
   }
 
-  // The irrealis of する is さ only before a voice auxiliary (さ+せる), not
-  // before a connective particle. This rejects fabricated さ+て paths while
-  // leaving other irrealis + ば patterns and productive causatives intact.
-  if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && prev.lemma == "する" &&
-      (next.extended_pos == core::ExtendedPOS::ParticleConj || next.extended_pos == core::ExtendedPOS::AuxAspectIru)) {
-    bonus += cost::kAlmostNever;
+  // The サ変 irrealis is split across cells: さ exists solely to host a voice
+  // auxiliary (さ+せる, さ+れる) while せ/しよ carry the rest of the paradigm
+  // (せ+ず, しよ+う). Stating the さ cell's requirement positively — its
+  // follower must be a voice auxiliary — subsumes the connective-particle and
+  // aspectual rejections for that cell, and keeps a lone さ between a nominal
+  // host and an independent predicate from reading as する (紙さ書く). The
+  // other cells only reject those two followers, leaving irrealis + ば and
+  // productive causatives intact.
+  if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && grammar::isSuruBaseForm(prev.lemma)) {
+    const bool follows_voice_auxiliary =
+        next.extended_pos == core::ExtendedPOS::AuxCausative || next.extended_pos == core::ExtendedPOS::AuxPassive;
+    const bool follows_rejected_host =
+        next.extended_pos == core::ExtendedPOS::ParticleConj || next.extended_pos == core::ExtendedPOS::AuxAspectIru;
+    const bool is_voice_only_cell = grammar::isSingleHiragana(prev.surface, U'さ');
+    if (is_voice_only_cell ? !follows_voice_auxiliary : follows_rejected_host) {
+      bonus += cost::kAlmostNever;
+    }
   }
 
   // A compound candidate emitted directly in mizenkei has already verified

@@ -1504,6 +1504,55 @@
       ],
       "id": "iwosuru",
       "input": "手洗いをする"
+    },
+    {
+      "description": "Sahen passive keeps the さ irrealis before the voice auxiliary",
+      "expected": [
+        {
+          "lemma": "紹介",
+          "pos": "Noun",
+          "surface": "紹介"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "sareta",
+      "input": "紹介された"
+    },
+    {
+      "description": "Sahen passive with the full れる auxiliary keeps the さ irrealis",
+      "expected": [
+        {
+          "lemma": "反映",
+          "pos": "Noun",
+          "surface": "反映"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れる"
+        }
+      ],
+      "id": "sareru_2",
+      "input": "反映される"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",
