@@ -510,6 +510,50 @@
       ],
       "id": "ra_wo_mu",
       "input": "専ら本を読む"
+    },
+    {
+      "description": "Lexicalized compound noun stays one search unit",
+      "expected": [
+        {
+          "lemma": "水掛け論",
+          "pos": "Noun",
+          "surface": "水掛け論"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "ke_ninaru",
+      "input": "水掛け論になる"
+    },
+    {
+      "description": "Lexicalized compound noun stays one search unit before a case particle",
+      "expected": [
+        {
+          "lemma": "独り言",
+          "pos": "Noun",
+          "surface": "独り言"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        }
+      ],
+      "id": "ri_wo_u",
+      "input": "独り言を言う"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

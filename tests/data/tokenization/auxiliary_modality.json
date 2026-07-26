@@ -1992,6 +1992,28 @@
       ],
       "id": "doshita",
       "input": "紙どした"
+    },
+    {
+      "description": "Solitary nominal before a noun keeps its nominal reading instead of a fabricated verb",
+      "expected": [
+        {
+          "lemma": "独り",
+          "pos": "Noun",
+          "surface": "独り"
+        },
+        {
+          "lemma": "相撲",
+          "pos": "Noun",
+          "surface": "相撲"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ri_da",
+      "input": "独り相撲だ"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",
