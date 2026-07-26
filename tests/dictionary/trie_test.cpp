@@ -6,28 +6,6 @@ namespace suzume {
 namespace dictionary {
 namespace {
 
-TEST(TrieTest, InsertAndLookup) {
-  Trie trie;
-  trie.insert("hello", 1);
-  trie.insert("world", 2);
-
-  auto result = trie.lookup("hello");
-  ASSERT_EQ(result.size(), 1);
-  EXPECT_EQ(result[0], 1);
-
-  result = trie.lookup("world");
-  ASSERT_EQ(result.size(), 1);
-  EXPECT_EQ(result[0], 2);
-}
-
-TEST(TrieTest, LookupNotFound) {
-  Trie trie;
-  trie.insert("hello", 1);
-
-  auto result = trie.lookup("world");
-  EXPECT_TRUE(result.empty());
-}
-
 TEST(TrieTest, LookupViewReturnsOwnedEntryIdsWithoutCopying) {
   Trie trie;
   trie.insert("テスト", 3);
@@ -40,20 +18,6 @@ TEST(TrieTest, LookupViewReturnsOwnedEntryIdsWithoutCopying) {
   EXPECT_EQ((*result)[1], 7);
   EXPECT_EQ(trie.lookupView("テス"), nullptr);
   EXPECT_EQ(trie.lookupView(""), nullptr);
-}
-
-TEST(TrieTest, InsertJapanese) {
-  Trie trie;
-  trie.insert("日本", 1);
-  trie.insert("日本語", 2);
-
-  auto result = trie.lookup("日本");
-  ASSERT_EQ(result.size(), 1);
-  EXPECT_EQ(result[0], 1);
-
-  result = trie.lookup("日本語");
-  ASSERT_EQ(result.size(), 1);
-  EXPECT_EQ(result[0], 2);
 }
 
 TEST(TrieTest, PrefixMatch) {
@@ -83,19 +47,6 @@ TEST(TrieTest, PrefixMatchFromPosition) {
   EXPECT_EQ(results[1].first, 2);  // length 2: 本語
 }
 
-TEST(TrieTest, MultipleEntriesSameKey) {
-  Trie trie;
-  trie.insert("は", 1);
-  trie.insert("は", 2);
-  trie.insert("は", 3);
-
-  auto result = trie.lookup("は");
-  ASSERT_EQ(result.size(), 3);
-  EXPECT_EQ(result[0], 1);
-  EXPECT_EQ(result[1], 2);
-  EXPECT_EQ(result[2], 3);
-}
-
 TEST(TrieTest, Clear) {
   Trie trie;
   trie.insert("test", 1);
@@ -103,7 +54,7 @@ TEST(TrieTest, Clear) {
 
   trie.clear();
   EXPECT_EQ(trie.size(), 0);
-  EXPECT_TRUE(trie.lookup("test").empty());
+  EXPECT_EQ(trie.lookupView("test"), nullptr);
 }
 
 }  // namespace

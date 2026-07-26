@@ -119,6 +119,11 @@ void DictionaryManager::addUserDictionary(std::shared_ptr<UserDictionary> dict) 
   }
 }
 
+void DictionaryManager::clearUserDictionaries() {
+  user_binary_dicts_.clear();
+  user_dicts_.clear();
+}
+
 std::vector<LookupResult> DictionaryManager::lookup(std::string_view text, size_t start_pos) const {
   std::vector<LookupResult> results;
 
@@ -130,12 +135,12 @@ std::vector<LookupResult> DictionaryManager::lookup(std::string_view text, size_
     appendLookupResults(results, core_binary_dict_->lookup(text, start_pos));
   }
 
-  // Lookup in user binary dictionary (Layer 3: user.dic)
-  if (user_binary_dict_ && user_binary_dict_->isLoaded()) {
-    appendLookupResults(results, user_binary_dict_->lookup(text, start_pos), true);
+  // Lookup in binary user dictionaries (Layer 3)
+  for (const auto& user_binary_dict : user_binary_dicts_) {
+    appendLookupResults(results, user_binary_dict->lookup(text, start_pos), true);
   }
 
-  // Lookup in custom user dictionaries (Layer 4: CSV/TSV files)
+  // Lookup in source user dictionaries (Layer 4: CSV/TSV files)
   for (const auto& user_dict : user_dicts_) {
     appendLookupResults(results, user_dict->lookup(text, start_pos), true);
   }
@@ -156,8 +161,8 @@ const DictionaryEntry* DictionaryManager::lookupExact(std::string_view surface, 
       return entry;
     }
   }
-  if (user_binary_dict_ && user_binary_dict_->isLoaded()) {
-    if (const auto* entry = user_binary_dict_->lookupExact(surface, pos)) {
+  for (const auto& user_binary_dict : user_binary_dicts_) {
+    if (const auto* entry = user_binary_dict->lookupExact(surface, pos)) {
       return entry;
     }
   }
@@ -198,16 +203,14 @@ bool DictionaryManager::hasCoreBinaryDictionary() const {
   return core_binary_dict_ && core_binary_dict_->isLoaded();
 }
 
-bool DictionaryManager::loadUserBinaryDictionary(const std::string& path) {
-  return loadUserBinaryDictionaryResult(path).hasValue();
-}
-
 core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryResult(const std::string& path) {
-  if (!user_binary_dict_) {
-    user_binary_dict_ = std::make_unique<BinaryDictionary>();
+  auto dictionary = std::make_unique<BinaryDictionary>();
+  auto result = dictionary->loadFromFile(path);
+  if (!result.hasValue()) {
+    return core::makeUnexpected(result.error());
   }
-
-  return user_binary_dict_->loadFromFile(path);
+  user_binary_dicts_.push_back(std::move(dictionary));
+  return result.value();
 }
 
 bool DictionaryManager::loadUserBinaryDictionaryFromMemory(const uint8_t* data, size_t size) {
@@ -216,15 +219,17 @@ bool DictionaryManager::loadUserBinaryDictionaryFromMemory(const uint8_t* data, 
 
 core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryFromMemoryResult(const uint8_t* data,
                                                                                                 size_t size) {
-  if (!user_binary_dict_) {
-    user_binary_dict_ = std::make_unique<BinaryDictionary>();
+  auto dictionary = std::make_unique<BinaryDictionary>();
+  auto result = dictionary->loadFromMemory(data, size);
+  if (!result.hasValue()) {
+    return core::makeUnexpected(result.error());
   }
-
-  return user_binary_dict_->loadFromMemory(data, size);
+  user_binary_dicts_.push_back(std::move(dictionary));
+  return result.value();
 }
 
 bool DictionaryManager::hasUserBinaryDictionary() const {
-  return user_binary_dict_ && user_binary_dict_->isLoaded();
+  return !user_binary_dicts_.empty();
 }
 
 bool DictionaryManager::tryAutoLoadCoreDictionary() {

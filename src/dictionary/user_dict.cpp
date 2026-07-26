@@ -1,160 +1,23 @@
 #include "dictionary/user_dict.h"
 
+#ifndef __EMSCRIPTEN__
 #include <fstream>
 #include <iterator>
+#endif
 
 #include "core/types.h"
+#include "dictionary/source_parser.h"
 
 namespace suzume::dictionary {
-
-namespace {
-
-struct ParsedLine {
-  std::vector<std::string> fields;
-  std::string error;
-};
-
-std::string trimAsciiWhitespace(std::string_view field) {
-  size_t field_start = field.find_first_not_of(" \t");
-  size_t field_end = field.find_last_not_of(" \t");
-  if (field_start == std::string::npos) {
-    return "";
-  }
-  return std::string(field.substr(field_start, field_end - field_start + 1));
-}
-
-std::string_view trimLineWhitespace(std::string_view line) {
-  const size_t line_start = line.find_first_not_of(" \t\r\n");
-  if (line_start == std::string_view::npos) {
-    return {};
-  }
-  const size_t line_end = line.find_last_not_of(" \t\r\n");
-  return line.substr(line_start, line_end - line_start + 1);
-}
-
-bool isAsciiWhitespace(char chr) {
-  return chr == ' ' || chr == '\t';
-}
-
-bool isNumericField(std::string_view field) {
-  if (field.empty()) {
-    return false;
-  }
-  bool seen_digit = false;
-  for (char chr : field) {
-    if (chr >= '0' && chr <= '9') {
-      seen_digit = true;
-      continue;
-    }
-    if (chr == '.' || chr == '-' || chr == '+') {
-      continue;
-    }
-    return false;
-  }
-  return seen_digit;
-}
-
-bool isConjugationTypeField(std::string_view field) {
-  // Accepts the long PascalCase / SCREAMING_SNAKE aliases (Ichidan/ICHIDAN,
-  // Interjection/INTERJECTION, ...), but not the short INTJ/FAMILY/GIVEN forms;
-  // a field spelled that way is treated as a lemma, not a conjugation type.
-  return conjTypeFromAnyAlias(field).has_value();
-}
-
-ParsedLine parseDelimitedLine(std::string_view line, char delimiter) {
-  ParsedLine result;
-  std::string field;
-  bool in_quotes = false;
-  bool after_closing_quote = false;
-  bool field_has_non_space = false;
-
-  if (delimiter != ',') {
-    size_t field_start = 0;
-    while (field_start < line.size()) {
-      const size_t field_end = line.find(delimiter, field_start);
-      if (field_end == std::string_view::npos) {
-        result.fields.push_back(trimAsciiWhitespace(line.substr(field_start)));
-        break;
-      }
-      result.fields.push_back(trimAsciiWhitespace(line.substr(field_start, field_end - field_start)));
-      field_start = field_end + 1;
-    }
-    return result;
-  }
-
-  for (size_t idx = 0; idx < line.size(); ++idx) {
-    char chr = line[idx];
-
-    if (chr == '"') {
-      if (in_quotes && idx + 1 < line.size() && line[idx + 1] == '"') {
-        field.push_back('"');
-        ++idx;
-        field_has_non_space = true;
-        continue;
-      }
-
-      if (in_quotes) {
-        in_quotes = false;
-        after_closing_quote = true;
-        continue;
-      }
-
-      if (field_has_non_space) {
-        result.error = "quote found inside an unquoted field";
-        return result;
-      }
-
-      field.clear();
-      in_quotes = true;
-      field_has_non_space = true;
-      continue;
-    }
-
-    if (chr == delimiter && !in_quotes) {
-      result.fields.push_back(trimAsciiWhitespace(field));
-      field.clear();
-      after_closing_quote = false;
-      field_has_non_space = false;
-      continue;
-    }
-
-    if (after_closing_quote) {
-      if (isAsciiWhitespace(chr)) {
-        continue;
-      }
-      result.error = "unexpected character after closing quote";
-      return result;
-    }
-
-    if (!isAsciiWhitespace(chr)) {
-      field_has_non_space = true;
-    }
-    field.push_back(chr);
-  }
-
-  if (in_quotes) {
-    result.error = "unterminated quoted field";
-    return result;
-  }
-
-  result.fields.push_back(trimAsciiWhitespace(field));
-  return result;
-}
-
-core::Expected<core::PartOfSpeech, core::Error> parseUserDictPos(std::string_view field, size_t line_number) {
-  auto pos = core::stringToPosStrict(field);
-  if (!pos) {
-    return core::Error(core::ErrorCode::InvalidInput,
-                       "Invalid POS at line " + std::to_string(line_number) + ": " + std::string(field));
-  }
-  return *pos;
-}
-
-}  // namespace
 
 UserDictionary::UserDictionary() = default;
 
 core::Expected<size_t, core::Error> UserDictionary::loadFromFile(const std::string& path) {
+#ifdef __EMSCRIPTEN__
+  (void)path;
+  return core::makeUnexpected(
+      core::Error(core::ErrorCode::InvalidInput, "File dictionary loading is unavailable in WebAssembly"));
+#else
   std::ifstream file(path);
   if (!file.is_open()) {
     return core::Error(core::ErrorCode::FileNotFound, "Failed to open dictionary file: " + path);
@@ -162,6 +25,7 @@ core::Expected<size_t, core::Error> UserDictionary::loadFromFile(const std::stri
 
   std::string content{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
   return loadFromMemory(content.c_str(), content.size());
+#endif
 }
 
 core::Expected<size_t, core::Error> UserDictionary::loadFromMemory(const char* data, size_t size) {
@@ -169,7 +33,7 @@ core::Expected<size_t, core::Error> UserDictionary::loadFromMemory(const char* d
     return core::Error(core::ErrorCode::InvalidInput, "Empty dictionary data");
   }
 
-  return parseCSV(std::string_view(data, size));
+  return parseSource(std::string_view(data, size));
 }
 
 void UserDictionary::addEntry(const DictionaryEntry& entry) {
@@ -226,83 +90,17 @@ void UserDictionary::clear() {
   trie_.clear();
 }
 
-core::Expected<size_t, core::Error> UserDictionary::parseCSV(std::string_view csv_data) {
+core::Expected<size_t, core::Error> UserDictionary::parseSource(std::string_view source_data) {
   std::vector<DictionaryEntry> parsed_entries;
-
-  size_t line_number = 0;
-  size_t line_start = 0;
-  while (line_start < csv_data.size()) {
-    ++line_number;
-
-    const size_t newline_pos = csv_data.find('\n', line_start);
-    const size_t line_end = newline_pos == std::string_view::npos ? csv_data.size() : newline_pos;
-    std::string_view line = trimLineWhitespace(csv_data.substr(line_start, line_end - line_start));
-    line_start = newline_pos == std::string_view::npos ? csv_data.size() : newline_pos + 1;
-
-    if (line.empty()) {
-      continue;
-    }
-
-    if (line[0] == '#') {
-      continue;
-    }
-
-    // Detect delimiter: tab for TSV, comma for CSV
-    char delimiter = (line.find('\t') != std::string::npos) ? '\t' : ',';
-
-    auto parsed = parseDelimitedLine(line, delimiter);
-    if (!parsed.error.empty()) {
-      return core::Error(core::ErrorCode::InvalidInput,
-                         "Invalid CSV quoting at line " + std::to_string(line_number) + ": " + parsed.error);
-    }
-    auto& fields = parsed.fields;
-
-    // Minimum: surface, pos
-    if (fields.size() < 2) {
-      continue;  // Skip invalid lines
-    }
-
-    if (fields[0].empty()) {
-      return core::Error(core::ErrorCode::InvalidInput, "Empty surface at line " + std::to_string(line_number));
-    }
-    if (fields[1].empty()) {
-      return core::Error(core::ErrorCode::InvalidInput, "Empty POS at line " + std::to_string(line_number));
-    }
-
-    DictionaryEntry entry;
-    entry.surface = fields[0];
-    auto pos_result = parseUserDictPos(fields[1], line_number);
-    if (!pos_result.hasValue()) {
-      return pos_result.error();
-    }
-    entry.pos = pos_result.value();
-
-    // TSV format:
-    //   surface, pos, conj_type                 (compiler-compatible, no lemma)
-    //   surface, pos, lemma                     (runtime convenience)
-    //   surface, pos, conj_type, lemma          (runtime convenience)
-    //   surface, pos, reading, cost, conj, lemma (legacy extension)
-    // CSV format: surface, pos, cost, lemma
-    bool is_tsv = (delimiter == '\t');
-
-    if (is_tsv) {
-      if (fields.size() > 5) {
-        entry.lemma = fields[5];
-      } else if (fields.size() == 4 && !isNumericField(fields[3])) {
-        entry.lemma = fields[3];
-      } else if (fields.size() == 3 && !isNumericField(fields[2]) && !isConjugationTypeField(fields[2])) {
-        entry.lemma = fields[2];
-      }
-    } else {
-      // CSV format: surface, pos, cost, lemma
-      // Field 2 (cost) is ignored
-      if (fields.size() > 3) {
-        entry.lemma = fields[3];
-      }
-    }
-
-    entry.extended_pos = core::posToDefaultExtendedPOS(entry.pos);
-    parsed_entries.push_back(std::move(entry));
+  SourceParseOptions options;
+  options.skip_single_field_records = true;
+  auto parsed = parseDictionarySource(source_data, options);
+  if (!parsed.hasValue()) {
+    return core::makeUnexpected(parsed.error());
+  }
+  parsed_entries.reserve(parsed.value().entries.size());
+  for (const auto& source_entry : parsed.value().entries) {
+    parsed_entries.push_back(sourceToDictionaryEntry(source_entry));
   }
 
   entries_.reserve(entries_.size() + parsed_entries.size());
@@ -313,13 +111,6 @@ core::Expected<size_t, core::Error> UserDictionary::parseCSV(std::string_view cs
   }
 
   return parsed_entries.size();
-}
-
-void UserDictionary::rebuildTrie() {
-  trie_.clear();
-  for (size_t idx = 0; idx < entries_.size(); ++idx) {
-    trie_.insert(entries_[idx].surface, static_cast<uint32_t>(idx));
-  }
 }
 
 }  // namespace suzume::dictionary

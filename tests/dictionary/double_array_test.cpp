@@ -261,21 +261,7 @@ TEST_F(DoubleArrayTest, Clear) {
 
   trie_.clear();
   EXPECT_TRUE(trie_.empty());
-  EXPECT_EQ(trie_.memoryUsage(), 0u);
   EXPECT_EQ(trie_.exactMatch("a"), -1);
-}
-
-TEST_F(DoubleArrayTest, MemoryUsage) {
-  std::vector<std::string> keys = {"a", "b", "c"};
-  std::vector<uint32_t> values = {1, 2, 3};
-
-  EXPECT_TRUE(trie_.build(keys, values));
-
-  size_t usage = trie_.memoryUsage();
-  EXPECT_GT(usage, 0u);
-  // Memory usage should be related to the number of nodes
-  // Each node is one packed 32-bit unit.
-  EXPECT_EQ(usage % sizeof(uint32_t), 0u);
 }
 
 }  // namespace

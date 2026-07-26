@@ -342,8 +342,4 @@ void DoubleArray::clear() {
   std::vector<Unit>().swap(units_);
 }
 
-size_t DoubleArray::memoryUsage() const {
-  return units_.capacity() * sizeof(Unit);
-}
-
 }  // namespace suzume::dictionary

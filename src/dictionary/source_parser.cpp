@@ -1,0 +1,371 @@
+#include "dictionary/source_parser.h"
+
+#include <optional>
+#include <utility>
+
+namespace suzume {
+namespace dictionary {
+
+namespace {
+
+struct ParsedRecord {
+  std::vector<std::string> fields;
+  std::string error;
+};
+
+std::string trimAsciiWhitespace(std::string_view field) {
+  const size_t field_start = field.find_first_not_of(" \t\r\n");
+  if (field_start == std::string_view::npos) {
+    return "";
+  }
+  const size_t field_end = field.find_last_not_of(" \t\r\n");
+  return std::string(field.substr(field_start, field_end - field_start + 1));
+}
+
+std::string_view trimAsciiWhitespaceView(std::string_view field) {
+  const size_t field_start = field.find_first_not_of(" \t\r\n");
+  if (field_start == std::string_view::npos) {
+    return {};
+  }
+  const size_t field_end = field.find_last_not_of(" \t\r\n");
+  return field.substr(field_start, field_end - field_start + 1);
+}
+
+bool isAsciiHorizontalWhitespace(char chr) {
+  return chr == ' ' || chr == '\t' || chr == '\r';
+}
+
+bool isNumericField(std::string_view field) {
+  if (field.empty()) {
+    return false;
+  }
+  bool seen_digit = false;
+  for (char chr : field) {
+    if (chr >= '0' && chr <= '9') {
+      seen_digit = true;
+      continue;
+    }
+    if (chr == '.' || chr == '-' || chr == '+') {
+      continue;
+    }
+    return false;
+  }
+  return seen_digit;
+}
+
+std::optional<ConjugationType> parseConjugationType(std::string_view field) {
+  auto canonical = conjTypeFromCanonical(field);
+  if (canonical.has_value()) {
+    return canonical;
+  }
+  return conjTypeFromAnyAlias(field);
+}
+
+char detectDelimiter(std::string_view record) {
+  bool in_quotes = false;
+  bool field_has_non_space = false;
+  for (size_t idx = 0; idx < record.size(); ++idx) {
+    const char chr = record[idx];
+    if (chr == '"') {
+      if (in_quotes && idx + 1 < record.size() && record[idx + 1] == '"') {
+        ++idx;
+        continue;
+      }
+      if (in_quotes) {
+        in_quotes = false;
+      } else if (!field_has_non_space) {
+        in_quotes = true;
+      } else {
+        field_has_non_space = true;
+      }
+      continue;
+    }
+    if (!in_quotes && chr == '\t') {
+      return '\t';
+    }
+    if (!in_quotes && chr == ',') {
+      field_has_non_space = false;
+      continue;
+    }
+    if (!in_quotes && chr != ' ' && chr != '\r' && chr != '\n') {
+      field_has_non_space = true;
+    }
+  }
+  return ',';
+}
+
+ParsedRecord parseDelimitedRecord(std::string_view record, char delimiter) {
+  ParsedRecord result;
+  std::string field;
+  bool in_quotes = false;
+  bool after_closing_quote = false;
+  bool field_has_non_space = false;
+
+  for (size_t idx = 0; idx < record.size(); ++idx) {
+    const char chr = record[idx];
+
+    if (chr == '"') {
+      if (in_quotes && idx + 1 < record.size() && record[idx + 1] == '"') {
+        field.push_back('"');
+        ++idx;
+        field_has_non_space = true;
+        continue;
+      }
+      if (in_quotes) {
+        in_quotes = false;
+        after_closing_quote = true;
+        continue;
+      }
+      if (field_has_non_space) {
+        field.push_back('"');
+        continue;
+      }
+      field.clear();
+      in_quotes = true;
+      field_has_non_space = true;
+      continue;
+    }
+
+    if (chr == delimiter && !in_quotes) {
+      result.fields.push_back(trimAsciiWhitespace(field));
+      field.clear();
+      after_closing_quote = false;
+      field_has_non_space = false;
+      continue;
+    }
+
+    if (after_closing_quote) {
+      if (isAsciiHorizontalWhitespace(chr)) {
+        continue;
+      }
+      result.error = "unexpected character after closing quote";
+      return result;
+    }
+
+    if (chr != ' ' && chr != '\t' && chr != '\r' && chr != '\n') {
+      field_has_non_space = true;
+    }
+    field.push_back(chr);
+  }
+
+  if (in_quotes) {
+    result.error = "unterminated quoted field";
+    return result;
+  }
+
+  result.fields.push_back(trimAsciiWhitespace(field));
+  return result;
+}
+
+core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::string>& fields, size_t line_number,
+                                                       char delimiter) {
+  if (fields.size() < 2) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::ParseError, "Missing POS field at line " + std::to_string(line_number)));
+  }
+  if (fields[0].empty()) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::ParseError, "Empty surface at line " + std::to_string(line_number)));
+  }
+  if (fields[1].empty()) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::ParseError, "Empty POS at line " + std::to_string(line_number)));
+  }
+
+  auto pos = core::stringToPosStrict(fields[1]);
+  if (!pos.has_value()) {
+    return core::makeUnexpected(core::Error(core::ErrorCode::ParseError,
+                                            "Invalid POS at line " + std::to_string(line_number) + ": " + fields[1]));
+  }
+
+  SourceEntry entry;
+  entry.surface = fields[0];
+  entry.pos = *pos;
+  entry.line_number = line_number;
+  if (entry.pos == core::PartOfSpeech::Interjection) {
+    entry.conj_type = ConjugationType::Interjection;
+  }
+
+  const bool is_tsv = delimiter == '\t';
+  if (is_tsv) {
+    // Legacy extended TSV: surface, POS, reading, cost, conj_type, lemma.
+    if (fields.size() > 4 && !fields[4].empty()) {
+      auto conj_type = parseConjugationType(fields[4]);
+      if (!conj_type.has_value()) {
+        return core::makeUnexpected(
+            core::Error(core::ErrorCode::ParseError,
+                        "Line " + std::to_string(line_number) + ": Invalid conjugation type: " + fields[4]));
+      }
+      entry.conj_type = *conj_type;
+    }
+    if (fields.size() > 4) {
+      if (fields.size() > 5) {
+        entry.lemma = fields[5];
+      }
+      return entry;
+    }
+    if (fields.size() == 4 && isNumericField(fields[3])) {
+      return entry;
+    }
+
+    // Current TSV: surface, POS, conj_type[, lemma]. A third field which is
+    // neither a conjugation marker nor a numeric legacy cost is a runtime lemma.
+    if (fields.size() > 2 && !fields[2].empty()) {
+      auto conj_type = parseConjugationType(fields[2]);
+      if (conj_type.has_value()) {
+        entry.conj_type = *conj_type;
+      } else if (!isNumericField(fields[2])) {
+        entry.lemma = fields[2];
+      }
+    }
+    if (fields.size() == 4 && !isNumericField(fields[3])) {
+      entry.lemma = fields[3];
+    }
+  } else {
+    // Legacy CSV: surface, POS, cost, lemma.
+    if (fields.size() > 3) {
+      entry.lemma = fields[3];
+    }
+  }
+
+  return entry;
+}
+
+core::Expected<SourceEntry, core::Error> parseRecord(std::string_view record, size_t line_number, char delimiter) {
+  auto parsed = parseDelimitedRecord(record, delimiter);
+  if (!parsed.error.empty()) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::ParseError,
+                    "Invalid CSV quoting at line " + std::to_string(line_number) + ": " + parsed.error));
+  }
+  return convertFields(parsed.fields, line_number, delimiter);
+}
+
+}  // namespace
+
+core::Expected<SourceParseResult, core::Error> parseDictionarySource(std::string_view content,
+                                                                     SourceParseOptions options) {
+  SourceParseResult result;
+  if (content.size() >= 3 && static_cast<unsigned char>(content[0]) == 0xEF &&
+      static_cast<unsigned char>(content[1]) == 0xBB && static_cast<unsigned char>(content[2]) == 0xBF) {
+    content.remove_prefix(3);
+  }
+
+  std::optional<char> delimiter;
+  size_t record_start = 0;
+  size_t record_line = 1;
+  size_t current_line = 1;
+  bool in_quotes = false;
+  bool field_has_non_space = false;
+
+  for (size_t idx = 0; idx <= content.size(); ++idx) {
+    const bool at_end = idx == content.size();
+    if (at_end && record_start == content.size()) {
+      break;
+    }
+    const char chr = at_end ? '\0' : content[idx];
+    if (!at_end && chr == '"') {
+      if (in_quotes && idx + 1 < content.size() && content[idx + 1] == '"') {
+        ++idx;
+        continue;
+      }
+      if (in_quotes) {
+        in_quotes = false;
+      } else if (!field_has_non_space) {
+        in_quotes = true;
+      } else {
+        field_has_non_space = true;
+      }
+    } else if (!at_end && !in_quotes && (chr == '\t' || chr == ',')) {
+      field_has_non_space = false;
+    } else if (!at_end && !in_quotes && chr != ' ' && chr != '\r' && chr != '\n') {
+      field_has_non_space = true;
+    }
+
+    if (!at_end && chr == '\n') {
+      ++current_line;
+    }
+    if (!at_end && (chr != '\n' || in_quotes)) {
+      continue;
+    }
+
+    std::string_view record = content.substr(record_start, idx - record_start);
+    std::string_view trimmed = trimAsciiWhitespaceView(record);
+    if (trimmed.empty()) {
+      ++result.stats.empty_lines;
+    } else if (trimmed.front() == '#') {
+      ++result.stats.comment_lines;
+    } else {
+      const char record_delimiter = delimiter.value_or(detectDelimiter(record));
+      if (options.skip_single_field_records) {
+        auto parsed_record = parseDelimitedRecord(record, record_delimiter);
+        if (!parsed_record.error.empty()) {
+          return core::makeUnexpected(
+              core::Error(core::ErrorCode::ParseError,
+                          "Invalid CSV quoting at line " + std::to_string(record_line) + ": " + parsed_record.error));
+        }
+        if (parsed_record.fields.size() < 2) {
+          record_start = idx + 1;
+          record_line = current_line;
+          continue;
+        }
+      }
+      if (!delimiter.has_value()) {
+        delimiter = record_delimiter;
+      }
+      auto entry = parseRecord(record, record_line, record_delimiter);
+      if (!entry.hasValue()) {
+        return core::makeUnexpected(entry.error());
+      }
+      result.entries.push_back(std::move(entry.value()));
+      ++result.stats.entries;
+    }
+    record_start = idx + 1;
+    record_line = current_line;
+    field_has_non_space = false;
+  }
+
+  if (in_quotes) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::ParseError,
+                    "Invalid CSV quoting at line " + std::to_string(record_line) + ": unterminated quoted field"));
+  }
+  return result;
+}
+
+core::Expected<SourceEntry, core::Error> parseDictionarySourceLine(std::string_view line, size_t line_number) {
+  if (line.size() >= 3 && static_cast<unsigned char>(line[0]) == 0xEF && static_cast<unsigned char>(line[1]) == 0xBB &&
+      static_cast<unsigned char>(line[2]) == 0xBF) {
+    line.remove_prefix(3);
+  }
+  return parseRecord(line, line_number, detectDelimiter(line));
+}
+
+DictionaryEntry sourceToDictionaryEntry(const SourceEntry& source_entry) {
+  DictionaryEntry entry;
+  entry.surface = source_entry.surface;
+  entry.pos = source_entry.pos;
+  entry.lemma = source_entry.lemma;
+
+  switch (source_entry.conj_type) {
+    case ConjugationType::Interjection:
+      entry.extended_pos = core::ExtendedPOS::Interjection;
+      break;
+    case ConjugationType::NaAdjective:
+      entry.extended_pos = core::ExtendedPOS::AdjNaAdj;
+      break;
+    case ConjugationType::ProperFamily:
+      entry.extended_pos = core::ExtendedPOS::NounProperFamily;
+      break;
+    case ConjugationType::ProperGiven:
+      entry.extended_pos = core::ExtendedPOS::NounProperGiven;
+      break;
+    default:
+      entry.extended_pos = core::posToExtendedPos(entry.pos);
+      break;
+  }
+  return entry;
+}
+
+}  // namespace dictionary
+}  // namespace suzume

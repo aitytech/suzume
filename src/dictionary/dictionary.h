@@ -115,10 +115,17 @@ class DictionaryManager {
   DictionaryManager& operator=(DictionaryManager&&) noexcept;
 
   /**
-   * @brief Add a user dictionary
+   * @brief Add a source user dictionary to the additive user layer
    * @param dict User dictionary to add
    */
   void addUserDictionary(std::shared_ptr<UserDictionary> dict);
+
+  /**
+   * @brief Remove every source and binary user dictionary
+   *
+   * Core dictionaries (the built-in L1 and optional core.dic) are retained.
+   */
+  void clearUserDictionaries();
 
   /**
    * @brief Lookup entries from all dictionaries
@@ -170,13 +177,6 @@ class DictionaryManager {
   bool hasCoreBinaryDictionary() const;
 
   /**
-   * @brief Load user binary dictionary from file
-   * @param path File path
-   * @return true if loaded successfully
-   */
-  bool loadUserBinaryDictionary(const std::string& path);
-
-  /**
    * @brief Load user binary dictionary from file with error details
    */
   core::Expected<size_t, core::Error> loadUserBinaryDictionaryResult(const std::string& path);
@@ -215,7 +215,7 @@ class DictionaryManager {
  private:
   std::unique_ptr<CoreDictionary> core_dict_;
   std::unique_ptr<BinaryDictionary> core_binary_dict_;
-  std::unique_ptr<BinaryDictionary> user_binary_dict_;
+  std::vector<std::unique_ptr<BinaryDictionary>> user_binary_dicts_;
   std::vector<std::shared_ptr<UserDictionary>> user_dicts_;
 };
 

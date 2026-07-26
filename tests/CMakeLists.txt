@@ -48,10 +48,12 @@ set(TEST_SOURCES
   ${CLI_SOURCES_FOR_TESTS}
   cli/cli_common_test.cpp
   cli/dict_compiler_test.cpp
+  cli/tsv_parser_test.cpp
   core/types_test.cpp
   core/types_extended_test.cpp
   core/error_test.cpp
   core/viterbi_test.cpp
+  core/lattice_test.cpp
   normalize/utf8_test.cpp
   normalize/char_type_test.cpp
   normalize/normalizer_test.cpp
@@ -61,10 +63,12 @@ set(TEST_SOURCES
   dictionary/core_dict_test.cpp
   dictionary/packed_core_entries_test.cpp
   ${PACKED_CORE_ENTRIES_TEST_CPP}
+  dictionary/source_parser_test.cpp
   dictionary/user_dict_test.cpp
   dictionary/conj_type_test.cpp
   grammar/conjugator_test.cpp
   grammar/conjugation_test.cpp
+  grammar/dictionary_expansion_test.cpp
   grammar/inflection_basic_test.cpp
   grammar/inflection_potential_test.cpp
   grammar/inflection_compound_test.cpp
@@ -91,9 +95,11 @@ set(TEST_SOURCES
   analysis/verb_guard_family_test.cpp
   output/japanese_format_test.cpp
   postprocess/tag_generator_test.cpp
+  postprocess/postprocessor_test.cpp
   integration/suzume_api_test.cpp
   integration/suzume_c_api_test.cpp
   integration/suzume_hpp_test.cpp
+  integration/source_dictionary_parity_test.cpp
   # Universal test: auto-discovers all JSON files and cases in tests/data/tokenization/.
   # New regression cases are picked up without creating dedicated C++ files.
   integration/universal_tokenization_test.cpp

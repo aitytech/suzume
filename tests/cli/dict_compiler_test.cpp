@@ -116,7 +116,7 @@ TEST_F(DictCompilerTest, CompileMultipleRejectsDuplicateSurfaceAndPosAcrossFiles
   EXPECT_FALSE(std::filesystem::exists(output));
 }
 
-TEST_F(DictCompilerTest, KuruExpansionGeneratesRealKanjiSurfaces) {
+TEST_F(DictCompilerTest, KuruExpansionGeneratesSafeKanjiAndKanaSurfaces) {
   auto input = writeFile("kuru.tsv", "来る\tVERB\tKURU\n");
   auto output = temp_dir_ / "kuru.dic";
 
@@ -129,11 +129,16 @@ TEST_F(DictCompilerTest, KuruExpansionGeneratesRealKanjiSurfaces) {
   ASSERT_TRUE(load_result.hasValue()) << load_result.error().message;
 
   std::set<std::string> surfaces;
-  for (std::string_view text : {"来る", "来", "来れ", "来よ", "来い", "来られる", "来れる"}) {
+  for (std::string_view text :
+       {"来る", "来", "来れ", "来よ", "来い", "来られる", "来れる", "くる", "くれ", "こよ", "こい"}) {
     for (const auto& result : dict.lookup(text, 0)) {
       ASSERT_NE(result.entry, nullptr);
       surfaces.insert(result.entry->surface);
-      EXPECT_EQ(result.entry->lemma, "来る");
+      const bool kana_surface = result.entry->surface != "来る" && result.entry->surface != "来" &&
+                                result.entry->surface != "来れ" && result.entry->surface != "来よ" &&
+                                result.entry->surface != "来い" && result.entry->surface != "来られる" &&
+                                result.entry->surface != "来れる";
+      EXPECT_EQ(result.entry->lemma, kana_surface ? "くる" : "来る");
     }
   }
 
@@ -148,9 +153,47 @@ TEST_F(DictCompilerTest, KuruExpansionGeneratesRealKanjiSurfaces) {
   EXPECT_TRUE(has_surface("来い"));
   EXPECT_TRUE(has_surface("来られる"));
   EXPECT_TRUE(has_surface("来れる"));
+  EXPECT_TRUE(has_surface("くる"));
+  EXPECT_TRUE(has_surface("くれ"));
+  EXPECT_TRUE(has_surface("こよ"));
+  EXPECT_TRUE(has_surface("こい"));
+  EXPECT_FALSE(has_surface("き"));
+  EXPECT_FALSE(has_surface("こ"));
+  EXPECT_FALSE(has_surface("こられる"));
+  EXPECT_FALSE(has_surface("これる"));
   EXPECT_FALSE(has_surface("来くる"));
   EXPECT_FALSE(has_surface("来き"));
   EXPECT_FALSE(has_surface("来こ"));
+}
+
+TEST_F(DictCompilerTest, IkuExpansionUsesSokuonbinWithoutShadowingGodanWaRenyokei) {
+  auto input = writeFile("iku.tsv",
+                         "行く\tVERB\tGODAN_KA\n行う\tVERB\tGODAN_WA\n"
+                         "いく\tVERB\tGODAN_KA\nいう\tVERB\tGODAN_WA\n");
+  auto output = temp_dir_ / "iku.dic";
+
+  DictCompiler compiler;
+  auto compile_result = compiler.compile(input.string(), output.string());
+  ASSERT_TRUE(compile_result.hasValue()) << compile_result.error().message;
+
+  dictionary::BinaryDictionary dict;
+  auto load_result = dict.loadFromFile(output.string());
+  ASSERT_TRUE(load_result.hasValue()) << load_result.error().message;
+
+  const auto lemmas_for = [&dict](std::string_view surface) {
+    std::set<std::string> lemmas;
+    for (const auto& result : dict.lookup(surface, 0)) {
+      if (result.entry != nullptr && result.entry->surface == surface) {
+        lemmas.insert(result.entry->lemma);
+      }
+    }
+    return lemmas;
+  };
+
+  EXPECT_EQ(lemmas_for("行っ"), std::set<std::string>({"行く"}));
+  EXPECT_EQ(lemmas_for("いっ"), std::set<std::string>({"いく"}));
+  EXPECT_EQ(lemmas_for("行い"), std::set<std::string>({"行う"}));
+  EXPECT_EQ(lemmas_for("いい"), std::set<std::string>({"いう"}));
 }
 
 TEST_F(DictCompilerTest, NaAdjectiveStoresSpecificExtendedPos) {

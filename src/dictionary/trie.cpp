@@ -25,11 +25,6 @@ void Trie::insert(std::string_view key, uint32_t entry_id) {
   ++entry_count_;
 }
 
-std::vector<uint32_t> Trie::lookup(std::string_view key) const {
-  const auto* entry_ids = lookupView(key);
-  return entry_ids != nullptr ? *entry_ids : std::vector<uint32_t>{};
-}
-
 const std::vector<uint32_t>* Trie::lookupView(std::string_view key) const {
   const TrieNode* node = root_.get();
   size_t pos = 0;

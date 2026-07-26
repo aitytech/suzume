@@ -425,15 +425,15 @@ TEST(UserDictTest, LoadFromMemoryRejectsTextAfterClosingQuote) {
   EXPECT_EQ(dict.size(), 0);
 }
 
-TEST(UserDictTest, LoadFromMemoryRejectsQuoteInsideUnquotedField) {
+TEST(UserDictTest, LoadFromMemoryPreservesQuoteInsideUnquotedField) {
   UserDictionary dict;
 
   const char* csv_data = "東\"京,NOUN,0.5\n";
 
   auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
-  EXPECT_FALSE(result.hasValue());
-  EXPECT_NE(result.error().message.find("quote found inside an unquoted field"), std::string::npos);
-  EXPECT_EQ(dict.size(), 0);
+  ASSERT_TRUE(result.hasValue()) << result.error().message;
+  ASSERT_EQ(dict.size(), 1);
+  EXPECT_EQ(dict.getEntry(0)->surface, "東\"京");
 }
 
 TEST(UserDictTest, LoadFromMemoryFailureDoesNotPartiallyAppendEntries) {

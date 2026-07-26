@@ -1,0 +1,65 @@
+#include "tsv_parser.h"
+
+#include <gtest/gtest.h>
+
+#include <filesystem>
+#include <fstream>
+#include <iterator>
+
+#include "dictionary/user_dict.h"
+
+namespace suzume {
+namespace cli {
+namespace {
+
+TEST(TsvParserTest, CliAndRuntimeShareBomAndMarkerParsing) {
+  const std::string source =
+      "\xEF\xBB\xBF  東京  \t PROPER_NOUN \t FAMILY \n"
+      "しほ\tPROPER_NOUN\tGIVEN\n"
+      "なるほど\tINTJ\n";
+
+  TsvParser parser;
+  auto cli_result = parser.parseString(source);
+  ASSERT_TRUE(cli_result.hasValue()) << cli_result.error().message;
+
+  dictionary::UserDictionary runtime_dict;
+  auto runtime_result = runtime_dict.loadFromMemory(source.data(), source.size());
+  ASSERT_TRUE(runtime_result.hasValue()) << runtime_result.error().message;
+
+  ASSERT_EQ(cli_result.value().size(), runtime_result.value());
+  ASSERT_NE(runtime_dict.getEntry(0), nullptr);
+  EXPECT_EQ(runtime_dict.getEntry(0)->surface, cli_result.value()[0].surface);
+  EXPECT_EQ(runtime_dict.getEntry(0)->extended_pos, core::ExtendedPOS::NounProperFamily);
+  ASSERT_NE(runtime_dict.getEntry(1), nullptr);
+  EXPECT_EQ(runtime_dict.getEntry(1)->extended_pos, core::ExtendedPOS::NounProperGiven);
+  ASSERT_NE(runtime_dict.getEntry(2), nullptr);
+  EXPECT_EQ(runtime_dict.getEntry(2)->extended_pos, core::ExtendedPOS::Interjection);
+}
+
+TEST(TsvParserTest, WritePreservesCanonicalMarkerAndLemma) {
+  const std::filesystem::path output = std::filesystem::temp_directory_path() / "suzume_tsv_parser_roundtrip.tsv";
+  const std::vector<TsvEntry> entries = {
+      {"東京", core::PartOfSpeech::Noun, dictionary::ConjugationType::ProperFamily, "東京", 1},
+      {"なるほど", core::PartOfSpeech::Interjection, dictionary::ConjugationType::Interjection, "なるほど", 2},
+  };
+
+  auto write_result = writeTsvFile(output.string(), entries);
+  ASSERT_TRUE(write_result.hasValue()) << write_result.error().message;
+
+  std::ifstream file(output);
+  const std::string source{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+  std::filesystem::remove(output);
+
+  TsvParser parser;
+  auto parsed = parser.parseString(source);
+  ASSERT_TRUE(parsed.hasValue()) << parsed.error().message;
+  ASSERT_EQ(parsed.value().size(), entries.size());
+  EXPECT_EQ(parsed.value()[0].conj_type, dictionary::ConjugationType::ProperFamily);
+  EXPECT_EQ(parsed.value()[0].lemma, "東京");
+  EXPECT_EQ(parsed.value()[1].conj_type, dictionary::ConjugationType::Interjection);
+  EXPECT_EQ(parsed.value()[1].lemma, "なるほど");
+}
+
+}  // namespace
+}  // namespace cli
+}  // namespace suzume

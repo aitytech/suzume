@@ -54,13 +54,6 @@ class Trie {
   void insert(std::string_view key, uint32_t entry_id);
 
   /**
-   * @brief Exact match lookup
-   * @param key String key
-   * @return Entry IDs, or empty vector if not found
-   */
-  std::vector<uint32_t> lookup(std::string_view key) const;
-
-  /**
    * @brief Allocation-free exact match lookup
    * @param key String key
    * @return Entry IDs owned by the trie, or nullptr if not found

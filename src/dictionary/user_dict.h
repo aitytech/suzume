@@ -15,7 +15,7 @@ namespace suzume::dictionary {
  * @brief User dictionary loaded at runtime
  *
  * Supports loading from file (native) or memory (WASM).
- * Format: surface,pos,cost,lemma (CSV)
+ * Accepts current source TSV and legacy surface,pos,cost,lemma CSV.
  */
 class UserDictionary {
  public:
@@ -37,7 +37,7 @@ class UserDictionary {
 
   /**
    * @brief Load dictionary from memory (WASM)
-   * @param data Pointer to CSV data
+   * @param data Pointer to dictionary source data
    * @param size Data size
    * @return Number of entries on success, error on failure
    */
@@ -85,17 +85,7 @@ class UserDictionary {
   std::vector<DictionaryEntry> entries_;
   Trie trie_;
 
-  /**
-   * @brief Parse CSV data and add entries
-   * @param csv_data CSV data string
-   * @return Number of entries parsed
-   */
-  core::Expected<size_t, core::Error> parseCSV(std::string_view csv_data);
-
-  /**
-   * @brief Rebuild trie from entries
-   */
-  void rebuildTrie();
+  core::Expected<size_t, core::Error> parseSource(std::string_view source_data);
 };
 
 }  // namespace suzume::dictionary

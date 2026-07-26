@@ -89,11 +89,6 @@ class DoubleArray {
    */
   void clear();
 
-  /**
-   * @brief Get memory usage in bytes
-   */
-  size_t memoryUsage() const;
-
  private:
   /**
    * @brief Double-array unit (packed 32-bit)

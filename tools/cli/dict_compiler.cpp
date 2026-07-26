@@ -2,15 +2,12 @@
 
 #include <fstream>
 #include <iostream>
-#include <tuple>
-#include <unordered_map>
 #include <utility>
 #include <variant>
 
 #include "cli_common.h"
-#include "core/utf8_constants.h"
 #include "dictionary/binary_dict.h"
-#include "grammar/conjugation.h"
+#include "grammar/dictionary_expansion.h"
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 
@@ -35,126 +32,6 @@ core::Expected<std::monostate, core::Error> rejectDecompiledDump(const std::stri
                                                               "recompiled; edit the source TSV under data/ instead."));
   }
   return std::monostate{};
-}
-
-// I-adjective conjugation suffixes for dictionary expansion
-// Store only forms that are lexical units; compound auxiliary forms stay split.
-// Excludes compound forms that should be split (e.g., くなる → く + なる)
-struct IAdjSuffix {
-  const char* suffix;
-  core::ExtendedPOS extended_pos;
-};
-
-const std::vector<IAdjSuffix> kIAdjSuffixes = {
-    {"い", core::ExtendedPOS::AdjBasic},  // Base form: 美しい
-    // かった/くなかった are not stored as single tokens because their
-    // adjective and auxiliary morphemes remain distinct.
-    {"かっ", core::ExtendedPOS::AdjKatt},  // Ta-connection (連用タ接続): 美しかっ+た
-    // くない/くなかっ intentionally NOT expanded as single tokens: negatives must
-    // split (辛くない → 辛く + ない) per MeCab normalization. The く renyokei form
-    // below + the ない auxiliary produce the split; storing くない whole would make
-    // dict adjectives under-split (regression against Adjective_general/kunai).
-    // くて is compositional: 美しく(連用形) + て(接続助詞). Keeping the
-    // merged span in the compiled dictionary makes registered adjectives
-    // under-split in contexts where the following connection favors it.
-    {"ければ", core::ExtendedPOS::AdjKeForm},    // Conditional: 美しければ
-    {"く", core::ExtendedPOS::AdjRenyokei},      // Adverbial/Renyokei: 美しく
-    {"かったら", core::ExtendedPOS::AdjKeForm},  // Conditional past: 美しかったら
-    {"そう", core::ExtendedPOS::AdjStem},        // Looks like: 美しそう
-};
-
-// Expand i-adjective entry into all conjugated forms
-std::vector<dictionary::DictionaryEntry> expandIAdjective(const dictionary::DictionaryEntry& entry) {
-  std::vector<dictionary::DictionaryEntry> result;
-
-  // Check if it ends with い
-  if (!utf8::endsWith(entry.surface, "い")) {
-    result.push_back(entry);
-    return result;
-  }
-
-  // Skip irregular adjective いい - its conjugations (よく, よければ, etc.) are
-  // already in L1 dictionary as よい forms. Expanding いい would incorrectly
-  // generate いく instead of よく.
-  if (entry.surface == "いい") {
-    result.push_back(entry);  // Just add the base form
-    return result;
-  }
-
-  // Get stem by removing final い
-  std::string stem(utf8::dropLastChar(entry.surface));
-  std::string lemma = entry.lemma.empty() ? entry.surface : entry.lemma;
-
-  for (const auto& entry_info : kIAdjSuffixes) {
-    dictionary::DictionaryEntry new_entry;
-    new_entry.surface = stem + entry_info.suffix;
-    new_entry.pos = core::PartOfSpeech::Adjective;
-    new_entry.extended_pos = entry_info.extended_pos;
-    new_entry.lemma = lemma;
-    result.push_back(new_entry);
-  }
-
-  // Contracted forms for ない-ending adjectives (くだらない → くだらん) are
-  // intentionally NOT expanded into the dictionary: MeCab splits くだらん as
-  // くだら(verb未然形) + ん(助動詞), and dictionary entries would block that split.
-
-  return result;
-}
-
-// Expand verb entry into conjugated forms using Conjugation engine
-std::vector<dictionary::DictionaryEntry> expandVerb(const dictionary::DictionaryEntry& entry,
-                                                    grammar::VerbType verb_type) {
-  std::vector<dictionary::DictionaryEntry> result;
-
-  if (verb_type == grammar::VerbType::Unknown) {
-    result.push_back(entry);
-    return result;
-  }
-
-  static grammar::Conjugation conj;
-  std::string lemma = entry.lemma.empty() ? entry.surface : entry.lemma;
-
-  if (verb_type == grammar::VerbType::Kuru) {
-    struct KuruForm {
-      const char* kanji_surface;
-      const char* kana_surface;
-      core::ExtendedPOS extended_pos;
-    };
-    const std::vector<KuruForm> forms = {
-        {"来る", "くる", core::ExtendedPOS::VerbShuushikei},
-        {"来", "き", core::ExtendedPOS::VerbRenyokei},
-        {"来", "こ", core::ExtendedPOS::VerbMizenkei},
-        {"来れ", "くれ", core::ExtendedPOS::VerbKateikei},
-        {"来よ", "こよ", core::ExtendedPOS::VerbMizenkei},
-        {"来い", "こい", core::ExtendedPOS::VerbMeireikei},
-        {"来られる", "こられる", core::ExtendedPOS::VerbShuushikei},
-        {"来れる", "これる", core::ExtendedPOS::VerbShuushikei},
-    };
-    const bool kanji = entry.surface == "来る";
-    for (const auto& form : forms) {
-      dictionary::DictionaryEntry new_entry;
-      new_entry.surface = kanji ? form.kanji_surface : form.kana_surface;
-      new_entry.pos = core::PartOfSpeech::Verb;
-      new_entry.extended_pos = form.extended_pos;
-      new_entry.lemma = lemma;
-      result.push_back(new_entry);
-    }
-    return result;
-  }
-
-  auto suffixes = conj.getDictionarySuffixes(verb_type);
-  std::string stem = grammar::Conjugation::getStem(entry.surface, verb_type);
-
-  for (const auto& suf : suffixes) {
-    dictionary::DictionaryEntry new_entry;
-    new_entry.surface = stem + suf.suffix;
-    new_entry.pos = core::PartOfSpeech::Verb;
-    new_entry.extended_pos = suf.extended_pos;  // Use ExtendedPOS from suffix
-    new_entry.lemma = lemma;
-    result.push_back(new_entry);
-  }
-
-  return result;
 }
 
 }  // namespace
@@ -264,128 +141,20 @@ core::Expected<size_t, core::Error> DictCompiler::compileEntries(const std::vect
     }
   }
 
-  const auto& work_entries = *active_entries;
-
   dictionary::BinaryDictWriter writer;
-  entries_compiled_ = 0;
-  conj_expanded_ = 0;
-  size_t duplicates_skipped = 0;
-
-  // Deduplication: track surfaces (trie requires unique keys)
-  // When duplicate surfaces arise from different verb base forms (e.g., 降り from
-  // both 降る and 降りる), prefer the entry with the longer lemma (more specific).
-  // Only replace same-POS entries to avoid VERB overriding NOUN (e.g., 晴れ).
-  struct SeenEntry {
-    size_t lemma_len;
-    core::PartOfSpeech pos;
-  };
-  std::unordered_map<std::string, SeenEntry> seen_surfaces;
-
-  // Two-pass processing:
-  // Pass 1: Process non-conjugating entries (nouns, adverbs, etc.) first
-  //         This ensures noun entries like 思い take priority over verb renyokei
-  // Pass 2: Process conjugating entries (verbs, adjectives) with expansion
-
-  // Helper lambda to check if entry needs conjugation expansion
-  auto needsExpansion = [](const TsvEntry& entry) {
-    return (entry.pos == core::PartOfSpeech::Adjective && entry.conj_type == dictionary::ConjugationType::IAdjective) ||
-           entry.pos == core::PartOfSpeech::Verb;
-  };
-
-  // Pass 1: Non-conjugating entries
-  for (const auto& tsv_entry : work_entries) {
-    if (needsExpansion(tsv_entry)) {
-      continue;  // Skip conjugating entries in pass 1
-    }
-
-    dictionary::DictionaryEntry base_entry;
-    base_entry.surface = tsv_entry.surface;
-    base_entry.pos = tsv_entry.pos;
-    base_entry.lemma = tsv_entry.surface;
-
-    if (tsv_entry.conj_type == dictionary::ConjugationType::Interjection) {
-      base_entry.extended_pos = core::ExtendedPOS::Interjection;
-    } else if (tsv_entry.conj_type == dictionary::ConjugationType::NaAdjective) {
-      base_entry.extended_pos = core::ExtendedPOS::AdjNaAdj;
-    } else if (tsv_entry.conj_type == dictionary::ConjugationType::ProperFamily) {
-      base_entry.extended_pos = core::ExtendedPOS::NounProperFamily;
-    } else if (tsv_entry.conj_type == dictionary::ConjugationType::ProperGiven) {
-      base_entry.extended_pos = core::ExtendedPOS::NounProperGiven;
-    } else {
-      base_entry.extended_pos = core::posToExtendedPos(base_entry.pos);
-    }
-
-    if (seen_surfaces.count(base_entry.surface) > 0) {
-      ++duplicates_skipped;
-      continue;
-    }
-    seen_surfaces.emplace(base_entry.surface, SeenEntry{base_entry.lemma.size(), base_entry.pos});
-    writer.addEntry(base_entry);
-    ++entries_compiled_;
+  auto expanded = grammar::expandDictionarySourceEntries(*active_entries);
+  for (const auto& entry : expanded.entries) {
+    writer.addEntry(entry);
   }
-
-  // Pass 2: Conjugating entries (verbs and i-adjectives with expansion)
-  for (const auto& tsv_entry : work_entries) {
-    if (!needsExpansion(tsv_entry)) {
-      continue;  // Skip non-conjugating entries in pass 2
-    }
-
-    // Create base entry
-    dictionary::DictionaryEntry base_entry;
-    base_entry.surface = tsv_entry.surface;
-    base_entry.pos = tsv_entry.pos;
-    base_entry.extended_pos = core::ExtendedPOS::Unknown;
-    base_entry.lemma = tsv_entry.surface;
-
-    std::vector<dictionary::DictionaryEntry> expanded_entries;
-
-    if (tsv_entry.pos == core::PartOfSpeech::Adjective &&
-        tsv_entry.conj_type == dictionary::ConjugationType::IAdjective) {
-      // I-adjective: expand to all conjugated forms
-      base_entry.extended_pos = core::ExtendedPOS::AdjBasic;
-      expanded_entries = expandIAdjective(base_entry);
-    } else if (tsv_entry.pos == core::PartOfSpeech::Verb) {
-      // Verb: use conj_type hint if it names a verb type, otherwise auto-detect.
-      grammar::VerbType verb_type = grammar::conjTypeToVerbType(tsv_entry.conj_type);
-      if (verb_type == grammar::VerbType::Unknown || verb_type == grammar::VerbType::IAdjective) {
-        verb_type = grammar::Conjugation::detectType(tsv_entry.surface);
-      }
-
-      base_entry.extended_pos = core::ExtendedPOS::VerbShuushikei;
-      expanded_entries = expandVerb(base_entry, verb_type);
-    }
-
-    // Add expanded entries with deduplication (by surface)
-    // When duplicate surfaces exist and both are VERB, prefer the longer lemma
-    // (e.g., 降りる > 降る for surface 降り — ichidan is more specific)
-    // Don't replace non-VERB entries (e.g., 晴れ NOUN should not be replaced by 晴れる VERB)
-    for (const auto& exp_entry : expanded_entries) {
-      auto it = seen_surfaces.find(exp_entry.surface);
-      if (it != seen_surfaces.end()) {
-        if (exp_entry.pos == it->second.pos && exp_entry.lemma.size() > it->second.lemma_len) {
-          // Replace with more specific entry (longer lemma, same POS)
-          it->second = SeenEntry{exp_entry.lemma.size(), exp_entry.pos};
-          writer.replaceEntry(exp_entry);
-        }
-        ++duplicates_skipped;
-        continue;
-      }
-      seen_surfaces.emplace(exp_entry.surface, SeenEntry{exp_entry.lemma.size(), exp_entry.pos});
-
-      writer.addEntry(exp_entry);
-      ++entries_compiled_;
-      if (expanded_entries.size() > 1) {
-        ++conj_expanded_;
-      }
-    }
-  }
+  entries_compiled_ = expanded.entries.size();
+  conj_expanded_ = expanded.expanded_forms;
 
   if (verbose_ && conj_expanded_ > 0) {
     printInfo("Expanded " + std::to_string(conj_expanded_) + " conjugated forms");
   }
 
-  if (verbose_ && duplicates_skipped > 0) {
-    printInfo("Skipped " + std::to_string(duplicates_skipped) + " duplicate entries");
+  if (verbose_ && expanded.duplicates_skipped > 0) {
+    printInfo("Skipped " + std::to_string(expanded.duplicates_skipped) + " duplicate entries");
   }
 
   auto write_result = writer.writeToFile(dic_path);

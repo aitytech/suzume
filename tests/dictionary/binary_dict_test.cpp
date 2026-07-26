@@ -8,8 +8,10 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <memory>
 
 #include "dictionary/dictionary.h"
+#include "dictionary/user_dict.h"
 
 namespace suzume {
 namespace dictionary {
@@ -918,6 +920,42 @@ TEST_F(BinaryDictTest, DictionaryManagerLoadFromMemoryInvalidData) {
   DictionaryManager manager;
   EXPECT_FALSE(manager.loadUserBinaryDictionaryFromMemory(bad_data.data(), bad_data.size()));
   EXPECT_FALSE(manager.hasUserBinaryDictionary());
+}
+
+TEST_F(BinaryDictTest, DictionaryManagerBinaryDictionariesAreAdditiveAndFailedLoadsPreserveThem) {
+  auto first_data = buildTestDict("東京テスト", core::PartOfSpeech::Noun);
+  auto second_data = buildTestDict("りんごテスト", core::PartOfSpeech::Noun);
+  const std::vector<uint8_t> invalid_data(10, 0);
+
+  DictionaryManager manager;
+  ASSERT_TRUE(manager.loadUserBinaryDictionaryFromMemory(first_data.data(), first_data.size()));
+  ASSERT_TRUE(manager.loadUserBinaryDictionaryFromMemory(second_data.data(), second_data.size()));
+  EXPECT_FALSE(manager.loadUserBinaryDictionaryFromMemory(invalid_data.data(), invalid_data.size()));
+
+  EXPECT_NE(manager.lookupExact("東京テスト"), nullptr);
+  EXPECT_NE(manager.lookupExact("りんごテスト"), nullptr);
+  EXPECT_TRUE(manager.hasUserBinaryDictionary());
+}
+
+TEST_F(BinaryDictTest, DictionaryManagerClearRemovesEveryUserDictionaryButKeepsCoreDictionary) {
+  auto core_data = buildTestDict("東京テスト", core::PartOfSpeech::Noun);
+  auto binary_data = buildTestDict("りんごテスト", core::PartOfSpeech::Noun);
+  auto source_dictionary = std::make_shared<UserDictionary>();
+  source_dictionary->addEntry({"テスト公園", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, "テスト公園"});
+
+  DictionaryManager manager;
+  ASSERT_TRUE(manager.loadCoreDictionaryFromMemoryResult(core_data.data(), core_data.size()).hasValue());
+  ASSERT_TRUE(manager.loadUserBinaryDictionaryFromMemory(binary_data.data(), binary_data.size()));
+  manager.addUserDictionary(source_dictionary);
+  ASSERT_NE(manager.lookupExact("りんごテスト"), nullptr);
+  ASSERT_NE(manager.lookupExact("テスト公園"), nullptr);
+
+  manager.clearUserDictionaries();
+
+  EXPECT_FALSE(manager.hasUserBinaryDictionary());
+  EXPECT_EQ(manager.lookupExact("りんごテスト"), nullptr);
+  EXPECT_EQ(manager.lookupExact("テスト公園"), nullptr);
+  EXPECT_NE(manager.lookupExact("東京テスト"), nullptr);
 }
 
 }  // namespace

@@ -6,6 +6,7 @@ add_library(suzume_grammar OBJECT
   char_patterns.cpp
   conjugation.cpp
   conjugator.cpp
+  dictionary_expansion.cpp
   inflection.cpp
   inflection_scorer.cpp
   inflection_scorer_form_potential.cpp

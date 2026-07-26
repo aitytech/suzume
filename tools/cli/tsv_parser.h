@@ -9,27 +9,23 @@
 #include "core/types.h"
 #include "dictionary/binary_dict.h"
 #include "dictionary/dictionary.h"
+#include "dictionary/source_parser.h"
 
 namespace suzume::cli {
 
 /**
  * @brief TSV dictionary entry (parsed from TSV file)
  *
- * v0.8 simplified format: surface<TAB>pos<TAB>conj_type
- * - reading and cost fields removed (not used)
+ * Current format: surface<TAB>pos<TAB>conj_type<TAB>lemma
+ * Legacy reading/cost fields are accepted but not retained.
  */
-struct TsvEntry {
-  std::string surface;
-  core::PartOfSpeech pos{core::PartOfSpeech::Noun};
-  dictionary::ConjugationType conj_type{dictionary::ConjugationType::None};
-  size_t line_number{0};
-};
+using TsvEntry = dictionary::SourceEntry;
 
 /**
  * @brief TSV dictionary parser
  *
- * Parses TSV format (v0.8):
- * surface<TAB>pos<TAB>conj_type
+ * Wraps the Dictionary-layer source parser with CLI statistics and validation.
+ * Both current TSV and legacy runtime CSV input are accepted.
  *
  * Comments start with #, empty lines are ignored.
  */
@@ -79,9 +75,6 @@ class TsvParser {
   size_t comment_lines_ = 0;
   size_t empty_lines_ = 0;
   size_t error_lines_ = 0;
-
-  static core::Expected<core::PartOfSpeech, core::Error> parsePos(std::string_view str, size_t line);
-  static core::Expected<dictionary::ConjugationType, core::Error> parseConjType(std::string_view str, size_t line);
 };
 
 /**
@@ -91,11 +84,6 @@ class TsvParser {
  * @return Number of entries written, or error
  */
 core::Expected<size_t, core::Error> writeTsvFile(const std::string& path, const std::vector<TsvEntry>& entries);
-
-/**
- * @brief Convert TsvEntry to DictionaryEntry
- */
-dictionary::DictionaryEntry tsvToDictEntry(const TsvEntry& tsv_entry);
 
 }  // namespace suzume::cli
 
