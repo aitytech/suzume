@@ -2505,6 +2505,234 @@
       ],
       "id": "honno_sukoshi_dake_degree_boundaries",
       "input": "ほんの少しだけ残る"
+    },
+    {
+      "description": "確認しかできない - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shikadekinai",
+      "input": "確認しかできない"
+    },
+    {
+      "description": "確認だけしかない - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "dakeshikanai",
+      "input": "確認だけしかない"
+    },
+    {
+      "description": "確認だけはする - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "dakehasuru",
+      "input": "確認だけはする"
+    },
+    {
+      "description": "確認にまで及ぶ - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "及ぶ",
+          "pos": "Verb",
+          "surface": "及ぶ"
+        }
+      ],
+      "id": "nimade_bu",
+      "input": "確認にまで及ぶ"
+    },
+    {
+      "description": "本しかない - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shikanai_3",
+      "input": "本しかない"
+    },
+    {
+      "description": "確認はする - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "hasuru",
+      "input": "確認はする"
+    },
+    {
+      "description": "確認までに - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        }
+      ],
+      "id": "madeni",
+      "input": "確認までに"
+    },
+    {
+      "description": "いつまでたっても - regression test",
+      "expected": [
+        {
+          "lemma": "いつ",
+          "pos": "Pronoun",
+          "surface": "いつ"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "たつ",
+          "pos": "Verb",
+          "surface": "たっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        }
+      ],
+      "id": "itsumadetatttemo",
+      "input": "いつまでたっても"
+    },
+    {
+      "description": "確認だけなら - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        }
+      ],
+      "id": "dakenara",
+      "input": "確認だけなら"
     }
   ],
   "description": "Binding and adverbial particles (は、も、だけ)",

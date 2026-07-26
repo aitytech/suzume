@@ -371,6 +371,33 @@
       ],
       "id": "gozaru_classical_negative_boundary",
       "input": "ござらぬ"
+    },
+    {
+      "description": "確認たるもの進める - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "tarumono_meru",
+      "input": "確認たるもの進める"
     }
   ],
   "description": "auxiliary_classical tests",

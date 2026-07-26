@@ -255,6 +255,9 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // particle, so は+た is not a real boundary. Prevents an isolated hiragana noun
       // from splitting into は(係助詞)+た(過去)+… (はたけ → は+た+け).
       {EPOS::ParticleTopic, EPOS::AuxTenseTa, cost::kSevere},
+      // The same holds for an adverbial particle (いつまで+たっ+て+も, never
+      // いつまで+た+って+も).
+      {EPOS::ParticleAdverbial, EPOS::AuxTenseTa, cost::kSevere},
 
       // AuxAspectIru → AuxTenseTa (い+た) - moderate bonus
       {EPOS::AuxAspectIru, EPOS::AuxTenseTa, cost::kModerateBonus},

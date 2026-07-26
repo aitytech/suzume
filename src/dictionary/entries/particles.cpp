@@ -12,7 +12,10 @@ EntrySpecRange getParticleEntries() {
       particle("で", EPOS::ParticleCase),  // low cost for te-form split
       particle("と", EPOS::ParticleCase),
       particle("から", EPOS::ParticleCase),
-      particle("まで", EPOS::ParticleCase),
+      // まで is an adverbial particle, not an argument-marking case particle:
+      // it stacks on top of one (にまで, からまで) and the case-stacking penalty
+      // would otherwise break that chain apart at its own mora boundary.
+      particle("まで", EPOS::ParticleAdverbial),
       particle("より", EPOS::ParticleCase),
       particle("へ", EPOS::ParticleCase),
 

@@ -213,6 +213,14 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // unknown noun that absorbs the particle sequence.
       {EPOS::ParticleBinding, EPOS::VerbShuushikei, cost::kVeryStrongBonus},
 
+      // The same holds for the non-finite stems that carry a following
+      // auxiliary (しか+でき+ない, しか+読ま+ない, さえ+すれ+ば). Without these
+      // rows the particle's own first mora is cheap enough to be re-read as a
+      // separate closed-class token (しか split into the suru continuative and
+      // the interrogative か).
+      {EPOS::ParticleBinding, EPOS::VerbRenyokei, cost::kVeryStrongBonus},
+      {EPOS::ParticleBinding, EPOS::VerbMizenkei, cost::kVeryStrongBonus},
+
       // Whether a conjunctive particle may take a binding particle depends on
       // its surface: productive て/で combinations are rewarded by the
       // surface-aware scorer.  Keep the category pair neutral here so short
@@ -654,6 +662,10 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // the same search unit (気+持ち), even though both are selected by the
       // same closed adnominal auxiliary.
       {EPOS::AuxClassicalTari, EPOS::NounVerbal, cost::kStrongBonus},
+      // A formal noun is a nominal head too (たるもの, たるゆえん). Without the
+      // row it is cheaper to restart the formal noun as a focus particle plus a
+      // nominalizer (もの split into も + の).
+      {EPOS::AuxClassicalTari, EPOS::NounFormal, cost::kStrongBonus},
       {EPOS::AuxClassicalTari, EPOS::ParticleBinding, cost::kStrongBonus},
       {EPOS::AuxClassicalTari, EPOS::ParticleCase, cost::kStrongBonus},
 

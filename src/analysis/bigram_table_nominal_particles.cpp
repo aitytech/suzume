@@ -71,6 +71,11 @@ void setNominalParticleCosts(BigramMatrix& table) {
       {EPOS::Conjunction, EPOS::Noun, cost::kStrongBonus},
       {EPOS::Conjunction, EPOS::Pronoun, cost::kMinorBonus},
       {EPOS::ParticleCase, EPOS::ParticleBinding, cost::kStrongBonus},
+      // An adverbial particle stacks with a binding particle just as a case
+      // particle does (だけしか, までしか, ばかりしか). Without the row the chain
+      // is dear enough that the binding particle is split at its own mora
+      // boundary and its tail is glued to a following auxiliary.
+      {EPOS::ParticleAdverbial, EPOS::ParticleBinding, cost::kStrongBonus},
       {EPOS::ParticleBinding, EPOS::AdjBasic, cost::kStrongBonus},
       {EPOS::ParticleBinding, EPOS::AdjRenyokei, cost::kStrongBonus},
       {EPOS::Noun, EPOS::AdjNaAdj, cost::kStrongBonus},

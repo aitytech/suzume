@@ -33,6 +33,11 @@ void setParticleAndLexicalPenaltyCosts(BigramMatrix& table) {
       // whose focus-particle reading is productive before a predicate.
       {EPOS::ParticleCase, EPOS::ParticleTopic, cost::kVeryStrongBonus},
 
+      // PART_副 → PART_係 (だけ+は, まで+は, ばかり+は) stacks the same way. The
+      // adverbial particle is at least two morae, so this cannot re-bond a
+      // short conjunctive homograph the way the note below describes.
+      {EPOS::ParticleAdverbial, EPOS::ParticleTopic, cost::kVeryStrongBonus},
+
       // Note: PART_接続 → PART_係 bonus is NOT set here because short particles
       // like て, し also have PART_接続 and would incorrectly bond with は, も.
       // Instead, compound particle (≥3 chars) + topic particle bonus is handled
