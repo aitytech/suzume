@@ -34,8 +34,14 @@ jobs:
           node-version: 22
           cache: yarn
           cache-dependency-path: bindings/wasm/yarn.lock
+      - uses: astral-sh/setup-uv@v7
       - run: yarn install --immutable
       - run: yarn lint
+      - name: Lint MCP server and repository scripts
+        working-directory: scripts/mcp
+        run: |
+          uv run --locked ruff format --check . ../../scripts/*.py
+          uv run --locked ruff check . ../../scripts/*.py
 
   guardrails:
     runs-on: ubuntu-latest
@@ -51,6 +57,9 @@ jobs:
       # A V2 added to the core's compound lexicon must reach the oracle's mirror,
       # or expectations start splitting compounds the tokenizer joins.
       - run: python3 scripts/check_compound_v2_sync.py
+      # Closed Unicode/grammar sets duplicated in the Python oracle must remain
+      # exact mirrors of their C++ sources.
+      - run: python3 scripts/check_oracle_mirrors.py
       # Version must stay in lockstep across every binding manifest.
       - run: scripts/check_version_mirror.sh
 

@@ -48,10 +48,7 @@ function median(samples) {
 }
 
 function wasmPages(instance) {
-  // This is intentionally benchmark-only access to the generated wrapper's
-  // module field. The public API does not expose the Emscripten heap.
-  const heapBytes = instance.module.HEAPU32.buffer.byteLength;
-  return heapBytes / 65536;
+  return instance.wasmMemoryBytes() / 65536;
 }
 
 const options = { ...defaults, corpus: undefined };

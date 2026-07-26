@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Mechanical guardrails for the design principles in CLAUDE.md that were previously
-# only enforced by convention. Ratchet-based: per analysis source file it counts
+# only enforced by convention. Ratchet-based: per core source file it counts
 #   - surface_cmp:    surface-string equality comparisons (hardcoded word tests)
 #   - score_literals: raw float score literals (magic numbers not via named constants)
 #   - score_additions: ordered conditional additions in scorer translation units
@@ -9,8 +9,9 @@
 # an intentional reduction is recorded by re-running with `update`, which shows up as
 # a baseline diff in the commit.
 #
-# Also verifies WASM-core purity: no <fstream>/<thread>/<filesystem>/<mutex> in core
-# layers outside the explicit __EMSCRIPTEN__-guarded allowlist.
+# Also verifies WASM-core purity: no
+# <fstream>/<thread>/<filesystem>/<mutex>/<iostream> in core layers outside an
+# actual __EMSCRIPTEN__-excluded preprocessor branch or the explicit allowlist.
 #
 # Portable to bash 3.2 (macOS) and bash 4+ (CI): no associative arrays, greps guarded.
 #
@@ -28,8 +29,8 @@ count() { grep -oE "$1" "$2" 2>/dev/null | wc -l | tr -d ' '; }
 
 metrics_for() {
   local f="$1" surf floats additions
-  surf=$(count '(->|\.)surface *[!=]=' "$f")
-  floats=$(count '[0-9]+\.[0-9]+F' "$f")
+  surf=$(count '(^|[^[:alnum:]_])surface[[:space:]]*[!=]=' "$f")
+  floats=$(count '[0-9]+\.[0-9]+F?' "$f")
   additions=0
   case "$f" in
     src/analysis/scorer*.cpp)
@@ -39,32 +40,135 @@ metrics_for() {
   printf '%s\t%s\t%s\t%s\n' "$f" "$surf" "$floats" "$additions"
 }
 
-# Analysis translation units plus the core headers that carry lattice/Viterbi
-# scoring. Core is scanned because a scoring literal parked in a header there
-# would otherwise sit permanently outside the ratchet.
-FILES=$(find src/analysis -name '*.cpp' | sort)
-FILES="$FILES $(find src/core -name '*.h' | sort)"
+# Analysis, grammar, and postprocessing carry candidate/scoring decisions across
+# both translation units and headers. Core headers are included because a scoring
+# literal parked in lattice/Viterbi would otherwise sit outside the ratchet.
+FILES=$(
+  {
+    find src/analysis src/grammar src/postprocess -type f \( -name '*.cpp' -o -name '*.h' \)
+    find src/core -type f -name '*.h'
+  } | sort
+)
 
 gen_baseline() {
   printf '# file\tsurface_cmp\tscore_literals\tscore_additions\n'
   for f in $FILES; do metrics_for "$f"; done
 }
 
-# WASM-core purity: file-I/O / thread headers must never reach the WASM build. A file
-# may use them only behind an __EMSCRIPTEN__ guard. We flag any file that includes such a
-# header but contains NO __EMSCRIPTEN__ guard at all (self-maintaining: no manual allowlist).
+# WASM-core purity: native file-I/O, thread, and stream headers must never reach
+# the WASM build. Track preprocessor branches so an unrelated __EMSCRIPTEN__
+# mention elsewhere in the file cannot hide an unguarded include.
 PURITY_DIRS="src/core src/normalize src/analysis src/dictionary src/postprocess src/grammar src/pretokenizer"
 # Native-only file APIs must be wrapped in an __EMSCRIPTEN__ guard. The user
 # dictionary has a separate native file loader until it receives the same split.
 PURITY_ALLOW="src/dictionary/user_dict.cpp"
 
+unguarded_purity_includes() {
+  awk '
+    function branch_state(line, expression) {
+      if (line ~ /^[[:space:]]*#[[:space:]]*ifndef[[:space:]]+__EMSCRIPTEN__([[:space:]]|$)/) {
+        return -1
+      }
+      if (line ~ /^[[:space:]]*#[[:space:]]*ifdef[[:space:]]+__EMSCRIPTEN__([[:space:]]|$)/) {
+        return 1
+      }
+
+      expression = line
+      sub(/^[[:space:]]*#[[:space:]]*(if|elif)[[:space:]]+/, "", expression)
+      sub(/[[:space:]]*(\/\/|\/\*).*/, "", expression)
+      gsub(/[[:space:]]/, "", expression)
+
+      if (expression ~ /^!defined\(?__EMSCRIPTEN__\)?$/ ||
+          expression ~ /^!__EMSCRIPTEN__$/) {
+        return -1
+      }
+      if (expression ~ /^defined\(?__EMSCRIPTEN__\)?$/ ||
+          expression ~ /^__EMSCRIPTEN__$/) {
+        return 1
+      }
+      # A false term in an AND expression makes the whole branch native-only.
+      if (expression ~ /!defined\(?__EMSCRIPTEN__\)?/ &&
+          expression !~ /\|\|/) {
+        return -1
+      }
+      # A true term in an OR expression makes the branch active on WASM.
+      if (expression ~ /(^|\|\|)defined\(?__EMSCRIPTEN__\)?(\|\||$)/ &&
+          expression !~ /&&/) {
+        return 1
+      }
+      return 0
+    }
+
+    /^[[:space:]]*#[[:space:]]*(if|ifdef|ifndef)([[:space:]]|$)/ {
+      depth++
+      state[depth] = branch_state($0)
+      seen_true[depth] = state[depth] == 1
+      seen_unknown[depth] = state[depth] == 0
+      next
+    }
+    /^[[:space:]]*#[[:space:]]*elif([[:space:]]|$)/ {
+      if (depth > 0) {
+        if (seen_true[depth]) {
+          state[depth] = -1
+        } else if (seen_unknown[depth]) {
+          state[depth] = 0
+        } else {
+          state[depth] = branch_state($0)
+          seen_true[depth] = state[depth] == 1
+          seen_unknown[depth] = state[depth] == 0
+        }
+      }
+      next
+    }
+    /^[[:space:]]*#[[:space:]]*else([[:space:]]|$)/ {
+      if (depth > 0) {
+        if (seen_true[depth]) {
+          state[depth] = -1
+        } else if (seen_unknown[depth]) {
+          state[depth] = 0
+        } else {
+          state[depth] = 1
+        }
+      }
+      next
+    }
+    /^[[:space:]]*#[[:space:]]*endif([[:space:]]|$)/ {
+      if (depth > 0) {
+        delete state[depth]
+        delete seen_true[depth]
+        delete seen_unknown[depth]
+        depth--
+      }
+      next
+    }
+    /^[[:space:]]*#[[:space:]]*include[[:space:]]*<(fstream|thread|filesystem|mutex|iostream)>/ {
+      guarded = 0
+      for (level = 1; level <= depth; level++) {
+        if (state[level] == -1) {
+          guarded = 1
+        }
+      }
+      if (!guarded) {
+        print FNR ":" $0
+      }
+    }
+  ' "$1"
+}
+
 check_purity() {
-  local bad=0 hit
-  for hit in $(grep -rlE '#include *<(fstream|thread|filesystem|mutex)>' $PURITY_DIRS 2>/dev/null || true); do
-    grep -q '__EMSCRIPTEN__' "$hit" && continue
+  local bad=0 hit unguarded
+  for hit in $(grep -rlE '#[[:space:]]*include[[:space:]]*<(fstream|thread|filesystem|mutex|iostream)>' \
+    $PURITY_DIRS 2>/dev/null || true); do
     case " $PURITY_ALLOW " in *" $hit "*) continue ;; esac
-    echo "❌ WASM-core purity: $hit includes a file-I/O/thread header without an __EMSCRIPTEN__ guard"
-    bad=1
+    unguarded=$(unguarded_purity_includes "$hit")
+    if [ -n "$unguarded" ]; then
+      while IFS= read -r violation; do
+        echo "❌ WASM-core purity: $hit:$violation is not excluded from the Emscripten preprocessor branch"
+      done <<EOF
+$unguarded
+EOF
+      bad=1
+    fi
   done
   return $bad
 }

@@ -33,6 +33,17 @@ py_ver=$(grep -Eo '^version = "[0-9]+\.[0-9]+\.[0-9]+"' bindings/python/pyprojec
   | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
 check "python pyproject.toml" bindings/python/pyproject.toml "$py_ver"
 
+py_lock_ver=$(awk '
+  $0 == "name = \"suzume\"" {
+    if (getline > 0 && $1 == "version" && $2 == "=") {
+      gsub(/"/, "", $3)
+      print $3
+      exit
+    }
+  }
+' bindings/python/uv.lock)
+check "python uv.lock" bindings/python/uv.lock "$py_lock_ver"
+
 if [ "$status" -eq 0 ]; then
   echo "All version mirrors consistent: $canonical"
 fi

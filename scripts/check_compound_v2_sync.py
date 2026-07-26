@@ -75,7 +75,7 @@ def main() -> int:
     os.chdir(repo_root())
 
     sys.path.insert(0, "scripts/mcp/src")
-    from suzume_mcp.core.constants import (  # noqa: PLC0415
+    from suzume_mcp.core.constants import (
         COMPOUND_VERB_V2_GODAN,
         COMPOUND_VERB_V2_ICHIDAN,
         COMPOUND_VERB_V2_NOT_AFTER_SURU,
@@ -90,6 +90,13 @@ def main() -> int:
         missing = sorted(forms - oracle[kind] - READINGS_NOT_MIRRORED)
         if missing:
             print(f"❌ {CONSTANTS}: COMPOUND_VERB_V2_{kind.upper()} is missing {' '.join(missing)}")
+            failed = True
+        stale = sorted(oracle[kind] - forms - READINGS_NOT_MIRRORED)
+        if stale:
+            print(
+                f"❌ {CONSTANTS}: COMPOUND_VERB_V2_{kind.upper()} retains "
+                f"{' '.join(stale)}, which the core no longer joins"
+            )
             failed = True
 
     for name, core_set, oracle_set in (

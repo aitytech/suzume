@@ -12,9 +12,7 @@ local run fails on them too; this script is the whole-corpus view for CI.
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEST_DATA_DIR = PROJECT_ROOT / "tests" / "data" / "tokenization"

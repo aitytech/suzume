@@ -25,36 +25,51 @@ status=0
 
 # --- C++ core and native tooling (clang-format, scoped to staged files) ---
 cpp=$(printf '%s\n' "$staged" | grep -E '^(src|include|tools|tests|examples)/.*\.(cpp|h|hpp|c)$')
-if [ -n "$cpp" ] && command -v clang-format >/dev/null 2>&1; then
-    if ! printf '%s\n' "$cpp" | xargs clang-format --dry-run --Werror; then
+if [ -n "$cpp" ]; then
+    if ! command -v clang-format >/dev/null 2>&1; then
+        echo "[pre-commit] clang-format is required for staged C/C++ files."
+        status=1
+    elif ! printf '%s\n' "$cpp" | xargs clang-format --dry-run --Werror; then
         echo "[pre-commit] C++ formatting issues (clang-format)."
         status=1
     fi
 fi
 
 # --- WASM binding (biome, whole sub-project when any of its files are staged) ---
-if printf '%s\n' "$staged" | grep -qE '^bindings/wasm/(js|tests)/.*\.(ts|js)$' \
-    && [ -d bindings/wasm/node_modules ]; then
-    if ! (cd bindings/wasm && yarn lint >/dev/null 2>&1); then
+if printf '%s\n' "$staged" | grep -qE '^bindings/wasm/(js|tests)/.*\.(ts|js)$'; then
+    if ! command -v yarn >/dev/null 2>&1; then
+        echo "[pre-commit] yarn is required for staged WASM binding files."
+        status=1
+    elif [ ! -d bindings/wasm/node_modules ]; then
+        echo "[pre-commit] WASM dependencies are missing; run: cd bindings/wasm && yarn install --immutable"
+        status=1
+    elif ! (cd bindings/wasm && yarn lint >/dev/null 2>&1); then
         echo "[pre-commit] WASM binding lint issues (biome)."
         status=1
     fi
 fi
 
-# --- Python binding + MCP server (ruff, whole sub-project each) ---
-if command -v uv >/dev/null 2>&1; then
-    if printf '%s\n' "$staged" | grep -qE '^bindings/python/.*\.py$'; then
-        if ! (cd bindings/python && uv run --extra dev ruff format --check . \
-            && uv run --extra dev ruff check .) >/dev/null 2>&1; then
-            echo "[pre-commit] Python binding formatting/lint issues (ruff)."
-            status=1
+# --- Python binding + MCP/repository scripts (ruff, whole sub-project each) ---
+python_binding=$(printf '%s\n' "$staged" | grep -E '^bindings/python/.*\.py$')
+repository_scripts=$(printf '%s\n' "$staged" | grep -E '^scripts/.*\.py$')
+if [ -n "$python_binding$repository_scripts" ]; then
+    if ! command -v uv >/dev/null 2>&1; then
+        echo "[pre-commit] uv is required for staged Python files."
+        status=1
+    else
+        if [ -n "$python_binding" ]; then
+            if ! (cd bindings/python && uv run --extra dev ruff format --check . \
+                && uv run --extra dev ruff check .) >/dev/null 2>&1; then
+                echo "[pre-commit] Python binding formatting/lint issues (ruff)."
+                status=1
+            fi
         fi
-    fi
-    if printf '%s\n' "$staged" | grep -qE '^scripts/mcp/.*\.py$'; then
-        if ! (cd scripts/mcp && uv run ruff format --check . \
-            && uv run ruff check .) >/dev/null 2>&1; then
-            echo "[pre-commit] MCP server formatting/lint issues (ruff)."
-            status=1
+        if [ -n "$repository_scripts" ]; then
+            if ! (cd scripts/mcp && uv run ruff format --check . ../../scripts/*.py \
+                && uv run ruff check . ../../scripts/*.py) >/dev/null 2>&1; then
+                echo "[pre-commit] MCP server/repository script formatting or lint issues (ruff)."
+                status=1
+            fi
         fi
     fi
 fi

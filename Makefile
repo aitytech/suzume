@@ -1,8 +1,8 @@
 # Suzume Makefile
 # Convenience wrapper for CMake build system
 
-.PHONY: help build test clean rebuild format format-check lint configure \
-        wasm wasm-configure wasm-dict wasm-test wasm-clean wasm-rebuild dict \
+.PHONY: help build test mcp-test clean rebuild format format-check lint configure \
+        wasm wasm-configure wasm-dict wasm-test wasm-bench wasm-clean wasm-rebuild dict \
         python-build python-test python-wheel version-check \
         install examples embedded consumer-smoke cmake-smoke
 
@@ -23,11 +23,12 @@ help:
 	@echo "  make build        - Build the project (default)"
 	@echo "  make dict         - Build dictionaries"
 	@echo "  make test         - Run all tests (includes dict)"
+	@echo "  make mcp-test     - Run MCP server/oracle tests"
 	@echo "  make clean        - Clean build directory"
 	@echo "  make rebuild      - Clean and rebuild"
-	@echo "  make format       - Auto-fix format/lint: C++, MCP, WASM, Python bindings"
+	@echo "  make format       - Auto-fix format/lint: C++, scripts/MCP, WASM, Python"
 	@echo "  make format-check - Check formatting across all languages"
-	@echo "  make lint         - Run read-only MCP, WASM, and Python static checks"
+	@echo "  make lint         - Run read-only scripts/MCP, WASM, and Python static checks"
 	@echo "  make configure    - Configure CMake"
 	@echo "  make version-check - Verify version is consistent across binding manifests"
 	@echo "  make cmake-smoke  - Verify supported CMake build/install configurations"
@@ -48,6 +49,7 @@ help:
 	@echo "  make wasm         - Build WASM module (includes wasm-dict)"
 	@echo "  make wasm-dict    - Build dictionaries for the WASM link"
 	@echo "  make wasm-test    - Run WASM tests"
+	@echo "  make wasm-bench   - Measure public-API WASM throughput and memory"
 	@echo "  make wasm-clean   - Clean WASM build"
 	@echo "  make wasm-rebuild - Clean and rebuild WASM"
 	@echo ""
@@ -80,10 +82,16 @@ dict: build
 	@echo "Dictionary build complete!"
 
 # Run tests
-test: dict
+test: dict mcp-test
 	@echo "Running tests..."
 	ctest --test-dir $(BUILD_DIR) --output-on-failure
 	@echo "Tests complete!"
+
+# Run the MCP server/oracle test suite from its project root so pytest uses
+# scripts/mcp/pyproject.toml and imports the local package correctly.
+mcp-test:
+	@echo "Running MCP server/oracle tests..."
+	cd scripts/mcp && uv run pytest -q
 
 # Clean build directory
 clean:
@@ -146,12 +154,13 @@ cmake-smoke:
 	scripts/check_cmake_configurations.sh
 
 # Auto-fix formatting/lint across every language in the repo:
-# C++ core (clang-format), MCP server (ruff), WASM binding (biome), Python binding (ruff).
+# C++ core (clang-format), MCP/repository scripts (ruff), WASM binding (biome),
+# Python binding (ruff).
 format:
 	@echo "Formatting C++ (clang-format)..."
 	@find src include tools tests examples -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \) | xargs $(CLANG_FORMAT) -i
-	@echo "Formatting MCP server (ruff)..."
-	cd scripts/mcp && uv run ruff format . && uv run ruff check --fix .
+	@echo "Formatting MCP server and repository scripts (ruff)..."
+	cd scripts/mcp && uv run ruff format . ../../scripts/*.py && uv run ruff check --fix . ../../scripts/*.py
 	@echo "Formatting WASM binding (biome)..."
 	cd bindings/wasm && yarn lint:fix
 	@echo "Formatting Python binding (ruff)..."
@@ -163,8 +172,8 @@ format:
 format-check:
 	@echo "Checking C++ formatting (clang-format)..."
 	@find src include tools tests examples -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \) | xargs $(CLANG_FORMAT) --dry-run --Werror
-	@echo "Checking MCP server formatting (ruff)..."
-	cd scripts/mcp && uv run ruff format --check .
+	@echo "Checking MCP server and repository script formatting (ruff)..."
+	cd scripts/mcp && uv run ruff format --check . ../../scripts/*.py
 	@echo "Checking Python binding formatting (ruff)..."
 	cd bindings/python && uv run --extra dev ruff format --check .
 	$(MAKE) lint
@@ -173,8 +182,8 @@ format-check:
 # Read-only static analysis. This repository does not configure clang-tidy, so
 # C++ is covered by clang-format in format-check rather than a nominal lint step.
 lint:
-	@echo "Linting MCP server (ruff)..."
-	cd scripts/mcp && uv run ruff check .
+	@echo "Linting MCP server and repository scripts (ruff)..."
+	cd scripts/mcp && uv run ruff check . ../../scripts/*.py
 	@echo "Linting WASM binding (biome)..."
 	cd bindings/wasm && yarn lint
 	@echo "Linting Python binding (ruff)..."
@@ -246,6 +255,12 @@ wasm-test: wasm
 	@echo "Running WASM tests..."
 	cd bindings/wasm && yarn build:js && yarn test
 	@echo "WASM tests complete!"
+
+# Measure the shipped public JS API, including result decoding. Override the
+# workload with WASM_BENCH_ARGS, for example:
+#   make wasm-bench WASM_BENCH_ARGS="--iterations=100 --samples=3"
+wasm-bench: wasm
+	node scripts/measure_wasm_metrics.mjs $(WASM_BENCH_ARGS)
 
 # Clean WASM build
 wasm-clean:
