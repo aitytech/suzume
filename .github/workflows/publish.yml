@@ -57,9 +57,14 @@ jobs:
           cmake --build build --parallel
           cmake --build build --target build-dict
 
+      # Run the gtest binary directly; ctest registers each case separately, so it
+      # would spawn thousands of dictionary-loading processes. Non-gtest tests are
+      # still driven by ctest and must be named here.
       - name: Run C++ tests
         working-directory: ${{ github.workspace }}
-        run: ctest --test-dir build --output-on-failure
+        run: |
+          ./build/bin/suzume_test
+          ctest --test-dir build --output-on-failure -R native_cli_contract
 
       - run: yarn install --immutable
       - run: yarn lint

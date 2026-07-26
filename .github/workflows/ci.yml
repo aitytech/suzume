@@ -84,8 +84,14 @@ jobs:
           cmake -B build -DBUILD_WASM=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage"
           cmake --build build --parallel
           cmake --build build --target build-dict
+      # The gtest binary is run once rather than through ctest: gtest_discover_tests
+      # registers every case separately, so ctest spawns thousands of processes that
+      # each reload the dictionaries. Tests that are not gtest cases still go through
+      # ctest and must be named here.
       - name: Run C++ tests
-        run: ctest --test-dir build --output-on-failure
+        run: |
+          ./build/bin/suzume_test
+          ctest --test-dir build --output-on-failure -R native_cli_contract
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
