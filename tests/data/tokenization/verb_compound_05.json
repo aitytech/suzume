@@ -141,6 +141,119 @@
       ],
       "id": "wo_eru_2",
       "input": "本を揃える"
+    },
+    {
+      "description": "読み終わりを待つ - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "終わり",
+          "pos": "Noun",
+          "surface": "終わり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "mi_wariwo_tsu",
+      "input": "読み終わりを待つ"
+    },
+    {
+      "description": "書き終わりを確認する - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "終わり",
+          "pos": "Noun",
+          "surface": "終わり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ki_wariwo_suru",
+      "input": "書き終わりを確認する"
+    },
+    {
+      "description": "本を読み終わる - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わる"
+        }
+      ],
+      "id": "wo_mi_waru",
+      "input": "本を読み終わる"
+    },
+    {
+      "description": "差し引きを計算する - regression test",
+      "expected": [
+        {
+          "lemma": "差し引き",
+          "pos": "Noun",
+          "surface": "差し引き"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "計算",
+          "pos": "Noun",
+          "surface": "計算"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "shi_kiwo_suru",
+      "input": "差し引きを計算する"
     }
   ],
   "description": "Compound verbs (part 5/5)",

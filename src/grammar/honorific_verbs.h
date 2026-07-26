@@ -1,11 +1,11 @@
 /**
  * @file honorific_verbs.h
- * @brief Closed-class honorific, benefactive, and modal subsidiary verb data
+ * @brief Closed-class honorific, benefactive, modal, and aspectual subsidiary verb data
  *
- * Predicates for closed-class honorific (敬語), benefactive (授受), and modal
- * (可能否定 かねる) subsidiary verbs. Their static tables have one owner in the
- * grammar implementation; callers use these predicates instead of scattered
- * surface literals.
+ * Predicates for closed-class honorific (敬語), benefactive (授受), modal
+ * (可能否定 かねる), and aspectual (相 始める・終わる) subsidiary verbs. Their static
+ * tables have one owner in the grammar implementation; callers use these
+ * predicates instead of scattered surface literals.
  */
 
 #ifndef SUZUME_GRAMMAR_HONORIFIC_VERBS_H_
@@ -46,6 +46,18 @@ bool isSubsidiaryHonorificRenyokei(std::string_view surface);
  * @return true if the surface is a conjugated stem of かねる
  */
 bool isModalSubsidiaryRenyokei(std::string_view surface);
+
+/**
+ * @brief Check whether a lemma is an aspectual subsidiary verb (始める・終わる・終える・過ぎる)
+ * @param lemma Dictionary form of the candidate V2 (UTF-8, kanji or reading)
+ * @return true if the lemma marks phase rather than lexical content
+ *
+ * These verbs describe the phase of the preceding predicate instead of adding
+ * lexical content, so a compound built on them stays two search units
+ * (読み|終わる, 食べ|始める). Callers that would otherwise join an arbitrary V2
+ * consult this predicate to keep the finite and nominalized forms consistent.
+ */
+bool isAspectualSubsidiaryLemma(std::string_view lemma);
 
 }  // namespace suzume::grammar
 

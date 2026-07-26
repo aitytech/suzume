@@ -1,6 +1,6 @@
 /**
  * @file honorific_verbs.cpp
- * @brief Closed-class honorific, benefactive, and modal subsidiary verb data
+ * @brief Closed-class honorific, benefactive, modal, and aspectual subsidiary verb data
  */
 
 #include "grammar/honorific_verbs.h"
@@ -20,6 +20,10 @@ constexpr std::string_view kBenefactiveRenyokei[] = {"もらい", "あげ"};
 constexpr std::string_view kBenefactiveLemmas[] = {"もらう", "もらえる", "くれる", "あげる"};
 constexpr std::string_view kPotentialBenefactiveLemmas[] = {"いただける", "もらえる"};
 constexpr std::string_view kModalSubsidiaryRenyokei[] = {"かね"};
+// 続ける is deliberately absent: productive V1+続ける compounds are themselves the
+// search unit, so it belongs to the lexical V2 lexicon rather than to this class.
+constexpr std::string_view kAspectualSubsidiaryLemmas[] = {"始める", "はじめる", "終わる", "おわる",
+                                                           "終える", "おえる",   "過ぎる", "すぎる"};
 
 bool contains(const std::string_view* entries, size_t count, std::string_view value) {
   for (size_t index = 0; index < count; ++index) {
@@ -59,6 +63,11 @@ bool isSubsidiaryHonorificRenyokei(std::string_view surface) {
 bool isModalSubsidiaryRenyokei(std::string_view surface) {
   return contains(kModalSubsidiaryRenyokei, sizeof(kModalSubsidiaryRenyokei) / sizeof(kModalSubsidiaryRenyokei[0]),
                   surface);
+}
+
+bool isAspectualSubsidiaryLemma(std::string_view lemma) {
+  return contains(kAspectualSubsidiaryLemmas,
+                  sizeof(kAspectualSubsidiaryLemmas) / sizeof(kAspectualSubsidiaryLemmas[0]), lemma);
 }
 
 }  // namespace suzume::grammar

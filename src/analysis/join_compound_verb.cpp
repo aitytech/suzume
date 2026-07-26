@@ -3,6 +3,7 @@
  * @brief Kanji-led compound-verb join candidate generation
  */
 
+#include "grammar/honorific_verbs.h"
 #include "join_compound_verb_internal.h"
 
 namespace suzume::analysis {
@@ -101,6 +102,15 @@ void addDictionaryVerifiedGodanCompoundNominalCandidate(core::Lattice& lattice, 
   // fallback is only for an otherwise unregistered Godan V2 such as 畳む.
   const std::string v2_surface = extractSubstring(codepoints, v2_start, end_pos);
   if (dict_manager.lookupExact(v2_surface + "る", core::PartOfSpeech::Verb) != nullptr) {
+    return;
+  }
+
+  // An aspectual V2 stays an independent search unit, exactly as it does in its
+  // finite form (読み|終わる).  Without this the nominalized form of the same
+  // compound would join (読み終わり) while the finite one splits.
+  const std::string v2_base = extractSubstring(codepoints, v2_start, end_pos - 1) +
+                              std::string(grammar::godanBaseSuffixFromIRow(codepoints[end_pos - 1]));
+  if (grammar::isAspectualSubsidiaryLemma(v2_base)) {
     return;
   }
 
