@@ -894,6 +894,13 @@ VERB_NOT_AUX_LEMMAS: set[str] = {
     "いらっしゃる",
 }
 
+# 動詞,接尾 lemmas that stay as Verb. Kept separate from VERB_NOT_AUX_LEMMAS
+# because that set is consulted only for 動詞,非自立, where its members carry a
+# different reading. がかる inflects as a full godan verb, and the reference
+# analyzer applies the 接尾 tag only to the hosts it knows lexically, which
+# contradicts the rejoined form produced for every other host.
+DERIVATIONAL_SUFFIX_VERB_LEMMAS: set[str] = {"がかる"}
+
 # Plural suffix split targets
 PLURAL_RA_STEMS: list[str] = ["彼女", "彼", "僕", "奴", "我"]
 

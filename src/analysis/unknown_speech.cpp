@@ -189,6 +189,30 @@ void UnknownWordGenerator::generateCharacterSpeechCandidates(std::string_view /*
         }
       }
 
+      // A multi-character character-speech ending is a copula or politeness
+      // auxiliary carrying a final particle (のだ, ですぞ, ざます, だぜ), so it
+      // opens on a mora that can begin one. Without the same shape check the
+      // single-character branch applies, any two morae at a sentence end became
+      // a past-tense auxiliary and peeled the tail off an unregistered
+      // hiragana noun (いちご read as い + ちご, 汗まみれ as 汗ま + みれ).
+      if (char_count >= 2 && start_type == normalize::CharType::Hiragana) {
+        static constexpr std::string_view kAuxiliaryOpeners[] = {
+            "た", "て", "ぬ", "む", "ん", "い", "せ", "れ", "ず", "よ", "ろ", "だ", "で",
+            "じ", "ざ", "ま", "な", "の", "に", "っ", "わ", "ぜ", "ぞ", "さ", "や",
+        };
+        const std::string_view opener = std::string_view(surface).substr(0, core::kJapaneseCharBytes);
+        bool opens_auxiliary = false;
+        for (const auto& valid : kAuxiliaryOpeners) {
+          if (opener == valid) {
+            opens_auxiliary = true;
+            break;
+          }
+        }
+        if (!opens_auxiliary) {
+          continue;
+        }
+      }
+
       // Apply length-based penalty for character speech
       // Short patterns (1-2 chars) like ぜ, のだ are common
       // Longer patterns like まむぎ (3+ chars) are rare

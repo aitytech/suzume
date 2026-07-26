@@ -85,6 +85,96 @@
       ],
       "id": "nendomatsu_endpoint_formal_noun",
       "input": "年度末の処理"
+    },
+    {
+      "description": "汗まみれ - regression test",
+      "expected": [
+        {
+          "lemma": "汗",
+          "pos": "Noun",
+          "surface": "汗"
+        },
+        {
+          "lemma": "まみれ",
+          "pos": "Suffix",
+          "surface": "まみれ"
+        }
+      ],
+      "id": "mamire",
+      "input": "汗まみれ"
+    },
+    {
+      "description": "いちご - regression test",
+      "expected": [
+        {
+          "lemma": "いちご",
+          "pos": "Noun",
+          "surface": "いちご"
+        }
+      ],
+      "id": "ichigo",
+      "input": "いちご"
+    },
+    {
+      "description": "芝居がかった表現 - regression test",
+      "expected": [
+        {
+          "lemma": "芝居",
+          "pos": "Noun",
+          "surface": "芝居"
+        },
+        {
+          "lemma": "がかる",
+          "pos": "Verb",
+          "surface": "がかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "表現",
+          "pos": "Noun",
+          "surface": "表現"
+        }
+      ],
+      "id": "gakattta",
+      "input": "芝居がかった表現"
+    },
+    {
+      "description": "時代がかった - regression test",
+      "expected": [
+        {
+          "lemma": "時代",
+          "pos": "Noun",
+          "surface": "時代"
+        },
+        {
+          "lemma": "がかる",
+          "pos": "Verb",
+          "surface": "がかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "gakattta_2",
+      "input": "時代がかった"
+    },
+    {
+      "description": "ばったり - regression test",
+      "expected": [
+        {
+          "lemma": "ばったり",
+          "pos": "Adverb",
+          "surface": "ばったり"
+        }
+      ],
+      "id": "batttari",
+      "input": "ばったり"
     }
   ],
   "description": "noun_suffix tests",

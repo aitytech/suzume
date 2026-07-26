@@ -2597,14 +2597,9 @@
           "surface": "紫"
         },
         {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "かう",
+          "lemma": "がかる",
           "pos": "Verb",
-          "surface": "かっ"
+          "surface": "がかっ"
         },
         {
           "lemma": "て",

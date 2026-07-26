@@ -6,6 +6,7 @@ from .constants import (
     ADVERB_OVERRIDES,
     BENEFACTIVE_REQUEST_LEMMAS,
     CLASSICAL_KI_CONJ_TYPE,
+    DERIVATIONAL_SUFFIX_VERB_LEMMAS,
     DIALECT_FINAL_PARTICLES,
     FINITE_PREDECESSOR_CONJ_FORM,
     KEEP_AS_NOUN_NOT_ADJ,
@@ -237,6 +238,8 @@ def map_mecab_pos(token: dict | str) -> str:
 
     # 動詞,接尾 -> Auxiliary
     if pos == "動詞" and pos_sub1 == "接尾":
+        if token.get("lemma", "") in DERIVATIONAL_SUFFIX_VERB_LEMMAS:
+            return "Verb"
         return "Auxiliary"
 
     # 名詞,代名詞 -> Pronoun

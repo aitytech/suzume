@@ -961,3 +961,42 @@ def _postprocess_dialectal(result: list[dict]) -> None:
                 curr["lemma"] = "なん"
                 nxt["pos"] = "動詞"
                 nxt["lemma"] = "する"
+
+
+def _postprocess_bound_voiced_suffix(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Rejoin the bound voiced suffix がかる when it was split at its first mora.
+
+    がかる is a bound suffix on a nominal host (芝居がかった, 紫がかって). The
+    reference analyzer knows a few hosts lexically and splits the rest into the
+    case particle が plus a remainder that is not a word on its own, so the same
+    suffix is analyzed two different ways depending on the host. Rejoin the split
+    form so the oracle treats every host alike.
+
+    がましい is deliberately absent: rejoining it consumes the が that the
+    compound-verb merge uses to recognize its own nominal host, which would move
+    the difference rather than remove it.
+    """
+    tails = ("かっ", "かる", "かり", "かれ", "から", "かろ")
+    new_result: list[dict] = []
+    idx = 0
+    while idx < len(result):
+        token = result[idx]
+        following = result[idx + 1] if idx + 1 < len(result) else None
+        host_is_nominal = bool(new_result) and new_result[-1].get("pos") in ("名詞", "Noun", "動詞", "Verb")
+        if (
+            host_is_nominal
+            and token.get("surface") == "が"
+            and following is not None
+            and following.get("surface", "") in tails
+        ):
+            merged = token.get("surface", "") + following.get("surface", "")
+            pos = "動詞"
+            lemma = "がかる"
+            new_result.append({"surface": merged, "pos": pos, "lemma": lemma})
+            if applied_rule is None:
+                applied_rule = "bound-voiced-suffix"
+            idx += 2
+            continue
+        new_result.append(token)
+        idx += 1
+    return new_result, applied_rule
