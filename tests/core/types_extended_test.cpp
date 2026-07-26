@@ -125,6 +125,19 @@ TEST(TypesExtendedTest, IsFunctionWordFalse) {
   EXPECT_FALSE(isFunctionWord(PartOfSpeech::Unknown));
 }
 
+TEST(TypesExtendedTest, LowInformationCategoriesAreGrammaticalAndClosed) {
+  EXPECT_TRUE(isLowInformation(ExtendedPOS::NounFormal));
+  EXPECT_TRUE(isLowInformation(ExtendedPOS::Pronoun));
+  EXPECT_TRUE(isLowInformation(ExtendedPOS::PronounInterrogative));
+
+  EXPECT_FALSE(isLowInformation(ExtendedPOS::Noun));
+  EXPECT_FALSE(isLowInformation(ExtendedPOS::NounVerbal));
+  EXPECT_FALSE(isLowInformation(ExtendedPOS::NounProper));
+  EXPECT_FALSE(isLowInformation(ExtendedPOS::Adverb));
+  EXPECT_FALSE(isLowInformation(ExtendedPOS::Conjunction));
+  EXPECT_FALSE(isLowInformation(ExtendedPOS::Unknown));
+}
+
 // =============================================================================
 // originToString - all CandidateOrigin values
 // =============================================================================

@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "dictionary/dictionary.h"
 #include "grammar/conjugation.h"
@@ -59,6 +60,18 @@ struct Morpheme {
     end_pos = end;
     is_from_dictionary = features.is_dictionary;
   }
+};
+
+/**
+ * @brief Analysis output in the coordinate space used by morpheme offsets.
+ *
+ * Normalization can change both spelling and character count. Keeping the
+ * normalized text beside the morphemes makes their start/end offsets usable
+ * without pretending that they address the original input.
+ */
+struct AnalysisOutput {
+  std::string normalized_text;
+  std::vector<Morpheme> morphemes;
 };
 
 }  // namespace suzume::core

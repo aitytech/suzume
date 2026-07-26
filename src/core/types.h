@@ -215,6 +215,18 @@ enum class AnalysisMode : uint8_t {
 }
 
 /**
+ * @brief Whether an extended POS is normally omitted from search tags.
+ *
+ * This is a grammatical category predicate, not a surface-word list. Formal
+ * nouns and pronouns carry little standalone search value while remaining
+ * visible in morphological analysis.
+ */
+[[nodiscard]] constexpr bool isLowInformation(ExtendedPOS extended_pos) noexcept {
+  return extended_pos == ExtendedPOS::NounFormal || extended_pos == ExtendedPOS::Pronoun ||
+         extended_pos == ExtendedPOS::PronounInterrogative;
+}
+
+/**
  * @brief Origin of candidate generation (for debug)
  *
  * Tracks which generator produced a candidate for debugging purposes.

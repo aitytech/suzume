@@ -560,11 +560,12 @@ ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix) {
   // Need to distinguish from renyokei ending in い
   // い-onbin is specifically kanji + い (書い, 泳い) for godan verbs
   // All-hiragana surfaces ending in い are ichidan renyokei (食べ, につい, etc.)
-  if (surface.size() >= 3 && utf8::endsWithAny(surface, {"い"})) {
+  if (utf8::endsWithAny(surface, {"い"})) {
     // Check if surface contains kanji - only then classify as onbinkei
     bool has_kanji = false;
-    for (char32_t cp : suzume::normalize::utf8::decode(surface)) {
-      if (suzume::normalize::isKanjiCodepoint(cp)) {
+    size_t byte_pos = 0;
+    while (byte_pos < surface.size()) {
+      if (suzume::normalize::isKanjiCodepoint(suzume::normalize::decodeUtf8(surface, byte_pos))) {
         has_kanji = true;
         break;
       }

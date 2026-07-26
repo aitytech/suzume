@@ -76,13 +76,12 @@ class Viterbi {
 
     // States are keyed on (position, ExtendedPOS). Each key retains up to
     // kStatesPerKey lowest-cost paths instead of a single one, so predecessors
-    // with the same ExtendedPOS but different surfaces survive into the next
-    // position's connectionCost (which branches on the predecessor's surface).
+    // with the same ExtendedPOS but different scoring identities survive into
+    // the next position's connectionCost.
     // The cost of extending a path depends only on the edge it arrived with,
     // so per edge we insert only its cheapest predecessor. Entries within a
-    // key are kept surface-distinct: among same-surface arrivals only the
-    // cheapest path is retained, because the K-best diversity exists for
-    // surface-conditional connection rules.
+    // key are kept identity-distinct: among arrivals indistinguishable to the
+    // scorer only the cheapest path is retained.
     struct StateEntry {
       float cost{std::numeric_limits<float>::max()};
       uint32_t edge_id{kBosEdgeId};  // Edge the path arrived with (kBosEdgeId = BOS)
@@ -94,17 +93,24 @@ class Viterbi {
       std::array<StateEntry, kStatesPerKey> entries{};
       uint8_t count{0};
 
+      static bool hasSameScoringIdentity(const LatticeEdge& lhs, const LatticeEdge& rhs) {
+        return lhs.start == rhs.start && lhs.surface == rhs.surface && lhs.lemma == rhs.lemma && lhs.pos == rhs.pos &&
+               lhs.origin == rhs.origin && lhs.conj_type == rhs.conj_type &&
+               lhs.fromDictionary() == rhs.fromDictionary() && lhs.isFormalNoun() == rhs.isFormalNoun() &&
+               lhs.lemmaVerified() == rhs.lemmaVerified();
+      }
+
       // Insert a candidate, keeping entries sorted by ascending cost and
       // dropping the most expensive one when the key is full. A candidate
-      // whose surface matches an existing entry replaces it only if cheaper
-      // (surface-distinct invariant). Slot indices of existing entries may
+      // whose scoring identity matches an existing entry replaces it only if
+      // cheaper (identity-distinct invariant). Slot indices of existing entries may
       // shift here; this is safe because every write to a position's keys
       // happens before any backpointer into them is recorded (the forward
       // pass is position-ordered and start < end).
       void insert(const Lattice& lattice, float cost, uint32_t edge_id, uint16_t prev_epos_idx, uint8_t prev_slot) {
-        const std::string_view surface = lattice.getEdge(edge_id).surface;
+        const auto& edge = lattice.getEdge(edge_id);
         for (size_t existing = 0; existing < count; ++existing) {
-          if (lattice.getEdge(entries[existing].edge_id).surface == surface) {
+          if (hasSameScoringIdentity(lattice.getEdge(entries[existing].edge_id), edge)) {
             if (cost >= entries[existing].cost) {
               return;
             }
@@ -134,25 +140,52 @@ class Viterbi {
       }
     };
 
-    // Pre-allocate for all positions + 1 (for final position)
-    std::vector<std::array<StateSlots, kNumExtendedPosTypes>> states_by_pos(text_len + 1);
+    struct KeyState {
+      uint16_t epos_idx{0};
+      StateSlots slots;
+    };
+
+    struct PositionStates {
+      std::vector<KeyState> keys;
+
+      StateSlots* find(uint16_t epos_idx) {
+        for (auto& key : keys) {
+          if (key.epos_idx == epos_idx) {
+            return &key.slots;
+          }
+        }
+        return nullptr;
+      }
+
+      const StateSlots* find(uint16_t epos_idx) const {
+        for (const auto& key : keys) {
+          if (key.epos_idx == epos_idx) {
+            return &key.slots;
+          }
+        }
+        return nullptr;
+      }
+
+      StateSlots& getOrCreate(uint16_t epos_idx) {
+        if (StateSlots* existing = find(epos_idx); existing != nullptr) {
+          return *existing;
+        }
+        keys.push_back(KeyState{epos_idx, {}});
+        return keys.back().slots;
+      }
+    };
+
+    // Keep only ExtendedPOS keys that actually occur at each position. The
+    // former dense table retained dozens of empty StateSlots per position.
+    std::vector<PositionStates> states_by_pos(text_len + 1);
 
     // Initialize BOS state at position 0, ExtendedPOS=Unknown
-    states_by_pos[0][static_cast<size_t>(ExtendedPOS::Unknown)].insert(lattice, 0.0F, kBosEdgeId, 0, 0);
+    states_by_pos[0].getOrCreate(static_cast<uint16_t>(ExtendedPOS::Unknown)).insert(lattice, 0.0F, kBosEdgeId, 0, 0);
 
     // Forward pass - process positions in order
     for (size_t pos = 0; pos < text_len; ++pos) {
-      const auto& slots_at_pos = states_by_pos[pos];
-
-      // Check if any valid state exists at this position
-      bool has_valid_state = false;
-      for (size_t i = 0; i < kNumExtendedPosTypes; ++i) {
-        if (slots_at_pos[i].count > 0) {
-          has_valid_state = true;
-          break;
-        }
-      }
-      if (!has_valid_state) {
+      const auto& states_at_pos = states_by_pos[pos];
+      if (states_at_pos.keys.empty()) {
         continue;
       }
 
@@ -174,8 +207,8 @@ class Viterbi {
         uint16_t best_prev_epos = 0;
         uint8_t best_prev_slot = 0;
 
-        for (size_t epos_idx = 0; epos_idx < kNumExtendedPosTypes; ++epos_idx) {
-          const auto& slots = slots_at_pos[epos_idx];
+        for (const auto& key : states_at_pos.keys) {
+          const auto& slots = key.slots;
           for (uint8_t slot = 0; slot < slots.count; ++slot) {
             const auto& entry = slots.entries[slot];
 
@@ -201,14 +234,14 @@ class Viterbi {
                 SUZUME_DEBUG_STREAM << "]";
               }
 #endif
-              SUZUME_DEBUG_STREAM << " from " << extendedPosToString(static_cast<ExtendedPOS>(epos_idx)) << "#"
+              SUZUME_DEBUG_STREAM << " from " << extendedPosToString(static_cast<ExtendedPOS>(key.epos_idx)) << "#"
                                   << static_cast<int>(slot) << " word=" << word_cost << " conn=" << conn_cost
                                   << " total=" << total << "\n";
             }
 
             if (total < best_total) {
               best_total = total;
-              best_prev_epos = static_cast<uint16_t>(epos_idx);
+              best_prev_epos = key.epos_idx;
               best_prev_slot = slot;
             }
           }
@@ -222,7 +255,9 @@ class Viterbi {
         if (next_epos_idx >= kNumExtendedPosTypes) {
           next_epos_idx = static_cast<size_t>(ExtendedPOS::Unknown);
         }
-        states_by_pos[edge.end][next_epos_idx].insert(lattice, best_total, edge.id, best_prev_epos, best_prev_slot);
+        states_by_pos[edge.end]
+            .getOrCreate(static_cast<uint16_t>(next_epos_idx))
+            .insert(lattice, best_total, edge.id, best_prev_epos, best_prev_slot);
       }
     }
 
@@ -235,19 +270,19 @@ class Viterbi {
     float second_cost = std::numeric_limits<float>::max();
 
     const auto& final_states = states_by_pos[text_len];
-    for (size_t i = 0; i < kNumExtendedPosTypes; ++i) {
-      for (uint8_t slot = 0; slot < final_states[i].count; ++slot) {
-        const float cost = final_states[i].entries[slot].cost;
+    for (const auto& key : final_states.keys) {
+      for (uint8_t slot = 0; slot < key.slots.count; ++slot) {
+        const float cost = key.slots.entries[slot].cost;
         if (cost < best_cost) {
           second_cost = best_cost;
           second_final_epos_idx = best_final_epos_idx;
           second_final_slot = best_final_slot;
           best_cost = cost;
-          best_final_epos_idx = i;
+          best_final_epos_idx = key.epos_idx;
           best_final_slot = slot;
         } else if (cost < second_cost) {
           second_cost = cost;
-          second_final_epos_idx = i;
+          second_final_epos_idx = key.epos_idx;
           second_final_slot = slot;
         }
       }
@@ -264,11 +299,11 @@ class Viterbi {
       uint8_t current_slot = best_final_slot;
 
       while (current_pos > 0) {
-        const auto& slots = states_by_pos[current_pos][current_epos_idx];
-        if (current_slot >= slots.count) {
+        const StateSlots* slots = states_by_pos[current_pos].find(static_cast<uint16_t>(current_epos_idx));
+        if (slots == nullptr || current_slot >= slots->count) {
           break;
         }
-        const auto& entry = slots.entries[current_slot];
+        const auto& entry = slots->entries[current_slot];
         if (entry.edge_id == kBosEdgeId) {
           break;
         }
@@ -306,11 +341,11 @@ class Viterbi {
           size_t ru_epos_idx = second_final_epos_idx;
           uint8_t ru_slot = second_final_slot;
           while (ru_pos > 0) {
-            const auto& slots = states_by_pos[ru_pos][ru_epos_idx];
-            if (ru_slot >= slots.count) {
+            const StateSlots* slots = states_by_pos[ru_pos].find(static_cast<uint16_t>(ru_epos_idx));
+            if (slots == nullptr || ru_slot >= slots->count) {
               break;
             }
-            const auto& entry = slots.entries[ru_slot];
+            const auto& entry = slots->entries[ru_slot];
             if (entry.edge_id == kBosEdgeId) {
               break;
             }

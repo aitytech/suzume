@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string_view>
+
 namespace suzume::core {
 namespace {
 
@@ -21,6 +23,167 @@ struct ExtendedPosScorer {
     return 0.0F;
   }
 };
+
+enum class IdentitySignal {
+  Start,
+  PartOfSpeech,
+  FormalNoun,
+  Origin,
+  Lemma,
+  Conjugation,
+  Dictionary,
+  VerifiedLemma,
+};
+
+struct IdentityScorer {
+  IdentitySignal signal;
+
+  float wordCost(const LatticeEdge& edge) const { return edge.cost; }
+  float bosCost(const LatticeEdge&) const { return 0.0F; }
+  float eosCost(const LatticeEdge&) const { return 0.0F; }
+
+  float connectionCost(const LatticeEdge& prev, const LatticeEdge& next) const {
+    if (next.surface != "tail") {
+      return 0.0F;
+    }
+    bool preferred = false;
+    switch (signal) {
+      case IdentitySignal::Start:
+        preferred = prev.start == 1;
+        break;
+      case IdentitySignal::PartOfSpeech:
+        preferred = prev.pos == PartOfSpeech::Noun;
+        break;
+      case IdentitySignal::FormalNoun:
+        preferred = prev.isFormalNoun();
+        break;
+      case IdentitySignal::Origin:
+        preferred = prev.origin == CandidateOrigin::Dictionary;
+        break;
+      case IdentitySignal::Lemma:
+        preferred = prev.lemma == "target";
+        break;
+      case IdentitySignal::Conjugation:
+        preferred = prev.conj_type == dictionary::ConjugationType::GodanKa;
+        break;
+      case IdentitySignal::Dictionary:
+        preferred = prev.fromDictionary();
+        break;
+      case IdentitySignal::VerifiedLemma:
+        preferred = prev.lemmaVerified();
+        break;
+    }
+    return preferred ? -10.0F : 0.0F;
+  }
+};
+
+void expectIdentitySensitiveAlternativeWins(IdentitySignal signal, std::string_view cheap_lemma,
+                                            std::string_view preferred_lemma, dictionary::ConjugationType cheap_conj,
+                                            dictionary::ConjugationType preferred_conj, CandidateOrigin cheap_origin,
+                                            CandidateOrigin preferred_origin, uint8_t cheap_flags,
+                                            uint8_t preferred_flags, PartOfSpeech cheap_pos = PartOfSpeech::Verb,
+                                            PartOfSpeech preferred_pos = PartOfSpeech::Verb) {
+  Lattice lattice(2);
+  const auto cheap = lattice.addEdge("same", 0, 1, cheap_pos, 0.0F, cheap_flags, cheap_lemma, cheap_conj, cheap_origin,
+                                     0.0F, {}, ExtendedPOS::VerbRenyokei);
+  const auto preferred = lattice.addEdge("same", 0, 1, preferred_pos, 1.0F, preferred_flags, preferred_lemma,
+                                         preferred_conj, preferred_origin, 0.0F, {}, ExtendedPOS::VerbRenyokei);
+  lattice.addEdge("tail", 1, 2, PartOfSpeech::Auxiliary, 0.0F, 0, {}, dictionary::ConjugationType::None,
+                  CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::AuxTenseMasu);
+
+  const auto result = Viterbi{}.solve(lattice, IdentityScorer{signal});
+  ASSERT_EQ(result.path.size(), 2U);
+  EXPECT_NE(result.path[0], cheap);
+  EXPECT_EQ(result.path[0], preferred);
+}
+
+TEST(ViterbiTest, DedupPreservesPartOfSpeechDependentAlternative) {
+  expectIdentitySensitiveAlternativeWins(IdentitySignal::PartOfSpeech, "same", "same",
+                                         dictionary::ConjugationType::None, dictionary::ConjugationType::None,
+                                         CandidateOrigin::Unknown, CandidateOrigin::Unknown, 0, 0, PartOfSpeech::Verb,
+                                         PartOfSpeech::Noun);
+}
+
+TEST(ViterbiTest, DedupPreservesFormalNounDependentAlternative) {
+  expectIdentitySensitiveAlternativeWins(IdentitySignal::FormalNoun, "same", "same", dictionary::ConjugationType::None,
+                                         dictionary::ConjugationType::None, CandidateOrigin::Unknown,
+                                         CandidateOrigin::Unknown, 0, static_cast<uint8_t>(EdgeFlags::IsFormalNoun),
+                                         PartOfSpeech::Noun, PartOfSpeech::Noun);
+}
+
+TEST(ViterbiTest, DedupPreservesStartDependentAlternative) {
+  Lattice lattice(3);
+  lattice.addEdge("prefix", 0, 1, PartOfSpeech::Other, 0.0F, 0, {}, dictionary::ConjugationType::None,
+                  CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::Other);
+  const auto cheap = lattice.addEdge("same", 0, 2, PartOfSpeech::Verb, 0.0F, 0, {}, dictionary::ConjugationType::None,
+                                     CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::VerbRenyokei);
+  const auto preferred =
+      lattice.addEdge("same", 1, 2, PartOfSpeech::Verb, 1.0F, 0, {}, dictionary::ConjugationType::None,
+                      CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::VerbRenyokei);
+  lattice.addEdge("tail", 2, 3, PartOfSpeech::Auxiliary, 0.0F, 0, {}, dictionary::ConjugationType::None,
+                  CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::AuxTenseMasu);
+
+  const auto result = Viterbi{}.solve(lattice, IdentityScorer{IdentitySignal::Start});
+  ASSERT_EQ(result.path.size(), 3U);
+  EXPECT_NE(result.path[1], cheap);
+  EXPECT_EQ(result.path[1], preferred);
+}
+
+TEST(ViterbiTest, DedupPreservesOriginDependentAlternative) {
+  expectIdentitySensitiveAlternativeWins(IdentitySignal::Origin, "same", "same", dictionary::ConjugationType::None,
+                                         dictionary::ConjugationType::None, CandidateOrigin::VerbHiragana,
+                                         CandidateOrigin::Dictionary, 0, 0);
+}
+
+TEST(ViterbiTest, DedupPreservesLemmaDependentAlternative) {
+  expectIdentitySensitiveAlternativeWins(IdentitySignal::Lemma, "other", "target", dictionary::ConjugationType::None,
+                                         dictionary::ConjugationType::None, CandidateOrigin::Unknown,
+                                         CandidateOrigin::Unknown, 0, 0);
+}
+
+TEST(ViterbiTest, DedupPreservesConjugationDependentAlternative) {
+  expectIdentitySensitiveAlternativeWins(IdentitySignal::Conjugation, "same", "same",
+                                         dictionary::ConjugationType::Ichidan, dictionary::ConjugationType::GodanKa,
+                                         CandidateOrigin::Unknown, CandidateOrigin::Unknown, 0, 0);
+}
+
+TEST(ViterbiTest, DedupPreservesDictionaryProvenanceAlternative) {
+  expectIdentitySensitiveAlternativeWins(IdentitySignal::Dictionary, "same", "same", dictionary::ConjugationType::None,
+                                         dictionary::ConjugationType::None, CandidateOrigin::Unknown,
+                                         CandidateOrigin::Unknown, 0, static_cast<uint8_t>(EdgeFlags::FromDictionary));
+}
+
+TEST(ViterbiTest, DedupPreservesVerifiedLemmaAlternative) {
+  expectIdentitySensitiveAlternativeWins(IdentitySignal::VerifiedLemma, "same", "same",
+                                         dictionary::ConjugationType::None, dictionary::ConjugationType::None,
+                                         CandidateOrigin::Unknown, CandidateOrigin::Unknown, 0,
+                                         static_cast<uint8_t>(EdgeFlags::LemmaVerified));
+}
+
+struct BeamBoundaryScorer {
+  float wordCost(const LatticeEdge& edge) const { return edge.cost; }
+  float bosCost(const LatticeEdge&) const { return 0.0F; }
+  float eosCost(const LatticeEdge&) const { return 0.0F; }
+  float connectionCost(const LatticeEdge& prev, const LatticeEdge& next) const {
+    return prev.surface == "third" && next.surface == "tail" ? -100.0F : 0.0F;
+  }
+};
+
+TEST(ViterbiTest, BeamKeepsExactlyTwoLowestCostAlternativesPerKey) {
+  Lattice lattice(2);
+  const auto first = lattice.addEdge("first", 0, 1, PartOfSpeech::Verb, 0.0F, 0, {}, dictionary::ConjugationType::None,
+                                     CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::VerbRenyokei);
+  lattice.addEdge("second", 0, 1, PartOfSpeech::Verb, 1.0F, 0, {}, dictionary::ConjugationType::None,
+                  CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::VerbRenyokei);
+  lattice.addEdge("third", 0, 1, PartOfSpeech::Verb, 2.0F, 0, {}, dictionary::ConjugationType::None,
+                  CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::VerbRenyokei);
+  lattice.addEdge("tail", 1, 2, PartOfSpeech::Auxiliary, 0.0F, 0, {}, dictionary::ConjugationType::None,
+                  CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::AuxTenseMasu);
+
+  const auto result = Viterbi{}.solve(lattice, BeamBoundaryScorer{});
+  ASSERT_EQ(result.path.size(), 2U);
+  EXPECT_EQ(result.path[0], first);
+}
 
 TEST(ViterbiTest, KeepsDistinctExtendedPosStatesForSamePosAndEnd) {
   Lattice lattice(2);

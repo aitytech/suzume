@@ -4,7 +4,6 @@ add_library(suzume_core OBJECT
   types.cpp
   error.cpp
   lattice.cpp
-  viterbi.cpp
 )
 
 target_include_directories(suzume_core

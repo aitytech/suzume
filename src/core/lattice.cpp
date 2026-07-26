@@ -4,7 +4,8 @@
 
 namespace suzume::core {
 
-Lattice::Lattice(size_t text_length) : text_length_(text_length), edge_indices_by_start_(text_length + 1) {}
+Lattice::Lattice(size_t text_length)
+    : text_length_(text_length), edge_indices_by_start_(text_length + 1), edge_indices_by_end_(text_length + 1) {}
 
 size_t Lattice::addEdge(std::string_view surface, uint32_t start, uint32_t end, PartOfSpeech pos, float cost,
                         uint8_t flags, std::string_view lemma, dictionary::ConjugationType conj_type,
@@ -89,7 +90,7 @@ size_t Lattice::addEdge(std::string_view surface, uint32_t start, uint32_t end, 
 
   all_edges_.push_back(edge);
   edge_indices_by_start_[start].push_back(edge.id);
-  ++edge_count_;
+  edge_indices_by_end_[end].push_back(edge.id);
 
   return edge.id;
 }
@@ -113,6 +114,14 @@ const std::vector<uint32_t>& Lattice::edgeIdsAt(size_t pos) const {
     return empty_ids;
   }
   return edge_indices_by_start_[pos];
+}
+
+const std::vector<uint32_t>& Lattice::edgeIdsEndingAt(size_t pos) const {
+  static const std::vector<uint32_t> empty_ids;
+  if (pos >= edge_indices_by_end_.size()) {
+    return empty_ids;
+  }
+  return edge_indices_by_end_[pos];
 }
 
 const LatticeEdge& Lattice::getEdge(size_t edge_id) const {
@@ -162,6 +171,9 @@ void Lattice::clear() {
   for (auto& indices : edge_indices_by_start_) {
     indices.clear();
   }
+  for (auto& indices : edge_indices_by_end_) {
+    indices.clear();
+  }
   all_edges_.clear();
   surface_storage_.clear();
   lemma_storage_.clear();
@@ -169,7 +181,6 @@ void Lattice::clear() {
   origin_detail_storage_.clear();
   epos_source_storage_.clear();
 #endif
-  edge_count_ = 0;
 }
 
 }  // namespace suzume::core

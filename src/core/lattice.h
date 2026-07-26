@@ -22,7 +22,6 @@ enum class EdgeFlags : uint8_t {
   IsFormalNoun = 1 << 2,
   IsLowInfo = 1 << 3,
   // Note: bit 4 is reserved for kIsUnknown legacy constant
-  HasSuffix = 1 << 5,      // Has suffix following (e.g., verb stem + aux)
   HasCustomCost = 1 << 6,  // Edge carries a deliberately tuned cost (distinguishes a genuine 0.0)
   LemmaVerified = 1 << 7   // Lemma (base form) attested as a dictionary verb at generation time
 };
@@ -73,7 +72,6 @@ struct LatticeEdge {
   bool fromUserDict() const { return hasFlag(flags, EdgeFlags::FromUserDict); }
   bool isFormalNoun() const { return hasFlag(flags, EdgeFlags::IsFormalNoun); }
   bool isLowInfo() const { return hasFlag(flags, EdgeFlags::IsLowInfo); }
-  bool hasSuffix() const { return hasFlag(flags, EdgeFlags::HasSuffix); }
   bool hasCustomCost() const { return hasFlag(flags, EdgeFlags::HasCustomCost); }
   // A dictionary edge's lemma is dictionary-attested by definition, so OR in
   // fromDictionary(): consumers see a strict superset of the dictionary gate.
@@ -141,6 +139,14 @@ class Lattice {
   const std::vector<uint32_t>& edgeIdsAt(size_t pos) const;
 
   /**
+   * @brief Get IDs of all edges ending at a position (no copy)
+   * @note Returns a reference to internal storage. This reverse index lets
+   *       predecessor queries inspect only edges adjacent to the requested
+   *       boundary instead of rescanning every earlier start position.
+   */
+  const std::vector<uint32_t>& edgeIdsEndingAt(size_t pos) const;
+
+  /**
    * @brief Get edge by ID
    * @param edge_id Edge ID
    * @return Edge reference
@@ -167,19 +173,14 @@ class Lattice {
   size_t textLength() const { return text_length_; }
 
   /**
-   * @brief Get total number of edges
-   */
-  size_t edgeCount() const { return edge_count_; }
-
-  /**
    * @brief Clear the lattice
    */
   void clear();
 
  private:
   size_t text_length_{0};
-  size_t edge_count_{0};
   std::vector<std::vector<uint32_t>> edge_indices_by_start_;  // Edge indices per position
+  std::vector<std::vector<uint32_t>> edge_indices_by_end_;    // Edge indices per end position
   std::vector<LatticeEdge> all_edges_;                        // All edges (primary storage)
   std::deque<std::string> surface_storage_;                   // Storage for surface strings (deque for stable pointers)
   std::deque<std::string> lemma_storage_;                     // Storage for lemma strings (deque for stable pointers)

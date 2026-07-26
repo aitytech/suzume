@@ -5,6 +5,7 @@
  * Compile-time control:
  *   - Define SUZUME_DEBUG at compile time to enable debug infrastructure
  *   - Without SUZUME_DEBUG, all debug code is completely eliminated
+ *   - Emscripten builds always eliminate stream-based debug infrastructure
  *
  * Runtime control (when SUZUME_DEBUG is defined):
  *   - SUZUME_DEBUG=1: Basic output (analysis results, key decisions)
@@ -15,7 +16,7 @@
 #ifndef SUZUME_CORE_DEBUG_H_
 #define SUZUME_CORE_DEBUG_H_
 
-#ifdef SUZUME_DEBUG
+#if defined(SUZUME_DEBUG) && !defined(__EMSCRIPTEN__)
 
 #include <cstdlib>
 #include <iostream>
@@ -77,7 +78,7 @@ class Debug {
 #define SUZUME_DEBUG_TRACE_BLOCK if (suzume::core::Debug::isTrace())
 #define SUZUME_DEBUG_STREAM suzume::core::Debug::log()
 
-#else  // SUZUME_DEBUG not defined - complete elimination
+#else  // Debug disabled, including all Emscripten builds
 
 #define SUZUME_DEBUG_LOG(expr) ((void)0)
 #define SUZUME_DEBUG_LOG_VERBOSE(expr) ((void)0)
@@ -104,6 +105,6 @@ inline NullStream& nullStream() {
 }  // namespace suzume::core
 #define SUZUME_DEBUG_STREAM suzume::core::nullStream()
 
-#endif  // SUZUME_DEBUG
+#endif  // defined(SUZUME_DEBUG) && !defined(__EMSCRIPTEN__)
 
 #endif  // SUZUME_CORE_DEBUG_H_
