@@ -1,14 +1,18 @@
 # Suzume Makefile
 # Convenience wrapper for CMake build system
 
-.PHONY: help build test mcp-test clean rebuild format format-check lint configure \
+.PHONY: help build test mcp-test clean clean-build rebuild format format-check lint configure \
         wasm wasm-configure wasm-dict wasm-test wasm-bench wasm-clean wasm-rebuild dict \
         python-build python-test python-wheel version-check \
-        install examples embedded consumer-smoke cmake-smoke
+        install uninstall examples embedded consumer-smoke cmake-smoke
 
 # Build directories
 BUILD_DIR := build
 WASM_BUILD_DIR := build-wasm
+
+# Install prefix used by consumer-smoke. Kept inside the repo (not /tmp) so that it
+# matches the gitignored build-* pattern and `make clean` reclaims it too.
+SMOKE_PREFIX := $(CURDIR)/build-smoke-prefix
 
 # clang-format command (can be overridden: make CLANG_FORMAT=clang-format-18 format)
 CLANG_FORMAT ?= clang-format
@@ -24,8 +28,9 @@ help:
 	@echo "  make dict         - Build dictionaries"
 	@echo "  make test         - Run all tests (includes dict)"
 	@echo "  make mcp-test     - Run MCP server/oracle tests"
-	@echo "  make clean        - Clean build directory"
-	@echo "  make rebuild      - Clean and rebuild"
+	@echo "  make clean        - Remove $(BUILD_DIR) and every scratch build-* directory"
+	@echo "  make clean-build  - Remove $(BUILD_DIR) only"
+	@echo "  make rebuild      - Clean $(BUILD_DIR) and rebuild"
 	@echo "  make format       - Auto-fix format/lint: C++, scripts/MCP, WASM, Python"
 	@echo "  make format-check - Check formatting across all languages"
 	@echo "  make lint         - Run read-only scripts/MCP, WASM, and Python static checks"
@@ -35,6 +40,7 @@ help:
 	@echo ""
 	@echo "C/C++ integration targets:"
 	@echo "  make install      - Install libs + headers + find_package/pkg-config (PREFIX=/usr/local)"
+	@echo "  make uninstall    - Remove the installed files (run before 'make clean')"
 	@echo "  make examples     - Build the in-tree C and C++ examples"
 	@echo "  make embedded     - Build the embedded (no-filesystem, dict baked-in) static library"
 	@echo "  make consumer-smoke - Install to a temp prefix and build examples via find_package"
@@ -93,14 +99,24 @@ mcp-test:
 	@echo "Running MCP server/oracle tests..."
 	cd scripts/mcp && uv run pytest -q
 
-# Clean build directory
-clean:
-	@echo "Cleaning build directory..."
+# Clean the primary build directory only
+clean-build:
+	@echo "Cleaning $(BUILD_DIR)..."
 	rm -rf $(BUILD_DIR)
+
+# Clean the primary build directory plus every scratch build-* directory produced by
+# the ad-hoc CMake configurations across the repo (build-wasm, build-python,
+# build-embedded, build-smoke, ...). All of them are gitignored.
+# Run `make uninstall` BEFORE this if an install needs undoing: the manifest that
+# uninstall reads lives under build-install and is removed here.
+clean: clean-build
+	@echo "Cleaning scratch build directories..."
+	rm -rf build-*/ cmake-build-*/
 	@echo "Clean complete!"
 
-# Rebuild from scratch
-rebuild: clean build
+# Rebuild from scratch. Deliberately only recreates $(BUILD_DIR) — a full clean would
+# also drop build-wasm and force an expensive Emscripten rebuild.
+rebuild: clean-build build
 
 # ============================================
 # C/C++ integration targets
@@ -120,6 +136,18 @@ install:
 	cmake --install build-install
 	@echo "Installed suzume under $(PREFIX)"
 
+# Remove what `make install` placed under $(PREFIX), using the manifest CMake wrote.
+# Must run before `make clean`, which deletes build-install along with the manifest.
+uninstall:
+	@if [ -f build-install/install_manifest.txt ]; then \
+		xargs rm -f < build-install/install_manifest.txt; \
+		echo "Uninstalled suzume from the recorded prefix."; \
+	else \
+		echo "build-install/install_manifest.txt not found - nothing to uninstall."; \
+		echo "It is written by 'make install' and removed by 'make clean'."; \
+		exit 1; \
+	fi
+
 # Build the in-tree C and C++ examples.
 examples: dict
 	cmake -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=Release -DSUZUME_BUILD_EXAMPLES=ON $(CMAKE_OPTIONS)
@@ -134,16 +162,16 @@ embedded:
 	cmake --build build-embedded --target suzume --parallel
 	@echo "Embedded static library built: build-embedded/lib/"
 
-# Packaging smoke test: install (static) to a temp prefix, then build + run the
-# C/C++ examples against it via find_package. Mirrors the CI consumer-smoke job.
+# Packaging smoke test: install (static) to a throwaway prefix inside the repo, then
+# build + run the C/C++ examples against it via find_package.
 consumer-smoke:
-	rm -rf build-smoke /tmp/suzume-smoke-prefix build-smoke-consumer
+	rm -rf build-smoke $(SMOKE_PREFIX) build-smoke-consumer
 	cmake -B build-smoke -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
-		-DCMAKE_INSTALL_PREFIX=/tmp/suzume-smoke-prefix
+		-DCMAKE_INSTALL_PREFIX=$(SMOKE_PREFIX)
 	cmake --build build-smoke --parallel
 	cmake --build build-smoke --target build-dict
 	cmake --install build-smoke
-	cmake -S examples/consumer -B build-smoke-consumer -DCMAKE_PREFIX_PATH=/tmp/suzume-smoke-prefix
+	cmake -S examples/consumer -B build-smoke-consumer -DCMAKE_PREFIX_PATH=$(SMOKE_PREFIX)
 	cmake --build build-smoke-consumer
 	ctest --test-dir build-smoke-consumer --output-on-failure
 	@echo "Consumer smoke test passed."
