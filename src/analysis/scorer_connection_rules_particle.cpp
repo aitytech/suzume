@@ -4,6 +4,7 @@
 #include "analysis/category_cost.h"
 #include "analysis/scorer.h"
 #include "analysis/scorer_connection_rules.h"
+#include "analysis/scorer_connection_rules_internal.h"
 #include "analysis/scorer_constants.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "core/debug.h"
@@ -77,9 +78,9 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   // Exception: し (renyokei of する) - valid in emphatic negation ありはしない pattern
   if (prev.extended_pos == core::ExtendedPOS::ParticleTopic && prev.surface == "は" &&
       next.pos == core::PartOfSpeech::Verb && grammar::isPureHiragana(next.surface) &&
-      next.surface.size() <= 3 &&  // 1 char only (3 bytes in UTF-8)
-      next.surface != "い" &&      // い+られ is valid (いる potential)
-      next.surface != "し") {      // し+ない is valid (emphatic negation)
+      next.surface.size() <= 3 &&                       // 1 char only (3 bytes in UTF-8)
+      next.surface != "い" &&                           // い+られ is valid (いる potential)
+      !grammar::isSuruRenyokeiSurface(next.surface)) {  // し+ない is valid (emphatic negation)
     bonus += cost::kVeryRare;
   }
 
@@ -131,7 +132,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   // The homographic determiner cannot fill that predicate slot.
   if ((prev.extended_pos == core::ExtendedPOS::Suffix && prev.surface == "間") ||
       prev.extended_pos == core::ExtendedPOS::ParticleAdverbial) {
-    if (next.surface == "かかる" && next.extended_pos == core::ExtendedPOS::Determiner) {
+    if (grammar::isDurationPredicateKakaru(next.surface) && next.extended_pos == core::ExtendedPOS::Determiner) {
       bonus += cost::kAlmostNever;
     }
   }
@@ -204,11 +205,10 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
   // Valid ADV+verb patterns: ゆっくり+歩く (verb is longer/has kanji)
   // This prevents split like はなはだ+し+い when はなはだしい exists in dict
   // Exception: dictionary verbs like ね(寝る), み(見る), で(出る) are valid
-  bool is_dict_verb_renyokei = core::hasFlag(next.flags, core::EdgeFlags::FromDictionary);
-  if (prev.pos == core::PartOfSpeech::Adverb && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      grammar::isPureHiragana(next.surface) && next.surface.size() <= 3 &&  // 1 char only (し, み, etc.)
-      !is_dict_verb_renyokei) {
-    bonus += cost::kVeryRare;
+  if (prev.pos == core::PartOfSpeech::Adverb && isSingleHiraganaVerbRenyokei(next) && !next.fromDictionary()) {
+    // This rule formerly contributed kVeryRare in two call sites. Preserve
+    // that effective magnitude while owning the rule here only.
+    bonus += cost::kVeryRare + cost::kVeryRare;
   }
 
   // Penalty for opening bracket → PARTICLE pattern (furigana in parentheses).

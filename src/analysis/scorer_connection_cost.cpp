@@ -296,7 +296,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       normalize::utf8Length(prev.surface) == 1 &&  // Single char
       next.pos == core::PartOfSpeech::Verb &&
       (next.extended_pos == core::ExtendedPOS::VerbRenyokei || next.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
-      next.surface != "し" &&  // Exclude suru renyokei (サ変動詞パターン)
+      !grammar::isSuruRenyokeiSurface(next.surface) &&  // Exclude suru renyokei (サ変動詞パターン)
       !kana::isKatakanaCodepoint(utf8::decodeFirstChar(next.surface)) &&            // Exclude katakana verbs
       !suzume::normalize::isKanjiCodepoint(utf8::decodeFirstChar(next.surface))) {  // Exclude kanji verbs
     surface_bonus += cost::kVeryRare;
@@ -355,7 +355,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Exclude single-char "い" which is いる renyokei (interferes with 上手い+し)
   // Exclude "で" which is でる renyokei (interferes with んでした → ん+でし+た)
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      next.surface == "し" && prev.fromDictionary() && prev.surface != "い" && prev.surface != "で") {
+      grammar::isSuruRenyokeiSurface(next.surface) && prev.fromDictionary() && prev.surface != "い" &&
+      prev.surface != "で") {
     surface_bonus += cost::kStrongBonus;
   }
 
@@ -364,7 +365,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // These patterns are usually compound verbs registered in dictionary
   // The pattern: 漢字+っ+漢字 (kanji + sokuon + kanji) as NOUN → し(する連用形)
   if (prev.pos == core::PartOfSpeech::Noun && !prev.fromDictionary() &&
-      next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface == "し" &&
+      next.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSuruRenyokeiSurface(next.surface) &&
       prev.surface.size() >= 9 &&  // At least 3 chars (2 kanji + っ)
       utf8::contains(prev.surface, "っ")) {
     // Check if it's kanji+っ+kanji pattern
@@ -388,7 +389,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // This does not affect kanji nouns (勉強+し is valid suru compound)
   // Use small penalty (0.08) to tip balance: はなし gap=0.013, なんし gap=0.102
   if (prev.pos == core::PartOfSpeech::Noun && prev.fromDictionary() &&
-      next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface == "し" &&
+      next.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSuruRenyokeiSurface(next.surface) &&
       grammar::isPureHiragana(prev.surface)) {
     surface_bonus += sc::kPenaltyHiraganaNounToSuruTip;
   }
@@ -413,7 +414,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // nominalizer-led なので/なのに forms are valid.  This keeps a closed
   // particle such as など from being split into な+ど while preserving those
   // productive copular constructions.
-  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && prev.surface == "な" &&
+  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && grammar::isAttributiveCopulaNa(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && !utf8::startsWith(next.surface, "の")) {
     surface_bonus += cost::kVeryRare;  // Cancel the -0.8 bonus and add penalty
   }
@@ -424,9 +425,14 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // し can be recognized as VerbRenyokei (suru) or PARTICLE_接続 (parallel particle)
   // Neither is correct in this context - the でし is the renyokei of です copula
   // This ensures でし (AuxCopulaDesu renyokei) wins over で+し split
-  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && prev.surface == "で" && next.surface == "し" &&
+  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && prev.surface == "で" &&
       (next.extended_pos == core::ExtendedPOS::VerbRenyokei || next.extended_pos == core::ExtendedPOS::ParticleConj)) {
-    surface_bonus += cost::kAlmostNever;
+    const bool is_suru_or_conjunctive_shi =
+        (next.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSuruRenyokeiSurface(next.surface)) ||
+        (next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConjunctiveParticleShi(next.surface));
+    if (is_suru_or_conjunctive_shi) {
+      surface_bonus += cost::kAlmostNever;
+    }
   }
 
   // Penalty for PART_接続(し) → て pattern (PART_接続 or AUX_継続)
@@ -435,7 +441,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // This prevents adjective renyokei (なく) + し (particle) + て from winning
   // over verb renyokei (なくし) + て pattern
   // Note: "て" can be either ParticleConj or AuxAspectIru (ている/てる aspect)
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && prev.surface == "し" && next.surface == "て" &&
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConjunctiveParticleShi(prev.surface) &&
+      next.surface == "て" &&
       (next.extended_pos == core::ExtendedPOS::ParticleConj || next.extended_pos == core::ExtendedPOS::AuxAspectIru)) {
     surface_bonus += cost::kStrong;
   }
@@ -445,9 +452,11 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Short verb renyokei (2-3 chars) followed by し or き often indicates
   // over-segmentation of a noun or longer verb
   // Exclude ば (valid conditional: よれ+ば), て (te-form), etc.
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.surface.size() >= 6 &&
-      prev.surface.size() <= 9 &&  // 2-3 hiragana
-      (next.surface == "し" || next.surface == "き")) {
+  const bool next_is_shi =
+      (next.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSuruRenyokeiSurface(next.surface)) ||
+      (next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConjunctiveParticleShi(next.surface));
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.surface.size() >= 6 && prev.surface.size() <= 9 &&
+      (next_is_shi || next.surface == "き")) {  // 2-3 hiragana
     // Check prev is all hiragana
     if (grammar::isPureHiragana(prev.surface) && (next.extended_pos == core::ExtendedPOS::VerbRenyokei ||
                                                   next.extended_pos == core::ExtendedPOS::ParticleConj)) {
@@ -642,18 +651,6 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       (next.extended_pos == core::ExtendedPOS::VerbOnbinkei || next.extended_pos == core::ExtendedPOS::VerbTaForm) &&
       grammar::startsWithKanji(next.surface) && !utf8::startsWith(next.surface, "ござ")) {  // Exclude honorific ござる
     surface_bonus += cost::kAlmostNever;
-  }
-
-  // Penalty for single-kana verb renyokei after adverb
-  // Single-kana renyokei (で=出る, し=する) are ambiguous with copula/particles.
-  // After adverbs, copula/particle interpretation dominates (それほどで+も+ない)
-  // Exception: dict verbs (し=する) are valid after onomatopoeia ADV (じめじめ+し+た)
-  // Exception: kanji verbs (見, 寝, 出) are unambiguous and valid after adverbs (初めて+見+た)
-  if (prev.pos == core::PartOfSpeech::Adverb && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      normalize::utf8Length(next.surface) == 1 &&
-      grammar::isPureHiragana(next.surface) &&  // Only hiragana (で, し), not kanji (見, 出)
-      !core::hasFlag(next.flags, core::EdgeFlags::FromDictionary)) {
-    surface_bonus += cost::kVeryRare;
   }
 
   float total = base_cost + extended_cost + surface_bonus;

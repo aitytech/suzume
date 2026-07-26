@@ -35,6 +35,42 @@ TEST(DependentGrammarRoles, KeepsIndependentIkuVerbal) {
   EXPECT_EQ(result[2].pos, core::PartOfSpeech::Verb);
 }
 
+TEST(DependentGrammarRoles, KeepsCaseParticleBeforeIndependentPredicates) {
+  auto analyzer = makeDependentGrammarAnalyzer();
+
+  const auto katakana_result = analyzer.analyze("バスでいく");
+  ASSERT_EQ(katakana_result.size(), 3U);
+  EXPECT_EQ(katakana_result[0].surface, "バス");
+  EXPECT_EQ(katakana_result[0].pos, core::PartOfSpeech::Noun);
+  EXPECT_EQ(katakana_result[1].surface, "で");
+  EXPECT_EQ(katakana_result[1].extended_pos, core::ExtendedPOS::ParticleCase);
+  EXPECT_EQ(katakana_result[2].surface, "いく");
+  EXPECT_EQ(katakana_result[2].pos, core::PartOfSpeech::Verb);
+
+  const auto pronoun_result = analyzer.analyze("そちらでやる");
+  ASSERT_EQ(pronoun_result.size(), 3U);
+  EXPECT_EQ(pronoun_result[0].surface, "そちら");
+  EXPECT_EQ(pronoun_result[0].pos, core::PartOfSpeech::Pronoun);
+  EXPECT_EQ(pronoun_result[1].surface, "で");
+  EXPECT_EQ(pronoun_result[1].extended_pos, core::ExtendedPOS::ParticleCase);
+  EXPECT_EQ(pronoun_result[2].surface, "やる");
+  EXPECT_EQ(pronoun_result[2].pos, core::PartOfSpeech::Verb);
+}
+
+TEST(DependentGrammarRoles, KeepsOnbinConnectiveAndAuxiliaryBoundaries) {
+  auto analyzer = makeDependentGrammarAnalyzer();
+  const auto result = analyzer.analyze("本を読んでみる");
+
+  ASSERT_EQ(result.size(), 5U);
+  EXPECT_EQ(result[2].surface, "読ん");
+  EXPECT_EQ(result[2].extended_pos, core::ExtendedPOS::VerbOnbinkei);
+  EXPECT_EQ(result[3].surface, "で");
+  EXPECT_EQ(result[3].extended_pos, core::ExtendedPOS::ParticleConj);
+  EXPECT_EQ(result[4].surface, "みる");
+  EXPECT_EQ(result[4].pos, core::PartOfSpeech::Auxiliary);
+  EXPECT_EQ(result[4].extended_pos, core::ExtendedPOS::AuxAspectMiru);
+}
+
 TEST(DependentGrammarRoles, SelectsPastConditionalAfterIOnbin) {
   auto analyzer = makeDependentGrammarAnalyzer();
   const auto result = analyzer.analyze("泣いたら進む");

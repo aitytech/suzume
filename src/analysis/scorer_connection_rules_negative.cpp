@@ -110,7 +110,10 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
       prev.fromDictionary() && prev.surface != "で" && !grammar::endsWithARow(prev.surface) &&
       (next.pos == core::PartOfSpeech::Adjective || next.pos == core::PartOfSpeech::Auxiliary) &&
       utf8::equalsAny(next.surface, {"なく", "ない", "なかっ", "なけれ"})) {
-    bonus += cost::kStrongBonus;
+    // The ExtendedPOS bigram already provides the primary grammatical
+    // preference.  Keep this lexical tie-break modest: a full strong bonus
+    // lets a verbal homograph erase an equally attested formal-noun reading.
+    bonus += cost::kMinorBonus;
   }
 
   // Bonus for ば(PART_接続) → なら/なり/なる/なれ(VERB) in -なければならない pattern
@@ -250,7 +253,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // carries no such evidence and stays inside the compound (出+来 in 出来事).
   const bool renyokei_has_okurigana = grammar::startsWithKanji(next.surface) && !grammar::isAllKanji(next.surface);
   if (prev.extended_pos == core::ExtendedPOS::Noun && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      next.surface != "し" && next.surface != "せ" && next.surface.size() <= 6 &&
+      !grammar::isSuruRenyokeiSurface(next.surface) && next.surface != "せ" && next.surface.size() <= 6 &&
       prev.surface.size() == core::kJapaneseCharBytes && !renyokei_has_okurigana) {
     bonus += cost::kRare;  // Cancel the bigram bonus
   }
@@ -268,7 +271,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // E.g., 寒し (archaic adjective) should not split as 寒+し
   // But 得+し (suru-verb renyokei) should still split
   if (prev.extended_pos == core::ExtendedPOS::Noun && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      next.surface == "し" && normalize::utf8Length(prev.surface) == 1) {
+      grammar::isSuruRenyokeiSurface(next.surface) && normalize::utf8Length(prev.surface) == 1) {
     bonus += cost::kUncommon;
   }
 

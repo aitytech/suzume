@@ -37,14 +37,15 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
 
   // Surface-based bonus for VerbRenyokei → た/たら (ichidan/irregular
   // past and conditional-past forms). E.g., 食べ+た, 見+たら.
-  // Guard: require kanji, dictionary, or a context-validated ひらがな一段
-  // candidate.  The latter is created only for its immediately following
-  // て/た, so it can retain a real split (混雑を+さけ+た) without allowing
-  // unbounded fragments such as まし(ましる) to steal the past auxiliary.
+  // Guard: require kanji or dictionary-attested lexical evidence.  A generated
+  // pure-hiragana Ichidan stem is also usable when it starts after an observed
+  // token boundary: the following て/た validates its inflectional shape while
+  // the left context keeps a sentence-initial compound from being split into a
+  // fabricated lemma plus the past auxiliary.
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::equalsAny(next.surface, {"た", "たら"}) &&
       next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
-      (grammar::containsKanji(prev.surface) || prev.fromDictionary() ||
-       prev.origin == core::CandidateOrigin::VerbHiraganaInflectedRenyokei)) {
+      (grammar::containsKanji(prev.surface) || prev.lemmaVerified() ||
+       (prev.start > 0 && prev.origin == core::CandidateOrigin::VerbHiraganaInflectedRenyokei))) {
     bonus += cost::kVeryStrongBonus;
   }
 

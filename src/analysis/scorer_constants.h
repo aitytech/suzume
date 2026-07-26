@@ -1,6 +1,7 @@
 #ifndef SUZUME_ANALYSIS_SCORER_CONSTANTS_H_
 #define SUZUME_ANALYSIS_SCORER_CONSTANTS_H_
 
+#include <array>
 #include <cstddef>
 #include <string_view>
 
@@ -90,14 +91,6 @@ constexpr float kBonusLongSuffix = -1.5F;
 
 // Bonus for short hiragana verbs from dictionary (なる, ある, いる, する)
 constexpr float kBonusShortHiraganaVerb = -0.3F;
-// A verified multi-mora dictionary verb must retain its lexical search unit
-// against accidental internal function-word and renyokei paths.  Scale by
-// length because every extra internal boundary can otherwise add a bonus.
-constexpr float kBonusLongDictionaryVerbBase = -2.0F;
-constexpr float kBonusLongDictionaryVerbPerChar = -0.35F;
-constexpr float kBonusLongDictionaryPotentialStem = -2.0F;
-constexpr float kBonusLongDictionaryVerb = -1.0F;
-
 // A pure-hiragana sokuonbin stem of this length has enough lexical evidence
 // to attach its following te-form particle without reopening a shorter stem.
 constexpr size_t kLongPureHiraganaOnbinMinChars = 4;
@@ -141,10 +134,6 @@ constexpr float kPenaltyKanjiChuuCompound = scale::kMinor;
 // The Kuruwa polite auxiliary is a closed-class inflectional marker. Its
 // dedicated category must remain available against noun-plus-suru fragments.
 constexpr float kBonusKuruwaPoliteAuxiliary = scale::kExtraStrongBonus;
-
-// A closed binding particle used as a standalone token must remain intact
-// rather than being decomposed into unrelated homographic short words.
-constexpr float kBonusStandaloneBindingParticle = scale::kExtraStrongBonus;
 
 // =============================================================================
 // Pattern String Constants
@@ -307,10 +296,6 @@ constexpr float kBonusHonorificGoNounPerChar = 0.3F;
 // Used by AdjStem→すぎ, all-kanji NOUN→すぎ, で→ある patterns
 constexpr float kBonusDoubleVeryStrong = scale::kVeryStrongBonus * 2;  // -3.2
 
-// Contracted negative past AuxNegativeNu(ん) → VerbOnbinkei(かっ): くだらなかった
-// Very strong bonus because the かっ unknown verb candidate has high cost (~2.7)
-constexpr float kBonusContractedNegPast = scale::kVeryStrongBonus * 2 + scale::kMinorBonus;  // -3.45
-
 // Bonus for a split productive kanji V1連用 + kanji V2連用 compound verb
 // (読み+終え, 書き+始め). Two kanji content-verb 連用形 halves that already split
 // mark a genuine V1+V2 compound (MeCab splits 読み終える), so V1 must stay
@@ -365,22 +350,82 @@ constexpr std::string_view kNegationPrefixKanji[] = {"非", "不", "無", "未"}
 // =============================================================================
 // BOS (beginning-of-sentence) connection-cost adjustments. A morpheme that
 // cannot naturally start a sentence is penalized; a conjunction is rewarded.
-constexpr float kBosSuffixPenalty = 3.0F;               // Suffix cannot lead a sentence
-constexpr float kBosConjunctionBonus = -0.5F;           // でも / しかし are natural at BOS
-constexpr float kBosAppearanceSouPenalty = 0.5F;        // 様態そう should be demonstrative at BOS
-constexpr float kBosAspectIkuPenalty = 1.0F;            // いく aspect needs a preceding て-form
-constexpr float kBosAspectKuruPenalty = 3.0F;           // くる aspect (き) needs a preceding て-form
-constexpr float kBosTensePenalty = 2.0F;                // た/だ needs a preceding verb/adj stem
-constexpr float kBosFinalParticlePenalty = 2.0F;        // Sentence-final particle cannot lead
-constexpr float kBosTopicParticlePenalty = 1.0F;        // 係助詞 は/も cannot lead a sentence
-constexpr float kBosConjunctiveParticlePenalty = 1.0F;  // 接続助詞 joins clauses, so it rarely leads one
-constexpr float kBosHonorificAuxPenalty = 0.3F;         // Honorific auxiliary needs a preceding renyokei
+constexpr float kBosSuffixPenalty = 3.0F;                    // Suffix cannot lead a sentence
+constexpr float kBosConjunctionBonus = -0.5F;                // でも / しかし are natural at BOS
+constexpr float kBosAppearanceSouPenalty = 0.5F;             // 様態そう should be demonstrative at BOS
+constexpr float kBosAspectIruPenalty = scale::kRare;         // いる aspect needs a preceding て-form
+constexpr float kBosAspectShimauPenalty = scale::kVeryRare;  // しまう aspect needs a preceding て-form
+constexpr float kBosAspectIkuPenalty = 1.0F;                 // いく aspect needs a preceding て-form
+constexpr float kBosAspectKuruPenalty = 3.0F;                // くる aspect (き) needs a preceding て-form
+constexpr float kBosTensePenalty = 2.0F;                     // た/だ needs a preceding verb/adj stem
+constexpr float kBosFinalParticlePenalty = 2.0F;             // Sentence-final particle cannot lead
+constexpr float kBosTopicParticlePenalty = 1.0F;             // 係助詞 は/も cannot lead a sentence
+constexpr float kBosConjunctiveParticlePenalty = 1.0F;       // 接続助詞 joins clauses, so it rarely leads one
+constexpr float kBosBindingParticlePenalty = scale::kRare;   // 係結び has no host at sentence start
+constexpr float kBosHonorificAuxPenalty = 0.3F;              // Honorific auxiliary needs a preceding renyokei
 
-// EOS (end-of-sentence) cost adjustments, symmetric to the BOS set above. A
-// morpheme that cannot naturally END a sentence is penalized, so an isolated
-// hiragana word is not carved into a stem plus a dangling auxiliary/aspect.
+// EOS (end-of-sentence) adjustments share the table below with BOS. The two
+// columns are intentionally asymmetric: a final particle can naturally close a
+// sentence, while a prefix cannot.
 constexpr float kEosAspectKuruPenalty = 3.0F;  // き (来 aspect) needs a following stem (ひこうき → ひこう+き)
 constexpr float kEosListingParticlePenalty = 2.0F;  // たり listing particle needs a parallel predicate
+constexpr float kEosBindingParticleBonus = scale::kExtraStrongBonus;  // Keep standalone こそ/さえ intact
+constexpr float kEosPrefixPenalty = scale::kAlmostNever;              // Prefix requires a following host
+
+enum class EosBoundaryGate {
+  Always,
+  SingleCodepoint,
+  ListingParticle,
+};
+
+struct BoundaryCost {
+  float bos;
+  float eos;
+  EosBoundaryGate eos_gate{EosBoundaryGate::Always};
+};
+
+/**
+ * Sentence-boundary costs indexed by ExtendedPOS.
+ *
+ * Keeping BOS and EOS adjustments in the same row makes intentionally
+ * asymmetric categories explicit and prevents boundary-only rules from
+ * drifting into wordCost().
+ */
+constexpr std::array<BoundaryCost, static_cast<size_t>(core::ExtendedPOS::Count_)> kBoundaryCostTable = [] {
+  std::array<BoundaryCost, static_cast<size_t>(core::ExtendedPOS::Count_)> table{};
+
+  table[static_cast<size_t>(core::ExtendedPOS::Conjunction)].bos = kBosConjunctionBonus;
+  table[static_cast<size_t>(core::ExtendedPOS::Suffix)].bos = kBosSuffixPenalty;
+
+  table[static_cast<size_t>(core::ExtendedPOS::AuxAppearanceSou)].bos = kBosAppearanceSouPenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::AuxAspectIru)].bos = kBosAspectIruPenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::AuxAspectShimau)].bos = kBosAspectShimauPenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::AuxAspectIku)].bos = kBosAspectIkuPenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::AuxAspectKuru)].bos = kBosAspectKuruPenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::AuxTenseTa)].bos = kBosTensePenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::AuxHonorific)].bos = kBosHonorificAuxPenalty;
+
+  table[static_cast<size_t>(core::ExtendedPOS::ParticleFinal)].bos = kBosFinalParticlePenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::ParticleTopic)].bos = kBosTopicParticlePenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::ParticleConj)].bos = kBosConjunctiveParticlePenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::ParticleBinding)].bos = kBosBindingParticlePenalty;
+
+  table[static_cast<size_t>(core::ExtendedPOS::AuxAspectKuru)].eos = kEosAspectKuruPenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::AuxAspectKuru)].eos_gate = EosBoundaryGate::SingleCodepoint;
+  table[static_cast<size_t>(core::ExtendedPOS::ParticleConj)].eos = kEosListingParticlePenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::ParticleConj)].eos_gate = EosBoundaryGate::ListingParticle;
+  table[static_cast<size_t>(core::ExtendedPOS::ParticleBinding)].eos = kEosBindingParticleBonus;
+  table[static_cast<size_t>(core::ExtendedPOS::Prefix)].eos = kEosPrefixPenalty;
+
+  return table;
+}();
+
+[[nodiscard]] constexpr BoundaryCost getBoundaryCost(core::ExtendedPOS extended_pos) noexcept {
+  if (!core::isValidExtendedPos(extended_pos)) {
+    return {};
+  }
+  return kBoundaryCostTable[static_cast<size_t>(extended_pos)];
+}
 
 }  // namespace suzume::analysis::scorer
 

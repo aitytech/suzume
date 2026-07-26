@@ -420,14 +420,6 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kStrongBonus;
   }
 
-  // The formal conditional であれ consists of the copula followed by the
-  // kateikei of ある. Prefer that boundary over a fabricated compound verb
-  // beginning with あれ (そうであれ続ける, 何であれ続行する).
-  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && grammar::isSingleHiragana(prev.surface, U'で') &&
-      next.extended_pos == core::ExtendedPOS::VerbKateikei && next.lemma == "ある") {
-    bonus += cost::kVeryStrongBonus;
-  }
-
   // The quotative conditional とあれば retains the finite irregular form as
   // one search unit. Other particle contexts can use the regular あれ+ば
   // boundary (さえあれば, こそあれば).
@@ -470,7 +462,7 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // Penalty for VerbRenyokei + し(conjunction) with kanji verb
   // In modern Japanese, conjunction し follows shuushikei (行く+し), not renyoukei (行き+し).
   // VerbRenyokei + し is usually a false split of godan-sa renyoukei (尽く+し → 尽くし).
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface == "し" &&
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isConjunctiveParticleShi(next.surface) &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::containsKanji(prev.surface)) {
     bonus += cost::kMinor;  // Penalty to discourage false split
   }
@@ -584,8 +576,8 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // E.g., 何してる should be 何+し(VERB)+てる, not 何+し(PART)+てる
   // The reasoning conjunction し should not be directly followed by progressive てる
   // This cancels the ParticleConj→AuxAspectIru bonus (-0.8) for this specific case
-  if (prev.surface == "し" && prev.extended_pos == core::ExtendedPOS::ParticleConj && next.surface == "てる" &&
-      next.extended_pos == core::ExtendedPOS::AuxAspectIru) {
+  if (grammar::isConjunctiveParticleShi(prev.surface) && prev.extended_pos == core::ExtendedPOS::ParticleConj &&
+      next.surface == "てる" && next.extended_pos == core::ExtendedPOS::AuxAspectIru) {
     bonus += cost::kRare;  // Cancel the -0.8 bonus
   }
 

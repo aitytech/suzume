@@ -9,6 +9,7 @@
 
 #include <array>
 
+#include "analysis/bigram_table_internal.h"
 #include "analysis/scorer.h"
 
 namespace suzume::analysis {
@@ -118,6 +119,55 @@ TEST(BigramTableTest, PureExtendedPosRulesKeepTheirConnectionCosts) {
     EXPECT_FLOAT_EQ(scorer.connectionCost(prev, next), test_case.expected_cost);
   }
 }
+
+TEST(BigramTableTest, EveryNominalHeadHasTheCommonContinuationRules) {
+  using EPOS = core::ExtendedPOS;
+  struct NominalHeadCase {
+    EPOS head;
+    float case_cost;
+    float adverbial_cost;
+    float final_cost;
+  };
+  constexpr std::array<NominalHeadCase, 5> kNominalHeads = {{
+      {EPOS::Noun, bigram_cost::kNeutral, bigram_cost::kStrongBonus, bigram_cost::kModerateBonus},
+      {EPOS::NounVerbal, bigram_cost::kNeutral, bigram_cost::kStrongBonus, bigram_cost::kModerateBonus},
+      {EPOS::NounNumber, bigram_cost::kNeutral, bigram_cost::kStrongBonus, bigram_cost::kNeutral},
+      {EPOS::Pronoun, bigram_cost::kModerateBonus, bigram_cost::kExtraStrongBonus, bigram_cost::kModerateBonus},
+      {EPOS::PronounInterrogative, bigram_cost::kNeutral, bigram_cost::kExtraStrongBonus, bigram_cost::kNeutral},
+  }};
+  struct ContinuationCost {
+    EPOS next;
+    float expected_cost;
+  };
+  constexpr std::array<ContinuationCost, 3> kCommonContinuations = {{
+      {EPOS::ParticleTopic, bigram_cost::kStrongBonus},
+      {EPOS::ParticleBinding, bigram_cost::kVeryStrongBonus},
+      {EPOS::AuxCopulaDa, bigram_cost::kExtraStrongBonus},
+  }};
+
+  for (const NominalHeadCase& head : kNominalHeads) {
+    EXPECT_FLOAT_EQ(BigramTable::getCost(head.head, EPOS::ParticleCase), head.case_cost);
+    EXPECT_FLOAT_EQ(BigramTable::getCost(head.head, EPOS::ParticleAdverbial), head.adverbial_cost);
+    EXPECT_FLOAT_EQ(BigramTable::getCost(head.head, EPOS::ParticleFinal), head.final_cost);
+    for (const ContinuationCost& continuation : kCommonContinuations) {
+      EXPECT_FLOAT_EQ(BigramTable::getCost(head.head, continuation.next), continuation.expected_cost);
+    }
+  }
+}
+
+#ifndef NDEBUG
+TEST(BigramTableTest, DuplicateRuleAssignmentIsRejectedInDebugBuilds) {
+  using EPOS = core::ExtendedPOS;
+  bigram_rules::BigramMatrix table{};
+  for (auto& row : table) {
+    row.fill(bigram_rules::kUnsetCost);
+  }
+  const bigram_rules::BigramRule rule{EPOS::ParticleFinal, EPOS::Noun, bigram_cost::kProhibitive};
+  bigram_rules::applyRules(table, &rule, 1);
+
+  EXPECT_DEATH(bigram_rules::applyRules(table, &rule, 1), "duplicate ExtendedPOS bigram rule");
+}
+#endif
 
 }  // namespace
 }  // namespace suzume::analysis

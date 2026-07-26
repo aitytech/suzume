@@ -239,7 +239,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // the legitimate dict VERB imperative entry. Restricted to the suru-imperative
   // surfaces so godan imperative forms (柿+食え) are not falsely boosted.
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::VerbMeireikei &&
-      (next.surface == "せよ" || next.surface == "しろ")) {
+      grammar::isSuruImperativeSurface(next.surface)) {
     bonus += cost::kStrongBonus;
   }
 

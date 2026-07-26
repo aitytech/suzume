@@ -30,6 +30,11 @@ bool isRecentCompletionCompoundNounVerbal(std::string_view surface) {
 
 }  // namespace
 
+bool isSingleHiraganaVerbRenyokei(const core::LatticeEdge& edge) {
+  return edge.extended_pos == core::ExtendedPOS::VerbRenyokei && normalize::utf8Length(edge.surface) == 1 &&
+         grammar::isPureHiragana(edge.surface);
+}
+
 float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};
 
@@ -245,7 +250,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // Penalty for PREFIX ご → VerbRenyokei ざい pattern
   // E.g., ございます should be ござい+ます, not ご+ざい+ます
   // The prefix ご is for nouns (ご報告), not for splitting ござる
-  if (prev.extended_pos == core::ExtendedPOS::Prefix && prev.surface == "ご" &&
+  if (prev.extended_pos == core::ExtendedPOS::Prefix && grammar::isHonorificPrefix(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::startsWith(next.surface, "ざい")) {
     bonus += cost::kAlmostNever;
   }
@@ -301,9 +306,8 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // Final particles (よ, な, ね, わ) are rarely followed by verb renyokei
   // The short hiragana verb ね (寝る renyokei) competes with final particle ね
   // This penalty ensures particle interpretation wins in よね, なね, etc. patterns
-  if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      grammar::isPureHiragana(next.surface) && next.surface.size() <= 3) {  // Single hiragana (3 bytes)
-    bonus += cost::kRare;
+  if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && isSingleHiraganaVerbRenyokei(next)) {
+    bonus += cost::kSevere;
   }
 
   // The surface か also marks an indefinite phrase (誰か来る, 何かいる).
@@ -352,14 +356,25 @@ float computeCopulaConditionalBonus(const core::LatticeEdge& prev, const core::L
   // The literary concessive/conditional construction であれ(ば) is the
   // continuative copula followed by the hypothetical form of ある. Favor this
   // grammatical chain over the homographic case-particle + pronoun sequence.
-  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && next.extended_pos == core::ExtendedPOS::VerbKateikei &&
-      utf8::equalsAny(next.surface, {"あれ"}) && utf8::equalsAny(next.lemma, {"ある"})) {
+  const bool copula_before_hypothetical =
+      prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && next.extended_pos == core::ExtendedPOS::VerbKateikei;
+  const bool continuative_copula = grammar::isSingleHiragana(prev.surface, U'で');
+  const bool aru_hypothetical_stem = grammar::isAruHypotheticalStem(next.surface) && next.lemma == "ある";
+  if (copula_before_hypothetical && continuative_copula && aru_hypothetical_stem) {
+    return sc::kBonusDoubleVeryStrong;
+  }
+  if (copula_before_hypothetical && aru_hypothetical_stem) {
     return cost::kVeryStrongBonus;
+  }
+  // Preserve the former broad で+lemma=ある fallback. Noncanonical surfaces
+  // receive both the generic hypothetical penalty and its compensating bonus.
+  if (copula_before_hypothetical && continuative_copula && next.lemma == "ある") {
+    return cost::kStrong + cost::kVeryStrongBonus;
   }
   // A copula cannot directly take an unrelated lexical hypothetical form.
   // This also keeps the known で+あれ+ば chain split rather than selecting a
   // fabricated one-token verb candidate for あれば.
-  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && next.extended_pos == core::ExtendedPOS::VerbKateikei) {
+  if (copula_before_hypothetical) {
     return cost::kStrong;
   }
   // In であれ, the hypothetical ある can coordinate another nominal

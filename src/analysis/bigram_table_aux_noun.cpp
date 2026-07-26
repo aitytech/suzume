@@ -469,11 +469,6 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // AuxCopulaDa → ParticleFinal (だ+ね/よ) - minor bonus
       {EPOS::AuxCopulaDa, EPOS::ParticleFinal, cost::kMinorBonus},
 
-      // Noun → ParticleFinal (素敵+ね, 本+よ) - a nominal predicate closes on the
-      // final particle, which competes with the continuative of a verb spelled
-      // with the same kana.
-      {EPOS::Noun, EPOS::ParticleFinal, cost::kModerateBonus},
-
       // ParticleConj → ParticleFinal (ない+で+よ, 待って+て+ね) - a request or
       // prohibition ends on the conjunctive particle, and the closing particle
       // is the only thing that can follow it there.
@@ -488,30 +483,9 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // =========================================================================
       // Pronoun → Particles
       // =========================================================================
-      // Pronoun → ParticleCase (あれ+が, これ+を, それ+に) - moderate bonus
-      // Pronouns naturally take case particles; beats VERB_連用 interpretation
-      // E.g., あれが欲しい → あれ(PRON)+が, not あれ(VERB ある)+が
-      {EPOS::Pronoun, EPOS::ParticleCase, cost::kModerateBonus},
-
-      // Pronouns also take topic particles (彼女+は, 我輩+は). This nominal
-      // boundary must outrank an unknown noun candidate for the same surface.
-      {EPOS::Pronoun, EPOS::ParticleTopic, cost::kStrongBonus},
-
       // Pronoun → AuxCopulaDesu (何+です, これ+です) - moderate bonus
       // Pronouns naturally take polite copula; matches Noun→AuxCopulaDesu bonus
       {EPOS::Pronoun, EPOS::AuxCopulaDesu, cost::kModerateBonus},
-
-      // Pronoun → AuxCopulaDa (彼女+だ, 誰+で+は) follows the same nominal
-      // predicate construction as an ordinary noun. Without this, a fallback
-      // unknown-noun candidate can replace a dictionary pronoun before だ/で.
-      {EPOS::Pronoun, EPOS::AuxCopulaDa, cost::kExtraStrongBonus},
-      {EPOS::PronounInterrogative, EPOS::AuxCopulaDa, cost::kExtraStrongBonus},
-
-      // Pronoun → ParticleAdverbial (これ+だけ, あれ+だけ, それ+だけ).
-      // Prefer the focus-particle boundary over a homographic copula plus
-      // final particle (これ+だ+け).
-      {EPOS::Pronoun, EPOS::ParticleAdverbial, cost::kExtraStrongBonus},
-      {EPOS::PronounInterrogative, EPOS::ParticleAdverbial, cost::kExtraStrongBonus},
 
       // Pronouns can directly govern a continuative predicate (何もかも+忘れ
       // た, どれ+を+選び). Keep a lexicalized pronoun from losing to an
@@ -619,11 +593,6 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // =========================================================================
       // Noun → Copula/Negative
       // =========================================================================
-
-      // Noun → AuxCopulaDa (学生+だ、本+だよ) - a nominal predicate is a
-      // fundamental boundary. It must outrank an unknown compound noun that
-      // absorbs a casual copula ending.
-      {EPOS::Noun, EPOS::AuxCopulaDa, cost::kExtraStrongBonus},
 
       // The surface だっ is also the voiced allomorph of the past auxiliary,
       // but a noun or na-adjective before it forms a copular predicate

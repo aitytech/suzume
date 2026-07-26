@@ -269,18 +269,6 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
     bonus += cost::kStrong;
   }
 
-  // A final particle followed immediately by a one-mora hiragana renyokei
-  // is likewise an implausible no-boundary split. It fabricates chains such
-  // as 扱い+か+ね+た from an adjective/question fragment, instead of preserving
-  // the preceding verb-renyokei plus its subsidiary. Real sentence-final
-  // questions end here; a following lexical verb begins a new clause and is
-  // normally separated by punctuation or has a multi-mora stem.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      next.surface.size() == core::kJapaneseCharBytes &&
-      normalize::classifyChar(utf8::decodeFirstChar(next.surface)) == normalize::CharType::Hiragana) {
-    bonus += cost::kStrong;
-  }
-
   // Bonus for VerbRenyokei/VerbOnbinkei → VerbRenyokei (subsidiary verb patterns)
   // E.g., 願い+いたし (お願いいたします), 報告+いたし (ご報告いたします),
   //       し+かね (賛成しかねます), 沿い+かね (ご期待に沿いかねます)

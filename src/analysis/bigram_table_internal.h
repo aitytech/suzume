@@ -1,11 +1,15 @@
 #ifndef SUZUME_ANALYSIS_BIGRAM_TABLE_INTERNAL_H_
 #define SUZUME_ANALYSIS_BIGRAM_TABLE_INTERNAL_H_
 
+#include <limits>
+
 #include "bigram_table.h"
 
 namespace suzume::analysis::bigram_rules {
 
 using BigramMatrix = std::array<std::array<uint8_t, BigramTable::kSize>, BigramTable::kSize>;
+
+inline constexpr uint8_t kUnsetCost = std::numeric_limits<uint8_t>::max();
 
 // Every value used by the grammatical rule tables. Keep this list compact:
 // the dense matrix stores only an index into it.
@@ -32,6 +36,7 @@ inline constexpr std::array<float, 21> kCostPalette = {
     bigram_cost::kNever,
     bigram_cost::kProhibitive,
 };
+static_assert(kCostPalette.size() < kUnsetCost);
 
 constexpr uint8_t encodeCost(float value) {
   for (size_t index = 0; index < kCostPalette.size(); ++index) {

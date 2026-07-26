@@ -325,11 +325,6 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // (sentence-final particles rarely continue to verbs)
       {EPOS::ParticleFinal, EPOS::VerbShuushikei, cost::kVeryRare},
 
-      // A sentence-final particle cannot directly modify a noun. This keeps
-      // an attributive copula available in adverb + な + noun sequences;
-      // quoted uses retain an intervening symbol.
-      {EPOS::ParticleFinal, EPOS::Noun, cost::kAlmostNever},
-
       // A sentence-final particle cannot introduce the contracted negative
       // auxiliary. This preserves a following honorific suffix as a single
       // unit instead of fragmenting it into a final particle plus ん.
