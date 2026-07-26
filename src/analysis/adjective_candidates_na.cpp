@@ -54,7 +54,14 @@ void generateHiraganaNariNaAdjectiveCandidates(const std::vector<char32_t>& code
       continue;
     }
     const std::string stem = extractSubstring(codepoints, start_pos, stem_end);
-    if (!utf8::endsWithAny(stem, {"やか", "らか"})) {
+    // The classical attributive なる only ever attaches to a nominal adjective
+    // stem, and the productive shape of that stem is a -か ending (しずか,
+    // ゆたか, おごそか).  Before なる the wider -か shape is safe; before the
+    // modern continuations it is not, because 〜かな/〜かに also occur inside
+    // ordinary verb inflection, so those keep the narrow -やか/-らか test.
+    const bool has_na_adjective_stem_shape =
+        utf8::endsWithAny(stem, {"やか", "らか"}) || (has_classical_attributive && utf8::endsWithAny(stem, {"か"}));
+    if (!has_na_adjective_stem_shape) {
       continue;
     }
     candidates.push_back(makeNaAdjCandidate(stem, start_pos, stem_end, candidate::kNaAdjYakaCost, true,

@@ -2335,6 +2335,94 @@
       ],
       "id": "kana_3",
       "input": "確かな情報"
+    },
+    {
+      "description": "ゆたかなる心 - regression test",
+      "expected": [
+        {
+          "lemma": "ゆたか",
+          "pos": "Adjective",
+          "surface": "ゆたか"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なる"
+        },
+        {
+          "lemma": "心",
+          "pos": "Noun",
+          "surface": "心"
+        }
+      ],
+      "id": "yutakanaru",
+      "input": "ゆたかなる心"
+    },
+    {
+      "description": "静かなる海 - regression test",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なる"
+        },
+        {
+          "lemma": "海",
+          "pos": "Noun",
+          "surface": "海"
+        }
+      ],
+      "id": "kanaru",
+      "input": "静かなる海"
+    },
+    {
+      "description": "華やかなる舞台 - regression test",
+      "expected": [
+        {
+          "lemma": "華やか",
+          "pos": "Adjective",
+          "surface": "華やか"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なる"
+        },
+        {
+          "lemma": "舞台",
+          "pos": "Noun",
+          "surface": "舞台"
+        }
+      ],
+      "id": "yakanaru",
+      "input": "華やかなる舞台"
+    },
+    {
+      "description": "すこやかなる子 - regression test",
+      "expected": [
+        {
+          "lemma": "すこやか",
+          "pos": "Adjective",
+          "surface": "すこやか"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なる"
+        },
+        {
+          "lemma": "子",
+          "pos": "Noun",
+          "surface": "子"
+        }
+      ],
+      "id": "sukoyakanaru",
+      "input": "すこやかなる子"
     }
   ],
   "description": "Na-adjectives (ナ形容詞)",
