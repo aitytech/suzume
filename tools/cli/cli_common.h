@@ -3,9 +3,16 @@
 
 #include <cstdint>
 #include <iostream>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include "core/error.h"
+
+namespace suzume {
+class Suzume;
+}
 
 namespace suzume::cli {
 
@@ -16,7 +23,6 @@ enum class OutputFormat {
   Morpheme,  // Default: surface TAB pos TAB lemma
   Tags,      // Tags only, one per line
   Json,      // JSON format
-  Tsv,       // TSV with all fields
   Chasen     // ChaSen-like format (Japanese POS, conjugation info)
 };
 
@@ -51,10 +57,23 @@ std::string jsonEscape(std::string_view value);
 void stripUtf8Bom(std::string* value);
 
 /**
+ * @brief Add one source or binary user dictionary based on its file extension.
+ *
+ * Source TSV/legacy CSV and binary .dic files share additive load semantics.
+ */
+core::Expected<size_t, core::Error> loadUserDictionaryPath(Suzume* analyzer, const std::string& path);
+
+/**
  * @brief Translate a shell-style wildcard pattern (* and ?) into an ECMAScript
  *        regex string, escaping all other regex metacharacters.
  */
 std::string wildcardToRegex(std::string_view pattern);
+
+/**
+ * @brief Compile a shell-style wildcard pattern as an ECMAScript regex.
+ * @return Compiled regex, or an error instead of throwing std::regex_error.
+ */
+core::Expected<std::regex, core::Error> compileWildcardRegex(std::string_view pattern);
 
 /**
  * @brief True if @p path ends with @p ext (e.g. ".dic"). ASCII, case-sensitive.

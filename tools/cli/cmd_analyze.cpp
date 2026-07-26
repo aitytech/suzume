@@ -1,8 +1,6 @@
 #include "cmd_analyze.h"
 
-#include <cctype>
 #include <cstdlib>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -98,36 +96,6 @@ core::AnalysisMode parseMode(const std::string& mode_str) {
   return core::AnalysisMode::Normal;
 }
 
-bool isBinaryDictionaryPath(std::string_view path) {
-  constexpr std::string_view kExtension = ".dic";
-  if (path.size() < kExtension.size()) {
-    return false;
-  }
-  const std::string_view suffix = path.substr(path.size() - kExtension.size());
-  for (size_t idx = 0; idx < kExtension.size(); ++idx) {
-    const auto actual = static_cast<unsigned char>(suffix[idx]);
-    if (static_cast<char>(std::tolower(actual)) != kExtension[idx]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-core::Expected<size_t, core::Error> loadBinaryDictionaryFile(Suzume* analyzer, const std::string& path) {
-  std::ifstream file(path, std::ios::binary);
-  if (!file) {
-    return core::makeUnexpected(
-        core::Error(core::ErrorCode::FileNotFound, "Failed to open binary dictionary file: " + path));
-  }
-
-  std::vector<char> data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  if (file.bad()) {
-    return core::makeUnexpected(
-        core::Error(core::ErrorCode::DictionaryLoadFailed, "Failed to read binary dictionary file: " + path));
-  }
-  return analyzer->loadBinaryDictionaryResult(reinterpret_cast<const uint8_t*>(data.data()), data.size());
-}
-
 }  // namespace
 
 int cmdAnalyze(const CommandArgs& args) {
@@ -205,22 +173,9 @@ int cmdAnalyze(const CommandArgs& args) {
     printWarning(warning);
   }
 
-  size_t binary_dictionary_count = 0;
+  // Source and binary dictionaries share the same additive user layer.
   for (const auto& dict_path : args.dict_paths) {
-    if (isBinaryDictionaryPath(dict_path)) {
-      ++binary_dictionary_count;
-    }
-  }
-  if (binary_dictionary_count > 1) {
-    printError("Only one binary .dic dictionary may be loaded; additional binary dictionaries would replace it");
-    return 1;
-  }
-
-  // Text dictionaries are additive. The core has one replaceable binary user
-  // dictionary slot, so the count check above prevents silent replacement.
-  for (const auto& dict_path : args.dict_paths) {
-    auto load_result = isBinaryDictionaryPath(dict_path) ? loadBinaryDictionaryFile(&analyzer, dict_path)
-                                                         : analyzer.loadUserDictionaryResult(dict_path);
+    auto load_result = loadUserDictionaryPath(&analyzer, dict_path);
     if (!load_result.hasValue()) {
       printError("Failed to load dictionary: " + dict_path + ": " + load_result.error().message);
       return 1;
@@ -305,8 +260,7 @@ int cmdAnalyze(const CommandArgs& args) {
 
   // Normal analysis
   switch (args.format) {
-    case OutputFormat::Morpheme:
-    case OutputFormat::Tsv: {
+    case OutputFormat::Morpheme: {
       auto morphemes = analyzer.analyze(text);
       outputMorphemes(morphemes);
       break;

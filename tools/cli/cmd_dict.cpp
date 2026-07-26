@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <regex>
 #include <utility>
 
@@ -97,7 +98,7 @@ int cmdDictNew(const std::vector<std::string>& args, bool /* verbose */) {
   }
 
   file << "# suzume dictionary source file\n";
-  file << "# Format: surface<TAB>pos<TAB>reading<TAB>cost<TAB>conj_type\n";
+  file << "# Format: surface<TAB>pos<TAB>conj_type<TAB>lemma\n";
   file << "#\n";
   file << "# POS values: NOUN, PROPN, VERB, ADJECTIVE, ADVERB, PARTICLE, "
           "AUXILIARY, SYMBOL, OTHER\n";
@@ -191,10 +192,10 @@ int cmdDictValidate(const std::vector<std::string>& args, bool /* verbose */) {
 // Expand glob patterns in a path (e.g., "data/core/*.tsv")
 // Returns the path as-is if it contains no glob characters or if expansion
 // yields no matches.
-std::vector<std::string> expandGlob(const std::string& pattern) {
+core::Expected<std::vector<std::string>, core::Error> expandGlob(const std::string& pattern) {
   // Check if the pattern contains glob characters
   if (pattern.find('*') == std::string::npos && pattern.find('?') == std::string::npos) {
-    return {pattern};
+    return std::vector<std::string>{pattern};
   }
 
   namespace fs = std::filesystem;
@@ -209,15 +210,19 @@ std::vector<std::string> expandGlob(const std::string& pattern) {
   }
 
   if (!fs::exists(dir) || !fs::is_directory(dir)) {
-    return {pattern};
+    return std::vector<std::string>{pattern};
   }
 
   // Convert glob pattern to regex
-  std::regex re(wildcardToRegex(file_pattern));
+  auto regex_result = compileWildcardRegex(file_pattern);
+  if (!regex_result.hasValue()) {
+    return core::makeUnexpected(regex_result.error());
+  }
+  const std::regex& regex_pattern = regex_result.value();
   std::vector<std::string> matches;
 
   for (const auto& entry : fs::directory_iterator(dir)) {
-    if (entry.is_regular_file() && std::regex_match(entry.path().filename().string(), re)) {
+    if (entry.is_regular_file() && std::regex_match(entry.path().filename().string(), regex_pattern)) {
       matches.push_back(entry.path().string());
     }
   }
@@ -228,10 +233,14 @@ std::vector<std::string> expandGlob(const std::string& pattern) {
 }
 
 // Expand all glob patterns in a list of paths
-std::vector<std::string> expandGlobs(const std::vector<std::string>& paths) {
+core::Expected<std::vector<std::string>, core::Error> expandGlobs(const std::vector<std::string>& paths) {
   std::vector<std::string> result;
   for (const auto& path : paths) {
-    auto expanded = expandGlob(path);
+    auto expanded_result = expandGlob(path);
+    if (!expanded_result.hasValue()) {
+      return core::makeUnexpected(expanded_result.error());
+    }
+    auto& expanded = expanded_result.value();
     result.reserve(result.size() + expanded.size());
     for (auto& match : expanded) {
       result.push_back(std::move(match));
@@ -276,7 +285,12 @@ int cmdDictCompile(const std::vector<std::string>& args, bool verbose) {
     std::string dic_path = swapOrAppendExtension(tsv_path, ".tsv", ".dic");
 
     // Single arg might be a glob pattern
-    auto expanded = expandGlob(tsv_path);
+    auto expanded_result = expandGlob(tsv_path);
+    if (!expanded_result.hasValue()) {
+      printError(expanded_result.error().message);
+      return 1;
+    }
+    auto& expanded = expanded_result.value();
     if (expanded.size() == 1 && expanded[0] == tsv_path) {
       // No glob expansion, single file compile
       auto result = compiler.compile(tsv_path, dic_path);
@@ -314,7 +328,12 @@ int cmdDictCompile(const std::vector<std::string>& args, bool verbose) {
   }
 
   std::vector<std::string> raw_paths(file_args.begin(), file_args.end() - 1);
-  auto tsv_paths = expandGlobs(raw_paths);
+  auto tsv_paths_result = expandGlobs(raw_paths);
+  if (!tsv_paths_result.hasValue()) {
+    printError(tsv_paths_result.error().message);
+    return 1;
+  }
+  auto& tsv_paths = tsv_paths_result.value();
 
   auto result = compiler.compileMultiple(tsv_paths, dic_path);
   if (!result.hasValue()) {
@@ -361,14 +380,19 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
   }
 
   const std::string& path = args[0];
-  std::string pos_filter;
+  std::optional<core::PartOfSpeech> pos_filter;
   std::string pattern;
   size_t limit = 0;
 
   // Parse options
   for (size_t idx = 1; idx < args.size(); ++idx) {
     if (args[idx].substr(0, 6) == "--pos=") {
-      pos_filter = args[idx].substr(6);
+      const std::string value = toUpper(args[idx].substr(6));
+      pos_filter = core::stringToPosStrict(value);
+      if (!pos_filter.has_value()) {
+        printError("Invalid POS: " + args[idx].substr(6));
+        return 1;
+      }
     } else if (args[idx].substr(0, 10) == "--pattern=") {
       pattern = args[idx].substr(10);
     } else if (args[idx].substr(0, 8) == "--limit=") {
@@ -382,7 +406,12 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
   std::regex pattern_regex;
   bool has_pattern = !pattern.empty();
   if (has_pattern) {
-    pattern_regex = std::regex(wildcardToRegex(pattern));
+    auto regex_result = compileWildcardRegex(pattern);
+    if (!regex_result.hasValue()) {
+      printError(regex_result.error().message);
+      return 1;
+    }
+    pattern_regex = std::move(regex_result.value());
   }
 
   // Load dictionary
@@ -402,7 +431,7 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
         continue;
       }
 
-      if (!pos_filter.empty() && core::posToString(entry->pos) != pos_filter) {
+      if (pos_filter.has_value() && entry->pos != *pos_filter) {
         continue;
       }
       if (has_pattern && !std::regex_match(entry->surface, pattern_regex)) {
@@ -430,7 +459,7 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
 
     size_t count = 0;
     for (const auto& entry : result.value()) {
-      if (!pos_filter.empty() && core::posToString(entry.pos) != pos_filter) {
+      if (pos_filter.has_value() && entry.pos != *pos_filter) {
         continue;
       }
       if (has_pattern && !std::regex_match(entry.surface, pattern_regex)) {
@@ -461,7 +490,12 @@ int cmdDictSearch(const std::vector<std::string>& args, bool /* verbose */) {
   std::string pattern = args[1];
 
   // Convert simple wildcard to regex
-  std::regex regex_pattern(wildcardToRegex(pattern));
+  auto regex_result = compileWildcardRegex(pattern);
+  if (!regex_result.hasValue()) {
+    printError(regex_result.error().message);
+    return 1;
+  }
+  const std::regex& regex_pattern = regex_result.value();
 
   // Load and search
   TsvParser parser;
@@ -519,13 +553,14 @@ int cmdDictLookup(const std::vector<std::string>& args, bool /* verbose */) {
   }
 
   // Search L2 (TSV dictionary)
-  std::cout << "\n=== L2 (data/core/*.tsv) ===\n";
+  std::cout << "\n=== L2 (core/*.tsv source) ===\n";
 
-  // Find L2 dictionary directory
+  // SUZUME_DATA_DIR always names the data root: compiled core.dic lives at
+  // its root and editable source files live in its core/ child.
   std::string tsv_dir;
   const char* data_dir = std::getenv("SUZUME_DATA_DIR");
   if (data_dir != nullptr) {
-    tsv_dir = std::string(data_dir);
+    tsv_dir = (std::filesystem::path(data_dir) / "core").string();
   } else {
     tsv_dir = "data/core";
   }

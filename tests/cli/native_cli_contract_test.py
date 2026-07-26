@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -15,6 +16,7 @@ def run_cli(
     *args: str,
     input_text: str | None = None,
     input_bytes: bytes | None = None,
+    env: dict[str, str] | None = None,
     expect_success: bool = True,
 ) -> subprocess.CompletedProcess[str]:
     if input_text is not None and input_bytes is not None:
@@ -27,6 +29,7 @@ def run_cli(
         input=process_input,
         capture_output=True,
         check=False,
+        env=env,
     )
     result = subprocess.CompletedProcess(
         raw_result.args,
@@ -75,6 +78,12 @@ def assert_help_contract(cli: Path) -> None:
     assert "Output Formats:" not in top_level.stdout
     assert "Output Formats:" in analyze.stdout
     assert "Commands:" not in analyze.stdout
+    assert "-VV, --very-verbose" in analyze.stdout
+    assert "tsv                    Alias of morpheme" in analyze.stdout
+
+    morpheme = run_cli(cli, "analyze", "--format", "morpheme", "東京")
+    tsv = run_cli(cli, "analyze", "--format", "tsv", "東京")
+    assert tsv.stdout == morpheme.stdout
 
 
 def assert_stdin_contract(cli: Path) -> None:
@@ -194,6 +203,30 @@ def assert_tag_filters(cli: Path) -> None:
     assert "りんご" not in tags
 
 
+def assert_single_test_contract(cli: Path) -> None:
+    result = run_cli(cli, "test", "--verbose", "東京へ", "--expect", "東京")
+    assert "PASS: 東京へ" in result.stdout, result.stdout
+
+
+def assert_bundled_user_dictionary_contract(cli: Path) -> None:
+    result = run_cli(cli, "analyze", "--format", "json", "セーラー服を着る")
+    morphemes = json.loads(result.stdout)["morphemes"]
+    assert morphemes[0]["surface"] == "セーラー服"
+    assert morphemes[0]["is_user_dict"] is True
+
+    engine_owned_cases = {
+        "キャミソールとタンクトップを選ぶ": ["キャミソール", "と", "タンクトップ", "を", "選ぶ"],
+        "いつの間にか終わった": ["いつ", "の", "間", "に", "か", "終わっ", "た"],
+        "つめあわせを作る": ["つめあわせ", "を", "作る"],
+        "病みかわが好き": ["病みかわ", "が", "好き"],
+    }
+    for input_text, expected_surfaces in engine_owned_cases.items():
+        analyzed = run_cli(cli, "analyze", "--format", "json", input_text)
+        analyzed_morphemes = json.loads(analyzed.stdout)["morphemes"]
+        assert [morpheme["surface"] for morpheme in analyzed_morphemes] == expected_surfaces
+        assert all(not morpheme["is_user_dict"] for morpheme in analyzed_morphemes)
+
+
 def assert_dictionary_contract(cli: Path) -> None:
     with tempfile.TemporaryDirectory(prefix="suzume-native-cli-") as temp_name:
         temp_dir = Path(temp_name)
@@ -201,8 +234,27 @@ def assert_dictionary_contract(cli: Path) -> None:
         compiled = temp_dir / "compiled.dic"
         source.write_text("東京テスト\tNOUN\n", encoding="utf-8")
 
+        created = temp_dir / "created.tsv"
+        run_cli(cli, "dict", "new", str(created))
+        created_header = created.read_text(encoding="utf-8")
+        assert "surface<TAB>pos<TAB>conj_type<TAB>lemma" in created_header
+        assert "reading<TAB>cost" not in created_header
+        created.write_text(created_header + "東京公園\tNOUN\n", encoding="utf-8")
+        run_cli(cli, "dict", "compile", str(created), str(temp_dir / "created.dic"))
+
         run_cli(cli, "dict", "compile", str(source), str(compiled))
         assert compiled.is_file()
+        binary_test = run_cli(
+            cli,
+            "test",
+            "--verbose",
+            "--dict",
+            str(compiled),
+            "東京テスト",
+            "--expect",
+            "東京テスト",
+        )
+        assert "PASS: 東京テスト" in binary_test.stdout, binary_test.stdout
 
         result = run_cli(cli, "analyze", "--dict", str(compiled), "--format", "json", "東京テスト")
         morphemes = json.loads(result.stdout)["morphemes"]
@@ -210,17 +262,48 @@ def assert_dictionary_contract(cli: Path) -> None:
         assert matching
         assert matching[0]["is_user_dict"] is True
 
-        duplicate_binary = run_cli(
+        adjective_source = temp_dir / "adjective.tsv"
+        adjective_source.write_text("静か\tADJECTIVE\tNA_ADJ\n", encoding="utf-8")
+        adjective_list = run_cli(cli, "dict", "list", str(adjective_source), "--pos=ADJECTIVE")
+        assert "静か\tADJ" in adjective_list.stdout
+        interactive_list = run_cli(
+            cli,
+            "dict",
+            "-i",
+            str(adjective_source),
+            input_text="list --pos=ADJECTIVE\nlist --pos=NOT_A_POS\nquit\n",
+        )
+        assert "静か\tADJ" in interactive_list.stdout
+        assert "Invalid POS: NOT_A_POS" in interactive_list.stderr
+        invalid_pos = run_cli(
+            cli,
+            "dict",
+            "list",
+            str(adjective_source),
+            "--pos=NOT_A_POS",
+            expect_success=False,
+        )
+        assert "Invalid POS: NOT_A_POS" in invalid_pos.stderr
+
+        second_binary_source = temp_dir / "second-binary.tsv"
+        second_binary = temp_dir / "second-binary.dic"
+        second_binary_source.write_text("テスト公園\tNOUN\n", encoding="utf-8")
+        run_cli(cli, "dict", "compile", str(second_binary_source), str(second_binary))
+        additive_binary = run_cli(
             cli,
             "analyze",
             "--dict",
             str(compiled),
             "--dict",
-            str(compiled),
-            "東京",
-            expect_success=False,
+            str(second_binary),
+            "--format",
+            "json",
+            "東京テスト テスト公園",
         )
-        assert "Only one binary .dic dictionary" in duplicate_binary.stderr
+        additive_surfaces = {
+            morpheme["surface"] for morpheme in json.loads(additive_binary.stdout)["morphemes"]
+        }
+        assert {"東京テスト", "テスト公園"} <= additive_surfaces
 
         first_text = temp_dir / "first.tsv"
         second_text = temp_dir / "second.tsv"
@@ -245,6 +328,56 @@ def assert_dictionary_contract(cli: Path) -> None:
             assert surface in by_surface, (surface, mixed_morphemes)
             assert by_surface[surface]["is_user_dict"] is True
 
+        round_trip_source = temp_dir / "names.tsv"
+        round_trip_source.write_text(
+            "東京\tNOUN\tFAMILY\n"
+            "テスト\tNOUN\tGIVEN\n",
+            encoding="utf-8",
+        )
+        run_cli(cli, "dict", "-i", str(round_trip_source), input_text="save\nquit\n")
+        saved_lines = {
+            line
+            for line in round_trip_source.read_text(encoding="utf-8").splitlines()
+            if line and not line.startswith("#")
+        }
+        assert saved_lines == {
+            "東京\tNOUN\tFAMILY",
+            "テスト\tNOUN\tGIVEN",
+        }
+        run_cli(cli, "dict", "compile", str(round_trip_source), str(temp_dir / "names.dic"))
+
+        metachar_surface = r"記号.^$+()[]{}|\終"
+        wildcard_source = temp_dir / "wildcards.tsv"
+        wildcard_source.write_text(
+            f"{metachar_surface}\tNOUN\n"
+            "{a\tNOUN\n"
+            "a}\tNOUN\n",
+            encoding="utf-8",
+        )
+        literal_match = run_cli(cli, "dict", "search", str(wildcard_source), metachar_surface)
+        assert f"{metachar_surface}\tNOUN" in literal_match.stdout
+        wildcard_match = run_cli(cli, "dict", "search", str(wildcard_source), "記号*終")
+        assert f"{metachar_surface}\tNOUN" in wildcard_match.stdout
+        for brace_surface in ("{a", "a}"):
+            brace_match = run_cli(cli, "dict", "search", str(wildcard_source), brace_surface)
+            assert f"{brace_surface}\tNOUN" in brace_match.stdout
+
+        data_root = temp_dir / "data-root"
+        source_dir = data_root / "core"
+        source_dir.mkdir(parents=True)
+        source_lookup = source_dir / "lookup.tsv"
+        source_lookup.write_text("東京テスト公園\tNOUN\n", encoding="utf-8")
+        lookup_env = os.environ.copy()
+        lookup_env["SUZUME_DATA_DIR"] = str(data_root)
+        source_result = run_cli(
+            cli,
+            "dict",
+            "lookup",
+            "東京テスト公園",
+            env=lookup_env,
+        )
+        assert "東京テスト公園\tNOUN" in source_result.stdout
+
 
 def main() -> int:
     if len(sys.argv) != 2:
@@ -263,6 +396,8 @@ def main() -> int:
     assert_json_schema(cli)
     assert_score_precision(cli)
     assert_tag_filters(cli)
+    assert_single_test_contract(cli)
+    assert_bundled_user_dictionary_contract(cli)
     assert_dictionary_contract(cli)
     return 0
 

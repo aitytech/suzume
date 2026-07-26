@@ -125,6 +125,7 @@ int cmdTestSingle(const std::vector<std::string>& args, bool verbose, const std:
   for (size_t idx = 0; idx < args.size(); ++idx) {
     if (args[idx] == "--expect" && idx + 1 < args.size()) {
       expect_str = args[idx + 1];
+      ++idx;
     } else if (args[idx].substr(0, 9) == "--expect=") {
       expect_str = args[idx].substr(9);
     } else if (args[idx][0] != '-') {
@@ -151,7 +152,7 @@ int cmdTestSingle(const std::vector<std::string>& args, bool verbose, const std:
   Suzume analyzer(options);
 
   for (const auto& path : dict_paths) {
-    auto load_result = analyzer.loadUserDictionaryResult(path);
+    auto load_result = loadUserDictionaryPath(&analyzer, path);
     if (!load_result.hasValue()) {
       printError("Failed to load dictionary: " + path + ": " + load_result.error().message);
       return 1;
@@ -221,7 +222,7 @@ int cmdTestFile(const std::vector<std::string>& args, bool verbose, const std::v
   Suzume analyzer(options);
 
   for (const auto& path : dict_paths) {
-    auto load_result = analyzer.loadUserDictionaryResult(path);
+    auto load_result = loadUserDictionaryPath(&analyzer, path);
     if (!load_result.hasValue()) {
       printError("Failed to load dictionary: " + path + ": " + load_result.error().message);
       return 1;
@@ -321,7 +322,7 @@ int cmdTestBenchmark(const std::vector<std::string>& args, bool /* verbose */,
     const auto initialization_start = std::chrono::steady_clock::now();
     Suzume analyzer(options);
     for (const auto& path : dict_paths) {
-      auto load_result = analyzer.loadUserDictionaryResult(path);
+      auto load_result = loadUserDictionaryPath(&analyzer, path);
       if (!load_result.hasValue()) {
         printError("Failed to load dictionary: " + path + ": " + load_result.error().message);
         return 1;

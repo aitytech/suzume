@@ -6,9 +6,12 @@
 #include <unistd.h>
 #endif
 
+#include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <iomanip>
+#include <iterator>
 #include <limits>
 #include <sstream>
 
@@ -38,7 +41,7 @@ bool tryParseOutputFormat(std::string_view value, OutputFormat* output) {
   } else if (value == "json") {
     *output = OutputFormat::Json;
   } else if (value == "tsv") {
-    *output = OutputFormat::Tsv;
+    *output = OutputFormat::Morpheme;
   } else if (value == "chasen") {
     *output = OutputFormat::Chasen;
   } else {
@@ -221,6 +224,35 @@ void stripUtf8Bom(std::string* value) {
   }
 }
 
+core::Expected<size_t, core::Error> loadUserDictionaryPath(Suzume* analyzer, const std::string& path) {
+  if (analyzer == nullptr) {
+    return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Analyzer must not be null"));
+  }
+
+  std::string extension;
+  if (path.size() >= 4) {
+    extension = path.substr(path.size() - 4);
+    for (char& chr : extension) {
+      chr = static_cast<char>(std::tolower(static_cast<unsigned char>(chr)));
+    }
+  }
+  if (extension != ".dic") {
+    return analyzer->loadUserDictionaryResult(path);
+  }
+
+  std::ifstream file(path, std::ios::binary);
+  if (!file) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::FileNotFound, "Failed to open binary dictionary file: " + path));
+  }
+  const std::vector<char> data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  if (file.bad()) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::DictionaryLoadFailed, "Failed to read binary dictionary file: " + path));
+  }
+  return analyzer->loadBinaryDictionaryResult(reinterpret_cast<const uint8_t*>(data.data()), data.size());
+}
+
 bool hasExtension(std::string_view path, std::string_view ext) {
   return path.size() >= ext.size() && path.substr(path.size() - ext.size()) == ext;
 }
@@ -241,7 +273,7 @@ std::string wildcardToRegex(std::string_view pattern) {
     } else if (chr == '?') {
       regex_str += ".";
     } else if (chr == '.' || chr == '^' || chr == '$' || chr == '+' || chr == '(' || chr == ')' || chr == '[' ||
-               chr == ']' || chr == '|' || chr == '\\') {
+               chr == ']' || chr == '{' || chr == '}' || chr == '|' || chr == '\\') {
       regex_str += '\\';
       regex_str += chr;
     } else {
@@ -249,6 +281,15 @@ std::string wildcardToRegex(std::string_view pattern) {
     }
   }
   return regex_str;
+}
+
+core::Expected<std::regex, core::Error> compileWildcardRegex(std::string_view pattern) {
+  try {
+    return std::regex(wildcardToRegex(pattern), std::regex::ECMAScript);
+  } catch (const std::regex_error& error) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::InvalidInput, "Invalid wildcard pattern: " + std::string(error.what())));
+  }
 }
 
 bool isTerminal() {
@@ -662,6 +703,7 @@ Options:
   -m, --mode MODE        Analysis mode: normal, search, split
   -f, --format FMT       Output format: morpheme, tags, json, tsv, chasen
   -V, --verbose          Verbose output
+  -VV, --very-verbose    Very verbose output (includes lattice dump)
   --no-user-dict         Disable user dictionary
   --no-core-dict         Disable auto-loaded core.dic
   --compare              Compare with/without user dictionary
@@ -686,7 +728,7 @@ Output Formats:
   morpheme               surface TAB pos TAB lemma TAB start TAB end (default)
   tags                   tag TAB pos, one per line
   json                   JSON format
-  tsv                    TSV with all fields (surface, pos, lemma, start, end)
+  tsv                    Alias of morpheme
   chasen                 ChaSen-like format (Japanese POS, conjugation info)
 
 Examples:
@@ -698,6 +740,9 @@ Examples:
   suzume-cli analyze --compare -d user.dic "text"
   suzume-cli analyze --normalize-vu "ヴァイオリン"
   echo "text" | suzume-cli analyze
+
+Environment:
+  SUZUME_DATA_DIR        Data root containing core.dic/user.dic and core/*.tsv
 )";
 }
 
@@ -723,6 +768,9 @@ Subcommands:
                          A dump is for inspection, not compiler input.
   -i, --interactive [file.tsv]
                          Interactive mode
+
+Environment:
+  SUZUME_DATA_DIR        Data root; source lookup reads core/*.tsv below it
 
 POS Values:
   NOUN, PROPN, VERB, ADJECTIVE, ADVERB, PARTICLE,

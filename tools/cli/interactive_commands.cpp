@@ -1,6 +1,8 @@
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <regex>
+#include <utility>
 
 #include "cli_common.h"
 #include "dict_compiler.h"
@@ -197,14 +199,19 @@ bool InteractiveSession::cmdUpdate(const std::vector<std::string>& args) {
 }
 
 bool InteractiveSession::cmdList(const std::vector<std::string>& args) {
-  std::string pos_filter;
+  std::optional<core::PartOfSpeech> pos_filter;
   std::string pattern;
   size_t limit = 50;
 
   // Parse options
   for (const auto& arg : args) {
     if (arg.substr(0, 6) == "--pos=") {
-      pos_filter = toUpper(arg.substr(6));
+      const std::string value = toUpper(arg.substr(6));
+      pos_filter = core::stringToPosStrict(value);
+      if (!pos_filter.has_value()) {
+        printError("Invalid POS: " + arg.substr(6));
+        return true;
+      }
     } else if (arg.substr(0, 10) == "--pattern=") {
       pattern = arg.substr(10);
     } else if (arg.substr(0, 8) == "--limit=") {
@@ -218,13 +225,18 @@ bool InteractiveSession::cmdList(const std::vector<std::string>& args) {
   // Convert pattern to regex if provided
   std::unique_ptr<std::regex> regex_pattern;
   if (!pattern.empty()) {
-    regex_pattern = std::make_unique<std::regex>(wildcardToRegex(pattern));
+    auto regex_result = compileWildcardRegex(pattern);
+    if (!regex_result.hasValue()) {
+      printError(regex_result.error().message);
+      return true;
+    }
+    regex_pattern = std::make_unique<std::regex>(std::move(regex_result.value()));
   }
 
   size_t count = 0;
   for (const auto& entry : entries_) {
     // Apply POS filter
-    if (!pos_filter.empty() && toUpper(std::string(core::posToString(entry.pos))) != pos_filter) {
+    if (pos_filter.has_value() && entry.pos != *pos_filter) {
       continue;
     }
 
@@ -260,7 +272,12 @@ bool InteractiveSession::cmdSearch(const std::vector<std::string>& args) {
   std::string pattern = args[0];
 
   // Convert wildcard pattern to regex
-  std::regex regex_pattern(wildcardToRegex(pattern));
+  auto regex_result = compileWildcardRegex(pattern);
+  if (!regex_result.hasValue()) {
+    printError(regex_result.error().message);
+    return true;
+  }
+  const std::regex& regex_pattern = regex_result.value();
 
   size_t count = 0;
   for (const auto& entry : entries_) {
