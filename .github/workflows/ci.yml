@@ -67,7 +67,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # Pinned: the WASM size gate compares against a baseline recorded with this
+      # exact toolchain, and emitted code size moves with the compiler. Bumping the
+      # version means re-recording scripts/wasm-size-baseline.txt in the same commit.
       - uses: mymindstorm/setup-emsdk@v16
+        with:
+          version: 6.0.3
       - run: corepack enable
       - uses: actions/setup-node@v6
         with:

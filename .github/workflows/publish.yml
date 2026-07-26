@@ -35,7 +35,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Pinned to the same version as the CI size gate so a published artifact is
+      # byte-comparable with the one the gate measured.
       - uses: mymindstorm/setup-emsdk@v16
+        with:
+          version: 6.0.3
 
       - uses: actions/setup-node@v6
         with:
