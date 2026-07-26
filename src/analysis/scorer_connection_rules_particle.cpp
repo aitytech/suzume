@@ -114,27 +114,19 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
     bonus += cost::kAlmostNever;
   }
 
-  // Penalty for Noun → かかる(Determiner) with no intervening particle
   // The classical determiner 斯かる always needs a preceding particle, topic
   // marker, or clause boundary (は+かかる, として+かかる, かかる事態 at clause
-  // start); it never directly follows a bare noun. Direct noun adjacency
-  // (3週間かかる, 5分かかる) is the intransitive verb 掛かる/罹る taking a
-  // duration/quantity noun without a particle. The ParticleCase→Determiner
-  // bigram penalty above only covers noun+particle+かかる (壁にかかる); this
-  // covers noun+かかる directly (3週間かかる).
-  if (prev.pos == core::PartOfSpeech::Noun && grammar::isDurationPredicateKakaru(next.surface) &&
+  // start). A bare noun, a duration closing suffix and a degree particle all
+  // introduce the intransitive verb 掛かる/罹る instead, taking a duration or
+  // quantity host without a case particle (3週間かかる, 三時間ほどかかる), so the
+  // homographic determiner cannot fill that slot. The ParticleCase→Determiner
+  // bigram penalty covers only noun+particle+かかる (壁にかかる).
+  const bool duration_host_before_kakaru = prev.pos == core::PartOfSpeech::Noun ||
+                                           (prev.extended_pos == core::ExtendedPOS::Suffix && prev.surface == "間") ||
+                                           prev.extended_pos == core::ExtendedPOS::ParticleAdverbial;
+  if (duration_host_before_kakaru && grammar::isDurationPredicateKakaru(next.surface) &&
       next.extended_pos == core::ExtendedPOS::Determiner) {
     bonus += cost::kAlmostNever;
-  }
-
-  // A duration closing suffix and a degree particle both introduce a
-  // predicate in a duration expression (三時間かかる、三時間ほどかかる).
-  // The homographic determiner cannot fill that predicate slot.
-  if ((prev.extended_pos == core::ExtendedPOS::Suffix && prev.surface == "間") ||
-      prev.extended_pos == core::ExtendedPOS::ParticleAdverbial) {
-    if (grammar::isDurationPredicateKakaru(next.surface) && next.extended_pos == core::ExtendedPOS::Determiner) {
-      bonus += cost::kAlmostNever;
-    }
   }
 
   // The quotative determiner cannot introduce the comparative particle. When
@@ -168,6 +160,21 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
           normalize::isKanjiCodepoint(utf8::decodeLastChar(before_last))) {
         bonus += cost::kAlmostNever;
       }
+    }
+  }
+
+  // とも has exactly two hosts: a counted quantity, where it is the universal
+  // quantifier (二人とも), and a negative/volitional auxiliary or an adjective
+  // adverbial form, where it is the concessive conjunctive particle (読まずとも,
+  // 届こうとも, 少なくとも). Anywhere else the surface is the case particle と plus
+  // も, or the opening of a longer lexical word (ともだち, もっとも, 何とも).
+  if (next.pos == core::PartOfSpeech::Particle && utf8::equalsAny(next.surface, {"とも"})) {
+    const bool quantifier_host = prev.origin == core::CandidateOrigin::Counter;
+    const bool concessive_host = prev.extended_pos == core::ExtendedPOS::AuxNegativeNu ||
+                                 prev.extended_pos == core::ExtendedPOS::AuxVolitional ||
+                                 prev.extended_pos == core::ExtendedPOS::AdjRenyokei;
+    if (quantifier_host || !concessive_host) {
+      bonus += quantifier_host ? cost::kExtremeBonus : cost::kAlmostNever;
     }
   }
 

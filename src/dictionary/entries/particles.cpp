@@ -120,6 +120,7 @@ EntrySpecRange getParticleEntries() {
       particle("ぐらい", EPOS::ParticleAdverbial),
       particle("など", EPOS::ParticleAdverbial),
       particle("とか", EPOS::ParticleAdverbial),  // 並立 (AとかBとか)
+      particle("とも", EPOS::ParticleAdverbial),  // 集合の全称 (二人とも, 三つとも)
       particle("なんて", EPOS::ParticleAdverbial),
       particle("だって", EPOS::ParticleAdverbial),
       particle("だに", EPOS::ParticleAdverbial),    // 文語的な最小限定・強調

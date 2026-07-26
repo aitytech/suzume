@@ -27,7 +27,7 @@ EntrySpecRange getConjunctionEntries() {
 
       // Alternative (選択)
       conj("或いは", ""), conj("又は", ""), conj("若しくは", ""), conj("または", ""), conj("ないしは", ""),
-      conj("それとも", ""), conj("あるいは", "或いは"), conj("もしくは", ""),
+      conj("ないし", ""), conj("それとも", ""), conj("あるいは", "或いは"), conj("もしくは", ""),
 
       // Explanation/Supplement (説明・補足)
       conj("即ち", ""), conj("すなわち", ""), conj("例えば", ""), conj("但し", ""), conj("ただし", ""), conj("尚", ""),

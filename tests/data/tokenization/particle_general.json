@@ -517,6 +517,131 @@
       ],
       "id": "dosarito_chiru",
       "input": "どさりと落ちる"
+    },
+    {
+      "description": "二人とも確認する - regression test",
+      "expected": [
+        {
+          "lemma": "二人",
+          "pos": "Noun",
+          "surface": "二人"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "tomo_suru",
+      "input": "二人とも確認する"
+    },
+    {
+      "description": "三人とも来た - regression test",
+      "expected": [
+        {
+          "lemma": "三人",
+          "pos": "Noun",
+          "surface": "三人"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tomo_ta",
+      "input": "三人とも来た"
+    },
+    {
+      "description": "10件ないし20件 - regression test",
+      "expected": [
+        {
+          "lemma": "10件",
+          "pos": "Noun",
+          "surface": "10件"
+        },
+        {
+          "lemma": "ないし",
+          "pos": "Conjunction",
+          "surface": "ないし"
+        },
+        {
+          "lemma": "20件",
+          "pos": "Noun",
+          "surface": "20件"
+        }
+      ],
+      "id": "10_naishi20",
+      "input": "10件ないし20件"
+    },
+    {
+      "description": "本と紙 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        }
+      ],
+      "id": "to",
+      "input": "本と紙"
+    },
+    {
+      "description": "読まずとも分かる - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かる"
+        }
+      ],
+      "id": "mazutomo_karu",
+      "input": "読まずとも分かる"
     }
   ],
   "description": "particle_general tests",

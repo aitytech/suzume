@@ -44,6 +44,7 @@ from .merge_postprocessors import (
     _postprocess_productive_mimetics,
     _postprocess_search_unit_split,
     _postprocess_small_kana_head_merge,
+    _postprocess_tomo_particle,
     _postprocess_totomoni,
 )
 from .split_rules import base_from_renyokei, bases_from_renyokei
@@ -1008,6 +1009,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_classical_mu(result, applied_rule)
     result, applied_rule = _postprocess_classical_shimu(result, applied_rule)
     result, applied_rule = _postprocess_izenkei_concessive(result, applied_rule)
+    result, applied_rule = _postprocess_tomo_particle(result, applied_rule)
     result, applied_rule = _postprocess_bound_voiced_suffix(result, applied_rule)
     result, applied_rule = _postprocess_kanji_merge(result, applied_rule)
     result, applied_rule = _postprocess_nickname_merge(result, applied_rule)

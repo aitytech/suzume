@@ -463,6 +463,52 @@ _E_ROW_TO_U_ROW = {
 _CONCESSIVE_PARTICLES = ("ど", "ども")
 
 
+_TOMO_CONCESSIVE_AUXILIARIES = frozenset({"ず"})
+
+
+def _postprocess_tomo_particle(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Keep とも whole where it is one particle rather than と plus も.
+
+    とも is a single particle in two frames: after a counted quantity it is the
+    universal quantifier (二人とも), and after the negative auxiliary ず or an
+    adjective adverbial form it is the concessive conjunctive particle
+    (読まずとも, 少なくとも). The reference dictionary lexicalizes only
+    the handful of quantities it happens to list and splits the rest, so the
+    boundary is restored from the host instead. Every other host keeps the
+    case particle と plus the binding particle も (願いとも違う).
+    """
+    merged: list[dict] = []
+    skip_next = False
+    for idx, token in enumerate(result):
+        if skip_next:
+            skip_next = False
+            continue
+        following = result[idx + 1] if idx + 1 < len(result) else None
+        host = merged[-1] if merged else None
+        if (
+            following is not None
+            and host is not None
+            and token.get("surface") == "と"
+            and token.get("pos") == "助詞"
+            and following.get("surface") == "も"
+            and following.get("pos") == "助詞"
+        ):
+            host_surface = host.get("surface", "")
+            host_pos = host.get("pos", "")
+            quantifier_host = host_pos == "名詞" and host.get("pos_sub1") == "数"
+            concessive_host = (host_pos == "助動詞" and host_surface in _TOMO_CONCESSIVE_AUXILIARIES) or (
+                host_pos == "形容詞" and host_surface.endswith("く")
+            )
+            if quantifier_host or concessive_host:
+                merged.append({"surface": "とも", "pos": "助詞", "lemma": "とも"})
+                skip_next = True
+                if applied_rule is None:
+                    applied_rule = "tomo-particle-boundary"
+                continue
+        merged.append(token)
+    return merged, applied_rule
+
+
 def _postprocess_izenkei_concessive(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
     """Give the 已然形 before a concessive conjunction its plain verb lemma.
 
