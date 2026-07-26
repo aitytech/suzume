@@ -656,6 +656,7 @@ TEST(CharTypeTest, QuantityCharacterPropertiesMatchClosedClasses) {
   expect_membership(isQuantityPrefixKanji, U"数半何");
   expect_membership(isNumericApproxPrefixKanji, U"約計総");
   expect_membership(isTemporalSpanSuffixKanji, U"中末");
+  expect_membership(isDerivationalNounSuffixKanji, U"性者");
 }
 
 }  // namespace

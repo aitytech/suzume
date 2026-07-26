@@ -20,6 +20,7 @@ enum CharProperty : uint8_t {
   kQuantityPrefix = 1 << 4,
   kNumericApproxPrefix = 1 << 5,
   kTemporalSpanSuffix = 1 << 6,
+  kDerivationalNounSuffix = 1 << 7,
 };
 
 struct CharPropertyEntry {
@@ -27,7 +28,7 @@ struct CharPropertyEntry {
   uint8_t properties;
 };
 
-constexpr std::array<CharPropertyEntry, 87> kCharProperties = {{{U'丁', kCounter},
+constexpr std::array<CharPropertyEntry, 89> kCharProperties = {{{U'丁', kCounter},
                                                                 {U'万', kCounter},
                                                                 {U'世', kCounter},
                                                                 {U'両', kCounter},
@@ -60,6 +61,7 @@ constexpr std::array<CharPropertyEntry, 87> kCharProperties = {{{U'丁', kCounte
                                                                 {U'年', kCounter | kTemporalCounter},
                                                                 {U'度', kCounter},
                                                                 {U'後', kTemporalRelationSuffix},
+                                                                {U'性', kDerivationalNounSuffix},
                                                                 {U'戦', kCounter},
                                                                 {U'戸', kCounter},
                                                                 {U'才', kCounter},
@@ -98,6 +100,7 @@ constexpr std::array<CharPropertyEntry, 87> kCharProperties = {{{U'丁', kCounte
                                                                 {U'組', kCounter},
                                                                 {U'総', kNumericApproxPrefix},
                                                                 {U'羽', kCounter},
+                                                                {U'者', kDerivationalNounSuffix},
                                                                 {U'色', kCounter},
                                                                 {U'計', kNumericApproxPrefix},
                                                                 {U'話', kCounter},
@@ -509,6 +512,10 @@ bool isIntervalCompoundSecondKanji(char32_t code_point) {
 
 bool isTemporalSpanSuffixKanji(char32_t code_point) {
   return hasCharProperty(code_point, kTemporalSpanSuffix);
+}
+
+bool isDerivationalNounSuffixKanji(char32_t code_point) {
+  return hasCharProperty(code_point, kDerivationalNounSuffix);
 }
 
 bool isFiscalYearBindingPair(char32_t stem_last, char32_t suffix) {

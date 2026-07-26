@@ -545,9 +545,12 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // a 3+1 stem+suffix split (新規手 + 法). Penalize to let the whole-word
   // (or 2+2 split) compete fairly. Dict-verified 3-char NOUNs (e.g., 政治学+者 if
   // 政治学 were in dict) keep the bonus, since they represent intended compounds.
+  // A stem that already ends in a bound derivational suffix (利用者, 安全性) is a
+  // derived noun, not the left half of a two-compound run, so it keeps the bonus.
   if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix && !prev.fromDictionary() &&
       prev.surface.size() >= 3 * core::kJapaneseCharBytes && next.surface.size() == core::kJapaneseCharBytes &&
-      grammar::isAllKanji(prev.surface) && grammar::isAllKanji(next.surface)) {
+      grammar::isAllKanji(prev.surface) && grammar::isAllKanji(next.surface) &&
+      !normalize::isDerivationalNounSuffixKanji(utf8::decodeLastChar(prev.surface))) {
     bonus += cost::kRare;  // +1.0 to neutralize -0.8 bigram bonus
   }
 

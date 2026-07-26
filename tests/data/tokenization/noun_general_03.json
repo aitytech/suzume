@@ -749,6 +749,98 @@
       ],
       "id": "unnamed_11",
       "input": "検査結果"
+    },
+    {
+      "description": "確認以後 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "以後",
+          "pos": "Suffix",
+          "surface": "以後"
+        }
+      ],
+      "id": "unnamed_12",
+      "input": "確認以後"
+    },
+    {
+      "description": "利用者用 - regression test",
+      "expected": [
+        {
+          "lemma": "利用者",
+          "pos": "Noun",
+          "surface": "利用者"
+        },
+        {
+          "lemma": "用",
+          "pos": "Suffix",
+          "surface": "用"
+        }
+      ],
+      "id": "unnamed_13",
+      "input": "利用者用"
+    },
+    {
+      "description": "管理者用 - regression test",
+      "expected": [
+        {
+          "lemma": "管理者",
+          "pos": "Noun",
+          "surface": "管理者"
+        },
+        {
+          "lemma": "用",
+          "pos": "Suffix",
+          "surface": "用"
+        }
+      ],
+      "id": "unnamed_14",
+      "input": "管理者用"
+    },
+    {
+      "description": "新規手法 - regression test",
+      "expected": [
+        {
+          "lemma": "新規手法",
+          "pos": "Noun",
+          "surface": "新規手法"
+        }
+      ],
+      "id": "unnamed_15",
+      "input": "新規手法"
+    },
+    {
+      "description": "業務用 - regression test",
+      "expected": [
+        {
+          "lemma": "業務",
+          "pos": "Noun",
+          "surface": "業務"
+        },
+        {
+          "lemma": "用",
+          "pos": "Suffix",
+          "surface": "用"
+        }
+      ],
+      "id": "unnamed_16",
+      "input": "業務用"
+    },
+    {
+      "description": "確認以前 - regression test",
+      "expected": [
+        {
+          "lemma": "確認以前",
+          "pos": "Noun",
+          "surface": "確認以前"
+        }
+      ],
+      "id": "unnamed_17",
+      "input": "確認以前"
     }
   ],
   "description": "General nouns (part 3/3)",

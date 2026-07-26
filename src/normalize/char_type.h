@@ -313,6 +313,19 @@ bool isIntervalCompoundSecondKanji(char32_t code_point);
 bool isTemporalSpanSuffixKanji(char32_t code_point);
 
 /**
+ * @brief Check if a codepoint is a bound derivational noun suffix.
+ *
+ * These kanji derive a noun from a preceding kango (利用+者, 安全+性) instead of
+ * heading a compound of their own, so a run that ends in one is already a
+ * derived noun and must not be re-analyzed as the left half of a two-compound
+ * split.
+ *
+ * @param code_point Unicode codepoint
+ * @return true if codepoint is a derivational noun suffix kanji
+ */
+bool isDerivationalNounSuffixKanji(char32_t code_point);
+
+/**
  * @brief Check if a 2-kanji pair forms an adverbial (副詞可能) temporal noun.
  *
  * These nouns (現在, 昨日, 今年…) detach from a following kanji noun rather than
