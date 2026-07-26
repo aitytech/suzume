@@ -59,6 +59,19 @@ bool isModalSubsidiaryRenyokei(std::string_view surface);
  */
 bool isAspectualSubsidiaryLemma(std::string_view lemma);
 
+/**
+ * @brief Check whether a text begins with an honorific/humble subsidiary verb
+ * @param surface Text following a candidate continuative stem (UTF-8)
+ * @return true if くださる, いただく, or いたす opens the text
+ *
+ * These verbs attach only to a verb renyokei (お確かめ+ください,
+ * ご確認+いただく, 確認+いたします), so their presence is grammatical evidence
+ * for the verbal reading of the preceding stem in exactly the way the ます
+ * family is. なさる is deliberately absent: callers already treat its な
+ * opening as a continuation.
+ */
+bool startsHonorificSubsidiaryVerb(std::string_view surface);
+
 }  // namespace suzume::grammar
 
 #endif  // SUZUME_GRAMMAR_HONORIFIC_VERBS_H_

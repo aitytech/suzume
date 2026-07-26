@@ -2313,6 +2313,28 @@
       ],
       "id": "arikitarina_e",
       "input": "ありきたりな答え"
+    },
+    {
+      "description": "確かな情報 - auto-generated",
+      "expected": [
+        {
+          "lemma": "確か",
+          "pos": "Adjective",
+          "surface": "確か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "情報",
+          "pos": "Noun",
+          "surface": "情報"
+        }
+      ],
+      "id": "kana_3",
+      "input": "確かな情報"
     }
   ],
   "description": "Na-adjectives (ナ形容詞)",

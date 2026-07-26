@@ -631,6 +631,18 @@ constexpr float kNominalizedNounParticleBonus = -1.5F;
 // noun before a case particle (鳴らしを、書きを).
 constexpr float kVerifiedRenyokeiNominalCandidateCost = 0.8F;
 
+// The humble construction 敬語接頭辞 + V連用形 + する nominalizes the
+// continuative (お伝えする, おかけする).  The verbal reading of the same span is
+// generated with a continuative bonus of its own, so the nominal needs a
+// stronger preference to win inside this closed frame.
+constexpr float kHumbleNominalCandidateBonus = -1.2F;
+
+// Confidence floor the continuative must clear inside that frame.  The
+// inflection analyzer reconstructs a nominal ichidan paradigm for any kana run
+// at the same value it uses for a bare kateikei stem, so the comparison is
+// strict and the two floors move together.
+constexpr float kHumbleNominalStemMinConfidence = verb_cost::kIchidanKateikeiMinConfidence;
+
 // A dictionary-confirmed i-adjective in the classical terminal -し form is a
 // self-contained lexical unit at the end of a predicate.
 constexpr float kClassicalIAdjectiveTerminalNounBonus = -0.5F;

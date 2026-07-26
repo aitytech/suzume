@@ -373,4 +373,79 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
   return;
 }
 
+void generateHumbleNominalCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     const grammar::Inflection& inflection,
+                                     const dictionary::DictionaryManager* dict_manager,
+                                     std::vector<UnknownCandidate>& candidates) {
+  if (start_pos == 0 || start_pos >= codepoints.size()) {
+    return;
+  }
+  if (!grammar::isHonorificPrefix(extractSubstring(codepoints, start_pos - 1, start_pos))) {
+    return;
+  }
+  // A one-mora stem carries no continuative evidence of its own and would turn
+  // the opening kana of a lexical word into a nominal (おいしい).
+  constexpr size_t kMinStemLength = 2;
+  // Long enough for a compound continuative (問い合わせ) without scanning past
+  // the frame.
+  constexpr size_t kMaxStemLength = 5;
+  const size_t max_end = std::min(codepoints.size(), start_pos + kMaxStemLength);
+  for (size_t end_pos = start_pos + kMinStemLength; end_pos <= max_end; ++end_pos) {
+    if (end_pos >= codepoints.size()) {
+      break;
+    }
+    // する closes the frame in its dictionary form or through its continuative
+    // し, which carries the polite and past chains (お伝えします, おかけした).
+    const char32_t suru_head = codepoints[end_pos];
+    const bool closes_frame = suru_head == U'し' || (suru_head == U'す' && end_pos + 1 < codepoints.size() &&
+                                                     codepoints[end_pos + 1] == U'る');
+    if (!closes_frame) {
+      continue;
+    }
+    // A kanji-headed continuative already carries its own deverbal-noun and
+    // verbal candidates inside this frame, so only the pure-hiragana stem is
+    // left with nothing to oppose the fabricated verb.
+    const std::string stem = extractSubstring(codepoints, start_pos, end_pos);
+    if (!grammar::isPureHiragana(stem)) {
+      continue;
+    }
+    // A continuative ends in an e-row or i-row mora. Without this the a-row
+    // tail of an ordinary lexical word (おこがましい, ございました) reads as a
+    // stem, because the inflection analyzer reconstructs a nominal ichidan
+    // paradigm for any kana run at its floor confidence.
+    const char32_t stem_end = codepoints[end_pos - 1];
+    if (!grammar::isERowCodepoint(stem_end) && !grammar::isIRowCodepoint(stem_end)) {
+      continue;
+    }
+    const auto& stem_analysis = inflection.analyze(stem);
+    const std::string ichidan_base = stem + "る";
+    const grammar::VerbType godan_type = grammar::verbTypeFromIRowCodepoint(codepoints[end_pos - 1]);
+    std::string godan_base;
+    if (godan_type != grammar::VerbType::Unknown) {
+      godan_base = extractSubstring(codepoints, start_pos, end_pos - 1) +
+                   std::string(grammar::godanBaseSuffixFromIRow(codepoints[end_pos - 1]));
+    }
+    bool is_continuative = false;
+    for (const auto& cand : stem_analysis) {
+      if (cand.confidence <= candidate::kHumbleNominalStemMinConfidence) {
+        continue;
+      }
+      if ((cand.verb_type == grammar::VerbType::Ichidan && cand.base_form == ichidan_base) ||
+          (cand.verb_type == godan_type && !godan_base.empty() && cand.base_form == godan_base)) {
+        is_continuative = true;
+        break;
+      }
+    }
+    if (!is_continuative) {
+      continue;
+    }
+    auto cand = makeCandidate(stem, start_pos, end_pos, core::PartOfSpeech::Noun,
+                              candidate::kHumbleNominalCandidateBonus, true, CandidateOrigin::NominalizedNoun);
+#ifdef SUZUME_DEBUG_INFO
+    cand.pattern = "humble_nominal";
+#endif
+    candidates.push_back(cand);
+  }
+}
+
 }  // namespace suzume::analysis

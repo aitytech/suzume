@@ -1183,6 +1183,87 @@
       ],
       "id": "beyo_1",
       "input": "命令を確認せよ"
+    },
+    {
+      "description": "お確かめください - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "確かめる",
+          "pos": "Verb",
+          "surface": "確かめ"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "o_kamekudasai",
+      "input": "お確かめください"
+    },
+    {
+      "description": "お確かめいただく - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "確かめる",
+          "pos": "Verb",
+          "surface": "確かめ"
+        },
+        {
+          "lemma": "いただく",
+          "pos": "Verb",
+          "surface": "いただく"
+        }
+      ],
+      "id": "o_kameitadaku",
+      "input": "お確かめいただく"
+    },
+    {
+      "description": "ご迷惑をおかけする - regression test",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "迷惑",
+          "pos": "Noun",
+          "surface": "迷惑"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "かけ",
+          "pos": "Noun",
+          "surface": "かけ"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "go_wookakesuru",
+      "input": "ご迷惑をおかけする"
     }
   ],
   "description": "Ichidan verbs (一段動詞) (part 2/2)",

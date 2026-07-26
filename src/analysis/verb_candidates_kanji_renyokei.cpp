@@ -15,6 +15,7 @@
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
+#include "grammar/honorific_verbs.h"
 #include "grammar/inflection_scorer_constants.h"
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
@@ -334,6 +335,7 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
            codepoints[renyokei_end] == U'ぬ' ||
            (codepoints[renyokei_end] == U'れ' && renyokei_end + 1 < codepoints.size() &&
             codepoints[renyokei_end + 1] == U'ば') ||
+           grammar::startsHonorificSubsidiaryVerb(extractSubstring(codepoints, renyokei_end, codepoints.size())) ||
            follows_kanji_sahen_predicate || causative_follows || passive_follows || follows_symbol_after_case_particle);
       if (!first_is_single_stem_ending && has_ichidan_continuation &&
           (grammar::isERowCodepoint(second_hira) || grammar::isIRowCodepoint(second_hira))) {

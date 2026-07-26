@@ -98,6 +98,29 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
                                        std::vector<UnknownCandidate>& candidates);
 
 /**
+ * @brief Generate the deverbal nominal of the humble 敬語接頭辞 + V連用形 + する frame
+ *
+ * The humble construction attaches する directly to a continuative that is
+ * licensed by a preceding honorific prefix (お伝えする, お待ちする, おかけする).
+ * No other environment lets する follow a bare continuative, so the prefix on
+ * the left and the suru form on the right together delimit a closed frame in
+ * which the continuative is a deverbal noun rather than a finite predicate.
+ * Without this candidate the span is either read as a verb or, for a
+ * pure-hiragana stem that has no other continuative evidence, swallowed whole
+ * into a fabricated verb (かけする).
+ *
+ * @param codepoints Text as codepoints
+ * @param start_pos Start position (character index)
+ * @param inflection Inflection analyzer used to verify the continuative
+ * @param dict_manager Dictionary manager used to verify the honorific prefix (may be null)
+ * @param candidates Output candidates, appended in generation order
+ */
+void generateHumbleNominalCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     const grammar::Inflection& inflection,
+                                     const dictionary::DictionaryManager* dict_manager,
+                                     std::vector<UnknownCandidate>& candidates);
+
+/**
  * @brief Generate kanji + hiragana compound noun candidates
  *
  * Detects compound nouns with kanji prefix and hiragana suffix:

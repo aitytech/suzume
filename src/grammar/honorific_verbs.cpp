@@ -7,7 +7,11 @@
 
 #include <cstddef>
 
+#include "core/utf8_constants.h"
+
 namespace suzume::grammar {
+
+using ::utf8::startsWithAny;
 
 namespace {
 
@@ -63,6 +67,10 @@ bool isSubsidiaryHonorificRenyokei(std::string_view surface) {
 bool isModalSubsidiaryRenyokei(std::string_view surface) {
   return contains(kModalSubsidiaryRenyokei, sizeof(kModalSubsidiaryRenyokei) / sizeof(kModalSubsidiaryRenyokei[0]),
                   surface);
+}
+
+bool startsHonorificSubsidiaryVerb(std::string_view surface) {
+  return startsWithAny(surface, {"くださ", "いただ", "いたし", "いたす"});
 }
 
 bool isAspectualSubsidiaryLemma(std::string_view lemma) {
