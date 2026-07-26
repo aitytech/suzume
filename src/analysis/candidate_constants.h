@@ -83,6 +83,10 @@ constexpr float kSuffixWholeCandidateCost = 1.2F;
 // It is a complete search unit and must compete with the stem + suffix path,
 // which receives a strong Noun→Suffix connection bonus.
 constexpr float kDerivedSuffixCompoundNounCost = -0.2F;
+// A deverbal compound noun (笑い声, 立ち姿) is the same kind of complete search
+// unit, competing against a continuative + noun split whose two halves are both
+// cheap on their own, so it carries the same magnitude.
+constexpr float kDeverbalCompoundNounCost = kDerivedSuffixCompoundNounCost;
 // A non-quantity nominal stem plus the closed comparison bound 以上/以下 is a
 // single search unit (必要以上, 期待以下). The strong local cost compensates
 // for the lexical adverb bonus carried by the homographic standalone 以上;

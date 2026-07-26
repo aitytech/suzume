@@ -22,6 +22,12 @@ namespace suzume::analysis {
 
 namespace {
 
+#ifdef SUZUME_DEBUG_INFO
+// Reported confidence shared by the nominalized-noun candidates; debug metadata
+// only, it never reaches the lattice score.
+constexpr float kNominalizedNounReportedConfidence = 0.6F;
+#endif
+
 bool hasNominalizedNounParticleContinuation(const std::vector<char32_t>& codepoints, size_t end_pos,
                                             const dictionary::DictionaryManager* dict_manager) {
   return end_pos < codepoints.size() && normalize::isParticleCodepoint(codepoints[end_pos]) &&
@@ -362,11 +368,76 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
         auto cand = makeCandidate(surface, start_pos, kanji_end + 1, core::PartOfSpeech::Noun, nom1_cost,
                                   has_particle_continuation, CandidateOrigin::NominalizedNoun);
 #ifdef SUZUME_DEBUG_INFO
-        cand.confidence = 0.6F;
+        cand.confidence = kNominalizedNounReportedConfidence;
         cand.pattern = "nominalized_1hira";
 #endif
         candidates.push_back(cand);
       }
+    }
+  }
+
+  // Deverbal compound noun: a continuative verb form written as kanji plus one
+  // okurigana, followed by a single-kanji noun, is a productive nominal compound
+  // (笑い声, 泣き声, 立ち姿, 聞き耳, 呼び声).  The continuative must reconstruct a
+  // dictionary verb, the noun must be a kanji run of exactly one character so a
+  // longer kanji compound keeps its own left boundary (読み文章 stays split), and
+  // the whole span must close in nominal context so 連用中止法 before an object
+  // (水を飲み薬を出す) is not fused either.
+  if (kanji_count == 1 && dict_manager != nullptr && kanji_end + 2 <= char_types.size() &&
+      char_types[kanji_end + 1] == normalize::CharType::Kanji &&
+      (kanji_end + 2 == char_types.size() || char_types[kanji_end + 2] != normalize::CharType::Kanji)) {
+    // The continuative shape alone is not enough: 高い山 and 及び水 have it too,
+    // and only an attested verb base separates them from a real compound. The
+    // reconstructed base therefore has to be a known verb, on either the godan
+    // (i-row okurigana) or the ichidan (whole stem + る) paradigm.
+    const std::string stem = extractSubstring(codepoints, start_pos, kanji_end + 1);
+    const std::string_view base_ending = grammar::godanBaseSuffixFromIRow(first_hiragana);
+    const bool is_verb_continuative =
+        (!base_ending.empty() &&
+         verb_helpers::isVerbInDictionary(
+             dict_manager, normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending))) ||
+        (grammar::isERowCodepoint(first_hiragana) && verb_helpers::isVerbInDictionary(dict_manager, stem + "る"));
+    // A closed suffix on the right is its own morpheme (書き|先, 崩し|的), so it
+    // never becomes the second half of a lexical compound.
+    const bool crosses_suffix = hasClosedSuffixBoundary(codepoints, start_pos, kanji_end + 2, dict_manager);
+    // A span that is already lexicalized as a closed-class word keeps that
+    // reading even when its shape also parses as a continuative (及び, 従って).
+    bool stem_is_closed_class = false;
+    for (const auto& match : dict_manager->lookup(stem, 0)) {
+      if (match.entry != nullptr && match.entry->surface.size() == stem.size() &&
+          match.entry->pos != core::PartOfSpeech::Verb && match.entry->pos != core::PartOfSpeech::Noun) {
+        stem_is_closed_class = true;
+        break;
+      }
+    }
+    bool nominal_context = true;
+    if (kanji_end + 2 < char_types.size() && char_types[kanji_end + 2] == normalize::CharType::Hiragana) {
+      const char32_t after = codepoints[kanji_end + 2];
+      nominal_context = normalize::isParticleCodepoint(after) || after == U'だ';
+    }
+    // A lexical entry reaching past the compound owns the span: the second kanji
+    // is then the head of a compound verb, not a noun (取り逃がす, not 取り逃+が+す).
+    bool longer_entry_starts_here = false;
+    {
+      constexpr size_t kLexicalProbe = 6;
+      const size_t probe_end = std::min(codepoints.size(), start_pos + kLexicalProbe);
+      for (const auto& match : dict_manager->lookup(extractSubstring(codepoints, start_pos, probe_end), 0)) {
+        if (match.entry != nullptr && normalize::utf8Length(match.entry->surface) > kanji_end + 2 - start_pos) {
+          longer_entry_starts_here = true;
+          break;
+        }
+      }
+    }
+    if (is_verb_continuative && nominal_context && !crosses_suffix && !stem_is_closed_class &&
+        !longer_entry_starts_here) {
+      auto cand = makeCandidate(extractSubstring(codepoints, start_pos, kanji_end + 2), start_pos, kanji_end + 2,
+                                core::PartOfSpeech::Noun, candidate::kDeverbalCompoundNounCost, true,
+                                CandidateOrigin::NominalizedNoun);
+#ifdef SUZUME_DEBUG_INFO
+      cand.confidence = kNominalizedNounReportedConfidence;
+      cand.pattern = "deverbal_compound_noun";
+#endif
+      candidates.push_back(cand);
     }
   }
 
@@ -375,7 +446,7 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
 
 void generateHumbleNominalCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                      const grammar::Inflection& inflection,
-                                     const dictionary::DictionaryManager* dict_manager,
+                                     const dictionary::DictionaryManager* /*dict_manager*/,
                                      std::vector<UnknownCandidate>& candidates) {
   if (start_pos == 0 || start_pos >= codepoints.size()) {
     return;

@@ -501,6 +501,88 @@
       ],
       "id": "takusanno",
       "input": "たくさんの人"
+    },
+    {
+      "description": "笑い声を聞く - regression test",
+      "expected": [
+        {
+          "lemma": "笑い声",
+          "pos": "Noun",
+          "surface": "笑い声"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "i_wo_ku",
+      "input": "笑い声を聞く"
+    },
+    {
+      "description": "泣き声 - regression test",
+      "expected": [
+        {
+          "lemma": "泣き声",
+          "pos": "Noun",
+          "surface": "泣き声"
+        }
+      ],
+      "id": "ki_2",
+      "input": "泣き声"
+    },
+    {
+      "description": "話し声 - regression test",
+      "expected": [
+        {
+          "lemma": "話し声",
+          "pos": "Noun",
+          "surface": "話し声"
+        }
+      ],
+      "id": "shi",
+      "input": "話し声"
+    },
+    {
+      "description": "立ち姿 - regression test",
+      "expected": [
+        {
+          "lemma": "立ち姿",
+          "pos": "Noun",
+          "surface": "立ち姿"
+        }
+      ],
+      "id": "chi",
+      "input": "立ち姿"
+    },
+    {
+      "description": "聞き耳 - regression test",
+      "expected": [
+        {
+          "lemma": "聞き耳",
+          "pos": "Noun",
+          "surface": "聞き耳"
+        }
+      ],
+      "id": "ki_3",
+      "input": "聞き耳"
+    },
+    {
+      "description": "呼び声 - regression test",
+      "expected": [
+        {
+          "lemma": "呼び声",
+          "pos": "Noun",
+          "surface": "呼び声"
+        }
+      ],
+      "id": "bi",
+      "input": "呼び声"
     }
   ],
   "description": "General nouns (part 3/3)",
