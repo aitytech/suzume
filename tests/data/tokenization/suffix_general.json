@@ -528,6 +528,62 @@
       ],
       "id": "renyokei_productive_suffix_boundary_control",
       "input": "読みぶりを確認する"
+    },
+    {
+      "description": "確認しだい知らせる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "しだい",
+          "pos": "Suffix",
+          "surface": "しだい"
+        },
+        {
+          "lemma": "知らせる",
+          "pos": "Verb",
+          "surface": "知らせる"
+        }
+      ],
+      "id": "shidai_raseru",
+      "input": "確認しだい知らせる"
+    },
+    {
+      "description": "確認しだい - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "しだい",
+          "pos": "Suffix",
+          "surface": "しだい"
+        }
+      ],
+      "id": "shidai",
+      "input": "確認しだい"
+    },
+    {
+      "description": "確認次第知らせる - regression test",
+      "expected": [
+        {
+          "lemma": "確認次第",
+          "pos": "Noun",
+          "surface": "確認次第"
+        },
+        {
+          "lemma": "知らせる",
+          "pos": "Verb",
+          "surface": "知らせる"
+        }
+      ],
+      "id": "raseru_2",
+      "input": "確認次第知らせる"
     }
   ],
   "description": "suffix_general tests",

@@ -15,10 +15,13 @@ using ::utf8::startsWithAny;
 
 namespace {
 
-constexpr std::string_view kHumbleHonorificRenyokei[] = {"いたし", "くださ", "いただき"};
+// The kanji orthography of いたす belongs to the same closed class: 確認致します
+// is the same construction as 確認いたします, and without the variant the
+// continuative is absorbed into the preceding kanji run (確認致 + し).
+constexpr std::string_view kHumbleHonorificRenyokei[] = {"いたし", "致し", "くださ", "いただき"};
 // 給ふ and 候ふ are the classical members of the same class: they follow a
 // continuative or an auxiliary exactly as くださる does (読ませ+給へ, 書かせ+候ふ).
-constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "くださる",   "いただく", "なさる",
+constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "致す",       "くださる", "いただく", "なさる",
                                                        "はする", "申し上げる", "給ふ",     "候ふ"};
 constexpr std::string_view kBenefactiveRenyokei[] = {"もらい", "あげ"};
 constexpr std::string_view kBenefactiveLemmas[] = {"もらう", "もらえる", "くれる", "あげる"};
@@ -70,7 +73,7 @@ bool isModalSubsidiaryRenyokei(std::string_view surface) {
 }
 
 bool startsHonorificSubsidiaryVerb(std::string_view surface) {
-  return startsWithAny(surface, {"くださ", "いただ", "いたし", "いたす"});
+  return startsWithAny(surface, {"くださ", "いただ", "いたし", "いたす", "致し", "致す"});
 }
 
 bool isAspectualSubsidiaryLemma(std::string_view lemma) {

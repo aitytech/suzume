@@ -451,6 +451,12 @@ EntrySpecRange getAuxiliaryEntries() {
       // Interval suffix: 一日おき, 一時間おき.
       suffix("おき", "おき"),
 
+      // Immediacy / dependency suffix, kana orthography of 次第: 確認しだい,
+      // 手当たりしだい. The kanji form is already held together by the kanji run
+      // itself; the kana form has no such anchor and otherwise falls apart into
+      // the suru continuative plus a fabricated だい.
+      suffix("しだい", "しだい"),
+
       // Verb renyokei suffix っぱなし (出しっぱなし, 置きっぱなし)
       // MeCab: 出しっぱなし → 出し + っぱなし (verb renyokei + suffix)
       suffix("っぱなし", "っぱなし"),

@@ -21,6 +21,7 @@
 #include "core/kana_constants.h"
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
+#include "grammar/honorific_verbs.h"
 #include "join_candidates.h"
 #include "normalize/utf8.h"
 #include "split_candidates.h"
@@ -205,6 +206,12 @@ bool startsInsideVerifiedNounAndAbsorbsSuru(const core::Lattice& lattice,
                                             const dictionary::DictionaryManager& dict_manager, std::string_view text,
                                             const ByteOffsets& byte_offsets, const UnknownCandidate& candidate) {
   if (candidate.pos != core::PartOfSpeech::Verb || candidate.start == 0) {
+    return false;
+  }
+  // A closed humble subsidiary verb is its own morpheme after the nominal
+  // (確認 + 致し + ます). Its continuative also ends in し, so the enclosing
+  // kanji-run noun looks verified when it is in fact the fabricated reading.
+  if (grammar::isHumbleHonorificRenyokei(candidate.surface)) {
     return false;
   }
   for (size_t suru_start = candidate.start + 1; suru_start < candidate.end; ++suru_start) {

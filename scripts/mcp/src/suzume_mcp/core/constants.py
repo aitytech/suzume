@@ -868,6 +868,12 @@ VERB_NOT_AUX_LEMMAS: set[str] = {
     "くださる",
     "下さる",
     "いたす",
+    # Same humble verb as いたす, only written in kanji. The reference analyzer
+    # tags one as a verb and the other as an auxiliary purely because of its own
+    # lexicon, which would make the oracle contradict itself for 確認いたします
+    # and 確認致します.
+    "致す",
+    "頂く",
     "あげる",
     "くれる",
     "もらう",

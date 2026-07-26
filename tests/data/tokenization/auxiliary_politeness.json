@@ -1268,6 +1268,160 @@
       ],
       "id": "itadaiteiru_humble_onbin",
       "input": "いただいている"
+    },
+    {
+      "description": "確認致します - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "致す",
+          "pos": "Verb",
+          "surface": "致し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "shimasu",
+      "input": "確認致します"
+    },
+    {
+      "description": "対応致します - regression test",
+      "expected": [
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "致す",
+          "pos": "Verb",
+          "surface": "致し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "shimasu_2",
+      "input": "対応致します"
+    },
+    {
+      "description": "確認いたします - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "いたす",
+          "pos": "Verb",
+          "surface": "いたし"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "itashimasu",
+      "input": "確認いたします"
+    },
+    {
+      "description": "致し方ない - regression test",
+      "expected": [
+        {
+          "lemma": "致し方",
+          "pos": "Noun",
+          "surface": "致し方"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shi_nai",
+      "input": "致し方ない"
+    },
+    {
+      "description": "提出しました - regression test",
+      "expected": [
+        {
+          "lemma": "提出",
+          "pos": "Noun",
+          "surface": "提出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shimashita_2",
+      "input": "提出しました"
+    },
+    {
+      "description": "見直しました - regression test",
+      "expected": [
+        {
+          "lemma": "見直す",
+          "pos": "Verb",
+          "surface": "見直し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shimashita_3",
+      "input": "見直しました"
+    },
+    {
+      "description": "確認したい - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "たい",
+          "pos": "Auxiliary",
+          "surface": "たい"
+        }
+      ],
+      "id": "shitai",
+      "input": "確認したい"
     }
   ],
   "description": "Politeness auxiliaries (ます、です)",

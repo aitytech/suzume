@@ -9,6 +9,7 @@
 #include "analysis/category_cost.h"
 #include "candidate_constants.h"
 #include "core/debug.h"
+#include "grammar/honorific_verbs.h"
 #include "grammar/inflection.h"
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
@@ -377,7 +378,18 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
   const std::string final_kanji = normalize::encodeUtf8(codepoints[kanji_end - 1]);
   const bool ends_with_derivational_suffix =
       dict_manager.lookupExact(final_kanji, core::PartOfSpeech::Suffix) != nullptr;
-  if (hasSuruContinuation(codepoints, kanji_end) && !hasDictionaryLexicalPrefix(noun_results, kanji_length) &&
+  // The last kanji of the run can itself open a closed humble subsidiary verb
+  // (確認 + 致し + ます). Its continuative ends in し, so the run is shaped exactly
+  // like an ordinary sahen verbal noun, and reading it as one absorbs the
+  // subsidiary's kanji (確認致 + し).
+  const size_t humble_subsidiary_start =
+      (kanji_end > start_pos + 1 && kanji_end < codepoints.size() &&
+       grammar::isHumbleHonorificRenyokei(extractSubstring(codepoints, kanji_end - 1, kanji_end + 1)))
+          ? kanji_end - 1
+          : kanji_end;
+  const bool ends_at_humble_subsidiary = humble_subsidiary_start < kanji_end;
+  if (hasSuruContinuation(codepoints, kanji_end) && !ends_at_humble_subsidiary &&
+      !hasDictionaryLexicalPrefix(noun_results, kanji_length) &&
       !crossesModifierBoundaryForSuruNoun(text, byte_offsets, start_pos, kanji_end, dict_manager) &&
       !(start_pos > 0 && normalize::isIterationMark(codepoints[start_pos - 1])) &&
       !containsIterationMark(codepoints, start_pos, kanji_end) && !ends_with_derivational_suffix) {
@@ -396,7 +408,10 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
     // (見直し).  In both cases, fabricating a noun+verb boundary inside the
     // kanji run is grammatically unsupported (提+出し, 見+直し).  Preserve
     // the complete run; the ordinary noun/verb candidates decide its POS.
-    if (kanji_end < codepoints.size() && codepoints[kanji_end] == U'し') {
+    // The exception is the humble subsidiary above: that boundary is a real
+    // morpheme boundary rather than a fabricated one inside a verbal noun.
+    if (kanji_end < codepoints.size() && codepoints[kanji_end] == U'し' &&
+        start_pos + noun_len != humble_subsidiary_start) {
       continue;
     }
 
