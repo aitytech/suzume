@@ -3,8 +3,9 @@
  * @brief Header-only C++ wrapper over the Suzume C ABI (suzume_c.h).
  *
  * This is a thin, exception-free convenience layer: it owns the handle via RAII,
- * copies results into owning std::string/std::vector, and never throws (matching
- * the core's Expected<T, Error> style). It depends only on the stable C ABI, so
+ * copies results into owning std::string/std::vector, and reports native errors
+ * through empty results plus lastError(). Owning C++ allocations may still
+ * throw std::bad_alloc. It depends only on the stable C ABI, so
  * it stays ABI-compatible across releases. Include this from C++; C code includes
  * suzume_c.h directly.
  */
@@ -15,6 +16,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -39,6 +41,10 @@ struct Options {
   Mode mode = Mode::Normal;
   bool lemmatize = true;
   bool merge_compounds = false;
+  bool skip_user_dictionary = false;
+  bool skip_core_dictionary = false;
+  bool report_scorer_config = false;
+  std::string scorer_options_json;
 };
 
 /** @brief A single analyzed morpheme with owning strings. */
@@ -58,6 +64,12 @@ struct Morpheme {
   bool is_unknown = false;
   bool is_from_dictionary = false;
   float score = 0.0F;
+};
+
+/** @brief Normalized input together with analyzed morphemes. */
+struct AnalysisResult {
+  std::string normalized_text;
+  std::vector<Morpheme> morphemes;
 };
 
 /** @brief Tag-generation options (see suzume_tag_options_t). */
@@ -80,6 +92,21 @@ struct Tag {
   std::string pos;
 };
 
+namespace detail {
+
+inline std::string conjugationTypeLabel(std::uint8_t code) {
+  const char* label = suzume_conjugation_type_label(code);
+  return label != nullptr ? std::string(label) : std::string();
+}
+
+inline std::string conjugationFormLabel(std::uint8_t code) {
+  static constexpr std::array<const char*, 7> labels = {"終止形", "未然形", "連用形", "連用形",
+                                                        "仮定形", "命令形", "意志形"};
+  return code < labels.size() ? labels[code] : "";
+}
+
+}  // namespace detail
+
 /**
  * @brief RAII wrapper around a suzume_t handle.
  *
@@ -99,6 +126,10 @@ class Tokenizer {
     copts.mode = static_cast<std::uint8_t>(options.mode);
     copts.lemmatize = options.lemmatize ? 1 : 0;
     copts.merge_compounds = options.merge_compounds ? 1 : 0;
+    copts.skip_user_dictionary = options.skip_user_dictionary ? 1 : 0;
+    copts.skip_core_dictionary = options.skip_core_dictionary ? 1 : 0;
+    copts.report_scorer_config = options.report_scorer_config ? 1 : 0;
+    copts.scorer_options_json = options.scorer_options_json.empty() ? nullptr : options.scorer_options_json.c_str();
     handle_ = suzume_create_with_extended_options(&copts);
   }
 
@@ -126,27 +157,31 @@ class Tokenizer {
    * @brief Analyze text into morphemes.
    * @return Morphemes, or an empty vector on failure (see lastError()).
    */
-  std::vector<Morpheme> analyze(std::string_view text) const {
-    std::vector<Morpheme> out;
+  std::vector<Morpheme> analyze(std::string_view text) const { return analyzeWithNormalizedText(text).morphemes; }
+
+  /** @brief Analyze text and expose the normalized text used for offsets. */
+  AnalysisResult analyzeWithNormalizedText(std::string_view text) const {
+    AnalysisResult out;
     if (handle_ == nullptr) {
       return out;
     }
-    const std::string input(text);
-    suzume_result_t* result = suzume_analyze(handle_, input.c_str());
+    suzume_result_t* result = suzume_analyze_n(handle_, text.empty() ? "" : text.data(), text.size());
     if (result == nullptr) {
       return out;
     }
-    out.reserve(result->count);
-    for (std::size_t idx = 0; idx < result->count; ++idx) {
-      const suzume_morpheme_t& src = result->morphemes[idx];
+    std::unique_ptr<suzume_result_t, decltype(&suzume_result_free)> owned_result(result, &suzume_result_free);
+    out.normalized_text.assign(owned_result->normalized_text, owned_result->normalized_text_size);
+    out.morphemes.reserve(owned_result->count);
+    for (std::size_t idx = 0; idx < owned_result->count; ++idx) {
+      const suzume_morpheme_t& src = owned_result->morphemes[idx];
       Morpheme morph;
       morph.surface = cstr(src.surface);
       morph.pos = posLabel(src.pos, false);
       morph.lemma = cstr(src.base_form);
       morph.pos_ja = posLabel(src.pos, true);
-      const bool conjugates = src.pos == SUZUME_POS_VERB || src.pos == SUZUME_POS_ADJECTIVE;
-      morph.conj_type = conjugates ? conjugationTypeLabel(src.conjugation_type) : std::string();
-      morph.conj_form = conjugates ? conjugationFormLabel(src.conjugation_form) : std::string();
+      const bool conjugates = (src.flags & SUZUME_MORPHEME_CONJUGATABLE) != 0;
+      morph.conj_type = conjugates ? detail::conjugationTypeLabel(src.conjugation_type) : std::string();
+      morph.conj_form = conjugates ? detail::conjugationFormLabel(src.conjugation_form) : std::string();
       morph.extended_pos = extendedPosLabel(src.extended_pos);
       morph.start = src.start;
       morph.end = src.end;
@@ -156,9 +191,8 @@ class Tokenizer {
       morph.is_unknown = (src.flags & SUZUME_MORPHEME_UNKNOWN) != 0;
       morph.is_from_dictionary = (src.flags & SUZUME_MORPHEME_FROM_DICTIONARY) != 0;
       morph.score = src.score;
-      out.push_back(std::move(morph));
+      out.morphemes.push_back(std::move(morph));
     }
-    suzume_result_free(result);
     return out;
   }
 
@@ -167,8 +201,7 @@ class Tokenizer {
     if (handle_ == nullptr) {
       return {};
     }
-    const std::string input(text);
-    return collectTags(suzume_generate_tags(handle_, input.c_str()));
+    return collectTags(suzume_generate_tags_n(handle_, text.empty() ? "" : text.data(), text.size()));
   }
 
   /** @brief Generate search tags with explicit options. */
@@ -188,8 +221,8 @@ class Tokenizer {
     copts.exclude_formal_nouns = options.exclude_formal_nouns ? 1 : 0;
     copts.exclude_low_info = options.exclude_low_info ? 1 : 0;
     copts.remove_duplicates = options.remove_duplicates ? 1 : 0;
-    const std::string input(text);
-    return collectTags(suzume_generate_tags_with_options(handle_, input.c_str(), &copts));
+    return collectTags(
+        suzume_generate_tags_with_options_n(handle_, text.empty() ? "" : text.data(), text.size(), &copts));
   }
 
   /**
@@ -214,8 +247,31 @@ class Tokenizer {
     return suzume_load_binary_dict(handle_, data, size) != 0;
   }
 
+  /** @brief Remove all user dictionaries loaded by this tokenizer. */
+  bool clearUserDictionaries() const { return handle_ != nullptr && suzume_clear_user_dictionaries(handle_) != 0; }
+
+  /** @brief Warnings produced while auto-loading dictionaries. */
+  std::vector<std::string> dictionaryWarnings() const {
+    if (handle_ == nullptr) {
+      return {};
+    }
+    std::vector<std::string> warnings;
+    const std::size_t count = suzume_dictionary_warning_count(handle_);
+    warnings.reserve(count);
+    for (std::size_t index = 0; index < count; ++index) {
+      const char* warning = suzume_dictionary_warning(handle_, index);
+      if (warning != nullptr) {
+        warnings.emplace_back(warning);
+      }
+    }
+    return warnings;
+  }
+
   /** @brief Last error message for this thread (empty when none). */
   static std::string lastError() { return cstr(suzume_last_error()); }
+
+  /** @brief Stable code for the last C ABI error. */
+  static suzume_error_code_t lastErrorCode() { return suzume_last_error_code(); }
 
   /** @brief Library version string. */
   static std::string version() { return cstr(suzume_version()); }
@@ -224,29 +280,16 @@ class Tokenizer {
   static std::string cstr(const char* str) { return str != nullptr ? std::string(str) : std::string(); }
 
   static std::string posLabel(std::uint8_t code, bool japanese) {
-    static constexpr std::array<const char*, 15> english = {"OTHER",    "NOUN",   "VERB", "ADJ",    "ADV",
-                                                            "PARTICLE", "AUX",    "CONJ", "DET",    "PRON",
-                                                            "PREFIX",   "SUFFIX", "INTJ", "SYMBOL", "OTHER"};
     static constexpr std::array<const char*, 15> japanese_labels = {"その他", "名詞",   "動詞",   "形容詞", "副詞",
                                                                     "助詞",   "助動詞", "接続詞", "連体詞", "代名詞",
                                                                     "接頭辞", "接尾辞", "感動詞", "記号",   "その他"};
-    if (code >= english.size()) {
+    if (!japanese) {
+      return cstr(suzume_pos_label(code));
+    }
+    if (code >= japanese_labels.size()) {
       code = 0;
     }
-    return japanese ? japanese_labels[code] : english[code];
-  }
-
-  static std::string conjugationTypeLabel(std::uint8_t code) {
-    static constexpr std::array<const char*, 14> labels = {
-        "",           "一段",       "五段・カ行", "五段・ガ行", "五段・サ行", "五段・タ行", "五段・ナ行",
-        "五段・バ行", "五段・マ行", "五段・ラ行", "五段・ワ行", "サ変",       "カ変",       "形容詞"};
-    return code < labels.size() ? labels[code] : "";
-  }
-
-  static std::string conjugationFormLabel(std::uint8_t code) {
-    static constexpr std::array<const char*, 7> labels = {"終止形", "未然形", "連用形", "連用形",
-                                                          "仮定形", "命令形", "意志形"};
-    return code < labels.size() ? labels[code] : "";
+    return japanese_labels[code];
   }
 
   static std::string extendedPosLabel(std::uint8_t code) {
@@ -341,14 +384,14 @@ class Tokenizer {
     if (tags == nullptr) {
       return out;
     }
-    out.reserve(tags->count);
-    for (std::size_t idx = 0; idx < tags->count; ++idx) {
+    std::unique_ptr<suzume_tags_t, decltype(&suzume_tags_free)> owned_tags(tags, &suzume_tags_free);
+    out.reserve(owned_tags->count);
+    for (std::size_t idx = 0; idx < owned_tags->count; ++idx) {
       Tag entry;
-      entry.tag = cstr(tags->tags != nullptr ? tags->tags[idx] : nullptr);
-      entry.pos = tags->pos != nullptr ? posLabel(tags->pos[idx], false) : std::string();
+      entry.tag = cstr(owned_tags->tags != nullptr ? owned_tags->tags[idx] : nullptr);
+      entry.pos = owned_tags->pos != nullptr ? posLabel(owned_tags->pos[idx], false) : std::string();
       out.push_back(std::move(entry));
     }
-    suzume_tags_free(tags);
     return out;
   }
 

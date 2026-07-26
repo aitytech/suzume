@@ -5,6 +5,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <string>
 #include <string_view>
 
 #include "normalize/utf8.h"
@@ -202,6 +203,38 @@ TEST_F(SuzumeApiTest, AnalyzeResultMatchesAnalyzeOnValidText) {
   }
 }
 
+TEST_F(SuzumeApiTest, DetailedAnalysisExposesNormalizedOffsetCoordinateText) {
+  Suzume instance(makeTestOptions());
+  auto result = instance.analyzeWithNormalizedTextResult("ｶﾞｸｾｲ");
+  ASSERT_TRUE(result.hasValue());
+  EXPECT_EQ(result.value().normalized_text, "ガクセイ");
+  ASSERT_FALSE(result.value().morphemes.empty());
+
+  const size_t normalized_length = normalize::utf8Length(result.value().normalized_text);
+  EXPECT_EQ(result.value().morphemes.front().start, 0U);
+  EXPECT_EQ(result.value().morphemes.back().end, normalized_length);
+  for (const auto& morpheme : result.value().morphemes) {
+    EXPECT_LE(morpheme.start, morpheme.end);
+    EXPECT_LE(morpheme.end, normalized_length);
+  }
+}
+
+TEST_F(SuzumeApiTest, LowInformationCategoriesDriveTagExclusion) {
+  Suzume instance(makeTestOptions());
+  auto morphemes = instance.analyze("それ");
+  ASSERT_EQ(morphemes.size(), 1U);
+  EXPECT_EQ(morphemes.front().extended_pos, core::ExtendedPOS::Pronoun);
+  EXPECT_TRUE(morphemes.front().features.is_low_info);
+  EXPECT_TRUE(instance.generateTags("それ").empty());
+
+  postprocess::TagGeneratorOptions options;
+  options.exclude_low_info = false;
+  options.min_tag_length = 1;
+  auto included = instance.generateTags("それ", options);
+  ASSERT_EQ(included.size(), 1U);
+  EXPECT_EQ(included.front().tag, "それ");
+}
+
 TEST_F(SuzumeApiTest, NumericKatakanaMergesAsQuantity) {
   Suzume instance(makeTestOptions());
 
@@ -226,6 +259,20 @@ TEST_F(SuzumeApiTest, AnalyzeSingleCharacter) {
   // Single kanji "mountain"
   auto results = instance.analyze("\xe5\xb1\xb1");
   EXPECT_FALSE(results.empty());
+}
+
+TEST_F(SuzumeApiTest, DefaultOptionsPreserveUnicodeLettersAndUnclassifiedText) {
+  Suzume instance(makeTestOptions());
+
+  for (const std::string_view text : {"café", "Москва", "서울", "ไทย", "𫠠", "ا"}) {
+    const auto results = instance.analyze(text);
+    std::string reconstructed;
+    for (const auto& morpheme : results) {
+      EXPECT_NE(morpheme.pos, core::PartOfSpeech::Symbol) << text;
+      reconstructed += morpheme.surface;
+    }
+    EXPECT_EQ(reconstructed, text) << text;
+  }
 }
 
 TEST_F(SuzumeApiTest, PretokenizedMorphemesHaveExtendedPos) {
@@ -460,7 +507,8 @@ TEST_F(SuzumeApiTest, LoadUserDictionaryFromInvalidPath) {
 TEST_F(SuzumeApiTest, LoadUserDictionaryResultReportsInvalidPath) {
   Suzume instance(makeTestOptions());
   auto result = instance.loadUserDictionaryResult("/nonexistent/path/dict.csv");
-  EXPECT_FALSE(result.hasValue());
+  ASSERT_FALSE(result.hasValue());
+  EXPECT_EQ(result.error().code, core::ErrorCode::FileNotFound);
   EXPECT_NE(result.error().message.find("Failed to open dictionary file"), std::string::npos);
 }
 
@@ -474,7 +522,8 @@ TEST_F(SuzumeApiTest, LoadUserDictionaryFromMemoryResultReportsParseError) {
   Suzume instance(makeTestOptions());
   const char* csv_data = "\"東京,NOUN,0.5\n";
   auto result = instance.loadUserDictionaryFromMemoryResult(csv_data, std::strlen(csv_data));
-  EXPECT_FALSE(result.hasValue());
+  ASSERT_FALSE(result.hasValue());
+  EXPECT_EQ(result.error().code, core::ErrorCode::ParseError);
   EXPECT_NE(result.error().message.find("unterminated quoted field"), std::string::npos);
 }
 
@@ -495,12 +544,30 @@ TEST_F(SuzumeApiTest, LoadBinaryDictionaryFromInvalidMemory) {
   EXPECT_FALSE(result);
 }
 
-TEST_F(SuzumeApiTest, LoadBinaryDictionaryResultReportsParseError) {
+TEST_F(SuzumeApiTest, LoadBinaryDictionaryResultReportsLoadError) {
   Suzume instance(makeTestOptions());
   const uint8_t bad_data[] = {0x00, 0x01, 0x02, 0x03};
   auto result = instance.loadBinaryDictionaryResult(bad_data, sizeof(bad_data));
-  EXPECT_FALSE(result.hasValue());
+  ASSERT_FALSE(result.hasValue());
+  EXPECT_EQ(result.error().code, core::ErrorCode::DictionaryLoadFailed);
   EXPECT_NE(result.error().message.find("Dictionary file too small"), std::string::npos);
+}
+
+TEST_F(SuzumeApiTest, ClearUserDictionariesRemovesRuntimeSourceDictionary) {
+  Suzume instance(makeTestOptions());
+  const char* source = "東京テスト\tNOUN\n";
+  ASSERT_TRUE(instance.loadUserDictionaryFromMemoryResult(source, std::strlen(source)).hasValue());
+
+  auto loaded = instance.analyze("東京テスト");
+  ASSERT_TRUE(std::any_of(loaded.begin(), loaded.end(), [](const core::Morpheme& morpheme) {
+    return morpheme.surface == "東京テスト" && morpheme.features.is_user_dict;
+  }));
+
+  instance.clearUserDictionaries();
+
+  auto cleared = instance.analyze("東京テスト");
+  EXPECT_FALSE(std::any_of(cleared.begin(), cleared.end(),
+                           [](const core::Morpheme& morpheme) { return morpheme.features.is_user_dict; }));
 }
 
 TEST_F(SuzumeApiTest, AutoDictionaryLoadWarningsAreRecorded) {

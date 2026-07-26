@@ -20,12 +20,13 @@ namespace suzume {
  */
 struct SuzumeOptions {
   core::AnalysisMode mode = core::AnalysisMode::Normal;
-  bool lemmatize = true;
+  bool lemmatize = true;  // Retain corrected lemmas; conjugation/POS annotations are always computed
   bool merge_compounds = false;
   bool remove_symbols = true;         // Remove symbol-only morphemes (default: true)
   bool skip_user_dictionary = false;  // Skip auto-loading user.dic (for testing)
   bool skip_core_dictionary = false;  // Skip auto-loading core.dic (for testing)
   bool report_scorer_config = false;  // Print scorer config status/warnings
+  std::string scorer_options_json;    // Direct JSON scorer overrides (available on every target)
   postprocess::TagGeneratorOptions tag_options;
   normalize::NormalizeOptions normalize_options;
   analysis::ScorerOptions scorer_options;  // Scoring parameters (tunable at runtime)
@@ -60,8 +61,9 @@ class Suzume {
   Suzume& operator=(Suzume&&) noexcept;
 
   /**
-   * @brief Load user dictionary from file
-   * @param path Path to dictionary file (CSV format)
+   * @brief Add a user dictionary from a source file
+   * @param path Path to dictionary source file (current TSV or legacy CSV)
+   * @note Loads are additive until clearUserDictionaries() is called.
    * @return true on success
    * @see loadUserDictionaryResult for error details
    */
@@ -69,15 +71,16 @@ class Suzume {
 
   /**
    * @brief Load user dictionary from file with error details
-   * @param path Path to dictionary file (CSV format)
+   * @param path Path to dictionary source file (current TSV or legacy CSV)
    * @return Number of loaded entries on success, error on failure
    */
   core::Expected<size_t, core::Error> loadUserDictionaryResult(const std::string& path);
 
   /**
-   * @brief Load user dictionary from memory
+   * @brief Add a user dictionary from source text in memory
    * @param data Dictionary data
    * @param size Data size
+   * @note Loads are additive until clearUserDictionaries() is called.
    * @return true on success
    * @see loadUserDictionaryFromMemoryResult for error details
    */
@@ -92,9 +95,10 @@ class Suzume {
   core::Expected<size_t, core::Error> loadUserDictionaryFromMemoryResult(const char* data, size_t size);
 
   /**
-   * @brief Load binary dictionary from memory (as user dictionary)
+   * @brief Add a binary dictionary from memory (as a user dictionary)
    * @param data Dictionary data (.dic binary format)
    * @param size Data size in bytes
+   * @note Loads are additive until clearUserDictionaries() is called.
    * @return true on success
    */
   bool loadBinaryDictionary(const uint8_t* data, size_t size);
@@ -106,6 +110,13 @@ class Suzume {
    * @return Number of loaded entries on success, error on failure
    */
   core::Expected<size_t, core::Error> loadBinaryDictionaryResult(const uint8_t* data, size_t size);
+
+  /**
+   * @brief Remove every source and binary user dictionary loaded at runtime
+   *
+   * Auto-loaded and built-in core dictionaries are retained.
+   */
+  void clearUserDictionaries();
 
   /**
    * @brief Warnings produced while auto-loading dictionaries at construction.
@@ -135,6 +146,14 @@ class Suzume {
    * @return Vector of morphemes on success, or the normalizer error
    */
   core::Expected<std::vector<core::Morpheme>, core::Error> analyzeResult(std::string_view text) const;
+
+  /**
+   * @brief Analyze text and return the normalized text addressed by offsets.
+   *
+   * @param text UTF-8 encoded input text
+   * @return Normalized text plus morphemes on success, or normalization error
+   */
+  core::Expected<core::AnalysisOutput, core::Error> analyzeWithNormalizedTextResult(std::string_view text) const;
 
   /**
    * @brief Debug analyze - returns lattice for debugging

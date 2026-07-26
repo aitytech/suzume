@@ -12,6 +12,7 @@ TEST(SuzumeCApiTest, LastErrorReportsInvalidArguments) {
 
   std::string error = suzume_last_error();
   EXPECT_NE(error.find("null handle"), std::string::npos);
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_INVALID_INPUT);
 }
 
 TEST(SuzumeCApiTest, LastErrorClearsAfterSuccess) {
@@ -24,6 +25,7 @@ TEST(SuzumeCApiTest, LastErrorClearsAfterSuccess) {
   suzume_result_t* result = suzume_analyze(handle, "東京");
   ASSERT_NE(result, nullptr);
   EXPECT_STREQ(suzume_last_error(), "");
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_SUCCESS);
 
   suzume_result_free(result);
   suzume_destroy(handle);
@@ -82,6 +84,10 @@ TEST(SuzumeCApiTest, InitExtendedOptionsPreservesDefaultTrueFields) {
   EXPECT_EQ(options.mode, 0);
   EXPECT_EQ(options.lemmatize, 1);
   EXPECT_EQ(options.merge_compounds, 0);
+  EXPECT_EQ(options.skip_user_dictionary, 0);
+  EXPECT_EQ(options.skip_core_dictionary, 0);
+  EXPECT_EQ(options.report_scorer_config, 0);
+  EXPECT_EQ(options.scorer_options_json, nullptr);
 }
 
 TEST(SuzumeCApiTest, CreateWithExtendedOptionsRejectsInvalidMode) {
@@ -103,13 +109,14 @@ TEST(SuzumeCApiTest, AnalyzeReturnsOffsetsAndDiagnosticFields) {
   suzume_result_t* result = suzume_analyze(handle, "東京");
   ASSERT_NE(result, nullptr);
   ASSERT_GT(result->count, 0u);
+  EXPECT_STREQ(result->normalized_text, "東京");
 
   const auto& morpheme = result->morphemes[0];
   EXPECT_STREQ(morpheme.surface, "東京");
   EXPECT_EQ(morpheme.start, 0u);
   EXPECT_GE(morpheme.end, morpheme.start + 1u);
   EXPECT_GE(morpheme.score, 0.0F);
-  EXPECT_EQ(morpheme.flags & ~0x1FU, 0U);
+  EXPECT_EQ(morpheme.flags & ~0x3FU, 0U);
 
   suzume_result_free(result);
   suzume_destroy(handle);
@@ -125,8 +132,71 @@ TEST(SuzumeCApiTest, ConjugationMetadataUsesCompactCodes) {
   EXPECT_EQ(result->morphemes[0].pos, SUZUME_POS_ADJECTIVE);
   EXPECT_EQ(result->morphemes[0].conjugation_type, 0U);
   EXPECT_EQ(result->morphemes[0].conjugation_form, 2U);
+  EXPECT_NE(result->morphemes[0].flags & SUZUME_MORPHEME_CONJUGATABLE, 0U);
+  EXPECT_STREQ(suzume_conjugation_type_label(14), "ナ形容詞");
+  EXPECT_EQ(suzume_conjugation_type_label(18), nullptr);
+  EXPECT_STREQ(suzume_pos_label(SUZUME_POS_VERB), "VERB");
+  EXPECT_EQ(suzume_pos_label(15), nullptr);
 
   suzume_result_free(result);
+  suzume_destroy(handle);
+}
+
+TEST(SuzumeCApiTest, LengthAwareAnalyzePreservesTextAfterEmbeddedNull) {
+  suzume_t handle = suzume_create();
+  ASSERT_NE(handle, nullptr);
+
+  const std::string text("東京\0大阪", 13);
+  suzume_result_t* result = suzume_analyze_n(handle, text.data(), text.size());
+  ASSERT_NE(result, nullptr) << suzume_last_error();
+  bool found_after_null = false;
+  for (size_t index = 0; index < result->count; ++index) {
+    found_after_null = found_after_null || std::strcmp(result->morphemes[index].surface, "大阪") == 0;
+  }
+  EXPECT_TRUE(found_after_null);
+
+  suzume_result_free(result);
+  suzume_destroy(handle);
+}
+
+TEST(SuzumeCApiTest, TagEntrypointsRejectInvalidUtf8WithStableCode) {
+  suzume_t handle = suzume_create();
+  ASSERT_NE(handle, nullptr);
+  const std::string invalid("\xE3\x81", 2);
+
+  EXPECT_EQ(suzume_generate_tags_n(handle, invalid.data(), invalid.size()), nullptr);
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_INVALID_UTF8);
+
+  suzume_tag_options_t options{};
+  suzume_init_tag_options(&options);
+  EXPECT_EQ(suzume_generate_tags_with_options_n(handle, invalid.data(), invalid.size(), &options), nullptr);
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_INVALID_UTF8);
+  suzume_destroy(handle);
+}
+
+TEST(SuzumeCApiTest, InvalidScorerJsonFailsConstruction) {
+  suzume_extended_options_t options{};
+  suzume_init_extended_options(&options);
+  options.scorer_options_json = "{";
+
+  EXPECT_EQ(suzume_create_with_extended_options(&options), nullptr);
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_PARSE);
+  EXPECT_NE(std::string(suzume_last_error()).find("scorer options"), std::string::npos);
+}
+
+TEST(SuzumeCApiTest, UserDictionariesCanBeCleared) {
+  suzume_extended_options_t options{};
+  suzume_init_extended_options(&options);
+  options.skip_user_dictionary = 1;
+  options.skip_core_dictionary = 1;
+  suzume_t handle = suzume_create_with_extended_options(&options);
+  ASSERT_NE(handle, nullptr);
+  const std::string dictionary = "検査語\tNOUN\n";
+  ASSERT_EQ(suzume_load_user_dict(handle, dictionary.data(), dictionary.size()), 1);
+  ASSERT_EQ(suzume_clear_user_dictionaries(handle), 1);
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_SUCCESS);
+  EXPECT_EQ(suzume_clear_user_dictionaries(nullptr), 0);
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_INVALID_INPUT);
   suzume_destroy(handle);
 }
 
@@ -188,6 +258,8 @@ TEST(SuzumeCApiTest, LayoutFunctionsMatchNativeStructs) {
 
   EXPECT_EQ(suzume_offsetof_result(0), offsetof(suzume_result_t, morphemes));
   EXPECT_EQ(suzume_offsetof_result(1), offsetof(suzume_result_t, count));
+  EXPECT_EQ(suzume_offsetof_result(2), offsetof(suzume_result_t, normalized_text));
+  EXPECT_EQ(suzume_offsetof_result(3), offsetof(suzume_result_t, normalized_text_size));
   EXPECT_EQ(suzume_offsetof_morpheme(6), offsetof(suzume_morpheme_t, extended_pos));
   EXPECT_EQ(suzume_offsetof_morpheme(2), offsetof(suzume_morpheme_t, start));
   EXPECT_EQ(suzume_offsetof_morpheme(4), offsetof(suzume_morpheme_t, score));
@@ -199,6 +271,10 @@ TEST(SuzumeCApiTest, LayoutFunctionsMatchNativeStructs) {
   EXPECT_EQ(suzume_offsetof_extended_options(0), offsetof(suzume_extended_options_t, preserve_vu));
   EXPECT_EQ(suzume_offsetof_extended_options(3), offsetof(suzume_extended_options_t, mode));
   EXPECT_EQ(suzume_offsetof_extended_options(5), offsetof(suzume_extended_options_t, merge_compounds));
+  EXPECT_EQ(suzume_offsetof_extended_options(6), offsetof(suzume_extended_options_t, skip_user_dictionary));
+  EXPECT_EQ(suzume_offsetof_extended_options(7), offsetof(suzume_extended_options_t, skip_core_dictionary));
+  EXPECT_EQ(suzume_offsetof_extended_options(8), offsetof(suzume_extended_options_t, report_scorer_config));
+  EXPECT_EQ(suzume_offsetof_extended_options(9), offsetof(suzume_extended_options_t, scorer_options_json));
   EXPECT_EQ(suzume_offsetof_result(99), static_cast<size_t>(-1));
   EXPECT_EQ(suzume_offsetof_extended_options(99), static_cast<size_t>(-1));
 }

@@ -99,6 +99,19 @@ enum {
 typedef uint8_t suzume_extended_pos_t;
 typedef uint8_t suzume_conjugation_type_t;
 typedef uint8_t suzume_conjugation_form_t;
+typedef uint8_t suzume_error_code_t;
+
+/** Stable error codes returned by suzume_last_error_code(). */
+enum {
+  SUZUME_ERROR_SUCCESS = 0,
+  SUZUME_ERROR_INVALID_UTF8 = 1,
+  SUZUME_ERROR_DICTIONARY_LOAD_FAILED = 2,
+  SUZUME_ERROR_FILE_NOT_FOUND = 3,
+  SUZUME_ERROR_PARSE = 4,
+  SUZUME_ERROR_OUT_OF_MEMORY = 5,
+  SUZUME_ERROR_INVALID_INPUT = 6,
+  SUZUME_ERROR_INTERNAL = 7,
+};
 
 enum {
   SUZUME_MORPHEME_USER_DICT = 1U << 0U,
@@ -106,14 +119,23 @@ enum {
   SUZUME_MORPHEME_LOW_INFO = 1U << 2U,
   SUZUME_MORPHEME_UNKNOWN = 1U << 3U,
   SUZUME_MORPHEME_FROM_DICTIONARY = 1U << 4U,
+  SUZUME_MORPHEME_CONJUGATABLE = 1U << 5U,
+};
+
+/** Stable POS-filter bits used by suzume_tag_options_t::pos_filter. */
+enum {
+  SUZUME_TAG_POS_NOUN = 1U << 0U,
+  SUZUME_TAG_POS_VERB = 1U << 1U,
+  SUZUME_TAG_POS_ADJECTIVE = 1U << 2U,
+  SUZUME_TAG_POS_ADVERB = 1U << 3U,
 };
 
 /**
  * @brief Morpheme data structure
  */
 typedef struct {
-  const char* surface;                        /**< Surface form (UTF-8) */
-  const char* base_form;                      /**< Base/dictionary form */
+  const char* surface;                        /**< Borrowed UTF-8 view owned by the containing result */
+  const char* base_form;                      /**< Borrowed UTF-8 view owned by the containing result */
   uint32_t start;                             /**< Start character offset in normalized text */
   uint32_t end;                               /**< End character offset in normalized text */
   float score;                                /**< Candidate score/cost */
@@ -128,17 +150,19 @@ typedef struct {
  * @brief Analysis result structure
  */
 typedef struct {
-  suzume_morpheme_t* morphemes; /**< Array of morphemes */
+  suzume_morpheme_t* morphemes; /**< Borrowed array; valid until suzume_result_free */
   size_t count;                 /**< Number of morphemes */
+  const char* normalized_text;  /**< Borrowed UTF-8 text; valid until result free */
+  size_t normalized_text_size;  /**< Byte length; normalized text may contain U+0000 */
 } suzume_result_t;
 
 /**
  * @brief Tag generation result structure
  */
 typedef struct {
-  char** tags;       /**< Array of tag strings */
-  suzume_pos_t* pos; /**< Array of numeric POS codes */
-  size_t count;      /**< Number of tags */
+  const char* const* tags; /**< Borrowed strings and array; valid until suzume_tags_free */
+  suzume_pos_t* pos;       /**< Borrowed array of numeric POS codes */
+  size_t count;            /**< Number of tags */
 } suzume_tags_t;
 
 /**
@@ -148,12 +172,16 @@ typedef struct {
  * default true values such as preserve_case and lemmatize are preserved.
  */
 typedef struct {
-  uint8_t preserve_vu;      /**< Preserve ヴ (don't normalize to ビ etc.) */
-  uint8_t preserve_case;    /**< Preserve case (don't lowercase ASCII) */
-  uint8_t preserve_symbols; /**< Preserve symbols/emoji (don't remove from output) */
-  uint8_t mode;             /**< 0=normal, 1=search, 2=split */
-  uint8_t lemmatize;        /**< Apply lemmatization */
-  uint8_t merge_compounds;  /**< Merge consecutive noun compounds */
+  uint8_t preserve_vu;             /**< Preserve ヴ (don't normalize to ビ etc.) */
+  uint8_t preserve_case;           /**< Preserve case (don't lowercase ASCII) */
+  uint8_t preserve_symbols;        /**< Preserve symbols/emoji (don't remove from output) */
+  uint8_t mode;                    /**< 0=normal, 1=search, 2=split */
+  uint8_t lemmatize;               /**< Replace source lemmas with corrected lemmas; annotations are always computed */
+  uint8_t merge_compounds;         /**< Merge consecutive noun compounds */
+  uint8_t skip_user_dictionary;    /**< Skip automatic loading of the bundled user dictionary */
+  uint8_t skip_core_dictionary;    /**< Skip automatic loading of the bundled core dictionary */
+  uint8_t report_scorer_config;    /**< Report scorer configuration diagnostics */
+  const char* scorer_options_json; /**< UTF-8 JSON scorer overrides, or NULL for defaults */
 } suzume_extended_options_t;
 
 // --- Lifecycle functions ---
@@ -177,6 +205,8 @@ SUZUME_EXPORT void suzume_init_extended_options(suzume_extended_options_t* optio
  * @brief Create a new Suzume instance with extended options
  * @param options Pointer to extended options structure
  * @return Handle to Suzume instance, or NULL on failure
+ * @note Passing NULL selects all defaults. scorer_options_json is borrowed only
+ *       for the duration of this call and may be NULL.
  */
 SUZUME_EXPORT suzume_t suzume_create_with_extended_options(const suzume_extended_options_t* options);
 
@@ -197,10 +227,21 @@ SUZUME_EXPORT void suzume_destroy(suzume_t handle);
  *         Invalid UTF-8 input fails with NULL and a suzume_last_error()
  *         message; empty input succeeds with an empty result (count == 0).
  *         Non-NULL results must be freed exactly once with suzume_result_free.
+ *         All pointers inside the result borrow from one result-owned arena and
+ *         become invalid together when that function is called.
  * @note Not thread-safe with respect to other calls on the same handle;
  *       see suzume_t.
  */
 SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text);
+
+/**
+ * @brief Analyze an explicit UTF-8 byte range
+ * @param handle Suzume handle
+ * @param text UTF-8 bytes; embedded U+0000 is preserved
+ * @param size Number of bytes in text
+ * @return Analysis result, or NULL on failure
+ */
+SUZUME_EXPORT suzume_result_t* suzume_analyze_n(suzume_t handle, const char* text, size_t size);
 
 /**
  * @brief Free analysis result
@@ -215,8 +256,18 @@ SUZUME_EXPORT void suzume_result_free(suzume_result_t* result);
  * @param text UTF-8 encoded Japanese text
  * @return Tags result allocated by Suzume, or NULL on failure.
  *         Non-NULL results must be freed exactly once with suzume_tags_free.
+ *         The array and strings are borrowed from one result-owned arena.
  */
 SUZUME_EXPORT suzume_tags_t* suzume_generate_tags(suzume_t handle, const char* text);
+
+/**
+ * @brief Generate tags from an explicit UTF-8 byte range
+ * @param handle Suzume handle
+ * @param text UTF-8 bytes; embedded U+0000 is preserved
+ * @param size Number of bytes in text
+ * @return Tags result, or NULL on failure
+ */
+SUZUME_EXPORT suzume_tags_t* suzume_generate_tags_n(suzume_t handle, const char* text, size_t size);
 
 /**
  * @brief Tag generation options.
@@ -225,7 +276,7 @@ SUZUME_EXPORT suzume_tags_t* suzume_generate_tags(suzume_t handle, const char* t
  * overriding individual fields.
  */
 typedef struct {
-  uint8_t pos_filter;           /**< POS bitmask: 1=noun, 2=verb, 4=adjective, 8=adverb (0=all) */
+  uint8_t pos_filter;           /**< Bitwise SUZUME_TAG_POS_* values; 0 includes all content POS */
   uint8_t exclude_basic;        /**< Exclude basic words (hiragana-only lemma) */
   uint8_t use_lemma;            /**< Use lemma instead of surface (default: 1) */
   size_t min_length;            /**< Minimum tag length in characters (default: 2) */
@@ -251,9 +302,16 @@ SUZUME_EXPORT void suzume_init_tag_options(suzume_tag_options_t* options);
  * @param options Tag generation options
  * @return Tags result allocated by Suzume, or NULL on failure.
  *         Non-NULL results must be freed exactly once with suzume_tags_free.
+ * @note options must not be NULL.
  */
 SUZUME_EXPORT suzume_tags_t* suzume_generate_tags_with_options(suzume_t handle, const char* text,
                                                                const suzume_tag_options_t* options);
+
+/**
+ * @brief Generate tags from an explicit UTF-8 byte range with options
+ */
+SUZUME_EXPORT suzume_tags_t* suzume_generate_tags_with_options_n(suzume_t handle, const char* text, size_t size,
+                                                                 const suzume_tag_options_t* options);
 
 /**
  * @brief Free tags result
@@ -265,11 +323,14 @@ SUZUME_EXPORT void suzume_tags_free(suzume_tags_t* tags);
 // --- Dictionary functions ---
 
 /**
- * @brief Load user dictionary from memory
+ * @brief Add user-dictionary entries from UTF-8 source text
  * @param handle Suzume handle
- * @param data Dictionary data (CSV format)
+ * @param data Current TSV or legacy 3-column CSV source bytes. TSV columns may
+ *             carry lemma/conjugation metadata; the legacy CSV cost column is
+ *             accepted but ignored.
  * @param size Data size in bytes
  * @return 1 on success, 0 on failure
+ * @note Loads are additive until suzume_clear_user_dictionaries() is called.
  */
 SUZUME_EXPORT int suzume_load_user_dict(suzume_t handle, const char* data, size_t size);
 
@@ -279,8 +340,15 @@ SUZUME_EXPORT int suzume_load_user_dict(suzume_t handle, const char* data, size_
  * @param data Binary dictionary data (.dic format)
  * @param size Data size in bytes
  * @return 1 on success, 0 on failure
+ * @note Loads are additive. A failed load preserves all existing dictionaries.
  */
 SUZUME_EXPORT int suzume_load_binary_dict(suzume_t handle, const uint8_t* data, size_t size);
+
+/**
+ * @brief Remove all source and binary user dictionaries loaded by this handle
+ * @return 1 on success, 0 on invalid handle
+ */
+SUZUME_EXPORT int suzume_clear_user_dictionaries(suzume_t handle);
 
 // --- Utility functions ---
 
@@ -292,9 +360,28 @@ SUZUME_EXPORT const char* suzume_version(void);
 
 /**
  * @brief Get the last C API error message for the current thread/runtime
- * @return Last error string (static/thread-local, do not free)
+ * @return Borrowed thread-local string; do not free. It is invalidated by a
+ *         later C API call that clears or replaces the diagnostic, and by
+ *         thread termination.
  */
 SUZUME_EXPORT const char* suzume_last_error(void);
+
+/**
+ * @brief Get the stable code for the last C API error on this thread/runtime
+ */
+SUZUME_EXPORT suzume_error_code_t suzume_last_error_code(void);
+
+/**
+ * @brief Get the Japanese label for a serialized conjugation type
+ * @return Static string, or NULL when code is out of range
+ */
+SUZUME_EXPORT const char* suzume_conjugation_type_label(suzume_conjugation_type_t code);
+
+/**
+ * @brief Get the stable English label for a serialized POS code
+ * @return Static string, or NULL when code is out of range
+ */
+SUZUME_EXPORT const char* suzume_pos_label(suzume_pos_t code);
 
 /**
  * @brief Get number of dictionary warnings from auto-loading dictionaries
@@ -314,7 +401,6 @@ SUZUME_EXPORT size_t suzume_dictionary_warning_count(suzume_t handle);
  */
 SUZUME_EXPORT const char* suzume_dictionary_warning(suzume_t handle, size_t index);
 
-#ifndef __EMSCRIPTEN__
 /**
  * @brief Get sizeof(suzume_result_t)
  */
@@ -342,7 +428,8 @@ SUZUME_EXPORT size_t suzume_sizeof_extended_options(void);
 
 /**
  * @brief Get byte offset of field in suzume_result_t
- * @param field 0=morphemes, 1=count
+ * @param field 0=morphemes, 1=count, 2=normalized_text,
+ *              3=normalized_text_size
  */
 SUZUME_EXPORT size_t suzume_offsetof_result(uint32_t field);
 
@@ -372,24 +459,25 @@ SUZUME_EXPORT size_t suzume_offsetof_tag_options(uint32_t field);
 /**
  * @brief Get byte offset of field in suzume_extended_options_t
  * @param field 0=preserve_vu, 1=preserve_case, 2=preserve_symbols,
- *              3=mode, 4=lemmatize, 5=merge_compounds
+ *              3=mode, 4=lemmatize, 5=merge_compounds,
+ *              6=skip_user_dictionary, 7=skip_core_dictionary,
+ *              8=report_scorer_config, 9=scorer_options_json
  */
 SUZUME_EXPORT size_t suzume_offsetof_extended_options(uint32_t field);
 
 /**
- * @brief Allocate memory (for WASM interop)
+ * @brief Allocate C-ABI-compatible memory
  * @param size Size in bytes
  * @return Pointer to allocated memory
  */
 SUZUME_EXPORT void* suzume_malloc(size_t size);
 
 /**
- * @brief Free memory (for WASM interop)
+ * @brief Free memory returned by suzume_malloc
  * @param ptr Pointer to free
  * @note Passing NULL is allowed and has no effect.
  */
 SUZUME_EXPORT void suzume_free(void* ptr);
-#endif
 
 #ifdef __cplusplus
 }

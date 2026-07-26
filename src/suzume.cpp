@@ -1,6 +1,10 @@
 #include "suzume.h"
 
 #include <cstdlib>
+#ifndef __EMSCRIPTEN__
+#include <fstream>
+#include <iterator>
+#endif
 #include <utility>
 #include <vector>
 
@@ -17,11 +21,11 @@
 #endif
 
 #include "analysis/analyzer.h"
-#ifndef SUZUME_USE_EMBEDDED_DICT
 #include "analysis/scorer_options_loader.h"
-#endif
 #include "dictionary/binary_dict.h"
+#include "dictionary/source_parser.h"
 #include "dictionary/user_dict.h"
+#include "grammar/dictionary_expansion.h"
 #ifdef SUZUME_USE_EMBEDDED_DICT
 #include "embedded_dictionaries.h"
 #endif
@@ -31,6 +35,37 @@
 namespace suzume {
 
 namespace {
+
+struct LoadedSourceDictionary {
+  std::shared_ptr<dictionary::UserDictionary> dictionary;
+  size_t source_entry_count;
+};
+
+void refreshLowInformationFlags(std::vector<core::Morpheme>& morphemes) {
+  for (core::Morpheme& morpheme : morphemes) {
+    morpheme.features.is_low_info = core::isLowInformation(morpheme.extended_pos);
+  }
+}
+
+core::Expected<LoadedSourceDictionary, core::Error> loadSourceDictionaryFromMemory(const char* data, size_t size) {
+  if (data == nullptr || size == 0) {
+    return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Empty dictionary data"));
+  }
+
+  dictionary::SourceParseOptions parse_options;
+  parse_options.skip_single_field_records = true;
+  auto parsed = dictionary::parseDictionarySource(std::string_view(data, size), parse_options);
+  if (!parsed.hasValue()) {
+    return core::makeUnexpected(parsed.error());
+  }
+
+  auto expanded = grammar::expandDictionarySourceEntries(parsed.value().entries);
+  auto user_dictionary = std::make_shared<dictionary::UserDictionary>();
+  for (const auto& entry : expanded.entries) {
+    user_dictionary->addEntry(entry);
+  }
+  return LoadedSourceDictionary{std::move(user_dictionary), parsed.value().entries.size()};
+}
 
 #ifndef SUZUME_USE_EMBEDDED_DICT
 namespace fs = std::filesystem;
@@ -103,6 +138,15 @@ struct Suzume::Impl {
 
   static analysis::ScorerOptions loadScorerConfig(const SuzumeOptions& opts) {
     analysis::ScorerOptions scorer_opts = opts.scorer_options;
+    if (!opts.scorer_options_json.empty()) {
+      std::string error_message;
+      if (!analysis::ScorerOptionsLoader::loadFromJsonString(opts.scorer_options_json, scorer_opts, &error_message) &&
+          opts.report_scorer_config) {
+#ifndef SUZUME_USE_EMBEDDED_DICT
+        std::cerr << "warning: Failed to load direct scorer config: " << error_message << "\n";
+#endif
+      }
+    }
 #ifndef SUZUME_USE_EMBEDDED_DICT
     // Load from environment variables (SUZUME_SCORER_CONFIG and SUZUME_SCORER_*)
     auto result = analysis::ScorerOptionsLoader::loadFromEnv(scorer_opts, opts.report_scorer_config);
@@ -200,6 +244,7 @@ struct Suzume::Impl {
       return {};
     }
     auto processed = postprocessor.process(std::move(result.value()));
+    refreshLowInformationFlags(processed);
     postprocess::TagGenerator generator(tag_options);
     return generator.generate(processed);
   }
@@ -220,15 +265,24 @@ bool Suzume::loadUserDictionary(const std::string& path) {
 }
 
 core::Expected<size_t, core::Error> Suzume::loadUserDictionaryResult(const std::string& path) {
-  // For CSV/TSV custom dictionaries
-  auto dict = std::make_shared<dictionary::UserDictionary>();
-  auto result = dict->loadFromFile(path);
-  if (result.hasValue()) {
-    impl_->custom_dict = dict;
-    impl_->analyzer.addUserDictionary(dict);
-    return result.value();
+#ifdef __EMSCRIPTEN__
+  (void)path;
+  return core::makeUnexpected(
+      core::Error(core::ErrorCode::InvalidInput, "File dictionary loading is unavailable in WebAssembly"));
+#else
+  std::ifstream file(path);
+  if (!file.is_open()) {
+    return core::makeUnexpected(core::Error(core::ErrorCode::FileNotFound, "Failed to open dictionary file: " + path));
   }
-  return result.error();
+  const std::string content{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+  auto loaded = loadSourceDictionaryFromMemory(content.data(), content.size());
+  if (!loaded.hasValue()) {
+    return core::makeUnexpected(loaded.error());
+  }
+  impl_->custom_dict = loaded.value().dictionary;
+  impl_->analyzer.addUserDictionary(loaded.value().dictionary);
+  return loaded.value().source_entry_count;
+#endif
 }
 
 bool Suzume::loadUserDictionaryFromMemory(const char* data, size_t size) {
@@ -236,15 +290,13 @@ bool Suzume::loadUserDictionaryFromMemory(const char* data, size_t size) {
 }
 
 core::Expected<size_t, core::Error> Suzume::loadUserDictionaryFromMemoryResult(const char* data, size_t size) {
-  // For CSV/TSV custom dictionaries
-  auto dict = std::make_shared<dictionary::UserDictionary>();
-  auto result = dict->loadFromMemory(data, size);
-  if (result.hasValue()) {
-    impl_->custom_dict = dict;
-    impl_->analyzer.addUserDictionary(dict);
-    return result.value();
+  auto loaded = loadSourceDictionaryFromMemory(data, size);
+  if (!loaded.hasValue()) {
+    return core::makeUnexpected(loaded.error());
   }
-  return result.error();
+  impl_->custom_dict = loaded.value().dictionary;
+  impl_->analyzer.addUserDictionary(loaded.value().dictionary);
+  return loaded.value().source_entry_count;
 }
 
 bool Suzume::loadBinaryDictionary(const uint8_t* data, size_t size) {
@@ -252,7 +304,16 @@ bool Suzume::loadBinaryDictionary(const uint8_t* data, size_t size) {
 }
 
 core::Expected<size_t, core::Error> Suzume::loadBinaryDictionaryResult(const uint8_t* data, size_t size) {
-  return impl_->analyzer.dictionaryManager().loadUserBinaryDictionaryFromMemoryResult(data, size);
+  auto result = impl_->analyzer.dictionaryManager().loadUserBinaryDictionaryFromMemoryResult(data, size);
+  if (!result.hasValue()) {
+    return core::makeUnexpected(core::Error(core::ErrorCode::DictionaryLoadFailed, result.error().message));
+  }
+  return result.value();
+}
+
+void Suzume::clearUserDictionaries() {
+  impl_->analyzer.dictionaryManager().clearUserDictionaries();
+  impl_->custom_dict.reset();
 }
 
 const std::vector<std::string>& Suzume::dictionaryWarnings() const {
@@ -268,16 +329,29 @@ std::vector<core::Morpheme> Suzume::analyze(std::string_view text) const {
 }
 
 core::Expected<std::vector<core::Morpheme>, core::Error> Suzume::analyzeResult(std::string_view text) const {
-  auto result = impl_->analyzer.analyze(text);
+  auto result = analyzeWithNormalizedTextResult(text);
   if (!result.hasValue()) {
     return core::makeUnexpected(result.error());
   }
-  return impl_->postprocessor.process(std::move(result.value()));
+  return std::move(result.value().morphemes);
+}
+
+core::Expected<core::AnalysisOutput, core::Error> Suzume::analyzeWithNormalizedTextResult(std::string_view text) const {
+  auto result = impl_->analyzer.analyzeWithNormalizedText(text);
+  if (!result.hasValue()) {
+    return core::makeUnexpected(result.error());
+  }
+  core::AnalysisOutput output = std::move(result.value());
+  output.morphemes = impl_->postprocessor.process(std::move(output.morphemes));
+  refreshLowInformationFlags(output.morphemes);
+  return output;
 }
 
 std::vector<core::Morpheme> Suzume::analyzeDebug(std::string_view text, core::Lattice* out_lattice) const {
   auto morphemes = impl_->analyzer.analyzeDebug(text, out_lattice);
-  return impl_->postprocessor.process(std::move(morphemes));
+  morphemes = impl_->postprocessor.process(std::move(morphemes));
+  refreshLowInformationFlags(morphemes);
+  return morphemes;
 }
 
 std::vector<postprocess::TagEntry> Suzume::generateTags(std::string_view text) const {
