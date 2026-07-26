@@ -287,7 +287,9 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Penalty for single-kanji noun + hiragana verb renyokei/onbinkei
   // E.g., 勘+違い should be 勘違い (compound noun), not 勘 (noun) + 違い (dict verb)
   // Single-kanji nouns rarely form valid noun+verb compounds with hiragana verbs
-  // Exception: し (suru renyokei) is valid for サ変 pattern (得+し, 得する)
+  // Exception: し (suru renyokei) is valid for サ変 pattern (得+し, 得する), but only
+  //            for a registered host. A fabricated single-kanji noun has no verbal-noun
+  //            reading to license it, so 押しボタン must keep its continuative 押し.
   // Exception: Katakana verbs (バズっ, ググっ) are valid after nouns (超バズった)
   // Exception: Kanji-initial verbs (本+買っ) are valid noun+verb (dropped を)
   // Exception: NounNumber quantity tokens (半 split off a duration-counter run)
@@ -296,7 +298,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       normalize::utf8Length(prev.surface) == 1 &&  // Single char
       next.pos == core::PartOfSpeech::Verb &&
       (next.extended_pos == core::ExtendedPOS::VerbRenyokei || next.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
-      !grammar::isSuruRenyokeiSurface(next.surface) &&  // Exclude suru renyokei (サ変動詞パターン)
+      !(grammar::isSuruRenyokeiSurface(next.surface) && prev.fromDictionary()) &&   // サ変動詞パターン
       !kana::isKatakanaCodepoint(utf8::decodeFirstChar(next.surface)) &&            // Exclude katakana verbs
       !suzume::normalize::isKanjiCodepoint(utf8::decodeFirstChar(next.surface))) {  // Exclude kanji verbs
     surface_bonus += cost::kVeryRare;

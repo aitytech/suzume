@@ -1,0 +1,109 @@
+{
+  "cases": [
+    {
+      "description": "押し問答が続く - regression test",
+      "expected": [
+        {
+          "lemma": "押し問答",
+          "pos": "Noun",
+          "surface": "押し問答"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続く"
+        }
+      ],
+      "id": "shi_ga_ku",
+      "input": "押し問答が続く"
+    },
+    {
+      "description": "押しボタンを押す - regression test",
+      "expected": [
+        {
+          "lemma": "押す",
+          "pos": "Verb",
+          "surface": "押し"
+        },
+        {
+          "lemma": "ボタン",
+          "pos": "Noun",
+          "surface": "ボタン"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "押す",
+          "pos": "Verb",
+          "surface": "押す"
+        }
+      ],
+      "id": "shi_wo_su",
+      "input": "押しボタンを押す"
+    },
+    {
+      "description": "書類を提出した - regression test",
+      "expected": [
+        {
+          "lemma": "書類",
+          "pos": "Noun",
+          "surface": "書類"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "提出",
+          "pos": "Noun",
+          "surface": "提出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_shita_2",
+      "input": "書類を提出した"
+    },
+    {
+      "description": "引き出しを開ける - regression test",
+      "expected": [
+        {
+          "lemma": "引き出し",
+          "pos": "Noun",
+          "surface": "引き出し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "開ける",
+          "pos": "Verb",
+          "surface": "開ける"
+        }
+      ],
+      "id": "ki_shiwo_keru",
+      "input": "引き出しを開ける"
+    }
+  ],
+  "description": "noun_compound_01 tests",
+  "version": "1.0"
+}
