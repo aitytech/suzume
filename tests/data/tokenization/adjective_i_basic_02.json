@@ -1870,6 +1870,28 @@
       ],
       "id": "zukashisugiru",
       "input": "恥ずかしすぎる"
+    },
+    {
+      "description": "おおきいのが - auto-generated",
+      "expected": [
+        {
+          "lemma": "おおきい",
+          "pos": "Adjective",
+          "surface": "おおきい"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        }
+      ],
+      "id": "ookiinoga",
+      "input": "おおきいのが"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",

@@ -150,9 +150,18 @@ void addHonorificSamaNounJoinCandidate(core::Lattice& lattice, std::string_view 
 void addStandaloneHonorificPrefixInterjectionCandidate(core::Lattice& lattice, std::string_view text,
                                                        const std::vector<char32_t>& codepoints,
                                                        const ByteOffsets& byte_offsets, size_t start_pos,
+                                                       const std::vector<normalize::CharType>& char_types,
                                                        const Scorer& scorer) {
   if (start_pos + 1 != codepoints.size() ||
       !grammar::isHonorificPrefix(extractSubstring(codepoints, start_pos, start_pos + 1))) {
+    return;
+  }
+  // Standalone means both sides are free: the prefix has lost its host on the
+  // right, and nothing runs into it on the left. Ending the input is not
+  // enough — with only the right condition this cheap one-mora interjection
+  // detaches the final mora of any hiragana noun that happens to end in お or
+  // ご (いちご read as いち + ご).
+  if (start_pos > 0 && char_types[start_pos - 1] != normalize::CharType::Symbol) {
     return;
   }
 
@@ -174,7 +183,8 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   }
 
   addHonorificSamaNounJoinCandidate(lattice, text, codepoints, byte_offsets, start_pos, char_types, scorer);
-  addStandaloneHonorificPrefixInterjectionCandidate(lattice, text, codepoints, byte_offsets, start_pos, scorer);
+  addStandaloneHonorificPrefixInterjectionCandidate(lattice, text, codepoints, byte_offsets, start_pos, char_types,
+                                                    scorer);
 
   // Check if current character is a productive prefix
   char32_t current_char = codepoints[start_pos];

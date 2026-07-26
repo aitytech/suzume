@@ -423,6 +423,84 @@
       ],
       "id": "hiragana_deverbal_noun_before_object_particle",
       "input": "つめあわせを作る"
+    },
+    {
+      "description": "りんごの色 - regression test",
+      "expected": [
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "色",
+          "pos": "Noun",
+          "surface": "色"
+        }
+      ],
+      "id": "ringono",
+      "input": "りんごの色"
+    },
+    {
+      "description": "りんご - regression test",
+      "expected": [
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        }
+      ],
+      "id": "ringo",
+      "input": "りんご"
+    },
+    {
+      "description": "みかんの皮 - regression test",
+      "expected": [
+        {
+          "lemma": "みかん",
+          "pos": "Noun",
+          "surface": "みかん"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "皮",
+          "pos": "Noun",
+          "surface": "皮"
+        }
+      ],
+      "id": "mikanno",
+      "input": "みかんの皮"
+    },
+    {
+      "description": "たくさんの人 - regression test",
+      "expected": [
+        {
+          "lemma": "たくさん",
+          "pos": "Adverb",
+          "surface": "たくさん"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        }
+      ],
+      "id": "takusanno",
+      "input": "たくさんの人"
     }
   ],
   "description": "General nouns (part 3/3)",

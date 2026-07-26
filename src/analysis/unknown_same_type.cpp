@@ -675,8 +675,17 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
     // clause boundary (sentence end / symbol).
     const bool right_genitive_after_internal_particle =
         scan < codepoints.size() && codepoints[scan] == U'の' && internal_particles > 0;
+    // A genitive の is normally no bracket at all, because it just as often
+    // marks a boundary inside the run. Once the run reaches the substantive
+    // three-mora length it does delimit the modifier, exactly as a case
+    // particle does at the same length. Without this an unregistered hiragana
+    // noun before の has no whole-run candidate and shatters into a chain of
+    // closed-class fragments (りんごの色).
+    const bool right_genitive_after_substantive_run =
+        scan < codepoints.size() && codepoints[scan] == U'の' && scan - start_pos >= 3;
     bool right_particle = (scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan])) ||
-                          multi_char_particle_at(scan) || right_genitive_after_internal_particle;
+                          multi_char_particle_at(scan) || right_genitive_after_internal_particle ||
+                          right_genitive_after_substantive_run;
     bool right_clause =
         (scan == codepoints.size()) || (scan < codepoints.size() && char_types[scan] == normalize::CharType::Symbol);
     // Whole-run candidate is safe at length 2 only when both sides are real particles
@@ -686,8 +695,11 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
     size_t min_len = fully_particle_bracketed ? 2 : 3;
     const std::string promoted_surface = extractSubstring(codepoints, start_pos, scan);
     const auto& promoted_inflections = inflection_.analyze(promoted_surface);
+    // Before a genitive the run is a modifier, so an inflected predicate
+    // reading of the whole span is the modifier (おおきい|の, 楽しい|の) and the
+    // nominal promotion must stand down, just as it does at a clause boundary.
     const bool has_inflected_predicate_reading =
-        right_clause &&
+        (right_clause || right_genitive_after_substantive_run) &&
         std::any_of(promoted_inflections.begin(), promoted_inflections.end(),
                     [](const grammar::InflectionCandidate& inflection_candidate) {
                       return !inflection_candidate.suffix.empty() &&
@@ -697,8 +709,11 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
         !has_inflected_predicate_reading &&
         !hasAuxiliaryParticleDecomposition(codepoints, start_pos, scan, dict_manager_)) {
       float noun_cost = getCostForType(start_type, len) + candidate::kPostParticleNounPenalty;
-      const bool selected_nominal = right_particle && (left_determiner_bracket || left_clause_bracket ||
-                                                       (start_pos > 0 && codepoints[start_pos - 1] == U'の'));
+      // A genitive right bracket is weaker evidence than a case particle, so it
+      // only makes the whole-run candidate available; it does not select it.
+      const bool selected_nominal =
+          right_particle && !right_genitive_after_substantive_run &&
+          (left_determiner_bracket || left_clause_bracket || (start_pos > 0 && codepoints[start_pos - 1] == U'の'));
       // This is an unknown-noun rescue path.  Keep the homographic noun
       // candidate when an exact lexical reading exists, but do not give it
       // the rescue bonus that would erase the dictionary POS (きれい, しかれ,
