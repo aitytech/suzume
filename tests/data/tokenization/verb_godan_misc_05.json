@@ -339,6 +339,106 @@
       ],
       "id": "itanode_ita",
       "input": "いたので驚いた"
+    },
+    {
+      "description": "Dialectal case particle さ between a nominal host and an independent predicate",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        }
+      ],
+      "id": "sa_ku",
+      "input": "紙さ書く"
+    },
+    {
+      "description": "Dialectal negative auxiliary ね after a verb irrealis with the case particle dropped",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ま"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ね"
+        }
+      ],
+      "id": "mane",
+      "input": "水飲まね"
+    },
+    {
+      "description": "Fossilized a-row nominal keeps its dictionary reading before a verb",
+      "expected": [
+        {
+          "lemma": "自ら",
+          "pos": "Noun",
+          "surface": "自ら"
+        },
+        {
+          "lemma": "動く",
+          "pos": "Verb",
+          "surface": "動く"
+        }
+      ],
+      "id": "ra_ku",
+      "input": "自ら動く"
+    },
+    {
+      "description": "Terminal form plus べき stays split instead of forming a longer verb",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        }
+      ],
+      "id": "kubeki",
+      "input": "行くべき道"
+    },
+    {
+      "description": "Final particle ね after a finite predicate keeps its particle reading",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "kune",
+      "input": "行くね"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
