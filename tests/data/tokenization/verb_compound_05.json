@@ -70,6 +70,77 @@
       ],
       "id": "te_shiwo_u",
       "input": "仕立て直しを行う"
+    },
+    {
+      "description": "Lexicalized compound whose V2 joins productively",
+      "expected": [
+        {
+          "lemma": "取り揃え",
+          "pos": "Noun",
+          "surface": "取り揃え"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ri_ewo_suru",
+      "input": "取り揃えを確認する"
+    },
+    {
+      "description": "Same V2 behind a different continuative",
+      "expected": [
+        {
+          "lemma": "買い揃え",
+          "pos": "Noun",
+          "surface": "買い揃え"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "i_ewo_meru",
+      "input": "買い揃えを進める"
+    },
+    {
+      "description": "The V2 stays an independent verb after a noun and case particle",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "揃える",
+          "pos": "Verb",
+          "surface": "揃える"
+        }
+      ],
+      "id": "wo_eru_2",
+      "input": "本を揃える"
     }
   ],
   "description": "Compound verbs (part 5/5)",

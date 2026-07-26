@@ -170,6 +170,7 @@ extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount] = {
     {"捨てる", "すてる", "てる", V2VerbType::Ichidan},           // 見捨てる
     {"届ける", "とどける", "ける", V2VerbType::Ichidan},         // 聞き届ける
     {"添える", "そえる", "える", V2VerbType::Ichidan},           // 書き添える
+    {"揃える", "そろえる", "える", V2VerbType::Ichidan},         // 取り揃える, 買い揃える
     {"押さえる", "おさえる", "える", V2VerbType::Ichidan},       // 取り押さえる
     {"調べる", "しらべる", "べる", V2VerbType::Ichidan},         // 取り調べる
     {"違える", "ちがえる", "える", V2VerbType::Ichidan},         // 取り違える
