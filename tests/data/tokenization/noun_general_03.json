@@ -583,6 +583,172 @@
       ],
       "id": "bi",
       "input": "呼び声"
+    },
+    {
+      "description": "再度確認する - regression test",
+      "expected": [
+        {
+          "lemma": "再度",
+          "pos": "Adverb",
+          "surface": "再度"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru_7",
+      "input": "再度確認する"
+    },
+    {
+      "description": "一旦確認する - regression test",
+      "expected": [
+        {
+          "lemma": "一旦",
+          "pos": "Adverb",
+          "surface": "一旦"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru_8",
+      "input": "一旦確認する"
+    },
+    {
+      "description": "万一確認する - regression test",
+      "expected": [
+        {
+          "lemma": "万一",
+          "pos": "Adverb",
+          "surface": "万一"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru_9",
+      "input": "万一確認する"
+    },
+    {
+      "description": "一斉確認する - regression test",
+      "expected": [
+        {
+          "lemma": "一斉",
+          "pos": "Noun",
+          "surface": "一斉"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru_10",
+      "input": "一斉確認する"
+    },
+    {
+      "description": "一番確認する - regression test",
+      "expected": [
+        {
+          "lemma": "一番",
+          "pos": "Noun",
+          "surface": "一番"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru_11",
+      "input": "一番確認する"
+    },
+    {
+      "description": "その結果確認する - regression test",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sono_suru",
+      "input": "その結果確認する"
+    },
+    {
+      "description": "一旦停止 - regression test",
+      "expected": [
+        {
+          "lemma": "一旦",
+          "pos": "Adverb",
+          "surface": "一旦"
+        },
+        {
+          "lemma": "停止",
+          "pos": "Noun",
+          "surface": "停止"
+        }
+      ],
+      "id": "unnamed_10",
+      "input": "一旦停止"
+    },
+    {
+      "description": "検査結果 - regression test",
+      "expected": [
+        {
+          "lemma": "検査結果",
+          "pos": "Noun",
+          "surface": "検査結果"
+        }
+      ],
+      "id": "unnamed_11",
+      "input": "検査結果"
     }
   ],
   "description": "General nouns (part 3/3)",
