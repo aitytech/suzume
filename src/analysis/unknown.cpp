@@ -510,8 +510,15 @@ core::PartOfSpeech UnknownWordGenerator::getPosForType(normalize::CharType ctype
       return core::PartOfSpeech::Noun;
     case normalize::CharType::Hiragana:
       return core::PartOfSpeech::Other;
-    default:
+    case normalize::CharType::Symbol:
+    case normalize::CharType::Emoji:
       return core::PartOfSpeech::Symbol;
+    case normalize::CharType::Unknown:
+    default:
+      // Preserve unclassified Unicode text by default. A future character
+      // class omission may produce a coarse POS, but must never make user
+      // input disappear when remove_symbols is enabled.
+      return core::PartOfSpeech::Other;
   }
 }
 

@@ -554,6 +554,18 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
   if (start_type == normalize::CharType::Hiragana &&
       (left_particle_bracket || left_determiner_bracket || left_clause_bracket) &&
       !isImpossibleHiraganaStart(codepoints[start_pos])) {
+    constexpr size_t kDefaultBracketedNounLength = 4;
+    constexpr size_t kLongDeverbalNounLength = 5;
+    const bool long_deverbal_object_shape =
+        getMaxLength(start_type) >= kLongDeverbalNounLength &&
+        start_pos + kLongDeverbalNounLength < codepoints.size() &&
+        std::all_of(char_types.begin() + static_cast<std::ptrdiff_t>(start_pos),
+                    char_types.begin() + static_cast<std::ptrdiff_t>(start_pos + kLongDeverbalNounLength),
+                    [](normalize::CharType type) { return type == normalize::CharType::Hiragana; }) &&
+        grammar::isERowCodepoint(codepoints[start_pos + kLongDeverbalNounLength - 1]) &&
+        codepoints[start_pos + kLongDeverbalNounLength] == U'を';
+    const size_t bracketed_noun_limit =
+        long_deverbal_object_shape ? kLongDeverbalNounLength : kDefaultBracketedNounLength;
     bool particle_initial =
         (codepoints[start_pos] == U'は' || codepoints[start_pos] == U'に' || codepoints[start_pos] == U'へ');
     size_t max_internal = particle_initial ? 0 : 2;
@@ -623,7 +635,8 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
     };
     bool crossed_verified_predicate = false;
     size_t scan = start_pos + 1;
-    while (scan < codepoints.size() && scan - start_pos < 4 && char_types[scan] == normalize::CharType::Hiragana) {
+    while (scan < codepoints.size() && scan - start_pos < bracketed_noun_limit &&
+           char_types[scan] == normalize::CharType::Hiragana) {
       char32_t curr = codepoints[scan];
       if (curr == U'を') {
         break;  // accusative を does not sit inside a native hiragana noun

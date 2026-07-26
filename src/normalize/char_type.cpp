@@ -130,6 +130,54 @@ bool hasCharProperty(char32_t codepoint, CharProperty property) {
          (kCharProperties[first].properties & property) != 0;
 }
 
+bool isGreekLetter(char32_t codepoint) {
+  return (codepoint >= 0x0370 && codepoint <= 0x0374) || (codepoint >= 0x0376 && codepoint <= 0x0377) ||
+         (codepoint >= 0x037A && codepoint <= 0x037D) || codepoint == 0x037F || codepoint == 0x0386 ||
+         (codepoint >= 0x0388 && codepoint <= 0x038A) || codepoint == 0x038C ||
+         (codepoint >= 0x038E && codepoint <= 0x03A1) || (codepoint >= 0x03A3 && codepoint <= 0x03F5) ||
+         (codepoint >= 0x03F7 && codepoint <= 0x03FF);
+}
+
+bool isGreekExtendedLetter(char32_t codepoint) {
+  return (codepoint >= 0x1F00 && codepoint <= 0x1F15) || (codepoint >= 0x1F18 && codepoint <= 0x1F1D) ||
+         (codepoint >= 0x1F20 && codepoint <= 0x1F45) || (codepoint >= 0x1F48 && codepoint <= 0x1F4D) ||
+         (codepoint >= 0x1F50 && codepoint <= 0x1F57) || codepoint == 0x1F59 || codepoint == 0x1F5B ||
+         codepoint == 0x1F5D || (codepoint >= 0x1F5F && codepoint <= 0x1F7D) ||
+         (codepoint >= 0x1F80 && codepoint <= 0x1FB4) || (codepoint >= 0x1FB6 && codepoint <= 0x1FBC) ||
+         codepoint == 0x1FBE || (codepoint >= 0x1FC2 && codepoint <= 0x1FC4) ||
+         (codepoint >= 0x1FC6 && codepoint <= 0x1FCC) || (codepoint >= 0x1FD0 && codepoint <= 0x1FD3) ||
+         (codepoint >= 0x1FD6 && codepoint <= 0x1FDB) || (codepoint >= 0x1FE0 && codepoint <= 0x1FEC) ||
+         (codepoint >= 0x1FF2 && codepoint <= 0x1FF4) || (codepoint >= 0x1FF6 && codepoint <= 0x1FFC);
+}
+
+bool isUnicodeLetterOrMark(char32_t codepoint) {
+  // Suzume does not ship the Unicode character database. Keep the major
+  // scripts seen in Japanese text as compact letter/mark ranges, excluding
+  // punctuation and digits that share their Unicode blocks.
+  return (codepoint >= 0x00C0 && codepoint <= 0x00D6) ||  // Latin-1 letters
+         (codepoint >= 0x00D8 && codepoint <= 0x00F6) ||
+         (codepoint >= 0x00F8 && codepoint <= 0x02AF) ||  // Latin extensions and IPA
+         (codepoint >= 0x0300 && codepoint <= 0x036F) ||  // Combining diacritical marks
+         isGreekLetter(codepoint) || (codepoint >= 0x0400 && codepoint <= 0x0481) ||
+         (codepoint >= 0x0483 && codepoint <= 0x052F) ||  // Cyrillic letters and marks
+         (codepoint >= 0x0E01 && codepoint <= 0x0E3A) ||  // Thai letters and marks
+         (codepoint >= 0x0E40 && codepoint <= 0x0E4E) || (codepoint >= 0x1100 && codepoint <= 0x11FF) ||
+         (codepoint >= 0x1C80 && codepoint <= 0x1C8F) || isGreekExtendedLetter(codepoint) ||
+         (codepoint >= 0x1D00 && codepoint <= 0x1EFF) ||    // Phonetic and Latin extensions
+         (codepoint >= 0x2C60 && codepoint <= 0x2C7F) ||    // Latin Extended-C
+         (codepoint >= 0x2DE0 && codepoint <= 0x2DFF) ||    // Cyrillic Extended-A
+         (codepoint >= 0x3130 && codepoint <= 0x318F) ||    // Hangul compatibility Jamo
+         (codepoint >= 0xA640 && codepoint <= 0xA69F) ||    // Cyrillic Extended-B
+         (codepoint >= 0xA720 && codepoint <= 0xA7FF) ||    // Latin Extended-D
+         (codepoint >= 0xA960 && codepoint <= 0xA97F) ||    // Hangul Jamo Extended-A
+         (codepoint >= 0xAB30 && codepoint <= 0xAB6F) ||    // Latin Extended-E
+         (codepoint >= 0xAC00 && codepoint <= 0xD7A3) ||    // Hangul syllables
+         (codepoint >= 0xD7B0 && codepoint <= 0xD7FF) ||    // Hangul Jamo Extended-B
+         (codepoint >= 0x10780 && codepoint <= 0x107BF) ||  // Latin Extended-F
+         (codepoint >= 0x1DF00 && codepoint <= 0x1DFFF) ||  // Latin Extended-G
+         (codepoint >= 0x1E030 && codepoint <= 0x1E08F);    // Cyrillic Extended-D
+}
+
 }  // namespace
 
 CharType classifyChar(char32_t codepoint) {
@@ -180,6 +228,10 @@ CharType classifyChar(char32_t codepoint) {
     return CharType::Alphabet;
   }
 
+  if (isUnicodeLetterOrMark(codepoint)) {
+    return CharType::Alphabet;
+  }
+
   // ASCII digits
   if (codepoint >= '0' && codepoint <= '9') {
     return CharType::Digit;
@@ -187,6 +239,11 @@ CharType classifyChar(char32_t codepoint) {
 
   // Full-width digits
   if (codepoint >= 0xFF10 && codepoint <= 0xFF19) {
+    return CharType::Digit;
+  }
+
+  // Thai digits
+  if (codepoint >= 0x0E50 && codepoint <= 0x0E59) {
     return CharType::Digit;
   }
 
@@ -215,11 +272,9 @@ CharType classifyChar(char32_t codepoint) {
       (codepoint >= 0x2600 && codepoint <= 0x26FF) ||    // Misc symbols
       (codepoint >= 0x2700 && codepoint <= 0x27BF) ||    // Dingbats
       (codepoint >= 0x2300 && codepoint <= 0x23FF) ||    // Misc Technical (⌚⌛⏰ etc.)
+      (codepoint >= 0x25A0 && codepoint <= 0x25FF) ||    // Geometric Shapes
       (codepoint >= 0x2B50 && codepoint <= 0x2B55) ||    // Stars and circles (⭐⭕ etc.)
       (codepoint >= 0x2934 && codepoint <= 0x2935) ||    // Arrows
-      (codepoint >= 0x25AA && codepoint <= 0x25AB) ||    // Squares
-      (codepoint >= 0x25B6 && codepoint <= 0x25C0) ||    // Triangles
-      (codepoint >= 0x25FB && codepoint <= 0x25FE) ||    // Squares
       (codepoint >= 0x2614 && codepoint <= 0x2615) ||    // Umbrella, hot beverage
       (codepoint >= 0x2648 && codepoint <= 0x2653) ||    // Zodiac signs
       (codepoint >= 0x267F && codepoint <= 0x267F) ||    // Wheelchair

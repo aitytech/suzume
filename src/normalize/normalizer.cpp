@@ -35,11 +35,6 @@ char32_t fullwidthToHalfwidth(char32_t codepoint, bool preserve_case) {
   return codepoint;
 }
 
-// Full-width ASCII to half-width (default: lowercase)
-char32_t fullwidthToHalfwidth(char32_t codepoint) {
-  return fullwidthToHalfwidth(codepoint, false);
-}
-
 // Half-width katakana to full-width
 char32_t halfwidthKatakanaToFullwidth(char32_t codepoint) {
   // Half-width katakana range: U+FF66-U+FF9F
@@ -191,12 +186,6 @@ char32_t normalizeVuSequence(char32_t vu_char, char32_t next_char) {
 }
 
 }  // namespace
-
-char32_t Normalizer::normalizeChar(char32_t codepoint) {
-  codepoint = fullwidthToHalfwidth(codepoint);
-  codepoint = halfwidthKatakanaToFullwidth(codepoint);
-  return codepoint;
-}
 
 core::Result<std::string> Normalizer::normalize(std::string_view text) const {
   if (!isValidUtf8(text)) {

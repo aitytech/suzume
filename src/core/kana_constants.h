@@ -71,7 +71,14 @@ inline bool isKanjiCodepoint(char32_t cp) {
          (cp >= 0x20000 && cp <= 0x2A6DF) ||  // CJK Extension B
          (cp >= 0x2A700 && cp <= 0x2B73F) ||  // CJK Extension C
          (cp >= 0x2B740 && cp <= 0x2B81F) ||  // CJK Extension D
+         (cp >= 0x2B820 && cp <= 0x2CEAF) ||  // CJK Extension E
+         (cp >= 0x2CEB0 && cp <= 0x2EBEF) ||  // CJK Extension F
+         (cp >= 0x2EBF0 && cp <= 0x2EE5F) ||  // CJK Extension I
+         (cp >= 0x30000 && cp <= 0x3134F) ||  // CJK Extension G
+         (cp >= 0x31350 && cp <= 0x323AF) ||  // CJK Extension H
+         (cp >= 0x323B0 && cp <= 0x3347F) ||  // CJK Extension J
          (cp >= 0xF900 && cp <= 0xFAFF) ||    // CJK Compatibility Ideographs
+         (cp >= 0x2F800 && cp <= 0x2FA1F) ||  // CJK Compatibility Ideographs Supplement
          (cp >= 0x2F00 && cp <= 0x2FDF);      // Kangxi Radicals
 }
 

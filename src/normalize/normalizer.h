@@ -49,13 +49,6 @@ class Normalizer {
   core::Result<std::string> normalize(std::string_view text) const;
 
   /**
-   * @brief Normalize a single codepoint
-   * @param codepoint Unicode codepoint
-   * @return Normalized codepoint
-   */
-  static char32_t normalizeChar(char32_t codepoint);
-
-  /**
    * @brief Check if text needs normalization
    * @param text Input text
    * @return true if normalization would change the text

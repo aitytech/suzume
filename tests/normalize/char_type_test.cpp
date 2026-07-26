@@ -85,9 +85,26 @@ TEST(CharTypeTest, ClassifyCJKExtensionD) {
   EXPECT_EQ(classifyChar(0x2B81F), CharType::Kanji);
 }
 
+TEST(CharTypeTest, ClassifyModernCJKExtensions) {
+  EXPECT_EQ(classifyChar(0x2B820), CharType::Kanji);  // Extension E start
+  EXPECT_EQ(classifyChar(0x2CEAF), CharType::Kanji);  // Extension E end
+  EXPECT_EQ(classifyChar(0x2CEB0), CharType::Kanji);  // Extension F start
+  EXPECT_EQ(classifyChar(0x2EBEF), CharType::Kanji);  // Extension F end
+  EXPECT_EQ(classifyChar(0x2EBF0), CharType::Kanji);  // Extension I start
+  EXPECT_EQ(classifyChar(0x2EE5F), CharType::Kanji);  // Extension I block end
+  EXPECT_EQ(classifyChar(0x30000), CharType::Kanji);  // Extension G start
+  EXPECT_EQ(classifyChar(0x3134F), CharType::Kanji);  // Extension G block end
+  EXPECT_EQ(classifyChar(0x31350), CharType::Kanji);  // Extension H start
+  EXPECT_EQ(classifyChar(0x323AF), CharType::Kanji);  // Extension H end
+  EXPECT_EQ(classifyChar(0x323B0), CharType::Kanji);  // Extension J start
+  EXPECT_EQ(classifyChar(0x3347F), CharType::Kanji);  // Extension J block end
+}
+
 TEST(CharTypeTest, ClassifyCJKCompatibilityIdeographs) {
   EXPECT_EQ(classifyChar(0xF900), CharType::Kanji);
   EXPECT_EQ(classifyChar(0xFAFF), CharType::Kanji);
+  EXPECT_EQ(classifyChar(0x2F800), CharType::Kanji);
+  EXPECT_EQ(classifyChar(0x2FA1F), CharType::Kanji);
 }
 
 TEST(CharTypeTest, ClassifyKangxiRadicals) {
@@ -110,6 +127,24 @@ TEST(CharTypeTest, ClassifyFullWidthAlphabet) {
   EXPECT_EQ(classifyChar(0xFF5A), CharType::Alphabet);  // Full-width z
 }
 
+TEST(CharTypeTest, ClassifyUnicodeAlphabeticBlocks) {
+  EXPECT_EQ(classifyChar(U'é'), CharType::Alphabet);
+  EXPECT_EQ(classifyChar(0x0301), CharType::Alphabet);  // Combining acute accent
+  EXPECT_EQ(classifyChar(U'Ω'), CharType::Alphabet);
+  EXPECT_EQ(classifyChar(0x1F00), CharType::Alphabet);  // Greek Extended
+  EXPECT_EQ(classifyChar(U'Я'), CharType::Alphabet);
+  EXPECT_EQ(classifyChar(U'ก'), CharType::Alphabet);
+  EXPECT_EQ(classifyChar(U'서'), CharType::Alphabet);
+  EXPECT_EQ(classifyChar(0xA720), CharType::Alphabet);   // Latin Extended-D
+  EXPECT_EQ(classifyChar(0x1E030), CharType::Alphabet);  // Cyrillic Extended-D
+
+  EXPECT_EQ(classifyChar(U'×'), CharType::Unknown);
+  EXPECT_EQ(classifyChar(U'÷'), CharType::Unknown);
+  EXPECT_EQ(classifyChar(0x0387), CharType::Unknown);  // Greek ano teleia
+  EXPECT_EQ(classifyChar(0x03F6), CharType::Unknown);  // Greek reversed lunate epsilon symbol
+  EXPECT_EQ(classifyChar(0x0E5A), CharType::Unknown);  // Thai punctuation
+}
+
 TEST(CharTypeTest, ClassifyAsciiDigits) {
   EXPECT_EQ(classifyChar(U'0'), CharType::Digit);
   EXPECT_EQ(classifyChar(U'9'), CharType::Digit);
@@ -119,6 +154,11 @@ TEST(CharTypeTest, ClassifyAsciiDigits) {
 TEST(CharTypeTest, ClassifyFullWidthDigits) {
   EXPECT_EQ(classifyChar(0xFF10), CharType::Digit);  // Full-width 0
   EXPECT_EQ(classifyChar(0xFF19), CharType::Digit);  // Full-width 9
+}
+
+TEST(CharTypeTest, ClassifyThaiDigits) {
+  EXPECT_EQ(classifyChar(0x0E50), CharType::Digit);
+  EXPECT_EQ(classifyChar(0x0E59), CharType::Digit);
 }
 
 TEST(CharTypeTest, ClassifyCJKSymbols) {
@@ -147,6 +187,7 @@ TEST(CharTypeTest, ClassifyEmoji) {
   EXPECT_EQ(classifyChar(0x1F4A9), CharType::Emoji);  // Misc symbols
   EXPECT_EQ(classifyChar(0x1F680), CharType::Emoji);  // Rocket
   EXPECT_EQ(classifyChar(0x2615), CharType::Emoji);   // Hot beverage
+  EXPECT_EQ(classifyChar(0x25CE), CharType::Emoji);   // Bullseye
   EXPECT_EQ(classifyChar(0x2B50), CharType::Emoji);   // Star
   EXPECT_EQ(classifyChar(0x231A), CharType::Emoji);   // Watch
   EXPECT_EQ(classifyChar(0x1F1E6), CharType::Emoji);  // Regional indicator A
@@ -156,10 +197,6 @@ TEST(CharTypeTest, ClassifyEmoji) {
 TEST(CharTypeTest, ClassifyUnknown) {
   // Arabic character - not in any recognized range
   EXPECT_EQ(classifyChar(0x0627), CharType::Unknown);
-  // Cyrillic
-  EXPECT_EQ(classifyChar(0x0410), CharType::Unknown);
-  // Thai
-  EXPECT_EQ(classifyChar(0x0E01), CharType::Unknown);
 }
 
 // ============================================================================
@@ -544,8 +581,16 @@ TEST(CharTypeTest, IsKanjiCodepoint) {
   EXPECT_TRUE(isKanjiCodepoint(0x2A700));
   // Extension D
   EXPECT_TRUE(isKanjiCodepoint(0x2B740));
+  // Extensions E, F, I, G, H, and J
+  EXPECT_TRUE(isKanjiCodepoint(0x2B820));
+  EXPECT_TRUE(isKanjiCodepoint(0x2CEB0));
+  EXPECT_TRUE(isKanjiCodepoint(0x2EBF0));
+  EXPECT_TRUE(isKanjiCodepoint(0x30000));
+  EXPECT_TRUE(isKanjiCodepoint(0x31350));
+  EXPECT_TRUE(isKanjiCodepoint(0x323B0));
   // CJK Compatibility
   EXPECT_TRUE(isKanjiCodepoint(0xF900));
+  EXPECT_TRUE(isKanjiCodepoint(0x2F800));
   // Kangxi Radicals
   EXPECT_TRUE(isKanjiCodepoint(0x2F00));
 
