@@ -299,6 +299,8 @@ def _run_analysis(args: argparse.Namespace, parser: argparse.ArgumentParser) -> 
         lemmatize=not args.no_lemmatize,
         merge_compounds=args.merge_compounds,
     ) as analyzer:
+        for warning in analyzer.dictionary_warnings:
+            print(f"warning: {warning}", file=sys.stderr)
         _load_dictionaries(analyzer, args.dictionary_paths)
         if args.format == "tags":
             tags = analyzer.generate_tags(

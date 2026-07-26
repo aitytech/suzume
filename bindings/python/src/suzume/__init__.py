@@ -13,9 +13,10 @@ Example:
 from __future__ import annotations
 
 import ctypes
+import json
 from collections.abc import Iterable
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, IntEnum
 from types import TracebackType
 
 from ._ffi import (
@@ -24,24 +25,25 @@ from ._ffi import (
     load_library,
 )
 from ._labels import (
+    FLAG_CONJUGATABLE,
     FLAG_FORMAL_NOUN,
     FLAG_FROM_DICTIONARY,
     FLAG_LOW_INFO,
     FLAG_UNKNOWN,
     FLAG_USER_DICT,
     conjugation_form,
-    conjugation_type,
     extended_pos,
-    pos_english,
     pos_japanese,
 )
 
 __all__ = [
     "Suzume",
     "Morpheme",
+    "AnalysisResult",
     "Tag",
     "Mode",
     "SuzumeError",
+    "ErrorCode",
     "version",
 ]
 
@@ -72,8 +74,25 @@ def _resolve_pos_filter(pos_filter: int | Iterable[str]) -> int:
     return mask
 
 
+class ErrorCode(IntEnum):
+    """Stable native error categories."""
+
+    SUCCESS = 0
+    INVALID_UTF8 = 1
+    DICTIONARY_LOAD_FAILED = 2
+    FILE_NOT_FOUND = 3
+    PARSE = 4
+    OUT_OF_MEMORY = 5
+    INVALID_INPUT = 6
+    INTERNAL = 7
+
+
 class SuzumeError(RuntimeError):
     """Raised when a native suzume call fails."""
+
+    def __init__(self, message: str, code: ErrorCode | int = ErrorCode.INTERNAL) -> None:
+        super().__init__(message)
+        self.code = ErrorCode(code)
 
 
 class Mode(str, Enum):
@@ -110,6 +129,14 @@ class Morpheme:
 
 
 @dataclass(frozen=True)
+class AnalysisResult:
+    """Normalized input together with its morphemes."""
+
+    normalized_text: str
+    morphemes: list[Morpheme]
+
+
+@dataclass(frozen=True)
 class Tag:
     """A generated tag: the keyword text plus its part of speech."""
 
@@ -124,6 +151,13 @@ def _decode(value: bytes | None) -> str:
 def version() -> str:
     """Return the native library version string."""
     return _decode(_lib.suzume_version())
+
+
+def _native_error(fallback: str) -> SuzumeError:
+    return SuzumeError(
+        _decode(_lib.suzume_last_error()) or fallback,
+        _lib.suzume_last_error_code(),
+    )
 
 
 class Suzume:
@@ -142,6 +176,10 @@ class Suzume:
         preserve_symbols: bool = False,
         lemmatize: bool = True,
         merge_compounds: bool = False,
+        skip_user_dictionary: bool = False,
+        skip_core_dictionary: bool = False,
+        report_scorer_config: bool = False,
+        scorer_options: str | dict[str, object] | None = None,
     ) -> None:
         mode = Mode(mode)
         opts = SuzumeExtendedOptions()
@@ -152,12 +190,22 @@ class Suzume:
         opts.mode = mode._code
         opts.lemmatize = int(lemmatize)
         opts.merge_compounds = int(merge_compounds)
+        opts.skip_user_dictionary = int(skip_user_dictionary)
+        opts.skip_core_dictionary = int(skip_core_dictionary)
+        opts.report_scorer_config = int(report_scorer_config)
+        scorer_json = (
+            scorer_options
+            if isinstance(scorer_options, str)
+            else json.dumps(scorer_options, ensure_ascii=False)
+            if scorer_options is not None
+            else None
+        )
+        scorer_payload = scorer_json.encode("utf-8") if scorer_json is not None else None
+        opts.scorer_options_json = scorer_payload
 
         handle = _lib.suzume_create_with_extended_options(ctypes.byref(opts))
         if not handle:
-            raise SuzumeError(
-                _decode(_lib.suzume_last_error()) or "failed to create Suzume instance"
-            )
+            raise _native_error("failed to create Suzume instance")
         self._handle: int | None = handle
 
     # --- lifecycle ---
@@ -191,23 +239,35 @@ class Suzume:
 
     def analyze(self, text: str) -> list[Morpheme]:
         """Analyze ``text`` into a list of :class:`Morpheme`."""
+        return self.analyze_with_normalized_text(text).morphemes
+
+    def analyze_with_normalized_text(self, text: str) -> AnalysisResult:
+        """Analyze text and return the exact normalized text used for offsets."""
         handle = self._require_handle()
-        result = _lib.suzume_analyze(handle, text.encode("utf-8"))
+        try:
+            payload = text.encode("utf-8")
+        except UnicodeEncodeError as error:
+            raise SuzumeError(str(error), ErrorCode.INVALID_UTF8) from error
+        result = _lib.suzume_analyze_n(handle, payload, len(payload))
         if not result:
-            raise SuzumeError(_decode(_lib.suzume_last_error()) or "analysis failed")
+            raise _native_error("analysis failed")
         try:
             data = result.contents
             out: list[Morpheme] = []
             for idx in range(data.count):
                 m = data.morphemes[idx]
-                conjugates = m.pos in (2, 3)
+                conjugates = bool(m.flags & FLAG_CONJUGATABLE)
                 out.append(
                     Morpheme(
                         surface=_decode(m.surface),
-                        pos=pos_english(m.pos),
+                        pos=_decode(_lib.suzume_pos_label(m.pos)) or "OTHER",
                         base_form=_decode(m.base_form),
                         pos_ja=pos_japanese(m.pos),
-                        conj_type=conjugation_type(m.conjugation_type) if conjugates else None,
+                        conj_type=(
+                            _decode(_lib.suzume_conjugation_type_label(m.conjugation_type))
+                            if conjugates
+                            else None
+                        ),
                         conj_form=conjugation_form(m.conjugation_form) if conjugates else None,
                         extended_pos=extended_pos(m.extended_pos),
                         start=int(m.start),
@@ -220,7 +280,12 @@ class Suzume:
                         score=float(m.score),
                     )
                 )
-            return out
+            return AnalysisResult(
+                normalized_text=ctypes.string_at(
+                    data.normalized_text, data.normalized_text_size
+                ).decode("utf-8"),
+                morphemes=out,
+            )
         finally:
             _lib.suzume_result_free(result)
 
@@ -247,28 +312,37 @@ class Suzume:
         together. All other flags map directly to the native tag options.
         """
         handle = self._require_handle()
-        opts = SuzumeTagOptions(
-            pos_filter=_resolve_pos_filter(pos_filter),
-            exclude_basic=int(exclude_basic),
-            use_lemma=int(use_lemma),
-            min_length=min_length,
-            max_tags=max_tags,
-            exclude_particles=int(exclude_particles),
-            exclude_auxiliaries=int(exclude_auxiliaries),
-            exclude_formal_nouns=int(exclude_formal_nouns),
-            exclude_low_info=int(exclude_low_info),
-            remove_duplicates=int(remove_duplicates),
-        )
-        result = _lib.suzume_generate_tags_with_options(
-            handle, text.encode("utf-8"), ctypes.byref(opts)
+        try:
+            payload = text.encode("utf-8")
+        except UnicodeEncodeError as error:
+            raise SuzumeError(str(error), ErrorCode.INVALID_UTF8) from error
+        opts = SuzumeTagOptions()
+        _lib.suzume_init_tag_options(ctypes.byref(opts))
+        opts.pos_filter = _resolve_pos_filter(pos_filter)
+        opts.exclude_basic = int(exclude_basic)
+        opts.use_lemma = int(use_lemma)
+        opts.min_length = min_length
+        opts.max_tags = max_tags
+        opts.exclude_particles = int(exclude_particles)
+        opts.exclude_auxiliaries = int(exclude_auxiliaries)
+        opts.exclude_formal_nouns = int(exclude_formal_nouns)
+        opts.exclude_low_info = int(exclude_low_info)
+        opts.remove_duplicates = int(remove_duplicates)
+        result = _lib.suzume_generate_tags_with_options_n(
+            handle, payload, len(payload), ctypes.byref(opts)
         )
         if not result:
-            raise SuzumeError(_decode(_lib.suzume_last_error()) or "tag generation failed")
+            raise _native_error("tag generation failed")
         try:
             data = result.contents
             out: list[Tag] = []
             for idx in range(data.count):
-                out.append(Tag(tag=_decode(data.tags[idx]), pos=pos_english(data.pos[idx])))
+                out.append(
+                    Tag(
+                        tag=_decode(data.tags[idx]),
+                        pos=_decode(_lib.suzume_pos_label(data.pos[idx])) or "OTHER",
+                    )
+                )
             return out
         finally:
             _lib.suzume_tags_free(result)
@@ -280,16 +354,20 @@ class Suzume:
         handle = self._require_handle()
         payload = csv.encode("utf-8")
         if not _lib.suzume_load_user_dict(handle, payload, len(payload)):
-            raise SuzumeError(_decode(_lib.suzume_last_error()) or "failed to load user dictionary")
+            raise _native_error("failed to load user dictionary")
 
     def load_binary_dict(self, data: bytes) -> None:
         """Load a compiled binary (.dic) dictionary from memory."""
         handle = self._require_handle()
         buf = (ctypes.c_uint8 * len(data)).from_buffer_copy(data)
         if not _lib.suzume_load_binary_dict(handle, buf, len(data)):
-            raise SuzumeError(
-                _decode(_lib.suzume_last_error()) or "failed to load binary dictionary"
-            )
+            raise _native_error("failed to load binary dictionary")
+
+    def clear_user_dictionaries(self) -> None:
+        """Remove all user dictionaries loaded by this analyzer."""
+        handle = self._require_handle()
+        if not _lib.suzume_clear_user_dictionaries(handle):
+            raise _native_error("failed to clear user dictionaries")
 
     @property
     def dictionary_warnings(self) -> list[str]:

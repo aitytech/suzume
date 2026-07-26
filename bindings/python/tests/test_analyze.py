@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 import suzume
-from suzume import Mode, Morpheme, Suzume, SuzumeError
-from suzume._labels import EXTENDED_POS, extended_pos
+from suzume import ErrorCode, Mode, Morpheme, Suzume, SuzumeError
+from suzume._labels import (
+    EXTENDED_POS,
+    conjugation_form,
+    conjugation_type,
+    extended_pos,
+)
 
 
 def test_extended_pos_labels_match_the_serialized_range() -> None:
@@ -18,6 +23,17 @@ def test_extended_pos_labels_match_the_serialized_range() -> None:
     # One past the last label: a code the C ABI has but the table does not must
     # degrade to UNKNOWN rather than shift every later label by one.
     assert extended_pos(83) == "UNKNOWN"
+
+
+def test_conjugation_labels_match_the_serialized_range() -> None:
+    assert conjugation_type(14) == "ナ形容詞"
+    assert conjugation_type(15) == "感動詞"
+    assert conjugation_type(16) == "固有名詞・姓"
+    assert conjugation_type(17) == "固有名詞・名"
+    assert conjugation_type(18) is None
+
+    assert conjugation_form(6) == "意志形"
+    assert conjugation_form(7) is None
 
 
 def test_version_is_nonempty() -> None:
@@ -59,6 +75,44 @@ def test_conjugation_fields_are_none_for_non_conjugating_words() -> None:
 def test_empty_string_yields_no_morphemes() -> None:
     with Suzume() as sz:
         assert sz.analyze("") == []
+
+
+def test_length_aware_analysis_preserves_embedded_null_and_normalized_text() -> None:
+    with Suzume() as sz:
+        result = sz.analyze_with_normalized_text("東京\0大阪")
+        tags = sz.generate_tags("東京\0大阪", min_length=1)
+    assert "大阪" in result.normalized_text
+    assert any(m.surface == "大阪" for m in result.morphemes)
+    assert any(tag.tag == "大阪" for tag in tags)
+
+
+def test_invalid_unicode_reports_stable_error_code() -> None:
+    with Suzume() as sz:
+        try:
+            sz.analyze("\ud800")
+        except SuzumeError as error:
+            assert error.code is ErrorCode.INVALID_UTF8
+        else:  # pragma: no cover
+            raise AssertionError("expected invalid UTF-8 error")
+
+
+def test_extended_options_and_clear_are_public() -> None:
+    with Suzume(
+        skip_user_dictionary=True,
+        skip_core_dictionary=True,
+        scorer_options={"unary": {"noun_prior": 0.25}},
+    ) as sz:
+        assert sz.dictionary_warnings == []
+        sz.clear_user_dictionaries()
+
+
+def test_invalid_scorer_json_reports_parse_error() -> None:
+    try:
+        Suzume(scorer_options="{")
+    except SuzumeError as error:
+        assert error.code is ErrorCode.PARSE
+    else:  # pragma: no cover
+        raise AssertionError("expected scorer parse error")
 
 
 def test_search_mode_constructs() -> None:

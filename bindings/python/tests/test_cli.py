@@ -356,6 +356,31 @@ def test_missing_input_returns_one_and_uses_stderr() -> None:
     assert "no input text provided" in result.stderr
 
 
+def test_dictionary_warnings_are_written_to_stderr(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    class WarningAnalyzer:
+        dictionary_warnings = ["dictionary unavailable"]
+
+        def __init__(self, **kwargs: object) -> None:
+            pass
+
+        def __enter__(self) -> WarningAnalyzer:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def analyze(self, text: str) -> list[suzume.Morpheme]:
+            return []
+
+    monkeypatch.setattr(cli, "Suzume", WarningAnalyzer)
+    parser = cli._build_parser()
+    args = parser.parse_args(["東京"])
+    assert cli._run_analysis(args, parser) == 0
+    assert "warning: dictionary unavailable" in capsys.readouterr().err
+
+
 def test_invalid_utf8_stdin_fails_cleanly() -> None:
     result = _run_cli_bytes("--format", "json", input_bytes=b"\xff\n")
     assert result.returncode == 1

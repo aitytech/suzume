@@ -136,6 +136,10 @@ CONJUGATION_TYPES: tuple[str | None, ...] = (
     "サ変",
     "カ変",
     "形容詞",
+    "ナ形容詞",
+    "感動詞",
+    "固有名詞・姓",
+    "固有名詞・名",
 )
 CONJUGATION_FORMS = ("終止形", "未然形", "連用形", "連用形", "仮定形", "命令形", "意志形")
 
@@ -144,6 +148,7 @@ FLAG_FORMAL_NOUN = 1 << 1
 FLAG_LOW_INFO = 1 << 2
 FLAG_UNKNOWN = 1 << 3
 FLAG_FROM_DICTIONARY = 1 << 4
+FLAG_CONJUGATABLE = 1 << 5
 
 
 def _lookup(values: tuple[str, ...], code: int, fallback: str) -> str:

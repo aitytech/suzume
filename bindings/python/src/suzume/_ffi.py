@@ -41,6 +41,8 @@ class SuzumeResult(ctypes.Structure):
     _fields_ = [
         ("morphemes", ctypes.POINTER(SuzumeMorpheme)),
         ("count", ctypes.c_size_t),
+        ("normalized_text", ctypes.POINTER(ctypes.c_char)),
+        ("normalized_text_size", ctypes.c_size_t),
     ]
 
 
@@ -60,6 +62,10 @@ class SuzumeExtendedOptions(ctypes.Structure):
         ("mode", ctypes.c_uint8),
         ("lemmatize", ctypes.c_uint8),
         ("merge_compounds", ctypes.c_uint8),
+        ("skip_user_dictionary", ctypes.c_uint8),
+        ("skip_core_dictionary", ctypes.c_uint8),
+        ("report_scorer_config", ctypes.c_uint8),
+        ("scorer_options_json", ctypes.c_char_p),
     ]
 
 
@@ -109,7 +115,9 @@ def _find_library() -> str:
     # Source checkout: bindings/python/src/suzume/_ffi.py -> project root is 4 up.
     project_root = pkg_dir.parents[3]
     if (project_root / "CMakeLists.txt").exists():
-        for build_dir in ("build-python", "build-shared", "build"):
+        # `make python-test` refreshes build-shared. Prefer that canonical
+        # developer build over a possibly stale wheel workspace.
+        for build_dir in ("build-shared", "build-python", "build"):
             build_path = project_root / build_dir / "lib" / lib_name
             if build_path.exists():
                 return str(build_path)
@@ -148,16 +156,33 @@ def _configure_signatures(lib: ctypes.CDLL) -> None:
     lib.suzume_analyze.restype = ctypes.POINTER(SuzumeResult)
     lib.suzume_analyze.argtypes = [handle, ctypes.c_char_p]
 
+    lib.suzume_analyze_n.restype = ctypes.POINTER(SuzumeResult)
+    lib.suzume_analyze_n.argtypes = [handle, ctypes.c_char_p, ctypes.c_size_t]
+
     lib.suzume_result_free.restype = None
     lib.suzume_result_free.argtypes = [ctypes.POINTER(SuzumeResult)]
 
     lib.suzume_generate_tags.restype = ctypes.POINTER(SuzumeTags)
     lib.suzume_generate_tags.argtypes = [handle, ctypes.c_char_p]
 
+    lib.suzume_generate_tags_n.restype = ctypes.POINTER(SuzumeTags)
+    lib.suzume_generate_tags_n.argtypes = [handle, ctypes.c_char_p, ctypes.c_size_t]
+
+    lib.suzume_init_tag_options.restype = None
+    lib.suzume_init_tag_options.argtypes = [ctypes.POINTER(SuzumeTagOptions)]
+
     lib.suzume_generate_tags_with_options.restype = ctypes.POINTER(SuzumeTags)
     lib.suzume_generate_tags_with_options.argtypes = [
         handle,
         ctypes.c_char_p,
+        ctypes.POINTER(SuzumeTagOptions),
+    ]
+
+    lib.suzume_generate_tags_with_options_n.restype = ctypes.POINTER(SuzumeTags)
+    lib.suzume_generate_tags_with_options_n.argtypes = [
+        handle,
+        ctypes.c_char_p,
+        ctypes.c_size_t,
         ctypes.POINTER(SuzumeTagOptions),
     ]
 
@@ -174,11 +199,23 @@ def _configure_signatures(lib: ctypes.CDLL) -> None:
         ctypes.c_size_t,
     ]
 
+    lib.suzume_clear_user_dictionaries.restype = ctypes.c_int
+    lib.suzume_clear_user_dictionaries.argtypes = [handle]
+
     lib.suzume_version.restype = ctypes.c_char_p
     lib.suzume_version.argtypes = []
 
     lib.suzume_last_error.restype = ctypes.c_char_p
     lib.suzume_last_error.argtypes = []
+
+    lib.suzume_last_error_code.restype = ctypes.c_uint8
+    lib.suzume_last_error_code.argtypes = []
+
+    lib.suzume_conjugation_type_label.restype = ctypes.c_char_p
+    lib.suzume_conjugation_type_label.argtypes = [ctypes.c_uint8]
+
+    lib.suzume_pos_label.restype = ctypes.c_char_p
+    lib.suzume_pos_label.argtypes = [ctypes.c_uint8]
 
     lib.suzume_dictionary_warning_count.restype = ctypes.c_size_t
     lib.suzume_dictionary_warning_count.argtypes = [handle]
