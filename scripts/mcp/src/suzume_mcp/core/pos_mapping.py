@@ -5,7 +5,9 @@ import regex
 from .constants import (
     ADVERB_OVERRIDES,
     BENEFACTIVE_REQUEST_LEMMAS,
+    CLASSICAL_KI_CONJ_TYPE,
     DIALECT_FINAL_PARTICLES,
+    FINITE_PREDECESSOR_CONJ_FORM,
     KEEP_AS_NOUN_NOT_ADJ,
     NA_ADJ_OVERRIDES,
     NOUN_AS_PRONOUN,
@@ -405,6 +407,18 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
                 "形容詞",
             ):
                 t["pos"] = "Particle"
+
+        # The regional causal き is read as the classical past auxiliary, which
+        # it is homographic with. Only the form in front separates them: the
+        # classical auxiliary attaches to a continuative, so a finite predicate
+        # before it identifies the conjunctive particle instead.
+        if (
+            surface == "き"
+            and t.get("conj_type") == CLASSICAL_KI_CONJ_TYPE
+            and idx > 0
+            and tokens[idx - 1].get("conj_form") == FINITE_PREDECESSOR_CONJ_FORM
+        ):
+            t["pos"] = "Particle"
 
         # Fix の (名詞,非自立) as Particle
         if surface == "の" and pos == "名詞" and t.get("pos_sub1") == "非自立":
