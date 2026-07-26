@@ -1,7 +1,13 @@
 // Emscripten uses a 32-bit ABI. C++ static_asserts in suzume_c.cpp guard these
 // constants at build time, avoiding runtime sizeof/offsetof exports in WASM.
 export const C_LAYOUTS = {
-  result: { size: 8, morphemes: 0, count: 4 },
+  result: {
+    size: 16,
+    morphemes: 0,
+    count: 4,
+    normalizedText: 8,
+    normalizedTextSize: 12,
+  },
   morpheme: {
     size: 28,
     surface: 0,
@@ -30,12 +36,16 @@ export const C_LAYOUTS = {
     removeDuplicates: 16,
   },
   extendedOptions: {
-    size: 6,
+    size: 16,
     preserveVu: 0,
     preserveCase: 1,
     preserveSymbols: 2,
     mode: 3,
     lemmatize: 4,
     mergeCompounds: 5,
+    skipUserDictionary: 6,
+    skipCoreDictionary: 7,
+    reportScorerConfig: 8,
+    scorerOptionsJson: 12,
   },
 } as const;

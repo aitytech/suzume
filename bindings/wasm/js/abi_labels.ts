@@ -138,6 +138,10 @@ const CONJUGATION_TYPE_JAPANESE: readonly (string | null)[] = [
   'サ変',
   'カ変',
   '形容詞',
+  'ナ形容詞',
+  '感動詞',
+  '固有名詞・姓',
+  '固有名詞・名',
 ];
 
 const CONJUGATION_FORM_JAPANESE = [
@@ -156,6 +160,7 @@ export const MORPHEME_FLAG = {
   lowInfo: 1 << 2,
   unknown: 1 << 3,
   fromDictionary: 1 << 4,
+  conjugatable: 1 << 5,
 } as const;
 
 export function posEnglish(code: number): string {

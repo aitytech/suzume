@@ -1,5 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { allocString, getModule, parseMorphemes, type WasmModule } from './helpers';
+import {
+  allocString,
+  EXTENDED_OPTIONS_LAYOUT,
+  getModule,
+  parseMorphemes,
+  type WasmModule,
+} from './helpers';
 
 describe('C API: analyze', () => {
   let module: WasmModule;
@@ -223,9 +229,9 @@ describe('C API: create_with_extended_options', () => {
     const resultFree = module.cwrap('suzume_result_free', null, ['number']) as (r: number) => void;
     const destroy = module.cwrap('suzume_destroy', null, ['number']) as (h: number) => void;
 
-    const optionsPtr = module._malloc(6);
+    const optionsPtr = module._malloc(EXTENDED_OPTIONS_LAYOUT.size);
     initOptions(optionsPtr);
-    new Uint8Array(module.HEAPU32.buffer)[optionsPtr + 2] = 1; // preserve_symbols
+    new Uint8Array(module.HEAPU32.buffer)[optionsPtr + EXTENDED_OPTIONS_LAYOUT.preserveSymbols] = 1;
     const h = createWithOptions(optionsPtr);
     module._free(optionsPtr);
     expect(h).toBeGreaterThan(0);

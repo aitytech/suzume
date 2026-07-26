@@ -37,6 +37,22 @@ const tags = suzume.generateTags('東京の公園に行きました')
 suzume.destroy() // optional immediate cleanup
 ```
 
+## Filtering generated tags by part of speech
+
+Use `posFilter` with any combination of `noun`, `verb`, `adjective`, and
+`adverb`:
+
+```typescript
+const tags = suzume.generateTags('東京の公園に行きました', {
+  posFilter: ['noun', 'verb'],
+})
+```
+
+Unknown names throw an `Error`. An empty array (`posFilter: []`) means all
+content words, matching the default native filter. The former `pos` option
+remains available as a deprecated alias; when both are provided, `posFilter`
+takes precedence.
+
 ## Loading the `.wasm` file
 
 Bundlers that do not resolve the WebAssembly asset automatically can pass its

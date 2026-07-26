@@ -21,19 +21,31 @@ interface EmscriptenModule {
   _suzume_create_with_extended_options: (optionsPtr: number) => number;
   _suzume_destroy: (handle: number) => void;
   _suzume_analyze: (handle: number, textPtr: number) => number;
+  _suzume_analyze_n: (handle: number, textPtr: number, size: number) => number;
   _suzume_result_free: (resultPtr: number) => void;
   _suzume_generate_tags: (handle: number, textPtr: number) => number;
+  _suzume_generate_tags_n: (handle: number, textPtr: number, size: number) => number;
   _suzume_init_tag_options: (optionsPtr: number) => void;
   _suzume_generate_tags_with_options: (
     handle: number,
     textPtr: number,
     optionsPtr: number,
   ) => number;
+  _suzume_generate_tags_with_options_n: (
+    handle: number,
+    textPtr: number,
+    size: number,
+    optionsPtr: number,
+  ) => number;
   _suzume_tags_free: (tagsPtr: number) => void;
   _suzume_load_user_dict: (handle: number, dataPtr: number, size: number) => number;
   _suzume_load_binary_dict: (handle: number, dataPtr: number, size: number) => number;
+  _suzume_clear_user_dictionaries: (handle: number) => number;
   _suzume_version: () => number;
   _suzume_last_error: () => number;
+  _suzume_last_error_code: () => number;
+  _suzume_conjugation_type_label: (code: number) => number;
+  _suzume_pos_label: (code: number) => number;
   _suzume_dictionary_warning_count: (handle: number) => number;
   _suzume_dictionary_warning: (handle: number, index: number) => number;
 }

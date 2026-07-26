@@ -11,7 +11,12 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Suzume } from '../dist/index.js';
-import { extendedPosLabel } from '../js/abi_labels.js';
+import {
+  conjugationFormJapanese,
+  conjugationTypeJapanese,
+  extendedPosLabel,
+} from '../js/abi_labels.js';
+import { C_LAYOUTS } from '../js/abi_layout.js';
 import {
   allocString,
   EXTENDED_OPTIONS_LAYOUT,
@@ -54,30 +59,121 @@ describe('JS API: struct layout compatibility', () => {
     expect(extendedPosLabel(83)).toBe('UNKNOWN');
   });
 
+  it('labels every serialized conjugation code and rejects the next value', () => {
+    expect(conjugationTypeJapanese(14)).toBe('ナ形容詞');
+    expect(conjugationTypeJapanese(15)).toBe('感動詞');
+    expect(conjugationTypeJapanese(16)).toBe('固有名詞・姓');
+    expect(conjugationTypeJapanese(17)).toBe('固有名詞・名');
+    expect(conjugationTypeJapanese(18)).toBeNull();
+
+    expect(conjugationFormJapanese(6)).toBe('意志形');
+    expect(conjugationFormJapanese(7)).toBeNull();
+  });
+
   it('exports the complete C ABI surface required by the JS binding', () => {
     const expectedExports = [
       '_suzume_analyze',
+      '_suzume_analyze_n',
+      '_suzume_clear_user_dictionaries',
+      '_suzume_conjugation_type_label',
       '_suzume_create',
       '_suzume_create_with_extended_options',
       '_suzume_destroy',
       '_suzume_dictionary_warning',
       '_suzume_dictionary_warning_count',
       '_suzume_generate_tags',
+      '_suzume_generate_tags_n',
       '_suzume_generate_tags_with_options',
+      '_suzume_generate_tags_with_options_n',
       '_suzume_init_extended_options',
       '_suzume_init_tag_options',
       '_suzume_last_error',
+      '_suzume_last_error_code',
       '_suzume_load_binary_dict',
       '_suzume_load_user_dict',
       '_suzume_result_free',
+      '_suzume_sizeof_extended_options',
+      '_suzume_sizeof_morpheme',
+      '_suzume_sizeof_result',
+      '_suzume_sizeof_tag_options',
+      '_suzume_sizeof_tags',
+      '_suzume_offsetof_extended_options',
+      '_suzume_offsetof_morpheme',
+      '_suzume_offsetof_result',
+      '_suzume_offsetof_tag_options',
+      '_suzume_offsetof_tags',
+      '_suzume_pos_label',
       '_suzume_tags_free',
       '_suzume_version',
-    ];
+    ].sort();
     const exports = Object.keys(module as object)
       .filter((name) => name.startsWith('_suzume_'))
       .sort();
 
     expect(exports).toEqual(expectedExports);
+  });
+
+  it('matches every TypeScript ABI layout against the runtime C oracle', () => {
+    const size = (name: string) =>
+      (module.cwrap(`suzume_sizeof_${name}`, 'number', []) as () => number)();
+    const offset = (name: string, field: number) =>
+      (module.cwrap(`suzume_offsetof_${name}`, 'number', ['number']) as (index: number) => number)(
+        field,
+      );
+    const layouts = [
+      ['result', C_LAYOUTS.result],
+      ['morpheme', C_LAYOUTS.morpheme],
+      ['tags', C_LAYOUTS.tags],
+      ['tag_options', C_LAYOUTS.tagOptions],
+      ['extended_options', C_LAYOUTS.extendedOptions],
+    ] as const;
+    const fieldNames = [
+      ['morphemes', 'count', 'normalizedText', 'normalizedTextSize'],
+      [
+        'surface',
+        'baseForm',
+        'start',
+        'end',
+        'score',
+        'pos',
+        'extendedPos',
+        'conjugationType',
+        'conjugationForm',
+        'flags',
+      ],
+      ['tags', 'pos', 'count'],
+      [
+        'posFilter',
+        'excludeBasic',
+        'useLemma',
+        'minLength',
+        'maxTags',
+        'excludeParticles',
+        'excludeAuxiliaries',
+        'excludeFormalNouns',
+        'excludeLowInfo',
+        'removeDuplicates',
+      ],
+      [
+        'preserveVu',
+        'preserveCase',
+        'preserveSymbols',
+        'mode',
+        'lemmatize',
+        'mergeCompounds',
+        'skipUserDictionary',
+        'skipCoreDictionary',
+        'reportScorerConfig',
+        'scorerOptionsJson',
+      ],
+    ] as const;
+
+    layouts.forEach(([name, layout], layoutIndex) => {
+      expect(size(name)).toBe(layout.size);
+      fieldNames[layoutIndex].forEach((field, fieldIndex) => {
+        expect(offset(name, fieldIndex)).toBe((layout as unknown as Record<string, number>)[field]);
+      });
+    });
   });
 
   it('parseMorphemes returns the complete Morpheme result field snapshot', () => {
@@ -324,11 +420,107 @@ describe('JS API: error reporting', () => {
       mode: 'split',
       lemmatize: true,
       mergeCompounds: false,
+      skipUserDictionary: true,
+      skipCoreDictionary: true,
+      scorerOptions: { unary: { noun_prior: 0.25 } },
     });
 
     try {
       const morphemes = suzume.analyze('API開発');
       expect(morphemes.length).toBeGreaterThan(1);
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('rejects malformed scorer JSON during construction', async () => {
+    await expect(Suzume.create({ scorerOptions: '{' })).rejects.toThrow(/invalid scorer options/i);
+  });
+
+  it('preserves embedded NUL and exposes normalized text', async () => {
+    const suzume = await Suzume.create();
+    try {
+      const result = suzume.analyzeWithNormalizedText('東京\0大阪');
+      expect(result.normalizedText).toContain('大阪');
+      expect(result.morphemes.some((morpheme) => morpheme.surface === '大阪')).toBe(true);
+      expect(
+        suzume.generateTags('東京\0大阪', { minLength: 1 }).some((tag) => tag.tag === '大阪'),
+      ).toBe(true);
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('exposes version, warnings, stable errors, and memory size', async () => {
+    const suzume = await Suzume.create();
+    try {
+      expect(suzume.version).toMatch(/^\d+\.\d+\.\d+$/);
+      expect(suzume.dictionaryWarnings).toEqual([]);
+      expect(suzume.wasmMemoryBytes()).toBeGreaterThan(0);
+      expect(suzume.loadUserDictionary('"東京,NOUN,0.5\n')).toBe(false);
+      expect(suzume.lastErrorCode).not.toBe(0);
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('clears user dictionaries without destroying the analyzer', async () => {
+    const suzume = await Suzume.create({
+      skipUserDictionary: true,
+      skipCoreDictionary: true,
+    });
+    try {
+      expect(suzume.loadUserDictionary('検査語\tNOUN\n')).toBe(true);
+      expect(suzume.analyze('検査語').some((morpheme) => morpheme.isUserDict)).toBe(true);
+      suzume.clearUserDictionaries();
+      expect(suzume.analyze('検査語').some((morpheme) => morpheme.isUserDict)).toBe(false);
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('generateTags accepts posFilter and keeps pos as an alias', async () => {
+    const suzume = await Suzume.create();
+
+    try {
+      const text = '東京でりんごを食べる';
+      const canonical = suzume.generateTags(text, { posFilter: ['noun'], minLength: 1 });
+      const alias = suzume.generateTags(text, { pos: ['noun'], minLength: 1 });
+      const canonicalWins = suzume.generateTags(text, {
+        posFilter: ['noun'],
+        pos: ['verb'],
+        minLength: 1,
+      });
+
+      expect(canonical).toEqual(alias);
+      expect(canonical).toEqual(canonicalWins);
+      expect(canonical.length).toBeGreaterThan(0);
+      expect(canonical.every((tag) => tag.pos === 'NOUN')).toBe(true);
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('generateTags treats an empty posFilter as all content words', async () => {
+    const suzume = await Suzume.create();
+
+    try {
+      const text = '東京でりんごを食べる';
+      expect(suzume.generateTags(text, { posFilter: [] })).toEqual(suzume.generateTags(text));
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('generateTags rejects an unknown POS filter name', async () => {
+    const suzume = await Suzume.create();
+
+    try {
+      expect(() =>
+        suzume.generateTags('東京', {
+          posFilter: ['bogus'] as never,
+        }),
+      ).toThrow('unknown POS filter name: "bogus" (expected one of adjective, adverb, noun, verb)');
     } finally {
       suzume.destroy();
     }

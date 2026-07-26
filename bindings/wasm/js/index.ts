@@ -11,15 +11,8 @@
  * ```
  */
 
-import {
-  conjugationFormJapanese,
-  conjugationTypeJapanese,
-  extendedPosLabel,
-  MORPHEME_FLAG,
-  posEnglish,
-  posJapanese,
-} from './abi_labels.js';
 import { C_LAYOUTS } from './abi_layout.js';
+import { decodeAnalysisResult, decodeTags } from './decode.js';
 
 // Types for Emscripten module
 interface EmscriptenModule {
@@ -34,19 +27,31 @@ interface EmscriptenModule {
   _suzume_create_with_extended_options: (optionsPtr: number) => number;
   _suzume_destroy: (handle: number) => void;
   _suzume_analyze: (handle: number, textPtr: number) => number;
+  _suzume_analyze_n: (handle: number, textPtr: number, size: number) => number;
   _suzume_result_free: (resultPtr: number) => void;
   _suzume_generate_tags: (handle: number, textPtr: number) => number;
+  _suzume_generate_tags_n: (handle: number, textPtr: number, size: number) => number;
   _suzume_init_tag_options: (optionsPtr: number) => void;
   _suzume_generate_tags_with_options: (
     handle: number,
     textPtr: number,
     optionsPtr: number,
   ) => number;
+  _suzume_generate_tags_with_options_n: (
+    handle: number,
+    textPtr: number,
+    size: number,
+    optionsPtr: number,
+  ) => number;
   _suzume_tags_free: (tagsPtr: number) => void;
   _suzume_load_user_dict: (handle: number, dataPtr: number, size: number) => number;
   _suzume_load_binary_dict: (handle: number, dataPtr: number, size: number) => number;
+  _suzume_clear_user_dictionaries: (handle: number) => number;
   _suzume_version: () => number;
   _suzume_last_error: () => number;
+  _suzume_last_error_code: () => number;
+  _suzume_conjugation_type_label: (code: number) => number;
+  _suzume_pos_label: (code: number) => number;
   _suzume_dictionary_warning_count: (handle: number) => number;
   _suzume_dictionary_warning: (handle: number, index: number) => number;
 }
@@ -63,10 +68,18 @@ export interface SuzumeOptions {
   preserveSymbols?: boolean;
   /** Analysis mode, default: normal */
   mode?: 'normal' | 'search' | 'split';
-  /** Apply lemmatization, default: true */
+  /** Retain corrected lemmas; conjugation/POS annotations are always computed. Default: true */
   lemmatize?: boolean;
   /** Merge consecutive noun compounds, default: false */
   mergeCompounds?: boolean;
+  /** Skip automatic loading of the bundled user dictionary, default: false */
+  skipUserDictionary?: boolean;
+  /** Skip automatic loading of the bundled core dictionary, default: false */
+  skipCoreDictionary?: boolean;
+  /** Report scorer configuration diagnostics, default: false */
+  reportScorerConfig?: boolean;
+  /** Scorer override JSON, or an object serialized to JSON */
+  scorerOptions?: string | Record<string, unknown>;
 }
 
 /**
@@ -105,6 +118,12 @@ export interface Morpheme {
   score: number;
 }
 
+/** Normalized input together with its morphemes. */
+export interface AnalysisResult {
+  normalizedText: string;
+  morphemes: Morpheme[];
+}
+
 /**
  * Tag entry with POS information
  */
@@ -118,9 +137,20 @@ export interface Tag {
 /**
  * Options for tag generation
  */
+export type TagPosFilterName = 'noun' | 'verb' | 'adjective' | 'adverb';
+
 export interface TagOptions {
-  /** POS categories to include (default: all content words) */
-  pos?: ('noun' | 'verb' | 'adjective' | 'adverb')[];
+  /**
+   * POS categories to include. An empty array includes all content words,
+   * matching the native `pos_filter = 0` default.
+   */
+  posFilter?: readonly TagPosFilterName[];
+  /**
+   * Deprecated alias for `posFilter`. When both are present, `posFilter` wins.
+   *
+   * @deprecated Use `posFilter` instead.
+   */
+  pos?: readonly TagPosFilterName[];
   /** Exclude basic/common words with hiragana-only lemma (default: false) */
   excludeBasic?: boolean;
   /** Use lemma instead of surface form (default: true) */
@@ -139,6 +169,31 @@ export interface TagOptions {
   excludeLowInfo?: boolean;
   /** Remove duplicate tags (default: true) */
   removeDuplicates?: boolean;
+}
+
+const TAG_POS_FILTER_BITS: Readonly<Record<string, number>> = {
+  noun: 1,
+  verb: 2,
+  adjective: 4,
+  adverb: 8,
+};
+
+function resolveTagPosFilter(options: TagOptions): number {
+  const selectedPos = options.posFilter !== undefined ? options.posFilter : options.pos;
+  let filter = 0;
+
+  for (const pos of selectedPos ?? []) {
+    const bit = TAG_POS_FILTER_BITS[pos];
+    if (bit === undefined) {
+      throw new Error(
+        `unknown POS filter name: ${JSON.stringify(pos)} ` +
+          `(expected one of ${Object.keys(TAG_POS_FILTER_BITS).sort().join(', ')})`,
+      );
+    }
+    filter |= bit;
+  }
+
+  return filter;
 }
 
 // Release handle ref for destructor so the destroy fn is not bound to the Suzume instance
@@ -166,15 +221,24 @@ export class Suzume {
   private module: EmscriptenModule;
   private handle: number;
   private cleanupRef: CleanupRef;
-  private _analyze: (handle: number, textPtr: number) => number;
+  private _analyzeN: (handle: number, textPtr: number, size: number) => number;
   private _resultFree: (resultPtr: number) => void;
-  private _generateTags: (handle: number, textPtr: number) => number;
-  private _generateTagsWithOptions: (handle: number, textPtr: number, optionsPtr: number) => number;
+  private _generateTagsN: (handle: number, textPtr: number, size: number) => number;
+  private _generateTagsWithOptionsN: (
+    handle: number,
+    textPtr: number,
+    size: number,
+    optionsPtr: number,
+  ) => number;
   private _tagsFree: (tagsPtr: number) => void;
   private _loadUserDict: (handle: number, dataPtr: number, size: number) => number;
   private _loadBinaryDict: (handle: number, dataPtr: number, size: number) => number;
+  private _clearUserDictionaries: (handle: number) => number;
   private _version: () => number;
   private _lastError: () => number;
+  private _lastErrorCode: () => number;
+  private _conjugationTypeLabel: (code: number) => number;
+  private _posLabel: (code: number) => number;
   private _dictionaryWarningCount: (handle: number) => number;
   private _dictionaryWarning: (handle: number, index: number) => number;
   private layouts = C_LAYOUTS;
@@ -186,15 +250,19 @@ export class Suzume {
     this.cleanupRef = { module, handle };
     registry.register(this, this.cleanupRef, this.unregisterToken);
 
-    this._analyze = module._suzume_analyze;
+    this._analyzeN = module._suzume_analyze_n;
     this._resultFree = module._suzume_result_free;
-    this._generateTags = module._suzume_generate_tags;
-    this._generateTagsWithOptions = module._suzume_generate_tags_with_options;
+    this._generateTagsN = module._suzume_generate_tags_n;
+    this._generateTagsWithOptionsN = module._suzume_generate_tags_with_options_n;
     this._tagsFree = module._suzume_tags_free;
     this._loadUserDict = module._suzume_load_user_dict;
     this._loadBinaryDict = module._suzume_load_binary_dict;
+    this._clearUserDictionaries = module._suzume_clear_user_dictionaries;
     this._version = module._suzume_version;
     this._lastError = module._suzume_last_error;
+    this._lastErrorCode = module._suzume_last_error_code;
+    this._conjugationTypeLabel = module._suzume_conjugation_type_label;
+    this._posLabel = module._suzume_pos_label;
     this._dictionaryWarningCount = module._suzume_dictionary_warning_count;
     this._dictionaryWarning = module._suzume_dictionary_warning;
   }
@@ -225,12 +293,17 @@ export class Suzume {
         options.preserveSymbols !== undefined ||
         options.mode !== undefined ||
         options.lemmatize !== undefined ||
-        options.mergeCompounds !== undefined)
+        options.mergeCompounds !== undefined ||
+        options.skipUserDictionary !== undefined ||
+        options.skipCoreDictionary !== undefined ||
+        options.reportScorerConfig !== undefined ||
+        options.scorerOptions !== undefined)
     ) {
       // Create with options
       const layout = C_LAYOUTS.extendedOptions;
       const OPTIONS_SIZE = layout.size;
       const optionsPtr = module._malloc(OPTIONS_SIZE);
+      let scorerOptionsPtr = 0;
 
       try {
         // _malloc hands back uninitialized heap, so seed the struct with the C
@@ -258,9 +331,25 @@ export class Suzume {
         heap[optionsPtr + layout.mode] = modeValue;
         heap[optionsPtr + layout.lemmatize] = options.lemmatize !== false ? 1 : 0;
         heap[optionsPtr + layout.mergeCompounds] = options.mergeCompounds === true ? 1 : 0;
+        heap[optionsPtr + layout.skipUserDictionary] = options.skipUserDictionary === true ? 1 : 0;
+        heap[optionsPtr + layout.skipCoreDictionary] = options.skipCoreDictionary === true ? 1 : 0;
+        heap[optionsPtr + layout.reportScorerConfig] = options.reportScorerConfig === true ? 1 : 0;
+        if (options.scorerOptions !== undefined) {
+          const scorerJson =
+            typeof options.scorerOptions === 'string'
+              ? options.scorerOptions
+              : JSON.stringify(options.scorerOptions);
+          const scorerBytes = module.lengthBytesUTF8(scorerJson) + 1;
+          scorerOptionsPtr = module._malloc(scorerBytes);
+          module.stringToUTF8(scorerJson, scorerOptionsPtr, scorerBytes);
+          module.HEAPU32[(optionsPtr + layout.scorerOptionsJson) >> 2] = scorerOptionsPtr;
+        }
 
         handle = module._suzume_create_with_extended_options(optionsPtr);
       } finally {
+        if (scorerOptionsPtr !== 0) {
+          module._free(scorerOptionsPtr);
+        }
         module._free(optionsPtr);
       }
     } else {
@@ -287,10 +376,17 @@ export class Suzume {
    * @returns Array of morphemes
    */
   analyze(text: string): Morpheme[] {
+    return this.analyzeWithNormalizedText(text).morphemes;
+  }
+
+  /**
+   * Analyze text and return the exact normalized text used for offsets.
+   */
+  analyzeWithNormalizedText(text: string): AnalysisResult {
     this.ensureAlive();
 
-    return this.withUtf8String(text, (textPtr) => {
-      const resultPtr = this._analyze(this.handle, textPtr);
+    return this.withUtf8String(text, (textPtr, textBytes) => {
+      const resultPtr = this._analyzeN(this.handle, textPtr, textBytes - 1);
 
       if (resultPtr === 0) {
         throw new Error(`Suzume analyze failed: ${this.lastError || 'unknown error'}`);
@@ -314,21 +410,9 @@ export class Suzume {
   generateTags(text: string, options?: TagOptions): Tag[] {
     this.ensureAlive();
 
-    return this.withUtf8String(text, (textPtr) => {
+    return this.withUtf8String(text, (textPtr, textBytes) => {
       if (options) {
-        // Build pos_filter bitmask
-        let posFilter = 0;
-        if (options.pos) {
-          const posMap: Record<string, number> = {
-            noun: 1,
-            verb: 2,
-            adjective: 4,
-            adverb: 8,
-          };
-          for (const pos of options.pos) {
-            posFilter |= posMap[pos] ?? 0;
-          }
-        }
+        const posFilter = resolveTagPosFilter(options);
 
         const optionsPtr = this.module._malloc(this.layouts.tagOptions.size);
 
@@ -353,13 +437,15 @@ export class Suzume {
             options.excludeFormalNouns !== false ? 1 : 0;
           heapU8[optionsPtr + layout.excludeLowInfo] = options.excludeLowInfo !== false ? 1 : 0;
           heapU8[optionsPtr + layout.removeDuplicates] = options.removeDuplicates !== false ? 1 : 0;
-          return this.consumeTags(this._generateTagsWithOptions(this.handle, textPtr, optionsPtr));
+          return this.consumeTags(
+            this._generateTagsWithOptionsN(this.handle, textPtr, textBytes - 1, optionsPtr),
+          );
         } finally {
           this.module._free(optionsPtr);
         }
       }
 
-      return this.consumeTags(this._generateTags(this.handle, textPtr));
+      return this.consumeTags(this._generateTagsN(this.handle, textPtr, textBytes - 1));
     });
   }
 
@@ -422,6 +508,16 @@ export class Suzume {
   }
 
   /**
+   * Remove all user dictionaries loaded by this instance.
+   */
+  clearUserDictionaries(): void {
+    this.ensureAlive();
+    if (this._clearUserDictionaries(this.handle) !== 1) {
+      throw new Error(`Suzume dictionary clear failed: ${this.lastError || 'unknown error'}`);
+    }
+  }
+
+  /**
    * Get Suzume version string
    */
   get version(): string {
@@ -436,6 +532,17 @@ export class Suzume {
    */
   get lastError(): string {
     return this.module.UTF8ToString(this._lastError());
+  }
+
+  /** Stable native error category for the last failed C ABI call. */
+  get lastErrorCode(): number {
+    return this._lastErrorCode();
+  }
+
+  /** Current WebAssembly linear-memory size in bytes. */
+  wasmMemoryBytes(): number {
+    this.ensureAlive();
+    return this.module.HEAPU32.buffer.byteLength;
   }
 
   /**
@@ -499,76 +606,29 @@ export class Suzume {
     }
   }
 
+  private conjugationTypeLabel(code: number): string | null {
+    const labelPtr = this._conjugationTypeLabel(code);
+    return labelPtr === 0 ? null : this.module.UTF8ToString(labelPtr);
+  }
+
   // Parse suzume_result_t structure from WASM memory
-  private parseResult(resultPtr: number): Morpheme[] {
-    const HEAPU32 = this.module.HEAPU32;
-    const HEAPU8 = new Uint8Array(HEAPU32.buffer);
-    const HEAPF32 = new Float32Array(HEAPU32.buffer);
-    const resultLayout = this.layouts.result;
-    const morphemeLayout = this.layouts.morpheme;
-
-    const morphemesPtr = HEAPU32[(resultPtr + resultLayout.morphemes) >> 2];
-    const count = HEAPU32[(resultPtr + resultLayout.count) >> 2];
-
-    const morphemes: Morpheme[] = [];
-
-    for (let idx = 0; idx < count; idx++) {
-      const morphPtr = morphemesPtr + idx * morphemeLayout.size;
-      const surfacePtr = HEAPU32[(morphPtr + morphemeLayout.surface) >> 2];
-      const baseFormPtr = HEAPU32[(morphPtr + morphemeLayout.baseForm) >> 2];
-      const start = HEAPU32[(morphPtr + morphemeLayout.start) >> 2];
-      const end = HEAPU32[(morphPtr + morphemeLayout.end) >> 2];
-      const posCode = HEAPU8[morphPtr + morphemeLayout.pos];
-      const flags = HEAPU8[morphPtr + morphemeLayout.flags];
-      const conjugates = posCode === 2 || posCode === 3;
-
-      morphemes.push({
-        surface: this.module.UTF8ToString(surfacePtr),
-        pos: posEnglish(posCode),
-        baseForm: this.module.UTF8ToString(baseFormPtr),
-        posJa: posJapanese(posCode),
-        conjType: conjugates
-          ? conjugationTypeJapanese(HEAPU8[morphPtr + morphemeLayout.conjugationType])
-          : null,
-        conjForm: conjugates
-          ? conjugationFormJapanese(HEAPU8[morphPtr + morphemeLayout.conjugationForm])
-          : null,
-        extendedPos: extendedPosLabel(HEAPU8[morphPtr + morphemeLayout.extendedPos]),
-        start,
-        end,
-        isUserDict: (flags & MORPHEME_FLAG.userDict) !== 0,
-        isFormalNoun: (flags & MORPHEME_FLAG.formalNoun) !== 0,
-        isLowInfo: (flags & MORPHEME_FLAG.lowInfo) !== 0,
-        isUnknown: (flags & MORPHEME_FLAG.unknown) !== 0,
-        isFromDictionary: (flags & MORPHEME_FLAG.fromDictionary) !== 0,
-        score: HEAPF32[(morphPtr + morphemeLayout.score) >> 2],
-      });
-    }
-
-    return morphemes;
+  private parseResult(resultPtr: number): AnalysisResult {
+    return decodeAnalysisResult(
+      this.module,
+      resultPtr,
+      (code) => this.conjugationTypeLabel(code),
+      (code) => this.posLabel(code),
+    );
   }
 
   // Parse suzume_tags_t structure from WASM memory
   private parseTags(tagsPtr: number): Tag[] {
-    const HEAPU32 = this.module.HEAPU32;
-    const HEAPU8 = new Uint8Array(HEAPU32.buffer);
-    const layout = this.layouts.tags;
+    return decodeTags(this.module, tagsPtr, (code) => this.posLabel(code));
+  }
 
-    const tagsArrayPtr = HEAPU32[(tagsPtr + layout.tags) >> 2];
-    const posArrayPtr = HEAPU32[(tagsPtr + layout.pos) >> 2];
-    const count = HEAPU32[(tagsPtr + layout.count) >> 2];
-
-    const tags: Tag[] = [];
-
-    for (let idx = 0; idx < count; idx++) {
-      const tagPtr = HEAPU32[(tagsArrayPtr >> 2) + idx];
-      tags.push({
-        tag: this.module.UTF8ToString(tagPtr),
-        pos: posEnglish(HEAPU8[posArrayPtr + idx]),
-      });
-    }
-
-    return tags;
+  private posLabel(code: number): string {
+    const labelPtr = this._posLabel(code);
+    return labelPtr === 0 ? 'OTHER' : this.module.UTF8ToString(labelPtr);
   }
 }
 
