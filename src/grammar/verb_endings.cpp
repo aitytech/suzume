@@ -60,9 +60,10 @@ std::vector<TaggedVerbEnding> generateGodanEndings() {
     // Onbinkei (音便形): explicit onbin (い/っ/ん) or, for サ行, the い段 form.
     endings.push_back({{onbinFormOf(row), base, type, true}, conn::kVerbOnbinkei});
 
-    // Special case: GodanKa also has っ-onbin for いく (irregular)
+    // Special case: GodanKa also has っ-onbin for いく (irregular).
+    // Derive the surface through the shared lexical-irregularity helper.
     if (type == VerbType::GodanKa) {
-      endings.push_back({{"っ", base, type, true}, conn::kVerbOnbinkei});
+      endings.push_back({{godanOnbinForm(type, "い"), base, type, true}, conn::kVerbOnbinkei});
     }
 
     // Renyokei (連用形)
@@ -128,15 +129,6 @@ constexpr VerbEndingSpec kIrregularEndings[] = {
     {"する", "する", VerbType::Suru, conn::kVerbBase, false},        // Base/dictionary form
     {"す", "する", VerbType::Suru, conn::kVerbBase, false},          // すべき special
 
-    // カ変 (来る)
-    {"き", "くる", VerbType::Kuru, conn::kVerbOnbinkei, true},
-    {"き", "くる", VerbType::Kuru, conn::kVerbRenyokei, false},
-    {"こ", "くる", VerbType::Kuru, conn::kVerbMizenkei, false},
-    {"くれ", "くる", VerbType::Kuru, conn::kVerbKatei, false},       // くれば
-    {"こい", "くる", VerbType::Kuru, conn::kVerbMeireikei, false},   // Imperative: こい
-    {"こよ", "くる", VerbType::Kuru, conn::kVerbVolitional, false},  // こよう
-    {"くる", "くる", VerbType::Kuru, conn::kVerbBase, false},        // Base/dictionary form
-
     // い形容詞 (美しい)
     {"", "い", VerbType::IAdjective, conn::kIAdjStem, false},
 };
@@ -155,10 +147,22 @@ struct VerbEndingTable {
 
 VerbEndingTable buildVerbEndingTable() {
   std::vector<TaggedVerbEnding> tagged = generateGodanEndings();
-  tagged.reserve(tagged.size() + std::size(kIrregularEndings));
+  tagged.reserve(tagged.size() + std::size(kIrregularEndings) + 7);
   for (const auto& spec : kIrregularEndings) {
     tagged.push_back({{spec.suffix, spec.base_suffix, spec.verb_type, spec.is_onbin}, spec.provides_conn});
   }
+
+  // カ変 is derived from the same kana stem record used by generation and
+  // dictionary expansion. Keeping it out of kIrregularEndings avoids a fourth
+  // independent list of こ/き/くれ/こよ/こい spellings.
+  const KuruStemForms kuru = getKuruStemForms("くる");
+  tagged.push_back({{kuru.onbinkei, kuru.base, VerbType::Kuru, true}, conn::kVerbOnbinkei});
+  tagged.push_back({{kuru.renyokei, kuru.base, VerbType::Kuru, false}, conn::kVerbRenyokei});
+  tagged.push_back({{kuru.mizenkei, kuru.base, VerbType::Kuru, false}, conn::kVerbMizenkei});
+  tagged.push_back({{kuru.kateikei, kuru.base, VerbType::Kuru, false}, conn::kVerbKatei});
+  tagged.push_back({{kuru.meireikei, kuru.base, VerbType::Kuru, false}, conn::kVerbMeireikei});
+  tagged.push_back({{kuru.ishikei, kuru.base, VerbType::Kuru, false}, conn::kVerbVolitional});
+  tagged.push_back({{kuru.base, kuru.base, VerbType::Kuru, false}, conn::kVerbBase});
 
   VerbEndingTable table;
   table.endings.reserve(tagged.size());

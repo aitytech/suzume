@@ -184,13 +184,12 @@ float scoreAdjectiveAndForm(float base, const InflectionScoreContext& context) {
       //       行 + か + な → 行かな (godan verb mizenkei + な)
       // vs. 危 + な → あぶな (real adjective stem)
       else if (stem_len >= core::kThreeJapaneseCharBytes) {
-        std::string_view prev = stem.substr(stem_len - core::kTwoJapaneseCharBytes, core::kJapaneseCharBytes);
-        // If previous char is hiragana, this looks like verb mizenkei
-        // Include all rows: a-row (godan mizenkei), e-row (ichidan), i-row, etc.
-        // e-row, i-row, a-row hiragana (ichidan, godan renyokei, mizenkei)
-        if (utf8::equalsAny(prev, {"べ", "め", "せ", "け", "て", "ね", "れ", "え", "げ", "ぜ", "で", "ぺ", "み", "き",
-                                   "し", "ち", "に", "ひ", "り", "い", "ぎ", "じ", "ぢ", "び", "ぴ", "か", "が", "さ",
-                                   "ざ", "た", "だ", "な", "ば", "ぱ", "ま", "ら", "わ", "あ", "は", "っ"})) {
+        const char32_t previous =
+            utf8::decodeFirstChar(stem.substr(stem_len - core::kTwoJapaneseCharBytes, core::kJapaneseCharBytes));
+        // A/i/e-row kana cover Godan mizenkei/renyokei and Ichidan stems.
+        // Use the canonical vowel predicates so や and へ cannot drift out of
+        // a hand-maintained surface list. 促音 is the independent onbin marker.
+        if (isARowCodepoint(previous) || isIRowCodepoint(previous) || isERowCodepoint(previous) || previous == U'っ') {
           base -= inflection::kPenaltyIAdjMizenkeiPattern;
           logConfidenceAdjustment(-inflection::kPenaltyIAdjMizenkeiPattern, "i_adj_mizenkei_pattern");
         }

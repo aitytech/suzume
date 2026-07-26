@@ -399,6 +399,7 @@ float scoreGodan(float base, const InflectionScoreContext& context) {
   [[maybe_unused]] const size_t aux_count = context.aux_count;
   [[maybe_unused]] const uint16_t required_conn = context.required_conn;
   [[maybe_unused]] const size_t suffix_len = context.suffix_len;
+  [[maybe_unused]] const bool first_aux_starts_with_te_de = context.first_aux_starts_with_te_de;
   [[maybe_unused]] const InflectionScorerOptions* opts = context.opts;
   const size_t stem_len = stem.size();
 
@@ -439,40 +440,24 @@ float scoreGodan(float base, const InflectionScoreContext& context) {
       base -= inflection::kPenaltyGodanTaOnbinStemInvalid;
       logConfidenceAdjustment(-inflection::kPenaltyGodanTaOnbinStemInvalid, "godan_ta_onbin_stem_invalid");
     }
-    // GodanTa uses った for te-form onbin, not てた
+    // GodanTa uses った for te-form onbin, not てた.
     // 見てた should be Ichidan 見る, not GodanTa 見つ
     // GodanTa te-form: 持つ → 持った → 持ってた
-    // If aux starts with て (not っ), it's wrong for GodanTa
-    if (required_conn == conn::kVerbRenyokei && aux_total_len > 0) {
-      base -= inflection::kPenaltyGodanTaTeAuxInvalid;
-      logConfidenceAdjustment(-inflection::kPenaltyGodanTaTeAuxInvalid, "godan_ta_te_aux_invalid");
+    // Only penalize when the first auxiliary actually starts with て/で.
+    // Other valid renyokei auxiliaries (持ち+ます/たい) must not be affected.
+    if (required_conn == conn::kVerbRenyokei && first_aux_starts_with_te_de) {
+      base -= inflection::kPenaltyGodanTaRenyokeiTeDeAuxInvalid;
+      logConfidenceAdjustment(-inflection::kPenaltyGodanTaRenyokeiTeDeAuxInvalid,
+                              "godan_ta_renyokei_te_de_aux_invalid");
     }
   }
 
-  // GodanWa disambiguation for っ-onbin patterns with all-kanji stems
+  // GodanRa disambiguation for っ-onbin patterns with single-kanji stems
   // Three verb types share っ-onbin: GodanWa (買う), GodanRa (取る), GodanTa (持つ)
-  // For multi-kanji stems (2+ kanji), GodanWa is much more common:
-  //   - 手伝う, 買い求う, 争う, 戦う, 追い払う (all GodanWa)
-  //   - GodanRa verbs rarely have 2+ kanji stems
-  //   - GodanTa verbs rarely have 2+ kanji stems
-  // For single-kanji stems, GodanWa is also more common than GodanRa/Ta:
-  //   - 云う, 貰う, 失う, 言う, 問う, 酔う, 追う (all GodanWa)
-  //   - GodanRa: 取る, 知る, 切る (fewer verbs)
-  //   - GodanTa: 持つ, 打つ, 待つ (fewer verbs)
-  // Hiragana stems like いらっしゃ (→ いらっしゃる GodanRa) should NOT be affected
+  // A small GodanRa preference is useful only for a single-kanji stem; longer
+  // stems are left neutral so dictionary evidence decides the verb class.
   if (required_conn == conn::kVerbOnbinkei && isAllKanji(stem)) {
-    // For multi-kanji stems, GodanWa is more common than GodanRa/Ta
-    // (手伝う, 買い求う, 争う vs. rare multi-kanji GodanRa/Ta)
-    // For single-kanji stems, GodanRa verbs are very common (作る, 知る, 取る, 切る, etc.)
-    // So we give a small preference to GodanRa over GodanWa for disambiguation
-    if (type == VerbType::GodanWa && stem_len >= core::kTwoJapaneseCharBytes) {
-      base += inflection::kBonusGodanWaMultiKanji;
-      logConfidenceAdjustment(inflection::kBonusGodanWaMultiKanji, "godan_wa_multi_kanji");
-    } else if ((type == VerbType::GodanRa || type == VerbType::GodanTa) && stem_len >= core::kTwoJapaneseCharBytes) {
-      base -= inflection::kPenaltyGodanRaTaMultiKanji;
-      logConfidenceAdjustment(-inflection::kPenaltyGodanRaTaMultiKanji, "godan_ra_ta_multi_kanji");
-    } else if (type == VerbType::GodanRa && stem_len == core::kJapaneseCharBytes) {
-      // Single-kanji GodanRa verbs are very common - give small preference
+    if (type == VerbType::GodanRa && stem_len == core::kJapaneseCharBytes) {
       base += inflection::scale::kMinorBonus;
       logConfidenceAdjustment(inflection::scale::kMinorBonus, "godan_ra_single_kanji");
     }
@@ -505,7 +490,7 @@ float scoreGodan(float base, const InflectionScoreContext& context) {
   // - "来" (kanji form: 来なかった → 来る)
   // - "" (empty, when suffix is こ/き: こなかった → くる)
   if (type == VerbType::Kuru) {
-    if (stem != inflection::kKuruKanji && !stem.empty()) {
+    if (!isKuruStem(stem)) {
       // Any stem other than 来 or empty is invalid for Kuru
       base -= inflection::kPenaltyKuruInvalidStem;
       logConfidenceAdjustment(-inflection::kPenaltyKuruInvalidStem, "kuru_invalid_stem");
@@ -558,7 +543,7 @@ float scoreGodan(float base, const InflectionScoreContext& context) {
     std::string_view second = stem.substr(core::kJapaneseCharBytes);
     // If first char is a common particle and second is な, this is likely
     // a misparse of PARTICLE + ない(adjective/aux)
-    if (second == "な" && isInArray(first, inflection::kParticleNaStemPrefixes)) {
+    if (second == "な" && isInArray(first, inflection::kParticleStemList)) {
       base -= inflection::kPenaltyGodanWaParticleNaStem;
       logConfidenceAdjustment(-inflection::kPenaltyGodanWaParticleNaStem, "godan_wa_particle_na_stem");
     }
@@ -574,7 +559,12 @@ float scoreGodan(float base, const InflectionScoreContext& context) {
   bool is_godan_non_ra = isGodanVerbType(type) && type != VerbType::GodanRa;
   if (is_godan_non_ra && stem_len == core::kJapaneseCharBytes && !containsKanji(stem)) {
     // Exception: い(く) = 行く is valid
-    bool is_iku = (type == VerbType::GodanKa && stem == "い");
+    bool is_iku = (type == VerbType::GodanKa && isIkuStem(stem));
+    // A matched タ行五段 連用形 + auxiliary chain is strong grammatical
+    // evidence even with a one-kana lexical stem (も+ち+たい, た+ち+ます).
+    // Keep this independent of the auxiliary surface: invalid ち+て/で chains
+    // receive the dedicated penalty above instead of two unrelated penalties.
+    bool is_godan_ta_renyokei_aux = type == VerbType::GodanTa && required_conn == conn::kVerbRenyokei && aux_count > 0;
     // Exception: the bare-う dictionary form of a single-kana GodanWa stem is a
     // systematically real verb (かう/買う, すう/吸う, ぬう/縫う, いう/言う, あう/会う).
     // Scoped to the base form (conn = kVerbBase, suffix = the single mora う, no
@@ -582,7 +572,7 @@ float scoreGodan(float base, const InflectionScoreContext& context) {
     // don't fabricate かう readings elsewhere.
     bool is_godan_wa_base = (type == VerbType::GodanWa && required_conn == conn::kVerbBase && aux_count == 0 &&
                              suffix_len == core::kJapaneseCharBytes);
-    if (!is_iku && !is_godan_wa_base) {
+    if (!is_iku && !is_godan_ta_renyokei_aux && !is_godan_wa_base) {
       float pen = GET_OPT(penalty_godan_single_hiragana_stem, inflection::kPenaltyGodanSingleHiraganaStem);
       base -= pen;
       logConfidenceAdjustment(-pen, "godan_single_hiragana_stem");

@@ -76,15 +76,6 @@ bool startsWithKanji(std::string_view stem);
 bool containsKanji(std::string_view stem);
 
 /**
- * @brief Check if stem contains any katakana character
- * @param stem The stem to check
- * @return True if at least one character is katakana
- *
- * Used to identify loanword verb/adjective stems (バズる, エモい, etc.)
- */
-bool containsKatakana(std::string_view stem);
-
-/**
  * @brief Check if stem consists only of hiragana characters
  * @param stem The stem to check
  * @return True if all characters are hiragana (no kanji, katakana, etc.)
@@ -200,13 +191,6 @@ bool isPastMarkerTaDaSurface(std::string_view surface);
 bool isParallelTogetherAdverb(std::string_view surface);
 
 /**
- * @brief Whether a noun surface ends with the productive temporal suffix 時
- * @param surface Noun surface
- * @return True when the surface ends with 時
- */
-bool endsWithTemporalNounSuffix(std::string_view surface);
-
-/**
  * @brief Whether a suffix surface is the productive state/duration marker 中
  * @param surface Candidate suffix surface
  * @return True when the suffix is 中
@@ -279,13 +263,6 @@ bool isClassicalFuruTerminal(std::string_view surface);
 
 /** @brief Whether text begins the classical existential-conjectural construction あらん限り */
 bool startsClassicalAraNLimit(std::string_view surface);
-
-/**
- * @brief Whether text begins the formal copular-topic predicate ではある
- * @param surface Text at a prospective topic-particle boundary
- * @return True when the sequence begins with ではある
- */
-bool startsCopularTopicAru(std::string_view surface);
 
 /**
  * @brief Whether a conjunctive-particle candidate is the causal ので before は
@@ -419,16 +396,6 @@ bool endsWithRenyokeiMarker(std::string_view stem);
  * These characters cannot start a word independently.
  */
 bool isSmallKana(std::string_view ch);
-
-/**
- * @brief Check if string starts with a hiragana character
- * @param s The string to check
- * @return True if the first character is hiragana (U+3040-U+309F)
- *
- * Used to quickly check if a word starts with hiragana.
- * Checks the first 3 bytes of UTF-8 encoded string.
- */
-bool startsWithHiragana(std::string_view s);
 
 /**
  * @brief Check if stem ends with a-row hiragana (verb mizenkei indicators)

@@ -2,6 +2,9 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <string_view>
+
 namespace suzume {
 namespace grammar {
 namespace {
@@ -41,6 +44,10 @@ TEST_F(ConjugationTest, GetStemSuru) {
 
 TEST_F(ConjugationTest, GetStemKuru) {
   EXPECT_EQ(conjugator_.getStem("来る", VerbType::Kuru), "来");
+  EXPECT_EQ(conjugator_.getStem("くる", VerbType::Kuru), "く");
+  EXPECT_TRUE(isKuruStem("来"));
+  EXPECT_TRUE(isKuruStem(""));
+  EXPECT_FALSE(isKuruStem("書"));
 }
 
 TEST_F(ConjugationTest, GetStemIAdjective) {
@@ -133,258 +140,25 @@ TEST_F(ConjugationTest, DetectTypeTooShort) {
   EXPECT_EQ(conjugator_.detectType("a"), VerbType::Unknown);
 }
 
-// ============================================================================
-// generate tests - Ichidan
-// ============================================================================
+TEST_F(ConjugationTest, DictionarySuffixesPreserveRegularAndIkuOnbin) {
+  const auto suffixes_for = [this](std::string_view base_form) {
+    return conjugator_.getDictionarySuffixes(VerbType::GodanKa, base_form);
+  };
+  const auto has_onbin = [](const std::vector<Conjugation::DictionarySuffix>& suffixes, std::string_view expected) {
+    return std::any_of(suffixes.begin(), suffixes.end(), [expected](const auto& suffix) {
+      return suffix.extended_pos == core::ExtendedPOS::VerbOnbinkei && suffix.suffix == expected;
+    });
+  };
 
-TEST_F(ConjugationTest, GenerateIchidan) {
-  auto forms = conjugator_.generate("食べる", VerbType::Ichidan);
-  EXPECT_GT(forms.size(), 0);
+  const auto regular = suffixes_for("書く");
+  EXPECT_TRUE(has_onbin(regular, "い"));
+  EXPECT_FALSE(has_onbin(regular, "っ"));
 
-  // Check some expected forms
-  bool found_base = false;
-  bool found_nai = false;
-  bool found_ta = false;
-  bool found_te = false;
-
-  for (const auto& form : forms) {
-    if (form.surface == "食べる")
-      found_base = true;
-    if (form.surface == "食べない")
-      found_nai = true;
-    if (form.surface == "食べた")
-      found_ta = true;
-    if (form.surface == "食べて")
-      found_te = true;
+  for (const std::string_view base_form : {"行く", "いく"}) {
+    const auto irregular = suffixes_for(base_form);
+    EXPECT_TRUE(has_onbin(irregular, "っ"));
+    EXPECT_FALSE(has_onbin(irregular, "い"));
   }
-
-  EXPECT_TRUE(found_base);
-  EXPECT_TRUE(found_nai);
-  EXPECT_TRUE(found_ta);
-  EXPECT_TRUE(found_te);
-}
-
-// ============================================================================
-// generate tests - Godan
-// ============================================================================
-
-TEST_F(ConjugationTest, GenerateGodanKa) {
-  auto forms = conjugator_.generate("書く", VerbType::GodanKa);
-  EXPECT_GT(forms.size(), 0);
-
-  bool found_base = false;
-  bool found_nai = false;
-  bool found_ta = false;  // 書いた (音便)
-
-  for (const auto& form : forms) {
-    if (form.surface == "書く")
-      found_base = true;
-    if (form.surface == "書かない")
-      found_nai = true;
-    if (form.surface == "書いた")
-      found_ta = true;
-  }
-
-  EXPECT_TRUE(found_base);
-  EXPECT_TRUE(found_nai);
-  EXPECT_TRUE(found_ta);
-}
-
-TEST_F(ConjugationTest, GenerateGodanGa) {
-  auto forms = conjugator_.generate("泳ぐ", VerbType::GodanGa);
-
-  bool found_ta = false;  // 泳いだ (濁音)
-  for (const auto& form : forms) {
-    if (form.surface == "泳いだ")
-      found_ta = true;
-  }
-  EXPECT_TRUE(found_ta);
-}
-
-TEST_F(ConjugationTest, GenerateGodanSa) {
-  auto forms = conjugator_.generate("話す", VerbType::GodanSa);
-
-  bool found_ta = false;  // 話した (音便なし)
-  for (const auto& form : forms) {
-    if (form.surface == "話した")
-      found_ta = true;
-  }
-  EXPECT_TRUE(found_ta);
-}
-
-TEST_F(ConjugationTest, GenerateGodanTa) {
-  auto forms = conjugator_.generate("立つ", VerbType::GodanTa);
-
-  bool found_ta = false;  // 立った (促音便)
-  for (const auto& form : forms) {
-    if (form.surface == "立った")
-      found_ta = true;
-  }
-  EXPECT_TRUE(found_ta);
-}
-
-TEST_F(ConjugationTest, GenerateGodanNa) {
-  auto forms = conjugator_.generate("死ぬ", VerbType::GodanNa);
-
-  bool found_ta = false;  // 死んだ (撥音便 + 濁音)
-  for (const auto& form : forms) {
-    if (form.surface == "死んだ")
-      found_ta = true;
-  }
-  EXPECT_TRUE(found_ta);
-}
-
-TEST_F(ConjugationTest, GenerateGodanBa) {
-  auto forms = conjugator_.generate("遊ぶ", VerbType::GodanBa);
-
-  bool found_ta = false;  // 遊んだ (撥音便 + 濁音)
-  for (const auto& form : forms) {
-    if (form.surface == "遊んだ")
-      found_ta = true;
-  }
-  EXPECT_TRUE(found_ta);
-}
-
-TEST_F(ConjugationTest, GenerateGodanMa) {
-  auto forms = conjugator_.generate("読む", VerbType::GodanMa);
-
-  bool found_ta = false;  // 読んだ (撥音便 + 濁音)
-  for (const auto& form : forms) {
-    if (form.surface == "読んだ")
-      found_ta = true;
-  }
-  EXPECT_TRUE(found_ta);
-}
-
-TEST_F(ConjugationTest, GenerateGodanRa) {
-  auto forms = conjugator_.generate("走る", VerbType::GodanRa);
-
-  bool found_ta = false;  // 走った (促音便)
-  for (const auto& form : forms) {
-    if (form.surface == "走った")
-      found_ta = true;
-  }
-  EXPECT_TRUE(found_ta);
-}
-
-TEST_F(ConjugationTest, GenerateGodanWa) {
-  auto forms = conjugator_.generate("買う", VerbType::GodanWa);
-
-  bool found_ta = false;   // 買った (促音便)
-  bool found_nai = false;  // 買わない
-  for (const auto& form : forms) {
-    if (form.surface == "買った")
-      found_ta = true;
-    if (form.surface == "買わない")
-      found_nai = true;
-  }
-  EXPECT_TRUE(found_ta);
-  EXPECT_TRUE(found_nai);
-}
-
-// ============================================================================
-// generate tests - Suru/Kuru
-// ============================================================================
-
-TEST_F(ConjugationTest, GenerateSuru) {
-  auto forms = conjugator_.generate("する", VerbType::Suru);
-
-  bool found_base = false;
-  bool found_nai = false;
-  bool found_ta = false;
-
-  for (const auto& form : forms) {
-    if (form.surface == "する")
-      found_base = true;
-    if (form.surface == "しない")
-      found_nai = true;
-    if (form.surface == "した")
-      found_ta = true;
-  }
-
-  EXPECT_TRUE(found_base);
-  EXPECT_TRUE(found_nai);
-  EXPECT_TRUE(found_ta);
-}
-
-TEST_F(ConjugationTest, GenerateSuruCompound) {
-  auto forms = conjugator_.generate("勉強する", VerbType::Suru);
-
-  bool found_base = false;
-  bool found_nai = false;
-  bool found_ta = false;
-
-  for (const auto& form : forms) {
-    if (form.surface == "勉強する")
-      found_base = true;
-    if (form.surface == "勉強しない")
-      found_nai = true;
-    if (form.surface == "勉強した")
-      found_ta = true;
-  }
-
-  EXPECT_TRUE(found_base);
-  EXPECT_TRUE(found_nai);
-  EXPECT_TRUE(found_ta);
-}
-
-TEST_F(ConjugationTest, GenerateKuru) {
-  auto forms = conjugator_.generate("来る", VerbType::Kuru);
-
-  bool found_base = false;
-  bool found_konai = false;  // こない
-  bool found_kita = false;   // きた
-
-  for (const auto& form : forms) {
-    if (form.surface == "来る")
-      found_base = true;
-    if (form.surface == "来ない")
-      found_konai = true;
-    if (form.surface == "来た")
-      found_kita = true;
-  }
-
-  EXPECT_TRUE(found_base);
-  EXPECT_TRUE(found_konai);
-  EXPECT_TRUE(found_kita);
-}
-
-// ============================================================================
-// generate tests - IAdjective
-// ============================================================================
-
-TEST_F(ConjugationTest, GenerateIAdjective) {
-  auto forms = conjugator_.generate("高い", VerbType::IAdjective);
-
-  bool found_base = false;
-  bool found_kunai = false;  // くない
-  bool found_katta = false;  // かった
-  bool found_kute = false;   // くて
-
-  for (const auto& form : forms) {
-    if (form.surface == "高い")
-      found_base = true;
-    if (form.surface == "高くない")
-      found_kunai = true;
-    if (form.surface == "高かった")
-      found_katta = true;
-    if (form.surface == "高くて")
-      found_kute = true;
-  }
-
-  EXPECT_TRUE(found_base);
-  EXPECT_TRUE(found_kunai);
-  EXPECT_TRUE(found_katta);
-  EXPECT_TRUE(found_kute);
-}
-
-// ============================================================================
-// generate tests - Unknown
-// ============================================================================
-
-TEST_F(ConjugationTest, GenerateUnknown) {
-  auto forms = conjugator_.generate("テスト", VerbType::Unknown);
-  EXPECT_TRUE(forms.empty());
 }
 
 // ============================================================================
@@ -441,6 +215,7 @@ TEST(ConjFormStringTest, AllForms) {
   EXPECT_EQ(conjFormToString(ConjForm::Kateikei), "kateikei");
   EXPECT_EQ(conjFormToString(ConjForm::Meireikei), "meireikei");
   EXPECT_EQ(conjFormToString(ConjForm::Ishikei), "ishikei");
+  EXPECT_EQ(conjFormToString(ConjForm::Count_), "");
 }
 
 // ============================================================================
@@ -455,6 +230,7 @@ TEST(ConjFormJapaneseTest, AllForms) {
   EXPECT_EQ(conjFormToJapanese(ConjForm::Kateikei), "仮定形");
   EXPECT_EQ(conjFormToJapanese(ConjForm::Meireikei), "命令形");
   EXPECT_EQ(conjFormToJapanese(ConjForm::Ishikei), "意志形");
+  EXPECT_EQ(conjFormToJapanese(ConjForm::Count_), "");
 }
 
 }  // namespace

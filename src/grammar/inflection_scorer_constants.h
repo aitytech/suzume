@@ -141,16 +141,6 @@ constexpr float kBonusIchidanKateiIRow = 0.12F;
 constexpr float kPenaltyGodanRaKateiIRow = 0.10F;
 
 // =============================================================================
-// GodanWa/Ra/Ta Disambiguation
-// =============================================================================
-
-// Multi-kanji stem with っ-onbin - no bias (dictionary handles disambiguation)
-constexpr float kBonusGodanWaMultiKanji = 0.0F;
-
-// Multi-kanji stem with っ-onbin - no bias (dictionary handles disambiguation)
-constexpr float kPenaltyGodanRaTaMultiKanji = 0.0F;
-
-// =============================================================================
 // Kuru Validation
 // =============================================================================
 
@@ -403,8 +393,9 @@ constexpr float kPenaltyIchidanSuruImperativeSePattern = scale::kModerate + scal
 // E.g., stem ending in characters that can't form valid た-row verb
 constexpr float kPenaltyGodanTaOnbinStemInvalid = scale::kStrong + scale::kTrivial;  // 0.50F
 
-// GodanTa with invalid て/た auxiliary connection
-constexpr float kPenaltyGodanTaTeAuxInvalid = scale::kModerate + scale::kTrivial * 2;  // 0.40F
+// GodanTa 連用形 with a て/で-starting auxiliary. Modern タ行五段 te/ta forms
+// require the 促音便 stem (持っ+て), never the 連用形 stem (持ち+て).
+constexpr float kPenaltyGodanTaRenyokeiTeDeAuxInvalid = scale::kModerate + scale::kTrivial * 2;  // 0.40F
 
 // Suru verb with onbin-like stem (shouldn't have onbin)
 // Suru verbs conjugate regularly without onbin: 勉強した, not *勉強っ+た
@@ -489,16 +480,10 @@ inline constexpr const char* kValidIAdjRaStemExceptions[] = {
     "つら",  // 辛い (つらい) - painful, hard
     "きら"   // 嫌い (きらい) - dislike
 };
-// Kuru verb kanji (来)
-inline constexpr const char* kKuruKanji = "来";
-
 // Common particles that cannot be verb stems
 // Used for Ichidan single-hiragana particle stem validation
 inline constexpr const char* kParticleStemList[] = {"も", "は", "が", "を", "に", "へ", "と", "で",
                                                     "よ", "ね", "わ", "な", "か", "ぞ", "さ", "ば"};
-// Particles that form invalid な-stem patterns with GodanWa
-// E.g., もな (も + ない), はな (は + ない)
-inline constexpr const char* kParticleNaStemPrefixes[] = {"も", "は", "が", "を", "に", "へ", "と", "で", "か"};
 }  // namespace suzume::grammar::inflection
 
 #endif  // SUZUME_GRAMMAR_INFLECTION_SCORER_CONSTANTS_H_

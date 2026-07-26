@@ -7,6 +7,8 @@
 #include <algorithm>
 
 #include "grammar/inflection.h"
+#include "grammar/inflection_scorer.h"
+#include "grammar/inflection_scorer_constants.h"
 
 namespace suzume::grammar {
 namespace {
@@ -124,6 +126,37 @@ TEST_F(InflectionBasicTest, IkuTeMitaForm) {
   auto result = inflection_.getBest("いってみた");
   EXPECT_EQ(result.base_form, "いく");
   EXPECT_EQ(result.verb_type, VerbType::GodanKa);
+}
+
+TEST_F(InflectionBasicTest, GodanTaRenyokeiAuxiliariesKeepGodanLemma) {
+  struct Case {
+    const char* surface;
+    const char* base_form;
+  };
+  constexpr Case kCases[] = {
+      {"もちたい", "もつ"}, {"持ちます", "持つ"}, {"待ちたい", "待つ"}, {"立ちます", "立つ"},
+      {"打ちたい", "打つ"}, {"勝ちます", "勝つ"}, {"育ちたい", "育つ"}, {"保ちます", "保つ"},
+  };
+
+  for (const auto& test_case : kCases) {
+    SCOPED_TRACE(test_case.surface);
+    const auto result = inflection_.getBest(test_case.surface);
+    EXPECT_EQ(result.base_form, test_case.base_form);
+    EXPECT_EQ(result.verb_type, VerbType::GodanTa);
+  }
+}
+
+TEST(InflectionScorerTest, GodanTaPenaltyOnlyAppliesToTeDeStartingAuxiliary) {
+  constexpr size_t kOneKanaBytes = 3;
+  InflectionScorerOptions opts;
+  opts.confidence_floor = 0.0F;
+  opts.confidence_ceiling = 1.0F;
+  const float regular_aux = calculateConfidence(VerbType::GodanTa, "持", kOneKanaBytes, 1, conn::kVerbRenyokei,
+                                                kOneKanaBytes * 2, false, &opts);
+  const float te_de_aux = calculateConfidence(VerbType::GodanTa, "持", kOneKanaBytes, 1, conn::kVerbRenyokei,
+                                              kOneKanaBytes * 2, true, &opts);
+
+  EXPECT_FLOAT_EQ(regular_aux - te_de_aux, inflection::kPenaltyGodanTaRenyokeiTeDeAuxInvalid);
 }
 
 // ===== I-adjective patterns =====
@@ -302,6 +335,20 @@ TEST_F(InflectionBasicTest, KuNakatta_NotIchidanKuru) {
   EXPECT_NE(result.base_form, "くる");
 }
 
+TEST_F(InflectionBasicTest, ParticleNaGodanWaPenaltyCoversCanonicalParticleSet) {
+  auto godan_wa_confidence = [this](std::string_view surface) {
+    const auto& candidates = inflection_.analyze(surface);
+    const auto candidate = std::find_if(candidates.begin(), candidates.end(),
+                                        [](const auto& value) { return value.verb_type == VerbType::GodanWa; });
+    EXPECT_NE(candidate, candidates.end()) << surface;
+    return candidate == candidates.end() ? -1.0F : candidate->confidence;
+  };
+
+  const float established_particle_confidence = godan_wa_confidence("もない");
+  EXPECT_FLOAT_EQ(godan_wa_confidence("わない"), established_particle_confidence);
+  EXPECT_FLOAT_EQ(godan_wa_confidence("ぞない"), established_particle_confidence);
+}
+
 // すなかった should NOT be analyzed as Ichidan する (する is Suru, not Ichidan)
 TEST_F(InflectionBasicTest, SuNakatta_NotIchidanSuru) {
   auto result = inflection_.getBest("すなかった");
@@ -315,6 +362,25 @@ TEST_F(InflectionBasicTest, Kuru_ValidConjugations) {
   auto result = inflection_.getBest("来なかった");
   EXPECT_EQ(result.base_form, "来る");
   EXPECT_EQ(result.verb_type, VerbType::Kuru);
+}
+
+TEST_F(InflectionBasicTest, KuruKanaFormsHaveNoPrefixedFalseCandidates) {
+  for (const std::string_view surface : {"くる", "きます", "こない", "くれば", "こよう"}) {
+    SCOPED_TRACE(surface);
+    const auto& candidates = inflection_.analyze(surface);
+    const auto valid_kuru = std::find_if(candidates.begin(), candidates.end(), [](const auto& candidate) {
+      return candidate.verb_type == VerbType::Kuru && candidate.base_form == "くる";
+    });
+    EXPECT_NE(valid_kuru, candidates.end());
+  }
+
+  for (const std::string_view surface : {"かきます", "さきます", "ききます"}) {
+    SCOPED_TRACE(surface);
+    const auto& candidates = inflection_.analyze(surface);
+    const auto false_kuru = std::find_if(candidates.begin(), candidates.end(),
+                                         [](const auto& candidate) { return candidate.verb_type == VerbType::Kuru; });
+    EXPECT_EQ(false_kuru, candidates.end());
+  }
 }
 
 // Verify valid Suru conjugations still work

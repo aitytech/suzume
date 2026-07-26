@@ -92,6 +92,15 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
         stem = std::string(remaining.substr(0, remaining.size() - ending.suffix.size()));
       }
 
+      // Native カ変 endings are the kana sequence itself (こ/き/くれ/...),
+      // so their lexical stem must be empty. A non-empty non-来 prefix is never
+      // カ変, and 来 + a kana ending would be an invalid mixed spelling
+      // (*来きます). Kanji 来 forms are handled by the existing zero-ending
+      // Ichidan match and remapped to Kuru below.
+      if (ending.verb_type == VerbType::Kuru && (!isKuruStem(stem) || !stem.empty())) {
+        continue;
+      }
+
       // Classical サ変未然形 せ is licensed by the classical negative
       // auxiliaries ず/ぬ (屈せず, 屈せぬ), not by modern ない compounds.
       // Without this guard, 話せなくなる is misread as 話する +
@@ -111,6 +120,8 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
       // - Kuru verb with こ/き→くる (empty stem is allowed for mizenkei/renyokei)
       // - Kuru verb with こい→くる (imperative, empty stem allowed)
       // - Kuru verb with くれ→くる (hypothetical, empty stem allowed)
+      // - Kuru verb with こよ→くる (volitional, empty stem allowed)
+      // - Kuru verb with くる→くる (dictionary form, empty stem allowed)
       // NOTE: Suru with empty suffix + empty stem + aux is NOT allowed
       // (e.g., なかった should NOT become する)
       // Valid Suru patterns require non-empty suffix (し, さ) to connect to aux
@@ -119,7 +130,8 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
             (ending.suffix == "す" || ending.suffix == "し" || ending.suffix == "しろ" || ending.suffix == "せよ" ||
              ending.suffix == "しよ" || ending.suffix == "すれ")) &&
           !(ending.verb_type == VerbType::Kuru &&
-            (ending.suffix == "こ" || ending.suffix == "き" || ending.suffix == "こい" || ending.suffix == "くれ"))) {
+            (ending.suffix == "こ" || ending.suffix == "き" || ending.suffix == "こい" || ending.suffix == "くれ" ||
+             ending.suffix == "こよ" || ending.suffix == "くる"))) {
         continue;
       }
 
@@ -149,7 +161,7 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
 
       // Validate irregular いく pattern: GodanKa with っ-onbin only valid for い/行
       if (ending.verb_type == VerbType::GodanKa && ending.suffix == "っ" && ending.is_onbin) {
-        if (stem != "い" && stem != "行") {
+        if (!isIkuStem(stem)) {
           continue;  // Skip invalid irregular pattern
         }
       }
@@ -273,6 +285,8 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
       for (const auto& aux : aux_chain) {
         aux_total_len += aux.size();
       }
+      const bool first_aux_starts_with_te_de =
+          !aux_chain.empty() && (utf8::startsWith(aux_chain.back(), "て") || utf8::startsWith(aux_chain.back(), "で"));
 
       InflectionCandidate candidate;
       candidate.base_form = base_form;
@@ -280,7 +294,7 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
       candidate.suffix = suffix_str;
       candidate.verb_type = actual_verb_type;  // Use remapped type for 来→Kuru
       candidate.confidence = calculateConfidence(actual_verb_type, stem, aux_total_len, aux_chain.size(), required_conn,
-                                                 suffix_str.size());
+                                                 suffix_str.size(), first_aux_starts_with_te_de);
 
       // Ichidan verbs use て/た for te/ta-form, NOT で/だ
       // で/だ are only used for 撥音便 Godan verbs (読む→読んで/読んだ, 遊ぶ→遊んで/遊んだ)

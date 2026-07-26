@@ -15,6 +15,7 @@ struct InflectionScoreContext {
   size_t aux_count;
   uint16_t required_conn;
   size_t suffix_len;
+  bool first_aux_starts_with_te_de;
   const InflectionScorerOptions* opts;
 };
 

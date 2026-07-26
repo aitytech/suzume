@@ -131,10 +131,6 @@ bool containsKanji(std::string_view stem) {
   return anyCharMatches(stem, kana::isKanjiCodepoint);
 }
 
-bool containsKatakana(std::string_view stem) {
-  return anyCharMatches(stem, kana::isKatakanaCodepoint);
-}
-
 bool isPureHiragana(std::string_view stem) {
   return allCharsMatch(stem, kana::isHiraganaCodepoint);
 }
@@ -263,10 +259,6 @@ bool isParallelTogetherAdverb(std::string_view surface) {
   return surface == "ともに";
 }
 
-bool endsWithTemporalNounSuffix(std::string_view surface) {
-  return utf8::endsWith(surface, "時");
-}
-
 bool isStateDurationSuffix(std::string_view surface) {
   return surface == "中";
 }
@@ -325,10 +317,6 @@ bool startsClassicalAraNLimit(std::string_view surface) {
   return utf8::startsWith(surface, "あらん限り");
 }
 
-bool startsCopularTopicAru(std::string_view surface) {
-  return utf8::startsWith(surface, "ではある");
-}
-
 bool isCausalParticleBeforeTopic(std::string_view particle_surface, std::string_view following_surface) {
   return particle_surface == "ので" && utf8::startsWith(following_surface, "は");
 }
@@ -370,11 +358,6 @@ bool isPureKatakana(std::string_view stem) {
 bool isSmallKana(std::string_view ch) {
   char32_t cp = utf8::decodeFirstChar(ch);
   return cp != 0 && kana::isSmallKanaCodepoint(cp);
-}
-
-bool startsWithHiragana(std::string_view s) {
-  char32_t cp = utf8::decodeFirstChar(s);
-  return cp != 0 && kana::isHiraganaCodepoint(cp);
 }
 
 // A-row (あ段) endings for Godan mizenkei detection.

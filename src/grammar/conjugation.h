@@ -74,23 +74,17 @@ enum class ConjForm : uint8_t {
   Kateikei,   // 仮定形: 書け
   Meireikei,  // 命令形: 書け
   Ishikei,    // 意志形: 書こ
+  Count_,
 };
 
-/**
- * @brief Generated conjugation form
- */
-struct ConjugatedForm {
-  std::string surface;    // 活用形: 書いた
-  std::string base_form;  // 基本形: 書く
-  std::string stem;       // 語幹: 書
-  VerbType verb_type;     // 活用型
-  std::string suffix;     // 付加語尾: た
-};
+static_assert(static_cast<uint8_t>(ConjForm::Base) == 0 && static_cast<uint8_t>(ConjForm::Mizenkei) == 1 &&
+                  static_cast<uint8_t>(ConjForm::Renyokei) == 2 && static_cast<uint8_t>(ConjForm::Onbinkei) == 3 &&
+                  static_cast<uint8_t>(ConjForm::Kateikei) == 4 && static_cast<uint8_t>(ConjForm::Meireikei) == 5 &&
+                  static_cast<uint8_t>(ConjForm::Ishikei) == 6 && static_cast<uint8_t>(ConjForm::Count_) == 7,
+              "ConjForm ABI values must remain stable");
 
 /**
  * @brief Conjugation engine
- *
- * Generates all conjugated forms from base form + verb type
  */
 class Conjugation {
  public:
@@ -143,14 +137,6 @@ class Conjugation {
   static GodanOnbinRange getGodanTypesByOnbin(std::string_view onbin);
 
   /**
-   * @brief Generate all conjugated forms for a verb
-   * @param base_form Base form (終止形): 書く
-   * @param type Verb type: GodanKa
-   * @return All conjugated surface forms with info
-   */
-  std::vector<ConjugatedForm> generate(const std::string& base_form, VerbType type) const;
-
-  /**
    * @brief Suffix info for dictionary expansion
    */
   struct DictionarySuffix {
@@ -170,7 +156,7 @@ class Conjugation {
    * @param type Verb type
    * @return Vector of suffixes to generate dictionary entries
    */
-  std::vector<DictionarySuffix> getDictionarySuffixes(VerbType type) const;
+  std::vector<DictionarySuffix> getDictionarySuffixes(VerbType type, std::string_view base_form = {}) const;
 
   /**
    * @brief Get verb stem from base form
@@ -181,13 +167,6 @@ class Conjugation {
    * @brief Detect verb type from base form (heuristic)
    */
   static VerbType detectType(const std::string& base_form);
-
- private:
-  std::vector<ConjugatedForm> generateGodan(const std::string& stem, const std::string& base_form, VerbType type) const;
-  static std::vector<ConjugatedForm> generateIchidan(const std::string& stem, const std::string& base_form);
-  static std::vector<ConjugatedForm> generateSuru(const std::string& stem, const std::string& base_form);
-  static std::vector<ConjugatedForm> generateKuru(const std::string& stem, const std::string& base_form);
-  static std::vector<ConjugatedForm> generateIAdjective(const std::string& stem, const std::string& base_form);
 };
 
 /**
@@ -227,6 +206,38 @@ struct KuruStemForms {
 KuruStemForms getKuruStemForms(const std::string& base_form);
 
 /**
+ * @brief Dictionary form surfaces for both spellings of カ変.
+ */
+struct KuruDictionaryForm {
+  std::string kanji_surface;
+  std::string kana_surface;
+  core::ExtendedPOS extended_pos;
+};
+
+/**
+ * @brief Derive dictionary forms for カ変 from the canonical stem surfaces.
+ */
+std::vector<KuruDictionaryForm> getKuruDictionaryForms();
+
+/**
+ * @brief Whether a reverse-analysis stem can belong to カ変.
+ *
+ * The kana spelling has an empty lexical stem because its visible こ/き/くれ
+ * sequence is carried by the ending. The kanji spelling keeps 来 as its stem.
+ */
+bool isKuruStem(std::string_view stem);
+
+/**
+ * @brief Whether a base form is the irregular 促音便 verb 行く/いく.
+ */
+bool isIkuBaseForm(std::string_view base_form);
+
+/**
+ * @brief Whether a Godan-Ka stem is the irregular 促音便 stem 行/い.
+ */
+bool isIkuStem(std::string_view stem);
+
+/**
  * @brief Encode a Godan row's vowel codepoints into UTF-8 strings.
  * @param row Godan row data
  * @return GodanVowels with base/a/i/e/o surfaces
@@ -243,6 +254,14 @@ GodanVowels encodeGodanVowels(const Conjugation::GodanRow& row);
  * @return UTF-8 onbinkei surface
  */
 std::string onbinFormOf(const Conjugation::GodanRow& row);
+
+/**
+ * @brief Return a Godan verb's onbin surface, including 行く/いく irregularity.
+ *
+ * Normal Godan-Ka uses イ音便 (書い), while the lexical stems 行/い use
+ * 促音便 (行っ/いっ). Other rows use their canonical GodanRow value.
+ */
+std::string godanOnbinForm(VerbType type, std::string_view stem);
 
 /**
  * @brief Whether a verb type is one of the nine Godan conjugation rows.
