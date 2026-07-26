@@ -2,7 +2,8 @@
 
 #include <array>
 #include <cctype>
-#include <cerrno>
+#include <cfloat>
+#include <cstdint>
 #include <cstdlib>
 #ifndef __EMSCRIPTEN__
 #include <fstream>
@@ -259,6 +260,133 @@ bool validateConfig(const JsonValue& root, std::string* error_message) {
           validateOptionObject(*inflection, kInflectionOptionSpecs, "inflection", error_message));
 }
 
+// Powers of ten that are exactly representable in double; 1e22 is the largest.
+constexpr int kMaxExactPowerOfTen = 22;
+constexpr std::array<double, kMaxExactPowerOfTen + 1> kPowersOfTen{{
+    1e0,  1e1,  1e2,  1e3,  1e4,  1e5,  1e6,  1e7,  1e8,  1e9,  1e10, 1e11,
+    1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21, 1e22,
+}};
+
+// A 19-digit significand is the most that fits a 64-bit integer exactly.
+constexpr int kMaxSignificandDigits = 19;
+// Beyond these decimal exponents no 19-digit significand can land inside the
+// normal float range, so the value is rejected without scaling it digit by digit.
+constexpr int kOverflowExponent = 39;
+constexpr int kUnderflowExponent = -60;
+
+// Convert a scanned JSON number token to float.
+//
+// std::strtof would do this, but the libc scanner it calls computes in 128-bit
+// long double, which drags the software floating-point helpers (__addtf3,
+// __multf3, __divtf3, fmodl and the scanner internals) into the WASM binary —
+// about 7 KB of code for one configuration knob. The caller has already limited
+// the token to [-]digits[.digits][(e|E)[+-]digits], so a direct conversion
+// covers the whole accepted grammar.
+//
+// Rounding: the significand is accumulated exactly and scaled by exact powers of
+// ten, so the double intermediate carries a single rounding at 2^-53 before it is
+// narrowed to float at 2^-24. Magnitudes outside the normal float range are
+// rejected, which is what the strtof path did through ERANGE.
+bool convertDecimalToFloat(std::string_view text, float& out) {
+  size_t pos = 0;
+  bool negative = false;
+  if (pos < text.size() && (text[pos] == '-' || text[pos] == '+')) {
+    negative = text[pos] == '-';
+    ++pos;
+  }
+
+  uint64_t significand = 0;
+  int exponent = 0;
+  int digits = 0;
+  bool has_digit = false;
+  while (pos < text.size() && text[pos] >= '0' && text[pos] <= '9') {
+    has_digit = true;
+    if (digits < kMaxSignificandDigits) {
+      significand = significand * 10 + static_cast<uint64_t>(text[pos] - '0');
+      if (significand != 0) {
+        ++digits;
+      }
+    } else {
+      // Digits past the significand still scale the value.
+      ++exponent;
+    }
+    ++pos;
+  }
+  if (pos < text.size() && text[pos] == '.') {
+    ++pos;
+    while (pos < text.size() && text[pos] >= '0' && text[pos] <= '9') {
+      has_digit = true;
+      if (digits < kMaxSignificandDigits) {
+        significand = significand * 10 + static_cast<uint64_t>(text[pos] - '0');
+        if (significand != 0) {
+          ++digits;
+        }
+        --exponent;
+      }
+      ++pos;
+    }
+  }
+  if (!has_digit) {
+    return false;
+  }
+
+  if (pos < text.size() && (text[pos] == 'e' || text[pos] == 'E')) {
+    ++pos;
+    bool exponent_negative = false;
+    if (pos < text.size() && (text[pos] == '+' || text[pos] == '-')) {
+      exponent_negative = text[pos] == '-';
+      ++pos;
+    }
+    if (pos >= text.size() || text[pos] < '0' || text[pos] > '9') {
+      return false;
+    }
+    int written = 0;
+    while (pos < text.size() && text[pos] >= '0' && text[pos] <= '9') {
+      if (written < 1000) {
+        written = written * 10 + (text[pos] - '0');
+      }
+      ++pos;
+    }
+    exponent += exponent_negative ? -written : written;
+  }
+  if (pos != text.size()) {
+    return false;
+  }
+
+  if (significand == 0) {
+    // A zero significand still carries the sign the token spelled out.
+    float zero{};
+    out = negative ? -zero : zero;
+    return true;
+  }
+  if (exponent > kOverflowExponent || exponent < kUnderflowExponent) {
+    return false;
+  }
+
+  double value = static_cast<double>(significand);
+  while (exponent > kMaxExactPowerOfTen) {
+    value *= kPowersOfTen.back();
+    exponent -= kMaxExactPowerOfTen;
+  }
+  while (exponent < -kMaxExactPowerOfTen) {
+    value /= kPowersOfTen.back();
+    exponent += kMaxExactPowerOfTen;
+  }
+  if (exponent > 0) {
+    value *= kPowersOfTen[static_cast<size_t>(exponent)];
+  } else if (exponent < 0) {
+    value /= kPowersOfTen[static_cast<size_t>(-exponent)];
+  }
+
+  float result = static_cast<float>(negative ? -value : value);
+  float magnitude = result < 0 ? -result : result;
+  if (magnitude < FLT_MIN || magnitude > FLT_MAX) {
+    return false;
+  }
+  out = result;
+  return true;
+}
+
 }  // namespace
 
 JsonValue ScorerOptionsLoader::Parser::parse() {
@@ -467,15 +595,11 @@ JsonValue ScorerOptionsLoader::Parser::parseNumber() {
     setError("Invalid number in JSON");
     return result;
   }
-  // Exception-free parse: std::strtof never throws (unlike std::stof). Validate
-  // that the whole token was consumed and the magnitude is in range, mirroring
-  // the environment-variable path (env_override_internal::tryGetEnvFloat).
-  std::string number_str = json_.substr(start, pos_ - start);
-  const char* begin_ptr = number_str.c_str();
-  char* end_ptr = nullptr;
-  errno = 0;
-  float parsed = std::strtof(begin_ptr, &end_ptr);
-  if (end_ptr == begin_ptr || *end_ptr != '\0' || errno == ERANGE) {
+  // Exception-free parse: the converter reports a malformed or out-of-range token
+  // instead of throwing, and rejects the same inputs the strtof path rejected
+  // through a trailing character or ERANGE.
+  float parsed{};
+  if (!convertDecimalToFloat(std::string_view(json_).substr(start, pos_ - start), parsed)) {
     setError("Invalid number in JSON");
     return result;
   }

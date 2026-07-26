@@ -7,9 +7,14 @@
 
 #include <gtest/gtest.h>
 
+#include <cerrno>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
+#include <random>
 #include <string>
+#include <vector>
 
 #include "analysis/scorer_bigram_overrides.h"
 
@@ -542,6 +547,141 @@ TEST_F(LoadFromEnvTest, InvalidConfigFile) {
 }
 
 #endif  // __EMSCRIPTEN__
+
+// =============================================================================
+// Number Conversion Parity
+// =============================================================================
+// The JSON number path converts decimals itself rather than calling std::strtof,
+// because the libc scanner behind strtof computes in 128-bit long double and pulls
+// several kilobytes of software floating-point helpers into the WASM binary. These
+// tests hold the converter to what the scanner produced: the same accept/reject
+// decision and, for accepted tokens, the identical float bit pattern.
+
+uint32_t floatBits(float value) {
+  uint32_t bits = 0;
+  std::memcpy(&bits, &value, sizeof(bits));
+  return bits;
+}
+
+// The strtof-based reference, including the trailing-character and ERANGE checks
+// the JSON path applied around it.
+bool referenceParse(const std::string& token, float& out) {
+  const char* begin = token.c_str();
+  char* end = nullptr;
+  errno = 0;
+  float value = std::strtof(begin, &end);
+  if (end == begin || *end != '\0' || errno == ERANGE) {
+    return false;
+  }
+  out = value;
+  return true;
+}
+
+bool loadNumberToken(const std::string& token, float& out) {
+  ScorerOptions opts;
+  if (!ScorerOptionsLoader::loadFromJsonString(R"({"unary":{"noun_prior":)" + token + "}}", opts)) {
+    return false;
+  }
+  out = opts.noun_prior;
+  return true;
+}
+
+void expectStrtofParity(const std::string& token) {
+  float reference = 0.0F;
+  float parsed = 0.0F;
+  const bool reference_accepted = referenceParse(token, reference);
+  const bool parsed_accepted = loadNumberToken(token, parsed);
+  ASSERT_EQ(parsed_accepted, reference_accepted) << "acceptance differs for token " << token;
+  if (reference_accepted) {
+    EXPECT_EQ(floatBits(parsed), floatBits(reference)) << "value differs for token " << token;
+  }
+}
+
+TEST(ScorerOptionNumberTest, MatchesStrtofOnBoundaryTokens) {
+  const std::vector<std::string> tokens = {
+      "0",
+      "-0",
+      "0.0",
+      "-0.0",
+      "1",
+      "-0.8",
+      "0.1",
+      "-0.25",
+      "1.5e-3",
+      "1E3",
+      "1e+3",
+      "0.000001",
+      "123456789",
+      "1234567890123456789",
+      "12345678901234567890123456",
+      "0.1234567890123456789",
+      "1e22",
+      "1e23",
+      "3.4028234663852886e38",   // FLT_MAX
+      "3.5e38",                  // past FLT_MAX, rejected as out of range
+      "1.1754943508222875e-38",  // FLT_MIN
+      "1e-38",                   // subnormal, rejected as out of range
+      "1e-46",                   // underflows to zero, rejected as out of range
+      "1e39",                    // overflows, rejected as out of range
+      "-1e39",
+  };
+  for (const std::string& token : tokens) {
+    expectStrtofParity(token);
+  }
+}
+
+TEST(ScorerOptionNumberTest, MatchesStrtofOnGeneratedTokens) {
+  std::mt19937 generator(20260727);
+  std::uniform_int_distribution<int> digit_count(1, 20);
+  std::uniform_int_distribution<int> digit(0, 9);
+  std::uniform_int_distribution<int> exponent(-30, 30);
+  std::uniform_int_distribution<int> shape(0, 3);
+
+  for (int iteration = 0; iteration < 20000; ++iteration) {
+    std::string token;
+    if (shape(generator) == 0) {
+      token += '-';
+    }
+    const int integer_digits = digit_count(generator);
+    for (int index = 0; index < integer_digits; ++index) {
+      token += static_cast<char>('0' + digit(generator));
+    }
+    if (shape(generator) != 0) {
+      token += '.';
+      const int fraction_digits = digit_count(generator);
+      for (int index = 0; index < fraction_digits; ++index) {
+        token += static_cast<char>('0' + digit(generator));
+      }
+    }
+    if (shape(generator) != 0) {
+      token += 'e';
+      const int value = exponent(generator);
+      if (value < 0) {
+        token += '-';
+      }
+      token += std::to_string(value < 0 ? -value : value);
+    }
+    expectStrtofParity(token);
+  }
+}
+
+TEST(ScorerOptionNumberTest, RejectsTheOverflowThresholdTie) {
+  // Exactly halfway between FLT_MAX and 2^128. Round-to-nearest-even resolves the
+  // tie upward, so the value overflows the float range and is rejected. Some
+  // platform scanners resolve the same tie downward to FLT_MAX; the converter
+  // follows IEEE rounding rather than the host libc, so the result no longer
+  // depends on which platform parsed the configuration.
+  float parsed = 0.0F;
+  EXPECT_FALSE(loadNumberToken("3.4028235677973366e38", parsed));
+}
+
+TEST(ScorerOptionNumberTest, RejectsMalformedNumbers) {
+  ScorerOptions opts;
+  std::string error;
+  EXPECT_FALSE(ScorerOptionsLoader::loadFromJsonString(R"({"unary":{"noun_prior":1e}})", opts, &error));
+  EXPECT_FALSE(ScorerOptionsLoader::loadFromJsonString(R"({"unary":{"noun_prior":-}})", opts, &error));
+  EXPECT_FALSE(ScorerOptionsLoader::loadFromJsonString(R"({"unary":{"noun_prior":1e+}})", opts, &error));
+}
 
 }  // namespace
 }  // namespace suzume::analysis
