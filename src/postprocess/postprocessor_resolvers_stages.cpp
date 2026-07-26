@@ -465,6 +465,22 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
     }
   }
 
+  // The regional causal き is homographic with the classical past auxiliary,
+  // which attaches to a continuative (あり+き). After a finite predicate — a
+  // terminal form or the past auxiliary — no classical reading is available,
+  // so the residual unknown token is the conjunctive particle (書く+き).
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    auto& causal = result[idx];
+    const auto& host = result[idx - 1];
+    if (causal.pos != core::PartOfSpeech::Other || !grammar::isSingleHiragana(causal.surface, U'き')) {
+      continue;
+    }
+    if (host.extended_pos == core::ExtendedPOS::VerbShuushikei || host.extended_pos == core::ExtendedPOS::AuxTenseTa) {
+      resolver::retag(causal, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleConj, "き",
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    }
+  }
+
   // Sentence-final ね is the final particle after a completed predicate or
   // after any particle, not the homographic verb/negative auxiliary.  No
   // particle licenses a following predicate stem, so a trailing ね behind one
