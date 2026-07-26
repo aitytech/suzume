@@ -6,6 +6,13 @@
 # baseline by more than TOLERANCE_PCT, and always prints raw and reproducible
 # gzip (-9 -n) sizes. Legacy one-number baselines remain raw-only compatible.
 #
+# The baseline is only comparable when it was recorded under the shipped build
+# conditions, so record it with the pinned Emscripten version used by CI and with
+# the git-tracked dictionary variant (`make wasm-dict`, which feeds the compiler
+# only `git ls-files 'data/user/*.tsv'`). A baseline taken from a working tree that
+# also holds untracked user dictionaries measures a binary nobody ships, and the
+# gate silently gains headroom it does not have.
+#
 # Usage:
 #   scripts/check_wasm_size.sh <path-to.wasm>          # check against baseline
 #   scripts/check_wasm_size.sh <path-to.wasm> update   # set raw + gzip baseline
