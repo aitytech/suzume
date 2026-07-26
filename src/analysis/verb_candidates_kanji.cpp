@@ -300,6 +300,10 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
                             const std::vector<normalize::CharType>& char_types, const grammar::Inflection& inflection,
                             const dictionary::DictionaryManager* dict_manager, const VerbCandidateOptions& verb_opts,
                             std::vector<UnknownCandidate>& candidates) {
+  // The buffer is shared with the other generators for this position, so every
+  // whole-buffer step below must stay inside the range this generator appended.
+  const size_t candidate_start = candidates.size();
+
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
     return;
   }
@@ -710,7 +714,7 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
   appendVerifiedTailGodanTaCompoundCandidates(codepoints, start_pos, kanji_end, dict_manager, candidates);
 
   // Add emphatic variants (来た → 来たっ, etc.)
-  vh::addEmphaticVariants(candidates, codepoints);
+  vh::addEmphaticVariants(candidates, codepoints, candidate_start);
 
   // An inflection-validated renyokei immediately followed by a particle can
   // head a deverbal noun phrase (鳴らしを, 書きを). Keep that noun reading
@@ -718,7 +722,8 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
   // split the stem internally. The particle and lexical-continuation guards
   // keep finite predicates and derivational suffixes unaffected.
   std::vector<UnknownCandidate> nominalized_candidates;
-  for (const auto& cand : candidates) {
+  for (size_t idx = candidate_start; idx < candidates.size(); ++idx) {
+    const UnknownCandidate& cand = candidates[idx];
     if (cand.pos != core::PartOfSpeech::Verb || cand.origin != core::CandidateOrigin::VerbKanji ||
         cand.extended_pos != core::ExtendedPOS::VerbRenyokei ||
         (!cand.lemma_verified && cand.conj_type != dictionary::ConjugationType::GodanSa) ||
@@ -741,7 +746,7 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
   // Verified lexical verb forms remain available for genuine homographs.
   candidates.erase(
       std::remove_if(
-          candidates.begin(), candidates.end(),
+          candidates.begin() + static_cast<std::ptrdiff_t>(candidate_start), candidates.end(),
           [&](const UnknownCandidate& cand) {
             const bool has_auxiliary_continuation =
                 cand.end < codepoints.size() && (codepoints[cand.end] == U'た' || codepoints[cand.end] == U'て');
@@ -770,7 +775,8 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
   // generation already preserves unknown verbs in this context; discount the
   // verbal path as well so noun/adjective homographs do not win merely through
   // cheaper local connections.
-  for (auto& cand : candidates) {
+  for (size_t idx = candidate_start; idx < candidates.size(); ++idx) {
+    UnknownCandidate& cand = candidates[idx];
     if (cand.pos == core::PartOfSpeech::Verb && cand.extended_pos == core::ExtendedPOS::VerbRenyokei &&
         vh::isCommaClauseChainingRenyokei(codepoints, cand.start, cand.end, dict_manager)) {
       cand.cost += candidate::verb_cost::kCommaClauseRenyokeiBonus;
@@ -779,13 +785,13 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
 
   // Apply mid-kanji-run dictionary compound penalty (see comment above)
   if (mid_compound_penalty != 0.0F) {
-    for (auto& cand : candidates) {
-      cand.cost += mid_compound_penalty;
+    for (size_t idx = candidate_start; idx < candidates.size(); ++idx) {
+      candidates[idx].cost += mid_compound_penalty;
     }
   }
 
   // Sort by cost and return best candidates
-  vh::sortCandidatesByCost(candidates);
+  vh::sortCandidatesByCost(candidates, candidate_start);
 
   return;
 }
