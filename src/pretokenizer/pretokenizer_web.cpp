@@ -3,6 +3,7 @@
  * @brief Web identifier matchers for the pre-tokenizer
  */
 
+#include "normalize/char_type.h"
 #include "normalize/utf8.h"
 #include "pretokenizer/pretokenizer_internal.h"
 
@@ -131,12 +132,14 @@ bool isHashtagChar(char32_t codepoint) {
   if (codepoint >= 0x30A0 && codepoint <= 0x30FF) {
     return true;
   }
-  // CJK Unified Ideographs (U+4E00-U+9FFF) - allowed for hashtags
-  if (codepoint >= 0x4E00 && codepoint <= 0x9FFF) {
+  if (normalize::isKanjiCodepoint(codepoint)) {
     return true;
   }
-  // Full-width alphanumeric (U+FF00-U+FF5E)
-  if (codepoint >= 0xFF00 && codepoint <= 0xFF5E) {
+  // Full-width ASCII letters, digits, and underscore. Do not accept the
+  // surrounding punctuation block: in particular, a second ＃ starts a new
+  // hashtag rather than becoming content of the first.
+  if ((codepoint >= U'０' && codepoint <= U'９') || (codepoint >= U'Ａ' && codepoint <= U'Ｚ') ||
+      (codepoint >= U'ａ' && codepoint <= U'ｚ') || codepoint == U'＿') {
     return true;
   }
   // Hiragana is NOT allowed - to avoid particles being included

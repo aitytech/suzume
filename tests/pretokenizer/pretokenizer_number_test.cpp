@@ -440,5 +440,25 @@ TEST_F(PreTokenizerNumberTest, NoMatch_PlainNumber) {
   EXPECT_FALSE(result.spans.empty());
 }
 
+TEST_F(PreTokenizerNumberTest, LongPlainDigitRunsRemainSingleSpans) {
+  const std::string ascii_digits(32768, '1');
+  const auto ascii_result = pretokenizer_.process(ascii_digits);
+  ASSERT_EQ(ascii_result.spans.size(), 1U);
+  EXPECT_EQ(ascii_result.spans[0].start, 0U);
+  EXPECT_EQ(ascii_result.spans[0].end, ascii_digits.size());
+  EXPECT_TRUE(ascii_result.tokens.empty());
+
+  std::string fullwidth_digits;
+  fullwidth_digits.reserve(4096 * std::string("１").size());
+  for (size_t index = 0; index < 4096; ++index) {
+    fullwidth_digits += "１";
+  }
+  const auto fullwidth_result = pretokenizer_.process(fullwidth_digits);
+  ASSERT_EQ(fullwidth_result.spans.size(), 1U);
+  EXPECT_EQ(fullwidth_result.spans[0].start, 0U);
+  EXPECT_EQ(fullwidth_result.spans[0].end, fullwidth_digits.size());
+  EXPECT_TRUE(fullwidth_result.tokens.empty());
+}
+
 }  // namespace
 }  // namespace suzume::pretokenizer

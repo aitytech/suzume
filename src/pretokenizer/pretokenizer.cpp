@@ -24,20 +24,29 @@ PreTokenResult PreTokenizer::process(std::string_view text) const {
 
   size_t pos = 0;
   size_t span_start = 0;
+  bool previous_was_digit = false;
 
   while (pos < text.size()) {
     PreToken token;
+    size_t next_pos = pos;
+    const char32_t codepoint = normalize::decodeUtf8(text, next_pos);
+    const bool current_is_digit = (codepoint >= U'0' && codepoint <= U'9') || isFullwidthDigit(codepoint);
+    // Numeric matchers scan the complete digit run. Once the first position
+    // has failed, retrying every suffix of the same run is quadratic and can
+    // only manufacture a token that starts in the middle of a number.
+    const bool inside_numeric_run = previous_was_digit && current_is_digit;
 
     // Try to match patterns in priority order
     // Note: URL must come before Email (URLs contain @ in some cases)
     // Note: Email must come before Mention (emails have @ followed by domain)
     // Note: Percentage must come before Version to avoid "3.14%" being parsed as version
     // Note: Date must come before Time (日付 includes 日 which looks like time suffix)
-    if (tryMatchUrl(text, pos, token) || tryMatchEmail(text, pos, token) || tryMatchHashtag(text, pos, token) ||
-        tryMatchMention(text, pos, token) || tryMatchDate(text, pos, token) || tryMatchCounter(text, pos, token) ||
-        tryMatchTime(text, pos, token) || tryMatchCurrency(text, pos, token) || tryMatchStorage(text, pos, token) ||
-        tryMatchPercentage(text, pos, token) || tryMatchAddressNumber(text, pos, token) ||
-        tryMatchVersion(text, pos, token) || tryMatchAsciiWithDots(text, pos, token)) {
+    if (!inside_numeric_run &&
+        (tryMatchUrl(text, pos, token) || tryMatchEmail(text, pos, token) || tryMatchHashtag(text, pos, token) ||
+         tryMatchMention(text, pos, token) || tryMatchDate(text, pos, token) || tryMatchCounter(text, pos, token) ||
+         tryMatchTime(text, pos, token) || tryMatchCurrency(text, pos, token) || tryMatchStorage(text, pos, token) ||
+         tryMatchPercentage(text, pos, token) || tryMatchAddressNumber(text, pos, token) ||
+         tryMatchVersion(text, pos, token) || tryMatchAsciiWithDots(text, pos, token))) {
       // Add span before this token if any
       if (pos > span_start) {
         result.spans.push_back({span_start, pos});
@@ -46,13 +55,11 @@ PreTokenResult PreTokenizer::process(std::string_view text) const {
       result.tokens.push_back(token);
       pos = token.end;
       span_start = pos;
+      previous_was_digit = false;
       continue;
     }
 
     // Check for sentence boundary
-    size_t byte_pos = pos;
-    char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
-
     if (isSentenceBoundary(codepoint)) {
       // Add span before boundary if any
       if (pos > span_start) {
@@ -60,16 +67,18 @@ PreTokenResult PreTokenizer::process(std::string_view text) const {
       }
 
       // Add boundary token
-      setTokenFromRange(token, text, pos, byte_pos, PreTokenType::Boundary, core::PartOfSpeech::Symbol);
+      setTokenFromRange(token, text, pos, next_pos, PreTokenType::Boundary, core::PartOfSpeech::Symbol);
       result.tokens.push_back(token);
 
-      pos = byte_pos;
+      pos = next_pos;
       span_start = pos;
+      previous_was_digit = false;
       continue;
     }
 
     // Move to next character
-    pos = byte_pos;
+    pos = next_pos;
+    previous_was_digit = current_is_digit;
   }
 
   // Add final span if any

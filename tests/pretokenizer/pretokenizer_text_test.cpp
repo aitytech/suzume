@@ -106,6 +106,20 @@ TEST_F(PreTokenizerTextTest, MatchHashtag_FullWidth) {
   EXPECT_EQ(result.tokens[0].type, PreTokenType::Hashtag);
 }
 
+TEST_F(PreTokenizerTextTest, FullWidthHashStartsANewHashtag) {
+  const auto result = pretokenizer_.process("＃東京＃テスト");
+  ASSERT_EQ(result.tokens.size(), 2U);
+  EXPECT_EQ(result.tokens[0].surface, "＃東京");
+  EXPECT_EQ(result.tokens[1].surface, "＃テスト");
+}
+
+TEST_F(PreTokenizerTextTest, MatchHashtag_SupplementaryKanji) {
+  const auto result = pretokenizer_.process("#𠮟");
+  ASSERT_EQ(result.tokens.size(), 1U);
+  EXPECT_EQ(result.tokens[0].surface, "#𠮟");
+  EXPECT_EQ(result.tokens[0].type, PreTokenType::Hashtag);
+}
+
 TEST_F(PreTokenizerTextTest, MatchHashtag_InText) {
   auto result = pretokenizer_.process("今日は #プログラミング を勉強");
   bool found_hashtag = false;
