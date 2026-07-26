@@ -51,6 +51,21 @@ def base_from_renyokei(stem: str) -> str | None:
     return None
 
 
+def bases_from_renyokei(stem: str) -> tuple[str, ...]:
+    """Every dictionary form a renyokei surface can reconstruct to.
+
+    An i-row ending belongs to both conjugation classes (落ち is 落つ or 落ちる,
+    起き is 起く or 起きる), so a caller that resolves the reading against a closed
+    verb class needs both readings rather than the Godan one alone.
+    """
+    godan = base_from_renyokei(stem)
+    if godan is None:
+        return ()
+    if stem[-1] in _GODAN_RENYOKEI_TO_BASE:
+        return (godan, stem + "る")
+    return (godan,)
+
+
 def base_from_mizenkei(stem: str) -> str | None:
     """Reconstruct a Godan dictionary form from an a-row irrealis stem."""
     if not stem:

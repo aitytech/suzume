@@ -2215,8 +2215,52 @@
       ],
       "id": "compound_causative_oshi_awaseru",
       "input": "板を押し合わせる"
+    },
+    {
+      "description": "Godan V2 continuative nominalized by a case particle stays one deverbal compound",
+      "expected": [
+        {
+          "lemma": "聞き取り",
+          "pos": "Noun",
+          "surface": "聞き取り"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ki_riwo_meru",
+      "input": "聞き取りを進める"
+    },
+    {
+      "description": "Ichidan V2 whose continuative also reconstructs as a Godan base",
+      "expected": [
+        {
+          "lemma": "抜け落ち",
+          "pos": "Noun",
+          "surface": "抜け落ち"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "防ぐ",
+          "pos": "Verb",
+          "surface": "防ぐ"
+        }
+      ],
+      "id": "ke_chiwo_gu",
+      "input": "抜け落ちを防ぐ"
     }
   ],
-  "description": "Compound verbs (part 4/4)",
+  "description": "Compound verbs (part 4/5)",
   "version": "1.0"
 }

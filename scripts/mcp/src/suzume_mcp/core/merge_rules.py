@@ -6,6 +6,8 @@ from .constants import (
     COLLOQUIAL_PRONOUNS,
     COMPOUND_VERB_V2_GODAN,
     COMPOUND_VERB_V2_ICHIDAN,
+    COMPOUND_VERB_V2_NOT_AFTER_SURU,
+    COMPOUND_VERB_V2_SURU_ONLY,
     FAMILY_TERMS,
     FIXED_FUNCTION_LEMMAS,
     FIXED_FUNCTION_SEARCH_UNITS,
@@ -43,7 +45,7 @@ from .merge_postprocessors import (
     _postprocess_small_kana_head_merge,
     _postprocess_totomoni,
 )
-from .split_rules import base_from_renyokei
+from .split_rules import base_from_renyokei, bases_from_renyokei
 
 # Numeric-approximation/aggregation prefixes that modify a whole quantity and split
 # off the following number+counter (約|二時間, 計|五名), unlike ordinal 第 which binds
@@ -821,7 +823,11 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # Reconstructing its base is a productive morphology check; the closed
         # V2 class below prevents this from becoming an unrestricted noun+verb
         # merge rule.
-        v1_nominal_renyokei = t.get("pos") == "名詞" and base_from_renyokei(v1_surface) is not None
+        # A dependent noun keeps its own boundary: 〜たきり is the formal noun, not
+        # a nominalized 切り, however well it reconstructs as one.
+        v1_nominal_renyokei = (
+            t.get("pos") == "名詞" and t.get("pos_sub1") != "非自立" and base_from_renyokei(v1_surface) is not None
+        )
         if not merged and not begins_fixed_subsidiary and (v1_verb_renyokei or v1_nominal_renyokei):
             j = i + 1
             if j < len(tokens):
@@ -833,6 +839,10 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                         if next_lemma == v2:
                             v2_base = v2
                             break
+                    v1_is_suru = (t.get("lemma") or v1_surface) == "する"
+                    restricted = COMPOUND_VERB_V2_NOT_AFTER_SURU if v1_is_suru else COMPOUND_VERB_V2_SURU_ONLY
+                    if v2_base in restricted:
+                        v2_base = ""
                     if v2_base:
                         combined = t.get("surface", "") + nxt.get("surface", "")
                         compound_lemma = t.get("surface", "") + v2_base
@@ -853,18 +863,24 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
             if i + 2 < len(tokens):
                 nxt = tokens[i + 1]
                 follower = tokens[i + 2]
-                v2_base = base_from_renyokei(nxt.get("surface", ""))
+                v2_readings = bases_from_renyokei(nxt.get("surface", ""))
+                v2_base = next((base for base in v2_readings if base in _PRODUCTIVE_COMPOUND_V2), None)
                 nominalizing_particle = (
                     follower.get("pos") == "助詞" and follower.get("surface") in _NOMINALIZING_PARTICLES
                 )
+                # A bound or verbal-noun V2 reading attaches to whatever stem
+                # precedes it (仕立て+直し, 引き+寄せ); a free nominal V2 attaches
+                # only behind an unambiguous verb continuative (送り+届け). Two free
+                # nominals side by side are coordinated, not compounded, and keep
+                # their boundary (上がり + 下がり).
+                v2_is_bound_reading = nxt.get("pos") == "接尾辞" or nxt.get("pos_sub1") in {"接尾", "サ変接続"}
+                # A し-final stem is the continuative of a Godan-sa verb (出し, 押し)
+                # however MeCab tags it, so it counts as a verbal head as well.
+                v1_is_verbal = v1_renyokei or v1_surface.endswith("し")
                 if (
                     nxt.get("pos") in {"名詞", "接尾辞"}
-                    and v2_base in _PRODUCTIVE_COMPOUND_V2
-                    and (
-                        v1_surface.endswith("し")
-                        or v2_base in _PRODUCTIVE_ICHIDAN_COMPOUND_V2
-                        or nxt.get("pos_sub1") == "接尾"
-                    )
+                    and v2_base is not None
+                    and (v2_is_bound_reading or v1_is_verbal)
                     and nominalizing_particle
                 ):
                     combined = v1_surface + nxt.get("surface", "")

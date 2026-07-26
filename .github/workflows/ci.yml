@@ -48,6 +48,9 @@ jobs:
       # A POS added to the C ABI must reach both bindings' label tables; the
       # C++ suite cannot see that gap.
       - run: python3 scripts/check_binding_labels.py
+      # A V2 added to the core's compound lexicon must reach the oracle's mirror,
+      # or expectations start splitting compounds the tokenizer joins.
+      - run: python3 scripts/check_compound_v2_sync.py
       # Version must stay in lockstep across every binding manifest.
       - run: scripts/check_version_mirror.sh
 

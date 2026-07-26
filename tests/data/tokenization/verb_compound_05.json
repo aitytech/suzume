@@ -1,0 +1,77 @@
+{
+  "cases": [
+    {
+      "description": "Nominal-tagged V1 with a bound V2 reading forms one compound",
+      "expected": [
+        {
+          "lemma": "引き寄せ",
+          "pos": "Noun",
+          "surface": "引き寄せ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "試みる",
+          "pos": "Verb",
+          "surface": "試みる"
+        }
+      ],
+      "id": "ki_sewo_miru",
+      "input": "引き寄せを試みる"
+    },
+    {
+      "description": "Free nominal V2 joins behind an unambiguous verb continuative",
+      "expected": [
+        {
+          "lemma": "送り届け",
+          "pos": "Noun",
+          "surface": "送り届け"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "依頼",
+          "pos": "Noun",
+          "surface": "依頼"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ri_kewo_suru",
+      "input": "送り届けを依頼する"
+    },
+    {
+      "description": "Verbal-noun V2 reading joins a nominal-tagged continuative",
+      "expected": [
+        {
+          "lemma": "仕立て直し",
+          "pos": "Noun",
+          "surface": "仕立て直し"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "te_shiwo_u",
+      "input": "仕立て直しを行う"
+    }
+  ],
+  "description": "Compound verbs (part 5/5)",
+  "version": "1.0"
+}
