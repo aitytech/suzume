@@ -615,6 +615,14 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::AdjRenyokei, EPOS::AuxClassicalKeri, cost::kVeryStrongBonus},
       {EPOS::AdjRenyokei, EPOS::AuxClassicalPerfect, cost::kVeryStrongBonus},
 
+      // A nominal predicate takes the same classical auxiliaries directly, the
+      // copula being elided in the literary register (確認けり, 確認べし,
+      // 確認ごとし). Without these the auxiliary loses to a fabricated verb or
+      // to an unknown run that swallows it whole.
+      {EPOS::Noun, EPOS::AuxClassicalKeri, cost::kStrongBonus},
+      {EPOS::Noun, EPOS::AuxClassicalBeshi, cost::kVeryStrongBonus},
+      {EPOS::Noun, EPOS::AuxSimilitudeYou, cost::kVeryStrongBonus},
+
       // Only the 連体形 し and 已然形 しか of the classical past survive in
       // ordinary text, and both attach to a continuative: a verb's own
       // (読み+し), the negative's (読まざり+し) or the supplementary adjective

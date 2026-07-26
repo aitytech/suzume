@@ -398,6 +398,91 @@
       ],
       "id": "tarumono_meru",
       "input": "確認たるもの進める"
+    },
+    {
+      "description": "確認けり - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "keri",
+      "input": "確認けり"
+    },
+    {
+      "description": "確認べし - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べし"
+        }
+      ],
+      "id": "beshi",
+      "input": "確認べし"
+    },
+    {
+      "description": "確認ごとし - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "ごとし",
+          "pos": "Auxiliary",
+          "surface": "ごとし"
+        }
+      ],
+      "id": "gotoshi",
+      "input": "確認ごとし"
+    },
+    {
+      "description": "対応たし - regression test",
+      "expected": [
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "たい",
+          "pos": "Auxiliary",
+          "surface": "たし"
+        }
+      ],
+      "id": "tashi",
+      "input": "対応たし"
+    },
+    {
+      "description": "確認まじ - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "まじ",
+          "pos": "Adjective",
+          "surface": "まじ"
+        }
+      ],
+      "id": "maji",
+      "input": "確認まじ"
     }
   ],
   "description": "auxiliary_classical tests",

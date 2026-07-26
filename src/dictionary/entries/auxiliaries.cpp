@@ -259,6 +259,7 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("たい", "たい", EPOS::AuxDesireTai),
       aux("たく", "たい", EPOS::AuxDesireTai),
       aux("たかっ", "たい", EPOS::AuxDesireTai),
+      aux("たし", "たい", EPOS::AuxDesireTai),  // 文語終止形 (対応たし)
       // たがる (3rd-person desiderative): conjugates like a godan-ra verb
       aux("たがる", "たがる", EPOS::AuxDesireTai),  // 終止/連体
       aux("たがら", "たがる", EPOS::AuxDesireTai),  // 未然 (+ない)
