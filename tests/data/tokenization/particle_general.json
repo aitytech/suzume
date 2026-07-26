@@ -239,6 +239,75 @@
       ],
       "id": "nanka_colloquial_adverbial_particle",
       "input": "なんかおかしい"
+    },
+    {
+      "description": "資料っていえば分かる - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いえ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かる"
+        }
+      ],
+      "id": "ttteieba_karu",
+      "input": "資料っていえば分かる"
+    },
+    {
+      "description": "確認っていえば記録する - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いえ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "記録",
+          "pos": "Noun",
+          "surface": "記録"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ttteieba_suru",
+      "input": "確認っていえば記録する"
     }
   ],
   "description": "particle_general tests",

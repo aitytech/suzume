@@ -336,7 +336,29 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
         }
 #endif
 
-        if (matched_verb_type != grammar::VerbType::Unknown) {
+        // A non-dictionary sokuonbin candidate that begins inside a kanji run
+        // must not take its っ from the head of a dictionary particle. The run
+        // is a compound nominal that the particle marks (資料 + って, 確認 +
+        // って), so the fabricated predicate splits the nominal and steals the
+        // particle's first mora in one move (資 + 料っ + て). A dictionary-backed
+        // base keeps its ordinary te-form reading (見 + 合って).
+        // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+        bool sokuon_heads_dictionary_particle = false;
+        if (!matched_via_dict && dict_manager != nullptr && start_pos > 0 &&
+            normalize::isKanjiCodepoint(codepoints[start_pos - 1]) && kanji_end + 1 < codepoints.size()) {
+          constexpr size_t kParticleProbe = 3;
+          const size_t max_particle_end = std::min(codepoints.size(), kanji_end + kParticleProbe);
+          for (size_t particle_end = kanji_end + 2; particle_end <= max_particle_end; ++particle_end) {
+            if (dict_manager->lookupExact(extractSubstring(codepoints, kanji_end, particle_end),
+                                          core::PartOfSpeech::Particle) != nullptr) {
+              sokuon_heads_dictionary_particle = true;
+              SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << kanji_stem << "\" sokuon heads a dictionary particle\n");
+              break;
+            }
+          }
+        }
+
+        if (matched_verb_type != grammar::VerbType::Unknown && !sokuon_heads_dictionary_particle) {
           // Found valid verb - generate sokuonbin stem candidate
           // Dict-matched verbs get bonus (-0.5) to beat unsplit forms
           // Inflection-only matches get neutral cost (0) to avoid false positives

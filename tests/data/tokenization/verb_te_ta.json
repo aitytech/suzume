@@ -1230,6 +1230,50 @@
       ],
       "id": "sokuonbin_matsu_control",
       "input": "待っている"
+    },
+    {
+      "description": "見合って決める - regression test",
+      "expected": [
+        {
+          "lemma": "見合う",
+          "pos": "Verb",
+          "surface": "見合っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "決める",
+          "pos": "Verb",
+          "surface": "決める"
+        }
+      ],
+      "id": "ttte_meru",
+      "input": "見合って決める"
+    },
+    {
+      "description": "話し合って決める - regression test",
+      "expected": [
+        {
+          "lemma": "話し合う",
+          "pos": "Verb",
+          "surface": "話し合っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "決める",
+          "pos": "Verb",
+          "surface": "決める"
+        }
+      ],
+      "id": "shi_ttte_meru",
+      "input": "話し合って決める"
     }
   ],
   "description": "Te-form and ta-form patterns",
