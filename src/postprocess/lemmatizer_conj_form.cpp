@@ -36,8 +36,8 @@ grammar::ConjForm Lemmatizer::detectConjForm(std::string_view surface, std::stri
   if (pos == core::PartOfSpeech::Verb && utf8::endsWith(lemma, "る")) {
     // Check if this looks like an ichidan verb stem (lemma ends with る, surface is stem)
     // Ichidan verb stem = lemma without final る
-    if (lemma.size() >= 3 && surface.size() >= 3) {
-      std::string_view lemma_stem(lemma.data(), lemma.size() - 3);  // Remove る (3 bytes)
+    if (lemma.size() >= core::kJapaneseCharBytes && surface.size() >= core::kJapaneseCharBytes) {
+      std::string_view lemma_stem(lemma.data(), lemma.size() - core::kJapaneseCharBytes);
       if (surface == lemma_stem && !next_lemma.empty()) {
         // This is an ichidan verb stem - check what follows
         if (utf8::equalsAny(next_lemma, {

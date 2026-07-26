@@ -14,7 +14,15 @@ namespace suzume::postprocess {
 
 using namespace lemmatizer_detail;
 
-void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
+void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool update_lemmas) const {
+  std::vector<std::string> original_lemmas;
+  if (!update_lemmas) {
+    original_lemmas.reserve(morphemes.size());
+    for (const auto& morpheme : morphemes) {
+      original_lemmas.push_back(morpheme.lemma);
+    }
+  }
+
   for (size_t i = 0; i < morphemes.size(); ++i) {
     auto& morpheme = morphemes[i];
 
@@ -65,8 +73,8 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
 
     // Fix classical suru-verb lemma: 漢字2文字以上+す → 漢字+する (確認す → 確認する)
     // The verb_candidates sometimes returns classical form that needs conversion
-    if (morpheme.pos == core::PartOfSpeech::Verb && morpheme.conj_type != dictionary::ConjugationType::GodanSa) {
-      if (std::string suru = fixSuruClassical(morpheme.lemma); !suru.empty()) {
+    if (morpheme.pos == core::PartOfSpeech::Verb) {
+      if (std::string suru = fixSuruClassical(morpheme.lemma, morpheme.conj_type); !suru.empty()) {
         morpheme.lemma = suru;
       }
     }
@@ -342,6 +350,12 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes) const {
       morpheme.lemma = "た";
     }
     morpheme.conj_form = detectConjForm(morpheme.surface, morpheme.lemma, morpheme.pos, next_lemma);
+  }
+
+  if (!update_lemmas) {
+    for (size_t idx = 0; idx < morphemes.size(); ++idx) {
+      morphemes[idx].lemma = std::move(original_lemmas[idx]);
+    }
   }
 }
 

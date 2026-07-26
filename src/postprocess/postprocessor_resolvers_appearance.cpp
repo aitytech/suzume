@@ -83,18 +83,11 @@ void resolveAppearanceSouPredicate(std::vector<core::Morpheme>& result) {
       retagNaAdjectivalSou(sou);
       continue;
     }
-    if ((predicate.extended_pos == core::ExtendedPOS::VerbRenyokei ||
-         predicate.extended_pos == core::ExtendedPOS::VerbShuushikei ||
-         predicate.extended_pos == core::ExtendedPOS::AuxAspectIru) &&
-        sou.extended_pos == core::ExtendedPOS::AdjNaAdj) {
+    if (isVerbalPredicateBeforeSou(predicate) && sou.extended_pos == core::ExtendedPOS::AdjNaAdj) {
       retagAppearanceSou(sou);
     }
     if (sou.pos == core::PartOfSpeech::Adverb) {
-      const bool verbal_predicate = predicate.extended_pos == core::ExtendedPOS::VerbRenyokei ||
-                                    predicate.extended_pos == core::ExtendedPOS::VerbShuushikei ||
-                                    predicate.extended_pos == core::ExtendedPOS::AuxAspectShimau ||
-                                    predicate.extended_pos == core::ExtendedPOS::AuxAspectIru;
-      if (verbal_predicate) {
+      if (isVerbalPredicateBeforeSou(predicate)) {
         retagAppearanceSou(sou);
       } else {
         retagNaAdjectivalSou(sou);
@@ -106,11 +99,7 @@ void resolveAppearanceSouPredicate(std::vector<core::Morpheme>& result) {
     const auto& preceding = result[idx - 1];
     auto& sou = result[idx];
     const auto& na = result[idx + 1];
-    const bool has_lexical_predicate = preceding.extended_pos == core::ExtendedPOS::VerbRenyokei ||
-                                       preceding.extended_pos == core::ExtendedPOS::VerbShuushikei ||
-                                       preceding.extended_pos == core::ExtendedPOS::AdjStem ||
-                                       preceding.extended_pos == core::ExtendedPOS::AuxAspectShimau ||
-                                       preceding.extended_pos == core::ExtendedPOS::AuxAspectIru;
+    const bool has_lexical_predicate = isVerbalPredicateBeforeSou(preceding);
     if (sou.surface != "そう" || sou.pos != core::PartOfSpeech::Adverb || na.surface != "な" || has_lexical_predicate) {
       continue;
     }
@@ -356,10 +345,8 @@ void mergeSplitCopularNegative(std::vector<core::Morpheme>& result) {
         i.extended_pos != core::ExtendedPOS::AuxAspectIru || i.surface != "い") {
       continue;
     }
-    na.surface = "ない";
+    mergeInto(na, i);
     retagNegativeNai(na);
-    na.end = i.end;
-    na.end_pos = i.end_pos;
     if (idx == 0 || result[idx - 1].pos == core::PartOfSpeech::Noun ||
         result[idx - 1].pos == core::PartOfSpeech::Particle) {
       na.pos = core::PartOfSpeech::Adjective;
@@ -383,14 +370,12 @@ void mergeSplitFormalNounNegativeRenyokei(std::vector<core::Morpheme>& result) {
         ku.pos != core::PartOfSpeech::Auxiliary) {
       continue;
     }
-    na.surface = "なく";
+    mergeInto(na, ku);
     na.lemma = "ない";
     na.pos = core::PartOfSpeech::Adjective;
     na.extended_pos = core::ExtendedPOS::AdjRenyokei;
     na.conj_type = dictionary::ConjugationType::IAdjective;
     na.conj_form = grammar::ConjForm::Renyokei;
-    na.end = ku.end;
-    na.end_pos = ku.end_pos;
     result.erase(result.begin() + static_cast<std::ptrdiff_t>(idx + 1));
   }
 }
@@ -479,7 +464,7 @@ constexpr std::array<ObligationPattern, 5> kObligationPatterns{{
 
 bool matchesObligationSlot(const ObligationSlot& slot, const core::Morpheme& morpheme) {
   if (slot.te_connective) {
-    return morpheme.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(morpheme.surface);
+    return followsTeFormConnective(morpheme);
   }
   if (slot.first != nullptr && morpheme.surface == slot.first) {
     return true;

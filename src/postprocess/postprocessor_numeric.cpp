@@ -5,6 +5,7 @@
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 #include "postprocess/postprocessor.h"
+#include "postprocess/postprocessor_resolvers_internal.h"
 
 namespace suzume::postprocess {
 
@@ -100,18 +101,14 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<c
       const auto& next = morphemes[idx + 1];
       if (next.pos == core::PartOfSpeech::Noun && isNumericExpression(next.surface)) {
         core::Morpheme merged = current;
-        merged.surface += next.surface;
+        resolver::mergeInto(merged, next);
         merged.lemma = merged.surface;
-        merged.end = next.end;
-        merged.end_pos = next.end_pos;
         size_t merge_end = idx + 2;
 
         if (merge_end < morphemes.size() && morphemes[merge_end].pos == core::PartOfSpeech::Noun &&
             utf8::equalsAny(morphemes[merge_end].surface, {"目"})) {
-          merged.surface += morphemes[merge_end].surface;
+          resolver::mergeInto(merged, morphemes[merge_end]);
           merged.lemma = merged.surface;
-          merged.end = morphemes[merge_end].end;
-          merged.end_pos = morphemes[merge_end].end_pos;
           ++merge_end;
         }
 
@@ -131,10 +128,8 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<c
       while (merge_end < morphemes.size()) {
         const auto& next = morphemes[merge_end];
         if (next.pos == core::PartOfSpeech::Noun && isNumericExpression(next.surface)) {
-          merged.surface += next.surface;
+          resolver::mergeInto(merged, next);
           merged.lemma = merged.surface;
-          merged.end = next.end;
-          merged.end_pos = next.end_pos;
           ++merge_end;
 
           // Continue if this also ends with a continuable unit
@@ -169,10 +164,8 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<c
       bool is_versus = (next.surface == "対");
       if (next.pos == core::PartOfSpeech::Noun && looksLikeUnit(next.surface) && !is_versus) {
         core::Morpheme merged = current;
-        merged.surface += next.surface;
+        resolver::mergeInto(merged, next);
         merged.lemma = merged.surface;
-        merged.end = next.end;
-        merged.end_pos = next.end_pos;
 
         SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged number+unit: \"" << current.surface << "\" + \"" << next.surface
                                                                      << "\" → \"" << merged.surface << "\"\n");
@@ -189,10 +182,8 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<c
       // Check for common time/counter suffixes that get split
       if (next.pos == core::PartOfSpeech::Noun && utf8::equalsAny(next.surface, {"間", "半", "目"})) {
         core::Morpheme merged = current;
-        merged.surface += next.surface;
+        resolver::mergeInto(merged, next);
         merged.lemma = merged.surface;
-        merged.end = next.end;
-        merged.end_pos = next.end_pos;
 
         SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged numeric+suffix: \"" << current.surface << "\" + \"" << next.surface
                                                                         << "\" → \"" << merged.surface << "\"\n");
@@ -211,10 +202,8 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<c
       if (next.pos == core::PartOfSpeech::Suffix) {
         core::Morpheme merged = current;
         merged.pos = core::PartOfSpeech::Noun;  // Merged result is always NOUN
-        merged.surface += next.surface;
+        resolver::mergeInto(merged, next);
         merged.lemma = merged.surface;
-        merged.end = next.end;
-        merged.end_pos = next.end_pos;
 
         SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged indefinite+suffix: \""
                                  << current.surface << "\" + \"" << next.surface << "\" → \"" << merged.surface

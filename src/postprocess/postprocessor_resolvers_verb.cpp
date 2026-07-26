@@ -204,8 +204,7 @@ void resolveBenefactivePotential(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx < result.size(); ++idx) {
     const auto& predecessor = result[idx - 1];
     auto& benefactive = result[idx];
-    const bool follows_te_form =
-        predecessor.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(predecessor.surface);
+    const bool follows_te_form = followsTeFormConnective(predecessor);
     const bool potential_benefactive = grammar::isPotentialBenefactiveLemma(benefactive.lemma);
     if (follows_te_form && benefactive.pos == core::PartOfSpeech::Verb &&
         (grammar::isBenefactiveLemma(benefactive.lemma) || potential_benefactive)) {
@@ -269,8 +268,7 @@ void resolveProgressiveIru(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx < result.size(); ++idx) {
     auto& iru = result[idx];
     const auto& immediate = result[idx - 1];
-    const bool direct_te_form =
-        immediate.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(immediate.surface);
+    const bool direct_te_form = followsTeFormConnective(immediate);
     const bool focused_te_form = idx >= 2 && immediate.extended_pos == core::ExtendedPOS::ParticleBinding &&
                                  result[idx - 2].extended_pos == core::ExtendedPOS::ParticleConj &&
                                  grammar::isTeDeSurface(result[idx - 2].surface);
@@ -306,8 +304,7 @@ void resolveDependentVerbHomographs(std::vector<core::Morpheme>& result) {
       dependent.extended_pos = core::ExtendedPOS::AuxPotential;
       continue;
     }
-    const bool follows_te_form =
-        predecessor.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(predecessor.surface);
+    const bool follows_te_form = followsTeFormConnective(predecessor);
     if (follows_te_form && grammar::isTeFormCompletiveAuxiliaryLemma(dependent.lemma)) {
       dependent.pos = core::PartOfSpeech::Auxiliary;
       dependent.extended_pos = core::ExtendedPOS::AuxAspectShimau;
@@ -434,8 +431,7 @@ void resolveTearuAuxiliary(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx < result.size(); ++idx) {
     const auto& connective = result[idx - 1];
     auto& aru = result[idx];
-    if (connective.extended_pos != core::ExtendedPOS::ParticleConj ||
-        (connective.surface != "て" && connective.surface != "で") || aru.lemma != "ある" ||
+    if (!followsTeFormConnective(connective) || aru.lemma != "ある" ||
         aru.extended_pos != core::ExtendedPOS::VerbRenyokei) {
       continue;
     }
@@ -497,7 +493,7 @@ void resolveVerbTeParticle(std::vector<core::Morpheme>& result) {
     const bool is_connective_verb_form =
         verb.extended_pos == core::ExtendedPOS::VerbOnbinkei || verb.extended_pos == core::ExtendedPOS::VerbRenyokei ||
         verb.extended_pos == core::ExtendedPOS::VerbTeForm || verb.extended_pos == core::ExtendedPOS::AuxAspectOku;
-    if (!is_connective_verb_form || (te.surface != "て" && te.surface != "で")) {
+    if (!is_connective_verb_form || !grammar::isTeDeSurface(te.surface)) {
       continue;
     }
     const bool contracted_progressive_before_past = te.extended_pos == core::ExtendedPOS::AuxAspectIru &&
@@ -612,9 +608,9 @@ void resolveSahenRenyokei(std::vector<core::Morpheme>& result) {
   }
 }
 
-// A demonstrative adverb followed by いっ and a te/past continuation is the
-// quotative verb 言う in euphonic form. The same bare surface remains
-// ambiguous with 行く, so the deictic quotation context supplies the evidence.
+// A quotative particle or demonstrative adverb followed by いっ and a te/past
+// continuation is the verb 言う in euphonic form. The same bare surface remains
+// ambiguous with 行く, so the left context supplies the evidence.
 void resolveDemonstrativeQuotativeOnbin(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
     const auto& demonstrative = result[idx - 1];
@@ -622,8 +618,11 @@ void resolveDemonstrativeQuotativeOnbin(std::vector<core::Morpheme>& result) {
     const auto& continuation = result[idx + 1];
     const bool is_te_or_past = continuation.extended_pos == core::ExtendedPOS::ParticleConj ||
                                continuation.extended_pos == core::ExtendedPOS::AuxTenseTa;
-    if (demonstrative.extended_pos != core::ExtendedPOS::Adverb ||
-        !grammar::isDemonstrativeUAdverb(demonstrative.surface) || verb.surface != "いっ" || !is_te_or_past) {
+    const bool demonstrative_context = demonstrative.extended_pos == core::ExtendedPOS::Adverb &&
+                                       grammar::isDemonstrativeUAdverb(demonstrative.surface);
+    const bool quotative_context =
+        demonstrative.pos == core::PartOfSpeech::Particle && utf8::equalsAny(demonstrative.surface, {"と"});
+    if ((!demonstrative_context && !quotative_context) || verb.surface != "いっ" || !is_te_or_past) {
       continue;
     }
     retag(verb, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbOnbinkei, "いう", dictionary::ConjugationType::GodanWa,

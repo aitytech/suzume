@@ -1,0 +1,115 @@
+#include "postprocess/postprocessor.h"
+
+#include <gtest/gtest.h>
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "dictionary/user_dict.h"
+#include "postprocess/lemmatizer_internal.h"
+#include "postprocess/postprocessor_resolvers_internal.h"
+
+namespace suzume::postprocess {
+namespace {
+
+core::Morpheme makeMorpheme(std::string surface, core::PartOfSpeech pos, core::ExtendedPOS extended_pos, size_t start,
+                            size_t end) {
+  core::Morpheme morpheme;
+  morpheme.surface = std::move(surface);
+  morpheme.lemma = morpheme.surface;
+  morpheme.pos = pos;
+  morpheme.extended_pos = extended_pos;
+  morpheme.start = start;
+  morpheme.end = end;
+  morpheme.syncPositions();
+  return morpheme;
+}
+
+TEST(PostprocessorTest, ExactDictionaryEvidenceIgnoresShorterVerbPrefix) {
+  auto dictionary = std::make_shared<dictionary::UserDictionary>();
+  dictionary->addEntry({"歩", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "歩"});
+  dictionary->addEntry({"歩く", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "歩く"});
+  dictionary::DictionaryManager manager;
+  manager.addUserDictionary(dictionary);
+
+  auto morpheme = makeMorpheme("歩い", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbOnbinkei, 0, 2);
+  morpheme.conj_type = dictionary::ConjugationType::GodanWa;
+
+  EXPECT_EQ(Lemmatizer(&manager).lemmatize(morpheme), "歩く");
+}
+
+TEST(PostprocessorTest, ProductiveMasuAndNaiFallbacksChooseTheConjugationRow) {
+  EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("書きます"), "書く");
+  EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("食べます"), "食べる");
+  EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("書かない"), "書く");
+  EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("食べない"), "食べる");
+}
+
+TEST(PostprocessorTest, MergedNounCompoundClearsDictionaryProvenance) {
+  auto first = makeMorpheme("東京", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, 0, 2);
+  first.features.is_dictionary = true;
+  first.features.is_user_dict = true;
+  first.syncPositions();
+  auto second = makeMorpheme("駅", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, 2, 3);
+  second.features.is_dictionary = true;
+  second.syncPositions();
+
+  PostprocessOptions options;
+  options.merge_noun_compounds = true;
+  options.remove_symbols = false;
+  const auto result = Postprocessor(options).process({first, second});
+
+  ASSERT_EQ(result.size(), 1U);
+  EXPECT_EQ(result[0].surface, "東京駅");
+  EXPECT_EQ(result[0].start, 0U);
+  EXPECT_EQ(result[0].end, 3U);
+  EXPECT_FALSE(result[0].features.is_dictionary);
+  EXPECT_FALSE(result[0].features.is_user_dict);
+  EXPECT_FALSE(result[0].is_from_dictionary);
+}
+
+TEST(PostprocessorResolverTest, TeFormConnectiveRequiresBothRoleAndSurface) {
+  auto connective = makeMorpheme("て", core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleConj, 0, 1);
+  EXPECT_TRUE(resolver::followsTeFormConnective(connective));
+
+  connective.extended_pos = core::ExtendedPOS::ParticleCase;
+  EXPECT_FALSE(resolver::followsTeFormConnective(connective));
+  connective.extended_pos = core::ExtendedPOS::ParticleConj;
+  connective.surface = "に";
+  EXPECT_FALSE(resolver::followsTeFormConnective(connective));
+}
+
+TEST(PostprocessorResolverTest, AppearanceSouUsesOnePredicateClassification) {
+  constexpr core::ExtendedPOS kPredicateRoles[] = {
+      core::ExtendedPOS::VerbRenyokei,    core::ExtendedPOS::VerbShuushikei, core::ExtendedPOS::AdjStem,
+      core::ExtendedPOS::AuxAspectShimau, core::ExtendedPOS::AuxAspectIru,
+  };
+  for (const auto role : kPredicateRoles) {
+    const core::PartOfSpeech predicate_pos =
+        role == core::ExtendedPOS::AdjStem ? core::PartOfSpeech::Adjective : core::PartOfSpeech::Verb;
+    auto predicate = makeMorpheme("高", predicate_pos, role, 0, 1);
+    auto sou = makeMorpheme("そう", core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjNaAdj, 1, 2);
+    auto copula = makeMorpheme("だ", core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxCopulaDa, 2, 3);
+    std::vector<core::Morpheme> morphemes{predicate, sou, copula};
+
+    resolver::resolveAppearanceSouPredicate(morphemes);
+
+    EXPECT_EQ(morphemes[1].pos, core::PartOfSpeech::Auxiliary);
+    EXPECT_EQ(morphemes[1].extended_pos, core::ExtendedPOS::AuxAppearanceSou);
+  }
+}
+
+TEST(LemmatizerTest, TariAdverbLengthUsesCodepoints) {
+  EXPECT_EQ(lemmatizer_detail::fixTariAdverb("𠮷々と"), "𠮷々");
+  EXPECT_EQ(lemmatizer_detail::fixTariAdverb("堂々と"), "堂々");
+  EXPECT_TRUE(lemmatizer_detail::fixTariAdverb("一々と").empty());
+}
+
+TEST(LemmatizerTest, IchidanStemDetectionHandlesFourByteStem) {
+  EXPECT_EQ(Lemmatizer::detectConjForm("𠮷", "𠮷る", core::PartOfSpeech::Verb, "ない"), grammar::ConjForm::Mizenkei);
+}
+
+}  // namespace
+}  // namespace suzume::postprocess

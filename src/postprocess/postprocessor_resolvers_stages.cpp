@@ -176,7 +176,7 @@ void resolvePostPrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
 // These repairs run only after merges and filtering have finalized the local
 // token context.  Moving them earlier would change the grammatical evidence
 // each resolver observes.
-void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
+void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictionary::DictionaryManager* dict_manager) {
   resolver::resolveDurationPredicateKakaru(result);
   resolver::resolveClosedInflectionalChains(result);
 
@@ -195,16 +195,12 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
       continue;
     }
     const std::string v1_surface = v1.surface;
-    v1.surface += v2.surface;
+    resolver::mergeInto(v1, v2);
     v1.lemma = v1_surface + v2.lemma;
-    v1.end = v2.end;
     v1.pos = v2.pos;
     v1.extended_pos = v2.extended_pos;
     v1.conj_type = v2.conj_type;
     v1.conj_form = v2.conj_form;
-    v1.features.is_dictionary = false;
-    v1.is_from_dictionary = false;
-    v1.syncPositions();
     result.erase(result.begin() + static_cast<std::ptrdiff_t>(idx + 1));
   }
 
@@ -240,8 +236,7 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx < result.size(); ++idx) {
     auto& previous = result[idx - 1];
     auto& current = result[idx];
-    if (previous.extended_pos != core::ExtendedPOS::ParticleConj || !utf8::equalsAny(previous.surface, {"て", "で"}) ||
-        current.pos != core::PartOfSpeech::Verb) {
+    if (!resolver::followsTeFormConnective(previous) || current.pos != core::PartOfSpeech::Verb) {
       continue;
     }
     for (const auto& subsidiary : kTeFormSubsidiaries) {
@@ -344,16 +339,11 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
     auto& stem = result[idx];
     const auto& focus = result[idx + 1];
     const auto& suru = result[idx + 2];
-    const char32_t stem_last = utf8::decodeLastChar(stem.surface);
-    const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(stem_last);
-    const grammar::VerbType verb_type = grammar::verbTypeFromIRowCodepoint(stem_last);
     const auto& left_context = result[idx - 1];
     if (stem.pos == core::PartOfSpeech::Noun && !stem.features.is_dictionary && grammar::containsKanji(stem.surface) &&
-        !base_suffix.empty() && left_context.pos == core::PartOfSpeech::Particle && focus.surface == "は" &&
+        left_context.pos == core::PartOfSpeech::Particle && focus.surface == "は" &&
         focus.pos == core::PartOfSpeech::Particle && suru.pos == core::PartOfSpeech::Verb && suru.lemma == "する") {
-      resolver::retag(stem, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei,
-                      std::string(utf8::dropLastChar(stem.surface)) + std::string(base_suffix),
-                      grammar::verbTypeToConjType(verb_type), grammar::ConjForm::Renyokei);
+      resolver::retagGodanRenyokeiFromIRow(stem, true);
     }
   }
 
@@ -520,19 +510,35 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result) {
     }
   }
 
-  // A clause-final e-row verb after an argument particle is the Godan
-  // imperative (急げ→急ぐ), not an Ichidan potential stem.  The shared row
-  // table handles every Godan class without lexical enumeration. The
-  // demonstrative nominal frame above has already been removed from this gate.
+  // A clause-final e-row verb after an argument particle can be the Godan
+  // imperative (急げ→急ぐ), but an Ichidan continuative legitimately ends in
+  // the same row (まとめ→まとめる). A dictionary-confirmed Godan base makes
+  // the argument-particle frame an imperative; without that evidence, preserve
+  // the lattice judgment rather than manufacturing a lexical lemma. This also
+  // gives the imperative priority when the productive potential form is in the
+  // dictionary, because the clause-final syntax is the disambiguating evidence.
+  // The shared row table handles every Godan class without lexical enumeration.
   if (!result.empty()) {
     auto& final = result.back();
     const char32_t tail = utf8::decodeFirstChar(utf8::lastChar(final.surface));
     const std::string_view base_suffix = grammar::godanBaseSuffixFromERow(tail);
-    if (final.pos == core::PartOfSpeech::Verb && !base_suffix.empty() && result.size() >= 2 &&
-        result[result.size() - 2].pos == core::PartOfSpeech::Particle) {
-      final.lemma = std::string(utf8::dropLastChar(final.surface)) + std::string(base_suffix);
-      final.extended_pos = core::ExtendedPOS::VerbMeireikei;
-      final.conj_form = grammar::ConjForm::Meireikei;
+    if (dict_manager != nullptr && final.pos == core::PartOfSpeech::Verb && !base_suffix.empty() &&
+        result.size() >= 2 && result[result.size() - 2].pos == core::PartOfSpeech::Particle) {
+      const std::string stem(utf8::dropLastChar(final.surface));
+      const std::string ichidan_base = final.surface + "る";
+      const std::string godan_base = stem + std::string(base_suffix);
+      [[maybe_unused]] const bool has_ichidan =
+          dict_manager->lookupExact(ichidan_base, core::PartOfSpeech::Verb) != nullptr;
+      const bool has_godan = dict_manager->lookupExact(godan_base, core::PartOfSpeech::Verb) != nullptr;
+      SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] clause-final e-row evidence: ichidan=" << has_ichidan
+                                                                                  << ", godan=" << has_godan << "\n");
+      if (has_godan) {
+        final.lemma = godan_base;
+        final.extended_pos = core::ExtendedPOS::VerbMeireikei;
+        final.conj_type = grammar::verbTypeToConjType(
+            grammar::verbTypeFromBaseCodepoint(utf8::decodeFirstChar(utf8::lastChar(godan_base))));
+        final.conj_form = grammar::ConjForm::Meireikei;
+      }
     }
   }
 

@@ -14,8 +14,11 @@ void retag(core::Morpheme& morpheme, core::PartOfSpeech pos, core::ExtendedPOS e
 
 bool isCompoundRenyokeiShape(const std::string& surface);
 bool isCounterDurationNoun(const std::string& surface);
+bool followsTeFormConnective(const core::Morpheme& morpheme);
+bool isVerbalPredicateBeforeSou(const core::Morpheme& morpheme);
 bool isNominalForcingParticle(const core::Morpheme& next);
 bool isPredicativeCopula(const core::Morpheme& morpheme);
+void mergeInto(core::Morpheme& head, const core::Morpheme& tail);
 void mergeSplitCopularNegative(std::vector<core::Morpheme>& result);
 void mergeSplitFormalNounNegativeRenyokei(std::vector<core::Morpheme>& result);
 void resolveAdjectiveNominalizerSa(std::vector<core::Morpheme>& result);

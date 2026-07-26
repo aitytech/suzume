@@ -8,6 +8,7 @@
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 #include "postprocess/postprocessor_internal.h"
+#include "postprocess/postprocessor_resolvers_internal.h"
 
 namespace suzume::postprocess {
 
@@ -20,10 +21,11 @@ bool isOnlyProlongedSoundMarks(std::string_view surface) {
 
 }  // namespace
 
-Postprocessor::Postprocessor(const PostprocessOptions& options) : options_(options), lemmatizer_() {}
+Postprocessor::Postprocessor(const PostprocessOptions& options)
+    : options_(options), dict_manager_(nullptr), lemmatizer_() {}
 
 Postprocessor::Postprocessor(const dictionary::DictionaryManager* dict_manager, const PostprocessOptions& options)
-    : options_(options), lemmatizer_(dict_manager) {}
+    : options_(options), dict_manager_(dict_manager), lemmatizer_(dict_manager) {}
 
 std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> result) const {
   [[maybe_unused]] size_t before_count = 0;
@@ -46,11 +48,12 @@ std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> r
   // Keep a na-adjective stem and the attributive copula な as separate
   // grammatical search units.
 
-  // Apply lemmatization
-  if (options_.lemmatize) {
-    lemmatizer_.lemmatizeAll(result);
-    SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] lemmatize: applied\n");
-  }
+  // Conjugation-form detection and contextual POS repairs are annotations, not
+  // optional lemma output. Always run the batch pass; the option controls only
+  // whether its corrected lemmas are retained.
+  lemmatizer_.lemmatizeAll(result, options_.lemmatize);
+  SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] lemmatize: " << (options_.lemmatize ? "applied" : "lemma writes suppressed")
+                                                    << "\n");
 
   resolvePrePrefixMorphemeRoles(result);
   convertPrefixVerbToNoun(result);
@@ -98,7 +101,7 @@ std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> r
   // Filter unwanted morphemes
   result = filterMorphemes(std::move(result));
 
-  resolveFinalMorphemeRoles(result);
+  resolveFinalMorphemeRoles(result, dict_manager_);
 
   return result;
 }
@@ -126,14 +129,12 @@ std::vector<core::Morpheme> Postprocessor::mergeNounCompounds(std::vector<core::
         const auto& next = morphemes[merge_end];
         if (next.pos == core::PartOfSpeech::Noun && !next.features.is_formal_noun) {
           // Merge surface and lemma
-          merged.surface += next.surface;
+          resolver::mergeInto(merged, next);
           if (!next.lemma.empty()) {
             merged.lemma += next.lemma;
           } else {
             merged.lemma += next.surface;
           }
-          merged.end = next.end;
-          merged.end_pos = next.end_pos;
           ++merge_end;
           ++merge_count;
         } else {
@@ -198,12 +199,10 @@ std::vector<core::Morpheme> Postprocessor::mergeVerbRenyokeiMono(std::vector<cor
         morphemes[i].conj_form == grammar::ConjForm::Renyokei && morphemes[i + 1].surface == "もの" &&
         morphemes[i + 1].features.is_formal_noun) {
       core::Morpheme merged = morphemes[i];
-      merged.surface += morphemes[i + 1].surface;
+      resolver::mergeInto(merged, morphemes[i + 1]);
       merged.pos = core::PartOfSpeech::Noun;
       merged.extended_pos = core::ExtendedPOS::Noun;
       merged.lemma = merged.surface;
-      merged.end = morphemes[i + 1].end;
-      merged.end_pos = morphemes[i + 1].end_pos;
       SUZUME_DEBUG_LOG("[POSTPROC] Merged verb+もの: \"" << morphemes[i].surface << "\" + \"もの\" → \""
                                                          << merged.surface << "\"\n");
       result.push_back(merged);
@@ -235,12 +234,10 @@ std::vector<core::Morpheme> Postprocessor::mergeNounTemporalFormal(std::vector<c
     }
 
     core::Morpheme merged = morphemes[idx];
-    merged.surface += morphemes[idx + 1].surface;
+    resolver::mergeInto(merged, morphemes[idx + 1]);
     merged.lemma = merged.surface;
     merged.extended_pos = core::ExtendedPOS::Noun;
     merged.features.is_formal_noun = false;
-    merged.end = morphemes[idx + 1].end;
-    merged.end_pos = morphemes[idx + 1].end_pos;
     SUZUME_DEBUG_LOG("[POSTPROC] Merged noun+途中: \"" << morphemes[idx].surface << "\" + \"途中\" → \""
                                                        << merged.surface << "\"\n");
     result.push_back(std::move(merged));
@@ -278,14 +275,12 @@ std::vector<core::Morpheme> Postprocessor::mergeLexicalizedAdverbs(std::vector<c
 
       if (is_sahen_te || is_chanto) {
         core::Morpheme merged = cur;
-        merged.surface += nxt.surface;
+        resolver::mergeInto(merged, nxt);
         merged.pos = core::PartOfSpeech::Adverb;
         merged.extended_pos = core::ExtendedPOS::Adverb;
         merged.lemma = merged.surface;
         merged.conj_type = dictionary::ConjugationType::None;
         merged.conj_form = grammar::ConjForm::Base;
-        merged.end = nxt.end;
-        merged.end_pos = nxt.end_pos;
         SUZUME_DEBUG_LOG("[POSTPROC] Merged lexicalized adverb: \"" << cur.surface << "\"+\"" << nxt.surface
                                                                     << "\" → \"" << merged.surface << "\"\n");
         result.push_back(merged);
@@ -314,9 +309,7 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(std::vector<c
         const auto& current = morphemes[i];
         if (current.pos != core::PartOfSpeech::Symbol) {
           core::Morpheme merged = current;
-          merged.surface += next.surface;
-          merged.end = next.end;
-          merged.end_pos = next.end_pos;
+          resolver::mergeInto(merged, next);
           if (!merged.lemma.empty()) {
             merged.lemma += next.surface;
           }
@@ -326,12 +319,10 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(std::vector<c
             if (!isOnlyProlongedSoundMarks(morphemes[skip].surface)) {
               break;
             }
-            merged.surface += morphemes[skip].surface;
+            resolver::mergeInto(merged, morphemes[skip]);
             if (!merged.lemma.empty()) {
               merged.lemma += morphemes[skip].surface;
             }
-            merged.end = morphemes[skip].end;
-            merged.end_pos = morphemes[skip].end_pos;
             ++skip;
           }
 

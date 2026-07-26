@@ -124,7 +124,7 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
 
     // Check for サ変動詞 classical form: 漢字2文字以上+す → 漢字+する (確認す → 確認する)
     if (morpheme.pos == core::PartOfSpeech::Verb) {
-      if (std::string suru = fixSuruClassical(morpheme.lemma); !suru.empty()) {
+      if (std::string suru = fixSuruClassical(morpheme.lemma, morpheme.conj_type); !suru.empty()) {
         return suru;
       }
     }
@@ -197,7 +197,7 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
     // Check for サ変動詞 classical form: 漢字2文字以上+す → 漢字+する (勉強す → 勉強する)
     // Check for compound しる verbs: 対しる → 対する, やりなおしる → やりなおす
     if (morpheme.pos == core::PartOfSpeech::Verb) {
-      if (std::string suru = fixSuruClassical(grammar_result); !suru.empty()) {
+      if (std::string suru = fixSuruClassical(grammar_result, morpheme.conj_type); !suru.empty()) {
         return suru;
       }
       // fixShiru rewrites an ichidan-misanalyzed サ変/godan-sa ~しる (対しる→対する).
@@ -264,14 +264,10 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
           grammar_result.size() >= core::kTwoJapaneseCharBytes) {
         // First check if grammar_result is a valid verb in dictionary
         // If so, it's likely a godan-wa verb (使う, 買う, etc.), not onbin
-        if (dict_manager_ != nullptr) {
-          auto results_u = dict_manager_->lookup(grammar_result, 0);
-          for (const auto& r : results_u) {
-            if (r.entry != nullptr && r.entry->pos == core::PartOfSpeech::Verb) {
-              // grammar_result (e.g., 使う) is valid - use it directly
-              return grammar_result;
-            }
-          }
+        if (hasExactVerbEntry(dict_manager_, grammar_result)) {
+          // grammar_result (e.g., 使う) is valid - use it directly. Prefix
+          // entries are not evidence for the complete generated lemma.
+          return grammar_result;
         }
         // grammar_result not found in dictionary - try onbin correction.
         // Reverse-derive the godan base from the イ音便 table (く before ぐ),

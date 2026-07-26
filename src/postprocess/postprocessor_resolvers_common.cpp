@@ -58,6 +58,26 @@ void retagNounSurface(core::Morpheme& morpheme) {
         dictionary::ConjugationType::None, grammar::ConjForm::Base);
 }
 
+void mergeInto(core::Morpheme& head, const core::Morpheme& tail) {
+  head.surface += tail.surface;
+  head.end = tail.end;
+  head.features.is_dictionary = false;
+  head.features.is_user_dict = false;
+  head.syncPositions();
+}
+
+bool followsTeFormConnective(const core::Morpheme& morpheme) {
+  return morpheme.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(morpheme.surface);
+}
+
+bool isVerbalPredicateBeforeSou(const core::Morpheme& morpheme) {
+  return morpheme.extended_pos == core::ExtendedPOS::VerbRenyokei ||
+         morpheme.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+         morpheme.extended_pos == core::ExtendedPOS::AdjStem ||
+         morpheme.extended_pos == core::ExtendedPOS::AuxAspectShimau ||
+         morpheme.extended_pos == core::ExtendedPOS::AuxAspectIru;
+}
+
 // Recover a Godan dictionary form from an i-row continuative stem.  Some
 // callers intentionally preserve the lattice-provided conjugation form while
 // others require an explicit renyokei form, so that policy stays at the call

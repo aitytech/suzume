@@ -13,7 +13,8 @@ namespace suzume::postprocess {
 // observe the resulting token categories.
 void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& morphemes);
 void resolvePostPrefixMorphemeRoles(std::vector<core::Morpheme>& morphemes);
-void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& morphemes);
+void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& morphemes,
+                               const dictionary::DictionaryManager* dict_manager);
 
 }  // namespace suzume::postprocess
 

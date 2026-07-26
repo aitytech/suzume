@@ -149,43 +149,28 @@ const VerbEnding kVerbEndings[] = {
 
     // Compound verbs (longest first)
     {"ってしまった", "う"},
-    {"ってしまった", "つ"},
-    {"ってしまった", "る"},
     {"いてしまった", "く"},
     {"んでしまった", "む"},
-    {"してしまった", "す"},
     {"てしまった", "る"},
 
     {"っておいた", "う"},
-    {"っておいた", "つ"},
-    {"っておいた", "る"},
     {"いておいた", "く"},
     {"んでおいた", "む"},
-    {"しておいた", "す"},
     {"ておいた", "る"},
 
     {"ってみた", "う"},
-    {"ってみた", "つ"},
-    {"ってみた", "る"},
     {"いてみた", "く"},
     {"んでみた", "む"},
-    {"してみた", "す"},
     {"てみた", "る"},
 
     {"ってきた", "う"},
-    {"ってきた", "つ"},
-    {"ってきた", "る"},
     {"いてきた", "く"},
     {"んできた", "む"},
-    {"してきた", "す"},
     {"てきた", "る"},
 
     {"っていった", "う"},
-    {"っていった", "つ"},
-    {"っていった", "る"},
     {"いていった", "く"},
     {"んでいった", "む"},
-    {"していった", "す"},
     {"ていった", "る"},
 
     // =========================================================================
@@ -210,37 +195,23 @@ const VerbEnding kVerbEndings[] = {
 
     // Godan verbs (onbin forms)
     {"った", "う"},
-    {"った", "つ"},
-    {"った", "る"},
     {"いた", "く"},
     {"いだ", "ぐ"},
     {"んだ", "む"},
-    {"んだ", "ぶ"},
-    {"んだ", "ぬ"},
     {"した", "す"},
 
     // Te-form
     {"って", "う"},
-    {"って", "つ"},
-    {"って", "る"},
     {"いて", "く"},
     {"いで", "ぐ"},
     {"んで", "む"},
-    {"んで", "ぶ"},
-    {"んで", "ぬ"},
     {"して", "す"},
 
     // Masu-form
-    {"います", "う"},
-    {"います", "く"},
-    {"います", "す"},
-    {"きます", "くる"},
-    {"します", "する"},
-    {"ます", "る"},
+    {"ます", ""},
 
     // Nai-form: 五段未然形 + ない
     {"ない", ""},
-    {"ない", "る"},  // Ichidan fallback
 
     // Potential: 五段え段 + る
     {"る", ""},
@@ -342,9 +313,11 @@ bool hasExactVerbEntry(const dictionary::DictionaryManager* dict_manager, std::s
 
 // サ変動詞 classical form: 漢字2文字以上+す → 漢字+する
 // e.g., 確認す → 確認する, 運動す → 運動する.
-// Single kanji + す (出す, 消す) are GodanSa, not Suru, so require a 2+ kanji stem.
-std::string fixSuruClassical(std::string_view lemma) {
-  if (!utf8::endsWith(lemma, "す") || utf8::endsWith(lemma, "する")) {
+// GodanSa is rejected from this shared helper so every caller preserves lexical
+// multi-kanji verbs such as 見出す as well as single-kanji stems such as 出す.
+std::string fixSuruClassical(std::string_view lemma, dictionary::ConjugationType conj_type) {
+  if (conj_type == dictionary::ConjugationType::GodanSa || !utf8::endsWith(lemma, "す") ||
+      utf8::endsWith(lemma, "する")) {
     return "";
   }
   std::string stem(utf8::dropLastChar(lemma));
@@ -481,19 +454,18 @@ std::string fixPotentialVerb(const core::Morpheme& morpheme) {
 }
 
 // Tari-adjective adverb: strip trailing と, e.g., 颯爽と → 颯爽, 堂々と → 堂々.
-// Pattern: exactly 漢字2文字 + と (6 bytes kanji + 3 bytes と). MeCab uses the stem as lemma.
+// Pattern: exactly 漢字2文字 + と. MeCab uses the stem as lemma.
 std::string fixTariAdverb(std::string_view surface) {
-  constexpr size_t kTariAdverbLen = core::kTwoJapaneseCharBytes + core::kJapaneseCharBytes;
-  if (surface.size() != kTariAdverbLen || !utf8::endsWith(surface, "と")) {
+  const auto codepoints = normalize::utf8::decode(surface);
+  if (codepoints.size() != 3 || codepoints.back() != U'と') {
     return "";
   }
-  std::string stem(surface.substr(0, core::kTwoJapaneseCharBytes));
+  std::string stem(utf8::dropLastChar(surface));
   const auto stem_codepoints = normalize::utf8::decode(stem);
   if (!stem_codepoints.empty() && normalize::isNumeralCodepoint(stem_codepoints.front())) {
     return "";
   }
-  if (grammar::isAllKanji(stem) ||
-      (stem.size() == core::kTwoJapaneseCharBytes && stem.substr(core::kJapaneseCharBytes) == "々")) {
+  if (grammar::isAllKanji(stem) || (stem_codepoints.size() == 2 && stem_codepoints.back() == U'々')) {
     return stem;
   }
   return "";
@@ -526,9 +498,21 @@ std::string fixHatsuonbin(std::string_view stem, const dictionary::DictionaryMan
 std::string lemmatizeGodanEnding(std::string_view surface, const VerbEnding& ending) {
   const std::string_view stem = surface.substr(0, surface.size() - ending.suffix.size());
   const char32_t row_codepoint = utf8::decodeFirstChar(utf8::lastChar(stem));
-  const std::string_view base = ending.suffix == "る" ? grammar::godanBaseSuffixFromERow(row_codepoint)
-                                                      : grammar::godanBaseSuffixFromARow(row_codepoint);
+  std::string_view base;
+  if (ending.suffix == "る") {
+    base = grammar::godanBaseSuffixFromERow(row_codepoint);
+  } else if (ending.suffix == "ます") {
+    base = grammar::godanBaseSuffixFromIRow(row_codepoint);
+  } else {
+    base = grammar::godanBaseSuffixFromARow(row_codepoint);
+  }
   if (base.empty()) {
+    // Ichidan 未然・連用形 share the bare stem. The former duplicate rows
+    // attempted this fallback after a failed Godan reversal, but identical
+    // suffixes made that decision order-dependent.
+    if (ending.suffix == "ない" || ending.suffix == "ます") {
+      return std::string(stem) + "る";
+    }
     return "";
   }
   return std::string(utf8::dropLastChar(stem)) + std::string(base);
