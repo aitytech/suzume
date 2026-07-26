@@ -47,6 +47,12 @@ class ScorerOptionsLoader {
   /// @return true on success, false on failure
   static bool loadFromFile(const std::string& path, ScorerOptions& options, std::string* error_msg = nullptr);
 
+  /// Load scorer options directly from a JSON string.
+  ///
+  /// Unknown sections and option names are rejected so misspelled tuning
+  /// parameters cannot silently leave the defaults active.
+  static bool loadFromJsonString(const std::string& json, ScorerOptions& options, std::string* error_msg = nullptr);
+
 #ifndef __EMSCRIPTEN__
   /// Apply environment variable overrides to scorer options
   /// Environment variables: SUZUME_SCORER_{SECTION}_{KEY}=value

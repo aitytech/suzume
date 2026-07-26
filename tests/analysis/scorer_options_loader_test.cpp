@@ -50,8 +50,7 @@ TEST_F(JsonParserTest, LoadCandidatesJoin) {
     "candidates": {
       "join": {
         "compound_verb_bonus": -0.7,
-        "verified_v1_bonus": -0.3,
-        "te_form_aux_bonus": -0.5
+        "verified_v1_bonus": -0.3
       }
     }
   })");
@@ -60,7 +59,6 @@ TEST_F(JsonParserTest, LoadCandidatesJoin) {
   EXPECT_TRUE(ScorerOptionsLoader::loadFromFile(file.path(), opts));
   EXPECT_FLOAT_EQ(opts.candidates.join.compound_verb_bonus, -0.7F);
   EXPECT_FLOAT_EQ(opts.candidates.join.verified_v1_bonus, -0.3F);
-  EXPECT_FLOAT_EQ(opts.candidates.join.te_form_aux_bonus, -0.5F);
 }
 
 TEST_F(JsonParserTest, LoadCandidatesSplit) {
@@ -150,6 +148,49 @@ TEST_F(JsonParserTest, LoadEveryBigramOverride) {
   }
 }
 
+TEST_F(JsonParserTest, LoadJsonStringAndEveryVerbCandidateOption) {
+  const std::string json = R"({
+    "verb_candidates": {
+      "confidence_low": 1,
+      "confidence_standard": 2,
+      "confidence_past_te": 3,
+      "confidence_ichidan_dict": 4,
+      "confidence_short_godan_base": 5,
+      "confidence_dict_verb": 6,
+      "confidence_katakana": 7,
+      "confidence_high": 8,
+      "confidence_very_high": 9,
+      "base_cost_standard": 10,
+      "base_cost_high": 11,
+      "base_cost_low": 12,
+      "base_cost_verified": 13,
+      "base_cost_long_verified": 14,
+      "bonus_ichidan": 15,
+      "bonus_long_dict": 16,
+      "bonus_long_verified": 17,
+      "penalty_single_char": 18,
+      "confidence_cost_scale": 19,
+      "confidence_cost_scale_small": 20,
+      "confidence_cost_scale_medium": 21
+    }
+  })";
+
+  ScorerOptions opts;
+  ASSERT_TRUE(ScorerOptionsLoader::loadFromJsonString(json, opts));
+  EXPECT_FLOAT_EQ(opts.candidates.verb.confidence_low, 1.0F);
+  EXPECT_FLOAT_EQ(opts.candidates.verb.confidence_cost_scale, 19.0F);
+  EXPECT_FLOAT_EQ(opts.candidates.verb.confidence_cost_scale_small, 20.0F);
+  EXPECT_FLOAT_EQ(opts.candidates.verb.confidence_cost_scale_medium, 21.0F);
+}
+
+TEST_F(JsonParserTest, LoadsPreviouslyUnreachableInflectionOptions) {
+  ScorerOptions opts;
+  ASSERT_TRUE(ScorerOptionsLoader::loadFromJsonString(
+      R"({"inflection":{"penalty_i_adj_ru_stem_invalid":1.25,"penalty_godan_te_stem":2.5}})", opts));
+  EXPECT_FLOAT_EQ(opts.inflection.penalty_i_adj_ru_stem_invalid, 1.25F);
+  EXPECT_FLOAT_EQ(opts.inflection.penalty_godan_te_stem, 2.5F);
+}
+
 // =============================================================================
 // Error Handling Tests
 // =============================================================================
@@ -225,22 +266,35 @@ TEST_F(JsonValueTypesTest, IntegerValues) {
   EXPECT_FLOAT_EQ(opts.noun_prior, 3.0F);
 }
 
-TEST_F(JsonValueTypesTest, IgnoresUnknownKeys) {
+TEST_F(JsonValueTypesTest, RejectsUnknownKeysWithQualifiedDiagnostic) {
   TempJsonFile file(R"({
     "candidates": {
       "join": {
         "compound_verb_bonus": -0.5,
         "unknown_key": 999.0
       }
-    },
-    "unknown_section": {
-      "foo": "bar"
     }
   })");
 
   ScorerOptions opts;
-  EXPECT_TRUE(ScorerOptionsLoader::loadFromFile(file.path(), opts));
-  EXPECT_FLOAT_EQ(opts.candidates.join.compound_verb_bonus, -0.5F);
+  std::string error;
+  EXPECT_FALSE(ScorerOptionsLoader::loadFromFile(file.path(), opts, &error));
+  EXPECT_EQ(error, "Unknown scorer option: candidates.join.unknown_key");
+  EXPECT_FLOAT_EQ(opts.candidates.join.compound_verb_bonus, JoinOptions{}.compound_verb_bonus);
+}
+
+TEST_F(JsonValueTypesTest, RejectsUnknownTopLevelSection) {
+  ScorerOptions opts;
+  std::string error;
+  EXPECT_FALSE(ScorerOptionsLoader::loadFromJsonString(R"({"typo_section":{}})", opts, &error));
+  EXPECT_EQ(error, "Unknown scorer section: typo_section");
+}
+
+TEST_F(JsonValueTypesTest, RejectsNonnumericKnownOption) {
+  ScorerOptions opts;
+  std::string error;
+  EXPECT_FALSE(ScorerOptionsLoader::loadFromJsonString(R"({"unary":{"noun_prior":"cheap"}})", opts, &error));
+  EXPECT_EQ(error, "Scorer option must be numeric: unary.noun_prior");
 }
 
 // =============================================================================
@@ -254,7 +308,6 @@ TEST_F(DefaultValuesTest, JoinOptionsDefaults) {
   EXPECT_FLOAT_EQ(opts.compound_verb_bonus, -0.8F);
   EXPECT_FLOAT_EQ(opts.verified_v1_bonus, -0.3F);
   EXPECT_FLOAT_EQ(opts.verified_noun_bonus, -0.3F);
-  EXPECT_FLOAT_EQ(opts.te_form_aux_bonus, -0.8F);
 }
 
 TEST_F(DefaultValuesTest, SplitOptionsDefaults) {
@@ -342,13 +395,13 @@ TEST_F(EnvOverrideTest, InvalidValueWithSuffix) {
 }
 
 TEST_F(EnvOverrideTest, NegativeValue) {
-  ScopedEnv env("SUZUME_SCORER_JOIN_te_form_aux_bonus", "-2.5");
+  ScopedEnv env("SUZUME_SCORER_JOIN_verified_v1_bonus", "-2.5");
 
   ScorerOptions opts;
   int count = ScorerOptionsLoader::applyEnvOverrides(opts);
 
   EXPECT_EQ(count, 1);
-  EXPECT_FLOAT_EQ(opts.candidates.join.te_form_aux_bonus, -2.5F);
+  EXPECT_FLOAT_EQ(opts.candidates.join.verified_v1_bonus, -2.5F);
 }
 
 TEST_F(EnvOverrideTest, ZeroValue) {
@@ -359,6 +412,18 @@ TEST_F(EnvOverrideTest, ZeroValue) {
 
   EXPECT_EQ(count, 1);
   EXPECT_FLOAT_EQ(opts.candidates.join.compound_verb_bonus, 0.0F);
+}
+
+TEST_F(EnvOverrideTest, PreviouslyUnreachableVerbScalesAreApplied) {
+  ScopedEnv small("SUZUME_SCORER_VERB_confidence_cost_scale_small", "0.75");
+  ScopedEnv medium("SUZUME_SCORER_VERB_confidence_cost_scale_medium", "0.85");
+
+  ScorerOptions opts;
+  int count = ScorerOptionsLoader::applyEnvOverrides(opts);
+
+  EXPECT_EQ(count, 2);
+  EXPECT_FLOAT_EQ(opts.candidates.verb.confidence_cost_scale_small, 0.75F);
+  EXPECT_FLOAT_EQ(opts.candidates.verb.confidence_cost_scale_medium, 0.85F);
 }
 
 TEST_F(EnvOverrideTest, ScientificNotation) {

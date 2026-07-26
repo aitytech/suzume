@@ -1,14 +1,17 @@
 #include "analysis/scorer_options_loader.h"
 
-#ifndef __EMSCRIPTEN__
-
+#include <array>
 #include <cctype>
 #include <cerrno>
 #include <cstdlib>
+#ifndef __EMSCRIPTEN__
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <sstream>
+#endif
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace suzume::analysis {
 
@@ -19,23 +22,253 @@ struct JsonValue {
   Type type = Type::Null;
   float number_value{};
   std::string string_value;
-  std::map<std::string, JsonValue> object_value;
+  std::vector<std::pair<std::string, JsonValue>> object_value;
 
   bool isNumber() const { return type == Type::Number; }
   bool isObject() const { return type == Type::Object; }
 
   float asFloat() const { return number_value; }
   const JsonValue* get(const std::string& key) const {
-    const auto iterator = object_value.find(key);
-    return iterator != object_value.end() ? &iterator->second : nullptr;
+    for (const auto& [name, value] : object_value) {
+      if (name == key) {
+        return &value;
+      }
+    }
+    return nullptr;
   }
 };
 
 }  // namespace scorer_options_loader_detail
 
+namespace {
+
+template <typename Options>
+struct FloatOptionSpec {
+  const char* name;
+  float Options::*value;
+};
+
+constexpr std::array<FloatOptionSpec<JoinOptions>, 3> kJoinOptionSpecs{{
+    {"compound_verb_bonus", &JoinOptions::compound_verb_bonus},
+    {"verified_v1_bonus", &JoinOptions::verified_v1_bonus},
+    {"verified_noun_bonus", &JoinOptions::verified_noun_bonus},
+}};
+
+constexpr std::array<FloatOptionSpec<SplitOptions>, 10> kSplitOptionSpecs{{
+    {"alpha_kanji_bonus", &SplitOptions::alpha_kanji_bonus},
+    {"alpha_katakana_bonus", &SplitOptions::alpha_katakana_bonus},
+    {"digit_kanji_1_bonus", &SplitOptions::digit_kanji_1_bonus},
+    {"digit_kanji_2_bonus", &SplitOptions::digit_kanji_2_bonus},
+    {"duration_period_bonus", &SplitOptions::duration_period_bonus},
+    {"digit_kanji_3_penalty", &SplitOptions::digit_kanji_3_penalty},
+    {"dict_split_bonus", &SplitOptions::dict_split_bonus},
+    {"split_base_cost", &SplitOptions::split_base_cost},
+    {"noun_verb_split_bonus", &SplitOptions::noun_verb_split_bonus},
+    {"verified_verb_bonus", &SplitOptions::verified_verb_bonus},
+}};
+
+constexpr std::array<FloatOptionSpec<ScorerOptions>, 8> kUnaryOptionSpecs{{
+    {"noun_prior", &ScorerOptions::noun_prior},
+    {"verb_prior", &ScorerOptions::verb_prior},
+    {"adj_prior", &ScorerOptions::adj_prior},
+    {"adv_prior", &ScorerOptions::adv_prior},
+    {"particle_prior", &ScorerOptions::particle_prior},
+    {"aux_prior", &ScorerOptions::aux_prior},
+    {"pronoun_prior", &ScorerOptions::pronoun_prior},
+    {"user_dict_bonus", &ScorerOptions::user_dict_bonus},
+}};
+
+constexpr std::array<FloatOptionSpec<VerbCandidateOptions>, 21> kVerbOptionSpecs{{
+    {"confidence_low", &VerbCandidateOptions::confidence_low},
+    {"confidence_standard", &VerbCandidateOptions::confidence_standard},
+    {"confidence_past_te", &VerbCandidateOptions::confidence_past_te},
+    {"confidence_ichidan_dict", &VerbCandidateOptions::confidence_ichidan_dict},
+    {"confidence_short_godan_base", &VerbCandidateOptions::confidence_short_godan_base},
+    {"confidence_dict_verb", &VerbCandidateOptions::confidence_dict_verb},
+    {"confidence_katakana", &VerbCandidateOptions::confidence_katakana},
+    {"confidence_high", &VerbCandidateOptions::confidence_high},
+    {"confidence_very_high", &VerbCandidateOptions::confidence_very_high},
+    {"base_cost_standard", &VerbCandidateOptions::base_cost_standard},
+    {"base_cost_high", &VerbCandidateOptions::base_cost_high},
+    {"base_cost_low", &VerbCandidateOptions::base_cost_low},
+    {"base_cost_verified", &VerbCandidateOptions::base_cost_verified},
+    {"base_cost_long_verified", &VerbCandidateOptions::base_cost_long_verified},
+    {"bonus_ichidan", &VerbCandidateOptions::bonus_ichidan},
+    {"bonus_long_dict", &VerbCandidateOptions::bonus_long_dict},
+    {"bonus_long_verified", &VerbCandidateOptions::bonus_long_verified},
+    {"penalty_single_char", &VerbCandidateOptions::penalty_single_char},
+    {"confidence_cost_scale", &VerbCandidateOptions::confidence_cost_scale},
+    {"confidence_cost_scale_small", &VerbCandidateOptions::confidence_cost_scale_small},
+    {"confidence_cost_scale_medium", &VerbCandidateOptions::confidence_cost_scale_medium},
+}};
+
+constexpr std::array<FloatOptionSpec<grammar::InflectionScorerOptions>, 28> kInflectionOptionSpecs{{
+    {"base_confidence", &grammar::InflectionScorerOptions::base_confidence},
+    {"confidence_floor", &grammar::InflectionScorerOptions::confidence_floor},
+    {"confidence_ceiling", &grammar::InflectionScorerOptions::confidence_ceiling},
+    {"penalty_stem_very_long", &grammar::InflectionScorerOptions::penalty_stem_very_long},
+    {"penalty_stem_long", &grammar::InflectionScorerOptions::penalty_stem_long},
+    {"bonus_stem_two_char", &grammar::InflectionScorerOptions::bonus_stem_two_char},
+    {"bonus_aux_length_per_byte", &grammar::InflectionScorerOptions::bonus_aux_length_per_byte},
+    {"penalty_ichidan_potential_ambiguity", &grammar::InflectionScorerOptions::penalty_ichidan_potential_ambiguity},
+    {"bonus_ichidan_e_row", &grammar::InflectionScorerOptions::bonus_ichidan_e_row},
+    {"penalty_ichidan_looks_godan", &grammar::InflectionScorerOptions::penalty_ichidan_looks_godan},
+    {"penalty_ichidan_kanji_i", &grammar::InflectionScorerOptions::penalty_ichidan_kanji_i},
+    {"penalty_ichidan_kanji_hiragana_stem", &grammar::InflectionScorerOptions::penalty_ichidan_kanji_hiragana_stem},
+    {"penalty_ichidan_irregular_stem", &grammar::InflectionScorerOptions::penalty_ichidan_irregular_stem},
+    {"penalty_i_adj_single_kanji", &grammar::InflectionScorerOptions::penalty_i_adj_single_kanji},
+    {"penalty_i_adj_verb_aux_pattern", &grammar::InflectionScorerOptions::penalty_i_adj_verb_aux_pattern},
+    {"bonus_i_adj_compound_yasui_nikui", &grammar::InflectionScorerOptions::bonus_i_adj_compound_yasui_nikui},
+    {"penalty_i_adj_e_row_stem", &grammar::InflectionScorerOptions::penalty_i_adj_e_row_stem},
+    {"penalty_i_adj_ru_stem_invalid", &grammar::InflectionScorerOptions::penalty_i_adj_ru_stem_invalid},
+    {"penalty_i_adj_verb_rashii_pattern", &grammar::InflectionScorerOptions::penalty_i_adj_verb_rashii_pattern},
+    {"bonus_suru_two_kanji", &grammar::InflectionScorerOptions::bonus_suru_two_kanji},
+    {"penalty_godan_sa_two_kanji", &grammar::InflectionScorerOptions::penalty_godan_sa_two_kanji},
+    {"bonus_godan_sa_single_kanji", &grammar::InflectionScorerOptions::bonus_godan_sa_single_kanji},
+    {"penalty_suru_single_kanji", &grammar::InflectionScorerOptions::penalty_suru_single_kanji},
+    {"penalty_ichidan_single_hiragana_particle",
+     &grammar::InflectionScorerOptions::penalty_ichidan_single_hiragana_particle},
+    {"penalty_pure_hiragana_stem", &grammar::InflectionScorerOptions::penalty_pure_hiragana_stem},
+    {"penalty_godan_single_hiragana_stem", &grammar::InflectionScorerOptions::penalty_godan_single_hiragana_stem},
+    {"penalty_godan_non_ra_pure_hiragana", &grammar::InflectionScorerOptions::penalty_godan_non_ra_pure_hiragana},
+    {"penalty_godan_te_stem", &grammar::InflectionScorerOptions::penalty_godan_te_stem},
+}};
+
+template <typename Options, size_t Size>
+void applyOptionSpecs(Options& options, const JsonValue& json,
+                      const std::array<FloatOptionSpec<Options>, Size>& specs) {
+  for (const auto& spec : specs) {
+    const JsonValue* value = json.get(spec.name);
+    if (value != nullptr && value->isNumber()) {
+      options.*(spec.value) = value->asFloat();
+    }
+  }
+}
+
+template <typename Spec, size_t Size>
+bool hasOptionName(std::string_view name, const std::array<Spec, Size>& specs) {
+  for (const auto& spec : specs) {
+    if (name == spec.name) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template <size_t Size>
+bool hasOptionName(std::string_view name, const std::array<std::string_view, Size>& names) {
+  for (std::string_view candidate : names) {
+    if (name == candidate) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template <typename Spec, size_t Size>
+bool validateOptionObject(const JsonValue& json, const std::array<Spec, Size>& specs, std::string_view path,
+                          std::string* error_message) {
+  for (const auto& [name, value] : json.object_value) {
+    if (!hasOptionName(name, specs)) {
+      if (error_message != nullptr) {
+        *error_message = "Unknown scorer option: " + std::string(path) + "." + name;
+      }
+      return false;
+    }
+    if (!value.isNumber()) {
+      if (error_message != nullptr) {
+        *error_message = "Scorer option must be numeric: " + std::string(path) + "." + name;
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
+bool validateObject(const JsonValue& parent, const char* key, std::string_view path, const JsonValue** output,
+                    std::string* error_message) {
+  const JsonValue* value = parent.get(key);
+  if (value == nullptr) {
+    *output = nullptr;
+    return true;
+  }
+  if (!value->isObject()) {
+    if (error_message != nullptr) {
+      *error_message = "Scorer section must be an object: " + std::string(path);
+    }
+    return false;
+  }
+  *output = value;
+  return true;
+}
+
+bool validateConfig(const JsonValue& root, std::string* error_message) {
+  constexpr std::array<std::string_view, 5> kRootSections{"candidates", "unary", "bigram", "verb_candidates",
+                                                          "inflection"};
+  for (const auto& [name, value] : root.object_value) {
+    (void)value;
+    if (!hasOptionName(name, kRootSections)) {
+      if (error_message != nullptr) {
+        *error_message = "Unknown scorer section: " + name;
+      }
+      return false;
+    }
+  }
+
+  const JsonValue* candidates = nullptr;
+  if (!validateObject(root, "candidates", "candidates", &candidates, error_message)) {
+    return false;
+  }
+  if (candidates != nullptr) {
+    constexpr std::array<std::string_view, 2> kCandidateSections{"join", "split"};
+    for (const auto& [name, value] : candidates->object_value) {
+      (void)value;
+      if (!hasOptionName(name, kCandidateSections)) {
+        if (error_message != nullptr) {
+          *error_message = "Unknown scorer section: candidates." + name;
+        }
+        return false;
+      }
+    }
+    const JsonValue* join = nullptr;
+    const JsonValue* split = nullptr;
+    if (!validateObject(*candidates, "join", "candidates.join", &join, error_message) ||
+        !validateObject(*candidates, "split", "candidates.split", &split, error_message)) {
+      return false;
+    }
+    if ((join != nullptr && !validateOptionObject(*join, kJoinOptionSpecs, "candidates.join", error_message)) ||
+        (split != nullptr && !validateOptionObject(*split, kSplitOptionSpecs, "candidates.split", error_message))) {
+      return false;
+    }
+  }
+
+  const JsonValue* unary = nullptr;
+  const JsonValue* bigram = nullptr;
+  const JsonValue* verb = nullptr;
+  const JsonValue* inflection = nullptr;
+  if (!validateObject(root, "unary", "unary", &unary, error_message) ||
+      !validateObject(root, "bigram", "bigram", &bigram, error_message) ||
+      !validateObject(root, "verb_candidates", "verb_candidates", &verb, error_message) ||
+      !validateObject(root, "inflection", "inflection", &inflection, error_message)) {
+    return false;
+  }
+  return (unary == nullptr || validateOptionObject(*unary, kUnaryOptionSpecs, "unary", error_message)) &&
+         (bigram == nullptr || validateOptionObject(*bigram, kBigramOverrideSpecs, "bigram", error_message)) &&
+         (verb == nullptr || validateOptionObject(*verb, kVerbOptionSpecs, "verb_candidates", error_message)) &&
+         (inflection == nullptr ||
+          validateOptionObject(*inflection, kInflectionOptionSpecs, "inflection", error_message));
+}
+
+}  // namespace
+
 JsonValue ScorerOptionsLoader::Parser::parse() {
   skipWhitespace();
-  return parseValue();
+  JsonValue value = parseValue();
+  skipWhitespace();
+  if (!has_error_ && peek() != '\0') {
+    setError("Trailing content after JSON value");
+  }
+  return value;
 }
 
 void ScorerOptionsLoader::Parser::setError(const char* msg) {
@@ -58,18 +291,18 @@ JsonValue ScorerOptionsLoader::Parser::parseValue() {
     return parseString();
   if (c == '-' || (c >= '0' && c <= '9'))
     return parseNumber();
-  if (c == 'n') {  // null
+  if (c == 'n' && json_.compare(pos_, 4, "null") == 0) {
     pos_ += 4;
     return JsonValue{};
   }
-  if (c == 't') {  // true
+  if (c == 't' && json_.compare(pos_, 4, "true") == 0) {
     pos_ += 4;
     JsonValue v;
     v.type = JsonValue::Type::Number;
     v.number_value = 1.0F;
     return v;
   }
-  if (c == 'f') {  // false
+  if (c == 'f' && json_.compare(pos_, 5, "false") == 0) {
     pos_ += 5;
     JsonValue v;
     v.type = JsonValue::Type::Number;
@@ -87,7 +320,18 @@ JsonValue ScorerOptionsLoader::Parser::parseObject() {
   result.type = JsonValue::Type::Object;
   consume();  // '{'
   skipWhitespace();
-  while (!has_error_ && peek() != '}' && peek() != '\0') {
+  if (match('}')) {
+    return result;
+  }
+  while (!has_error_) {
+    if (peek() == '\0') {
+      setError("Unterminated object");
+      return result;
+    }
+    if (peek() != '"') {
+      setError("Expected string key in object");
+      return result;
+    }
     auto key = parseString();
     if (has_error_)
       return result;
@@ -97,16 +341,30 @@ JsonValue ScorerOptionsLoader::Parser::parseObject() {
       return result;
     }
     skipWhitespace();
-    result.object_value[key.string_value] = parseValue();
+    JsonValue value = parseValue();
     if (has_error_)
       return result;
+    bool replaced = false;
+    for (auto& [existing_key, existing_value] : result.object_value) {
+      if (existing_key == key.string_value) {
+        existing_value = std::move(value);
+        replaced = true;
+        break;
+      }
+    }
+    if (!replaced) {
+      result.object_value.emplace_back(std::move(key.string_value), std::move(value));
+    }
     skipWhitespace();
-    if (peek() == ',')
-      consume();
+    if (match('}')) {
+      return result;
+    }
+    if (!match(',')) {
+      setError("Expected ',' or '}' in object");
+      return result;
+    }
     skipWhitespace();
   }
-  if (peek() == '}')
-    consume();  // '}'
   return result;
 }
 
@@ -117,17 +375,27 @@ JsonValue ScorerOptionsLoader::Parser::parseArray() {
   result.type = JsonValue::Type::Array;
   consume();  // '['
   skipWhitespace();
-  while (!has_error_ && peek() != ']' && peek() != '\0') {
+  if (match(']')) {
+    return result;
+  }
+  while (!has_error_) {
+    if (peek() == '\0') {
+      setError("Unterminated array");
+      return result;
+    }
     parseValue();  // Skip array values for now
     if (has_error_)
       return result;
     skipWhitespace();
-    if (peek() == ',')
-      consume();
+    if (match(']')) {
+      return result;
+    }
+    if (!match(',')) {
+      setError("Expected ',' or ']' in array");
+      return result;
+    }
     skipWhitespace();
   }
-  if (peek() == ']')
-    consume();  // ']'
   return result;
 }
 
@@ -136,7 +404,10 @@ JsonValue ScorerOptionsLoader::Parser::parseString() {
   if (has_error_)
     return result;
   result.type = JsonValue::Type::String;
-  consume();  // '"'
+  if (!match('"')) {
+    setError("Expected string");
+    return result;
+  }
   while (!has_error_ && pos_ < json_.size() && json_[pos_] != '"') {
     if (json_[pos_] == '\\' && pos_ + 1 < json_.size()) {
       pos_++;
@@ -164,6 +435,8 @@ JsonValue ScorerOptionsLoader::Parser::parseString() {
   }
   if (pos_ < json_.size() && json_[pos_] == '"') {
     consume();  // '"'
+  } else {
+    setError("Unterminated string");
   }
   return result;
 }
@@ -237,46 +510,16 @@ bool ScorerOptionsLoader::Parser::match(char c) {
   return false;
 }
 
-// Helper macro to set option from JSON
-#define SET_OPT(opts, field, json, key) \
-  do {                                  \
-    auto* v = json.get(key);            \
-    if (v && v->isNumber())             \
-      opts.field = v->asFloat();        \
-  } while (0)
-
 void ScorerOptionsLoader::applyJoinOptions(JoinOptions& opts, const JsonValue& json) {
-  SET_OPT(opts, compound_verb_bonus, json, "compound_verb_bonus");
-  SET_OPT(opts, verified_v1_bonus, json, "verified_v1_bonus");
-  SET_OPT(opts, verified_noun_bonus, json, "verified_noun_bonus");
-  SET_OPT(opts, te_form_aux_bonus, json, "te_form_aux_bonus");
+  applyOptionSpecs(opts, json, kJoinOptionSpecs);
 }
 
 void ScorerOptionsLoader::applySplitOptions(SplitOptions& opts, const JsonValue& json) {
-  SET_OPT(opts, alpha_kanji_bonus, json, "alpha_kanji_bonus");
-  SET_OPT(opts, alpha_katakana_bonus, json, "alpha_katakana_bonus");
-  SET_OPT(opts, digit_kanji_1_bonus, json, "digit_kanji_1_bonus");
-  SET_OPT(opts, digit_kanji_2_bonus, json, "digit_kanji_2_bonus");
-  SET_OPT(opts, duration_period_bonus, json, "duration_period_bonus");
-  SET_OPT(opts, digit_kanji_3_penalty, json, "digit_kanji_3_penalty");
-  SET_OPT(opts, dict_split_bonus, json, "dict_split_bonus");
-  SET_OPT(opts, split_base_cost, json, "split_base_cost");
-  SET_OPT(opts, noun_verb_split_bonus, json, "noun_verb_split_bonus");
-  SET_OPT(opts, verified_verb_bonus, json, "verified_verb_bonus");
+  applyOptionSpecs(opts, json, kSplitOptionSpecs);
 }
 
 void ScorerOptionsLoader::applyUnaryOptions(ScorerOptions& opts, const JsonValue& json) {
-  // POS priors
-  SET_OPT(opts, noun_prior, json, "noun_prior");
-  SET_OPT(opts, verb_prior, json, "verb_prior");
-  SET_OPT(opts, adj_prior, json, "adj_prior");
-  SET_OPT(opts, adv_prior, json, "adv_prior");
-  SET_OPT(opts, particle_prior, json, "particle_prior");
-  SET_OPT(opts, aux_prior, json, "aux_prior");
-  SET_OPT(opts, pronoun_prior, json, "pronoun_prior");
-
-  // Bonuses
-  SET_OPT(opts, user_dict_bonus, json, "user_dict_bonus");
+  applyOptionSpecs(opts, json, kUnaryOptionSpecs);
 }
 
 void ScorerOptionsLoader::applyBigramOptions(ScorerOptions::BigramOverrides& opts, const JsonValue& json) {
@@ -289,75 +532,22 @@ void ScorerOptionsLoader::applyBigramOptions(ScorerOptions::BigramOverrides& opt
 }
 
 void ScorerOptionsLoader::applyVerbCandidateOptions(VerbCandidateOptions& opts, const JsonValue& json) {
-  // Confidence thresholds
-  SET_OPT(opts, confidence_low, json, "confidence_low");
-  SET_OPT(opts, confidence_standard, json, "confidence_standard");
-  SET_OPT(opts, confidence_past_te, json, "confidence_past_te");
-  SET_OPT(opts, confidence_ichidan_dict, json, "confidence_ichidan_dict");
-  SET_OPT(opts, confidence_short_godan_base, json, "confidence_short_godan_base");
-  SET_OPT(opts, confidence_dict_verb, json, "confidence_dict_verb");
-  SET_OPT(opts, confidence_katakana, json, "confidence_katakana");
-  SET_OPT(opts, confidence_high, json, "confidence_high");
-  SET_OPT(opts, confidence_very_high, json, "confidence_very_high");
-  // Base costs
-  SET_OPT(opts, base_cost_standard, json, "base_cost_standard");
-  SET_OPT(opts, base_cost_high, json, "base_cost_high");
-  SET_OPT(opts, base_cost_low, json, "base_cost_low");
-  SET_OPT(opts, base_cost_verified, json, "base_cost_verified");
-  SET_OPT(opts, base_cost_long_verified, json, "base_cost_long_verified");
-  // Bonuses
-  SET_OPT(opts, bonus_ichidan, json, "bonus_ichidan");
-  SET_OPT(opts, bonus_long_dict, json, "bonus_long_dict");
-  SET_OPT(opts, bonus_long_verified, json, "bonus_long_verified");
-  // Penalties
-  SET_OPT(opts, penalty_single_char, json, "penalty_single_char");
-  // Scaling
-  SET_OPT(opts, confidence_cost_scale, json, "confidence_cost_scale");
+  applyOptionSpecs(opts, json, kVerbOptionSpecs);
 }
 
 void ScorerOptionsLoader::applyInflectionOptions(grammar::InflectionScorerOptions& opts, const JsonValue& json) {
-  // Base configuration
-  SET_OPT(opts, base_confidence, json, "base_confidence");
-  SET_OPT(opts, confidence_floor, json, "confidence_floor");
-  SET_OPT(opts, confidence_ceiling, json, "confidence_ceiling");
-
-  // Stem length adjustments
-  SET_OPT(opts, penalty_stem_very_long, json, "penalty_stem_very_long");
-  SET_OPT(opts, penalty_stem_long, json, "penalty_stem_long");
-  SET_OPT(opts, bonus_stem_two_char, json, "bonus_stem_two_char");
-  SET_OPT(opts, bonus_aux_length_per_byte, json, "bonus_aux_length_per_byte");
-
-  // Ichidan validation
-  SET_OPT(opts, penalty_ichidan_potential_ambiguity, json, "penalty_ichidan_potential_ambiguity");
-  SET_OPT(opts, bonus_ichidan_e_row, json, "bonus_ichidan_e_row");
-  SET_OPT(opts, penalty_ichidan_looks_godan, json, "penalty_ichidan_looks_godan");
-  SET_OPT(opts, penalty_ichidan_kanji_i, json, "penalty_ichidan_kanji_i");
-  SET_OPT(opts, penalty_ichidan_kanji_hiragana_stem, json, "penalty_ichidan_kanji_hiragana_stem");
-  SET_OPT(opts, penalty_ichidan_irregular_stem, json, "penalty_ichidan_irregular_stem");
-
-  // I-Adjective validation
-  SET_OPT(opts, penalty_i_adj_single_kanji, json, "penalty_i_adj_single_kanji");
-  SET_OPT(opts, penalty_i_adj_verb_aux_pattern, json, "penalty_i_adj_verb_aux_pattern");
-  SET_OPT(opts, bonus_i_adj_compound_yasui_nikui, json, "bonus_i_adj_compound_yasui_nikui");
-  SET_OPT(opts, penalty_i_adj_e_row_stem, json, "penalty_i_adj_e_row_stem");
-  SET_OPT(opts, penalty_i_adj_verb_rashii_pattern, json, "penalty_i_adj_verb_rashii_pattern");
-
-  // Suru vs GodanSa disambiguation
-  SET_OPT(opts, bonus_suru_two_kanji, json, "bonus_suru_two_kanji");
-  SET_OPT(opts, penalty_godan_sa_two_kanji, json, "penalty_godan_sa_two_kanji");
-  SET_OPT(opts, bonus_godan_sa_single_kanji, json, "bonus_godan_sa_single_kanji");
-  SET_OPT(opts, penalty_suru_single_kanji, json, "penalty_suru_single_kanji");
-
-  // Single hiragana stem penalties
-  SET_OPT(opts, penalty_ichidan_single_hiragana_particle, json, "penalty_ichidan_single_hiragana_particle");
-  SET_OPT(opts, penalty_pure_hiragana_stem, json, "penalty_pure_hiragana_stem");
-  SET_OPT(opts, penalty_godan_single_hiragana_stem, json, "penalty_godan_single_hiragana_stem");
-  SET_OPT(opts, penalty_godan_non_ra_pure_hiragana, json, "penalty_godan_non_ra_pure_hiragana");
+  applyOptionSpecs(opts, json, kInflectionOptionSpecs);
 }
 
-#undef SET_OPT
-
 bool ScorerOptionsLoader::loadFromFile(const std::string& path, ScorerOptions& options, std::string* error_msg) {
+#ifdef __EMSCRIPTEN__
+  (void)path;
+  (void)options;
+  if (error_msg != nullptr) {
+    *error_msg = "File scorer configuration is unavailable in WebAssembly";
+  }
+  return false;
+#else
   std::ifstream file(path);
   if (!file) {
     if (error_msg)
@@ -366,8 +556,11 @@ bool ScorerOptionsLoader::loadFromFile(const std::string& path, ScorerOptions& o
   }
   std::stringstream buffer;
   buffer << file.rdbuf();
-  std::string json = buffer.str();
+  return loadFromJsonString(buffer.str(), options, error_msg);
+#endif
+}
 
+bool ScorerOptionsLoader::loadFromJsonString(const std::string& json, ScorerOptions& options, std::string* error_msg) {
   Parser parser(json);
   auto root = parser.parse();
 
@@ -381,6 +574,10 @@ bool ScorerOptionsLoader::loadFromFile(const std::string& path, ScorerOptions& o
   if (!root.isObject()) {
     if (error_msg)
       *error_msg = "JSON root must be an object";
+    return false;
+  }
+
+  if (!validateConfig(root, error_msg)) {
     return false;
   }
 
@@ -455,10 +652,18 @@ bool tryGetEnvFloat(const char* name, float& out, bool report_warnings) {
   return true;
 }
 
-// Macro to check and apply single environment variable
-#define TRY_ENV(section, field)                                                         \
-  if (tryGetEnvFloat("SUZUME_SCORER_" section "_" #field, opts.field, report_warnings)) \
-  count++
+template <typename Options, size_t Size>
+int applySpecs(const char* section, Options& options, const std::array<FloatOptionSpec<Options>, Size>& specs,
+               bool report_warnings) {
+  int count = 0;
+  for (const auto& spec : specs) {
+    const std::string variable_name = std::string("SUZUME_SCORER_") + section + "_" + spec.name;
+    if (tryGetEnvFloat(variable_name.c_str(), options.*(spec.value), report_warnings)) {
+      ++count;
+    }
+  }
+  return count;
+}
 
 }  // namespace env_override_internal
 
@@ -470,44 +675,9 @@ int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options, bool report_w
   using namespace env_override_internal;
   int count = 0;
 
-  // Join options (SUZUME_SCORER_JOIN_*)
-  {
-    auto& opts = options.candidates.join;
-    TRY_ENV("JOIN", compound_verb_bonus);
-    TRY_ENV("JOIN", verified_v1_bonus);
-    TRY_ENV("JOIN", verified_noun_bonus);
-    TRY_ENV("JOIN", te_form_aux_bonus);
-  }
-
-  // Split options (SUZUME_SCORER_SPLIT_*)
-  {
-    auto& opts = options.candidates.split;
-    TRY_ENV("SPLIT", alpha_kanji_bonus);
-    TRY_ENV("SPLIT", alpha_katakana_bonus);
-    TRY_ENV("SPLIT", digit_kanji_1_bonus);
-    TRY_ENV("SPLIT", digit_kanji_2_bonus);
-    TRY_ENV("SPLIT", duration_period_bonus);
-    TRY_ENV("SPLIT", digit_kanji_3_penalty);
-    TRY_ENV("SPLIT", dict_split_bonus);
-    TRY_ENV("SPLIT", split_base_cost);
-    TRY_ENV("SPLIT", noun_verb_split_bonus);
-    TRY_ENV("SPLIT", verified_verb_bonus);
-  }
-
-  // Unary options (SUZUME_SCORER_UNARY_*)
-  {
-    auto& opts = options;
-    // POS priors
-    TRY_ENV("UNARY", noun_prior);
-    TRY_ENV("UNARY", verb_prior);
-    TRY_ENV("UNARY", adj_prior);
-    TRY_ENV("UNARY", adv_prior);
-    TRY_ENV("UNARY", particle_prior);
-    TRY_ENV("UNARY", aux_prior);
-    TRY_ENV("UNARY", pronoun_prior);
-    // Bonuses
-    TRY_ENV("UNARY", user_dict_bonus);
-  }
+  count += applySpecs("JOIN", options.candidates.join, kJoinOptionSpecs, report_warnings);
+  count += applySpecs("SPLIT", options.candidates.split, kSplitOptionSpecs, report_warnings);
+  count += applySpecs("UNARY", options, kUnaryOptionSpecs, report_warnings);
 
   // Bigram options (SUZUME_SCORER_BIGRAM_*)
   {
@@ -520,71 +690,8 @@ int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options, bool report_w
     }
   }
 
-  // Verb candidate options (SUZUME_SCORER_VERB_*)
-  {
-    auto& opts = options.candidates.verb;
-    // Confidence thresholds
-    TRY_ENV("VERB", confidence_low);
-    TRY_ENV("VERB", confidence_standard);
-    TRY_ENV("VERB", confidence_past_te);
-    TRY_ENV("VERB", confidence_ichidan_dict);
-    TRY_ENV("VERB", confidence_short_godan_base);
-    TRY_ENV("VERB", confidence_dict_verb);
-    TRY_ENV("VERB", confidence_katakana);
-    TRY_ENV("VERB", confidence_high);
-    TRY_ENV("VERB", confidence_very_high);
-    // Base costs
-    TRY_ENV("VERB", base_cost_standard);
-    TRY_ENV("VERB", base_cost_high);
-    TRY_ENV("VERB", base_cost_low);
-    TRY_ENV("VERB", base_cost_verified);
-    TRY_ENV("VERB", base_cost_long_verified);
-    // Bonuses
-    TRY_ENV("VERB", bonus_ichidan);
-    TRY_ENV("VERB", bonus_long_dict);
-    TRY_ENV("VERB", bonus_long_verified);
-    // Penalties
-    TRY_ENV("VERB", penalty_single_char);
-    // Scaling
-    TRY_ENV("VERB", confidence_cost_scale);
-  }
-
-  // Inflection scorer options (SUZUME_SCORER_INFL_*)
-  {
-    auto& opts = options.inflection;
-    // Base configuration
-    TRY_ENV("INFL", base_confidence);
-    TRY_ENV("INFL", confidence_floor);
-    TRY_ENV("INFL", confidence_ceiling);
-    // Stem length adjustments
-    TRY_ENV("INFL", penalty_stem_very_long);
-    TRY_ENV("INFL", penalty_stem_long);
-    TRY_ENV("INFL", bonus_stem_two_char);
-    TRY_ENV("INFL", bonus_aux_length_per_byte);
-    // Ichidan validation
-    TRY_ENV("INFL", penalty_ichidan_potential_ambiguity);
-    TRY_ENV("INFL", bonus_ichidan_e_row);
-    TRY_ENV("INFL", penalty_ichidan_looks_godan);
-    TRY_ENV("INFL", penalty_ichidan_kanji_i);
-    TRY_ENV("INFL", penalty_ichidan_kanji_hiragana_stem);
-    TRY_ENV("INFL", penalty_ichidan_irregular_stem);
-    // I-Adjective validation
-    TRY_ENV("INFL", penalty_i_adj_single_kanji);
-    TRY_ENV("INFL", penalty_i_adj_verb_aux_pattern);
-    TRY_ENV("INFL", bonus_i_adj_compound_yasui_nikui);
-    TRY_ENV("INFL", penalty_i_adj_e_row_stem);
-    TRY_ENV("INFL", penalty_i_adj_verb_rashii_pattern);
-    // Suru vs GodanSa disambiguation
-    TRY_ENV("INFL", bonus_suru_two_kanji);
-    TRY_ENV("INFL", penalty_godan_sa_two_kanji);
-    TRY_ENV("INFL", bonus_godan_sa_single_kanji);
-    TRY_ENV("INFL", penalty_suru_single_kanji);
-    // Single hiragana stem penalties
-    TRY_ENV("INFL", penalty_ichidan_single_hiragana_particle);
-    TRY_ENV("INFL", penalty_pure_hiragana_stem);
-    TRY_ENV("INFL", penalty_godan_single_hiragana_stem);
-    TRY_ENV("INFL", penalty_godan_non_ra_pure_hiragana);
-  }
+  count += applySpecs("VERB", options.candidates.verb, kVerbOptionSpecs, report_warnings);
+  count += applySpecs("INFL", options.inflection, kInflectionOptionSpecs, report_warnings);
 
   return count;
 }
@@ -615,10 +722,6 @@ ScorerLoadResult ScorerOptionsLoader::loadFromEnv(ScorerOptions& options, bool r
   return result;
 }
 
-#undef TRY_ENV
-
 #endif  // __EMSCRIPTEN__
 
 }  // namespace suzume::analysis
-
-#endif  // __EMSCRIPTEN__
