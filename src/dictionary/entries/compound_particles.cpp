@@ -45,8 +45,8 @@ EntrySpecRange getCompoundParticleEntries() {
 
       // Topic/Means (話題・手段)
       particle("をめぐって", EPOS::ParticleCase),
-      particle("をめぐり", EPOS::ParticleCase),
-      particle("をもって", EPOS::ParticleCase),
+      // Note: をめぐり / をもって removed - grammatically を + 連用形 (めぐり, もっ+て);
+      // the continuative keeps its own morpheme boundary
       particle("を通じて", EPOS::ParticleCase),
       particle("を通して", EPOS::ParticleCase),
   };

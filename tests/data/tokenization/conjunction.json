@@ -840,9 +840,19 @@
       "description": "とすれば簡単だ - regression test",
       "expected": [
         {
-          "lemma": "とすれば",
-          "pos": "Conjunction",
-          "surface": "とすれば"
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
         },
         {
           "lemma": "簡単",
@@ -862,9 +872,19 @@
       "description": "とすれば問題ない - regression test",
       "expected": [
         {
-          "lemma": "とすれば",
-          "pos": "Conjunction",
-          "surface": "とすれば"
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
         },
         {
           "lemma": "問題",
@@ -1551,9 +1571,19 @@
           "surface": "確認"
         },
         {
-          "lemma": "をもって",
+          "lemma": "を",
           "pos": "Particle",
-          "surface": "をもって"
+          "surface": "を"
+        },
+        {
+          "lemma": "もつ",
+          "pos": "Verb",
+          "surface": "もっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
         },
         {
           "lemma": "終了",

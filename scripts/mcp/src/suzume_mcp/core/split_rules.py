@@ -36,6 +36,24 @@ _GODAN_MIZENKEI_TO_BASE: dict[str, str] = {
     "ら": "る",
 }
 _ICHIDAN_RENYOKEI_ENDINGS = frozenset("えけげせぜてでねへべめれ")
+
+# A case particle followed by an inflected lexical predicate that a reference
+# dictionary lexicalizes as one 連語, inconsistently: the same surface is split
+# in some contexts and kept whole in others.  The internal boundary is a real
+# inflection boundary (もっ = 持つ continuative, すれ = する conditional), so it is
+# always restored.
+_LEXICALIZED_PREDICATE_COMPOUNDS: dict[str, tuple[dict, ...]] = {
+    "をもって": (
+        {"surface": "を", "pos": "助詞", "lemma": "を"},
+        {"surface": "もっ", "pos": "動詞", "lemma": "もつ"},
+        {"surface": "て", "pos": "助詞", "lemma": "て"},
+    ),
+    "とすれば": (
+        {"surface": "と", "pos": "助詞", "lemma": "と"},
+        {"surface": "すれ", "pos": "動詞", "lemma": "する"},
+        {"surface": "ば", "pos": "助詞", "lemma": "ば"},
+    ),
+}
 _COMPLETIVE_TSUKUSU_FORMS = frozenset({"尽くさ", "尽くし", "尽くす", "尽くせ", "尽くそ"})
 
 
@@ -112,6 +130,13 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             )
             if applied_rule is None:
                 applied_rule = "interrogative-nominal-adverb-boundary"
+            continue
+
+        lexicalized_compound = _LEXICALIZED_PREDICATE_COMPOUNDS.get(surface)
+        if lexicalized_compound is not None and t.get("pos") in ("助詞", "接続詞"):
+            result.extend(dict(part) for part in lexicalized_compound)
+            if applied_rule is None:
+                applied_rule = "lexicalized-particle-predicate-boundary"
             continue
 
         # Productive negative auxiliaries keep their boundary even when a

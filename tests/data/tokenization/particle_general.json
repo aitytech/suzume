@@ -308,6 +308,215 @@
       ],
       "id": "ttteieba_suru",
       "input": "確認っていえば記録する"
+    },
+    {
+      "description": "確認をもって進める - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "もつ",
+          "pos": "Verb",
+          "surface": "もっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "womottte_meru",
+      "input": "確認をもって進める"
+    },
+    {
+      "description": "確認とすれば問題ない - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "tosureba_nai_2",
+      "input": "確認とすれば問題ない"
+    },
+    {
+      "description": "確認にかぎらず対応する - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "かぎる",
+          "pos": "Verb",
+          "surface": "かぎら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        },
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nikagirazu_suru",
+      "input": "確認にかぎらず対応する"
+    },
+    {
+      "description": "問題をめぐり議論する - regression test",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "めぐる",
+          "pos": "Verb",
+          "surface": "めぐり"
+        },
+        {
+          "lemma": "議論",
+          "pos": "Noun",
+          "surface": "議論"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "womeguri_suru",
+      "input": "問題をめぐり議論する"
+    },
+    {
+      "description": "確認につき連絡する - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "につき",
+          "pos": "Particle",
+          "surface": "につき"
+        },
+        {
+          "lemma": "連絡",
+          "pos": "Noun",
+          "surface": "連絡"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nitsuki_suru",
+      "input": "確認につき連絡する"
+    },
+    {
+      "description": "したがって対応する - regression test",
+      "expected": [
+        {
+          "lemma": "したがって",
+          "pos": "Conjunction",
+          "surface": "したがって"
+        },
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "shitagattte_suru",
+      "input": "したがって対応する"
+    },
+    {
+      "description": "どさりと落ちる - regression test",
+      "expected": [
+        {
+          "lemma": "どさり",
+          "pos": "Adverb",
+          "surface": "どさり"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "落ちる",
+          "pos": "Verb",
+          "surface": "落ちる"
+        }
+      ],
+      "id": "dosarito_chiru",
+      "input": "どさりと落ちる"
     }
   ],
   "description": "particle_general tests",

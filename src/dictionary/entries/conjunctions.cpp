@@ -42,7 +42,7 @@ EntrySpecRange getConjunctionEntries() {
 
       // Additional conjunctions
       conj("いわば", "言わば"), conj("言わば", ""), conj("さもないと", ""), conj("さもなければ", ""),
-      conj("とすれば", ""),
+      // Note: とすれば removed - grammatically と + すれ (する仮定形) + ば
       // Colloquial conditional conjunction. Keep the closed search unit
       // rather than following MeCab's non-lexical そん+なら split.
       conj("そんなら", ""), conj("それにしても", ""), adv("ともかく", ""),

@@ -421,9 +421,19 @@
       "description": "formal particle expression",
       "expected": [
         {
-          "lemma": "をもって",
+          "lemma": "を",
           "pos": "Particle",
-          "surface": "をもって"
+          "surface": "を"
+        },
+        {
+          "lemma": "もつ",
+          "pos": "Verb",
+          "surface": "もっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
         },
         {
           "lemma": "終了",

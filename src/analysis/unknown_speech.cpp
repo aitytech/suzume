@@ -446,7 +446,15 @@ void UnknownWordGenerator::generateOnomatopoeiaCandidates(const std::vector<char
       // Skip if first char is a common particle (の, は, が, を, に, で, も, と, へ, か)
       // to avoid false matches like のやり, はしり, がわり
       char32_t first = codepoints[start_pos];
-      if (!normalize::isParticleCodepoint(first) && !isBareVowelMora(first) && first != U'ら') {
+      // An attested Godan-ra continuative has the same AB+り shape (めぐり,
+      // かぎり). The verb reading owns it; a mimetic candidate here would
+      // outrank it on the adverb connection alone.
+      const bool is_godan_ra_continuative =
+          dict_manager_ != nullptr &&
+          dict_manager_->lookupExact(extractSubstring(codepoints, start_pos, start_pos + 2) + "る",
+                                     core::PartOfSpeech::Verb) != nullptr;
+      if (!normalize::isParticleCodepoint(first) && !isBareVowelMora(first) && first != U'ら' &&
+          !is_godan_ra_continuative) {
         std::string surface = extractSubstring(codepoints, start_pos, start_pos + 3);
         if (!surface.empty()) {
           auto cand = makeCandidate(surface, start_pos, start_pos + 3, core::PartOfSpeech::Adverb, 0.7F, true,
