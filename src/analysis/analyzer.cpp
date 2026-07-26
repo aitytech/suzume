@@ -164,8 +164,16 @@ void Analyzer::setMode(core::AnalysisMode mode) {
 }
 
 core::Expected<std::vector<core::Morpheme>, core::Error> Analyzer::analyze(std::string_view text) const {
+  auto result = analyzeWithNormalizedText(text);
+  if (!result.hasValue()) {
+    return core::makeUnexpected(result.error());
+  }
+  return std::move(result.value().morphemes);
+}
+
+core::Expected<core::AnalysisOutput, core::Error> Analyzer::analyzeWithNormalizedText(std::string_view text) const {
   if (text.empty()) {
-    return std::vector<core::Morpheme>{};
+    return core::AnalysisOutput{};
   }
 
   // Normalize once up front so pretoken boundaries and morpheme offsets share a
@@ -182,19 +190,21 @@ core::Expected<std::vector<core::Morpheme>, core::Error> Analyzer::analyze(std::
   }
   std::string normalized = std::get<std::string>(std::move(norm_result));
   if (normalized.empty()) {
-    return std::vector<core::Morpheme>{};
+    return core::AnalysisOutput{std::move(normalized), {}};
   }
   std::string_view norm_text = normalized;
 
   if (norm_text.size() <= kMaxChunkBytes) {  // short text: process directly
-    return analyzeWithPretokenizer(norm_text, 0);
+    auto morphemes = analyzeWithPretokenizer(norm_text, 0);
+    return core::AnalysisOutput{std::move(normalized), std::move(morphemes)};
   }
 
   // Long text: split at sentence boundaries before pretokenizer
   // This prevents pretokenizer from scanning 100MB+ in one pass.
-  return chunkBySentenceBoundary(norm_text, 0, [this](std::string_view chunk, size_t chunk_char_offset) {
+  auto morphemes = chunkBySentenceBoundary(norm_text, 0, [this](std::string_view chunk, size_t chunk_char_offset) {
     return analyzeWithPretokenizer(chunk, chunk_char_offset);
   });
+  return core::AnalysisOutput{std::move(normalized), std::move(morphemes)};
 }
 
 std::vector<core::Morpheme> Analyzer::analyzeWithPretokenizer(std::string_view text, size_t base_char_offset) const {
@@ -364,7 +374,7 @@ std::vector<core::Morpheme> Analyzer::pathToMorphemes(const core::ViterbiResult&
     morpheme.features.is_dictionary = edge.fromDictionary();
     morpheme.features.is_user_dict = edge.fromUserDict();
     morpheme.features.is_formal_noun = edge.isFormalNoun();
-    morpheme.features.is_low_info = edge.isLowInfo();
+    morpheme.features.is_low_info = edge.isLowInfo() || core::isLowInformation(edge.extended_pos);
     morpheme.features.score = edge.cost;
     morpheme.is_from_dictionary = edge.fromDictionary();
     morpheme.is_unknown = edge.isUnknown();

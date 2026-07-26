@@ -87,7 +87,6 @@ core::Lattice Tokenizer::buildLattice(std::string_view text, const std::vector<c
         addHiraganaCompoundVerbJoinCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
         addVerbSuffixNounJoinCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
       }
-      addTeFormAuxiliaryCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
     }
 
     SUZUME_DEBUG_LOG("[LATTICE] pos=" << pos << " candidates=" << lattice.edgeIdsAt(pos).size() << "\n");
@@ -201,14 +200,6 @@ void Tokenizer::addPronounPluralJoinCandidates(core::Lattice& lattice, std::stri
                                                const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
                                                size_t start_pos) const {
   analysis::addPronounPluralJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, dict_manager_, scorer_);
-}
-
-void Tokenizer::addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
-                                             const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
-                                             size_t start_pos,
-                                             const std::vector<normalize::CharType>& char_types) const {
-  analysis::addTeFormAuxiliaryCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types, scorer_,
-                                         inflection_);
 }
 
 void Tokenizer::addTaruAdjectiveJoinCandidates(core::Lattice& lattice, std::string_view text,

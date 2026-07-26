@@ -28,6 +28,8 @@ namespace suzume::analysis {
 using ByteOffsets = std::vector<size_t>;
 using PartOfSpeechMask = uint32_t;
 
+inline constexpr size_t kDictionaryLookbehindChars = 8;
+
 constexpr PartOfSpeechMask partOfSpeechMask(core::PartOfSpeech pos) {
   return 1U << static_cast<uint8_t>(pos);
 }
@@ -99,6 +101,13 @@ inline size_t byteOffsetAt(const ByteOffsets& byte_offsets, size_t char_pos) {
 }
 
 /**
+ * @brief Return the UTF-8 text covered by a character range.
+ *
+ * Invalid, empty, or out-of-bounds ranges resolve to an empty view.
+ */
+std::string_view textRange(std::string_view text, const ByteOffsets& byte_offsets, size_t start, size_t end);
+
+/**
  * @brief Advance a character position until its byte offset reaches a target
  *
  * Starting from @p start_char (whose UTF-8 byte offset is @p start_byte), walk
@@ -122,6 +131,13 @@ std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t sta
 
 /** Whether a position begins a case/topic/nominalizer particle sequence. */
 bool startsNominalForcingParticle(const std::vector<char32_t>& codepoints, size_t pos);
+
+/** Whether a particle category can turn a preceding continuative into a nominal head. */
+bool isNominalForcingParticle(core::ExtendedPOS extended_pos);
+
+/** Whether dictionary evidence at a position starts a nominal-forcing particle. */
+bool hasNominalForcingParticleContinuation(const std::vector<char32_t>& codepoints, size_t pos,
+                                           const dictionary::DictionaryManager* dict_manager);
 
 /** Whether a position begins a multi-character non-particle dictionary entry. */
 bool startsLongerNonParticleEntry(const std::vector<char32_t>& codepoints, size_t start_pos,

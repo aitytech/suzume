@@ -146,21 +146,6 @@ class Tokenizer {
                                       size_t start_pos) const;
 
   /**
-   * @brief Add te-form + auxiliary verb split candidates
-   *
-   * Detects patterns where a verb in te-form is followed by auxiliary verbs
-   * like いく, くる, みる, おく, しまう and generates split candidates.
-   *
-   * Examples:
-   *   "学んでいきたい" → ["学んで" + "いきたい"]
-   *   "食べてみる" → ["食べて" + "みる"]
-   *   "書いておく" → ["書いて" + "おく"]
-   */
-  void addTeFormAuxiliaryCandidates(core::Lattice& lattice, std::string_view text,
-                                    const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
-                                    size_t start_pos, const std::vector<normalize::CharType>& char_types) const;
-
-  /**
    * @brief Add taru-adjective adverb join candidates (X然と pattern)
    *
    * Detects X然と patterns and generates single adverb candidates.

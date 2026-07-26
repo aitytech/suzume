@@ -50,14 +50,6 @@ bool allCharsAre(const std::vector<normalize::CharType>& char_types, const std::
   return true;
 }
 
-std::string_view textRange(std::string_view text, const ByteOffsets& byte_offsets, size_t start, size_t end) {
-  if (start >= end || end >= byte_offsets.size()) {
-    return {};
-  }
-  const size_t byte_start = byte_offsets[start];
-  return text.substr(byte_start, byte_offsets[end] - byte_start);
-}
-
 // A copular irrealis form followed by the volitional auxiliary is a
 // grammatical auxiliary sequence, not an unknown lexical verb.  Keeping the
 // sequence visible prevents a short pure-hiragana verb candidate from hiding
@@ -332,16 +324,24 @@ bool hasCompleteInternalConstituentBoundary(const core::Lattice& lattice,
                                             const std::vector<UnknownCandidate>& batch_candidates,
                                             const UnknownCandidate& candidate) {
   for (size_t split = candidate.start + 1; split < candidate.end; ++split) {
-    const std::string_view right_surface = textRange(text, byte_offsets, split, candidate.end);
+    const size_t right_probe_end =
+        std::min(byte_offsets.size() - 1, std::max(candidate.end, split + static_cast<size_t>(4)));
+    const std::string_view right_probe = textRange(text, byte_offsets, split, right_probe_end);
     bool complete_right = false;
     bool right_is_auxiliary = false;
     bool right_is_adjective = false;
     bool right_is_formal_noun = false;
     bool right_is_particle = false;
+    bool right_is_connective_particle = false;
+    bool right_is_nominal_particle = false;
     bool right_is_suffix = false;
     core::ExtendedPOS right_auxiliary_epos = core::ExtendedPOS::Unknown;
-    for (const auto& match : dict_manager.lookup(right_surface, 0)) {
-      if (match.entry == nullptr || match.length != candidate.end - split) {
+    for (const auto& match : dict_manager.lookup(right_probe, 0)) {
+      // A constituent may end exactly with the fabricated continuative
+      // (見+て) or continue across its right edge (いる+あいだ). Both prove
+      // that the continuative span cuts through a stronger grammatical
+      // boundary.
+      if (match.entry == nullptr || match.length < candidate.end - split) {
         continue;
       }
       right_is_auxiliary = right_is_auxiliary || match.entry->pos == core::PartOfSpeech::Auxiliary;
@@ -352,10 +352,15 @@ bool hasCompleteInternalConstituentBoundary(const core::Lattice& lattice,
       right_is_formal_noun = right_is_formal_noun || (match.entry->pos == core::PartOfSpeech::Noun &&
                                                       match.entry->extended_pos == core::ExtendedPOS::NounFormal);
       right_is_particle = right_is_particle || match.entry->pos == core::PartOfSpeech::Particle;
+      right_is_connective_particle =
+          right_is_connective_particle || match.entry->extended_pos == core::ExtendedPOS::ParticleConj;
+      right_is_nominal_particle = right_is_nominal_particle || (match.entry->pos == core::PartOfSpeech::Particle &&
+                                                                isNominalForcingParticle(match.entry->extended_pos));
       right_is_suffix = right_is_suffix || match.entry->pos == core::PartOfSpeech::Suffix;
-      complete_right = right_is_auxiliary || right_is_adjective || right_is_formal_noun || right_is_suffix;
+      complete_right = right_is_auxiliary || right_is_adjective || right_is_formal_noun ||
+                       right_is_connective_particle || right_is_nominal_particle || right_is_suffix;
     }
-    if (!complete_right || right_is_particle) {
+    if (!complete_right || (right_is_particle && !right_is_connective_particle && !right_is_nominal_particle)) {
       continue;
     }
 
@@ -383,13 +388,20 @@ bool hasCompleteInternalConstituentBoundary(const core::Lattice& lattice,
           right_is_formal_noun &&
           (left_pos == core::PartOfSpeech::Auxiliary ||
            (left_verified && (left_pos == core::PartOfSpeech::Verb || left_pos == core::PartOfSpeech::Adjective)));
+      const bool licenses_connective_particle =
+          right_is_connective_particle && left_pos == core::PartOfSpeech::Verb &&
+          (left_epos == core::ExtendedPOS::VerbRenyokei || left_epos == core::ExtendedPOS::VerbOnbinkei);
+      const bool licenses_nominal_particle =
+          right_is_nominal_particle && left_verified &&
+          (left_pos == core::PartOfSpeech::Noun || left_pos == core::PartOfSpeech::Pronoun);
       // A closed suffix after a nominal is an explicit internal morpheme
       // boundary.  This prevents the generic kanji+hiragana nominalizer from
       // swallowing arbitrary hosts (家庭/初心者/読者 + 向け) without naming any
       // member of the open host class.
       const bool licenses_suffix = right_is_suffix && left_pos == core::PartOfSpeech::Noun &&
                                    (left_verified || !grammar::isPureHiragana(left_surface));
-      return licenses_adjective || licenses_auxiliary || licenses_formal_noun || licenses_suffix;
+      return licenses_adjective || licenses_auxiliary || licenses_formal_noun || licenses_connective_particle ||
+             licenses_nominal_particle || licenses_suffix;
     };
     bool complete_left = false;
     for (size_t edge_start = 0; edge_start <= candidate.start; ++edge_start) {
@@ -1016,10 +1028,6 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
 
     std::string surface_str(candidate.surface);
 
-    // Set HasSuffix flag for verb/adj candidates with suffix marking
-    if (candidate.has_suffix) {
-      flags |= static_cast<uint8_t>(core::EdgeFlags::HasSuffix);
-    }
     // Relay dict-verified-lemma marking so the scorer can exempt genuine verb
     // onbin forms from the spurious-onbin penalty.
     if (candidate.lemma_verified) {
@@ -1031,15 +1039,9 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     // that POS alternative without registering each open-class nominalization.
     if (candidate.pos == core::PartOfSpeech::Verb && candidate.extended_pos == core::ExtendedPOS::VerbRenyokei &&
         candidate.end < codepoints.size()) {
-      const std::string_view following_surface = textRange(text, byte_offsets, candidate.end, candidate.end + 1);
-      const auto* following_particle = dict_manager_.lookupExact(following_surface, core::PartOfSpeech::Particle);
-      const bool nominal_particle =
-          following_particle != nullptr && (following_particle->extended_pos == core::ExtendedPOS::ParticleCase ||
-                                            following_particle->extended_pos == core::ExtendedPOS::ParticleTopic ||
-                                            following_particle->extended_pos == core::ExtendedPOS::ParticleBinding ||
-                                            following_particle->extended_pos == core::ExtendedPOS::ParticleNo);
-      // A one-mora particle homograph must not hide a longer dependent
-      // predicate or closed derivational suffix beginning at the same boundary
+      const bool nominal_particle = hasNominalForcingParticleContinuation(codepoints, candidate.end, &dict_manager_);
+      // A particle homograph must not hide a longer dependent predicate or
+      // closed derivational suffix beginning at the same boundary
       // (理解+し+がたい, 読み+やすい, 遅刻+し+がち).
       // Longest closed-class evidence takes priority over the nominalized
       // renyokei alternative; a standalone が/を still licenses it.
@@ -1054,7 +1056,12 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
           break;
         }
       }
-      const bool is_lexical_noun = dict_manager_.lookupExact(surface_str, core::PartOfSpeech::Noun) != nullptr;
+      const auto same_surface_entries = dict_manager_.lookup(surface_str, 0);
+      const bool has_lexical_nonverb_reading =
+          std::any_of(same_surface_entries.begin(), same_surface_entries.end(), [&](const auto& match) {
+            return match.entry != nullptr && match.length == candidate.end - candidate.start &&
+                   match.entry->pos != core::PartOfSpeech::Verb;
+          });
       const bool is_complete_shii_adjective = isProductiveShiiAdjectiveTerminal(surface_str, inflection_);
       const bool crosses_complete_internal_boundary =
           hasCompleteInternalConstituentBoundary(lattice, dict_manager_, text, byte_offsets, candidates, candidate);
@@ -1069,9 +1076,9 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       const bool verb_reading_rejected = adjusted_cost > getCategoryCost(core::ExtendedPOS::Unknown);
       const bool bound_suffix_after_host =
           verb_helpers::isBoundSuffixAfterNominalHost(&dict_manager_, codepoints, candidate.start, candidate.surface);
-      if (nominal_particle && !longer_dependent_follows && !is_lexical_noun && !is_complete_shii_adjective &&
-          !crosses_complete_internal_boundary && !crosses_noun_nagara_ni_boundary && !verb_reading_rejected &&
-          !bound_suffix_after_host) {
+      if (nominal_particle && !longer_dependent_follows && !has_lexical_nonverb_reading &&
+          !is_complete_shii_adjective && !crosses_complete_internal_boundary && !crosses_noun_nagara_ni_boundary &&
+          !verb_reading_rejected && !bound_suffix_after_host) {
         lattice.addEdge(surface_str, static_cast<uint32_t>(candidate.start), static_cast<uint32_t>(candidate.end),
                         core::PartOfSpeech::Noun,
                         getCategoryCost(core::ExtendedPOS::NounVerbal) + candidate::kNominalizedNounParticleBonus,

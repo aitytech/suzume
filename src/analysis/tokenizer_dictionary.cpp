@@ -14,6 +14,8 @@
  * - Join candidates (delegated to join_candidates.h)
  */
 
+#include <array>
+
 #include "analysis/category_cost.h"
 #include "analysis/tokenizer.h"
 #include "candidate_constants.h"
@@ -53,12 +55,47 @@ bool isKanjiRunFollowedByAttributiveNa(const std::vector<char32_t>& codepoints, 
 // this keeps ordinary nominal uses such as 道具としても intact.
 bool hasInterrogativeEndingAt(const dictionary::DictionaryManager& dict_manager, std::string_view text,
                               const ByteOffsets& byte_offsets, size_t end_pos) {
-  for (size_t start_pos = 0; start_pos < end_pos; ++start_pos) {
+  const size_t scan_start = end_pos > kDictionaryLookbehindChars ? end_pos - kDictionaryLookbehindChars : 0;
+  for (size_t start_pos = scan_start; start_pos < end_pos; ++start_pos) {
     const size_t byte_pos = byteOffsetAt(byte_offsets, start_pos);
     for (const auto& result : dict_manager.lookup(text, byte_pos)) {
       if (result.entry != nullptr && result.entry->extended_pos == core::ExtendedPOS::PronounInterrogative &&
           start_pos + result.length == end_pos) {
         return true;
+      }
+    }
+  }
+  return false;
+}
+
+// An indefinite か can close a short interrogative nominal phrase rather than
+// only an immediately preceding pronoun: いつ+の+間+に+か, 誰+に+か. Walk
+// backward over lattice edges that can stay inside such a phrase. The bounded
+// reverse index keeps this proportional to the local candidate count.
+bool hasInterrogativeNominalPhraseEndingAt(const core::Lattice& lattice, size_t end_pos) {
+  const size_t scan_start = end_pos > kDictionaryLookbehindChars ? end_pos - kDictionaryLookbehindChars : 0;
+  std::array<bool, kDictionaryLookbehindChars + 1> reachable{};
+  reachable[end_pos - scan_start] = true;
+
+  for (size_t boundary = end_pos; boundary > scan_start; --boundary) {
+    if (!reachable[boundary - scan_start]) {
+      continue;
+    }
+    for (const uint32_t edge_id : lattice.edgeIdsEndingAt(boundary)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.start < scan_start) {
+        continue;
+      }
+      if (edge.extended_pos == core::ExtendedPOS::PronounInterrogative) {
+        return true;
+      }
+      const bool stays_in_nominal_phrase =
+          core::isNounType(edge.extended_pos) || edge.pos == core::PartOfSpeech::Suffix ||
+          edge.extended_pos == core::ExtendedPOS::ParticleCase || edge.extended_pos == core::ExtendedPOS::ParticleNo ||
+          edge.extended_pos == core::ExtendedPOS::ParticleBinding ||
+          edge.extended_pos == core::ExtendedPOS::ParticleTopic;
+      if (stays_in_nominal_phrase) {
+        reachable[edge.start - scan_start] = true;
       }
     }
   }
@@ -562,7 +599,8 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
   // どこ+か). Generate the adverbial-particle homograph only at that
   // verified boundary so a global one-mora entry cannot split lexical words
   // containing か (かかる, 静か, うれしかった).
-  if (codepoints[start_pos] == U'か' && hasInterrogativeEndingAt(dict_manager_, text, byte_offsets, start_pos)) {
+  if (codepoints[start_pos] == U'か' && (hasInterrogativeEndingAt(dict_manager_, text, byte_offsets, start_pos) ||
+                                         hasInterrogativeNominalPhraseEndingAt(lattice, start_pos))) {
     lattice.addEdge("か", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 1),
                     core::PartOfSpeech::Particle, getCategoryCost(core::ExtendedPOS::ParticleAdverbial),
                     core::LatticeEdge::kFromDictionary, "か", dictionary::ConjugationType::None,

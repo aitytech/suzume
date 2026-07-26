@@ -69,6 +69,14 @@ class Analyzer {
   core::Expected<std::vector<core::Morpheme>, core::Error> analyze(std::string_view text) const;
 
   /**
+   * @brief Analyze text and retain the normalized coordinate source.
+   *
+   * Morpheme offsets index `normalized_text`, whose length can differ from the
+   * original input after width or combining-mark normalization.
+   */
+  core::Expected<core::AnalysisOutput, core::Error> analyzeWithNormalizedText(std::string_view text) const;
+
+  /**
    * @brief Debug analyze - returns lattice information for debugging
    * @param text UTF-8 text
    * @param out_lattice Output lattice (if not null)
