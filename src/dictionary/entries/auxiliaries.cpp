@@ -443,6 +443,11 @@ EntrySpecRange getAuxiliaryEntries() {
       suffix("ずくめ", "ずくめ"),
       suffix("づくめ", "づくめ"),
 
+      // Creation suffix, voiced allomorph only: 環境づくり, 街づくり, 体づくり.
+      // The unvoiced 作り stands alone as a noun, so only the voiced form is
+      // bound and nameable here.
+      suffix("づくり", "づくり"),
+
       // Interval suffix: 一日おき, 一時間おき.
       suffix("おき", "おき"),
 
