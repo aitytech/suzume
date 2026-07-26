@@ -554,6 +554,55 @@
       ],
       "id": "ri_wo_u",
       "input": "独り言を言う"
+    },
+    {
+      "description": "Regional causal particle after a terminal-form verb",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "き",
+          "pos": "Particle",
+          "surface": "き"
+        }
+      ],
+      "id": "kuki",
+      "input": "紙書くき"
+    },
+    {
+      "description": "Regional causal particle after the past auxiliary",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "き",
+          "pos": "Particle",
+          "surface": "き"
+        }
+      ],
+      "id": "ndaki",
+      "input": "水飲んだき"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
