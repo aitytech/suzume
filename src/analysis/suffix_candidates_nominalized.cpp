@@ -259,6 +259,19 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
     }
   }
 
+  // A deverbal noun is built on the continuative stem (読み, 調べ), never on
+  // the irrealis. An a-row tail is therefore a conjugational boundary rather
+  // than a nominalization, and fabricating a noun across it swallows the verb
+  // together with its host (水飲ま+ね instead of 水/飲ま/ね). Fossilized a-row
+  // nominals are not deverbal at all and are carried by their own entries
+  // (自ら, 半ば), so the dictionary reading still wins where one exists.
+  if (grammar::isARowCodepoint(first_hiragana)) {
+    const std::string nominal_surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
+    if (dict_manager == nullptr || dict_manager->lookupExact(nominal_surface, core::PartOfSpeech::Noun) == nullptr) {
+      skip_single_char = true;
+    }
+  }
+
   // A long kanji sequence ending in an attested godan stem normally contains a
   // nominal boundary (東京+行き, 翌月+払い, ご確認+願い), rather than one unknown
   // nominalization. The boundary shows up both before a particle and before a
