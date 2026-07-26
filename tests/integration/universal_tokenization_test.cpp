@@ -5,7 +5,9 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -119,26 +121,42 @@ std::vector<TestDataEntry>& getTestData() {
   return data;
 }
 
-// Load all test data from discovered JSON files
-void loadAllTestData() {
-  auto& data = getTestData();
-  if (!data.empty()) {
-    return;  // Already loaded
-  }
+std::vector<std::string>& getLoadErrors() {
+  static std::vector<std::string> errors;
+  return errors;
+}
 
-  auto json_files = discoverJsonFiles();
+size_t& getDiscoveredFileCount() {
+  static size_t count = 0;
+  return count;
+}
+
+void appendTestData(const std::vector<fs::path>& json_files, std::vector<TestDataEntry>* data,
+                    std::vector<std::string>* errors) {
   for (const auto& json_path : json_files) {
     std::string suite_name = fileToSuiteName(json_path.filename().string());
     try {
       auto suite = JsonLoader::loadFromFile(json_path.string());
-      for (auto& tc : suite.cases) {
-        data.push_back({suite_name, json_path.string(), std::move(tc)});
+      for (auto& test_case : suite.cases) {
+        data->push_back({suite_name, json_path.string(), std::move(test_case)});
       }
-    } catch (const std::exception& e) {
-      // Skip files that fail to load
-      std::cerr << "Warning: Failed to load " << json_path << ": " << e.what() << std::endl;
+    } catch (const std::exception& error) {
+      errors->push_back(json_path.string() + ": " + error.what());
     }
   }
+}
+
+// Load all test data from discovered JSON files
+void loadAllTestData() {
+  auto& data = getTestData();
+  auto& errors = getLoadErrors();
+  if (!data.empty() || !errors.empty() || getDiscoveredFileCount() != 0) {
+    return;  // Already loaded
+  }
+
+  auto json_files = discoverJsonFiles();
+  getDiscoveredFileCount() = json_files.size();
+  appendTestData(json_files, &data, &errors);
 }
 
 // Parameterized test class
@@ -173,6 +191,35 @@ struct TestDataInitializer {
 
 // Global initializer - runs before INSTANTIATE_TEST_SUITE_P
 static TestDataInitializer g_initializer;
+
+TEST(UniversalTokenizationDataTest, AllDiscoveredJsonFilesLoad) {
+  EXPECT_GT(getDiscoveredFileCount(), 0U) << "No tokenization JSON files were discovered";
+  EXPECT_FALSE(getTestData().empty()) << "No tokenization cases were loaded";
+  for (const auto& error : getLoadErrors()) {
+    ADD_FAILURE() << "Failed to load tokenization JSON: " << error;
+  }
+}
+
+TEST(UniversalTokenizationDataTest, MalformedJsonIsReported) {
+  const auto unique_suffix = std::chrono::steady_clock::now().time_since_epoch().count();
+  const fs::path malformed_path =
+      fs::temp_directory_path() / ("suzume-malformed-tokenization-" + std::to_string(unique_suffix) + ".json");
+  {
+    std::ofstream malformed_file(malformed_path);
+    ASSERT_TRUE(malformed_file.is_open());
+    malformed_file << "{";
+  }
+
+  std::vector<TestDataEntry> data;
+  std::vector<std::string> errors;
+  appendTestData({malformed_path}, &data, &errors);
+  std::error_code remove_error;
+  fs::remove(malformed_path, remove_error);
+
+  EXPECT_TRUE(data.empty());
+  ASSERT_EQ(errors.size(), 1U);
+  EXPECT_NE(errors.front().find(malformed_path.string()), std::string::npos);
+}
 
 INSTANTIATE_TEST_SUITE_P(AutoDiscovered, UniversalTokenizationParamTest, ::testing::ValuesIn(getTestData()),
                          UniversalTestNameGenerator());

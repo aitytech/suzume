@@ -401,6 +401,28 @@
       ],
       "id": "riwo_shimu",
       "input": "山登りを楽しむ"
+    },
+    {
+      "description": "文頭の長いひらがな連用形名詞を目的格助詞の前で名詞化する回帰",
+      "expected": [
+        {
+          "lemma": "つめあわせ",
+          "pos": "Noun",
+          "surface": "つめあわせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "作る",
+          "pos": "Verb",
+          "surface": "作る"
+        }
+      ],
+      "id": "hiragana_deverbal_noun_before_object_particle",
+      "input": "つめあわせを作る"
     }
   ],
   "description": "General nouns (part 3/3)",

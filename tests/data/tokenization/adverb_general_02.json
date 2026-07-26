@@ -1996,6 +1996,48 @@
       ],
       "id": "tomo_da",
       "input": "何とも難しい"
+    },
+    {
+      "description": "Fixed adverb keeps productive interrogative nominal boundaries",
+      "expected": [
+        {
+          "lemma": "いつ",
+          "pos": "Pronoun",
+          "surface": "いつ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "interrogative_nominal_adverb_boundary",
+      "input": "いつの間にか終わった"
     }
   ],
   "description": "General adverbs (part 2/2)",

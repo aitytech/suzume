@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "description": "形容詞語幹とガル助動詞未然形の境界",
+      "expected": [
+        {
+          "lemma": "恥ずかしい",
+          "pos": "Adjective",
+          "surface": "恥ずかし"
+        },
+        {
+          "lemma": "がる",
+          "pos": "Verb",
+          "surface": "がら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "zukashigaranai",
+      "input": "恥ずかしがらない"
+    }
+  ],
+  "description": "adjective_inflection tests",
+  "version": "1.0"
+}

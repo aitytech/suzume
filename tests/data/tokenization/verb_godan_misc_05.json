@@ -1,0 +1,346 @@
+{
+  "cases": [
+    {
+      "description": "Hangul letters remain searchable",
+      "expected": [
+        {
+          "lemma": "테스트",
+          "pos": "Noun",
+          "surface": "테스트"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "wo_ru_5",
+      "input": "테스트を見る"
+    },
+    {
+      "description": "Modern CJK extension ideographs remain searchable",
+      "expected": [
+        {
+          "lemma": "𫠠",
+          "pos": "Noun",
+          "surface": "𫠠"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "wo_ru_6",
+      "input": "𫠠を見る"
+    },
+    {
+      "description": "Godan-sa lemmas are not rewritten as suru verbs",
+      "expected": [
+        {
+          "lemma": "見出す",
+          "pos": "Verb",
+          "surface": "見出し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shita_7",
+      "input": "見出した"
+    },
+    {
+      "description": "P3-1 multi-character nominal-forcing particle after deverbal noun",
+      "expected": [
+        {
+          "lemma": "答え",
+          "pos": "Noun",
+          "surface": "答え"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "edakewo_ru",
+      "input": "答えだけを見る"
+    },
+    {
+      "description": "P3-2 clause-final Ichidan continuative",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "まとめる",
+          "pos": "Verb",
+          "surface": "まとめ"
+        }
+      ],
+      "id": "womatome",
+      "input": "資料をまとめ"
+    },
+    {
+      "description": "P3-2 clause-final Ichidan continuative",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "投げる",
+          "pos": "Verb",
+          "surface": "投げ"
+        }
+      ],
+      "id": "wo_ge_2",
+      "input": "荷物を投げ"
+    },
+    {
+      "description": "P3-2 clause-final Ichidan continuative",
+      "expected": [
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "助ける",
+          "pos": "Verb",
+          "surface": "助け"
+        }
+      ],
+      "id": "wo_ke",
+      "input": "人を助け"
+    },
+    {
+      "description": "P3-3 Godan ta-row continuative before desiderative auxiliary",
+      "expected": [
+        {
+          "lemma": "もつ",
+          "pos": "Verb",
+          "surface": "もち"
+        },
+        {
+          "lemma": "たい",
+          "pos": "Auxiliary",
+          "surface": "たい"
+        }
+      ],
+      "id": "mochitai",
+      "input": "もちたい"
+    },
+    {
+      "description": "P3-4 kana Godan ka-row stem must not become Kuru",
+      "expected": [
+        {
+          "lemma": "かく",
+          "pos": "Verb",
+          "surface": "かき"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "kakimasu",
+      "input": "かきます"
+    },
+    {
+      "description": "P3-4 kana Godan ka-row stem must not become Kuru",
+      "expected": [
+        {
+          "lemma": "さく",
+          "pos": "Verb",
+          "surface": "さき"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "sakimasu",
+      "input": "さきます"
+    },
+    {
+      "description": "P3-5 case particle boundary before independent verb",
+      "expected": [
+        {
+          "lemma": "バス",
+          "pos": "Noun",
+          "surface": "バス"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Verb",
+          "surface": "いく"
+        }
+      ],
+      "id": "deiku",
+      "input": "バスでいく"
+    },
+    {
+      "description": "P3-5 case particle boundary after pronoun",
+      "expected": [
+        {
+          "lemma": "そちら",
+          "pos": "Pronoun",
+          "surface": "そちら"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やる"
+        }
+      ],
+      "id": "sochiradeyaru",
+      "input": "そちらでやる"
+    },
+    {
+      "description": "P3-6 single application of copular hypothetical connection rule",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あれ"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続ける"
+        }
+      ],
+      "id": "deare_keru",
+      "input": "本であれ続ける"
+    },
+    {
+      "description": "P3-7 boundary cost and lexical verb guard",
+      "expected": [
+        {
+          "lemma": "さえる",
+          "pos": "Verb",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "映画",
+          "pos": "Noun",
+          "surface": "映画"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "saenai_dattta",
+      "input": "さえない映画だった"
+    },
+    {
+      "description": "P3-7 sentence-initial verb boundary",
+      "expected": [
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "ので",
+          "pos": "Particle",
+          "surface": "ので"
+        },
+        {
+          "lemma": "驚く",
+          "pos": "Verb",
+          "surface": "驚い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "itanode_ita",
+      "input": "いたので驚いた"
+    }
+  ],
+  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
+  "version": "1.0"
+}

@@ -2810,8 +2810,52 @@
       ],
       "id": "wo_kimasue",
       "input": "紙を書きますえ"
+    },
+    {
+      "description": "Unicode Latin letters remain searchable",
+      "expected": [
+        {
+          "lemma": "café",
+          "pos": "Noun",
+          "surface": "café"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "caf_wo_ru",
+      "input": "caféを見る"
+    },
+    {
+      "description": "Cyrillic letters remain searchable",
+      "expected": [
+        {
+          "lemma": "тест",
+          "pos": "Noun",
+          "surface": "тест"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "wo_ru_4",
+      "input": "тестを見る"
     }
   ],
-  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/4)",
+  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 4/5)",
   "version": "1.0"
 }

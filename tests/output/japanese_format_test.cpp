@@ -16,6 +16,7 @@
 #include "grammar/conjugation.h"
 #include "postprocess/lemmatizer.h"
 #include "postprocess/lemmatizer_internal.h"
+#include "postprocess/postprocessor.h"
 #include "suzume.h"
 
 namespace suzume::output::test {
@@ -178,6 +179,164 @@ TEST(LemmatizerTest, DictionarySuruPassiveReturnsSuruLemma) {
   morpheme.surface = "確認されて";
   morpheme.lemma = "確認されて";
   EXPECT_EQ(lemmatizer.lemmatize(morpheme), "確認する");
+}
+
+TEST(LemmatizerTest, ClassicalSuruFixPreservesGodanSaAcrossAllCallPaths) {
+  using dictionary::ConjugationType;
+  using postprocess::lemmatizer_detail::fixSuruClassical;
+
+  EXPECT_TRUE(fixSuruClassical("見出す", ConjugationType::GodanSa).empty());
+  EXPECT_EQ(fixSuruClassical("確認す", ConjugationType::Suru), "確認する");
+
+  postprocess::Lemmatizer lemmatizer;
+  for (const auto& [surface, lemma] :
+       std::array<std::pair<std::string_view, std::string_view>, 2>{{{"見出し", "見出す"}, {"見通し", "見通す"}}}) {
+    core::Morpheme morpheme;
+    morpheme.surface = surface;
+    morpheme.lemma = lemma;
+    morpheme.pos = core::PartOfSpeech::Verb;
+    morpheme.conj_type = ConjugationType::GodanSa;
+    EXPECT_EQ(lemmatizer.lemmatize(morpheme), lemma);
+
+    morpheme.surface = lemma;
+    morpheme.lemma = lemma;
+    EXPECT_EQ(lemmatizer.lemmatize(morpheme), lemma);
+  }
+}
+
+TEST(PostprocessorTest, DisablingLemmatizationPreservesAnnotationsAndOriginalLemma) {
+  std::vector<core::Morpheme> input(2);
+  input[0].surface = "伺い";
+  input[0].lemma = "伺い";
+  input[0].pos = core::PartOfSpeech::Noun;
+  input[0].extended_pos = core::ExtendedPOS::Noun;
+  input[1].surface = "ます";
+  input[1].lemma = "ます";
+  input[1].pos = core::PartOfSpeech::Auxiliary;
+  input[1].extended_pos = core::ExtendedPOS::AuxTenseMasu;
+
+  postprocess::PostprocessOptions enabled_options;
+  postprocess::Postprocessor enabled(enabled_options);
+  const auto with_lemmas = enabled.process(input);
+
+  postprocess::PostprocessOptions disabled_options;
+  disabled_options.lemmatize = false;
+  postprocess::Postprocessor disabled(disabled_options);
+  const auto without_lemmas = disabled.process(input);
+
+  ASSERT_EQ(with_lemmas.size(), without_lemmas.size());
+  ASSERT_EQ(without_lemmas.size(), 2);
+  EXPECT_EQ(with_lemmas[0].lemma, "伺う");
+  EXPECT_EQ(without_lemmas[0].lemma, "伺い");
+  for (size_t idx = 0; idx < with_lemmas.size(); ++idx) {
+    EXPECT_EQ(without_lemmas[idx].surface, with_lemmas[idx].surface);
+    EXPECT_EQ(without_lemmas[idx].pos, with_lemmas[idx].pos);
+    EXPECT_EQ(without_lemmas[idx].extended_pos, with_lemmas[idx].extended_pos);
+    EXPECT_EQ(without_lemmas[idx].conj_type, with_lemmas[idx].conj_type);
+    EXPECT_EQ(without_lemmas[idx].conj_form, with_lemmas[idx].conj_form);
+  }
+  EXPECT_EQ(without_lemmas[0].pos, core::PartOfSpeech::Verb);
+  EXPECT_EQ(without_lemmas[0].extended_pos, core::ExtendedPOS::VerbRenyokei);
+  EXPECT_EQ(without_lemmas[0].conj_form, grammar::ConjForm::Renyokei);
+}
+
+TEST(PostprocessorTest, ClauseFinalERowPreservesIchidanRenyokei) {
+  using dictionary::ConjugationType;
+
+  dictionary::DictionaryManager dict_manager;
+  auto user_dict = std::make_shared<dictionary::UserDictionary>();
+  user_dict->addEntry({"まとめる", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "まとめる"});
+  dict_manager.addUserDictionary(user_dict);
+
+  constexpr std::array<std::pair<std::string_view, std::string_view>, 3> kCases = {{
+      {"まとめ", "まとめる"},
+      {"投げ", "投げる"},
+      {"助け", "助ける"},
+  }};
+  postprocess::Postprocessor postprocessor(&dict_manager);
+  for (const auto& [surface, lemma] : kCases) {
+    SCOPED_TRACE(surface);
+    std::vector<core::Morpheme> input(2);
+    input[0].surface = "を";
+    input[0].lemma = "を";
+    input[0].pos = core::PartOfSpeech::Particle;
+    input[0].extended_pos = core::ExtendedPOS::ParticleCase;
+    input[1].surface = surface;
+    input[1].lemma = lemma;
+    input[1].pos = core::PartOfSpeech::Verb;
+    input[1].extended_pos = core::ExtendedPOS::VerbRenyokei;
+    input[1].conj_type = ConjugationType::Ichidan;
+    input[1].conj_form = grammar::ConjForm::Renyokei;
+
+    const auto result = postprocessor.process(std::move(input));
+
+    ASSERT_EQ(result.size(), 2);
+    EXPECT_EQ(result[1].lemma, lemma);
+    EXPECT_EQ(result[1].extended_pos, core::ExtendedPOS::VerbRenyokei);
+    EXPECT_EQ(result[1].conj_type, ConjugationType::Ichidan);
+    EXPECT_EQ(result[1].conj_form, grammar::ConjForm::Renyokei);
+  }
+}
+
+TEST(PostprocessorTest, ClauseFinalERowStillRepairsGodanImperative) {
+  using dictionary::ConjugationType;
+
+  dictionary::DictionaryManager dict_manager;
+  auto user_dict = std::make_shared<dictionary::UserDictionary>();
+  user_dict->addEntry({"急ぐ", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "急ぐ"});
+  dict_manager.addUserDictionary(user_dict);
+
+  std::vector<core::Morpheme> input(2);
+  input[0].surface = "が";
+  input[0].lemma = "が";
+  input[0].pos = core::PartOfSpeech::Particle;
+  input[0].extended_pos = core::ExtendedPOS::ParticleCase;
+  input[1].surface = "急げ";
+  input[1].lemma = "急ぐ";
+  input[1].pos = core::PartOfSpeech::Verb;
+  input[1].extended_pos = core::ExtendedPOS::VerbRenyokei;
+  input[1].conj_type = ConjugationType::Ichidan;
+  input[1].conj_form = grammar::ConjForm::Renyokei;
+
+  postprocess::Postprocessor postprocessor(&dict_manager);
+  const auto result = postprocessor.process(std::move(input));
+
+  ASSERT_EQ(result.size(), 2);
+  EXPECT_EQ(result[1].lemma, "急ぐ");
+  EXPECT_EQ(result[1].extended_pos, core::ExtendedPOS::VerbMeireikei);
+  EXPECT_EQ(result[1].conj_type, ConjugationType::GodanGa);
+  EXPECT_EQ(result[1].conj_form, grammar::ConjForm::Meireikei);
+}
+
+TEST(PostprocessorTest, ClauseFinalERowPrefersGodanWhenBothDictionaryFormsExist) {
+  using dictionary::ConjugationType;
+
+  dictionary::DictionaryManager dict_manager;
+  auto user_dict = std::make_shared<dictionary::UserDictionary>();
+  user_dict->addEntry({"読む", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "読む"});
+  user_dict->addEntry({"読める", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "読める"});
+  dict_manager.addUserDictionary(user_dict);
+
+  std::vector<core::Morpheme> input(2);
+  input[0].surface = "を";
+  input[0].lemma = "を";
+  input[0].pos = core::PartOfSpeech::Particle;
+  input[0].extended_pos = core::ExtendedPOS::ParticleCase;
+  input[1].surface = "読め";
+  input[1].lemma = "読める";
+  input[1].pos = core::PartOfSpeech::Verb;
+  input[1].extended_pos = core::ExtendedPOS::VerbRenyokei;
+  input[1].conj_type = ConjugationType::Ichidan;
+  input[1].conj_form = grammar::ConjForm::Renyokei;
+
+  postprocess::Postprocessor postprocessor(&dict_manager);
+  const auto result = postprocessor.process(std::move(input));
+
+  ASSERT_EQ(result.size(), 2);
+  EXPECT_EQ(result[1].lemma, "読む");
+  EXPECT_EQ(result[1].extended_pos, core::ExtendedPOS::VerbMeireikei);
+  EXPECT_EQ(result[1].conj_type, ConjugationType::GodanMa);
+  EXPECT_EQ(result[1].conj_form, grammar::ConjForm::Meireikei);
 }
 
 TEST(LemmatizerTest, FallbackGodanMizenRulesUseCanonicalRows) {

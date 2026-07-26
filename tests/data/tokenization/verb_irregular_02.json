@@ -58,6 +58,28 @@
       ],
       "id": "ga_nu",
       "input": "花が来ぬ"
+    },
+    {
+      "description": "P3-4 kana Kuru dictionary expansion",
+      "expected": [
+        {
+          "lemma": "友達",
+          "pos": "Noun",
+          "surface": "友達"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Verb",
+          "surface": "くる"
+        }
+      ],
+      "id": "gakuru",
+      "input": "友達がくる"
     }
   ],
   "description": "Irregular verbs (する、くる) (part 2/2)",
