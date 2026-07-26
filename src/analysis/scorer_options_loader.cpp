@@ -1,8 +1,8 @@
 #include "analysis/scorer_options_loader.h"
 
 #include <array>
-#include <cctype>
 #include <cfloat>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #ifndef __EMSCRIPTEN__
@@ -10,254 +10,165 @@
 #include <iostream>
 #include <sstream>
 #endif
+#include <string>
 #include <string_view>
-#include <utility>
-#include <vector>
+#include <type_traits>
 
 namespace suzume::analysis {
 
-namespace scorer_options_loader_detail {
-
-struct JsonValue {
-  enum class Type { Null, Number, String, Object, Array };
-  Type type = Type::Null;
-  float number_value{};
-  std::string string_value;
-  std::vector<std::pair<std::string, JsonValue>> object_value;
-
-  bool isNumber() const { return type == Type::Number; }
-  bool isObject() const { return type == Type::Object; }
-
-  float asFloat() const { return number_value; }
-  const JsonValue* get(const std::string& key) const {
-    for (const auto& [name, value] : object_value) {
-      if (name == key) {
-        return &value;
-      }
-    }
-    return nullptr;
-  }
-};
-
-}  // namespace scorer_options_loader_detail
-
 namespace {
 
-template <typename Options>
-struct FloatOptionSpec {
-  const char* name;
-  float Options::*value;
+// Every tunable option is a float inside ScorerOptions, so one byte offset locates
+// any of them. Addressing options that way lets a single reader serve all sections
+// instead of instantiating the same lookup-and-assign code per option struct.
+static_assert(std::is_standard_layout_v<ScorerOptions>, "scorer options are addressed by byte offset");
+
+struct OptionSpec {
+  std::string_view name;
+  size_t offset;  // relative to the section struct, not to ScorerOptions
 };
 
-constexpr std::array<FloatOptionSpec<JoinOptions>, 3> kJoinOptionSpecs{{
-    {"compound_verb_bonus", &JoinOptions::compound_verb_bonus},
-    {"verified_v1_bonus", &JoinOptions::verified_v1_bonus},
-    {"verified_noun_bonus", &JoinOptions::verified_noun_bonus},
+// The public option name and the member it writes are one definition; stringizing
+// the member keeps a renamed field from silently keeping its old JSON name.
+#define SUZUME_OPTION(Section, field) \
+  OptionSpec {                        \
+    #field, offsetof(Section, field)  \
+  }
+
+constexpr std::array<OptionSpec, 3> kJoinOptionSpecs{{
+    SUZUME_OPTION(JoinOptions, compound_verb_bonus),
+    SUZUME_OPTION(JoinOptions, verified_v1_bonus),
+    SUZUME_OPTION(JoinOptions, verified_noun_bonus),
 }};
 
-constexpr std::array<FloatOptionSpec<SplitOptions>, 10> kSplitOptionSpecs{{
-    {"alpha_kanji_bonus", &SplitOptions::alpha_kanji_bonus},
-    {"alpha_katakana_bonus", &SplitOptions::alpha_katakana_bonus},
-    {"digit_kanji_1_bonus", &SplitOptions::digit_kanji_1_bonus},
-    {"digit_kanji_2_bonus", &SplitOptions::digit_kanji_2_bonus},
-    {"duration_period_bonus", &SplitOptions::duration_period_bonus},
-    {"digit_kanji_3_penalty", &SplitOptions::digit_kanji_3_penalty},
-    {"dict_split_bonus", &SplitOptions::dict_split_bonus},
-    {"split_base_cost", &SplitOptions::split_base_cost},
-    {"noun_verb_split_bonus", &SplitOptions::noun_verb_split_bonus},
-    {"verified_verb_bonus", &SplitOptions::verified_verb_bonus},
+constexpr std::array<OptionSpec, 10> kSplitOptionSpecs{{
+    SUZUME_OPTION(SplitOptions, alpha_kanji_bonus),
+    SUZUME_OPTION(SplitOptions, alpha_katakana_bonus),
+    SUZUME_OPTION(SplitOptions, digit_kanji_1_bonus),
+    SUZUME_OPTION(SplitOptions, digit_kanji_2_bonus),
+    SUZUME_OPTION(SplitOptions, duration_period_bonus),
+    SUZUME_OPTION(SplitOptions, digit_kanji_3_penalty),
+    SUZUME_OPTION(SplitOptions, dict_split_bonus),
+    SUZUME_OPTION(SplitOptions, split_base_cost),
+    SUZUME_OPTION(SplitOptions, noun_verb_split_bonus),
+    SUZUME_OPTION(SplitOptions, verified_verb_bonus),
 }};
 
-constexpr std::array<FloatOptionSpec<ScorerOptions>, 8> kUnaryOptionSpecs{{
-    {"noun_prior", &ScorerOptions::noun_prior},
-    {"verb_prior", &ScorerOptions::verb_prior},
-    {"adj_prior", &ScorerOptions::adj_prior},
-    {"adv_prior", &ScorerOptions::adv_prior},
-    {"particle_prior", &ScorerOptions::particle_prior},
-    {"aux_prior", &ScorerOptions::aux_prior},
-    {"pronoun_prior", &ScorerOptions::pronoun_prior},
-    {"user_dict_bonus", &ScorerOptions::user_dict_bonus},
+constexpr std::array<OptionSpec, 8> kUnaryOptionSpecs{{
+    SUZUME_OPTION(ScorerOptions, noun_prior),
+    SUZUME_OPTION(ScorerOptions, verb_prior),
+    SUZUME_OPTION(ScorerOptions, adj_prior),
+    SUZUME_OPTION(ScorerOptions, adv_prior),
+    SUZUME_OPTION(ScorerOptions, particle_prior),
+    SUZUME_OPTION(ScorerOptions, aux_prior),
+    SUZUME_OPTION(ScorerOptions, pronoun_prior),
+    SUZUME_OPTION(ScorerOptions, user_dict_bonus),
 }};
 
-constexpr std::array<FloatOptionSpec<VerbCandidateOptions>, 21> kVerbOptionSpecs{{
-    {"confidence_low", &VerbCandidateOptions::confidence_low},
-    {"confidence_standard", &VerbCandidateOptions::confidence_standard},
-    {"confidence_past_te", &VerbCandidateOptions::confidence_past_te},
-    {"confidence_ichidan_dict", &VerbCandidateOptions::confidence_ichidan_dict},
-    {"confidence_short_godan_base", &VerbCandidateOptions::confidence_short_godan_base},
-    {"confidence_dict_verb", &VerbCandidateOptions::confidence_dict_verb},
-    {"confidence_katakana", &VerbCandidateOptions::confidence_katakana},
-    {"confidence_high", &VerbCandidateOptions::confidence_high},
-    {"confidence_very_high", &VerbCandidateOptions::confidence_very_high},
-    {"base_cost_standard", &VerbCandidateOptions::base_cost_standard},
-    {"base_cost_high", &VerbCandidateOptions::base_cost_high},
-    {"base_cost_low", &VerbCandidateOptions::base_cost_low},
-    {"base_cost_verified", &VerbCandidateOptions::base_cost_verified},
-    {"base_cost_long_verified", &VerbCandidateOptions::base_cost_long_verified},
-    {"bonus_ichidan", &VerbCandidateOptions::bonus_ichidan},
-    {"bonus_long_dict", &VerbCandidateOptions::bonus_long_dict},
-    {"bonus_long_verified", &VerbCandidateOptions::bonus_long_verified},
-    {"penalty_single_char", &VerbCandidateOptions::penalty_single_char},
-    {"confidence_cost_scale", &VerbCandidateOptions::confidence_cost_scale},
-    {"confidence_cost_scale_small", &VerbCandidateOptions::confidence_cost_scale_small},
-    {"confidence_cost_scale_medium", &VerbCandidateOptions::confidence_cost_scale_medium},
+constexpr std::array<OptionSpec, 21> kVerbOptionSpecs{{
+    SUZUME_OPTION(VerbCandidateOptions, confidence_low),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_standard),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_past_te),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_ichidan_dict),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_short_godan_base),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_dict_verb),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_katakana),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_high),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_very_high),
+    SUZUME_OPTION(VerbCandidateOptions, base_cost_standard),
+    SUZUME_OPTION(VerbCandidateOptions, base_cost_high),
+    SUZUME_OPTION(VerbCandidateOptions, base_cost_low),
+    SUZUME_OPTION(VerbCandidateOptions, base_cost_verified),
+    SUZUME_OPTION(VerbCandidateOptions, base_cost_long_verified),
+    SUZUME_OPTION(VerbCandidateOptions, bonus_ichidan),
+    SUZUME_OPTION(VerbCandidateOptions, bonus_long_dict),
+    SUZUME_OPTION(VerbCandidateOptions, bonus_long_verified),
+    SUZUME_OPTION(VerbCandidateOptions, penalty_single_char),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_cost_scale),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_cost_scale_small),
+    SUZUME_OPTION(VerbCandidateOptions, confidence_cost_scale_medium),
 }};
 
-constexpr std::array<FloatOptionSpec<grammar::InflectionScorerOptions>, 28> kInflectionOptionSpecs{{
-    {"base_confidence", &grammar::InflectionScorerOptions::base_confidence},
-    {"confidence_floor", &grammar::InflectionScorerOptions::confidence_floor},
-    {"confidence_ceiling", &grammar::InflectionScorerOptions::confidence_ceiling},
-    {"penalty_stem_very_long", &grammar::InflectionScorerOptions::penalty_stem_very_long},
-    {"penalty_stem_long", &grammar::InflectionScorerOptions::penalty_stem_long},
-    {"bonus_stem_two_char", &grammar::InflectionScorerOptions::bonus_stem_two_char},
-    {"bonus_aux_length_per_byte", &grammar::InflectionScorerOptions::bonus_aux_length_per_byte},
-    {"penalty_ichidan_potential_ambiguity", &grammar::InflectionScorerOptions::penalty_ichidan_potential_ambiguity},
-    {"bonus_ichidan_e_row", &grammar::InflectionScorerOptions::bonus_ichidan_e_row},
-    {"penalty_ichidan_looks_godan", &grammar::InflectionScorerOptions::penalty_ichidan_looks_godan},
-    {"penalty_ichidan_kanji_i", &grammar::InflectionScorerOptions::penalty_ichidan_kanji_i},
-    {"penalty_ichidan_kanji_hiragana_stem", &grammar::InflectionScorerOptions::penalty_ichidan_kanji_hiragana_stem},
-    {"penalty_ichidan_irregular_stem", &grammar::InflectionScorerOptions::penalty_ichidan_irregular_stem},
-    {"penalty_i_adj_single_kanji", &grammar::InflectionScorerOptions::penalty_i_adj_single_kanji},
-    {"penalty_i_adj_verb_aux_pattern", &grammar::InflectionScorerOptions::penalty_i_adj_verb_aux_pattern},
-    {"bonus_i_adj_compound_yasui_nikui", &grammar::InflectionScorerOptions::bonus_i_adj_compound_yasui_nikui},
-    {"penalty_i_adj_e_row_stem", &grammar::InflectionScorerOptions::penalty_i_adj_e_row_stem},
-    {"penalty_i_adj_ru_stem_invalid", &grammar::InflectionScorerOptions::penalty_i_adj_ru_stem_invalid},
-    {"penalty_i_adj_verb_rashii_pattern", &grammar::InflectionScorerOptions::penalty_i_adj_verb_rashii_pattern},
-    {"bonus_suru_two_kanji", &grammar::InflectionScorerOptions::bonus_suru_two_kanji},
-    {"penalty_godan_sa_two_kanji", &grammar::InflectionScorerOptions::penalty_godan_sa_two_kanji},
-    {"bonus_godan_sa_single_kanji", &grammar::InflectionScorerOptions::bonus_godan_sa_single_kanji},
-    {"penalty_suru_single_kanji", &grammar::InflectionScorerOptions::penalty_suru_single_kanji},
-    {"penalty_ichidan_single_hiragana_particle",
-     &grammar::InflectionScorerOptions::penalty_ichidan_single_hiragana_particle},
-    {"penalty_pure_hiragana_stem", &grammar::InflectionScorerOptions::penalty_pure_hiragana_stem},
-    {"penalty_godan_single_hiragana_stem", &grammar::InflectionScorerOptions::penalty_godan_single_hiragana_stem},
-    {"penalty_godan_non_ra_pure_hiragana", &grammar::InflectionScorerOptions::penalty_godan_non_ra_pure_hiragana},
-    {"penalty_godan_te_stem", &grammar::InflectionScorerOptions::penalty_godan_te_stem},
+constexpr std::array<OptionSpec, 28> kInflectionOptionSpecs{{
+    SUZUME_OPTION(grammar::InflectionScorerOptions, base_confidence),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, confidence_floor),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, confidence_ceiling),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_stem_very_long),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_stem_long),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, bonus_stem_two_char),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, bonus_aux_length_per_byte),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_ichidan_potential_ambiguity),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, bonus_ichidan_e_row),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_ichidan_looks_godan),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_ichidan_kanji_i),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_ichidan_kanji_hiragana_stem),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_ichidan_irregular_stem),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_i_adj_single_kanji),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_i_adj_verb_aux_pattern),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, bonus_i_adj_compound_yasui_nikui),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_i_adj_e_row_stem),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_i_adj_ru_stem_invalid),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_i_adj_verb_rashii_pattern),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, bonus_suru_two_kanji),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_godan_sa_two_kanji),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, bonus_godan_sa_single_kanji),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_suru_single_kanji),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_ichidan_single_hiragana_particle),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_pure_hiragana_stem),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_godan_single_hiragana_stem),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_godan_non_ra_pure_hiragana),
+    SUZUME_OPTION(grammar::InflectionScorerOptions, penalty_godan_te_stem),
 }};
 
-template <typename Options, size_t Size>
-void applyOptionSpecs(Options& options, const JsonValue& json,
-                      const std::array<FloatOptionSpec<Options>, Size>& specs) {
-  for (const auto& spec : specs) {
-    const JsonValue* value = json.get(spec.name);
-    if (value != nullptr && value->isNumber()) {
-      options.*(spec.value) = value->asFloat();
-    }
-  }
+#undef SUZUME_OPTION
+
+// Where each section's struct starts inside ScorerOptions. The unary options are
+// members of ScorerOptions itself, so their section starts at the root.
+constexpr size_t kUnaryBase = 0;
+constexpr size_t kJoinBase = offsetof(ScorerOptions, candidates) + offsetof(CandidateOptions, join);
+constexpr size_t kSplitBase = offsetof(ScorerOptions, candidates) + offsetof(CandidateOptions, split);
+constexpr size_t kVerbBase = offsetof(ScorerOptions, candidates) + offsetof(CandidateOptions, verb);
+constexpr size_t kInflectionBase = offsetof(ScorerOptions, inflection);
+
+struct SectionSpec {
+  std::string_view key;   // key inside its parent object
+  std::string_view path;  // qualified name used in diagnostics
+  size_t base;
+  const OptionSpec* options;
+  size_t option_count;
+};
+
+constexpr std::array<SectionSpec, 2> kCandidateSections{{
+    {"join", "candidates.join", kJoinBase, kJoinOptionSpecs.data(), kJoinOptionSpecs.size()},
+    {"split", "candidates.split", kSplitBase, kSplitOptionSpecs.data(), kSplitOptionSpecs.size()},
+}};
+
+constexpr std::array<SectionSpec, 3> kRootOptionSections{{
+    {"unary", "unary", kUnaryBase, kUnaryOptionSpecs.data(), kUnaryOptionSpecs.size()},
+    {"verb_candidates", "verb_candidates", kVerbBase, kVerbOptionSpecs.data(), kVerbOptionSpecs.size()},
+    {"inflection", "inflection", kInflectionBase, kInflectionOptionSpecs.data(), kInflectionOptionSpecs.size()},
+}};
+
+float& optionAt(ScorerOptions& options, size_t offset) {
+  return *reinterpret_cast<float*>(reinterpret_cast<std::byte*>(&options) + offset);
 }
 
-template <typename Spec, size_t Size>
-bool hasOptionName(std::string_view name, const std::array<Spec, Size>& specs) {
-  for (const auto& spec : specs) {
-    if (name == spec.name) {
-      return true;
+const SectionSpec* findSection(const SectionSpec* sections, size_t count, std::string_view key) {
+  for (size_t index = 0; index < count; ++index) {
+    if (sections[index].key == key) {
+      return &sections[index];
     }
   }
-  return false;
+  return nullptr;
 }
 
-template <size_t Size>
-bool hasOptionName(std::string_view name, const std::array<std::string_view, Size>& names) {
-  for (std::string_view candidate : names) {
-    if (name == candidate) {
-      return true;
+const OptionSpec* findOption(const SectionSpec& section, std::string_view name) {
+  for (size_t index = 0; index < section.option_count; ++index) {
+    if (section.options[index].name == name) {
+      return &section.options[index];
     }
   }
-  return false;
-}
-
-template <typename Spec, size_t Size>
-bool validateOptionObject(const JsonValue& json, const std::array<Spec, Size>& specs, std::string_view path,
-                          std::string* error_message) {
-  for (const auto& [name, value] : json.object_value) {
-    if (!hasOptionName(name, specs)) {
-      if (error_message != nullptr) {
-        *error_message = "Unknown scorer option: " + std::string(path) + "." + name;
-      }
-      return false;
-    }
-    if (!value.isNumber()) {
-      if (error_message != nullptr) {
-        *error_message = "Scorer option must be numeric: " + std::string(path) + "." + name;
-      }
-      return false;
-    }
-  }
-  return true;
-}
-
-bool validateObject(const JsonValue& parent, const char* key, std::string_view path, const JsonValue** output,
-                    std::string* error_message) {
-  const JsonValue* value = parent.get(key);
-  if (value == nullptr) {
-    *output = nullptr;
-    return true;
-  }
-  if (!value->isObject()) {
-    if (error_message != nullptr) {
-      *error_message = "Scorer section must be an object: " + std::string(path);
-    }
-    return false;
-  }
-  *output = value;
-  return true;
-}
-
-bool validateConfig(const JsonValue& root, std::string* error_message) {
-  constexpr std::array<std::string_view, 5> kRootSections{"candidates", "unary", "bigram", "verb_candidates",
-                                                          "inflection"};
-  for (const auto& [name, value] : root.object_value) {
-    (void)value;
-    if (!hasOptionName(name, kRootSections)) {
-      if (error_message != nullptr) {
-        *error_message = "Unknown scorer section: " + name;
-      }
-      return false;
-    }
-  }
-
-  const JsonValue* candidates = nullptr;
-  if (!validateObject(root, "candidates", "candidates", &candidates, error_message)) {
-    return false;
-  }
-  if (candidates != nullptr) {
-    constexpr std::array<std::string_view, 2> kCandidateSections{"join", "split"};
-    for (const auto& [name, value] : candidates->object_value) {
-      (void)value;
-      if (!hasOptionName(name, kCandidateSections)) {
-        if (error_message != nullptr) {
-          *error_message = "Unknown scorer section: candidates." + name;
-        }
-        return false;
-      }
-    }
-    const JsonValue* join = nullptr;
-    const JsonValue* split = nullptr;
-    if (!validateObject(*candidates, "join", "candidates.join", &join, error_message) ||
-        !validateObject(*candidates, "split", "candidates.split", &split, error_message)) {
-      return false;
-    }
-    if ((join != nullptr && !validateOptionObject(*join, kJoinOptionSpecs, "candidates.join", error_message)) ||
-        (split != nullptr && !validateOptionObject(*split, kSplitOptionSpecs, "candidates.split", error_message))) {
-      return false;
-    }
-  }
-
-  const JsonValue* unary = nullptr;
-  const JsonValue* bigram = nullptr;
-  const JsonValue* verb = nullptr;
-  const JsonValue* inflection = nullptr;
-  if (!validateObject(root, "unary", "unary", &unary, error_message) ||
-      !validateObject(root, "bigram", "bigram", &bigram, error_message) ||
-      !validateObject(root, "verb_candidates", "verb_candidates", &verb, error_message) ||
-      !validateObject(root, "inflection", "inflection", &inflection, error_message)) {
-    return false;
-  }
-  return (unary == nullptr || validateOptionObject(*unary, kUnaryOptionSpecs, "unary", error_message)) &&
-         (bigram == nullptr || validateOptionObject(*bigram, kBigramOverrideSpecs, "bigram", error_message)) &&
-         (verb == nullptr || validateOptionObject(*verb, kVerbOptionSpecs, "verb_candidates", error_message)) &&
-         (inflection == nullptr ||
-          validateOptionObject(*inflection, kInflectionOptionSpecs, "inflection", error_message));
+  return nullptr;
 }
 
 // Powers of ten that are exactly representable in double; 1e22 is the largest.
@@ -279,7 +190,7 @@ constexpr int kUnderflowExponent = -60;
 // std::strtof would do this, but the libc scanner it calls computes in 128-bit
 // long double, which drags the software floating-point helpers (__addtf3,
 // __multf3, __divtf3, fmodl and the scanner internals) into the WASM binary —
-// about 7 KB of code for one configuration knob. The caller has already limited
+// about 14 KB of code for one configuration knob. The caller has already limited
 // the token to [-]digits[.digits][(e|E)[+-]digits], so a direct conversion
 // covers the whole accepted grammar.
 //
@@ -387,281 +298,440 @@ bool convertDecimalToFloat(std::string_view text, float& out) {
   return true;
 }
 
-}  // namespace
+// Single-pass reader for a scorer configuration document.
+//
+// The accepted document is a fixed two-level shape — section, option name, number —
+// so the reader checks names, converts values, and stages them in one traversal
+// rather than materializing a generic value tree and walking it again. Values are
+// staged on the caller's behalf only after the whole document reads cleanly.
+//
+// Diagnostics keep the wording the tree-based loader used. A document with several
+// independent mistakes now reports the first one in document order instead of the
+// order the sections happened to be validated in.
+class ConfigReader {
+ public:
+  ConfigReader(std::string_view json, ScorerOptions& staged, std::string* error_message)
+      : json_(json), staged_(staged), error_message_(error_message) {}
 
-JsonValue ScorerOptionsLoader::Parser::parse() {
-  skipWhitespace();
-  JsonValue value = parseValue();
-  skipWhitespace();
-  if (!has_error_ && peek() != '\0') {
-    setError("Trailing content after JSON value");
-  }
-  return value;
-}
+  bool read();
 
-void ScorerOptionsLoader::Parser::setError(const char* msg) {
-  if (!has_error_) {
-    has_error_ = true;
-    error_message_ = msg;
-  }
-}
+ private:
+  bool readRootObject();
+  bool readCandidates();
+  bool readOptionSection(const SectionSpec& section);
+  bool readBigramSection();
+  bool readSectionKeyValue(std::string& key);
+  bool readOptionValue(std::string_view path, const std::string& name, float& out);
+  bool enterSection(std::string_view path);
+  bool readString(std::string& out);
+  bool readNumber(float& out);
+  bool skipValue();
+  void skipWhitespace();
+  char peek() const;
+  bool match(char expected);
+  bool fail(std::string message);
+  bool failParse(const char* message);
 
-JsonValue ScorerOptionsLoader::Parser::parseValue() {
-  if (has_error_)
-    return JsonValue{};
-  skipWhitespace();
-  char c = peek();
-  if (c == '{')
-    return parseObject();
-  if (c == '[')
-    return parseArray();
-  if (c == '"')
-    return parseString();
-  if (c == '-' || (c >= '0' && c <= '9'))
-    return parseNumber();
-  if (c == 'n' && json_.compare(pos_, 4, "null") == 0) {
-    pos_ += 4;
-    return JsonValue{};
-  }
-  if (c == 't' && json_.compare(pos_, 4, "true") == 0) {
-    pos_ += 4;
-    JsonValue v;
-    v.type = JsonValue::Type::Number;
-    v.number_value = 1.0F;
-    return v;
-  }
-  if (c == 'f' && json_.compare(pos_, 5, "false") == 0) {
-    pos_ += 5;
-    JsonValue v;
-    v.type = JsonValue::Type::Number;
-    v.number_value = 0.0F;
-    return v;
-  }
-  setError("Unexpected character in JSON");
-  return JsonValue{};
-}
+  std::string_view json_;
+  ScorerOptions& staged_;
+  std::string* error_message_;
+  size_t pos_{0};
+};
 
-JsonValue ScorerOptionsLoader::Parser::parseObject() {
-  JsonValue result;
-  if (has_error_)
-    return result;
-  result.type = JsonValue::Type::Object;
-  consume();  // '{'
-  skipWhitespace();
-  if (match('}')) {
-    return result;
-  }
-  while (!has_error_) {
-    if (peek() == '\0') {
-      setError("Unterminated object");
-      return result;
-    }
-    if (peek() != '"') {
-      setError("Expected string key in object");
-      return result;
-    }
-    auto key = parseString();
-    if (has_error_)
-      return result;
-    skipWhitespace();
-    if (!match(':')) {
-      setError("Expected ':' in object");
-      return result;
-    }
-    skipWhitespace();
-    JsonValue value = parseValue();
-    if (has_error_)
-      return result;
-    bool replaced = false;
-    for (auto& [existing_key, existing_value] : result.object_value) {
-      if (existing_key == key.string_value) {
-        existing_value = std::move(value);
-        replaced = true;
-        break;
-      }
-    }
-    if (!replaced) {
-      result.object_value.emplace_back(std::move(key.string_value), std::move(value));
-    }
-    skipWhitespace();
-    if (match('}')) {
-      return result;
-    }
-    if (!match(',')) {
-      setError("Expected ',' or '}' in object");
-      return result;
-    }
-    skipWhitespace();
-  }
-  return result;
-}
-
-JsonValue ScorerOptionsLoader::Parser::parseArray() {
-  JsonValue result;
-  if (has_error_)
-    return result;
-  result.type = JsonValue::Type::Array;
-  consume();  // '['
-  skipWhitespace();
-  if (match(']')) {
-    return result;
-  }
-  while (!has_error_) {
-    if (peek() == '\0') {
-      setError("Unterminated array");
-      return result;
-    }
-    parseValue();  // Skip array values for now
-    if (has_error_)
-      return result;
-    skipWhitespace();
-    if (match(']')) {
-      return result;
-    }
-    if (!match(',')) {
-      setError("Expected ',' or ']' in array");
-      return result;
-    }
-    skipWhitespace();
-  }
-  return result;
-}
-
-JsonValue ScorerOptionsLoader::Parser::parseString() {
-  JsonValue result;
-  if (has_error_)
-    return result;
-  result.type = JsonValue::Type::String;
-  if (!match('"')) {
-    setError("Expected string");
-    return result;
-  }
-  while (!has_error_ && pos_ < json_.size() && json_[pos_] != '"') {
-    if (json_[pos_] == '\\' && pos_ + 1 < json_.size()) {
-      pos_++;
-      switch (json_[pos_]) {
-        case 'n':
-          result.string_value += '\n';
-          break;
-        case 't':
-          result.string_value += '\t';
-          break;
-        case '"':
-          result.string_value += '"';
-          break;
-        case '\\':
-          result.string_value += '\\';
-          break;
-        default:
-          result.string_value += json_[pos_];
-          break;
-      }
-    } else {
-      result.string_value += json_[pos_];
-    }
-    pos_++;
-  }
-  if (pos_ < json_.size() && json_[pos_] == '"') {
-    consume();  // '"'
-  } else {
-    setError("Unterminated string");
-  }
-  return result;
-}
-
-JsonValue ScorerOptionsLoader::Parser::parseNumber() {
-  JsonValue result;
-  if (has_error_)
-    return result;
-  result.type = JsonValue::Type::Number;
-  size_t start = pos_;
-  if (peek() == '-')
-    consume();
-  while (pos_ < json_.size() && (json_[pos_] >= '0' && json_[pos_] <= '9'))
-    pos_++;
-  if (pos_ < json_.size() && json_[pos_] == '.') {
-    pos_++;
-    while (pos_ < json_.size() && (json_[pos_] >= '0' && json_[pos_] <= '9'))
-      pos_++;
-  }
-  if (pos_ < json_.size() && (json_[pos_] == 'e' || json_[pos_] == 'E')) {
-    pos_++;
-    if (pos_ < json_.size() && (json_[pos_] == '+' || json_[pos_] == '-'))
-      pos_++;
-    while (pos_ < json_.size() && (json_[pos_] >= '0' && json_[pos_] <= '9'))
-      pos_++;
-  }
-  if (pos_ == start) {
-    setError("Invalid number in JSON");
-    return result;
-  }
-  // Exception-free parse: the converter reports a malformed or out-of-range token
-  // instead of throwing, and rejects the same inputs the strtof path rejected
-  // through a trailing character or ERANGE.
-  float parsed{};
-  if (!convertDecimalToFloat(std::string_view(json_).substr(start, pos_ - start), parsed)) {
-    setError("Invalid number in JSON");
-    return result;
-  }
-  result.number_value = parsed;
-  return result;
-}
-
-void ScorerOptionsLoader::Parser::skipWhitespace() {
+void ConfigReader::skipWhitespace() {
   while (pos_ < json_.size() &&
          (json_[pos_] == ' ' || json_[pos_] == '\t' || json_[pos_] == '\n' || json_[pos_] == '\r')) {
-    pos_++;
+    ++pos_;
   }
 }
 
-char ScorerOptionsLoader::Parser::peek() const {
+char ConfigReader::peek() const {
   return pos_ < json_.size() ? json_[pos_] : '\0';
 }
 
-char ScorerOptionsLoader::Parser::consume() {
-  if (pos_ >= json_.size()) {
-    setError("Unexpected end of JSON");
-    return '\0';
-  }
-  return json_[pos_++];
-}
-
-bool ScorerOptionsLoader::Parser::match(char c) {
-  if (peek() == c) {
-    consume();
+bool ConfigReader::match(char expected) {
+  if (peek() == expected) {
+    ++pos_;
     return true;
   }
   return false;
 }
 
-void ScorerOptionsLoader::applyJoinOptions(JoinOptions& opts, const JsonValue& json) {
-  applyOptionSpecs(opts, json, kJoinOptionSpecs);
+bool ConfigReader::fail(std::string message) {
+  if (error_message_ != nullptr) {
+    *error_message_ = std::move(message);
+  }
+  return false;
 }
 
-void ScorerOptionsLoader::applySplitOptions(SplitOptions& opts, const JsonValue& json) {
-  applyOptionSpecs(opts, json, kSplitOptionSpecs);
+bool ConfigReader::failParse(const char* message) {
+  return fail(std::string("JSON parse error: ") + message);
 }
 
-void ScorerOptionsLoader::applyUnaryOptions(ScorerOptions& opts, const JsonValue& json) {
-  applyOptionSpecs(opts, json, kUnaryOptionSpecs);
-}
-
-void ScorerOptionsLoader::applyBigramOptions(ScorerOptions::BigramOverrides& opts, const JsonValue& json) {
-  for (const BigramOverrideSpec& spec : kBigramOverrideSpecs) {
-    const JsonValue* value = json.get(spec.name);
-    if (value != nullptr && value->isNumber()) {
-      opts.*(spec.value) = value->asFloat();
+bool ConfigReader::readString(std::string& out) {
+  if (!match('"')) {
+    return failParse("Expected string");
+  }
+  while (pos_ < json_.size() && json_[pos_] != '"') {
+    if (json_[pos_] == '\\' && pos_ + 1 < json_.size()) {
+      ++pos_;
+      switch (json_[pos_]) {
+        case 'n':
+          out += '\n';
+          break;
+        case 't':
+          out += '\t';
+          break;
+        default:
+          out += json_[pos_];
+          break;
+      }
+    } else {
+      out += json_[pos_];
     }
+    ++pos_;
+  }
+  if (pos_ >= json_.size()) {
+    return failParse("Unterminated string");
+  }
+  ++pos_;  // closing quote
+  return true;
+}
+
+bool ConfigReader::readNumber(float& out) {
+  const size_t start = pos_;
+  if (peek() == '-') {
+    ++pos_;
+  }
+  while (pos_ < json_.size() && json_[pos_] >= '0' && json_[pos_] <= '9') {
+    ++pos_;
+  }
+  if (pos_ < json_.size() && json_[pos_] == '.') {
+    ++pos_;
+    while (pos_ < json_.size() && json_[pos_] >= '0' && json_[pos_] <= '9') {
+      ++pos_;
+    }
+  }
+  if (pos_ < json_.size() && (json_[pos_] == 'e' || json_[pos_] == 'E')) {
+    ++pos_;
+    if (pos_ < json_.size() && (json_[pos_] == '+' || json_[pos_] == '-')) {
+      ++pos_;
+    }
+    while (pos_ < json_.size() && json_[pos_] >= '0' && json_[pos_] <= '9') {
+      ++pos_;
+    }
+  }
+  if (pos_ == start || !convertDecimalToFloat(json_.substr(start, pos_ - start), out)) {
+    return failParse("Invalid number in JSON");
+  }
+  return true;
+}
+
+bool ConfigReader::skipValue() {
+  const char lead = peek();
+  if (lead == '{') {
+    ++pos_;
+    skipWhitespace();
+    if (match('}')) {
+      return true;
+    }
+    while (true) {
+      if (peek() == '\0') {
+        return failParse("Unterminated object");
+      }
+      if (peek() != '"') {
+        return failParse("Expected string key in object");
+      }
+      std::string ignored;
+      if (!readString(ignored)) {
+        return false;
+      }
+      skipWhitespace();
+      if (!match(':')) {
+        return failParse("Expected ':' in object");
+      }
+      skipWhitespace();
+      if (!skipValue()) {
+        return false;
+      }
+      skipWhitespace();
+      if (match('}')) {
+        return true;
+      }
+      if (!match(',')) {
+        return failParse("Expected ',' or '}' in object");
+      }
+      skipWhitespace();
+    }
+  }
+  if (lead == '[') {
+    ++pos_;
+    skipWhitespace();
+    if (match(']')) {
+      return true;
+    }
+    while (true) {
+      if (peek() == '\0') {
+        return failParse("Unterminated array");
+      }
+      if (!skipValue()) {
+        return false;
+      }
+      skipWhitespace();
+      if (match(']')) {
+        return true;
+      }
+      if (!match(',')) {
+        return failParse("Expected ',' or ']' in array");
+      }
+      skipWhitespace();
+    }
+  }
+  if (lead == '"') {
+    std::string ignored;
+    return readString(ignored);
+  }
+  if (lead == '-' || (lead >= '0' && lead <= '9')) {
+    float ignored{};
+    return readNumber(ignored);
+  }
+  if (json_.compare(pos_, 4, "null") == 0 || json_.compare(pos_, 4, "true") == 0) {
+    pos_ += 4;
+    return true;
+  }
+  if (json_.compare(pos_, 5, "false") == 0) {
+    pos_ += 5;
+    return true;
+  }
+  return failParse("Unexpected character in JSON");
+}
+
+bool ConfigReader::enterSection(std::string_view path) {
+  if (peek() == '{') {
+    return true;
+  }
+  // The document still has to be well formed before its shape is judged, so a
+  // broken value reports the scanner's complaint rather than the type error.
+  if (!skipValue()) {
+    return false;
+  }
+  return fail("Scorer section must be an object: " + std::string(path));
+}
+
+bool ConfigReader::readSectionKeyValue(std::string& key) {
+  if (peek() == '\0') {
+    return failParse("Unterminated object");
+  }
+  if (peek() != '"') {
+    return failParse("Expected string key in object");
+  }
+  if (!readString(key)) {
+    return false;
+  }
+  skipWhitespace();
+  if (!match(':')) {
+    return failParse("Expected ':' in object");
+  }
+  skipWhitespace();
+  return true;
+}
+
+// JSON booleans stand in for numbers, which is how the tree-based loader read
+// them: true became 1 and false became 0.
+constexpr float kJsonTrue = 1.0F;
+constexpr float kJsonFalse = 0.0F;
+
+bool ConfigReader::readOptionValue(std::string_view path, const std::string& name, float& out) {
+  const char lead = peek();
+  if (lead == '-' || (lead >= '0' && lead <= '9')) {
+    return readNumber(out);
+  }
+  if (json_.compare(pos_, 4, "true") == 0) {
+    pos_ += 4;
+    out = kJsonTrue;
+    return true;
+  }
+  if (json_.compare(pos_, 5, "false") == 0) {
+    pos_ += 5;
+    out = kJsonFalse;
+    return true;
+  }
+  if (!skipValue()) {
+    return false;
+  }
+  return fail("Scorer option must be numeric: " + std::string(path) + "." + name);
+}
+
+bool ConfigReader::readOptionSection(const SectionSpec& section) {
+  if (!enterSection(section.path)) {
+    return false;
+  }
+  ++pos_;  // '{'
+  skipWhitespace();
+  if (match('}')) {
+    return true;
+  }
+  while (true) {
+    std::string name;
+    if (!readSectionKeyValue(name)) {
+      return false;
+    }
+    const OptionSpec* option = findOption(section, name);
+    if (option == nullptr) {
+      return fail("Unknown scorer option: " + std::string(section.path) + "." + name);
+    }
+    float value{};
+    if (!readOptionValue(section.path, name, value)) {
+      return false;
+    }
+    optionAt(staged_, section.base + option->offset) = value;
+    skipWhitespace();
+    if (match('}')) {
+      return true;
+    }
+    if (!match(',')) {
+      return failParse("Expected ',' or '}' in object");
+    }
+    skipWhitespace();
   }
 }
 
-void ScorerOptionsLoader::applyVerbCandidateOptions(VerbCandidateOptions& opts, const JsonValue& json) {
-  applyOptionSpecs(opts, json, kVerbOptionSpecs);
+bool ConfigReader::readBigramSection() {
+  if (!enterSection("bigram")) {
+    return false;
+  }
+  ++pos_;  // '{'
+  skipWhitespace();
+  if (match('}')) {
+    return true;
+  }
+  while (true) {
+    std::string name;
+    if (!readSectionKeyValue(name)) {
+      return false;
+    }
+    const BigramOverrideSpec* override_spec = nullptr;
+    for (const BigramOverrideSpec& spec : kBigramOverrideSpecs) {
+      if (name == spec.name) {
+        override_spec = &spec;
+        break;
+      }
+    }
+    if (override_spec == nullptr) {
+      return fail("Unknown scorer option: bigram." + name);
+    }
+    float value{};
+    if (!readOptionValue("bigram", name, value)) {
+      return false;
+    }
+    staged_.bigram.*(override_spec->value) = value;
+    skipWhitespace();
+    if (match('}')) {
+      return true;
+    }
+    if (!match(',')) {
+      return failParse("Expected ',' or '}' in object");
+    }
+    skipWhitespace();
+  }
 }
 
-void ScorerOptionsLoader::applyInflectionOptions(grammar::InflectionScorerOptions& opts, const JsonValue& json) {
-  applyOptionSpecs(opts, json, kInflectionOptionSpecs);
+bool ConfigReader::readCandidates() {
+  if (!enterSection("candidates")) {
+    return false;
+  }
+  ++pos_;  // '{'
+  skipWhitespace();
+  if (match('}')) {
+    return true;
+  }
+  while (true) {
+    std::string key;
+    if (!readSectionKeyValue(key)) {
+      return false;
+    }
+    const SectionSpec* section = findSection(kCandidateSections.data(), kCandidateSections.size(), key);
+    if (section == nullptr) {
+      return fail("Unknown scorer section: candidates." + key);
+    }
+    if (!readOptionSection(*section)) {
+      return false;
+    }
+    skipWhitespace();
+    if (match('}')) {
+      return true;
+    }
+    if (!match(',')) {
+      return failParse("Expected ',' or '}' in object");
+    }
+    skipWhitespace();
+  }
 }
+
+bool ConfigReader::readRootObject() {
+  ++pos_;  // '{'
+  skipWhitespace();
+  if (match('}')) {
+    return true;
+  }
+  while (true) {
+    std::string key;
+    if (!readSectionKeyValue(key)) {
+      return false;
+    }
+    if (key == "candidates") {
+      if (!readCandidates()) {
+        return false;
+      }
+    } else if (key == "bigram") {
+      if (!readBigramSection()) {
+        return false;
+      }
+    } else {
+      const SectionSpec* section = findSection(kRootOptionSections.data(), kRootOptionSections.size(), key);
+      if (section == nullptr) {
+        return fail("Unknown scorer section: " + key);
+      }
+      if (!readOptionSection(*section)) {
+        return false;
+      }
+    }
+    skipWhitespace();
+    if (match('}')) {
+      return true;
+    }
+    if (!match(',')) {
+      return failParse("Expected ',' or '}' in object");
+    }
+    skipWhitespace();
+  }
+}
+
+bool ConfigReader::read() {
+  skipWhitespace();
+  if (peek() != '{') {
+    // The scanner ran to completion before the tree-based loader judged the root,
+    // so a malformed document still reports the scanner's complaint first.
+    if (!skipValue()) {
+      return false;
+    }
+    skipWhitespace();
+    if (peek() != '\0') {
+      return failParse("Trailing content after JSON value");
+    }
+    return fail("JSON root must be an object");
+  }
+  if (!readRootObject()) {
+    return false;
+  }
+  skipWhitespace();
+  if (peek() != '\0') {
+    return failParse("Trailing content after JSON value");
+  }
+  return true;
+}
+
+}  // namespace
 
 bool ScorerOptionsLoader::loadFromFile(const std::string& path, ScorerOptions& options, std::string* error_msg) {
 #ifdef __EMSCRIPTEN__
@@ -685,68 +755,14 @@ bool ScorerOptionsLoader::loadFromFile(const std::string& path, ScorerOptions& o
 }
 
 bool ScorerOptionsLoader::loadFromJsonString(const std::string& json, ScorerOptions& options, std::string* error_msg) {
-  Parser parser(json);
-  auto root = parser.parse();
-
-  // Check for parse errors
-  if (parser.hasError()) {
-    if (error_msg)
-      *error_msg = std::string("JSON parse error: ") + parser.errorMessage();
+  // Values are staged on a copy, so a document that fails partway through leaves
+  // the caller's options untouched exactly as validating before applying did.
+  ScorerOptions staged = options;
+  ConfigReader reader(json, staged, error_msg);
+  if (!reader.read()) {
     return false;
   }
-
-  if (!root.isObject()) {
-    if (error_msg)
-      *error_msg = "JSON root must be an object";
-    return false;
-  }
-
-  if (!validateConfig(root, error_msg)) {
-    return false;
-  }
-
-  // Apply candidates section
-  if (auto* cands = root.get("candidates")) {
-    if (cands->isObject()) {
-      if (auto* join = cands->get("join")) {
-        if (join->isObject())
-          applyJoinOptions(options.candidates.join, *join);
-      }
-      if (auto* split = cands->get("split")) {
-        if (split->isObject())
-          applySplitOptions(options.candidates.split, *split);
-      }
-    }
-  }
-
-  // Apply unary section (POS priors, penalties, bonuses, optimal length)
-  if (auto* unary = root.get("unary")) {
-    if (unary->isObject()) {
-      applyUnaryOptions(options, *unary);
-    }
-  }
-
-  // Apply bigram section (POS pair cost overrides)
-  if (auto* bigram = root.get("bigram")) {
-    if (bigram->isObject()) {
-      applyBigramOptions(options.bigram, *bigram);
-    }
-  }
-
-  // Apply verb_candidates section (verb candidate generation options)
-  if (auto* verb_cand = root.get("verb_candidates")) {
-    if (verb_cand->isObject()) {
-      applyVerbCandidateOptions(options.candidates.verb, *verb_cand);
-    }
-  }
-
-  // Apply inflection section (inflection scorer confidence adjustments)
-  if (auto* infl = root.get("inflection")) {
-    if (infl->isObject()) {
-      applyInflectionOptions(options.inflection, *infl);
-    }
-  }
-
+  options = staged;
   return true;
 }
 
@@ -776,17 +792,16 @@ bool tryGetEnvFloat(const char* name, float& out, bool report_warnings) {
   return true;
 }
 
-template <typename Options, size_t Size>
-int applySpecs(const char* section, Options& options, const std::array<FloatOptionSpec<Options>, Size>& specs,
+int applySpecs(const char* section, ScorerOptions& options, size_t base, const OptionSpec* specs, size_t count,
                bool report_warnings) {
-  int count = 0;
-  for (const auto& spec : specs) {
-    const std::string variable_name = std::string("SUZUME_SCORER_") + section + "_" + spec.name;
-    if (tryGetEnvFloat(variable_name.c_str(), options.*(spec.value), report_warnings)) {
-      ++count;
+  int applied = 0;
+  for (size_t index = 0; index < count; ++index) {
+    const std::string variable_name = std::string("SUZUME_SCORER_") + section + "_" + std::string(specs[index].name);
+    if (tryGetEnvFloat(variable_name.c_str(), optionAt(options, base + specs[index].offset), report_warnings)) {
+      ++applied;
     }
   }
-  return count;
+  return applied;
 }
 
 }  // namespace env_override_internal
@@ -799,23 +814,23 @@ int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options, bool report_w
   using namespace env_override_internal;
   int count = 0;
 
-  count += applySpecs("JOIN", options.candidates.join, kJoinOptionSpecs, report_warnings);
-  count += applySpecs("SPLIT", options.candidates.split, kSplitOptionSpecs, report_warnings);
-  count += applySpecs("UNARY", options, kUnaryOptionSpecs, report_warnings);
+  count += applySpecs("JOIN", options, kJoinBase, kJoinOptionSpecs.data(), kJoinOptionSpecs.size(), report_warnings);
+  count +=
+      applySpecs("SPLIT", options, kSplitBase, kSplitOptionSpecs.data(), kSplitOptionSpecs.size(), report_warnings);
+  count +=
+      applySpecs("UNARY", options, kUnaryBase, kUnaryOptionSpecs.data(), kUnaryOptionSpecs.size(), report_warnings);
 
   // Bigram options (SUZUME_SCORER_BIGRAM_*)
-  {
-    auto& opts = options.bigram;
-    for (const BigramOverrideSpec& spec : kBigramOverrideSpecs) {
-      const std::string variable_name = std::string("SUZUME_SCORER_BIGRAM_") + spec.name;
-      if (tryGetEnvFloat(variable_name.c_str(), opts.*(spec.value), report_warnings)) {
-        ++count;
-      }
+  for (const BigramOverrideSpec& spec : kBigramOverrideSpecs) {
+    const std::string variable_name = std::string("SUZUME_SCORER_BIGRAM_") + spec.name;
+    if (tryGetEnvFloat(variable_name.c_str(), options.bigram.*(spec.value), report_warnings)) {
+      ++count;
     }
   }
 
-  count += applySpecs("VERB", options.candidates.verb, kVerbOptionSpecs, report_warnings);
-  count += applySpecs("INFL", options.inflection, kInflectionOptionSpecs, report_warnings);
+  count += applySpecs("VERB", options, kVerbBase, kVerbOptionSpecs.data(), kVerbOptionSpecs.size(), report_warnings);
+  count += applySpecs("INFL", options, kInflectionBase, kInflectionOptionSpecs.data(), kInflectionOptionSpecs.size(),
+                      report_warnings);
 
   return count;
 }

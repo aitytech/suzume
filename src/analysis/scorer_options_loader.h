@@ -23,12 +23,6 @@
 
 namespace suzume::analysis {
 
-namespace scorer_options_loader_detail {
-struct JsonValue;
-}
-
-using JsonValue = scorer_options_loader_detail::JsonValue;
-
 /// Result of loading scorer options from environment
 struct ScorerLoadResult {
   std::string config_path;    // Path to JSON config file (if loaded)
@@ -68,53 +62,6 @@ class ScorerOptionsLoader {
   static ScorerLoadResult loadFromEnv(ScorerOptions& options);
   static ScorerLoadResult loadFromEnv(ScorerOptions& options, bool report_warnings);
 #endif
-
- private:
-  /// Apply join options from JSON
-  static void applyJoinOptions(JoinOptions& opts, const JsonValue& json);
-
-  /// Apply split options from JSON
-  static void applySplitOptions(SplitOptions& opts, const JsonValue& json);
-
-  /// Apply unary options (POS priors, penalties, bonuses) from JSON
-  static void applyUnaryOptions(ScorerOptions& opts, const JsonValue& json);
-
-  /// Apply bigram override options from JSON
-  static void applyBigramOptions(ScorerOptions::BigramOverrides& opts, const JsonValue& json);
-
-  /// Apply verb candidate options from JSON
-  static void applyVerbCandidateOptions(VerbCandidateOptions& opts, const JsonValue& json);
-
-  /// Apply inflection scorer options from JSON
-  static void applyInflectionOptions(grammar::InflectionScorerOptions& opts, const JsonValue& json);
-
-  // JSON parser internals (exception-free)
-  class Parser {
-   public:
-    explicit Parser(const std::string& json) : json_(json), pos_(0) {}
-    JsonValue parse();
-
-    // Error state accessors
-    bool hasError() const { return has_error_; }
-    const std::string& errorMessage() const { return error_message_; }
-
-   private:
-    JsonValue parseValue();
-    JsonValue parseObject();
-    JsonValue parseArray();
-    JsonValue parseString();
-    JsonValue parseNumber();
-    void skipWhitespace();
-    char peek() const;
-    char consume();
-    bool match(char c);
-    void setError(const char* msg);
-
-    std::string json_;
-    size_t pos_{0};
-    bool has_error_{false};
-    std::string error_message_;
-  };
 };
 
 }  // namespace suzume::analysis
