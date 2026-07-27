@@ -460,6 +460,25 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
           decomposesIntoMultipleParticles(codepoints, start_pos, candidate_end, dict_manager_)) {
         continue;
       }
+      // A kanji run must not end on the kanji that heads a bound suffix: the
+      // suffix owns that character together with its okurigana (画面|越し,
+      // 条件|付き), so a run reaching into it is a boundary error.
+      if (start_type == normalize::CharType::Kanji && dict_manager_ != nullptr && candidate_end < codepoints.size() &&
+          char_types[candidate_end] == normalize::CharType::Hiragana) {
+        constexpr size_t kSuffixProbe = 3;
+        const size_t probe_end = std::min(codepoints.size(), candidate_end + kSuffixProbe);
+        bool heads_bound_suffix = false;
+        for (size_t suffix_end = candidate_end + 1; suffix_end <= probe_end; ++suffix_end) {
+          if (dict_manager_->lookupExact(extractSubstring(codepoints, candidate_end - 1, suffix_end),
+                                         core::PartOfSpeech::Suffix) != nullptr) {
+            heads_bound_suffix = true;
+            break;
+          }
+        }
+        if (heads_bound_suffix && len > 1) {
+          continue;
+        }
+      }
       auto cand = makeCandidate(surface, start_pos, candidate_end, pos, cost, has_suffix, CandidateOrigin::SameType);
 #ifdef SUZUME_DEBUG_INFO
       cand.confidence = started_with_particle ? 0.7F : 1.0F;

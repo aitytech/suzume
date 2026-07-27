@@ -584,6 +584,60 @@
       ],
       "id": "raseru_2",
       "input": "確認次第知らせる"
+    },
+    {
+      "description": "画面越しに見る - regression test",
+      "expected": [
+        {
+          "lemma": "画面",
+          "pos": "Noun",
+          "surface": "画面"
+        },
+        {
+          "lemma": "越し",
+          "pos": "Suffix",
+          "surface": "越し"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "shini_ru",
+      "input": "画面越しに見る"
+    },
+    {
+      "description": "条件付きで許可 - regression test",
+      "expected": [
+        {
+          "lemma": "条件",
+          "pos": "Noun",
+          "surface": "条件"
+        },
+        {
+          "lemma": "付き",
+          "pos": "Suffix",
+          "surface": "付き"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "許可",
+          "pos": "Noun",
+          "surface": "許可"
+        }
+      ],
+      "id": "kide",
+      "input": "条件付きで許可"
     }
   ],
   "description": "suffix_general tests",

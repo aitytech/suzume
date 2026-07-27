@@ -444,6 +444,15 @@ EntrySpecRange getAuxiliaryEntries() {
       suffix("ずくめ", "ずくめ"),
       suffix("づくめ", "づくめ"),
 
+      // Intervening-medium suffix: 画面越し, 肩越し, 一年越し.  Bound to a nominal
+      // host, so its trailing し is never a sahen continuative.
+      suffix("越し", "越し"),
+      suffix("ごし", "ごし"),
+
+      // Route suffix, voiced allomorph only: 川づたい, 線路づたい.  The unvoiced
+      // 伝い stands alone as a deverbal noun, so only the bound form is nameable.
+      suffix("づたい", "づたい"),
+
       // Creation suffix, voiced allomorph only: 環境づくり, 街づくり, 体づくり.
       // The unvoiced 作り stands alone as a noun, so only the voiced form is
       // bound and nameable here.
