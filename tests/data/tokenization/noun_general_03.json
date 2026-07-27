@@ -992,6 +992,28 @@
       ],
       "id": "kakeno",
       "input": "見かけの数字"
+    },
+    {
+      "description": "名詞ホストでも口語形式名詞 もん が保たれる",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "もん",
+          "pos": "Noun",
+          "surface": "もん"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "monka",
+      "input": "確認もんか"
     }
   ],
   "description": "General nouns (part 3/3)",

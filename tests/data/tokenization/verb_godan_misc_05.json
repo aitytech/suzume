@@ -787,6 +787,28 @@
       ],
       "id": "warazu_gaaru",
       "input": "相変わらず問題がある"
+    },
+    {
+      "description": "口語形式名詞 もん が係助詞+準体助詞に割れない",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "もん",
+          "pos": "Noun",
+          "surface": "もん"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "kumonka",
+      "input": "行くもんか"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
