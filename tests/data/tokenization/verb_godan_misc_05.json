@@ -694,6 +694,38 @@
       ],
       "id": "a3_wo_u",
       "input": "A3用紙を使う"
+    },
+    {
+      "description": "fixed hypothetical nominal keeps its internal が unsplit",
+      "expected": [
+        {
+          "lemma": "万が一",
+          "pos": "Noun",
+          "surface": "万が一"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "場合",
+          "pos": "Noun",
+          "surface": "場合"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "備える",
+          "pos": "Verb",
+          "surface": "備える"
+        }
+      ],
+      "id": "ga_no_ni_eru",
+      "input": "万が一の場合に備える"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
