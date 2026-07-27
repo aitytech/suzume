@@ -159,6 +159,19 @@ bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, 
                                        const dictionary::DictionaryManager* dict_manager);
 
 /**
+ * @brief Return true when a span is a focus particle followed by more function
+ *        words (ほど+で, ばかり+に).
+ *
+ * A nominal promotion of such a span is not an unknown-word rescue: every piece
+ * is already a dictionary entry. The head has to be a focus particle spanning
+ * two or more characters, because a case particle or a single mora is just as
+ * often the opening of a lexical word whose remainder happens to be a function
+ * word too (から+だ, けん+か) — those runs are what the rescue path is for.
+ */
+bool hasFunctionWordChainDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                       const dictionary::DictionaryManager* dict_manager);
+
+/**
  * @brief Generate productive suffix candidates for hiragana sequences
  *
  * Detects productive suffix patterns attached to verb stems:

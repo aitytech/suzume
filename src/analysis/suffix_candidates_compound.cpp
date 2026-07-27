@@ -307,6 +307,33 @@ bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, 
   return false;
 }
 
+bool hasFunctionWordChainDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                       const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos < start_pos + 3) {
+    return false;
+  }
+  constexpr PartOfSpeechMask kLexicalMask =
+      partOfSpeechMask(core::PartOfSpeech::Noun) | partOfSpeechMask(core::PartOfSpeech::Verb) |
+      partOfSpeechMask(core::PartOfSpeech::Adjective) | partOfSpeechMask(core::PartOfSpeech::Adverb);
+  if (hasExactPartOfSpeech(*dict_manager, extractSubstring(codepoints, start_pos, end_pos), kLexicalMask)) {
+    return false;
+  }
+  constexpr PartOfSpeechMask kFunctionMask =
+      partOfSpeechMask(core::PartOfSpeech::Particle) | partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+  for (size_t split = start_pos + 2; split < end_pos; ++split) {
+    const auto* head =
+        dict_manager->lookupExact(extractSubstring(codepoints, start_pos, split), core::PartOfSpeech::Particle);
+    if (head == nullptr || (head->extended_pos != core::ExtendedPOS::ParticleAdverbial &&
+                            head->extended_pos != core::ExtendedPOS::ParticleBinding)) {
+      continue;
+    }
+    if (hasExactPartOfSpeech(*dict_manager, extractSubstring(codepoints, split, end_pos), kFunctionMask)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                            const std::vector<normalize::CharType>& char_types,
                                            const grammar::Inflection& inflection,
@@ -371,7 +398,11 @@ void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoin
         has_blocking_exact_reading = true;
       }
     }
+    // A chain of registered function words is never a nominal head, however
+    // strong the left selector is (という+ほど+で), so that check is not gated on
+    // the selector the way the auxiliary+particle one is.
     if (has_exact_noun || has_blocking_exact_reading ||
+        hasFunctionWordChainDecomposition(codepoints, start_pos, head_end, dict_manager) ||
         (!has_attributive_selector &&
          hasAuxiliaryParticleDecomposition(codepoints, start_pos, head_end, dict_manager))) {
       continue;

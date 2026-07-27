@@ -2014,6 +2014,38 @@
       ],
       "id": "ri_da",
       "input": "独り相撲だ"
+    },
+    {
+      "description": "Focus particle boundary after a demonstrative",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "ほど",
+          "pos": "Particle",
+          "surface": "ほど"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "korehododehanai",
+      "input": "これほどではない"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

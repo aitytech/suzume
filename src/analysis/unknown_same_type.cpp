@@ -745,7 +745,8 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
                     });
     if (len >= min_len && (right_particle || right_clause) && !crossed_verified_predicate &&
         !has_inflected_predicate_reading &&
-        !hasAuxiliaryParticleDecomposition(codepoints, start_pos, scan, dict_manager_)) {
+        !hasAuxiliaryParticleDecomposition(codepoints, start_pos, scan, dict_manager_) &&
+        !hasFunctionWordChainDecomposition(codepoints, start_pos, scan, dict_manager_)) {
       float noun_cost = getCostForType(start_type, len) + candidate::kPostParticleNounPenalty;
       // A genitive right bracket is weaker evidence than a case particle, so it
       // only makes the whole-run candidate available; it does not select it.
