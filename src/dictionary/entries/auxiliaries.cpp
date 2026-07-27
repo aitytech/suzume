@@ -84,11 +84,17 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("けむ", "けむ", EPOS::AuxVolitional),     // 過去推量 (行きけむ)
       aux("らむ", "らむ", EPOS::AuxVolitional),     // 現在推量 (行くらむ)
       // Classical タリ活用 連体形 たる (堂々たる, 確固たる). Only 連体形 is registered:
-      // 終止 たり / 未然 たら / 已然命令 たれ collide with the parallel particle たり,
-      // the conditional たら, and imperative forms, so they are intentionally omitted.
+      // 終止 たり and 未然 たら collide with the parallel particle たり and the
+      // conditional たら, and neither collision has a follower that separates it.
       aux("たる", "たり", EPOS::AuxClassicalTari),
       aux("たり", "たり", EPOS::AuxClassicalPerfect),  // 完了 (行きたり)
-      aux("り", "り", EPOS::AuxClassicalPerfect),      // 存続 (行けり)
+      // 已然形 たれ (記録したれども).  These two kana also spell the past auxiliary
+      // plus the passive (打た+れ), so unlike the two cells above this one does have
+      // a separating follower — the conjunctive particle that selects the cell — and
+      // the dictionary edge is admitted only there.  See
+      // grammar::isClassicalPerfectIzenkeiSurface.
+      aux("たれ", "たり", EPOS::AuxClassicalPerfect),
+      aux("り", "り", EPOS::AuxClassicalPerfect),  // 存続 (行けり)
       // Classical past き: only its 連体形 し and 已然形 しか survive in
       // ordinary text, and both attach to a continuative (読みし人, 見しかば).
       aux("し", "き", EPOS::AuxClassicalKi),

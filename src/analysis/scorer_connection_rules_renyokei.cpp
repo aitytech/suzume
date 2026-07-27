@@ -4,7 +4,6 @@
 #include "analysis/category_cost.h"
 #include "analysis/scorer.h"
 #include "analysis/scorer_connection_rules.h"
-#include "analysis/scorer_connection_rules_internal.h"
 #include "analysis/scorer_constants.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "core/debug.h"
@@ -244,12 +243,13 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kStrongBonus;
   }
 
-  // Classical completion たり follows the continuative form. The same surface
-  // is also the modern listing particle, whose sentence-final use is penalized
-  // at EOS; this left-side rule selects the literary auxiliary in its complete
-  // predicate construction (行き+たり).
+  // Classical completion たり follows the continuative form, and so does the
+  // 已然形 of the same auxiliary (記録し+たれ+ども). The terminal surface is also
+  // the modern listing particle, whose sentence-final use is penalized at EOS;
+  // this left-side rule selects the literary auxiliary in its complete predicate
+  // construction (行き+たり).
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
-      next.extended_pos == core::ExtendedPOS::AuxClassicalPerfect && utf8::equalsAny(next.surface, {"たり"})) {
+      next.extended_pos == core::ExtendedPOS::AuxClassicalPerfect && utf8::equalsAny(next.surface, {"たり", "たれ"})) {
     bonus += cost::kVeryStrongBonus;
   }
 
@@ -284,7 +284,7 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // bonus: without it the continuative of a homographic potential verb
   // (飲める) takes the span and the lemma with it.
   if (prev.extended_pos == core::ExtendedPOS::VerbKateikei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
-      isHypotheticalSelectingConjunctiveParticle(next.surface)) {
+      grammar::isHypotheticalSelectingConjunctiveParticle(next.surface)) {
     bonus += cost::kVeryStrongBonus;
   }
 

@@ -1273,8 +1273,13 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // clause (読みし人, 読まざりし。) and しか takes the conditional particle
     // (見しかば).  Anywhere else the same kana is the サ変 continuative
     // (消し+ます, 落ち+し+て).
-    if (result.entry->extended_pos == core::ExtendedPOS::AuxClassicalKi &&
-        !classicalPastEnvironmentFollows(dict_manager_, codepoints, end_pos, end_pos - start_pos > 1)) {
+    // The classical perfect たり contributes its own 已然形 たれ, which needs the
+    // same conjunctive particle (記録したれ+ども).
+    const bool classical_perfect_izenkei = grammar::isClassicalPerfectIzenkeiSurface(result.entry->surface) &&
+                                           result.entry->extended_pos == core::ExtendedPOS::AuxClassicalPerfect;
+    if ((result.entry->extended_pos == core::ExtendedPOS::AuxClassicalKi || classical_perfect_izenkei) &&
+        !classicalPastEnvironmentFollows(dict_manager_, codepoints, end_pos,
+                                         classical_perfect_izenkei || end_pos - start_pos > 1)) {
       continue;
     }
 

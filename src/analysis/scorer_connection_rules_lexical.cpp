@@ -35,10 +35,6 @@ bool isSingleHiraganaVerbRenyokei(const core::LatticeEdge& edge) {
          grammar::isPureHiragana(edge.surface);
 }
 
-bool isHypotheticalSelectingConjunctiveParticle(std::string_view surface) {
-  return utf8::equalsAny(surface, {"ば", "ど", "ども"});
-}
-
 float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};
 

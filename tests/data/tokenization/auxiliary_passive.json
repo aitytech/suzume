@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "description": "Passive hypothetical cell れれ keeps the conditional particle",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "karereba_ru",
+      "input": "書かれれば困る"
+    }
+  ],
+  "description": "auxiliary_passive tests",
+  "version": "1.0"
+}

@@ -180,10 +180,16 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   const bool unlicensed_tomo = tomo_particle && prev.extended_pos != core::ExtendedPOS::AuxNegativeNu &&
                                prev.extended_pos != core::ExtendedPOS::AuxVolitional &&
                                prev.extended_pos != core::ExtendedPOS::AdjRenyokei;
+  // A particle offers no inflected stem, and the passive fills the slot with its
+  // own cell れれ/られれ — so the bare 未然/連用 れ cannot carry these particles
+  // either, even though it precedes every other conjunctive particle.
+  const bool unlicensed_hypothetical_host =
+      prev.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+      prev.extended_pos == core::ExtendedPOS::ParticleBinding ||
+      (prev.extended_pos == core::ExtendedPOS::AuxPassive && !grammar::isPassiveHypotheticalCell(prev.surface));
   const bool unlicensed_hypothetical = next.extended_pos == core::ExtendedPOS::ParticleConj &&
-                                       isHypotheticalSelectingConjunctiveParticle(next.surface) &&
-                                       (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
-                                        prev.extended_pos == core::ExtendedPOS::ParticleBinding);
+                                       grammar::isHypotheticalSelectingConjunctiveParticle(next.surface) &&
+                                       unlicensed_hypothetical_host;
   if (quantifier_host || unlicensed_tomo || unlicensed_hypothetical) {
     bonus += quantifier_host ? cost::kExtremeBonus : cost::kAlmostNever;
   }

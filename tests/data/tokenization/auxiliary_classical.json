@@ -483,6 +483,48 @@
       ],
       "id": "maji",
       "input": "確認まじ"
+    },
+    {
+      "description": "Classical perfect izenkei たれ before the concessive ども",
+      "expected": [
+        {
+          "lemma": "記録",
+          "pos": "Noun",
+          "surface": "記録"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たれ"
+        },
+        {
+          "lemma": "ども",
+          "pos": "Particle",
+          "surface": "ども"
+        },
+        {
+          "lemma": "変化",
+          "pos": "Noun",
+          "surface": "変化"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shitaredomo_hanai",
+      "input": "記録したれども変化はない"
     }
   ],
   "description": "auxiliary_classical tests",
