@@ -226,6 +226,32 @@ void addHiraganaCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_v
         }
       }
 
+      // Try the V2 irrealis stem before a passive, causative or negative
+      // auxiliary (し直さ+せる). The kanji-led path already matches this cell;
+      // without the same match here the compound exists in its terminal and
+      // continuative forms but comes apart in the irrealis one, which is a
+      // difference in the host's script rather than in the grammar.
+      bool matched_v2_mizenkei = false;
+      if (matched_v2_len == 0) {
+        const auto match_mizenkei = [&](std::string_view mizenkei, bool via_reading) {
+          if (mizenkei.empty() || v2_start_byte + mizenkei.size() + core::kJapaneseCharBytes > text.size() ||
+              text.substr(v2_start_byte, mizenkei.size()) != mizenkei) {
+            return false;
+          }
+          size_t following_pos = v2_start_byte + mizenkei.size();
+          if (!isMizenkeiAuxiliaryStarter(normalize::decodeUtf8(text, following_pos))) {
+            return false;
+          }
+          matched_v2_len = mizenkei.size();
+          matched_v2_mizenkei = true;
+          matched_v2_via_reading = via_reading;
+          return true;
+        };
+        if (!match_mizenkei(generateMizenkei(v2_surface, "", v2_verb.verb_type), false)) {
+          match_mizenkei(generateMizenkei(v2_reading, "", v2_verb.verb_type), true);
+        }
+      }
+
       // Try V2 te-form euphonic stem match (e.g., こもっ from こもる for とじこもって).
       // Restricted to an exact match against the promised euphonic stem, followed by
       // て/た (or で/だ for voiced onbin), so that arbitrary inflected forms cannot

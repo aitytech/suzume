@@ -89,12 +89,17 @@ void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, siz
           return;
         }
         const char32_t follower = codepoints[end_pos];
-        const bool is_allowed = (epos == core::ExtendedPOS::VerbRenyokei &&
-                                 (follower == U'た' || follower == U'て' || follower == U'で' || follower == U'ま' ||
-                                  follower == U'な' || follower == U'ず')) ||
-                                (epos == core::ExtendedPOS::VerbMizenkei &&
-                                 (follower == U'な' || follower == U'ず' || follower == U'ら')) ||
-                                (epos == core::ExtendedPOS::VerbKateikei && follower == U'ば');
+        const bool is_allowed =
+            (epos == core::ExtendedPOS::VerbRenyokei &&
+             (follower == U'た' || follower == U'て' || follower == U'で' || follower == U'ま' || follower == U'な' ||
+              follower == U'ず')) ||
+            // The irrealis stem selects the whole voice
+            // paradigm, not only the negatives: せる and
+            // れる attach to it exactly as ない and ず do
+            // (し直さ+せる, し直さ+れる).
+            (epos == core::ExtendedPOS::VerbMizenkei &&
+             (follower == U'な' || follower == U'ず' || follower == U'ら' || follower == U'せ' || follower == U'れ')) ||
+            (epos == core::ExtendedPOS::VerbKateikei && follower == U'ば');
         if (is_allowed) {
           addCandidate(end_pos, lemma_base, epos, origin);
         }

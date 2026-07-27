@@ -396,6 +396,45 @@
       ],
       "id": "teno",
       "input": "二階建ての家"
+    },
+    {
+      "description": "対応し直させる - auto-generated",
+      "expected": [
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "し直す",
+          "pos": "Verb",
+          "surface": "し直さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "shi_saseru",
+      "input": "対応し直させる"
+    },
+    {
+      "description": "やりなおさせる - auto-generated",
+      "expected": [
+        {
+          "lemma": "やりなおす",
+          "pos": "Verb",
+          "surface": "やりなおさ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "yarinaosaseru",
+      "input": "やりなおさせる"
     }
   ],
   "description": "Compound verbs (part 5/5)",
