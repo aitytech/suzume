@@ -156,6 +156,58 @@
       ],
       "id": "ni_tari_suru",
       "input": "確認に当たり注意する"
+    },
+    {
+      "description": "確認したのであって問題ない - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Auxiliary",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shitanodeattte_nai",
+      "input": "確認したのであって問題ない"
     }
   ],
   "description": "particle_compound tests",

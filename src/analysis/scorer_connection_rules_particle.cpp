@@ -212,6 +212,25 @@ float computeCompoundParticlePoliteBonus(const core::LatticeEdge& prev, const co
   return -cost::kSevere;
 }
 
+// The copula である is the auxiliary で plus ある, so a conjunctive particle that
+// merely ends in で cannot govern ある: its で would have to be the particle's
+// own tail and the copula at once. The reading that fits is the formal noun
+// plus the copula (確認したのであって = の + で + あっ + て). A bare で is
+// exempt because there it really is the copula.
+float computeConjunctiveParticleCopulaPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  // Match the cells of ある by surface as well as by lemma: when this edge is
+  // barred the analyzer falls back to an unknown token over the same span, and
+  // a lemma-only test would let that fallback carry the very path being ruled
+  // out.
+  const bool governs_aru =
+      next.lemma == "ある" || utf8::equalsAny(next.surface, {"ある", "あっ", "あり", "あれ", "あろ", "あら"});
+  if (prev.extended_pos != core::ExtendedPOS::ParticleConj || normalize::utf8Length(prev.surface) < 2 ||
+      !utf8::endsWith(prev.surface, "で") || !governs_aru) {
+    return cost::kNeutral;
+  }
+  return cost::kProhibitive;
+}
+
 // Prefix/adverb→short-verb, symbol→particle/aux/furigana, and で+も copula rules.
 float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0

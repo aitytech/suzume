@@ -14,6 +14,9 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
 
 /** @brief Waives the particle→polite-auxiliary bar for a continuative-based compound particle. */
 float computeCompoundParticlePoliteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+
+/** @brief Bars a multi-mora conjunctive particle ending in で from governing the copular ある. */
+float computeConjunctiveParticleCopulaPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeCompoundNominalizationBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);

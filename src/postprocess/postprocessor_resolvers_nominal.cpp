@@ -102,7 +102,14 @@ void resolveNominalCaseDe(std::vector<core::Morpheme>& result) {
         predecessor.extended_pos == core::ExtendedPOS::AuxNegativeNu && predecessor.surface == "ん";
     const bool is_tendency_suffix = predecessor.extended_pos == core::ExtendedPOS::SuffixTendency;
     const bool is_adverbial_predicate = predecessor.pos == core::PartOfSpeech::Adverb;
-    if (!is_nominal && !is_na_adjective && !is_tendency_suffix && !is_adverbial_predicate && !is_contracted_negative) {
+    // The nominalizer turns the clause in front of it into the subject of a
+    // copular predicate, which is the whole point of のである. It is the one
+    // host that also licenses the onbin cell あっ: after a place noun で+あっ
+    // is the case particle plus 有る (公園であった出来事), but a nominalized
+    // clause has no such reading.
+    const bool is_nominalized_clause = predecessor.extended_pos == core::ExtendedPOS::ParticleNo;
+    if (!is_nominal && !is_na_adjective && !is_tendency_suffix && !is_adverbial_predicate && !is_contracted_negative &&
+        !is_nominalized_clause) {
       continue;
     }
     const bool follows_negative =
@@ -127,7 +134,7 @@ void resolveNominalCaseDe(std::vector<core::Morpheme>& result) {
         (successor->extended_pos == core::ExtendedPOS::AuxGozaru || follows_negative || topic_starts_copular_negative ||
          topic_starts_copular_aru || binding_is_copular ||
          (successor->extended_pos == core::ExtendedPOS::AuxCopulaDa && successor->surface != "あっ") ||
-         (is_na_adjective && successor->surface == "あっ") ||
+         ((is_na_adjective || is_nominalized_clause) && successor->surface == "あっ") ||
          utf8::equalsAny(successor->surface, {"ある", "あり", "あろ", "あれ", "ござい", "ござる"}));
     const bool na_adjective_coordination =
         is_na_adjective && successor != nullptr && successor->extended_pos == core::ExtendedPOS::AdjBasic;
@@ -147,6 +154,15 @@ void resolveNominalCaseDe(std::vector<core::Morpheme>& result) {
         aru.extended_pos = core::ExtendedPOS::AuxCopulaDa;
         aru.lemma = "ある";
         aru.conj_type = dictionary::ConjugationType::GodanRa;
+      }
+      // である is one copula, so after a nominalized clause its ある half is
+      // the auxiliary rather than the existential verb it spells.
+      if (is_nominalized_clause && successor != nullptr &&
+          utf8::equalsAny(successor->surface, {"ある", "あっ", "あり", "あろ", "あれ"})) {
+        successor->pos = core::PartOfSpeech::Auxiliary;
+        successor->extended_pos = core::ExtendedPOS::AuxCopulaDa;
+        successor->lemma = "ある";
+        successor->conj_type = dictionary::ConjugationType::GodanRa;
       }
       if (successor != nullptr && successor->surface == "ござる") {
         auto& gozaru = *successor;
