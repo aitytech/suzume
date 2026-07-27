@@ -1193,6 +1193,106 @@
       ],
       "id": "fixed_omoigakezu",
       "input": "思いがけず進める"
+    },
+    {
+      "description": "却って良い - regression test",
+      "expected": [
+        {
+          "lemma": "却って",
+          "pos": "Adverb",
+          "surface": "却って"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        }
+      ],
+      "id": "ttte_i",
+      "input": "却って良い"
+    },
+    {
+      "description": "たった一人 - regression test",
+      "expected": [
+        {
+          "lemma": "たった",
+          "pos": "Adverb",
+          "surface": "たった"
+        },
+        {
+          "lemma": "一人",
+          "pos": "Noun",
+          "surface": "一人"
+        }
+      ],
+      "id": "tattta",
+      "input": "たった一人"
+    },
+    {
+      "description": "半数近くを占める - regression test",
+      "expected": [
+        {
+          "lemma": "半数",
+          "pos": "Noun",
+          "surface": "半数"
+        },
+        {
+          "lemma": "近く",
+          "pos": "Noun",
+          "surface": "近く"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "占める",
+          "pos": "Verb",
+          "surface": "占める"
+        }
+      ],
+      "id": "kuwo_meru",
+      "input": "半数近くを占める"
+    },
+    {
+      "description": "近くの店 - regression test",
+      "expected": [
+        {
+          "lemma": "近く",
+          "pos": "Noun",
+          "surface": "近く"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "店",
+          "pos": "Noun",
+          "surface": "店"
+        }
+      ],
+      "id": "kuno",
+      "input": "近くの店"
+    },
+    {
+      "description": "近くない - regression test",
+      "expected": [
+        {
+          "lemma": "近い",
+          "pos": "Adjective",
+          "surface": "近く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "kunai_2",
+      "input": "近くない"
     }
   ],
   "description": "adverb tests",
