@@ -107,13 +107,18 @@
       "description": "Colloquial explanatory negative contraction retains auxiliary boundaries",
       "expected": [
         {
-          "lemma": "んじゃ",
-          "pos": "Conjunction",
-          "surface": "んじゃ"
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "じゃ"
         },
         {
           "lemma": "ない",
-          "pos": "Adjective",
+          "pos": "Auxiliary",
           "surface": "ない"
         },
         {
@@ -396,6 +401,38 @@
       ],
       "id": "betarashii",
       "input": "食べたらしい"
+    },
+    {
+      "description": "Nominalizer plus contracted copula before the negative",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "じゃ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "surunji_nai",
+      "input": "確認するんじゃない"
     }
   ],
   "description": "auxiliary_general tests",

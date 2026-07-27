@@ -3713,6 +3713,28 @@
       ],
       "id": "attte_suru",
       "input": "故あって参加する"
+    },
+    {
+      "description": "Search-unit boundary before the case particle",
+      "expected": [
+        {
+          "lemma": "確認次第",
+          "pos": "Noun",
+          "surface": "確認次第"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "ni_meru_2",
+      "input": "確認次第に進める"
     }
   ],
   "description": "Formal nouns (こと、もの、ところ)",

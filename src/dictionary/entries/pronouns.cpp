@@ -116,6 +116,10 @@ EntrySpecRange getPronounEntries() {
       // Interrogatives (疑問詞)
       pronoun_interrogative("いつ", ""),
       pronoun_interrogative("いくつ", ""),
+      // Kanji spelling of the same interrogatives. Without them the counter is
+      // rebuilt as a godan-ta predicate on the quantity prefix (幾/つか).
+      pronoun_interrogative("幾つ", ""),
+      pronoun_interrogative("幾ら", ""),
       pronoun_interrogative("いくら", ""),
       // どう/いかが can take だ/です (どうですか, いかがですか)
       // Register as both adverb and na-adjective for correct copula connection

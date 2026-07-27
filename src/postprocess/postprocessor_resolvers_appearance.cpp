@@ -134,6 +134,19 @@ void resolveAppearanceSouPredicate(std::vector<core::Morpheme>& result) {
 }
 
 void resolveProgressiveContractionNominalizer(std::vector<core::Morpheme>& result) {
+  // A negative auxiliary opening the text has no predicate to negate, and the
+  // copula behind it cannot supply one either. What the two spell there is the
+  // nominalizer plus that copula (んじゃないか).
+  if (result.size() >= 2 && result[0].extended_pos == core::ExtendedPOS::AuxNegativeNu &&
+      result[1].extended_pos == core::ExtendedPOS::AuxCopulaDa) {
+    retag(result[0], core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleNo, "の",
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    // What negates that copula is the auxiliary, as in any copular negative
+    // chain, not the existence adjective.
+    if (result.size() >= 3 && result[2].extended_pos == core::ExtendedPOS::AdjBasic) {
+      retagNegativeNai(result[2]);
+    }
+  }
   for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
     auto& contraction = result[idx];
     const auto& connective = result[idx - 1];

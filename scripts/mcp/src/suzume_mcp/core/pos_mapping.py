@@ -314,6 +314,39 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
             t["pos"] = "副詞"
             continue
 
+        # んじゃ is the nominalizer plus the contracted copula wherever a
+        # predicate precedes it (読む+ん+じゃ+ない). Opening a fragment, the
+        # nominalizer has no host and the analyzer falls back to the dialectal
+        # conjunction; the morphemes are the same either way.
+        if surface == "んじゃ" and pos == "接続詞":
+            t.update({"surface": "ん", "pos": "名詞", "pos_sub1": "非自立", "lemma": "ん"})
+            tokens.insert(idx + 1, {"surface": "じゃ", "pos": "助詞", "pos_sub1": "副助詞", "lemma": "じゃ"})
+            continue
+
+        # The kanji spelling of an interrogative quantity pronoun is absent from
+        # the reference dictionary, which falls back to a plain noun; the kana
+        # spelling of the same word is tagged 代名詞 (いくつ, いくら).
+        if surface in ("幾つ", "幾ら") and pos == "名詞":
+            t["pos_sub1"] = "代名詞"
+            continue
+
+        # A kanji adverb ending in に is a noun plus the case particle whenever a
+        # kanji nominal precedes it: 確認次第に is 確認次第 + に, not 確認 followed
+        # by the manner adverb 次第に. The same split happens later for the
+        # standalone adverb, but by then the search-unit merge has already run
+        # and the nominal it exposes can no longer join the noun in front of it.
+        if (
+            pos == "副詞"
+            and idx > 0
+            and regex.fullmatch(r"[\p{Han}]+に", surface)
+            and tokens[idx - 1].get("pos") == "名詞"
+            and is_all_kanji(tokens[idx - 1].get("surface", ""))
+        ):
+            base = surface[:-1]
+            t.update({"surface": base, "pos": "名詞", "pos_sub1": "副詞可能", "lemma": base})
+            tokens.insert(idx + 1, {"surface": "に", "pos": "助詞", "pos_sub1": "格助詞", "lemma": "に"})
+            continue
+
         # The causal formal noun ゆえ/故 is in the reference dictionary, but a
         # predicate behind it makes the analyzer prefer a reading that fits the
         # slot better: a fabricated ru-verb for the kana form, the honorific

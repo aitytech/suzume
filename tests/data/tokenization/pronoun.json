@@ -1124,6 +1124,33 @@
       ],
       "id": "literary_onore_voice_chain",
       "input": "おのれを省みさせられた"
+    },
+    {
+      "description": "Kanji spelling of the interrogative quantity pronoun",
+      "expected": [
+        {
+          "lemma": "幾つ",
+          "pos": "Pronoun",
+          "surface": "幾つ"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "記録",
+          "pos": "Noun",
+          "surface": "記録"
+        }
+      ],
+      "id": "tsukano",
+      "input": "幾つかの記録"
     }
   ],
   "description": "Pronouns",

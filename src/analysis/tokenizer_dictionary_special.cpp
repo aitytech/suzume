@@ -109,18 +109,6 @@ void appendSpecialGrammarCandidates(core::Lattice& lattice, std::string_view tex
                     "long_sentence_particle_quote");
   }
 
-  if (grammar::startsContractedNjaNegative(text.substr(byte_pos))) {
-    lattice.addEdge("んじゃ", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 3),
-                    core::PartOfSpeech::Conjunction, candidate::kContractedNjaNegativeCost, 0, "んじゃ",
-                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
-                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::Conjunction,
-                    "contracted_nja_negative");
-    lattice.addEdge("ない", static_cast<uint32_t>(start_pos + 3), static_cast<uint32_t>(start_pos + 5),
-                    core::PartOfSpeech::Adjective, candidate::kContractedNegativeAuxCost, 0, "ない",
-                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
-                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::AdjBasic, "contracted_nja_negative");
-  }
-
   // Edition 版 is a suffix only after a numeral or ordinal component
   // (第3版, 第三版).  Elsewhere it retains the independent noun reading
   // (新しい版), so do not register it as an unconditional dictionary suffix.
