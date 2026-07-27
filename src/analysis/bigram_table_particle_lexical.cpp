@@ -341,6 +341,13 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // rather than collapsing the copula into the homographic conjunction.
       {EPOS::ParticleNo, EPOS::Conjunction, cost::kAlmostNever},
 
+      // A quotative 連体詞 quotes the clause ahead of the noun it introduces, and
+      // the nominalizer has already closed that clause into a nominal, so the two
+      // cannot stack (なんという stays なんと+いう). The plain 連体詞 row is
+      // deliberately absent: the classical comparison ごとき takes exactly the
+      // nominal the nominalizer produces (かくのごとき).
+      {EPOS::ParticleNo, EPOS::DeterminerQuotative, cost::kAlmostNever},
+
       // ParticleFinal → VerbShuushikei (ね+食べる) - strong penalty
       // (sentence-final particles rarely continue to verbs)
       {EPOS::ParticleFinal, EPOS::VerbShuushikei, cost::kVeryRare},

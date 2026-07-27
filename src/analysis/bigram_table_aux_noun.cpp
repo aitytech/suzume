@@ -656,6 +656,14 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::ParticleCase, EPOS::AuxNegativeNu, cost::kAlmostNever},
       {EPOS::AdjStem, EPOS::AuxNegativeNu, cost::kAlmostNever},
 
+      // The contracted volitional ん (from む) reads off the same irrealis form,
+      // so it rejects the same hosts. Listing it beside the negative keeps one
+      // host set for the two auxiliaries that share the mora.
+      {EPOS::ParticleNo, EPOS::AuxVolitional, cost::kAlmostNever},
+      {EPOS::ParticleQuote, EPOS::AuxVolitional, cost::kAlmostNever},
+      {EPOS::ParticleCase, EPOS::AuxVolitional, cost::kAlmostNever},
+      {EPOS::AdjStem, EPOS::AuxVolitional, cost::kAlmostNever},
+
       // An adjective stem cannot govern an object or case particle. This
       // preserves a competing lexical noun reading before the particle.
       {EPOS::AdjStem, EPOS::ParticleCase, cost::kAlmostNever},

@@ -2051,6 +2051,65 @@
       ],
       "id": "gamashisagaaru",
       "input": "未練がましさがある"
+    },
+    {
+      "description": "Nominalizer contraction keeps its adjectival-noun host",
+      "expected": [
+        {
+          "lemma": "どう",
+          "pos": "Adjective",
+          "surface": "どう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "dounandarou",
+      "input": "どうなんだろう"
+    },
+    {
+      "description": "Nominalizer contraction after an i-adjective",
+      "expected": [
+        {
+          "lemma": "危ない",
+          "pos": "Adjective",
+          "surface": "危ない"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        }
+      ],
+      "id": "naindakara",
+      "input": "危ないんだから"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",
