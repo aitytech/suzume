@@ -129,6 +129,65 @@
       ],
       "id": "literary_akuru_determiner",
       "input": "あくる日に読む"
+    },
+    {
+      "description": "そのため確認する - auto-generated",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "ため",
+          "pos": "Noun",
+          "surface": "ため"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sonotame_suru",
+      "input": "そのため確認する"
+    },
+    {
+      "description": "その上で確認する - auto-generated",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "上",
+          "pos": "Noun",
+          "surface": "上"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sono_de_suru",
+      "input": "その上で確認する"
     }
   ],
   "description": "determiner tests",
