@@ -80,8 +80,15 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
   // compositional instead (読む+だけ+あって), not a compound verb.
   for (size_t particle_start = start_pos; particle_start < v2_start; ++particle_start) {
     const std::string particle_probe = extractSubstring(codepoints, particle_start, v2_start);
+    // Away from the span's own start, the same u-row evidence the single-char
+    // check below relies on decides whether a clause actually closed there.
+    // Without it the okurigana of a continuative is read as a particle the
+    // moment it happens to spell one (向か+い, where かい is the final
+    // particle), and the compound is rejected before V1 is ever analyzed.
+    const bool closes_preceding_clause =
+        particle_start == start_pos || kana::isURowCodepoint(codepoints[particle_start - 1]);
     for (const auto& match : dict_manager.lookup(particle_probe, 0)) {
-      if (match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Particle &&
+      if (closes_preceding_clause && match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Particle &&
           normalize::utf8Length(match.entry->surface) > 1 &&
           particle_start + normalize::utf8Length(match.entry->surface) <= v2_start) {
         return {};

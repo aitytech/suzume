@@ -1076,6 +1076,107 @@
       ],
       "id": "wo_mae_meru",
       "input": "計画を踏まえ進める"
+    },
+    {
+      "description": "final particle cannot precede a continuative predicate",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "向かい合わせ",
+          "pos": "Noun",
+          "surface": "向かい合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_kai_wasewo_u",
+      "input": "確認の向かい合わせを行う"
+    },
+    {
+      "description": "causative stem cannot precede a noun",
+      "expected": [
+        {
+          "lemma": "色",
+          "pos": "Noun",
+          "surface": "色"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "合わせる",
+          "pos": "Verb",
+          "surface": "合わせ"
+        },
+        {
+          "lemma": "技法",
+          "pos": "Noun",
+          "surface": "技法"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "学ぶ",
+          "pos": "Verb",
+          "surface": "学ぶ"
+        }
+      ],
+      "id": "wo_wase_wo_bu",
+      "input": "色を合わせ技法を学ぶ"
+    },
+    {
+      "description": "two-kana continuative joins its subsidiary verb",
+      "expected": [
+        {
+          "lemma": "席",
+          "pos": "Noun",
+          "surface": "席"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "向かい合わせ",
+          "pos": "Noun",
+          "surface": "向かい合わせ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "並べる",
+          "pos": "Verb",
+          "surface": "並べる"
+        }
+      ],
+      "id": "wo_kai_waseni_beru",
+      "input": "席を向かい合わせに並べる"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

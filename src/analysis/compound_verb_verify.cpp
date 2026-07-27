@@ -93,14 +93,20 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
   // and its final kana is that row's continuative form.
   if (!v1_verified && !dict_compound_v1 && is_ichidan && v2_start > kanji_end + 1) {
     const std::string v1_renyokei(text.substr(start_byte, v2_start_byte - start_byte));
-    const auto inflection_candidate = inflection.getBest(v1_renyokei);
-    const auto* godan_row = grammar::Conjugation::getGodanRow(inflection_candidate.verb_type);
-    if (godan_row != nullptr &&
-        inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
-        codepoints[v2_start - 1] == godan_row->i_row) {
-      v1_base = inflection_candidate.base_form;
-      v1_verified = true;
-      v1_godan_inflection = true;
+    // Weigh every reading rather than the top-scoring one alone: the Godan
+    // continuative ending い is also the i-adjective ending, so a span such as
+    // 向かい is reported as an adjective first and the continuative that
+    // proves the compound sits behind it.
+    for (const auto& inflection_candidate : inflection.analyze(v1_renyokei)) {
+      const auto* godan_row = grammar::Conjugation::getGodanRow(inflection_candidate.verb_type);
+      if (godan_row != nullptr &&
+          inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
+          codepoints[v2_start - 1] == godan_row->i_row) {
+        v1_base = inflection_candidate.base_form;
+        v1_verified = true;
+        v1_godan_inflection = true;
+        break;
+      }
     }
   }
 
