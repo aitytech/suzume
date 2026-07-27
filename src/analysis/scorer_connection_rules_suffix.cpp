@@ -530,7 +530,10 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
                                             grammar::isAllKanji(next.surface);
   if (prev.surface.size() == core::kJapaneseCharBytes && next.surface.size() == core::kJapaneseCharBytes &&
       (one_kanji_noun_before_suffix || one_kanji_suffix_before_noun)) {
-    bonus += cost::kRare;  // +1.0 to counteract -0.8 bonus
+    // The split collects the -0.8 bigram bonus here and the SUFFIX→PART_格
+    // bonus on the next edge (最+中+に), so a penalty that only offsets the
+    // first one still leaves the broken kango cheaper.
+    bonus += cost::kStrong;
   }
 
   // Penalty for 年+度 lexical binding pattern (年度, fiscal year)

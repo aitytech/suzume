@@ -479,6 +479,25 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
           continue;
         }
       }
+      // The mirror boundary: a kanji run must not open with a registered
+      // multi-kanji formal noun (以来|問題, 途中|経過). A formal noun is a bound
+      // right-hand element, so the material after it starts a new phrase rather
+      // than continuing one compound. One-kanji formal nouns are excluded — 内,
+      // 中, 手, 先 head ordinary kango (内容, 中止, 手法, 先方).
+      if (start_type == normalize::CharType::Kanji && dict_manager_ != nullptr && len > 2) {
+        bool opens_with_formal_noun = false;
+        for (size_t head_end = start_pos + 2; head_end < candidate_end; ++head_end) {
+          const auto* entry =
+              dict_manager_->lookupExact(extractSubstring(codepoints, start_pos, head_end), core::PartOfSpeech::Noun);
+          if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::NounFormal) {
+            opens_with_formal_noun = true;
+            break;
+          }
+        }
+        if (opens_with_formal_noun) {
+          continue;
+        }
+      }
       auto cand = makeCandidate(surface, start_pos, candidate_end, pos, cost, has_suffix, CandidateOrigin::SameType);
 #ifdef SUZUME_DEBUG_INFO
       cand.confidence = started_with_particle ? 0.7F : 1.0F;

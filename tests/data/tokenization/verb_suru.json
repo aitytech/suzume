@@ -1607,6 +1607,112 @@
       ],
       "id": "no3_no1wo_suru",
       "input": "全体の3分の1を確認する"
+    },
+    {
+      "description": "2字漢語 最中 が一字名詞+接尾辞に割れない",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        },
+        {
+          "lemma": "最中",
+          "pos": "Noun",
+          "surface": "最中"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "shiteiru_ni_mu",
+      "input": "確認している最中に進む"
+    },
+    {
+      "description": "形式名詞 以来 が後続漢語を巻き込まない",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "以来",
+          "pos": "Noun",
+          "surface": "以来"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shite_nai_2",
+      "input": "確認して以来問題ない"
+    },
+    {
+      "description": "一字形式名詞を含む漢語が割れない負の統制",
+      "expected": [
+        {
+          "lemma": "内容",
+          "pos": "Noun",
+          "surface": "内容"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "wo_suru",
+      "input": "内容を確認する"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",
