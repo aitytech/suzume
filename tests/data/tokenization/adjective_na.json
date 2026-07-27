@@ -2423,6 +2423,99 @@
       ],
       "id": "sukoyakanaru",
       "input": "すこやかなる子"
+    },
+    {
+      "description": "大変なんだ - regression test",
+      "expected": [
+        {
+          "lemma": "大変",
+          "pos": "Adjective",
+          "surface": "大変"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "nanda_2",
+      "input": "大変なんだ"
+    },
+    {
+      "description": "大変困った - regression test",
+      "expected": [
+        {
+          "lemma": "大変",
+          "pos": "Adverb",
+          "surface": "大変"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ttta_3",
+      "input": "大変困った"
+    },
+    {
+      "description": "真ん丸な月 - regression test",
+      "expected": [
+        {
+          "lemma": "真ん丸",
+          "pos": "Adjective",
+          "surface": "真ん丸"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "月",
+          "pos": "Noun",
+          "surface": "月"
+        }
+      ],
+      "id": "n_na",
+      "input": "真ん丸な月"
+    },
+    {
+      "description": "とても静かだ - regression test",
+      "expected": [
+        {
+          "lemma": "とても",
+          "pos": "Adverb",
+          "surface": "とても"
+        },
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "totemo_kada",
+      "input": "とても静かだ"
     }
   ],
   "description": "Na-adjectives (ナ形容詞)",

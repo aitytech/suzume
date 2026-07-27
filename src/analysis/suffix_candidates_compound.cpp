@@ -628,8 +628,15 @@ void generateKanjiHiraganaCompoundCandidates(const std::vector<char32_t>& codepo
         end_pos >= char_types.size() || char_types[end_pos] != normalize::CharType::Kanji;
     std::string surface = extractSubstring(codepoints, start_pos, end_pos);
     if (second_kanji_is_single && !surface.empty()) {
-      auto cand = makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Noun,
+      // An attributive copula right after the compound identifies it as a
+      // na-adjective stem rather than a plain noun (真ん丸+な+月).
+      const bool has_attributive_copula = end_pos < codepoints.size() && codepoints[end_pos] == U'な';
+      auto cand = makeCandidate(surface, start_pos, end_pos,
+                                has_attributive_copula ? core::PartOfSpeech::Adjective : core::PartOfSpeech::Noun,
                                 candidate::kInfixCompoundNounCost, false, CandidateOrigin::KanjiHiraganaCompound);
+      if (has_attributive_copula) {
+        cand.extended_pos = core::ExtendedPOS::AdjNaAdj;
+      }
 #ifdef SUZUME_DEBUG_INFO
       cand.confidence = 0.9F;
       cand.pattern = "kanji_hatsuon_kanji";

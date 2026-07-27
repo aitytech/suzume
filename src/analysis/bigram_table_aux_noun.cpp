@@ -693,8 +693,8 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
 
       // Adverb → AuxCopulaDa/Desu - penalty: adverbs modify verbs/adjectives, they
       // don't directly take copula (そうです: そう should be na-adjective, not adverb).
-      {EPOS::Adverb, EPOS::AuxCopulaDa, cost::kRare},
-      {EPOS::Adverb, EPOS::AuxCopulaDesu, cost::kRare},
+      {EPOS::Adverb, EPOS::AuxCopulaDa, cost::kStrong},
+      {EPOS::Adverb, EPOS::AuxCopulaDesu, cost::kStrong},
 
       // AuxCopulaDa → Noun (さすがな+人, 静かな+部屋) - strong bonus
       // Copula な(連体形 of だ) + Noun is the na-adjective attributive pattern
