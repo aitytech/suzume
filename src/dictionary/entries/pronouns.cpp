@@ -153,7 +153,14 @@ EntrySpecRange getPronounEntries() {
       adv("しいて", ""),
       adv("さほど", ""),
       adv("然程", ""),
+      // 大変 is a degree adverb and an adjectival noun at once: it modifies a
+      // predicate directly (大変おいしい) and it also inflects through the copula
+      // (大変だ, 大変な問題). Both readings have to be present for the connection
+      // rules to choose, the same way どう and いかが are registered above.
       adv("たいへん", ""),
+      na_adj("たいへん", "たいへん"),
+      adv("大変", ""),
+      na_adj("大変", "大変"),
       adv("すごく", ""),
       adv("ちょっと", ""),
       adv("もっと", ""),

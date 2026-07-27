@@ -1334,6 +1334,28 @@
       ],
       "id": "wo_nda_3",
       "input": "水を飲んだ"
+    },
+    {
+      "description": "Adverb reading before a verbal predicate",
+      "expected": [
+        {
+          "lemma": "大変",
+          "pos": "Adverb",
+          "surface": "大変"
+        },
+        {
+          "lemma": "助かる",
+          "pos": "Verb",
+          "surface": "助かり"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "karimasu",
+      "input": "大変助かります"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

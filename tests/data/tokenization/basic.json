@@ -696,6 +696,28 @@
       ],
       "id": "nanigashikano",
       "input": "なにがしかの理由"
+    },
+    {
+      "description": "Adverb reading when a predicate is modified directly",
+      "expected": [
+        {
+          "lemma": "大変",
+          "pos": "Adverb",
+          "surface": "大変"
+        },
+        {
+          "lemma": "おいしい",
+          "pos": "Adjective",
+          "surface": "おいしい"
+        },
+        {
+          "lemma": "料理",
+          "pos": "Noun",
+          "surface": "料理"
+        }
+      ],
+      "id": "oishii",
+      "input": "大変おいしい料理"
     }
   ],
   "description": "Basic tokenization tests",
