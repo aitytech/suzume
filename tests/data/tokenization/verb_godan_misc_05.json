@@ -1639,6 +1639,28 @@
       ],
       "id": "no_wo_u",
       "input": "年度末の処理を行う"
+    },
+    {
+      "description": "The same unit case-marked as a nominal",
+      "expected": [
+        {
+          "lemma": "ありのまま",
+          "pos": "Noun",
+          "surface": "ありのまま"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "伝える",
+          "pos": "Verb",
+          "surface": "伝える"
+        }
+      ],
+      "id": "arinomamawo_eru",
+      "input": "ありのままを伝える"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

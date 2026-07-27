@@ -2003,6 +2003,28 @@
       ],
       "id": "ga_suru",
       "input": "体力が衰弱する"
+    },
+    {
+      "description": "Fixed まま adverbial kept as one search unit",
+      "expected": [
+        {
+          "lemma": "ありのまま",
+          "pos": "Adverb",
+          "surface": "ありのまま"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "arinomama_suru",
+      "input": "ありのまま確認する"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",
