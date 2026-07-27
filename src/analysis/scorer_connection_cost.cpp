@@ -91,7 +91,20 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
   // (昔+の+まま+で, where のま+まで invents a host for まで).
   const bool barred_focus_particle_host = next.extended_pos == core::ExtendedPOS::ParticleAdverbial &&
                                           prev.pos == core::PartOfSpeech::Noun && unknown_hiragana_conjunction_host;
-  if (barred_conjunction_host || barred_focus_particle_host) {
+  // A formal noun whose canonical spelling is kana (こと, もの) is not one when
+  // it appears as its single kanji directly after another kanji: there it is the
+  // tail of that compound (果物, 仕事, 記事). The kana lemma behind the kanji
+  // entry is what marks this class, so bound suffixes that really are written in
+  // kanji (年度末) keep their boundary. Without the bar the formal noun claims
+  // the compound's last kanji to collect the bonus its own followers carry.
+  const bool kana_spelled_formal_noun = next.extended_pos == core::ExtendedPOS::NounFormal &&
+                                        normalize::utf8Length(next.surface) == 1 &&
+                                        normalize::isKanjiCodepoint(utf8::decodeFirstChar(next.surface)) &&
+                                        next.lemma != next.surface && grammar::isPureHiragana(next.lemma);
+  const bool barred_kanji_formal_noun = kana_spelled_formal_noun && prev.pos == core::PartOfSpeech::Noun &&
+                                        !prev.surface.empty() &&
+                                        normalize::isKanjiCodepoint(utf8::decodeLastChar(prev.surface));
+  if (barred_conjunction_host || barred_focus_particle_host || barred_kanji_formal_noun) {
     bonus += cost::kProhibitive;
   }
   const bool conjunction_before_hiragana_de = prev.pos == core::PartOfSpeech::Conjunction &&

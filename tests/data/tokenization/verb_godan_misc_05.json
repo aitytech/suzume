@@ -1521,6 +1521,124 @@
       ],
       "id": "yara_yara_u",
       "input": "本やら雑誌やら買う"
+    },
+    {
+      "description": "A kana-spelled formal noun does not claim the last kanji of a compound",
+      "expected": [
+        {
+          "lemma": "果物",
+          "pos": "Noun",
+          "surface": "果物"
+        },
+        {
+          "lemma": "やら",
+          "pos": "Particle",
+          "surface": "やら"
+        },
+        {
+          "lemma": "野菜",
+          "pos": "Noun",
+          "surface": "野菜"
+        },
+        {
+          "lemma": "やら",
+          "pos": "Particle",
+          "surface": "やら"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "yara_yara_u_2",
+      "input": "果物やら野菜やら買う"
+    },
+    {
+      "description": "Same compound before a different adverbial particle",
+      "expected": [
+        {
+          "lemma": "果物",
+          "pos": "Noun",
+          "surface": "果物"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "dake_u",
+      "input": "果物だけ買う"
+    },
+    {
+      "description": "Negative control: the kana formal noun keeps its own boundary after an attributive",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ぶ"
+        }
+      ],
+      "id": "mumonodake_bu",
+      "input": "読むものだけ選ぶ"
+    },
+    {
+      "description": "Negative control: a kanji-spelled bound suffix keeps its boundary",
+      "expected": [
+        {
+          "lemma": "年度",
+          "pos": "Noun",
+          "surface": "年度"
+        },
+        {
+          "lemma": "末",
+          "pos": "Noun",
+          "surface": "末"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "処理",
+          "pos": "Noun",
+          "surface": "処理"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "no_wo_u",
+      "input": "年度末の処理を行う"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
