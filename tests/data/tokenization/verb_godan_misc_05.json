@@ -726,6 +726,23 @@
       ],
       "id": "ga_no_ni_eru",
       "input": "万が一の場合に備える"
+    },
+    {
+      "description": "漢語名詞が後続動詞の語幹漢字を巻き込まない（可能助動詞は名詞に接続しない）",
+      "expected": [
+        {
+          "lemma": "人数",
+          "pos": "Noun",
+          "surface": "人数"
+        },
+        {
+          "lemma": "増える",
+          "pos": "Verb",
+          "surface": "増える"
+        }
+      ],
+      "id": "eru",
+      "input": "人数増える"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

@@ -79,6 +79,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // Must be strong to beat single_kanji_ichidan_polite VERB path for 得
       {EPOS::VerbRenyokei, EPOS::AuxPotential, cost::kStrongBonus},
 
+      // A potential auxiliary attaches to a verb stem and to nothing else, so a
+      // nominal host before it means a kanji run has eaten the head of the verb
+      // it belongs to (人数増+える, 三割強増+える).
+      {EPOS::Noun, EPOS::AuxPotential, cost::kSevere},
+
       // The connective copula joins coordinated/predicative adjectives
       // (静かで美しい). Without this, the generic copula→noun preference can make
       // a structurally complete i-adjective lose to an unknown noun homograph.

@@ -1713,6 +1713,33 @@
       ],
       "id": "wo_suru",
       "input": "内容を確認する"
+    },
+    {
+      "description": "文語可能 得る は連用形の後で保つ負の統制",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "得る",
+          "pos": "Auxiliary",
+          "surface": "得る"
+        },
+        {
+          "lemma": "場合",
+          "pos": "Noun",
+          "surface": "場合"
+        }
+      ],
+      "id": "shi_ru",
+      "input": "確認し得る場合"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",
