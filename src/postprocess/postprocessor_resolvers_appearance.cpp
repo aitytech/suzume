@@ -170,7 +170,11 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx < result.size(); ++idx) {
     auto& negative = result[idx];
     auto& predicate = result[idx - 1];
-    if (negative.surface != "ない") {
+    // The syntax that picks the independent adjective over the auxiliary is the
+    // host, not the cell, so accept every cell of the negative paradigm the
+    // lattice produced (ない, なかっ, なく, なけれ) rather than the base form
+    // alone — 問題+なかっ+た has the same nominal host as 問題+ない.
+    if (negative.lemma != "ない") {
       continue;
     }
 
@@ -185,7 +189,7 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
     if (predicate.pos == core::PartOfSpeech::Verb && is_godan_renyokei &&
         negative.extended_pos == core::ExtendedPOS::AuxNegativeNai) {
       retagNounSurface(predicate);
-      retagBasicNegativeAdjective(negative);
+      retagNegativeAdjectiveCell(negative);
       continue;
     }
 
@@ -211,7 +215,7 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
     // independent adjective ない (問題+ない, 関係+ない).
     if (negative.extended_pos == core::ExtendedPOS::AuxNegativeNai &&
         predicate.extended_pos != core::ExtendedPOS::ParticleBinding) {
-      retagBasicNegativeAdjective(negative);
+      retagNegativeAdjectiveCell(negative);
       continue;
     }
 
@@ -220,7 +224,7 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
     // following nominal, not a dependent verbal auxiliary.
     if (idx + 1 < result.size() && result[idx + 1].pos == core::PartOfSpeech::Noun &&
         negative.extended_pos == core::ExtendedPOS::AuxNegativeNai) {
-      retagBasicNegativeAdjective(negative);
+      retagNegativeAdjectiveCell(negative);
       continue;
     }
 
@@ -243,7 +247,7 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
     if (marker.extended_pos != core::ExtendedPOS::ParticleCase || marker.surface != "に") {
       continue;
     }
-    retagBasicNegativeAdjective(negative);
+    retagNegativeAdjectiveCell(negative);
   }
 }
 

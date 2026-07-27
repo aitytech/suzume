@@ -170,6 +170,14 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
 
       // Found a valid verb - generate onbin stem candidate
       std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_pos + 1);
+      // A span the dictionary already registers as an auxiliary is a cell of a
+      // closed paradigm, and that paradigm is complete: nothing is left for an
+      // unattested open-class base to explain. なかっ is the past stem of the
+      // negative predicate, not the continuative of a fabricated なかう.
+      if (!lemma_dict_verified && vh::hasDictionaryEntry(dict_manager, onbin_surface, core::PartOfSpeech::Auxiliary)) {
+        SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << onbin_surface << "\" registered auxiliary cell\n");
+        continue;
+      }
       // For tense patterns, use higher cost to avoid false positives for short stems
       // Contraction patterns (っとく, っちゃう) are more reliable, use lower cost
       const float cost =

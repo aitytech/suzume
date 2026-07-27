@@ -34,6 +34,10 @@ using adj_detail::makeNaAdjCandidate;
 
 namespace {
 
+/// Base form the inflection analyzer reports for every cell of the negative
+/// predicate (ない/なく/なかっ/なけれ).
+constexpr const char* kNegativeAdjectiveBase = "ない";
+
 // =============================================================================
 // Pattern Skip Helpers for I-Adjective Candidate Generation
 // =============================================================================
@@ -268,13 +272,25 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
       SUZUME_DEBUG_LOG_VERBOSE("[ADJ_NAI] dict-confirmed nai-adj: \"" << surface << "\"\n");
     }
 
-    // A 2+ consecutive-kanji stem directly followed by exactly ない or its
-    // adverbial form なく is a noun plus ない (問題+ない, 資金+なくして),
-    // never a newly constructed i-adjective. Suppress the fused candidate so
-    // the noun and negative-adjective path wins. Dictionary-confirmed
-    // multi-kanji nai-adjectives (味気ない etc.) keep their fused form.
-    bool is_bare_nai_form = hiragana_part == "ない" || hiragana_part == "なく";
-    if (is_bare_nai_form && (kanji_end - start_pos) >= 2 && !isAdjectiveInDictionary(dict_manager, surface)) {
+    // A 2+ consecutive-kanji stem directly followed by nothing but the negative
+    // predicate is a noun plus ない (問題+ない, 資金+なくして, 問題+なかっ+た),
+    // never a newly constructed i-adjective. The negative has a full paradigm,
+    // and every cell of it attaches to the noun the same way, so recognize the
+    // form through the inflection analyzer instead of naming its surfaces —
+    // otherwise the past cell escapes and its trimmed かっ variant inherits an
+    // unpenalized cost. Suppress the fused candidate so the noun and
+    // negative-adjective path wins. Dictionary-confirmed multi-kanji
+    // nai-adjectives (味気ない etc.) keep their fused form, in any cell.
+    bool is_bare_nai_form = false;
+    for (const auto& nai_cand : inflection.analyze(hiragana_part)) {
+      if (nai_cand.verb_type == grammar::VerbType::IAdjective && nai_cand.base_form == kNegativeAdjectiveBase) {
+        is_bare_nai_form = true;
+        break;
+      }
+    }
+    if (is_bare_nai_form && (kanji_end - start_pos) >= 2 && !isAdjectiveInDictionary(dict_manager, surface) &&
+        !isAdjectiveInDictionary(dict_manager,
+                                 extractSubstring(codepoints, start_pos, kanji_end) + kNegativeAdjectiveBase)) {
       continue;
     }
 

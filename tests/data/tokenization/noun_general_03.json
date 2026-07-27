@@ -1014,6 +1014,55 @@
       ],
       "id": "monka",
       "input": "確認もんか"
+    },
+    {
+      "description": "名詞＋否定形容詞の過去形",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nakattta",
+      "input": "問題なかった"
+    },
+    {
+      "description": "格助詞の後の否定形容詞の過去形",
+      "expected": [
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ganakattta",
+      "input": "時間がなかった"
     }
   ],
   "description": "General nouns (part 3/3)",

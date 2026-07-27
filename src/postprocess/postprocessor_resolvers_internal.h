@@ -66,6 +66,15 @@ void resolveVerbTeParticle(std::vector<core::Morpheme>& result);
 void retagAdverbialSou(core::Morpheme& morpheme);
 void retagAppearanceSou(core::Morpheme& morpheme);
 void retagBasicNegativeAdjective(core::Morpheme& morpheme);
+
+/**
+ * @brief Retag a negative predicate as the independent adjective, in its own cell.
+ *
+ * Like retagBasicNegativeAdjective, but keeps the inflection the surface spells
+ * (ない → 終止形, なかっ → 連用形, なけれ → 仮定形) so a nominal host resolves the
+ * whole paradigm and not just the base form.
+ */
+void retagNegativeAdjectiveCell(core::Morpheme& morpheme);
 void retagCopulaDa(core::Morpheme& morpheme);
 bool retagGodanRenyokeiFromIRow(core::Morpheme& stem, bool set_conj_form);
 void retagNaAdjectivalSou(core::Morpheme& morpheme);

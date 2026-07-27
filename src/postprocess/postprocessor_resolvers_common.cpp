@@ -53,6 +53,26 @@ void retagBasicNegativeAdjective(core::Morpheme& negative) {
         dictionary::ConjugationType::IAdjective, grammar::ConjForm::Base);
 }
 
+void retagNegativeAdjectiveCell(core::Morpheme& negative) {
+  const core::ExtendedPOS cell = core::detectAdjForm(negative.surface, /*is_na_adj=*/false);
+  grammar::ConjForm conj_form = grammar::ConjForm::Base;
+  switch (cell) {
+    case core::ExtendedPOS::AdjKatt:
+    case core::ExtendedPOS::AdjRenyokei:
+      conj_form = grammar::ConjForm::Renyokei;
+      break;
+    case core::ExtendedPOS::AdjKeForm:
+      conj_form = grammar::ConjForm::Kateikei;
+      break;
+    case core::ExtendedPOS::AdjMizenkei:
+      conj_form = grammar::ConjForm::Mizenkei;
+      break;
+    default:
+      break;
+  }
+  retag(negative, core::PartOfSpeech::Adjective, cell, "ない", dictionary::ConjugationType::IAdjective, conj_form);
+}
+
 void retagNounSurface(core::Morpheme& morpheme) {
   retag(morpheme, core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, morpheme.surface,
         dictionary::ConjugationType::None, grammar::ConjForm::Base);
