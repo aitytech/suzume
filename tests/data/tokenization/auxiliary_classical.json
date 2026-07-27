@@ -525,6 +525,38 @@
       ],
       "id": "shitaredomo_hanai",
       "input": "記録したれども変化はない"
+    },
+    {
+      "description": "Classical negative conjectural まじ after a sahen irrealis",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "せ"
+        },
+        {
+          "lemma": "まじ",
+          "pos": "Auxiliary",
+          "surface": "まじ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "semajito_u",
+      "input": "確認せまじと思う"
     }
   ],
   "description": "auxiliary_classical tests",

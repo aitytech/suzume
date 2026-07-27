@@ -123,6 +123,11 @@ EntrySpecRange getAuxiliaryEntries() {
       // class with the same irrealis connection behavior.
       aux("じ", "じ", EPOS::AuxNegativeNu),
       aux("まじき", "まじ", EPOS::AuxNegativeMai),  // 文語打消推量の連体形
+      // 終止形 まじ (確認せまじ). It shares its surface with the colloquial
+      // na-adjective, which is separated by the host: this auxiliary needs a
+      // terminal or irrealis predicate in front of it, while the adjective
+      // follows a nominal or opens the clause.
+      aux("まじ", "まじ", EPOS::AuxNegativeMai),
       // 文語の禁止 なかれ (確認するなかれ). It follows a terminal form like まい
       // does, so it shares that class; without the entry the three morae are
       // rebuilt as a copula plus two one-mora fragments.

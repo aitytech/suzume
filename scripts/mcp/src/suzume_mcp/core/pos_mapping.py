@@ -166,10 +166,6 @@ def map_mecab_pos(token: dict | str) -> str:
         token["lemma"] = "じゃん"
         return "Particle"
 
-    # まじ: -> Adjective
-    if surface == "まじ" and pos == "助動詞":
-        return "Adjective"
-
     # や (Kansai copula): 助動詞 -> Particle
     if surface == "や" and pos == "助動詞":
         token["lemma"] = "や"
@@ -351,6 +347,17 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
         # (けり, べし), which carry their own lemma rather than a modern base.
         if surface == "なかれ" and pos == "形容詞":
             t["pos"] = "助動詞"
+
+        # Disambiguate まじ by its host. The classical negative conjectural shares
+        # its surface with the colloquial na-adjective: the auxiliary needs a verb
+        # in front of it (確認せまじ), while the adjective follows a nominal or opens
+        # the clause (それはまじ, まじで困る). MeCab tags both 助動詞, so the reading
+        # is decided here rather than mapped unconditionally.
+        if surface == "まじ" and pos == "助動詞":
+            if idx > 0 and tokens[idx - 1].get("pos") in ("動詞", "Verb"):
+                t["lemma"] = "まじ"
+            else:
+                t["pos"] = "形容詞"
 
         # Fix ない/なかっ after じゃ: 形容詞 -> 助動詞
         if surface in ("ない", "なかっ") and pos == "形容詞":

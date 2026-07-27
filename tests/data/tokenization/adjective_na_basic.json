@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "description": "Colloquial まじ keeps its adjective reading on a nominal host",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "まじ",
+          "pos": "Adjective",
+          "surface": "まじ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "sorehamajide_ru",
+      "input": "それはまじで困る"
+    }
+  ],
+  "description": "adjective_na_basic tests",
+  "version": "1.0"
+}
