@@ -296,6 +296,17 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       continue;
     }
 
+    // Nor may a two-mora hypothesis — the shortest base the tables endorse, and
+    // the one carrying the least evidence — start one mora inside a registered
+    // verb that ends where it does (か+かる for かかる). Every two-mora verb of
+    // the modern language is frequent enough to be registered, so an unattested
+    // one competing with a dictionary word is a fragment of it.
+    if (!is_dictionary_verb && end_pos - start_pos == 2 && start_pos > 0 &&
+        vh::isVerbInDictionary(dict_manager, extractSubstring(codepoints, start_pos - 1, end_pos))) {
+      SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << surface << "\" starts inside a dictionary verb\n");
+      continue;
+    }
+
     const size_t pre_filter_len = end_pos - start_pos;
     const bool looks_like_short_godan_base = pre_filter_len == 2 && grammar::isGodanVerbType(best.verb_type) &&
                                              best.base_form == surface &&

@@ -998,6 +998,57 @@
       ],
       "id": "kano_wo_reru",
       "input": "かの地を訪れる"
+    },
+    {
+      "description": "カ変のら抜き可能動詞の未然形",
+      "expected": [
+        {
+          "lemma": "来れる",
+          "pos": "Verb",
+          "surface": "来れ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "renai",
+      "input": "来れない"
+    },
+    {
+      "description": "カ変のら抜き可能動詞＋丁寧の助動詞",
+      "expected": [
+        {
+          "lemma": "来れる",
+          "pos": "Verb",
+          "surface": "来れ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "remasu",
+      "input": "来れます"
+    },
+    {
+      "description": "疑問代名詞の後の辞書動詞が捏造動詞に頭を奪われない",
+      "expected": [
+        {
+          "lemma": "いくら",
+          "pos": "Pronoun",
+          "surface": "いくら"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "ikurakakaru",
+      "input": "いくらかかる"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
