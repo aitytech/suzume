@@ -503,6 +503,13 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Genuine derived adjectives (素晴らしい) stay merged via their dict-inflected 連用形.
       {EPOS::AuxConjectureRashii, EPOS::AuxNegativeNai, cost::kExtremeBonus},
 
+      // The same 連用形 らしく also modifies a following predicate directly
+      // (資料らしく見える, 学生らしく振る舞う). Without the row that reading has
+      // no support at all and the fabricated i-adjective over the whole span
+      // wins, which made the host merge or split depending only on which cell
+      // of らしい happened to be written.
+      {EPOS::AuxConjectureRashii, EPOS::VerbShuushikei, cost::kStrongBonus},
+
       // The conjectural auxiliary's stem (らし) cannot be followed by the
       // progressive auxiliary く. Its adverbial form is the single inflected
       // token らしく, so this rejects a spurious らし+く segmentation.
