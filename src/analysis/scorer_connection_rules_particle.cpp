@@ -168,26 +168,24 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   // adverbial form, where it is the concessive conjunctive particle (読まずとも,
   // 届こうとも, 少なくとも). Anywhere else the surface is the case particle と plus
   // も, or the opening of a longer lexical word (ともだち, もっとも, 何とも).
-  if (next.pos == core::PartOfSpeech::Particle && utf8::equalsAny(next.surface, {"とも"})) {
-    const bool quantifier_host = prev.origin == core::CandidateOrigin::Counter;
-    const bool concessive_host = prev.extended_pos == core::ExtendedPOS::AuxNegativeNu ||
-                                 prev.extended_pos == core::ExtendedPOS::AuxVolitional ||
-                                 prev.extended_pos == core::ExtendedPOS::AdjRenyokei;
-    if (quantifier_host || !concessive_host) {
-      bonus += quantifier_host ? cost::kExtremeBonus : cost::kAlmostNever;
-    }
-  }
-
-  // ば/ど/ども complete the hypothetical slot of a predicate and have no other
-  // host, so a focus particle cannot precede them: it offers no inflected stem.
-  // The ParticleAdverbial→ParticleConj bonus is meant for the conditional なら
+  //
+  // ば/ど/ども are the same kind of rule one particle over: they complete the
+  // hypothetical slot of a predicate and have no other host, so a focus particle
+  // cannot precede them either, offering no inflected stem. The
+  // ParticleAdverbial→ParticleConj bonus is meant for the conditional なら
   // (だけ+なら, ほど+なら) and would otherwise buy the fabricated だけ+ど over the
   // copula plus けど (〜んだけど).
-  if (next.extended_pos == core::ExtendedPOS::ParticleConj &&
-      isHypotheticalSelectingConjunctiveParticle(next.surface) &&
-      (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
-       prev.extended_pos == core::ExtendedPOS::ParticleBinding)) {
-    bonus += cost::kAlmostNever;
+  const bool tomo_particle = next.pos == core::PartOfSpeech::Particle && utf8::equalsAny(next.surface, {"とも"});
+  const bool quantifier_host = tomo_particle && prev.origin == core::CandidateOrigin::Counter;
+  const bool unlicensed_tomo = tomo_particle && prev.extended_pos != core::ExtendedPOS::AuxNegativeNu &&
+                               prev.extended_pos != core::ExtendedPOS::AuxVolitional &&
+                               prev.extended_pos != core::ExtendedPOS::AdjRenyokei;
+  const bool unlicensed_hypothetical = next.extended_pos == core::ExtendedPOS::ParticleConj &&
+                                       isHypotheticalSelectingConjunctiveParticle(next.surface) &&
+                                       (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+                                        prev.extended_pos == core::ExtendedPOS::ParticleBinding);
+  if (quantifier_host || unlicensed_tomo || unlicensed_hypothetical) {
+    bonus += quantifier_host ? cost::kExtremeBonus : cost::kAlmostNever;
   }
 
   return bonus;

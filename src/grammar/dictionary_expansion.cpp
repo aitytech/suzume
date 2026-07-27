@@ -109,7 +109,8 @@ std::vector<dictionary::DictionaryEntry> expandVerb(const dictionary::Dictionary
   result.reserve(suffixes.size());
   for (const auto& suffix : suffixes) {
     std::string surface = stem + suffix.suffix;
-    if (bound_suffix_verb && surface != base_entry.surface && surface.size() <= 2 * core::kJapaneseCharBytes) {
+    if (bound_suffix_verb && suffix.extended_pos != core::ExtendedPOS::VerbShuushikei &&
+        surface.size() <= 2 * core::kJapaneseCharBytes) {
       continue;
     }
     result.push_back({std::move(surface), core::PartOfSpeech::Verb, suffix.extended_pos, base_entry.lemma});

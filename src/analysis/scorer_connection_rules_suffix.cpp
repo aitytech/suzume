@@ -95,12 +95,22 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     return cost::kAlmostNever;
   }
 
-  // The sentence-final particle ったら attaches to a completed predicate
-  // (困ったら), never directly to a noun. This blocks a high-scoring false
-  // parse such as 行 + ったら while leaving ordinary noun-final questions
-  // (本か) untouched.
-  if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::ParticleFinal &&
-      utf8::equalsAny(next.surface, {"ったら"})) {
+  // A closed morpheme whose host class is fixed, attached to the wrong class.
+  // The sentence-final ったら attaches to a completed predicate (困ったら) and
+  // never to a noun, which blocks a false parse such as 行 + ったら while leaving
+  // ordinary noun-final questions (本か) untouched. A personal-address suffix is
+  // the mirror image: it names its host, so an inflected predicate cannot fill
+  // the slot. Without that half, 〜たん takes the continuative stem and the past
+  // auxiliary with it (確認し+たん+だ+けど for 確認+し+た+ん+だ+けど), because the
+  // concessive particle pays a large bonus to whatever past auxiliary precedes.
+  const bool predicate_particle_on_nominal_host = prev.pos == core::PartOfSpeech::Noun &&
+                                                  next.extended_pos == core::ExtendedPOS::ParticleFinal &&
+                                                  utf8::equalsAny(next.surface, {"ったら"});
+  const bool address_suffix_on_predicate_host =
+      next.extended_pos == core::ExtendedPOS::Suffix && grammar::isPersonalAddressSuffix(next.surface) &&
+      (prev.pos == core::PartOfSpeech::Verb || prev.pos == core::PartOfSpeech::Adjective ||
+       prev.pos == core::PartOfSpeech::Auxiliary);
+  if (predicate_particle_on_nominal_host || address_suffix_on_predicate_host) {
     bonus += cost::kAlmostNever;
   }
 
@@ -631,17 +641,6 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
       next.surface.size() <= 3 &&  // Single hiragana (3 bytes)
       grammar::isPureHiragana(next.surface) && prev.surface != "たり" && prev.surface != "だり") {
     bonus += cost::kAlmostNever;  // Strongly discourage
-  }
-
-  // A personal-address suffix names its host, so an inflected predicate cannot
-  // fill that slot. Without the gate the 〜たん suffix takes the continuative of
-  // the preceding verb and the past auxiliary with it (確認し+たん+だ+けど instead
-  // of 確認+し+た+ん+だ+けど), because the concessive particle pays a large bonus
-  // to whatever past auxiliary precedes it.
-  if (grammar::isPersonalAddressSuffix(next.surface) && next.extended_pos == core::ExtendedPOS::Suffix &&
-      (prev.pos == core::PartOfSpeech::Verb || prev.pos == core::PartOfSpeech::Adjective ||
-       prev.pos == core::PartOfSpeech::Auxiliary)) {
-    bonus += cost::kAlmostNever;
   }
 
   return bonus;
