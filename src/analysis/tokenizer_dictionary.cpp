@@ -656,6 +656,9 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 
     // A registered word is no more entitled to the material in front of the
     // nominalizer っこ than a constructed one is (で+きっ+こない for できっこない).
+    if (verb_helpers::startsInsideGaMashiiSuffix(codepoints, start_pos)) {
+      continue;
+    }
     if (verb_helpers::crossesKkoNominalizer(codepoints, start_pos, end_pos)) {
       continue;
     }

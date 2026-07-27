@@ -689,6 +689,9 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       continue;
     }
 
+    if (verb_helpers::startsInsideGaMashiiSuffix(codepoints, candidate.start)) {
+      continue;
+    }
     if (verb_helpers::crossesKkoNominalizer(codepoints, candidate.start, candidate.end)) {
       continue;
     }

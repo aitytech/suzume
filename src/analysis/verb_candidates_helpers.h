@@ -599,6 +599,19 @@ bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 bool crossesKkoNominalizer(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);
 
 /**
+ * @brief Whether a candidate starting here opens inside the suffix がまし〜.
+ *
+ * The suffix derives an i-adjective from a nominal (未練がましい, 恩着せがましさ)
+ * and is bound: no word begins at its が, ま or し. An adjective cell must
+ * follow the stem, which separates it from the nominal まし after the subject
+ * marker (こちらの方がましだ).
+ *
+ * @param codepoints Full input codepoints
+ * @param pos Candidate start position
+ */
+bool startsInsideGaMashiiSuffix(const std::vector<char32_t>& codepoints, size_t pos);
+
+/**
  * @brief Check whether the conditional negative auxiliary なけれ begins at @p pos.
  *
  * This is the irrealis-stem continuation used by 〜なければ.  Keeping it

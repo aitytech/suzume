@@ -2071,3 +2071,40 @@ def postprocess_nara_verb(tokens: list[dict]) -> None:
         if nxt_surface in ("ない", "なく", "なかっ", "ぬ"):
             t["pos"] = "Verb"
             t["lemma"] = "なる"
+
+
+def postprocess_bound_derived_adjective(tokens: list[dict]) -> bool:
+    """Rejoin the bound suffix がまし〜 when it was split at its first mora.
+
+    がまし〜 derives an i-adjective from a nominal host (未練がましい, 恩着せがましく).
+    The reference dictionary knows a few of those adjectives lexically and keeps
+    them whole, but for every other host it falls back to the case particle が
+    plus a remainder that is not a word at all, so the same suffix is analyzed
+    two ways depending on which host it sits on.
+
+    Only an adjective cell licenses the merge: the nominal まし takes the copula
+    instead (こちらの方がましだ), and that が really is the subject marker. Runs at
+    the very end of the pipeline because the compound merges that assemble the
+    host come first, and they read the same が.
+    """
+    cells = ("ましい", "ましく", "ましかっ", "ましけれ", "ましかろ")
+    nominalized_cell = "まし"
+    changed = False
+    idx = 1
+    while idx + 1 < len(tokens):
+        host = tokens[idx - 1]
+        particle = tokens[idx]
+        suffix = tokens[idx + 1]
+        follower = tokens[idx + 2].get("surface") if idx + 2 < len(tokens) else None
+        licensed = suffix.get("surface", "") in cells or (
+            suffix.get("surface", "") == nominalized_cell and follower == "さ"
+        )
+        if host.get("pos") not in ("Noun", "Verb") or particle.get("surface") != "が" or not licensed:
+            idx += 1
+            continue
+        host["surface"] = host.get("surface", "") + particle.get("surface", "") + suffix.get("surface", "")
+        host["pos"] = "Adjective"
+        host["lemma"] = host["surface"].removesuffix(suffix.get("surface", "")) + "ましい"
+        del tokens[idx : idx + 2]
+        changed = True
+    return changed

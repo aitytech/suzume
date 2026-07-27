@@ -1019,9 +1019,9 @@ def _postprocess_bound_voiced_suffix(result: list[dict], applied_rule: str | Non
     suffix is analyzed two different ways depending on the host. Rejoin the split
     form so the oracle treats every host alike.
 
-    がましい is deliberately absent: rejoining it consumes the が that the
-    compound-verb merge uses to recognize its own nominal host, which would move
-    the difference rather than remove it.
+    がましい is handled at the end of the pipeline instead: the compound merges
+    that build its host run later than this pass, and rejoining the suffix here
+    would consume the が they use to recognize that host.
     """
     tails = ("かっ", "かる", "かり", "かれ", "から", "かろ")
     new_result: list[dict] = []

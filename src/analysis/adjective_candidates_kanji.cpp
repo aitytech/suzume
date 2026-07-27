@@ -38,6 +38,11 @@ namespace {
 /// predicate (ない/なく/なかっ/なけれ).
 constexpr const char* kNegativeAdjectiveBase = "ない";
 
+/// Stem of the derivational suffix that builds an i-adjective from a nominal
+/// (未練がましい, 恩着せがましさ); its cells differ only past this point.
+constexpr const char* kGaMashiiStem = "がまし";
+constexpr size_t kGaMashiiStemLength = 3;
+
 // =============================================================================
 // Pattern Skip Helpers for I-Adjective Candidate Generation
 // =============================================================================
@@ -220,7 +225,14 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
     // (見もしない) are dropped downstream by the loop's verb-negative filter.
     bool medial_mo_adjective = first_hiragana == U'も' && kanji_end == start_pos + 1 &&
                                kanji_end + 1 < codepoints.size() && codepoints[kanji_end + 1] == U'し';
-    if (!medial_mo_adjective) {
+    // Exception: the derivational suffix がまし〜, which turns a nominal into an
+    // i-adjective (未練がましい, 言い訳がましく, 恩着せがましさ). Its が is part of
+    // the suffix, never the case particle, and the suffix is closed — so require
+    // the whole stem of it, not just its opening mora.
+    const bool ga_mashii_derivation =
+        first_hiragana == U'が' && kanji_end + kGaMashiiStemLength <= codepoints.size() &&
+        extractSubstring(codepoints, kanji_end, kanji_end + kGaMashiiStemLength) == kGaMashiiStem;
+    if (!medial_mo_adjective && !ga_mashii_derivation) {
       return;  // These particles follow nouns/verbs, not adjective stems
     }
   }

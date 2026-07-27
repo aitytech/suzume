@@ -141,6 +141,30 @@ bool crossesKkoNominalizer(const std::vector<char32_t>& codepoints, size_t start
   return false;
 }
 
+bool startsInsideGaMashiiSuffix(const std::vector<char32_t>& codepoints, size_t pos) {
+  // The suffix is が+ま+し followed by an i-adjective cell, so a candidate opens
+  // inside it when any of those three morae is at most two positions back.
+  constexpr size_t kSuffixStemLength = 3;
+  for (size_t offset = 0; offset < kSuffixStemLength; ++offset) {
+    if (offset > pos) {
+      break;
+    }
+    const size_t suffix_start = pos - offset;
+    if (suffix_start + kSuffixStemLength >= codepoints.size() || codepoints[suffix_start] != U'が' ||
+        codepoints[suffix_start + 1] != U'ま' || codepoints[suffix_start + 2] != U'し') {
+      continue;
+    }
+    // Only an adjective cell proves the suffix. The nominal まし takes the
+    // copula and case particles instead (こちらの方がましだ), and that が is the
+    // ordinary subject marker.
+    const char32_t cell = codepoints[suffix_start + kSuffixStemLength];
+    if (cell == U'い' || cell == U'く' || cell == U'さ' || cell == U'か' || cell == U'け') {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool classicalPastEnvironmentFollows(const dictionary::DictionaryManager& dict_manager,
                                      const std::vector<char32_t>& codepoints, size_t end_pos, bool is_izenkei) {
   constexpr size_t kFollowerProbeChars = 3;

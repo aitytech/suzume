@@ -376,19 +376,9 @@
       "description": "派生形容詞と形容詞語幹の接尾辞境界を保つ",
       "expected": [
         {
-          "lemma": "恩着せ",
-          "pos": "Noun",
-          "surface": "恩着せ"
-        },
-        {
-          "lemma": "が",
-          "pos": "Particle",
-          "surface": "が"
-        },
-        {
-          "lemma": "ましい",
+          "lemma": "恩着せがましい",
           "pos": "Adjective",
-          "surface": "ましい"
+          "surface": "恩着せがましい"
         },
         {
           "lemma": "態度",

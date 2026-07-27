@@ -1936,6 +1936,67 @@
       ],
       "id": "kareto_u",
       "input": "高かれと願う"
+    },
+    {
+      "description": "名詞＋派生接尾辞がまし〜",
+      "expected": [
+        {
+          "lemma": "未練がましい",
+          "pos": "Adjective",
+          "surface": "未練がましい"
+        },
+        {
+          "lemma": "態度",
+          "pos": "Noun",
+          "surface": "態度"
+        }
+      ],
+      "id": "gamashii",
+      "input": "未練がましい態度"
+    },
+    {
+      "description": "転成名詞＋派生接尾辞がまし〜",
+      "expected": [
+        {
+          "lemma": "押しつけがましい",
+          "pos": "Adjective",
+          "surface": "押しつけがましい"
+        },
+        {
+          "lemma": "言い方",
+          "pos": "Noun",
+          "surface": "言い方"
+        }
+      ],
+      "id": "shitsukegamashii_i",
+      "input": "押しつけがましい言い方"
+    },
+    {
+      "description": "複合転成名詞＋派生接尾辞がまし〜",
+      "expected": [
+        {
+          "lemma": "恩着せがましい",
+          "pos": "Adjective",
+          "surface": "恩着せがましい"
+        },
+        {
+          "lemma": "態度",
+          "pos": "Noun",
+          "surface": "態度"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "取る",
+          "pos": "Verb",
+          "surface": "取る"
+        }
+      ],
+      "id": "segamashii_wo_ru",
+      "input": "恩着せがましい態度を取る"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",

@@ -12,6 +12,7 @@ from .postprocessors import (
     postprocess_adverb_nominal_context,
     postprocess_attributive_mamonaku,
     postprocess_binding_negative_aux,
+    postprocess_bound_derived_adjective,
     postprocess_chigai_negative_adjective,
     postprocess_classical_conjecture_aux,
     postprocess_classical_desiderative_aux,
@@ -305,6 +306,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "binding-negative-aux"
     if postprocess_productive_search_unit_boundaries(tokens) and applied_rule is None:
         applied_rule = "productive-search-unit-boundaries"
+    if postprocess_bound_derived_adjective(tokens) and applied_rule is None:
+        applied_rule = "bound-derived-adjective"
 
     # Normalize full-width alphanumeric to half-width
     fullwidth_applied = False
