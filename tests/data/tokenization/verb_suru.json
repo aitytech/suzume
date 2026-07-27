@@ -1900,6 +1900,28 @@
       ],
       "id": "ni_shita_2",
       "input": "条件に合致した"
+    },
+    {
+      "description": "formal noun after a numeral is a counter",
+      "expected": [
+        {
+          "lemma": "一通り",
+          "pos": "Noun",
+          "surface": "一通り"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ri_suru",
+      "input": "一通り確認する"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

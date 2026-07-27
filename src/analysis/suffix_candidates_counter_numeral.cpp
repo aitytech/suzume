@@ -167,7 +167,16 @@ void appendBasicNumeralCounterCandidates(const std::vector<char32_t>& codepoints
         break;
       }
     }
-    if (has_deverbal_counter && !inflected_predicate) {
+    // A formal noun in the same slot is the same construction read off the
+    // other side of the lexicon: 通り counts ways (一通り, 三通り) just as 切れ
+    // counts slices, and its kanji alone spells the unrelated counter 通
+    // (手紙三通). Only the formal-noun subclass qualifies — an ordinary noun
+    // after a numeral is a modified nominal, not a quantity phrase.
+    const auto* formal_noun =
+        dict_manager->lookupExact(extractSubstring(codepoints, numeral_end, counter_end), core::PartOfSpeech::Noun);
+    const bool has_formal_noun_counter =
+        formal_noun != nullptr && formal_noun->extended_pos == core::ExtendedPOS::NounFormal;
+    if ((has_deverbal_counter || has_formal_noun_counter) && !inflected_predicate) {
       std::string surface = extractSubstring(codepoints, start_pos, counter_end);
       auto cand =
           makeCandidate(surface, start_pos, counter_end, core::PartOfSpeech::Noun, candidate::kCounterNounSplitBonus,
