@@ -1976,6 +1976,33 @@
       ],
       "id": "wo_suru_3",
       "input": "数値を検出する"
+    },
+    {
+      "description": "Negative control: a lexical compound ending in 弱 stays whole",
+      "expected": [
+        {
+          "lemma": "体力",
+          "pos": "Noun",
+          "surface": "体力"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "衰弱",
+          "pos": "Noun",
+          "surface": "衰弱"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ga_suru",
+      "input": "体力が衰弱する"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

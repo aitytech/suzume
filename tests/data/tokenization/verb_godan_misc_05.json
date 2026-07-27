@@ -1199,6 +1199,87 @@
       ],
       "id": "gaafureru",
       "input": "水があふれる"
+    },
+    {
+      "description": "Approximation suffix keeps the quantity phrase boundary",
+      "expected": [
+        {
+          "lemma": "三割",
+          "pos": "Noun",
+          "surface": "三割"
+        },
+        {
+          "lemma": "強",
+          "pos": "Suffix",
+          "surface": "強"
+        },
+        {
+          "lemma": "増える",
+          "pos": "Verb",
+          "surface": "増える"
+        }
+      ],
+      "id": "eru_2",
+      "input": "三割強増える"
+    },
+    {
+      "description": "Approximation suffix after a temporal counter",
+      "expected": [
+        {
+          "lemma": "二時間",
+          "pos": "Noun",
+          "surface": "二時間"
+        },
+        {
+          "lemma": "弱",
+          "pos": "Suffix",
+          "surface": "弱"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わる"
+        }
+      ],
+      "id": "de_waru",
+      "input": "二時間弱で終わる"
+    },
+    {
+      "description": "Negative control: a lexical compound keeps its whole-word candidate",
+      "expected": [
+        {
+          "lemma": "最強",
+          "pos": "Noun",
+          "surface": "最強"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ぶ"
+        }
+      ],
+      "id": "no_wo_bu",
+      "input": "最強の方法を選ぶ"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

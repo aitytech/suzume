@@ -36,6 +36,14 @@ EntrySpecRange getFormalNounEntries() {
       // Temporal endpoint formal noun (年度末、学期末). Short lexical compounds
       // such as 月末 retain their whole-word candidate.
       formal_noun("末", ""),
+      // Approximation suffixes on a quantity phrase (三割強、二時間弱). They
+      // modify the amount rather than join it, so the quantity keeps its own
+      // boundary — the digit spelling already splits (10割|強) and the kanji
+      // spelling has to agree. Lexical compounds (勉強、衰弱) keep their
+      // whole-word candidate because only a numeral+counter head reaches the
+      // quantity boundary rule.
+      suffix("強", ""),
+      suffix("弱", ""),
       formal_noun("あいだ", ""),
       formal_noun("うち", ""),
       formal_noun("途中", ""),
