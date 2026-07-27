@@ -2260,6 +2260,60 @@
       ],
       "id": "shitakotoninaru",
       "input": "確認したことになる"
+    },
+    {
+      "description": "そのままで進める - auto-generated",
+      "expected": [
+        {
+          "lemma": "そのまま",
+          "pos": "Adverb",
+          "surface": "そのまま"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "sonomamade_meru",
+      "input": "そのままで進める"
+    },
+    {
+      "description": "今のままで進める - auto-generated",
+      "expected": [
+        {
+          "lemma": "今",
+          "pos": "Noun",
+          "surface": "今"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "まま",
+          "pos": "Noun",
+          "surface": "まま"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "nomamade_meru",
+      "input": "今のままで進める"
     }
   ],
   "description": "formal_noun tests",

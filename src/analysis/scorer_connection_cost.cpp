@@ -82,8 +82,16 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
   // (確認+だ+から+こそ), and only a clause boundary in front of the conjunction
   // makes the listed reading available.
   const bool copula_initial_conjunction = utf8::startsWith(next.surface, "だ");
-  if (next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun &&
-      (unknown_hiragana_conjunction_host || te_form_conjunction || copula_initial_conjunction)) {
+  const bool barred_conjunction_host =
+      next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun &&
+      (unknown_hiragana_conjunction_host || te_form_conjunction || copula_initial_conjunction);
+  // A focus particle marks a phrase the analyzer has already identified. An
+  // unknown hiragana noun is the fallback for material it could not, so the
+  // pairing means the boundary landed inside a word rather than after one
+  // (昔+の+まま+で, where のま+まで invents a host for まで).
+  const bool barred_focus_particle_host = next.extended_pos == core::ExtendedPOS::ParticleAdverbial &&
+                                          prev.pos == core::PartOfSpeech::Noun && unknown_hiragana_conjunction_host;
+  if (barred_conjunction_host || barred_focus_particle_host) {
     bonus += cost::kProhibitive;
   }
   const bool conjunction_before_hiragana_de = prev.pos == core::PartOfSpeech::Conjunction &&
