@@ -1177,6 +1177,28 @@
       ],
       "id": "wo_kai_waseni_beru",
       "input": "席を向かい合わせに並べる"
+    },
+    {
+      "description": "Negative control: a real subject marker still breaks a fabricated predicate span",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "あふれる",
+          "pos": "Verb",
+          "surface": "あふれる"
+        }
+      ],
+      "id": "gaafureru",
+      "input": "水があふれる"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

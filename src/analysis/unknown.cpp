@@ -306,6 +306,13 @@ bool spansCaseParticleBeforeVerifiedPredicate(const suzume::analysis::UnknownCan
     if (boundary + 2 >= candidate.end) {
       continue;
     }
+    // A bound derivational suffix owns its own opening mora, so the kana there
+    // is not a particle at all (押しつけ+がまし+さ). Without this the guard
+    // reads the suffix as 押しつけ+が+まし and refuses the derived adjective.
+    // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+    if (suzume::analysis::verb_helpers::startsInsideGaMashiiSuffix(codepoints, boundary)) {
+      continue;
+    }
     const std::string particle = suzume::analysis::extractSubstring(codepoints, boundary, boundary + 1);
     const auto* entry = dict_manager->lookupExact(particle, suzume::core::PartOfSpeech::Particle);
     if (entry == nullptr || (entry->extended_pos != suzume::core::ExtendedPOS::ParticleCase &&
