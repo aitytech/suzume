@@ -95,8 +95,15 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // exclusive construction (する+しか+ない, 見る+しか+ない).
       {EPOS::VerbShuushikei, EPOS::ParticleBinding, cost::kVeryStrongBonus},
 
-      // An irrealis verb form selects auxiliaries, not a case particle.
+      // An irrealis verb form selects auxiliaries, not a particle. The stem is
+      // unfinished, so nothing that attaches to a completed phrase can follow
+      // it — a case particle no more than a focus or topic marker
+      // (昔+の+まま+で, never 昔+のま+まで). The conjunctive class is
+      // deliberately absent: the classical conditional really is 未然形+ば.
       {EPOS::VerbMizenkei, EPOS::ParticleCase, cost::kAlmostNever},
+      {EPOS::VerbMizenkei, EPOS::ParticleAdverbial, cost::kAlmostNever},
+      {EPOS::VerbMizenkei, EPOS::ParticleBinding, cost::kAlmostNever},
+      {EPOS::VerbMizenkei, EPOS::ParticleTopic, cost::kAlmostNever},
 
       // A derivational suffix completes a nominal unit and cannot directly
       // take a predicate connective. Case-marked nominalizations such as
