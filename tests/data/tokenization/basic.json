@@ -718,6 +718,33 @@
       ],
       "id": "oishii",
       "input": "大変おいしい料理"
+    },
+    {
+      "description": "A nominal head selected by a determiner cannot span the genitive into a formal noun",
+      "expected": [
+        {
+          "lemma": "ある",
+          "pos": "Determiner",
+          "surface": "ある"
+        },
+        {
+          "lemma": "日",
+          "pos": "Noun",
+          "surface": "日"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        }
+      ],
+      "id": "aru_nokoto",
+      "input": "ある日のこと"
     }
   ],
   "description": "Basic tokenization tests",

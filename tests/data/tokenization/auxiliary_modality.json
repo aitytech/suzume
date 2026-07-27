@@ -2046,6 +2046,38 @@
       ],
       "id": "korehododehanai",
       "input": "これほどではない"
+    },
+    {
+      "description": "Negative control: the genitive still opens a nominal the head must not absorb",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "気",
+          "pos": "Noun",
+          "surface": "気"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "せい",
+          "pos": "Noun",
+          "surface": "せい"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "sono_noseida",
+      "input": "その気のせいだ"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

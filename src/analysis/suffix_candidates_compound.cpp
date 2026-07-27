@@ -145,6 +145,16 @@ bool hasInternalNominalParticleBoundary(const std::vector<char32_t>& codepoints,
       if (hasExactPartOfSpeech(*dict_manager, remainder, kPredicateMask)) {
         return true;
       }
+      // The particle joins two complete constituents, so a head may only span
+      // it when what follows finishes a lexicalized nominal (目の前). A
+      // remainder that is no word at all means the head cut into the word
+      // after it instead (日のこ|と, where こと is the formal noun).
+      constexpr PartOfSpeechMask kNominalMask = partOfSpeechMask(core::PartOfSpeech::Noun) |
+                                                partOfSpeechMask(core::PartOfSpeech::Pronoun) |
+                                                partOfSpeechMask(core::PartOfSpeech::Suffix);
+      if (!hasExactPartOfSpeech(*dict_manager, remainder, kNominalMask)) {
+        return true;
+      }
     }
   }
   return false;

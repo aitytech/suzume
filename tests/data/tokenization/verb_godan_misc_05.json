@@ -1356,6 +1356,43 @@
       ],
       "id": "karimasu",
       "input": "大変助かります"
+    },
+    {
+      "description": "Same head shape after a demonstrative determiner",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "日",
+          "pos": "Noun",
+          "surface": "日"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "思い出す",
+          "pos": "Verb",
+          "surface": "思い出す"
+        }
+      ],
+      "id": "sono_nokotowo_i_su",
+      "input": "その日のことを思い出す"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
