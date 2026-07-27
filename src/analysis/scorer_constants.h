@@ -377,6 +377,10 @@ constexpr float kEosAspectKuruPenalty = 3.0F;  // き (来 aspect) needs a follo
 constexpr float kEosListingParticlePenalty = 2.0F;  // たり listing particle needs a parallel predicate
 constexpr float kEosBindingParticleBonus = scale::kExtraStrongBonus;  // Keep standalone こそ/さえ intact
 constexpr float kEosPrefixPenalty = scale::kAlmostNever;              // Prefix requires a following host
+// A 連体詞 modifies the nominal after it, so it cannot close a sentence either.
+// Without this a determiner homographic with a finished predicate wins over that
+// predicate when nothing follows (とんだ read as the determiner, not 飛ん+だ).
+constexpr float kEosDeterminerPenalty = kEosPrefixPenalty;
 // A one-mora continuative cannot close a sentence: it always needs an auxiliary
 // or a subsidiary verb after it (確認したらしい, not 確認したら+し+い).
 constexpr float kEosShortRenyokeiPenalty = scale::kStrong;
@@ -427,6 +431,7 @@ constexpr std::array<BoundaryCost, static_cast<size_t>(core::ExtendedPOS::Count_
   table[static_cast<size_t>(core::ExtendedPOS::ParticleConj)].eos_gate = EosBoundaryGate::ListingParticle;
   table[static_cast<size_t>(core::ExtendedPOS::ParticleBinding)].eos = kEosBindingParticleBonus;
   table[static_cast<size_t>(core::ExtendedPOS::Prefix)].eos = kEosPrefixPenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::Determiner)].eos = kEosDeterminerPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::VerbRenyokei)].eos = kEosShortRenyokeiPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::VerbRenyokei)].eos_gate = EosBoundaryGate::SingleCodepoint;
 

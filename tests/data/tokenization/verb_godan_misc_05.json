@@ -1393,6 +1393,60 @@
       ],
       "id": "sono_nokotowo_i_su",
       "input": "その日のことを思い出す"
+    },
+    {
+      "description": "Evaluative determiner before a nominal",
+      "expected": [
+        {
+          "lemma": "とんだ",
+          "pos": "Determiner",
+          "surface": "とんだ"
+        },
+        {
+          "lemma": "災難",
+          "pos": "Noun",
+          "surface": "災難"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "遭う",
+          "pos": "Verb",
+          "surface": "遭う"
+        }
+      ],
+      "id": "tonda_ni_u",
+      "input": "とんだ災難に遭う"
+    },
+    {
+      "description": "Negative control: the same kana is the past predicate when nothing follows",
+      "expected": [
+        {
+          "lemma": "鳥",
+          "pos": "Noun",
+          "surface": "鳥"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "とぶ",
+          "pos": "Verb",
+          "surface": "とん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "gatonda",
+      "input": "鳥がとんだ"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

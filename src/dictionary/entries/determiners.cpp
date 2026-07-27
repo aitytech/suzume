@@ -30,6 +30,9 @@ EntrySpecRange getDeterminerEntries() {
       det("たいした", ""),  // 大した - prevent 願望たい+し+た split (たいした問題)
       det("大した", ""),    // kanji spelling of the fixed evaluative determiner
       det("あくる", ""),    // 時間名詞を修飾する固定連体詞
+      // Evaluative determiner (とんだ災難). Homographic with the past tense of
+      // 飛ぶ/跳ぶ, which is written with its kanji when that verb is meant.
+      det("とんだ", ""),
       det("何らかの", ""),  // indefinite determiner (何らかの方法)
 
       // Demonstrative manner determiners (指示様態連体詞)
