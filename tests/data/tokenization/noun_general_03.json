@@ -841,6 +841,108 @@
       ],
       "id": "unnamed_17",
       "input": "確認以前"
+    },
+    {
+      "description": "望ましい方向 - regression test",
+      "expected": [
+        {
+          "lemma": "望ましい",
+          "pos": "Adjective",
+          "surface": "望ましい"
+        },
+        {
+          "lemma": "方向",
+          "pos": "Noun",
+          "surface": "方向"
+        }
+      ],
+      "id": "mashii",
+      "input": "望ましい方向"
+    },
+    {
+      "description": "やり方 - regression test",
+      "expected": [
+        {
+          "lemma": "やり方",
+          "pos": "Noun",
+          "surface": "やり方"
+        }
+      ],
+      "id": "yari",
+      "input": "やり方"
+    },
+    {
+      "description": "あり方 - regression test",
+      "expected": [
+        {
+          "lemma": "あり方",
+          "pos": "Noun",
+          "surface": "あり方"
+        }
+      ],
+      "id": "ari",
+      "input": "あり方"
+    },
+    {
+      "description": "A4サイズの紙 - regression test",
+      "expected": [
+        {
+          "lemma": "A4",
+          "pos": "Noun",
+          "surface": "A4"
+        },
+        {
+          "lemma": "サイズ",
+          "pos": "Noun",
+          "surface": "サイズ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        }
+      ],
+      "id": "a4_no",
+      "input": "A4サイズの紙"
+    },
+    {
+      "description": "B5サイズ - regression test",
+      "expected": [
+        {
+          "lemma": "B5",
+          "pos": "Noun",
+          "surface": "B5"
+        },
+        {
+          "lemma": "サイズ",
+          "pos": "Noun",
+          "surface": "サイズ"
+        }
+      ],
+      "id": "b5",
+      "input": "B5サイズ"
+    },
+    {
+      "description": "3キロ走る - regression test",
+      "expected": [
+        {
+          "lemma": "3キロ",
+          "pos": "Noun",
+          "surface": "3キロ"
+        },
+        {
+          "lemma": "走る",
+          "pos": "Verb",
+          "surface": "走る"
+        }
+      ],
+      "id": "3_ru",
+      "input": "3キロ走る"
     }
   ],
   "description": "General nouns (part 3/3)",
