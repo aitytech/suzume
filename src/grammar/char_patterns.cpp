@@ -298,7 +298,7 @@ bool endsWithAdministrativeSuffix(std::string_view surface) {
 }
 
 bool startsClassicalDesiderativeSequence(std::string_view surface) {
-  return utf8::startsWith(surface, "まほしき");
+  return utf8::startsWith(surface, "まほし");
 }
 
 bool isClassicalDesiderativeMarker(std::string_view surface) {

@@ -1385,13 +1385,25 @@ def postprocess_you_noun(tokens: list[dict]) -> None:
 
 
 def postprocess_classical_conjecture_aux(tokens: list[dict]) -> None:
-    """Treat classical けむ/らむ after a verb as auxiliaries."""
-    for idx, token in enumerate(tokens):
-        if idx == 0 or token.get("surface") not in ("けむ", "らむ"):
-            continue
-        if tokens[idx - 1].get("pos") == "Verb":
+    """Treat classical けむ/らむ after a predicate as auxiliaries.
+
+    The analyzer knows neither auxiliary. After a verb it at least keeps the two
+    morae together; after a nominal predicate it splits them into a plural
+    suffix plus an unknown noun (確認+ら+む), which is rejoined here.
+    """
+    for idx in range(len(tokens) - 1, 0, -1):
+        token = tokens[idx]
+        if token.get("surface") in ("けむ", "らむ") and tokens[idx - 1].get("pos") == "Verb":
             token["pos"] = "Auxiliary"
             token["lemma"] = token["surface"]
+            continue
+        if (
+            idx >= 2
+            and (tokens[idx - 1].get("surface"), token.get("surface")) in (("け", "む"), ("ら", "む"))
+            and tokens[idx - 2].get("pos") in ("Noun", "Verb")
+        ):
+            merged = tokens[idx - 1].get("surface", "") + "む"
+            tokens[idx - 1 : idx + 1] = [{"surface": merged, "pos": "Auxiliary", "lemma": merged}]
 
 
 def postprocess_classical_kere_aux(tokens: list[dict]) -> bool:
@@ -1427,10 +1439,14 @@ def postprocess_classical_ramu_boundary(tokens: list[dict]) -> None:
 
 
 def postprocess_classical_desiderative_aux(tokens: list[dict]) -> bool:
-    """Normalize the split classical desiderative ま + ほしき chain."""
+    """Normalize the split classical desiderative ま + ほし chain.
+
+    ほし is the terminal cell of the same adjective the attributive ほしき
+    spells, and the analyzer splits both the same way.
+    """
     changed = False
     for idx, token in enumerate(tokens[:-1]):
-        if token.get("surface") != "ま" or tokens[idx + 1].get("surface") != "ほしき":
+        if token.get("surface") != "ま" or tokens[idx + 1].get("surface") not in ("ほし", "ほしき"):
             continue
         token["pos"] = "Auxiliary"
         token["lemma"] = "まほし"

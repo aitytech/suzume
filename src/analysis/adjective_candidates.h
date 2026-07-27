@@ -134,6 +134,22 @@ void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t st
                               std::vector<UnknownCandidate>& candidates);
 
 /**
+ * @brief Append classical i-adjective terminal candidates (stem + し)
+ *
+ * The classical 終止形 closes a clause where the modern base would stand
+ * (山高し, 見まほし). Both paradigms spell it with a final し, so the candidate
+ * is emitted only when the reconstructed modern base is a dictionary adjective
+ * and no su-row verb claims the same spelling.
+ *
+ * @param scan_start First index where the terminal し may sit (kanji_end for a
+ *        kanji stem, start_pos for a pure-hiragana stem).
+ * @param scan_end   One past the last index to scan (hiragana region end).
+ */
+void appendIAdjClassicalTerminalCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
+                                           size_t scan_end, const dictionary::DictionaryManager* dict_manager,
+                                           std::vector<UnknownCandidate>& candidates);
+
+/**
  * @brief Append i-adjective classical negative-stem candidates (stem + から + ず)
  *
  * The classical negative form 高からず / 美しからず has a verb-like から

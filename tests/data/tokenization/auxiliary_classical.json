@@ -557,6 +557,84 @@
       ],
       "id": "semajito_u",
       "input": "確認せまじと思う"
+    },
+    {
+      "description": "Classical perfect つ after a sahen continuative",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "つ",
+          "pos": "Auxiliary",
+          "surface": "つ"
+        }
+      ],
+      "id": "shitsu",
+      "input": "確認しつ"
+    },
+    {
+      "description": "Classical perfect つ after a godan continuative",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "つ",
+          "pos": "Auxiliary",
+          "surface": "つ"
+        }
+      ],
+      "id": "kitsu",
+      "input": "書きつ"
+    },
+    {
+      "description": "Classical present conjecture らむ on a nominal predicate",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "らむ",
+          "pos": "Auxiliary",
+          "surface": "らむ"
+        }
+      ],
+      "id": "ramu",
+      "input": "確認らむ"
+    },
+    {
+      "description": "Classical desiderative terminal まほし",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "まほし",
+          "pos": "Auxiliary",
+          "surface": "ま"
+        },
+        {
+          "lemma": "ほしい",
+          "pos": "Adjective",
+          "surface": "ほし"
+        }
+      ],
+      "id": "mahoshi",
+      "input": "見まほし"
     }
   ],
   "description": "auxiliary_classical tests",

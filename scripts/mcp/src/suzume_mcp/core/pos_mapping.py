@@ -136,11 +136,6 @@ def map_mecab_pos(token: dict | str) -> str:
         token["lemma"] = "推し"
         return "Noun"
 
-    # 寒し: 形容詞 -> Noun
-    if surface == "寒し" and pos == "形容詞":
-        token["lemma"] = "寒し"
-        return "Noun"
-
     # 超: 接頭詞 -> Noun
     if surface == "超" and pos == "接頭詞":
         return "Noun"

@@ -94,6 +94,10 @@ EntrySpecRange getAuxiliaryEntries() {
       // the dictionary edge is admitted only there.  See
       // grammar::spellsHypotheticalAuxiliaryCell.
       aux("たれ", "たり", EPOS::AuxClassicalPerfect),
+      // 完了の助動詞つ, 終止形 (見つ, 書きつ). One mora, and the tail of a great
+      // many words, so the tokenizer admits it only between a continuative and
+      // a clause end.
+      aux("つ", "つ", EPOS::AuxClassicalPerfect),
       aux("り", "り", EPOS::AuxClassicalPerfect),  // 存続 (行けり)
       // Classical past き: only its 連体形 し and 已然形 しか survive in
       // ordinary text, and both attach to a continuative (読みし人, 見しかば).

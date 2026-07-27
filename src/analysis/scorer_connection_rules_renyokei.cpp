@@ -244,13 +244,21 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   }
 
   // Classical completion たり follows the continuative form, and so does the
-  // 已然形 of the same auxiliary (記録し+たれ+ども). The terminal surface is also
-  // the modern listing particle, whose sentence-final use is penalized at EOS;
-  // this left-side rule selects the literary auxiliary in its complete predicate
-  // construction (行き+たり).
+  // 已然形 of the same auxiliary (記録し+たれ+ども) and the perfect つ (書き+つ).
+  // Each terminal surface is also something else — the modern listing particle,
+  // the tail of a godan-ta verb — so this left-side rule selects the literary
+  // auxiliary in its complete predicate construction (行き+たり). The perfect り
+  // is deliberately absent: it takes the realis, and after a continuative the
+  // same mora is the far more frequent deverbal-noun ending (書き+まくり).
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       next.extended_pos == core::ExtendedPOS::AuxClassicalPerfect && utf8::equalsAny(next.surface, {"たり", "たれ"})) {
     bonus += cost::kVeryStrongBonus;
+  }
+  // The perfect つ needs the narrower margin: a one-mora continuative in front
+  // of it is also the opening kana of ordinary words (いつ, かつ).
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      next.extended_pos == core::ExtendedPOS::AuxClassicalPerfect && utf8::equalsAny(next.surface, {"つ"})) {
+    bonus += cost::kStrongBonus;
   }
 
   // Recent-completion たて attaches directly to a verb's continuative form

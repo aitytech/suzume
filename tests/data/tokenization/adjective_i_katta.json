@@ -157,8 +157,8 @@
           "surface": "は"
         },
         {
-          "lemma": "寒し",
-          "pos": "Noun",
+          "lemma": "寒い",
+          "pos": "Adjective",
           "surface": "寒し"
         }
       ],
@@ -313,6 +313,23 @@
       ],
       "id": "verified_adjective_past_control",
       "input": "山が高かった。"
+    },
+    {
+      "description": "Classical i-adjective terminal after a nominal",
+      "expected": [
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高し"
+        }
+      ],
+      "id": "shi_2",
+      "input": "山高し"
     }
   ],
   "description": "I-adjectives past forms (過去形) - katta forms, past negative, past with desu",

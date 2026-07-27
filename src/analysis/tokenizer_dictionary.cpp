@@ -1289,6 +1289,19 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       continue;
     }
 
+    // A one-mora classical perfect is the tail of far more words than it is an
+    // auxiliary (待つ, 一つ, いつの間にか), so it is admitted only where the
+    // paradigm cell it attaches to actually precedes it. The realis is evidence
+    // enough on its own, because り is the only auxiliary that takes it
+    // (行け+り). A continuative precedes half the lattice, so the terminal つ
+    // additionally needs the clause end its form implies (書き+つ).
+    if (result.entry->extended_pos == core::ExtendedPOS::AuxClassicalPerfect && end_pos == start_pos + 1 &&
+        !hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::VerbKateikei) &&
+        !(hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::VerbRenyokei) &&
+          classicalPastEnvironmentFollows(dict_manager_, codepoints, end_pos, false))) {
+      continue;
+    }
+
     // An interjection is an utterance of its own, closed by punctuation or by a
     // change of script rather than continued by more kana. Where its surface is
     // also the irrealis of a dictionary verb, that verb owns the paradigm behind

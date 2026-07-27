@@ -780,6 +780,58 @@ bool hasDictionaryVerifiedVerbAnalysis(const std::string& surface, const grammar
   return adj_detail::hasDictionaryVerbAnalysis(analyses, dict_manager);
 }
 
+void appendIAdjClassicalTerminalCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
+                                           size_t scan_end, const dictionary::DictionaryManager* dict_manager,
+                                           std::vector<UnknownCandidate>& candidates) {
+  for (size_t shi_pos = scan_start; shi_pos < scan_end; ++shi_pos) {
+    if (shi_pos <= start_pos || codepoints[shi_pos] != U'し') {
+      continue;
+    }
+    // The terminal closes its clause. Any hiragana behind it continues some
+    // other paradigm — the modern adjective's own (美し+かった), the sahen
+    // predicate's (確認し+て) — and that reading owns the mora.
+    if (shi_pos + 1 < codepoints.size() &&
+        normalize::classifyChar(codepoints[shi_pos + 1]) == normalize::CharType::Hiragana) {
+      continue;
+    }
+    const std::string stem = extractSubstring(codepoints, start_pos, shi_pos);
+    const std::string surface = extractSubstring(codepoints, start_pos, shi_pos + 1);
+    // A registered su-row base makes the same spelling that row's continuative
+    // (話し from 話す), which is the incomparably more frequent reading.
+    if (verb_helpers::isVerbInDictionary(dict_manager, stem + "す") ||
+        verb_helpers::hasNonVerbDictionaryEntry(dict_manager, surface)) {
+      continue;
+    }
+    // The ku paradigm spells its terminal by adding し to the stem the modern
+    // base keeps (高い -> 高し); the shiku paradigm already ends in that mora and
+    // spells the terminal with the stem itself (欲しい -> 欲し). Only a dictionary
+    // base licenses the reading: the analyzer endorses an i-adjective shape for
+    // any run ending in し, which would fabricate one per kanji run.
+    std::string lemma = surface + "い";
+    if (!verb_helpers::isAdjectiveInDictionary(dict_manager, lemma)) {
+      lemma = stem + "い";
+      if (!verb_helpers::isAdjectiveInDictionary(dict_manager, lemma)) {
+        continue;
+      }
+    }
+    UnknownCandidate terminal;
+    terminal.surface = surface;
+    terminal.start = start_pos;
+    terminal.end = shi_pos + 1;
+    terminal.pos = core::PartOfSpeech::Adjective;
+    terminal.lemma = lemma;
+    terminal.cost = candidate::verb_cost::kStrongBonus;
+    terminal.has_suffix = true;
+    terminal.extended_pos = core::ExtendedPOS::AdjBasic;
+#ifdef SUZUME_DEBUG_INFO
+    terminal.origin = CandidateOrigin::AdjectiveI;
+    terminal.confidence = candidate::kIAdjKaroConfidence;
+    terminal.pattern = "i_adjective_classical_shi";
+#endif
+    candidates.push_back(std::move(terminal));
+  }
+}
+
 void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
                               size_t scan_end, const grammar::Inflection& inflection,
                               const dictionary::DictionaryManager* dict_manager,
