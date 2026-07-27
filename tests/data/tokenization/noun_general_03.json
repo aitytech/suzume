@@ -970,6 +970,28 @@
       ],
       "id": "no_6",
       "input": "学生用の机"
+    },
+    {
+      "description": "語彙化した転成名詞 見かけ が閉じクラス断片に割れない",
+      "expected": [
+        {
+          "lemma": "見かけ",
+          "pos": "Noun",
+          "surface": "見かけ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "数字",
+          "pos": "Noun",
+          "surface": "数字"
+        }
+      ],
+      "id": "kakeno",
+      "input": "見かけの数字"
     }
   ],
   "description": "General nouns (part 3/3)",

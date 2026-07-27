@@ -743,6 +743,50 @@
       ],
       "id": "eru",
       "input": "人数増える"
+    },
+    {
+      "description": "擬態語由来の固定副詞が語幹と助詞に割れない",
+      "expected": [
+        {
+          "lemma": "せっせと",
+          "pos": "Adverb",
+          "surface": "せっせと"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "settseto_meru",
+      "input": "せっせと進める"
+    },
+    {
+      "description": "固定副詞 相変わらず が捏造動詞+否定に割れない",
+      "expected": [
+        {
+          "lemma": "相変わらず",
+          "pos": "Adverb",
+          "surface": "相変わらず"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "warazu_gaaru",
+      "input": "相変わらず問題がある"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
