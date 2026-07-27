@@ -326,6 +326,43 @@ void generateProductiveSuffixVerbCandidates(const std::vector<char32_t>& codepoi
     return;
   }
 
+  // めかす derives a transitive verb from the same nominal bases as めく
+  // (冗談めかす, 秘密めかした) but inflects as Godan-sa, so its cells are not
+  // reachable from the Godan-ka table above. Without them the surface is read
+  // as めく's irrealis plus the classical causative す, which puts the boundary
+  // one mora early and turns the continuative into an auxiliary.
+  struct GodanSaForm {
+    std::string_view inflection;
+    core::ExtendedPOS extended_pos;
+  };
+  static constexpr std::array<GodanSaForm, 5> kMekasuForms = {{
+      {"めかす", core::ExtendedPOS::VerbShuushikei},
+      {"めかさ", core::ExtendedPOS::VerbMizenkei},
+      {"めかし", core::ExtendedPOS::VerbRenyokei},
+      {"めかせ", core::ExtendedPOS::VerbKateikei},
+      {"めかそ", core::ExtendedPOS::VerbMizenkei},
+  }};
+  if (!numeral_led_base) {
+    for (const auto& form : kMekasuForms) {
+      const size_t form_length = normalize::utf8Length(form.inflection);
+      const size_t candidate_end = base_end + form_length;
+      if (candidate_end > codepoints.size() ||
+          extractSubstring(codepoints, base_end, candidate_end) != form.inflection) {
+        continue;
+      }
+
+      const std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
+      const std::string lemma = extractSubstring(codepoints, start_pos, base_end) + "めかす";
+      auto candidate = makeVerbCandidate(surface, start_pos, candidate_end, candidate::kProductiveSuffixVerbCost, lemma,
+                                         dictionary::ConjugationType::GodanSa, true, CandidateOrigin::SuffixPattern,
+                                         candidate::kDictionaryOriginConfidence, "nominal_godan_sa_mekasu_suffix",
+                                         form.extended_pos);
+      candidate.lemma_verified = true;
+      candidates.push_back(std::move(candidate));
+      return;
+    }
+  }
+
   for (const auto& suffix_stem : kNominalSuffixVerbStems) {
     if (numeral_led_base) {
       break;
