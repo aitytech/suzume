@@ -141,6 +141,43 @@ void appendBasicNumeralCounterCandidates(const std::vector<char32_t>& codepoints
     }
   }
 
+  // A deverbal counter is written with its okurigana (一切れ, 三重ね), so the
+  // quantity phrase spans past the numeral+kanji prefix that a dictionary entry
+  // happens to cover — the adverb 一切, the noun 三重.  The registered
+  // continuative behind the counter is what licenses the extra kana, and the
+  // char-property table cannot hold the counter because its kanji alone spells
+  // something else.  Only a single trailing kana qualifies: a longer okurigana
+  // run is an inflected predicate, not a counter.
+  if (dict_manager != nullptr && numeral_end + 1 < codepoints.size() &&
+      normalize::isKanjiCodepoint(codepoints[numeral_end]) &&
+      normalize::classifyChar(codepoints[numeral_end + 1]) == normalize::CharType::Hiragana) {
+    const size_t counter_end = numeral_end + 2;
+    const bool has_deverbal_counter =
+        lookupResultsHavePartOfSpeech(dict_manager->lookup(extractSubstring(codepoints, numeral_end, counter_end), 0),
+                                      partOfSpeechMask(core::PartOfSpeech::Verb));
+    // A longer registered form of the same verb is an inflected predicate, and
+    // it owns the span rather than the counter reading (二重ねる, 三切れる).
+    bool inflected_predicate = false;
+    for (size_t probe_end = counter_end + 1; probe_end <= std::min(codepoints.size(), counter_end + 2); ++probe_end) {
+      if (hasExactPartOfSpeech(*dict_manager, extractSubstring(codepoints, numeral_end, probe_end),
+                               partOfSpeechMask(core::PartOfSpeech::Verb))) {
+        inflected_predicate = true;
+        break;
+      }
+    }
+    if (has_deverbal_counter && !inflected_predicate) {
+      std::string surface = extractSubstring(codepoints, start_pos, counter_end);
+      auto cand =
+          makeCandidate(surface, start_pos, counter_end, core::PartOfSpeech::Noun, candidate::kCounterNounSplitBonus,
+                        false, CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
+      cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+      cand.pattern = "numeral_okurigana_counter";
+#endif
+      candidates.push_back(cand);
+    }
+  }
+
   // Check for counter suffix (つ for native counters)
   char32_t next = codepoints[numeral_end];
   if (next == U'つ') {

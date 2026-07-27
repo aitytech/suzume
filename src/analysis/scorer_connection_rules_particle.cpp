@@ -186,7 +186,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   const bool unlicensed_hypothetical_host =
       prev.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
       prev.extended_pos == core::ExtendedPOS::ParticleBinding ||
-      (prev.extended_pos == core::ExtendedPOS::AuxPassive && !grammar::isPassiveHypotheticalCell(prev.surface));
+      (prev.extended_pos == core::ExtendedPOS::AuxPassive && !grammar::spellsHypotheticalAuxiliaryCell(prev.surface));
   const bool unlicensed_hypothetical = next.extended_pos == core::ExtendedPOS::ParticleConj &&
                                        grammar::isHypotheticalSelectingConjunctiveParticle(next.surface) &&
                                        unlicensed_hypothetical_host;

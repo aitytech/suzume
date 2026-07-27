@@ -251,12 +251,8 @@ bool isHypotheticalSelectingConjunctiveParticle(std::string_view surface) {
   return utf8::equalsAny(surface, {"ば", "ど", "ども"});
 }
 
-bool isClassicalPerfectIzenkeiSurface(std::string_view surface) {
-  return surface == "たれ";
-}
-
-bool isPassiveHypotheticalCell(std::string_view surface) {
-  return utf8::endsWith(surface, "れれ");
+bool spellsHypotheticalAuxiliaryCell(std::string_view surface) {
+  return utf8::endsWithAny(surface, {"れれ", "たれ"});
 }
 
 bool isColloquialConditionalNegativeSurface(std::string_view surface) {

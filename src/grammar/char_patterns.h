@@ -187,26 +187,17 @@ bool isListingParticleTariSurface(std::string_view surface);
 bool isHypotheticalSelectingConjunctiveParticle(std::string_view surface);
 
 /**
- * @brief Whether an auxiliary surface is the 已然形 of the classical perfect たり
+ * @brief Whether an auxiliary surface spells the cell ば/ど/ども select
  *
- * The cell occurs only before the conjunctive particle that selects it
- * (記録したれ+ども), the same environment the classical past's 已然形 needs.
- * Elsewhere those two kana spell the past auxiliary plus the passive (打た+れ),
- * so callers gate the entry on that follower.  The sibling cells 終止 たり and
- * 未然 たら stay unregistered because their collisions — the listing particle and
- * the conditional — have no distinguishing follower of their own.
+ * Each paradigm names that cell by its tail: the passive spells it れれ/られれ
+ * (書か+れれ+ば) and the classical perfect spells it たれ (記録し+たれ+ども).
+ * Their other cells do not — the passive's bare 未然/連用 れ, the perfect's 終止
+ * たり — which is what a caller needs on either side of the boundary: whether the
+ * たれ dictionary edge is licensed at all, and whether a passive form may carry
+ * one of those particles.  Callers pair this with the auxiliary's class, so a tail
+ * match cannot reach a cell of some other paradigm.
  */
-bool isClassicalPerfectIzenkeiSurface(std::string_view surface);
-
-/**
- * @brief Whether a passive-auxiliary surface is its hypothetical cell
- *
- * The passive paradigm fills the slot ば/ど/ども select with れれ/られれ
- * (書か+れれ+ば).  The bare れ/られ is the 未然/連用 cell, so it cannot carry
- * those particles even though it precedes every other conjunctive particle
- * (揉ま+れ+ながら).
- */
-bool isPassiveHypotheticalCell(std::string_view surface);
+bool spellsHypotheticalAuxiliaryCell(std::string_view surface);
 
 /** @brief Whether a negative auxiliary surface is a colloquial conditional form */
 bool isColloquialConditionalNegativeSurface(std::string_view surface);

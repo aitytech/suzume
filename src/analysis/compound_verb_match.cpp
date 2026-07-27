@@ -12,6 +12,18 @@ namespace {
 // A compound-verb candidate needs inflectional evidence, not a bare
 // continuative ending. Politeness is intentionally excluded: ます remains a
 // separate auxiliary token.
+bool isNumeralOnlySpan(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (start_pos >= end_pos || end_pos > codepoints.size()) {
+    return false;
+  }
+  for (size_t pos = start_pos; pos < end_pos; ++pos) {
+    if (!normalize::isNumeralCodepoint(codepoints[pos])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool hasAuxiliarySuffix(std::string_view suffix) {
   return !suffix.empty() && utf8::containsAny(suffix, {"た", "て", "で", "だ", "ない", "れ"});
 }
@@ -489,6 +501,14 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // Only generate compound verb candidates when V1 is a verified verb
     // This prevents false positives like 試験に落ちる (試験 is not a verb)
     if (!v1.verified) {
+      continue;
+    }
+
+    // A numeral names a quantity and is never a verbal element, so it cannot be
+    // the V1 of a compound verb.  The productive single-kanji V1 fallback is
+    // dictionary-free and otherwise accepts one (三+切れる, 二+重ねる), stealing
+    // the span from the quantity phrase it actually spells.
+    if (isNumeralOnlySpan(codepoints, start_pos, v2_start)) {
       continue;
     }
 

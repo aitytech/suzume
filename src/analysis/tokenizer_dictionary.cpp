@@ -1275,8 +1275,8 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // (消し+ます, 落ち+し+て).
     // The classical perfect たり contributes its own 已然形 たれ, which needs the
     // same conjunctive particle (記録したれ+ども).
-    const bool classical_perfect_izenkei = grammar::isClassicalPerfectIzenkeiSurface(result.entry->surface) &&
-                                           result.entry->extended_pos == core::ExtendedPOS::AuxClassicalPerfect;
+    const bool classical_perfect_izenkei = result.entry->extended_pos == core::ExtendedPOS::AuxClassicalPerfect &&
+                                           grammar::spellsHypotheticalAuxiliaryCell(result.entry->surface);
     if ((result.entry->extended_pos == core::ExtendedPOS::AuxClassicalKi || classical_perfect_izenkei) &&
         !classicalPastEnvironmentFollows(dict_manager_, codepoints, end_pos,
                                          classical_perfect_izenkei || end_pos - start_pos > 1)) {

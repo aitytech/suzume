@@ -481,6 +481,36 @@ bool hasNounNagaraNiBoundary(const core::Lattice& lattice, const dictionary::Dic
   });
 }
 
+/**
+ * @brief Whether a span is a numeral plus a counter written with okurigana
+ *
+ * A deverbal counter carries its okurigana into the quantity phrase (一切れ,
+ * 三重ね), so the span always extends past the numeral+kanji prefix that a
+ * dictionary entry happens to cover (the adverb 一切, the noun 三重).  The
+ * registered continuative behind the counter is what licenses the extra kana, so
+ * the coincidental prefix must not price the phrase out.
+ */
+bool isNumeralOkuriganaCounterPhrase(const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                     const std::vector<size_t>& byte_offsets, const std::vector<char32_t>& codepoints,
+                                     const std::vector<normalize::CharType>& char_types, size_t start_pos,
+                                     size_t end_pos) {
+  if (end_pos < start_pos + 3 || end_pos > codepoints.size()) {
+    return false;
+  }
+  const size_t counter_pos = end_pos - 2;
+  if (char_types[counter_pos] != normalize::CharType::Kanji ||
+      char_types[end_pos - 1] != normalize::CharType::Hiragana) {
+    return false;
+  }
+  for (size_t pos = start_pos; pos < counter_pos; ++pos) {
+    if (!normalize::isNumeralCodepoint(codepoints[pos])) {
+      return false;
+    }
+  }
+  return hasExactPartOfSpeech(dict_manager, textRange(text, byte_offsets, counter_pos, end_pos),
+                              partOfSpeechMask(core::PartOfSpeech::Verb));
+}
+
 }  // namespace
 
 void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view text,
@@ -670,6 +700,13 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     if (candidate.pos == core::PartOfSpeech::Adverb) {
       skip_penalty = true;
       skip_reason = "adverb";
+    }
+
+    if (!skip_penalty && candidate.pos == core::PartOfSpeech::Noun &&
+        isNumeralOkuriganaCounterPhrase(dict_manager_, text, byte_offsets, codepoints, char_types, candidate.start,
+                                        candidate.end)) {
+      skip_penalty = true;
+      skip_reason = "numeral_okurigana_counter";
     }
 
     if (!skip_penalty &&

@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "description": "Numeral plus a deverbal counter written with okurigana",
+      "expected": [
+        {
+          "lemma": "一切れ",
+          "pos": "Noun",
+          "surface": "一切れ"
+        },
+        {
+          "lemma": "ずつ",
+          "pos": "Particle",
+          "surface": "ずつ"
+        },
+        {
+          "lemma": "分ける",
+          "pos": "Verb",
+          "surface": "分ける"
+        }
+      ],
+      "id": "rezutsu_keru",
+      "input": "一切れずつ分ける"
+    },
+    {
+      "description": "Deverbal counter keeps its quantity reading before a predicate",
+      "expected": [
+        {
+          "lemma": "三切れ",
+          "pos": "Noun",
+          "surface": "三切れ"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "re_beta",
+      "input": "三切れ食べた"
+    },
+    {
+      "description": "A numeral cannot head a compound verb, so the counter boundary holds",
+      "expected": [
+        {
+          "lemma": "三枚",
+          "pos": "Noun",
+          "surface": "三枚"
+        },
+        {
+          "lemma": "重ねる",
+          "pos": "Verb",
+          "surface": "重ねる"
+        }
+      ],
+      "id": "neru",
+      "input": "三枚重ねる"
+    }
+  ],
+  "description": "counter_units tests",
+  "version": "1.0"
+}

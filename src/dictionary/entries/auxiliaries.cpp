@@ -92,7 +92,7 @@ EntrySpecRange getAuxiliaryEntries() {
       // plus the passive (打た+れ), so unlike the two cells above this one does have
       // a separating follower — the conjunctive particle that selects the cell — and
       // the dictionary edge is admitted only there.  See
-      // grammar::isClassicalPerfectIzenkeiSurface.
+      // grammar::spellsHypotheticalAuxiliaryCell.
       aux("たれ", "たり", EPOS::AuxClassicalPerfect),
       aux("り", "り", EPOS::AuxClassicalPerfect),  // 存続 (行けり)
       // Classical past き: only its 連体形 し and 已然形 しか survive in
