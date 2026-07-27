@@ -246,7 +246,20 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
           is_conjunctive_particle = true;
         }
         const auto* auxiliary = dict_manager->lookupExact(particle_surface, core::PartOfSpeech::Auxiliary);
-        if (auxiliary != nullptr && auxiliary->extended_pos == core::ExtendedPOS::AuxClassicalKeri) {
+        // The perfect selects the same bare continuative that the past けり does
+        // (見つ, 経つ). Two conditions keep it off the stems of ordinary words:
+        // an i-row opening mora is excluded, because directly after a kanji it
+        // spells the stem's own continuative okurigana (居り, 祭り) — exactly
+        // where the izenkei-attaching perfect り would sit; and the auxiliary
+        // must be able to end the clause where it does, or 見つける would open
+        // with a perfect too.
+        const bool continuative_perfect = auxiliary != nullptr &&
+                                          auxiliary->extended_pos == core::ExtendedPOS::AuxClassicalPerfect &&
+                                          !grammar::isIRowCodepoint(h1) &&
+                                          vh::classicalPastEnvironmentFollows(*dict_manager, codepoints, particle_end,
+                                                                              /*is_izenkei=*/false);
+        if (continuative_perfect ||
+            (auxiliary != nullptr && auxiliary->extended_pos == core::ExtendedPOS::AuxClassicalKeri)) {
           is_classical_past_aux = true;
         }
         if (is_conjunctive_particle && is_classical_past_aux) {

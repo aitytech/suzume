@@ -662,6 +662,23 @@
       ],
       "id": "senubeshi",
       "input": "確認せぬべし"
+    },
+    {
+      "description": "単漢字一段動詞の連用形＋文語完了の助動詞",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "つ",
+          "pos": "Auxiliary",
+          "surface": "つ"
+        }
+      ],
+      "id": "tsu",
+      "input": "見つ"
     }
   ],
   "description": "auxiliary_classical tests",

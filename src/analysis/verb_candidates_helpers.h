@@ -612,6 +612,23 @@ bool crossesKkoNominalizer(const std::vector<char32_t>& codepoints, size_t start
 bool naiConditionalFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 
 /**
+ * @brief Whether a classical past/perfect form can end at this position.
+ *
+ * The 連体形 either modifies a nominal (読みし人, 見しこと) or closes the clause,
+ * and the 已然形 takes a conjunctive particle. Requiring one of those keeps the
+ * far more frequent readings of the same spellings intact — the サ変 continuative
+ * for し, and the ordinary stem-internal kana for the one-mora perfect (見つける
+ * is not 見 + つ).
+ *
+ * @param dict_manager Dictionary used to probe the follower
+ * @param codepoints Full input codepoints
+ * @param end_pos Index just past the classical form
+ * @param is_izenkei Whether the form is the 已然形 cell
+ */
+bool classicalPastEnvironmentFollows(const dictionary::DictionaryManager& dict_manager,
+                                     const std::vector<char32_t>& codepoints, size_t end_pos, bool is_izenkei);
+
+/**
  * @brief Check whether the いただく paradigm begins at @p pos.
  *
  * The receptive humble auxiliary いただく conjugates as いただ + ka-row kana

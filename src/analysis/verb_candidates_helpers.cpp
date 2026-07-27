@@ -141,6 +141,39 @@ bool crossesKkoNominalizer(const std::vector<char32_t>& codepoints, size_t start
   return false;
 }
 
+bool classicalPastEnvironmentFollows(const dictionary::DictionaryManager& dict_manager,
+                                     const std::vector<char32_t>& codepoints, size_t end_pos, bool is_izenkei) {
+  constexpr size_t kFollowerProbeChars = 3;
+  const size_t probe_end = std::min(codepoints.size(), end_pos + kFollowerProbeChars);
+  if (is_izenkei) {
+    for (size_t stop = end_pos + 1; stop <= probe_end; ++stop) {
+      const auto* particle =
+          dict_manager.lookupExact(extractSubstring(codepoints, end_pos, stop), core::PartOfSpeech::Particle);
+      if (particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleConj) {
+        return true;
+      }
+    }
+    return false;
+  }
+  if (end_pos >= codepoints.size()) {
+    return true;
+  }
+  const char32_t following = codepoints[end_pos];
+  if (following == U'。' || following == U'、' || following == U'！' || following == U'？' || following == U'」' ||
+      following == U'）') {
+    return true;
+  }
+  if (normalize::isKanjiCodepoint(following) || normalize::classifyChar(following) == normalize::CharType::Katakana) {
+    return true;
+  }
+  for (size_t stop = end_pos + 1; stop <= probe_end; ++stop) {
+    if (dict_manager.lookupExact(extractSubstring(codepoints, end_pos, stop), core::PartOfSpeech::Noun) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool naiConditionalFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
   return pos + 2 < codepoints.size() && codepoints[pos] == U'な' && codepoints[pos + 1] == U'け' &&
          codepoints[pos + 2] == U'れ';
