@@ -444,6 +444,9 @@ EntrySpecRange getAuxiliaryEntries() {
       suffix("ずくめ", "ずくめ"),
       suffix("づくめ", "づくめ"),
 
+      // Exhaustive-listing suffix, voiced allomorph only: ごちそうづくし, 名物づくし.
+      suffix("づくし", "づくし"),
+
       // Intervening-medium suffix: 画面越し, 肩越し, 一年越し.  Bound to a nominal
       // host, so its trailing し is never a sahen continuative.
       suffix("越し", "越し"),

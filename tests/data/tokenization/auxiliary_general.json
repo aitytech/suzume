@@ -281,6 +281,121 @@
       ],
       "id": "shisugiru_3",
       "input": "難しすぎる"
+    },
+    {
+      "description": "確認づくし - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "づくし",
+          "pos": "Suffix",
+          "surface": "づくし"
+        }
+      ],
+      "id": "dukushi",
+      "input": "確認づくし"
+    },
+    {
+      "description": "名物づくし - regression test",
+      "expected": [
+        {
+          "lemma": "名物",
+          "pos": "Noun",
+          "surface": "名物"
+        },
+        {
+          "lemma": "づくし",
+          "pos": "Suffix",
+          "surface": "づくし"
+        }
+      ],
+      "id": "dukushi_2",
+      "input": "名物づくし"
+    },
+    {
+      "description": "確認したらしい - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        }
+      ],
+      "id": "shitarashii",
+      "input": "確認したらしい"
+    },
+    {
+      "description": "確認したら教えて - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "たら"
+        },
+        {
+          "lemma": "教える",
+          "pos": "Verb",
+          "surface": "教え"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "shitara_ete",
+      "input": "確認したら教えて"
+    },
+    {
+      "description": "食べたらしい - regression test",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしい"
+        }
+      ],
+      "id": "betarashii",
+      "input": "食べたらしい"
     }
   ],
   "description": "auxiliary_general tests",
