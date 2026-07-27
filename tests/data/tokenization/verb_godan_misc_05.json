@@ -944,6 +944,33 @@
       ],
       "id": "battte_su",
       "input": "形式ばって話す"
+    },
+    {
+      "description": "Godan irrealis plus passive, not the supplementary imperative",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れる"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "kareruto_ru",
+      "input": "書かれると困る"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

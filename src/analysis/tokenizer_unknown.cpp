@@ -1070,6 +1070,16 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
                    match.entry->pos != core::PartOfSpeech::Verb;
           });
       const bool is_complete_shii_adjective = isProductiveShiiAdjectiveTerminal(surface_str, inflection_);
+      // A finished adjective reading of the same span is a complete inflectional
+      // analysis, so a deverbal re-reading built on a fabricated verb must stand
+      // down: 高かれ+と is the カリ 命令形 of 高い, not a noun from 高かれる. The
+      // lemma has to differ from the surface, or the "adjective" is itself an
+      // unanalyzed guess and settles nothing.
+      const bool same_span_adjective_analysis =
+          std::any_of(candidates.begin(), candidates.end(), [&](const UnknownCandidate& other) {
+            return other.pos == core::PartOfSpeech::Adjective && other.extended_pos == core::ExtendedPOS::AdjBasic &&
+                   other.start == candidate.start && other.end == candidate.end && other.lemma != other.surface;
+          });
       const bool crosses_complete_internal_boundary =
           hasCompleteInternalConstituentBoundary(lattice, dict_manager_, text, byte_offsets, candidates, candidate);
       const bool crosses_noun_nagara_ni_boundary =
@@ -1084,8 +1094,8 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       const bool bound_suffix_after_host =
           verb_helpers::isBoundSuffixAfterNominalHost(&dict_manager_, codepoints, candidate.start, candidate.surface);
       if (nominal_particle && !longer_dependent_follows && !has_lexical_nonverb_reading &&
-          !is_complete_shii_adjective && !crosses_complete_internal_boundary && !crosses_noun_nagara_ni_boundary &&
-          !verb_reading_rejected && !bound_suffix_after_host) {
+          !is_complete_shii_adjective && !same_span_adjective_analysis && !crosses_complete_internal_boundary &&
+          !crosses_noun_nagara_ni_boundary && !verb_reading_rejected && !bound_suffix_after_host) {
         lattice.addEdge(surface_str, static_cast<uint32_t>(candidate.start), static_cast<uint32_t>(candidate.end),
                         core::PartOfSpeech::Noun,
                         getCategoryCost(core::ExtendedPOS::NounVerbal) + candidate::kNominalizedNounParticleBonus,

@@ -1892,6 +1892,50 @@
       ],
       "id": "ookiinoga",
       "input": "おおきいのが"
+    },
+    {
+      "description": "Classical supplementary imperative in the optative construction",
+      "expected": [
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しかれ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願う"
+        }
+      ],
+      "id": "shikareto_u",
+      "input": "正しかれと願う"
+    },
+    {
+      "description": "Supplementary imperative on a single-kanji adjective stem",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高かれ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願う"
+        }
+      ],
+      "id": "kareto_u",
+      "input": "高かれと願う"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",

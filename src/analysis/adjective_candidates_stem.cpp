@@ -844,10 +844,14 @@ core::ExtendedPOS classicalKariCell(char32_t after_ka) {
     case U'り':
       return core::ExtendedPOS::AdjRenyokei;
     // The attributive and terminal cells share one form for i-adjectives.
-    // The paradigm has no 已然形 (the plain conjugation supplies けれ) and its
-    // 命令形 かれ is unattested in practice, so that row is deliberately absent:
-    // かれ is overwhelmingly a godan irrealis plus the passive れ (書か+れ).
+    // The paradigm has no 已然形 (the plain conjugation supplies けれ).
     case U'る':
+      return core::ExtendedPOS::AdjBasic;
+    // The 命令形 closes a clause exactly as the terminal cell does, so it shares
+    // that ExtendedPOS. It needs a licensing environment of its own rather than
+    // the classical auxiliary the other cells take, because かれ is
+    // overwhelmingly a godan irrealis plus the passive れ (書か+れ).
+    case U'れ':
       return core::ExtendedPOS::AdjBasic;
     default:
       return core::ExtendedPOS::Unknown;
@@ -909,7 +913,15 @@ void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t 
     // exists precisely to carry auxiliaries the plain paradigm cannot
     // (大きから+ず, 高かり+けり, 冷たかる+べし). Without one, the same kana are an
     // ordinary noun or godan verb (明かり, 見つかる).
-    if (!classicalAuxiliaryFollowsAt(codepoints, kara_pos + 2, scan_end, dict_manager)) {
+    //
+    // The 命令形 takes no auxiliary at all: it survives in the optative, where
+    // the quotative と reports the wish (正しかれ+と願う, 幸多かれ+と祈る). That
+    // particle is what separates it from the passive reading, which cannot end
+    // a clause and so never precedes と (書かれ+ると, not 書かれ+と).
+    const bool licensed = codepoints[kara_pos + 1] == U'れ'
+                              ? codepoints[kara_pos + 2] == U'と'
+                              : classicalAuxiliaryFollowsAt(codepoints, kara_pos + 2, scan_end, dict_manager);
+    if (!licensed) {
       continue;
     }
     std::string lemma = extractSubstring(codepoints, start_pos, kara_pos) + "い";
@@ -920,7 +932,12 @@ void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t 
     // auxiliary. A complete analysis whose reconstructed verb lemma is
     // dictionary-attested is stronger than the weak, generic i-adjective
     // hypothesis (分からぬ -> 分かる, not fictitious 分い).
-    const std::string whole_surface = extractSubstring(codepoints, start_pos, std::min(kara_pos + 3, scan_end));
+    // The other cells need their auxiliary inside the probe for the verb
+    // analysis to complete (分から+ぬ -> 分かる). The 命令形 is followed by a
+    // particle instead, which no verb analysis spans, so the probe stops at the
+    // cell itself — that is what still recognizes 分かれ as 分かれる before と.
+    const size_t probe_end = codepoints[kara_pos + 1] == U'れ' ? kara_pos + 2 : std::min(kara_pos + 3, scan_end);
+    const std::string whole_surface = extractSubstring(codepoints, start_pos, probe_end);
     if (hasDictionaryVerifiedVerbAnalysis(whole_surface, inflection, dict_manager)) {
       continue;
     }
