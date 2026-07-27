@@ -108,11 +108,18 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   }
 
   // A causative auxiliary may be followed by another auxiliary (notably the
-  // passive in 書か+せ+られる), but it does not connect directly to a lexical
-  // verb. Penalize the homographic unknown-verb path without naming a surface.
-  if (prev.extended_pos == core::ExtendedPOS::AuxCausative && next.pos == core::PartOfSpeech::Verb &&
-      !grammar::isHumbleHonorificLemma(next.lemma)) {
-    bonus += cost::kRare;
+  // passive in 書か+せ+られる), but it does not open a lexical word of its own.
+  // No verb attaches to it directly, and a nominal attaches only to its
+  // attributive cell (行か+せる+人): the irrealis/continuative stem せ/させ is an
+  // unfinished predicate, so a noun behind it means the split landed inside a
+  // lexical word (合わ+せ+技 for 合わせ技).
+  if (prev.extended_pos == core::ExtendedPOS::AuxCausative) {
+    const bool opens_lexical_verb =
+        next.pos == core::PartOfSpeech::Verb && !grammar::isHumbleHonorificLemma(next.lemma);
+    const bool modifies_nominal_from_stem = next.pos == core::PartOfSpeech::Noun && !utf8::endsWith(prev.surface, "る");
+    if (opens_lexical_verb || modifies_nominal_from_stem) {
+      bonus += cost::kRare;
+    }
   }
 
   // The conditional form of a causative auxiliary attaches directly to ば:
