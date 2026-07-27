@@ -21,6 +21,12 @@ void appendBasicNumeralCounterCandidates(const std::vector<char32_t>& codepoints
                                          const std::vector<normalize::CharType>& char_types,
                                          const dictionary::DictionaryManager* dict_manager,
                                          std::vector<UnknownCandidate>& candidates) {
+  // A temporal counter closed by the span marker 間 is one duration unit
+  // (三日間, 五年間).  Every boundary rule below that would cut before 間 has to
+  // stand down for it, so the test is computed once here.
+  const bool closes_duration_span = normalize::isTemporalCounterKanji(codepoints[numeral_end]) &&
+                                    numeral_end + 1 < codepoints.size() && codepoints[numeral_end + 1] == U'間';
+
   // A numeral+counter phrase can modify an i-adjective in adverbial form
   // (百件|近く確認する, 三日|早く終える). Preserve the quantity boundary so
   // the generic kanji sequence cannot absorb the adjective's stem. The same
@@ -112,10 +118,6 @@ void appendBasicNumeralCounterCandidates(const std::vector<char32_t>& codepoints
     std::string suffix_text = extractSubstring(codepoints, counter_end, codepoints.size());
     const bool suffix_follows = lookupResultsHavePartOfSpeech(dict_manager->lookup(suffix_text, 0),
                                                               partOfSpeechMask(core::PartOfSpeech::Suffix));
-    // A temporal counter closed by the span marker 間 is one duration unit
-    // (三日間, 五年間), not a quantity plus a separate suffix.
-    const bool closes_duration_span = normalize::isTemporalCounterKanji(codepoints[numeral_end]) &&
-                                      counter_end < codepoints.size() && codepoints[counter_end] == U'間';
     if (closes_duration_span) {
       std::string surface = extractSubstring(codepoints, start_pos, counter_end + 1);
       auto cand = makeCandidate(surface, start_pos, counter_end + 1, core::PartOfSpeech::Noun,
@@ -221,7 +223,8 @@ void appendBasicNumeralCounterCandidates(const std::vector<char32_t>& codepoints
   // predicate distinguishes the productive quantity construction.
   if (numeral_end < char_types.size() && normalize::isCounterKanji(codepoints[numeral_end])) {
     const bool repeated_predicate_unit = isRepeatedNumeralNounPredicateUnitAt(codepoints, char_types, start_pos);
-    if (!repeated_predicate_unit && hasKanjiSuruPredicateAt(codepoints, char_types, numeral_end + 1)) {
+    if (!repeated_predicate_unit && !closes_duration_span && dict_manager != nullptr &&
+        headsKanjiSuruPredicateAt(*dict_manager, codepoints, char_types, numeral_end + 1)) {
       std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 1);
       if (!surface.empty()) {
         auto cand = makeCandidate(surface, start_pos, numeral_end + 1, core::PartOfSpeech::Noun,

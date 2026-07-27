@@ -60,6 +60,55 @@
       ],
       "id": "neru",
       "input": "三枚重ねる"
+    },
+    {
+      "description": "Quantity boundary holds before a サ変 predicate in its continuative form",
+      "expected": [
+        {
+          "lemma": "一番",
+          "pos": "Noun",
+          "surface": "一番"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "やすい",
+          "pos": "Adjective",
+          "surface": "やすい"
+        }
+      ],
+      "id": "shiyasui",
+      "input": "一番確認しやすい"
+    },
+    {
+      "description": "Duration span keeps 間 before a サ変 predicate",
+      "expected": [
+        {
+          "lemma": "三年間",
+          "pos": "Noun",
+          "surface": "三年間"
+        },
+        {
+          "lemma": "勉強",
+          "pos": "Noun",
+          "surface": "勉強"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru_12",
+      "input": "三年間勉強する"
     }
   ],
   "description": "counter_units tests",

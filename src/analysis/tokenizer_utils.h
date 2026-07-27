@@ -83,6 +83,20 @@ bool hasKanjiSuruPredicateAt(const std::vector<char32_t>& codepoints,
                              size_t minimum_kanji_count = 1);
 
 /**
+ * @brief Check whether a kanji run at @p start_pos heads a サ変 predicate
+ *
+ * Same construction hasKanjiSuruPredicateAt recognizes, plus the continuative
+ * cell the predicate uses whenever anything follows it (確認+し+やすい,
+ * 実施+し+た, 報告+し+て).  The continuative needs its own continuation to count:
+ * a bare clause-final し is the conjunctive particle, and し opening a longer
+ * particle (しか, しも) does not head a predicate either.
+ */
+bool headsKanjiSuruPredicateAt(const dictionary::DictionaryManager& dict_manager,
+                               const std::vector<char32_t>& codepoints,
+                               const std::vector<normalize::CharType>& char_types, size_t start_pos,
+                               size_t minimum_kanji_count = 1);
+
+/**
  * @brief Build UTF-8 byte offsets for every character boundary
  *
  * @param codepoints Vector of Unicode codepoints

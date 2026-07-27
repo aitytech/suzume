@@ -7,6 +7,7 @@
 
 #include "core/utf8_constants.h"
 #include "dictionary/dictionary.h"
+#include "grammar/char_patterns.h"
 #include "normalize/utf8.h"
 
 namespace suzume::analysis {
@@ -27,6 +28,28 @@ bool hasKanjiSuruPredicateAt(const std::vector<char32_t>& codepoints,
       char_types, start_pos, char_types.size() - std::min(start_pos, char_types.size()), normalize::CharType::Kanji);
   return predicate_end - start_pos >= minimum_kanji_count && predicate_end + 1 < codepoints.size() &&
          codepoints[predicate_end] == U'す' && codepoints[predicate_end + 1] == U'る';
+}
+
+bool headsKanjiSuruPredicateAt(const dictionary::DictionaryManager& dict_manager,
+                               const std::vector<char32_t>& codepoints,
+                               const std::vector<normalize::CharType>& char_types, size_t start_pos,
+                               size_t minimum_kanji_count) {
+  if (hasKanjiSuruPredicateAt(codepoints, char_types, start_pos, minimum_kanji_count)) {
+    return true;
+  }
+  const size_t predicate_end = findCharRegionEnd(
+      char_types, start_pos, char_types.size() - std::min(start_pos, char_types.size()), normalize::CharType::Kanji);
+  if (predicate_end - start_pos < minimum_kanji_count || predicate_end + 1 >= codepoints.size() ||
+      !grammar::isSuruRenyokeiSurface(extractSubstring(codepoints, predicate_end, predicate_end + 1))) {
+    return false;
+  }
+  if (char_types[predicate_end + 1] != normalize::CharType::Hiragana) {
+    return false;
+  }
+  // A particle opening with し follows a complete nominal, so it is evidence
+  // against the predicate reading rather than for it (五人組しか, 一番星しも).
+  return !hasExactPartOfSpeech(dict_manager, extractSubstring(codepoints, predicate_end, predicate_end + 2),
+                               partOfSpeechMask(core::PartOfSpeech::Particle));
 }
 
 ByteOffsets buildByteOffsets(const std::vector<char32_t>& codepoints) {
