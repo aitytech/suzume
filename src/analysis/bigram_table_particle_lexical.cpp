@@ -351,6 +351,12 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // (prevents なさそう → な(終助詞)+さ(未然)+そう over な(形容詞)+さ(接尾辞)+そう)
       {EPOS::ParticleFinal, EPOS::VerbMizenkei, cost::kVeryRare},
 
+      // The continuative belongs to the same paradigm as the cells above and
+      // is barred for the same reason: the particle has already closed the
+      // clause, so a predicate that opens a new one cannot follow it
+      // (向かい+合わせ, not 向+かい+合わせ).
+      {EPOS::ParticleFinal, EPOS::VerbRenyokei, cost::kVeryRare},
+
       // A sentence-final particle cannot introduce an independent adjective.
       // This preserves verb+auxiliary sequences such as そう+なる+まい over
       // a spurious そう+な+るまい segmentation.
