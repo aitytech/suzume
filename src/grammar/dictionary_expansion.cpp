@@ -7,6 +7,7 @@
 #include "core/utf8_constants.h"
 #include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
+#include "grammar/honorific_verbs.h"
 
 namespace suzume {
 namespace grammar {
@@ -98,9 +99,20 @@ std::vector<dictionary::DictionaryEntry> expandVerb(const dictionary::Dictionary
   const Conjugation conjugation;
   const auto suffixes = conjugation.getDictionarySuffixes(verb_type, base_entry.surface);
   const std::string stem = Conjugation::getStem(base_entry.surface, verb_type);
+  // A bound derivational suffix verb is written only onto a nominal host, so a
+  // two-mora inflected spelling of one is indistinguishable from ordinary
+  // word-internal kana — the same objection the one-mora くる forms above
+  // answer (ばっ inside ばったり). Reverse inflection still reaches those cells
+  // from the base entry, which is kept, and it sees the host. Longer stems are
+  // unambiguous enough to materialize (がかっ, がかり).
+  const bool bound_suffix_verb = isBoundDerivationalSuffixVerbLemma(base_entry.lemma);
   result.reserve(suffixes.size());
   for (const auto& suffix : suffixes) {
-    result.push_back({stem + suffix.suffix, core::PartOfSpeech::Verb, suffix.extended_pos, base_entry.lemma});
+    std::string surface = stem + suffix.suffix;
+    if (bound_suffix_verb && surface != base_entry.surface && surface.size() <= 2 * core::kJapaneseCharBytes) {
+      continue;
+    }
+    result.push_back({std::move(surface), core::PartOfSpeech::Verb, suffix.extended_pos, base_entry.lemma});
   }
   return result.empty() ? std::vector<dictionary::DictionaryEntry>{base_entry} : result;
 }

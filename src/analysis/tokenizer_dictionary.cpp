@@ -1173,6 +1173,14 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       continue;
     }
 
+    // A bound derivational suffix verb has no independent use, so without a
+    // nominal host in front the entry is not a candidate at all.
+    if (result.entry->pos == core::PartOfSpeech::Verb &&
+        grammar::isBoundDerivationalSuffixVerbLemma(result.entry->lemma) &&
+        !verb_helpers::hasNominalHostBefore(codepoints, start_pos)) {
+      continue;
+    }
+
     // Past た/だ is an auxiliary boundary, not part of a dictionary verb
     // token.  Inflected dictionary entries still provide the stem/onbin edge;
     // discard only the fused full-past alternative.

@@ -114,6 +114,15 @@ bool isBoundSuffixAfterNominalHost(const dictionary::DictionaryManager* dict_man
                                    const std::vector<char32_t>& codepoints, size_t start_pos, std::string_view surface);
 
 /**
+ * @brief Check whether a kanji or katakana host is written directly before a position
+ *
+ * This is the environment a bound morpheme requires. Callers use it to withhold
+ * a candidate whose morpheme cannot stand on its own, whether the reading comes
+ * from a dictionary entry or from the inflection analyzer.
+ */
+bool hasNominalHostBefore(const std::vector<char32_t>& codepoints, size_t start_pos);
+
+/**
  * @brief Check if a surface has a particle entry in dictionary
  *
  * Used to detect compound particles (について, によって, として, etc.)

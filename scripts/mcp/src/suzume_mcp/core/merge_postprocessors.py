@@ -3,6 +3,7 @@
 import regex
 
 from .constants import (
+    BOUND_SUFFIX_VERB_NOUN_CELLS,
     HONORIFIC_EXCEPTIONS,
     HONORIFIC_SUFFIXES,
     KANJI_PREFIX_COMPOUNDS,
@@ -1045,4 +1046,28 @@ def _postprocess_bound_voiced_suffix(result: list[dict], applied_rule: str | Non
             continue
         new_result.append(token)
         idx += 1
+    return new_result, applied_rule
+
+
+def _postprocess_bound_suffix_noun_cell(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Restore a bound suffix verb cell the reference dictionary read as a noun.
+
+    形式ばった / 四角ばった are the host plus the derivational suffix ばる in its
+    past form, and the analyzer already reads that suffix as a verb wherever its
+    spelling is not a word (形式ばって -> ばっ/ばる). Only the cells that spell a
+    known noun break, and they break silently: ばった becomes the insect. A
+    nominal host is required, which is the environment the suffix takes.
+    """
+    new_result: list[dict] = []
+    for token in result:
+        cell = BOUND_SUFFIX_VERB_NOUN_CELLS.get(token.get("surface", ""))
+        host_is_nominal = bool(new_result) and new_result[-1].get("pos") in ("名詞", "Noun")
+        if cell is None or not host_is_nominal or token.get("pos") not in ("名詞", "Noun"):
+            new_result.append(token)
+            continue
+        suffix_surface, lemma, auxiliary = cell
+        new_result.append({"surface": suffix_surface, "pos": "動詞", "lemma": lemma})
+        new_result.append({"surface": auxiliary, "pos": "助動詞", "lemma": auxiliary})
+        if applied_rule is None:
+            applied_rule = "bound-suffix-noun-cell"
     return new_result, applied_rule

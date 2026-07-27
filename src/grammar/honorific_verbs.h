@@ -73,6 +73,19 @@ bool isAspectualSubsidiaryLemma(std::string_view lemma);
 bool startsHonorificSubsidiaryVerb(std::string_view surface);
 
 /**
+ * @brief Check whether a lemma is a bound derivational suffix verb (ばる・がかる)
+ * @param lemma Dictionary form of the candidate verb (UTF-8)
+ * @return true if the verb only exists attached to a nominal host
+ *
+ * These conjugate as ordinary Godan verbs but have no independent use: there is
+ * no verb ばる, only 形式ばる / 四角ばる. A dictionary entry is still the right
+ * home for the conjugation table, so callers use this predicate to require the
+ * host — otherwise the entry wins spans it has no claim on, and because the
+ * stem is a single mora those spans are common (ばったり → ばっ + たり).
+ */
+bool isBoundDerivationalSuffixVerbLemma(std::string_view lemma);
+
+/**
  * @brief Check whether a surface is a personal-address suffix (さん・ちゃん・たん…)
  * @param surface Candidate token surface (UTF-8)
  * @return true if the suffix names or addresses a person

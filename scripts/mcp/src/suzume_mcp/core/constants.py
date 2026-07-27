@@ -904,6 +904,16 @@ VERB_NOT_AUX_LEMMAS: set[str] = {
 # contradicts the rejoined form produced for every other host.
 DERIVATIONAL_SUFFIX_VERB_LEMMAS: set[str] = {"がかる"}
 
+# Cells of a bound derivational suffix verb that the reference analyzer loses to
+# a homographic noun. It reads the suffix correctly wherever the spelling is not
+# a word of its own (形式ばって -> ばっ/ばる), so the suffix reading is already
+# established and only these cells contradict it: ばった is also the insect.
+# Each entry gives the suffix surface, its lemma, and the auxiliary the noun
+# reading swallowed.
+BOUND_SUFFIX_VERB_NOUN_CELLS: dict[str, tuple[str, str, str]] = {
+    "ばった": ("ばっ", "ばる", "た"),
+}
+
 # Plural suffix split targets
 PLURAL_RA_STEMS: list[str] = ["彼女", "彼", "僕", "奴", "我"]
 

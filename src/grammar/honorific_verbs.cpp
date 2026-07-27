@@ -31,6 +31,10 @@ constexpr std::string_view kModalSubsidiaryRenyokei[] = {"かね"};
 // search unit, so it belongs to the lexical V2 lexicon rather than to this class.
 constexpr std::string_view kAspectualSubsidiaryLemmas[] = {"始める", "はじめる", "終わる", "おわる",
                                                            "終える", "おえる",   "過ぎる", "すぎる"};
+// Verbs that exist only as a derivational suffix on a nominal host (形式ばる,
+// 芝居がかる). Their conjugation lives in the dictionary; the host requirement
+// cannot, so callers gate the entry on it.
+constexpr std::string_view kBoundDerivationalSuffixVerbLemmas[] = {"ばる", "がかる"};
 // Suffixes that address or name a person. 様/氏 are absent on purpose: their
 // kanji orthography cannot be confused with predicate material, so no caller
 // needs a host check for them.
@@ -83,6 +87,11 @@ bool startsHonorificSubsidiaryVerb(std::string_view surface) {
 bool isAspectualSubsidiaryLemma(std::string_view lemma) {
   return contains(kAspectualSubsidiaryLemmas,
                   sizeof(kAspectualSubsidiaryLemmas) / sizeof(kAspectualSubsidiaryLemmas[0]), lemma);
+}
+
+bool isBoundDerivationalSuffixVerbLemma(std::string_view lemma) {
+  return contains(kBoundDerivationalSuffixVerbLemmas,
+                  sizeof(kBoundDerivationalSuffixVerbLemmas) / sizeof(kBoundDerivationalSuffixVerbLemmas[0]), lemma);
 }
 
 bool isPersonalAddressSuffix(std::string_view surface) {

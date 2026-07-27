@@ -863,6 +863,87 @@
       ],
       "id": "sanni_ku_2",
       "input": "田中さんに聞く"
+    },
+    {
+      "description": "Bound derivational suffix on a two-kanji nominal host",
+      "expected": [
+        {
+          "lemma": "形式",
+          "pos": "Noun",
+          "surface": "形式"
+        },
+        {
+          "lemma": "ばる",
+          "pos": "Verb",
+          "surface": "ばっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "表現",
+          "pos": "Noun",
+          "surface": "表現"
+        }
+      ],
+      "id": "battta",
+      "input": "形式ばった表現"
+    },
+    {
+      "description": "Bound derivational suffix on a second nominal host",
+      "expected": [
+        {
+          "lemma": "四角",
+          "pos": "Noun",
+          "surface": "四角"
+        },
+        {
+          "lemma": "ばる",
+          "pos": "Verb",
+          "surface": "ばっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "態度",
+          "pos": "Noun",
+          "surface": "態度"
+        }
+      ],
+      "id": "battta_2",
+      "input": "四角ばった態度"
+    },
+    {
+      "description": "Te-form cell of the bound derivational suffix",
+      "expected": [
+        {
+          "lemma": "形式",
+          "pos": "Noun",
+          "surface": "形式"
+        },
+        {
+          "lemma": "ばる",
+          "pos": "Verb",
+          "surface": "ばっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話す"
+        }
+      ],
+      "id": "battte_su",
+      "input": "形式ばって話す"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
