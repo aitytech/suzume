@@ -68,19 +68,30 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
       normalize::utf8Length(prev.surface) == 1) {
     bonus += cost::kAlmostNever;
   }
-  if (next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun && !prev.fromDictionary() &&
-      grammar::isPureHiragana(prev.surface)) {
+  // An unknown hiragana noun cannot introduce a conjunction, and a conjunction
+  // that spells a te-form cannot be introduced by a bare noun at all: with no
+  // boundary marker between them its opening mora is the continuative that the
+  // noun's own predicate needs (確認+し+たがっ+て+いる, not 確認+したがって+いる).
+  // A conjunction reached through a particle or a punctuation mark is
+  // unaffected, which is where the clause-opening reading actually occurs.
+  const bool unknown_hiragana_conjunction_host = !prev.fromDictionary() && grammar::isPureHiragana(prev.surface);
+  const bool te_form_conjunction =
+      grammar::isPureHiragana(next.surface) && utf8::endsWithAny(next.surface, {"て", "で"});
+  if (next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun &&
+      (unknown_hiragana_conjunction_host || te_form_conjunction)) {
     bonus += cost::kProhibitive;
   }
   const bool conjunction_before_hiragana_de = prev.pos == core::PartOfSpeech::Conjunction &&
                                               next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
                                               next.surface == "で";
-  // A hiragana conjunction ending in the connective して cannot directly
-  // govern existential いる.  In this context the ending is the productive
-  // する te-form and いる is aspectual (そう+し+て+いる).
+  // A hiragana conjunction ending in a connective te-form cannot directly
+  // govern existential いる.  Whatever the conjunction is listed as, that
+  // ending is the productive te-form of the predicate inside it and いる is
+  // the aspectual auxiliary the te-form selects (そう+し+て+いる,
+  // 確認+し+たがっ+て+いる).
   const bool conjunction_shite_before_iru = prev.pos == core::PartOfSpeech::Conjunction &&
                                             grammar::isPureHiragana(prev.surface) &&
-                                            utf8::endsWith(prev.surface, "して") &&
+                                            utf8::endsWithAny(prev.surface, {"て", "で"}) &&
                                             ((next.pos == core::PartOfSpeech::Verb && next.lemma == "いる") ||
                                              next.extended_pos == core::ExtendedPOS::AuxAspectIru);
   if (conjunction_before_hiragana_de || conjunction_shite_before_iru) {
@@ -177,7 +188,11 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   surface_bonus += connection_rules::computeParticleDeterminerBonus(prev, next);
 
   surface_bonus += connection_rules::computePrefixSymbolBonus(prev, next);
-  surface_bonus += connection_rules::computeCompoundParticlePoliteBonus(prev, next);
+  // What a multi-mora particle may govern: both rules key on the predicate
+  // form the particle was lexicalized from, and their contributions are
+  // additive, so they share one accumulation.
+  surface_bonus += connection_rules::computeCompoundParticlePoliteBonus(prev, next) +
+                   connection_rules::computeConjunctiveParticleCopulaPenalty(prev, next);
 
   // Note: Removed penalty for Pronoun + でも patterns
   // MeCab behavior is context-dependent:

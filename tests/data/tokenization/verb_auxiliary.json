@@ -2512,6 +2512,48 @@
       ],
       "id": "suru_passive_negative_boundary",
       "input": "余儀なくされない"
+    },
+    {
+      "description": "対象は確認したがっている - auto-generated",
+      "expected": [
+        {
+          "lemma": "対象",
+          "pos": "Noun",
+          "surface": "対象"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "たがる",
+          "pos": "Auxiliary",
+          "surface": "たがっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "ha_shitagattteiru",
+      "input": "対象は確認したがっている"
     }
   ],
   "description": "verb_auxiliary tests",

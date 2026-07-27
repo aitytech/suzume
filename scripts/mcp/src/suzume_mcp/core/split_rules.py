@@ -132,6 +132,30 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
                 applied_rule = "interrogative-nominal-adverb-boundary"
             continue
 
+        # 従う is intransitive and reaches its complement through に, so a bare
+        # noun sitting directly in front of it cannot be that complement. What
+        # the span actually spells is the sa-hen continuative plus the
+        # desiderative (確認+し+たがっ+て+いる). The reference analyzer already
+        # reads it that way in every cell whose surface does not collide with
+        # an onbin form of 従う (確認+し+たがる).
+        if (
+            t.get("pos") == "動詞"
+            and t.get("lemma") in ("従う", "したがう")
+            and surface.startswith("し")
+            and len(surface) > 1
+            and token_index > 0
+            and tokens[token_index - 1].get("pos") == "名詞"
+        ):
+            result.extend(
+                [
+                    {"surface": "し", "pos": "動詞", "lemma": "する"},
+                    {"surface": surface[1:], "pos": "助動詞", "lemma": "たがる"},
+                ]
+            )
+            if applied_rule is None:
+                applied_rule = "sahen-desiderative-boundary"
+            continue
+
         # ます is an auxiliary, so it is never part of a particle. A compound
         # particle lexicalized together with its polite form (に関しまして,
         # に際しまして) hides the auxiliary boundary that the plain form
