@@ -4,6 +4,7 @@
 #include "analysis/category_cost.h"
 #include "analysis/scorer.h"
 #include "analysis/scorer_connection_rules.h"
+#include "analysis/scorer_connection_rules_internal.h"
 #include "analysis/scorer_constants.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "core/debug.h"
@@ -283,7 +284,7 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // bonus: without it the continuative of a homographic potential verb
   // (飲める) takes the span and the lemma with it.
   if (prev.extended_pos == core::ExtendedPOS::VerbKateikei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
-      utf8::equalsAny(next.surface, {"ば", "ど", "ども"})) {
+      isHypotheticalSelectingConjunctiveParticle(next.surface)) {
     bonus += cost::kVeryStrongBonus;
   }
 

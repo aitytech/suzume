@@ -178,6 +178,18 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
     }
   }
 
+  // ば/ど/ども complete the hypothetical slot of a predicate and have no other
+  // host, so a focus particle cannot precede them: it offers no inflected stem.
+  // The ParticleAdverbial→ParticleConj bonus is meant for the conditional なら
+  // (だけ+なら, ほど+なら) and would otherwise buy the fabricated だけ+ど over the
+  // copula plus けど (〜んだけど).
+  if (next.extended_pos == core::ExtendedPOS::ParticleConj &&
+      isHypotheticalSelectingConjunctiveParticle(next.surface) &&
+      (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+       prev.extended_pos == core::ExtendedPOS::ParticleBinding)) {
+    bonus += cost::kAlmostNever;
+  }
+
   return bonus;
 }
 

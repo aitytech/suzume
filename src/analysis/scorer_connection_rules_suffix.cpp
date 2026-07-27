@@ -633,6 +633,17 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kAlmostNever;  // Strongly discourage
   }
 
+  // A personal-address suffix names its host, so an inflected predicate cannot
+  // fill that slot. Without the gate the 〜たん suffix takes the continuative of
+  // the preceding verb and the past auxiliary with it (確認し+たん+だ+けど instead
+  // of 確認+し+た+ん+だ+けど), because the concessive particle pays a large bonus
+  // to whatever past auxiliary precedes it.
+  if (grammar::isPersonalAddressSuffix(next.surface) && next.extended_pos == core::ExtendedPOS::Suffix &&
+      (prev.pos == core::PartOfSpeech::Verb || prev.pos == core::PartOfSpeech::Adjective ||
+       prev.pos == core::PartOfSpeech::Auxiliary)) {
+    bonus += cost::kAlmostNever;
+  }
+
   return bonus;
 }
 

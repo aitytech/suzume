@@ -329,6 +329,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Nominalizer の/ん is followed by copula (のだ/のです), not past tense
       {EPOS::ParticleNo, EPOS::AuxTenseTa, cost::kAlmostNever},
 
+      // Same slot, same reason: a conjunction joins clauses and cannot fill the
+      // copula the nominalizer requires, so 〜んだけど / 〜のだが stay as ん+だ+けど
+      // rather than collapsing the copula into the homographic conjunction.
+      {EPOS::ParticleNo, EPOS::Conjunction, cost::kAlmostNever},
+
       // ParticleFinal → VerbShuushikei (ね+食べる) - strong penalty
       // (sentence-final particles rarely continue to verbs)
       {EPOS::ParticleFinal, EPOS::VerbShuushikei, cost::kVeryRare},

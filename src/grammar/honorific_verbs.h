@@ -72,6 +72,19 @@ bool isAspectualSubsidiaryLemma(std::string_view lemma);
  */
 bool startsHonorificSubsidiaryVerb(std::string_view surface);
 
+/**
+ * @brief Check whether a surface is a personal-address suffix (さん・ちゃん・たん…)
+ * @param surface Candidate token surface (UTF-8)
+ * @return true if the suffix names or addresses a person
+ *
+ * These suffixes take a personal name or a kinship term as their host, so they
+ * cannot attach to an inflected predicate. The class matters because two of
+ * them are homographic with predicate material: 〜たん is also 〜た+ん (past plus
+ * nominalizer) and 〜さん also opens the polite 〜さんです, and without a host
+ * check the suffix reading takes a continuative stem with it (確認し+たん).
+ */
+bool isPersonalAddressSuffix(std::string_view surface);
+
 }  // namespace suzume::grammar
 
 #endif  // SUZUME_GRAMMAR_HONORIFIC_VERBS_H_

@@ -809,6 +809,60 @@
       ],
       "id": "kumonka",
       "input": "行くもんか"
+    },
+    {
+      "description": "Classical concessive ども after a hypothetical verb form",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読め"
+        },
+        {
+          "lemma": "ども",
+          "pos": "Particle",
+          "surface": "ども"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分から"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "medomo_karanai",
+      "input": "読めども分からない"
+    },
+    {
+      "description": "Personal-address suffix on a nominal host",
+      "expected": [
+        {
+          "lemma": "田中",
+          "pos": "Noun",
+          "surface": "田中"
+        },
+        {
+          "lemma": "さん",
+          "pos": "Suffix",
+          "surface": "さん"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "sanni_ku_2",
+      "input": "田中さんに聞く"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

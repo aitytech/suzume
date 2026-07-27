@@ -31,6 +31,10 @@ constexpr std::string_view kModalSubsidiaryRenyokei[] = {"かね"};
 // search unit, so it belongs to the lexical V2 lexicon rather than to this class.
 constexpr std::string_view kAspectualSubsidiaryLemmas[] = {"始める", "はじめる", "終わる", "おわる",
                                                            "終える", "おえる",   "過ぎる", "すぎる"};
+// Suffixes that address or name a person. 様/氏 are absent on purpose: their
+// kanji orthography cannot be confused with predicate material, so no caller
+// needs a host check for them.
+constexpr std::string_view kPersonalAddressSuffixes[] = {"さん", "ちゃん", "くん", "さま", "たん", "にゃん"};
 
 bool contains(const std::string_view* entries, size_t count, std::string_view value) {
   for (size_t index = 0; index < count; ++index) {
@@ -79,6 +83,11 @@ bool startsHonorificSubsidiaryVerb(std::string_view surface) {
 bool isAspectualSubsidiaryLemma(std::string_view lemma) {
   return contains(kAspectualSubsidiaryLemmas,
                   sizeof(kAspectualSubsidiaryLemmas) / sizeof(kAspectualSubsidiaryLemmas[0]), lemma);
+}
+
+bool isPersonalAddressSuffix(std::string_view surface) {
+  return contains(kPersonalAddressSuffixes, sizeof(kPersonalAddressSuffixes) / sizeof(kPersonalAddressSuffixes[0]),
+                  surface);
 }
 
 }  // namespace suzume::grammar
