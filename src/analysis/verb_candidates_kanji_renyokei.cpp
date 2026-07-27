@@ -71,7 +71,15 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
       bool is_single_kanji = (kanji_end == start_pos + 1);
       // Skip kuru irregular verb: 来 + て/た should not be treated as ichidan
       // 来る is kuru irregular, not ichidan (来て should have lemma 来る, not 来てる)
-      bool is_kuru_verb = is_single_kanji && codepoints[start_pos] == U'来';
+      // Its ra-nuki potential is a lexical Ichidan verb of its own, however, and
+      // that stem takes the ordinary Ichidan auxiliaries (来れない, 来れます). Let
+      // the Ichidan path claim the cell whenever the potential base is registered,
+      // so the reading rests on the dictionary rather than on the kana alone.
+      const bool ranuki_potential_base =
+          is_single_kanji &&
+          vh::isVerbInDictionary(dict_manager, extractSubstring(codepoints, start_pos, kanji_end + 1) + "る") &&
+          first_hira == U'れ';
+      bool is_kuru_verb = is_single_kanji && codepoints[start_pos] == U'来' && !ranuki_potential_base;
       if ((is_common_particle && is_single_kanji) || is_i_adjective_suffix || is_kuru_verb) {
         // Skip this pattern - almost certainly noun + particle, i-adjective, or kuru verb
       } else {
