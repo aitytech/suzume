@@ -143,6 +143,10 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbOnbinkei → AuxTenseTa (書い+た, 泳い+だ) - strong bonus
       {EPOS::VerbOnbinkei, EPOS::AuxTenseTa, cost::kStrongBonus},
 
+      // The onbin stem exists only to carry て/た and their contractions, so a
+      // predicate in the irrealis cannot follow it (できっこない is not で+きっ+こ).
+      {EPOS::VerbOnbinkei, EPOS::VerbMizenkei, cost::kSevere},
+
       // VerbOnbinkei → contracted progressive auxiliary (行っ+て+た).
       {EPOS::VerbOnbinkei, EPOS::AuxAspectIru, cost::kVeryStrongBonus},
 

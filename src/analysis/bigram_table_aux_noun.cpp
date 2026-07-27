@@ -322,10 +322,8 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::AuxAspectKuru, EPOS::AuxTenseMasu, cost::kStrongBonus},
       {EPOS::AuxAspectKuru, EPOS::ParticleConj, cost::kVeryStrongBonus},
 
-      // Colloquial negative conjecture V連用形+っ+こ+ない. Both one-mora
-      // candidates are context-gated, so these connections cannot affect
-      // ordinary uses of くる or the negative-conjecture auxiliary まい.
-      {EPOS::AuxNegativeMai, EPOS::AuxAspectKuru, cost::kStrongBonus},
+      // The directional subsidiary is negated by ない (持ってこない), and its
+      // mizenkei candidate is context-gated on exactly that ending.
       {EPOS::AuxAspectKuru, EPOS::AuxNegativeNai, cost::kStrongBonus},
 
       // Both contracted and uncontracted renyokei forms accept polite ます.
@@ -757,6 +755,13 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // one-mora suffix plus ん, while verbal irrealis stems retain their
       // dedicated VerbMizenkei → AuxNegativeNu connection.
       {EPOS::Suffix, EPOS::AuxNegativeNu, cost::kAlmostNever},
+
+      // Nor the plain negative auxiliary, for the same reason: a suffix derives
+      // a nominal, and a nominal is negated by the independent adjective. The
+      // adjective reading of the same surface is promoted alongside, so the
+      // negation does not fall apart into a final particle (負け+っこ+ない).
+      {EPOS::Suffix, EPOS::AuxNegativeNai, cost::kRare},
+      {EPOS::Suffix, EPOS::AdjBasic, cost::kStrongBonus},
 
       // VerbRenyokei → recent-completion suffix (焼き+たて, 作り+たて).
       // This productive suffix competes directly with the past た + connective

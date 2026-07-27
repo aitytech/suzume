@@ -131,6 +131,16 @@ bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
   return naiNegativeFormLengthAt(codepoints, pos) != 0;
 }
 
+bool crossesKkoNominalizer(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  for (size_t pos = start_pos + 1; pos < end_pos; ++pos) {
+    if (codepoints[pos] == U'っ' && pos + 1 < codepoints.size() && codepoints[pos + 1] == U'こ' &&
+        naiNegativeFollowsAt(codepoints, pos + 2)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool naiConditionalFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
   return pos + 2 < codepoints.size() && codepoints[pos] == U'な' && codepoints[pos + 1] == U'け' &&
          codepoints[pos + 2] == U'れ';

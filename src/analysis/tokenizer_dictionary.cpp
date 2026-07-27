@@ -694,6 +694,12 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // guards below inspect the following lexical head.
     size_t end_pos = start_pos + result.length;
 
+    // A registered word is no more entitled to the material in front of the
+    // nominalizer っこ than a constructed one is (で+きっ+こない for できっこない).
+    if (verb_helpers::crossesKkoNominalizer(codepoints, start_pos, end_pos)) {
+      continue;
+    }
+
     if (result.entry->pos == core::PartOfSpeech::Adverb &&
         overlapsCompleteIAdjectiveBeforeParticles(lattice, dict_manager_, codepoints, start_pos, end_pos)) {
       continue;

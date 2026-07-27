@@ -16,6 +16,7 @@ from .constants import (
     UNUSUAL_NAMES,
     WORD_EXCEPTIONS,
 )
+from .mecab import mecab_analyze
 from .pos_mapping import _is_katakana_onomatopoeia
 from .split_rules import base_from_mizenkei, base_from_renyokei
 
@@ -125,6 +126,52 @@ def postprocess_mecab_tokens(
             pos += len(t.get("surface", ""))
 
     return tokens
+
+
+# The ない-family cells a predicate can spell: ない / なく(て) / なかっ(た) /
+# なけれ(ば) / なけりゃ / なきゃ. The analyzer cuts each of them at the tail, so
+# only the head is matched here.
+_NAI_NEGATIVE_HEAD = regex.compile(r"^な(い|く|かっ|けれ|けりゃ|きゃ)")
+
+
+def repair_kko_nominalizer(tokens: list[dict]) -> None:
+    """Rebuild the bound nominalizer っこ before a ない-family predicate.
+
+    The reference dictionary has no entry for っこ, so it reads the two morae as
+    the emphatic sokuon plus the irrealis of 来る and then reconstructs a verb
+    around whatever is left: 負ける becomes 負/ける with the okurigana glued to the
+    sokuon (負+けっ+こ), できる becomes で+きっ+こ, and a stem whose okurigana is
+    already a full continuative simply keeps a standalone っ (分かり+っ+こ). Every
+    host breaks, so the suffix is restored here rather than corrected per word.
+
+    The continuative in front of the suffix is recovered by re-analyzing the
+    prefix under ます, which selects that cell and nothing else, and the ない that
+    follows is left as MeCab tagged it — it is the predicate of the construction.
+    Re-analysis starts after the previous repair, because feeding an already
+    repaired っこ back to the analyzer would only break it the same way again.
+    """
+    idx = 1
+    repaired_end = 0
+    while idx < len(tokens) - 1:
+        token = tokens[idx]
+        previous = tokens[idx - 1]
+        if (
+            token.get("surface") != "こ"
+            or not previous.get("surface", "").endswith("っ")
+            or not _NAI_NEGATIVE_HEAD.match(tokens[idx + 1].get("surface", ""))
+        ):
+            idx += 1
+            continue
+        prefix = "".join(t.get("surface", "") for t in tokens[repaired_end:idx])[:-1]
+        continuative = mecab_analyze(prefix + "ます")
+        if not continuative or continuative[-1].get("surface") != "ます":
+            idx += 1
+            continue
+        suffix = {"surface": "っこ", "pos": "名詞", "pos_sub1": "接尾", "lemma": "っこ"}
+        tokens[repaired_end : idx + 1] = [*continuative[:-1], suffix]
+        repaired_end += len(continuative)
+        idx = repaired_end
+    return
 
 
 def postprocess_sou(tokens: list[dict]) -> None:
@@ -1978,10 +2025,11 @@ def postprocess_nai_context(tokens: list[dict]) -> None:
                 )
                 should_fix = not is_copular_negative
 
-            # A negative auxiliary cannot attach directly to a noun. In a
-            # bare nominal predicate, ない is the independent adjective with
-            # an omitted nominative marker (問題ない, 関係ない).
-            elif prev_pos == "Noun":
+            # A negative auxiliary cannot attach directly to a noun, nor to a
+            # suffix that derives one. In a bare nominal predicate, ない is the
+            # independent adjective with an omitted nominative marker (問題ない,
+            # 関係ない, 負けっこない).
+            elif prev_pos in ("Noun", "Suffix"):
                 should_fix = True
 
         if should_fix:

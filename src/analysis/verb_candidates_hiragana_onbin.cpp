@@ -203,22 +203,25 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
 //   - otherwise: main verb 来る before negation → Verb / VerbMizenkei
 // Emitting a single context-appropriate reading avoids relying on a broad
 // AuxAspectKuru connection rule that could mis-flip other subsidiary verbs.
-void appendKkoNegativeConjectureCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                           std::vector<UnknownCandidate>& candidates) {
-  // The colloquial negative-conjecture construction V連用形+っ+こ+ない
-  // (読みっこない, 食べっこなかった) has two one-mora dependent elements.
-  // Generate the first only when the following こ and a ない-family ending
-  // prove this construction; a standalone っ must never become a token.
+void appendKkoNominalizerCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    std::vector<UnknownCandidate>& candidates) {
+  // The colloquial negative-possibility construction V連用形+っこ+ない
+  // (読みっこない, 食べっこなかった) is built on the nominalizing suffix っこ,
+  // the same one that names a reciprocal action (かけっこ). Neither mora is a
+  // morpheme on its own, so the suffix is emitted as one token — and only when
+  // the ない-family ending proves the construction, because っこ is otherwise
+  // word-internal material (抱っこ, そこっ子).
   if (start_pos == 0 || start_pos + 2 >= codepoints.size() || codepoints[start_pos] != U'っ' ||
       codepoints[start_pos + 1] != U'こ' || !vh::naiNegativeFollowsAt(codepoints, start_pos + 2)) {
     return;
   }
 
-  std::string surface = extractSubstring(codepoints, start_pos, start_pos + 1);
-  auto candidate = makeCandidate(surface, start_pos, start_pos + 1, core::PartOfSpeech::Auxiliary,
-                                 candidate::verb_cost::kStrongBonus, true, CandidateOrigin::VerbHiragana,
-                                 core::ExtendedPOS::AuxNegativeMai, "hiragana_kko_negative_conjecture");
-  candidate.lemma = "く";
+  const size_t end_pos = start_pos + 2;
+  std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+  auto candidate =
+      makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Suffix, candidate::verb_cost::kStrongBonus, true,
+                    CandidateOrigin::VerbHiragana, core::ExtendedPOS::Suffix, "hiragana_kko_nominalizer");
+  candidate.lemma = surface;
   candidates.push_back(std::move(candidate));
 }
 
@@ -294,8 +297,10 @@ void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, si
     return;
   }
   constexpr float kCost = candidate::verb_cost::kStandardBonus;
-  const bool is_kko_negative = start_pos > 0 && codepoints[start_pos - 1] == U'っ';
-  const bool subsidiary = isClearTeFormBeforeSubsidiary(codepoints, start_pos, false) || is_kko_negative;
+  // A preceding 促音 does NOT license the directional subsidiary: the sokuon
+  // there belongs to the nominalizer っこ (できっこない), which is one token,
+  // and 来る never contracts a て into it.
+  const bool subsidiary = isClearTeFormBeforeSubsidiary(codepoints, start_pos, false);
   if (volitional_follows) {
     if (!subsidiary) {
       return;

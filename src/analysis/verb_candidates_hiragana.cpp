@@ -258,7 +258,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   }
 
   // Context-gated irregular 来る mizenkei: こ + ない-family negative
-  appendKkoNegativeConjectureCandidates(codepoints, start_pos, candidates);
+  appendKkoNominalizerCandidates(codepoints, start_pos, candidates);
   appendSuruInabilityCandidates(codepoints, start_pos, candidates);
   appendEruObligationCandidates(codepoints, start_pos, candidates);
   appendKuruMizenkeiNaiCandidates(codepoints, start_pos, candidates);

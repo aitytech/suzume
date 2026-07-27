@@ -82,6 +82,7 @@ from .postprocessors import (
     postprocess_yoshi_formal_noun,
     postprocess_you_noun,
     preprocess_for_mecab,
+    repair_kko_nominalizer,
 )
 from .split_rules import apply_suzume_split
 
@@ -148,6 +149,7 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     processed_text, replacements = preprocess_for_mecab(text)
     raw_tokens = mecab_analyze(processed_text)
     postprocess_mecab_tokens(raw_tokens, text, replacements)
+    repair_kko_nominalizer(raw_tokens)
 
     # Fix MeCab POS errors (before POS mapping)
     correct_mecab_pos(raw_tokens)

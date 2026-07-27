@@ -689,6 +689,10 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       continue;
     }
 
+    if (verb_helpers::crossesKkoNominalizer(codepoints, candidate.start, candidate.end)) {
+      continue;
+    }
+
     uint8_t flags = core::LatticeEdge::kIsUnknown;
     float adjusted_cost = candidate.cost;
 

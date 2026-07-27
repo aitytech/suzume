@@ -1847,18 +1847,13 @@
           "surface": "読み"
         },
         {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -1867,18 +1862,13 @@
           "surface": "書き"
         },
         {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -1887,18 +1877,13 @@
           "surface": "食べ"
         },
         {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -1907,18 +1892,13 @@
           "surface": "読み"
         },
         {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なかっ"
         },
         {
@@ -1932,18 +1912,13 @@
           "surface": "書き"
         },
         {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なかっ"
         },
         {
@@ -1957,18 +1932,13 @@
           "surface": "食べ"
         },
         {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なかっ"
         },
         {
@@ -1982,18 +1952,13 @@
           "surface": "読み"
         },
         {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "なく"
         },
         {
@@ -2012,18 +1977,13 @@
           "surface": "食べ"
         },
         {
-          "lemma": "く",
-          "pos": "Auxiliary",
-          "surface": "っ"
-        },
-        {
-          "lemma": "くる",
-          "pos": "Auxiliary",
-          "surface": "こ"
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
         },
         {
           "lemma": "ない",
-          "pos": "Auxiliary",
+          "pos": "Adjective",
           "surface": "ない"
         },
         {
@@ -3675,6 +3635,129 @@
       ],
       "id": "contracted_completive_before_polite_auxiliary",
       "input": "食べちゃいます"
+    },
+    {
+      "description": "Sahen host before the nominalizer っこ",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shittkonai",
+      "input": "確認しっこない"
+    },
+    {
+      "description": "Nominalizer っこ on a hiragana potential stem",
+      "expected": [
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "dekittkonaito_u",
+      "input": "できっこないと思う"
+    },
+    {
+      "description": "Passive auxiliary host before the nominalizer っこ",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "berarettkonai",
+      "input": "食べられっこない"
+    },
+    {
+      "description": "Nominalizer っこ after a godan continuative",
+      "expected": [
+        {
+          "lemma": "そんな",
+          "pos": "Determiner",
+          "surface": "そんな"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かり"
+        },
+        {
+          "lemma": "っこ",
+          "pos": "Suffix",
+          "surface": "っこ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "sonnakotoha_karittkonai",
+      "input": "そんなことは分かりっこない"
     }
   ],
   "description": "auxiliary tests",

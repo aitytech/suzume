@@ -66,8 +66,8 @@ void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, si
                                      std::vector<UnknownCandidate>& candidates);
 void appendKuruRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                   std::vector<UnknownCandidate>& candidates);
-void appendKkoNegativeConjectureCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                           std::vector<UnknownCandidate>& candidates);
+void appendKkoNominalizerCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    std::vector<UnknownCandidate>& candidates);
 void appendSuruInabilityCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                    std::vector<UnknownCandidate>& candidates);
 void appendEruObligationCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,

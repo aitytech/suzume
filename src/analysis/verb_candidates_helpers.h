@@ -589,6 +589,16 @@ size_t naiNegativeFormLengthAt(const std::vector<char32_t>& codepoints, size_t p
 bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 
 /**
+ * @brief Check whether a span runs across the nominalizer っこ
+ *
+ * A ない-family predicate behind っこ proves the suffix, and with it a morpheme
+ * boundary in front of its sokuon (食べ|られ|っこ|ない). Any span reaching across
+ * that boundary — or stopping between the suffix's two morae — is built on
+ * material the construction has already spoken for.
+ */
+bool crossesKkoNominalizer(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);
+
+/**
  * @brief Check whether the conditional negative auxiliary なけれ begins at @p pos.
  *
  * This is the irrealis-stem continuation used by 〜なければ.  Keeping it

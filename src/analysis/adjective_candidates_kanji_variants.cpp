@@ -56,6 +56,24 @@ void adj_detail::appendKanjiIAdjPostVariants(const std::vector<char32_t>& codepo
                                   [](const UnknownCandidate& cand) { return utf8::endsWith(cand.surface, "かった"); }),
                    candidates.end());
 
+  // The nominalizer っこ carries its own ない-family predicate (負け|っこ|なかっ|た),
+  // so an adjective span reaching across the suffix is a fabrication: no
+  // adjective paradigm puts a sokuon inside its stem.
+  candidates.erase(std::remove_if(candidates.begin() + candidate_start, candidates.end(),
+                                  [&codepoints](const UnknownCandidate& cand) {
+                                    if (cand.pos != core::PartOfSpeech::Adjective) {
+                                      return false;
+                                    }
+                                    for (size_t pos = cand.start + 1; pos + 2 < cand.end; ++pos) {
+                                      if (codepoints[pos] == U'っ' && codepoints[pos + 1] == U'こ' &&
+                                          verb_helpers::naiNegativeFollowsAt(codepoints, pos + 2)) {
+                                        return true;
+                                      }
+                                    }
+                                    return false;
+                                  }),
+                   candidates.end());
+
   // 書か+なく+ない is a verb irrealis followed by the negative auxiliary, not an
   // adjective continuative. What separates it from a genuine stem is where the
   // な sits: on the kanji itself in 少+なく and 危+なく, but behind the irrealis
