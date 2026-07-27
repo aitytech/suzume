@@ -208,6 +208,33 @@
       ],
       "id": "shitanodeattte_nai",
       "input": "確認したのであって問題ない"
+    },
+    {
+      "description": "確認だの対応だの - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "だの",
+          "pos": "Particle",
+          "surface": "だの"
+        },
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "だの",
+          "pos": "Particle",
+          "surface": "だの"
+        }
+      ],
+      "id": "dano_dano",
+      "input": "確認だの対応だの"
     }
   ],
   "description": "particle_compound tests",

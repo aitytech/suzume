@@ -919,6 +919,24 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 if applied_rule is None:
                     applied_rule = "mecha-merge"
 
+        # AだのBだの coordinates with one particle repeated. The reference
+        # analyzer lexicalizes it inside the sentence but falls back to the
+        # copula plus の at the end, so the same morpheme comes out two
+        # different ways in a single coordination. An earlier だの in the same
+        # sentence is what identifies the frame.
+        if (
+            not merged
+            and t.get("surface") == "だ"
+            and i + 1 < len(tokens)
+            and tokens[i + 1].get("surface") == "の"
+            and any(prior.get("surface") == "だの" for prior in result)
+        ):
+            result.append({"surface": "だの", "pos": "助詞", "lemma": "だの"})
+            i += 2
+            merged = True
+            if applied_rule is None:
+                applied_rule = "dano-coordination"
+
         # 11b. ず+に -> ずに
         if not merged and t.get("surface") == "ず" and t.get("pos") == "助動詞":
             if i + 1 < len(tokens) and tokens[i + 1].get("surface") == "に":
