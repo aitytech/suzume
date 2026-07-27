@@ -208,9 +208,12 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
       // ない (終止/連体), なく (連用), なかっ (た接続), なけれ (仮定), なきゃ (口語縮約仮定)
       bool is_negative_aux = vh::naiNegativeFollowsAt(codepoints, kanji_end);
       bool is_negative_conditional = vh::naiConditionalFollowsAt(codepoints, kanji_end);
-      // Classical negative auxiliary ぬ/ず/ざる/ざれ also attaches to the ichidan
-      // mizenkei (= bare stem): 見ぬ人, 見ざるを得ない → 見 + ざる, 見ずに → 見 + ずに.
-      bool is_classical_negative_aux = (h1 == U'ぬ') || (h1 == kZu) || (h1 == kZa && (h2 == kRu || h2 == kRe));
+      // The classical negative auxiliary attaches to the ichidan mizenkei
+      // (= bare stem): 見ぬ人, 見ざるを得ない → 見 + ざる, 見ずに → 見 + ずに.
+      // Resolve the cell from the auxiliary inventory, exactly as the 来 branch
+      // above does, so the whole paradigm is covered at once instead of a
+      // hand-listed subset — the izenkei ね before ば (見+ね+ば) was missing.
+      bool is_classical_negative_aux = classical_negative_follows;
       // The literary volitional ん is distinct from the contracted negative
       // when the quotative particle follows (見んとする, 寝んとする).
       bool is_literary_volitional_n = (h1 == U'ん' && h2 == kTo);

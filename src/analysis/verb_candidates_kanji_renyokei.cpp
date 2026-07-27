@@ -201,12 +201,17 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         // The okurigana of an unverified Ichidan proposal must not be the head of
         // a dictionary auxiliary that starts at the same position: 見けむ is the
         // continuative of 見る plus けむ, not a fabricated 見ける. The shorter
-        // reading needs its own evidence, so require the kanji run to be a
-        // dictionary verb on its own.
+        // reading needs its own evidence, so require the kanji run to be an
+        // attested verb on its own — either a dictionary base or a member of the
+        // closed single-kanji Ichidan class, whose bases are recovered by rule
+        // rather than registered (見る, 出る, 寝る).
         // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+        const bool ichidan_stem_is_attested =
+            vh::isVerbInDictionary(dict_manager, extractSubstring(codepoints, start_pos, kanji_end) + "る") ||
+            (is_single_kanji && vh::isSingleKanjiIchidan(codepoints[start_pos]));
         bool okurigana_opens_auxiliary = false;
         if (!ichidan_base_is_dict && dict_manager != nullptr && renyokei_end < codepoints.size() &&
-            vh::isVerbInDictionary(dict_manager, extractSubstring(codepoints, start_pos, kanji_end) + "る")) {
+            ichidan_stem_is_attested) {
           constexpr size_t kAuxiliaryProbe = 4;
           const size_t max_aux_end = std::min(codepoints.size(), kanji_end + kAuxiliaryProbe);
           for (size_t aux_end = renyokei_end + 1; aux_end <= max_aux_end; ++aux_end) {
@@ -217,6 +222,18 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
                                                 << "skipping ichidan_renyokei\n");
               break;
             }
+          }
+          // The okurigana can also be the whole auxiliary rather than its head,
+          // but only the classical negative may claim that cell: its ぬ paradigm
+          // attaches to the bare Ichidan stem, so 見ね is always 見 + ね (izenkei,
+          // before ば). Other one-kana auxiliaries coincide with the stem-final
+          // kana of ordinary lexical verbs (見せ, 立て) and must stay absorbed.
+          const auto* okurigana_auxiliary = dict_manager->lookupExact(
+              extractSubstring(codepoints, kanji_end, renyokei_end), core::PartOfSpeech::Auxiliary);
+          if (okurigana_auxiliary != nullptr && okurigana_auxiliary->extended_pos == core::ExtendedPOS::AuxNegativeNu) {
+            okurigana_opens_auxiliary = true;
+            SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" okurigana is the classical negative, "
+                                              << "skipping ichidan_renyokei\n");
           }
         }
         // A surface that is also a dictionary i-adjective (強い) is verbal
