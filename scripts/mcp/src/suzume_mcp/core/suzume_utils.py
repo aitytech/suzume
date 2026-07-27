@@ -65,6 +65,7 @@ from .postprocessors import (
     postprocess_productive_verb_suffix_stem,
     postprocess_prolonged_sound_noun,
     postprocess_quantity_bound_suffix,
+    postprocess_quotative_determiner_spelling,
     postprocess_renyokei_compound_particle,
     postprocess_shimau_aux,
     postprocess_short_hiragana_onbin,
@@ -308,6 +309,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "productive-search-unit-boundaries"
     if postprocess_bound_derived_adjective(tokens) and applied_rule is None:
         applied_rule = "bound-derived-adjective"
+    if postprocess_quotative_determiner_spelling(tokens) and applied_rule is None:
+        applied_rule = "quotative-determiner-spelling"
 
     # Normalize full-width alphanumeric to half-width
     fullwidth_applied = False

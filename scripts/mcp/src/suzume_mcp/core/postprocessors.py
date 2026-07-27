@@ -2108,3 +2108,33 @@ def postprocess_bound_derived_adjective(tokens: list[dict]) -> bool:
         del tokens[idx : idx + 2]
         changed = True
     return changed
+
+
+def postprocess_quotative_determiner_spelling(tokens: list[dict]) -> bool:
+    """Move the boundary of なんと+いう onto the pronoun plus quotative determiner.
+
+    The reference dictionary reads 何という as the interrogative pronoun plus the
+    quotative 連体詞, but reads its kana spelling なんという as the exclamatory
+    adverb なんと plus the verb いう. The construction is the same one; only the
+    script differs, so the kana spelling inherits the kanji spelling's boundary.
+
+    Only the uninflected いう directly before a noun qualifies. An inflected form
+    is the genuine adverb-plus-verb reading (なんといっても), and so is いう before
+    anything other than a noun (なんというか).
+    """
+    changed = False
+    idx = 0
+    while idx + 2 < len(tokens):
+        adverb, verb, head = tokens[idx], tokens[idx + 1], tokens[idx + 2]
+        if adverb.get("surface") != "なんと" or verb.get("surface") != "いう" or head.get("pos") != "Noun":
+            idx += 1
+            continue
+        adverb["surface"] = "なん"
+        adverb["pos"] = "Noun"
+        adverb["lemma"] = "なん"
+        verb["surface"] = "という"
+        verb["pos"] = "Determiner"
+        verb["lemma"] = "という"
+        changed = True
+        idx += 2
+    return changed
