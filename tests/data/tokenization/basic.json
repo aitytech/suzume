@@ -664,6 +664,38 @@
       ],
       "id": "korehayoi",
       "input": "これはよい"
+    },
+    {
+      "description": "Closed-class chain where a determiner would steal the focus particle's mora",
+      "expected": [
+        {
+          "lemma": "なに",
+          "pos": "Pronoun",
+          "surface": "なに"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "理由",
+          "pos": "Noun",
+          "surface": "理由"
+        }
+      ],
+      "id": "nanigashikano",
+      "input": "なにがしかの理由"
     }
   ],
   "description": "Basic tokenization tests",

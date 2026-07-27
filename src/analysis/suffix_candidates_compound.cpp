@@ -321,10 +321,15 @@ bool hasFunctionWordChainDecomposition(const std::vector<char32_t>& codepoints, 
   constexpr PartOfSpeechMask kFunctionMask =
       partOfSpeechMask(core::PartOfSpeech::Particle) | partOfSpeechMask(core::PartOfSpeech::Auxiliary);
   for (size_t split = start_pos + 2; split < end_pos; ++split) {
-    const auto* head =
-        dict_manager->lookupExact(extractSubstring(codepoints, start_pos, split), core::PartOfSpeech::Particle);
-    if (head == nullptr || (head->extended_pos != core::ExtendedPOS::ParticleAdverbial &&
-                            head->extended_pos != core::ExtendedPOS::ParticleBinding)) {
+    const std::string head_surface = extractSubstring(codepoints, start_pos, split);
+    // A focus particle, or a pronoun — the one nominal that is itself closed
+    // class, so a run opening with one has no unknown noun to recover either
+    // (なにが for なに+が, これから, それでも).
+    const auto* head = dict_manager->lookupExact(head_surface, core::PartOfSpeech::Particle);
+    const bool focus_particle_head = head != nullptr && (head->extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+                                                         head->extended_pos == core::ExtendedPOS::ParticleBinding);
+    if (!focus_particle_head &&
+        !hasExactPartOfSpeech(*dict_manager, head_surface, partOfSpeechMask(core::PartOfSpeech::Pronoun))) {
       continue;
     }
     if (hasExactPartOfSpeech(*dict_manager, extractSubstring(codepoints, split, end_pos), kFunctionMask)) {

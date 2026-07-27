@@ -971,6 +971,33 @@
       ],
       "id": "kareruto_ru",
       "input": "書かれると困る"
+    },
+    {
+      "description": "Genuine classical determiner at a clause boundary",
+      "expected": [
+        {
+          "lemma": "かの",
+          "pos": "Determiner",
+          "surface": "かの"
+        },
+        {
+          "lemma": "地",
+          "pos": "Noun",
+          "surface": "地"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "訪れる",
+          "pos": "Verb",
+          "surface": "訪れる"
+        }
+      ],
+      "id": "kano_wo_reru",
+      "input": "かの地を訪れる"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

@@ -450,7 +450,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // A connective te-form followed by ある uses the lexical existential
       // verb, not a copular or determiner-homograph candidate (並べ+て+ある).
       {EPOS::ParticleConj, EPOS::AuxCopulaDa, cost::kUncommon},
-      {EPOS::ParticleConj, EPOS::Determiner, cost::kUncommon},
+      // Suspending a clause before a determiner needs punctuation, which is its
+      // own boundary, so this joins the finite-verb and past-auxiliary rows
+      // below at the same weight: without it the classical determiner takes the
+      // mora that completes the focus particle (し+かの for しか+の).
+      {EPOS::ParticleConj, EPOS::Determiner, cost::kSevere},
 
       // A copula can be followed by a binding particle: でこそ, でさえ,
       // ですら, でしか. This preserves the nominal-predicate boundary over
@@ -584,6 +588,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // particle sequence in clause-final similatives such as ある+か+の+よう
       // instead of selecting the unrelated determiner かの.
       {EPOS::VerbShuushikei, EPOS::Determiner, cost::kSevere},
+
+      // A continuative cannot take one either: suspending a clause on it needs
+      // punctuation, which is its own boundary. Same かの over-match as the two
+      // rows above, one paradigm cell over (なにが+し+かの for なに+が+しか+の).
+      {EPOS::VerbRenyokei, EPOS::Determiner, cost::kSevere},
 
       // The formal copula である also cannot directly take a determiner.
       // In であるかのよう, retain the intervening final and nominalizing
