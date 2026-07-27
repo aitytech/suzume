@@ -1,0 +1,113 @@
+{
+  "cases": [
+    {
+      "description": "三日間 - regression test",
+      "expected": [
+        {
+          "lemma": "三日間",
+          "pos": "Noun",
+          "surface": "三日間"
+        }
+      ],
+      "id": "unnamed_18",
+      "input": "三日間"
+    },
+    {
+      "description": "五年間 - regression test",
+      "expected": [
+        {
+          "lemma": "五年間",
+          "pos": "Noun",
+          "surface": "五年間"
+        }
+      ],
+      "id": "unnamed_19",
+      "input": "五年間"
+    },
+    {
+      "description": "数年間 - regression test",
+      "expected": [
+        {
+          "lemma": "数年間",
+          "pos": "Noun",
+          "surface": "数年間"
+        }
+      ],
+      "id": "unnamed_20",
+      "input": "数年間"
+    },
+    {
+      "description": "数分かかる - regression test",
+      "expected": [
+        {
+          "lemma": "数分",
+          "pos": "Noun",
+          "surface": "数分"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "kakaru_2",
+      "input": "数分かかる"
+    },
+    {
+      "description": "三年間隔で行う - regression test",
+      "expected": [
+        {
+          "lemma": "三年",
+          "pos": "Noun",
+          "surface": "三年"
+        },
+        {
+          "lemma": "間隔",
+          "pos": "Noun",
+          "surface": "間隔"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "de_u",
+      "input": "三年間隔で行う"
+    },
+    {
+      "description": "三日間にわたり確認する - regression test",
+      "expected": [
+        {
+          "lemma": "三日間",
+          "pos": "Noun",
+          "surface": "三日間"
+        },
+        {
+          "lemma": "にわたり",
+          "pos": "Particle",
+          "surface": "にわたり"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "niwatari_suru",
+      "input": "三日間にわたり確認する"
+    }
+  ],
+  "description": "counter tests",
+  "version": "1.0"
+}

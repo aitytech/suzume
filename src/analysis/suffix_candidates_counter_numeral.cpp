@@ -112,7 +112,22 @@ void appendBasicNumeralCounterCandidates(const std::vector<char32_t>& codepoints
     std::string suffix_text = extractSubstring(codepoints, counter_end, codepoints.size());
     const bool suffix_follows = lookupResultsHavePartOfSpeech(dict_manager->lookup(suffix_text, 0),
                                                               partOfSpeechMask(core::PartOfSpeech::Suffix));
-    if (suffix_follows) {
+    // A temporal counter closed by the span marker 間 is one duration unit
+    // (三日間, 五年間), not a quantity plus a separate suffix.
+    const bool closes_duration_span = normalize::isTemporalCounterKanji(codepoints[numeral_end]) &&
+                                      counter_end < codepoints.size() && codepoints[counter_end] == U'間';
+    if (closes_duration_span) {
+      std::string surface = extractSubstring(codepoints, start_pos, counter_end + 1);
+      auto cand = makeCandidate(surface, start_pos, counter_end + 1, core::PartOfSpeech::Noun,
+                                candidate::kNumeralCounterMergeBonus, false, CandidateOrigin::Counter,
+                                core::ExtendedPOS::NounNumber);
+      cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+      cand.pattern = "temporal_counter_duration_span";
+#endif
+      candidates.push_back(cand);
+    }
+    if (suffix_follows && !closes_duration_span) {
       std::string surface = extractSubstring(codepoints, start_pos, counter_end);
       if (!surface.empty()) {
         auto cand = makeCandidate(surface, start_pos, counter_end, core::PartOfSpeech::Noun,

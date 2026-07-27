@@ -170,7 +170,12 @@ void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, si
   {
     size_t scan = start_pos;
     bool has_quantity = false;
-    if (normalize::isQuantityPrefixKanji(codepoints[scan])) {
+    // An approximation prefix reads as such only at the head of its own word.
+    // Inside a kanji run it is the tail of the preceding noun (人数+分, not
+    // 人+数分).
+    const bool prefix_inside_kanji_run =
+        start_pos > 0 && start_pos - 1 < char_types.size() && char_types[start_pos - 1] == normalize::CharType::Kanji;
+    if (!prefix_inside_kanji_run && normalize::isQuantityPrefixKanji(codepoints[scan])) {
       ++scan;
       has_quantity = true;
     }
@@ -300,6 +305,20 @@ void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, si
 #endif
           candidates.push_back(cand);
         }
+      }
+    } else if (run_ends_in_span) {
+      // Nothing continues the kanji run, so the 間-closed duration is a complete
+      // quantity of its own (数年間, 三日間).
+      std::string surface = extractSubstring(codepoints, start_pos, scan);
+      if (!surface.empty()) {
+        auto cand =
+            makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun, candidate::kNumeralCounterMergeBonus,
+                          false, CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "duration_span_whole";
+#endif
+        candidates.push_back(cand);
       }
     }
   }
