@@ -15,6 +15,15 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // AuxTenseMasu → AuxTenseTa (まし+た) - strong bonus
       {EPOS::AuxTenseMasu, EPOS::AuxTenseTa, cost::kStrongBonus},
 
+      // The polite auxiliary attaches to a continuative predicate and to nothing
+      // else, so no particle can host it. Its 連用形 まし is also the na-adjective
+      // まし (こちらの方がましだ) and the opening of ましい-derived adjectives, and
+      // those readings are the ones a particle actually selects.
+      {EPOS::ParticleCase, EPOS::AuxTenseMasu, cost::kSevere},
+      {EPOS::ParticleTopic, EPOS::AuxTenseMasu, cost::kSevere},
+      {EPOS::ParticleBinding, EPOS::AuxTenseMasu, cost::kSevere},
+      {EPOS::ParticleAdverbial, EPOS::AuxTenseMasu, cost::kSevere},
+
       // AuxTenseMasu → AuxNegativeNu (ませ+ん for polite negative) - strong bonus
       // Ensures ません → ませ+ん (aux) over ませ+ん (particle の)
       {EPOS::AuxTenseMasu, EPOS::AuxNegativeNu, cost::kStrongBonus},

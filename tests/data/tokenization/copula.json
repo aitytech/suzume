@@ -1280,6 +1280,75 @@
       ],
       "id": "madashimo_fixed_concessive_adverb",
       "input": "まだしも良い"
+    },
+    {
+      "description": "主格の が ＋名詞 まし は派生接尾辞ではない",
+      "expected": [
+        {
+          "lemma": "こちら",
+          "pos": "Pronoun",
+          "surface": "こちら"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "方",
+          "pos": "Noun",
+          "surface": "方"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "まし",
+          "pos": "Adjective",
+          "surface": "まし"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kochirano_gamashida",
+      "input": "こちらの方がましだ"
+    },
+    {
+      "description": "形容動詞語幹の まし は丁寧の助動詞ではない",
+      "expected": [
+        {
+          "lemma": "まだ",
+          "pos": "Adverb",
+          "surface": "まだ"
+        },
+        {
+          "lemma": "まし",
+          "pos": "Adjective",
+          "surface": "まし"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "madamashina_da",
+      "input": "まだましな結果だ"
     }
   ],
   "description": "Copula patterns (だ、です、である)",
