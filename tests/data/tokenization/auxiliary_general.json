@@ -151,6 +151,158 @@
       ],
       "id": "shiteokou",
       "input": "しておこう"
+    },
+    {
+      "description": "確認だったり対応だったり - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Particle",
+          "surface": "たり"
+        },
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たり"
+        }
+      ],
+      "id": "datttari_datttari",
+      "input": "確認だったり対応だったり"
+    },
+    {
+      "description": "本を読んだり書いたり - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "だり",
+          "pos": "Particle",
+          "surface": "だり"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たり"
+        }
+      ],
+      "id": "wo_ndari_itari",
+      "input": "本を読んだり書いたり"
+    },
+    {
+      "description": "確認しすぎる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "shisugiru",
+      "input": "確認しすぎる"
+    },
+    {
+      "description": "美味しすぎる - regression test",
+      "expected": [
+        {
+          "lemma": "美味しい",
+          "pos": "Adjective",
+          "surface": "美味し"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "shisugiru_2",
+      "input": "美味しすぎる"
+    },
+    {
+      "description": "難しすぎる - regression test",
+      "expected": [
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難し"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "shisugiru_3",
+      "input": "難しすぎる"
+    },
+    {
+      "description": "確認しがる - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "がる",
+          "pos": "Auxiliary",
+          "surface": "がる"
+        }
+      ],
+      "id": "shigaru",
+      "input": "確認しがる"
     }
   ],
   "description": "auxiliary_general tests",

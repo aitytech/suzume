@@ -48,6 +48,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // (読んで+いく). It cannot follow the past auxiliary た; this prevents
       // a desiderative form such as たく from becoming た+く.
       {EPOS::AuxTenseTa, EPOS::AuxAspectIku, cost::kAlmostNever},
+
+      // The classical perfect り attaches to a 四段已然形 or サ変未然形, never to
+      // the modern past た. Without this the alternating たり of a coordinated
+      // list decomposes at the end of a clause (読んだり書い+た+り).
+      {EPOS::AuxTenseTa, EPOS::AuxClassicalPerfect, cost::kSevere},
       {EPOS::VerbTaForm, EPOS::AuxAspectIku, cost::kAlmostNever},
 
       // AuxTenseMasu → ParticleConj (まし+て, ますれ+ば) - decisive bonus

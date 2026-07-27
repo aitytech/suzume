@@ -491,6 +491,15 @@ void generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, si
               }
             }
           }
+          // A multi-kanji stem before し is a サ変 verbal noun plus its
+          // continuative (確認+し+すぎる), not an adjective stem. Only an
+          // attested い-adjective of that spelling keeps the stem reading
+          // (美味し+すぎる).
+          const bool sahen_sized_stem = normalize::utf8Length(kanji_part) >= 2 ||
+                                        (start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]));
+          if (ext_okurigana == "し" && sahen_sized_stem && !isAdjectiveInDictionary(dict_manager, base_form)) {
+            has_nominal_sahen_suffix_boundary = true;
+          }
           if (has_nominal_sahen_suffix_boundary) {
             continue;
           }
