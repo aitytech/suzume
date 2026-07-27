@@ -337,6 +337,41 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
       bool follows_kanji_sahen_predicate =
           following_kanji_end > renyokei_end && following_kanji_end + 1 < codepoints.size() &&
           codepoints[following_kanji_end] == U'す' && codepoints[following_kanji_end + 1] == U'る';
+      // The object marker in front of the stem is what makes it the head of its
+      // own clause rather than the first half of a compound verb.
+      bool preceded_by_case_particle = false;
+      if (start_pos > 0 && dict_manager != nullptr) {
+        const auto* preceding = dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos),
+                                                          core::PartOfSpeech::Particle);
+        preceded_by_case_particle = preceding != nullptr && preceding->extended_pos == core::ExtendedPOS::ParticleCase;
+      }
+      // A bare continuative also chains straight into the predicate that follows
+      // it (計画を+踏まえ+進める), and the サ変 probe above recognizes only one
+      // lexical class of predicate. Accept the following kanji run whenever it
+      // heads a dictionary verb, so the evidence stays lexical rather than
+      // resting on the kana that happen to follow. The case particle is required
+      // because without it the two predicates are just as likely one compound
+      // verb, whose own continuative already covers the span (見つけ+出し+た).
+      bool follows_kanji_predicate = false;
+      if (preceded_by_case_particle && following_kanji_end > renyokei_end && dict_manager != nullptr) {
+        constexpr size_t kPredicateOkuriganaProbe = 3;
+        const size_t probe_limit = std::min(codepoints.size(), following_kanji_end + kPredicateOkuriganaProbe);
+        for (size_t probe_end = following_kanji_end + 1; probe_end <= probe_limit && !follows_kanji_predicate;
+             ++probe_end) {
+          const std::string follower = extractSubstring(codepoints, renyokei_end, probe_end);
+          if (vh::isVerbInDictionary(dict_manager, follower)) {
+            follows_kanji_predicate = true;
+            break;
+          }
+          for (const auto& follower_cand : inflection.analyze(follower)) {
+            if (follower_cand.verb_type != grammar::VerbType::IAdjective &&
+                vh::isVerbInDictionary(dict_manager, follower_cand.base_form)) {
+              follows_kanji_predicate = true;
+              break;
+            }
+          }
+        }
+      }
       const bool causative_follows = vh::causativeSaseFollowsAt(codepoints, renyokei_end);
       const bool passive_follows = renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end] == U'ら' &&
                                    codepoints[renyokei_end + 1] == U'れ' &&
@@ -347,10 +382,7 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
       if (renyokei_end < codepoints.size() &&
           normalize::classifyChar(codepoints[renyokei_end]) == normalize::CharType::Symbol && start_pos > 0 &&
           dict_manager != nullptr) {
-        const auto* preceding_particle = dict_manager->lookupExact(
-            extractSubstring(codepoints, start_pos - 1, start_pos), core::PartOfSpeech::Particle);
-        follows_symbol_after_case_particle =
-            preceding_particle != nullptr && preceding_particle->extended_pos == core::ExtendedPOS::ParticleCase;
+        follows_symbol_after_case_particle = preceded_by_case_particle;
       }
       bool has_ichidan_continuation =
           renyokei_end < codepoints.size() &&
@@ -361,7 +393,8 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
            (codepoints[renyokei_end] == U'れ' && renyokei_end + 1 < codepoints.size() &&
             codepoints[renyokei_end + 1] == U'ば') ||
            grammar::startsHonorificSubsidiaryVerb(extractSubstring(codepoints, renyokei_end, codepoints.size())) ||
-           follows_kanji_sahen_predicate || causative_follows || passive_follows || follows_symbol_after_case_particle);
+           follows_kanji_sahen_predicate || follows_kanji_predicate || causative_follows || passive_follows ||
+           follows_symbol_after_case_particle);
       if (!first_is_single_stem_ending && has_ichidan_continuation &&
           (grammar::isERowCodepoint(second_hira) || grammar::isIRowCodepoint(second_hira))) {
         std::string surface = extractSubstring(codepoints, start_pos, renyokei_end);

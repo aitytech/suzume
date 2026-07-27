@@ -1049,6 +1049,33 @@
       ],
       "id": "ikurakakaru",
       "input": "いくらかかる"
+    },
+    {
+      "description": "2モーラ送り仮名の一段連用形が後続述語の前で保たれる",
+      "expected": [
+        {
+          "lemma": "計画",
+          "pos": "Noun",
+          "surface": "計画"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "踏まえる",
+          "pos": "Verb",
+          "surface": "踏まえ"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進める"
+        }
+      ],
+      "id": "wo_mae_meru",
+      "input": "計画を踏まえ進める"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
