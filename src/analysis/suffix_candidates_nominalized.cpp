@@ -444,6 +444,42 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
   return;
 }
 
+void generateReciprocalActionNounCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                            const std::vector<normalize::CharType>& char_types,
+                                            const dictionary::DictionaryManager* dict_manager,
+                                            std::vector<UnknownCandidate>& candidates) {
+  if (dict_manager == nullptr || start_pos >= char_types.size() ||
+      char_types[start_pos] != normalize::CharType::Hiragana) {
+    return;
+  }
+  // The nominalizer needs a continuative long enough to be one on its own: a
+  // one-mora head would turn the opening kana of a lexical word into a stem.
+  constexpr size_t kMinStemLength = 2;
+  // Long enough for a compound continuative (追いかけっこ) without running past
+  // the construction.
+  constexpr size_t kMaxStemLength = 4;
+  const size_t max_stem_end = std::min(codepoints.size(), start_pos + kMaxStemLength);
+  for (size_t stem_end = start_pos + kMinStemLength; stem_end <= max_stem_end; ++stem_end) {
+    const size_t end_pos = stem_end + 2;
+    if (end_pos > codepoints.size() || codepoints[stem_end] != core::hiragana::kSmallTsu ||
+        codepoints[stem_end + 1] != U'こ') {
+      continue;
+    }
+    if (!hasExactPartOfSpeech(*dict_manager, extractSubstring(codepoints, start_pos, stem_end),
+                              partOfSpeechMask(core::PartOfSpeech::Verb))) {
+      continue;
+    }
+    std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+    auto cand = makeCandidate(surface, start_pos, end_pos, core::PartOfSpeech::Noun,
+                              candidate::kReciprocalActionNounCost, false, CandidateOrigin::NominalizedNoun);
+    cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+    cand.pattern = "reciprocal_action_kko";
+#endif
+    candidates.push_back(cand);
+  }
+}
+
 void generateHumbleNominalCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                      const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* /*dict_manager*/,

@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "description": "Reciprocal-action nominalizer っこ closes a continuative into one search unit",
+      "expected": [
+        {
+          "lemma": "にらめっこ",
+          "pos": "Noun",
+          "surface": "にらめっこ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "niramettkowosuru",
+      "input": "にらめっこをする"
+    }
+  ],
+  "description": "noun_derived tests",
+  "version": "1.0"
+}

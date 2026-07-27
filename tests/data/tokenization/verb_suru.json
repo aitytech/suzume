@@ -1836,6 +1836,70 @@
       ],
       "id": "shitanodaga",
       "input": "確認したのだが"
+    },
+    {
+      "description": "Unregistered kango keeps its sahen reading against a guessed godan-sa continuative",
+      "expected": [
+        {
+          "lemma": "意見",
+          "pos": "Noun",
+          "surface": "意見"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "一致",
+          "pos": "Noun",
+          "surface": "一致"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ga_shita",
+      "input": "意見が一致した"
+    },
+    {
+      "description": "Same kango boundary with a different first kanji",
+      "expected": [
+        {
+          "lemma": "条件",
+          "pos": "Noun",
+          "surface": "条件"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "合致",
+          "pos": "Noun",
+          "surface": "合致"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ni_shita_2",
+      "input": "条件に合致した"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

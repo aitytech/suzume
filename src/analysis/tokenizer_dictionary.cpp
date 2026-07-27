@@ -1573,7 +1573,16 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
                                 ? verb_helpers::EmphaticSuffixMatch{}
                                 : verb_helpers::matchEmphaticSuffix(codepoints, end_pos, result.entry->pos,
                                                                     verb_helpers::SokuonOnsetPolicy::DictionaryEntry);
-      if (!emphatic.empty()) {
+      // A bare sokuon after a predicate is one of two things: the genuine 促音便,
+      // which needs て/た/で/だ behind it (と+いっ+て), or colloquial emphasis, which
+      // closes the clause (行くっ！). Before any other kana it is neither, and taking
+      // it eats the opening mora of the following word (にらめっ+こ for にらめっこ).
+      const bool bare_sokuon = emphatic.suffix == "っ";
+      const bool unlicensed_bare_sokuon =
+          bare_sokuon && emphatic.end < codepoints.size() &&
+          normalize::classifyChar(codepoints[emphatic.end]) == normalize::CharType::Hiragana &&
+          !utf8::equalsAny(extractSubstring(codepoints, emphatic.end, emphatic.end + 1), {"て", "た", "で", "だ"});
+      if (!emphatic.empty() && !unlicensed_bare_sokuon) {
         // Determine extended_pos for emphatic form
         // Sokuon-ending verb forms should be VerbOnbinkei (音便形)
         core::ExtendedPOS emphatic_epos = result.entry->extended_pos;

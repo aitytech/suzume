@@ -109,6 +109,33 @@
       ],
       "id": "suru_12",
       "input": "三年間勉強する"
+    },
+    {
+      "description": "Kanji run must not swallow a verb stem before a one-mora continuative",
+      "expected": [
+        {
+          "lemma": "三枚",
+          "pos": "Noun",
+          "surface": "三枚"
+        },
+        {
+          "lemma": "重ねる",
+          "pos": "Verb",
+          "surface": "重ね"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "置く",
+          "pos": "Verb",
+          "surface": "置く"
+        }
+      ],
+      "id": "nete_ku",
+      "input": "三枚重ねて置く"
     }
   ],
   "description": "counter_units tests",

@@ -4,6 +4,7 @@
 #include "analysis/category_cost.h"
 #include "analysis/scorer.h"
 #include "analysis/scorer_connection_rules.h"
+#include "analysis/scorer_connection_rules_internal.h"
 #include "analysis/scorer_constants.h"
 #include "analysis/verb_candidates_helpers.h"
 #include "core/debug.h"
@@ -251,10 +252,24 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // A continuative written with its own okurigana is a complete content word,
   // so a bare noun before it is a separate token (花+散り, 飯+食べ). A bare kanji
   // carries no such evidence and stays inside the compound (出+来 in 出来事).
-  const bool renyokei_has_okurigana = grammar::startsWithKanji(next.surface) && !grammar::isAllKanji(next.surface);
+  // That argument fails for one okurigana: し also completes the サ変 predicate of
+  // the whole kanji run, so a productively guessed godan-sa continuative competes
+  // with the kango's own reading instead of standing as a content word (一致した is
+  // not 一+致し+た, 合致した not 合+致し+た). Attested verbs keep the exemption, as
+  // do the other rows, whose okurigana is unambiguous (花+散り, 飯+食べ).
+  const bool guessed_sahen_ambiguous_renyokei = utf8::endsWith(next.surface, "し") && !next.lemmaVerified();
+  const bool renyokei_has_okurigana =
+      grammar::startsWithKanji(next.surface) && !grammar::isAllKanji(next.surface) && !guessed_sahen_ambiguous_renyokei;
+  // A longer kanji run gets the same treatment when the continuative is a single
+  // mora of hiragana, because that is the shape of a run that swallowed the verb's
+  // own kanji stem (三枚重+ね for 三枚+重ね). A genuine one-mora ichidan stem writes
+  // that mora in kanji after kanji material (毎日+寝+て), so nothing legitimate has
+  // this shape. Longer hiragana continuatives keep the exemption (外出+でき+ない).
+  const bool bare_kanji_host = prev.surface.size() == core::kJapaneseCharBytes ||
+                               (grammar::isAllKanji(prev.surface) && isSingleHiraganaVerbRenyokei(next));
   if (prev.extended_pos == core::ExtendedPOS::Noun && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       !grammar::isSuruRenyokeiSurface(next.surface) && next.surface != "せ" && next.surface.size() <= 6 &&
-      prev.surface.size() == core::kJapaneseCharBytes && !renyokei_has_okurigana) {
+      bare_kanji_host && !renyokei_has_okurigana) {
     bonus += cost::kRare;  // Cancel the bigram bonus
   }
 

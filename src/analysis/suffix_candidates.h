@@ -115,6 +115,19 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
  * @param dict_manager Dictionary manager used to verify the honorific prefix (may be null)
  * @param candidates Output candidates, appended in generation order
  */
+/**
+ * @brief Generate reciprocal-action deverbal noun candidates (連用形 + っこ)
+ *
+ * The nominalizer っこ turns a continuative into the name of a reciprocal action
+ * (にらめっこ, かけっこ, ぶつけっこ) and the result is one search unit. A span this
+ * long written entirely in hiragana is otherwise priced by the generic unknown
+ * model, which fragments it, so the whole construction needs its own candidate.
+ */
+void generateReciprocalActionNounCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                            const std::vector<normalize::CharType>& char_types,
+                                            const dictionary::DictionaryManager* dict_manager,
+                                            std::vector<UnknownCandidate>& candidates);
+
 void generateHumbleNominalCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                      const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,

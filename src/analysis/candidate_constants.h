@@ -635,6 +635,13 @@ constexpr float kNominalizedNounParticleBonus = -1.5F;
 // noun before a case particle (鳴らしを、書きを).
 constexpr float kVerifiedRenyokeiNominalCandidateCost = 0.8F;
 
+// The reciprocal-action nominalizer っこ closes a continuative into one search
+// unit (にらめっこ, かけっこ). A pure-hiragana span this long is otherwise priced
+// by the generic unknown model, which fragments it, so the candidate carries a
+// merge bonus rather than an ordinary noun cost — the same shape as a numeral
+// and its counter, whose pieces are likewise analysable on their own.
+constexpr float kReciprocalActionNounCost = kNumeralCounterMergeBonus;
+
 // The humble construction 敬語接頭辞 + V連用形 + する nominalizes the
 // continuative (お伝えする, おかけする).  The verbal reading of the same span is
 // generated with a continuative bonus of its own, so the nominal needs a

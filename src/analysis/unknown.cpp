@@ -656,6 +656,9 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
   // honorific prefix and the suru auxiliary, not by the stem's script.
   analysis::generateHumbleNominalCandidates(codepoints, start_pos, inflection_, dict_manager_, candidates);
 
+  // Generate reciprocal-action deverbal nouns (にらめっこ, かけっこ)
+  analysis::generateReciprocalActionNounCandidates(codepoints, start_pos, char_types, dict_manager_, candidates);
+
   // Generate hiragana verb candidates (pure hiragana verbs like いく, くる)
   if (char_types[start_pos] == normalize::CharType::Hiragana) {
     appendCandidates(candidates, generateHiraganaVerbCandidates(text, codepoints, start_pos, char_types));
