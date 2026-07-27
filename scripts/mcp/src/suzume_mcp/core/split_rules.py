@@ -132,6 +132,23 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
                 applied_rule = "interrogative-nominal-adverb-boundary"
             continue
 
+        # ます is an auxiliary, so it is never part of a particle. A compound
+        # particle lexicalized together with its polite form (に関しまして,
+        # に際しまして) hides the auxiliary boundary that the plain form
+        # (に関し, に際し) keeps, which makes the same closed unit tokenize two
+        # different ways depending only on politeness.
+        if t.get("pos") == "助詞" and surface.endswith("まして") and len(surface) > 3:
+            result.extend(
+                [
+                    {"surface": surface[:-3], "pos": "助詞", "lemma": surface[:-3]},
+                    {"surface": "まし", "pos": "助動詞", "lemma": "ます"},
+                    {"surface": "て", "pos": "助詞", "lemma": "て"},
+                ]
+            )
+            if applied_rule is None:
+                applied_rule = "polite-compound-particle-boundary"
+            continue
+
         lexicalized_compound = _LEXICALIZED_PREDICATE_COMPOUNDS.get(surface)
         if lexicalized_compound is not None and t.get("pos") in ("助詞", "接続詞"):
             result.extend(dict(part) for part in lexicalized_compound)

@@ -47,9 +47,13 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
 
     // The polite auxiliary selects a verbal continuative. This resolves
     // homographic adjective/noun candidates such as 伺い+ます without a
-    // surface lexicon; registered kami-ichidan i-stems retain +る.
+    // surface lexicon; registered kami-ichidan i-stems retain +る. A particle
+    // is exempt: a compound particle sitting here is lexicalized on top of a
+    // continuative already (に関し+まし+て), so rebuilding a predicate from it
+    // would undo the very analysis that put it in this slot.
     if (i + 1 < morphemes.size() && morphemes[i + 1].extended_pos == core::ExtendedPOS::AuxTenseMasu &&
-        morpheme.pos != core::PartOfSpeech::Verb && morpheme.pos != core::PartOfSpeech::Auxiliary) {
+        morpheme.pos != core::PartOfSpeech::Verb && morpheme.pos != core::PartOfSpeech::Auxiliary &&
+        morpheme.pos != core::PartOfSpeech::Particle) {
       const char32_t final_cp = utf8::decodeFirstChar(utf8::lastChar(morpheme.surface));
       std::string reconstructed;
       if (grammar::inflection::isValidKanjiIStemException(morpheme.surface)) {

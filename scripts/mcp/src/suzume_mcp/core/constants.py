@@ -626,6 +626,13 @@ FIXED_FUNCTION_SEARCH_UNITS: dict[str, str] = {
     "やんけ": "助詞",
     "やねん": "助動詞",
     "だっちゃ": "助動詞",
+    # Lexicalized compound particles the reference analyzer keeps whole after a
+    # noun but takes apart after a verb attributive (確認に際して vs
+    # 確認するに際して). The unit does not change with what precedes it, and the
+    # continuative member is the one that carries the polite form (に際し+まし+て).
+    "に際して": "助詞",
+    "に際し": "助詞",
+    "につき": "助詞",
 }
 
 # Closed inflected function forms that the reference analyzer can split into

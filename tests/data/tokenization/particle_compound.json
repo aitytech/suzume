@@ -43,6 +43,119 @@
       ],
       "id": "ni_ttte_meru",
       "input": "規則に従って進める"
+    },
+    {
+      "description": "確認に従い記録する - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に従い",
+          "pos": "Particle",
+          "surface": "に従い"
+        },
+        {
+          "lemma": "記録",
+          "pos": "Noun",
+          "surface": "記録"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ni_i_suru",
+      "input": "確認に従い記録する"
+    },
+    {
+      "description": "確認に関しまして説明する - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に関し",
+          "pos": "Particle",
+          "surface": "に関し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ni_shimashite_suru",
+      "input": "確認に関しまして説明する"
+    },
+    {
+      "description": "確認するに際して - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "に際して",
+          "pos": "Particle",
+          "surface": "に際して"
+        }
+      ],
+      "id": "suruni_shite",
+      "input": "確認するに際して"
+    },
+    {
+      "description": "確認に当たり注意する - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "に当たり",
+          "pos": "Particle",
+          "surface": "に当たり"
+        },
+        {
+          "lemma": "注意",
+          "pos": "Noun",
+          "surface": "注意"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ni_tari_suru",
+      "input": "確認に当たり注意する"
     }
   ],
   "description": "particle_compound tests",

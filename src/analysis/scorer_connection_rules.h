@@ -11,6 +11,9 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
 float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+
+/** @brief Waives the particle→polite-auxiliary bar for a continuative-based compound particle. */
+float computeCompoundParticlePoliteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeCompoundNominalizationBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);

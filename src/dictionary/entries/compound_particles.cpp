@@ -2,6 +2,12 @@
 
 namespace suzume::dictionary::entries {
 
+// A lexicalized compound particle is registered as a paradigm, not as whichever
+// single form happened to be observed: the te-form and the bare continuative are
+// the same closed unit (にわたって/にわたり), and a member that carries only one
+// of them makes the class behave inconsistently. The polite variant is not part
+// of the paradigm — ます is an auxiliary, so につきまして keeps the boundaries
+// につき + まし + て.
 EntrySpecRange getCompoundParticleEntries() {
   static constexpr EntrySpec kEntries[] = {
       // Relation (関連)
@@ -13,6 +19,7 @@ EntrySpecRange getCompoundParticleEntries() {
       particle("につき", EPOS::ParticleCase),    // formal reason/topic marker in notices
       particle("につれて", EPOS::ParticleCase),  // beat に+つれ(verb)+て split
       particle("に従って", EPOS::ParticleCase),  // formal compliance/sequence marker
+      particle("に従い", EPOS::ParticleCase),
       particle("にかけて", EPOS::ParticleCase),  // beat にか(noun)+けて(verb) split
       // Note: による removed - grammatically に+よる (格助詞+動詞連体形)
       // Note: によると removed - MeCab splits as に+よる+と (引用表現)
@@ -29,10 +36,12 @@ EntrySpecRange getCompoundParticleEntries() {
       particle("にとって", EPOS::ParticleCase),
       // にとっても removed — MeCab splits as にとって+も
       particle("に関して", EPOS::ParticleCase),
+      particle("に関し", EPOS::ParticleCase),
       particle("に関する", EPOS::ParticleCase),
       particle("に際して", EPOS::ParticleCase),
       particle("に際し", EPOS::ParticleCase),
       particle("に対して", EPOS::ParticleCase),
+      particle("に対し", EPOS::ParticleCase),
       particle("に対する", EPOS::ParticleCase),
 
       // Duration/Scope (範囲・期間)
@@ -41,6 +50,8 @@ EntrySpecRange getCompoundParticleEntries() {
       particle("にわたる", EPOS::ParticleCase),
       particle("にあたって", EPOS::ParticleCase),
       particle("にあたり", EPOS::ParticleCase),
+      particle("に当たって", EPOS::ParticleCase),
+      particle("に当たり", EPOS::ParticleCase),
       adv("わりに", "わりに"),  // concessive degree/expectation marker
 
       // Topic/Means (話題・手段)

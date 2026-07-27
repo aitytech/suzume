@@ -177,6 +177,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   surface_bonus += connection_rules::computeParticleDeterminerBonus(prev, next);
 
   surface_bonus += connection_rules::computePrefixSymbolBonus(prev, next);
+  surface_bonus += connection_rules::computeCompoundParticlePoliteBonus(prev, next);
 
   // Note: Removed penalty for Pronoun + でも patterns
   // MeCab behavior is context-dependent:

@@ -197,6 +197,21 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   return bonus;
 }
 
+// A compound particle built on a predicate continuative still hosts the polite
+// auxiliary (に関し+まし+て, につき+まし+て). The POS-level bigram bars every
+// particle from that slot because a bare particle offers no stem for ます, and
+// the homographic readings of まし — the na-adjective and the opening of a
+// ましい-derived adjective — are what a bare particle actually selects. The
+// continuative row it ends in is the distinguishing evidence, and a bare
+// particle is a single mora that never carries it.
+float computeCompoundParticlePoliteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  if (next.extended_pos != core::ExtendedPOS::AuxTenseMasu || prev.extended_pos != core::ExtendedPOS::ParticleCase ||
+      normalize::utf8Length(prev.surface) < 3 || !grammar::isIRowCodepoint(utf8::decodeLastChar(prev.surface))) {
+    return cost::kNeutral;
+  }
+  return -cost::kSevere;
+}
+
 // Prefix/adverb→short-verb, symbol→particle/aux/furigana, and で+も copula rules.
 float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
