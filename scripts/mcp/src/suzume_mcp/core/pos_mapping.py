@@ -91,10 +91,6 @@ def map_mecab_pos(token: dict | str) -> str:
     if surface in PRONOUN_OVERRIDES and pos == "名詞":
         return "Pronoun"
 
-    # なん: 代名詞 -> Noun
-    if surface == "なん" and pos == "名詞" and pos_sub1 == "代名詞":
-        return "Noun"
-
     # にく (standalone hiragana): 形容詞 -> Noun
     if surface == "にく" and pos == "形容詞":
         token["lemma"] = "にく"

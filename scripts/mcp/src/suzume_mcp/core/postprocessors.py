@@ -2130,7 +2130,7 @@ def postprocess_quotative_determiner_spelling(tokens: list[dict]) -> bool:
             idx += 1
             continue
         adverb["surface"] = "なん"
-        adverb["pos"] = "Noun"
+        adverb["pos"] = "Pronoun"
         adverb["lemma"] = "なん"
         verb["surface"] = "という"
         verb["pos"] = "Determiner"
