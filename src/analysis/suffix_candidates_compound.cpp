@@ -307,6 +307,24 @@ bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, 
   return false;
 }
 
+bool hasAuxiliaryChainDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                    const dictionary::DictionaryManager* dict_manager) {
+  // Two morae are spelled by too many one-mora auxiliaries to be evidence of
+  // anything: な+す and か+ぬ decompose that way and are ordinary verbs.
+  if (dict_manager == nullptr || end_pos < start_pos + 3) {
+    return false;
+  }
+  for (size_t split = start_pos + 1; split < end_pos; ++split) {
+    if (dict_manager->lookupExact(extractSubstring(codepoints, start_pos, split), core::PartOfSpeech::Auxiliary) !=
+            nullptr &&
+        dict_manager->lookupExact(extractSubstring(codepoints, split, end_pos), core::PartOfSpeech::Auxiliary) !=
+            nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool hasFunctionWordChainDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                        const dictionary::DictionaryManager* dict_manager) {
   if (dict_manager == nullptr || end_pos < start_pos + 3) {

@@ -3649,6 +3649,70 @@
       ],
       "id": "affirmative_clause_wake_boundary",
       "input": "本なわけではない。読むわけではない。書くわけではない。食べるわけではない。高いわけではない。静かなわけではない。"
+    },
+    {
+      "description": "Causal formal noun heading its own clause",
+      "expected": [
+        {
+          "lemma": "ゆえ",
+          "pos": "Noun",
+          "surface": "ゆえ"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "参加",
+          "pos": "Noun",
+          "surface": "参加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "yueattte_suru",
+      "input": "ゆえあって参加する"
+    },
+    {
+      "description": "Causal formal noun in kanji before an existential predicate",
+      "expected": [
+        {
+          "lemma": "故",
+          "pos": "Noun",
+          "surface": "故"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "参加",
+          "pos": "Noun",
+          "surface": "参加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "attte_suru",
+      "input": "故あって参加する"
     }
   ],
   "description": "Formal nouns (こと、もの、ところ)",

@@ -635,6 +635,33 @@
       ],
       "id": "mahoshi",
       "input": "見まほし"
+    },
+    {
+      "description": "Classical negative plus obligation after a sahen irrealis",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "せ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べし"
+        }
+      ],
+      "id": "senubeshi",
+      "input": "確認せぬべし"
     }
   ],
   "description": "auxiliary_classical tests",

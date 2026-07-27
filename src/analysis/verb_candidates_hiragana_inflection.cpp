@@ -288,6 +288,14 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       continue;
     }
 
+    // Nor may it be spelled entirely by a chain of registered auxiliaries: the
+    // paradigm tables endorse a base for any run ending in a verbal mora, so
+    // ぬ+べし becomes the continuative of a non-word (ぬべす).
+    if (!is_dictionary_verb && hasAuxiliaryChainDecomposition(codepoints, start_pos, end_pos, dict_manager)) {
+      SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << surface << "\" auxiliary_chain\n");
+      continue;
+    }
+
     const size_t pre_filter_len = end_pos - start_pos;
     const bool looks_like_short_godan_base = pre_filter_len == 2 && grammar::isGodanVerbType(best.verb_type) &&
                                              best.base_form == surface &&

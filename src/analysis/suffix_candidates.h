@@ -167,6 +167,16 @@ void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoin
                                            const dictionary::DictionaryManager* dict_manager,
                                            std::vector<UnknownCandidate>& candidates);
 
+/**
+ * @brief Return true when a span is exactly two registered auxiliaries (ぬ+べし)
+ *
+ * A chain of closed-class forms spells no open-class word, so a predicate
+ * fabricated over one is an artefact of the paradigm tables rather than a
+ * lexical reading.
+ */
+bool hasAuxiliaryChainDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                    const dictionary::DictionaryManager* dict_manager);
+
 /** Return true when a span is exactly a closed auxiliary+particle chain. */
 bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                        const dictionary::DictionaryManager* dict_manager);

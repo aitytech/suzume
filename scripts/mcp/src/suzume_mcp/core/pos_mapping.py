@@ -314,6 +314,25 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
             t["pos"] = "副詞"
             continue
 
+        # The causal formal noun ゆえ/故 is in the reference dictionary, but a
+        # predicate behind it makes the analyzer prefer a reading that fits the
+        # slot better: a fabricated ru-verb for the kana form, the honorific
+        # prefix 故 (the late ...) for the kanji one. Both readings are wrong in
+        # 故あって参加する, where the noun heads its own clause.
+        if surface in ("ゆえ", "故") and pos in ("動詞", "接頭詞"):
+            t["pos"] = "名詞"
+            t["pos_sub1"] = "非自立"
+            t["lemma"] = surface
+            # The predicate that followed it was read as a subsidiary of the
+            # verb reading just withdrawn; behind a nominal it heads the clause,
+            # and the reciprocal あう it was taken for is the existential ある.
+            following = tokens[idx + 1] if idx + 1 < len(tokens) else None
+            if following is not None and following.get("pos") == "動詞" and following.get("pos_sub1") == "非自立":
+                following["pos_sub1"] = "自立"
+                if following.get("lemma") == "あう":
+                    following["lemma"] = "ある"
+            continue
+
         # Fix adjective 連用形 (〜く): always 形容詞, not 副詞
         # Only when lemma ends in い, or surface contains kanji (正しく etc.)
         # Excludes pure hiragana adverbs: わくわく, せっかく, とにかく, etc.

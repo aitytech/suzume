@@ -743,7 +743,23 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
                       return !inflection_candidate.suffix.empty() &&
                              inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence;
                     });
-    if (len >= min_len && (right_particle || right_clause) && !crossed_verified_predicate &&
+    // The rescue may not stop part-way through a registered predicate that
+    // begins inside the run. ゆえあ|って cuts the onbin stem あっ in half, and
+    // what is left of the te-form then looks like the quotative particle that
+    // brackets it (ゆえ|あっ|て).
+    bool cuts_into_predicate = false;
+    for (size_t probe = start_pos + 1; probe < scan && !cuts_into_predicate && dict_manager_ != nullptr; ++probe) {
+      constexpr size_t kOverhangProbe = 2;
+      const size_t probe_limit = std::min(codepoints.size(), scan + kOverhangProbe);
+      for (size_t probe_end = scan + 1; probe_end <= probe_limit; ++probe_end) {
+        if (hasExactPartOfSpeech(*dict_manager_, extractSubstring(codepoints, probe, probe_end),
+                                 partOfSpeechMask(core::PartOfSpeech::Verb))) {
+          cuts_into_predicate = true;
+          break;
+        }
+      }
+    }
+    if (len >= min_len && (right_particle || right_clause) && !crossed_verified_predicate && !cuts_into_predicate &&
         !has_inflected_predicate_reading &&
         !hasAuxiliaryParticleDecomposition(codepoints, start_pos, scan, dict_manager_) &&
         !hasFunctionWordChainDecomposition(codepoints, start_pos, scan, dict_manager_)) {
