@@ -2138,3 +2138,30 @@ def postprocess_quotative_determiner_spelling(tokens: list[dict]) -> bool:
         changed = True
         idx += 2
     return changed
+
+
+def postprocess_adverbial_na_adjective(tokens: list[dict]) -> bool:
+    """Tag a degree word as an adjective in the cells its copula supplies.
+
+    A word such as 大変 is an adverb and an adjectival noun at once. The
+    reference dictionary already tags the adjectival reading before the
+    attributive な, but keeps the adverb tag before the terminal だ, so one
+    paradigm is split across two parts of speech by cell rather than by
+    grammar. Only the copula licenses the change; a directly modified predicate
+    keeps the adverb (大変おいしい).
+    """
+    from .constants import ADVERBIAL_NA_ADJECTIVES
+
+    changed = False
+    for idx, token in enumerate(tokens[:-1]):
+        follower = tokens[idx + 1]
+        if (
+            token.get("surface") not in ADVERBIAL_NA_ADJECTIVES
+            or token.get("pos") != "Adverb"
+            or follower.get("pos") != "Auxiliary"
+            or follower.get("surface") not in ("だ", "です", "な", "でし", "だっ", "なら")
+        ):
+            continue
+        token["pos"] = "Adjective"
+        changed = True
+    return changed

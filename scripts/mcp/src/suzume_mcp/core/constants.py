@@ -848,6 +848,12 @@ NA_ADJ_OVERRIDES: set[str] = {
     "滅多",
 }
 
+# Degree words that are an adverb and an adjectival noun at once. They modify a
+# predicate directly (大変おいしい) and also inflect through the copula
+# (大変だ, 大変な問題); the reference dictionary tags the copula cell Adverb for
+# some of them and Adjective for others (そうだ), so the paradigm is completed here.
+ADVERBIAL_NA_ADJECTIVES: frozenset[str] = frozenset({"大変", "たいへん"})
+
 # Words to keep as Noun despite 形容動詞語幹 classification
 KEEP_AS_NOUN_NOT_ADJ: set[str] = {
     "マジ",

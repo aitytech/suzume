@@ -10,6 +10,7 @@ from .postprocessors import (
     postprocess_adjective_garu,
     postprocess_adjective_nominalizer,
     postprocess_adverb_nominal_context,
+    postprocess_adverbial_na_adjective,
     postprocess_attributive_mamonaku,
     postprocess_binding_negative_aux,
     postprocess_bound_derived_adjective,
@@ -311,6 +312,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "bound-derived-adjective"
     if postprocess_quotative_determiner_spelling(tokens) and applied_rule is None:
         applied_rule = "quotative-determiner-spelling"
+    if postprocess_adverbial_na_adjective(tokens) and applied_rule is None:
+        applied_rule = "adverbial-na-adjective"
 
     # Normalize full-width alphanumeric to half-width
     fullwidth_applied = False
