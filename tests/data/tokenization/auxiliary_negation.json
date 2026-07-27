@@ -1596,6 +1596,65 @@
       ],
       "id": "kana_wo_mu",
       "input": "静かな句を読む"
+    },
+    {
+      "description": "Euphonic interrogative pronoun before the genitive particle",
+      "expected": [
+        {
+          "lemma": "なん",
+          "pos": "Pronoun",
+          "surface": "なん"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "nanno_monai",
+      "input": "なんの問題もない"
+    },
+    {
+      "description": "Control: an adverb still hosts an interrogative pronoun",
+      "expected": [
+        {
+          "lemma": "もう",
+          "pos": "Adverb",
+          "surface": "もう"
+        },
+        {
+          "lemma": "何",
+          "pos": "Pronoun",
+          "surface": "何"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "mou_monai",
+      "input": "もう何もない"
     }
   ],
   "description": "Negation auxiliaries (ない、ぬ)",

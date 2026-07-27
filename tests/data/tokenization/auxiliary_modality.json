@@ -2078,6 +2078,33 @@
       ],
       "id": "sono_noseida",
       "input": "その気のせいだ"
+    },
+    {
+      "description": "Euphonic interrogative pronoun leading a sentence before the copula",
+      "expected": [
+        {
+          "lemma": "なん",
+          "pos": "Pronoun",
+          "surface": "なん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        }
+      ],
+      "id": "nandakoreha",
+      "input": "なんだこれは"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

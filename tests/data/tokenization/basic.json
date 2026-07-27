@@ -745,6 +745,50 @@
       ],
       "id": "aru_nokoto",
       "input": "ある日のこと"
+    },
+    {
+      "description": "Euphonic interrogative pronoun before the concessive particle",
+      "expected": [
+        {
+          "lemma": "なん",
+          "pos": "Pronoun",
+          "surface": "なん"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "nandemoii",
+      "input": "なんでもいい"
+    },
+    {
+      "description": "Kana spelling of the interrogative pronoun plus quotative determiner",
+      "expected": [
+        {
+          "lemma": "なん",
+          "pos": "Pronoun",
+          "surface": "なん"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        }
+      ],
+      "id": "nantoiu",
+      "input": "なんという結果"
     }
   ],
   "description": "Basic tokenization tests",

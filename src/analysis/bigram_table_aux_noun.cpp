@@ -536,6 +536,19 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::Determiner, EPOS::NounFormal, kDeterminerNounBonus},
       {EPOS::Determiner, EPOS::NounProper, kDeterminerNounBonus},
 
+      // A demonstrative or degree adverb attaches to the predicate it modifies,
+      // so an interrogative argument between the two is the marked order. The
+      // margin is deliberately negligible: the order is possible (もう+何+も), it
+      // just must not outrank the copula chain the adverb's own adjectival-noun
+      // reading takes (そう+な+ん+だ, not そう+なん+だ).
+      {EPOS::Adverb, EPOS::PronounInterrogative, cost::kNegligible},
+
+      // A degree determiner heads a quantity adverb (ほんの+少し, ごく+わずか),
+      // where the head word is adverbial rather than nominal. Without a rule the
+      // pair is charged the unlisted-connection penalty and the same surface's
+      // nominalized reading wins on the determiner bonus alone.
+      {EPOS::Determiner, EPOS::Adverb, cost::kModerateBonus},
+
       // A lexical noun followed by と+いう retains the quotative particle and
       // predicate boundary (希望+と+いう+より).  The fused attributive entry
       // is selected from contexts that can actually follow a determiner, not

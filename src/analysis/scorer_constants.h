@@ -248,7 +248,11 @@ constexpr float kBonusHiraganaUFinalAdverb = -1.6F;
 constexpr float kBonusHiraganaAdverbBase = -3.0F;
 constexpr float kBonusHiraganaAdverbPerChar = 0.85F;
 
-// Non-hiragana (kanji-containing) adverb from dictionary (初めて, 大して), 3+ chars
+// Non-hiragana (kanji-containing) adverb from dictionary (初めて, 大して)
+// A two-character adverb is weakened the same way the hiragana branch weakens
+// its own short entries: at that length the surface is short enough to be some
+// other word's reading, and the full split-fighting bonus buries it.
+constexpr float kBonusNonHiraganaAdverbShort = -2.5F;
 constexpr float kBonusNonHiraganaAdverbBase = -3.5F;
 constexpr float kBonusNonHiraganaAdverbPerChar = 0.3F;
 
@@ -369,6 +373,10 @@ constexpr float kBosHonorificAuxPenalty = 0.3F;              // Honorific auxili
 // occupying the whole input (りんご read as り + ん + ご).
 constexpr float kBosClassicalPerfectPenalty = kBosTensePenalty;
 constexpr float kBosClassicalNegativePenalty = kBosTensePenalty;
+// The copula predicates over a nominal, so it needs one before it. At sentence
+// start there is none, and without a penalty its one-mora attributive form opens
+// a nominalized clause out of nothing (なんだ read as な + ん + だ).
+constexpr float kBosCopulaPenalty = scale::kMinor;
 
 // EOS (end-of-sentence) adjustments share the table below with BOS. The two
 // columns are intentionally asymmetric: a final particle can naturally close a
@@ -419,6 +427,7 @@ constexpr std::array<BoundaryCost, static_cast<size_t>(core::ExtendedPOS::Count_
   table[static_cast<size_t>(core::ExtendedPOS::AuxHonorific)].bos = kBosHonorificAuxPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxClassicalPerfect)].bos = kBosClassicalPerfectPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxNegativeNu)].bos = kBosClassicalNegativePenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::AuxCopulaDa)].bos = kBosCopulaPenalty;
 
   table[static_cast<size_t>(core::ExtendedPOS::ParticleFinal)].bos = kBosFinalParticlePenalty;
   table[static_cast<size_t>(core::ExtendedPOS::ParticleTopic)].bos = kBosTopicParticlePenalty;

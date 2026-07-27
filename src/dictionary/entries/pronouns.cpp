@@ -109,6 +109,9 @@ EntrySpecRange getPronounEntries() {
       // kanji forms so 誰か/何か boundaries resolve in pure-hiragana text
       pronoun_interrogative("だれ", ""),
       pronoun_interrogative("なに", ""),
+      // Euphonic variant of なに before だ/の/で/と (なんだ, なんの, なんで).
+      // It spells its own lemma, like the other kana interrogatives above.
+      pronoun_interrogative("なん", ""),
       // Closed indefinite pronoun, not an interrogative plus final particle.
       pronoun_interrogative("何かしら", ""),
       pronoun("よそ", ""),  // 外所: place/other-party pronoun

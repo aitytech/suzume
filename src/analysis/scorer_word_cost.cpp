@@ -504,10 +504,10 @@ float computeAdverbDictBonus(const core::LatticeEdge& edge) {
     float adverb_bonus =
         (char_len <= 2) ? sc::kBonusHiraganaAdverbShort
                         : lengthScaledBonus(sc::kBonusHiraganaAdverbBase, char_len, 2, sc::kBonusHiraganaAdverbPerChar);
-    bonus += adverb_bonus;
     if (char_len == 2 && utf8::endsWith(edge.surface, "う")) {
-      bonus += sc::kBonusHiraganaUFinalAdverb;
+      adverb_bonus += sc::kBonusHiraganaUFinalAdverb;
     }
+    bonus += adverb_bonus;
   }
 
   // Bonus for non-hiragana adverbs from dictionary (初めて, 大して, etc.)
@@ -516,7 +516,9 @@ float computeAdverbDictBonus(const core::LatticeEdge& edge) {
   // E.g., 初めて(ADV, cost=0.5) vs 初め(VERB_連用, -0.13) + て(PART, conn=-0.5)
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adverb && !grammar::isPureHiragana(edge.surface)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
-    if (char_len >= 2) {
+    if (char_len == 2) {
+      bonus += sc::kBonusNonHiraganaAdverbShort;
+    } else if (char_len > 2) {
       bonus += lengthScaledBonus(sc::kBonusNonHiraganaAdverbBase, char_len, 2, sc::kBonusNonHiraganaAdverbPerChar);
     }
   }
