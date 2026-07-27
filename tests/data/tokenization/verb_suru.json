@@ -1570,6 +1570,43 @@
       ],
       "id": "ri_rashisuru",
       "input": "独り暮らしする"
+    },
+    {
+      "description": "digit-spelled fraction stays one quantity unit after a genitive",
+      "expected": [
+        {
+          "lemma": "全体",
+          "pos": "Noun",
+          "surface": "全体"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "3分の1",
+          "pos": "Noun",
+          "surface": "3分の1"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "no3_no1wo_suru",
+      "input": "全体の3分の1を確認する"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

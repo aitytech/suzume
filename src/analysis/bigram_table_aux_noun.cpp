@@ -225,6 +225,12 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Genitive の + noun is fundamental Japanese grammar
       {EPOS::ParticleNo, EPOS::Noun, cost::kStrongBonus},
 
+      // ParticleNo → NounNumber (の+3分の1, の+二人) - same strong bonus
+      // A quantity nominal heads a genitive phrase exactly as a plain noun
+      // does; without this row the quantity reading loses to a plain-noun
+      // prefix of itself purely because the connection was unscored.
+      {EPOS::ParticleNo, EPOS::NounNumber, cost::kStrongBonus},
+
       // AuxDesireTai → AuxTenseTa (たかっ+た) - strong bonus
       {EPOS::AuxDesireTai, EPOS::AuxTenseTa, cost::kStrongBonus},
 

@@ -208,7 +208,16 @@ void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, si
         break;
       }
     }
-    if (has_quantity && scan > unit_start && (followed_by_hiragana || followed_by_quantity_particle)) {
+    // 分 followed by の and a numeral is the denominator marker of a fraction
+    // (5分の3), not a duration before a particle. The numeral generator emits
+    // the whole fraction as one quantity unit, so the duration split must not
+    // undercut it — with kanji numerals it never competes, which is why only
+    // the digit spelling was breaking.
+    const bool opens_fraction_denominator = codepoints[scan - 1] == U'分' && scan + 1 < codepoints.size() &&
+                                            codepoints[scan] == U'の' &&
+                                            normalize::isNumeralCodepoint(codepoints[scan + 1]);
+    if (has_quantity && scan > unit_start && !opens_fraction_denominator &&
+        (followed_by_hiragana || followed_by_quantity_particle)) {
       std::string surface = extractSubstring(codepoints, start_pos, scan);
       if (!surface.empty()) {
         auto cand = makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun, candidate::kCounterNounSplitBonus,
