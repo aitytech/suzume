@@ -667,6 +667,33 @@
       ],
       "id": "nebanaranu",
       "input": "寝ねばならぬ"
+    },
+    {
+      "description": "two-kanji kango kept whole after an alphanumeric host",
+      "expected": [
+        {
+          "lemma": "A3",
+          "pos": "Noun",
+          "surface": "A3"
+        },
+        {
+          "lemma": "用紙",
+          "pos": "Noun",
+          "surface": "用紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "a3_wo_u",
+      "input": "A3用紙を使う"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

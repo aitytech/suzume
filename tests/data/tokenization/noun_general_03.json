@@ -943,6 +943,33 @@
       ],
       "id": "3_ru",
       "input": "3キロ走る"
+    },
+    {
+      "description": "run-final derivational suffix keeps its boundary",
+      "expected": [
+        {
+          "lemma": "学生",
+          "pos": "Noun",
+          "surface": "学生"
+        },
+        {
+          "lemma": "用",
+          "pos": "Suffix",
+          "surface": "用"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "机",
+          "pos": "Noun",
+          "surface": "机"
+        }
+      ],
+      "id": "no_6",
+      "input": "学生用の机"
     }
   ],
   "description": "General nouns (part 3/3)",

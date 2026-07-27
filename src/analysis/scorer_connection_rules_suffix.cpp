@@ -510,20 +510,26 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kAlmostNever;
   }
 
-  // Penalty for single-kanji NOUN → single-kanji SUFFIX pattern
-  // E.g., 正+式, 手+法, 結+論 are 2-kanji compound words being oversplit
-  // because the second kanji is registered as SUFFIX in L1 dictionary.
-  // The NOUN→SUFFIX bigram bonus (-0.8) + SUFFIX→PART_格 epos bonus
-  // makes the split path cheaper than the compound path.
-  // This penalty counteracts that for single-kanji-to-single-kanji transitions,
-  // without affecting multi-kanji noun + suffix (e.g., 学生+たち, 科学+的).
+  // Penalty for a one-kanji-to-one-kanji noun/suffix transition, in either
+  // direction. Such a pair is normally a two-kanji kango word that the L1
+  // suffix inventory splits open: 正+式, 手+法, 結+論 when the suffix follows,
+  // 用+紙, 用+品 when it leads. The NOUN→SUFFIX bigram bonus (-0.8) plus the
+  // SUFFIX→PART_格 epos bonus otherwise makes the split path cheaper than the
+  // compound path. Adjacent lattice edges are contiguous in the text, so two
+  // all-kanji surfaces here always sit inside one kanji run — a run-final
+  // suffix (学生+用, 科学+的) and a multi-kanji stem (学生+たち) never reach it.
   // Exceptions:
   // - 様/氏: handled by +4.0 kanji_seq penalty in unknown.cpp (always split)
   // - 的: removed from kanji_seq penalty; 1-char + 的 stays merged naturally
   //   (目的, 動的, 知的), 2+ char + 的 still splits via bigram bonus (論理+的)
-  if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix &&
-      prev.surface.size() == core::kJapaneseCharBytes && next.surface.size() == core::kJapaneseCharBytes &&
-      grammar::isAllKanji(prev.surface) && next.surface != "様" && next.surface != "氏") {
+  const bool one_kanji_noun_before_suffix =
+      prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix &&
+      grammar::isAllKanji(prev.surface) && !grammar::isKanjiHonorificTitle(next.surface);
+  const bool one_kanji_suffix_before_noun = prev.pos == core::PartOfSpeech::Suffix &&
+                                            next.pos == core::PartOfSpeech::Noun && grammar::isAllKanji(prev.surface) &&
+                                            grammar::isAllKanji(next.surface);
+  if (prev.surface.size() == core::kJapaneseCharBytes && next.surface.size() == core::kJapaneseCharBytes &&
+      (one_kanji_noun_before_suffix || one_kanji_suffix_before_noun)) {
     bonus += cost::kRare;  // +1.0 to counteract -0.8 bonus
   }
 
