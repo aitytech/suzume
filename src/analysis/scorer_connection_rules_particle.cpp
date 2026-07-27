@@ -231,6 +231,22 @@ float computeConjunctiveParticleCopulaPenalty(const core::LatticeEdge& prev, con
   return cost::kProhibitive;
 }
 
+// An adverb ending in the adverbializing に opens the clause it modifies, so a
+// finished predicate cannot introduce one: without a boundary marker the same
+// spelling is a nominal plus the case particle, which is what an attributive or
+// a past auxiliary actually selects (確認した+ことに+なる is 確認した+こと+に+なる,
+// while clause-initial ことに夜風が冷たかった keeps the adverb).
+float computeAdverbialNiAfterPredicatePenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  const bool finished_predicate = prev.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+                                  prev.extended_pos == core::ExtendedPOS::AuxTenseTa ||
+                                  prev.extended_pos == core::ExtendedPOS::AdjBasic;
+  if (!finished_predicate || next.pos != core::PartOfSpeech::Adverb || !next.fromDictionary() ||
+      !utf8::endsWith(next.surface, "に")) {
+    return cost::kNeutral;
+  }
+  return cost::kProhibitive;
+}
+
 // Prefix/adverb→short-verb, symbol→particle/aux/furigana, and で+も copula rules.
 float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0

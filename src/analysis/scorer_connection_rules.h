@@ -17,6 +17,9 @@ float computeCompoundParticlePoliteBonus(const core::LatticeEdge& prev, const co
 
 /** @brief Bars a multi-mora conjunctive particle ending in で from governing the copular ある. */
 float computeConjunctiveParticleCopulaPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+
+/** @brief Bars a finished predicate from introducing an adverb ending in the adverbializing に. */
+float computeAdverbialNiAfterPredicatePenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeCompoundNominalizationBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next);

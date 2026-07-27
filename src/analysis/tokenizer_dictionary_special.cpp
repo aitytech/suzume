@@ -50,16 +50,10 @@ void appendSpecialGrammarCandidates(core::Lattice& lattice, std::string_view tex
                     core::ExtendedPOS::Conjunction, "contrastive_ippou");
   }
 
-  // The result expression ことに+なる is lexicalized at the formal-noun
-  // boundary.  Keep its closed grammatical head searchable without changing
-  // ordinary clause nominalization (読むことにする).
-  if (start_pos + 4 < codepoints.size() && codepoints[start_pos] == U'こ' && codepoints[start_pos + 1] == U'と' &&
-      codepoints[start_pos + 2] == U'に' && codepoints[start_pos + 3] == U'な' && codepoints[start_pos + 4] == U'る') {
-    lattice.addEdge("ことに", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 3),
-                    core::PartOfSpeech::Adverb, candidate::kCopularTopicAruCandidateCost, 0, "ことに",
-                    dictionary::ConjugationType::None, core::CandidateOrigin::Unknown,
-                    candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::Adverb, "result_kotoni_naru");
-  }
+  // Note: ことに+なる carries no adverb candidate. こと+に+なる is the same
+  // productive clause nominalization as こと+に+する, which has always split,
+  // and an adverb reading of just one of the pair made the construction
+  // tokenize two ways for no grammatical reason.
 
   if (startsEvaluativeKotoni(codepoints, start_pos)) {
     lattice.addEdge("ことに", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 3),

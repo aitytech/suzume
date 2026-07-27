@@ -77,8 +77,13 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
   const bool unknown_hiragana_conjunction_host = !prev.fromDictionary() && grammar::isPureHiragana(prev.surface);
   const bool te_form_conjunction =
       grammar::isPureHiragana(next.surface) && utf8::endsWithAny(next.surface, {"て", "で"});
+  // A conjunction opening with だ is barred from the same slot for the mirror
+  // reason: directly after a noun that だ is the copula predicating it
+  // (確認+だ+から+こそ), and only a clause boundary in front of the conjunction
+  // makes the listed reading available.
+  const bool copula_initial_conjunction = utf8::startsWith(next.surface, "だ");
   if (next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun &&
-      (unknown_hiragana_conjunction_host || te_form_conjunction)) {
+      (unknown_hiragana_conjunction_host || te_form_conjunction || copula_initial_conjunction)) {
     bonus += cost::kProhibitive;
   }
   const bool conjunction_before_hiragana_de = prev.pos == core::PartOfSpeech::Conjunction &&
@@ -192,7 +197,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // form the particle was lexicalized from, and their contributions are
   // additive, so they share one accumulation.
   surface_bonus += connection_rules::computeCompoundParticlePoliteBonus(prev, next) +
-                   connection_rules::computeConjunctiveParticleCopulaPenalty(prev, next);
+                   connection_rules::computeConjunctiveParticleCopulaPenalty(prev, next) +
+                   connection_rules::computeAdverbialNiAfterPredicatePenalty(prev, next);
 
   // Note: Removed penalty for Pronoun + でも patterns
   // MeCab behavior is context-dependent:
