@@ -117,6 +117,10 @@ EntrySpecRange getAuxiliaryEntries() {
       // class with the same irrealis connection behavior.
       aux("じ", "じ", EPOS::AuxNegativeNu),
       aux("まじき", "まじ", EPOS::AuxNegativeMai),  // 文語打消推量の連体形
+      // 文語の禁止 なかれ (確認するなかれ). It follows a terminal form like まい
+      // does, so it shares that class; without the entry the three morae are
+      // rebuilt as a copula plus two one-mora fragments.
+      aux("なかれ", "なかれ", EPOS::AuxNegativeMai),
 
       // Conjecture - らしい (推定)
       aux("らしい", "らしい", EPOS::AuxConjectureRashii),

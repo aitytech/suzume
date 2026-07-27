@@ -1740,6 +1740,28 @@
       ],
       "id": "shi_ru",
       "input": "確認し得る場合"
+    },
+    {
+      "description": "文語禁止 なかれ が終止形の後で1トークンになる",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "なかれ",
+          "pos": "Auxiliary",
+          "surface": "なかれ"
+        }
+      ],
+      "id": "surunakare",
+      "input": "確認するなかれ"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

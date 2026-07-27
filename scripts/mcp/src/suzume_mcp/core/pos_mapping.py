@@ -345,6 +345,13 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
             t["pos"] = "助動詞"
             t["lemma"] = "です"
 
+        # Fix なかれ: 形容詞 -> 助動詞. The classical prohibitive is a bound form
+        # of the negative that only appears after a terminal predicate
+        # (確認するなかれ), so it belongs with the other classical auxiliaries
+        # (けり, べし), which carry their own lemma rather than a modern base.
+        if surface == "なかれ" and pos == "形容詞":
+            t["pos"] = "助動詞"
+
         # Fix ない/なかっ after じゃ: 形容詞 -> 助動詞
         if surface in ("ない", "なかっ") and pos == "形容詞":
             if idx > 0 and tokens[idx - 1].get("surface") == "じゃ":

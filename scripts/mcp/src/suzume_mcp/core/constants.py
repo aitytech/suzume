@@ -809,6 +809,9 @@ FIXED_FUNCTION_LEMMAS: dict[str, str] = {
     "だべ": "だ",
     "やねん": "だ",
     "だっちゃ": "だ",
+    # The classical prohibitive is its own dictionary form, like the other
+    # classical auxiliaries, rather than the modern negative it descends from.
+    "なかれ": "なかれ",
 }
 
 # Pronoun overrides (名詞 -> Pronoun)
