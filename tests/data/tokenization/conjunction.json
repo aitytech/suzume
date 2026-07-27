@@ -1689,6 +1689,28 @@
       ],
       "id": "productive_suru_to_inside_phrase",
       "input": "もしかすると雨だ"
+    },
+    {
+      "description": "Lexicalized conditional conjunction",
+      "expected": [
+        {
+          "lemma": "それなら",
+          "pos": "Conjunction",
+          "surface": "それなら"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sorenara_suru",
+      "input": "それなら確認する"
     }
   ],
   "description": "conjunction tests",

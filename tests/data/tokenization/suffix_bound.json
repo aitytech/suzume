@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "description": "Bound suffix keeps the case particle outside it",
+      "expected": [
+        {
+          "lemma": "線路",
+          "pos": "Noun",
+          "surface": "線路"
+        },
+        {
+          "lemma": "づたい",
+          "pos": "Suffix",
+          "surface": "づたい"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩く"
+        }
+      ],
+      "id": "dutaini_ku",
+      "input": "線路づたいに歩く"
+    }
+  ],
+  "description": "suffix_bound tests",
+  "version": "1.0"
+}

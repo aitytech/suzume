@@ -335,15 +335,25 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
         # by the manner adverb 次第に. The same split happens later for the
         # standalone adverb, but by then the search-unit merge has already run
         # and the nominal it exposes can no longer join the noun in front of it.
-        if (
-            pos == "副詞"
-            and idx > 0
-            and regex.fullmatch(r"[\p{Han}]+に", surface)
-            and tokens[idx - 1].get("pos") == "名詞"
-            and is_all_kanji(tokens[idx - 1].get("surface", ""))
+        # The same holds for a bound suffix the dictionary does not know at all:
+        # it comes back as an unknown noun with the case particle inside it
+        # (線路+づたい+に). Three morae of kana keep the short nouns that really
+        # do end in に out of it.
+        unknown_kana_noun_with_case = (
+            pos == "名詞"
+            and t.get("pos_sub1") == "一般"
+            and len(surface) >= 4
+            and regex.fullmatch(r"\p{Hiragana}+に", surface) is not None
+        )
+        if ((pos == "副詞" and regex.fullmatch(r"[\p{Han}]+に", surface)) or unknown_kana_noun_with_case) and (
+            idx > 0 and tokens[idx - 1].get("pos") == "名詞" and is_all_kanji(tokens[idx - 1].get("surface", ""))
         ):
             base = surface[:-1]
-            t.update({"surface": base, "pos": "名詞", "pos_sub1": "副詞可能", "lemma": base})
+            # A kana chunk the dictionary does not know, bound to the noun in
+            # front of it, is that noun's suffix; a known adverbial nominal
+            # keeps its own class.
+            sub1 = "接尾" if unknown_kana_noun_with_case else "副詞可能"
+            t.update({"surface": base, "pos": "名詞", "pos_sub1": sub1, "lemma": base})
             tokens.insert(idx + 1, {"surface": "に", "pos": "助詞", "pos_sub1": "格助詞", "lemma": "に"})
             continue
 

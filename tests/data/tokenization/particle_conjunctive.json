@@ -747,6 +747,58 @@
       ],
       "id": "particle_sou_naraba_conditional_sequence",
       "input": "そうならば進む"
+    },
+    {
+      "description": "Immediacy compound particle as one search unit",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "知らせ",
+          "pos": "Noun",
+          "surface": "知らせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        },
+        {
+          "lemma": "や否や",
+          "pos": "Particle",
+          "surface": "や否や"
+        },
+        {
+          "lemma": "担当者",
+          "pos": "Noun",
+          "surface": "担当者"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "立ち上がる",
+          "pos": "Verb",
+          "surface": "立ち上がっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "sono_rasewo_kuya_ya_ha_chi_gattta",
+      "input": "その知らせを聞くや否や、担当者は立ち上がった。"
     }
   ],
   "description": "particle_conjunctive tests",

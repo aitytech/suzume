@@ -614,6 +614,9 @@ FIXED_FUNCTION_SEARCH_UNITS: dict[str, str] = {
     "おのれ": "代名詞",
     "だけ": "助詞",
     "だに": "助詞",
+    # 即時の接続助詞. The analyzer reads its middle mora as the noun 否, which
+    # never stands alone here; the compound has no internal boundary.
+    "や否や": "助詞",
     "がてら": "助詞",
     # Regional predicate tails. The reference analyzer has no entry for them and
     # guesses an internal boundary (だ+べ, やん+け), but each is one closed

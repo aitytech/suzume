@@ -45,7 +45,11 @@ EntrySpecRange getConjunctionEntries() {
       // Note: とすれば removed - grammatically と + すれ (する仮定形) + ば
       // Colloquial conditional conjunction. Keep the closed search unit
       // rather than following MeCab's non-lexical そん+なら split.
-      conj("そんなら", ""), conj("それにしても", ""), adv("ともかく", ""),
+      conj("そんなら", ""), conj("それなら", ""), conj("それにしても", ""), adv("ともかく", ""),
+      // Lexicalized adverb (何かと忙しい). Its pieces are all closed class, so
+      // nothing recovers the adverbial reading once they are split apart, and
+      // the sibling sequences stay productive (何かに, 何かで).
+      adv("何かと", ""),
       // Keep productive particle/auxiliary sequences searchable as their
       // constituent morphemes (いずれ + に + し + て + も), rather than
       // treating the whole sequence as a fixed conjunction.

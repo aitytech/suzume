@@ -2141,14 +2141,9 @@
           "surface": "読む"
         },
         {
-          "lemma": "や",
+          "lemma": "や否や",
           "pos": "Particle",
-          "surface": "や"
-        },
-        {
-          "lemma": "否や",
-          "pos": "Noun",
-          "surface": "否や"
+          "surface": "や否や"
         },
         {
           "lemma": "書く",
@@ -2161,14 +2156,9 @@
           "surface": "書く"
         },
         {
-          "lemma": "や",
+          "lemma": "や否や",
           "pos": "Particle",
-          "surface": "や"
-        },
-        {
-          "lemma": "否や",
-          "pos": "Noun",
-          "surface": "否や"
+          "surface": "や否や"
         },
         {
           "lemma": "読む",
@@ -2181,14 +2171,9 @@
           "surface": "食べる"
         },
         {
-          "lemma": "や",
+          "lemma": "や否や",
           "pos": "Particle",
-          "surface": "や"
-        },
-        {
-          "lemma": "否や",
-          "pos": "Noun",
-          "surface": "否や"
+          "surface": "や否や"
         },
         {
           "lemma": "飲む",
@@ -2201,14 +2186,9 @@
           "surface": "終える"
         },
         {
-          "lemma": "や",
+          "lemma": "や否や",
           "pos": "Particle",
-          "surface": "や"
-        },
-        {
-          "lemma": "否や",
-          "pos": "Noun",
-          "surface": "否や"
+          "surface": "や否や"
         },
         {
           "lemma": "始める",

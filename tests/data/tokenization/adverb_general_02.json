@@ -2038,6 +2038,28 @@
       ],
       "id": "interrogative_nominal_adverb_boundary",
       "input": "いつの間にか終わった"
+    },
+    {
+      "description": "Lexicalized adverb built from closed-class pieces",
+      "expected": [
+        {
+          "lemma": "何かと",
+          "pos": "Adverb",
+          "surface": "何かと"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "kato_suru",
+      "input": "何かと確認する"
     }
   ],
   "description": "General adverbs (part 2/2)",
