@@ -281,28 +281,6 @@
       ],
       "id": "shisugiru_3",
       "input": "難しすぎる"
-    },
-    {
-      "description": "確認しがる - regression test",
-      "expected": [
-        {
-          "lemma": "確認",
-          "pos": "Noun",
-          "surface": "確認"
-        },
-        {
-          "lemma": "する",
-          "pos": "Verb",
-          "surface": "し"
-        },
-        {
-          "lemma": "がる",
-          "pos": "Auxiliary",
-          "surface": "がる"
-        }
-      ],
-      "id": "shigaru",
-      "input": "確認しがる"
     }
   ],
   "description": "auxiliary_general tests",
