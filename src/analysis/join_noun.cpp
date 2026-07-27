@@ -550,6 +550,15 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     if (c1 != U'り' && c1 != U'い') {
       return;
     }
+    // Verbs are an open class, but a two-mora hiragana continuative is short
+    // enough to be a coincidence: the tail of an i-adjective written across a
+    // kanji stem has the same shape (望まし+い方 out of 望ましい+方向). Require
+    // the reconstructed base to be attested before joining.
+    const std::string continuative_base =
+        extractSubstring(codepoints, start_pos, start_pos + 1) + std::string(grammar::godanBaseSuffixFromIRow(c1));
+    if (!verb_helpers::isVerbInDictionary(&dict_manager, continuative_base)) {
+      return;
+    }
     size_t end_pos = start_pos + 3;
     std::string surface(textRange(text, byte_offsets, start_pos, end_pos));
     float base_cost = scorer.posPrior(core::PartOfSpeech::Noun);
@@ -730,6 +739,7 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
 
   // Build the compound noun surface
   size_t end_pos = hiragana_end + head_length;  // Include the bound noun head
+
   std::string surface(textRange(text, byte_offsets, start_pos, end_pos));
 
   // Calculate cost with bonus for compound noun pattern

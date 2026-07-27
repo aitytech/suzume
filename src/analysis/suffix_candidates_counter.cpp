@@ -63,9 +63,14 @@ void generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t s
     }
   }
 
+  // A digit run glued to a preceding letter is part of an alphanumeric
+  // identifier, not a quantity: the A of A4 owns the 4, so the following
+  // katakana noun starts its own token (A4|サイズ, not A|4サイズ).
+  const bool follows_letter = start_pos > 0 && char_types[start_pos - 1] == normalize::CharType::Alphabet;
+
   // Check for katakana unit suffix (e.g., キロ, ドル, メートル, パーセント)
   // Generate digit + katakana unit candidates like 3キロ, 100ドル, 80パーセント
-  if (numeral_is_digits && numeral_end < char_types.size() &&
+  if (numeral_is_digits && !follows_letter && numeral_end < char_types.size() &&
       char_types[numeral_end] == normalize::CharType::Katakana) {
     // Find end of katakana sequence (max 8 chars for reasonable unit length)
     size_t unit_end = findCharRegionEnd(char_types, numeral_end, 8, normalize::CharType::Katakana);
