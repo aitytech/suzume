@@ -182,9 +182,17 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   // start matching V2 after the first kanji instead of treating its last
   // hiragana as V1's stem ending. A Godan renyokei remains a boundary after
   // the full kanji sequence (提出+し), not evidence for a bare Ichidan stem.
-  const bool has_kanji_v2_after_bare_ichidan = kanji_end >= start_pos + 2 &&
-                                               char_types[start_pos + 1] == CharType::Kanji &&
-                                               godanRenyokeiBaseCp(renyokei_char) == 0;
+  //
+  // Only a known single-kanji Ichidan verb can be read this way: the stem
+  // vowel is unwritten, so nothing else in the span identifies the kanji as
+  // verbal. Without that evidence any kanji whose neighbour happens to open a
+  // dictionary verb becomes a V1, and the compound is carved out of the
+  // interior of a two-kanji kango (提+出す for 提出する). The same closed set
+  // already gates the retry below, which spells this construction the other
+  // way round.
+  const bool has_kanji_v2_after_bare_ichidan =
+      kanji_end >= start_pos + 2 && char_types[start_pos + 1] == CharType::Kanji &&
+      godanRenyokeiBaseCp(renyokei_char) == 0 && verb_helpers::isSingleKanjiIchidan(codepoints[start_pos]);
 
   if (addPassiveContinuativeTailCandidates(lattice, codepoints, start_pos, kanji_end, dict_manager)) {
     return;

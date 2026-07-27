@@ -1922,6 +1922,60 @@
       ],
       "id": "ri_suru",
       "input": "一通り確認する"
+    },
+    {
+      "description": "資料を提出する - auto-generated",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "提出",
+          "pos": "Noun",
+          "surface": "提出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "wo_suru_2",
+      "input": "資料を提出する"
+    },
+    {
+      "description": "数値を検出する - auto-generated",
+      "expected": [
+        {
+          "lemma": "数値",
+          "pos": "Noun",
+          "surface": "数値"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "検出",
+          "pos": "Noun",
+          "surface": "検出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "wo_suru_3",
+      "input": "数値を検出する"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",
