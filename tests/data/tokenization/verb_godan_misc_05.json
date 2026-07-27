@@ -1447,6 +1447,80 @@
       ],
       "id": "gatonda",
       "input": "鳥がとんだ"
+    },
+    {
+      "description": "The classical negative takes a verb irrealis, not the listing particle",
+      "expected": [
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざる"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "得る",
+          "pos": "Verb",
+          "surface": "得"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "状況",
+          "pos": "Noun",
+          "surface": "状況"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "yarazaruwo_nai_da",
+      "input": "やらざるを得ない状況だ"
+    },
+    {
+      "description": "Negative control: the listing particle keeps its reading between nominals",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "やら",
+          "pos": "Particle",
+          "surface": "やら"
+        },
+        {
+          "lemma": "雑誌",
+          "pos": "Noun",
+          "surface": "雑誌"
+        },
+        {
+          "lemma": "やら",
+          "pos": "Particle",
+          "surface": "やら"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "yara_yara_u",
+      "input": "本やら雑誌やら買う"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

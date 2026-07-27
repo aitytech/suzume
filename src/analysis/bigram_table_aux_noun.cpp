@@ -654,6 +654,7 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::ParticleNo, EPOS::AuxNegativeNu, cost::kAlmostNever},
       {EPOS::ParticleQuote, EPOS::AuxNegativeNu, cost::kAlmostNever},
       {EPOS::ParticleCase, EPOS::AuxNegativeNu, cost::kAlmostNever},
+      {EPOS::ParticleAdverbial, EPOS::AuxNegativeNu, cost::kAlmostNever},
       {EPOS::AdjStem, EPOS::AuxNegativeNu, cost::kAlmostNever},
 
       // The contracted volitional ん (from む) reads off the same irrealis form,
@@ -662,6 +663,7 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::ParticleNo, EPOS::AuxVolitional, cost::kAlmostNever},
       {EPOS::ParticleQuote, EPOS::AuxVolitional, cost::kAlmostNever},
       {EPOS::ParticleCase, EPOS::AuxVolitional, cost::kAlmostNever},
+      {EPOS::ParticleAdverbial, EPOS::AuxVolitional, cost::kAlmostNever},
       {EPOS::AdjStem, EPOS::AuxVolitional, cost::kAlmostNever},
 
       // An adjective stem cannot govern an object or case particle. This
