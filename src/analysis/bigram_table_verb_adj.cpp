@@ -206,8 +206,14 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbShuushikei → ParticleFinal (食べる+ね) - minor bonus
       {EPOS::VerbShuushikei, EPOS::ParticleFinal, cost::kMinorBonus},
 
-      // VerbShuushikei → ParticleNo (食べる+の+だ for のだ/んだ) - strong bonus
-      {EPOS::VerbShuushikei, EPOS::ParticleNo, cost::kStrongBonus},
+      // VerbShuushikei → ParticleNo (食べる+の+だ for のだ/んだ).
+      // The nominalizer after a finite verb opens a productive chain with any
+      // following case particle (読むのが, 読むのを, 読むのに), so it has to beat
+      // a listed conjunctive particle that spells the same two morae. Without
+      // the margin only the adjective host split — 読むのに使う, whose に marks
+      // a purpose, came out as one adversative particle. The lexicalized ので
+      // stays whole because its own entry is still the cheaper single edge.
+      {EPOS::VerbShuushikei, EPOS::ParticleNo, cost::kVeryStrongBonus},
 
       // Verb → ParticleAdverbial (できる+だけ, 食べる+だけ, 行く+だけ) - minor bonus
       {EPOS::VerbShuushikei, EPOS::ParticleAdverbial, cost::kMinorBonus},

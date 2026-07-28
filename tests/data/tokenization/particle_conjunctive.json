@@ -799,6 +799,92 @@
       ],
       "id": "sono_rasewo_kuya_ya_ha_chi_gattta",
       "input": "その知らせを聞くや否や、担当者は立ち上がった。"
+    },
+    {
+      "description": "Nominalizer plus case particle stays split after a finite verb",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "進める",
+          "pos": "Verb",
+          "surface": "進め"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "surunoni_menai",
+      "input": "確認するのに進めない"
+    },
+    {
+      "description": "Purpose reading of the nominalizer chain keeps both particles",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "munoni_u",
+      "input": "読むのに使う"
+    },
+    {
+      "description": "Lexicalized causal particle stays whole after the same finite host",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "ので",
+          "pos": "Particle",
+          "surface": "ので"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "kunode_tsu",
+      "input": "行くので待つ"
     }
   ],
   "description": "particle_conjunctive tests",
