@@ -570,10 +570,15 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     if (candidate.rejects_preceding_content_edge && hasContentEdgeEndingAt(lattice, candidate.start)) {
       continue;
     }
+    // A longer content word from any other generator supersedes the rescue, but
+    // not another rescue: the generator offers both the maximal run and the run
+    // that stops in front of a trailing auxiliary, and those two are meant to
+    // compete in the lattice (りんご + だ against りんごだ) rather than one
+    // silencing the other before scoring sees them.
     if (candidate.bracketed_noun_rescue &&
         std::any_of(candidates.begin(), candidates.end(), [&](const UnknownCandidate& alternative) {
           return alternative.start == candidate.start && alternative.end > candidate.end &&
-                 core::isContentWord(alternative.pos);
+                 !alternative.bracketed_noun_rescue && core::isContentWord(alternative.pos);
         })) {
       continue;
     }

@@ -1543,6 +1543,28 @@
       ],
       "id": "ci/cdtogt-rno",
       "input": "CI/CDとGT-Rの話"
+    },
+    {
+      "description": "Negative control: a hiragana noun spanning an auxiliary mora keeps its whole run",
+      "expected": [
+        {
+          "lemma": "たなばた",
+          "pos": "Noun",
+          "surface": "たなばた"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "夜",
+          "pos": "Noun",
+          "surface": "夜"
+        }
+      ],
+      "id": "tanabatano",
+      "input": "たなばたの夜"
     }
   ],
   "description": "General nouns (part 3/3)",

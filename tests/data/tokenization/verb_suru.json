@@ -2253,6 +2253,117 @@
       ],
       "id": "suru_13",
       "input": "一時中断する"
+    },
+    {
+      "description": "Copula after an unregistered hiragana noun keeps its boundary",
+      "expected": [
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "栄養",
+          "pos": "Noun",
+          "surface": "栄養"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        }
+      ],
+      "id": "ringodatosureba_ga_i",
+      "input": "りんごだとすれば栄養が高い"
+    },
+    {
+      "description": "Sibling of the copula boundary after an unregistered hiragana noun",
+      "expected": [
+        {
+          "lemma": "みかん",
+          "pos": "Noun",
+          "surface": "みかん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "mikandatosureba",
+      "input": "みかんだとすれば"
+    },
+    {
+      "description": "Positive control: the same shape with a registered hiragana noun",
+      "expected": [
+        {
+          "lemma": "さくら",
+          "pos": "Noun",
+          "surface": "さくら"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "sakuradatosureba",
+      "input": "さくらだとすれば"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",
