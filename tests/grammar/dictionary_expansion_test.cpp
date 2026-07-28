@@ -135,6 +135,14 @@ TEST(DictionaryExpansionTest, PreservesDifferentPosAtTheSameExpandedSurface) {
                                                [](const auto& entry) { return entry.surface == "テストすれば"; });
   EXPECT_EQ(binary_collisions, 1);
   EXPECT_GT(binary_expanded.duplicates_skipped, 0);
+
+  DictionaryExpansionOptions distinct_pos_options;
+  distinct_pos_options.preserve_same_pos_homographs = false;
+  auto distinct_pos_expanded = expandDictionarySourceEntries({verb, noun}, distinct_pos_options);
+  const auto distinct_pos_collisions =
+      std::count_if(distinct_pos_expanded.entries.begin(), distinct_pos_expanded.entries.end(),
+                    [](const auto& entry) { return entry.surface == "テストすれば"; });
+  EXPECT_EQ(distinct_pos_collisions, 2);
 }
 
 }  // namespace

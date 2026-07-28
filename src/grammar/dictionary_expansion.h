@@ -17,10 +17,15 @@ struct DictionaryExpansionResult {
 };
 
 struct DictionaryExpansionOptions {
-  // Runtime source dictionaries can retain grammatical homographs. The
-  // current binary dictionary trie stores one record per surface, so its
-  // compiler requests deterministic surface collapse and reports every loss.
+  // Runtime source dictionaries can retain every grammatical homograph.
   bool preserve_surface_homographs{true};
+  // Binary dictionaries retain distinct POS readings for one surface, while
+  // collapsing competing expanded forms inside one broad POS deterministically.
+  bool preserve_same_pos_homographs{true};
+  // Explicit source homographs are lexical evidence. Inflected forms which
+  // merely collide after expansion are not, and binary dictionaries collapse
+  // those generated collisions to the stable first entry.
+  bool preserve_generated_surface_homographs{true};
 };
 
 /**

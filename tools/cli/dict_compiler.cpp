@@ -143,7 +143,9 @@ core::Expected<size_t, core::Error> DictCompiler::compileEntries(const std::vect
 
   dictionary::BinaryDictWriter writer;
   grammar::DictionaryExpansionOptions expansion_options;
-  expansion_options.preserve_surface_homographs = false;
+  expansion_options.preserve_surface_homographs = true;
+  expansion_options.preserve_same_pos_homographs = false;
+  expansion_options.preserve_generated_surface_homographs = false;
   auto expanded = grammar::expandDictionarySourceEntries(*active_entries, expansion_options);
   for (const auto& entry : expanded.entries) {
     writer.addEntry(entry);
@@ -157,7 +159,7 @@ core::Expected<size_t, core::Error> DictCompiler::compileEntries(const std::vect
 
   if (expanded.duplicates_skipped > 0) {
     printWarning("Skipped " + std::to_string(expanded.duplicates_skipped) +
-                 " expanded entries whose surfaces cannot coexist in the binary dictionary");
+                 " duplicate expanded entries inside the same POS");
   }
 
   auto write_result = writer.writeToFile(dic_path);

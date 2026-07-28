@@ -7,6 +7,7 @@
 #include <fstream>
 #endif
 #include <limits>
+#include <tuple>
 #include <unordered_map>
 
 #include "core/debug.h"
@@ -139,10 +140,6 @@ core::Expected<std::vector<uint8_t>, core::Error> encodeFrontCodedSurfaces(
   for (const DictionaryEntry& entry : entries) {
     const size_t prefix_length = commonPrefixLength(previous, entry.surface);
     const size_t suffix_length = entry.surface.size() - prefix_length;
-    if (suffix_length == 0) {
-      return core::makeUnexpected(
-          core::Error(core::ErrorCode::InvalidInput, "Duplicate dictionary surface: " + entry.surface));
-    }
 
     const uint8_t control = static_cast<uint8_t>((std::min(prefix_length, kInlineFrontLength) << 4U) |
                                                  std::min(suffix_length, kInlineFrontLength));
@@ -170,16 +167,20 @@ bool decodeFrontCodedSurfaces(const uint8_t* data, size_t size, size_t entry_cou
     size_t prefix_length = 0;
     size_t suffix_length = 0;
     if (!readFrontLength(data, size, offset, control >> 4U, prefix_length) ||
-        !readFrontLength(data, size, offset, control & 0x0FU, suffix_length) || suffix_length == 0 ||
-        prefix_length > previous.size() || suffix_length > size - offset ||
-        prefix_length + suffix_length > kMaxSerializedSurfaceLength) {
+        !readFrontLength(data, size, offset, control & 0x0FU, suffix_length) || prefix_length > previous.size() ||
+        suffix_length > size - offset || prefix_length + suffix_length > kMaxSerializedSurfaceLength) {
+      return false;
+    }
+    const bool repeats_previous = suffix_length == 0;
+    if (repeats_previous && (previous.empty() || prefix_length != previous.size())) {
       return false;
     }
 
     std::string surface(previous.data(), prefix_length);
     surface.append(reinterpret_cast<const char*>(data + offset), suffix_length);
     offset += suffix_length;
-    if (surface.empty() || !normalize::isValidUtf8(surface) || (!previous.empty() && surface <= previous)) {
+    if (surface.empty() || !normalize::isValidUtf8(surface) ||
+        (!previous.empty() && (repeats_previous ? surface != previous : surface <= previous))) {
       return false;
     }
     surfaces.push_back(surface);
@@ -337,7 +338,17 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
   if (!decodeFrontCodedSurfaces(data + surface_offset, surface_size, entry_count, trie_surfaces)) {
     return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid dictionary surface table"));
   }
-  if (!trie.build(trie_surfaces)) {
+  std::vector<std::string> trie_keys;
+  std::vector<int32_t> trie_values;
+  trie_keys.reserve(trie_surfaces.size());
+  trie_values.reserve(trie_surfaces.size());
+  for (size_t idx = 0; idx < trie_surfaces.size(); ++idx) {
+    if (idx == 0 || trie_surfaces[idx] != trie_surfaces[idx - 1]) {
+      trie_keys.push_back(trie_surfaces[idx]);
+      trie_values.push_back(static_cast<int32_t>(idx));
+    }
+  }
+  if (!trie.build(trie_keys, trie_values)) {
     return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Failed to build dictionary trie"));
   }
 
@@ -459,12 +470,16 @@ std::vector<LookupResult> BinaryDictionary::lookup(std::string_view text, size_t
 
   for (const auto& tres : trie_results) {
     if (tres.value >= 0 && static_cast<size_t>(tres.value) < entries_.size()) {
-      LookupResult result{};
-      result.entry_id = static_cast<uint32_t>(tres.value);
-      // Convert byte length from trie to character count
-      result.length = normalize::utf8Length(text.substr(start_pos, tres.length));
-      result.entry = &entries_[tres.value];
-      results.push_back(result);
+      const size_t first_idx = static_cast<size_t>(tres.value);
+      const std::string& matched_surface = entries_[first_idx].surface;
+      for (size_t idx = first_idx; idx < entries_.size() && entries_[idx].surface == matched_surface; ++idx) {
+        LookupResult result{};
+        result.entry_id = static_cast<uint32_t>(idx);
+        // Convert byte length from trie to character count
+        result.length = normalize::utf8Length(text.substr(start_pos, tres.length));
+        result.entry = &entries_[idx];
+        results.push_back(result);
+      }
     }
   }
 
@@ -476,8 +491,13 @@ const DictionaryEntry* BinaryDictionary::lookupExact(std::string_view surface, c
   if (idx < 0 || static_cast<size_t>(idx) >= entries_.size()) {
     return nullptr;
   }
-  const auto& entry = entries_[static_cast<size_t>(idx)];
-  return pos == core::PartOfSpeech::Unknown || entry.pos == pos ? &entry : nullptr;
+  for (size_t entry_idx = static_cast<size_t>(idx);
+       entry_idx < entries_.size() && entries_[entry_idx].surface == surface; ++entry_idx) {
+    if (pos == core::PartOfSpeech::Unknown || entries_[entry_idx].pos == pos) {
+      return &entries_[entry_idx];
+    }
+  }
+  return nullptr;
 }
 
 const DictionaryEntry* BinaryDictionary::getEntry(uint32_t idx) const {
@@ -497,7 +517,7 @@ void BinaryDictWriter::addEntry(const DictionaryEntry& entry) {
 
 void BinaryDictWriter::replaceEntry(const DictionaryEntry& entry) {
   for (auto& existing : entries_) {
-    if (existing.surface == entry.surface) {
+    if (existing.surface == entry.surface && existing.pos == entry.pos && existing.extended_pos == entry.extended_pos) {
       existing = entry;
       return;
     }
@@ -512,9 +532,12 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
     return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Dictionary has too many entries"));
   }
 
-  // Sort entries by surface for trie building
-  std::sort(entries_.begin(), entries_.end(),
-            [](const DictionaryEntry& lhs, const DictionaryEntry& rhs) { return lhs.surface < rhs.surface; });
+  // Keep grammatical homographs consecutive and deterministic. The trie points
+  // at the first entry for each surface and lookup returns the whole group.
+  std::sort(entries_.begin(), entries_.end(), [](const DictionaryEntry& lhs, const DictionaryEntry& rhs) {
+    return std::tie(lhs.surface, lhs.pos, lhs.extended_pos, lhs.lemma) <
+           std::tie(rhs.surface, rhs.pos, rhs.extended_pos, rhs.lemma);
+  });
 
   // Entries use a lemma reference and an index into a per-file
   // POS/ExtendedPOS palette. The final representation is selected after
@@ -596,14 +619,21 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
     compact_entries.push_back({lemma_reference, grammar_index});
   }
 
+  for (size_t idx = 1; idx < entries_.size(); ++idx) {
+    const auto& previous = entries_[idx - 1];
+    const auto& entry = entries_[idx];
+    if (std::tie(previous.surface, previous.pos, previous.extended_pos, previous.lemma) ==
+        std::tie(entry.surface, entry.pos, entry.extended_pos, entry.lemma)) {
+      return core::makeUnexpected(
+          core::Error(core::ErrorCode::InvalidInput, "Duplicate dictionary entry: " + entry.surface));
+    }
+  }
   std::vector<std::string> trie_surfaces;
   trie_surfaces.reserve(entries_.size());
   for (const auto& entry : entries_) {
-    if (!trie_surfaces.empty() && trie_surfaces.back() == entry.surface) {
-      return core::makeUnexpected(
-          core::Error(core::ErrorCode::InvalidInput, "Duplicate dictionary surface: " + entry.surface));
+    if (trie_surfaces.empty() || trie_surfaces.back() != entry.surface) {
+      trie_surfaces.push_back(entry.surface);
     }
-    trie_surfaces.push_back(entry.surface);
   }
   DoubleArray trie_validation;
   if (!trie_validation.build(trie_surfaces)) {

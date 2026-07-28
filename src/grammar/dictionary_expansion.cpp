@@ -1,5 +1,6 @@
 #include "grammar/dictionary_expansion.h"
 
+#include <map>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -166,18 +167,75 @@ DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictio
     size_t index;
     size_t lemma_length;
     core::PartOfSpeech pos;
+    bool explicit_surface;
   };
   std::unordered_map<std::string, SeenSurface> seen_surfaces;
+  std::map<std::pair<std::string, core::PartOfSpeech>, SeenSurface> seen_surface_pos;
 
   auto append_source = [&](const dictionary::SourceEntry& source_entry) {
     auto expanded_entries = expandDictionarySourceEntry(source_entry);
     const bool is_expanded = expanded_entries.size() > 1;
     for (auto& entry : expanded_entries) {
+      const bool is_explicit_surface = entry.surface.compare(source_entry.surface) == 0;
       if (options.preserve_surface_homographs) {
+        if (!options.preserve_generated_surface_homographs) {
+          auto found = seen_surfaces.find(entry.surface);
+          if (found != seen_surfaces.end()) {
+            if (!is_explicit_surface) {
+              if (!found->second.explicit_surface && entry.pos == found->second.pos &&
+                  entry.lemma.size() > found->second.lemma_length) {
+                const auto& previous = result.entries[found->second.index];
+                seen_entries.erase(
+                    EntryIdentity{previous.surface, previous.pos, previous.extended_pos, previous.lemma});
+                result.entries[found->second.index] = std::move(entry);
+                const auto& replacement = result.entries[found->second.index];
+                found->second.lemma_length = replacement.lemma.size();
+                seen_entries.insert(
+                    EntryIdentity{replacement.surface, replacement.pos, replacement.extended_pos, replacement.lemma});
+                if (!options.preserve_same_pos_homographs) {
+                  seen_surface_pos.at(std::make_pair(replacement.surface, replacement.pos)) = found->second;
+                }
+              }
+              ++result.duplicates_skipped;
+              continue;
+            }
+            if (!found->second.explicit_surface) {
+              const auto& previous = result.entries[found->second.index];
+              seen_entries.erase(EntryIdentity{previous.surface, previous.pos, previous.extended_pos, previous.lemma});
+              if (!options.preserve_same_pos_homographs) {
+                seen_surface_pos.erase(std::make_pair(previous.surface, previous.pos));
+              }
+              result.entries[found->second.index] = std::move(entry);
+              const auto& replacement = result.entries[found->second.index];
+              found->second = {found->second.index, replacement.lemma.size(), replacement.pos, true};
+              seen_entries.insert(
+                  EntryIdentity{replacement.surface, replacement.pos, replacement.extended_pos, replacement.lemma});
+              if (!options.preserve_same_pos_homographs) {
+                seen_surface_pos.emplace(std::make_pair(replacement.surface, replacement.pos), found->second);
+              }
+              ++result.duplicates_skipped;
+              continue;
+            }
+          }
+        }
         EntryIdentity identity{entry.surface, entry.pos, entry.extended_pos, entry.lemma};
         if (!seen_entries.insert(std::move(identity)).second) {
           ++result.duplicates_skipped;
           continue;
+        }
+        if (!options.preserve_same_pos_homographs) {
+          const auto key = std::make_pair(entry.surface, entry.pos);
+          auto found = seen_surface_pos.find(key);
+          if (found != seen_surface_pos.end()) {
+            if (entry.lemma.size() > found->second.lemma_length) {
+              found->second.lemma_length = entry.lemma.size();
+              result.entries[found->second.index] = std::move(entry);
+            }
+            ++result.duplicates_skipped;
+            continue;
+          }
+          seen_surface_pos.emplace(
+              key, SeenSurface{result.entries.size(), entry.lemma.size(), entry.pos, is_explicit_surface});
         }
       } else {
         auto found = seen_surfaces.find(entry.surface);
@@ -189,9 +247,13 @@ DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictio
           ++result.duplicates_skipped;
           continue;
         }
-        seen_surfaces.emplace(entry.surface, SeenSurface{result.entries.size(), entry.lemma.size(), entry.pos});
+        seen_surfaces.emplace(entry.surface,
+                              SeenSurface{result.entries.size(), entry.lemma.size(), entry.pos, is_explicit_surface});
       }
       result.entries.push_back(std::move(entry));
+      seen_surfaces.try_emplace(result.entries.back().surface,
+                                SeenSurface{result.entries.size() - 1, result.entries.back().lemma.size(),
+                                            result.entries.back().pos, is_explicit_surface});
       if (is_expanded) {
         ++result.expanded_forms;
       }

@@ -116,6 +116,55 @@ TEST_F(DictCompilerTest, CompileMultipleRejectsDuplicateSurfaceAndPosAcrossFiles
   EXPECT_FALSE(std::filesystem::exists(output));
 }
 
+TEST_F(DictCompilerTest, CompileMultiplePreservesDifferentPosForSameSurface) {
+  auto noun = writeFile("nouns.tsv", "最悪\tNOUN\n");
+  auto adjective = writeFile("adjectives.tsv", "最悪\tADJECTIVE\tNA_ADJ\n");
+  auto output = temp_dir_ / "out.dic";
+
+  DictCompiler compiler;
+  auto result = compiler.compileMultiple({noun.string(), adjective.string()}, output.string());
+  ASSERT_TRUE(result.hasValue()) << result.error().message;
+
+  dictionary::BinaryDictionary dict;
+  auto load_result = dict.loadFromFile(output.string());
+  ASSERT_TRUE(load_result.hasValue()) << load_result.error().message;
+  EXPECT_NE(dict.lookupExact("最悪", core::PartOfSpeech::Noun), nullptr);
+  EXPECT_NE(dict.lookupExact("最悪", core::PartOfSpeech::Adjective), nullptr);
+}
+
+TEST_F(DictCompilerTest, ExplicitSourceEntryReplacesEarlierGeneratedSurfaceCollision) {
+  auto input = writeFile("explicit.tsv", "扱う\tVERB\tGODAN_WA\n扱い\tADJECTIVE\tI_ADJ\n");
+  auto output = temp_dir_ / "explicit.dic";
+
+  DictCompiler compiler;
+  auto result = compiler.compile(input.string(), output.string());
+  ASSERT_TRUE(result.hasValue()) << result.error().message;
+
+  dictionary::BinaryDictionary dict;
+  auto load_result = dict.loadFromFile(output.string());
+  ASSERT_TRUE(load_result.hasValue()) << load_result.error().message;
+  const auto matches = dict.lookup("扱い", 0);
+  ASSERT_EQ(matches.size(), 1u);
+  EXPECT_EQ(matches[0].entry->pos, core::PartOfSpeech::Adjective);
+  EXPECT_EQ(matches[0].entry->lemma, "扱い");
+}
+
+TEST_F(DictCompilerTest, GeneratedSamePosCollisionKeepsLongerLemmaEvidence) {
+  auto input = writeFile("generated.tsv", "届く\tVERB\tGODAN_KA\n届ける\tVERB\tICHIDAN\n");
+  auto output = temp_dir_ / "generated.dic";
+
+  DictCompiler compiler;
+  auto result = compiler.compile(input.string(), output.string());
+  ASSERT_TRUE(result.hasValue()) << result.error().message;
+
+  dictionary::BinaryDictionary dict;
+  auto load_result = dict.loadFromFile(output.string());
+  ASSERT_TRUE(load_result.hasValue()) << load_result.error().message;
+  const auto matches = dict.lookup("届け", 0);
+  ASSERT_EQ(matches.size(), 1u);
+  EXPECT_EQ(matches[0].entry->lemma, "届ける");
+}
+
 TEST_F(DictCompilerTest, KuruExpansionGeneratesSafeKanjiAndKanaSurfaces) {
   auto input = writeFile("kuru.tsv", "来る\tVERB\tKURU\n");
   auto output = temp_dir_ / "kuru.dic";

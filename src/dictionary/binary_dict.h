@@ -28,9 +28,9 @@ struct BinaryDictHeader {
   uint16_t reserved;      // Must be zero
 
   static constexpr uint32_t kMagic = 0x444D5A53;  // "SZMD"
-  // v3 added the record palette. This pre-1.0 format deliberately has no v2
-  // compatibility decoder, avoiding a permanently retained WASM code path.
-  static constexpr uint8_t kVersion = 3;
+  // v4 allows consecutive entries to share one surface so grammatical
+  // homographs retain every POS/ExtendedPOS alternative.
+  static constexpr uint8_t kVersion = 4;
   static constexpr uint8_t kEntryEncodingMask = 0x03;
   static constexpr uint8_t kRecordPaletteEntries = 0x00;  // 1-byte indexes into packed records
   static constexpr uint8_t kGrammarOnlyEntries = 0x01;    // 1 byte/entry, no differing lemmas
@@ -44,6 +44,8 @@ static_assert(sizeof(BinaryDictHeader) == 16);
 /**
  * The format stores front-coded sorted UTF-8 surfaces, a POS/ExtendedPOS palette, an
  * adaptive entry array, and an optional length-prefixed, deduplicated lemma table.
+ * A zero-length suffix repeats the immediately preceding surface for a grammatical
+ * homograph; the runtime trie points at the first entry in each consecutive group.
  * Repeated packed records use a byte-indexed palette. When every lemma is also a
  * nearby surface, packed entries store a signed surface-index delta instead. The
  * runtime DoubleArray is rebuilt while loading.
@@ -135,7 +137,7 @@ class BinaryDictWriter {
   void addEntry(const DictionaryEntry& entry);
 
   /**
-   * @brief Replace an existing entry with the same surface
+   * @brief Replace an existing entry with the same surface and grammatical identity
    */
   void replaceEntry(const DictionaryEntry& entry);
 

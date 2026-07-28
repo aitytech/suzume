@@ -690,7 +690,7 @@ TEST_F(BinaryDictTest, BuildRejectsEmptySurface) {
   EXPECT_NE(result.error().message.find("surface must not be empty"), std::string::npos);
 }
 
-TEST_F(BinaryDictTest, BuildRejectsEmbeddedNullAndDuplicateTrieKeys) {
+TEST_F(BinaryDictTest, BuildRejectsEmbeddedNullAndExactDuplicateEntries) {
   BinaryDictWriter nul_writer;
   nul_writer.addEntry({std::string("東京\0大阪", 13), core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, "東京"});
   auto nul_result = nul_writer.build();
@@ -699,10 +699,33 @@ TEST_F(BinaryDictTest, BuildRejectsEmbeddedNullAndDuplicateTrieKeys) {
 
   BinaryDictWriter duplicate_writer;
   duplicate_writer.addEntry({"検査", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, "検査"});
-  duplicate_writer.addEntry({"検査", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "検査する"});
+  duplicate_writer.addEntry({"検査", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, "検査"});
   auto duplicate_result = duplicate_writer.build();
   ASSERT_FALSE(duplicate_result.hasValue());
-  EXPECT_NE(duplicate_result.error().message.find("Duplicate dictionary surface"), std::string::npos);
+  EXPECT_NE(duplicate_result.error().message.find("Duplicate dictionary entry"), std::string::npos);
+}
+
+TEST_F(BinaryDictTest, GrammaticalHomographsRoundTripAndLookupByPos) {
+  BinaryDictWriter writer;
+  writer.addEntry({"最悪", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, "最悪"});
+  writer.addEntry({"最悪", core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjNaAdj, "最悪"});
+
+  auto build_result = writer.build();
+  ASSERT_TRUE(build_result.hasValue()) << build_result.error().message;
+
+  BinaryDictionary dict;
+  auto load_result = dict.loadFromMemory(build_result.value().data(), build_result.value().size());
+  ASSERT_TRUE(load_result.hasValue()) << load_result.error().message;
+  EXPECT_EQ(dict.size(), 2u);
+
+  const auto results = dict.lookup("最悪な", 0);
+  ASSERT_EQ(results.size(), 2u);
+  EXPECT_EQ(results[0].entry->surface, "最悪");
+  EXPECT_EQ(results[1].entry->surface, "最悪");
+  ASSERT_NE(dict.lookupExact("最悪", core::PartOfSpeech::Noun), nullptr);
+  ASSERT_NE(dict.lookupExact("最悪", core::PartOfSpeech::Adjective), nullptr);
+  EXPECT_EQ(dict.lookupExact("最悪", core::PartOfSpeech::Noun)->extended_pos, core::ExtendedPOS::Noun);
+  EXPECT_EQ(dict.lookupExact("最悪", core::PartOfSpeech::Adjective)->extended_pos, core::ExtendedPOS::AdjNaAdj);
 }
 
 TEST_F(BinaryDictTest, BuildRejectsInvalidPosOrExtendedPos) {
