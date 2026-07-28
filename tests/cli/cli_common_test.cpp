@@ -10,6 +10,23 @@ TEST(CliCommonTest, JsonEscapeEscapesSpecialCharacters) {
   EXPECT_EQ(jsonEscape("line\nnext\tend"), "line\\nnext\\tend");
 }
 
+TEST(CliCommonTest, WildcardMatchesLiteralAndWildcardCharacters) {
+  EXPECT_TRUE(wildcardMatches("記号*終", "記号.^$+()[]{}|\\終"));
+  EXPECT_TRUE(wildcardMatches("??", "ab"));
+  EXPECT_FALSE(wildcardMatches("??", "a"));
+  EXPECT_TRUE(wildcardMatches("a**b", "axxxb"));
+  EXPECT_FALSE(wildcardMatches("a*b", "axxxc"));
+}
+
+TEST(CliCommonTest, WildcardValidationRejectsExcessiveStars) {
+  const std::string pattern(65, '*');
+  auto result = validateWildcardPattern(pattern);
+
+  EXPECT_FALSE(result.hasValue());
+  EXPECT_EQ(result.error().code, core::ErrorCode::InvalidInput);
+  EXPECT_NE(result.error().message.find("too many '*'"), std::string::npos);
+}
+
 TEST(CliCommonTest, JsonEscapeEscapesControlCharacters) {
   std::string input;
   input.push_back('\x01');

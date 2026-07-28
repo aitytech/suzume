@@ -362,6 +362,28 @@ def assert_dictionary_contract(cli: Path) -> None:
             brace_match = run_cli(cli, "dict", "search", str(wildcard_source), brace_surface)
             assert f"{brace_surface}\tNOUN" in brace_match.stdout
 
+        excessive_pattern = "*" * 65
+        excessive_search = run_cli(
+            cli,
+            "dict",
+            "search",
+            str(wildcard_source),
+            excessive_pattern,
+            expect_success=False,
+        )
+        assert excessive_search.returncode != -6, excessive_search
+        assert "too many '*'" in excessive_search.stderr
+
+        interactive_excessive = run_cli(
+            cli,
+            "dict",
+            "-i",
+            str(wildcard_source),
+            input_text=f"list --pattern={excessive_pattern}\nsearch {excessive_pattern}\nquit\n",
+        )
+        assert interactive_excessive.returncode == 0
+        assert interactive_excessive.stderr.count("too many '*'") == 2
+
         data_root = temp_dir / "data-root"
         source_dir = data_root / "core"
         source_dir.mkdir(parents=True)

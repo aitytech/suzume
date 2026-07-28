@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <iostream>
-#include <regex>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -64,16 +63,20 @@ void stripUtf8Bom(std::string* value);
 core::Expected<size_t, core::Error> loadUserDictionaryPath(Suzume* analyzer, const std::string& path);
 
 /**
- * @brief Translate a shell-style wildcard pattern (* and ?) into an ECMAScript
- *        regex string, escaping all other regex metacharacters.
+ * @brief Validate a shell-style wildcard pattern before matching it.
+ *
+ * The limit keeps dictionary commands responsive even when a pattern comes
+ * from an untrusted or accidentally repeated shell expansion.
  */
-std::string wildcardToRegex(std::string_view pattern);
+core::Expected<bool, core::Error> validateWildcardPattern(std::string_view pattern);
 
 /**
- * @brief Compile a shell-style wildcard pattern as an ECMAScript regex.
- * @return Compiled regex, or an error instead of throwing std::regex_error.
+ * @brief Match a shell-style wildcard pattern (* and ?) without regex.
+ *
+ * All characters other than '*' and '?' are literal. Matching is byte-based,
+ * preserving the narrow-string behavior previously used by the CLI regexes.
  */
-core::Expected<std::regex, core::Error> compileWildcardRegex(std::string_view pattern);
+bool wildcardMatches(std::string_view pattern, std::string_view value);
 
 /**
  * @brief True if @p path ends with @p ext (e.g. ".dic"). ASCII, case-sensitive.

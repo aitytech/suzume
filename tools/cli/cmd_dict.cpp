@@ -6,7 +6,6 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
-#include <regex>
 #include <utility>
 
 #include "cli_common.h"
@@ -213,16 +212,14 @@ core::Expected<std::vector<std::string>, core::Error> expandGlob(const std::stri
     return std::vector<std::string>{pattern};
   }
 
-  // Convert glob pattern to regex
-  auto regex_result = compileWildcardRegex(file_pattern);
-  if (!regex_result.hasValue()) {
-    return core::makeUnexpected(regex_result.error());
+  auto validation = validateWildcardPattern(file_pattern);
+  if (!validation.hasValue()) {
+    return core::makeUnexpected(validation.error());
   }
-  const std::regex& regex_pattern = regex_result.value();
   std::vector<std::string> matches;
 
   for (const auto& entry : fs::directory_iterator(dir)) {
-    if (entry.is_regular_file() && std::regex_match(entry.path().filename().string(), regex_pattern)) {
+    if (entry.is_regular_file() && wildcardMatches(file_pattern, entry.path().filename().string())) {
       matches.push_back(entry.path().string());
     }
   }
@@ -403,15 +400,13 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
     }
   }
 
-  std::regex pattern_regex;
   bool has_pattern = !pattern.empty();
   if (has_pattern) {
-    auto regex_result = compileWildcardRegex(pattern);
-    if (!regex_result.hasValue()) {
-      printError(regex_result.error().message);
+    auto validation = validateWildcardPattern(pattern);
+    if (!validation.hasValue()) {
+      printError(validation.error().message);
       return 1;
     }
-    pattern_regex = std::move(regex_result.value());
   }
 
   // Load dictionary
@@ -434,7 +429,7 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
       if (pos_filter.has_value() && entry->pos != *pos_filter) {
         continue;
       }
-      if (has_pattern && !std::regex_match(entry->surface, pattern_regex)) {
+      if (has_pattern && !wildcardMatches(pattern, entry->surface)) {
         continue;
       }
 
@@ -462,7 +457,7 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
       if (pos_filter.has_value() && entry.pos != *pos_filter) {
         continue;
       }
-      if (has_pattern && !std::regex_match(entry.surface, pattern_regex)) {
+      if (has_pattern && !wildcardMatches(pattern, entry.surface)) {
         continue;
       }
 
@@ -489,13 +484,11 @@ int cmdDictSearch(const std::vector<std::string>& args, bool /* verbose */) {
   const std::string& path = args[0];
   std::string pattern = args[1];
 
-  // Convert simple wildcard to regex
-  auto regex_result = compileWildcardRegex(pattern);
-  if (!regex_result.hasValue()) {
-    printError(regex_result.error().message);
+  auto validation = validateWildcardPattern(pattern);
+  if (!validation.hasValue()) {
+    printError(validation.error().message);
     return 1;
   }
-  const std::regex& regex_pattern = regex_result.value();
 
   // Load and search
   TsvParser parser;
@@ -507,7 +500,7 @@ int cmdDictSearch(const std::vector<std::string>& args, bool /* verbose */) {
 
   size_t count = 0;
   for (const auto& entry : result.value()) {
-    if (std::regex_match(entry.surface, regex_pattern)) {
+    if (wildcardMatches(pattern, entry.surface)) {
       std::cout << entry.surface << "\t" << core::posToString(entry.pos) << "\n";
       ++count;
     }

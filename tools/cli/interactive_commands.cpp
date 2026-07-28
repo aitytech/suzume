@@ -1,7 +1,6 @@
 #include <iomanip>
 #include <iostream>
 #include <optional>
-#include <regex>
 #include <utility>
 
 #include "cli_common.h"
@@ -222,15 +221,12 @@ bool InteractiveSession::cmdList(const std::vector<std::string>& args) {
     }
   }
 
-  // Convert pattern to regex if provided
-  std::unique_ptr<std::regex> regex_pattern;
   if (!pattern.empty()) {
-    auto regex_result = compileWildcardRegex(pattern);
-    if (!regex_result.hasValue()) {
-      printError(regex_result.error().message);
+    auto validation = validateWildcardPattern(pattern);
+    if (!validation.hasValue()) {
+      printError(validation.error().message);
       return true;
     }
-    regex_pattern = std::make_unique<std::regex>(std::move(regex_result.value()));
   }
 
   size_t count = 0;
@@ -241,7 +237,7 @@ bool InteractiveSession::cmdList(const std::vector<std::string>& args) {
     }
 
     // Apply pattern filter
-    if (regex_pattern && !std::regex_match(entry.surface, *regex_pattern)) {
+    if (!pattern.empty() && !wildcardMatches(pattern, entry.surface)) {
       continue;
     }
 
@@ -271,17 +267,15 @@ bool InteractiveSession::cmdSearch(const std::vector<std::string>& args) {
 
   std::string pattern = args[0];
 
-  // Convert wildcard pattern to regex
-  auto regex_result = compileWildcardRegex(pattern);
-  if (!regex_result.hasValue()) {
-    printError(regex_result.error().message);
+  auto validation = validateWildcardPattern(pattern);
+  if (!validation.hasValue()) {
+    printError(validation.error().message);
     return true;
   }
-  const std::regex& regex_pattern = regex_result.value();
 
   size_t count = 0;
   for (const auto& entry : entries_) {
-    if (std::regex_match(entry.surface, regex_pattern)) {
+    if (wildcardMatches(pattern, entry.surface)) {
       printEntry(entry);
       ++count;
     }

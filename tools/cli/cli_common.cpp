@@ -264,32 +264,43 @@ std::string swapOrAppendExtension(std::string_view path, std::string_view from_e
   return std::string(path) + std::string(to_ext);
 }
 
-std::string wildcardToRegex(std::string_view pattern) {
-  std::string regex_str;
-  regex_str.reserve(pattern.size() * 2);
+core::Expected<bool, core::Error> validateWildcardPattern(std::string_view pattern) {
+  constexpr size_t kMaxWildcardStars = 64;
+  size_t star_count = 0;
   for (char chr : pattern) {
-    if (chr == '*') {
-      regex_str += ".*";
-    } else if (chr == '?') {
-      regex_str += ".";
-    } else if (chr == '.' || chr == '^' || chr == '$' || chr == '+' || chr == '(' || chr == ')' || chr == '[' ||
-               chr == ']' || chr == '{' || chr == '}' || chr == '|' || chr == '\\') {
-      regex_str += '\\';
-      regex_str += chr;
-    } else {
-      regex_str += chr;
+    if (chr == '*' && ++star_count > kMaxWildcardStars) {
+      return core::makeUnexpected(
+          core::Error(core::ErrorCode::InvalidInput, "Wildcard pattern has too many '*' characters (maximum 64)"));
     }
   }
-  return regex_str;
+  return true;
 }
 
-core::Expected<std::regex, core::Error> compileWildcardRegex(std::string_view pattern) {
-  try {
-    return std::regex(wildcardToRegex(pattern), std::regex::ECMAScript);
-  } catch (const std::regex_error& error) {
-    return core::makeUnexpected(
-        core::Error(core::ErrorCode::InvalidInput, "Invalid wildcard pattern: " + std::string(error.what())));
+bool wildcardMatches(std::string_view pattern, std::string_view value) {
+  size_t pattern_pos = 0;
+  size_t value_pos = 0;
+  size_t star_pos = std::string_view::npos;
+  size_t retry_value_pos = 0;
+
+  while (value_pos < value.size()) {
+    if (pattern_pos < pattern.size() && (pattern[pattern_pos] == '?' || pattern[pattern_pos] == value[value_pos])) {
+      ++pattern_pos;
+      ++value_pos;
+    } else if (pattern_pos < pattern.size() && pattern[pattern_pos] == '*') {
+      star_pos = pattern_pos++;
+      retry_value_pos = value_pos;
+    } else if (star_pos != std::string_view::npos) {
+      pattern_pos = star_pos + 1;
+      value_pos = ++retry_value_pos;
+    } else {
+      return false;
+    }
   }
+
+  while (pattern_pos < pattern.size() && pattern[pattern_pos] == '*') {
+    ++pattern_pos;
+  }
+  return pattern_pos == pattern.size();
 }
 
 bool isTerminal() {
