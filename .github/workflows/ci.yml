@@ -34,14 +34,19 @@ jobs:
           node-version: 22
           cache: yarn
           cache-dependency-path: bindings/wasm/yarn.lock
-      - uses: astral-sh/setup-uv@v7
+      - name: Install rye
+        working-directory: .
+        run: |
+          curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" RYE_NO_AUTO_INSTALL=0 bash
+          echo "$HOME/.rye/shims" >> "$GITHUB_PATH"
       - run: yarn install --immutable
       - run: yarn lint
       - name: Lint MCP server and repository scripts
         working-directory: scripts/mcp
         run: |
-          uv run --locked ruff format --check . ../../scripts/*.py
-          uv run --locked ruff check . ../../scripts/*.py
+          rye sync
+          rye run ruff format --check . ../../scripts/*.py
+          rye run ruff check . ../../scripts/*.py
 
   guardrails:
     runs-on: ubuntu-latest

@@ -2,8 +2,8 @@
   "mcpServers": {
     "suzume": {
       "type": "stdio",
-      "command": "uv",
-      "args": ["run", "--project", "scripts/mcp", "suzume-mcp"]
+      "command": "sh",
+      "args": ["-c", "cd scripts/mcp && exec rye run suzume-mcp"]
     }
   }
 }

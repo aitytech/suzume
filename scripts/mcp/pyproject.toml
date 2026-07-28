@@ -22,8 +22,9 @@ packages = ["src/suzume_mcp"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 
-[dependency-groups]
-dev = [
+[tool.rye]
+managed = true
+dev-dependencies = [
     "pytest",
     "pytest-asyncio",
     "ruff",

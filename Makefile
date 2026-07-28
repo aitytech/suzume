@@ -3,7 +3,7 @@
 
 .PHONY: help build test mcp-test clean clean-build rebuild format format-check lint configure \
         wasm wasm-configure wasm-dict wasm-test wasm-bench wasm-clean wasm-rebuild dict \
-        python-build python-test python-wheel version-check \
+        python-build python-test python-wheel python-sync version-check \
         install uninstall examples embedded consumer-smoke cmake-smoke
 
 # Build directories
@@ -16,6 +16,23 @@ SMOKE_PREFIX := $(CURDIR)/build-smoke-prefix
 
 # clang-format command (can be overridden: make CLANG_FORMAT=clang-format-18 format)
 CLANG_FORMAT ?= clang-format
+
+# Python environments. `rye run` does not provision on demand the way `uv run`
+# did, so every Python target depends on its venv and re-syncs when the lock
+# moves. `rye sync` touches the venv directory, which is what make compares.
+MCP_VENV := scripts/mcp/.venv
+PYBINDING_VENV := bindings/python/.venv
+
+$(MCP_VENV): scripts/mcp/requirements-dev.lock scripts/mcp/pyproject.toml
+	cd scripts/mcp && rye sync
+
+$(PYBINDING_VENV): bindings/python/requirements-dev.lock bindings/python/pyproject.toml
+	cd bindings/python && rye sync
+
+# Force a re-provision of both Python environments.
+python-sync:
+	cd scripts/mcp && rye sync --force
+	cd bindings/python && rye sync --force
 
 # Default target
 .DEFAULT_GOAL := build
@@ -35,6 +52,7 @@ help:
 	@echo "  make format-check - Check formatting across all languages"
 	@echo "  make lint         - Run read-only scripts/MCP, WASM, and Python static checks"
 	@echo "  make configure    - Configure CMake"
+	@echo "  make python-sync  - Re-provision both rye-managed Python environments"
 	@echo "  make version-check - Verify version is consistent across binding manifests"
 	@echo "  make cmake-smoke  - Verify supported CMake build/install configurations"
 	@echo ""
@@ -95,9 +113,9 @@ test: dict mcp-test
 
 # Run the MCP server/oracle test suite from its project root so pytest uses
 # scripts/mcp/pyproject.toml and imports the local package correctly.
-mcp-test:
+mcp-test: $(MCP_VENV)
 	@echo "Running MCP server/oracle tests..."
-	cd scripts/mcp && uv run pytest -q
+	cd scripts/mcp && rye run pytest -q
 
 # Clean the primary build directory only
 clean-build:
@@ -184,38 +202,38 @@ cmake-smoke:
 # Auto-fix formatting/lint across every language in the repo:
 # C++ core (clang-format), MCP/repository scripts (ruff), WASM binding (biome),
 # Python binding (ruff).
-format:
+format: $(MCP_VENV) $(PYBINDING_VENV)
 	@echo "Formatting C++ (clang-format)..."
 	@find src include tools tests examples -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \) | xargs $(CLANG_FORMAT) -i
 	@echo "Formatting MCP server and repository scripts (ruff)..."
-	cd scripts/mcp && uv run ruff format . ../../scripts/*.py && uv run ruff check --fix . ../../scripts/*.py
+	cd scripts/mcp && rye run ruff format . ../../scripts/*.py && rye run ruff check --fix . ../../scripts/*.py
 	@echo "Formatting WASM binding (biome)..."
 	cd bindings/wasm && yarn lint:fix
 	@echo "Formatting Python binding (ruff)..."
-	cd bindings/python && uv run --extra dev ruff format . && uv run --extra dev ruff check --fix .
+	cd bindings/python && rye run ruff format . && rye run ruff check --fix .
 	$(MAKE) lint
 	@echo "Format complete!"
 
 # Check-only counterpart for CI (same language fan-out, no writes).
-format-check:
+format-check: $(MCP_VENV) $(PYBINDING_VENV)
 	@echo "Checking C++ formatting (clang-format)..."
 	@find src include tools tests examples -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \) | xargs $(CLANG_FORMAT) --dry-run --Werror
 	@echo "Checking MCP server and repository script formatting (ruff)..."
-	cd scripts/mcp && uv run ruff format --check . ../../scripts/*.py
+	cd scripts/mcp && rye run ruff format --check . ../../scripts/*.py
 	@echo "Checking Python binding formatting (ruff)..."
-	cd bindings/python && uv run --extra dev ruff format --check .
+	cd bindings/python && rye run ruff format --check .
 	$(MAKE) lint
 	@echo "Format check passed!"
 
 # Read-only static analysis. This repository does not configure clang-tidy, so
 # C++ is covered by clang-format in format-check rather than a nominal lint step.
-lint:
+lint: $(MCP_VENV) $(PYBINDING_VENV)
 	@echo "Linting MCP server and repository scripts (ruff)..."
-	cd scripts/mcp && uv run ruff check . ../../scripts/*.py
+	cd scripts/mcp && rye run ruff check . ../../scripts/*.py
 	@echo "Linting WASM binding (biome)..."
 	cd bindings/wasm && yarn lint
 	@echo "Linting Python binding (ruff)..."
-	cd bindings/python && uv run --extra dev ruff check .
+	cd bindings/python && rye run ruff check .
 
 # ============================================
 # Python binding targets
@@ -229,13 +247,13 @@ python-build:
 	cmake --build build-shared --target suzume_shared --parallel
 	@echo "Shared library built: build-shared/lib/"
 
-# Run the Python binding test suite via uv (auto-provisions dev deps)
-python-test: python-build
+# Run the Python binding test suite in the rye-managed venv
+python-test: python-build $(PYBINDING_VENV)
 	@echo "Running Python binding tests..."
-	cd bindings/python && uv run --extra dev pytest -q \
-		&& uv run --extra dev ruff check . \
-		&& uv run --extra dev ruff format --check . \
-		&& uv run --extra dev mypy src/suzume
+	cd bindings/python && rye run pytest -q \
+		&& rye run ruff check . \
+		&& rye run ruff format --check . \
+		&& rye run mypy src/suzume
 
 # Build a platform-tagged wheel
 python-wheel:
