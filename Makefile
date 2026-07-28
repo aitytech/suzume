@@ -310,7 +310,11 @@ python-build:
 	@echo "Shared library built: build-shared/lib/"
 
 # Run the Python binding test suite in the rye-managed venv
-python-test: python-build $(PYBINDING_VENV)
+python-dict: dict
+	cmake -E copy_if_different data/core.dic bindings/python/src/suzume/core.dic
+	cmake -E copy_if_different data/user.dic bindings/python/src/suzume/user.dic
+
+python-test: python-build python-dict $(PYBINDING_VENV)
 	@echo "Running Python binding tests..."
 	cd bindings/python && rye run pytest -q \
 		&& rye run ruff check . \
