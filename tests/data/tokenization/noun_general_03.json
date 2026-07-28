@@ -1193,6 +1193,180 @@
       ],
       "id": "no_kuha_i",
       "input": "本の多くは古い"
+    },
+    {
+      "description": "数量句を閉じる範囲標識 中 は割合の1単位",
+      "expected": [
+        {
+          "lemma": "10件中",
+          "pos": "Noun",
+          "surface": "10件中"
+        },
+        {
+          "lemma": "3件",
+          "pos": "Noun",
+          "surface": "3件"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        }
+      ],
+      "id": "10_3_wo",
+      "input": "10件中3件を確認"
+    },
+    {
+      "description": "漢数字以外の数量句でも割合の 中 を統合する",
+      "expected": [
+        {
+          "lemma": "5人中",
+          "pos": "Noun",
+          "surface": "5人中"
+        },
+        {
+          "lemma": "2人",
+          "pos": "Noun",
+          "surface": "2人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "賛成",
+          "pos": "Noun",
+          "surface": "賛成"
+        }
+      ],
+      "id": "5_2_ga",
+      "input": "5人中2人が賛成"
+    },
+    {
+      "description": "期間標識 間 で閉じた数量句にも範囲標識 中 が付く",
+      "expected": [
+        {
+          "lemma": "一週間中",
+          "pos": "Noun",
+          "surface": "一週間中"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "予定",
+          "pos": "Noun",
+          "surface": "予定"
+        }
+      ],
+      "id": "no_7",
+      "input": "一週間中の予定"
+    },
+    {
+      "description": "日付トークンも範囲標識 中 を取り込む",
+      "expected": [
+        {
+          "lemma": "2024年中",
+          "pos": "Noun",
+          "surface": "2024年中"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "完了",
+          "pos": "Noun",
+          "surface": "完了"
+        }
+      ],
+      "id": "2024_ni",
+      "input": "2024年中に完了"
+    },
+    {
+      "description": "序数接頭辞の後ろの漢字語は独立語で、助数詞読みで内部を切らない",
+      "expected": [
+        {
+          "lemma": "第2",
+          "pos": "Noun",
+          "surface": "第2"
+        },
+        {
+          "lemma": "部門",
+          "pos": "Noun",
+          "surface": "部門"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "担当",
+          "pos": "Noun",
+          "surface": "担当"
+        }
+      ],
+      "id": "2_no",
+      "input": "第2部門の担当"
+    },
+    {
+      "description": "序数＋単独助数詞は従来どおり分割（負の対照）",
+      "expected": [
+        {
+          "lemma": "第2",
+          "pos": "Noun",
+          "surface": "第2"
+        },
+        {
+          "lemma": "部",
+          "pos": "Suffix",
+          "surface": "部"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        }
+      ],
+      "id": "2_no_2",
+      "input": "第2部の資料"
+    },
+    {
+      "description": "連用形＋束縛名詞の複合名詞は存在否定 ない の前でも保たれる",
+      "expected": [
+        {
+          "lemma": "申し分",
+          "pos": "Noun",
+          "surface": "申し分"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "記録",
+          "pos": "Noun",
+          "surface": "記録"
+        }
+      ],
+      "id": "shi_nai_2",
+      "input": "申し分ない記録"
     }
   ],
   "description": "General nouns (part 3/3)",

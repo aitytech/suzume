@@ -1970,6 +1970,136 @@
       ],
       "id": "ga_ku_maru",
       "input": "人が多く集まる"
+    },
+    {
+      "description": "中 が漢字を率いるときは日付に取り込まない（負の対照）",
+      "expected": [
+        {
+          "lemma": "2024年",
+          "pos": "Noun",
+          "surface": "2024年"
+        },
+        {
+          "lemma": "中止",
+          "pos": "Noun",
+          "surface": "中止"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "2024_ninattta",
+      "input": "2024年中止になった"
+    },
+    {
+      "description": "序数の後ろが2字漢字語なら境界を保つ",
+      "expected": [
+        {
+          "lemma": "第2",
+          "pos": "Noun",
+          "surface": "第2"
+        },
+        {
+          "lemma": "段階",
+          "pos": "Noun",
+          "surface": "段階"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "2_ni_mu",
+      "input": "第2段階に進む"
+    },
+    {
+      "description": "数量詞が異なれば反復ではない（負の対照）",
+      "expected": [
+        {
+          "lemma": "一つ",
+          "pos": "Noun",
+          "surface": "一つ"
+        },
+        {
+          "lemma": "二つ",
+          "pos": "Noun",
+          "surface": "二つ"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ぶ"
+        }
+      ],
+      "id": "tsu_tsu_bu",
+      "input": "一つ二つ選ぶ"
+    },
+    {
+      "description": "ない の活用形でも複合名詞の境界は同じ",
+      "expected": [
+        {
+          "lemma": "申し分",
+          "pos": "Noun",
+          "surface": "申し分"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shi_naku_wattta",
+      "input": "申し分なく終わった"
+    },
+    {
+      "description": "格助詞の前の同型複合名詞（負の対照）",
+      "expected": [
+        {
+          "lemma": "言い分",
+          "pos": "Noun",
+          "surface": "言い分"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "i_wo_ku_2",
+      "input": "言い分を聞く"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

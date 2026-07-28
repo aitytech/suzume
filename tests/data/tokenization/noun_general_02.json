@@ -638,14 +638,9 @@
       "description": "一つひとつ調べる - auto-generated",
       "expected": [
         {
-          "lemma": "一つ",
+          "lemma": "一つひとつ",
           "pos": "Noun",
-          "surface": "一つ"
-        },
-        {
-          "lemma": "ひとつ",
-          "pos": "Noun",
-          "surface": "ひとつ"
+          "surface": "一つひとつ"
         },
         {
           "lemma": "調べる",

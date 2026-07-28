@@ -2052,6 +2052,87 @@
       ],
       "id": "shinubeshi",
       "input": "確認しぬべし"
+    },
+    {
+      "description": "数量句以外の 中 は状態接尾辞として独立する（負の対照）",
+      "expected": [
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        },
+        {
+          "lemma": "中",
+          "pos": "Suffix",
+          "surface": "中"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ni_suru_2",
+      "input": "会議中に確認する"
+    },
+    {
+      "description": "助数詞で始まらない語彙化序数名詞は1語のまま（負の対照）",
+      "expected": [
+        {
+          "lemma": "第三者",
+          "pos": "Noun",
+          "surface": "第三者"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "相談",
+          "pos": "Noun",
+          "surface": "相談"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ni_suru_3",
+      "input": "第三者に相談する"
+    },
+    {
+      "description": "同じ数量詞を書き分けた反復は1つの配分副詞句",
+      "expected": [
+        {
+          "lemma": "一つひとつ",
+          "pos": "Noun",
+          "surface": "一つひとつ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "tsuhitotsu_suru",
+      "input": "一つひとつ確認する"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",
