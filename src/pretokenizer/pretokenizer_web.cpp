@@ -13,6 +13,12 @@ using namespace pretokenizer_detail;
 
 namespace {
 
+// Characters an ASCII word keeps inside itself. Brand and technical names are
+// written with these as part of the spelling (Coca-Cola, McDonald's, H&M,
+// CI/CD, example.com), so splitting on them would break the search unit into
+// fragments that no query matches.
+constexpr std::string_view kAsciiWordJoiners = ".-'&/";
+
 size_t trailingUnmatchedClosingParentheses(std::string_view text, size_t start, size_t end) {
   size_t open_count = 0;
   size_t trailing_unmatched = 0;
@@ -284,35 +290,36 @@ bool PreTokenizer::tryMatchMention(std::string_view text, size_t pos, PreToken& 
   return true;
 }
 
-bool PreTokenizer::tryMatchAsciiWithDots(std::string_view text, size_t pos, PreToken& token) const {
-  // Match ASCII alphanumeric sequences with embedded dots
-  // Pattern: alnum+ (. alnum+)+
-  // e.g., example.com, foo.bar.baz
-  // Must have at least one dot to distinguish from regular ASCII sequences
+bool PreTokenizer::tryMatchAsciiWithJoiners(std::string_view text, size_t pos, PreToken& token) const {
+  // Match ASCII alphanumeric sequences held together by a word-internal joiner
+  // Pattern: alnum+ (joiner alnum+)+
+  // e.g., example.com, Coca-Cola, McDonald's, H&M, CI/CD
+  // Must have at least one joiner to distinguish from regular ASCII sequences
 
-  if (pos >= text.size() || !isAsciiAlnum(text[pos]) || hasAsciiRunLeftNeighbor(text, pos, ".")) {
+  if (pos >= text.size() || !isAsciiAlnum(text[pos]) || hasAsciiRunLeftNeighbor(text, pos, kAsciiWordJoiners)) {
     return false;
   }
 
   size_t start = pos;
   size_t idx = pos;
-  bool has_dot = false;
+  bool has_joiner = false;
 
   while (idx < text.size()) {
     char chr = text[idx];
     if (isAsciiAlnum(chr)) {
       ++idx;
-    } else if (chr == '.' && idx + 1 < text.size() && isAsciiAlnum(text[idx + 1])) {
-      // Dot followed by alphanumeric
-      has_dot = true;
+    } else if (kAsciiWordJoiners.find(chr) != std::string_view::npos && idx + 1 < text.size() &&
+               isAsciiAlnum(text[idx + 1])) {
+      // Joiner surrounded by alphanumerics
+      has_joiner = true;
       ++idx;
     } else {
       break;
     }
   }
 
-  // Must have at least one dot and not end with dot
-  if (!has_dot || idx <= start + 2) {
+  // Must have at least one joiner and not end with one
+  if (!has_joiner || idx <= start + 2) {
     return false;
   }
 

@@ -25,7 +25,7 @@ enum class PreTokenType : uint8_t {
   Mention,     // Mention (@user)
   Number,      // Plain number
   Counter,     // Number with a counter (3か月, 12箇所)
-  AsciiSeq,    // ASCII sequence with dots (example.com)
+  AsciiSeq,    // ASCII sequence with word-internal joiners (example.com, Coca-Cola)
   Boundary,    // Sentence boundary (。！？)
 };
 
@@ -193,13 +193,14 @@ class PreTokenizer {
   bool tryMatchMention(std::string_view text, size_t pos, PreToken& token) const;
 
   /**
-   * @brief Match ASCII sequence with embedded dots (e.g., example.com)
+   * @brief Match ASCII sequence held together by word-internal joiners
+   *        (e.g., example.com, Coca-Cola, McDonald's, H&M, CI/CD)
    * @param text Input text
    * @param pos Current position
    * @param token Output token if matched
    * @return true if matched
    */
-  bool tryMatchAsciiWithDots(std::string_view text, size_t pos, PreToken& token) const;
+  bool tryMatchAsciiWithJoiners(std::string_view text, size_t pos, PreToken& token) const;
 
   /**
    * @brief Check if character is sentence boundary

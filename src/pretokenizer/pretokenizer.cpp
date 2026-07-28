@@ -46,7 +46,7 @@ PreTokenResult PreTokenizer::process(std::string_view text) const {
          tryMatchMention(text, pos, token) || tryMatchDate(text, pos, token) || tryMatchCounter(text, pos, token) ||
          tryMatchTime(text, pos, token) || tryMatchCurrency(text, pos, token) || tryMatchStorage(text, pos, token) ||
          tryMatchPercentage(text, pos, token) || tryMatchAddressNumber(text, pos, token) ||
-         tryMatchVersion(text, pos, token) || tryMatchAsciiWithDots(text, pos, token))) {
+         tryMatchVersion(text, pos, token) || tryMatchAsciiWithJoiners(text, pos, token))) {
       // Add span before this token if any
       if (pos > span_start) {
         result.spans.push_back({span_start, pos});
