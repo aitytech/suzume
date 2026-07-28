@@ -297,11 +297,26 @@ constexpr float kDurationSpanSplitBonus = -2.6F;
 // kanji→non-kanji boundary, so a following kanji (五度目, 五度見た) keeps its boundary.
 constexpr float kNumeralCounterMergeBonus = -0.5F;
 
+// Quantity phrase closed by the extent marker 中 (10件中3件, 一日中, 一週間中).
+// The marker also reads as an ordinary state suffix after a plain noun (作業|中),
+// and that reading is what the suffix lexicon supplies; after a numeral+counter
+// it instead closes the quantity into a single ratio/extent unit. This has to
+// beat the counter merge plus the dictionary suffix on the split side, so it is
+// set below their combined cost rather than at the plain counter-merge level.
+constexpr float kQuantityExtentMergeBonus = -1.4F;
+
 // Closed kana NounNumber + quantitative Suffix composition (いち+まい,
 // よん+にん).  Both split components receive strong dictionary/bigram bonuses,
 // so the complete quantity search unit needs a correspondingly stronger cost.
 // The candidate generator requires exact L1 class evidence on both halves.
 constexpr float kKanaNumeralCounterMergeBonus = -2.0F;
+
+// Native counter repeated across scripts (一つひとつ). Both halves are closed
+// quantity expressions and the kana half is an L1 entry with a full dictionary
+// bonus, so the complete distributive unit needs a cost below their combined
+// split. The generator requires a registered kana quantity closing on the same
+// counter, so no productive kana run can reach this cost.
+constexpr float kMixedScriptRepeatedQuantityBonus = -3.2F;
 
 // Fraction merge cost (三分の一, 十分の三). A numerator, the denominator
 // marker 分の, and a numeral denominator form one quantity search unit. The

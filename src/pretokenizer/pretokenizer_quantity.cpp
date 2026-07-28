@@ -3,6 +3,7 @@
  * @brief Date, time, and quantity matchers for the pre-tokenizer
  */
 
+#include "normalize/char_type.h"
 #include "normalize/utf8.h"
 #include "pretokenizer/pretokenizer_internal.h"
 
@@ -103,6 +104,27 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
         // Duration suffix 間 (期間接尾): N年 + 間 = N年間. Absorbed only when it
         // is not the interval signal 間 + stranded-kanji (see absorbsPeriodKan),
         // so 3年間活動 stays 3年間|活動 while 3年間隔 splits as 3年|間隔.
+        idx = byte_pos;
+      }
+    }
+  }
+
+  // Extent marker 中 (2024年中, 6年度中, 2024年12月中): the date is the quantity
+  // the marker measures, so the two belong to one token. Left outside, 中 is
+  // stranded at a segment boundary where the analyzer no longer sees the
+  // quantity that licenses the extent reading. A following kanji is excluded
+  // because 中 then heads a lexical compound of its own (2024年|中止); a numeral
+  // is exempt since it opens the second term of a ratio.
+  {
+    size_t byte_pos = idx;
+    if (byte_pos < text.size() && normalize::decodeUtf8(text, byte_pos) == U'中') {
+      size_t after_extent = byte_pos;
+      bool closes_phrase = true;
+      if (after_extent < text.size()) {
+        const char32_t following = normalize::decodeUtf8(text, after_extent);
+        closes_phrase = !normalize::isKanjiCodepoint(following) || normalize::isNumeralCodepoint(following);
+      }
+      if (closes_phrase) {
         idx = byte_pos;
       }
     }

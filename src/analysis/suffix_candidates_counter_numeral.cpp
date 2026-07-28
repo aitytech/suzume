@@ -27,6 +27,37 @@ void appendBasicNumeralCounterCandidates(const std::vector<char32_t>& codepoints
   const bool closes_duration_span = normalize::isTemporalCounterKanji(codepoints[numeral_end]) &&
                                     numeral_end + 1 < codepoints.size() && codepoints[numeral_end + 1] == U'間';
 
+  // The extent marker 中 closes a quantity into one search unit: a ratio
+  // (10件中3件, 百人中一人) or a span covering the whole quantity (一日中,
+  // 一週間中).  After a plain noun the same kanji is the ordinary state suffix
+  // (作業|中, 会議|中) and keeps its own boundary, so the numeral+counter left
+  // context is what licenses the merge.  A following kanji is left out because
+  // 中 then usually heads a lexical compound of its own (一時|中断, 三年|中学);
+  // a numeral is exempt since it opens the second term of the ratio.  Like the
+  // duration span above, the boundary rules that would cut before 中 stand down
+  // for it, so the test is computed once here.
+  const size_t extent_pos = numeral_end + (closes_duration_span ? 2 : 1);
+  const bool closes_quantity_extent = [&] {
+    if (!normalize::isCounterKanji(codepoints[numeral_end]) || extent_pos >= codepoints.size() ||
+        codepoints[extent_pos] != U'中') {
+      return false;
+    }
+    const size_t after_extent = extent_pos + 1;
+    return after_extent >= codepoints.size() || !normalize::isKanjiCodepoint(codepoints[after_extent]) ||
+           normalize::isNumeralCodepoint(codepoints[after_extent]);
+  }();
+  if (closes_quantity_extent) {
+    std::string surface = extractSubstring(codepoints, start_pos, extent_pos + 1);
+    auto cand = makeCandidate(surface, start_pos, extent_pos + 1, core::PartOfSpeech::Noun,
+                              candidate::kQuantityExtentMergeBonus, false, CandidateOrigin::Counter,
+                              core::ExtendedPOS::NounNumber);
+    cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+    cand.pattern = "quantity_extent_naka";
+#endif
+    candidates.push_back(cand);
+  }
+
   // A numeral+counter phrase can modify an i-adjective in adverbial form
   // (百件|近く確認する, 三日|早く終える). Preserve the quantity boundary so
   // the generic kanji sequence cannot absorb the adjective's stem. The same
@@ -129,7 +160,7 @@ void appendBasicNumeralCounterCandidates(const std::vector<char32_t>& codepoints
 #endif
       candidates.push_back(cand);
     }
-    if (suffix_follows && !closes_duration_span) {
+    if (suffix_follows && !closes_duration_span && !closes_quantity_extent) {
       std::string surface = extractSubstring(codepoints, start_pos, counter_end);
       if (!surface.empty()) {
         auto cand = makeCandidate(surface, start_pos, counter_end, core::PartOfSpeech::Noun,

@@ -174,6 +174,53 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
     }
   }
 
+  // A native つ counter repeated in its kana spelling is the same distributive
+  // expression written across two scripts (一つひとつ). The kana member has to be
+  // a registered closed-class quantity ending in the same counter, so an
+  // ordinary kana run behind a quantity cannot enter the rule and neither can a
+  // short kana numeral that also opens a common word (一つ|とおもう).
+  if (dict_manager != nullptr && normalize::isNumeralCodepoint(codepoints[start_pos])) {
+    size_t numeral_end = start_pos;
+    while (numeral_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[numeral_end])) {
+      ++numeral_end;
+    }
+    if (numeral_end < codepoints.size() && codepoints[numeral_end] == U'つ') {
+      const size_t unit_end = numeral_end + 1;
+      size_t kana_end = unit_end;
+      while (kana_end < char_types.size() && char_types[kana_end] == normalize::CharType::Hiragana) {
+        ++kana_end;
+      }
+      size_t repeated_end = 0;
+      for (size_t probe_end = unit_end + 3; probe_end <= kana_end; ++probe_end) {
+        if (codepoints[probe_end - 1] != U'つ') {
+          continue;
+        }
+        // The same kana quantity may also carry a plain nominal entry in a
+        // later layer, so every result is inspected rather than just the first
+        // exact-surface match.
+        const size_t kana_length = probe_end - unit_end;
+        for (const auto& result : dict_manager->lookup(extractSubstring(codepoints, unit_end, probe_end), 0)) {
+          if (result.length == kana_length && result.entry != nullptr &&
+              result.entry->extended_pos == core::ExtendedPOS::NounNumber) {
+            repeated_end = probe_end;
+            break;
+          }
+        }
+      }
+      if (repeated_end != 0) {
+        std::string surface = extractSubstring(codepoints, start_pos, repeated_end);
+        auto cand = makeCandidate(surface, start_pos, repeated_end, core::PartOfSpeech::Noun,
+                                  candidate::kMixedScriptRepeatedQuantityBonus, false, CandidateOrigin::Counter,
+                                  core::ExtendedPOS::NounNumber);
+        cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+        cand.pattern = "mixed_script_repeated_quantity";
+#endif
+        candidates.push_back(cand);
+      }
+    }
+  }
+
   // A repeated numeral+noun unit before a kanji サ変 predicate is a
   // distributive quantity phrase (一語一語|確認する, 一件一件|点検する).
   // Its unit kanji is intentionally not limited to the closed counter inventory:
@@ -265,6 +312,25 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
           candidates.push_back(ordinal);
           candidates.push_back(counter);
           candidates.push_back(ordinal_suffix);
+        }
+      } else if (tail_len >= 2 && ordinal_has_numeral && normalize::isCounterKanji(codepoints[ordinal_end]) &&
+                 codepoints[ordinal_end] != U'次') {
+        // A longer kanji tail behind the ordinal is a word of its own, and the
+        // counter reading of its first kanji cuts inside it (第2|部門, not
+        // 第2部|門). Only the ordinal boundary is emitted; the tail keeps the
+        // ordinary kanji-run analysis. A tail that does not open with a counter
+        // needs no boundary here, so a lexicalized ordinal noun (第三者, 第一
+        // 印象) retains its whole-word path.
+        std::string ordinal_surface = extractSubstring(codepoints, start_pos, ordinal_end);
+        if (!ordinal_surface.empty()) {
+          auto ordinal = makeCandidate(ordinal_surface, start_pos, ordinal_end, core::PartOfSpeech::Noun,
+                                       candidate::kOrdinalDigitCounterSplitBonus, false, CandidateOrigin::Counter,
+                                       core::ExtendedPOS::NounNumber);
+          ordinal.lemma = ordinal_surface;
+#ifdef SUZUME_DEBUG_INFO
+          ordinal.pattern = "ordinal_kanji_word_prefix";
+#endif
+          candidates.push_back(ordinal);
         }
       } else if (tail_len >= 2 && codepoints[ordinal_end] == U'次') {
         std::string ordinal_surface = extractSubstring(codepoints, start_pos, ordinal_end);
