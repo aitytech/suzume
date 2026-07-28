@@ -182,8 +182,9 @@ bool startsInsideKanjiRunBeforeShi(const std::vector<char32_t>& codepoints, size
 //                and で + auxiliary-chain checks in the onbin paths — see the
 //                per-site comments there for why each set differs from the
 //                helper's pattern list (ている/ておく are deliberately absent).
-//   - Head  (H): a leading 副助詞 opens the hiragana portion of an adjective —
-//                inline in the kanji adjective path.
+//   - Head  (H): a leading 副助詞 ‖ 係助詞 opens the hiragana portion of an
+//                adjective. Helper: startsWithFocusParticleHead, used by both
+//                the plain and the compound kanji adjective path.
 //
 // Shared invariant: a real verb/adjective that genuinely embeds these kana
 // (押さえる, 起こす) is protected by its own dictionary base form, so every guard
@@ -222,6 +223,20 @@ bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager
  */
 bool endsWithFocusParticleTail(const dictionary::DictionaryManager* dict_manager,
                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);
+
+/**
+ * @brief Check if the hiragana portion of a candidate opens with a focus particle
+ *
+ * True when a dictionary focus particle (副助詞 or 係助詞) of 2+ codepoints
+ * starts at @p hiragana_start inside [hiragana_start, end_pos). A particle
+ * there is not adjective okurigana: the run is [noun] + particle and the kana
+ * that look like an inflectional ending belong to the following word (水とか +
+ * いう absorbed into the non-word adjective 水とかい, 水しか + ない into 水しかい).
+ * The particle must be 2+ codepoints so a one-mora coincidence cannot match,
+ * and a following っ waives the check because an adjective past keeps it.
+ */
+bool startsWithFocusParticleHead(const dictionary::DictionaryManager* dict_manager,
+                                 const std::vector<char32_t>& codepoints, size_t hiragana_start, size_t end_pos);
 
 // True when a fabricated verb candidate starts with an exact auxiliary entry
 // and absorbs that auxiliary's negative inflection (過ぎない → 過ぎ + ない).

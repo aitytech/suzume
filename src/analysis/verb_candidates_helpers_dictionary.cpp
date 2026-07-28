@@ -225,6 +225,32 @@ bool endsWithFocusParticleTail(const dictionary::DictionaryManager* dict_manager
          endsWithParticleTailOfPos(dict_manager, codepoints, start_pos, end_pos, core::ExtendedPOS::ParticleBinding);
 }
 
+bool startsWithFocusParticleHead(const dictionary::DictionaryManager* dict_manager,
+                                 const std::vector<char32_t>& codepoints, size_t hiragana_start, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos < hiragana_start + 2 || end_pos > codepoints.size()) {
+    return false;
+  }
+  // Longest focus particle in the closed class is four codepoints (どころか).
+  constexpr size_t kMaxParticleLen = 4;
+  const size_t max_len = std::min(kMaxParticleLen, end_pos - hiragana_start);
+  for (size_t particle_len = 2; particle_len <= max_len; ++particle_len) {
+    const size_t particle_end = hiragana_start + particle_len;
+    const dictionary::DictionaryEntry* entry =
+        dict_manager->lookupExact(extractSubstring(codepoints, hiragana_start, particle_end));
+    if (entry == nullptr || (entry->extended_pos != core::ExtendedPOS::ParticleAdverbial &&
+                             entry->extended_pos != core::ExtendedPOS::ParticleBinding)) {
+      continue;
+    }
+    // An adjective past keeps っ right after the coinciding kana (美味しかっ +
+    // た), so that sequence is genuine okurigana rather than a particle.
+    if (particle_end < end_pos && codepoints[particle_end] == U'っ') {
+      continue;
+    }
+    return true;
+  }
+  return false;
+}
+
 bool hasAuxiliaryNegativeBoundary(const dictionary::DictionaryManager* dict_manager,
                                   const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
   if (dict_manager == nullptr || end_pos <= start_pos + 2 || end_pos > codepoints.size()) {
