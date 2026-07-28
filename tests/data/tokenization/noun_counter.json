@@ -53,6 +53,33 @@
       ],
       "id": "5_de_suru_2",
       "input": "5分間隔で確認する"
+    },
+    {
+      "description": "数量句が漢字連の奇数残りを許す負例",
+      "expected": [
+        {
+          "lemma": "3年",
+          "pos": "Noun",
+          "surface": "3年"
+        },
+        {
+          "lemma": "計画書",
+          "pos": "Noun",
+          "surface": "計画書"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "出す",
+          "pos": "Verb",
+          "surface": "出す"
+        }
+      ],
+      "id": "3_wo_su",
+      "input": "3年計画書を出す"
     }
   ],
   "description": "noun_counter tests",

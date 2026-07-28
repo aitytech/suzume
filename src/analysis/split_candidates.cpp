@@ -175,6 +175,14 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
   uint8_t flags = core::LatticeEdge::kIsUnknown;
 
   if (is_digit_kanji) {
+    // A 漢語 compound decomposes into two-kanji units, so the length cap above
+    // is not enough to place the cut: it only bounds how much of the run the
+    // quantity phrase may take. Measure the whole run so an odd leftover can be
+    // charged below.
+    size_t kanji_run_end = first_end;
+    while (kanji_run_end < char_types.size() && char_types[kanji_run_end] == CharType::Kanji) {
+      ++kanji_run_end;
+    }
     // For digit+kanji, generate multiple candidates with length-based costs
     // This allows Viterbi to choose the best segmentation
     for (size_t kanji_len = 1; kanji_len <= max_end - first_end; ++kanji_len) {
@@ -221,6 +229,15 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
         length_adjustment = -0.8F;
       }
 
+      // A cut that strands an odd number of kanji has landed on the wrong
+      // boundary: 3段階評価 cuts after the lone counter 段 and leaves the
+      // fragment 階評価, while the even cut leaves the word 評価. Charge the odd
+      // leftover so the even boundary wins. When the run offers no even cut the
+      // charge is uniform across candidates, so the quantity phrase still beats
+      // the bare numeral (3年 + 計画書).
+      if ((kanji_run_end - candidate_end) % 2 == 1) {
+        length_adjustment += bigram_cost::kMinor;
+      }
       float final_cost = base_cost + length_adjustment;
       SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_MIX] \"" << surface << "\": digit+kanji" << kanji_len
                                                 << " adj=" << length_adjustment << "\n");
