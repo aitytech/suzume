@@ -8,6 +8,7 @@ from .constants import (
     FIXED_LEADING_SEARCH_UNITS,
     LITERARY_VOLITIONAL_PARTICLE_COMPOUNDS,
     NOUN_NAI_COMPOUND_ADJECTIVES,
+    STATE_NOUN_SUFFIXES,
     TTARA_STEMS,
     TTEBA_STEMS,
     USER_DICT_COMPOUNDS,
@@ -266,6 +267,39 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
                 if applied_rule is None:
                     applied_rule = "productive-tate-suffix"
                 continue
+
+        # Noun-forming state suffix (泥/まみれ, 開け/っぱなし). The reference
+        # dictionary holds the lexicalized hosts as one token and splits every
+        # other host, but the suffix is productive and nothing else ends in it,
+        # so the boundary is always there.
+        state_suffix = next((suf for suf in STATE_NOUN_SUFFIXES if surface.endswith(suf)), "")
+        if t.get("pos") == "名詞" and state_suffix and len(surface) > len(state_suffix):
+            stem = surface[: -len(state_suffix)]
+            result.append({"surface": stem, "pos": "名詞", "lemma": stem})
+            result.append({"surface": state_suffix, "pos": "名詞", "pos_sub1": "接尾", "lemma": state_suffix})
+            if applied_rule is None:
+                applied_rule = "state-noun-suffix"
+            continue
+
+        # Degree suffix げ over an adjective stem or an adjectival noun
+        # (楽し/げ, おぼろ/げ). Lexicalized hosts (誇らしげ, 得意げ) reach us as
+        # one 形容動詞語幹 token; the suffix is the same productive one, so the
+        # host keeps its own search boundary.
+        if (
+            t.get("pos") == "名詞"
+            and t.get("pos_sub1") == "形容動詞語幹"
+            and surface.endswith("げ")
+            and len(surface) > 1
+        ):
+            stem = surface[:-1]
+            if stem.endswith("し"):
+                result.append({"surface": stem, "pos": "形容詞", "lemma": stem + "い"})
+            else:
+                result.append({"surface": stem, "pos": "名詞", "lemma": stem})
+            result.append({"surface": "げ", "pos": "名詞", "pos_sub1": "接尾", "lemma": "げ"})
+            if applied_rule is None:
+                applied_rule = "degree-suffix-ge"
+            continue
 
         # A closed leading modifier/adverb can be swallowed by a following
         # noun in the reference dictionary. Restore the grammatical search

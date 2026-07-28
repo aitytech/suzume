@@ -83,9 +83,15 @@ def test_honorific_exceptions_includes_family():
     assert "お客様" in HONORIFIC_EXCEPTIONS
 
 
-def test_prefix_exceptions_includes_fixed_words():
-    assert "おいで" in PREFIX_EXCEPTIONS
+def test_prefix_exceptions_covers_kanji_lexemes():
+    """Only kanji-bearing lexemes need listing.
+
+    An all-hiragana remainder (おいで, おかず) is never treated as a separable
+    prefix in the first place, so listing it would be dead weight.
+    """
     assert "お金" in PREFIX_EXCEPTIONS
+    assert "お前" in PREFIX_EXCEPTIONS
+    assert not {"おかず", "おでん", "おかげ", "おいで"} & PREFIX_EXCEPTIONS
 
 
 def test_particle_corrections_all_particle():

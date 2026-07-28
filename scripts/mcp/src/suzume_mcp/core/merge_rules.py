@@ -8,6 +8,7 @@ from .constants import (
     COMPOUND_VERB_V2_ICHIDAN,
     COMPOUND_VERB_V2_NOT_AFTER_SURU,
     COMPOUND_VERB_V2_SURU_ONLY,
+    DERIVED_VERB_SUFFIX_FORMS,
     FAMILY_TERMS,
     FIXED_FUNCTION_LEMMAS,
     FIXED_FUNCTION_SEARCH_UNITS,
@@ -27,10 +28,12 @@ from .merge_postprocessors import (
     _postprocess_bound_voiced_suffix,
     _postprocess_classical_mu,
     _postprocess_classical_shimu,
+    _postprocess_demo_copula,
     _postprocess_dialectal,
     _postprocess_distributive_quantity,
     _postprocess_epenthetic_sa,
     _postprocess_filler_split,
+    _postprocess_gamashii,
     _postprocess_ha_row_godan,
     _postprocess_honorific_split,
     _postprocess_izenkei_concessive,
@@ -587,6 +590,28 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     if applied_rule is None:
                         applied_rule = "verb-renyokei+kata"
 
+        # 5a''. Noun + verb-forming derivational suffix (謎めく, 冗談めかす).
+        # The suffix builds one godan paradigm with its host, so the whole
+        # derived verb inflects as a unit and carries no internal boundary.
+        # The reference dictionary merges only the entries it happens to hold
+        # (春めい) and splits the rest.
+        if not merged and t.get("pos") == "名詞" and t.get("pos_sub1") != "接尾" and i + 1 < len(tokens):
+            nxt = tokens[i + 1]
+            suffix_lemma = DERIVED_VERB_SUFFIX_FORMS.get(nxt.get("surface", ""))
+            if suffix_lemma is not None and nxt.get("pos") == "動詞":
+                combined = t.get("surface", "") + nxt.get("surface", "")
+                result.append(
+                    {
+                        "surface": combined,
+                        "pos": "動詞",
+                        "lemma": t.get("surface", "") + suffix_lemma,
+                    }
+                )
+                i += 2
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "noun+derived-verb-suffix"
+
         # 5b. Proper noun + region suffix
         # A destination suffix is one productive search unit with its nominal
         # host (東京行き, 学校行き).  The 接尾 feature supplies the boundary
@@ -1022,6 +1047,8 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_nde_split(result, applied_rule)
     result, applied_rule = _postprocess_filler_split(result, applied_rule)
     result, applied_rule = _postprocess_kuruwa(result, applied_rule)
+    result, applied_rule = _postprocess_demo_copula(result, applied_rule)
+    result, applied_rule = _postprocess_gamashii(result, applied_rule)
     result, applied_rule = _postprocess_adj_bungo(result, applied_rule)
     result, applied_rule = _postprocess_adj_kari(result, applied_rule)
     result, applied_rule = _postprocess_ha_row_godan(result, applied_rule)

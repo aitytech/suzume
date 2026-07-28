@@ -603,6 +603,11 @@ HIRAGANA_COMPOUNDS: dict[str, str] = {
 FIXED_FUNCTION_SEARCH_UNITS: dict[str, str] = {
     "然程": "副詞",
     "更に": "副詞",
+    # Lexicalized adverbs whose stem never stands alone in this sense. 実 is
+    # the fruit or the truth, not the degree, and しも is an archaic particle
+    # with no independent use left.
+    "実に": "副詞",
+    "折しも": "副詞",
     "更なる": "連体詞",
     "どのみち": "副詞",
     "ふいに": "副詞",
@@ -697,6 +702,37 @@ _COLLOQUIAL_FAMILY_TAILS: set[str] = {
 FAMILY_TERMS: set[str] = _HONORIFIC_FAMILY_TERMS | _COLLOQUIAL_FAMILY_TAILS
 _PREFIXED_FAMILY_TERMS = {f"お{term}" for term in FAMILY_TERMS}
 
+# Godan rows used to spell out a derivational suffix's paradigm. The く row
+# carries the onbin continuative い alongside its regular forms.
+_GODAN_ROWS: dict[str, str] = {
+    "く": "かきくけこい",
+    "す": "さしすせそ",
+}
+
+
+def _godan_suffix_forms(lemma: str) -> set[str]:
+    """Every inflected surface of a godan derivational suffix."""
+    stem, ending = lemma[:-1], lemma[-1]
+    return {stem + kana for kana in _GODAN_ROWS[ending]}
+
+
+# Verb-forming derivational suffixes. A noun takes them freely (春めく, 謎めく,
+# 冗談めかす), but the reference dictionary holds only the lexicalized results
+# as single tokens and splits the rest, so the boundary has to be restored from
+# the paradigm rather than from a word list.
+DERIVED_VERB_SUFFIX_FORMS: dict[str, str] = {
+    form: lemma for lemma in ("めく", "めかす") for form in _godan_suffix_forms(lemma)
+}
+
+# Noun-forming state suffixes. Nothing else ends in these, so a token carrying
+# one always has the suffix boundary inside it (泥/まみれ, 開け/っぱなし).
+STATE_NOUN_SUFFIXES: tuple[str, ...] = ("まみれ", "っぱなし")
+
+# Predicates that select the copular frame 〜でも: 学生でもよい / 学生でもない
+# is 断定 で plus 係助詞 も, the nominal counterpart of 食べてもよい. Any other
+# predicate leaves でも as the concessive adverbial particle (雨でも行く).
+COPULAR_DEMO_PREDICATE_LEMMAS: set[str] = {"よい", "いい", "ない", "ある"}
+
 # Colloquial pronouns to merge
 COLLOQUIAL_PRONOUNS: list[str] = ["どいつ", "こいつ", "そいつ", "あいつ"]
 
@@ -713,27 +749,33 @@ HONORIFIC_EXCEPTIONS: set[str] = (
     }
 )
 
-# Words where お/ご is part of the lexeme (not separable prefix)
+# Predicate tails that close the humble/honorific frame お/ご + verb stem + tail.
+# The frame is what makes a kana-only stem (おかけする) a separable prefix plus
+# a verb stem rather than one lexeme.
+HONORIFIC_FRAME_TAILS: set[str] = {
+    "する",
+    "し",
+    "しろ",
+    "せよ",
+    "され",
+    "いたし",
+    "いたす",
+    "ください",
+    "くださる",
+    "くださっ",
+    "なさる",
+    "なさっ",
+    "なさい",
+}
+
+# Words where お/ご is part of the lexeme (not separable prefix).
+# Only kanji-bearing lexemes need listing: an all-hiragana remainder separates
+# solely inside the honorific frame above.
 PREFIX_EXCEPTIONS: set[str] = _PREFIXED_FAMILY_TERMS | {
     "お出で",
-    "おいで",
-    "おすすめ",
     "お疲れ様",
     "お金",
     "お前",
-    "おまえ",
-    "おかず",
-    "おでん",
-    "おもち",
-    "おそれ",
-    "おかし",
-    "おととい",
-    "おかげ",
-    "おいら",
-    "おしっこ",
-    "おもらし",
-    # Fixed particle, not the honorific prefix お plus a noun.
-    "おろか",
 }
 
 # User-dict registered kanji+katakana compounds (skip splitting)
@@ -879,7 +921,22 @@ SUFFIX_AS_NOUN: set[str] = {"様", "末", "ごろ", "行き", "毛"}
 VALID_POS: set[str] = set(POS_MAP.values()) | {"Determiner", "Pronoun", "Suffix"}
 
 # Interrogatives for でも context detection
-INTERROGATIVES: set[str] = {"何", "誰", "どこ", "いつ", "どれ", "いくら", "どんな"}
+# Interrogative pronouns and quantifiers. Followed by でも they build the
+# indefinite (誰でも, どちらでも), which is one particle rather than the copula
+# plus 係助詞, whichever predicate comes next.
+INTERROGATIVES: set[str] = {
+    "何",
+    "なに",
+    "誰",
+    "だれ",
+    "どこ",
+    "どちら",
+    "どなた",
+    "いつ",
+    "どれ",
+    "いくら",
+    "どんな",
+}
 
 # Non-自立 verb lemmas that stay as Verb (not Auxiliary)
 VERB_NOT_AUX_LEMMAS: set[str] = {

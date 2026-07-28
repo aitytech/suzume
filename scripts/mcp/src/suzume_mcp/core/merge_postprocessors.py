@@ -4,7 +4,9 @@ import regex
 
 from .constants import (
     BOUND_SUFFIX_VERB_NOUN_CELLS,
+    COPULAR_DEMO_PREDICATE_LEMMAS,
     HONORIFIC_EXCEPTIONS,
+    HONORIFIC_FRAME_TAILS,
     HONORIFIC_SUFFIXES,
     KANJI_PREFIX_COMPOUNDS,
     PREFIX_EXCEPTIONS,
@@ -188,15 +190,25 @@ def _postprocess_honorific_split(result: list[dict], applied_rule: str | None) -
 
 
 def _postprocess_prefix_split(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
-    """Split お/ご+noun patterns."""
+    """Split お/ご+noun patterns.
+
+    The prefix is separable when the remainder carries a kanji, which is what
+    an honorific written over a free noun looks like (お仕事, ご意見). An
+    all-hiragana remainder is part of the lexeme far more often than not
+    (おなか, おだやか, おごそか, おかず) and its leading mora is not a prefix at
+    all, so it only separates inside the humble/honorific frame that requires a
+    verb stem after the prefix (ご迷惑をおかけする).
+    """
     new_result = []
-    for t in result:
+    for index, t in enumerate(result):
         surface = t.get("surface", "")
         pos = t.get("pos", "")
         pos_sub1 = t.get("pos_sub1", "")
         if pos == "名詞" and pos_sub1 != "接尾" and surface not in PREFIX_EXCEPTIONS:
             m = regex.match(r"^(お|ご)([\p{Han}\p{Hiragana}]+)$", surface)
-            if m:
+            following = result[index + 1].get("surface", "") if index + 1 < len(result) else ""
+            separable = regex.search(r"\p{Han}", m.group(2)) is not None if m else False
+            if m and (separable or following in HONORIFIC_FRAME_TAILS):
                 prefix, noun = m.group(1), m.group(2)
                 new_result.append({"surface": prefix, "pos": "接頭詞", "lemma": prefix})
                 new_result.append({"surface": noun, "pos": "名詞", "lemma": noun})
@@ -204,6 +216,123 @@ def _postprocess_prefix_split(result: list[dict], applied_rule: str | None) -> t
                     applied_rule = "prefix-split"
                 continue
         new_result.append(t)
+    return new_result, applied_rule
+
+
+# Inflections that can only follow the adjective-forming suffix がましい, never
+# the verb 増す. 増す is also written in kanji here, so the kana surface below
+# already separates the two; these tails are the second, independent check.
+_GAMASHII_TAILS: tuple[tuple[str, str], ...] = (
+    ("い", "動詞"),
+    ("さ", "名詞"),
+)
+
+
+def _postprocess_gamashii(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Rebuild the adjective-forming suffix がましい from its scattered pieces.
+
+    The reference dictionary holds the lexicalized derivations (押しつけがましい,
+    未練がましい) as single adjectives but has no entry for the productive rest,
+    where it reads the が as a case particle and まし as the verb 増す
+    (恩/着せ/が/まし/さ). The host plus がましい is one adjective either way.
+    """
+    new_result: list[dict] = []
+    index = 0
+    while index < len(result):
+        tail = result[index + 2] if index + 2 < len(result) else None
+        matched_tail = (
+            next(
+                (
+                    surface
+                    for surface, pos in _GAMASHII_TAILS
+                    if tail is not None and tail.get("surface") == surface and tail.get("pos") == pos
+                ),
+                "",
+            )
+            if tail is not None
+            else ""
+        )
+        if (
+            matched_tail
+            and result[index].get("surface") == "が"
+            and result[index].get("pos") == "助詞"
+            and result[index + 1].get("surface") == "まし"
+            and result[index + 1].get("pos") == "動詞"
+            and new_result
+        ):
+            # The host is whatever precedes the particle: a bare noun
+            # (言い訳がましい) or a noun plus a continuative verb (恩着せがましい).
+            host_size = (
+                2
+                if len(new_result) >= 2
+                and new_result[-1].get("pos") == "動詞"
+                and new_result[-1].get("conj_form") == "連用形"
+                and new_result[-2].get("pos") == "名詞"
+                else 1
+            )
+            host = "".join(t.get("surface", "") for t in new_result[-host_size:])
+            del new_result[-host_size:]
+            stem = f"{host}がまし"
+            lemma = f"{stem}い"
+            if matched_tail == "い":
+                new_result.append({"surface": lemma, "pos": "形容詞", "lemma": lemma})
+            else:
+                new_result.append({"surface": stem, "pos": "形容詞", "lemma": lemma})
+                new_result.append({"surface": "さ", "pos": "名詞", "pos_sub1": "接尾", "lemma": "さ"})
+            index += 3
+            if applied_rule is None:
+                applied_rule = "gamashii-adjective"
+            continue
+        new_result.append(result[index])
+        index += 1
+    return new_result, applied_rule
+
+
+def _selects_copular_demo(token: dict | None) -> bool:
+    """Whether a predicate puts でも in the copular frame rather than the particle."""
+    if token is None:
+        return False
+    return token.get("lemma", token.get("surface", "")) in COPULAR_DEMO_PREDICATE_LEMMAS
+
+
+def _postprocess_demo_copula(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Give でも after a nominal one analysis, chosen by the following predicate.
+
+    The reference dictionary decides this per lattice cost rather than per
+    construction, so the same concessive splits or merges depending on which
+    predicate follows (子供でもできる against 子供でも分かる, 雨でもいい against
+    雨でもよい). The construction is what settles it: よい/いい/ない/ある build
+    the copular frame 〜でも, the nominal counterpart of 食べてもよい, and every
+    other predicate leaves the concessive adverbial particle intact.
+    """
+    new_result: list[dict] = []
+    index = 0
+    while index < len(result):
+        token = result[index]
+        following = result[index + 1] if index + 1 < len(result) else None
+        if token.get("surface") == "でも" and token.get("pos") == "助詞" and _selects_copular_demo(following):
+            new_result.append({"surface": "で", "pos": "助詞", "pos_sub1": "格助詞", "lemma": "で"})
+            new_result.append({"surface": "も", "pos": "助詞", "pos_sub1": "係助詞", "lemma": "も"})
+            index += 1
+            if applied_rule is None:
+                applied_rule = "demo-copular-frame"
+            continue
+        after_mo = result[index + 2] if index + 2 < len(result) else None
+        if (
+            token.get("surface") == "で"
+            and token.get("pos_sub1") == "格助詞"
+            and following is not None
+            and following.get("surface") == "も"
+            and following.get("pos_sub1") == "係助詞"
+            and not _selects_copular_demo(after_mo)
+        ):
+            new_result.append({"surface": "でも", "pos": "助詞", "pos_sub1": "副助詞", "lemma": "でも"})
+            index += 2
+            if applied_rule is None:
+                applied_rule = "demo-adverbial-particle"
+            continue
+        new_result.append(token)
+        index += 1
     return new_result, applied_rule
 
 
