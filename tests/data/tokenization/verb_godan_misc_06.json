@@ -380,6 +380,184 @@
       ],
       "id": "wo_kazariki",
       "input": "道を行かざりき"
+    },
+    {
+      "description": "Past auxiliary plus quotative plus なる in a non-final clause",
+      "expected": [
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "datttatonaruto_gakakattta",
+      "input": "会議だったとなると時間がかかった"
+    },
+    {
+      "description": "Sibling of the past plus quotative plus なる chain",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "datttatonaruto_ru",
+      "input": "雨だったとなると困る"
+    },
+    {
+      "description": "Positive control: the same chain without the past auxiliary",
+      "expected": [
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "tonaruto_gakakaru",
+      "input": "会議となると時間がかかる"
+    },
+    {
+      "description": "Negative control: a mimetic adverb before the quotative keeps its reading",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "たじたじ",
+          "pos": "Adverb",
+          "surface": "たじたじ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "hatajitajitonattta",
+      "input": "彼はたじたじとなった"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

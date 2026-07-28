@@ -372,16 +372,24 @@ void UnknownWordGenerator::generateOnomatopoeiaCandidates(const std::vector<char
     std::string surface = extractSubstring(codepoints, start_pos, mimetic_end);
     bool decomposes_as_predicate_particle = false;
     if (dict_manager_ != nullptr) {
-      for (size_t split = start_pos + 1; split < mimetic_end; ++split) {
+      // The particle only has to begin at the split, not fill the rest of the
+      // run: a mimetic never opens with a predicate, so whatever follows that
+      // particle belongs to the next word (だっ|た+と+なる|と reads the past
+      // auxiliary, the quotative and なる as one fabricated adverb たとなる).
+      for (size_t split = start_pos + 1; split < mimetic_end && !decomposes_as_predicate_particle; ++split) {
         const std::string left = extractSubstring(codepoints, start_pos, split);
-        const std::string right = extractSubstring(codepoints, split, mimetic_end);
         constexpr PartOfSpeechMask kPredicateMask = partOfSpeechMask(core::PartOfSpeech::Verb) |
                                                     partOfSpeechMask(core::PartOfSpeech::Adjective) |
                                                     partOfSpeechMask(core::PartOfSpeech::Auxiliary);
-        const bool left_is_predicate = hasExactPartOfSpeech(*dict_manager_, left, kPredicateMask);
-        if (left_is_predicate && dict_manager_->lookupExact(right, core::PartOfSpeech::Particle) != nullptr) {
-          decomposes_as_predicate_particle = true;
-          break;
+        if (!hasExactPartOfSpeech(*dict_manager_, left, kPredicateMask)) {
+          continue;
+        }
+        for (size_t particle_end = split + 1; particle_end <= mimetic_end; ++particle_end) {
+          if (dict_manager_->lookupExact(extractSubstring(codepoints, split, particle_end),
+                                         core::PartOfSpeech::Particle) != nullptr) {
+            decomposes_as_predicate_particle = true;
+            break;
+          }
         }
       }
     }
