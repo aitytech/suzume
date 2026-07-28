@@ -41,6 +41,33 @@ TEST(DictionaryExpansionTest, KeepsLegacyInflectedCsvSurfaceLiteral) {
   EXPECT_EQ(expanded[0].lemma, "テストする");
 }
 
+TEST(DictionaryExpansionTest, PreservesPlainProperNounExtendedPos) {
+  dictionary::SourceEntry source{"東京", core::PartOfSpeech::Noun, dictionary::ConjugationType::None, "", 1};
+  source.is_proper_noun = true;
+
+  const auto expanded = expandDictionarySourceEntry(source);
+
+  ASSERT_EQ(expanded.size(), 1);
+  EXPECT_EQ(expanded[0].extended_pos, core::ExtendedPOS::NounProper);
+}
+
+TEST(DictionaryExpansionTest, IAdjectiveExpansionKeepsBareMorphemeBoundaries) {
+  const dictionary::SourceEntry source{"高い", core::PartOfSpeech::Adjective, dictionary::ConjugationType::IAdjective,
+                                       "", 1};
+
+  const auto expanded = expandDictionarySourceEntry(source);
+
+  const auto* conditional = findSurface(expanded, "高けれ");
+  const auto* conjectural = findSurface(expanded, "高かろ");
+  ASSERT_NE(conditional, nullptr);
+  ASSERT_NE(conjectural, nullptr);
+  EXPECT_EQ(conditional->extended_pos, core::ExtendedPOS::AdjKeForm);
+  EXPECT_EQ(conjectural->extended_pos, core::ExtendedPOS::AdjMizenkei);
+  EXPECT_EQ(findSurface(expanded, "高ければ"), nullptr);
+  EXPECT_EQ(findSurface(expanded, "高かったら"), nullptr);
+  EXPECT_EQ(findSurface(expanded, "高そう"), nullptr);
+}
+
 TEST(DictionaryExpansionTest, ReusesKuruKanjiAndKanaForms) {
   const dictionary::SourceEntry source{"来る", core::PartOfSpeech::Verb, dictionary::ConjugationType::Kuru, "", 1};
 
@@ -72,19 +99,42 @@ TEST(DictionaryExpansionTest, ConsumesCanonicalKuruStemForms) {
   // of receiving the dictionary short-verb bonus.
   EXPECT_EQ(findSurface(expanded, kana.mizenkei), nullptr);
   EXPECT_EQ(findSurface(expanded, kana.renyokei), nullptr);
+  EXPECT_EQ(findSurface(expanded, kana.mizenkei + "られる"), nullptr);
+  EXPECT_EQ(findSurface(expanded, kana.mizenkei + "れる"), nullptr);
+  EXPECT_EQ(findSurface(expanded, kana.mizenkei + "させる"), nullptr);
 }
 
-TEST(DictionaryExpansionTest, KeepsNominalSurfaceAheadOfConjugationCollision) {
+TEST(DictionaryExpansionTest, KeepsKuruCausativeInTheCanonicalParadigm) {
+  const auto forms = getKuruDictionaryForms();
+  const auto causative = std::find_if(forms.begin(), forms.end(), [](const auto& form) {
+    return form.kanji_surface == "来させる" && form.kana_surface == "こさせる";
+  });
+
+  ASSERT_NE(causative, forms.end());
+  EXPECT_EQ(causative->extended_pos, core::ExtendedPOS::VerbShuushikei);
+  EXPECT_FALSE(causative->emit_kanji);
+  EXPECT_FALSE(causative->emit_kana);
+}
+
+TEST(DictionaryExpansionTest, PreservesDifferentPosAtTheSameExpandedSurface) {
   const dictionary::SourceEntry noun{"テストすれば", core::PartOfSpeech::Noun, dictionary::ConjugationType::None, "",
                                      1};
   const dictionary::SourceEntry verb{"テストする", core::PartOfSpeech::Verb, dictionary::ConjugationType::Suru, "", 2};
 
   auto expanded = expandDictionarySourceEntries({verb, noun});
 
-  const auto* collision = findSurface(expanded.entries, "テストすれば");
-  ASSERT_NE(collision, nullptr);
-  EXPECT_EQ(collision->pos, core::PartOfSpeech::Noun);
-  EXPECT_GT(expanded.duplicates_skipped, 0);
+  const auto collisions = std::count_if(expanded.entries.begin(), expanded.entries.end(),
+                                        [](const auto& entry) { return entry.surface == "テストすれば"; });
+  EXPECT_EQ(collisions, 2);
+  EXPECT_EQ(expanded.duplicates_skipped, 0);
+
+  DictionaryExpansionOptions binary_options;
+  binary_options.preserve_surface_homographs = false;
+  auto binary_expanded = expandDictionarySourceEntries({verb, noun}, binary_options);
+  const auto binary_collisions = std::count_if(binary_expanded.entries.begin(), binary_expanded.entries.end(),
+                                               [](const auto& entry) { return entry.surface == "テストすれば"; });
+  EXPECT_EQ(binary_collisions, 1);
+  EXPECT_GT(binary_expanded.duplicates_skipped, 0);
 }
 
 }  // namespace

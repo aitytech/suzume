@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #ifndef __EMSCRIPTEN__
+#include <filesystem>
 #include <fstream>
 #endif
 #include <limits>
@@ -355,7 +356,11 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
       if (lemma_length == 0 || lemma_length > size - lemma_offset) {
         return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid compact lemma table"));
       }
-      compact_lemmas.emplace_back(reinterpret_cast<const char*>(data + lemma_offset), lemma_length);
+      const std::string_view lemma(reinterpret_cast<const char*>(data + lemma_offset), lemma_length);
+      if (!normalize::isValidUtf8(lemma)) {
+        return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Dictionary lemma is not valid UTF-8"));
+      }
+      compact_lemmas.push_back(lemma);
       lemma_offset += lemma_length;
       if (compact_lemmas.size() > std::numeric_limits<uint16_t>::max()) {
         return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Compact lemma table is too large"));
@@ -525,6 +530,10 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
     if (ent.surface.empty()) {
       return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Dictionary surface must not be empty"));
     }
+    if (ent.surface.find('\0') != std::string::npos) {
+      return core::makeUnexpected(
+          core::Error(core::ErrorCode::InvalidInput, "Dictionary surface contains an embedded NUL byte"));
+    }
     if (!normalize::isValidUtf8(ent.surface) || (!ent.lemma.empty() && !normalize::isValidUtf8(ent.lemma))) {
       return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Dictionary entry is not valid UTF-8"));
     }
@@ -585,6 +594,22 @@ core::Expected<std::vector<uint8_t>, core::Error> BinaryDictWriter::build() {
     }
 
     compact_entries.push_back({lemma_reference, grammar_index});
+  }
+
+  std::vector<std::string> trie_surfaces;
+  trie_surfaces.reserve(entries_.size());
+  for (const auto& entry : entries_) {
+    if (!trie_surfaces.empty() && trie_surfaces.back() == entry.surface) {
+      return core::makeUnexpected(
+          core::Error(core::ErrorCode::InvalidInput, "Duplicate dictionary surface: " + entry.surface));
+    }
+    trie_surfaces.push_back(entry.surface);
+  }
+  DoubleArray trie_validation;
+  if (!trie_validation.build(trie_surfaces)) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::InvalidInput,
+                    "Dictionary surfaces cannot be represented by the runtime trie (duplicate or capacity limit)"));
   }
 
   // If every differing lemma is also a nearby surface, encode its signed
@@ -753,17 +778,31 @@ core::Expected<size_t, core::Error> BinaryDictWriter::writeToFile(const std::str
     return core::makeUnexpected(result.error());
   }
 
-  std::ofstream file(path, std::ios::binary);
+  const std::filesystem::path output_path(path);
+  const std::filesystem::path temporary_path = output_path.string() + ".tmp";
+  std::ofstream file(temporary_path, std::ios::binary);
   if (!file) {
-    return core::makeUnexpected(
-        core::Error(core::ErrorCode::InternalError, "Failed to create dictionary file: " + path));
+    return core::makeUnexpected(core::Error(core::ErrorCode::InternalError,
+                                            "Failed to create temporary dictionary file: " + temporary_path.string()));
   }
 
   const auto& data = result.value();
   file.write(reinterpret_cast<const char*>(data.data()), data.size());
+  file.close();
   if (!file) {
+    std::error_code remove_error;
+    std::filesystem::remove(temporary_path, remove_error);
     return core::makeUnexpected(
         core::Error(core::ErrorCode::InternalError, "Failed to write dictionary file: " + path));
+  }
+
+  std::error_code rename_error;
+  std::filesystem::rename(temporary_path, output_path, rename_error);
+  if (rename_error) {
+    std::error_code remove_error;
+    std::filesystem::remove(temporary_path, remove_error);
+    return core::makeUnexpected(core::Error(
+        core::ErrorCode::InternalError, "Failed to replace dictionary file: " + path + ": " + rename_error.message()));
   }
 
   return data.size();

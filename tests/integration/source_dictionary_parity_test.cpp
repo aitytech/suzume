@@ -75,7 +75,7 @@ TEST(SourceDictionaryParityTest, CompilerAndRuntimeUseIdenticalExpandedEntries) 
   Suzume analyzer(options);
   auto source_load = analyzer.loadUserDictionaryFromMemoryResult(source.data(), source.size());
   ASSERT_TRUE(source_load.hasValue()) << source_load.error().message;
-  EXPECT_EQ(source_load.value(), parsed.value().entries.size());
+  EXPECT_EQ(source_load.value(), expanded.entries.size());
 
   auto analyzed = analyzer.analyze("テストすれば");
   auto runtime_form = std::find_if(analyzed.begin(), analyzed.end(),
@@ -87,7 +87,7 @@ TEST(SourceDictionaryParityTest, CompilerAndRuntimeUseIdenticalExpandedEntries) 
   Suzume file_analyzer(options);
   auto file_load = file_analyzer.loadUserDictionaryResult(source_path.string());
   ASSERT_TRUE(file_load.hasValue()) << file_load.error().message;
-  EXPECT_EQ(file_load.value(), parsed.value().entries.size());
+  EXPECT_EQ(file_load.value(), expanded.entries.size());
   auto file_analyzed = file_analyzer.analyze("テストすれば");
   auto file_form = std::find_if(file_analyzed.begin(), file_analyzed.end(),
                                 [](const auto& morpheme) { return morpheme.surface == "テストすれば"; });

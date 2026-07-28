@@ -1,11 +1,7 @@
 #include "dictionary/dictionary.h"
 
 #include <array>
-#include <cstdlib>
 #include <iterator>
-#ifndef __EMSCRIPTEN__
-#include <filesystem>
-#endif
 
 #include "dictionary/binary_dict.h"
 #include "dictionary/core_dict.h"
@@ -96,13 +92,6 @@ namespace {
 /**
  * @brief Get home directory path
  */
-std::string getHomeDir() {
-  if (const char* home = std::getenv("HOME")) {
-    return home;
-  }
-  return "";
-}
-
 }  // namespace
 #endif  // __EMSCRIPTEN__
 
@@ -135,12 +124,17 @@ std::vector<LookupResult> DictionaryManager::lookup(std::string_view text, size_
     appendLookupResults(results, core_binary_dict_->lookup(text, start_pos));
   }
 
-  // Lookup in binary user dictionaries (Layer 3)
+  // Lookup in the automatically loaded bundled user dictionary (Layer 3)
+  for (const auto& user_binary_dict : bundled_user_binary_dicts_) {
+    appendLookupResults(results, user_binary_dict->lookup(text, start_pos), true);
+  }
+
+  // Lookup in caller-loaded binary user dictionaries (Layer 4)
   for (const auto& user_binary_dict : user_binary_dicts_) {
     appendLookupResults(results, user_binary_dict->lookup(text, start_pos), true);
   }
 
-  // Lookup in source user dictionaries (Layer 4: CSV/TSV files)
+  // Lookup in caller-loaded source user dictionaries (Layer 5: CSV/TSV files)
   for (const auto& user_dict : user_dicts_) {
     appendLookupResults(results, user_dict->lookup(text, start_pos), true);
   }
@@ -158,6 +152,11 @@ const DictionaryEntry* DictionaryManager::lookupExact(std::string_view surface, 
   }
   if (core_binary_dict_ && core_binary_dict_->isLoaded()) {
     if (const auto* entry = core_binary_dict_->lookupExact(surface, pos)) {
+      return entry;
+    }
+  }
+  for (const auto& user_binary_dict : bundled_user_binary_dicts_) {
+    if (const auto* entry = user_binary_dict->lookupExact(surface, pos)) {
       return entry;
     }
   }
@@ -204,12 +203,17 @@ bool DictionaryManager::hasCoreBinaryDictionary() const {
 }
 
 core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryResult(const std::string& path) {
+  return loadUserBinaryDictionaryResultInto(path, user_binary_dicts_);
+}
+
+core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryResultInto(
+    const std::string& path, std::vector<std::unique_ptr<BinaryDictionary>>& dictionaries) {
   auto dictionary = std::make_unique<BinaryDictionary>();
   auto result = dictionary->loadFromFile(path);
   if (!result.hasValue()) {
     return core::makeUnexpected(result.error());
   }
-  user_binary_dicts_.push_back(std::move(dictionary));
+  dictionaries.push_back(std::move(dictionary));
   return result.value();
 }
 
@@ -219,63 +223,31 @@ bool DictionaryManager::loadUserBinaryDictionaryFromMemory(const uint8_t* data, 
 
 core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryFromMemoryResult(const uint8_t* data,
                                                                                                 size_t size) {
+  return loadUserBinaryDictionaryFromMemoryResultInto(data, size, user_binary_dicts_);
+}
+
+core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryFromMemoryResultInto(
+    const uint8_t* data, size_t size, std::vector<std::unique_ptr<BinaryDictionary>>& dictionaries) {
   auto dictionary = std::make_unique<BinaryDictionary>();
   auto result = dictionary->loadFromMemory(data, size);
   if (!result.hasValue()) {
     return core::makeUnexpected(result.error());
   }
-  user_binary_dicts_.push_back(std::move(dictionary));
+  dictionaries.push_back(std::move(dictionary));
   return result.value();
 }
 
-bool DictionaryManager::hasUserBinaryDictionary() const {
-  return !user_binary_dicts_.empty();
+core::Expected<size_t, core::Error> DictionaryManager::loadBundledUserBinaryDictionaryResult(const std::string& path) {
+  return loadUserBinaryDictionaryResultInto(path, bundled_user_binary_dicts_);
 }
 
-bool DictionaryManager::tryAutoLoadCoreDictionary() {
-  // Already loaded
-  if (hasCoreBinaryDictionary()) {
-    return true;
-  }
+core::Expected<size_t, core::Error> DictionaryManager::loadBundledUserBinaryDictionaryFromMemoryResult(
+    const uint8_t* data, size_t size) {
+  return loadUserBinaryDictionaryFromMemoryResultInto(data, size, bundled_user_binary_dicts_);
+}
 
-#ifdef __EMSCRIPTEN__
-  // WASM: Dictionaries are embedded and loaded via Suzume::Impl constructor
-  // This function is not used in WASM builds
-  return false;
-#else
-  namespace fs = std::filesystem;
-
-  std::vector<std::string> search_paths;
-
-  // 1. $SUZUME_DATA_DIR/core.dic
-  if (const char* data_dir = std::getenv("SUZUME_DATA_DIR")) {
-    search_paths.push_back(std::string(data_dir) + "/core.dic");
-  }
-
-  // 2. ./data/core.dic
-  search_paths.push_back("./data/core.dic");
-
-  // 3. ~/.suzume/core.dic
-  std::string home = getHomeDir();
-  if (!home.empty()) {
-    search_paths.push_back(home + "/.suzume/core.dic");
-  }
-
-  // 4. /usr/local/share/suzume/core.dic
-  search_paths.push_back("/usr/local/share/suzume/core.dic");
-
-  // 5. /usr/share/suzume/core.dic
-  search_paths.push_back("/usr/share/suzume/core.dic");
-
-  // Try each path
-  for (const auto& path : search_paths) {
-    if (fs::exists(path) && loadCoreDictionary(path)) {
-      return true;
-    }
-  }
-
-  return false;
-#endif  // __EMSCRIPTEN__
+bool DictionaryManager::hasUserBinaryDictionary() const {
+  return !bundled_user_binary_dicts_.empty() || !user_binary_dicts_.empty();
 }
 
 }  // namespace suzume::dictionary

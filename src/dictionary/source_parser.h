@@ -26,6 +26,9 @@ struct SourceEntry {
   ConjugationType conj_type{ConjugationType::None};
   std::string lemma;
   size_t line_number{0};
+  bool is_proper_noun{false};
+  bool used_legacy_tsv_layout{false};
+  bool ignored_empty_padding_columns{false};
 };
 
 struct SourceParseStats {
@@ -37,6 +40,7 @@ struct SourceParseStats {
 struct SourceParseResult {
   std::vector<SourceEntry> entries;
   SourceParseStats stats;
+  std::vector<std::string> warnings;
 };
 
 struct SourceParseOptions {

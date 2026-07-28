@@ -457,6 +457,25 @@ TEST_F(BinaryDictTest, WriteToFileAndLoad) {
   EXPECT_EQ(results[0].entry->surface, "file");
 }
 
+TEST_F(BinaryDictTest, WriteFailurePreservesDestinationAndRemovesTemporaryFile) {
+  BinaryDictWriter writer;
+  DictionaryEntry entry;
+  entry.surface = "東京";
+  entry.lemma = "東京";
+  entry.pos = core::PartOfSpeech::Noun;
+  writer.addEntry(entry);
+
+  const auto directory_destination = std::filesystem::temp_directory_path() / "suzume_binary_dict_destination";
+  std::filesystem::remove_all(directory_destination);
+  ASSERT_TRUE(std::filesystem::create_directory(directory_destination));
+
+  const auto write_result = writer.writeToFile(directory_destination.string());
+  EXPECT_FALSE(write_result.hasValue());
+  EXPECT_TRUE(std::filesystem::is_directory(directory_destination));
+  EXPECT_FALSE(std::filesystem::exists(directory_destination.string() + ".tmp"));
+  std::filesystem::remove_all(directory_destination);
+}
+
 TEST_F(BinaryDictTest, LoadInvalidFile) {
   BinaryDictionary dict;
   auto result = dict.loadFromFile("/nonexistent/path/dict.bin");
@@ -671,6 +690,21 @@ TEST_F(BinaryDictTest, BuildRejectsEmptySurface) {
   EXPECT_NE(result.error().message.find("surface must not be empty"), std::string::npos);
 }
 
+TEST_F(BinaryDictTest, BuildRejectsEmbeddedNullAndDuplicateTrieKeys) {
+  BinaryDictWriter nul_writer;
+  nul_writer.addEntry({std::string("東京\0大阪", 13), core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, "東京"});
+  auto nul_result = nul_writer.build();
+  ASSERT_FALSE(nul_result.hasValue());
+  EXPECT_NE(nul_result.error().message.find("embedded NUL"), std::string::npos);
+
+  BinaryDictWriter duplicate_writer;
+  duplicate_writer.addEntry({"検査", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, "検査"});
+  duplicate_writer.addEntry({"検査", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "検査する"});
+  auto duplicate_result = duplicate_writer.build();
+  ASSERT_FALSE(duplicate_result.hasValue());
+  EXPECT_NE(duplicate_result.error().message.find("Duplicate dictionary surface"), std::string::npos);
+}
+
 TEST_F(BinaryDictTest, BuildRejectsInvalidPosOrExtendedPos) {
   BinaryDictWriter invalid_pos_writer;
   DictionaryEntry invalid_pos;
@@ -727,6 +761,25 @@ TEST_F(BinaryDictTest, LemmaHandling) {
   auto results2 = dict.lookup("walk", 0);
   ASSERT_EQ(results2.size(), 1u);
   EXPECT_EQ(results2[0].entry->lemma, "walk");
+}
+
+TEST_F(BinaryDictTest, LoadRejectsInvalidUtf8InCompactLemmaPool) {
+  BinaryDictWriter writer;
+  writer.addEntry({"検査形", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, "独自レンマ"});
+  auto build_result = writer.build();
+  ASSERT_TRUE(build_result.hasValue()) << build_result.error().message;
+
+  auto data = std::move(build_result.value());
+  const std::string lemma = "独自レンマ";
+  auto lemma_pos = std::search(data.begin(), data.end(), lemma.begin(), lemma.end(),
+                               [](uint8_t byte, char chr) { return byte == static_cast<uint8_t>(chr); });
+  ASSERT_NE(lemma_pos, data.end());
+  *lemma_pos = 0xFF;
+
+  BinaryDictionary dict;
+  auto load_result = dict.loadFromMemory(data.data(), data.size());
+  ASSERT_FALSE(load_result.hasValue());
+  EXPECT_NE(load_result.error().message.find("lemma is not valid UTF-8"), std::string::npos);
 }
 
 TEST_F(BinaryDictTest, ExtendedPosRoundTrip) {

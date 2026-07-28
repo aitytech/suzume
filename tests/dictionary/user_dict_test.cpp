@@ -41,6 +41,9 @@ TEST(UserDictTest, AddEntryRejectsInvalidEntry) {
   invalid_extended_pos.extended_pos = static_cast<core::ExtendedPOS>(255);
   dict.addEntry(invalid_extended_pos);
 
+  DictionaryEntry invalid_lemma{"検査", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, std::string("\xE3\x81", 2)};
+  EXPECT_FALSE(dict.addEntry(invalid_lemma));
+
   EXPECT_EQ(dict.size(), 0);
   EXPECT_TRUE(dict.lookup("壊れた", 0).empty());
 }
@@ -131,6 +134,17 @@ TEST(UserDictTest, LoadFromMemoryEmpty) {
   UserDictionary dict;
   auto result = dict.loadFromMemory(nullptr, 0);
   EXPECT_FALSE(result.hasValue());
+}
+
+TEST(UserDictTest, LoadFromMemoryRejectsNoLoadableRecords) {
+  UserDictionary dict;
+  const char* source = "# comment\nmissing-pos\n";
+
+  auto result = dict.loadFromMemory(source, std::strlen(source));
+
+  EXPECT_FALSE(result.hasValue());
+  EXPECT_EQ(result.error().code, core::ErrorCode::ParseError);
+  EXPECT_EQ(dict.size(), 0);
 }
 
 TEST(UserDictTest, LoadFromMemoryCSV) {

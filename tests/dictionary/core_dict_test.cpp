@@ -3,7 +3,10 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <set>
+#include <string>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 #include "dictionary/entries/auxiliaries.h"
@@ -61,6 +64,22 @@ TEST(CoreDictionaryTest, MaterializesEveryStaticEntryWithStableMetadata) {
   EXPECT_EQ(dict.getEntry(static_cast<uint32_t>(expected.size())), nullptr);
 }
 
+TEST(CoreDictionaryTest, StaticEntrySetsContainNoExactDuplicates) {
+  const entries::EntrySpecRange sources[] = {
+      entries::getParticleEntries(),    entries::getCompoundParticleEntries(), entries::getAuxiliaryEntries(),
+      entries::getConjunctionEntries(), entries::getDeterminerEntries(),       entries::getPronounEntries(),
+      entries::getFormalNounEntries(),  entries::getInterjectionEntries(),
+  };
+  std::set<std::tuple<std::string, core::PartOfSpeech, core::ExtendedPOS, std::string>> unique_entries;
+  for (const auto source : sources) {
+    for (const auto& entry : source) {
+      const auto key =
+          std::make_tuple(std::string(entry.surface), entry.pos, entry.extended_pos, std::string(entry.lemma));
+      EXPECT_TRUE(unique_entries.insert(key).second) << "duplicate L1 entry: " << entry.surface;
+    }
+  }
+}
+
 TEST(CoreDictionaryTest, ContractedCompletiveParadigmsRemainAuxiliaries) {
   constexpr std::string_view kChauForms[] = {"ちゃう", "ちゃわ", "ちゃい", "ちゃっ", "ちゃえ", "ちゃお"};
   constexpr std::string_view kJauForms[] = {"じゃう", "じゃわ", "じゃい", "じゃっ", "じゃえ", "じゃお"};
@@ -85,6 +104,77 @@ TEST(CoreDictionaryTest, ContractedCompletiveParadigmsRemainAuxiliaries) {
 
   expect_auxiliary_paradigm(kChauForms, "ちゃう");
   expect_auxiliary_paradigm(kJauForms, "じゃう");
+}
+
+TEST(CoreDictionaryTest, QuotativeAdverbsUseTheirDedicatedExtendedPos) {
+  CoreDictionary dict;
+  for (const std::string_view surface : {"そう", "どう"}) {
+    const auto* entry = dict.lookupExact(surface, core::PartOfSpeech::Adverb);
+    ASSERT_NE(entry, nullptr) << surface;
+    EXPECT_EQ(entry->extended_pos, core::ExtendedPOS::AdverbQuotative) << surface;
+  }
+}
+
+TEST(CoreDictionaryTest, ClosedAuxiliaryAndBoundAdjectiveParadigmsAreComplete) {
+  CoreDictionary dict;
+
+  const auto expect_auxiliary_forms = [&dict](std::initializer_list<std::string_view> forms, std::string_view lemma,
+                                              core::ExtendedPOS extended_pos) {
+    for (const auto form : forms) {
+      const auto* entry = dict.lookupExact(form, core::PartOfSpeech::Auxiliary);
+      ASSERT_NE(entry, nullptr) << form;
+      EXPECT_EQ(entry->extended_pos, extended_pos) << form;
+      EXPECT_EQ(entry->lemma, lemma) << form;
+      EXPECT_EQ(core::extendedPosToPos(entry->extended_pos), core::PartOfSpeech::Auxiliary) << form;
+    }
+  };
+
+  expect_auxiliary_forms({"たい", "たく", "たかっ", "たけれ"}, "たい", core::ExtendedPOS::AuxDesireTai);
+  expect_auxiliary_forms({"ない", "なく", "なかっ", "なけれ", "なかろ"}, "ない", core::ExtendedPOS::AuxNegativeNai);
+  expect_auxiliary_forms({"ます", "まし", "ませ", "ましょ", "ますれ"}, "ます", core::ExtendedPOS::AuxTenseMasu);
+  expect_auxiliary_forms({"れ", "れる", "れれ", "れよ"}, "れる", core::ExtendedPOS::AuxPassive);
+  expect_auxiliary_forms({"られ", "られる", "られれ", "られよ"}, "られる", core::ExtendedPOS::AuxPassive);
+  expect_auxiliary_forms({"せ", "せる", "せれ", "せろ", "せよ"}, "せる", core::ExtendedPOS::AuxCausative);
+  expect_auxiliary_forms({"させ", "させる", "させれ", "させろ", "させよ"}, "させる", core::ExtendedPOS::AuxCausative);
+
+  struct AdjectiveFamily {
+    std::string_view stem;
+    std::string_view lemma;
+  };
+  constexpr AdjectiveFamily kFamilies[] = {
+      {"にく", "にくい"}, {"やす", "やすい"}, {"がた", "がたい"},
+      {"づら", "づらい"}, {"っぽ", "っぽい"}, {"ほし", "ほしい"},
+  };
+  struct AdjectiveCell {
+    std::string_view suffix;
+    core::ExtendedPOS extended_pos;
+  };
+  constexpr AdjectiveCell kCells[] = {
+      {"い", core::ExtendedPOS::AdjBasic},      {"く", core::ExtendedPOS::AdjRenyokei},
+      {"かっ", core::ExtendedPOS::AdjKatt},     {"けれ", core::ExtendedPOS::AdjKeForm},
+      {"かろ", core::ExtendedPOS::AdjMizenkei}, {"", core::ExtendedPOS::AdjStem},
+  };
+
+  for (const auto& family : kFamilies) {
+    for (const auto& cell : kCells) {
+      const std::string surface = std::string(family.stem) + std::string(cell.suffix);
+      const auto* entry = dict.lookupExact(surface, core::PartOfSpeech::Adjective);
+      ASSERT_NE(entry, nullptr) << surface;
+      EXPECT_EQ(entry->extended_pos, cell.extended_pos) << surface;
+      EXPECT_EQ(entry->lemma, family.lemma) << surface;
+      EXPECT_EQ(core::extendedPosToPos(entry->extended_pos), core::PartOfSpeech::Adjective) << surface;
+    }
+  }
+}
+
+TEST(CoreDictionaryTest, YasuiStemIsNotAnUnconditionalHonorificAuxiliary) {
+  CoreDictionary dict;
+
+  EXPECT_EQ(dict.lookupExact("やす", core::PartOfSpeech::Auxiliary), nullptr);
+  const auto* adjective_stem = dict.lookupExact("やす", core::PartOfSpeech::Adjective);
+  ASSERT_NE(adjective_stem, nullptr);
+  EXPECT_EQ(adjective_stem->extended_pos, core::ExtendedPOS::AdjStem);
+  EXPECT_EQ(adjective_stem->lemma, "やすい");
 }
 
 }  // namespace

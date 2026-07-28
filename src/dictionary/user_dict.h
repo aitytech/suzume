@@ -48,7 +48,7 @@ class UserDictionary {
    * @param entry Entry to add
    * @note Not thread-safe. Do not call during concurrent reads.
    */
-  void addEntry(const DictionaryEntry& entry);
+  bool addEntry(const DictionaryEntry& entry);
 
   /**
    * @brief Lookup entries at position

@@ -3,6 +3,8 @@
 #include <optional>
 #include <utility>
 
+#include "normalize/utf8.h"
+
 namespace suzume {
 namespace dictionary {
 
@@ -59,6 +61,13 @@ std::optional<ConjugationType> parseConjugationType(std::string_view field) {
     return canonical;
   }
   return conjTypeFromAnyAlias(field);
+}
+
+bool usesLegacyTsvLayout(const std::vector<std::string>& fields) {
+  // The legacy schema identifies itself with its numeric cost column:
+  // surface, POS, reading, cost[, conj_type, lemma]. Empty spreadsheet padding
+  // must not silently switch a current-format row into this schema.
+  return fields.size() >= 4 && isNumericField(fields[3]);
 }
 
 char detectDelimiter(std::string_view record) {
@@ -181,6 +190,7 @@ core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::st
   SourceEntry entry;
   entry.surface = fields[0];
   entry.pos = *pos;
+  entry.is_proper_noun = fields[1] == "PROPN" || fields[1] == "PROPER_NOUN";
   entry.line_number = line_number;
   if (entry.pos == core::PartOfSpeech::Interjection) {
     entry.conj_type = ConjugationType::Interjection;
@@ -188,24 +198,40 @@ core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::st
 
   const bool is_tsv = delimiter == '\t';
   if (is_tsv) {
-    // Legacy extended TSV: surface, POS, reading, cost, conj_type, lemma.
-    if (fields.size() > 4 && !fields[4].empty()) {
-      auto conj_type = parseConjugationType(fields[4]);
-      if (!conj_type.has_value()) {
-        return core::makeUnexpected(
-            core::Error(core::ErrorCode::ParseError,
-                        "Line " + std::to_string(line_number) + ": Invalid conjugation type: " + fields[4]));
+    entry.used_legacy_tsv_layout = usesLegacyTsvLayout(fields);
+    if (entry.used_legacy_tsv_layout) {
+      // Legacy extended TSV: surface, POS, reading, cost, conj_type, lemma.
+      if (fields.size() > 4 && !fields[4].empty()) {
+        auto conj_type = parseConjugationType(fields[4]);
+        if (!conj_type.has_value()) {
+          return core::makeUnexpected(
+              core::Error(core::ErrorCode::ParseError,
+                          "Line " + std::to_string(line_number) + ": Invalid conjugation type: " + fields[4]));
+        }
+        entry.conj_type = *conj_type;
       }
-      entry.conj_type = *conj_type;
-    }
-    if (fields.size() > 4) {
       if (fields.size() > 5) {
         entry.lemma = fields[5];
       }
+      for (size_t field_idx = 6; field_idx < fields.size(); ++field_idx) {
+        if (!fields[field_idx].empty()) {
+          return core::makeUnexpected(core::Error(
+              core::ErrorCode::ParseError, "Unexpected non-empty TSV column at line " + std::to_string(line_number) +
+                                               ": " + std::to_string(field_idx + 1)));
+        }
+      }
       return entry;
     }
-    if (fields.size() == 4 && isNumericField(fields[3])) {
-      return entry;
+
+    if (fields.size() > 4) {
+      for (size_t field_idx = 4; field_idx < fields.size(); ++field_idx) {
+        if (!fields[field_idx].empty()) {
+          return core::makeUnexpected(core::Error(
+              core::ErrorCode::ParseError, "Unexpected non-empty TSV column at line " + std::to_string(line_number) +
+                                               ": " + std::to_string(field_idx + 1)));
+        }
+      }
+      entry.ignored_empty_padding_columns = true;
     }
 
     // Current TSV: surface, POS, conj_type[, lemma]. A third field which is
@@ -215,10 +241,15 @@ core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::st
       if (conj_type.has_value()) {
         entry.conj_type = *conj_type;
       } else if (!isNumericField(fields[2])) {
+        if (fields.size() >= 4 && !fields[3].empty()) {
+          return core::makeUnexpected(
+              core::Error(core::ErrorCode::ParseError,
+                          "Ambiguous non-empty TSV columns 3 and 4 at line " + std::to_string(line_number)));
+        }
         entry.lemma = fields[2];
       }
     }
-    if (fields.size() == 4 && !isNumericField(fields[3])) {
+    if (fields.size() >= 4 && !fields[3].empty()) {
       entry.lemma = fields[3];
     }
   } else {
@@ -226,6 +257,11 @@ core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::st
     if (fields.size() > 3) {
       entry.lemma = fields[3];
     }
+  }
+
+  if (!normalize::isValidUtf8(entry.surface) || (!entry.lemma.empty() && !normalize::isValidUtf8(entry.lemma))) {
+    return core::makeUnexpected(core::Error(
+        core::ErrorCode::ParseError, "Dictionary entry is not valid UTF-8 at line " + std::to_string(line_number)));
   }
 
   return entry;
@@ -236,7 +272,7 @@ core::Expected<SourceEntry, core::Error> parseRecord(std::string_view record, si
   if (!parsed.error.empty()) {
     return core::makeUnexpected(
         core::Error(core::ErrorCode::ParseError,
-                    "Invalid CSV quoting at line " + std::to_string(line_number) + ": " + parsed.error));
+                    "Invalid legacy CSV quoting at line " + std::to_string(line_number) + ": " + parsed.error));
   }
   return convertFields(parsed.fields, line_number, delimiter);
 }
@@ -297,14 +333,16 @@ core::Expected<SourceParseResult, core::Error> parseDictionarySource(std::string
       ++result.stats.comment_lines;
     } else {
       const char record_delimiter = delimiter.value_or(detectDelimiter(record));
+      auto parsed_record = parseDelimitedRecord(record, record_delimiter);
+      if (!parsed_record.error.empty()) {
+        return core::makeUnexpected(core::Error(
+            core::ErrorCode::ParseError,
+            "Invalid legacy CSV quoting at line " + std::to_string(record_line) + ": " + parsed_record.error));
+      }
       if (options.skip_single_field_records) {
-        auto parsed_record = parseDelimitedRecord(record, record_delimiter);
-        if (!parsed_record.error.empty()) {
-          return core::makeUnexpected(
-              core::Error(core::ErrorCode::ParseError,
-                          "Invalid CSV quoting at line " + std::to_string(record_line) + ": " + parsed_record.error));
-        }
         if (parsed_record.fields.size() < 2) {
+          result.warnings.push_back("Skipped dictionary record at line " + std::to_string(record_line) +
+                                    ": missing POS field");
           record_start = idx + 1;
           record_line = current_line;
           continue;
@@ -313,9 +351,15 @@ core::Expected<SourceParseResult, core::Error> parseDictionarySource(std::string
       if (!delimiter.has_value()) {
         delimiter = record_delimiter;
       }
-      auto entry = parseRecord(record, record_line, record_delimiter);
+      auto entry = convertFields(parsed_record.fields, record_line, record_delimiter);
       if (!entry.hasValue()) {
         return core::makeUnexpected(entry.error());
+      }
+      if (entry.value().used_legacy_tsv_layout) {
+        result.warnings.push_back("Used legacy TSV layout at line " + std::to_string(record_line));
+      }
+      if (entry.value().ignored_empty_padding_columns) {
+        result.warnings.push_back("Ignored empty TSV padding columns at line " + std::to_string(record_line));
       }
       result.entries.push_back(std::move(entry.value()));
       ++result.stats.entries;
@@ -326,9 +370,9 @@ core::Expected<SourceParseResult, core::Error> parseDictionarySource(std::string
   }
 
   if (in_quotes) {
-    return core::makeUnexpected(
-        core::Error(core::ErrorCode::ParseError,
-                    "Invalid CSV quoting at line " + std::to_string(record_line) + ": unterminated quoted field"));
+    return core::makeUnexpected(core::Error(
+        core::ErrorCode::ParseError,
+        "Invalid legacy CSV quoting at line " + std::to_string(record_line) + ": unterminated quoted field"));
   }
   return result;
 }
@@ -361,7 +405,8 @@ DictionaryEntry sourceToDictionaryEntry(const SourceEntry& source_entry) {
       entry.extended_pos = core::ExtendedPOS::NounProperGiven;
       break;
     default:
-      entry.extended_pos = core::posToExtendedPos(entry.pos);
+      entry.extended_pos =
+          source_entry.is_proper_noun ? core::ExtendedPOS::NounProper : core::posToExtendedPos(entry.pos);
       break;
   }
   return entry;

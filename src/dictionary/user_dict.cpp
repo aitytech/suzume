@@ -7,6 +7,7 @@
 
 #include "core/types.h"
 #include "dictionary/source_parser.h"
+#include "normalize/utf8.h"
 
 namespace suzume::dictionary {
 
@@ -36,14 +37,16 @@ core::Expected<size_t, core::Error> UserDictionary::loadFromMemory(const char* d
   return parseSource(std::string_view(data, size));
 }
 
-void UserDictionary::addEntry(const DictionaryEntry& entry) {
-  if (entry.surface.empty() || !core::isValidPartOfSpeech(entry.pos) || !core::isValidExtendedPos(entry.extended_pos)) {
-    return;
+bool UserDictionary::addEntry(const DictionaryEntry& entry) {
+  if (entry.surface.empty() || !core::isValidPartOfSpeech(entry.pos) || !core::isValidExtendedPos(entry.extended_pos) ||
+      !normalize::isValidUtf8(entry.surface) || (!entry.lemma.empty() && !normalize::isValidUtf8(entry.lemma))) {
+    return false;
   }
 
   auto idx = static_cast<uint32_t>(entries_.size());
   entries_.push_back(entry);
   trie_.insert(entry.surface, idx);
+  return true;
 }
 
 std::vector<LookupResult> UserDictionary::lookup(std::string_view text, size_t start_pos) const {
@@ -103,14 +106,17 @@ core::Expected<size_t, core::Error> UserDictionary::parseSource(std::string_view
     parsed_entries.push_back(sourceToDictionaryEntry(source_entry));
   }
 
+  size_t installed_count = 0;
   entries_.reserve(entries_.size() + parsed_entries.size());
   for (auto& entry : parsed_entries) {
-    const auto idx = static_cast<uint32_t>(entries_.size());
-    entries_.push_back(std::move(entry));
-    trie_.insert(entries_.back().surface, idx);
+    installed_count += addEntry(entry) ? 1U : 0U;
   }
 
-  return parsed_entries.size();
+  if (installed_count == 0) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::ParseError, "Dictionary source contains no loadable entries"));
+  }
+  return installed_count;
 }
 
 }  // namespace suzume::dictionary

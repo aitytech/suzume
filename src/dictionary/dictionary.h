@@ -123,7 +123,8 @@ class DictionaryManager {
   /**
    * @brief Remove every source and binary user dictionary
    *
-   * Core dictionaries (the built-in L1 and optional core.dic) are retained.
+   * Core dictionaries and the automatically loaded bundled user dictionary
+   * are retained.
    */
   void clearUserDictionaries();
 
@@ -195,26 +196,35 @@ class DictionaryManager {
   core::Expected<size_t, core::Error> loadUserBinaryDictionaryFromMemoryResult(const uint8_t* data, size_t size);
 
   /**
+   * @brief Load the automatically discovered bundled user dictionary from file
+   *
+   * Bundled dictionaries remain installed when clearUserDictionaries() removes
+   * dictionaries explicitly added by the caller.
+   */
+  core::Expected<size_t, core::Error> loadBundledUserBinaryDictionaryResult(const std::string& path);
+
+  /**
+   * @brief Load an embedded bundled user dictionary from memory
+   *
+   * Bundled dictionaries remain installed when clearUserDictionaries() removes
+   * dictionaries explicitly added by the caller.
+   */
+  core::Expected<size_t, core::Error> loadBundledUserBinaryDictionaryFromMemoryResult(const uint8_t* data, size_t size);
+
+  /**
    * @brief Check if user binary dictionary is loaded
    */
   bool hasUserBinaryDictionary() const;
 
-  /**
-   * @brief Try to auto-load core.dic from standard paths
-   * @return true if loaded successfully
-   *
-   * Search order:
-   * 1. $SUZUME_DATA_DIR/core.dic
-   * 2. ./data/core.dic
-   * 3. ~/.suzume/core.dic
-   * 4. /usr/local/share/suzume/core.dic
-   * 5. /usr/share/suzume/core.dic
-   */
-  bool tryAutoLoadCoreDictionary();
-
  private:
+  core::Expected<size_t, core::Error> loadUserBinaryDictionaryResultInto(
+      const std::string& path, std::vector<std::unique_ptr<BinaryDictionary>>& dictionaries);
+  core::Expected<size_t, core::Error> loadUserBinaryDictionaryFromMemoryResultInto(
+      const uint8_t* data, size_t size, std::vector<std::unique_ptr<BinaryDictionary>>& dictionaries);
+
   std::unique_ptr<CoreDictionary> core_dict_;
   std::unique_ptr<BinaryDictionary> core_binary_dict_;
+  std::vector<std::unique_ptr<BinaryDictionary>> bundled_user_binary_dicts_;
   std::vector<std::unique_ptr<BinaryDictionary>> user_binary_dicts_;
   std::vector<std::shared_ptr<UserDictionary>> user_dicts_;
 };

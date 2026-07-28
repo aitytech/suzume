@@ -1,7 +1,9 @@
 #include "grammar/dictionary_expansion.h"
 
 #include <string>
+#include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "core/utf8_constants.h"
@@ -20,9 +22,9 @@ struct IAdjectiveSuffix {
 };
 
 constexpr IAdjectiveSuffix kIAdjectiveSuffixes[] = {
-    {"い", core::ExtendedPOS::AdjBasic},        {"かっ", core::ExtendedPOS::AdjKatt},
-    {"ければ", core::ExtendedPOS::AdjKeForm},   {"く", core::ExtendedPOS::AdjRenyokei},
-    {"かったら", core::ExtendedPOS::AdjKeForm}, {"そう", core::ExtendedPOS::AdjStem},
+    {"い", core::ExtendedPOS::AdjBasic},      {"く", core::ExtendedPOS::AdjRenyokei},
+    {"かっ", core::ExtendedPOS::AdjKatt},     {"けれ", core::ExtendedPOS::AdjKeForm},
+    {"かろ", core::ExtendedPOS::AdjMizenkei},
 };
 
 dictionary::DictionaryEntry makeBaseEntry(const dictionary::SourceEntry& source_entry) {
@@ -45,7 +47,8 @@ dictionary::DictionaryEntry makeBaseEntry(const dictionary::SourceEntry& source_
       entry.extended_pos = core::ExtendedPOS::NounProperGiven;
       break;
     default:
-      entry.extended_pos = core::posToExtendedPos(entry.pos);
+      entry.extended_pos =
+          source_entry.is_proper_noun ? core::ExtendedPOS::NounProper : core::posToExtendedPos(entry.pos);
       break;
   }
   return entry;
@@ -82,14 +85,14 @@ std::vector<dictionary::DictionaryEntry> expandVerb(const dictionary::Dictionary
     const std::string kanji_lemma = source_uses_kanji ? base_entry.lemma : "来る";
     const std::string kana_lemma = source_uses_kanji ? "くる" : base_entry.lemma;
     for (const auto& form : getKuruDictionaryForms()) {
-      result.push_back({form.kanji_surface, core::PartOfSpeech::Verb, form.extended_pos, kanji_lemma});
+      if (form.emit_kanji) {
+        result.push_back({form.kanji_surface, core::PartOfSpeech::Verb, form.extended_pos, kanji_lemma});
+      }
       // A one-mora kana dictionary edge (き/こ) is indistinguishable from
       // ordinary word-internal kana and receives the short-dictionary-verb
-      // bonus. Reverse inflection already generates these two forms with
-      // grammatical context, so only materialize the unambiguous 2+ mora
-      // kana spellings here.
-      const bool crosses_auxiliary_boundary = utf8::endsWithAny(form.kana_surface, {"られる", "れる"});
-      if (form.kana_surface.size() > core::kJapaneseCharBytes && !crosses_auxiliary_boundary) {
+      // bonus. Contextual candidate generation supplies the mizenkei before
+      // a selecting auxiliary, so only materialize the safe 2+ mora forms.
+      if (form.emit_kana && form.kana_surface.size() > core::kJapaneseCharBytes) {
         result.push_back({form.kana_surface, core::PartOfSpeech::Verb, form.extended_pos, kana_lemma});
       }
     }
@@ -135,30 +138,59 @@ std::vector<dictionary::DictionaryEntry> expandDictionarySourceEntry(const dicti
   return expandVerb(base_entry, conjTypeToVerbType(source_entry.conj_type));
 }
 
-DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictionary::SourceEntry>& source_entries) {
+DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictionary::SourceEntry>& source_entries,
+                                                        DictionaryExpansionOptions options) {
   DictionaryExpansionResult result;
-  struct SeenEntry {
+  struct EntryIdentity {
+    std::string surface;
+    core::PartOfSpeech pos;
+    core::ExtendedPOS extended_pos;
+    std::string lemma;
+
+    bool operator==(const EntryIdentity& other) const {
+      return std::tie(surface, pos, extended_pos, lemma) ==
+             std::tie(other.surface, other.pos, other.extended_pos, other.lemma);
+    }
+  };
+  struct EntryIdentityHash {
+    size_t operator()(const EntryIdentity& identity) const {
+      size_t hash = std::hash<std::string>{}(identity.surface);
+      hash ^= static_cast<size_t>(identity.pos) + 0x9E3779B9U + (hash << 6U) + (hash >> 2U);
+      hash ^= static_cast<size_t>(identity.extended_pos) + 0x9E3779B9U + (hash << 6U) + (hash >> 2U);
+      hash ^= std::hash<std::string>{}(identity.lemma) + 0x9E3779B9U + (hash << 6U) + (hash >> 2U);
+      return hash;
+    }
+  };
+  std::unordered_set<EntryIdentity, EntryIdentityHash> seen_entries;
+  struct SeenSurface {
     size_t index;
     size_t lemma_length;
     core::PartOfSpeech pos;
   };
-  std::unordered_map<std::string, SeenEntry> seen_surfaces;
+  std::unordered_map<std::string, SeenSurface> seen_surfaces;
 
   auto append_source = [&](const dictionary::SourceEntry& source_entry) {
     auto expanded_entries = expandDictionarySourceEntry(source_entry);
     const bool is_expanded = expanded_entries.size() > 1;
     for (auto& entry : expanded_entries) {
-      auto found = seen_surfaces.find(entry.surface);
-      if (found != seen_surfaces.end()) {
-        if (entry.pos == found->second.pos && entry.lemma.size() > found->second.lemma_length) {
-          found->second.lemma_length = entry.lemma.size();
-          result.entries[found->second.index] = std::move(entry);
+      if (options.preserve_surface_homographs) {
+        EntryIdentity identity{entry.surface, entry.pos, entry.extended_pos, entry.lemma};
+        if (!seen_entries.insert(std::move(identity)).second) {
+          ++result.duplicates_skipped;
+          continue;
         }
-        ++result.duplicates_skipped;
-        continue;
+      } else {
+        auto found = seen_surfaces.find(entry.surface);
+        if (found != seen_surfaces.end()) {
+          if (entry.pos == found->second.pos && entry.lemma.size() > found->second.lemma_length) {
+            found->second.lemma_length = entry.lemma.size();
+            result.entries[found->second.index] = std::move(entry);
+          }
+          ++result.duplicates_skipped;
+          continue;
+        }
+        seen_surfaces.emplace(entry.surface, SeenSurface{result.entries.size(), entry.lemma.size(), entry.pos});
       }
-      const size_t index = result.entries.size();
-      seen_surfaces.emplace(entry.surface, SeenEntry{index, entry.lemma.size(), entry.pos});
       result.entries.push_back(std::move(entry));
       if (is_expanded) {
         ++result.expanded_forms;
