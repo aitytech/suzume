@@ -89,6 +89,28 @@ bool isProductiveShiiAdjectiveTerminal(std::string_view surface, const grammar::
   return false;
 }
 
+bool hasContentEdgeEndingAt(const core::Lattice& lattice, size_t boundary) {
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(boundary)) {
+    if (core::isContentWord(lattice.getEdge(edge_id).pos)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool hasAttributiveEdgeEndingAt(const core::Lattice& lattice, size_t boundary) {
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(boundary)) {
+    const auto& edge = lattice.getEdge(edge_id);
+    if ((edge.pos == core::PartOfSpeech::Verb && (edge.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+                                                  edge.extended_pos == core::ExtendedPOS::VerbRentaikei ||
+                                                  edge.extended_pos == core::ExtendedPOS::VerbTaForm)) ||
+        (edge.pos == core::PartOfSpeech::Adjective && edge.extended_pos == core::ExtendedPOS::AdjBasic)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // A finite predicate followed by the closed negative-conjecture auxiliary owns
 // that boundary.  Unknown content candidates can otherwise start just before
 // it (forgetting the terminal kana of an Ichidan verb) or at the auxiliary and
@@ -109,15 +131,12 @@ bool overlapsPredicativeNegativeConjecture(const core::Lattice& lattice,
       if (aux_end > candidate_end || (candidate_start == aux_start && candidate_end == aux_end)) {
         continue;
       }
-      for (size_t predicate_start = 0; predicate_start < aux_start; ++predicate_start) {
-        for (const uint32_t edge_id : lattice.edgeIdsAt(predicate_start)) {
-          const auto& edge = lattice.getEdge(edge_id);
-          if (edge.end == aux_start && edge.pos == core::PartOfSpeech::Verb &&
-              (edge.extended_pos == core::ExtendedPOS::VerbShuushikei ||
-               edge.extended_pos == core::ExtendedPOS::VerbMizenkei ||
-               edge.extended_pos == core::ExtendedPOS::VerbRenyokei)) {
-            return true;
-          }
+      for (const uint32_t edge_id : lattice.edgeIdsEndingAt(aux_start)) {
+        const auto& edge = lattice.getEdge(edge_id);
+        if (edge.pos == core::PartOfSpeech::Verb && (edge.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+                                                     edge.extended_pos == core::ExtendedPOS::VerbMizenkei ||
+                                                     edge.extended_pos == core::ExtendedPOS::VerbRenyokei)) {
+          return true;
         }
       }
     }
@@ -219,13 +238,11 @@ bool startsInsideVerifiedNounAndAbsorbsSuru(const core::Lattice& lattice,
     if (!hasCompleteVerbLemma(dict_manager, suffix, candidate.end - suru_start, "する")) {
       continue;
     }
-    for (size_t noun_start = 0; noun_start < candidate.start; ++noun_start) {
-      for (const uint32_t edge_id : lattice.edgeIdsAt(noun_start)) {
-        const auto& noun = lattice.getEdge(edge_id);
-        if (noun.end == suru_start && noun.pos == core::PartOfSpeech::Noun &&
-            normalize::utf8Length(noun.surface) >= 2 && grammar::isAllKanji(noun.surface)) {
-          return true;
-        }
+    for (const uint32_t edge_id : lattice.edgeIdsEndingAt(suru_start)) {
+      const auto& noun = lattice.getEdge(edge_id);
+      if (noun.start < candidate.start && noun.pos == core::PartOfSpeech::Noun &&
+          normalize::utf8Length(noun.surface) >= 2 && grammar::isAllKanji(noun.surface)) {
+        return true;
       }
     }
   }
@@ -286,13 +303,11 @@ bool reopensObservedVerbAuxiliaryBoundary(const core::Lattice& lattice,
     if (auxiliary == nullptr) {
       continue;
     }
-    for (size_t edge_start = 0; edge_start < candidate.start; ++edge_start) {
-      for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-        const auto& edge = lattice.getEdge(edge_id);
-        if (edge.end == split && edge.pos == core::PartOfSpeech::Verb &&
-            verbFormLicensesAuxiliary(edge.extended_pos, auxiliary->extended_pos)) {
-          return true;
-        }
+    for (const uint32_t edge_id : lattice.edgeIdsEndingAt(split)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.start < candidate.start && edge.pos == core::PartOfSpeech::Verb &&
+          verbFormLicensesAuxiliary(edge.extended_pos, auxiliary->extended_pos)) {
+        return true;
       }
     }
   }
@@ -411,16 +426,11 @@ bool hasCompleteInternalConstituentBoundary(const core::Lattice& lattice,
              licenses_nominal_particle || licenses_suffix;
     };
     bool complete_left = false;
-    for (size_t edge_start = 0; edge_start <= candidate.start; ++edge_start) {
-      for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-        const auto& edge = lattice.getEdge(edge_id);
-        if (edge.end == split && left_licenses_right(edge.pos, edge.extended_pos, edge.lemmaVerified(),
-                                                     edge.start < candidate.start, edge.surface)) {
-          complete_left = true;
-          break;
-        }
-      }
-      if (complete_left) {
+    for (const uint32_t edge_id : lattice.edgeIdsEndingAt(split)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.start <= candidate.start && left_licenses_right(edge.pos, edge.extended_pos, edge.lemmaVerified(),
+                                                               edge.start < candidate.start, edge.surface)) {
+        complete_left = true;
         break;
       }
     }
@@ -550,6 +560,23 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
   auto candidates = unknown_gen_.generate(text, codepoints, start_pos, char_types);
 
   for (const auto& candidate : candidates) {
+    if (candidate.requires_left_content_edge &&
+        (candidate.start == 0 || !hasContentEdgeEndingAt(lattice, candidate.start - 1))) {
+      continue;
+    }
+    if (candidate.requires_left_attributive_edge && !hasAttributiveEdgeEndingAt(lattice, candidate.start)) {
+      continue;
+    }
+    if (candidate.rejects_preceding_content_edge && hasContentEdgeEndingAt(lattice, candidate.start)) {
+      continue;
+    }
+    if (candidate.bracketed_noun_rescue &&
+        std::any_of(candidates.begin(), candidates.end(), [&](const UnknownCandidate& alternative) {
+          return alternative.start == candidate.start && alternative.end > candidate.end &&
+                 core::isContentWord(alternative.pos);
+        })) {
+      continue;
+    }
     if (candidate.pos != core::PartOfSpeech::Particle &&
         joinsParticleToDictionaryAdverb(lattice, dict_manager_, text, byte_offsets, candidate.start, candidate.end)) {
       continue;

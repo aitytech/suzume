@@ -20,7 +20,8 @@ enum class EdgeFlags : uint8_t {
   FromDictionary = 1 << 0,
   FromUserDict = 1 << 1,
   IsFormalNoun = 1 << 2,
-  IsLowInfo = 1 << 3,
+  // Note: bit 3 is reserved for the removed IsLowInfo flag. Low-information
+  // status is derived exclusively from ExtendedPOS.
   // Note: bit 4 is reserved for kIsUnknown legacy constant
   HasCustomCost = 1 << 6,  // Edge carries a deliberately tuned cost (distinguishes a genuine 0.0)
   LemmaVerified = 1 << 7   // Lemma (base form) attested as a dictionary verb at generation time
@@ -62,7 +63,6 @@ struct LatticeEdge {
   static constexpr uint8_t kFromDictionary = static_cast<uint8_t>(EdgeFlags::FromDictionary);
   static constexpr uint8_t kFromUserDict = static_cast<uint8_t>(EdgeFlags::FromUserDict);
   static constexpr uint8_t kIsFormalNoun = static_cast<uint8_t>(EdgeFlags::IsFormalNoun);
-  static constexpr uint8_t kIsLowInfo = static_cast<uint8_t>(EdgeFlags::IsLowInfo);
   static constexpr uint8_t kIsUnknown = 1 << 4;
   static constexpr uint8_t kHasCustomCost = static_cast<uint8_t>(EdgeFlags::HasCustomCost);
   static constexpr uint8_t kLemmaVerified = static_cast<uint8_t>(EdgeFlags::LemmaVerified);
@@ -71,7 +71,6 @@ struct LatticeEdge {
   bool fromDictionary() const { return hasFlag(flags, EdgeFlags::FromDictionary); }
   bool fromUserDict() const { return hasFlag(flags, EdgeFlags::FromUserDict); }
   bool isFormalNoun() const { return hasFlag(flags, EdgeFlags::IsFormalNoun); }
-  bool isLowInfo() const { return hasFlag(flags, EdgeFlags::IsLowInfo); }
   bool hasCustomCost() const { return hasFlag(flags, EdgeFlags::HasCustomCost); }
   // A dictionary edge's lemma is dictionary-attested by definition, so OR in
   // fromDictionary(): consumers see a strict superset of the dictionary gate.

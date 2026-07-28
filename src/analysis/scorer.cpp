@@ -62,8 +62,21 @@ constexpr size_t posToIndex(suzume::core::PartOfSpeech pos) {
   return 12;
 }
 
+suzume::analysis::BigramOverrideCostTable makeBigramOverrideTable(const suzume::analysis::ScorerOptions& options) {
+  suzume::analysis::BigramOverrideCostTable table{};
+  for (auto& row : table) {
+    row.fill(std::numeric_limits<float>::quiet_NaN());
+  }
+  for (const suzume::analysis::BigramOverrideSpec& spec : suzume::analysis::kBigramOverrideSpecs) {
+    const size_t prev_index = posToIndex(spec.prev);
+    const size_t next_index = posToIndex(spec.next);
+    table[prev_index][next_index] = options.bigram.*(spec.value);
+  }
+  return table;
+}
+
 // Bigram cost table [prev][next]
-// Scale reference: kTrivial=0.2, kMinor=0.5, kModerate=1.0, kStrong=1.5
+// Scale reference: kNegligible=0.2, kMinor=0.5, kRare=1.0, kStrong=1.5
 // Negative values = bonus (encourages connection)
 // clang-format off
 constexpr float kBigramCostTable[13][13] = {
@@ -88,7 +101,8 @@ constexpr float kBigramCostTable[13][13] = {
 
 namespace suzume::analysis {
 
-Scorer::Scorer(const ScorerOptions& options) : options_(options) {}
+Scorer::Scorer(const ScorerOptions& options)
+    : options_(options), bigram_override_costs_(makeBigramOverrideTable(options)) {}
 
 float Scorer::posPrior(core::PartOfSpeech pos) const {
   switch (pos) {
@@ -112,18 +126,10 @@ float Scorer::posPrior(core::PartOfSpeech pos) const {
 }
 
 float Scorer::bigramCost(core::PartOfSpeech prev, core::PartOfSpeech next) const {
-  // Only the exposed POS pairs have runtime-tunable values.  The descriptor
-  // table keeps that public list and its lookup in one place.
-  for (const BigramOverrideSpec& spec : kBigramOverrideSpecs) {
-    if (prev == spec.prev && next == spec.next) {
-      const float override_value = options_.bigram.*(spec.value);
-      if (!std::isnan(override_value)) {
-        return override_value;
-      }
-      break;
-    }
+  const float override_value = bigram_override_costs_[posToIndex(prev)][posToIndex(next)];
+  if (!std::isnan(override_value)) {
+    return override_value;
   }
-
   // Fall back to default table
   return kBigramCostTable[posToIndex(prev)][posToIndex(next)];
 }

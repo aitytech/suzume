@@ -29,6 +29,7 @@ using ByteOffsets = std::vector<size_t>;
 using PartOfSpeechMask = uint32_t;
 
 inline constexpr size_t kDictionaryLookbehindChars = 8;
+inline constexpr size_t kClosedClassProbeChars = 5;
 
 constexpr PartOfSpeechMask partOfSpeechMask(core::PartOfSpeech pos) {
   return 1U << static_cast<uint8_t>(pos);
@@ -142,6 +143,9 @@ size_t advanceCharsToBytePos(const std::vector<char32_t>& codepoints, size_t sta
  * @brief Encode a codepoint range as UTF-8.
  */
 std::string extractSubstring(const std::vector<char32_t>& codepoints, size_t start, size_t end);
+
+/** Encode only the bounded closed-class lookahead starting at @p start. */
+std::string extractClosedClassProbe(const std::vector<char32_t>& codepoints, size_t start);
 
 /** Whether a position begins a case/topic/nominalizer particle sequence. */
 bool startsNominalForcingParticle(const std::vector<char32_t>& codepoints, size_t pos);

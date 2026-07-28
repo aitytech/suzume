@@ -1,6 +1,7 @@
 #ifndef SUZUME_ANALYSIS_SCORER_H_
 #define SUZUME_ANALYSIS_SCORER_H_
 
+#include <array>
 #include <cmath>
 #include <limits>
 
@@ -10,6 +11,11 @@
 #include "grammar/inflection_scorer.h"
 
 namespace suzume::analysis {
+
+// Public POS values collapse to the 13 scoring profiles used by the static
+// bigram matrix (Interjection, Other, and Unknown share the final profile).
+inline constexpr size_t kScoringPosClassCount = 13;
+using BigramOverrideCostTable = std::array<std::array<float, kScoringPosClassCount>, kScoringPosClassCount>;
 
 /**
  * @brief Scoring options
@@ -138,6 +144,7 @@ class Scorer {
 
  private:
   ScorerOptions options_;
+  BigramOverrideCostTable bigram_override_costs_;
 
   /**
    * @brief Calculate bigram connection cost

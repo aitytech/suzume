@@ -166,7 +166,8 @@ bool startsInsideKanjiLedVerb(const core::Lattice& lattice, const std::vector<ch
 // the adverb available at a real boundary while protecting the longer
 // grammatical edge that crosses this position.
 bool startsInsideVerifiedPredicate(const core::Lattice& lattice, size_t start_pos) {
-  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
+  const size_t scan_start = start_pos > kDictionaryLookbehindChars ? start_pos - kDictionaryLookbehindChars : 0;
+  for (size_t edge_start = scan_start; edge_start < start_pos; ++edge_start) {
     for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
       const auto& edge = lattice.getEdge(edge_id);
       if (edge.end <= start_pos || !edge.lemmaVerified()) {
@@ -216,13 +217,11 @@ bool overlapsCompleteIAdjectiveBeforeParticles(const core::Lattice& lattice,
       !canSegmentAsParticles(dict_manager, codepoints, start_pos + 1, end_pos)) {
     return false;
   }
-  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
-    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-      const auto& edge = lattice.getEdge(edge_id);
-      if (edge.end == start_pos + 1 && edge.pos == core::PartOfSpeech::Adjective &&
-          edge.extended_pos == core::ExtendedPOS::AdjBasic && edge.origin == core::CandidateOrigin::AdjectiveI) {
-        return true;
-      }
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(start_pos + 1)) {
+    const auto& edge = lattice.getEdge(edge_id);
+    if (edge.start < start_pos && edge.pos == core::PartOfSpeech::Adjective &&
+        edge.extended_pos == core::ExtendedPOS::AdjBasic && edge.origin == core::CandidateOrigin::AdjectiveI) {
+      return true;
     }
   }
   return false;
@@ -382,18 +381,13 @@ bool startsLiteraryNitsukeAt(const core::Lattice& lattice, const std::vector<cha
 bool hasPrecedingDeverbalNoun(const core::Lattice& lattice, size_t start_pos) {
   bool has_noun = false;
   bool has_renyokei = false;
-  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
-    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-      const auto& edge = lattice.getEdge(edge_id);
-      if (edge.end != start_pos) {
-        continue;
-      }
-      if (grammar::containsKanji(edge.surface) && edge.pos == core::PartOfSpeech::Noun) {
-        has_noun = true;
-      }
-      if (grammar::containsKanji(edge.surface) && edge.extended_pos == core::ExtendedPOS::VerbRenyokei) {
-        has_renyokei = true;
-      }
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(start_pos)) {
+    const auto& edge = lattice.getEdge(edge_id);
+    if (grammar::containsKanji(edge.surface) && edge.pos == core::PartOfSpeech::Noun) {
+      has_noun = true;
+    }
+    if (grammar::containsKanji(edge.surface) && edge.extended_pos == core::ExtendedPOS::VerbRenyokei) {
+      has_renyokei = true;
     }
   }
   return has_noun && has_renyokei;
@@ -404,12 +398,10 @@ bool hasPrecedingDeverbalNoun(const core::Lattice& lattice, size_t start_pos) {
 // (醒まし/て, さまし/て).  Requiring both the shared end and verified lemma
 // keeps ordinary polite chains such as 食べ/まし/て and 読み/まし/て intact.
 bool hasCoveringVerifiedVerbRenyokei(const core::Lattice& lattice, size_t interior_start, size_t shared_end) {
-  for (size_t edge_start = 0; edge_start < interior_start; ++edge_start) {
-    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-      const auto& edge = lattice.getEdge(edge_id);
-      if (edge.end == shared_end && edge.extended_pos == core::ExtendedPOS::VerbRenyokei && edge.lemmaVerified()) {
-        return true;
-      }
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(shared_end)) {
+    const auto& edge = lattice.getEdge(edge_id);
+    if (edge.start < interior_start && edge.extended_pos == core::ExtendedPOS::VerbRenyokei && edge.lemmaVerified()) {
+      return true;
     }
   }
   return false;
@@ -420,24 +412,20 @@ bool hasCoveringVerifiedVerbRenyokei(const core::Lattice& lattice, size_t interi
 // candidate ending at start_pos mistakes homographic word endings for an
 // independent auxiliary and suppresses the following particle.
 bool hasPrecedingVerbVolitionalChain(const core::Lattice& lattice, size_t start_pos) {
-  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
-    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-      const auto& edge = lattice.getEdge(edge_id);
-      if (edge.end != start_pos || (edge.extended_pos != core::ExtendedPOS::AuxVolitional &&
-                                    edge.extended_pos != core::ExtendedPOS::AuxNegativeMai)) {
-        continue;
-      }
-      for (size_t verb_start = 0; verb_start < edge.start; ++verb_start) {
-        for (const uint32_t verb_id : lattice.edgeIdsAt(verb_start)) {
-          const auto& verb = lattice.getEdge(verb_id);
-          const bool licenses_volitional = edge.extended_pos == core::ExtendedPOS::AuxVolitional &&
-                                           verb.extended_pos == core::ExtendedPOS::VerbMizenkei;
-          const bool licenses_negative_intent = edge.extended_pos == core::ExtendedPOS::AuxNegativeMai &&
-                                                verb.extended_pos == core::ExtendedPOS::VerbShuushikei;
-          if (verb.end == edge.start && (licenses_volitional || licenses_negative_intent)) {
-            return true;
-          }
-        }
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(start_pos)) {
+    const auto& edge = lattice.getEdge(edge_id);
+    if (edge.extended_pos != core::ExtendedPOS::AuxVolitional &&
+        edge.extended_pos != core::ExtendedPOS::AuxNegativeMai) {
+      continue;
+    }
+    for (const uint32_t verb_id : lattice.edgeIdsEndingAt(edge.start)) {
+      const auto& verb = lattice.getEdge(verb_id);
+      const bool licenses_volitional =
+          edge.extended_pos == core::ExtendedPOS::AuxVolitional && verb.extended_pos == core::ExtendedPOS::VerbMizenkei;
+      const bool licenses_negative_intent = edge.extended_pos == core::ExtendedPOS::AuxNegativeMai &&
+                                            verb.extended_pos == core::ExtendedPOS::VerbShuushikei;
+      if (licenses_volitional || licenses_negative_intent) {
+        return true;
       }
     }
   }
@@ -448,6 +436,31 @@ bool hasPrecedingNominal(const core::Lattice& lattice, size_t start_pos) {
   constexpr PartOfSpeechMask kNominalMask =
       partOfSpeechMask(core::PartOfSpeech::Noun) | partOfSpeechMask(core::PartOfSpeech::Pronoun);
   return hasPrecedingPartOfSpeech(lattice, start_pos, kNominalMask);
+}
+
+// A two-mora conjunction candidate can straddle the productive boundary in
+// AdjNaAdj + な + お/ご + nominal (重要+な+お+知らせ). A preceding
+// dictionary-verified na-adjective and a kanji/katakana head on the right make
+// that structure explicit, including open-class heads absent from the
+// dictionary, so the discourse-conjunction homograph is unavailable. Requiring
+// dictionary evidence keeps incidental unknown adjective candidates from
+// suppressing a real conjunction after a completed clause.
+bool crossesAttributiveNaHonorificNominal(const core::Lattice& lattice, const std::vector<char32_t>& codepoints,
+                                          size_t start_pos, size_t end_pos) {
+  if (end_pos != start_pos + 2 || end_pos >= codepoints.size() || codepoints[start_pos] != U'な' ||
+      !grammar::isHonorificPrefix(extractSubstring(codepoints, start_pos + 1, end_pos)) ||
+      (!normalize::isKanjiCodepoint(codepoints[end_pos]) &&
+       normalize::classifyChar(codepoints[end_pos]) != normalize::CharType::Katakana)) {
+    return false;
+  }
+
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(start_pos)) {
+    const auto& edge = lattice.getEdge(edge_id);
+    if (edge.extended_pos == core::ExtendedPOS::AdjNaAdj && edge.fromDictionary()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // The temporal noun 間 is licensed after a completed attributive predicate.
@@ -469,13 +482,10 @@ bool hasPrecedingAttributivePredicate(const core::Lattice& lattice, size_t start
 // that structural edge to distinguish 終了|間もなく from a candidate that
 // would reopen the interior of 時間 (時|間もなく).
 bool hasPrecedingTemporalCompoundBoundary(const core::Lattice& lattice, size_t start_pos) {
-  for (size_t edge_start = 0; edge_start < start_pos; ++edge_start) {
-    for (const uint32_t edge_id : lattice.edgeIdsAt(edge_start)) {
-      const auto& edge = lattice.getEdge(edge_id);
-      if (edge.end == start_pos && edge.pos == core::PartOfSpeech::Noun &&
-          edge.origin == core::CandidateOrigin::PrefixCompound) {
-        return true;
-      }
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(start_pos)) {
+    const auto& edge = lattice.getEdge(edge_id);
+    if (edge.pos == core::PartOfSpeech::Noun && edge.origin == core::CandidateOrigin::PrefixCompound) {
+      return true;
     }
   }
   return false;
@@ -515,6 +525,30 @@ bool startsParticleBeforeReduplicatedMimetic(const std::vector<char32_t>& codepo
          codepoints[rest + 4] == U'と';
 }
 
+// Kyoto honorific やす is a closed auxiliary, but its two-mora surface is also
+// the stem of the productive difficulty adjective やすい. Admit the honorific
+// only after the local honorific construction that licenses it: お/ご plus a
+// verb continuative, or a benefactive request form. This keeps 読み+やすかっ
+// as an adjective while preserving お+見+やす and 読んで+おくれ+やす.
+bool followsKyotoHonorificYasuHost(const core::Lattice& lattice, size_t start_pos) {
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(start_pos)) {
+    const auto& edge = lattice.getEdge(edge_id);
+    if (edge.extended_pos == core::ExtendedPOS::AuxBenefactive) {
+      return true;
+    }
+    if (edge.extended_pos != core::ExtendedPOS::VerbRenyokei) {
+      continue;
+    }
+    for (const uint32_t prefix_id : lattice.edgeIdsEndingAt(edge.start)) {
+      const auto& prefix = lattice.getEdge(prefix_id);
+      if (prefix.extended_pos == core::ExtendedPOS::Prefix && grammar::isHonorificPrefix(prefix.surface)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view text,
@@ -534,6 +568,17 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
                     core::LatticeEdge::kFromDictionary, "につけ", dictionary::ConjugationType::None,
                     core::CandidateOrigin::Dictionary, candidate::kDictionaryOriginConfidence, {},
                     core::ExtendedPOS::ParticleConj, "literary_nitsuke");
+  }
+
+  const bool starts_kyoto_honorific_yasu = start_pos + 1 < codepoints.size() && codepoints[start_pos] == U'や' &&
+                                           codepoints[start_pos + 1] == U'す' &&
+                                           followsKyotoHonorificYasuHost(lattice, start_pos);
+  if (starts_kyoto_honorific_yasu) {
+    lattice.addEdge("やす", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 2),
+                    core::PartOfSpeech::Auxiliary, getCategoryCost(core::ExtendedPOS::AuxHonorific),
+                    core::LatticeEdge::kFromDictionary, "やす", dictionary::ConjugationType::None,
+                    core::CandidateOrigin::Dictionary, candidate::kDictionaryOriginConfidence, {},
+                    core::ExtendedPOS::AuxHonorific, "kyoto_honorific_yasu");
   }
 
   if (codepoints[start_pos] == U'方' && hasPrecedingDeverbalNoun(lattice, start_pos)) {
@@ -653,6 +698,18 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // Calculate end position in characters before context-sensitive candidate
     // guards below inspect the following lexical head.
     size_t end_pos = start_pos + result.length;
+
+    // A one-kanji formal-noun homograph cannot claim the tail of an ongoing
+    // kanji compound immediately before an adverbial particle
+    // (行為+やら, 当時+やら, 室内+やら). The particle identifies the complete
+    // nominal boundary, while genuine productive formal-noun uses such as
+    // 年度+末 and 期間+内 remain available in their ordinary contexts.
+    if (result.entry->extended_pos == core::ExtendedPOS::NounFormal && result.length == 1 && start_pos > 0 &&
+        normalize::isKanjiCodepoint(codepoints[start_pos - 1]) && end_pos < codepoints.size() &&
+        lookupResultsHaveExtendedPOS(dict_manager_.lookup(text, byteOffsetAt(byte_offsets, end_pos)),
+                                     core::ExtendedPOS::ParticleAdverbial)) {
+      continue;
+    }
 
     // A registered word is no more entitled to the material in front of the
     // nominalizer っこ than a constructed one is (で+きっ+こない for できっこない).
@@ -981,6 +1038,9 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // lexical only at a clause boundary. Inside a phrase, keep the ordinary
     // predicate boundary (もしか+する+と).
     if (result.entry->pos == core::PartOfSpeech::Conjunction && start_pos > 0) {
+      if (crossesAttributiveNaHonorificNominal(lattice, codepoints, start_pos, end_pos)) {
+        continue;
+      }
       bool decomposes_as_verb_particle = false;
       for (size_t split = 1; split < result.length; ++split) {
         const std::string left = extractSubstring(codepoints, start_pos, start_pos + split);
@@ -1456,17 +1516,10 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 
     const bool is_fused_demo = result.length == 2 && end_pos >= 2 && codepoints[end_pos - 2] == U'で' &&
                                codepoints[end_pos - 1] == U'も' &&
-                               (result.entry->extended_pos == core::ExtendedPOS::ParticleAdverbial ||
-                                result.entry->extended_pos == core::ExtendedPOS::Conjunction);
-    const bool follows_interrogative =
-        is_fused_demo && hasInterrogativeEndingAt(dict_manager_, text, byte_offsets, start_pos);
+                               result.entry->extended_pos == core::ExtendedPOS::ParticleAdverbial;
     if (is_fused_demo && verb_helpers::naiNegativeFollowsAt(codepoints, end_pos) &&
-        hasPrecedingNominal(lattice, start_pos) && !follows_interrogative) {
+        hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::AdjNaAdj)) {
       continue;
-    }
-    if (is_fused_demo && verb_helpers::naiNegativeFollowsAt(codepoints, end_pos) && !follows_interrogative) {
-      cost += candidate::kFusedDemoNegativePenalty;
-      flags |= core::LatticeEdge::kHasCustomCost;
     }
 
     // A bare え-row dict-verb imperative closing a clause (書け, 止まれ) is the 命令形 of the
