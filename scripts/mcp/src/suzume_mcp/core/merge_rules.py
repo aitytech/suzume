@@ -210,6 +210,28 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     if applied_rule is None:
                         applied_rule = "url"
 
+        # 1c. Mixed-script reduplication (一つひとつ, 一人ひとり). Writing the same
+        # word twice in two scripts is how the distributive adverbial is spelled,
+        # and the two halves are one search unit. The reference analyzer merges
+        # only the pairs its lexicon happens to list, which is why 一つひとつ確認する
+        # comes back whole while 一つひとつ調べる comes back split. Matching on the
+        # reading is what makes the pattern general; requiring the surfaces to
+        # differ is what keeps an identical repetition (二つ二つに分ける) out, where
+        # two separate quantities are a live reading. A reduplication written
+        # entirely in kanji (一人一人, 一件一件) is already covered by the
+        # number+counter rule below.
+        if not merged and t.get("pos") == "名詞" and i + 1 < len(tokens):
+            nxt = tokens[i + 1]
+            reading = t.get("reading", "")
+            surface = t.get("surface", "")
+            if reading and nxt.get("pos") == "名詞" and nxt.get("reading") == reading and nxt.get("surface") != surface:
+                combined = surface + nxt.get("surface", "")
+                result.append({"surface": combined, "pos": "名詞", "pos_sub1": "数", "lemma": combined})
+                i += 2
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "mixed-script-reduplication"
+
         # 2. Number + counter/katakana
         if not merged and t.get("pos") == "名詞" and t.get("pos_sub1") == "数":
             j = i + 1
