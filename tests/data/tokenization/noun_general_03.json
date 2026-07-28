@@ -1107,6 +1107,92 @@
       ],
       "id": "tomodachini_u",
       "input": "ともだちに会う"
+    },
+    {
+      "description": "State suffix まみれ keeps its host boundary",
+      "expected": [
+        {
+          "lemma": "泥",
+          "pos": "Noun",
+          "surface": "泥"
+        },
+        {
+          "lemma": "まみれ",
+          "pos": "Suffix",
+          "surface": "まみれ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        }
+      ],
+      "id": "mamireno",
+      "input": "泥まみれの作業"
+    },
+    {
+      "description": "A plain nominal host takes the copular frame で plus も",
+      "expected": [
+        {
+          "lemma": "学生",
+          "pos": "Noun",
+          "surface": "学生"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "demonai_3",
+      "input": "学生でもない"
+    },
+    {
+      "description": "Nominalized 多く heads a noun phrase before a binding particle",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "多く",
+          "pos": "Noun",
+          "surface": "多く"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "古い",
+          "pos": "Adjective",
+          "surface": "古い"
+        }
+      ],
+      "id": "no_kuha_i",
+      "input": "本の多くは古い"
     }
   ],
   "description": "General nouns (part 3/3)",

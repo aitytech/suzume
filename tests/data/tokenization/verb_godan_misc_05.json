@@ -1661,6 +1661,315 @@
       ],
       "id": "arinomamawo_eru",
       "input": "ありのままを伝える"
+    },
+    {
+      "description": "Honorific prefix お is not separable from an all-hiragana lexeme",
+      "expected": [
+        {
+          "lemma": "おなか",
+          "pos": "Noun",
+          "surface": "おなか"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "すく",
+          "pos": "Verb",
+          "surface": "すい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "onakagasuita",
+      "input": "おなかがすいた"
+    },
+    {
+      "description": "Honorific prefix お stays separable before a kanji noun",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "仕事",
+          "pos": "Noun",
+          "surface": "仕事"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "頼む",
+          "pos": "Verb",
+          "surface": "頼む"
+        }
+      ],
+      "id": "o_wo_mu",
+      "input": "お仕事を頼む"
+    },
+    {
+      "description": "Noun plus the verb-forming suffix めく is one derived verb",
+      "expected": [
+        {
+          "lemma": "謎めく",
+          "pos": "Verb",
+          "surface": "謎めい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "meita",
+      "input": "謎めいた話"
+    },
+    {
+      "description": "Noun plus the verb-forming suffix めかす is one derived verb",
+      "expected": [
+        {
+          "lemma": "冗談めかす",
+          "pos": "Verb",
+          "surface": "冗談めかし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "言い方",
+          "pos": "Noun",
+          "surface": "言い方"
+        }
+      ],
+      "id": "mekashita_i",
+      "input": "冗談めかした言い方"
+    },
+    {
+      "description": "State suffix っぱなし keeps its host boundary",
+      "expected": [
+        {
+          "lemma": "開ける",
+          "pos": "Verb",
+          "surface": "開け"
+        },
+        {
+          "lemma": "っぱなし",
+          "pos": "Suffix",
+          "surface": "っぱなし"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "窓",
+          "pos": "Noun",
+          "surface": "窓"
+        }
+      ],
+      "id": "kettpanashino",
+      "input": "開けっぱなしの窓"
+    },
+    {
+      "description": "Case particle plus the verb 増す is not the がましい suffix",
+      "expected": [
+        {
+          "lemma": "効果",
+          "pos": "Noun",
+          "surface": "効果"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "増す",
+          "pos": "Verb",
+          "surface": "増し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ga_shita_2",
+      "input": "効果が増した"
+    },
+    {
+      "description": "Lexicalized めく host keeps the same single-verb boundary",
+      "expected": [
+        {
+          "lemma": "春めく",
+          "pos": "Verb",
+          "surface": "春めい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "日差し",
+          "pos": "Noun",
+          "surface": "日差し"
+        }
+      ],
+      "id": "meita_shi",
+      "input": "春めいた日差し"
+    },
+    {
+      "description": "Concessive でも stays one particle before a non-evaluative predicate",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        }
+      ],
+      "id": "todemoiubeki",
+      "input": "確認とでもいうべき"
+    },
+    {
+      "description": "Concessive でも stays one particle before a non-evaluative predicate",
+      "expected": [
+        {
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かる"
+        }
+      ],
+      "id": "demo_karu",
+      "input": "子供でも分かる"
+    },
+    {
+      "description": "Classical perfective ぬ plus べし after a continuative",
+      "expected": [
+        {
+          "lemma": "散る",
+          "pos": "Verb",
+          "surface": "散り"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べし"
+        }
+      ],
+      "id": "rinubeshi",
+      "input": "散りぬべし"
+    },
+    {
+      "description": "Nominalized 多く heads an adnominal phrase before の",
+      "expected": [
+        {
+          "lemma": "多く",
+          "pos": "Noun",
+          "surface": "多く"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "kuno_wo_mu",
+      "input": "多くの本を読む"
+    },
+    {
+      "description": "The continuative reading survives before a predicate",
+      "expected": [
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多く"
+        },
+        {
+          "lemma": "集まる",
+          "pos": "Verb",
+          "surface": "集まる"
+        }
+      ],
+      "id": "ga_ku_maru",
+      "input": "人が多く集まる"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",

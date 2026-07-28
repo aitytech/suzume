@@ -789,6 +789,28 @@
       ],
       "id": "nantoiu",
       "input": "なんという結果"
+    },
+    {
+      "description": "An interrogative host keeps the indefinite でも",
+      "expected": [
+        {
+          "lemma": "どちら",
+          "pos": "Pronoun",
+          "surface": "どちら"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "dochirademoyoi",
+      "input": "どちらでもよい"
     }
   ],
   "description": "Basic tokenization tests",

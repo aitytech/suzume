@@ -2025,6 +2025,33 @@
       ],
       "id": "arinomama_suru",
       "input": "ありのまま確認する"
+    },
+    {
+      "description": "A sa-hen noun reaches classical ぬ through its continuative",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べし"
+        }
+      ],
+      "id": "shinubeshi",
+      "input": "確認しぬべし"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

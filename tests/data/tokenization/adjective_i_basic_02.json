@@ -2159,6 +2159,104 @@
       ],
       "id": "na_ga_kiru",
       "input": "大変な問題が起きる"
+    },
+    {
+      "description": "Honorific prefix お is not separable from an all-hiragana lexeme",
+      "expected": [
+        {
+          "lemma": "おごそか",
+          "pos": "Adjective",
+          "surface": "おごそか"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なる"
+        },
+        {
+          "lemma": "式",
+          "pos": "Noun",
+          "surface": "式"
+        }
+      ],
+      "id": "ogosokanaru",
+      "input": "おごそかなる式"
+    },
+    {
+      "description": "Honorific prefix お is not separable from an all-hiragana lexeme",
+      "expected": [
+        {
+          "lemma": "おだやか",
+          "pos": "Adjective",
+          "surface": "おだやか"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "海",
+          "pos": "Noun",
+          "surface": "海"
+        }
+      ],
+      "id": "odayakana",
+      "input": "おだやかな海"
+    },
+    {
+      "description": "Productive がましい derivation is one adjective",
+      "expected": [
+        {
+          "lemma": "恩着せがましい",
+          "pos": "Adjective",
+          "surface": "恩着せがまし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じる"
+        }
+      ],
+      "id": "segamashisawo_jiru",
+      "input": "恩着せがましさを感じる"
+    },
+    {
+      "description": "A kanji adverb whose stem stands alone keeps the に boundary",
+      "expected": [
+        {
+          "lemma": "滅多",
+          "pos": "Adjective",
+          "surface": "滅多"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "ninai",
+      "input": "滅多にない話"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",

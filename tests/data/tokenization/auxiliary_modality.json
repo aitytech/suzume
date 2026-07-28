@@ -2105,6 +2105,65 @@
       ],
       "id": "nandakoreha",
       "input": "なんだこれは"
+    },
+    {
+      "description": "Degree suffix げ keeps its host boundary",
+      "expected": [
+        {
+          "lemma": "得意",
+          "pos": "Noun",
+          "surface": "得意"
+        },
+        {
+          "lemma": "げ",
+          "pos": "Suffix",
+          "surface": "げ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "顔",
+          "pos": "Noun",
+          "surface": "顔"
+        }
+      ],
+      "id": "gena",
+      "input": "得意げな顔"
+    },
+    {
+      "description": "Lexicalized adverb 折しも is one search unit",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "折しも",
+          "pos": "Adverb",
+          "surface": "折しも"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "no_shimo_da",
+      "input": "確認の折しも問題だ"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

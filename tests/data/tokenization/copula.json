@@ -1349,6 +1349,28 @@
       ],
       "id": "madamashina_da",
       "input": "まだましな結果だ"
+    },
+    {
+      "description": "Lexicalized adverb 実に is one search unit",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da",
+      "input": "実に重要だ"
     }
   ],
   "description": "Copula patterns (だ、です、である)",
