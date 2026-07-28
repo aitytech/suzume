@@ -1315,6 +1315,38 @@
       ],
       "id": "yamuwo_zu_suru",
       "input": "やむを得ず延期する"
+    },
+    {
+      "description": "辞書内容語の直後の助詞を名詞昇格が飲まない",
+      "expected": [
+        {
+          "lemma": "ただ",
+          "pos": "Adverb",
+          "surface": "ただ"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "手",
+          "pos": "Noun",
+          "surface": "手"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "入る",
+          "pos": "Verb",
+          "surface": "入る"
+        }
+      ],
+      "id": "tadade_ni_ru",
+      "input": "ただで手に入る"
     }
   ],
   "description": "adverb tests",

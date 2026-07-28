@@ -75,6 +75,7 @@ from .postprocessors import (
     postprocess_sou_aux,
     postprocess_state_suffix,
     postprocess_subsidiary_yuku,
+    postprocess_tada,
     postprocess_tagaru_aux,
     postprocess_taihen,
     postprocess_te_form_contraction,
@@ -187,6 +188,7 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     # Post-processing: context-dependent POS normalization
     postprocess_sou(tokens)
     postprocess_ikaga(tokens)
+    postprocess_tada(tokens)
     postprocess_demo(tokens)
     if postprocess_hiragana_yaka_adverbial(tokens) and applied_rule is None:
         applied_rule = "hiragana-yaka-adverbial"

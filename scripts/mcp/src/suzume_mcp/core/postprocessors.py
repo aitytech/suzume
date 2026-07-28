@@ -252,6 +252,23 @@ def postprocess_ikaga(tokens: list[dict]) -> None:
             t["pos"] = "Adverb"
 
 
+def postprocess_tada(tokens: list[dict]) -> None:
+    """Context-dependent ただ normalization.
+
+    The reference dictionary defaults ただ to the clause-opening conjunction
+    ("however"), but directly before で it is the adverbial noun meaning "free
+    of charge" (ただで手に入る, ただでさえ, ただでは済まない). The conjunction
+    reading needs a clause boundary, which shows up as punctuation, so gating on
+    the immediately following で keeps it untouched.
+    """
+    for i, t in enumerate(tokens):
+        if t.get("surface") != "ただ" or t.get("pos") != "Conjunction":
+            continue
+        if i + 1 < len(tokens) and tokens[i + 1].get("surface") == "で":
+            t["pos"] = "Adverb"
+            t["lemma"] = "ただ"
+
+
 def postprocess_demo(tokens: list[dict]) -> None:
     """Use Suzume's ambiguity policy: homographic でも is a bound particle."""
     for t in tokens:

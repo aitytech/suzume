@@ -87,6 +87,22 @@ bool isInternalParticleChar(char32_t code_point) {
   }
 }
 
+// True when [start_pos, end_pos) is itself a listed content word. Function
+// words are excluded: a run that has so far spelled only a particle or an
+// auxiliary has not ended a word, which is exactly the position where a
+// following particle char is still word-internal (と in ともだち).
+bool closesContentWord(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                       const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos <= start_pos) {
+    return false;
+  }
+  const auto* entry = dict_manager->lookupExact(extractSubstring(codepoints, start_pos, end_pos));
+  if (entry == nullptr) {
+    return false;
+  }
+  return entry->pos != core::PartOfSpeech::Particle && entry->pos != core::PartOfSpeech::Auxiliary;
+}
+
 // A generated hiragana noun cannot consist solely of two or more closed
 // particles. The dynamic program preserves a complete multi-mora particle as
 // one grammatical unit while rejecting accidental noun rescue paths such as
@@ -712,7 +728,12 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
         // particle (…およぎ|に|行く): stop before it so the right-bracket test sees it.
         // At the run's end it is word-final (こども), so keep it, capped by max_internal.
         bool word_follows = scan + 1 < codepoints.size() && char_types[scan + 1] != normalize::CharType::Hiragana;
-        if (word_follows || internal_particles >= max_internal) {
+        // A particle is only word-internal where no word has ended yet. Once the
+        // run so far is itself a listed content word, the particle attaches to
+        // that word (ただ+で), and swallowing it invents a nominal that then
+        // outscores the real adverb.
+        if (word_follows || internal_particles >= max_internal ||
+            closesContentWord(codepoints, start_pos, scan, dict_manager_)) {
           break;
         }
         ++internal_particles;

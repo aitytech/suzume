@@ -1085,6 +1085,28 @@
       ],
       "id": "tokaiu",
       "input": "確認とかいう話"
+    },
+    {
+      "description": "語内部の助詞字を保つ負例",
+      "expected": [
+        {
+          "lemma": "ともだち",
+          "pos": "Noun",
+          "surface": "ともだち"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "会う",
+          "pos": "Verb",
+          "surface": "会う"
+        }
+      ],
+      "id": "tomodachini_u",
+      "input": "ともだちに会う"
     }
   ],
   "description": "General nouns (part 3/3)",
