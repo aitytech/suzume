@@ -175,6 +175,22 @@ bool isAttributiveCopulaNa(std::string_view surface) {
   return surface == "な";
 }
 
+bool startsPredicativeCopula(std::string_view surface) {
+  return surface.rfind("だ", 0) == 0 || surface.rfind("です", 0) == 0 || surface.rfind("である", 0) == 0;
+}
+
+bool isFusedDemo(std::string_view surface) {
+  size_t byte_pos = 0;
+  return normalize::decodeUtf8(surface, byte_pos) == U'で' && normalize::decodeUtf8(surface, byte_pos) == U'も' &&
+         byte_pos == surface.size();
+}
+
+bool isBenefactiveFormalNoun(std::string_view surface) {
+  size_t byte_pos = 0;
+  return normalize::decodeUtf8(surface, byte_pos) == U'お' && normalize::decodeUtf8(surface, byte_pos) == U'か' &&
+         normalize::decodeUtf8(surface, byte_pos) == U'げ' && byte_pos == surface.size();
+}
+
 bool isIndependentNegativeAdjective(std::string_view surface) {
   return surface == "ない";
 }

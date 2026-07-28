@@ -30,7 +30,35 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
     // dictionary-free lattice selected a homographic noun/adjective. Recover
     // the productive base from its final kana: e-row and じ stems are ichidan;
     // the remaining i-row endings use the shared Godan table.
-    if (i + 1 < morphemes.size() && morphemes[i + 1].surface == "始め" && morpheme.pos != core::PartOfSpeech::Verb) {
+    const bool next_is_verbal_hajime = i + 1 < morphemes.size() && morphemes[i + 1].surface == "始め" &&
+                                       (morphemes[i + 1].pos == core::PartOfSpeech::Verb ||
+                                        morphemes[i + 1].extended_pos == core::ExtendedPOS::AuxAspectHajimeru);
+    const bool is_dictionary_noun =
+        dict_manager_ != nullptr && dict_manager_->lookupExact(morpheme.surface, core::PartOfSpeech::Noun) != nullptr;
+    const bool hajime_has_verbal_follower =
+        i + 2 < morphemes.size() &&
+        (morphemes[i + 2].pos == core::PartOfSpeech::Auxiliary || morphemes[i + 2].pos == core::PartOfSpeech::Verb);
+    const bool hajime_has_nominal_follower =
+        i + 2 == morphemes.size() ||
+        (i + 2 < morphemes.size() &&
+         (morphemes[i + 2].pos == core::PartOfSpeech::Particle || morphemes[i + 2].pos == core::PartOfSpeech::Symbol));
+    const bool nominalizable_hajime_host =
+        morpheme.pos == core::PartOfSpeech::Noun ||
+        (morpheme.pos == core::PartOfSpeech::Verb && morpheme.extended_pos == core::ExtendedPOS::VerbRenyokei);
+    if (next_is_verbal_hajime && hajime_has_nominal_follower && nominalizable_hajime_host) {
+      morpheme.pos = core::PartOfSpeech::Noun;
+      morpheme.extended_pos = core::ExtendedPOS::NounVerbal;
+      morpheme.lemma = morpheme.surface;
+      morpheme.conj_type = dictionary::ConjugationType::None;
+      morpheme.conj_form = grammar::ConjForm::Base;
+      auto& hajime = morphemes[i + 1];
+      hajime.pos = core::PartOfSpeech::Noun;
+      hajime.extended_pos = core::ExtendedPOS::Noun;
+      hajime.lemma = hajime.surface;
+      hajime.conj_type = dictionary::ConjugationType::None;
+      hajime.conj_form = grammar::ConjForm::Base;
+    } else if (next_is_verbal_hajime && (!is_dictionary_noun || hajime_has_verbal_follower) &&
+               morpheme.pos != core::PartOfSpeech::Verb) {
       const char32_t final_cp = utf8::decodeFirstChar(utf8::lastChar(morpheme.surface));
       std::string reconstructed;
       if (grammar::endsWithERow(morpheme.surface) || final_cp == U'じ') {
@@ -196,9 +224,11 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
     // Get next morpheme for context-dependent fixes
     std::string_view next_surface;
     std::string_view next_lemma;
+    core::ExtendedPOS next_extended_pos = core::ExtendedPOS::Unknown;
     if (i + 1 < morphemes.size()) {
       next_surface = morphemes[i + 1].surface;
       next_lemma = morphemes[i + 1].lemma;
+      next_extended_pos = morphemes[i + 1].extended_pos;
     }
     // An e-row form before polite ます is a potential verb, not a godan
     // conditional. The potential remains one verb token (書けます, なれます),
@@ -231,8 +261,11 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
     // past-conjunctive series. Reconstruct from the visible surface rather
     // than a speculative candidate lemma: unknown verbs may arrive as
     // つまずいる or 泣う, but the sound change itself still determines く/ぐ.
+    const bool contracted_shimau_follows =
+        next_extended_pos == core::ExtendedPOS::AuxAspectShimau && utf8::startsWithAny(next_surface, {"ちゃ", "じゃ"});
     const bool has_i_onbin_follower =
-        utf8::equalsAny(next_surface, {"た", "て", "たり", "たら", "ちゃ", "だ", "で", "だり", "だら"});
+        utf8::equalsAny(next_surface, {"た", "て", "たり", "たら", "だ", "で", "だり", "だら"}) ||
+        contracted_shimau_follows;
     if (!morpheme.is_from_dictionary && morpheme.pos != core::PartOfSpeech::Verb &&
         utf8::endsWith(morpheme.surface, "い") && has_i_onbin_follower) {
       morpheme.pos = core::PartOfSpeech::Verb;
@@ -246,14 +279,27 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
       // helper (getGodanTypesByOnbin is Ka-first and dict-gated): voicing correctly
       // handles out-of-dict verbs (凪いだ→凪ぐ) and voiced ties (ついだ→つぐ).
       std::string stem(utf8::dropLastChar(morpheme.surface));
+      const std::string godan_ka_base = stem + "く";
+      const std::string godan_ga_base = stem + "ぐ";
+      const bool has_godan_ka_entry =
+          dict_manager_ != nullptr && dict_manager_->lookupExact(godan_ka_base, core::PartOfSpeech::Verb) != nullptr;
+      const bool has_godan_ga_entry =
+          dict_manager_ != nullptr && dict_manager_->lookupExact(godan_ga_base, core::PartOfSpeech::Verb) != nullptr;
       // Check if next is voiced (だ/で) → 〜ぐ, otherwise → 〜く
       if (grammar::inflection::isValidKanjiIStemException(morpheme.surface)) {
         // Kami-ichidan renyokei (率い, 老い, ...) - dictionary form is surface + る
         morpheme.lemma = morpheme.surface + "る";
-      } else if (utf8::equalsAny(next_surface, {"だ", "で", "だり", "だら"})) {
-        morpheme.lemma = stem + "ぐ";  // GodanGa: 泳い+だ → 泳ぐ
+      } else if (has_godan_ga_entry && !has_godan_ka_entry) {
+        // A contracted でしまう can surface with ちゃう in casual speech, so
+        // lexical evidence outranks the contraction's voicing.
+        morpheme.lemma = godan_ga_base;
+      } else if (has_godan_ka_entry) {
+        morpheme.lemma = godan_ka_base;
+      } else if (utf8::equalsAny(next_surface, {"だ", "で", "だり", "だら"}) ||
+                 utf8::startsWith(next_surface, "じゃ")) {
+        morpheme.lemma = godan_ga_base;  // GodanGa: 泳い+だ → 泳ぐ
       } else {
-        morpheme.lemma = stem + "く";  // GodanKa: 書い+た → 書く
+        morpheme.lemma = godan_ka_base;  // GodanKa: 書い+た → 書く
       }
     }
     // Fix ichidan renyokei misread as a godan base using next morpheme context
@@ -353,7 +399,8 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
     if (morpheme.surface == "たら" && morpheme.lemma == "たら") {
       morpheme.lemma = "た";
     }
-    morpheme.conj_form = detectConjForm(morpheme.surface, morpheme.lemma, morpheme.pos, next_lemma);
+    morpheme.conj_form = detectConjForm(morpheme.surface, morpheme.lemma, morpheme.pos, next_lemma,
+                                        morpheme.extended_pos, next_extended_pos);
   }
 
   if (!update_lemmas) {

@@ -13,19 +13,10 @@ struct NominalContinuation {
 };
 
 struct NominalHeadProfile {
-  EPOS head;
   float case_cost;
   float adverbial_cost;
   bool accepts_final_particle;
 };
-
-constexpr std::array<NominalHeadProfile, 5> kNominalHeadProfiles = {{
-    {EPOS::Noun, cost::kNeutral, cost::kStrongBonus, true},
-    {EPOS::NounVerbal, cost::kNeutral, cost::kStrongBonus, true},
-    {EPOS::NounNumber, cost::kNeutral, cost::kStrongBonus, false},
-    {EPOS::Pronoun, cost::kModerateBonus, cost::kExtraStrongBonus, true},
-    {EPOS::PronounInterrogative, cost::kNeutral, cost::kExtraStrongBonus, false},
-}};
 
 constexpr std::array<NominalContinuation, 4> kCommonNominalContinuations = {{
     {EPOS::ParticleTopic, cost::kStrongBonus},
@@ -34,25 +25,46 @@ constexpr std::array<NominalContinuation, 4> kCommonNominalContinuations = {{
     {EPOS::ParticleCase, cost::kNeutral},
 }};
 
+constexpr bool isNominalHead(EPOS extended_pos) {
+  // Formal nouns have their own continuation profile below. Every other
+  // noun/pronoun category participates in the common nominal-head rules, so a
+  // newly added nominal EPOS cannot silently miss the profile.
+  return (core::isNounType(extended_pos) && extended_pos != EPOS::NounFormal) || core::isPronounType(extended_pos);
+}
+
+constexpr NominalHeadProfile nominalHeadProfile(EPOS head) {
+  const bool is_pronoun = core::isPronounType(head);
+  return {
+      head == EPOS::Pronoun ? cost::kModerateBonus : cost::kNeutral,
+      is_pronoun ? cost::kExtraStrongBonus : cost::kStrongBonus,
+      head != EPOS::NounNumber && head != EPOS::PronounInterrogative,
+  };
+}
+
 void applyRule(BigramMatrix& table, EPOS head, EPOS next, float rule_cost) {
   const BigramRule rule{head, next, rule_cost};
   applyRules(table, &rule, 1);
 }
 
 void applyNominalHeadRules(BigramMatrix& table) {
-  for (const NominalHeadProfile& profile : kNominalHeadProfiles) {
+  for (size_t idx = 0; idx < static_cast<size_t>(EPOS::Count_); ++idx) {
+    const EPOS head = static_cast<EPOS>(idx);
+    if (!isNominalHead(head)) {
+      continue;
+    }
+    const NominalHeadProfile profile = nominalHeadProfile(head);
     for (const NominalContinuation& continuation : kCommonNominalContinuations) {
       const float rule_cost = continuation.next == EPOS::ParticleCase ? profile.case_cost : continuation.cost;
-      applyRule(table, profile.head, continuation.next, rule_cost);
+      applyRule(table, head, continuation.next, rule_cost);
     }
-    applyRule(table, profile.head, EPOS::ParticleAdverbial, profile.adverbial_cost);
+    applyRule(table, head, EPOS::ParticleAdverbial, profile.adverbial_cost);
     if (profile.accepts_final_particle) {
       // Ordinary/deverbal nouns and personal pronouns can form a
       // sentence-final nominal predicate. Number phrases and interrogative
       // pronouns need a following predicate;
       // rewarding their homographic final-particle path breaks 一昼夜+かけて
       // and the fixed indefinite pronoun 何かしら.
-      applyRule(table, profile.head, EPOS::ParticleFinal, cost::kModerateBonus);
+      applyRule(table, head, EPOS::ParticleFinal, cost::kModerateBonus);
     }
   }
 }

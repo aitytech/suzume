@@ -3,6 +3,8 @@
  * @brief Structural counter boundaries outside the basic numeral scan
  */
 
+#include <algorithm>
+
 #include "candidate_constants.h"
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
@@ -34,6 +36,14 @@ bool isObjectCounterKanji(char32_t code_point) {
       return false;
   }
 }
+
+// NounNumber is a closed L1 class. Its longest kana surface is ここのつ
+// (four codepoints); the Suffix entries that may complete a kana quantity are
+// likewise closed, with a six-codepoint compatibility window. Keeping these
+// probes fixed prevents ordinary long hiragana from turning a counter check
+// into a scan of the entire remaining input.
+constexpr size_t kMaxKanaNounNumberLength = 4;
+constexpr size_t kMaxKanaCounterSuffixLength = 6;
 }  // namespace
 
 }  // namespace suzume::analysis::counter_detail
@@ -101,23 +111,31 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
                                        const std::vector<normalize::CharType>& char_types,
                                        const dictionary::DictionaryManager* dict_manager,
                                        std::vector<UnknownCandidate>& candidates) {
+  if (start_pos >= codepoints.size() || start_pos >= char_types.size()) {
+    return;
+  }
+
   // Kana quantity readings are a finite composition of the closed NounNumber
   // and quantitative Suffix classes (いち+まい, よん+にん).  MeCab may split
   // these at arbitrary syllable boundaries, but Suzume already owns both
   // grammatical components in L1; emit the complete quantity search unit
   // without registering any open-class word.
-  if (dict_manager != nullptr) {
-    for (size_t number_end = start_pos + 1; number_end < codepoints.size(); ++number_end) {
-      const std::string number_surface = extractSubstring(codepoints, start_pos, number_end);
-      const auto* number_entry = dict_manager->lookupExact(number_surface, core::PartOfSpeech::Noun);
-      if (number_entry == nullptr || number_entry->extended_pos != core::ExtendedPOS::NounNumber) {
+  if (dict_manager != nullptr && char_types[start_pos] == normalize::CharType::Hiragana) {
+    const size_t number_probe_end = std::min(codepoints.size(), start_pos + kMaxKanaNounNumberLength);
+    const std::string number_probe = extractSubstring(codepoints, start_pos, number_probe_end);
+    for (const auto& number_result : dict_manager->lookup(number_probe, 0)) {
+      if (number_result.entry == nullptr || number_result.entry->pos != core::PartOfSpeech::Noun ||
+          number_result.entry->extended_pos != core::ExtendedPOS::NounNumber) {
         continue;
       }
-      for (size_t suffix_end = number_end + 1; suffix_end <= codepoints.size(); ++suffix_end) {
-        const std::string suffix_surface = extractSubstring(codepoints, number_end, suffix_end);
-        if (dict_manager->lookupExact(suffix_surface, core::PartOfSpeech::Suffix) == nullptr) {
+      const size_t number_end = start_pos + number_result.length;
+      const size_t suffix_probe_end = std::min(codepoints.size(), number_end + kMaxKanaCounterSuffixLength);
+      const std::string suffix_probe = extractSubstring(codepoints, number_end, suffix_probe_end);
+      for (const auto& suffix_result : dict_manager->lookup(suffix_probe, 0)) {
+        if (suffix_result.entry == nullptr || suffix_result.entry->pos != core::PartOfSpeech::Suffix) {
           continue;
         }
+        const size_t suffix_end = number_end + suffix_result.length;
         std::string surface = extractSubstring(codepoints, start_pos, suffix_end);
         auto cand = makeCandidate(surface, start_pos, suffix_end, core::PartOfSpeech::Noun,
                                   candidate::kKanaNumeralCounterMergeBonus, true, CandidateOrigin::Counter,
@@ -186,26 +204,16 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
     }
     if (numeral_end < codepoints.size() && codepoints[numeral_end] == U'つ') {
       const size_t unit_end = numeral_end + 1;
-      size_t kana_end = unit_end;
-      while (kana_end < char_types.size() && char_types[kana_end] == normalize::CharType::Hiragana) {
-        ++kana_end;
-      }
       size_t repeated_end = 0;
-      for (size_t probe_end = unit_end + 3; probe_end <= kana_end; ++probe_end) {
-        if (codepoints[probe_end - 1] != U'つ') {
+      const size_t kana_probe_end = std::min(codepoints.size(), unit_end + kMaxKanaNounNumberLength);
+      const std::string kana_probe = extractSubstring(codepoints, unit_end, kana_probe_end);
+      for (const auto& result : dict_manager->lookup(kana_probe, 0)) {
+        if (result.entry == nullptr || result.entry->extended_pos != core::ExtendedPOS::NounNumber ||
+            result.length == 0 || codepoints[unit_end + result.length - 1] != U'つ') {
           continue;
         }
-        // The same kana quantity may also carry a plain nominal entry in a
-        // later layer, so every result is inspected rather than just the first
-        // exact-surface match.
-        const size_t kana_length = probe_end - unit_end;
-        for (const auto& result : dict_manager->lookup(extractSubstring(codepoints, unit_end, probe_end), 0)) {
-          if (result.length == kana_length && result.entry != nullptr &&
-              result.entry->extended_pos == core::ExtendedPOS::NounNumber) {
-            repeated_end = probe_end;
-            break;
-          }
-        }
+        repeated_end = unit_end + result.length;
+        break;
       }
       if (repeated_end != 0) {
         std::string surface = extractSubstring(codepoints, start_pos, repeated_end);
@@ -252,7 +260,8 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
   // tails have dedicated structural boundaries, while lexicalized ordinal
   // nouns are supplied by the dictionary. This prevents an arbitrary one-kanji
   // noun following an ordinal from being fabricated as a compound.
-  if (codepoints[start_pos] == U'第' && normalize::isNumeralCodepoint(codepoints[start_pos + 1])) {
+  if (start_pos + 1 < codepoints.size() && codepoints[start_pos] == U'第' &&
+      normalize::isNumeralCodepoint(codepoints[start_pos + 1])) {
     size_t ordinal_end = start_pos + 1;
     bool ordinal_has_numeral = false;
     while (ordinal_end < codepoints.size() && normalize::isNumeralCodepoint(codepoints[ordinal_end])) {

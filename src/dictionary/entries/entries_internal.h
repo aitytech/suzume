@@ -84,6 +84,11 @@ constexpr EntrySpec adv(const char* s, const char* lemma = "") {
   return {s, POS::Adverb, EPOS::Adverb, lemma};
 }
 
+// Demonstrative adverbs used as quotative or manner pro-forms.
+constexpr EntrySpec quotative_adv(const char* s, const char* lemma = "") {
+  return {s, POS::Adverb, EPOS::AdverbQuotative, lemma};
+}
+
 // Suffix helper: creates SUFFIX entry
 // Usage: suffix("さん")
 constexpr EntrySpec suffix(const char* s, const char* lemma = "") {

@@ -77,6 +77,7 @@ void generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t s
 
     // Generate candidate for digit + katakana unit
     size_t unit_len = unit_end - numeral_end;
+    bool is_ke_kanji_counter = false;
     // ヶ/ケ alone is not a counter — extend to include following kanji
     // (ヶ月, ヶ所, ヶ国, ヶ年 etc.)
     if (unit_len == 1 && (codepoints[numeral_end] == U'ヶ' || codepoints[numeral_end] == U'ケ') &&
@@ -85,13 +86,14 @@ void generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t s
       // Extend unit_end to include the kanji after ヶ/ケ
       unit_end += 1;
       unit_len = unit_end - numeral_end;
+      is_ke_kanji_counter = true;
     }
     if (unit_len >= 1) {  // unit_len <= 8 guaranteed by findCharRegionEnd
       std::string unit_surface = extractSubstring(codepoints, numeral_end, unit_end);
       // Any all-katakana run merges with the preceding numeral (3キロ, 100メダル);
       // MeCab treats number + katakana as one quantity token, so there is no
       // curated unit list. (ヶ/ケ + kanji surfaces are mixed-script and fall through.)
-      if (!normalize::isAllKatakana(unit_surface)) {
+      if (!is_ke_kanji_counter && !normalize::isAllKatakana(unit_surface)) {
         return;
       }
       std::string surface = extractSubstring(codepoints, start_pos, unit_end);

@@ -3,8 +3,6 @@
  * @brief Kanji na-adjective candidate generation
  */
 
-#include <array>
-
 #include "adjective_candidates.h"
 #include "adjective_candidates_internal.h"
 #include "analysis/candidate_constants.h"
@@ -13,6 +11,7 @@
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
+#include "suffix_candidates.h"
 #include "unknown.h"
 #include "verb_candidates_helpers.h"
 
@@ -22,10 +21,6 @@ using adj_detail::makeNaAdjCandidate;
 using verb_helpers::findCharRegionEnd;
 
 namespace {
-
-constexpr std::array<std::string_view, 1> kNaAdjSuffixes = {
-    "的",
-};
 
 void generateHiraganaNariNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                const std::vector<normalize::CharType>& char_types,
@@ -42,8 +37,11 @@ void generateHiraganaNariNaAdjectiveCandidates(const std::vector<char32_t>& code
   constexpr size_t kMaxHiraganaNaAdjectiveLength = 6;
   for (size_t stem_end = start_pos + 3;
        stem_end <= codepoints.size() && stem_end - start_pos <= kMaxHiraganaNaAdjectiveLength; ++stem_end) {
-    if (char_types[stem_end - 1] != normalize::CharType::Hiragana || stem_end >= codepoints.size()) {
-      continue;
+    if (char_types[stem_end - 1] != normalize::CharType::Hiragana) {
+      break;
+    }
+    if (stem_end >= codepoints.size()) {
+      break;
     }
     const bool has_classical_attributive =
         stem_end + 2 <= codepoints.size() && extractSubstring(codepoints, stem_end, stem_end + 2) == "なる";
@@ -234,7 +232,7 @@ void generateNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size
   // Keep X+的 as one tokenizer search unit while preserving its na-adjective
   // class.  A bare noun path remains available for contexts that do not
   // license the derived adjective.
-  for (const auto& suffix : kNaAdjSuffixes) {
+  for (const auto& suffix : getNaAdjSuffixes()) {
     if (kanji_seq.size() >= suffix.size()) {
       std::string_view kanji_suffix(kanji_seq.data() + kanji_seq.size() - suffix.size(), suffix.size());
       if (kanji_suffix == suffix) {

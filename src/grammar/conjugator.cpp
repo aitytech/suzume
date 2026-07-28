@@ -28,6 +28,9 @@ std::vector<StemForm> Conjugator::generateStems(const std::string& base_form, Ve
     case VerbType::Ichidan:
       return generateIchidanStems(stem, base_form);
 
+    case VerbType::IAdjective:
+      return generateIAdjectiveStems(stem, base_form);
+
     case VerbType::Suru:
       return generateSuruStems(stem, base_form);
 
@@ -51,6 +54,8 @@ std::vector<StemForm> Conjugator::generateGodanStems(const std::string& stem, co
   const std::string& base_suffix = vowels.base;
   const std::string& a_suffix = vowels.a;
   const std::string& i_suffix = vowels.i;
+  const std::string& e_suffix = vowels.e;
+  const std::string& o_suffix = vowels.o;
 
   // 終止形 (Base)
   forms.push_back({base_form, type, base_suffix, conn::kVerbBase});
@@ -62,7 +67,18 @@ std::vector<StemForm> Conjugator::generateGodanStems(const std::string& stem, co
   forms.push_back({stem + i_suffix, type, base_suffix, conn::kVerbRenyokei});
 
   // 音便形 (Onbinkei): 書い, 読ん, 持っ — or, for サ行, 連用形 doubles as onbinkei (話し + た).
-  forms.push_back({stem + onbinFormOf(*row), type, base_suffix, conn::kVerbOnbinkei});
+  forms.push_back({stem + godanOnbinForm(type, stem), type, base_suffix, conn::kVerbOnbinkei});
+
+  // The e-row supplies potential, conditional, and imperative readings. Keep
+  // all grammatical cells even though their surfaces coincide.
+  if (type != VerbType::GodanRa) {
+    forms.push_back({stem + e_suffix, type, base_suffix, conn::kVerbPotential});
+  }
+  forms.push_back({stem + e_suffix, type, base_suffix, conn::kVerbKatei});
+  forms.push_back({stem + e_suffix, type, base_suffix, conn::kVerbMeireikei});
+
+  // 意志形 stem before う: 書こ+う.
+  forms.push_back({stem + o_suffix, type, base_suffix, conn::kVerbVolitional});
 
   return forms;
 }
@@ -81,6 +97,15 @@ std::vector<StemForm> Conjugator::generateIchidanStems(const std::string& stem, 
   forms.push_back({stem, type, "る", conn::kVerbOnbinkei});
 
   return forms;
+}
+
+std::vector<StemForm> Conjugator::generateIAdjectiveStems(const std::string& stem, const std::string& base_form) const {
+  constexpr auto type = VerbType::IAdjective;
+  return {
+      {base_form, type, "い", conn::kVerbBase},       {stem, type, "い", conn::kIAdjStem},
+      {stem + "く", type, "い", conn::kVerbRenyokei}, {stem + "かっ", type, "い", conn::kVerbOnbinkei},
+      {stem + "けれ", type, "い", conn::kVerbKatei},  {stem + "かろ", type, "い", conn::kVerbVolitional},
+  };
 }
 
 std::vector<StemForm> Conjugator::generateSuruStems(const std::string& stem, const std::string& base_form) const {

@@ -160,7 +160,7 @@ EntrySpecRange getAuxiliaryEntries() {
       na_adj("そう", "そう"),
       // MeCab: そうかもしれない → そう(副詞,助詞類接続) + かも + しれ...
       // When followed by particles (not だ/な), MeCab treats そう as adverb
-      adv("そう"),
+      quotative_adv("そう"),
       // Note: さそう removed - MeCab splits as な+さ+そう (3 tokens)
 
       // Obligation (当為)
@@ -237,9 +237,12 @@ EntrySpecRange getAuxiliaryEntries() {
       // Kuru verb stem form (カ変動詞語幹活用形) - VERB, not AUX
       // MeCab: 来た → 来(連用形) + た(過去)
       verb("来", "来る", EPOS::VerbRenyokei),
-      // カ変未然形: 来ら+れる (可能・受身).
+      // The kanji passive spelling keeps the established dictionary boundary
+      // 来ら+れる. Kana uses the context-gated こ + られる candidate path,
+      // because its one-mora stem would otherwise split ordinary hiragana.
       verb("来ら", "来る", EPOS::VerbMizenkei),
-      // カ変使役の接続形: 来さ+せる/せられる.
+      // Likewise retain the established kanji causative boundary while the
+      // canonical Kuru paradigm drives the corresponding kana path.
       verb("来さ", "来る", EPOS::VerbMizenkei),
 
       // Deru verb stem form (一段動詞「出る」) - VERB
@@ -278,6 +281,7 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("たい", "たい", EPOS::AuxDesireTai),
       aux("たく", "たい", EPOS::AuxDesireTai),
       aux("たかっ", "たい", EPOS::AuxDesireTai),
+      aux("たけれ", "たい", EPOS::AuxDesireTai),
       aux("たし", "たい", EPOS::AuxDesireTai),  // 文語終止形 (対応たし)
       // たがる (3rd-person desiderative): conjugates like a godan-ra verb
       aux("たがる", "たがる", EPOS::AuxDesireTai),  // 終止/連体
@@ -286,7 +290,6 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("たがり", "たがる", EPOS::AuxDesireTai),  // 連用 (+ます)
       aux("たがっ", "たがる", EPOS::AuxDesireTai),  // 連用促音便 (+た/て)
       aux("たがれ", "たがる", EPOS::AuxDesireTai),  // 仮定 (+ば)
-      adj("たければ", "たい", EPOS::AuxDesireTai),
       // Classical desiderative まほし: verb renyokei + ま + ほしき.
       aux("ま", "まほし", EPOS::AuxDesireTai),
       adj("ほしき", "ほしい", EPOS::AdjBasic),
@@ -322,6 +325,8 @@ EntrySpecRange getAuxiliaryEntries() {
       adj("ほしい", "ほしい", EPOS::AdjBasic),
       adj("ほしく", "ほしい", EPOS::AdjRenyokei),
       adj("ほしかっ", "ほしい", EPOS::AdjKatt),
+      adj("ほしけれ", "ほしい", EPOS::AdjKeForm),
+      adj("ほしかろ", "ほしい", EPOS::AdjMizenkei),
       adj("ほし", "ほしい", EPOS::AdjStem),
 
       // Literary adjective meaning absence: ことなしに, 本なしに.
@@ -333,6 +338,9 @@ EntrySpecRange getAuxiliaryEntries() {
       // adjective paradigm rather than OTHER or a fabricated verb.
       adj("づらい", "づらい", EPOS::AdjBasic),
       adj("づらく", "づらい", EPOS::AdjRenyokei),
+      adj("づらかっ", "づらい", EPOS::AdjKatt),
+      adj("づらけれ", "づらい", EPOS::AdjKeForm),
+      adj("づらかろ", "づらい", EPOS::AdjMizenkei),
       adj("づら", "づらい", EPOS::AdjStem),
 
       // Kanji form of ない (無い) - used in formal writing
@@ -510,12 +518,18 @@ EntrySpecRange getAuxiliaryEntries() {
       adj("にくい", "にくい", EPOS::AdjBasic),
       adj("にくく", "にくい", EPOS::AdjRenyokei),
       adj("にくかっ", "にくい", EPOS::AdjKatt),
+      adj("にくけれ", "にくい", EPOS::AdjKeForm),
+      adj("にくかろ", "にくい", EPOS::AdjMizenkei),
       adj("やすい", "やすい", EPOS::AdjBasic),
       adj("やすく", "やすい", EPOS::AdjRenyokei),
       adj("やすかっ", "やすい", EPOS::AdjKatt),
+      adj("やすけれ", "やすい", EPOS::AdjKeForm),
+      adj("やすかろ", "やすい", EPOS::AdjMizenkei),
       adj("がたい", "がたい", EPOS::AdjBasic),
       adj("がたく", "がたい", EPOS::AdjRenyokei),
       adj("がたかっ", "がたい", EPOS::AdjKatt),
+      adj("がたけれ", "がたい", EPOS::AdjKeForm),
+      adj("がたかろ", "がたい", EPOS::AdjMizenkei),
       // Stem form (語幹/ガル接続) for さ-nominalization, mirroring よ/な stems:
       // MeCab: 使いやすさ → 使い + やす(語幹) + さ. Only やす needs this — にく already
       // has a NOUN reading (肉/にく) in the dictionary that carries 読みにくさ, whereas
@@ -531,6 +545,8 @@ EntrySpecRange getAuxiliaryEntries() {
       adj("っぽい", "っぽい", EPOS::AdjBasic),
       adj("っぽく", "っぽい", EPOS::AdjRenyokei),
       adj("っぽかっ", "っぽい", EPOS::AdjKatt),
+      adj("っぽけれ", "っぽい", EPOS::AdjKeForm),
+      adj("っぽかろ", "っぽい", EPOS::AdjMizenkei),
       adj("っぽ", "っぽい", EPOS::AdjStem),
 
       // Polite imperative - connect after verb renyokei
@@ -562,11 +578,6 @@ EntrySpecRange getAuxiliaryEntries() {
       // mora spells the final particle け, so it needs the te-form connection
       // the benefactives already have.
       aux("けろ", "けろ", EPOS::AuxBenefactive),
-
-      // Kyoto polite request やす, which attaches to a verb continuative after
-      // the honorific prefix (お読み+やす, 読んでおくれ+やす). Homographic with
-      // the i-adjective stem 安, so it relies on that continuative connection.
-      aux("やす", "やす", EPOS::AuxHonorific),
 
       // Kansai honorific subsidiary はる. It conjugates as a godan-ra verb and
       // attaches to the irrealis of a godan predicate (読ま+はる) or to a

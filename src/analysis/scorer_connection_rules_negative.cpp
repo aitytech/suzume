@@ -65,12 +65,19 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
       prev.extended_pos == core::ExtendedPOS::Noun && utf8::endsWith(prev.surface, "中") &&
       prev.surface.size() >= core::kThreeJapaneseCharBytes &&
       (next.extended_pos == core::ExtendedPOS::ParticleCase || next.extended_pos == core::ExtendedPOS::VerbShuushikei);
+  // The exclusive しか construction uses the closed negative auxiliary in
+  // the oracle contract. Other binding particles (さえ/すら/こそ) retain the
+  // existential adjective ない, so this is deliberately surface-specific.
+  const bool exclusive_binding_negative = prev.extended_pos == core::ExtendedPOS::ParticleBinding &&
+                                          utf8::equalsAny(prev.surface, {"しか"}) &&
+                                          next.extended_pos == core::ExtendedPOS::AuxNegativeNai;
   if (invalid_polite_hatsuon_volitional || contracted_negative_before_copula || marked_nominal_before_mimetic ||
-      long_chuu_nominal) {
+      long_chuu_nominal || exclusive_binding_negative) {
     bonus += (invalid_polite_hatsuon_volitional ? cost::kAlmostNever : cost::kNeutral) +
              (contracted_negative_before_copula ? cost::kAlmostNever : cost::kNeutral) +
              (marked_nominal_before_mimetic ? cost::kDoubleVeryStrongBonus : cost::kNeutral) +
-             (long_chuu_nominal ? cost::kStrongBonus + cost::kModerateBonus : cost::kNeutral);
+             (long_chuu_nominal ? cost::kStrongBonus + cost::kModerateBonus : cost::kNeutral) +
+             (exclusive_binding_negative ? cost::kVeryStrongBonus : cost::kNeutral);
   }
 
   // A topic particle cannot directly select the classical negative auxiliary.

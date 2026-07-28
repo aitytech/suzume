@@ -23,12 +23,12 @@ enum class AuxiliaryFormFamily : uint8_t {
   Progressive,
   Sokuonbin,
   Masu,
+  Positive,
 };
 
 struct AuxiliaryBase {
   std::string_view surface;
   VerbType conj_type;
-  uint16_t category_id;
   uint16_t required_conn;
   AuxiliaryFormFamily form_family = AuxiliaryFormFamily::Standard;
 };
@@ -119,7 +119,7 @@ void appendWithStem(const AuxiliaryBase& base, const ConjSuffix* suffixes, size_
 //                        old kGodanWaTeAttach subset.
 // @param force_sokuonbin いく-type 促音便 irregular: onbin becomes っ (った/って);
 //                        ます系 and 未然形 still follow the regular row.
-void appendGodanWithStem(const AuxiliaryBase& base, bool te_attach_only, bool force_sokuonbin,
+void appendGodanWithStem(const AuxiliaryBase& base, bool te_attach_only, bool force_sokuonbin, bool include_negative,
                          std::vector<AuxiliaryEntry>& result) {
   const Conjugation::GodanRow* row_ptr = Conjugation::getGodanRow(base.conj_type);
   if (row_ptr == nullptr) {
@@ -135,7 +135,7 @@ void appendGodanWithStem(const AuxiliaryBase& base, bool te_attach_only, bool fo
   const std::string te_kana = row.voiced_ta ? "で" : "て";
   const std::string stem(utf8::dropLastChar(base.surface));
 
-  result.reserve(result.size() + (te_attach_only ? 4 : 9));
+  result.reserve(result.size() + (te_attach_only ? 4 : (include_negative ? 9 : 6)));
   result.push_back({stem + vowels.base, conn::kAuxOutBase, base.required_conn});
   result.push_back({stem + onbin + ta_kana, conn::kAuxOutTa, base.required_conn});
   result.push_back({stem + onbin + ta_kana + "ら", conn::kAuxOutBase, base.required_conn});
@@ -145,6 +145,9 @@ void appendGodanWithStem(const AuxiliaryBase& base, bool te_attach_only, bool fo
   }
   result.push_back({stem + vowels.i + "ます", conn::kAuxOutMasu, base.required_conn});
   result.push_back({stem + vowels.i + "ました", conn::kAuxOutTa, base.required_conn});
+  if (!include_negative) {
+    return;
+  }
   result.push_back({stem + vowels.a + "ない", conn::kAuxOutBase, base.required_conn});
   result.push_back({stem + vowels.a + "なかった", conn::kAuxOutTa, base.required_conn});
   result.push_back({stem + vowels.a + "なくて", conn::kAuxOutTe, base.required_conn});
@@ -585,40 +588,42 @@ const auto& auxiliaryBases() {
   using namespace conn;
   static constexpr AuxiliaryBase kBases[] = {
       // === Te-form attachments (て形接続) ===
-      {"いる", VerbType::Ichidan, kAuxTeiru, kAuxOutTe, AuxiliaryFormFamily::Progressive},
-      {"ある", VerbType::GodanRa, kAuxTearu, kAuxOutTe},
-      {"しまう", VerbType::GodanWa, kAuxTeshimau, kAuxOutTe},
-      {"おく", VerbType::GodanKa, kAuxTeoku, kAuxOutTe},
-      {"くる", VerbType::Kuru, kAuxTekuru, kAuxOutTe},
-      {"いく", VerbType::GodanKa, kAuxTeiku, kAuxOutTe, AuxiliaryFormFamily::Sokuonbin},
-      {"みる", VerbType::Ichidan, kAuxTemiru, kAuxOutTe},
-      {"もらう", VerbType::GodanWa, kAuxTemorau, kAuxOutTe, AuxiliaryFormFamily::TeAttachment},
-      {"くれる", VerbType::Ichidan, kAuxTekureru, kAuxOutTe, AuxiliaryFormFamily::TeAttachment},
-      {"あげる", VerbType::Ichidan, kAuxTeageru, kAuxOutTe, AuxiliaryFormFamily::TeAttachment},
+      {"いる", VerbType::Ichidan, kAuxOutTe, AuxiliaryFormFamily::Progressive},
+      // てある has no regular 〜あらない negative paradigm. Its suppletive
+      // negative is represented compositionally by the closed negative forms.
+      {"ある", VerbType::GodanRa, kAuxOutTe, AuxiliaryFormFamily::Positive},
+      {"しまう", VerbType::GodanWa, kAuxOutTe},
+      {"おく", VerbType::GodanKa, kAuxOutTe},
+      {"くる", VerbType::Kuru, kAuxOutTe},
+      {"いく", VerbType::GodanKa, kAuxOutTe, AuxiliaryFormFamily::Sokuonbin},
+      {"みる", VerbType::Ichidan, kAuxOutTe},
+      {"もらう", VerbType::GodanWa, kAuxOutTe, AuxiliaryFormFamily::TeAttachment},
+      {"くれる", VerbType::Ichidan, kAuxOutTe, AuxiliaryFormFamily::TeAttachment},
+      {"あげる", VerbType::Ichidan, kAuxOutTe, AuxiliaryFormFamily::TeAttachment},
 
       // === Mizenkei attachments (未然形接続) ===
-      {"ない", VerbType::IAdjective, kAuxNai, kVerbMizenkei},
-      {"れる", VerbType::Ichidan, kAuxReru, kVerbMizenkei},
-      {"られる", VerbType::Ichidan, kAuxReru, kVerbMizenkei},
-      {"せる", VerbType::Ichidan, kAuxSeru, kVerbMizenkei},
-      {"させる", VerbType::Ichidan, kAuxSeru, kVerbMizenkei},
+      {"ない", VerbType::IAdjective, kVerbMizenkei},
+      {"れる", VerbType::Ichidan, kVerbMizenkei},
+      {"られる", VerbType::Ichidan, kVerbMizenkei},
+      {"せる", VerbType::Ichidan, kVerbMizenkei},
+      {"させる", VerbType::Ichidan, kVerbMizenkei},
 
       // === Renyokei attachments (連用形接続) ===
-      {"ます", VerbType::Unknown, kAuxMasu, kVerbRenyokei, AuxiliaryFormFamily::Masu},
-      {"たい", VerbType::IAdjective, kAuxTai, kVerbRenyokei},
-      {"やすい", VerbType::IAdjective, kAuxRenyokei, kVerbRenyokei},
-      {"にくい", VerbType::IAdjective, kAuxRenyokei, kVerbRenyokei},
-      {"すぎる", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
-      {"かける", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
-      {"出す", VerbType::GodanSa, kAuxRenyokei, kVerbRenyokei},
-      {"終わる", VerbType::GodanRa, kAuxRenyokei, kVerbRenyokei},
-      {"終える", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
-      {"続ける", VerbType::Ichidan, kAuxRenyokei, kVerbRenyokei},
-      {"直す", VerbType::GodanSa, kAuxRenyokei, kVerbRenyokei},
+      {"ます", VerbType::Unknown, kVerbRenyokei, AuxiliaryFormFamily::Masu},
+      {"たい", VerbType::IAdjective, kVerbRenyokei},
+      {"やすい", VerbType::IAdjective, kVerbRenyokei},
+      {"にくい", VerbType::IAdjective, kVerbRenyokei},
+      {"すぎる", VerbType::Ichidan, kVerbRenyokei},
+      {"かける", VerbType::Ichidan, kVerbRenyokei},
+      {"出す", VerbType::GodanSa, kVerbRenyokei},
+      {"終わる", VerbType::GodanRa, kVerbRenyokei},
+      {"終える", VerbType::Ichidan, kVerbRenyokei},
+      {"続ける", VerbType::Ichidan, kVerbRenyokei},
+      {"直す", VerbType::GodanSa, kVerbRenyokei},
 
       // === Base form attachments (終止形接続) ===
       // らしい: conjecture auxiliary (食べるらしい, 食べないらしい)
-      {"らしい", VerbType::IAdjective, kAuxRenyokei, kAuxOutBase},
+      {"らしい", VerbType::IAdjective, kAuxOutBase},
   };
   return kBases;
 }
@@ -641,7 +646,8 @@ void appendAuxiliaryBase(const AuxiliaryBase& base, std::vector<AuxiliaryEntry>&
     case VerbType::GodanSa:
     case VerbType::GodanRa:
       appendGodanWithStem(base, base.form_family == AuxiliaryFormFamily::TeAttachment,
-                          base.form_family == AuxiliaryFormFamily::Sokuonbin, result);
+                          base.form_family == AuxiliaryFormFamily::Sokuonbin,
+                          base.form_family != AuxiliaryFormFamily::Positive, result);
       return;
     case VerbType::Kuru:
       appendFullForms(base, kKuruFull, std::size(kKuruFull), result);

@@ -45,8 +45,9 @@
 //   kSevere (2.5F)     - Severe violation
 //   kNever (3.5F)      - Near-prohibition of pattern
 //
-// Base connection costs (from scorer.cpp):
-//   NOUN→NOUN: 0.0, VERB→VERB: 0.8, NOUN→VERB: 0.2, etc.
+// Base POS connection costs are canonical in scorer.cpp's kBigramCostTable.
+// Its rows are previous POS and columns are next POS; NOUN→VERB and
+// VERB→NOUN are intentionally asymmetric.
 // =============================================================================
 
 namespace suzume::analysis::scorer {
@@ -78,13 +79,13 @@ constexpr float kBonusClosedInterjection = -2.0F;
 // Length-scaled bonus for long mixed nouns (4+ chars, e.g. お兄ちゃん, お父さん)
 // Split paths accumulate PREFIX→NOUN→SUFFIX connection bonuses (~-1.7 advantage)
 constexpr float kBonusLongMixedNounBase = -1.8F;
-constexpr float kBonusLongMixedNounPerChar = -0.5F;
+constexpr float kBonusLongMixedNounPerChar = 0.5F;
 
 // Bonus for long all-kanji nouns from dictionary (4+ chars)
 // Without this, split path wins due to dict+dict connection bonus (-0.5) and
 // split_candidates both-in-dict bonus (-0.2), totaling -0.7 advantage
 constexpr float kBonusLongKanjiNounBase = -1.0F;
-constexpr float kBonusLongKanjiNounPerChar = -0.3F;
+constexpr float kBonusLongKanjiNounPerChar = 0.3F;
 
 // Bonus for multi-char hiragana suffixes from dictionary (まみれ, だらけ, ごと)
 constexpr float kBonusLongSuffix = -1.5F;
@@ -354,11 +355,13 @@ constexpr std::string_view kNegationPrefixKanji[] = {"非", "不", "無", "未"}
 // =============================================================================
 // BOS (beginning-of-sentence) connection-cost adjustments. A morpheme that
 // cannot naturally start a sentence is penalized; a conjunction is rewarded.
-constexpr float kBosSuffixPenalty = 3.0F;                    // Suffix cannot lead a sentence
-constexpr float kBosConjunctionBonus = -0.5F;                // でも / しかし are natural at BOS
+constexpr float kBosSuffixPenalty = 3.0F;      // Suffix cannot lead a sentence
+constexpr float kBosConjunctionBonus = -0.5F;  // でも / しかし are natural at BOS
+constexpr float kBosDemoConjunctionBonus = scale::kDoubleVeryStrongBonus;
 constexpr float kBosAppearanceSouPenalty = 0.5F;             // 様態そう should be demonstrative at BOS
 constexpr float kBosAspectIruPenalty = scale::kRare;         // いる aspect needs a preceding て-form
 constexpr float kBosAspectShimauPenalty = scale::kVeryRare;  // しまう aspect needs a preceding て-form
+constexpr float kBosAspectOkuPenalty = scale::kVeryRare;     // おく aspect needs a preceding て-form
 constexpr float kBosAspectIkuPenalty = 1.0F;                 // いく aspect needs a preceding て-form
 constexpr float kBosAspectKuruPenalty = 3.0F;                // くる aspect (き) needs a preceding て-form
 constexpr float kBosTensePenalty = 2.0F;                     // た/だ needs a preceding verb/adj stem
@@ -421,8 +424,12 @@ constexpr std::array<BoundaryCost, static_cast<size_t>(core::ExtendedPOS::Count_
   table[static_cast<size_t>(core::ExtendedPOS::AuxAppearanceSou)].bos = kBosAppearanceSouPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxAspectIru)].bos = kBosAspectIruPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxAspectShimau)].bos = kBosAspectShimauPenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::AuxAspectOku)].bos = kBosAspectOkuPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxAspectIku)].bos = kBosAspectIkuPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxAspectKuru)].bos = kBosAspectKuruPenalty;
+  // AuxAspectMiru and AuxAspectHajimeru intentionally have no BOS row: their
+  // full surfaces are also ordinary finite lexical verbs. Penalizing them at
+  // BOS would damage that reading before a grammatical host can disambiguate.
   table[static_cast<size_t>(core::ExtendedPOS::AuxTenseTa)].bos = kBosTensePenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxHonorific)].bos = kBosHonorificAuxPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxClassicalPerfect)].bos = kBosClassicalPerfectPenalty;
@@ -436,6 +443,8 @@ constexpr std::array<BoundaryCost, static_cast<size_t>(core::ExtendedPOS::Count_
 
   table[static_cast<size_t>(core::ExtendedPOS::AuxAspectKuru)].eos = kEosAspectKuruPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxAspectKuru)].eos_gate = EosBoundaryGate::SingleCodepoint;
+  // No other aspect auxiliary has an EOS row: its full finite form may close
+  // a sentence. Kuru is exceptional only for the one-mora continuative き.
   table[static_cast<size_t>(core::ExtendedPOS::ParticleConj)].eos = kEosListingParticlePenalty;
   table[static_cast<size_t>(core::ExtendedPOS::ParticleConj)].eos_gate = EosBoundaryGate::ListingParticle;
   table[static_cast<size_t>(core::ExtendedPOS::ParticleBinding)].eos = kEosBindingParticleBonus;

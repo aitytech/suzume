@@ -286,7 +286,7 @@ bool formalNounFollowsAt(const dictionary::DictionaryManager* dict_manager, cons
   if (dict_manager == nullptr || pos >= codepoints.size()) {
     return false;
   }
-  const std::string remaining = extractSubstring(codepoints, pos, codepoints.size());
+  const std::string remaining = extractClosedClassProbe(codepoints, pos);
   return lookupResultsHaveExtendedPOS(dict_manager->lookup(remaining, 0), core::ExtendedPOS::NounFormal);
 }
 

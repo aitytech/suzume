@@ -200,15 +200,15 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
   }
 }
 
-// Irregular 来る (カ変) mizenkei こ before a ない-family negative (こない,
-// こなかった, こなくて, こなければ, こなきゃ), or before the passive/potential
-// auxiliary (てこられる, でこられない). Its volitional stem こよ is likewise
-// emitted only in the directional auxiliary context (読んでこよう). The short
-// surfaces are far too frequent as unconditional dictionary entries (こと,
-// これ, きのこ, ...), so each candidate requires its following inflection.
+// Irregular 来る (カ変) mizenkei こ before a selecting closed auxiliary: the
+// ない family (こない, こなかった), passive/potential られる (こられる),
+// or causative させる (こさせる). Its volitional stem こよ is likewise emitted
+// only in the directional auxiliary context (読んでこよう). The short surface
+// is far too frequent as an unconditional dictionary entry (こと, これ,
+// きのこ, ...), so every candidate requires its inflectional continuation.
 // The reading is chosen from the preceding context:
 //   - after a clear て/で form: directional auxiliary てくる → Auxiliary / AuxAspectKuru
-//   - otherwise: main verb 来る before negation → Verb / VerbMizenkei
+//   - otherwise: main verb 来る before a selecting auxiliary → Verb / VerbMizenkei
 // Emitting a single context-appropriate reading avoids relying on a broad
 // AuxAspectKuru connection rule that could mis-flip other subsidiary verbs.
 void appendKkoNominalizerCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -279,8 +279,8 @@ void appendEruObligationCandidates(const std::vector<char32_t>& codepoints, size
   candidates.push_back(std::move(eru_candidate));
 }
 
-void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
-                                     std::vector<UnknownCandidate>& candidates) {
+void appendKuruMizenkeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  std::vector<UnknownCandidate>& candidates) {
   // The conditional stem くれ is distinct from benefactive くれる when it
   // is followed immediately by ば after a clear te-form (読んでくれ+ば).
   // The benefactive conditional is くれれ+ば, so this context uniquely marks
@@ -296,12 +296,16 @@ void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, si
     return;
   }
   const bool negative_follows = vh::naiNegativeFollowsAt(codepoints, start_pos + 1);
-  const bool passive_follows = start_pos + 2 < codepoints.size() && codepoints[start_pos + 1] == U'ら' &&
+  const bool passive_follows = start_pos + 3 < codepoints.size() && codepoints[start_pos + 1] == U'ら' &&
                                codepoints[start_pos + 2] == U'れ' &&
-                               isClearTeFormBeforeSubsidiary(codepoints, start_pos, false);
+                               vh::isPassiveAuxContinuation(codepoints, start_pos + 3, /*strict_masu=*/false);
+  const bool causative_follows = vh::causativeSaseFollowsAt(codepoints, start_pos + 1);
+  const bool ra_nuki_potential_follows =
+      start_pos + 2 < codepoints.size() && codepoints[start_pos + 1] == U'れ' && codepoints[start_pos + 2] == U'る';
   const bool volitional_follows =
       start_pos + 2 < codepoints.size() && codepoints[start_pos + 1] == U'よ' && codepoints[start_pos + 2] == U'う';
-  if (!negative_follows && !passive_follows && !volitional_follows) {
+  if (!negative_follows && !passive_follows && !causative_follows && !ra_nuki_potential_follows &&
+      !volitional_follows) {
     return;
   }
   constexpr float kCost = candidate::verb_cost::kStandardBonus;
@@ -318,6 +322,13 @@ void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, si
                                         candidates);
     return;
   }
+  if (ra_nuki_potential_follows) {
+    candidates.push_back(makeVerbCandidate(extractSubstring(codepoints, start_pos, start_pos + 3), start_pos,
+                                           start_pos + 3, kCost, "くる", dictionary::ConjugationType::Kuru, true,
+                                           CandidateOrigin::VerbHiragana, candidate::kHighOriginConfidence,
+                                           "hiragana_kuru_ra_nuki_potential", core::ExtendedPOS::VerbShuushikei));
+    return;
+  }
   const std::string surface = extractSubstring(codepoints, start_pos, start_pos + 1);
   SUZUME_DEBUG_VERBOSE_BLOCK {
     SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " hiragana_kuru_mizenkei lemma=くる cost=" << kCost
@@ -332,15 +343,9 @@ void appendKuruMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, si
     candidates.push_back(std::move(aux_cand));
     return;
   }
-  // A passive/potential continuation is only admitted after a te-form, where
-  // it is the directional subsidiary construction; standalone こられる remains
-  // available as a lexical verb candidate.
-  if (passive_follows) {
-    return;
-  }
   candidates.push_back(makeVerbCandidate(surface, start_pos, start_pos + 1, kCost, "くる",
                                          dictionary::ConjugationType::Kuru, true, CandidateOrigin::VerbHiragana,
-                                         candidate::kHighOriginConfidence, "hiragana_kuru_mizenkei_nai",
+                                         candidate::kHighOriginConfidence, "hiragana_kuru_mizenkei_auxiliary",
                                          core::ExtendedPOS::VerbMizenkei));
 }
 

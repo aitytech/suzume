@@ -84,6 +84,7 @@ EntrySpecRange getDeterminerEntries() {
       det("さる", ""),
       det("きたる", ""),
       det("こうした", ""),
+      det("そうした", ""),
   };
   return makeEntrySpecRange(kEntries);
 }

@@ -44,29 +44,35 @@ bool TagGenerator::shouldInclude(const core::Morpheme& morpheme) const {
     return false;
   }
 
-  // POS filter (whitelist)
-  if (options_.pos_filter != 0) {
-    uint8_t pos_bit = 0;
-    switch (morpheme.pos) {
-      case core::PartOfSpeech::Noun:
-      case core::PartOfSpeech::Pronoun:
-        pos_bit = kTagPosNoun;
+  // POS filter (whitelist). Zero means every filterable content-word category,
+  // plus particles/auxiliaries only when their explicit include flags allow it.
+  uint8_t pos_bit = 0;
+  switch (morpheme.pos) {
+    case core::PartOfSpeech::Noun:
+    case core::PartOfSpeech::Pronoun:
+      pos_bit = kTagPosNoun;
+      break;
+    case core::PartOfSpeech::Verb:
+      pos_bit = kTagPosVerb;
+      break;
+    case core::PartOfSpeech::Adjective:
+      pos_bit = kTagPosAdjective;
+      break;
+    case core::PartOfSpeech::Adverb:
+      pos_bit = kTagPosAdverb;
+      break;
+    case core::PartOfSpeech::Particle:
+    case core::PartOfSpeech::Auxiliary:
+      if (options_.pos_filter == 0) {
         break;
-      case core::PartOfSpeech::Verb:
-        pos_bit = kTagPosVerb;
-        break;
-      case core::PartOfSpeech::Adjective:
-        pos_bit = kTagPosAdjective;
-        break;
-      case core::PartOfSpeech::Adverb:
-        pos_bit = kTagPosAdverb;
-        break;
-      default:
-        return false;  // Not in any filterable category
-    }
-    if ((options_.pos_filter & pos_bit) == 0) {  // NOLINT(hicpp-signed-bitwise): bit flag operation
+      }
       return false;
-    }
+    default:
+      return false;
+  }
+  if (options_.pos_filter != 0 &&
+      (options_.pos_filter & pos_bit) == 0) {  // NOLINT(hicpp-signed-bitwise): bit flag operation
+    return false;
   }
 
   // Exclude basic words (hiragana-only lemma)

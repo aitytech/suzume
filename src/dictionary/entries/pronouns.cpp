@@ -126,7 +126,7 @@ EntrySpecRange getPronounEntries() {
       pronoun_interrogative("いくら", ""),
       // どう/いかが can take だ/です (どうですか, いかがですか)
       // Register as both adverb and na-adjective for correct copula connection
-      adv("どう", ""),
+      quotative_adv("どう", ""),
       na_adj("どう", "どう"),
       adv("いかが", ""),
       na_adj("いかが", "いかが"),
@@ -199,7 +199,6 @@ EntrySpecRange getPronounEntries() {
       noun("きのう", ""),
       noun("あした", ""),
       noun("あさって", ""),
-      formal_noun("おいで", ""),
 
       // Fixed temporal and frequency adverbs. These are closed lexical
       // function words, not productive pronoun-plus-particle sequences.

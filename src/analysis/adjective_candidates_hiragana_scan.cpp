@@ -193,7 +193,9 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
     }
     // Skip patterns ending with 〜かなく (verb negative renyokei of godan verbs)
     // E.g., いかなく = いく + ない
-    if (grammar::endsWithGodanNegativeRenyokei(surface)) {
+    const std::string adjective_ku_lemma =
+        utf8::endsWith(surface, "く") ? surface.substr(0, surface.size() - core::kJapaneseCharBytes) + "い" : "";
+    if (grammar::endsWithGodanNegativeRenyokei(surface) && !isAdjectiveInDictionary(dict_manager, adjective_ku_lemma)) {
       continue;  // Skip - godan negative renyokei
     }
 

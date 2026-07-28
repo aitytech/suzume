@@ -123,6 +123,15 @@ bool isKanjiHonorificTitle(std::string_view surface);
 /** @brief Whether a surface is the attributive form な of the copula だ */
 bool isAttributiveCopulaNa(std::string_view surface);
 
+/** @brief Whether a surface starts a predicative copula form (だ, です, である) */
+bool startsPredicativeCopula(std::string_view surface);
+
+/** @brief Whether a surface is the fused particle/conjunction でも */
+bool isFusedDemo(std::string_view surface);
+
+/** @brief Whether a surface is the benefactive formal noun おかげ */
+bool isBenefactiveFormalNoun(std::string_view surface);
+
 /** @brief Whether a surface is the independent negative adjective ない */
 bool isIndependentNegativeAdjective(std::string_view surface);
 

@@ -374,6 +374,19 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
                     dictionary::ConjugationType::None, grammar::ConjForm::Base);
   }
 
+  for (size_t idx = 0; idx < result.size(); ++idx) {
+    auto& current = result[idx];
+    const bool has_auxiliary_host =
+        idx == 0 || result[idx - 1].pos == core::PartOfSpeech::Noun ||
+        result[idx - 1].pos == core::PartOfSpeech::Verb || result[idx - 1].pos == core::PartOfSpeech::Adjective ||
+        result[idx - 1].pos == core::PartOfSpeech::Auxiliary || result[idx - 1].pos == core::PartOfSpeech::Adverb ||
+        result[idx - 1].pos == core::PartOfSpeech::Conjunction;
+    if (current.surface == "らしく" && has_auxiliary_host) {
+      resolver::retag(current, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxConjectureRashii, "らしい",
+                      dictionary::ConjugationType::IAdjective, grammar::ConjForm::Renyokei);
+    }
+  }
+
   for (size_t idx = 1; idx < result.size(); ++idx) {
     auto& current = result[idx];
     const auto& previous = result[idx - 1];
@@ -400,10 +413,6 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
     if (current.surface == "て" && previous.surface == "と") {
       resolver::retag(current, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleConj, "て",
                       dictionary::ConjugationType::None, grammar::ConjForm::Base);
-    }
-    if (current.surface == "らしく") {
-      resolver::retag(current, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxConjectureRashii, "らしい",
-                      dictionary::ConjugationType::IAdjective, grammar::ConjForm::Renyokei);
     }
     if ((current.surface == "はじめ" || current.surface == "そこね") &&
         previous.extended_pos == core::ExtendedPOS::VerbRenyokei) {

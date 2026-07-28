@@ -47,7 +47,8 @@ EntrySpecRange getParticleEntries() {
       // takes で: 読ん+じゃ+だめ, 飲ん+じゃ+いけない. The copula reading of じゃ
       // is a separate entry among the auxiliaries.
       particle("じゃ", EPOS::ParticleConj),
-      // Note: ら removed - たら handles conditional, ら suffix is in L2 as SUFFIX
+      // ら is not a conditional particle here: たら owns that role, while the
+      // plural suffix ら is an L1 entry in auxiliaries.cpp.
       particle("ながら", EPOS::ParticleConj),
       particle("つつ", EPOS::ParticleConj),  // 反復・並行の接続助詞 (連用形接続): 重ね+つつ, 増加し+つつ+ある
       // 即時: 聞くや否や, 着くや否や. A fixed classical compound with no

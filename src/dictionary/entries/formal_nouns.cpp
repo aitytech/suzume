@@ -10,6 +10,8 @@ EntrySpecRange getFormalNounEntries() {
       formal_noun("こと", ""),
       formal_noun("物", "もの"),
       formal_noun("もの", ""),
+      // Honorific nominal used in fixed request and invitation frames.
+      formal_noun("おいで", ""),
       // Colloquial contraction of the formal noun (行くもんか, うまいもんだ).
       // Without it the two morae are read as a focus particle plus the
       // nominalizer, or absorbed into a fabricated verb.
@@ -103,10 +105,10 @@ EntrySpecRange getFormalNounEntries() {
       // Formal noun expressing a risk after an attributive clause
       // (遅れるおそれがある, 欠けるおそれはない).
       formal_noun("おそれ", ""),
-      // Benefactive formal noun following the honorific prefix: お+かげで.
-      // The independent lexical noun is open-class, while this constructional
-      // use has a stable formal-noun distribution.
-      formal_noun("かげ", ""),
+      // Lexicalized nominal expressions whose initial お is no longer a
+      // productive honorific prefix. Keep each as one search unit.
+      formal_noun("おかげ", ""),
+      formal_noun("おしまい", ""),
       formal_noun("はず", "はず"),
       // Formal noun for conditional cases (読む場合、必要な場合).
       formal_noun("場合", ""),

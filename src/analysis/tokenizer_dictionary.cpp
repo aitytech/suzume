@@ -549,6 +549,16 @@ bool followsKyotoHonorificYasuHost(const core::Lattice& lattice, size_t start_po
   return false;
 }
 
+bool hasPrecedingQuantityEdge(const core::Lattice& lattice, size_t end_pos) {
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(end_pos)) {
+    const auto& edge = lattice.getEdge(edge_id);
+    if (edge.extended_pos == core::ExtendedPOS::NounNumber || edge.origin == core::CandidateOrigin::Counter) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view text,
@@ -684,6 +694,14 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 
   for (const auto& result : results) {
     if (result.entry == nullptr) {
+      continue;
+    }
+
+    // A closed kana numeral cannot open immediately after a completed
+    // quantity. Repeated/distributive quantities are owned by the dedicated
+    // counter candidate, while this position otherwise begins a particle or
+    // predicate (一つ+と+おもう, not 一つ+とお+も+う).
+    if (result.entry->extended_pos == core::ExtendedPOS::NounNumber && hasPrecedingQuantityEdge(lattice, start_pos)) {
       continue;
     }
 
@@ -953,6 +971,17 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
           (codepoints[end_pos] == U'な' && (end_pos + 1 >= codepoints.size() || codepoints[end_pos + 1] != U'ら')) ||
           (end_pos + 1 < codepoints.size() && codepoints[end_pos] == U'そ' && codepoints[end_pos + 1] == U'う');
       if (has_same_surface_na_adjective && na_adjective_continuation) {
+        continue;
+      }
+    }
+    // The reverse side of the same lexical homograph contract: when a surface
+    // is explicitly registered as both a noun and a na-adjective, a predicative
+    // copula selects its nominal reading. Adjective-only entries remain
+    // adjectives before the same copula.
+    if (result.entry->extended_pos == core::ExtendedPOS::AdjNaAdj && end_pos < codepoints.size()) {
+      const bool has_same_surface_noun =
+          lookupResultsHavePartOfSpeech(results, partOfSpeechMask(core::PartOfSpeech::Noun), result.length);
+      if (has_same_surface_noun && grammar::startsPredicativeCopula(text.substr(byteOffsetAt(byte_offsets, end_pos)))) {
         continue;
       }
     }

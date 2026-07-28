@@ -5,6 +5,9 @@
 
 #include "patterns.h"
 
+#include <string>
+
+#include "core/kana_constants.h"
 #include "core/utf8_constants.h"
 
 namespace suzume::grammar {
@@ -28,7 +31,8 @@ bool endsWithVerbNegative(std::string_view surface) {
   // Only e-row endings are matched; i-row Ichidan negatives (見ない → みない)
   // are not covered here. These patterns can appear when a kanji is followed
   // by hiragana.
-  if (utf8::equalsAny(last9, {"べない", "めない", "せない", "てない", "ねない", "けない", "げない", "れない"})) {
+  if (utf8::equalsAny(last9, {"えない", "けない", "げない", "せない", "ぜない", "てない", "でない", "ねない", "へない",
+                              "べない", "ぺない", "めない", "れない"})) {
     return true;
   }
 
@@ -69,9 +73,13 @@ bool endsWithNegativeBecomePattern(std::string_view surface) {
 }
 
 bool endsWithGodanNegativeRenyokei(std::string_view surface) {
-  // かなく (9 bytes): godan ka-row negative renyokei
-  // E.g., いかなく = いく + ない連用形
-  return utf8::endsWith(surface, "かなく");
+  for (std::string_view ending : kana::kMizenkeiEndings) {
+    const std::string suffix = std::string(ending) + "なく";
+    if (surface.size() > suffix.size() && utf8::endsWith(surface, suffix)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace suzume::grammar

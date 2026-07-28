@@ -505,15 +505,10 @@ ExtendedPOS posToExtendedPos(PartOfSpeech pos) {
 // Verb Form Detection Helpers
 // =============================================================================
 
-// NOTE: postprocess::Lemmatizer::detectConjForm() also maps endings to
-// conjugation forms, but over a different input domain (post-merge morpheme
-// surface plus lemma and next-morpheme context, verbs and adjectives) with
-// intentionally different ending sets and tier order. The same ending can
-// legitimately classify differently across the two (e.g. なければ: Kateikei here
-// via the ば tier, Mizenkei there via the negative tier; って/った: TeForm/TaForm
-// here, Onbinkei there), and ConjForm::Ishikei has no ExtendedPOS counterpart.
-// The two mappings are not copies of one table and must not be merged.
-ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix) {
+// This detector assigns ExtendedPOS while candidates are built. Postprocessing
+// treats that selected ExtendedPOS as authoritative when exposing ConjForm;
+// its surface heuristics are only a fallback for legacy morphemes without one.
+ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix, bool godan_imperative_hint) {
   // Empty surface defaults to shuushi
   if (surface.empty()) {
     return ExtendedPOS::VerbShuushikei;
@@ -577,6 +572,14 @@ ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix) {
     return ExtendedPOS::VerbRenyokei;
   }
 
+  // A bare e-row surface is ambiguous between a Godan imperative (待て) and
+  // an Ichidan continuative (食べ). Candidate generators that know the
+  // conjugation type provide the Godan hint; keep unknown forms conservative.
+  if (godan_imperative_hint && normalize::utf8Length(surface) > 1 &&
+      utf8::endsWithAny(surface, {"え", "け", "げ", "せ", "て", "ね", "べ", "め", "れ"})) {
+    return ExtendedPOS::VerbMeireikei;
+  }
+
   // て/で form
   if (utf8::endsWithAny(surface, {"て", "で"})) {
     return ExtendedPOS::VerbTeForm;
@@ -603,8 +606,9 @@ ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix) {
     return ExtendedPOS::VerbMeireikei;
   }
 
-  // る ending - likely shuushi (dictionary form) for ichidan
-  if (utf8::endsWithAny(surface, {"る"})) {
+  // Godan dictionary forms end in one of these nine u-row kana.  This also
+  // covers the shared る ending used by Ichidan dictionary forms.
+  if (utf8::endsWithAny(surface, {"う", "く", "ぐ", "す", "つ", "ぬ", "ぶ", "む", "る"})) {
     return ExtendedPOS::VerbShuushikei;
   }
 

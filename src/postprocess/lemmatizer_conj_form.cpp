@@ -10,18 +10,63 @@
 
 namespace suzume::postprocess {
 
-// NOTE: core::detectVerbForm() also maps endings to conjugation forms, but over
-// a different input domain (pre-merge verb surface plus suffix chain, verbs only)
-// with intentionally different ending sets and tier order. The same ending can
-// legitimately classify differently across the two (e.g. なければ: Mizenkei here
-// via the negative tier, Kateikei there via the ば tier; って/った: Onbinkei here,
-// TeForm/TaForm there), and Ishikei has no ExtendedPOS counterpart. The two
-// mappings are not copies of one table and must not be merged.
+namespace {
+
+grammar::ConjForm conjFormFromExtendedPos(core::ExtendedPOS extended_pos, core::ExtendedPOS next_extended_pos,
+                                          std::string_view next_lemma) {
+  using core::ExtendedPOS;
+  using grammar::ConjForm;
+
+  switch (extended_pos) {
+    case ExtendedPOS::VerbShuushikei:
+    case ExtendedPOS::VerbRentaikei:
+    case ExtendedPOS::AdjBasic:
+    case ExtendedPOS::AdjNaAdj:
+      return ConjForm::Base;
+    case ExtendedPOS::VerbRenyokei:
+    case ExtendedPOS::AdjRenyokei:
+    case ExtendedPOS::AdjStem:
+      return ConjForm::Renyokei;
+    case ExtendedPOS::VerbMizenkei:
+      // Modern volition is represented as a mizenkei stem plus the closed
+      // auxiliary う. Keep negative まい in the ordinary mizenkei cell.
+      return next_extended_pos == ExtendedPOS::AuxVolitional && utf8::equalsAny(next_lemma, {"う"})
+                 ? ConjForm::Ishikei
+                 : ConjForm::Mizenkei;
+    case ExtendedPOS::AdjMizenkei:
+      return ConjForm::Mizenkei;
+    case ExtendedPOS::VerbOnbinkei:
+    case ExtendedPOS::VerbTeForm:
+    case ExtendedPOS::VerbTaForm:
+    case ExtendedPOS::VerbTaraForm:
+    case ExtendedPOS::AdjKatt:
+      return ConjForm::Onbinkei;
+    case ExtendedPOS::VerbKateikei:
+    case ExtendedPOS::AdjKeForm:
+      return ConjForm::Kateikei;
+    case ExtendedPOS::VerbMeireikei:
+      return ConjForm::Meireikei;
+    default:
+      return ConjForm::Count_;
+  }
+}
+
+}  // namespace
+
 grammar::ConjForm Lemmatizer::detectConjForm(std::string_view surface, std::string_view lemma, core::PartOfSpeech pos,
-                                             std::string_view next_lemma) {
+                                             std::string_view next_lemma, core::ExtendedPOS extended_pos,
+                                             core::ExtendedPOS next_extended_pos) {
   // Only verbs and adjectives have conjugation forms
   if (pos != core::PartOfSpeech::Verb && pos != core::PartOfSpeech::Adjective) {
     return grammar::ConjForm::Base;
+  }
+
+  // ExtendedPOS is the lattice's grammatical decision and is authoritative.
+  // Surface rules below are retained only for callers and legacy morphemes
+  // that do not carry a verb/adjective form.
+  if (const grammar::ConjForm form = conjFormFromExtendedPos(extended_pos, next_extended_pos, next_lemma);
+      form != grammar::ConjForm::Count_) {
+    return form;
   }
 
   // If surface equals lemma, it's the base form
@@ -52,9 +97,11 @@ grammar::ConjForm Lemmatizer::detectConjForm(std::string_view surface, std::stri
     }
   }
 
-  // Check for negative forms (mizenkei)
-  if (utf8::endsWithAny(
-          surface, {"ない", "なかった", "ぬ", "ず", "ません", "なく", "なくて", "なければ", "なきゃ", "なくても"})) {
+  // Check for negative forms (mizenkei). A lexical adjective whose lemma
+  // itself ends in ない is not a negative construction (少ない→少なく).
+  const bool lemma_contains_nai = utf8::endsWith(lemma, "ない");
+  if (!lemma_contains_nai && utf8::endsWithAny(surface, {"ない", "なかった", "ぬ", "ず", "ません", "なく", "なくて",
+                                                         "なければ", "なきゃ", "なくても"})) {
     return grammar::ConjForm::Mizenkei;
   }
 

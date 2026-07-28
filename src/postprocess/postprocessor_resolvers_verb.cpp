@@ -618,7 +618,8 @@ void resolveDemonstrativeQuotativeOnbin(std::vector<core::Morpheme>& result) {
     const auto& continuation = result[idx + 1];
     const bool is_te_or_past = continuation.extended_pos == core::ExtendedPOS::ParticleConj ||
                                continuation.extended_pos == core::ExtendedPOS::AuxTenseTa;
-    const bool demonstrative_context = demonstrative.extended_pos == core::ExtendedPOS::Adverb &&
+    const bool demonstrative_context = (demonstrative.extended_pos == core::ExtendedPOS::Adverb ||
+                                        demonstrative.extended_pos == core::ExtendedPOS::AdverbQuotative) &&
                                        grammar::isDemonstrativeUAdverb(demonstrative.surface);
     const bool quotative_context =
         demonstrative.pos == core::PartOfSpeech::Particle && utf8::equalsAny(demonstrative.surface, {"と"});

@@ -18,6 +18,7 @@ EntrySpecRange getCompoundParticleEntries() {
       particle("により", EPOS::ParticleCase),
       particle("につき", EPOS::ParticleCase),    // formal reason/topic marker in notices
       particle("につれて", EPOS::ParticleCase),  // beat に+つれ(verb)+て split
+      particle("につれ", EPOS::ParticleCase),
       particle("に従って", EPOS::ParticleCase),  // formal compliance/sequence marker
       particle("に従い", EPOS::ParticleCase),
       particle("にかけて", EPOS::ParticleCase),  // beat にか(noun)+けて(verb) split

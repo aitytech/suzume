@@ -261,7 +261,7 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         // retain their ordinary continuative candidates.
         const bool unverified_before_temporal_nominal =
             !ichidan_base_is_dict && kanji_end > start_pos + 1 &&
-            grammar::startsClosedTemporalNominal(extractSubstring(codepoints, renyokei_end, codepoints.size()));
+            grammar::startsClosedTemporalNominal(extractClosedClassProbe(codepoints, renyokei_end));
         if (!prefer_suru && !prefer_godan && ichidan_cand.confidence > conf_threshold && !surface_is_dict_noun &&
             !single_kanji_te_form && !suffix_is_dict_verb && !trailing_span_is_dict_suffix &&
             !suffix_is_godan_before_auxiliary && !adj_homograph_blocked && !okurigana_opens_auxiliary &&
@@ -392,7 +392,7 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
            codepoints[renyokei_end] == U'ぬ' ||
            (codepoints[renyokei_end] == U'れ' && renyokei_end + 1 < codepoints.size() &&
             codepoints[renyokei_end + 1] == U'ば') ||
-           grammar::startsHonorificSubsidiaryVerb(extractSubstring(codepoints, renyokei_end, codepoints.size())) ||
+           grammar::startsHonorificSubsidiaryVerb(extractClosedClassProbe(codepoints, renyokei_end)) ||
            follows_kanji_sahen_predicate || follows_kanji_predicate || causative_follows || passive_follows ||
            follows_symbol_after_case_particle);
       if (!first_is_single_stem_ending && has_ichidan_continuation &&
@@ -407,8 +407,13 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         bool prefer_godan = !causative_follows && !passive_follows && (godan_cand.confidence > ichidan_cand.confidence);
         // Higher confidence threshold for multi-char stems to avoid false positives
         constexpr float kMultiCharIchidanThreshold = 0.45F;
-        // Skip surfaces ending in ない — almost always adjective (少ない) or negative suffix
-        bool ends_in_nai = (second_hira == U'い' && first_hira == U'な');
+        // A ない-family lexical adjective uses the whole okurigana paradigm:
+        // 少ない/少なく/少なかっ/少なけれ/少なかろ. Looking at only the
+        // first two kana misses the conditional and fabricates 危なける from
+        // 危なけれ+ば.
+        const std::string okurigana = extractSubstring(codepoints, kanji_end, hiragana_end);
+        const bool is_nai_adjective_okurigana =
+            utf8::startsWithAny(okurigana, {"ない", "なく", "なかっ", "なけれ", "なかろ"});
         // A-row + せ/れ before an auxiliary continuation is a Godan voice
         // stem (読ま+せる, 読ま+れる). Keep a genuinely lexicalized Ichidan
         // verb such as 泳がせる, but do not generate an unverified long
@@ -416,7 +421,7 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         bool is_unverified_godan_voice = grammar::isARowCodepoint(first_hira) &&
                                          (second_hira == U'せ' || second_hira == U'れ') &&
                                          !vh::isVerbInDictionary(dict_manager, ichidan_cand.base_form);
-        if (!prefer_suru && !prefer_godan && !ends_in_nai && !is_unverified_godan_voice &&
+        if (!prefer_suru && !prefer_godan && !is_nai_adjective_okurigana && !is_unverified_godan_voice &&
             ichidan_cand.confidence > kMultiCharIchidanThreshold) {
           bool surface_is_dict_entry = vh::isNounOrAdjectiveInDictionary(dict_manager, surface);
           bool base_is_dict_verb = vh::isVerbInDictionary(dict_manager, ichidan_cand.base_form);

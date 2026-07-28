@@ -207,6 +207,46 @@ bool hasGenitiveNominalSelector(const std::vector<char32_t>& codepoints,
   return false;
 }
 
+bool mayEndGeneratedAttributiveAdjective(char32_t terminal) {
+  switch (terminal) {
+    case U'い':  // modern basic form
+    case U'き':  // classical attributive
+    case U'し':  // classical terminal
+    case U'る':  // classical supplementary attributive/terminal
+    case U'れ':  // classical supplementary imperative
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool hasGeneratedAttributiveAdjectiveEndingAt(const std::vector<char32_t>& codepoints,
+                                              const std::vector<normalize::CharType>& char_types, size_t first_selector,
+                                              size_t selector_end, const grammar::Inflection& inflection,
+                                              const dictionary::DictionaryManager* dict_manager) {
+  if (!mayEndGeneratedAttributiveAdjective(codepoints[selector_end - 1])) {
+    return false;
+  }
+  for (size_t selector_start = first_selector; selector_start < selector_end; ++selector_start) {
+    std::vector<UnknownCandidate> adjective_candidates;
+    if (char_types[selector_start] == normalize::CharType::Kanji) {
+      generateAdjectiveCandidates(codepoints, selector_start, char_types, inflection, dict_manager,
+                                  adjective_candidates);
+    } else if (char_types[selector_start] == normalize::CharType::Hiragana) {
+      generateHiraganaAdjectiveCandidates(codepoints, selector_start, char_types, inflection, dict_manager,
+                                          adjective_candidates);
+    }
+    if (std::any_of(adjective_candidates.begin(), adjective_candidates.end(), [selector_end](const auto& adjective) {
+          return adjective.end == selector_end && adjective.pos == core::PartOfSpeech::Adjective &&
+                 adjective.extended_pos == core::ExtendedPOS::AdjBasic &&
+                 adjective.cost <= candidate::kAttributiveSelectorMaxCost;
+        })) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool hasAttributiveNominalSelector(const std::vector<char32_t>& codepoints,
                                    const std::vector<normalize::CharType>& char_types, size_t start_pos,
                                    const grammar::Inflection& inflection,
@@ -251,23 +291,9 @@ bool hasAttributiveNominalSelector(const std::vector<char32_t>& codepoints,
     if (exact_adjective != nullptr && exact_adjective->extended_pos == core::ExtendedPOS::AdjBasic) {
       return true;
     }
-    std::vector<UnknownCandidate> adjective_candidates;
-    if (char_types[selector_start] == normalize::CharType::Kanji) {
-      generateAdjectiveCandidates(codepoints, selector_start, char_types, inflection, dict_manager,
-                                  adjective_candidates);
-    } else if (char_types[selector_start] == normalize::CharType::Hiragana) {
-      generateHiraganaAdjectiveCandidates(codepoints, selector_start, char_types, inflection, dict_manager,
-                                          adjective_candidates);
-    }
-    if (std::any_of(adjective_candidates.begin(), adjective_candidates.end(), [start_pos](const auto& adjective) {
-          return adjective.end == start_pos && adjective.pos == core::PartOfSpeech::Adjective &&
-                 adjective.extended_pos == core::ExtendedPOS::AdjBasic &&
-                 adjective.cost <= candidate::kAttributiveSelectorMaxCost;
-        })) {
-      return true;
-    }
   }
-  return false;
+  return hasGeneratedAttributiveAdjectiveEndingAt(codepoints, char_types, first_selector, start_pos, inflection,
+                                                  dict_manager);
 }
 
 bool isSelectedNominalHeadShape(const std::vector<normalize::CharType>& char_types, size_t start_pos, size_t end_pos,
@@ -348,6 +374,30 @@ bool hasFunctionWordChainDecomposition(const std::vector<char32_t>& codepoints, 
   }
   constexpr PartOfSpeechMask kFunctionMask =
       partOfSpeechMask(core::PartOfSpeech::Particle) | partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+  for (size_t particle_start = start_pos + 2; particle_start < end_pos; ++particle_start) {
+    if (dict_manager->lookupExact(extractSubstring(codepoints, particle_start, end_pos),
+                                  core::PartOfSpeech::Particle) == nullptr) {
+      continue;
+    }
+    std::vector<int> auxiliary_count(particle_start - start_pos + 1, -1);
+    auxiliary_count[0] = 0;
+    for (size_t relative_start = 0; relative_start < particle_start - start_pos; ++relative_start) {
+      if (auxiliary_count[relative_start] < 0) {
+        continue;
+      }
+      for (size_t relative_end = relative_start + 1; relative_end <= particle_start - start_pos; ++relative_end) {
+        if (dict_manager->lookupExact(
+                extractSubstring(codepoints, start_pos + relative_start, start_pos + relative_end),
+                core::PartOfSpeech::Auxiliary) != nullptr) {
+          auxiliary_count[relative_end] = std::max(auxiliary_count[relative_end], auxiliary_count[relative_start] + 1);
+        }
+      }
+    }
+    if (auxiliary_count.back() >= 1) {
+      return true;
+    }
+  }
+
   for (size_t split = start_pos + 2; split < end_pos; ++split) {
     const std::string head_surface = extractSubstring(codepoints, start_pos, split);
     // A focus particle, or a pronoun — the one nominal that is itself closed

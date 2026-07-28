@@ -403,7 +403,7 @@ inline bool isPronounType(ExtendedPOS epos) {
  * @param suffix The suffix chain (from inflection analysis, may be empty)
  * @return The detected ExtendedPOS verb form
  */
-ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix = {});
+ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix = {}, bool godan_imperative_hint = false);
 
 /**
  * @brief Detect adjective conjugation form from surface

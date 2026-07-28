@@ -133,8 +133,12 @@ bool appendKanjiIAdjSpecialCandidates(const std::vector<char32_t>& codepoints, s
     size_t adj_end = kanji_end + 2;
     std::string surface = extractSubstring(codepoints, start_pos, adj_end);
     std::string lemma = extractSubstring(codepoints, start_pos, kanji_end) + "るい";
-    candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, lemma, candidate::kSingleKanjiICost,
-                                           CandidateOrigin::AdjectiveI, candidate::kIAdjConfMin, "single_kanji_rui"));
+    const std::string verb_lemma = extractSubstring(codepoints, start_pos, kanji_end) + "る";
+    if (!verb_helpers::isVerbInDictionary(dict_manager, verb_lemma) ||
+        verb_helpers::isAdjectiveInDictionary(dict_manager, lemma)) {
+      candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, lemma, candidate::kSingleKanjiICost,
+                                             CandidateOrigin::AdjectiveI, candidate::kIAdjConfMin, "single_kanji_rui"));
+    }
   }
   return false;
 }

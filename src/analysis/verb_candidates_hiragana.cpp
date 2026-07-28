@@ -204,7 +204,7 @@ void appendHiraganaRenyokeiBeforeAspect(const std::vector<char32_t>& codepoints,
     return;
   }
 
-  const std::string following = extractSubstring(codepoints, stem_end, codepoints.size());
+  const std::string following = extractClosedClassProbe(codepoints, stem_end);
   // Kanji-led aspect candidates are generated rather than dictionary-backed;
   // the leading aspect kanji is therefore also accepted as structural evidence.
   const bool aspect_follows =
@@ -257,11 +257,11 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     return candidates;
   }
 
-  // Context-gated irregular 来る mizenkei: こ + ない-family negative
+  // Context-gated irregular 来る mizenkei before a selecting auxiliary.
   appendKkoNominalizerCandidates(codepoints, start_pos, candidates);
   appendSuruInabilityCandidates(codepoints, start_pos, candidates);
   appendEruObligationCandidates(codepoints, start_pos, candidates);
-  appendKuruMizenkeiNaiCandidates(codepoints, start_pos, candidates);
+  appendKuruMizenkeiCandidates(codepoints, start_pos, candidates);
   appendKuruRenyokeiCandidates(codepoints, start_pos, candidates);
 
   // Context-gated directional いく inflections after a clear te-form.

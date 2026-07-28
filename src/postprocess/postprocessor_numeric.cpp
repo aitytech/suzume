@@ -212,6 +212,7 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<c
         core::Morpheme merged = current;
         merged.pos = core::PartOfSpeech::Noun;  // Merged result is always NOUN
         resolver::mergeInto(merged, next);
+        merged.extended_pos = core::ExtendedPOS::NounNumber;
         merged.lemma = merged.surface;
 
         SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged indefinite+suffix: \""

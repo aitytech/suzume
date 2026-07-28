@@ -32,16 +32,27 @@ struct UnknownOptions;
  */
 struct SuffixEntry {
   std::string_view suffix;
-  core::PartOfSpeech pos;
   // Derivational suffixes create a lexical compound noun (新制度, 安全性).
   // Relational suffixes such as 末 retain their compositional boundary.
   bool forms_derived_compound;
 };
 
+class SuffixEntryRange {
+ public:
+  constexpr SuffixEntryRange(const SuffixEntry* data, size_t size) : data_(data), size_(size) {}
+
+  constexpr const SuffixEntry* begin() const { return data_; }
+  constexpr const SuffixEntry* end() const { return data_ + size_; }
+
+ private:
+  const SuffixEntry* data_;
+  size_t size_;
+};
+
 /**
  * @brief Get list of kanji compound suffixes
  */
-const std::array<SuffixEntry, 22>& getSuffixEntries();
+SuffixEntryRange getSuffixEntries();
 
 /**
  * @brief Get list of na-adjective forming suffixes (的, etc.)
@@ -89,7 +100,8 @@ void generateWithSuffix(const std::vector<char32_t>& codepoints, size_t start_po
  * @param codepoints Text as codepoints
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
- * @param dict_manager Dictionary manager for deverbal compound verification (may be null)
+ * @param dict_manager Dictionary manager used to reject spans already owned by
+ *        exact nouns or suffix decompositions (may be null)
  * @param candidates Output candidates, appended in generation order
  */
 void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -98,36 +110,36 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
                                        std::vector<UnknownCandidate>& candidates);
 
 /**
- * @brief Generate the deverbal nominal of the humble 敬語接頭辞 + V連用形 + する frame
- *
- * The humble construction attaches する directly to a continuative that is
- * licensed by a preceding honorific prefix (お伝えする, お待ちする, おかけする).
- * No other environment lets する follow a bare continuative, so the prefix on
- * the left and the suru form on the right together delimit a closed frame in
- * which the continuative is a deverbal noun rather than a finite predicate.
- * Without this candidate the span is either read as a verb or, for a
- * pure-hiragana stem that has no other continuative evidence, swallowed whole
- * into a fabricated verb (かけする).
- *
- * @param codepoints Text as codepoints
- * @param start_pos Start position (character index)
- * @param inflection Inflection analyzer used to verify the continuative
- * @param dict_manager Dictionary manager used to verify the honorific prefix (may be null)
- * @param candidates Output candidates, appended in generation order
- */
-/**
  * @brief Generate reciprocal-action deverbal noun candidates (連用形 + っこ)
  *
  * The nominalizer っこ turns a continuative into the name of a reciprocal action
  * (にらめっこ, かけっこ, ぶつけっこ) and the result is one search unit. A span this
  * long written entirely in hiragana is otherwise priced by the generic unknown
  * model, which fragments it, so the whole construction needs its own candidate.
+ *
+ * @param codepoints Text as codepoints
+ * @param start_pos Start position (character index)
+ * @param char_types Character types for each position
+ * @param dict_manager Dictionary manager used to verify the verb stem
+ * @param candidates Output candidates, appended in generation order
  */
 void generateReciprocalActionNounCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                             const std::vector<normalize::CharType>& char_types,
                                             const dictionary::DictionaryManager* dict_manager,
                                             std::vector<UnknownCandidate>& candidates);
 
+/**
+ * @brief Generate the deverbal nominal of the humble 敬語接頭辞 + V連用形 + する frame
+ *
+ * The honorific prefix and following する form delimit a closed frame in which
+ * the continuative is a deverbal noun rather than a finite predicate.
+ *
+ * @param codepoints Text as codepoints
+ * @param start_pos Start position (character index)
+ * @param inflection Inflection analyzer used to verify the continuative
+ * @param dict_manager Reserved dictionary context (currently unused; may be null)
+ * @param candidates Output candidates, appended in generation order
+ */
 void generateHumbleNominalCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                      const grammar::Inflection& inflection,
                                      const dictionary::DictionaryManager* dict_manager,
@@ -247,7 +259,7 @@ void generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t s
  *
  * Detects temporal/prefix compounds:
  *   - 今日 (kyou - today), 今週 (konshuu - this week)
- *   - 本日 (honjitsu - today formal)
+ *   - 来月 (raigetsu - next month), 翌日 (yokujitsu - following day)
  *
  * The generated compound competes with split analysis.
  * Interrogatives (何, 誰, etc.) act as anchors to prevent over-concatenation.
@@ -284,8 +296,8 @@ void generateTemporalNounBoundaryCandidates(const std::vector<char32_t>& codepoi
 /**
  * @brief Check if a codepoint is a prefix-like kanji
  *
- * Returns true for kanji that commonly form temporal/formal compounds:
- * 今, 本, 来, 先, 昨, 翌, 毎, 全, 各, 両, 諸
+ * Returns true for kanji that productively head temporal compounds:
+ * 今, 来, 先, 昨, 翌, 毎
  *
  * @param cp Unicode codepoint to check
  * @return true if prefix-like kanji

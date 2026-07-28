@@ -102,6 +102,10 @@ constexpr float kProductiveSuffixVerbCost = -0.2F;
 constexpr size_t kEmphaticMinRepeatedVowels = 2;
 constexpr float kEmphaticRepeatedVowelBonus = -0.5F;
 constexpr float kEmphaticRepeatedVowelLengthPenalty = 0.05F;
+// Preserve a complete over-limit same-script run as a Viterbi alternative
+// without making arbitrarily long unknown words free.  Use the same per-unit
+// length pressure as emphatic vowel runs while keeping a semantic name here.
+constexpr float kLongSameTypeRunPenaltyPerExtraChar = kEmphaticRepeatedVowelLengthPenalty;
 constexpr float kEmphaticCharacterPenalty = 0.3F;
 
 // High origin-confidence for a rule-derived candidate whose surface context makes
@@ -710,11 +714,6 @@ constexpr float kClassicalAraNLimitCost = -4.0F;
 // Within that contraction, the independent negative auxiliary must remain
 // whole rather than decomposing into copular and continuative homographs.
 constexpr float kContractedNegativeAuxCost = -0.5F;
-
-// A fused でも candidate cannot carry the copular-negative reading when a
-// ない-family form follows. Prefer the productive で(AUX)+も(PARTICLE) path;
-// ordinary adverbial でも before a predicate (本でも読む) stays untouched.
-constexpr float kFusedDemoNegativePenalty = 2.0F;
 
 // Minimum inflection confidence for treating a lexical adverb ending in
 // て/で as a productive verb te-form homograph before progressive いる.

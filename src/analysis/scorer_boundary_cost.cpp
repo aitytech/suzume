@@ -8,6 +8,9 @@ namespace sc = suzume::analysis::scorer;
 namespace suzume::analysis {
 
 float Scorer::bosCost(const core::LatticeEdge& edge) const {
+  if (edge.extended_pos == core::ExtendedPOS::Conjunction && grammar::isFusedDemo(edge.surface)) {
+    return sc::kBosDemoConjunctionBonus;
+  }
   return sc::getBoundaryCost(edge.extended_pos).bos;
 }
 

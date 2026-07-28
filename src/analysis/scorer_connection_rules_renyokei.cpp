@@ -87,10 +87,18 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   const bool verified_v1_v2_mizenkei = prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
                                        next.extended_pos == core::ExtendedPOS::VerbMizenkei && prev.lemmaVerified() &&
                                        next.lemmaVerified();
-  if (renyokei_suru_compound || sahen_lexical_v2 || verified_v1_v2_mizenkei) {
+  // If the right edge is itself a generated finite compound, splitting a
+  // verified continuative immediately before it creates a nested suffix
+  // compound (追い+かけ回す). The matcher also emits the maximal compound
+  // spanning the same right boundary, so mildly penalize this interior cut.
+  const bool nested_finite_compound = prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.lemmaVerified() &&
+                                      next.origin == core::CandidateOrigin::VerbCompound &&
+                                      next.extended_pos == core::ExtendedPOS::VerbShuushikei;
+  if (renyokei_suru_compound || sahen_lexical_v2 || verified_v1_v2_mizenkei || nested_finite_compound) {
     bonus += (renyokei_suru_compound ? cost::kMinorBonus : cost::kNeutral) +
              (sahen_lexical_v2 ? cost::kStrongBonus : cost::kNeutral) +
-             (verified_v1_v2_mizenkei ? cost::kStrongBonus : cost::kNeutral);
+             (verified_v1_v2_mizenkei ? cost::kStrongBonus : cost::kNeutral) +
+             (nested_finite_compound ? cost::kMinor : cost::kNeutral);
   }
 
   // Demonstrative manner adverbs form closed compound adverbs with して
@@ -146,11 +154,11 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kVeryStrongBonus;
   }
 
-  // An adverbial particle can introduce an adjective predicate (何+でも+いい).
-  // The independent negative adjective instead retains the copula-plus-topic
-  // analysis used by nominal negative predicates.
+  // An adverbial particle can introduce an adjective predicate
+  // (何+でも+いい, 学生+でも+ない). The following open-class predicate does
+  // not change the particle's grammatical boundary.
   if (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial && next.extended_pos == core::ExtendedPOS::AdjBasic &&
-      next.lemma != "ない") {
+      (next.lemma != "ない" || utf8::equalsAny(prev.surface, {"でも"}))) {
     bonus += cost::kVeryStrongBonus + cost::kMinorBonus;
   }
 
@@ -219,9 +227,12 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   if (next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"なら"})) {
     if (prev.extended_pos == core::ExtendedPOS::AdjNaAdj) {
       bonus += cost::kStrongBonus;
-    } else if (prev.extended_pos == core::ExtendedPOS::Noun) {
-      bonus += cost::kModerateBonus;
-    } else if (prev.extended_pos == core::ExtendedPOS::Adverb) {
+    } else if (prev.extended_pos == core::ExtendedPOS::Noun || prev.extended_pos == core::ExtendedPOS::Suffix) {
+      // A nominal suffix takes the same conditional copula as its host
+      // (作業中+なら). Cancel the generic suffix→conjunctive penalty.
+      bonus += prev.extended_pos == core::ExtendedPOS::Suffix ? cost::kDoubleVeryStrongBonus : cost::kModerateBonus;
+    } else if (prev.extended_pos == core::ExtendedPOS::Adverb ||
+               prev.extended_pos == core::ExtendedPOS::AdverbQuotative) {
       // Demonstrative adverb + conditional (そう+なら) is a productive
       // conditional construction, not the mizenkei of なる.
       bonus += cost::kStrongBonus;

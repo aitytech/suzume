@@ -69,7 +69,7 @@ bool endsWithNegativeBecomePattern(std::string_view surface);
  * @param surface The surface to check
  * @return True if the surface ends with godan negative renyokei
  *
- * Matches: かなく (godan negative renyokei of ka-row verbs)
+ * Matches every Godan a-row stem followed by なく.
  *
  * Examples:
  * - いかなく → true (いく + ない連用形)

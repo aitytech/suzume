@@ -95,7 +95,7 @@ float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
 
   // Bonus for kanji+okurigana i-adjectives from dictionary (情けない, etc.)
   // These compete with verb renyokei + ない split paths that get strong
-  // VERB_連用→AUX_否定 connection bonus (-0.8).
+  // VERB_連用→AUX_否定 connection bonus (kVeryStrongBonus, -1.6).
   // Apply the same lexical preference to their conjugated forms (情けなく,
   // 情けなかっ): otherwise only the base form can beat a grammatical-looking
   // verb/particle split. AdjNaAdj is deliberately excluded.
@@ -289,7 +289,7 @@ float computeNounSuffixVerbDictBonus(const core::LatticeEdge& edge) {
     if (char_len >= 3 && grammar::isMixedHiraganaKanji(edge.surface)) {
       if (char_len >= 4) {
         // Length-scaled bonus for long mixed nouns (お兄ちゃん, お父さん, なし崩し)
-        bonus += lengthScaledBonus(sc::kBonusLongMixedNounBase, char_len, 4, -sc::kBonusLongMixedNounPerChar);
+        bonus += lengthScaledBonus(sc::kBonusLongMixedNounBase, char_len, 4, sc::kBonusLongMixedNounPerChar);
       } else {
         bonus += sc::kBonusMixedNoun;
       }
@@ -303,7 +303,7 @@ float computeNounSuffixVerbDictBonus(const core::LatticeEdge& edge) {
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Noun && grammar::isAllKanji(edge.surface)) {
     size_t char_len = suzume::normalize::utf8Length(edge.surface);
     if (char_len >= 4) {
-      bonus += lengthScaledBonus(sc::kBonusLongKanjiNounBase, char_len, 4, -sc::kBonusLongKanjiNounPerChar);
+      bonus += lengthScaledBonus(sc::kBonusLongKanjiNounBase, char_len, 4, sc::kBonusLongKanjiNounPerChar);
     }
   }
 
@@ -570,7 +570,7 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   cost += computeVerbEndingPenalty(edge);
 
   // Bonus for compound adjectives from dictionary (e.g., 男らしい, 女らしい)
-  // These compete with noun+らしい split which has -1.5 connection bonus.
+  // These compete with noun+らしい split which has kStrongBonus (-0.8).
   // Dictionary registration indicates compound adjective should take precedence.
   // Pattern: kanji stem + hiragana suffix forming an i-adjective
   if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&

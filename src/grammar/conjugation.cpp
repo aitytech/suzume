@@ -93,8 +93,23 @@ std::vector<KuruDictionaryForm> getKuruDictionaryForms() {
       {kanji.kateikei, kana.kateikei, core::ExtendedPOS::VerbKateikei},
       {kanji.ishikei, kana.ishikei, core::ExtendedPOS::VerbMizenkei},
       {kanji.meireikei, kana.meireikei, core::ExtendedPOS::VerbMeireikei},
-      {kanji.mizenkei + "られる", kana.mizenkei + "られる", core::ExtendedPOS::VerbShuushikei},
-      {kanji.mizenkei + "れる", kana.mizenkei + "れる", core::ExtendedPOS::VerbShuushikei},
+      // Standard potential/passive is a mizenkei + auxiliary chain. The
+      // unambiguous kanji spelling remains a dictionary form, while the kana
+      // spelling is generated contextually so its one-mora stem cannot split
+      // ordinary hiragana words.
+      {kanji.mizenkei + "られる", kana.mizenkei + "られる", core::ExtendedPOS::VerbShuushikei,
+       /*emit_kanji=*/true, /*emit_kana=*/false},
+      // The colloquial ra-nuki potential is a lexical terminal form. Its
+      // kanji spelling is safe as a dictionary entry; its kana spelling is
+      // generated as a context-gated irregular candidate to avoid reopening
+      // demonstrative compounds such as これより.
+      {kanji.mizenkei + "れる", kana.mizenkei + "れる", core::ExtendedPOS::VerbShuushikei,
+       /*emit_kanji=*/true, /*emit_kana=*/false},
+      // Causative is always segmented as the Kuru mizenkei plus させる. Keep
+      // its surface in the canonical paradigm without creating a competing
+      // whole-word dictionary edge.
+      {kanji.mizenkei + "させる", kana.mizenkei + "させる", core::ExtendedPOS::VerbShuushikei,
+       /*emit_kanji=*/false, /*emit_kana=*/false},
   };
 }
 

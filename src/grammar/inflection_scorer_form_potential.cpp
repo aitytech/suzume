@@ -246,13 +246,12 @@ float scoreAdjectiveAndForm(float base, const InflectionScoreContext& context) {
   // Exception: GodanSa has no phonetic change (音便) - し is the renyokei form
   // used in て-form context. Stems like いた (from いたす) or はな (from はなす)
   // can legitimately end with any hiragana, including a-row characters.
-  // Exception: GodanRa with わ-ending stems (終わる, 変わる, 代わる, etc.)
-  // These verbs have わ as part of the stem: 終わ + った = 終わった
+  // Exception: わ is part of the stem both for GodanRa verbs such as 終わる
+  // and GodanWa verbs such as 味わう: 終わ+った, 味わ+った.
   if (required_conn == conn::kVerbOnbinkei && stem_len >= core::kTwoJapaneseCharBytes && type != VerbType::GodanSa) {
     std::string_view last = utf8::lastChar(stem);
-    // Skip penalty for GodanRa with わ ending - legitimate pattern for 終わる etc.
-    bool is_godan_ra_wa = (type == VerbType::GodanRa && last == "わ");
-    if (!is_godan_ra_wa && endsWithChar(stem, kMizenkeiEndings, kMizenkeiCount)) {
+    const bool is_godan_wa_stem = (type == VerbType::GodanRa || type == VerbType::GodanWa) && last == "わ";
+    if (!is_godan_wa_stem && endsWithChar(stem, kMizenkeiEndings, kMizenkeiCount)) {
       // Stems ending in a-row are suspicious for onbinkei context
       base -= inflection::kPenaltyOnbinkeiARowStem;
       logConfidenceAdjustment(-inflection::kPenaltyOnbinkeiARowStem, "onbinkei_a_row_stem");

@@ -57,8 +57,9 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Prefer that grammatical boundary over a homographic short verb.
       {EPOS::Adverb, EPOS::ParticleAdverbial, cost::kStrongBonus},
 
-      // The regional polite auxiliary follows invitation adverbs (おいで+なんし).
-      {EPOS::Adverb, EPOS::AuxKuruwaPolite, cost::kStrongBonus},
+      // The regional polite auxiliary follows an invitation formal noun
+      // (おいで+なんし).
+      {EPOS::NounFormal, EPOS::AuxKuruwaPolite, cost::kStrongBonus},
 
       // ParticleAdverbial → VerbShuushikei (でも+行く) - strong bonus
       // This favors でも+行く over で+も+行く

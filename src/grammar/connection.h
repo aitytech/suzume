@@ -20,7 +20,6 @@ namespace suzume::grammar {
  * Organized by grammatical category:
  * - 0x00xx: Sentence boundaries
  * - 0x01xx: Verb stem endings
- * - 0x02xx: Auxiliary verb inputs (left connection)
  * - 0x03xx: Auxiliary verb outputs (right connection)
  * - 0x04xx: Particles
  * - 0x05xx: Nouns
@@ -41,28 +40,6 @@ constexpr uint16_t kIAdjStem = 0x0105;        // い形容詞語幹: 美し (ku-
 constexpr uint16_t kVerbVolitional = 0x0106;  // 意志形: 書こう, 食べよう
 constexpr uint16_t kVerbKatei = 0x0107;       // 仮定形: 書け (e-row for Godan)
 constexpr uint16_t kVerbMeireikei = 0x0108;   // 命令形: 書け, 食べろ, しろ
-
-// === Auxiliary inputs - what they require (0x02xx) ===
-constexpr uint16_t kAuxMasu = 0x0200;      // ます (requires 連用形)
-constexpr uint16_t kAuxNai = 0x0201;       // ない (requires 未然形)
-constexpr uint16_t kAuxTa = 0x0202;        // た/だ (requires 音便形)
-constexpr uint16_t kAuxTe = 0x0203;        // て/で (requires 音便形)
-constexpr uint16_t kAuxTeiru = 0x0204;     // いる (requires て形)
-constexpr uint16_t kAuxTeshimau = 0x0205;  // しまう (requires て形)
-constexpr uint16_t kAuxTeoku = 0x0206;     // おく (requires て形)
-constexpr uint16_t kAuxTekuru = 0x0207;    // くる (requires て形)
-constexpr uint16_t kAuxTeiku = 0x0208;     // いく (requires て形)
-constexpr uint16_t kAuxTemiru = 0x0209;    // みる (requires て形)
-constexpr uint16_t kAuxTemorau = 0x020A;   // もらう (requires て形)
-constexpr uint16_t kAuxTekureru = 0x020B;  // くれる (requires て形)
-constexpr uint16_t kAuxTeageru = 0x020C;   // あげる (requires て形)
-constexpr uint16_t kAuxTai = 0x020D;       // たい (requires 連用形)
-constexpr uint16_t kAuxReru = 0x020E;      // れる/られる (requires 未然形)
-constexpr uint16_t kAuxSeru = 0x020F;      // せる/させる (requires 未然形)
-constexpr uint16_t kAuxRenyokei = 0x0210;  // 連用形 compounds (すぎる, etc.)
-constexpr uint16_t kAuxSou = 0x0211;       // そう (looks like, requires 連用形)
-constexpr uint16_t kAuxCopula = 0x0212;    // だ/です/である (requires noun/na-adj)
-constexpr uint16_t kAuxTearu = 0x0213;     // ある (requires て形)
 
 // === Auxiliary outputs - what they provide (0x03xx) ===
 constexpr uint16_t kAuxOutBase = 0x0300;  // Auxiliary in base form

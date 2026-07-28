@@ -354,6 +354,10 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // 的 suffix followed by な (copula attributive) is very common
       {EPOS::Suffix, EPOS::AuxCopulaDa, cost::kStrongBonus},
 
+      // State and derivational suffixes also form polite nominal predicates
+      // (作業中+です, 確認済み+です).
+      {EPOS::Suffix, EPOS::AuxCopulaDesu, cost::kStrongBonus},
+
       // The tendency suffix retains ordinary suffix inflection (病気がちで、
       // 忘れがちだ) while its dedicated left-context rule selects a verb
       // continuative form when present.

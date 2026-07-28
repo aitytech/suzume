@@ -395,8 +395,15 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   const bool adjective_conditional = prev.extended_pos == core::ExtendedPOS::AdjKeForm &&
                                      next.extended_pos == core::ExtendedPOS::ParticleConj &&
                                      grammar::isSingleHiragana(next.surface, U'ば');
-  if (concessive_before_adjective || adjective_conditional) {
-    bonus += cost::kStrongBonus;
+  // The i-adjective conditional cell of the desiderative is たけれ+ば.
+  // Its surface is also a plausible fabricated godan kateikei, whose generic
+  // kateikei+ば bonus otherwise wins. Limit the decisive preference to the
+  // closed conditional cell so classical たし+て remains a lexical verb stem.
+  const bool desiderative_conditional =
+      prev.extended_pos == core::ExtendedPOS::AuxDesireTai && utf8::endsWith(prev.surface, "けれ") &&
+      next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isSingleHiragana(next.surface, U'ば');
+  if (concessive_before_adjective || adjective_conditional || desiderative_conditional) {
+    bonus += desiderative_conditional ? cost::kDoubleVeryStrongBonus : cost::kStrongBonus;
   }
 
   // An adverb ending in the connective mora て cannot directly introduce the
@@ -502,13 +509,13 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kProhibitive;
   }
 
-  // The benefactive formal noun かげ continues either with the instrumental
+  // The benefactive formal noun おかげ continues either with the instrumental
   // particle (おかげで) or the honorific suffix (おかげさまで). Both retain
   // the productive formal-noun boundary over their homographic alternatives.
-  if (prev.extended_pos == core::ExtendedPOS::NounFormal && utf8::equalsAny(prev.surface, {"かげ"}) &&
+  if (prev.extended_pos == core::ExtendedPOS::NounFormal && grammar::isBenefactiveFormalNoun(prev.surface) &&
       ((next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"で"})) ||
        (next.pos == core::PartOfSpeech::Suffix && utf8::equalsAny(next.surface, {"さま"})))) {
-    bonus += cost::kStrongBonus;
+    bonus += next.pos == core::PartOfSpeech::Suffix ? cost::kDoubleVeryStrongBonus : cost::kStrongBonus;
   }
 
   // Penalty for SUFFIX(さ) + VERB starting with せ/させ pattern
@@ -573,18 +580,27 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kRare;  // +1.0 to neutralize -0.8 bigram bonus
   }
 
+  // A fused でも directly following a content word is the adverbial particle
+  // ("even/as much as"), not the discourse conjunction.  Keep the conjunction
+  // candidate for BOS and clause-boundary use, while preventing the generic
+  // Conjunction→content-word bonus from relabeling nominal でも phrases.
+  const bool content_before_discourse_demo =
+      (core::isContentWord(prev.pos) || prev.pos == core::PartOfSpeech::Pronoun) &&
+      next.extended_pos == core::ExtendedPOS::Conjunction && grammar::isFusedDemo(next.surface);
+
   // Penalty for ADV → でも (CONJ or PART_副) pattern
   // After adverbs, でも should split as で(copula)+も(particle)
   // e.g., それほどでもない → それほど+で+も+ない
   const bool adverb_before_fused_demo =
-      prev.pos == core::PartOfSpeech::Adverb && next.surface == "でも" &&
+      prev.pos == core::PartOfSpeech::Adverb && grammar::isFusedDemo(next.surface) &&
       (next.pos == core::PartOfSpeech::Conjunction || next.extended_pos == core::ExtendedPOS::ParticleAdverbial);
   const bool adverb_before_focus_mo =
       prev.pos == core::PartOfSpeech::Adverb && prev.fromDictionary() && normalize::utf8Length(prev.surface) == 2 &&
       grammar::containsKanji(prev.surface) && utf8::endsWith(prev.surface, "し") &&
       next.extended_pos == core::ExtendedPOS::ParticleTopic && grammar::isSingleHiragana(next.surface, U'も');
-  if (adverb_before_fused_demo || adverb_before_focus_mo) {
-    bonus += adverb_before_fused_demo ? cost::kAlmostNever : cost::kDoubleVeryStrongBonus;
+  if (content_before_discourse_demo || adverb_before_fused_demo || adverb_before_focus_mo) {
+    bonus += adverb_before_fused_demo ? cost::kAlmostNever
+                                      : (content_before_discourse_demo ? cost::kRare : cost::kDoubleVeryStrongBonus);
   }
 
   // Penalty for predicate → copula-compound conjunction (だから/だけど/だが/…) pattern

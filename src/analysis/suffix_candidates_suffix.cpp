@@ -58,15 +58,14 @@ inline UnknownCandidate makeSuffixCandidateNoLemma(const std::string& surface, s
   return cand;
 }
 
-const std::array<SuffixEntry, 22>& getSuffixEntries() {
-  static constexpr std::array<SuffixEntry, 22> kSuffixes = {{
-      {"化する", core::PartOfSpeech::Verb, false},
+SuffixEntryRange getSuffixEntries() {
+  static constexpr SuffixEntry kSuffixes[] = {
       // Tokenizer use case: keep X+SUFFIX as one search unit. The following
       // suffixes are merged via kanji-merge normalization, not split here:
       //   家/力/法/論/員/式/感/的 (productive but one search unit)
-      {"化", core::PartOfSpeech::Suffix, true},   // 国際化, 自動化
-      {"視", core::PartOfSpeech::Suffix, false},  // 重要視, 問題視
-      {"性", core::PartOfSpeech::Suffix, true},
+      {"化", true},   // 国際化, 自動化
+      {"視", false},  // 重要視, 問題視
+      {"性", true},
       // {"率", core::PartOfSpeech::Suffix},  // Removed: causes over-segmentation (降水確率→降水確+率)
       // {"法", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (解決法, 民法)
       // {"論", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (進化論, 理論)
@@ -76,28 +75,28 @@ const std::array<SuffixEntry, 22>& getSuffixEntries() {
       // {"式", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (計算式, 結婚式)
       // {"感", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (達成感, 違和感)
       // {"力", core::PartOfSpeech::Suffix},  // Merge via kanji-merge (説得力, 影響力)
-      {"度", core::PartOfSpeech::Suffix, true},
-      {"方", core::PartOfSpeech::Suffix, false},  // 歩き方, やり方 (V連用形+方)
-      {"中", core::PartOfSpeech::Suffix, false},  // 一日中, 今日中 (N+中) - MeCab treats as suffix
-      {"末", core::PartOfSpeech::Suffix, false},  // 年度末, 学期末
+      {"度", true},
+      {"方", false},  // 歩き方, やり方 (V連用形+方)
+      {"中", false},  // 一日中, 今日中 (N+中) - MeCab treats as suffix
+      {"末", false},  // 年度末, 学期末
       // N中 compounds (今日中, 世界中, 一日中) are handled as compound nouns
       // Administrative suffixes (行政接尾辞)
-      {"県", core::PartOfSpeech::Suffix, false},
-      {"都", core::PartOfSpeech::Suffix, false},
-      {"府", core::PartOfSpeech::Suffix, false},
-      {"道", core::PartOfSpeech::Suffix, false},
-      {"市", core::PartOfSpeech::Suffix, false},
-      {"区", core::PartOfSpeech::Suffix, false},
-      {"町", core::PartOfSpeech::Suffix, false},
-      {"村", core::PartOfSpeech::Suffix, false},
-      {"庁", core::PartOfSpeech::Suffix, false},
-      {"署", core::PartOfSpeech::Suffix, false},
-      {"局", core::PartOfSpeech::Suffix, false},
-      {"省", core::PartOfSpeech::Suffix, false},
-      {"院", core::PartOfSpeech::Suffix, false},
-      {"所", core::PartOfSpeech::Suffix, false},
-  }};
-  return kSuffixes;
+      {"県", false},
+      {"都", false},
+      {"府", false},
+      {"道", false},
+      {"市", false},
+      {"区", false},
+      {"町", false},
+      {"村", false},
+      {"庁", false},
+      {"署", false},
+      {"局", false},
+      {"省", false},
+      {"院", false},
+      {"所", false},
+  };
+  return {kSuffixes, std::size(kSuffixes)};
 }
 
 const std::array<std::string_view, 1>& getNaAdjSuffixes() {
@@ -211,15 +210,16 @@ void generateProductiveSuffixVerbCandidates(const std::vector<char32_t>& codepoi
   // boundary. Share the same identical numeral+noun-unit evidence used by the
   // counter generator, so candidates start at the predicate rather than the
   // second half of 一語一語-like expressions.
-  bool crosses_repeated_quantity_boundary = false;
-  for (size_t unit_start = 0; unit_start < start_pos; ++unit_start) {
-    const size_t unit_end = repeatedNumeralNounUnitEndAt(codepoints, char_types, unit_start);
-    if (unit_end > start_pos && unit_end < base_end) {
-      crosses_repeated_quantity_boundary = true;
-      break;
+  const auto crosses_repeated_quantity_boundary = [&](size_t scan_start, size_t scan_end) {
+    for (size_t unit_start = scan_start; unit_start < scan_end; ++unit_start) {
+      const size_t unit_end = repeatedNumeralNounUnitEndAt(codepoints, char_types, unit_start);
+      if (unit_end > start_pos && unit_end < base_end) {
+        return true;
+      }
     }
-  }
-  if (crosses_repeated_quantity_boundary) {
+    return false;
+  };
+  if (crosses_repeated_quantity_boundary(start_pos, base_end) || crosses_repeated_quantity_boundary(0, start_pos)) {
     return;
   }
 
@@ -245,7 +245,8 @@ void generateProductiveSuffixVerbCandidates(const std::vector<char32_t>& codepoi
   // 位置付ける). Restrict the base to two or more kanji so an ordinary
   // single-kanji lexical verb keeps its normal candidate path.
   const size_t tsukeru_base_end = base_end > start_pos ? base_end - 1 : start_pos;
-  if (base_end > start_pos && codepoints[tsukeru_base_end] == U'付' && tsukeru_base_end - start_pos >= 2) {
+  if (!numeral_led_base && base_end > start_pos && codepoints[tsukeru_base_end] == U'付' &&
+      tsukeru_base_end - start_pos >= 2) {
     for (const auto& form : kIchidanTsukeruForms) {
       const size_t form_length = normalize::utf8Length(form.inflection);
       const size_t candidate_end = tsukeru_base_end + form_length;
@@ -298,6 +299,9 @@ void generateProductiveSuffixVerbCandidates(const std::vector<char32_t>& codepoi
       {"づけろ", core::ExtendedPOS::VerbMeireikei},
   }};
   for (const auto& form : kIchidanZukeruForms) {
+    if (numeral_led_base) {
+      break;
+    }
     const size_t form_length = normalize::utf8Length(form.inflection);
     const size_t candidate_end = base_end + form_length;
     if (candidate_end > codepoints.size() || extractSubstring(codepoints, base_end, candidate_end) != form.inflection) {
@@ -462,7 +466,7 @@ void generateWithSuffix(const std::vector<char32_t>& codepoints, size_t start_po
   const auto& suffixes = getSuffixEntries();
 
   // Check for suffixes
-  for (const auto& [suffix, suffix_pos, forms_derived_compound] : suffixes) {
+  for (const auto& [suffix, forms_derived_compound] : suffixes) {
     if (kanji_seq.size() > suffix.size() &&
         kanji_seq.compare(kanji_seq.size() - suffix.size(), suffix.size(), suffix) == 0) {
       // Calculate stem length in codepoints

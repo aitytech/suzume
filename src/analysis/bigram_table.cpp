@@ -1,4 +1,4 @@
-#include <cassert>
+#include <cstdlib>
 
 #include "bigram_table_internal.h"
 
@@ -9,11 +9,23 @@ namespace bigram_rules {
 void applyRules(BigramMatrix& table, const BigramRule* rules, size_t rule_count) {
   for (size_t rule_index = 0; rule_index < rule_count; ++rule_index) {
     const BigramRule& rule = rules[rule_index];
-#ifndef NDEBUG
-    assert(table[rule.prev][rule.next] == kUnsetCost && "duplicate ExtendedPOS bigram rule");
-#endif
+    if (table[rule.prev][rule.next] != kUnsetCost) {
+      std::abort();
+    }
     table[rule.prev][rule.next] = rule.cost;
   }
+}
+
+void inheritRuleProfile(BigramMatrix& table, core::ExtendedPOS source, core::ExtendedPOS target) {
+  const size_t source_idx = static_cast<size_t>(source);
+  const size_t target_idx = static_cast<size_t>(target);
+  for (size_t idx = 0; idx < BigramTable::kSize; ++idx) {
+    table[target_idx][idx] = table[source_idx][idx];
+    table[idx][target_idx] = table[idx][source_idx];
+  }
+  // The row copy makes target→source equal source→source; use it to complete
+  // the target→target intersection after the column copy.
+  table[target_idx][target_idx] = table[source_idx][source_idx];
 }
 
 }  // namespace bigram_rules
@@ -30,17 +42,20 @@ float BigramTable::getCost(core::ExtendedPOS prev, core::ExtendedPOS next) {
 BigramTable::EncodedTable BigramTable::initTable() {
   bigram_rules::BigramMatrix table{};
   for (auto& row : table) {
-#ifndef NDEBUG
     row.fill(bigram_rules::kUnsetCost);
-#else
-    row.fill(bigram_rules::encodeCost(bigram_cost::kNeutral));
-#endif
   }
 
   bigram_rules::setVerbAndAdjectiveCosts(table);
   bigram_rules::setAuxiliaryAndNounCosts(table);
   bigram_rules::setParticleAndLexicalCosts(table);
-#ifndef NDEBUG
+  // Quotative demonstrative adverbs are a semantic subtype. Their category
+  // cost remains distinct, while their syntactic continuations stay complete
+  // as the general adverb profile evolves.
+  bigram_rules::inheritRuleProfile(table, core::ExtendedPOS::Adverb, core::ExtendedPOS::AdverbQuotative);
+  // A quotative demonstrative cannot directly complete an adjective stem.
+  // Keep appearance そう on its auxiliary path (高+そう, キモ+そう).
+  table[static_cast<size_t>(core::ExtendedPOS::AdjStem)][static_cast<size_t>(core::ExtendedPOS::AdverbQuotative)] =
+      bigram_rules::encodeCost(bigram_cost::kRare);
   for (auto& row : table) {
     for (uint8_t& encoded_cost : row) {
       if (encoded_cost == bigram_rules::kUnsetCost) {
@@ -48,7 +63,6 @@ BigramTable::EncodedTable BigramTable::initTable() {
       }
     }
   }
-#endif
   return table;
 }
 

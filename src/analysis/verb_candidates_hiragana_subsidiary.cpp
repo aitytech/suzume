@@ -60,7 +60,7 @@ bool grammaticalStemFollowerStartsAt(const std::vector<char32_t>& codepoints, si
   if (dict_manager == nullptr || start_pos >= codepoints.size()) {
     return false;
   }
-  const std::string remaining = extractSubstring(codepoints, start_pos, codepoints.size());
+  const std::string remaining = extractClosedClassProbe(codepoints, start_pos);
   for (const auto& result : dict_manager->lookup(remaining, 0)) {
     if (result.entry == nullptr) {
       continue;

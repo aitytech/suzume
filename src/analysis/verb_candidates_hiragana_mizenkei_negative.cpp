@@ -193,6 +193,9 @@ void appendMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t
     if (!is_in_dict && endsWithParticleAfterVerb(dict_manager, inflection, codepoints, start_pos, mizenkei_end)) {
       continue;
     }
+    if (!is_in_dict && vh::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, mizenkei_end)) {
+      continue;
+    }
 
     // Minimum stem length check: need at least 2 chars in mizenkei to be meaningful
     // This prevents false positives like "かない" → "か" + "ない"

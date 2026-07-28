@@ -358,7 +358,7 @@ void mergeSplitCopularNegative(std::vector<core::Morpheme>& result) {
   for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
     auto& na = result[idx];
     const auto& i = result[idx + 1];
-    if (na.extended_pos != core::ExtendedPOS::AuxCopulaDa || na.surface != "な" ||
+    if (na.extended_pos != core::ExtendedPOS::AuxCopulaDa || na.surface != "な" || na.end != i.start ||
         i.extended_pos != core::ExtendedPOS::AuxAspectIru || i.surface != "い") {
       continue;
     }
@@ -384,7 +384,7 @@ void mergeSplitFormalNounNegativeRenyokei(std::vector<core::Morpheme>& result) {
     const auto& ku = result[idx + 1];
     if (formal_noun.surface != "こと" || formal_noun.extended_pos != core::ExtendedPOS::NounFormal ||
         na.surface != "な" || na.extended_pos != core::ExtendedPOS::AuxCopulaDa || ku.surface != "く" ||
-        ku.pos != core::PartOfSpeech::Auxiliary) {
+        ku.pos != core::PartOfSpeech::Auxiliary || na.end != ku.start) {
       continue;
     }
     mergeInto(na, ku);

@@ -66,7 +66,14 @@ bool hasSuruContinuation(const std::vector<char32_t>& codepoints, size_t suffix_
 
 bool hasDictionaryLexicalPrefix(const std::vector<dictionary::LookupResult>& results, size_t full_length) {
   for (const auto& result : results) {
-    if (result.entry != nullptr && result.length < full_length) {
+    if (result.entry == nullptr || result.length >= full_length) {
+      continue;
+    }
+    // A one-kanji suffix homograph is not evidence that a lexical search unit
+    // begins here (中 in 中断, for example). Multi-kanji closed entries such as
+    // 以後 and content entries such as 各自 still establish a real boundary.
+    const bool is_single_kanji_suffix = result.length == 1 && result.entry->pos == core::PartOfSpeech::Suffix;
+    if (!is_single_kanji_suffix) {
       return true;
     }
   }
@@ -340,15 +347,12 @@ void addCompoundSplitCandidates(core::Lattice& lattice, std::string_view text, c
         flags |= core::LatticeEdge::kIsFormalNoun;
       }
 
+      // Both dictionary-backed halves strengthen the same split hypothesis;
+      // encode that evidence in one edge instead of retaining a dominated
+      // duplicate with the unbonused cost.
+      const float edge_cost = first_in_dict && second_in_dict ? first_cost - 0.2F : first_cost;
       lattice.addEdge(first_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(first_end),
-                      core::PartOfSpeech::Noun, first_cost, flags, "");
-
-      // If both parts are in dictionary, give extra bonus
-      if (first_in_dict && second_in_dict) {
-        float bonus_cost = first_cost - 0.2F;
-        lattice.addEdge(first_surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(first_end),
-                        core::PartOfSpeech::Noun, bonus_cost, flags, "");
-      }
+                      core::PartOfSpeech::Noun, edge_cost, flags, "");
     }
   }
 }

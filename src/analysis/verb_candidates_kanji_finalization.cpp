@@ -430,7 +430,7 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
     // single-kanji stems such as 愛す are unaffected.
     if (!in_dict && kanji_count >= 2 && best.verb_type == grammar::VerbType::GodanSa && best.base_form == surface) {
       base_cost += bigram_cost::kVeryRare;
-      SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kMinor
+      SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kVeryRare
                                                << " (multi_kanji_classical_suru_penalty)\n");
     }
     // Penalize ichidan verb candidates with pure single-kanji stem (no hiragana)

@@ -188,7 +188,7 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
     // Note: い is excluded — kanji+2hira ending in い is overwhelmingly
     // i-adjective (美しい, 正しい, 激しい), not nominalized noun
     if (second_hiragana == U'げ' || second_hiragana == U'け' || second_hiragana == U'り' || second_hiragana == U'え' ||
-        second_hiragana == U'し') {
+        second_hiragana == U'し' || second_hiragana == U'み') {
       // Trailing し followed by a suru-auxiliary (or kanji) is ichidan renyokei
       // + する (お伝えします, お届けして), not a nominalization — skip the noun
       // so the verb split can win. し at end of text or before a particle keeps
@@ -205,7 +205,8 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
         }
       }
       // Generate 2-hiragana candidate
-      if (!trailing_shi_is_suru && !second_starts_classical_conjectural_auxiliary) {
+      const bool crosses_closed_suffix = hasClosedSuffixBoundary(codepoints, start_pos, hiragana_end + 1, dict_manager);
+      if (!trailing_shi_is_suru && !second_starts_classical_conjectural_auxiliary && !crosses_closed_suffix) {
         std::string surface = extractSubstring(codepoints, start_pos, hiragana_end + 1);
         if (!surface.empty()) {
           float nom2_cost = 0.8F;

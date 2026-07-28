@@ -212,6 +212,8 @@ struct KuruDictionaryForm {
   std::string kanji_surface;
   std::string kana_surface;
   core::ExtendedPOS extended_pos;
+  bool emit_kanji{true};
+  bool emit_kana{true};
 };
 
 /**

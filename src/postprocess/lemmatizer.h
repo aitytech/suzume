@@ -53,10 +53,14 @@ class Lemmatizer {
    * @param lemma Base form
    * @param pos Part of speech
    * @param next_lemma Optional: lemma of the next morpheme (for context-dependent forms)
+   * @param extended_pos Extended POS selected by the lattice
+   * @param next_extended_pos Extended POS of the next morpheme
    * @return Detected conjugation form
    */
   static grammar::ConjForm detectConjForm(std::string_view surface, std::string_view lemma, core::PartOfSpeech pos,
-                                          std::string_view next_lemma = "");
+                                          std::string_view next_lemma = "",
+                                          core::ExtendedPOS extended_pos = core::ExtendedPOS::Unknown,
+                                          core::ExtendedPOS next_extended_pos = core::ExtendedPOS::Unknown);
 
  private:
   grammar::Inflection inflection_;

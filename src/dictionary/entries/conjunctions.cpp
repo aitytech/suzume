@@ -129,7 +129,6 @@ EntrySpecRange getConjunctionEntries() {
       adv("生憎", ""),          // Orthographic variant
       adv("つねに", ""),        // 恒常副詞
       adv("おそらくは", ""),    // Fixed probability adverb
-      particle("ものの", EPOS::ParticleConj),     // 譲歩接続助詞
       particle("がてら", EPOS::ParticleConj),     // purpose-combining conjunctive expression
       particle("ていう", EPOS::ParticleQuote),    // 口語引用表現
       particle("やら", EPOS::ParticleAdverbial),  // 列挙助詞

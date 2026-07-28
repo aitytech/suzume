@@ -815,6 +815,10 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       const core::ExtendedPOS explicit_form = (looks_like_short_godan_base || is_godan_dictionary_form)
                                                   ? core::ExtendedPOS::VerbShuushikei
                                                   : core::ExtendedPOS::Unknown;
+      if (!is_dictionary_verb &&
+          verb_helpers::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, end_pos)) {
+        continue;
+      }
       candidates.push_back(makeVerbCandidate(
           surface, start_pos, end_pos, base_cost, best.base_form, grammar::verbTypeToConjType(best.verb_type), false,
           CandidateOrigin::VerbHiragana, best.confidence, grammar::verbTypeToString(best.verb_type).data(),
