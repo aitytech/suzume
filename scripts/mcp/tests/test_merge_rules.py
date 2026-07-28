@@ -153,6 +153,55 @@ class TestKanjiCompound:
         result, _ = apply_suzume_merge(tokens, text)
         assert len(result) == 2
 
+    def test_merges_productive_role_suffix_independent_of_dictionary_coverage(self):
+        tokens = [_tok("部門", pos="名詞"), _tok("長", pos="名詞", pos_sub1="接尾")]
+        result, rule = apply_suzume_merge(tokens, "部門長")
+        assert result == [{"surface": "部門長", "pos": "名詞", "lemma": "部門長"}]
+        assert rule == "noun+suffix"
+
+
+class TestDemoAdverbialParticle:
+    def test_merges_split_demo_independent_of_following_predicate(self):
+        for predicate in ("よい", "構わない"):
+            tokens = [
+                _tok("方法", pos="名詞"),
+                _tok("で", pos="助詞", pos_sub1="格助詞"),
+                _tok("も", pos="助詞", pos_sub1="係助詞"),
+                _tok(predicate, pos="形容詞"),
+            ]
+            result, _ = apply_suzume_merge(tokens, f"方法でも{predicate}")
+            assert [token["surface"] for token in result] == ["方法", "でも", predicate]
+
+    def test_keeps_existing_demo_independent_of_following_predicate(self):
+        tokens = [
+            _tok("何", pos="名詞"),
+            _tok("でも", pos="助詞", pos_sub1="副助詞"),
+            _tok("よい", pos="形容詞"),
+        ]
+        result, _ = apply_suzume_merge(tokens, "何でもよい")
+        assert [token["surface"] for token in result] == ["何", "でも", "よい"]
+
+    def test_keeps_na_adjective_copula_and_focus_particle_separate(self):
+        tokens = [
+            _tok("特別", pos="名詞", pos_sub1="形容動詞語幹"),
+            _tok("で", pos="助詞", pos_sub1="格助詞"),
+            _tok("も", pos="助詞", pos_sub1="係助詞"),
+            _tok("ない", pos="形容詞"),
+        ]
+        result, _ = apply_suzume_merge(tokens, "特別でもない")
+        assert [token["surface"] for token in result] == ["特別", "で", "も", "ない"]
+
+    def test_merges_demo_after_quotative_particle(self):
+        tokens = [
+            _tok("確認", pos="名詞"),
+            _tok("と", pos="助詞", pos_sub1="格助詞"),
+            _tok("で", pos="助詞", pos_sub1="格助詞"),
+            _tok("も", pos="助詞", pos_sub1="係助詞"),
+            _tok("いう", pos="動詞"),
+        ]
+        result, _ = apply_suzume_merge(tokens, "確認とでもいう")
+        assert [token["surface"] for token in result] == ["確認", "と", "でも", "いう"]
+
 
 class TestKatakanaCompound:
     def test_katakana_merge(self):
@@ -293,11 +342,19 @@ class TestPostprocessKanjiMerge:
             assert [token["surface"] for token in result] == [f"微{suffix}"]
             assert rule == "kanji-merge"
 
-    def test_ascii_dot_merge_has_one_canonical_rule_name(self):
+    def test_ascii_joiner_merge_has_one_canonical_rule_name(self):
         tokens = [_tok("tool", pos="名詞"), _tok(".", pos="記号"), _tok("example", pos="名詞")]
         result, rule = apply_suzume_merge(tokens, "tool.example")
         assert [token["surface"] for token in result] == ["tool.example"]
-        assert rule == "ascii-dot-merge"
+        assert rule == "ascii-joiner-merge"
+
+    def test_ascii_joiner_merge_covers_every_word_internal_joiner(self):
+        for joiner, head, tail in (("-", "Coca", "Cola"), ("'", "McDonald", "s"), ("&", "H", "M"), ("/", "CI", "CD")):
+            tokens = [_tok(head, pos="名詞"), _tok(joiner, pos="記号"), _tok(tail, pos="名詞")]
+            surface = f"{head}{joiner}{tail}"
+            result, rule = apply_suzume_merge(tokens, surface)
+            assert [token["surface"] for token in result] == [surface]
+            assert rule == "ascii-joiner-merge"
 
     def test_kanji_merge_post(self):
         """Post-process kanji merge after main pass."""
@@ -476,6 +533,12 @@ class TestProductiveMimeticNormalization:
 
 
 class TestStructuralNominalSearchUnits:
+    def test_recovers_known_hiragana_noun_from_particle_homograph(self):
+        tokens = [_tok("たま", pos="名詞"), _tok("ごと", pos="名詞"), _tok("みかん", pos="名詞")]
+        result, rule = apply_suzume_merge(tokens, "たまごとみかん")
+        assert [token["surface"] for token in result] == ["たまご", "と", "みかん"]
+        assert rule == "hiragana-compound"
+
     def test_merges_destination_suffix_without_place_name_list(self):
         tokens = [
             _tok("東京", pos="名詞", pos_sub1="固有名詞", pos_sub2="地域"),
@@ -508,6 +571,29 @@ class TestStructuralNominalSearchUnits:
         # must not classify a bare repeated number as a distributive unit.
         assert [token["surface"] for token in result] == ["十一十一"]
         assert rule != "distributive-quantity"
+
+    def test_merges_productive_nominal_zukeru_after_distributive_quantity(self):
+        tokens = [
+            _tok("一語", pos="名詞"),
+            _tok("一", pos="名詞"),
+            _tok("語", pos="名詞"),
+            _tok("意味", pos="名詞"),
+            _tok("づける", pos="動詞", lemma="づける"),
+        ]
+        result, _ = apply_suzume_merge(tokens, "一語一語意味づける")
+        assert [token["surface"] for token in result] == ["一語一語", "意味づける"]
+        assert result[-1]["lemma"] == "意味づける"
+
+
+class TestProductiveMimeticSuru:
+    def test_splits_fused_reduplicated_mimetic_progressive(self):
+        result, rule = apply_suzume_merge([_tok("ぷにぷにしてる", pos="名詞")], "ぷにぷにしてる")
+        assert result == [
+            {"surface": "ぷにぷに", "pos": "副詞", "lemma": "ぷにぷに"},
+            {"surface": "し", "pos": "動詞", "lemma": "する"},
+            {"surface": "てる", "pos": "助動詞", "lemma": "てる"},
+        ]
+        assert rule == "productive-mimetic-suru"
 
 
 class TestHonorificPredicateBoundary:

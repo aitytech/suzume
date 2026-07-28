@@ -38,6 +38,15 @@ class TestFixedFunctionSearchUnit:
         assert result == [_tok("更に", pos="副詞")]
         assert rule is None
 
+    def test_splits_kanji_nominal_and_ni_independent_of_reference_pos(self):
+        for reference_pos in ("副詞", "名詞"):
+            result, rule = apply_suzume_split([_tok("次に", pos=reference_pos)])
+            assert result == [
+                {"surface": "次", "pos": "名詞", "lemma": "次"},
+                {"surface": "に", "pos": "助詞", "lemma": "に"},
+            ]
+            assert rule == "adverb-ni-split"
+
 
 class TestInterrogativeNominalAdverb:
     def test_keeps_productive_morpheme_boundaries(self):

@@ -4,7 +4,6 @@ import regex
 
 from .constants import (
     BOUND_SUFFIX_VERB_NOUN_CELLS,
-    COPULAR_DEMO_PREDICATE_LEMMAS,
     HONORIFIC_EXCEPTIONS,
     HONORIFIC_FRAME_TAILS,
     HONORIFIC_SUFFIXES,
@@ -12,6 +11,8 @@ from .constants import (
     PREFIX_EXCEPTIONS,
     SEARCH_UNIT_COMPOUNDS,
 )
+
+_IDEOGRAPHIC_SEQUENCE = regex.compile(r"^[\p{Han}\uFE00-\uFE0F\U000E0100-\U000E01EF]+$")
 
 
 def _postprocess_kamo(result: list[dict], applied_rule: str | None) -> list[dict]:
@@ -288,43 +289,28 @@ def _postprocess_gamashii(result: list[dict], applied_rule: str | None) -> tuple
     return new_result, applied_rule
 
 
-def _selects_copular_demo(token: dict | None) -> bool:
-    """Whether a predicate puts でも in the copular frame rather than the particle."""
-    if token is None:
-        return False
-    return token.get("lemma", token.get("surface", "")) in COPULAR_DEMO_PREDICATE_LEMMAS
-
-
 def _postprocess_demo_copula(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
-    """Give でも after a nominal one analysis, chosen by the following predicate.
+    """Keep nominal でも as one adverbial particle independent of its predicate.
 
-    The reference dictionary decides this per lattice cost rather than per
-    construction, so the same concessive splits or merges depending on which
-    predicate follows (子供でもできる against 子供でも分かる, 雨でもいい against
-    雨でもよい). The construction is what settles it: よい/いい/ない/ある build
-    the copular frame 〜でも, the nominal counterpart of 食べてもよい, and every
-    other predicate leaves the concessive adverbial particle intact.
+    The reference lattice sometimes exposes the same construction as 格助詞
+    で + 係助詞 も and sometimes as the compound 副助詞 でも. The following
+    open-class predicate cannot change that grammatical boundary, so normalize
+    both representations to the latter.
     """
     new_result: list[dict] = []
     index = 0
     while index < len(result):
         token = result[index]
         following = result[index + 1] if index + 1 < len(result) else None
-        if token.get("surface") == "でも" and token.get("pos") == "助詞" and _selects_copular_demo(following):
-            new_result.append({"surface": "で", "pos": "助詞", "pos_sub1": "格助詞", "lemma": "で"})
-            new_result.append({"surface": "も", "pos": "助詞", "pos_sub1": "係助詞", "lemma": "も"})
-            index += 1
-            if applied_rule is None:
-                applied_rule = "demo-copular-frame"
-            continue
-        after_mo = result[index + 2] if index + 2 < len(result) else None
+        preceding = new_result[-1] if new_result else None
         if (
             token.get("surface") == "で"
             and token.get("pos_sub1") == "格助詞"
             and following is not None
             and following.get("surface") == "も"
             and following.get("pos_sub1") == "係助詞"
-            and not _selects_copular_demo(after_mo)
+            and preceding is not None
+            and preceding.get("pos_sub1") != "形容動詞語幹"
         ):
             new_result.append({"surface": "でも", "pos": "助詞", "pos_sub1": "副助詞", "lemma": "でも"})
             index += 2
@@ -853,8 +839,8 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
         )
         if merged and (
             (
-                regex.match(r"^[\p{Han}]+$", surface)
-                and regex.match(r"^[\p{Han}]+$", merged[-1].get("surface", ""))
+                _IDEOGRAPHIC_SEQUENCE.fullmatch(surface)
+                and _IDEOGRAPHIC_SEQUENCE.fullmatch(merged[-1].get("surface", ""))
                 # Kanji adjacency alone is not a compound boundary.  In
                 # particular, a temporal noun followed by a one-kanji verb
                 # stem (the pattern 日+見+た) must retain the predicate
@@ -871,7 +857,7 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
                 and not prev_is_go_prefix
                 and not formal_noun_na_adjective_boundary
             )
-            or (surface == "々" and regex.match(r"^[\p{Han}]+$", merged[-1].get("surface", "")))
+            or (surface == "々" and _IDEOGRAPHIC_SEQUENCE.fullmatch(merged[-1].get("surface", "")))
             or (
                 merged[-1].get("surface", "") in KANJI_PREFIX_COMPOUNDS
                 and surface in KANJI_PREFIX_COMPOUNDS[merged[-1]["surface"]]
@@ -928,23 +914,34 @@ def _postprocess_search_unit_split(result: list[dict], applied_rule: str | None)
     return new_result, applied_rule
 
 
-def _postprocess_ascii_dot_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
-    """Merge ASCII + dot + ASCII/number tokens."""
+# Characters an ASCII word keeps inside itself. The reference tokenizer emits
+# them as standalone symbol tokens (Coca + - + Cola), which breaks the search
+# unit into fragments no query matches, so the pieces are rejoined here.
+_ASCII_WORD_JOINERS = ".-'&/"
+
+
+def _postprocess_ascii_joiner_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Merge ASCII + word-internal joiner + ASCII/number tokens."""
     merged = []
     for j, curr in enumerate(result):
         surface = curr.get("surface", "")
         if (
-            surface == "."
+            len(surface) == 1
+            and surface in _ASCII_WORD_JOINERS
             and merged
             and regex.match(r"^[a-zA-Z]+$", merged[-1].get("surface", ""))
             and j + 1 < len(result)
             and regex.match(r"^[a-zA-Z0-9]+$", result[j + 1].get("surface", ""))
         ):
-            merged[-1]["surface"] += "."
+            merged[-1]["surface"] += surface
             merged[-1]["lemma"] = merged[-1]["surface"]
             if applied_rule is None:
-                applied_rule = "ascii-dot-merge"
-        elif merged and merged[-1].get("surface", "").endswith(".") and regex.match(r"^[a-zA-Z0-9]+$", surface):
+                applied_rule = "ascii-joiner-merge"
+        elif (
+            merged
+            and merged[-1].get("surface", "").endswith(tuple(_ASCII_WORD_JOINERS))
+            and regex.match(r"^[a-zA-Z0-9]+$", surface)
+        ):
             merged[-1]["surface"] += surface
             merged[-1]["lemma"] = merged[-1]["surface"]
         else:
@@ -1032,6 +1029,44 @@ def _postprocess_productive_mimetics(result: list[dict], applied_rule: str | Non
     normalized: list[dict] = []
     idx = 0
     while idx < len(result):
+        surface = result[idx].get("surface", "")
+        mimetic_suru_splits = {
+            "している": (
+                {"surface": "し", "pos": "動詞", "lemma": "する"},
+                {"surface": "て", "pos": "助詞", "lemma": "て"},
+                {"surface": "いる", "pos": "助動詞", "lemma": "いる"},
+            ),
+            "してる": (
+                {"surface": "し", "pos": "動詞", "lemma": "する"},
+                {"surface": "てる", "pos": "助動詞", "lemma": "てる"},
+            ),
+            "した": (
+                {"surface": "し", "pos": "動詞", "lemma": "する"},
+                {"surface": "た", "pos": "助動詞", "lemma": "た"},
+            ),
+            "して": (
+                {"surface": "し", "pos": "動詞", "lemma": "する"},
+                {"surface": "て", "pos": "助詞", "lemma": "て"},
+            ),
+            "する": ({"surface": "する", "pos": "動詞", "lemma": "する"},),
+        }
+        fused_suffix = next(
+            (
+                suffix
+                for suffix in mimetic_suru_splits
+                if surface.endswith(suffix) and _is_productive_mimetic_stem(surface[: -len(suffix)])
+            ),
+            "",
+        )
+        if fused_suffix:
+            stem = surface[: -len(fused_suffix)]
+            normalized.append({"surface": stem, "pos": "副詞", "lemma": stem})
+            normalized.extend(mimetic_suru_splits[fused_suffix])
+            idx += 1
+            if applied_rule is None:
+                applied_rule = "productive-mimetic-suru"
+            continue
+
         matched = False
         max_end = min(len(result), idx + 4)
         for end in range(max_end, idx, -1):
@@ -1072,6 +1107,37 @@ def _postprocess_productive_mimetics(result: list[dict], applied_rule: str | Non
         if not matched:
             normalized.append(result[idx])
             idx += 1
+    return normalized, applied_rule
+
+
+def _postprocess_nominal_zukeru(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Merge a kanji nominal host with the productive Ichidan suffix づける."""
+    normalized: list[dict] = []
+    idx = 0
+    zukeru_forms = ("づける", "づけ", "づけれ", "づけよ", "づけろ")
+    while idx < len(result):
+        current = result[idx]
+        if (
+            idx + 1 < len(result)
+            and current.get("pos") == "名詞"
+            and regex.fullmatch(r"[\p{Han}]{2,}", current.get("surface", ""))
+            and result[idx + 1].get("surface") in zukeru_forms
+            and result[idx + 1].get("pos") == "動詞"
+        ):
+            surface = current.get("surface", "") + result[idx + 1].get("surface", "")
+            normalized.append(
+                {
+                    "surface": surface,
+                    "pos": "動詞",
+                    "lemma": current.get("surface", "") + "づける",
+                }
+            )
+            idx += 2
+            if applied_rule is None:
+                applied_rule = "nominal-zukeru"
+            continue
+        normalized.append(current)
+        idx += 1
     return normalized, applied_rule
 
 

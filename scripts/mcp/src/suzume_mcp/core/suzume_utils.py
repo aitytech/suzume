@@ -1,5 +1,7 @@
 """Main orchestration module ported from SuzumeUtils.pm get_expected_tokens() etc."""
 
+import unicodedata
+
 import regex
 
 from .constants import SLANG_ADJ_STEMS
@@ -91,9 +93,55 @@ from .postprocessors import (
 from .split_rules import apply_suzume_split
 
 
+def _oracle_text(text: str) -> str:
+    """Return the single coordinate space shared by MeCab and merge rules."""
+    compact = "".join(char for char in text if not char.isspace())
+    normalized = []
+    for char in compact:
+        char = char.translate(_FULLWIDTH_TABLE)
+        if "\uff66" <= char <= "\uff9d":
+            # Mirror Normalizer::halfwidthKatakanaToFullwidth. The two
+            # half-width voiced marks (FF9E/FF9F) deliberately remain outside
+            # this range because the native table does not map them.
+            char = unicodedata.normalize("NFKC", char)
+        if char in ("\u309b", "\u309c") and normalized:
+            combining = "\u3099" if char == "\u309b" else "\u309a"
+            combined = unicodedata.normalize("NFC", normalized[-1] + combining)
+            if len(combined) == 1:
+                normalized[-1] = combined
+                continue
+        normalized.append(char)
+    return unicodedata.normalize("NFC", "".join(normalized))
+
+
+def _is_deliberately_removed_symbol(surface: str) -> bool:
+    """Mirror the punctuation/emoji classes removed by the C++ default."""
+
+    def is_cpp_emoji(codepoint: int) -> bool:
+        return (
+            0x1F300 <= codepoint <= 0x1F64F
+            or 0x1F680 <= codepoint <= 0x1FBFF
+            or 0x2300 <= codepoint <= 0x23FF
+            or 0x25A0 <= codepoint <= 0x27BF
+            or 0x2B50 <= codepoint <= 0x2B55
+            or 0x2934 <= codepoint <= 0x2935
+            or 0x1F1E6 <= codepoint <= 0x1F1FF
+            or codepoint == 0x200D
+            or 0xFE0E <= codepoint <= 0xFE0F
+            or 0x1F3FB <= codepoint <= 0x1F3FF
+            or codepoint == 0x20E3
+            or 0xE0020 <= codepoint <= 0xE007F
+        )
+
+    return bool(surface) and all(
+        unicodedata.category(char).startswith("P") or is_cpp_emoji(ord(char)) for char in surface
+    )
+
+
 def get_mecab_tokens(text: str) -> list[dict]:
     """Get MeCab tokens with slang handling and POS mapping."""
-    processed_text, replacements = preprocess_for_mecab(text)
+    normalized_text = _oracle_text(text)
+    processed_text, replacements = preprocess_for_mecab(normalized_text)
     raw_tokens = mecab_analyze(processed_text)
 
     tokens = []
@@ -106,7 +154,7 @@ def get_mecab_tokens(text: str) -> list[dict]:
             }
         )
 
-    postprocess_mecab_tokens(tokens, text, replacements)
+    postprocess_mecab_tokens(tokens, normalized_text, replacements)
     return tokens
 
 
@@ -119,7 +167,9 @@ def _reject_lossy_symbol_drop(surface: str, text: str) -> None:
     segmentation of text that is not the input. Correct the token's POS in
     correct_mecab_pos instead of letting it reach this filter.
     """
-    carries_text = [char for char in surface if regex.match(r"[\p{Han}\p{Hiragana}\p{Katakana}\p{L}\p{Nd}]", char)]
+    if _is_deliberately_removed_symbol(surface):
+        return
+    carries_text = [char for char in surface if not char.isspace()]
     if carries_text:
         raise RuntimeError(
             f"symbol filter would drop {''.join(carries_text)!r} from {text!r} "
@@ -128,7 +178,13 @@ def _reject_lossy_symbol_drop(surface: str, text: str) -> None:
         )
 
 
-def _reject_surface_mismatch(tokens: list[dict], text: str, surface_rule: str | None) -> None:
+def _reject_surface_mismatch(
+    tokens: list[dict],
+    text: str,
+    surface_rule: str | None,
+    *,
+    normalize_fullwidth: bool = False,
+) -> None:
     """Fail when normalization duplicates or loses an unexplained surface."""
     reconstructed = "".join(token.get("surface", "") for token in tokens)
     expected = "".join(char for char in text if not char.isspace())
@@ -136,6 +192,8 @@ def _reject_surface_mismatch(tokens: list[dict], text: str, surface_rule: str | 
         # This pre-existing oracle rule deliberately canonicalizes a run of
         # long-vowel marks. Every other merge/split rule must preserve input.
         expected = regex.sub(r"ー+", "ー", expected)
+    if normalize_fullwidth:
+        expected = expected.translate(_FULLWIDTH_TABLE)
     if reconstructed != expected:
         raise RuntimeError(
             f"normalized token surfaces do not reconstruct the input: "
@@ -150,20 +208,21 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         Tuple of (tokens, source_label, applied_rule).
     """
     # Get raw MeCab tokens
-    processed_text, replacements = preprocess_for_mecab(text)
+    normalized_text = _oracle_text(text)
+    processed_text, replacements = preprocess_for_mecab(normalized_text)
     raw_tokens = mecab_analyze(processed_text)
-    postprocess_mecab_tokens(raw_tokens, text, replacements)
+    postprocess_mecab_tokens(raw_tokens, normalized_text, replacements)
     repair_kko_nominalizer(raw_tokens)
 
     # Fix MeCab POS errors (before POS mapping)
     correct_mecab_pos(raw_tokens)
 
     # Apply Suzume merge rules
-    merged, merge_rule = apply_suzume_merge(raw_tokens, text)
+    merged, merge_rule = apply_suzume_merge(raw_tokens, normalized_text)
 
     # Apply Suzume split rules
     split_tokens, split_rule = apply_suzume_split(merged)
-    _reject_surface_mismatch(split_tokens, text, merge_rule)
+    _reject_surface_mismatch(split_tokens, normalized_text, merge_rule)
 
     # Combine rule names
     applied_rule = merge_rule or split_rule
@@ -172,11 +231,16 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
 
     # Map POS and filter symbols
     tokens = []
+    removed_symbol = False
+    retained_surface_parts = []
     for t in split_tokens:
         pos = normalize_pos(map_mecab_pos(t))
-        if pos == "Symbol":
+        surface = t.get("surface", "")
+        if pos == "Symbol" or _is_deliberately_removed_symbol(surface):
             _reject_lossy_symbol_drop(t.get("surface", ""), text)
+            removed_symbol = True
             continue
+        retained_surface_parts.append(surface)
         tokens.append(
             {
                 "surface": t.get("surface", ""),
@@ -184,12 +248,18 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
                 "lemma": t["lemma"] if t.get("lemma") and t["lemma"] != "*" else t.get("surface", ""),
             }
         )
+    if removed_symbol and applied_rule is None:
+        applied_rule = "symbol-filter"
 
     # Post-processing: context-dependent POS normalization
-    postprocess_sou(tokens)
-    postprocess_ikaga(tokens)
-    postprocess_tada(tokens)
-    postprocess_demo(tokens)
+    if postprocess_sou(tokens) and applied_rule is None:
+        applied_rule = "sou-context"
+    if postprocess_ikaga(tokens) and applied_rule is None:
+        applied_rule = "ikaga-adverb"
+    if postprocess_tada(tokens) and applied_rule is None:
+        applied_rule = "tada-context"
+    if postprocess_demo(tokens) and applied_rule is None:
+        applied_rule = "demo-particle"
     if postprocess_hiragana_yaka_adverbial(tokens) and applied_rule is None:
         applied_rule = "hiragana-yaka-adverbial"
     if postprocess_closed_function_words(tokens) and applied_rule is None:
@@ -204,15 +274,20 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "i-adjective-upper-bound"
     if postprocess_kadouka_adverb(tokens) and applied_rule is None:
         applied_rule = "kadouka-adverb"
-    postprocess_ii(tokens)
-    postprocess_iru_aux(tokens)
+    if postprocess_ii(tokens) and applied_rule is None:
+        applied_rule = "ii-adjective"
+    if postprocess_iru_aux(tokens) and applied_rule is None:
+        applied_rule = "iru-aux"
     if postprocess_giving_aux(tokens) and applied_rule is None:
         applied_rule = "giving-receiving-aux"
     if postprocess_contracted_progressive_aux(tokens) and applied_rule is None:
         applied_rule = "contracted-progressive-aux"
-    postprocess_itadakeru_aux(tokens)
-    postprocess_miru_aux(tokens)
-    postprocess_monono_conjunction(tokens)
+    if postprocess_itadakeru_aux(tokens) and applied_rule is None:
+        applied_rule = "itadakeru-aux"
+    if postprocess_miru_aux(tokens) and applied_rule is None:
+        applied_rule = "miru-aux"
+    if postprocess_monono_conjunction(tokens) and applied_rule is None:
+        applied_rule = "monono-conjunction"
     if postprocess_formal_noun_lemma(tokens) and applied_rule is None:
         applied_rule = "formal-noun-lemma"
     if postprocess_adjective_nominalizer(tokens) and applied_rule is None:
@@ -257,10 +332,12 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "honorific-request-renyokei"
     if postprocess_honorific_oki_aux(tokens) and applied_rule is None:
         applied_rule = "honorific-oki-aux"
-    postprocess_de_particle(tokens)
+    if postprocess_de_particle(tokens) and applied_rule is None:
+        applied_rule = "de-particle"
     if postprocess_te_form_contraction(tokens) and applied_rule is None:
         applied_rule = "te-form-contraction-particle"
-    postprocess_dai_final_particle(tokens)
+    if postprocess_dai_final_particle(tokens) and applied_rule is None:
+        applied_rule = "dai-final-particle"
     if postprocess_chigai_negative_adjective(tokens) and applied_rule is None:
         applied_rule = "chigai-negative-adjective"
     if postprocess_nanka_particle(tokens) and applied_rule is None:
@@ -271,11 +348,14 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "kuru-causative-lemma"
     if postprocess_onaji_predicate(tokens) and applied_rule is None:
         applied_rule = "onaji-predicative-na-adjective"
-    postprocess_de_aru(tokens)
+    if postprocess_de_aru(tokens) and applied_rule is None:
+        applied_rule = "de-aru"
     if postprocess_dewa_aru_boundary(tokens) and applied_rule is None:
         applied_rule = "dewa-aru-boundary"
-    postprocess_ka_suru_noun(tokens)
-    postprocess_taihen(tokens)
+    if postprocess_ka_suru_noun(tokens) and applied_rule is None:
+        applied_rule = "ka-suru-noun"
+    if postprocess_taihen(tokens) and applied_rule is None:
+        applied_rule = "taihen-context"
     if postprocess_na_adj_noun(tokens) and applied_rule is None:
         applied_rule = "na-adjective-noun-use"
     if postprocess_deverbal_noun_context(tokens) and applied_rule is None:
@@ -286,26 +366,36 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "adverb-nominal-context"
     if postprocess_temporal_nao(tokens) and applied_rule is None:
         applied_rule = "temporal-nao-adverb"
-    postprocess_tsuke_noun(tokens)
+    if postprocess_tsuke_noun(tokens) and applied_rule is None:
+        applied_rule = "tsuke-noun"
     if postprocess_copula_neg(tokens) and applied_rule is None:
         applied_rule = "copular-negative-pos"
-    postprocess_you_noun(tokens)
-    postprocess_classical_ramu_boundary(tokens)
+    if postprocess_you_noun(tokens) and applied_rule is None:
+        applied_rule = "you-noun"
+    if postprocess_classical_ramu_boundary(tokens) and applied_rule is None:
+        applied_rule = "classical-ramu-boundary"
     if postprocess_classical_desiderative_aux(tokens) and applied_rule is None:
         applied_rule = "classical-desiderative-aux"
     if postprocess_classical_honorific_aux(tokens) and applied_rule is None:
         applied_rule = "classical-honorific-aux"
-    postprocess_classical_conjecture_aux(tokens)
+    if postprocess_classical_conjecture_aux(tokens) and applied_rule is None:
+        applied_rule = "classical-conjecture-aux"
     if postprocess_classical_kere_aux(tokens) and applied_rule is None:
         applied_rule = "classical-kere-aux"
     if postprocess_classical_perfect_aux(tokens) and applied_rule is None:
         applied_rule = "classical-perfect-aux"
-    postprocess_prolonged_sound_noun(tokens)
-    postprocess_yoshi_formal_noun(tokens)
-    postprocess_sou_aux(tokens)
-    postprocess_nara_verb(tokens)
-    postprocess_n_kuruwa(tokens)
-    postprocess_nai_context(tokens)
+    if postprocess_prolonged_sound_noun(tokens) and applied_rule is None:
+        applied_rule = "prolonged-sound-noun"
+    if postprocess_yoshi_formal_noun(tokens) and applied_rule is None:
+        applied_rule = "yoshi-formal-noun"
+    if postprocess_sou_aux(tokens) and applied_rule is None:
+        applied_rule = "sou-aux"
+    if postprocess_nara_verb(tokens) and applied_rule is None:
+        applied_rule = "nara-verb"
+    if postprocess_n_kuruwa(tokens) and applied_rule is None:
+        applied_rule = "n-kuruwa"
+    if postprocess_nai_context(tokens) and applied_rule is None:
+        applied_rule = "nai-context"
     if postprocess_binding_negative_aux(tokens) and applied_rule is None:
         applied_rule = "binding-negative-aux"
     if postprocess_productive_search_unit_boundaries(tokens) and applied_rule is None:
@@ -331,6 +421,17 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
 
     if fullwidth_applied and applied_rule is None:
         applied_rule = "fullwidth-normalize"
+
+    # Merge/split validation above catches structural rules, while this second
+    # gate protects every context-dependent postprocessor as well. The only
+    # permitted surface changes after that first gate are the public symbol
+    # filter and full-width alphanumeric normalization.
+    _reject_surface_mismatch(
+        tokens,
+        "".join(retained_surface_parts),
+        merge_rule,
+        normalize_fullwidth=True,
+    )
 
     if applied_rule:
         return tokens, "MeCab+SuzumeRules", applied_rule or ""

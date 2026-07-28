@@ -728,11 +728,6 @@ DERIVED_VERB_SUFFIX_FORMS: dict[str, str] = {
 # one always has the suffix boundary inside it (泥/まみれ, 開け/っぱなし).
 STATE_NOUN_SUFFIXES: tuple[str, ...] = ("まみれ", "っぱなし")
 
-# Predicates that select the copular frame 〜でも: 学生でもよい / 学生でもない
-# is 断定 で plus 係助詞 も, the nominal counterpart of 食べてもよい. Any other
-# predicate leaves でも as the concessive adverbial particle (雨でも行く).
-COPULAR_DEMO_PREDICATE_LEMMAS: set[str] = {"よい", "いい", "ない", "ある"}
-
 # Colloquial pronouns to merge
 COLLOQUIAL_PRONOUNS: list[str] = ["どいつ", "こいつ", "そいつ", "あいつ"]
 
@@ -822,7 +817,7 @@ EMPHATIC_SOKUON: dict[str, str] = {
 
 # Inflected forms of the copula. Its negation takes the supplementary
 # adjective, unlike a verbal auxiliary's, so the two are told apart by surface.
-COPULA_SURFACES: frozenset[str] = frozenset({"だ", "だっ", "で", "です", "でし", "な", "なら"})
+COPULA_SURFACES: frozenset[str] = frozenset({"だ", "だっ", "で", "です", "でし", "でしょ", "な", "なら"})
 
 # Adverb overrides (words MeCab misclassifies)
 ADVERB_OVERRIDES: set[str] = {
@@ -917,8 +912,27 @@ NOUN_AS_PRONOUN: set[str] = {"彼氏", "彼女", "奴", "我", "わし"}
 # Suffix -> Noun overrides
 SUFFIX_AS_NOUN: set[str] = {"様", "末", "ごろ", "行き", "毛"}
 
-# Valid English POS values (values of POS_MAP)
-VALID_POS: set[str] = set(POS_MAP.values()) | {"Determiner", "Pronoun", "Suffix"}
+# Canonical spellings accepted by tests/common/test_case.cpp::posEnum().
+# Aliases such as NOUN are useful at external API boundaries, but test
+# expectations must use exactly these values or the C++ loader returns Unknown.
+VALID_POS: frozenset[str] = frozenset(
+    {
+        "Noun",
+        "Verb",
+        "Adjective",
+        "Adverb",
+        "Particle",
+        "Auxiliary",
+        "Conjunction",
+        "Determiner",
+        "Pronoun",
+        "Prefix",
+        "Suffix",
+        "Interjection",
+        "Symbol",
+        "Other",
+    }
+)
 
 # Interrogatives for でも context detection
 # Interrogative pronouns and quantifiers. Followed by でも they build the

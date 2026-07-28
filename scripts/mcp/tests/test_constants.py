@@ -16,6 +16,7 @@ from suzume_mcp.core.constants import (
     VALID_POS,
     WORD_EXCEPTIONS,
 )
+from suzume_mcp.core.pos_mapping import normalize_pos
 
 
 def test_pos_map_has_all_keys():
@@ -48,7 +49,7 @@ def test_pos_map_values_are_english():
 
 def test_valid_pos_covers_pos_map():
     for val in POS_MAP.values():
-        assert val in VALID_POS
+        assert normalize_pos(val) in VALID_POS
 
 
 def test_nai_adjectives_end_with_nai():

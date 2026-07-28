@@ -322,9 +322,9 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
                 applied_rule = "fixed-leading-search-unit"
             continue
 
-        # 0a. Split MeCab single-token kanji adverbs ending in に
-        # e.g., 次に → 次+に, 滅多に → 滅多+に
-        if t.get("pos") == "副詞" and surface not in FIXED_FUNCTION_SEARCH_UNITS:
+        # 0a. Split a kanji nominal head from adverbial に regardless of the
+        # reference dictionary's POS coverage (次に, 滅多に).
+        if surface not in FIXED_FUNCTION_SEARCH_UNITS:
             m = regex.match(r"^([\p{Han}]+)(に)$", surface)
             if m:
                 base = m.group(1)

@@ -45,6 +45,18 @@ class TestGetExpectedTokens:
         assert "じゃ" in surfaces
         assert "ない" in surfaces
 
+    @pytest.mark.parametrize(
+        ("text", "expected_rule"),
+        [
+            ("ただで入る", "tada-context"),
+            ("確認でも問題ない", "demo-adverbial-particle"),
+        ],
+    )
+    def test_context_postprocessors_report_their_rule(self, text, expected_rule):
+        _tokens, source, rule = get_expected_tokens(text)
+        assert source == "MeCab+SuzumeRules"
+        assert rule == expected_rule
+
     def test_symbols_filtered(self):
         tokens, source, rule = get_expected_tokens("（テスト）")
         surfaces = [t["surface"] for t in tokens]
@@ -56,6 +68,15 @@ class TestGetExpectedTokens:
         for t in tokens:
             s = t["surface"]
             assert "１" not in s  # Should be half-width
+
+    def test_word_exception_restoration_is_offset_scoped(self):
+        tokens, _, _ = get_expected_tokens("確認を再確認する")
+        assert "".join(token["surface"] for token in tokens) == "確認を再確認する"
+
+    def test_whitespace_does_not_shift_merge_rule_anchor(self):
+        tokens, _, rule = get_expected_tokens("彼は そんなら行く")
+        assert [token["surface"] for token in tokens] == ["彼", "は", "そんなら", "行く"]
+        assert rule == "fixed-function-search-unit"
 
 
 class TestSurfaceIsNeverLost:
@@ -88,6 +109,33 @@ class TestSurfaceIsNeverLost:
         assert "".join(token["surface"] for token in tokens) == "테스트を見る"
         assert tokens[0]["pos"] == "Noun"
 
+    @pytest.mark.parametrize(
+        ("source", "normalized"),
+        [
+            ("か\u3099く", "がく"),
+            ("か\u309bく", "がく"),
+            ("は\u309aん", "ぱん"),
+            ("は\u309cん", "ぱん"),
+            ("カ\u3099ク", "ガク"),
+        ],
+    )
+    def test_combining_kana_is_nfc_normalized(self, source, normalized):
+        tokens, _, _ = get_expected_tokens(source)
+        assert "".join(token["surface"] for token in tokens) == normalized
+
+    def test_emoji_family_is_explicitly_removed_like_the_cpp_default(self):
+        tokens, _, rule = get_expected_tokens("👨‍👩‍👧")
+        assert tokens == []
+        assert rule == "symbol-filter"
+
+    def test_unknown_non_punctuation_symbol_fails_instead_of_being_silently_dropped(self):
+        raw_symbol = [{"surface": "€", "pos": "記号", "pos_sub1": "一般", "lemma": "€"}]
+        with (
+            patch("suzume_mcp.core.suzume_utils.mecab_analyze", return_value=raw_symbol),
+            pytest.raises(RuntimeError, match="symbol filter would drop"),
+        ):
+            get_expected_tokens("€")
+
     def test_duplicate_surface_raises_instead_of_poisoning_the_oracle(self):
         duplicated = [
             {"surface": "東京", "pos": "名詞", "lemma": "東京"},
@@ -95,6 +143,20 @@ class TestSurfaceIsNeverLost:
         ]
         with (
             patch("suzume_mcp.core.suzume_utils.apply_suzume_split", return_value=(duplicated, "broken-rule")),
+            pytest.raises(RuntimeError, match="do not reconstruct"),
+        ):
+            get_expected_tokens("東京")
+
+    def test_postprocessor_surface_corruption_is_rejected(self):
+        def corrupt_surface(tokens):
+            tokens[0]["surface"] = "大阪"
+            return True
+
+        with (
+            patch(
+                "suzume_mcp.core.suzume_utils.postprocess_adverbial_na_adjective",
+                side_effect=corrupt_surface,
+            ),
             pytest.raises(RuntimeError, match="do not reconstruct"),
         ):
             get_expected_tokens("東京")

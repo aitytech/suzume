@@ -19,9 +19,10 @@ import sys
 def cmd_normalize(args: list[str]) -> None:
     """Run get_expected_tokens and output JSON."""
     # Lazy import: ensures fresh module load each process invocation
-    from .core.suzume_utils import format_expected, get_expected_tokens
+    from .core.suzume_utils import format_expected, get_expected_tokens, get_mecab_tokens
 
     batch = "--batch" in args
+    raw_mecab = "--mecab" in args
     texts: list[str] = []
 
     if batch:
@@ -40,9 +41,19 @@ def cmd_normalize(args: list[str]) -> None:
 
     results = []
     for text in texts:
-        tokens, source, rule = get_expected_tokens(text)
-        formatted = format_expected(tokens)
-        results.append({"tokens": formatted, "source": source, "rule": rule})
+        try:
+            if not isinstance(text, str):
+                raise TypeError(f"Expected text string, got {type(text).__name__}")
+            if raw_mecab:
+                tokens = get_mecab_tokens(text)
+                _oracle_tokens, _oracle_source, rule = get_expected_tokens(text)
+                source = "MeCab"
+            else:
+                tokens, source, rule = get_expected_tokens(text)
+            formatted = format_expected(tokens)
+            results.append({"tokens": formatted, "source": source, "rule": rule})
+        except Exception as exc:
+            results.append({"error": str(exc)})
 
     if batch or len(texts) > 1:
         print(json.dumps(results, ensure_ascii=False))

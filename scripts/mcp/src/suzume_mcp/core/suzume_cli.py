@@ -217,12 +217,14 @@ async def recompile_dic(glob_pattern: str, output_path: str) -> bool:
 _MCP_PROJECT_DIR = str(Path(__file__).resolve().parent.parent.parent.parent)
 
 
-def _run_normalize_cli(texts: list[str]) -> list[dict]:
+def _run_normalize_cli(texts: list[str], *, raw_mecab: bool = False) -> list[dict]:
     """Call normalization CLI via subprocess for fresh code.
 
     Returns list of {"tokens": [...], "source": str, "rule": str}.
     """
     cmd = [sys.executable, "-m", "suzume_mcp", "normalize", "--batch"]
+    if raw_mecab:
+        cmd.append("--mecab")
     result = subprocess.run(
         cmd,
         input=json.dumps(texts, ensure_ascii=False),
@@ -242,16 +244,39 @@ def get_expected_tokens_subprocess(text: str) -> tuple[list[dict], str, str]:
     """
     results = _run_normalize_cli([text])
     r = results[0]
+    if "error" in r:
+        raise RuntimeError(f"normalization failed for {text!r}: {r['error']}")
     return r["tokens"], r["source"], r["rule"]
 
 
 def get_expected_tokens_batch_subprocess(texts: list[str]) -> list[tuple[list[dict], str, str]]:
     """Batch version: process multiple texts in one subprocess call.
 
-    Returns list of (tokens, source, rule) tuples.
+    Returns list of (tokens, source, rule) tuples. A failed item is represented
+    as ([], "error", message), preserving the batch's other results.
     """
     results = _run_normalize_cli(texts)
-    return [(r["tokens"], r["source"], r["rule"]) for r in results]
+    return [
+        ([], "error", f"normalization failed for {text!r}: {result['error']}")
+        if "error" in result
+        else (result["tokens"], result["source"], result["rule"])
+        for text, result in zip(texts, results, strict=True)
+    ]
+
+
+def get_mecab_tokens_batch_subprocess(texts: list[str]) -> list[tuple[list[dict], str, str]]:
+    """Return raw MeCab tokens and oracle rule attribution in one batch.
+
+    A failed item uses the same ([], "error", message) representation as the
+    normalized batch API.
+    """
+    results = _run_normalize_cli(texts, raw_mecab=True)
+    return [
+        ([], "error", f"MeCab comparison failed for {text!r}: {result['error']}")
+        if "error" in result
+        else (result["tokens"], result["source"], result["rule"])
+        for text, result in zip(texts, results, strict=True)
+    ]
 
 
 def format_expected_from_tokens(tokens: list[dict]) -> list[dict]:

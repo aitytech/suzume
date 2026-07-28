@@ -30,10 +30,12 @@ from suzume_mcp.core.postprocessors import (
     postprocess_iru_aux,
     postprocess_itadakeru_aux,
     postprocess_kadouka_adverb,
+    postprocess_mecab_tokens,
     postprocess_miru_aux,
     postprocess_na_adj_noun,
     postprocess_nai_context,
     postprocess_nara_verb,
+    postprocess_onaji_predicate,
     postprocess_productive_search_unit_boundaries,
     postprocess_productive_verb_suffix_stem,
     postprocess_quantity_bound_suffix,
@@ -42,8 +44,10 @@ from suzume_mcp.core.postprocessors import (
     postprocess_short_hiragana_onbin,
     postprocess_shortened_causative_passive,
     postprocess_sou,
+    postprocess_state_suffix,
     postprocess_subsidiary_yuku,
     postprocess_tagaru_aux,
+    postprocess_teki_na_adjective,
     postprocess_temporal_nao,
     postprocess_to_areba_conditional,
     postprocess_tsuke_noun,
@@ -76,6 +80,21 @@ class TestPreprocessForMecab:
         text, reps = preprocess_for_mecab("食べる")
         assert text == "食べる"
         assert len(reps) == 0
+
+    def test_word_exception_restores_only_recorded_offset(self):
+        original = "確認を再確認する"
+        processed, replacements = preprocess_for_mecab(original)
+        assert processed == "確認を確認する"
+        tokens = [
+            _tok("確認", "名詞"),
+            _tok("を", "助詞"),
+            _tok("確認", "名詞"),
+            _tok("する", "動詞"),
+        ]
+
+        postprocess_mecab_tokens(tokens, original, replacements)
+
+        assert [token["surface"] for token in tokens] == ["確認", "を", "再確認", "する"]
 
 
 class TestPostprocessSou:
@@ -134,10 +153,15 @@ class TestPostprocessDemo:
         postprocess_demo(tokens)
         assert tokens[1]["pos"] == "Particle"
 
-    def test_sentence_initial_demo_uses_particle_ambiguity_policy(self):
+    def test_sentence_initial_demo_is_conjunction(self):
         tokens = [_tok("でも", "Particle"), _tok("始め", "Verb")]
         postprocess_demo(tokens)
-        assert tokens[0]["pos"] == "Particle"
+        assert tokens[0]["pos"] == "Conjunction"
+
+    def test_demo_after_symbol_is_conjunction(self):
+        tokens = [_tok("。", "Symbol"), _tok("でも", "Particle"), _tok("始め", "Verb")]
+        postprocess_demo(tokens)
+        assert tokens[1]["pos"] == "Conjunction"
 
 
 class TestPostprocessDeParticleNoop:
@@ -675,6 +699,82 @@ class TestPostprocessNaAdjNoun:
         assert postprocess_na_adj_noun(tokens)
         assert tokens[0] == _tok("平静", "Noun")
 
+    def test_na_adjective_stem_after_relative_clause_is_nominal_head(self):
+        tokens = [
+            _tok("春めい", "Verb", lemma="春めく"),
+            _tok("た", "Auxiliary", lemma="た"),
+            _tok("陽気", "Adjective"),
+        ]
+        assert postprocess_na_adj_noun(tokens)
+        assert tokens[-1] == _tok("陽気", "Noun")
+
+    def test_past_clause_before_particle_is_not_inferred_across_removed_punctuation(self):
+        tokens = [
+            _tok("基本的", "Adjective"),
+            _tok("だっ", "Auxiliary", lemma="だ"),
+            _tok("た", "Auxiliary", lemma="た"),
+            _tok("基本的", "Adjective"),
+            _tok("なら", "Particle"),
+        ]
+        assert not postprocess_na_adj_noun(tokens)
+        assert tokens[3] == _tok("基本的", "Adjective")
+
+    def test_appearance_auxiliary_after_past_clause_stays_adjective(self):
+        tokens = [
+            _tok("読ん", "Verb", lemma="読む"),
+            _tok("だ", "Auxiliary", lemma="た"),
+            _tok("そう", "Adjective"),
+            _tok("だ", "Auxiliary"),
+        ]
+        assert not postprocess_na_adj_noun(tokens)
+        assert tokens[2] == _tok("そう", "Adjective")
+
+    def test_past_sentence_does_not_retag_next_adjective_before_appearance_auxiliary(self):
+        tokens = [
+            _tok("高", "Adjective", lemma="高い"),
+            _tok("そう", "Auxiliary"),
+            _tok("だっ", "Auxiliary", lemma="だ"),
+            _tok("た", "Auxiliary", lemma="た"),
+            _tok("静か", "Adjective"),
+            _tok("そう", "Auxiliary"),
+            _tok("でし", "Auxiliary", lemma="です"),
+        ]
+        assert not postprocess_na_adj_noun(tokens)
+        assert tokens[4] == _tok("静か", "Adjective")
+
+    def test_predicative_na_adjective_stays_adjective(self):
+        tokens = [_tok("彼", "Pronoun"), _tok("は", "Particle"), _tok("元気", "Adjective"), _tok("だ", "Auxiliary")]
+        assert not postprocess_na_adj_noun(tokens)
+        assert tokens[-2] == _tok("元気", "Adjective")
+
+
+class TestCopulaParadigmNormalization:
+    copula_surfaces = ("だ", "だっ", "で", "です", "でし", "でしょ", "な", "なら")
+
+    def test_onaji_is_predicative_adjective_across_copula_cells_and_clause_end(self):
+        for following in (*self.copula_surfaces, None):
+            tokens = [_tok("同じ", "Determiner")]
+            if following is not None:
+                tokens.append(_tok(following, "Auxiliary"))
+            assert postprocess_onaji_predicate(tokens)
+            assert tokens[0] == _tok("同じ", "Adjective")
+
+    def test_teki_is_adjective_across_copula_cells_and_clause_end(self):
+        for following in (*self.copula_surfaces, None):
+            tokens = [_tok("基本的", "Noun")]
+            if following is not None:
+                tokens.append(_tok(following, "Auxiliary"))
+            assert postprocess_teki_na_adjective(tokens)
+            assert tokens[0]["pos"] == "Adjective"
+
+    def test_state_suffix_is_suffix_across_copula_cells_and_clause_end(self):
+        for following in (*self.copula_surfaces, None):
+            tokens = [_tok("作業", "Noun"), _tok("中", "Noun")]
+            if following is not None:
+                tokens.append(_tok(following, "Auxiliary"))
+            assert postprocess_state_suffix(tokens)
+            assert tokens[1]["pos"] == "Suffix"
+
 
 class TestPostprocessHiraganaYakaAdverbial:
     def test_repairs_reference_word_internal_split(self):
@@ -793,6 +893,11 @@ class TestPostprocessTsukeNoun:
 
 
 class TestPostprocessYouNoun:
+    def test_mizenkei_you_remains_volitional_auxiliary(self):
+        tokens = [_tok("見", "Verb", lemma="見る", conj_form="未然形"), _tok("よう", "Suffix")]
+        assert postprocess_you_noun(tokens)
+        assert tokens[1]["pos"] == "Auxiliary"
+
     def test_renyokei_you_is_formal_noun(self):
         tokens = [_tok("読み", "Verb", lemma="読む"), _tok("よう", "Suffix")]
         postprocess_you_noun(tokens)
@@ -935,11 +1040,16 @@ class TestProductiveSearchUnitBoundaries:
         assert postprocess_productive_search_unit_boundaries(tokens)
         assert tokens[1] == _tok("あり", "Noun")
 
+    def test_oide_before_kuruwa_polite_auxiliary_is_formal_noun(self):
+        tokens = [_tok("おいで", "Adverb"), _tok("なんし", "Auxiliary", lemma="ます")]
+        assert postprocess_productive_search_unit_boundaries(tokens)
+        assert tokens[0] == _tok("おいで", "Noun")
+
 
 class TestPostprocessItadakeruAux:
     def test_after_te_particle_is_auxiliary(self):
         tokens = [_tok("て", "Particle"), _tok("いただける", "Verb")]
-        postprocess_itadakeru_aux(tokens)
+        assert postprocess_itadakeru_aux(tokens)
         assert tokens[1]["pos"] == "Auxiliary"
 
     def test_inflected_form_after_honorific_nominal_is_auxiliary(self):
@@ -949,7 +1059,7 @@ class TestPostprocessItadakeruAux:
 
     def test_object_marked_lexical_verb_is_unchanged(self):
         tokens = [_tok("本", "Noun"), _tok("を", "Particle"), _tok("いただけ", "Verb", lemma="いただける")]
-        postprocess_itadakeru_aux(tokens)
+        assert not postprocess_itadakeru_aux(tokens)
         assert tokens[2]["pos"] == "Verb"
 
 

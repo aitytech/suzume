@@ -22,7 +22,7 @@ from .constants import (
 from .merge_postprocessors import (
     _postprocess_adj_bungo,
     _postprocess_adj_kari,
-    _postprocess_ascii_dot_merge,
+    _postprocess_ascii_joiner_merge,
     _postprocess_atode,
     _postprocess_bound_suffix_noun_cell,
     _postprocess_bound_voiced_suffix,
@@ -42,6 +42,7 @@ from .merge_postprocessors import (
     _postprocess_kuruwa,
     _postprocess_nde_split,
     _postprocess_nickname_merge,
+    _postprocess_nominal_zukeru,
     _postprocess_noni,
     _postprocess_onomatopoeia_tto_merge,
     _postprocess_prefix_split,
@@ -363,11 +364,11 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 if applied_rule is None:
                     applied_rule = "noun+suffix-char"
 
-        # 2c2. Noun + 時/率/性 suffix
+        # 2c2. Noun + productive search-unit suffix
         if not merged and t.get("pos") == "名詞" and i + 1 < len(tokens):
             nxt = tokens[i + 1]
             if (
-                nxt.get("surface", "") in ("時", "率", "性")
+                nxt.get("surface", "") in ("時", "率", "性", "長")
                 and nxt.get("pos") == "名詞"
                 and nxt.get("pos_sub1") == "接尾"
             ):
@@ -946,11 +947,17 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 if remaining.startswith(word):
                     length = 0
                     j = i
+                    consumed = ""
                     while j < len(tokens) and length < len(word):
-                        length += len(tokens[j].get("surface", ""))
+                        token_surface = tokens[j].get("surface", "")
+                        consumed += token_surface
+                        length += len(token_surface)
                         j += 1
-                    if length == len(word):
+                    residual = consumed[len(word) :]
+                    if consumed.startswith(word) and (not residual or residual in _NOMINALIZING_PARTICLES):
                         result.append({"surface": word, "pos": HIRAGANA_COMPOUNDS[word], "lemma": word})
+                        if residual:
+                            result.append({"surface": residual, "pos": "助詞", "lemma": residual})
                         i = j
                         merged = True
                         if applied_rule is None:
@@ -1086,7 +1093,8 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_onomatopoeia_tto_merge(result, applied_rule)
     result, applied_rule = _postprocess_productive_mimetics(result, applied_rule)
     result, applied_rule = _postprocess_distributive_quantity(result, applied_rule)
-    result, applied_rule = _postprocess_ascii_dot_merge(result, applied_rule)
+    result, applied_rule = _postprocess_nominal_zukeru(result, applied_rule)
+    result, applied_rule = _postprocess_ascii_joiner_merge(result, applied_rule)
     result, applied_rule = _postprocess_small_kana_head_merge(result, applied_rule)
     _postprocess_dialectal(result)
 
