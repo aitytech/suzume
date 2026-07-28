@@ -1,0 +1,105 @@
+{
+  "cases": [
+    {
+      "description": "漢字・ひらがな・カタカナ・ASCII混在の検索単位",
+      "expected": [
+        {
+          "lemma": "東京",
+          "pos": "Noun",
+          "surface": "東京"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "テスト",
+          "pos": "Noun",
+          "surface": "テスト"
+        },
+        {
+          "lemma": "ABC",
+          "pos": "Noun",
+          "surface": "ABC"
+        }
+      ],
+      "id": "mixed_scripts_kanji_katakana_ascii",
+      "input": "東京でテストABC"
+    },
+    {
+      "description": "半角カタカナを全角へ正規化する",
+      "expected": [
+        {
+          "lemma": "カタカナ",
+          "pos": "Noun",
+          "surface": "カタカナ"
+        }
+      ],
+      "id": "halfwidth_katakana_normalization",
+      "input": "ｶﾀｶﾅ"
+    },
+    {
+      "description": "全角英数字を半角の識別子へ正規化する",
+      "expected": [
+        {
+          "lemma": "ABC123",
+          "pos": "Noun",
+          "surface": "ABC123"
+        }
+      ],
+      "id": "fullwidth_ascii_alnum_normalization",
+      "input": "ＡＢＣ１２３"
+    },
+    {
+      "description": "ZWJを含む絵文字列を既定の記号除去で安全に扱う",
+      "expected": [
+        {
+          "lemma": "東京",
+          "pos": "Noun",
+          "surface": "東京"
+        }
+      ],
+      "id": "emoji_zwj_family_filter",
+      "input": "東京👨‍👩‍👧"
+    },
+    {
+      "description": "結合濁点をNFC正規化してカタカナ語を保つ",
+      "expected": [
+        {
+          "lemma": "ガク",
+          "pos": "Noun",
+          "surface": "ガク"
+        }
+      ],
+      "id": "combining_katakana_dakuten",
+      "input": "ガク"
+    },
+    {
+      "description": "カタカナ語末の長音記号連続を保持する",
+      "expected": [
+        {
+          "lemma": "テストーー",
+          "pos": "Noun",
+          "surface": "テストーー"
+        }
+      ],
+      "id": "repeated_prolonged_sound_in_katakana",
+      "input": "テストーー"
+    },
+    {
+      "description": "異体字セレクタを前後の漢字検索単位に保持する",
+      "expected": [
+        {
+          "lemma": "葛󠄀城市",
+          "pos": "Noun",
+          "surface": "葛󠄀城市"
+        }
+      ],
+      "id": "ideographic_variation_selector",
+      "input": "葛󠄀城市"
+    }
+  ],
+  "description": "unicode_edge_cases tests",
+  "version": "1.0"
+}

@@ -138,8 +138,8 @@ TEST(CharTypeTest, ClassifyUnicodeAlphabeticBlocks) {
   EXPECT_EQ(classifyChar(0xA720), CharType::Alphabet);   // Latin Extended-D
   EXPECT_EQ(classifyChar(0x1E030), CharType::Alphabet);  // Cyrillic Extended-D
 
-  EXPECT_EQ(classifyChar(U'×'), CharType::Unknown);
-  EXPECT_EQ(classifyChar(U'÷'), CharType::Unknown);
+  EXPECT_EQ(classifyChar(U'×'), CharType::Symbol);
+  EXPECT_EQ(classifyChar(U'÷'), CharType::Symbol);
   EXPECT_EQ(classifyChar(0x0387), CharType::Unknown);  // Greek ano teleia
   EXPECT_EQ(classifyChar(0x03F6), CharType::Unknown);  // Greek reversed lunate epsilon symbol
   EXPECT_EQ(classifyChar(0x0E5A), CharType::Unknown);  // Thai punctuation
@@ -180,6 +180,27 @@ TEST(CharTypeTest, ClassifyAsciiPunctuation) {
   EXPECT_EQ(classifyChar(U'['), CharType::Symbol);
   EXPECT_EQ(classifyChar(U'{'), CharType::Symbol);
   EXPECT_EQ(classifyChar(U'~'), CharType::Symbol);
+}
+
+TEST(CharTypeTest, ClassifyControlsSpacesAndUnicodeSymbols) {
+  for (const char32_t codepoint : {U'\0', U'\t', U'\r', char32_t{0x7F}, char32_t{0x85}, char32_t{0xA0},
+                                   char32_t{0x2028}, char32_t{0x202F}, char32_t{0xFEFF}}) {
+    EXPECT_EQ(classifyChar(codepoint), CharType::Symbol) << static_cast<uint32_t>(codepoint);
+  }
+  for (const char32_t codepoint : {U'×', U'÷', U'￣', U'→', U'∑'}) {
+    EXPECT_EQ(classifyChar(codepoint), CharType::Symbol) << static_cast<uint32_t>(codepoint);
+  }
+  EXPECT_EQ(classifyChar(U'□'), CharType::Emoji);
+}
+
+TEST(CharTypeTest, ClassifyVariationSelectorsAsModifiers) {
+  for (const char32_t codepoint :
+       {char32_t{0xFE00}, char32_t{0xFE0D}, char32_t{0xFE0F}, char32_t{0xE0100}, char32_t{0xE01EF}}) {
+    EXPECT_TRUE(isVariationSelector(codepoint));
+    EXPECT_TRUE(isEmojiModifier(codepoint));
+    EXPECT_EQ(classifyChar(codepoint), CharType::Emoji);
+  }
+  EXPECT_FALSE(isVariationSelector(U'A'));
 }
 
 TEST(CharTypeTest, ClassifyEmoji) {
@@ -422,8 +443,11 @@ TEST(CharTypeTest, IsEmojiModifier) {
   // ZWJ
   EXPECT_TRUE(isEmojiModifier(0x200D));
   // Variation selectors
+  EXPECT_TRUE(isEmojiModifier(0xFE00));
   EXPECT_TRUE(isEmojiModifier(0xFE0E));
   EXPECT_TRUE(isEmojiModifier(0xFE0F));
+  EXPECT_TRUE(isEmojiModifier(0xE0100));
+  EXPECT_TRUE(isEmojiModifier(0xE01EF));
   // Skin tone modifiers
   EXPECT_TRUE(isEmojiModifier(0x1F3FB));
   EXPECT_TRUE(isEmojiModifier(0x1F3FF));

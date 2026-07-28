@@ -548,7 +548,7 @@ void UnknownWordGenerator::generateOnomatopoeiaCandidates(const std::vector<char
           const bool particle_start = first_cp == U'に' || first_cp == U'は' || first_cp == U'も' ||
                                       first_cp == U'を' || first_cp == U'が' || first_cp == U'で' ||
                                       first_cp == U'と' || first_cp == U'か' || first_cp == U'の' || first_cp == U'へ';
-          if (stem_len >= 2 && particle_start && stem_len != 2) {
+          if (stem_len > 2 && particle_start) {
             break;
           }
           std::string surface = extractSubstring(codepoints, start_pos, adv_end);
@@ -558,6 +558,7 @@ void UnknownWordGenerator::generateOnomatopoeiaCandidates(const std::vector<char
             float cost = (stem_len <= 2) ? -1.5F : -0.5F;
             auto cand = makeCandidate(surface, start_pos, adv_end, core::PartOfSpeech::Adverb, cost, true,
                                       CandidateOrigin::Onomatopoeia);
+            cand.rejects_preceding_content_edge = particle_start && stem_len == 2;
 #ifdef SUZUME_DEBUG_INFO
             cand.confidence = 0.9F;
             cand.pattern = "x_tto_pattern";

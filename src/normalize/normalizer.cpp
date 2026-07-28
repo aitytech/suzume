@@ -70,6 +70,10 @@ char32_t halfwidthKatakanaToFullwidth(char32_t codepoint) {
   return codepoint;
 }
 
+char32_t normalizeWidthAndKana(char32_t codepoint, bool preserve_case) {
+  return halfwidthKatakanaToFullwidth(fullwidthToHalfwidth(codepoint, preserve_case));
+}
+
 // Vu-series (ヴ) normalization
 // ヴァ→バ, ヴィ→ビ, ヴ→ブ, ヴェ→ベ, ヴォ→ボ
 constexpr char32_t kKatakanaVu = 0x30F4;      // ヴ
@@ -130,10 +134,16 @@ char32_t combineKanaWithSoundMark(char32_t base, bool handakuten) {
     }
   }
 
-  // ワ has a precomposed katakana voiced counterpart, but its hiragana
-  // counterpart does not. Keep that Unicode asymmetry explicit.
-  if (combined == 0 && !handakuten && base == 0x30EF) {
-    return 0x30F7;
+  // The historical katakana wa row has four precomposed voiced forms, while
+  // the hiragana row has none.
+  if (combined == 0 && !handakuten) {
+    constexpr char32_t kVoicedWaRowBases[] = {0x30EF, 0x30F0, 0x30F1, 0x30F2};
+    constexpr char32_t kVoicedWaRowForms[] = {0x30F7, 0x30F8, 0x30F9, 0x30FA};
+    for (size_t idx = 0; idx < sizeof(kVoicedWaRowBases) / sizeof(kVoicedWaRowBases[0]); ++idx) {
+      if (base == kVoicedWaRowBases[idx]) {
+        return kVoicedWaRowForms[idx];
+      }
+    }
   }
   return combined == 0 || !is_katakana ? combined : combined + kKatakanaPlaneOffset;
 }
@@ -200,8 +210,7 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
     char32_t codepoint = decodeUtf8(text, pos);
 
     // Apply normalization with options
-    char32_t normalized_cp = fullwidthToHalfwidth(codepoint, options_.preserve_case);
-    normalized_cp = halfwidthKatakanaToFullwidth(normalized_cp);
+    char32_t normalized_cp = normalizeWidthAndKana(codepoint, options_.preserve_case);
 
     // A half-width dakuten/handakuten reaching this point did not combine with a
     // preceding kana (combinable ones are consumed in the look-ahead below).
@@ -248,13 +257,14 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
       size_t repeated_end = pos;
       while (repeated_end < text.size()) {
         size_t mark_pos = repeated_end;
-        if (decodeUtf8(text, mark_pos) != 0x30FC) {
+        if (normalizeWidthAndKana(decodeUtf8(text, mark_pos), options_.preserve_case) != 0x30FC) {
           break;
         }
         repeated_end = mark_pos;
       }
       size_t following_pos = repeated_end;
-      if (repeated_end > pos && following_pos < text.size() && isKanjiCodepoint(decodeUtf8(text, following_pos))) {
+      if (repeated_end > pos && following_pos < text.size() &&
+          isKanjiCodepoint(normalizeWidthAndKana(decodeUtf8(text, following_pos), options_.preserve_case))) {
         pos = repeated_end;
       }
     }
@@ -264,8 +274,7 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
       next_pos = pos;
       if (next_pos < text.size()) {
         char32_t next_cp = decodeUtf8(text, next_pos);
-        next_cp = fullwidthToHalfwidth(next_cp, options_.preserve_case);
-        next_cp = halfwidthKatakanaToFullwidth(next_cp);
+        next_cp = normalizeWidthAndKana(next_cp, options_.preserve_case);
         char32_t normalized = normalizeVuSequence(codepoint, next_cp);
         if (normalized != 0) {
           // Consume the small vowel and output normalized character

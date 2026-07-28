@@ -1,6 +1,7 @@
 #include "postprocess/postprocessor.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <string_view>
 #include <utility>
 
@@ -17,6 +18,49 @@ namespace {
 bool isOnlyProlongedSoundMarks(std::string_view surface) {
   const auto codepoints = normalize::toCodepoints(surface);
   return !codepoints.empty() && std::all_of(codepoints.begin(), codepoints.end(), normalize::isProlongedSoundMark);
+}
+
+void resolveSemanticRolesPreservingSymbols(std::vector<core::Morpheme>& result,
+                                           const dictionary::DictionaryManager* dict_manager) {
+  std::vector<core::Morpheme> semantic_morphemes;
+  std::vector<core::Morpheme> symbols;
+  semantic_morphemes.reserve(result.size());
+  symbols.reserve(result.size());
+  for (auto& morpheme : result) {
+    if (morpheme.pos == core::PartOfSpeech::Symbol) {
+      symbols.push_back(std::move(morpheme));
+    } else {
+      semantic_morphemes.push_back(std::move(morpheme));
+    }
+  }
+
+  resolveFinalMorphemeRoles(semantic_morphemes, dict_manager);
+
+  result.clear();
+  result.reserve(semantic_morphemes.size() + symbols.size());
+  size_t semantic_idx = 0;
+  size_t symbol_idx = 0;
+  while (semantic_idx < semantic_morphemes.size() && symbol_idx < symbols.size()) {
+    auto& semantic = semantic_morphemes[semantic_idx];
+    auto& symbol = symbols[symbol_idx];
+    if (semantic.end <= symbol.start) {
+      result.push_back(std::move(semantic));
+      ++semantic_idx;
+    } else if (symbol.end <= semantic.start) {
+      result.push_back(std::move(symbol));
+      ++symbol_idx;
+    } else {
+      // Structural resolver merges must not span punctuation. An overlap here
+      // would make lossless surface reconstruction impossible.
+      std::abort();
+    }
+  }
+  while (semantic_idx < semantic_morphemes.size()) {
+    result.push_back(std::move(semantic_morphemes[semantic_idx++]));
+  }
+  while (symbol_idx < symbols.size()) {
+    result.push_back(std::move(symbols[symbol_idx++]));
+  }
 }
 
 }  // namespace
@@ -98,10 +142,13 @@ std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> r
     SUZUME_DEBUG_LOG("[POSTPROC] mergeProlongedSoundMark: " << before_count << " → " << result.size() << "\n");
   }
 
-  // Filter unwanted morphemes
-  result = filterMorphemes(std::move(result));
+  // Punctuation must not affect neighboring semantic roles. Resolve a
+  // symbol-free owning vector, then merge its potentially shortened result
+  // back by source spans.
+  resolveSemanticRolesPreservingSymbols(result, dict_manager_);
 
-  resolveFinalMorphemeRoles(result, dict_manager_);
+  // Filter unwanted morphemes only after every role has been resolved.
+  result = filterMorphemes(std::move(result));
 
   return result;
 }

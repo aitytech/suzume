@@ -434,7 +434,10 @@ TEST_F(PreTokenizerTextTest, EdgeCase_EmptyString) {
 
 TEST_F(PreTokenizerTextTest, EdgeCase_OnlyWhitespace) {
   auto result = pretokenizer_.process("   ");
-  // Should handle gracefully - no crash
+  EXPECT_TRUE(result.tokens.empty());
+  ASSERT_EQ(result.spans.size(), 1U);
+  EXPECT_EQ(result.spans.front().start, 0U);
+  EXPECT_EQ(result.spans.front().end, 3U);
 }
 
 TEST_F(PreTokenizerTextTest, EdgeCase_OnlyPunctuation) {

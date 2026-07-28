@@ -11,6 +11,37 @@ namespace suzume::pretokenizer {
 
 using namespace pretokenizer_detail;
 
+namespace {
+
+size_t trailingUnmatchedClosingParentheses(std::string_view text, size_t start, size_t end) {
+  size_t open_count = 0;
+  size_t trailing_unmatched = 0;
+  for (size_t idx = start; idx < end; ++idx) {
+    if (text[idx] == '(') {
+      ++open_count;
+      trailing_unmatched = 0;
+    } else if (text[idx] == ')') {
+      if (open_count > 0) {
+        --open_count;
+        trailing_unmatched = 0;
+      } else {
+        ++trailing_unmatched;
+      }
+    } else if (text[idx] != '.' && text[idx] != ',') {
+      trailing_unmatched = 0;
+    }
+  }
+  return trailing_unmatched;
+}
+
+void trimTrailingStopsAndCommas(std::string_view text, size_t start, size_t& end) {
+  while (end > start && (text[end - 1] == '.' || text[end - 1] == ',')) {
+    --end;
+  }
+}
+
+}  // namespace
+
 bool PreTokenizer::tryMatchUrl(std::string_view text, size_t pos, PreToken& token) const {
   // Check for http:// or https://
   bool is_https = startsWithCI(text, pos, "https://");
@@ -22,6 +53,7 @@ bool PreTokenizer::tryMatchUrl(std::string_view text, size_t pos, PreToken& toke
 
   size_t start = pos;
   size_t idx = pos + (is_https ? 8 : 7);  // Skip protocol
+  size_t apostrophe_count = 0;
 
   // Match URL characters until whitespace or end
   while (idx < text.size()) {
@@ -31,17 +63,23 @@ bool PreTokenizer::tryMatchUrl(std::string_view text, size_t pos, PreToken& toke
         chr == '?' || chr == '#' || chr == '[' || chr == ']' || chr == '@' || chr == '!' || chr == '$' || chr == '&' ||
         chr == '\'' || chr == '(' || chr == ')' || chr == '*' || chr == '+' || chr == ',' || chr == ';' || chr == '=' ||
         chr == '%') {
+      if (chr == '\'') {
+        ++apostrophe_count;
+      }
       ++idx;
     } else {
       break;
     }
   }
 
-  // Remove trailing punctuation that's likely not part of URL
-  while (idx > start &&
-         (text[idx - 1] == '.' || text[idx - 1] == ',' || text[idx - 1] == ')' || text[idx - 1] == '\'')) {
+  // A trailing apostrophe is surrounding punctuation only when it has no mate
+  // inside the URL. Paired apostrophes and balanced parentheses are URL data.
+  if (idx > start && text[idx - 1] == '\'' && apostrophe_count % 2 == 1) {
     --idx;
   }
+  trimTrailingStopsAndCommas(text, start, idx);
+  idx -= trailingUnmatchedClosingParentheses(text, start, idx);
+  trimTrailingStopsAndCommas(text, start, idx);
 
   if (idx > start + (is_https ? 8 : 7)) {
     setTokenFromRange(token, text, start, idx, PreTokenType::Url,
@@ -55,11 +93,8 @@ bool PreTokenizer::tryMatchUrl(std::string_view text, size_t pos, PreToken& toke
 bool PreTokenizer::tryMatchEmail(std::string_view text, size_t pos, PreToken& token) const {
   // Match email: local-part@domain
   // Check that we're not starting in the middle of an email-like string
-  if (pos > 0) {
-    char prev = text[pos - 1];
-    if (isAsciiAlnum(prev) || prev == '.' || prev == '-' || prev == '_' || prev == '+' || prev == '@') {
-      return false;
-    }
+  if (hasAsciiRunLeftNeighbor(text, pos, ".-_+@")) {
+    return false;
   }
 
   size_t start = pos;
@@ -255,7 +290,7 @@ bool PreTokenizer::tryMatchAsciiWithDots(std::string_view text, size_t pos, PreT
   // e.g., example.com, foo.bar.baz
   // Must have at least one dot to distinguish from regular ASCII sequences
 
-  if (pos >= text.size() || !isAsciiAlnum(text[pos])) {
+  if (pos >= text.size() || !isAsciiAlnum(text[pos]) || hasAsciiRunLeftNeighbor(text, pos, ".")) {
     return false;
   }
 

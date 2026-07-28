@@ -68,6 +68,49 @@ TEST_F(PreTokenizerUrlTest, MatchUrl_Localhost) {
   EXPECT_EQ(result.tokens[0].surface, "http://localhost:3000");
 }
 
+TEST_F(PreTokenizerUrlTest, MatchUrl_UppercaseSchemeIsAsciiCaseInsensitive) {
+  auto result = pretokenizer_.process("HTTPs://example.com/path");
+  ASSERT_EQ(result.tokens.size(), 1);
+  EXPECT_EQ(result.tokens[0].surface, "HTTPs://example.com/path");
+  EXPECT_EQ(result.tokens[0].type, PreTokenType::Url);
+}
+
+TEST_F(PreTokenizerUrlTest, MatchUrl_PreservesBalancedParentheses) {
+  constexpr std::string_view kUrl = "https://example.com/a_(b(c))";
+  auto result = pretokenizer_.process(kUrl);
+  ASSERT_EQ(result.tokens.size(), 1);
+  EXPECT_EQ(result.tokens[0].surface, kUrl);
+  EXPECT_EQ(result.tokens[0].start, 0u);
+  EXPECT_EQ(result.tokens[0].end, kUrl.size());
+}
+
+TEST_F(PreTokenizerUrlTest, MatchUrl_StripsOnlyUnmatchedClosingParentheses) {
+  constexpr std::string_view kText = "https://example.com/a_(b)).";
+  constexpr std::string_view kUrl = "https://example.com/a_(b)";
+  auto result = pretokenizer_.process(kText);
+  ASSERT_EQ(result.tokens.size(), 1);
+  EXPECT_EQ(result.tokens[0].surface, kUrl);
+  EXPECT_EQ(result.tokens[0].start, 0u);
+  EXPECT_EQ(result.tokens[0].end, kUrl.size());
+}
+
+TEST_F(PreTokenizerUrlTest, MatchUrl_PreservesPairedApostrophes) {
+  constexpr std::string_view kUrl = "https://example.com/'part'";
+  auto result = pretokenizer_.process(kUrl);
+  ASSERT_EQ(result.tokens.size(), 1);
+  EXPECT_EQ(result.tokens[0].surface, kUrl);
+  EXPECT_EQ(result.tokens[0].end, kUrl.size());
+}
+
+TEST_F(PreTokenizerUrlTest, MatchUrl_StripsUnpairedSurroundingApostrophe) {
+  constexpr std::string_view kText = "https://example.com/path'";
+  constexpr std::string_view kUrl = "https://example.com/path";
+  auto result = pretokenizer_.process(kText);
+  ASSERT_EQ(result.tokens.size(), 1);
+  EXPECT_EQ(result.tokens[0].surface, kUrl);
+  EXPECT_EQ(result.tokens[0].end, kUrl.size());
+}
+
 TEST_F(PreTokenizerUrlTest, MatchUrl_MultipleInText) {
   auto result = pretokenizer_.process("参照: https://a.com と https://b.com");
   int url_count = 0;
@@ -190,6 +233,15 @@ TEST_F(PreTokenizerUrlTest, EmailVsMention_EmailWins) {
   }
   EXPECT_TRUE(has_email);
   EXPECT_FALSE(has_mention);
+}
+
+TEST_F(PreTokenizerUrlTest, LongDotlessAsciiRunIsScannedFromItsLeftEdgeOnly) {
+  const std::string text(32768, 'a');
+  auto result = pretokenizer_.process(text);
+  EXPECT_TRUE(result.tokens.empty());
+  ASSERT_EQ(result.spans.size(), 1);
+  EXPECT_EQ(result.spans[0].start, 0u);
+  EXPECT_EQ(result.spans[0].end, text.size());
 }
 
 }  // namespace

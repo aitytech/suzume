@@ -11,6 +11,18 @@ namespace suzume::pretokenizer {
 
 using namespace pretokenizer_detail;
 
+namespace {
+
+bool isValidCalendarMonth(const IntegerScan& month) {
+  return !month.empty() && month.digit_count <= 2 && month.value >= 1 && month.value <= 12;
+}
+
+bool isValidCalendarDay(const IntegerScan& day) {
+  return !day.empty() && day.digit_count <= 2 && day.value >= 1 && day.value <= 31;
+}
+
+}  // namespace
+
 bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& token) const {
   // Match patterns: MM月DD日, YYYY年MM月DD日, YYYY年MM月, YYYY年, YYYY年度 (fiscal year)
   if (pos > 0 && isAsciiDigit(text[pos - 1])) {
@@ -26,12 +38,12 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
 
   // A month and day without a year is still an atomic calendar date. Check it
   // before requiring 年 so 7月18日 does not become two adjacent date tokens.
-  if (year.digit_count <= 2 && year.value >= 1 && year.value <= 12 && idx < text.size()) {
+  if (isValidCalendarMonth(year) && idx < text.size()) {
     size_t byte_pos = idx;
     char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
     if (codepoint == U'月') {
       const IntegerScan day = scanInteger(text, byte_pos);
-      if (!day.empty() && day.digit_count <= 2 && day.value >= 1 && day.value <= 31 && day.end < text.size()) {
+      if (isValidCalendarDay(day) && day.end < text.size()) {
         byte_pos = day.end;
         codepoint = normalize::decodeUtf8(text, byte_pos);
         if (codepoint == U'日') {
@@ -64,7 +76,7 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
   size_t month_end = month.end;
 
   bool matched_month = false;
-  if (!month.empty() && month.digit_count <= 2) {
+  if (isValidCalendarMonth(month)) {
     byte_pos = month_end;
     if (byte_pos < text.size()) {
       codepoint = normalize::decodeUtf8(text, byte_pos);
@@ -76,7 +88,7 @@ bool PreTokenizer::tryMatchDate(std::string_view text, size_t pos, PreToken& tok
         const IntegerScan day = scanInteger(text, idx);
         size_t day_end = day.end;
 
-        if (!day.empty() && day.digit_count <= 2) {
+        if (isValidCalendarDay(day)) {
           byte_pos = day_end;
           if (byte_pos < text.size()) {
             codepoint = normalize::decodeUtf8(text, byte_pos);
@@ -314,33 +326,28 @@ bool PreTokenizer::tryMatchPercentage(std::string_view text, size_t pos, PreToke
 bool PreTokenizer::tryMatchAddressNumber(std::string_view text, size_t pos, PreToken& token) const {
   // Match address number patterns: 1-2-3, 1-2-3-4 etc.
   // Pattern: digit(s) + (hyphen + digit(s))+
-  std::string num_str;
-  size_t idx = parseIntegerText(text, pos, num_str);
-
-  if (num_str.empty()) {
+  const IntegerScan first_number = scanInteger(text, pos);
+  size_t idx = first_number.end;
+  if (first_number.empty()) {
     return false;
   }
 
   // Must have at least one hyphen-number sequence
   bool has_hyphen = false;
-  std::string surface = num_str;
 
   while (idx < text.size() && text[idx] == '-') {
     size_t hyphen_pos = idx;
     ++idx;
 
     // Parse the next number
-    std::string next_num;
-    size_t next_end = parseIntegerText(text, idx, next_num);
-    if (next_num.empty()) {
+    const IntegerScan next_number = scanInteger(text, idx);
+    if (next_number.empty()) {
       // No number after hyphen, revert
       idx = hyphen_pos;
       break;
     }
 
-    surface += '-';
-    surface += next_num;
-    idx = next_end;
+    idx = next_number.end;
     has_hyphen = true;
   }
 
@@ -348,11 +355,7 @@ bool PreTokenizer::tryMatchAddressNumber(std::string_view text, size_t pos, PreT
     return false;
   }
 
-  token.surface = surface;
-  token.start = pos;
-  token.end = idx;
-  token.type = PreTokenType::Number;
-  token.pos = core::PartOfSpeech::Noun;
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Number, core::PartOfSpeech::Noun);
   return true;
 }
 

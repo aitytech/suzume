@@ -3,8 +3,6 @@
  * @brief Shared byte and numeric helpers for pre-tokenizer matchers
  */
 
-#include <cctype>
-
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 #include "pretokenizer/pretokenizer_internal.h"
@@ -115,27 +113,12 @@ bool isMonthPlaceCounterPrefix(char32_t codepoint) {
   return codepoint == U'か' || codepoint == U'ヶ' || codepoint == U'ヵ' || codepoint == U'ケ' || codepoint == U'箇';
 }
 
-// Address-number output historically normalizes full-width digits to ASCII.
-// Keep the owning form only for that caller.
-size_t parseIntegerText(std::string_view text, size_t pos, std::string& digits) {
-  digits.clear();
-  size_t idx = pos;
-  while (idx < text.size()) {
-    const char chr = text[idx];
-    if (isAsciiDigit(chr)) {
-      digits += chr;
-      ++idx;
-      continue;
-    }
-    size_t byte_pos = idx;
-    const char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
-    if (!isFullwidthDigit(codepoint)) {
-      break;
-    }
-    digits += static_cast<char>('0' + (codepoint - 0xFF10));
-    idx = byte_pos;
+bool hasAsciiRunLeftNeighbor(std::string_view text, size_t pos, std::string_view punctuation) {
+  if (pos == 0) {
+    return false;
   }
-  return idx;
+  const char previous = text[pos - 1];
+  return isAsciiAlnum(previous) || punctuation.find(previous) != std::string_view::npos;
 }
 
 // Parse digits at position (including decimals), return end position
@@ -189,9 +172,10 @@ bool startsWithCI(std::string_view text, size_t pos, std::string_view prefix) {
     return false;
   }
   for (size_t idx = 0; idx < prefix.size(); ++idx) {
-    char txt_c = text[pos + idx];
-    char pre_c = prefix[idx];
-    if (std::tolower(static_cast<unsigned char>(txt_c)) != std::tolower(static_cast<unsigned char>(pre_c))) {
+    const auto fold_ascii = [](char chr) {
+      return chr >= 'A' && chr <= 'Z' ? static_cast<char>(chr - 'A' + 'a') : chr;
+    };
+    if (fold_ascii(text[pos + idx]) != fold_ascii(prefix[idx])) {
       return false;
     }
   }

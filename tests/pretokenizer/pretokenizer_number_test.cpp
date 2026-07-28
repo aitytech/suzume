@@ -55,6 +55,38 @@ TEST_F(PreTokenizerNumberTest, MatchDate_MonthDayRejectsInvalidMonth) {
   EXPECT_TRUE(result.tokens.empty());
 }
 
+TEST_F(PreTokenizerNumberTest, MatchDate_ValidatesMonthAndDayWithOrWithoutYear) {
+  struct DateCase {
+    std::string_view text;
+    std::string_view expected;
+  };
+  constexpr DateCase kCases[] = {
+      {"1月1日", "1月1日"},
+      {"12月31日", "12月31日"},
+      {"0月1日", ""},
+      {"13月1日", ""},
+      {"1月0日", ""},
+      {"1月32日", ""},
+      {"2024年1月1日", "2024年1月1日"},
+      {"2024年12月31日", "2024年12月31日"},
+      {"2024年0月1日", "2024年"},
+      {"2024年13月1日", "2024年"},
+      {"2024年1月0日", "2024年1月"},
+      {"2024年1月32日", "2024年1月"},
+  };
+
+  for (const auto& test_case : kCases) {
+    auto result = pretokenizer_.process(test_case.text);
+    if (test_case.expected.empty()) {
+      EXPECT_TRUE(result.tokens.empty()) << test_case.text;
+    } else {
+      ASSERT_FALSE(result.tokens.empty()) << test_case.text;
+      EXPECT_EQ(result.tokens.front().surface, test_case.expected) << test_case.text;
+      EXPECT_EQ(result.tokens.front().type, PreTokenType::Date) << test_case.text;
+    }
+  }
+}
+
 TEST_F(PreTokenizerNumberTest, MatchTime_DurationWithMinutes) {
   auto result = pretokenizer_.process("1時間15分");
   ASSERT_EQ(result.tokens.size(), 1);
@@ -88,6 +120,18 @@ TEST_F(PreTokenizerNumberTest, MatchDate_DoesNotAcceptDecimalYear) {
   auto result = pretokenizer_.process("20.24年の予定");
   for (const auto& token : result.tokens) {
     EXPECT_NE(token.type, PreTokenType::Date);
+  }
+}
+
+TEST_F(PreTokenizerNumberTest, MatchAddressNumberSurfaceMatchesRawRange) {
+  constexpr std::string_view kAddresses[] = {"1-2-3", "１-２-３", "1-２-3"};
+  for (std::string_view address : kAddresses) {
+    auto result = pretokenizer_.process(address);
+    ASSERT_EQ(result.tokens.size(), 1) << address;
+    const auto& token = result.tokens.front();
+    EXPECT_EQ(token.type, PreTokenType::Number) << address;
+    EXPECT_EQ(token.surface, address) << address;
+    EXPECT_EQ(token.surface, address.substr(token.start, token.end - token.start)) << address;
   }
 }
 

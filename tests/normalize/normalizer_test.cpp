@@ -179,6 +179,15 @@ TEST_F(NormalizerTest, HalfwidthKatakana_LongVowel) {
   EXPECT_EQ(std::get<std::string>(result), "コーヒー");
 }
 
+TEST_F(NormalizerTest, RepeatedProlongedMarksCollapseIndependentOfWidth) {
+  auto fullwidth = normalizer_.normalize("長いーー音");
+  auto halfwidth = normalizer_.normalize("長いｰｰ音");
+  ASSERT_TRUE(core::isSuccess(fullwidth));
+  ASSERT_TRUE(core::isSuccess(halfwidth));
+  EXPECT_EQ(std::get<std::string>(fullwidth), "長いー音");
+  EXPECT_EQ(std::get<std::string>(halfwidth), "長いー音");
+}
+
 // ===== Long Vowel Mark Tests (長音記号) =====
 
 TEST_F(NormalizerTest, LongVowel_FullwidthTilde) {
@@ -393,12 +402,31 @@ TEST_F(NormalizerTest, SpacingMark_TaRowDakuten) {
   EXPECT_EQ(std::get<std::string>(result), "ダンス");
 }
 
-TEST_F(NormalizerTest, SpacingMarkWaKeepsKanaPlaneAsymmetry) {
-  // Katakana ワ has a precomposed voiced form (ヷ); hiragana わ does not.
-  auto katakana_result = normalizer_.normalize("ワ\u309B");
-  ASSERT_TRUE(core::isSuccess(katakana_result));
-  EXPECT_EQ(std::get<std::string>(katakana_result), "ヷ");
+TEST_F(NormalizerTest, KatakanaWaRowComposesEveryVoicedForm) {
+  struct VoicedCase {
+    std::string_view base;
+    std::string_view expected;
+  };
+  constexpr VoicedCase kCases[] = {
+      {"ワ", "ヷ"},
+      {"ヰ", "ヸ"},
+      {"ヱ", "ヹ"},
+      {"ヲ", "ヺ"},
+  };
+  constexpr std::string_view kMarks[] = {"\u3099", "\u309B", "ﾞ"};
 
+  for (const auto& test_case : kCases) {
+    for (std::string_view mark : kMarks) {
+      auto result = normalizer_.normalize(std::string(test_case.base) + std::string(mark));
+      ASSERT_TRUE(core::isSuccess(result)) << test_case.base << mark;
+      EXPECT_EQ(std::get<std::string>(result), test_case.expected) << test_case.base << mark;
+    }
+    auto precomposed = normalizer_.normalize(test_case.expected);
+    ASSERT_TRUE(core::isSuccess(precomposed));
+    EXPECT_EQ(std::get<std::string>(precomposed), test_case.expected);
+  }
+
+  // Hiragana わ has no precomposed voiced counterpart.
   auto hiragana_result = normalizer_.normalize("わ\u309B");
   ASSERT_TRUE(core::isSuccess(hiragana_result));
   EXPECT_EQ(std::get<std::string>(hiragana_result), "わ\u309B");
@@ -601,17 +629,19 @@ TEST(NormalizerOptionsTest, SetOptionsAfterConstruction) {
 // ===== Error Handling Tests =====
 
 TEST_F(NormalizerTest, ErrorHandling_InvalidUtf8) {
-  // Invalid UTF-8 sequence - should handle gracefully
   std::string invalid_utf8 = "\xFF\xFE";
   auto result = normalizer_.normalize(invalid_utf8);
-  // Should either return error or handle gracefully
+  ASSERT_FALSE(core::isSuccess(result));
+  ASSERT_NE(core::getErrorPtr(result), nullptr);
+  EXPECT_EQ(core::getErrorPtr(result)->code, core::ErrorCode::InvalidUtf8);
 }
 
 TEST_F(NormalizerTest, ErrorHandling_IncompleteUtf8) {
-  // Incomplete UTF-8 sequence
   std::string incomplete = "\xE3\x81";  // Incomplete hiragana
   auto result = normalizer_.normalize(incomplete);
-  // Should handle gracefully
+  ASSERT_FALSE(core::isSuccess(result));
+  ASSERT_NE(core::getErrorPtr(result), nullptr);
+  EXPECT_EQ(core::getErrorPtr(result)->code, core::ErrorCode::InvalidUtf8);
 }
 
 }  // namespace

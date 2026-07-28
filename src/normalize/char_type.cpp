@@ -185,6 +185,27 @@ bool isUnicodeLetterOrMark(char32_t codepoint) {
          (codepoint >= 0x1E030 && codepoint <= 0x1E08F);    // Cyrillic Extended-D
 }
 
+bool isUnicodeControlOrSpace(char32_t codepoint) {
+  return codepoint <= 0x20 || (codepoint >= 0x7F && codepoint <= 0xA0) || codepoint == 0x1680 ||
+         (codepoint >= 0x2000 && codepoint <= 0x200A) || (codepoint >= 0x2028 && codepoint <= 0x2029) ||
+         codepoint == 0x202F || codepoint == 0x205F || codepoint == 0xFEFF;
+}
+
+bool isUnicodePunctuationOrSymbol(char32_t codepoint) {
+  return (codepoint >= 0x00A1 && codepoint <= 0x00BF) || codepoint == 0x00D7 || codepoint == 0x00F7 ||
+         (codepoint >= 0x200B && codepoint <= 0x206F) ||  // format controls and general punctuation
+         (codepoint >= 0x20A0 && codepoint <= 0x20CF) ||  // currency symbols
+         (codepoint >= 0x2100 && codepoint <= 0x214F) ||  // letterlike symbols
+         (codepoint >= 0x2190 && codepoint <= 0x22FF) ||  // arrows and mathematical operators
+         (codepoint >= 0x2300 && codepoint <= 0x24FF) ||  // technical and enclosed symbols
+         (codepoint >= 0x2500 && codepoint <= 0x25FF) ||  // box, block, and geometric symbols
+         (codepoint >= 0x27C0 && codepoint <= 0x2BFF) ||  // supplemental arrows and mathematical symbols
+         (codepoint >= 0x2E00 && codepoint <= 0x2E7F) ||  // supplemental punctuation
+         (codepoint >= 0xFF00 && codepoint <= 0xFF20) || (codepoint >= 0xFF3B && codepoint <= 0xFF40) ||
+         (codepoint >= 0xFF5B && codepoint <= 0xFF65) || (codepoint >= 0xFFE0 && codepoint <= 0xFFEE) ||
+         (codepoint >= 0xFFF0 && codepoint <= 0xFFFF);
+}
+
 }  // namespace
 
 CharType classifyChar(char32_t codepoint) {
@@ -254,8 +275,11 @@ CharType classifyChar(char32_t codepoint) {
     return CharType::Digit;
   }
 
-  // Common punctuation and symbols
-  if ((codepoint >= 0x3000 && codepoint <= 0x303F) ||  // CJK Symbols and Punctuation
+  // Controls, spacing characters, common punctuation, and symbols. Classify
+  // them together so remove_symbols treats every non-word separator
+  // consistently instead of preserving TAB/CR/NBSP as unknown text.
+  if (isUnicodeControlOrSpace(codepoint) ||
+      (codepoint >= 0x3000 && codepoint <= 0x303F) ||  // CJK Symbols and Punctuation
       (codepoint >= 0xFF00 && codepoint <= 0xFF0F) ||  // Full-width symbols
       (codepoint >= 0xFF61 && codepoint <= 0xFF65) ||  // Half-width CJK punctuation (｡｢｣､･)
       (codepoint >= 0x0020 && codepoint <= 0x002F) ||  // ASCII punctuation
@@ -302,6 +326,10 @@ CharType classifyChar(char32_t codepoint) {
       (codepoint >= 0x23F8 && codepoint <= 0x23FA) ||    // Media controls
       isEmojiModifier(codepoint) || isRegionalIndicator(codepoint)) {
     return CharType::Emoji;
+  }
+
+  if (isUnicodePunctuationOrSymbol(codepoint)) {
+    return CharType::Symbol;
   }
 
   return CharType::Unknown;
@@ -425,8 +453,7 @@ bool isEmojiModifier(char32_t ch) {
   if (ch == 0x200D)
     return true;
 
-  // Variation Selectors (text vs emoji presentation)
-  if (ch >= 0xFE0E && ch <= 0xFE0F)
+  if (isVariationSelector(ch))
     return true;
 
   // Skin tone modifiers (Fitzpatrick scale)
@@ -442,6 +469,14 @@ bool isEmojiModifier(char32_t ch) {
     return true;
 
   return false;
+}
+
+bool isVariationSelector(char32_t ch) {
+  return (ch >= 0xFE00 && ch <= 0xFE0F) || (ch >= 0xE0100 && ch <= 0xE01EF);
+}
+
+bool isTransparentFormatControl(char32_t ch) {
+  return ch == 0x200B;  // Zero Width Space
 }
 
 bool isRegionalIndicator(char32_t ch) {

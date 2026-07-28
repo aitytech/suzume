@@ -508,10 +508,14 @@ TEST(Utf8Test, EdgeCase_EmptyString) {
 }
 
 TEST(Utf8Test, EdgeCase_NullCharacter) {
-  // String containing null character
-  std::string with_null = "a\0b";
-  // Note: std::string can contain null bytes
-  // But string_view from C string would stop at null
+  const std::string with_null("a\0b", 3);
+  const auto codepoints = toCodepoints(with_null);
+  ASSERT_EQ(codepoints.size(), 3U);
+  EXPECT_EQ(codepoints[0], U'a');
+  EXPECT_EQ(codepoints[1], U'\0');
+  EXPECT_EQ(codepoints[2], U'b');
+  EXPECT_EQ(utf8Length(with_null), 3U);
+  EXPECT_EQ(fromCodepoints(codepoints), with_null);
 }
 
 TEST(Utf8Test, EdgeCase_VeryLongString) {

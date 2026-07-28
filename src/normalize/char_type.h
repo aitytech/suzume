@@ -155,6 +155,19 @@ bool isProlongedSoundMark(char32_t ch);
 bool isEmojiModifier(char32_t ch);
 
 /**
+ * @brief Check if character is a Unicode variation selector
+ *
+ * Covers the BMP variation selectors (U+FE00-U+FE0F) and the ideographic
+ * variation selector supplement (U+E0100-U+E01EF).
+ */
+bool isVariationSelector(char32_t ch);
+
+/**
+ * @brief Check if a format control is transparent inside a word run
+ */
+bool isTransparentFormatControl(char32_t ch);
+
+/**
  * @brief Check if character is a Regional Indicator Symbol
  *
  * Regional indicators (U+1F1E6-1F1FF) are used in pairs to form
