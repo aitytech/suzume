@@ -1231,6 +1231,175 @@
       ],
       "id": "kana_i_adjective_ge_control",
       "input": "悲しげな様子"
+    },
+    {
+      "description": "読みにくければ困る - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "にくい",
+          "pos": "Adjective",
+          "surface": "にくけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "minikukereba_ru",
+      "input": "読みにくければ困る"
+    },
+    {
+      "description": "読みたければ読む - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "たい",
+          "pos": "Auxiliary",
+          "surface": "たけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "mitakereba_mu",
+      "input": "読みたければ読む"
+    },
+    {
+      "description": "書きづらければ困る - auto-generated",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "づらい",
+          "pos": "Adjective",
+          "surface": "づらけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "kidurakereba_ru",
+      "input": "書きづらければ困る"
+    },
+    {
+      "description": "子供っぽければ - auto-generated",
+      "expected": [
+        {
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "っぽい",
+          "pos": "Adjective",
+          "surface": "っぽけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "ttpokereba",
+      "input": "子供っぽければ"
+    },
+    {
+      "description": "読みづらかった - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "づらい",
+          "pos": "Adjective",
+          "surface": "づらかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "midurakattta",
+      "input": "読みづらかった"
+    },
+    {
+      "description": "P2-2 regression",
+      "expected": [
+        {
+          "lemma": "少ない",
+          "pos": "Adjective",
+          "surface": "少なく"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "naku_ku",
+      "input": "少なく行く"
+    },
+    {
+      "description": "P2-2 regression",
+      "expected": [
+        {
+          "lemma": "危ない",
+          "pos": "Adjective",
+          "surface": "危なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "危険",
+          "pos": "Adjective",
+          "surface": "危険"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "nakereba_da",
+      "input": "危なければ危険だ"
     }
   ],
   "description": "adjective tests",

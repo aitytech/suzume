@@ -122,19 +122,7 @@ TEST(BigramTableTest, PureExtendedPosRulesKeepTheirConnectionCosts) {
 
 TEST(BigramTableTest, EveryNominalHeadHasTheCommonContinuationRules) {
   using EPOS = core::ExtendedPOS;
-  struct NominalHeadCase {
-    EPOS head;
-    float case_cost;
-    float adverbial_cost;
-    float final_cost;
-  };
-  constexpr std::array<NominalHeadCase, 5> kNominalHeads = {{
-      {EPOS::Noun, bigram_cost::kNeutral, bigram_cost::kStrongBonus, bigram_cost::kModerateBonus},
-      {EPOS::NounVerbal, bigram_cost::kNeutral, bigram_cost::kStrongBonus, bigram_cost::kModerateBonus},
-      {EPOS::NounNumber, bigram_cost::kNeutral, bigram_cost::kStrongBonus, bigram_cost::kNeutral},
-      {EPOS::Pronoun, bigram_cost::kModerateBonus, bigram_cost::kExtraStrongBonus, bigram_cost::kModerateBonus},
-      {EPOS::PronounInterrogative, bigram_cost::kNeutral, bigram_cost::kExtraStrongBonus, bigram_cost::kNeutral},
-  }};
+  constexpr std::array<EPOS, 1> kExplicitExclusions = {EPOS::NounFormal};
   struct ContinuationCost {
     EPOS next;
     float expected_cost;
@@ -145,18 +133,61 @@ TEST(BigramTableTest, EveryNominalHeadHasTheCommonContinuationRules) {
       {EPOS::AuxCopulaDa, bigram_cost::kExtraStrongBonus},
   }};
 
-  for (const NominalHeadCase& head : kNominalHeads) {
-    EXPECT_FLOAT_EQ(BigramTable::getCost(head.head, EPOS::ParticleCase), head.case_cost);
-    EXPECT_FLOAT_EQ(BigramTable::getCost(head.head, EPOS::ParticleAdverbial), head.adverbial_cost);
-    EXPECT_FLOAT_EQ(BigramTable::getCost(head.head, EPOS::ParticleFinal), head.final_cost);
+  for (size_t idx = 0; idx < static_cast<size_t>(EPOS::Count_); ++idx) {
+    const EPOS head = static_cast<EPOS>(idx);
+    const core::PartOfSpeech pos = core::extendedPosToPos(head);
+    bool is_explicitly_excluded = false;
+    for (const EPOS exclusion : kExplicitExclusions) {
+      is_explicitly_excluded = is_explicitly_excluded || head == exclusion;
+    }
+    if ((pos != core::PartOfSpeech::Noun && pos != core::PartOfSpeech::Pronoun) || is_explicitly_excluded) {
+      continue;
+    }
+    SCOPED_TRACE(idx);
+    const bool is_pronoun = core::isPronounType(head);
+    const float case_cost = head == EPOS::Pronoun ? bigram_cost::kModerateBonus : bigram_cost::kNeutral;
+    const float adverbial_cost = is_pronoun ? bigram_cost::kExtraStrongBonus : bigram_cost::kStrongBonus;
+    const bool accepts_final_particle = head != EPOS::NounNumber && head != EPOS::PronounInterrogative;
+
+    EXPECT_FLOAT_EQ(BigramTable::getCost(head, EPOS::ParticleCase), case_cost);
+    EXPECT_FLOAT_EQ(BigramTable::getCost(head, EPOS::ParticleAdverbial), adverbial_cost);
+    EXPECT_FLOAT_EQ(BigramTable::getCost(head, EPOS::ParticleFinal),
+                    accepts_final_particle ? bigram_cost::kModerateBonus : bigram_cost::kNeutral);
     for (const ContinuationCost& continuation : kCommonContinuations) {
-      EXPECT_FLOAT_EQ(BigramTable::getCost(head.head, continuation.next), continuation.expected_cost);
+      EXPECT_FLOAT_EQ(BigramTable::getCost(head, continuation.next), continuation.expected_cost);
+    }
+  }
+
+  for (const EPOS exclusion : kExplicitExclusions) {
+    const core::PartOfSpeech pos = core::extendedPosToPos(exclusion);
+    EXPECT_TRUE(pos == core::PartOfSpeech::Noun || pos == core::PartOfSpeech::Pronoun);
+  }
+}
+
+TEST(BigramTableTest, FormalNounUsesItsExplicitContinuationProfile) {
+  using EPOS = core::ExtendedPOS;
+  EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleCase), bigram_cost::kModerateBonus);
+  EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleTopic), bigram_cost::kModerateBonus);
+  EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleBinding), bigram_cost::kVeryStrongBonus);
+  EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::AuxCopulaDa), bigram_cost::kVeryStrongBonus);
+  EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleAdverbial), bigram_cost::kDoubleVeryStrongBonus);
+}
+
+TEST(BigramTableTest, QuotativeAdverbInheritsTheGeneralAdverbConnectionProfile) {
+  using EPOS = core::ExtendedPOS;
+  for (size_t idx = 0; idx < static_cast<size_t>(EPOS::Count_); ++idx) {
+    const EPOS other = static_cast<EPOS>(idx);
+    SCOPED_TRACE(idx);
+    EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::AdverbQuotative, other), BigramTable::getCost(EPOS::Adverb, other));
+    if (other == EPOS::AdjStem) {
+      EXPECT_FLOAT_EQ(BigramTable::getCost(other, EPOS::AdverbQuotative), bigram_cost::kRare);
+    } else {
+      EXPECT_FLOAT_EQ(BigramTable::getCost(other, EPOS::AdverbQuotative), BigramTable::getCost(other, EPOS::Adverb));
     }
   }
 }
 
-#ifndef NDEBUG
-TEST(BigramTableTest, DuplicateRuleAssignmentIsRejectedInDebugBuilds) {
+TEST(BigramTableTest, DuplicateRuleAssignmentIsRejectedInEveryBuild) {
   using EPOS = core::ExtendedPOS;
   bigram_rules::BigramMatrix table{};
   for (auto& row : table) {
@@ -165,9 +196,8 @@ TEST(BigramTableTest, DuplicateRuleAssignmentIsRejectedInDebugBuilds) {
   const bigram_rules::BigramRule rule{EPOS::ParticleFinal, EPOS::Noun, bigram_cost::kProhibitive};
   bigram_rules::applyRules(table, &rule, 1);
 
-  EXPECT_DEATH(bigram_rules::applyRules(table, &rule, 1), "duplicate ExtendedPOS bigram rule");
+  EXPECT_DEATH(bigram_rules::applyRules(table, &rule, 1), "");
 }
-#endif
 
 }  // namespace
 }  // namespace suzume::analysis

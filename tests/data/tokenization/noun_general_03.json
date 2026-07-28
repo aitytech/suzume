@@ -1144,14 +1144,9 @@
           "surface": "学生"
         },
         {
-          "lemma": "で",
+          "lemma": "でも",
           "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
+          "surface": "でも"
         },
         {
           "lemma": "ない",
@@ -1367,6 +1362,187 @@
       ],
       "id": "shi_nai_2",
       "input": "申し分ない記録"
+    },
+    {
+      "description": "名詞複合の始めで前項レンマを動詞へ書き換えない",
+      "expected": [
+        {
+          "lemma": "祭り",
+          "pos": "Noun",
+          "surface": "祭り"
+        },
+        {
+          "lemma": "始め",
+          "pos": "Noun",
+          "surface": "始め"
+        }
+      ],
+      "id": "nominal_hajime_compound",
+      "input": "祭り始め"
+    },
+    {
+      "description": "Digit plus ヶ and a following kanji counter stays one search unit",
+      "expected": [
+        {
+          "lemma": "5ヶ国",
+          "pos": "Noun",
+          "surface": "5ヶ国"
+        }
+      ],
+      "id": "digit_ke_country_counter",
+      "input": "5ヶ国"
+    },
+    {
+      "description": "Multi-digit number plus ヶ and a following kanji counter stays one search unit",
+      "expected": [
+        {
+          "lemma": "10ヶ年",
+          "pos": "Noun",
+          "surface": "10ヶ年"
+        }
+      ],
+      "id": "digit_ke_year_counter",
+      "input": "10ヶ年"
+    },
+    {
+      "description": "過去連体節後の形容動詞語幹を名詞主要部として分類",
+      "expected": [
+        {
+          "lemma": "春めく",
+          "pos": "Verb",
+          "surface": "春めい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "陽気",
+          "pos": "Noun",
+          "surface": "陽気"
+        }
+      ],
+      "id": "na_adjective_stem_as_relative_clause_head",
+      "input": "春めいた陽気"
+    },
+    {
+      "description": "非文頭のでもは副助詞として扱う",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "demo_nai",
+      "input": "確認でも問題ない"
+    },
+    {
+      "description": "内容語直後のでもを副助詞として一般化する",
+      "expected": [
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "demo_nai_2",
+      "input": "方法でも問題ない"
+    },
+    {
+      "description": "おかげと敬称接尾辞さまの境界を保つ",
+      "expected": [
+        {
+          "lemma": "おかげ",
+          "pos": "Noun",
+          "surface": "おかげ"
+        },
+        {
+          "lemma": "さま",
+          "pos": "Suffix",
+          "surface": "さま"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "元気",
+          "pos": "Adjective",
+          "surface": "元気"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "okagesamade_desu",
+      "input": "おかげさまで元気です"
+    },
+    {
+      "description": "ASCII slash and hyphen stay inside the token",
+      "expected": [
+        {
+          "lemma": "CI/CD",
+          "pos": "Noun",
+          "surface": "CI/CD"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "GT-R",
+          "pos": "Noun",
+          "surface": "GT-R"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "ci/cdtogt-rno",
+      "input": "CI/CDとGT-Rの話"
     }
   ],
   "description": "General nouns (part 3/3)",

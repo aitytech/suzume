@@ -2257,6 +2257,126 @@
       ],
       "id": "ninai",
       "input": "滅多にない話"
+    },
+    {
+      "description": "混在字種の名詞宿主全体にがましいを接続する",
+      "expected": [
+        {
+          "lemma": "言い訳がましい",
+          "pos": "Adjective",
+          "surface": "言い訳がましい"
+        },
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        }
+      ],
+      "id": "i_gamashii",
+      "input": "言い訳がましい説明"
+    },
+    {
+      "description": "送り仮名を含む名詞宿主全体にがましいを接続する",
+      "expected": [
+        {
+          "lemma": "差し出がましい",
+          "pos": "Adjective",
+          "surface": "差し出がましい"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        }
+      ],
+      "id": "shi_gamashiiyoudesuga",
+      "input": "差し出がましいようですが"
+    },
+    {
+      "description": "がましい派生では最長の名詞宿主を選ぶ",
+      "expected": [
+        {
+          "lemma": "嫌味がましい",
+          "pos": "Adjective",
+          "surface": "嫌味がましい"
+        },
+        {
+          "lemma": "口調",
+          "pos": "Noun",
+          "surface": "口調"
+        }
+      ],
+      "id": "gamashii_2",
+      "input": "嫌味がましい口調"
+    },
+    {
+      "description": "程度副詞句後の有効をナ形容詞として扱う",
+      "expected": [
+        {
+          "lemma": "非常",
+          "pos": "Adjective",
+          "surface": "非常"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "有効",
+          "pos": "Adjective",
+          "surface": "有効"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_3",
+      "input": "非常に有効だ"
+    },
+    {
+      "description": "連体用法の有効をナ形容詞として扱う",
+      "expected": [
+        {
+          "lemma": "有効",
+          "pos": "Adjective",
+          "surface": "有効"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "探す",
+          "pos": "Verb",
+          "surface": "探す"
+        }
+      ],
+      "id": "na_wo_su",
+      "input": "有効な方法を探す"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",

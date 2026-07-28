@@ -811,6 +811,40 @@
       ],
       "id": "dochirademoyoi",
       "input": "どちらでもよい"
+    },
+    {
+      "description": "指示連体詞そうしたを一単位で保持",
+      "expected": [
+        {
+          "lemma": "そうした",
+          "pos": "Determiner",
+          "surface": "そうした"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        }
+      ],
+      "id": "sou_shita_determiner",
+      "input": "そうした問題"
+    },
+    {
+      "description": "ナ形容詞走査が漢字境界をまたがない",
+      "expected": [
+        {
+          "lemma": "とても",
+          "pos": "Adverb",
+          "surface": "とても"
+        },
+        {
+          "lemma": "穏やか",
+          "pos": "Adjective",
+          "surface": "穏やか"
+        }
+      ],
+      "id": "na_adjective_scan_kanji_boundary",
+      "input": "とても穏やか"
     }
   ],
   "description": "Basic tokenization tests",

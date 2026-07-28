@@ -1,0 +1,146 @@
+{
+  "cases": [
+    {
+      "description": "数量句直後の引用助詞境界を一般化する",
+      "expected": [
+        {
+          "lemma": "三つ",
+          "pos": "Noun",
+          "surface": "三つ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "おもう",
+          "pos": "Verb",
+          "surface": "おもう"
+        }
+      ],
+      "id": "tsutoomou_3",
+      "input": "三つとおもう"
+    },
+    {
+      "description": "最善な方法を選ぶ - regression test",
+      "expected": [
+        {
+          "lemma": "最善",
+          "pos": "Noun",
+          "surface": "最善"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ぶ"
+        }
+      ],
+      "id": "na_wo_bu",
+      "input": "最善な方法を選ぶ"
+    },
+    {
+      "description": "A lexical noun with the productive negation prefix remains nominal before attributive copula な",
+      "expected": [
+        {
+          "lemma": "無免許",
+          "pos": "Noun",
+          "surface": "無免許"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "運転",
+          "pos": "Noun",
+          "surface": "運転"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "避ける",
+          "pos": "Verb",
+          "surface": "避ける"
+        }
+      ],
+      "id": "na_wo_keru",
+      "input": "無免許な運転を避ける"
+    },
+    {
+      "description": "ASCII word-internal hyphen stays inside the token",
+      "expected": [
+        {
+          "lemma": "Coca-Cola",
+          "pos": "Noun",
+          "surface": "Coca-Cola"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        }
+      ],
+      "id": "coca-colawo_mu",
+      "input": "Coca-Colaを飲む"
+    },
+    {
+      "description": "ASCII apostrophe and ampersand stay inside the token",
+      "expected": [
+        {
+          "lemma": "McDonald's",
+          "pos": "Noun",
+          "surface": "McDonald's"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "H&M",
+          "pos": "Noun",
+          "surface": "H&M"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "mcdonald'stoh&mni_ku",
+      "input": "McDonald'sとH&Mに行く"
+    }
+  ],
+  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",
+  "version": "1.0"
+}

@@ -70,6 +70,20 @@ TEST(PostprocessorTest, MergedNounCompoundClearsDictionaryProvenance) {
   EXPECT_FALSE(result[0].is_from_dictionary);
 }
 
+TEST(PostprocessorTest, IndefiniteCounterMergeUsesNumericNounCategories) {
+  auto interrogative = makeMorpheme("何", core::PartOfSpeech::Pronoun, core::ExtendedPOS::PronounInterrogative, 0, 1);
+  auto counter = makeMorpheme("ヶ月", core::PartOfSpeech::Suffix, core::ExtendedPOS::Suffix, 1, 3);
+
+  PostprocessOptions options;
+  options.remove_symbols = false;
+  const auto result = Postprocessor(options).process({interrogative, counter});
+
+  ASSERT_EQ(result.size(), 1U);
+  EXPECT_EQ(result[0].surface, "何ヶ月");
+  EXPECT_EQ(result[0].pos, core::PartOfSpeech::Noun);
+  EXPECT_EQ(result[0].extended_pos, core::ExtendedPOS::NounNumber);
+}
+
 TEST(PostprocessorResolverTest, TeFormConnectiveRequiresBothRoleAndSurface) {
   auto connective = makeMorpheme("て", core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleConj, 0, 1);
   EXPECT_TRUE(resolver::followsTeFormConnective(connective));

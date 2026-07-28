@@ -2100,8 +2100,407 @@
       ],
       "id": "i_wo_ku_2",
       "input": "言い分を聞く"
+    },
+    {
+      "description": "P2-2 regression",
+      "expected": [
+        {
+          "lemma": "凪ぐ",
+          "pos": "Verb",
+          "surface": "凪い"
+        },
+        {
+          "lemma": "ちゃう",
+          "pos": "Auxiliary",
+          "surface": "ちゃっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ichi_ttta",
+      "input": "凪いちゃった"
+    },
+    {
+      "description": "P2-2 regression",
+      "expected": [
+        {
+          "lemma": "味わう",
+          "pos": "Verb",
+          "surface": "味わっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "苦しみ",
+          "pos": "Noun",
+          "surface": "苦しみ"
+        }
+      ],
+      "id": "wattta_shimi",
+      "input": "味わった苦しみ"
+    },
+    {
+      "description": "P2-3 ひらがな複合動詞・閉じた形態素境界の回帰",
+      "expected": [
+        {
+          "lemma": "とりもどせる",
+          "pos": "Verb",
+          "surface": "とりもどせ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "torimodosenai",
+      "input": "とりもどせない"
+    },
+    {
+      "description": "P2-3 ひらがな複合動詞・閉じた形態素境界の回帰",
+      "expected": [
+        {
+          "lemma": "とりだす",
+          "pos": "Verb",
+          "surface": "とりだそ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "toridasou",
+      "input": "とりだそう"
+    },
+    {
+      "description": "P2-3 ひらがな複合動詞・閉じた形態素境界の回帰",
+      "expected": [
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やり"
+        },
+        {
+          "lemma": "とく",
+          "pos": "Auxiliary",
+          "surface": "とく"
+        }
+      ],
+      "id": "yaritoku",
+      "input": "やりとく"
+    },
+    {
+      "description": "裸の連用形を含む複合助詞を一単位で保持",
+      "expected": [
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わる"
+        },
+        {
+          "lemma": "につれ",
+          "pos": "Particle",
+          "surface": "につれ"
+        },
+        {
+          "lemma": "状況",
+          "pos": "Noun",
+          "surface": "状況"
+        }
+      ],
+      "id": "bare_renyokei_compound_particle",
+      "input": "変わるにつれ状況"
+    },
+    {
+      "description": "終止形の後のひらがな名詞を形容詞候補で吸収しない",
+      "expected": [
+        {
+          "lemma": "乗る",
+          "pos": "Verb",
+          "surface": "乗る"
+        },
+        {
+          "lemma": "くるま",
+          "pos": "Noun",
+          "surface": "くるま"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ぶ"
+        }
+      ],
+      "id": "attributive_verb_hiragana_noun",
+      "input": "乗るくるまを選ぶ"
+    },
+    {
+      "description": "反復数量境界をまたぐ接尾動詞候補を作らない",
+      "expected": [
+        {
+          "lemma": "一語一語",
+          "pos": "Noun",
+          "surface": "一語一語"
+        },
+        {
+          "lemma": "意味づける",
+          "pos": "Verb",
+          "surface": "意味づける"
+        }
+      ],
+      "id": "distributive_quantity_suffix_verb",
+      "input": "一語一語意味づける"
+    },
+    {
+      "description": "ひらがな助詞の後でも内容語エッジに基づき名詞昇格",
+      "expected": [
+        {
+          "lemma": "たまご",
+          "pos": "Noun",
+          "surface": "たまご"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "みかん",
+          "pos": "Noun",
+          "surface": "みかん"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "たべる",
+          "pos": "Verb",
+          "surface": "たべる"
+        }
+      ],
+      "id": "hiragana_noun_after_hiragana_particle",
+      "input": "たまごとみかんをたべる"
+    },
+    {
+      "description": "格助詞を二モーラXっとへ吸収しない",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "ぐっと",
+          "pos": "Adverb",
+          "surface": "ぐっと"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良く"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "particle_initial_xtto_after_case_particle",
+      "input": "この方法でぐっと良くなる"
+    },
+    {
+      "description": "助詞連鎖を二モーラXっとへ吸収しない",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "場",
+          "pos": "Noun",
+          "surface": "場"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "はっと",
+          "pos": "Adverb",
+          "surface": "はっと"
+        },
+        {
+          "lemma": "気づく",
+          "pos": "Verb",
+          "surface": "気づく"
+        }
+      ],
+      "id": "topic_initial_xtto_after_case_particle",
+      "input": "その場ではっと気づく"
+    },
+    {
+      "description": "A tab is a removable symbol boundary and does not change the following token",
+      "expected": [
+        {
+          "lemma": "東京",
+          "pos": "Noun",
+          "surface": "東京"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "tab_symbol_boundary",
+      "input": "東京\tに行く"
+    },
+    {
+      "description": "A carriage return is a removable symbol boundary and does not change the following token",
+      "expected": [
+        {
+          "lemma": "東京",
+          "pos": "Noun",
+          "surface": "東京"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "carriage_return_symbol_boundary",
+      "input": "東京\rに行く"
+    },
+    {
+      "description": "語彙化したおかげを一検索単位として扱う",
+      "expected": [
+        {
+          "lemma": "おかげ",
+          "pos": "Noun",
+          "surface": "おかげ"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "助かる",
+          "pos": "Verb",
+          "surface": "助かっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "okagede_kattta",
+      "input": "おかげで助かった"
+    },
+    {
+      "description": "格助詞前のおかげを一検索単位として扱う",
+      "expected": [
+        {
+          "lemma": "おかげ",
+          "pos": "Noun",
+          "surface": "おかげ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "被る",
+          "pos": "Verb",
+          "surface": "被る"
+        }
+      ],
+      "id": "okagewo_ru",
+      "input": "おかげを被る"
+    },
+    {
+      "description": "数量句直後では引用助詞と動詞の境界を優先する",
+      "expected": [
+        {
+          "lemma": "一つ",
+          "pos": "Noun",
+          "surface": "一つ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "おもう",
+          "pos": "Verb",
+          "surface": "おもう"
+        }
+      ],
+      "id": "tsutoomou",
+      "input": "一つとおもう"
+    },
+    {
+      "description": "かな数量詞候補を数量句直後で再開しない",
+      "expected": [
+        {
+          "lemma": "二つ",
+          "pos": "Noun",
+          "surface": "二つ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "おもう",
+          "pos": "Verb",
+          "surface": "おもう"
+        }
+      ],
+      "id": "tsutoomou_2",
+      "input": "二つとおもう"
     }
   ],
-  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/5)",
+  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 5/6)",
   "version": "1.0"
 }

@@ -374,6 +374,23 @@
       ],
       "id": "ha_mo_umaitoshite_ttta",
       "input": "彼は何も言うまいとして黙った。"
+    },
+    {
+      "description": "P2-2 regression",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べよ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "beyou",
+      "input": "食べよう"
     }
   ],
   "description": "verb_volitional tests",

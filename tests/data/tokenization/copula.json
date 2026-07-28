@@ -321,14 +321,9 @@
           "surface": "彼女"
         },
         {
-          "lemma": "で",
+          "lemma": "でも",
           "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
+          "surface": "でも"
         },
         {
           "lemma": "ない",
@@ -1371,6 +1366,378 @@
       ],
       "id": "ni_da",
       "input": "実に重要だ"
+    },
+    {
+      "description": "コピュラ前の有効をナ形容詞として扱う",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "有効",
+          "pos": "Adjective",
+          "surface": "有効"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_2",
+      "input": "実に有効だ"
+    },
+    {
+      "description": "主題後の有効をナ形容詞として扱う",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "有効",
+          "pos": "Adjective",
+          "surface": "有効"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "koreha_da",
+      "input": "これは有効だ"
+    },
+    {
+      "description": "実に無効だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "無効",
+          "pos": "Adjective",
+          "surface": "無効"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_4",
+      "input": "実に無効だ"
+    },
+    {
+      "description": "実に有用だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "有用",
+          "pos": "Adjective",
+          "surface": "有用"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_5",
+      "input": "実に有用だ"
+    },
+    {
+      "description": "実に無用だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "無用",
+          "pos": "Adjective",
+          "surface": "無用"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_6",
+      "input": "実に無用だ"
+    },
+    {
+      "description": "実に有益だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "有益",
+          "pos": "Adjective",
+          "surface": "有益"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_7",
+      "input": "実に有益だ"
+    },
+    {
+      "description": "実に無益だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "無益",
+          "pos": "Adjective",
+          "surface": "無益"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_8",
+      "input": "実に無益だ"
+    },
+    {
+      "description": "実に有害だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "有害",
+          "pos": "Adjective",
+          "surface": "有害"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_9",
+      "input": "実に有害だ"
+    },
+    {
+      "description": "実に無害だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "無害",
+          "pos": "Adjective",
+          "surface": "無害"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_10",
+      "input": "実に無害だ"
+    },
+    {
+      "description": "実に適切だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "適切",
+          "pos": "Adjective",
+          "surface": "適切"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_11",
+      "input": "実に適切だ"
+    },
+    {
+      "description": "実に不適切だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "不適切",
+          "pos": "Adjective",
+          "surface": "不適切"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_12",
+      "input": "実に不適切だ"
+    },
+    {
+      "description": "実に正確だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "正確",
+          "pos": "Adjective",
+          "surface": "正確"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_13",
+      "input": "実に正確だ"
+    },
+    {
+      "description": "実に不正確だ - regression test",
+      "expected": [
+        {
+          "lemma": "実に",
+          "pos": "Adverb",
+          "surface": "実に"
+        },
+        {
+          "lemma": "不正確",
+          "pos": "Adjective",
+          "surface": "不正確"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_da_14",
+      "input": "実に不正確だ"
+    },
+    {
+      "description": "これは無計画だ - regression test",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "無計画",
+          "pos": "Adjective",
+          "surface": "無計画"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "koreha_da_2",
+      "input": "これは無計画だ"
+    },
+    {
+      "description": "これは計画的だ - regression test",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "計画的",
+          "pos": "Adjective",
+          "surface": "計画的"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "koreha_da_3",
+      "input": "これは計画的だ"
+    },
+    {
+      "description": "同一表層の名詞・ナ形容詞を述語コピュラで名詞選択する",
+      "expected": [
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "最悪",
+          "pos": "Noun",
+          "surface": "最悪"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ha_da_3",
+      "input": "結果は最悪だ"
     }
   ],
   "description": "Copula patterns (だ、です、である)",

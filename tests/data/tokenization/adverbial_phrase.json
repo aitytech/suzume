@@ -21,6 +21,33 @@
       ],
       "id": "chounen_ni_watari_tsuzuku",
       "input": "長年にわたり続く"
+    },
+    {
+      "description": "漢字名詞と副詞格にを参照辞書の品詞被覆に依存せず分割",
+      "expected": [
+        {
+          "lemma": "次",
+          "pos": "Noun",
+          "surface": "次"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "tsugi_ni_reference_pos_independent",
+      "input": "次に確認する"
     }
   ],
   "description": "adverbial_phrase tests",

@@ -165,7 +165,7 @@ struct BeamBoundaryScorer {
   float bosCost(const LatticeEdge&) const { return 0.0F; }
   float eosCost(const LatticeEdge&) const { return 0.0F; }
   float connectionCost(const LatticeEdge& prev, const LatticeEdge& next) const {
-    return prev.surface == "third" && next.surface == "tail" ? -100.0F : 0.0F;
+    return prev.surface == "second" && next.surface == "tail" ? -100.0F : 0.0F;
   }
 };
 
@@ -173,8 +173,9 @@ TEST(ViterbiTest, BeamKeepsExactlyTwoLowestCostAlternativesPerKey) {
   Lattice lattice(2);
   const auto first = lattice.addEdge("first", 0, 1, PartOfSpeech::Verb, 0.0F, 0, {}, dictionary::ConjugationType::None,
                                      CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::VerbRenyokei);
-  lattice.addEdge("second", 0, 1, PartOfSpeech::Verb, 1.0F, 0, {}, dictionary::ConjugationType::None,
-                  CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::VerbRenyokei);
+  const auto second =
+      lattice.addEdge("second", 0, 1, PartOfSpeech::Verb, 1.0F, 0, {}, dictionary::ConjugationType::None,
+                      CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::VerbRenyokei);
   lattice.addEdge("third", 0, 1, PartOfSpeech::Verb, 2.0F, 0, {}, dictionary::ConjugationType::None,
                   CandidateOrigin::Unknown, 0.0F, {}, ExtendedPOS::VerbRenyokei);
   lattice.addEdge("tail", 1, 2, PartOfSpeech::Auxiliary, 0.0F, 0, {}, dictionary::ConjugationType::None,
@@ -182,7 +183,8 @@ TEST(ViterbiTest, BeamKeepsExactlyTwoLowestCostAlternativesPerKey) {
 
   const auto result = Viterbi{}.solve(lattice, BeamBoundaryScorer{});
   ASSERT_EQ(result.path.size(), 2U);
-  EXPECT_EQ(result.path[0], first);
+  EXPECT_NE(result.path[0], first);
+  EXPECT_EQ(result.path[0], second);
 }
 
 TEST(ViterbiTest, KeepsDistinctExtendedPosStatesForSamePosAndEnd) {

@@ -78,7 +78,7 @@ TEST_F(ConjugatorTest, IchidanShortVerb) {
 
 TEST_F(ConjugatorTest, GodanKaStems) {
   auto forms = conjugator_.generateStems("書く", VerbType::GodanKa);
-  ASSERT_EQ(forms.size(), 4u);
+  ASSERT_EQ(forms.size(), 8u);
 
   auto* base = findByRightId(forms, conn::kVerbBase);
   ASSERT_NE(base, nullptr);
@@ -99,9 +99,18 @@ TEST_F(ConjugatorTest, GodanKaStems) {
   EXPECT_EQ(onbinkei->surface, "書い");
 }
 
+TEST_F(ConjugatorTest, IkuUsesIrregularSokuonbinInGeneratedStems) {
+  for (const auto& base_form : {"行く", "いく"}) {
+    auto forms = conjugator_.generateStems(base_form, VerbType::GodanKa);
+    auto* onbinkei = findByRightId(forms, conn::kVerbOnbinkei);
+    ASSERT_NE(onbinkei, nullptr);
+    EXPECT_EQ(onbinkei->surface, base_form == std::string_view("行く") ? "行っ" : "いっ");
+  }
+}
+
 TEST_F(ConjugatorTest, GodanGaStems) {
   auto forms = conjugator_.generateStems("泳ぐ", VerbType::GodanGa);
-  ASSERT_EQ(forms.size(), 4u);
+  ASSERT_EQ(forms.size(), 8u);
 
   auto* base = findByRightId(forms, conn::kVerbBase);
   ASSERT_NE(base, nullptr);
@@ -124,7 +133,7 @@ TEST_F(ConjugatorTest, GodanGaStems) {
 
 TEST_F(ConjugatorTest, GodanSaStems) {
   auto forms = conjugator_.generateStems("話す", VerbType::GodanSa);
-  ASSERT_EQ(forms.size(), 4u);
+  ASSERT_EQ(forms.size(), 8u);
 
   auto* base = findByRightId(forms, conn::kVerbBase);
   ASSERT_NE(base, nullptr);
@@ -360,14 +369,18 @@ TEST_F(ConjugatorTest, UnknownTypeReturnsEmpty) {
   EXPECT_TRUE(forms.empty());
 }
 
-TEST_F(ConjugatorTest, IAdjectiveTypeReturnsEmpty) {
-  // IAdjective is not handled by generateStems (no case for it)
+TEST_F(ConjugatorTest, IAdjectiveGeneratesEveryBareStemCell) {
   auto forms = conjugator_.generateStems("高い", VerbType::IAdjective);
-  EXPECT_TRUE(forms.empty());
+  ASSERT_EQ(forms.size(), 6u);
+  EXPECT_EQ(findByRightId(forms, conn::kVerbBase)->surface, "高い");
+  EXPECT_EQ(findByRightId(forms, conn::kIAdjStem)->surface, "高");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbRenyokei)->surface, "高く");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbOnbinkei)->surface, "高かっ");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbKatei)->surface, "高けれ");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbVolitional)->surface, "高かろ");
 }
 
-TEST_F(ConjugatorTest, AllGodanFormsHaveFourStems) {
-  // Every godan type should produce exactly 4 stems
+TEST_F(ConjugatorTest, AllGodanFormsCoverTheReverseEndingCells) {
   struct TestCase {
     const char* base;
     VerbType type;
@@ -379,7 +392,12 @@ TEST_F(ConjugatorTest, AllGodanFormsHaveFourStems) {
   };
   for (const auto& tc : cases) {
     auto forms = conjugator_.generateStems(tc.base, tc.type);
-    EXPECT_EQ(forms.size(), 4u) << "Failed for: " << tc.base;
+    const size_t expected_size = tc.type == VerbType::GodanRa ? 7U : 8U;
+    EXPECT_EQ(forms.size(), expected_size) << "Failed for: " << tc.base;
+    EXPECT_NE(findByRightId(forms, conn::kVerbKatei), nullptr) << tc.base;
+    EXPECT_NE(findByRightId(forms, conn::kVerbMeireikei), nullptr) << tc.base;
+    EXPECT_NE(findByRightId(forms, conn::kVerbVolitional), nullptr) << tc.base;
+    EXPECT_EQ(findByRightId(forms, conn::kVerbPotential) != nullptr, tc.type != VerbType::GodanRa) << tc.base;
   }
 }
 

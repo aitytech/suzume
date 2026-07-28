@@ -13,6 +13,7 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -179,6 +180,24 @@ TEST(CompoundVerbForms, GodanRowsDriveConjugationAndTeForms) {
 
   EXPECT_EQ(compound_verb_detail::compoundConjugationType(V2VerbType::Godan, "い"), dictionary::ConjugationType::None);
   EXPECT_EQ(compound_verb_detail::getTeFormType("い"), TeFormType::Ichidan);
+}
+
+TEST(CompoundVerbForms, KanjiAndHiraganaHostsShareV2InflectionCells) {
+  SuzumeOptions options;
+  options.skip_user_dictionary = true;
+  Suzume analyzer(options);
+  const auto surfaces = [&](std::string_view input) {
+    std::vector<std::string> result;
+    for (const auto& token : analyzer.analyze(std::string(input))) {
+      result.push_back(token.surface);
+    }
+    return result;
+  };
+
+  EXPECT_EQ(surfaces("取り戻せない"), (std::vector<std::string>{"取り戻せ", "ない"}));
+  EXPECT_EQ(surfaces("とりもどせない"), (std::vector<std::string>{"とりもどせ", "ない"}));
+  EXPECT_EQ(surfaces("取り出そう"), (std::vector<std::string>{"取り出そ", "う"}));
+  EXPECT_EQ(surfaces("とりだそう"), (std::vector<std::string>{"とりだそ", "う"}));
 }
 
 TEST(CandidateGenerationRegression, IAdjectiveStemUsesCanonicalGaruParadigm) {

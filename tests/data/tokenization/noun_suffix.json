@@ -175,6 +175,145 @@
       ],
       "id": "batttari",
       "input": "ばったり"
+    },
+    {
+      "description": "状態接尾辞中をコピュラ活用全体で統一",
+      "expected": [
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "中",
+          "pos": "Suffix",
+          "surface": "中"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "中",
+          "pos": "Suffix",
+          "surface": "中"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "中",
+          "pos": "Suffix",
+          "surface": "中"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "でし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "中",
+          "pos": "Suffix",
+          "surface": "中"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "でしょ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "中",
+          "pos": "Suffix",
+          "surface": "中"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "中",
+          "pos": "Suffix",
+          "surface": "中"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "state_chuu_complete_copula_paradigm",
+      "input": "作業中だ、作業中です、作業中でした、作業中でしょう、作業中だった、作業中なら確認する"
+    },
+    {
+      "description": "役職接尾辞長を参照辞書の見出し被覆に依存せず統合",
+      "expected": [
+        {
+          "lemma": "第3",
+          "pos": "Noun",
+          "surface": "第3"
+        },
+        {
+          "lemma": "部門長",
+          "pos": "Noun",
+          "surface": "部門長"
+        }
+      ],
+      "id": "productive_role_suffix_chou",
+      "input": "第3部門長"
     }
   ],
   "description": "noun_suffix tests",

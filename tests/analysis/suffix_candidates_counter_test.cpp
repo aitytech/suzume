@@ -51,6 +51,24 @@ TEST(SuffixCandidatesCounterTest, TemporalCandidatesAcceptNonQuantityAtSentenceS
   counter_detail::appendTemporalCounterCandidates(codepoints, 0, char_types, &dictionary_manager, candidates);
 }
 
+TEST(SuffixCandidatesCounterTest, BoundsKanaCounterProbesOnLongHiraganaRun) {
+  std::string text;
+  for (size_t idx = 0; idx < 4000; ++idx) {
+    text += "あ";
+  }
+  const auto codepoints = normalize::toCodepoints(text);
+  const auto char_types = classify(codepoints);
+  dictionary::DictionaryManager dictionary_manager;
+  std::vector<UnknownCandidate> candidates;
+
+  for (size_t start_pos = 0; start_pos < codepoints.size(); ++start_pos) {
+    counter_detail::appendStructuralCounterCandidates(codepoints, start_pos, char_types, &dictionary_manager,
+                                                      candidates);
+  }
+
+  EXPECT_TRUE(candidates.empty());
+}
+
 TEST(SuffixCandidatesCounterTest, KeepsRepeatedQuantityTogetherBeforeSuruPredicate) {
   SuzumeOptions options;
   options.skip_user_dictionary = true;
@@ -65,6 +83,19 @@ TEST(SuffixCandidatesCounterTest, KeepsRepeatedQuantityTogetherBeforeSuruPredica
     const size_t repeated_end = repeatedNumeralNounUnitEndAt(codepoints, char_types, 0);
     ASSERT_NE(repeated_end, 0u) << text;
     EXPECT_EQ(results.front().surface, normalize::encodeRange(codepoints, 0, repeated_end)) << text;
+  }
+}
+
+TEST(SuffixCandidatesCounterTest, ExtendsKeCounterThroughFollowingKanji) {
+  SuzumeOptions options;
+  options.skip_user_dictionary = true;
+  Suzume analyzer(options);
+
+  for (const std::string_view text : {"5ヶ国", "10ヶ年"}) {
+    const auto results = analyzer.analyze(text);
+    ASSERT_EQ(results.size(), 1u) << text;
+    EXPECT_EQ(results.front().surface, text);
+    EXPECT_EQ(results.front().pos, core::PartOfSpeech::Noun);
   }
 }
 

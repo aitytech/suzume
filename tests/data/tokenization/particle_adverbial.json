@@ -856,6 +856,199 @@
       ],
       "id": "berudake_beta",
       "input": "食べるだけ食べた"
+    },
+    {
+      "description": "名詞後のでもを後続述語に依存せず副助詞として保持",
+      "expected": [
+        {
+          "lemma": "いずれ",
+          "pos": "Adverb",
+          "surface": "いずれ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "nominal_demo_before_yoi",
+      "input": "いずれの方法でもよい"
+    },
+    {
+      "description": "後続語依存を除いた正規化規則の負の対照",
+      "expected": [
+        {
+          "lemma": "何",
+          "pos": "Pronoun",
+          "surface": "何"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        },
+        {
+          "lemma": "いずれ",
+          "pos": "Adverb",
+          "surface": "いずれ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "方法",
+          "pos": "Noun",
+          "surface": "方法"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "構う",
+          "pos": "Verb",
+          "surface": "構わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "特",
+          "pos": "Noun",
+          "surface": "特"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "会計課長",
+          "pos": "Noun",
+          "surface": "会計課長"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "元気",
+          "pos": "Adjective",
+          "surface": "元気"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "oracle_following_context_negative_controls",
+      "input": "何でもよい、いずれの方法でも構わない、特に問題ない、会計課長に報告、彼は元気だ"
+    },
+    {
+      "description": "名詞＋格助詞の副詞的用法を平坦化しない",
+      "expected": [
+        {
+          "lemma": "別",
+          "pos": "Noun",
+          "surface": "別"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "構う",
+          "pos": "Verb",
+          "surface": "構わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ni_wanai",
+      "input": "別に構わない"
+    },
+    {
+      "description": "名詞＋にの同型を後続述語に依存せず分割する",
+      "expected": [
+        {
+          "lemma": "別",
+          "pos": "Noun",
+          "surface": "別"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "急ぐ",
+          "pos": "Verb",
+          "surface": "急が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ni_ganai",
+      "input": "別に急がない"
     }
   ],
   "description": "particle_adverbial tests",

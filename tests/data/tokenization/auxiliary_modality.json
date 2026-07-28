@@ -2164,6 +2164,131 @@
       ],
       "id": "no_shimo_da",
       "input": "確認の折しも問題だ"
+    },
+    {
+      "description": "P2-3 ひらがな複合動詞・閉じた形態素境界の回帰",
+      "expected": [
+        {
+          "lemma": "ゆめ",
+          "pos": "Adverb",
+          "surface": "ゆめ"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "yumeshikanai",
+      "input": "ゆめしかない"
+    },
+    {
+      "description": "文頭らしくも宿主判定を通して補助形へ再タグ",
+      "expected": [
+        {
+          "lemma": "らしい",
+          "pos": "Auxiliary",
+          "surface": "らしく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "sentence_initial_rashiku_auxiliary",
+      "input": "らしくないね"
+    },
+    {
+      "description": "彼は無免許だ - regression test",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "無免許",
+          "pos": "Noun",
+          "surface": "無免許"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ha_da_2",
+      "input": "彼は無免許だ"
+    },
+    {
+      "description": "これは最悪だ - regression test",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "最悪",
+          "pos": "Noun",
+          "surface": "最悪"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "koreha_da_4",
+      "input": "これは最悪だ"
+    },
+    {
+      "description": "これは最善だ - regression test",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "最善",
+          "pos": "Noun",
+          "surface": "最善"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "koreha_da_5",
+      "input": "これは最善だ"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

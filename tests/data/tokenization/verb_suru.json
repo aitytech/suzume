@@ -2133,6 +2133,126 @@
       ],
       "id": "tsuhitotsu_suru",
       "input": "一つひとつ確認する"
+    },
+    {
+      "description": "P2-3 ひらがな複合動詞・閉じた形態素境界の回帰",
+      "expected": [
+        {
+          "lemma": "早め",
+          "pos": "Noun",
+          "surface": "早め"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "とく",
+          "pos": "Auxiliary",
+          "surface": "とい"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "menishitoite",
+      "input": "早めにしといて"
+    },
+    {
+      "description": "文頭の準備相同形語を格助詞の宿主名詞として解釈",
+      "expected": [
+        {
+          "lemma": "とく",
+          "pos": "Noun",
+          "surface": "とく"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "bos_preparatory_aux_homograph",
+      "input": "とくをする"
+    },
+    {
+      "description": "反復擬態語を部分的な括弧名詞へ昇格しない",
+      "expected": [
+        {
+          "lemma": "ぷにぷに",
+          "pos": "Adverb",
+          "surface": "ぷにぷに"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "てる",
+          "pos": "Auxiliary",
+          "surface": "てる"
+        }
+      ],
+      "id": "mimetic_progressive_bracket_rescue",
+      "input": "ぷにぷにしてる"
+    },
+    {
+      "description": "語彙化したおしまいを一検索単位として扱う",
+      "expected": [
+        {
+          "lemma": "おしまい",
+          "pos": "Noun",
+          "surface": "おしまい"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "oshimainisuru",
+      "input": "おしまいにする"
+    },
+    {
+      "description": "A temporal noun and an independent verbal noun remain separate before する",
+      "expected": [
+        {
+          "lemma": "一時",
+          "pos": "Noun",
+          "surface": "一時"
+        },
+        {
+          "lemma": "中断",
+          "pos": "Noun",
+          "surface": "中断"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru_13",
+      "input": "一時中断する"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

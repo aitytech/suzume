@@ -846,6 +846,28 @@
       ],
       "id": "shiku_ku",
       "input": "物悲しく響く"
+    },
+    {
+      "description": "P2-3 ひらがな複合動詞・閉じた形態素境界の回帰",
+      "expected": [
+        {
+          "lemma": "はかない",
+          "pos": "Adjective",
+          "surface": "はかなく"
+        },
+        {
+          "lemma": "散る",
+          "pos": "Verb",
+          "surface": "散っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "hakanaku_ttta",
+      "input": "はかなく散った"
     }
   ],
   "description": "I-adjectives ku-forms (連用形) - adverbial, negative, te-form, ku-naru patterns",

@@ -94,6 +94,10 @@ TEST(ScorerBoundaryCostTest, AppliesSurfaceGatesAfterExtendedPosLookup) {
                   scorer::kBosAspectShimauPenalty);
   EXPECT_FLOAT_EQ(scorer.bosCost(makeBoundaryEdge(core::ExtendedPOS::ParticleBinding, "さえ")),
                   scorer::kBosBindingParticlePenalty);
+  EXPECT_FLOAT_EQ(scorer.bosCost(makeBoundaryEdge(core::ExtendedPOS::Conjunction, "でも")),
+                  scorer::kBosDemoConjunctionBonus);
+  EXPECT_FLOAT_EQ(scorer.bosCost(makeBoundaryEdge(core::ExtendedPOS::Conjunction, "しかし")),
+                  scorer::kBosConjunctionBonus);
   EXPECT_FLOAT_EQ(scorer.eosCost(makeBoundaryEdge(core::ExtendedPOS::ParticleBinding, "さえ")),
                   scorer::kEosBindingParticleBonus);
   EXPECT_FLOAT_EQ(scorer.eosCost(makeBoundaryEdge(core::ExtendedPOS::Prefix, "未")), scorer::kEosPrefixPenalty);

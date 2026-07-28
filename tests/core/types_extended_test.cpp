@@ -334,6 +334,21 @@ TEST(TypesExtendedTest, ExtendedPosToPosOthers) {
   EXPECT_EQ(extendedPosToPos(ExtendedPOS::Count_), PartOfSpeech::Other);
 }
 
+TEST(TypesExtendedTest, EveryDeclaredExtendedPosHasAnExplicitLabelAndPosMapping) {
+  for (size_t code = 0; code < static_cast<size_t>(ExtendedPOS::Count_); ++code) {
+    const auto extended_pos = static_cast<ExtendedPOS>(code);
+    if (extended_pos == ExtendedPOS::Unknown) {
+      EXPECT_EQ(extendedPosToString(extended_pos), "UNKNOWN");
+      EXPECT_EQ(extendedPosToPos(extended_pos), PartOfSpeech::Other);
+      continue;
+    }
+    EXPECT_NE(extendedPosToString(extended_pos), "UNKNOWN") << "ExtendedPOS code " << code;
+    if (extended_pos != ExtendedPOS::Other) {
+      EXPECT_NE(extendedPosToPos(extended_pos), PartOfSpeech::Other) << "ExtendedPOS code " << code;
+    }
+  }
+}
+
 // =============================================================================
 // posToExtendedPos - all POS values
 // =============================================================================
@@ -499,6 +514,25 @@ TEST(TypesExtendedTest, DetectVerbFormSurfaceRuEnding) {
 TEST(TypesExtendedTest, DetectVerbFormSurfaceStem) {
   // Short forms without known endings default to renyokei
   EXPECT_EQ(detectVerbForm("食べ"), ExtendedPOS::VerbRenyokei);
+}
+
+TEST(TypesExtendedTest, DetectVerbFormGodanRows) {
+  struct GodanForms {
+    std::string_view terminal;
+    std::string_view continuative;
+    std::string_view imperative;
+  };
+  constexpr GodanForms kRows[] = {
+      {"書く", "書き", "書け"}, {"泳ぐ", "泳ぎ", "泳げ"}, {"話す", "話し", "話せ"},
+      {"待つ", "待ち", "待て"}, {"死ぬ", "死に", "死ね"}, {"飛ぶ", "飛び", "飛べ"},
+      {"読む", "読み", "読め"}, {"取る", "取り", "取れ"}, {"買う", "買い", "買え"},
+  };
+
+  for (const auto& row : kRows) {
+    EXPECT_EQ(detectVerbForm(row.terminal), ExtendedPOS::VerbShuushikei) << row.terminal;
+    EXPECT_EQ(detectVerbForm(row.continuative, "ます", true), ExtendedPOS::VerbRenyokei) << row.continuative;
+    EXPECT_EQ(detectVerbForm(row.imperative, {}, true), ExtendedPOS::VerbMeireikei) << row.imperative;
+  }
 }
 
 // =============================================================================

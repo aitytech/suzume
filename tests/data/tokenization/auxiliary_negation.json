@@ -918,14 +918,9 @@
           "surface": "わけ"
         },
         {
-          "lemma": "で",
+          "lemma": "でも",
           "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
+          "surface": "でも"
         },
         {
           "lemma": "ない",
@@ -989,14 +984,9 @@
           "surface": "ほか"
         },
         {
-          "lemma": "で",
+          "lemma": "でも",
           "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
+          "surface": "でも"
         },
         {
           "lemma": "ない",
@@ -1043,14 +1033,9 @@
           "surface": "わけ"
         },
         {
-          "lemma": "で",
+          "lemma": "でも",
           "pos": "Particle",
-          "surface": "で"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
+          "surface": "でも"
         },
         {
           "lemma": "ない",

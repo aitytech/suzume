@@ -178,9 +178,11 @@ TEST_F(NegativeBecomePatternTest, NotMatch) {
 
 class GodanNegativeRenyokeiTest : public ::testing::Test {};
 
-TEST_F(GodanNegativeRenyokeiTest, KaNaku) {
-  EXPECT_TRUE(endsWithGodanNegativeRenyokei("いかなく"));  // いく + ない連用形
-  EXPECT_TRUE(endsWithGodanNegativeRenyokei("かかなく"));  // かく + ない連用形
+TEST_F(GodanNegativeRenyokeiTest, EveryGodanRow) {
+  for (std::string_view surface : {"いかなく", "およがなく", "はなさなく", "またなく", "しななく", "とばなく",
+                                   "よまなく", "とらなく", "かわなく"}) {
+    EXPECT_TRUE(endsWithGodanNegativeRenyokei(surface)) << surface;
+  }
 }
 
 TEST_F(GodanNegativeRenyokeiTest, NotMatch) {

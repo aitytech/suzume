@@ -68,7 +68,7 @@
       "expected": [
         {
           "lemma": "でも",
-          "pos": "Particle",
+          "pos": "Conjunction",
           "surface": "でも"
         },
         {

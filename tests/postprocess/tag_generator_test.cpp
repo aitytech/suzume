@@ -388,6 +388,25 @@ TEST(TagGeneratorTest, PosFilterZeroIncludesAll) {
   EXPECT_EQ(tags.size(), 3);
 }
 
+TEST(TagGeneratorTest, PosFilterZeroDoesNotIncludeUnfilterableCategories) {
+  TagGeneratorOptions options;
+  options.pos_filter = 0;
+  options.min_tag_length = 1;
+  TagGenerator generator(options);
+
+  std::vector<core::Morpheme> morphemes;
+  morphemes.push_back(makeMorpheme("東京", core::PartOfSpeech::Noun));
+  morphemes.push_back(makeMorpheme("この", core::PartOfSpeech::Determiner));
+  morphemes.push_back(makeMorpheme("接頭", core::PartOfSpeech::Prefix));
+  morphemes.push_back(makeMorpheme("接尾", core::PartOfSpeech::Suffix));
+  morphemes.push_back(makeMorpheme("感動", core::PartOfSpeech::Interjection));
+  morphemes.push_back(makeMorpheme("その他", core::PartOfSpeech::Other));
+
+  const auto tags = generator.generate(morphemes);
+  ASSERT_EQ(tags.size(), 1);
+  EXPECT_EQ(tags[0].tag, "東京");
+}
+
 TEST(TagGeneratorTest, PosFilterExcludesParticlesAndAuxiliaries) {
   TagGeneratorOptions options;
   options.pos_filter = kTagPosNoun;

@@ -10,6 +10,7 @@
 
 #include <array>
 #include <memory>
+#include <string_view>
 
 #include "core/types.h"
 #include "dictionary/user_dict.h"
@@ -554,6 +555,53 @@ TEST_F(ConjFormDetectionTest, Particle_ReturnsBase) {
   EXPECT_EQ(form, grammar::ConjForm::Base);
 }
 
+TEST_F(ConjFormDetectionTest, ExtendedPosCoversEveryGodanRowAndMajorCell) {
+  using EPOS = core::ExtendedPOS;
+  using Form = grammar::ConjForm;
+  struct GodanParadigm {
+    std::array<std::string_view, 7> surfaces;
+  };
+  constexpr std::array<GodanParadigm, 9> kParadigms = {{
+      {{{"書く", "書か", "書き", "書い", "書け", "書け", "書こ"}}},
+      {{{"泳ぐ", "泳が", "泳ぎ", "泳い", "泳げ", "泳げ", "泳ご"}}},
+      {{{"話す", "話さ", "話し", "話し", "話せ", "話せ", "話そ"}}},
+      {{{"持つ", "持た", "持ち", "持っ", "持て", "持て", "持と"}}},
+      {{{"死ぬ", "死な", "死に", "死ん", "死ね", "死ね", "死の"}}},
+      {{{"遊ぶ", "遊ば", "遊び", "遊ん", "遊べ", "遊べ", "遊ぼ"}}},
+      {{{"読む", "読ま", "読み", "読ん", "読め", "読め", "読も"}}},
+      {{{"取る", "取ら", "取り", "取っ", "取れ", "取れ", "取ろ"}}},
+      {{{"買う", "買わ", "買い", "買っ", "買え", "買え", "買お"}}},
+  }};
+  constexpr std::array<EPOS, 7> kExtendedPos = {
+      EPOS::VerbShuushikei, EPOS::VerbMizenkei,  EPOS::VerbRenyokei, EPOS::VerbOnbinkei,
+      EPOS::VerbKateikei,   EPOS::VerbMeireikei, EPOS::VerbMizenkei,
+  };
+  constexpr std::array<Form, 7> kExpectedForms = {
+      Form::Base, Form::Mizenkei, Form::Renyokei, Form::Onbinkei, Form::Kateikei, Form::Meireikei, Form::Ishikei,
+  };
+
+  for (size_t row_index = 0; row_index < kParadigms.size(); ++row_index) {
+    for (size_t form_index = 0; form_index < kExtendedPos.size(); ++form_index) {
+      SCOPED_TRACE(::testing::Message() << "row=" << row_index << " form=" << form_index);
+      const bool is_volitional = form_index == kExtendedPos.size() - 1;
+      EXPECT_EQ(postprocess::Lemmatizer::detectConjForm(kParadigms[row_index].surfaces[form_index],
+                                                        kParadigms[row_index].surfaces[0], core::PartOfSpeech::Verb,
+                                                        is_volitional ? "う" : "", kExtendedPos[form_index],
+                                                        is_volitional ? EPOS::AuxVolitional : EPOS::Unknown),
+                kExpectedForms[form_index]);
+    }
+  }
+}
+
+TEST_F(ConjFormDetectionTest, ExtendedPosOverridesNegativeLookingAdjectiveSurface) {
+  EXPECT_EQ(postprocess::Lemmatizer::detectConjForm("少なく", "少ない", core::PartOfSpeech::Adjective, "",
+                                                    core::ExtendedPOS::AdjRenyokei),
+            grammar::ConjForm::Renyokei);
+  EXPECT_EQ(postprocess::Lemmatizer::detectConjForm("危なけれ", "危ない", core::PartOfSpeech::Adjective, "ば",
+                                                    core::ExtendedPOS::AdjKeForm, core::ExtendedPOS::ParticleConj),
+            grammar::ConjForm::Kateikei);
+}
+
 // =============================================================================
 // Conjugation Type to Verb Type Conversion
 // =============================================================================
@@ -730,6 +778,82 @@ TEST_F(JapaneseFormatIntegrationTest, ConjForm_Base) {
   auto morphemes = analyzer_.analyze("食べる");
   ASSERT_EQ(morphemes.size(), 1);
   EXPECT_EQ(morphemes[0].conj_form, grammar::ConjForm::Base);
+}
+
+TEST_F(JapaneseFormatIntegrationTest, ConjFormUsesSelectedExtendedPos) {
+  struct Case {
+    std::string_view input;
+    std::string_view surface;
+    std::string_view lemma;
+    core::ExtendedPOS extended_pos;
+    grammar::ConjForm form;
+  };
+  constexpr std::array<Case, 5> kCases = {{
+      {"書かない", "書か", "書く", core::ExtendedPOS::VerbMizenkei, grammar::ConjForm::Mizenkei},
+      {"来い", "来い", "来る", core::ExtendedPOS::VerbMeireikei, grammar::ConjForm::Meireikei},
+      {"食べよう", "食べよ", "食べる", core::ExtendedPOS::VerbMizenkei, grammar::ConjForm::Ishikei},
+      {"少なく行く", "少なく", "少ない", core::ExtendedPOS::AdjRenyokei, grammar::ConjForm::Renyokei},
+      {"危なければ帰る", "危なけれ", "危ない", core::ExtendedPOS::AdjKeForm, grammar::ConjForm::Kateikei},
+  }};
+
+  for (const auto& test_case : kCases) {
+    SCOPED_TRACE(test_case.input);
+    const auto morphemes = analyzer_.analyze(test_case.input);
+    ASSERT_FALSE(morphemes.empty());
+    EXPECT_EQ(morphemes[0].surface, test_case.surface);
+    EXPECT_EQ(morphemes[0].getLemma(), test_case.lemma);
+    EXPECT_EQ(morphemes[0].extended_pos, test_case.extended_pos);
+    EXPECT_EQ(morphemes[0].conj_form, test_case.form);
+  }
+}
+
+TEST_F(JapaneseFormatIntegrationTest, ContractedShimauParadigmRepairsIOnbinLemma) {
+  constexpr std::array<std::string_view, 12> kInputs = {
+      "凪いちゃう", "凪いちゃわない", "凪いちゃいます", "凪いちゃった", "凪いちゃえば", "凪いちゃおう",
+      "泳いじゃう", "泳いじゃわない", "泳いじゃいます", "泳いじゃった", "泳いじゃえば", "泳いじゃおう",
+  };
+
+  for (const std::string_view input : kInputs) {
+    SCOPED_TRACE(input);
+    const auto morphemes = analyzer_.analyze(input);
+    ASSERT_GE(morphemes.size(), 2);
+    EXPECT_TRUE(morphemes[0].surface == "凪い" || morphemes[0].surface == "泳い");
+    EXPECT_EQ(morphemes[0].getLemma(), morphemes[0].surface == "凪い" ? "凪ぐ" : "泳ぐ");
+    EXPECT_EQ(morphemes[0].extended_pos, core::ExtendedPOS::VerbOnbinkei);
+    EXPECT_EQ(morphemes[1].extended_pos, core::ExtendedPOS::AuxAspectShimau);
+  }
+}
+
+TEST_F(JapaneseFormatIntegrationTest, WaRowSokuonbinKeepsLexicalBase) {
+  struct Case {
+    std::string_view input;
+    std::string_view lemma;
+  };
+  constexpr std::array<Case, 5> kCases = {{
+      {"味わった", "味わう"},
+      {"争った", "争う"},
+      {"終わった", "終わる"},
+      {"持った", "持つ"},
+      {"買った", "買う"},
+  }};
+
+  for (const auto& test_case : kCases) {
+    SCOPED_TRACE(test_case.input);
+    const auto morphemes = analyzer_.analyze(test_case.input);
+    ASSERT_GE(morphemes.size(), 2);
+    EXPECT_EQ(morphemes[0].getLemma(), test_case.lemma);
+    EXPECT_EQ(morphemes[0].extended_pos, core::ExtendedPOS::VerbOnbinkei);
+  }
+}
+
+TEST_F(JapaneseFormatIntegrationTest, MiNominalizationSurvivesAfterPastClause) {
+  const auto morphemes = analyzer_.analyze("味わった苦しみ");
+  ASSERT_EQ(morphemes.size(), 3);
+  EXPECT_EQ(morphemes[0].surface, "味わっ");
+  EXPECT_EQ(morphemes[0].getLemma(), "味わう");
+  EXPECT_EQ(morphemes[1].extended_pos, core::ExtendedPOS::AuxTenseTa);
+  EXPECT_EQ(morphemes[2].surface, "苦しみ");
+  EXPECT_EQ(morphemes[2].pos, core::PartOfSpeech::Noun);
 }
 
 }  // namespace suzume::output::test
