@@ -381,8 +381,8 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
   // (笑い声, 泣き声, 立ち姿, 聞き耳, 呼び声).  The continuative must reconstruct a
   // dictionary verb, the noun must be a kanji run of exactly one character so a
   // longer kanji compound keeps its own left boundary (読み文章 stays split), and
-  // the whole span must close in nominal context so 連用中止法 before an object
-  // (水を飲み薬を出す) is not fused either.
+  // the span must close in a nominal frame — a following predicate suffix means
+  // the second kanji heads a verb rather than closing a noun.
   if (kanji_count == 1 && dict_manager != nullptr && kanji_end + 2 <= char_types.size() &&
       char_types[kanji_end + 1] == normalize::CharType::Kanji &&
       (kanji_end + 2 == char_types.size() || char_types[kanji_end + 2] != normalize::CharType::Kanji)) {
@@ -413,7 +413,24 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
     bool nominal_context = true;
     if (kanji_end + 2 < char_types.size() && char_types[kanji_end + 2] == normalize::CharType::Hiragana) {
       const char32_t after = codepoints[kanji_end + 2];
-      nominal_context = normalize::isParticleCodepoint(after) || after == U'だ';
+      // The existential negative ない takes a nominal subject, so it closes the
+      // compound exactly as a particle does (申し分ない, 差し支えない). Its own
+      // i-adjective inflection is what identifies it: a continuative followed by
+      // a verb okurigana never reaches な here, because a negated compound verb
+      // carries its mizenkei vowel on that syllable instead (受け取ら|ない).
+      const bool heads_existential_negative = after == U'な' && kanji_end + 3 < codepoints.size() && [&] {
+        switch (codepoints[kanji_end + 3]) {
+          case U'い':
+          case U'く':
+          case U'か':
+          case U'け':
+          case U'さ':
+            return true;
+          default:
+            return false;
+        }
+      }();
+      nominal_context = normalize::isParticleCodepoint(after) || after == U'だ' || heads_existential_negative;
     }
     // A lexical entry reaching past the compound owns the span: the second kanji
     // is then the head of a compound verb, not a noun (取り逃がす, not 取り逃+が+す).
