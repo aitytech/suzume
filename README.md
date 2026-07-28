@@ -53,9 +53,10 @@ The Python wheel also installs the `suzume` command. PyPI provides binary
 wheels for Linux x86_64 and macOS arm64; Windows, other architectures, and
 source distributions are not supported.
 
-The Go module ships no precompiled binary. It builds the static library from
-source once, via `make lib` in the module directory, and embeds the
-dictionaries in your binary.
+The Go module is maintained and versioned in a separate repository; it is not
+built or compatibility-gated by this repository. It ships no precompiled
+binary, builds the static library from source once via `make lib` in the module
+directory, and embeds the dictionaries in your binary.
 
 For C/C++ installation, native builds, user dictionaries, and all runtime
 options, see the [documentation](https://suzume.libraz.net/docs/getting-started).

@@ -20,6 +20,7 @@
 #   scripts/check_code_guardrails.sh update   # regenerate baseline after an intentional drop
 
 set -eu
+export LC_ALL=C
 cd "$(git rev-parse --show-toplevel)"
 
 BASELINE="scripts/guardrail-baseline.tsv"

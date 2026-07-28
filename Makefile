@@ -1,18 +1,19 @@
 # Suzume Makefile
 # Convenience wrapper for CMake build system
 
-.PHONY: help build test mcp-test clean clean-build rebuild format format-check lint configure \
+.PHONY: help build test native-test native-bench mcp-test oracle-sync-check guardrails asan clean clean-build rebuild format format-check lint configure \
         wasm wasm-configure wasm-dict wasm-test wasm-bench wasm-clean wasm-rebuild dict \
-        python-build python-test python-wheel python-sync version-check \
-        install uninstall examples embedded consumer-smoke cmake-smoke
+        python-build python-test python-wheel python-sync python-examples version-check binding-parity \
+        install uninstall examples examples-test embedded consumer-smoke cmake-smoke
 
 # Build directories
 BUILD_DIR := build
 WASM_BUILD_DIR := build-wasm
-
-# Install prefix used by consumer-smoke. Kept inside the repo (not /tmp) so that it
-# matches the gitignored build-* pattern and `make clean` reclaims it too.
-SMOKE_PREFIX := $(CURDIR)/build-smoke-prefix
+ASAN_BUILD_DIR := build-asan
+# Apple's ASan runtime aborts when leak detection is requested. Linux enables
+# LeakSanitizer in the same target; the CI sanitizer job is the authoritative
+# leak gate.
+ASAN_DETECT_LEAKS ?= $(if $(filter Darwin,$(shell uname -s)),0,1)
 
 # clang-format command (can be overridden: make CLANG_FORMAT=clang-format-18 format)
 CLANG_FORMAT ?= clang-format
@@ -45,6 +46,8 @@ help:
 	@echo "  make dict         - Build dictionaries"
 	@echo "  make test         - Run all tests (includes dict)"
 	@echo "  make mcp-test     - Run MCP server/oracle tests"
+	@echo "  make asan         - Run native tests under ASan/LSan/UBSan"
+	@echo "  make native-bench - Measure native token throughput and long-input scaling"
 	@echo "  make clean        - Remove $(BUILD_DIR) and every scratch build-* directory"
 	@echo "  make clean-build  - Remove $(BUILD_DIR) only"
 	@echo "  make rebuild      - Clean $(BUILD_DIR) and rebuild"
@@ -105,17 +108,55 @@ dict: build
 	cmake --build $(BUILD_DIR) --target build-dict
 	@echo "Dictionary build complete!"
 
-# Run tests
-test: dict mcp-test
-	@echo "Running tests..."
-	ctest --test-dir $(BUILD_DIR) --output-on-failure
-	@echo "Tests complete!"
+# Run every shipped surface, consumer example, and repository invariant. Keep the native binary as
+# the source of truth: CTest's configure-time discovery can miss newly added
+# JSON golden cases and otherwise starts one process per gtest case.
+test: native-test mcp-test oracle-sync-check python-test wasm-test examples-test consumer-smoke binding-parity guardrails
+	@echo "All tests complete!"
+
+native-test: dict
+	@echo "Running native tests..."
+	$(BUILD_DIR)/bin/suzume_test
+	ctest --test-dir $(BUILD_DIR) --output-on-failure -R native_cli_contract
+
+native-bench: dict
+	python3 scripts/measure_native_metrics.py
+
+# Keep local verification aligned with the CI guardrails, including the WASM
+# artifact-size check that needs the shipped module built first.
+guardrails: wasm
+	LC_ALL=C scripts/check_code_guardrails.sh
+	python3 scripts/check_oracle_overrides.py
+	python3 scripts/check_binding_labels.py
+	python3 scripts/check_compound_v2_sync.py
+	python3 scripts/check_oracle_mirrors.py
+	scripts/check_version_mirror.sh
+	scripts/check_wasm_size.sh bindings/wasm/dist/suzume.wasm
+
+# AddressSanitizer includes LeakSanitizer on supported platforms. Keep this in
+# a separate build tree so normal and sanitized objects can never mix.
+asan:
+	@echo "Running sanitizers (ASan leak detection=$(ASAN_DETECT_LEAKS), UBSan=on)..."
+	cmake -B $(ASAN_BUILD_DIR) -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Debug \
+		-DENABLE_SANITIZER=ON -DENABLE_ASAN=ON -DENABLE_UBSAN=ON
+	cmake --build $(ASAN_BUILD_DIR) --parallel
+	cmake --build $(ASAN_BUILD_DIR) --target build-dict
+	ASAN_OPTIONS=detect_leaks=$(ASAN_DETECT_LEAKS):halt_on_error=1 \
+	UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
+	$(ASAN_BUILD_DIR)/bin/suzume_test
+	ASAN_OPTIONS=detect_leaks=$(ASAN_DETECT_LEAKS):halt_on_error=1 \
+	UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
+	ctest --test-dir $(ASAN_BUILD_DIR) --output-on-failure -R native_cli_contract
 
 # Run the MCP server/oracle test suite from its project root so pytest uses
 # scripts/mcp/pyproject.toml and imports the local package correctly.
 mcp-test: $(MCP_VENV)
 	@echo "Running MCP server/oracle tests..."
 	cd scripts/mcp && rye run pytest -q
+
+oracle-sync-check: build $(MCP_VENV)
+	@echo "Checking golden expectations against a fresh oracle process..."
+	cd scripts/mcp && rye run python ../../scripts/check_oracle_sync.py
 
 # Clean the primary build directory only
 clean-build:
@@ -169,8 +210,14 @@ uninstall:
 # Build the in-tree C and C++ examples.
 examples: dict
 	cmake -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=Release -DSUZUME_BUILD_EXAMPLES=ON $(CMAKE_OPTIONS)
-	cmake --build $(BUILD_DIR) --target suzume_example_c suzume_example_cpp --parallel
-	@echo "Examples built: $(BUILD_DIR)/bin/suzume_example_{c,cpp}"
+	cmake --build $(BUILD_DIR) --target \
+		suzume_example_c suzume_example_cpp suzume_example_cpp_basic \
+		suzume_example_cpp_search_indexer suzume_example_cpp_tags \
+		suzume_example_cpp_user_dictionary --parallel
+	@echo "Built all C/C++ examples under $(BUILD_DIR)/bin"
+
+examples-test: examples
+	ctest --test-dir $(BUILD_DIR) --output-on-failure -R '^suzume_example_'
 
 # Build the embedded (no-filesystem) configuration: dictionaries baked in, static
 # library, no CLI/tests. Useful for hosted-embedded / RTOS targets.
@@ -180,19 +227,34 @@ embedded:
 	cmake --build build-embedded --target suzume --parallel
 	@echo "Embedded static library built: build-embedded/lib/"
 
-# Packaging smoke test: install (static) to a throwaway prefix inside the repo, then
-# build + run the C/C++ examples against it via find_package.
+# Packaging smoke test: install both static and shared configurations, then
+# build + run C/C++ consumers against each package via find_package.
 consumer-smoke:
-	rm -rf build-smoke $(SMOKE_PREFIX) build-smoke-consumer
-	cmake -B build-smoke -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
-		-DCMAKE_INSTALL_PREFIX=$(SMOKE_PREFIX)
-	cmake --build build-smoke --parallel
-	cmake --build build-smoke --target build-dict
-	cmake --install build-smoke
-	cmake -S examples/consumer -B build-smoke-consumer -DCMAKE_PREFIX_PATH=$(SMOKE_PREFIX)
-	cmake --build build-smoke-consumer
-	ctest --test-dir build-smoke-consumer --output-on-failure
-	@echo "Consumer smoke test passed."
+	cmake -E remove_directory build-smoke-static
+	cmake -E remove_directory build-smoke-prefix-static
+	cmake -E remove_directory build-smoke-consumer-static
+	cmake -B build-smoke-static -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+		-DCMAKE_INSTALL_PREFIX=$(CURDIR)/build-smoke-prefix-static
+	cmake --build build-smoke-static --parallel
+	cmake --build build-smoke-static --target build-dict
+	cmake --install build-smoke-static
+	cmake -S examples/consumer -B build-smoke-consumer-static \
+		-DCMAKE_PREFIX_PATH=$(CURDIR)/build-smoke-prefix-static
+	cmake --build build-smoke-consumer-static
+	ctest --test-dir build-smoke-consumer-static --output-on-failure
+	cmake -E remove_directory build-smoke-shared
+	cmake -E remove_directory build-smoke-prefix-shared
+	cmake -E remove_directory build-smoke-consumer-shared
+	cmake -B build-smoke-shared -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DBUILD_SHARED=ON \
+		-DCMAKE_INSTALL_PREFIX=$(CURDIR)/build-smoke-prefix-shared
+	cmake --build build-smoke-shared --parallel
+	cmake --build build-smoke-shared --target build-dict
+	cmake --install build-smoke-shared
+	cmake -S examples/consumer -B build-smoke-consumer-shared \
+		-DCMAKE_PREFIX_PATH=$(CURDIR)/build-smoke-prefix-shared
+	cmake --build build-smoke-consumer-shared
+	ctest --test-dir build-smoke-consumer-shared --output-on-failure
+	@echo "Static and shared consumer smoke tests passed."
 
 # Reproducible build/install matrix covering library-only, no-install, and
 # multi-config dictionary builds without touching the shared build directories.
@@ -254,6 +316,10 @@ python-test: python-build $(PYBINDING_VENV)
 		&& rye run ruff check . \
 		&& rye run ruff format --check . \
 		&& rye run mypy src/suzume
+	$(MAKE) python-examples
+
+python-examples: python-build $(PYBINDING_VENV)
+	cd bindings/python && rye run python ../../examples/python/basic.py
 
 # Build a platform-tagged wheel
 python-wheel:
@@ -299,8 +365,12 @@ wasm: wasm-dict wasm-configure
 # Run WASM tests
 wasm-test: wasm
 	@echo "Running WASM tests..."
-	cd bindings/wasm && yarn build:js && yarn test
+	cd bindings/wasm && yarn test
+	cd bindings/wasm && yarn test:examples
 	@echo "WASM tests complete!"
+
+binding-parity: build python-build wasm $(PYBINDING_VENV)
+	cd bindings/python && rye run python ../../scripts/check_binding_parity.py
 
 # Measure the shipped public JS API, including result decoding. Override the
 # workload with WASM_BENCH_ARGS, for example:

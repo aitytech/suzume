@@ -68,6 +68,34 @@ jobs:
       # Version must stay in lockstep across every binding manifest.
       - run: scripts/check_version_mirror.sh
 
+  mcp-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install MeCab and IPADIC
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
+          command -v mecab
+      - name: Install rye
+        run: |
+          curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" RYE_NO_AUTO_INSTALL=0 bash
+          echo "$HOME/.rye/shims" >> "$GITHUB_PATH"
+      - name: Run MCP server and oracle tests
+        working-directory: scripts/mcp
+        run: |
+          rye sync
+          rye run pytest -q
+      - name: Verify golden expectations are synchronized
+        run: make oracle-sync-check
+
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run ASan, LSan, and UBSan
+        run: make asan
+
   build-and-test:
     runs-on: ubuntu-latest
     steps:
@@ -84,6 +112,9 @@ jobs:
           node-version: 22
           cache: yarn
           cache-dependency-path: bindings/wasm/yarn.lock
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       - name: Build native and compile dictionaries
         run: |
           cmake -B build -DBUILD_WASM=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage"
@@ -97,6 +128,8 @@ jobs:
         run: |
           ./build/bin/suzume_test
           ctest --test-dir build --output-on-failure -R native_cli_contract
+      - name: Run in-tree and installed-package examples
+        run: make examples-test consumer-smoke
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
@@ -110,7 +143,14 @@ jobs:
         run: scripts/check_wasm_size.sh bindings/wasm/dist/suzume.wasm
       - name: Run WASM tests
         working-directory: bindings/wasm
-        run: yarn test
+        run: |
+          yarn test
+          yarn test:examples
+      - name: Check native, Python, and WASM parity
+        run: |
+          make python-build
+          pip install -e bindings/python
+          python scripts/check_binding_parity.py
 
   python-binding:
     runs-on: ubuntu-latest
@@ -136,4 +176,6 @@ jobs:
           mypy src/suzume
       - name: Run Python tests
         working-directory: bindings/python
-        run: pytest -q
+        run: |
+          pytest -q
+          python ../../examples/python/basic.py

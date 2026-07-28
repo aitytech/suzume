@@ -3,7 +3,7 @@
 // Reproducible WASM performance and memory measurement.
 //
 // Run after `make wasm` from the repository root:
-//   node scripts/measure_wasm_metrics.mjs --iterations=1000 --samples=5 --warmup=1
+//   node scripts/measure_wasm_metrics.mjs --instances=10 --iterations=1000 --samples=5 --warmup=1
 //   node scripts/measure_wasm_metrics.mjs --corpus=/path/to/corpus.txt
 //
 // The script intentionally measures the public JS API, including result
@@ -23,6 +23,7 @@ const defaults = {
   iterations: 1000,
   samples: 5,
   warmup: 1,
+  instances: 10,
 };
 
 function parsePositiveInteger(value, option) {
@@ -59,6 +60,8 @@ for (const argument of process.argv.slice(2)) {
     options.samples = parsePositiveInteger(argument.slice('--samples='.length), '--samples');
   } else if (argument.startsWith('--warmup=')) {
     options.warmup = parseNonNegativeInteger(argument.slice('--warmup='.length), '--warmup');
+  } else if (argument.startsWith('--instances=')) {
+    options.instances = parsePositiveInteger(argument.slice('--instances='.length), '--instances');
   } else if (argument.startsWith('--corpus=')) {
     options.corpus = resolve(argument.slice('--corpus='.length));
   } else {
@@ -82,6 +85,22 @@ const initialPages = [];
 const steadyPages = [];
 let peakRssBytes = process.memoryUsage().rss;
 let morphemeCount = 0;
+let corpusMorphemeCount;
+
+const multiInstanceRssStart = process.memoryUsage().rss;
+const multiInstanceStart = performance.now();
+const simultaneousInstances = await Promise.all(
+  Array.from({ length: options.instances }, () => Suzume.create({ wasmPath })),
+);
+const multiInstanceMs = performance.now() - multiInstanceStart;
+for (const instance of simultaneousInstances) {
+  morphemeCount += instance.analyze(texts[0]).length;
+}
+const multiInstanceSharedMemory = simultaneousInstances[0].wasmMemoryBytes();
+const multiInstanceRssDelta = process.memoryUsage().rss - multiInstanceRssStart;
+for (const instance of simultaneousInstances) {
+  instance.destroy();
+}
 
 for (let sample = 0; sample < options.samples; sample += 1) {
   const instantiateStart = performance.now();
@@ -92,6 +111,10 @@ for (let sample = 0; sample < options.samples; sample += 1) {
   const firstStart = performance.now();
   morphemeCount += instance.analyze(texts[0]).length;
   firstAnalysisMs.push(performance.now() - firstStart);
+
+  if (corpusMorphemeCount === undefined) {
+    corpusMorphemeCount = texts.reduce((total, text) => total + instance.analyze(text).length, 0);
+  }
 
   for (let warmup = 0; warmup < options.warmup; warmup += 1) {
     for (const text of texts) {
@@ -113,12 +136,17 @@ for (let sample = 0; sample < options.samples; sample += 1) {
 
 const steadyMedian = median(steadyMs);
 const steadyBytesPerSecond = (corpusBytes * options.iterations * 1000) / steadyMedian;
+const steadyTokensPerSecond = (corpusMorphemeCount * options.iterations * 1000) / steadyMedian;
 console.log(
   `WASM benchmark: ${options.iterations} steady iterations, ${options.samples} samples, ${options.warmup} warmup iterations, ${texts.length} texts, ${corpusBytes} bytes per corpus pass`,
+);
+console.log(
+  `${options.instances} shared-runtime handles: ${multiInstanceMs.toFixed(3)} ms, ${multiInstanceSharedMemory} linear-memory bytes, RSS delta ${multiInstanceRssDelta} bytes`,
 );
 console.log(`Instantiate median: ${median(instantiateMs).toFixed(3)} ms`);
 console.log(`First analysis median: ${median(firstAnalysisMs).toFixed(3)} ms`);
 console.log(`Steady median: ${steadyMedian.toFixed(3)} ms`);
+console.log(`Steady token throughput: ${Math.floor(steadyTokensPerSecond)} tokens/sec`);
 console.log(`Steady throughput: ${Math.floor(steadyBytesPerSecond)} bytes/sec`);
 console.log(`Steady per text: ${(steadyMedian / (options.iterations * texts.length)).toFixed(6)} ms`);
 console.log(`WASM initial pages (median): ${median(initialPages)}`);
