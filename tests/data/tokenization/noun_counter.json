@@ -80,6 +80,28 @@
       ],
       "id": "3_wo_su",
       "input": "3年計画書を出す"
+    },
+    {
+      "description": "行を助数詞として認識する序数句",
+      "expected": [
+        {
+          "lemma": "3行目",
+          "pos": "Noun",
+          "surface": "3行目"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "3_wo_mu",
+      "input": "3行目を読む"
     }
   ],
   "description": "noun_counter tests",

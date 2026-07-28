@@ -31,6 +31,7 @@ constexpr size_t kMaxJapaneseLen = 8;    // Reasonable limit for Japanese part
 constexpr size_t kMaxDigitKanjiLen = 3;  // Max kanji for digit+kanji (counters)
 
 using normalize::isCounterKanji;
+using normalize::isQuantityPhraseSuffixKanji;
 
 // Minimum kanji sequence length for compound splitting
 constexpr size_t kMinCompoundLen = 4;
@@ -182,6 +183,12 @@ void addMixedScriptCandidates(core::Lattice& lattice, std::string_view text, con
     size_t kanji_run_end = first_end;
     while (kanji_run_end < char_types.size() && char_types[kanji_run_end] == CharType::Kanji) {
       ++kanji_run_end;
+    }
+    // A quantity-phrase suffix closing the run sits outside those two-kanji
+    // units: it binds to the whole counter phrase on its left (段階+目, 週+間).
+    // Counting it would invert the parity and push the cut one kanji early.
+    if (kanji_run_end > first_end && isQuantityPhraseSuffixKanji(codepoints[kanji_run_end - 1])) {
+      --kanji_run_end;
     }
     // For digit+kanji, generate multiple candidates with length-based costs
     // This allows Viterbi to choose the best segmentation

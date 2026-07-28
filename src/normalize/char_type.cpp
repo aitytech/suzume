@@ -29,7 +29,7 @@ struct CharPropertyEntry {
   uint16_t properties;
 };
 
-constexpr std::array<CharPropertyEntry, 90> kCharProperties = {
+constexpr std::array<CharPropertyEntry, 91> kCharProperties = {
     {{U'丁', kCounter},
      {U'万', kCounter},
      {U'世', kCounter},
@@ -105,6 +105,7 @@ constexpr std::array<CharPropertyEntry, 90> kCharProperties = {
      {U'羽', kCounter},
      {U'者', kDerivationalNounSuffix},
      {U'色', kCounter},
+     {U'行', kCounter},
      {U'計', kNumericApproxPrefix},
      {U'話', kCounter},
      {U'足', kCounter},
