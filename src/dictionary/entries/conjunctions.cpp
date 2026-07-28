@@ -63,13 +63,16 @@ EntrySpecRange getConjunctionEntries() {
       // are function adverbs kept in L1 to beat the spurious verb decompositions. Kanji-initial
       // 決して is intentionally NOT registered here: it would swallow the 決 of 解決して
       // (解決|し|て → 解|決して); its 決し(非語 VERB)+て over-split needs a candidate-side fix.
-      adv("もとより", ""),                                            // 追加・強調: 本はもとより水を読む
-      adv("いとも", ""),                                              // 文語の程度副詞
-      adv("たえず", ""),                                              // 文語の頻度副詞
-      adv("あまねく", ""),                                            // 文語の範囲副詞
-      na_adj("もっとも", ""),                                         // 評価用法: もっともな理由
-      noun("すべて", ""),                                             // 全称の閉じた名詞用法
-      conj("ともあれ", ""),                                           // 譲歩・話題転換: ともあれ始める
+      adv("もとより", ""),     // 追加・強調: 本はもとより水を読む
+      adv("いとも", ""),       // 文語の程度副詞
+      adv("たえず", ""),       // 文語の頻度副詞
+      adv("あまねく", ""),     // 文語の範囲副詞
+      na_adj("もっとも", ""),  // 評価用法: もっともな理由
+      noun("すべて", ""),      // 全称の閉じた名詞用法
+      // 多く は数量形容詞の連用形がそのまま名詞化した用法を持つ（本の多く、
+      // 多くの本）。連用形そのものは活用規則から出るので、規則が供給できない
+      // 名詞の読みだけを足して接続規則に選ばせる。
+      noun("多く", "多く"), conj("ともあれ", ""),                     // 譲歩・話題転換: ともあれ始める
       conj("いっぽう", ""), conj("そこで", ""), adv("とりわけ", ""),  // Focus adverb
       conj("なかんずく", ""),                                         // Literary additive conjunction
       adv("取り分け", ""),                                            // Orthographic variant

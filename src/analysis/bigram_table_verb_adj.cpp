@@ -252,6 +252,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // AdjRenyokei → ParticleConj (美しく+て, ウザく+て) - strong bonus for te-form split
       {EPOS::AdjRenyokei, EPOS::ParticleConj, cost::kStrongBonus},
 
+      // The continuative modifies a predicate, so it cannot be the head of an
+      // adnominal phrase. A く form standing before の is the nominalized
+      // reading instead (多く+の, 近く+の).
+      {EPOS::AdjRenyokei, EPOS::ParticleNo, cost::kRare},
+
       // AdjRenyokei → VerbRenyokei (美しく+なり) - strong bonus for adjective + become pattern
       // This is a very common Japanese pattern (美しくなる, 大きくなる, etc.)
       {EPOS::AdjRenyokei, EPOS::VerbRenyokei, cost::kStrongBonus},
