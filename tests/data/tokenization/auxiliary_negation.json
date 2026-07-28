@@ -1655,6 +1655,55 @@
       ],
       "id": "mou_monai",
       "input": "もう何もない"
+    },
+    {
+      "description": "Adverb ending in ni must not license a fabricated ichidan reading of the following kango",
+      "expected": [
+        {
+          "lemma": "とくに",
+          "pos": "Adverb",
+          "surface": "とくに"
+        },
+        {
+          "lemma": "影響",
+          "pos": "Noun",
+          "surface": "影響"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "tokuni_nai",
+      "input": "とくに影響ない"
+    },
+    {
+      "description": "Case particle plus attested ichidan lemma keeps the limiting predicate reading",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Verb",
+          "surface": "過ぎ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ni_ginai",
+      "input": "本に過ぎない"
     }
   ],
   "description": "Negation auxiliaries (ない、ぬ)",

@@ -263,6 +263,7 @@ void appendNiSugiPredicateCandidates(const std::vector<char32_t>& codepoints, si
 
 void appendNiLimitedIchidanCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                       const grammar::Inflection& inflection,
+                                      const dictionary::DictionaryManager* dict_manager,
                                       std::vector<UnknownCandidate>& candidates) {
   // In the limiting predicate Nに+V連用形+ない, a dictionary-verified
   // Ichidan renyokei must remain available over a homographic Godan reading
@@ -281,8 +282,13 @@ void appendNiLimitedIchidanCandidates(const std::vector<char32_t>& codepoints, s
     // Analyze that full inflected form, then emit only its stem as the token.
     const std::string negative_surface = extractSubstring(codepoints, start_pos, hiragana_end);
     for (const auto& inflected : inflection.analyze(negative_surface)) {
+      // Only a homograph can be resolved here, so the Ichidan base has to be an
+      // attested lemma. Without that check the construction fabricates a verb
+      // out of any nominal that happens to precede the negative (別に問題ない
+      // read as 問題る), which the following ない alone cannot rule out.
       if (inflected.stem != surface || inflected.verb_type != grammar::VerbType::Ichidan ||
-          inflected.confidence < candidate::verb_cost::kConstructedVerbMinConfidence) {
+          inflected.confidence < candidate::verb_cost::kConstructedVerbMinConfidence ||
+          !vh::isVerbInDictionary(dict_manager, inflected.base_form)) {
         continue;
       }
       candidates.push_back(makeVerbCandidate(surface, start_pos, end_pos, candidate::verb_cost::kStrongBonus,
@@ -515,7 +521,7 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
   const bool is_sugi_pattern = sugi_pos < hiragana_end;
 
   appendNiSugiPredicateCandidates(codepoints, start_pos, hiragana_end, inflection, dict_manager, candidates);
-  appendNiLimitedIchidanCandidates(codepoints, start_pos, hiragana_end, inflection, candidates);
+  appendNiLimitedIchidanCandidates(codepoints, start_pos, hiragana_end, inflection, dict_manager, candidates);
 
   // A closed excessive auxiliary owns the boundary immediately after a bare
   // kanji nominal/adjectival base (遠+すぎる, 最高+すぎる). With no okurigana
