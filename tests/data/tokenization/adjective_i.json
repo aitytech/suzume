@@ -1,0 +1,23 @@
+{
+  "cases": [
+    {
+      "description": "Lexicalized nai-adjective inflects into its past cell from the L2 entry",
+      "expected": [
+        {
+          "lemma": "やむを得ない",
+          "pos": "Adjective",
+          "surface": "やむを得なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "yamuwo_nakattta",
+      "input": "やむを得なかった"
+    }
+  ],
+  "description": "adjective_i tests",
+  "version": "1.0"
+}

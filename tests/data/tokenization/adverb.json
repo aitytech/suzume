@@ -1293,6 +1293,28 @@
       ],
       "id": "kunai_2",
       "input": "近くない"
+    },
+    {
+      "description": "Fixed classical adverbial stays one search unit",
+      "expected": [
+        {
+          "lemma": "やむを得ず",
+          "pos": "Adverb",
+          "surface": "やむを得ず"
+        },
+        {
+          "lemma": "延期",
+          "pos": "Noun",
+          "surface": "延期"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "yamuwo_zu_suru",
+      "input": "やむを得ず延期する"
     }
   ],
   "description": "adverb tests",

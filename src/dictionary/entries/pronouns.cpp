@@ -290,8 +290,10 @@ EntrySpecRange getPronounEntries() {
       // 比較的 selects the following predicate as an independent adverbial.
       adv("比較的", ""),
       adv("何しろ", ""),
-      adj("やむを得ない", "やむを得ない", EPOS::AdjBasic),
-      adj("ろくでもない", "ろくでもない", EPOS::AdjBasic),
+      // Note: やむを得ない and ろくでもない are not listed here. An L1 entry
+      // carries no conjugation type, so a lexicalized i-adjective registered
+      // at this layer only ever matches its citation form and loses its own
+      // past and continuative (やむを得なかった). They live in L2 as I_ADJ.
       adv("おおよそ", ""),
       adv("よほど", ""),
       adv("ろくすっぽ", ""),

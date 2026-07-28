@@ -1704,6 +1704,28 @@
       ],
       "id": "ni_ginai",
       "input": "本に過ぎない"
+    },
+    {
+      "description": "Classical negative nu selects the verb base of the fixed expression",
+      "expected": [
+        {
+          "lemma": "やむを得る",
+          "pos": "Verb",
+          "surface": "やむを得"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        },
+        {
+          "lemma": "事情",
+          "pos": "Noun",
+          "surface": "事情"
+        }
+      ],
+      "id": "yamuwo_nu",
+      "input": "やむを得ぬ事情"
     }
   ],
   "description": "Negation auxiliaries (ない、ぬ)",
