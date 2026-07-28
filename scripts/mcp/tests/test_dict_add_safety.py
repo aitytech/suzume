@@ -51,6 +51,40 @@ class TestDictAdd:
         assert result["status"] == "ok"
         assert result["entry"] == f"東京\tPROPER_NOUN\t{conj_type}"
 
+    def test_existing_surface_with_different_pos_is_accepted(self, monkeypatch):
+        existing = {
+            "最悪": [
+                {
+                    "surface": "最悪",
+                    "pos": "NOUN",
+                    "file": "data/core/nouns.tsv",
+                }
+            ]
+        }
+        monkeypatch.setattr(operations, "_load_all_entries", lambda: (existing["最悪"], existing))
+
+        result = parse(run(dict_add("最悪", "ADJECTIVE", conj_type="NA_ADJ", dry_run=True)))
+
+        assert result["status"] == "ok"
+        assert result["entry"] == "最悪\tADJECTIVE\tNA_ADJ"
+
+    def test_existing_surface_with_same_canonical_pos_is_rejected(self, monkeypatch):
+        existing = {
+            "東京": [
+                {
+                    "surface": "東京",
+                    "pos": "PROPN",
+                    "file": "data/core/proper_nouns.tsv",
+                }
+            ]
+        }
+        monkeypatch.setattr(operations, "_load_all_entries", lambda: (existing["東京"], existing))
+
+        result = parse(run(dict_add("東京", "PROPER_NOUN", dry_run=True)))
+
+        assert result["status"] == "error"
+        assert "DUPLICATE" in result["message"]
+
     def test_failed_recompile_rolls_back_append(self, monkeypatch, tmp_path):
         target = tmp_path / "data/core/nouns.tsv"
         target.parent.mkdir(parents=True)

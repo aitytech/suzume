@@ -110,6 +110,17 @@ VALID_CONJ = [
 ]
 
 
+def _canonical_pos(pos: str) -> str:
+    """Return the canonical short POS label used for dictionary identity."""
+    return POS_ALIASES.get(pos, pos)
+
+
+def _has_pos_entry(entries: list[dict], pos: str) -> bool:
+    """Whether entries already contain the same grammatical POS."""
+    canonical = _canonical_pos(pos)
+    return any(_canonical_pos(entry.get("pos", "")) == canonical for entry in entries)
+
+
 def _validate_surface(word: str) -> str | None:
     """Return an error message if a dictionary surface is unsafe."""
     if not word:

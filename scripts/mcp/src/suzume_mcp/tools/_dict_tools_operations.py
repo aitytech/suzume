@@ -11,7 +11,9 @@ from ._dict_tools_common import (
     USER_CATEGORIES,
     VALID_CONJ,
     VALID_POS,
+    _canonical_pos,
     _find_word_in_files,
+    _has_pos_entry,
     _json_result,
     _load_all_entries,
     _load_dictionary,
@@ -184,13 +186,13 @@ async def dict_add(
 
     # Cross-dictionary duplicate check (core + user)
     _, by_surface = _load_all_entries()
-    if word in by_surface:
+    if word in by_surface and _has_pos_entry(by_surface[word], pos):
         existing = by_surface[word]
-        files = sorted(set(e["file"] for e in existing))
+        files = sorted(set(e["file"] for e in existing if _canonical_pos(e.get("pos", "")) == _canonical_pos(pos)))
         return _json_result(
             {
                 "status": "error",
-                "message": f"DUPLICATE: '{word}' already exists in {', '.join(files)}",
+                "message": f"DUPLICATE: '{word}' already has POS {_canonical_pos(pos)} in {', '.join(files)}",
             }
         )
 
@@ -278,32 +280,55 @@ async def dict_add(
 
 
 @mcp.tool()
-async def dict_remove(word: str, user: str = "", dry_run: bool = False) -> str:
+async def dict_remove(word: str, pos: str = "", user: str = "", dry_run: bool = False) -> str:
     """Remove a word from the dictionary.
 
     Args:
         word: Word to remove.
+        pos: POS of the entry to remove. Required when the surface has multiple POS entries.
         user: User dictionary category (empty for core dict).
         dry_run: Preview only.
     """
+    if pos and pos not in VALID_POS:
+        return _json_result({"status": "error", "message": f"Invalid POS: {pos}. Valid values: {', '.join(VALID_POS)}"})
+
+    _, by_surface = _load_all_entries()
+    candidates = list(by_surface.get(word, []))
     if user:
-        filepath = PROJECT_ROOT / f"data/user/{user}.tsv"
-        file_rel = f"data/user/{user}.tsv"
-        if not filepath.exists():
-            return _json_result({"status": "error", "message": f"User dict file not found: {file_rel}"})
+        user_file = f"data/user/{user}.tsv"
+        candidates = [entry for entry in candidates if entry["file"] == user_file]
     else:
-        file_rel = _find_word_in_files(word)
-        if not file_rel:
-            return _json_result({"status": "error", "message": f"Word not found in dictionary: {word}"})
-        filepath = PROJECT_ROOT / file_rel
+        candidates = [entry for entry in candidates if entry["file"].startswith("data/core/")]
+    if pos:
+        canonical = _canonical_pos(pos)
+        candidates = [entry for entry in candidates if _canonical_pos(entry.get("pos", "")) == canonical]
+
+    if not candidates:
+        suffix = f" with POS {_canonical_pos(pos)}" if pos else ""
+        return _json_result({"status": "error", "message": f"Word not found in dictionary: {word}{suffix}"})
+    if len(candidates) > 1:
+        entries = [f"{entry['file']}: {entry['surface']}\t{entry['pos']}" for entry in candidates]
+        return _json_result(
+            {
+                "status": "error",
+                "message": f"AMBIGUOUS: '{word}' has multiple entries; specify pos",
+                "entries": entries,
+            }
+        )
+
+    selected = candidates[0]
+    file_rel = selected["file"]
+    filepath = PROJECT_ROOT / file_rel
 
     lines = filepath.read_text(encoding="utf-8").splitlines()
     new_lines = []
     removed = None
     for line in lines:
         if not line.startswith("#") and line.strip():
-            surface = line.split("\t")[0]
-            if surface == word:
+            fields = line.split("\t")
+            surface = fields[0]
+            line_pos = fields[1] if len(fields) > 1 else ""
+            if surface == word and _canonical_pos(line_pos) == _canonical_pos(selected.get("pos", "")):
                 removed = line
                 continue
         new_lines.append(line)
@@ -456,18 +481,26 @@ async def dict_validate(fix: bool = False) -> str:
                 mecab_split.append({"entry": entry, "tokens": tokens})
 
     for surface, entries_list in by_surface.items():
-        if len(entries_list) > 1:
-            duplicates.append({"surface": surface, "entries": entries_list})
+        by_pos: dict[str, list[dict]] = {}
+        for entry in entries_list:
+            by_pos.setdefault(_canonical_pos(entry.get("pos", "")), []).append(entry)
+        for canonical_pos, pos_entries in by_pos.items():
+            if len(pos_entries) > 1:
+                duplicates.append({"surface": surface, "pos": canonical_pos, "entries": pos_entries})
 
     # Cross-dictionary duplicates (core vs user)
     _, all_by_surface = _load_all_entries()
     cross_duplicates = []
     for surface, all_entries in all_by_surface.items():
-        files = set(e["file"] for e in all_entries)
-        has_core = any(f.startswith("data/core/") for f in files)
-        has_user = any(f.startswith("data/user/") for f in files)
-        if has_core and has_user:
-            cross_duplicates.append({"surface": surface, "files": sorted(files)})
+        by_pos: dict[str, list[dict]] = {}
+        for entry in all_entries:
+            by_pos.setdefault(_canonical_pos(entry.get("pos", "")), []).append(entry)
+        for canonical_pos, pos_entries in by_pos.items():
+            files = set(entry["file"] for entry in pos_entries)
+            has_core = any(file.startswith("data/core/") for file in files)
+            has_user = any(file.startswith("data/user/") for file in files)
+            if has_core and has_user:
+                cross_duplicates.append({"surface": surface, "pos": canonical_pos, "files": sorted(files)})
 
     result: dict = {
         "total_entries": len(entries),
@@ -480,8 +513,12 @@ async def dict_validate(fix: bool = False) -> str:
             }
             for cf in conjugated_forms
         ],
-        "duplicates": [{"surface": dup["surface"], "count": len(dup["entries"])} for dup in duplicates],
-        "cross_duplicates": [{"surface": cd["surface"], "files": cd["files"]} for cd in cross_duplicates],
+        "duplicates": [
+            {"surface": dup["surface"], "pos": dup["pos"], "count": len(dup["entries"])} for dup in duplicates
+        ],
+        "cross_duplicates": [
+            {"surface": cd["surface"], "pos": cd["pos"], "files": cd["files"]} for cd in cross_duplicates
+        ],
         "compound_words": len(mecab_split),
         "fixed": False,
     }

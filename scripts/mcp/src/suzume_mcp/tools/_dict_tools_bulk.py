@@ -8,6 +8,8 @@ from ._dict_tools_common import (
     USER_CATEGORIES,
     VALID_CONJ,
     VALID_POS,
+    _canonical_pos,
+    _has_pos_entry,
     _json_result,
     _load_all_entries,
     _recompile_core_dic,
@@ -71,10 +73,17 @@ async def dict_bulk_add(
             continue
 
         # Duplicate check
-        if word in by_surface:
+        if word in by_surface and _has_pos_entry(by_surface[word], pos):
             existing = by_surface[word]
-            files = sorted(set(entry["file"] for entry in existing))
-            skipped.append({"word": word, "reason": f"DUPLICATE: already exists in {', '.join(files)}"})
+            files = sorted(
+                set(entry["file"] for entry in existing if _canonical_pos(entry.get("pos", "")) == _canonical_pos(pos))
+            )
+            skipped.append(
+                {
+                    "word": word,
+                    "reason": f"DUPLICATE: POS {_canonical_pos(pos)} already exists in {', '.join(files)}",
+                }
+            )
             continue
 
         # MeCab split check

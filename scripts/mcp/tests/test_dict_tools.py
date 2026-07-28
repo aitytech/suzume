@@ -147,6 +147,29 @@ class TestDictSort:
 
 
 class TestDictBulkAdd:
+    def test_existing_surface_with_different_pos_is_accepted(self, tmp_path, monkeypatch):
+        target = tmp_path / "data/core/adjectives.tsv"
+        target.parent.mkdir(parents=True)
+        target.write_text("# adjectives\n", encoding="utf-8")
+        existing = {
+            "最悪": [
+                {
+                    "surface": "最悪",
+                    "pos": "NOUN",
+                    "file": "data/core/nouns.tsv",
+                }
+            ]
+        }
+
+        monkeypatch.setattr(bulk_tools, "PROJECT_ROOT", tmp_path)
+        monkeypatch.setattr(bulk_tools, "_load_all_entries", lambda: (existing["最悪"], existing))
+
+        result = parse(run(dict_bulk_add(words="最悪", pos="ADJECTIVE", conj_type="NA_ADJ", force=True, dry_run=True)))
+
+        assert result["status"] == "ok"
+        assert result["total_added"] == 1
+        assert result["added"][0]["entry"] == "最悪\tADJECTIVE\tNA_ADJ"
+
     def test_verb_conjugation_is_written_and_recompiled(self, tmp_path, monkeypatch):
         root = tmp_path
         target = root / "data/core/verbs.tsv"
@@ -305,12 +328,28 @@ class TestSingleEntryMutations:
         assert result["rolled_back"] is True
         assert target.read_text(encoding="utf-8") == original
 
+    def test_remove_requires_pos_for_grammatical_homograph(self, tmp_path, monkeypatch):
+        nouns = self.prepare_core(tmp_path, monkeypatch, "最悪\tNOUN\n")
+        adjectives = tmp_path / "data/core/adjectives.tsv"
+        adjectives.write_text("最悪\tADJECTIVE\tNA_ADJ\n", encoding="utf-8")
+
+        ambiguous = parse(run(dict_remove("最悪")))
+        assert ambiguous["status"] == "error"
+        assert "AMBIGUOUS" in ambiguous["message"]
+
+        removed = parse(run(dict_remove("最悪", pos="ADJECTIVE")))
+        assert removed["status"] == "ok"
+        assert "最悪\tNOUN" in nouns.read_text(encoding="utf-8")
+        assert "最悪\tADJECTIVE" not in adjectives.read_text(encoding="utf-8")
+
 
 class TestDictValidateMutation:
     def test_fix_removes_duplicate_and_recompiles(self, tmp_path, monkeypatch):
         target = tmp_path / "data/core/nouns.tsv"
         target.parent.mkdir(parents=True)
         target.write_text("東京\tNOUN\n東京\tNOUN\nりんご\tNOUN\n", encoding="utf-8")
+        adjective_target = tmp_path / "data/core/adjectives.tsv"
+        adjective_target.write_text("東京\tADJECTIVE\tNA_ADJ\n", encoding="utf-8")
 
         async def recompile():
             return "ok"
@@ -328,6 +367,7 @@ class TestDictValidateMutation:
         assert result["fixed"] is True
         assert result["removed_count"] == 1
         assert target.read_text(encoding="utf-8").count("東京\tNOUN") == 1
+        assert adjective_target.read_text(encoding="utf-8").count("東京\tADJECTIVE") == 1
 
 
 class TestDictRemoveMatching:
