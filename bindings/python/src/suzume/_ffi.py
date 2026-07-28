@@ -24,8 +24,8 @@ from pathlib import Path
 
 class SuzumeMorpheme(ctypes.Structure):
     _fields_ = [
-        ("surface", ctypes.c_char_p),
-        ("base_form", ctypes.c_char_p),
+        ("surface", ctypes.POINTER(ctypes.c_char)),
+        ("base_form", ctypes.POINTER(ctypes.c_char)),
         ("start", ctypes.c_uint32),
         ("end", ctypes.c_uint32),
         ("score", ctypes.c_float),
@@ -34,6 +34,8 @@ class SuzumeMorpheme(ctypes.Structure):
         ("conjugation_type", ctypes.c_uint8),
         ("conjugation_form", ctypes.c_uint8),
         ("flags", ctypes.c_uint8),
+        ("surface_size", ctypes.c_size_t),
+        ("base_form_size", ctypes.c_size_t),
     ]
 
 
@@ -65,7 +67,9 @@ class SuzumeExtendedOptions(ctypes.Structure):
         ("skip_user_dictionary", ctypes.c_uint8),
         ("skip_core_dictionary", ctypes.c_uint8),
         ("report_scorer_config", ctypes.c_uint8),
+        ("skip_env_config", ctypes.c_uint8),
         ("scorer_options_json", ctypes.c_char_p),
+        ("data_directory", ctypes.c_char_p),
     ]
 
 
@@ -113,8 +117,8 @@ def _find_library() -> str:
     lib_name = _lib_filename()
 
     # Source checkout: bindings/python/src/suzume/_ffi.py -> project root is 4 up.
-    project_root = pkg_dir.parents[3]
-    if (project_root / "CMakeLists.txt").exists():
+    project_root = pkg_dir.parents[3] if len(pkg_dir.parents) > 3 else None
+    if project_root is not None and (project_root / "CMakeLists.txt").exists():
         # `make python-test` refreshes build-shared. Prefer that canonical
         # developer build over a possibly stale wheel workspace.
         for build_dir in ("build-shared", "build-python", "build"):
@@ -192,6 +196,9 @@ def _configure_signatures(lib: ctypes.CDLL) -> None:
     lib.suzume_load_user_dict.restype = ctypes.c_int
     lib.suzume_load_user_dict.argtypes = [handle, ctypes.c_char_p, ctypes.c_size_t]
 
+    lib.suzume_load_user_dict_count.restype = ctypes.c_size_t
+    lib.suzume_load_user_dict_count.argtypes = [handle, ctypes.c_char_p, ctypes.c_size_t]
+
     lib.suzume_load_binary_dict.restype = ctypes.c_int
     lib.suzume_load_binary_dict.argtypes = [
         handle,
@@ -201,6 +208,9 @@ def _configure_signatures(lib: ctypes.CDLL) -> None:
 
     lib.suzume_clear_user_dictionaries.restype = ctypes.c_int
     lib.suzume_clear_user_dictionaries.argtypes = [handle]
+
+    lib.suzume_has_core_dictionary.restype = ctypes.c_int
+    lib.suzume_has_core_dictionary.argtypes = [handle]
 
     lib.suzume_version.restype = ctypes.c_char_p
     lib.suzume_version.argtypes = []
@@ -213,6 +223,12 @@ def _configure_signatures(lib: ctypes.CDLL) -> None:
 
     lib.suzume_conjugation_type_label.restype = ctypes.c_char_p
     lib.suzume_conjugation_type_label.argtypes = [ctypes.c_uint8]
+
+    lib.suzume_extended_pos_label.restype = ctypes.c_char_p
+    lib.suzume_extended_pos_label.argtypes = [ctypes.c_uint8]
+
+    lib.suzume_conjugation_form_label.restype = ctypes.c_char_p
+    lib.suzume_conjugation_form_label.argtypes = [ctypes.c_uint8]
 
     lib.suzume_pos_label.restype = ctypes.c_char_p
     lib.suzume_pos_label.argtypes = [ctypes.c_uint8]
@@ -256,16 +272,10 @@ def _bundled_data_dir(pkg_dir: Path) -> Path | None:
 def load_library(lib_path: str | None = None) -> ctypes.CDLL:
     """Load the suzume shared library with configured signatures.
 
-    When the wheel bundles ``core.dic``/``user.dic`` next to this module and the
-    caller has not set ``SUZUME_DATA_DIR``, point the auto-loader at them so the
-    native ``suzume_create`` finds the dictionaries without any external files.
+    Dictionary discovery is configured per analyzer, after loading the library,
+    so importing this module never mutates ``SUZUME_DATA_DIR``.
     """
     path = lib_path or _find_library()
-
-    pkg_dir = Path(__file__).parent
-    data_dir = _bundled_data_dir(pkg_dir)
-    if data_dir is not None:
-        os.environ.setdefault("SUZUME_DATA_DIR", str(data_dir))
 
     lib = ctypes.CDLL(path)
     _configure_signatures(lib)

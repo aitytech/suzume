@@ -14,14 +14,17 @@ from __future__ import annotations
 
 import ctypes
 import json
+import os
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum, IntEnum
+from pathlib import Path
 from types import TracebackType
 
 from ._ffi import (
     SuzumeExtendedOptions,
     SuzumeTagOptions,
+    _bundled_data_dir,
     load_library,
 )
 from ._labels import (
@@ -31,8 +34,6 @@ from ._labels import (
     FLAG_LOW_INFO,
     FLAG_UNKNOWN,
     FLAG_USER_DICT,
-    conjugation_form,
-    extended_pos,
     pos_japanese,
 )
 
@@ -48,6 +49,7 @@ __all__ = [
 ]
 
 _lib = load_library()
+_BUNDLED_DATA_DIR = _bundled_data_dir(Path(__file__).parent)
 
 # POS names accepted by ``generate_tags(pos_filter=...)``, mapped to their
 # bitmask value. Names and casing mirror the WASM binding's TagOptions.pos.
@@ -148,6 +150,10 @@ def _decode(value: bytes | None) -> str:
     return value.decode("utf-8") if value else ""
 
 
+def _decode_sized(value: ctypes._Pointer[ctypes.c_char], size: int) -> str:
+    return ctypes.string_at(value, size).decode("utf-8")
+
+
 def version() -> str:
     """Return the native library version string."""
     return _decode(_lib.suzume_version())
@@ -178,6 +184,7 @@ class Suzume:
         merge_compounds: bool = False,
         skip_user_dictionary: bool = False,
         skip_core_dictionary: bool = False,
+        skip_env_config: bool = False,
         report_scorer_config: bool = False,
         scorer_options: str | dict[str, object] | None = None,
     ) -> None:
@@ -192,6 +199,7 @@ class Suzume:
         opts.merge_compounds = int(merge_compounds)
         opts.skip_user_dictionary = int(skip_user_dictionary)
         opts.skip_core_dictionary = int(skip_core_dictionary)
+        opts.skip_env_config = int(skip_env_config)
         opts.report_scorer_config = int(report_scorer_config)
         scorer_json = (
             scorer_options
@@ -202,6 +210,8 @@ class Suzume:
         )
         scorer_payload = scorer_json.encode("utf-8") if scorer_json is not None else None
         opts.scorer_options_json = scorer_payload
+        data_directory = os.fsencode(_BUNDLED_DATA_DIR) if _BUNDLED_DATA_DIR is not None else None
+        opts.data_directory = data_directory
 
         handle = _lib.suzume_create_with_extended_options(ctypes.byref(opts))
         if not handle:
@@ -242,7 +252,13 @@ class Suzume:
         return self.analyze_with_normalized_text(text).morphemes
 
     def analyze_with_normalized_text(self, text: str) -> AnalysisResult:
-        """Analyze text and return the exact normalized text used for offsets."""
+        """Analyze text and return the exact normalized text used for offsets.
+
+        The Python surface accepts :class:`str`, not raw bytes. Python's strict
+        UTF-8 encoder therefore rejects lone surrogates before the C ABI is
+        called; arbitrary invalid byte sequences are only reachable through
+        the length-aware native API.
+        """
         handle = self._require_handle()
         try:
             payload = text.encode("utf-8")
@@ -259,17 +275,22 @@ class Suzume:
                 conjugates = bool(m.flags & FLAG_CONJUGATABLE)
                 out.append(
                     Morpheme(
-                        surface=_decode(m.surface),
+                        surface=_decode_sized(m.surface, m.surface_size),
                         pos=_decode(_lib.suzume_pos_label(m.pos)) or "OTHER",
-                        base_form=_decode(m.base_form),
+                        base_form=_decode_sized(m.base_form, m.base_form_size),
                         pos_ja=pos_japanese(m.pos),
                         conj_type=(
-                            _decode(_lib.suzume_conjugation_type_label(m.conjugation_type))
+                            _decode(_lib.suzume_conjugation_type_label(m.conjugation_type)) or None
                             if conjugates
                             else None
                         ),
-                        conj_form=conjugation_form(m.conjugation_form) if conjugates else None,
-                        extended_pos=extended_pos(m.extended_pos),
+                        conj_form=(
+                            _decode(_lib.suzume_conjugation_form_label(m.conjugation_form))
+                            if conjugates
+                            else None
+                        ),
+                        extended_pos=_decode(_lib.suzume_extended_pos_label(m.extended_pos))
+                        or "UNKNOWN",
                         start=int(m.start),
                         end=int(m.end),
                         is_user_dict=bool(m.flags & FLAG_USER_DICT),
@@ -349,12 +370,14 @@ class Suzume:
 
     # --- dictionaries ---
 
-    def load_user_dict(self, csv: str) -> None:
-        """Load a user dictionary from CSV text."""
+    def load_user_dict(self, data: str) -> int:
+        """Load current TSV (or legacy CSV) and return the installed expanded-entry count."""
         handle = self._require_handle()
-        payload = csv.encode("utf-8")
-        if not _lib.suzume_load_user_dict(handle, payload, len(payload)):
+        payload = data.encode("utf-8")
+        count = int(_lib.suzume_load_user_dict_count(handle, payload, len(payload)))
+        if count == 0:
             raise _native_error("failed to load user dictionary")
+        return count
 
     def load_binary_dict(self, data: bytes) -> None:
         """Load a compiled binary (.dic) dictionary from memory."""
@@ -364,14 +387,19 @@ class Suzume:
             raise _native_error("failed to load binary dictionary")
 
     def clear_user_dictionaries(self) -> None:
-        """Remove all user dictionaries loaded by this analyzer."""
+        """Remove caller-loaded dictionaries while retaining the bundled user dictionary."""
         handle = self._require_handle()
         if not _lib.suzume_clear_user_dictionaries(handle):
             raise _native_error("failed to clear user dictionaries")
 
     @property
     def dictionary_warnings(self) -> list[str]:
-        """Warnings emitted while auto-loading dictionaries."""
+        """Return dictionary-loading, parsing, and scorer-configuration diagnostics."""
         handle = self._require_handle()
         count = _lib.suzume_dictionary_warning_count(handle)
         return [_decode(_lib.suzume_dictionary_warning(handle, idx)) for idx in range(count)]
+
+    @property
+    def has_core_dictionary(self) -> bool:
+        """Whether the L2 core binary dictionary is loaded."""
+        return bool(_lib.suzume_has_core_dictionary(self._require_handle()))

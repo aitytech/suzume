@@ -10,12 +10,7 @@
  * WASM function calls. This file tests the JS-specific concerns.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { Suzume } from '../dist/index.js';
-import {
-  conjugationFormJapanese,
-  conjugationTypeJapanese,
-  extendedPosLabel,
-} from '../js/abi_labels.js';
+import { ErrorCode, Suzume, SuzumeError, version } from '../dist/index.js';
 import { C_LAYOUTS } from '../js/abi_layout.js';
 import {
   allocString,
@@ -46,28 +41,31 @@ describe('JS API: struct layout compatibility', () => {
   });
 
   it('labels every serialized ExtendedPOS code without shifting late additions', () => {
-    expect(extendedPosLabel(0)).toBe('UNKNOWN');
-    expect(extendedPosLabel(32)).toBe('AUX_開始');
-    expect(extendedPosLabel(33)).toBe('AUX_様態');
-    expect(extendedPosLabel(73)).toBe('AUX_文語完了');
-    expect(extendedPosLabel(77)).toBe('SUFFIX_直後');
-    expect(extendedPosLabel(80)).toBe('AUX_よう');
-    expect(extendedPosLabel(81)).toBe('AUX_KURUWA_POLITE');
-    expect(extendedPosLabel(82)).toBe('AUX_文語過去キ');
-    // One past the last label: a code the C ABI has but the table does not must
-    // degrade to UNKNOWN rather than shift every later label by one.
-    expect(extendedPosLabel(83)).toBe('UNKNOWN');
+    const label = module.cwrap('suzume_extended_pos_label', 'number', ['number']) as (
+      code: number,
+    ) => number;
+    const text = (code: number) => {
+      const ptr = label(code);
+      return ptr === 0 ? null : module.UTF8ToString(ptr);
+    };
+    expect(text(0)).toBe('UNKNOWN');
+    expect(text(32)).toBe('AUX_開始');
+    expect(text(82)).toBe('AUX_文語過去キ');
+    expect(text(83)).toBeNull();
   });
 
   it('labels every serialized conjugation code and rejects the next value', () => {
-    expect(conjugationTypeJapanese(14)).toBe('ナ形容詞');
-    expect(conjugationTypeJapanese(15)).toBe('感動詞');
-    expect(conjugationTypeJapanese(16)).toBe('固有名詞・姓');
-    expect(conjugationTypeJapanese(17)).toBe('固有名詞・名');
-    expect(conjugationTypeJapanese(18)).toBeNull();
-
-    expect(conjugationFormJapanese(6)).toBe('意志形');
-    expect(conjugationFormJapanese(7)).toBeNull();
+    const typeLabel = module.cwrap('suzume_conjugation_type_label', 'number', ['number']) as (
+      code: number,
+    ) => number;
+    const formLabel = module.cwrap('suzume_conjugation_form_label', 'number', ['number']) as (
+      code: number,
+    ) => number;
+    expect(module.UTF8ToString(typeLabel(17))).toBe('固有名詞・名');
+    expect(typeLabel(0)).toBe(0);
+    expect(typeLabel(18)).toBe(0);
+    expect(module.UTF8ToString(formLabel(6))).toBe('意志形');
+    expect(formLabel(7)).toBe(0);
   });
 
   it('exports the complete C ABI surface required by the JS binding', () => {
@@ -75,6 +73,7 @@ describe('JS API: struct layout compatibility', () => {
       '_suzume_analyze',
       '_suzume_analyze_n',
       '_suzume_clear_user_dictionaries',
+      '_suzume_conjugation_form_label',
       '_suzume_conjugation_type_label',
       '_suzume_create',
       '_suzume_create_with_extended_options',
@@ -85,12 +84,15 @@ describe('JS API: struct layout compatibility', () => {
       '_suzume_generate_tags_n',
       '_suzume_generate_tags_with_options',
       '_suzume_generate_tags_with_options_n',
+      '_suzume_extended_pos_label',
+      '_suzume_has_core_dictionary',
       '_suzume_init_extended_options',
       '_suzume_init_tag_options',
       '_suzume_last_error',
       '_suzume_last_error_code',
       '_suzume_load_binary_dict',
       '_suzume_load_user_dict',
+      '_suzume_load_user_dict_count',
       '_suzume_result_free',
       '_suzume_sizeof_extended_options',
       '_suzume_sizeof_morpheme',
@@ -140,6 +142,8 @@ describe('JS API: struct layout compatibility', () => {
         'conjugationType',
         'conjugationForm',
         'flags',
+        'surfaceSize',
+        'baseFormSize',
       ],
       ['tags', 'pos', 'count'],
       [
@@ -164,7 +168,9 @@ describe('JS API: struct layout compatibility', () => {
         'skipUserDictionary',
         'skipCoreDictionary',
         'reportScorerConfig',
+        'skipEnvConfig',
         'scorerOptionsJson',
+        'dataDirectory',
       ],
     ] as const;
 
@@ -196,6 +202,7 @@ describe('JS API: struct layout compatibility', () => {
       'conjForm',
       'conjType',
       'end',
+      'endUtf16',
       'extendedPos',
       'isFormalNoun',
       'isFromDictionary',
@@ -206,6 +213,7 @@ describe('JS API: struct layout compatibility', () => {
       'posJa',
       'score',
       'start',
+      'startUtf16',
       'surface',
     ]);
     expect(typeof m.surface).toBe('string');
@@ -384,7 +392,7 @@ describe('JS API: error reporting', () => {
 
     try {
       expect(suzume.loadUserDictionary('"東京,NOUN,0.5\n')).toBe(false);
-      expect(suzume.lastError).toContain('Invalid CSV quoting');
+      expect(suzume.lastError).toContain('Invalid legacy CSV quoting');
       expect(suzume.lastError).toContain('unterminated quoted field');
     } finally {
       suzume.destroy();
@@ -396,7 +404,7 @@ describe('JS API: error reporting', () => {
 
     try {
       expect(() => suzume.loadUserDictionaryOrThrow('"東京,NOUN,0.5\n')).toThrow(
-        /Invalid CSV quoting.*unterminated quoted field/,
+        /Invalid legacy CSV quoting.*unterminated quoted field/,
       );
     } finally {
       suzume.destroy();
@@ -422,6 +430,7 @@ describe('JS API: error reporting', () => {
       mergeCompounds: false,
       skipUserDictionary: true,
       skipCoreDictionary: true,
+      skipEnvConfig: true,
       scorerOptions: { unary: { noun_prior: 0.25 } },
     });
 
@@ -433,19 +442,136 @@ describe('JS API: error reporting', () => {
     }
   });
 
+  it('lemmatize and mergeCompounds change analysis output', async () => {
+    const lemmatized = await Suzume.create({ lemmatize: true, skipUserDictionary: true });
+    const sourceLemma = await Suzume.create({ lemmatize: false, skipUserDictionary: true });
+    const separate = await Suzume.create({
+      mergeCompounds: false,
+      skipUserDictionary: true,
+    });
+    const merged = await Suzume.create({ mergeCompounds: true, skipUserDictionary: true });
+
+    try {
+      expect(lemmatized.analyze('歩きます')[0]).toMatchObject({
+        surface: '歩き',
+        baseForm: '歩く',
+      });
+      expect(sourceLemma.analyze('歩きます')[0]).toMatchObject({
+        surface: '歩き',
+        baseForm: '歩き',
+      });
+      expect(separate.analyze('東京2024').map((morpheme) => morpheme.surface)).toEqual([
+        '東京',
+        '2024',
+      ]);
+      expect(merged.analyze('東京2024').map((morpheme) => morpheme.surface)).toEqual(['東京2024']);
+    } finally {
+      lemmatized.destroy();
+      sourceLemma.destroy();
+      separate.destroy();
+      merged.destroy();
+    }
+  });
+
   it('rejects malformed scorer JSON during construction', async () => {
     await expect(Suzume.create({ scorerOptions: '{' })).rejects.toThrow(/invalid scorer options/i);
   });
 
-  it('preserves embedded NUL and exposes normalized text', async () => {
+  it('reports stable error codes and rejects unpaired surrogates', async () => {
     const suzume = await Suzume.create();
+    try {
+      expect(() => suzume.analyze('\ud800')).toThrow(SuzumeError);
+      try {
+        suzume.analyze('\ud800');
+      } catch (error) {
+        expect(error).toBeInstanceOf(SuzumeError);
+        expect((error as SuzumeError).code).toBe(ErrorCode.InvalidUtf8);
+      }
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('exposes version without requiring a live analyzer handle', async () => {
+    const packageVersion = await version();
+    const suzume = await Suzume.create();
+    suzume.destroy();
+    expect(suzume.version).toBe(packageVersion);
+  });
+
+  it('shares one runtime across ten handles and supports isolated opt-out', async () => {
+    const shared = await Promise.all(Array.from({ length: 10 }, () => Suzume.create()));
+    const isolated = [
+      await Suzume.create({ freshWasmModule: true }),
+      await Suzume.create({
+        freshWasmModule: true,
+      }),
+    ];
+    try {
+      const runtime = (instance: Suzume) => (instance as unknown as { module: object }).module;
+      expect(new Set(shared.map(runtime)).size).toBe(1);
+      expect(new Set(isolated.map(runtime)).size).toBe(2);
+      expect(shared.every((instance) => instance.analyze('東京').length > 0)).toBe(true);
+    } finally {
+      for (const instance of [...shared, ...isolated]) {
+        instance.destroy();
+      }
+    }
+  });
+
+  it('reports active scorer configuration through warnings', async () => {
+    const suzume = await Suzume.create({
+      reportScorerConfig: true,
+      scorerOptions: { unary: { noun_prior: 0.25 } },
+    });
+    try {
+      expect(
+        suzume.dictionaryWarnings.some((warning) =>
+          warning.includes('Scorer configuration active'),
+        ),
+      ).toBe(true);
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('applies scorer configuration to analysis', async () => {
+    const suzume = await Suzume.create({
+      skipUserDictionary: true,
+      skipCoreDictionary: true,
+      scorerOptions: { inflection: { confidence_ceiling: 0 } },
+    });
+    try {
+      expect(suzume.analyze('歩いています')[0]?.surface).toBe('歩');
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('preserves embedded NUL and exposes normalized text', async () => {
+    const suzume = await Suzume.create({ preserveSymbols: true });
     try {
       const result = suzume.analyzeWithNormalizedText('東京\0大阪');
       expect(result.normalizedText).toContain('大阪');
+      expect(result.morphemes.some((morpheme) => morpheme.surface === '\0')).toBe(true);
       expect(result.morphemes.some((morpheme) => morpheme.surface === '大阪')).toBe(true);
       expect(
         suzume.generateTags('東京\0大阪', { minLength: 1 }).some((tag) => tag.tag === '大阪'),
       ).toBe(true);
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('exposes JavaScript UTF-16 offsets for direct slicing', async () => {
+    const suzume = await Suzume.create({ preserveSymbols: true });
+    try {
+      const result = suzume.analyzeWithNormalizedText('🎉𠮷字を読む');
+      for (const morpheme of result.morphemes) {
+        expect(result.normalizedText.slice(morpheme.startUtf16, morpheme.endUtf16)).toBe(
+          morpheme.surface,
+        );
+      }
     } finally {
       suzume.destroy();
     }
@@ -464,16 +590,25 @@ describe('JS API: error reporting', () => {
     }
   });
 
-  it('clears user dictionaries without destroying the analyzer', async () => {
-    const suzume = await Suzume.create({
-      skipUserDictionary: true,
-      skipCoreDictionary: true,
-    });
+  it('clears caller dictionaries while retaining the bundled user dictionary', async () => {
+    const suzume = await Suzume.create();
     try {
+      expect(suzume.hasCoreDictionary).toBe(true);
+      expect(suzume.analyze('コーヒー豆')).toMatchObject([
+        { surface: 'コーヒー豆', isUserDict: true },
+      ]);
+      expect(suzume.loadUserDictionaryCount('検査する\tVERB\tSURU\n')).toBeGreaterThan(1);
+      expect(suzume.loadUserDictionaryCount('ignored-record\n検査語\tNOUN\n')).toBe(1);
+      expect(suzume.dictionaryWarnings.some((warning) => warning.includes('line 1'))).toBe(true);
+      expect(suzume.loadUserDictionaryCount('ignored-record\n')).toBe(0);
+      expect(suzume.lastErrorCode).toBe(4);
       expect(suzume.loadUserDictionary('検査語\tNOUN\n')).toBe(true);
       expect(suzume.analyze('検査語').some((morpheme) => morpheme.isUserDict)).toBe(true);
       suzume.clearUserDictionaries();
       expect(suzume.analyze('検査語').some((morpheme) => morpheme.isUserDict)).toBe(false);
+      expect(suzume.analyze('コーヒー豆')).toMatchObject([
+        { surface: 'コーヒー豆', isUserDict: true },
+      ]);
     } finally {
       suzume.destroy();
     }
@@ -496,6 +631,46 @@ describe('JS API: error reporting', () => {
       expect(canonical).toEqual(canonicalWins);
       expect(canonical.length).toBeGreaterThan(0);
       expect(canonical.every((tag) => tag.pos === 'NOUN')).toBe(true);
+    } finally {
+      suzume.destroy();
+    }
+  });
+
+  it('generateTags applies every public filtering option', async () => {
+    const suzume = await Suzume.create();
+    const text = 'りんごが歩きます。読むこと。それ。りんご';
+    const inclusive = {
+      minLength: 1,
+      excludeParticles: false,
+      excludeAuxiliaries: false,
+      excludeFormalNouns: false,
+      excludeLowInfo: false,
+    };
+    const texts = (options: Parameters<typeof suzume.generateTags>[1]) =>
+      suzume.generateTags(text, options).map((tag) => tag.tag);
+
+    try {
+      const all = texts(inclusive);
+      expect(all).toContain('が');
+      expect(all).toContain('ます');
+      expect(all).toContain('こと');
+      expect(all).toContain('それ');
+      expect(all).toContain('歩く');
+      expect(all.filter((tag) => tag === 'りんご')).toHaveLength(1);
+
+      expect(texts({ ...inclusive, useLemma: false })).toContain('歩き');
+      expect(texts({ ...inclusive, useLemma: false })).not.toContain('歩く');
+      expect(texts({ ...inclusive, minLength: 2 })).not.toContain('が');
+      expect(texts({ ...inclusive, maxTags: 2 })).toHaveLength(2);
+      expect(
+        texts({ ...inclusive, removeDuplicates: false }).filter((tag) => tag === 'りんご'),
+      ).toHaveLength(2);
+      expect(texts({ ...inclusive, posFilter: ['noun'] })).not.toContain('歩く');
+      expect(texts({ ...inclusive, excludeBasic: true })).not.toContain('りんご');
+      expect(texts({ ...inclusive, excludeParticles: true })).not.toContain('が');
+      expect(texts({ ...inclusive, excludeAuxiliaries: true })).not.toContain('ます');
+      expect(texts({ ...inclusive, excludeFormalNouns: true })).not.toContain('こと');
+      expect(texts({ ...inclusive, excludeLowInfo: true })).not.toContain('それ');
     } finally {
       suzume.destroy();
     }

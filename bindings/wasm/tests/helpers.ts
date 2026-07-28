@@ -1,5 +1,5 @@
 import createModule from '../dist/suzume.js';
-import { conjugationTypeJapanese, posEnglish } from '../js/abi_labels.js';
+import { posEnglish } from '../js/abi_labels.js';
 import { C_LAYOUTS } from '../js/abi_layout.js';
 import { decodeAnalysisResult, decodeTags } from '../js/decode.js';
 import type { Morpheme as ParsedMorpheme, Tag as ParsedTag } from '../js/index.js';
@@ -53,7 +53,18 @@ export function allocString(module: WasmModule, text: string): number {
 }
 
 export function parseMorphemes(module: WasmModule, resultPtr: number): ParsedMorpheme[] {
-  return decodeAnalysisResult(module, resultPtr, conjugationTypeJapanese, posEnglish).morphemes;
+  const label = (name: string, code: number): string | null => {
+    const ptr = module.cwrap(name, 'number', ['number'])(code) as number;
+    return ptr === 0 ? null : module.UTF8ToString(ptr);
+  };
+  return decodeAnalysisResult(
+    module,
+    resultPtr,
+    (code) => label('suzume_conjugation_type_label', code),
+    (code) => label('suzume_conjugation_form_label', code),
+    (code) => label('suzume_extended_pos_label', code) ?? 'UNKNOWN',
+    posEnglish,
+  ).morphemes;
 }
 
 export function parseTags(module: WasmModule, tagsPtr: number): ParsedTag[] {

@@ -9,7 +9,7 @@ export const C_LAYOUTS = {
     normalizedTextSize: 12,
   },
   morpheme: {
-    size: 28,
+    size: 36,
     surface: 0,
     baseForm: 4,
     start: 8,
@@ -20,6 +20,8 @@ export const C_LAYOUTS = {
     conjugationType: 22,
     conjugationForm: 23,
     flags: 24,
+    surfaceSize: 28,
+    baseFormSize: 32,
   },
   tags: { size: 12, tags: 0, pos: 4, count: 8 },
   tagOptions: {
@@ -36,7 +38,7 @@ export const C_LAYOUTS = {
     removeDuplicates: 16,
   },
   extendedOptions: {
-    size: 16,
+    size: 20,
     preserveVu: 0,
     preserveCase: 1,
     preserveSymbols: 2,
@@ -46,6 +48,8 @@ export const C_LAYOUTS = {
     skipUserDictionary: 6,
     skipCoreDictionary: 7,
     reportScorerConfig: 8,
+    skipEnvConfig: 9,
     scorerOptionsJson: 12,
+    dataDirectory: 16,
   },
 } as const;

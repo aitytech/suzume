@@ -39,12 +39,16 @@ interface EmscriptenModule {
   ) => number;
   _suzume_tags_free: (tagsPtr: number) => void;
   _suzume_load_user_dict: (handle: number, dataPtr: number, size: number) => number;
+  _suzume_load_user_dict_count: (handle: number, dataPtr: number, size: number) => number;
   _suzume_load_binary_dict: (handle: number, dataPtr: number, size: number) => number;
   _suzume_clear_user_dictionaries: (handle: number) => number;
+  _suzume_has_core_dictionary: (handle: number) => number;
   _suzume_version: () => number;
   _suzume_last_error: () => number;
   _suzume_last_error_code: () => number;
   _suzume_conjugation_type_label: (code: number) => number;
+  _suzume_extended_pos_label: (code: number) => number;
+  _suzume_conjugation_form_label: (code: number) => number;
   _suzume_pos_label: (code: number) => number;
   _suzume_dictionary_warning_count: (handle: number) => number;
   _suzume_dictionary_warning: (handle: number, index: number) => number;

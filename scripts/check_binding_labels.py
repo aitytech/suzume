@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Verify that every public numeric label table matches the C++ enums.
+"""Verify that public numeric contracts match the canonical C/C++ definitions.
 
-The C ABI transports compact numeric codes.  The header-only C++ wrapper and
-the npm/PyPI bindings turn those codes back into strings with index-addressed
-tables, so a missing, reordered, or misspelled entry silently changes public
-output.  This guard treats the C++ enum order as the numeric ABI and compares
-the full contents of every mirror, not only its length.
+The C ABI transports compact numeric codes. The bindings use canonical native
+label functions where available and retain mirrors only for POS labels. This
+guard checks those mirrors plus error codes, flags, modes, and tag-filter bits.
 
 Usage:
   scripts/check_binding_labels.py
@@ -25,6 +23,9 @@ CPP_TYPES = "src/core/types.cpp"
 CPP_WRAPPER = "include/suzume/suzume.hpp"
 WASM_LABELS = "bindings/wasm/js/abi_labels.ts"
 PYTHON_LABELS = "bindings/python/src/suzume/_labels.py"
+C_HEADER = "include/suzume/suzume_c.h"
+WASM_INDEX = "bindings/wasm/js/index.ts"
+PYTHON_API = "bindings/python/src/suzume/__init__.py"
 
 
 @dataclass(frozen=True)
@@ -33,7 +34,8 @@ class EnumSpec:
     sentinel: str | None
 
 
-# These are all enums whose numeric values are decoded into public labels.
+# These enums define serialized public label domains. Only PartOfSpeech retains
+# binding-side mirrors; the others are decoded by canonical C ABI functions.
 MIRRORED_ENUMS = {
     "PartOfSpeech": EnumSpec("src/core/types.h", "Count_"),
     "ExtendedPOS": EnumSpec("src/core/types.h", "Count_"),
@@ -41,10 +43,8 @@ MIRRORED_ENUMS = {
     "ConjForm": EnumSpec("src/grammar/conjugation.h", "Count_"),
 }
 
-# ConjugationType has no complete C++ label function yet (the core formatter
-# accepts VerbType, whose domain stops at IAdjective).  Until the C ABI exposes
-# a canonical label API, keep this snapshot keyed by enum member.  Comparing
-# its keys with the enum makes additions and reorderings fail closed.
+# Keep snapshots keyed by enum member so additions and reorderings fail closed
+# even though bindings now obtain these labels from the C ABI.
 CONJUGATION_TYPE_LABELS = {
     "None": None,
     "Ichidan": "一段",
@@ -221,6 +221,115 @@ def compare(
     return True
 
 
+def normalized_name(name: str) -> str:
+    return name.replace("_", "").lower()
+
+
+def c_numeric_constants(prefix: str) -> dict[str, int]:
+    text = Path(C_HEADER).read_text()
+    values: dict[str, int] = {}
+    for name, expression in re.findall(rf"\b{prefix}([A-Z0-9_]+)\s*=\s*([^,\n]+)", text):
+        expression = expression.strip()
+        shift = re.fullmatch(r"1U?\s*<<\s*(\d+)U?", expression)
+        literal = re.fullmatch(r"(\d+)U?", expression)
+        if shift:
+            values[normalized_name(name)] = 1 << int(shift.group(1))
+        elif literal:
+            values[normalized_name(name)] = int(literal.group(1))
+    return values
+
+
+def check_numeric_contracts() -> bool:
+    failed = False
+    wasm = Path(WASM_INDEX).read_text()
+    wasm_labels = Path(WASM_LABELS).read_text()
+    python = Path(PYTHON_API).read_text()
+    python_labels = Path(PYTHON_LABELS).read_text()
+
+    canonical_errors = c_numeric_constants("SUZUME_ERROR_")
+    wasm_error_body = enclosed(wasm, wasm.index("{", wasm.index("export enum ErrorCode")), "{", "}", WASM_INDEX)
+    wasm_errors = {
+        normalized_name(name): int(value) for name, value in re.findall(r"\b(\w+)\s*=\s*(\d+)", wasm_error_body)
+    }
+    python_errors: dict[str, int] = {}
+    for node in ast.parse(python).body:
+        if isinstance(node, ast.ClassDef) and node.name == "ErrorCode":
+            for statement in node.body:
+                if (
+                    isinstance(statement, ast.Assign)
+                    and len(statement.targets) == 1
+                    and isinstance(statement.targets[0], ast.Name)
+                    and isinstance(statement.value, ast.Constant)
+                    and isinstance(statement.value.value, int)
+                ):
+                    python_errors[normalized_name(statement.targets[0].id)] = statement.value.value
+
+    canonical_flags = c_numeric_constants("SUZUME_MORPHEME_")
+    wasm_flag_body = enclosed(
+        wasm_labels,
+        wasm_labels.index("{", wasm_labels.index("export const MORPHEME_FLAG")),
+        "{",
+        "}",
+        WASM_LABELS,
+    )
+    wasm_flags = {
+        normalized_name(name): 1 << int(shift)
+        for name, shift in re.findall(r"\b(\w+)\s*:\s*1\s*<<\s*(\d+)", wasm_flag_body)
+    }
+    python_flags = {
+        normalized_name(name): 1 << int(shift)
+        for name, shift in re.findall(r"\bFLAG_([A-Z_]+)\s*=\s*1\s*<<\s*(\d+)", python_labels)
+    }
+
+    canonical_tags = c_numeric_constants("SUZUME_TAG_POS_")
+    wasm_tag_body = enclosed(wasm, wasm.index("{", wasm.index("TAG_POS_FILTER_BITS")), "{", "}", WASM_INDEX)
+    wasm_tags = {normalized_name(name): int(value) for name, value in re.findall(r"\b(\w+)\s*:\s*(\d+)", wasm_tag_body)}
+    python_tag_match = re.search(r"_POS_FILTER_BITS\s*=\s*\{(?P<body>.*?)\}", python, re.DOTALL)
+    python_tags = (
+        {
+            normalized_name(name): int(value)
+            for name, value in re.findall(r'"(\w+)"\s*:\s*(\d+)', python_tag_match.group("body"))
+        }
+        if python_tag_match
+        else {}
+    )
+
+    wrapper = Path(CPP_WRAPPER).read_text()
+    mode_match = re.search(r"enum class Mode[^{]*\{(?P<body>.*?)\}", wrapper, re.DOTALL)
+    canonical_modes = (
+        {
+            normalized_name(name): int(value)
+            for name, value in re.findall(r"\b(\w+)\s*=\s*(\d+)", mode_match.group("body"))
+        }
+        if mode_match
+        else {}
+    )
+    wasm_mode_match = re.search(r"const modeMap[^=]*=\s*\{(?P<body>.*?)\}", wasm, re.DOTALL)
+    wasm_modes = (
+        {
+            normalized_name(name): int(value)
+            for name, value in re.findall(r"\b(\w+)\s*:\s*(\d+)", wasm_mode_match.group("body"))
+        }
+        if wasm_mode_match
+        else {}
+    )
+    python_modes = {
+        normalized_name(name): int(value) for name, value in re.findall(r"Mode\.([A-Z]+)\s*:\s*(\d+)", python)
+    }
+
+    for label, canonical, mirrors in (
+        ("error codes", canonical_errors, (wasm_errors, python_errors)),
+        ("morpheme flags", canonical_flags, (wasm_flags, python_flags)),
+        ("tag POS bits", canonical_tags, (wasm_tags, python_tags)),
+        ("analysis modes", canonical_modes, (wasm_modes, python_modes)),
+    ):
+        for mirror in mirrors:
+            if mirror != canonical:
+                print(f"❌ {label} drift: expected {canonical}, got {mirror}")
+                failed = True
+    return failed
+
+
 def main() -> int:
     os.chdir(repo_root())
 
@@ -228,6 +337,8 @@ def main() -> int:
     canonical_calls = {
         "posLabel": "suzume_pos_label",
         "conjugationTypeLabel": "suzume_conjugation_type_label",
+        "conjugationFormLabel": "suzume_conjugation_form_label",
+        "extendedPosLabel": "suzume_extended_pos_label",
     }
     for function, canonical in canonical_calls.items():
         if canonical not in function_body(CPP_WRAPPER, function):
@@ -250,20 +361,6 @@ def main() -> int:
             cpp_local_table("posLabel", "japanese_labels"),
         ),
         (
-            CPP_WRAPPER,
-            "extendedPosLabel::labels",
-            members["ExtendedPOS"],
-            expected["extended"],
-            cpp_local_table("extendedPosLabel", "labels"),
-        ),
-        (
-            CPP_WRAPPER,
-            "conjugationFormLabel::labels",
-            members["ConjForm"],
-            expected["conj_form"],
-            cpp_local_table("conjugationFormLabel", "labels"),
-        ),
-        (
             WASM_LABELS,
             "POS_ENGLISH",
             members["PartOfSpeech"],
@@ -276,41 +373,6 @@ def main() -> int:
             members["PartOfSpeech"],
             expected["pos_ja"],
             named_table(WASM_LABELS, "POS_JAPANESE", "[", "]", r"'(?:\\.|[^'\\])*'", ("null",)),
-        ),
-        (
-            WASM_LABELS,
-            "EXTENDED_POS",
-            members["ExtendedPOS"],
-            expected["extended"],
-            named_table(WASM_LABELS, "EXTENDED_POS", "[", "]", r"'(?:\\.|[^'\\])*'", ("null",)),
-        ),
-        (
-            WASM_LABELS,
-            "CONJUGATION_TYPE_JAPANESE",
-            members["ConjugationType"],
-            expected["conj_type"],
-            named_table(
-                WASM_LABELS,
-                "CONJUGATION_TYPE_JAPANESE",
-                "[",
-                "]",
-                r"'(?:\\.|[^'\\])*'",
-                ("null",),
-            ),
-        ),
-        (
-            WASM_LABELS,
-            "CONJUGATION_FORM_JAPANESE",
-            members["ConjForm"],
-            expected["conj_form"],
-            named_table(
-                WASM_LABELS,
-                "CONJUGATION_FORM_JAPANESE",
-                "[",
-                "]",
-                r"'(?:\\.|[^'\\])*'",
-                ("null",),
-            ),
         ),
         (
             PYTHON_LABELS,
@@ -326,51 +388,16 @@ def main() -> int:
             expected["pos_ja"],
             named_table(PYTHON_LABELS, "POS_JAPANESE", "(", ")", r'"(?:\\.|[^"\\])*"', ("None",)),
         ),
-        (
-            PYTHON_LABELS,
-            "EXTENDED_POS",
-            members["ExtendedPOS"],
-            expected["extended"],
-            named_table(PYTHON_LABELS, "EXTENDED_POS", "(", ")", r'"(?:\\.|[^"\\])*"', ("None",)),
-        ),
-        (
-            PYTHON_LABELS,
-            "CONJUGATION_TYPES",
-            members["ConjugationType"],
-            expected["conj_type"],
-            named_table(
-                PYTHON_LABELS,
-                "CONJUGATION_TYPES",
-                "(",
-                ")",
-                r'"(?:\\.|[^"\\])*"',
-                ("None",),
-            ),
-        ),
-        (
-            PYTHON_LABELS,
-            "CONJUGATION_FORMS",
-            members["ConjForm"],
-            expected["conj_form"],
-            named_table(
-                PYTHON_LABELS,
-                "CONJUGATION_FORMS",
-                "(",
-                ")",
-                r'"(?:\\.|[^"\\])*"',
-                ("None",),
-            ),
-        ),
     ]
 
     results = [compare(*check) for check in checks]
-    failed = any(results)
+    failed = any(results) or check_numeric_contracts()
     if failed:
         print()
         print("A mislabeled numeric code changes public output. Update every mirror above in enum order.")
         return 1
 
-    print("✅ C++, WASM, and Python label contents match the C++ enums")
+    print("✅ C++, WASM, and Python labels and numeric contracts match")
     return 0
 
 

@@ -1,9 +1,4 @@
-import {
-  conjugationFormJapanese,
-  extendedPosLabel,
-  MORPHEME_FLAG,
-  posJapanese,
-} from './abi_labels.js';
+import { MORPHEME_FLAG, posJapanese } from './abi_labels.js';
 import { C_LAYOUTS } from './abi_layout.js';
 import type { AnalysisResult, Morpheme, Tag } from './index.js';
 
@@ -13,12 +8,16 @@ export interface DecodeMemory {
 }
 
 export type ConjugationTypeLabel = (code: number) => string | null;
+export type ConjugationFormLabel = (code: number) => string | null;
+export type ExtendedPosLabel = (code: number) => string;
 export type PosLabel = (code: number) => string;
 
 export function decodeAnalysisResult(
   module: DecodeMemory,
   resultPtr: number,
   conjugationTypeLabel: ConjugationTypeLabel,
+  conjugationFormLabel: ConjugationFormLabel,
+  extendedPosLabel: ExtendedPosLabel,
   posLabel: PosLabel,
 ): AnalysisResult {
   const heapU32 = module.HEAPU32;
@@ -30,6 +29,16 @@ export function decodeAnalysisResult(
   const count = heapU32[(resultPtr + resultLayout.count) >> 2];
   const normalizedTextPtr = heapU32[(resultPtr + resultLayout.normalizedText) >> 2];
   const normalizedTextSize = heapU32[(resultPtr + resultLayout.normalizedTextSize) >> 2];
+  const decoder = new TextDecoder();
+  const normalizedText = decoder.decode(
+    new Uint8Array(heapU32.buffer, normalizedTextPtr, normalizedTextSize),
+  );
+  const utf16Offsets = [0];
+  let utf16Offset = 0;
+  for (const codePoint of normalizedText) {
+    utf16Offset += codePoint.length;
+    utf16Offsets.push(utf16Offset);
+  }
   const morphemes: Morpheme[] = [];
 
   for (let idx = 0; idx < count; idx++) {
@@ -39,20 +48,26 @@ export function decodeAnalysisResult(
     const posCode = heapU8[morphPtr + morphemeLayout.pos];
     const flags = heapU8[morphPtr + morphemeLayout.flags];
     const conjugates = (flags & MORPHEME_FLAG.conjugatable) !== 0;
+    const start = heapU32[(morphPtr + morphemeLayout.start) >> 2];
+    const end = heapU32[(morphPtr + morphemeLayout.end) >> 2];
+    const surfaceSize = heapU32[(morphPtr + morphemeLayout.surfaceSize) >> 2];
+    const baseFormSize = heapU32[(morphPtr + morphemeLayout.baseFormSize) >> 2];
     morphemes.push({
-      surface: module.UTF8ToString(surfacePtr),
+      surface: decoder.decode(new Uint8Array(heapU32.buffer, surfacePtr, surfaceSize)),
       pos: posLabel(posCode),
-      baseForm: module.UTF8ToString(baseFormPtr),
+      baseForm: decoder.decode(new Uint8Array(heapU32.buffer, baseFormPtr, baseFormSize)),
       posJa: posJapanese(posCode),
       conjType: conjugates
         ? conjugationTypeLabel(heapU8[morphPtr + morphemeLayout.conjugationType])
         : null,
       conjForm: conjugates
-        ? conjugationFormJapanese(heapU8[morphPtr + morphemeLayout.conjugationForm])
+        ? conjugationFormLabel(heapU8[morphPtr + morphemeLayout.conjugationForm])
         : null,
       extendedPos: extendedPosLabel(heapU8[morphPtr + morphemeLayout.extendedPos]),
-      start: heapU32[(morphPtr + morphemeLayout.start) >> 2],
-      end: heapU32[(morphPtr + morphemeLayout.end) >> 2],
+      start,
+      end,
+      startUtf16: utf16Offsets[start] ?? normalizedText.length,
+      endUtf16: utf16Offsets[end] ?? normalizedText.length,
       isUserDict: (flags & MORPHEME_FLAG.userDict) !== 0,
       isFormalNoun: (flags & MORPHEME_FLAG.formalNoun) !== 0,
       isLowInfo: (flags & MORPHEME_FLAG.lowInfo) !== 0,
@@ -63,9 +78,7 @@ export function decodeAnalysisResult(
   }
 
   return {
-    normalizedText: new TextDecoder().decode(
-      new Uint8Array(heapU32.buffer, normalizedTextPtr, normalizedTextSize),
-    ),
+    normalizedText,
     morphemes,
   };
 }

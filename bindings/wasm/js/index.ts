@@ -14,6 +14,27 @@
 import { C_LAYOUTS } from './abi_layout.js';
 import { decodeAnalysisResult, decodeTags } from './decode.js';
 
+export enum ErrorCode {
+  Success = 0,
+  InvalidUtf8 = 1,
+  DictionaryLoadFailed = 2,
+  FileNotFound = 3,
+  Parse = 4,
+  OutOfMemory = 5,
+  InvalidInput = 6,
+  Internal = 7,
+}
+
+export class SuzumeError extends Error {
+  readonly code: ErrorCode;
+
+  constructor(message: string, code: ErrorCode = ErrorCode.Internal) {
+    super(message);
+    this.name = 'SuzumeError';
+    this.code = code;
+  }
+}
+
 // Types for Emscripten module
 interface EmscriptenModule {
   UTF8ToString: (ptr: number) => string;
@@ -45,21 +66,57 @@ interface EmscriptenModule {
   ) => number;
   _suzume_tags_free: (tagsPtr: number) => void;
   _suzume_load_user_dict: (handle: number, dataPtr: number, size: number) => number;
+  _suzume_load_user_dict_count: (handle: number, dataPtr: number, size: number) => number;
   _suzume_load_binary_dict: (handle: number, dataPtr: number, size: number) => number;
   _suzume_clear_user_dictionaries: (handle: number) => number;
+  _suzume_has_core_dictionary: (handle: number) => number;
   _suzume_version: () => number;
   _suzume_last_error: () => number;
   _suzume_last_error_code: () => number;
   _suzume_conjugation_type_label: (code: number) => number;
+  _suzume_extended_pos_label: (code: number) => number;
+  _suzume_conjugation_form_label: (code: number) => number;
   _suzume_pos_label: (code: number) => number;
   _suzume_dictionary_warning_count: (handle: number) => number;
   _suzume_dictionary_warning: (handle: number, index: number) => number;
+}
+
+const modulePromises = new Map<string, Promise<EmscriptenModule>>();
+
+async function instantiateModule(
+  wasmPath: string | undefined,
+  freshWasmModule: boolean,
+): Promise<EmscriptenModule> {
+  const createModule = await import('./suzume.js');
+  const moduleOptions: Record<string, unknown> = {};
+  if (wasmPath) {
+    moduleOptions.locateFile = (path: string) => (path.endsWith('.wasm') ? wasmPath : path);
+  }
+  if (freshWasmModule) {
+    return createModule.default(moduleOptions);
+  }
+
+  const key = wasmPath ?? '';
+  const cached = modulePromises.get(key);
+  if (cached) {
+    return cached;
+  }
+  const pending = createModule.default(moduleOptions) as Promise<EmscriptenModule>;
+  modulePromises.set(key, pending);
+  try {
+    return await pending;
+  } catch (error) {
+    modulePromises.delete(key);
+    throw error;
+  }
 }
 
 /**
  * Options for creating a Suzume instance
  */
 export interface SuzumeOptions {
+  /** Create an isolated WASM runtime instead of sharing the cached module, default: false */
+  freshWasmModule?: boolean;
   /** Preserve ヴ (don't normalize to ビ etc.), default: true */
   preserveVu?: boolean;
   /** Preserve case (don't lowercase ASCII), default: true */
@@ -76,9 +133,11 @@ export interface SuzumeOptions {
   skipUserDictionary?: boolean;
   /** Skip automatic loading of the bundled core dictionary, default: false */
   skipCoreDictionary?: boolean;
-  /** Report scorer configuration diagnostics, default: false */
+  /** Ignore native scorer configuration environment variables, default: false */
+  skipEnvConfig?: boolean;
+  /** Add scorer configuration diagnostics to dictionaryWarnings, default: false */
   reportScorerConfig?: boolean;
-  /** Scorer override JSON, or an object serialized to JSON */
+  /** Final-priority scorer override JSON, or an object serialized to JSON */
   scorerOptions?: string | Record<string, unknown>;
 }
 
@@ -100,10 +159,14 @@ export interface Morpheme {
   conjForm: string | null;
   /** Stable extended POS code (e.g., "VERB_連用", "AUX_過去") */
   extendedPos: string;
-  /** Start character offset in normalized text */
+  /** Start Unicode code-point offset in normalized text */
   start: number;
-  /** End character offset in normalized text */
+  /** End Unicode code-point offset in normalized text */
   end: number;
+  /** Start JavaScript UTF-16 offset, suitable for normalizedText.slice() */
+  startUtf16: number;
+  /** End JavaScript UTF-16 offset, suitable for normalizedText.slice() */
+  endUtf16: number;
   /** True if matched from a user dictionary */
   isUserDict: boolean;
   /** True if the morpheme is a formal noun */
@@ -231,13 +294,16 @@ export class Suzume {
     optionsPtr: number,
   ) => number;
   private _tagsFree: (tagsPtr: number) => void;
-  private _loadUserDict: (handle: number, dataPtr: number, size: number) => number;
+  private _loadUserDictCount: (handle: number, dataPtr: number, size: number) => number;
   private _loadBinaryDict: (handle: number, dataPtr: number, size: number) => number;
   private _clearUserDictionaries: (handle: number) => number;
+  private _hasCoreDictionary: (handle: number) => number;
   private _version: () => number;
   private _lastError: () => number;
   private _lastErrorCode: () => number;
   private _conjugationTypeLabel: (code: number) => number;
+  private _extendedPosLabel: (code: number) => number;
+  private _conjugationFormLabel: (code: number) => number;
   private _posLabel: (code: number) => number;
   private _dictionaryWarningCount: (handle: number) => number;
   private _dictionaryWarning: (handle: number, index: number) => number;
@@ -255,13 +321,16 @@ export class Suzume {
     this._generateTagsN = module._suzume_generate_tags_n;
     this._generateTagsWithOptionsN = module._suzume_generate_tags_with_options_n;
     this._tagsFree = module._suzume_tags_free;
-    this._loadUserDict = module._suzume_load_user_dict;
+    this._loadUserDictCount = module._suzume_load_user_dict_count;
     this._loadBinaryDict = module._suzume_load_binary_dict;
     this._clearUserDictionaries = module._suzume_clear_user_dictionaries;
+    this._hasCoreDictionary = module._suzume_has_core_dictionary;
     this._version = module._suzume_version;
     this._lastError = module._suzume_last_error;
     this._lastErrorCode = module._suzume_last_error_code;
     this._conjugationTypeLabel = module._suzume_conjugation_type_label;
+    this._extendedPosLabel = module._suzume_extended_pos_label;
+    this._conjugationFormLabel = module._suzume_conjugation_form_label;
     this._posLabel = module._suzume_pos_label;
     this._dictionaryWarningCount = module._suzume_dictionary_warning_count;
     this._dictionaryWarning = module._suzume_dictionary_warning;
@@ -275,14 +344,7 @@ export class Suzume {
    */
   static async create(options?: SuzumeOptions & { wasmPath?: string }): Promise<Suzume> {
     const wasmPath = options?.wasmPath;
-
-    // Dynamic import of the Emscripten-generated module
-    const createModule = await import('./suzume.js');
-    const moduleOptions: Record<string, unknown> = {};
-    if (wasmPath) {
-      moduleOptions.locateFile = (path: string) => (path.endsWith('.wasm') ? wasmPath : path);
-    }
-    const module: EmscriptenModule = await createModule.default(moduleOptions);
+    const module = await instantiateModule(wasmPath, options?.freshWasmModule === true);
 
     let handle: number;
 
@@ -296,6 +358,7 @@ export class Suzume {
         options.mergeCompounds !== undefined ||
         options.skipUserDictionary !== undefined ||
         options.skipCoreDictionary !== undefined ||
+        options.skipEnvConfig !== undefined ||
         options.reportScorerConfig !== undefined ||
         options.scorerOptions !== undefined)
     ) {
@@ -333,6 +396,7 @@ export class Suzume {
         heap[optionsPtr + layout.mergeCompounds] = options.mergeCompounds === true ? 1 : 0;
         heap[optionsPtr + layout.skipUserDictionary] = options.skipUserDictionary === true ? 1 : 0;
         heap[optionsPtr + layout.skipCoreDictionary] = options.skipCoreDictionary === true ? 1 : 0;
+        heap[optionsPtr + layout.skipEnvConfig] = options.skipEnvConfig === true ? 1 : 0;
         heap[optionsPtr + layout.reportScorerConfig] = options.reportScorerConfig === true ? 1 : 0;
         if (options.scorerOptions !== undefined) {
           const scorerJson =
@@ -359,10 +423,11 @@ export class Suzume {
 
     if (handle === 0) {
       const message = module.UTF8ToString(module._suzume_last_error());
-      throw new Error(
+      throw new SuzumeError(
         message
           ? `Failed to create Suzume instance: ${message}`
           : 'Failed to create Suzume instance',
+        module._suzume_last_error_code() as ErrorCode,
       );
     }
 
@@ -389,7 +454,10 @@ export class Suzume {
       const resultPtr = this._analyzeN(this.handle, textPtr, textBytes - 1);
 
       if (resultPtr === 0) {
-        throw new Error(`Suzume analyze failed: ${this.lastError || 'unknown error'}`);
+        throw new SuzumeError(
+          `Suzume analyze failed: ${this.lastError || 'unknown error'}`,
+          this.lastErrorCode,
+        );
       }
 
       try {
@@ -452,26 +520,35 @@ export class Suzume {
   /**
    * Load user dictionary from string data
    *
-   * @param data - Dictionary data in CSV format
+   * @param data - Dictionary data in current TSV format (legacy CSV is also accepted)
    * @returns true on success
    */
   loadUserDictionary(data: string): boolean {
+    return this.loadUserDictionaryCount(data) > 0;
+  }
+
+  /**
+   * Load user dictionary and return the number of installed expanded entries.
+   */
+  loadUserDictionaryCount(data: string): number {
     this.ensureAlive();
 
-    return this.withUtf8String(
-      data,
-      (dataPtr, dataBytes) => this._loadUserDict(this.handle, dataPtr, dataBytes - 1) === 1,
+    return this.withUtf8String(data, (dataPtr, dataBytes) =>
+      this._loadUserDictCount(this.handle, dataPtr, dataBytes - 1),
     );
   }
 
   /**
    * Load user dictionary from string data, throwing with C API details on failure.
    *
-   * @param data - Dictionary data in CSV format
+   * @param data - Dictionary data in current TSV format (legacy CSV is also accepted)
    */
   loadUserDictionaryOrThrow(data: string): void {
     if (!this.loadUserDictionary(data)) {
-      throw new Error(`Suzume user dictionary load failed: ${this.lastError || 'unknown error'}`);
+      throw new SuzumeError(
+        `Suzume user dictionary load failed: ${this.lastError || 'unknown error'}`,
+        this.lastErrorCode,
+      );
     }
   }
 
@@ -503,17 +580,23 @@ export class Suzume {
    */
   loadBinaryDictionaryOrThrow(data: Uint8Array): void {
     if (!this.loadBinaryDictionary(data)) {
-      throw new Error(`Suzume binary dictionary load failed: ${this.lastError || 'unknown error'}`);
+      throw new SuzumeError(
+        `Suzume binary dictionary load failed: ${this.lastError || 'unknown error'}`,
+        this.lastErrorCode,
+      );
     }
   }
 
   /**
-   * Remove all user dictionaries loaded by this instance.
+   * Remove caller-loaded dictionaries while retaining the bundled user dictionary.
    */
   clearUserDictionaries(): void {
     this.ensureAlive();
     if (this._clearUserDictionaries(this.handle) !== 1) {
-      throw new Error(`Suzume dictionary clear failed: ${this.lastError || 'unknown error'}`);
+      throw new SuzumeError(
+        `Suzume dictionary clear failed: ${this.lastError || 'unknown error'}`,
+        this.lastErrorCode,
+      );
     }
   }
 
@@ -521,8 +604,6 @@ export class Suzume {
    * Get Suzume version string
    */
   get version(): string {
-    this.ensureAlive();
-
     const versionPtr = this._version();
     return this.module.UTF8ToString(versionPtr);
   }
@@ -535,8 +616,8 @@ export class Suzume {
   }
 
   /** Stable native error category for the last failed C ABI call. */
-  get lastErrorCode(): number {
-    return this._lastErrorCode();
+  get lastErrorCode(): ErrorCode {
+    return this._lastErrorCode() as ErrorCode;
   }
 
   /** Current WebAssembly linear-memory size in bytes. */
@@ -545,9 +626,7 @@ export class Suzume {
     return this.module.HEAPU32.buffer.byteLength;
   }
 
-  /**
-   * Dictionary warnings produced while auto-loading dictionaries at construction.
-   */
+  /** Dictionary-loading, parsing, and scorer-configuration diagnostics. */
   get dictionaryWarnings(): string[] {
     this.ensureAlive();
     const count = this._dictionaryWarningCount(this.handle);
@@ -561,10 +640,15 @@ export class Suzume {
     return warnings;
   }
 
+  /** Whether the bundled L2 core dictionary is loaded. */
+  get hasCoreDictionary(): boolean {
+    this.ensureAlive();
+    return this._hasCoreDictionary(this.handle) === 1;
+  }
+
   /**
-   * Destroy the Suzume instance and free resources.
-   * Called automatically via FinalizationRegistry when garbage collected,
-   * but can be called explicitly for immediate cleanup.
+   * Destroy this analyzer handle. The shared WASM runtime remains cached for
+   * other and future Suzume instances.
    */
   destroy(): void {
     if (this.handle !== 0) {
@@ -585,6 +669,21 @@ export class Suzume {
     value: string,
     operation: (pointer: number, byteLength: number) => T,
   ): T {
+    for (let idx = 0; idx < value.length; idx++) {
+      const codeUnit = value.charCodeAt(idx);
+      if (codeUnit >= 0xd800 && codeUnit <= 0xdbff) {
+        const next = value.charCodeAt(idx + 1);
+        if (next < 0xdc00 || next > 0xdfff) {
+          throw new SuzumeError(
+            'Input contains an unpaired UTF-16 surrogate',
+            ErrorCode.InvalidUtf8,
+          );
+        }
+        idx++;
+      } else if (codeUnit >= 0xdc00 && codeUnit <= 0xdfff) {
+        throw new SuzumeError('Input contains an unpaired UTF-16 surrogate', ErrorCode.InvalidUtf8);
+      }
+    }
     const byteLength = this.module.lengthBytesUTF8(value) + 1;
     const pointer = this.module._malloc(byteLength);
     try {
@@ -597,7 +696,10 @@ export class Suzume {
 
   private consumeTags(tagsPtr: number): Tag[] {
     if (tagsPtr === 0) {
-      throw new Error(`Suzume tag generation failed: ${this.lastError || 'unknown error'}`);
+      throw new SuzumeError(
+        `Suzume tag generation failed: ${this.lastError || 'unknown error'}`,
+        this.lastErrorCode,
+      );
     }
     try {
       return this.parseTags(tagsPtr);
@@ -617,6 +719,8 @@ export class Suzume {
       this.module,
       resultPtr,
       (code) => this.conjugationTypeLabel(code),
+      (code) => this.conjugationFormLabel(code),
+      (code) => this.extendedPosLabel(code),
       (code) => this.posLabel(code),
     );
   }
@@ -630,7 +734,26 @@ export class Suzume {
     const labelPtr = this._posLabel(code);
     return labelPtr === 0 ? 'OTHER' : this.module.UTF8ToString(labelPtr);
   }
+
+  private conjugationFormLabel(code: number): string | null {
+    const labelPtr = this._conjugationFormLabel(code);
+    return labelPtr === 0 ? null : this.module.UTF8ToString(labelPtr);
+  }
+
+  private extendedPosLabel(code: number): string {
+    const labelPtr = this._extendedPosLabel(code);
+    return labelPtr === 0 ? 'UNKNOWN' : this.module.UTF8ToString(labelPtr);
+  }
 }
 
 // Default export
 export default Suzume;
+
+/** Return the package version without creating an analyzer handle. */
+export async function version(options?: {
+  wasmPath?: string;
+  freshWasmModule?: boolean;
+}): Promise<string> {
+  const module = await instantiateModule(options?.wasmPath, options?.freshWasmModule === true);
+  return module.UTF8ToString(module._suzume_version());
+}
