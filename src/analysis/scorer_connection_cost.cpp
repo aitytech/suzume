@@ -328,14 +328,14 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // Short pure-hiragana verbs + ず are likely false parses of nouns/adverbs
   // Long verbs (かかわら+ず) and kanji verbs (表さ+ず) are productive grammar
   // Lexicalized forms like 思わず have their own dict entries (ADV) that win anyway
-  // Note: ん, ぬ, ざる, ざれ, ね excluded — common productive patterns
-  // (ね is 已然形: せねば from する; まい carries its own AuxNegativeMai EPOS and
-  // never matches this rule)
+  // Only the ず cells are named, rather than every other cell being excluded: the
+  // noun collision this rule exists for is theirs alone, and an exclusion list
+  // silently captures each cell added to the paradigm afterwards (連用形 ざり).
   if (prev.pos == core::PartOfSpeech::Verb && prev.fromDictionary() && grammar::isPureHiragana(prev.surface) &&
       prev.surface.size() <= 9 &&  // ≤3 hiragana chars (9 bytes)
       next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
       !(prev.extended_pos == core::ExtendedPOS::VerbMizenkei && prev.lemma == "する") && prev.lemma != "ある" &&
-      prev.lemma != "なる" && !utf8::equalsAny(next.surface, {"ん", "ぬ", "ざる", "ざれ", "ね"})) {
+      prev.lemma != "なる" && utf8::equalsAny(next.surface, {"ず", "ずに"})) {
     surface_bonus += cost::kAlmostNever;
   }
 

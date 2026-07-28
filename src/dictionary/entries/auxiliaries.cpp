@@ -99,10 +99,13 @@ EntrySpecRange getAuxiliaryEntries() {
       // a clause end.
       aux("つ", "つ", EPOS::AuxClassicalPerfect),
       aux("り", "り", EPOS::AuxClassicalPerfect),  // 存続 (行けり)
-      // Classical past き: only its 連体形 し and 已然形 しか survive in
-      // ordinary text, and both attach to a continuative (読みし人, 見しかば).
+      // Classical past き: the 連体形 し and 已然形 しか both attach to a
+      // continuative (読みし人, 見しかば). The 終止形 き spells the Godan-ka
+      // continuative as well, so it closes a clause only behind another literary
+      // auxiliary (行かざり+き); the connection rules carry that restriction.
       aux("し", "き", EPOS::AuxClassicalKi),
       aux("しか", "き", EPOS::AuxClassicalKi),
+      aux("き", "き", EPOS::AuxClassicalKi),
 
       // Past/Completion - た (過去・完了)
       aux("た", "た", EPOS::AuxTenseTa),

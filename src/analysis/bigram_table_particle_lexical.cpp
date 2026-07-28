@@ -671,6 +671,15 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // continuative it competes with is the cheapest word in the lattice.
       {EPOS::AuxNegativeNu, EPOS::AuxClassicalKi, cost::kExtremeBonus},
       {EPOS::AdjRenyokei, EPOS::AuxClassicalKi, cost::kVeryStrongBonus},
+      // The 終止形 き closes a clause behind the same continuatives, but its two
+      // kana also spell the regional conjunctive particle, which instead takes a
+      // finite predicate or the modern past (紙書く+き, 水飲んだ+き). Those two
+      // hosts are the particle's alone, so the auxiliary is barred from them.
+      // The copula is barred with them: the literary past reaches an assertion
+      // through なり (春なりき), never through だ.
+      {EPOS::VerbShuushikei, EPOS::AuxClassicalKi, cost::kProhibitive},
+      {EPOS::AuxTenseTa, EPOS::AuxClassicalKi, cost::kProhibitive},
+      {EPOS::AuxCopulaDa, EPOS::AuxClassicalKi, cost::kProhibitive},
 
       // A passive predicate reaches the same auxiliaries through the passive's
       // own continuative (飲ま+れ+けり). Without the counterpart of the verb
