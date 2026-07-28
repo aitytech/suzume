@@ -68,13 +68,13 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
       normalize::utf8Length(prev.surface) == 1) {
     bonus += cost::kAlmostNever;
   }
-  // An unknown hiragana noun cannot introduce a conjunction, and a conjunction
-  // that spells a te-form cannot be introduced by a bare noun at all: with no
-  // boundary marker between them its opening mora is the continuative that the
-  // noun's own predicate needs (確認+し+たがっ+て+いる, not 確認+したがって+いる).
-  // A conjunction reached through a particle or a punctuation mark is
-  // unaffected, which is where the clause-opening reading actually occurs.
   const bool unknown_hiragana_conjunction_host = !prev.fromDictionary() && grammar::isPureHiragana(prev.surface);
+  // A conjunction that spells a te-form cannot be introduced by a bare noun:
+  // with no boundary marker between them its opening mora is the continuative
+  // that the noun's own predicate needs (確認+し+たがっ+て+いる, not
+  // 確認+したがって+いる). A conjunction reached through a particle or a
+  // punctuation mark is unaffected, which is where the clause-opening reading
+  // actually occurs.
   const bool te_form_conjunction =
       grammar::isPureHiragana(next.surface) && utf8::endsWithAny(next.surface, {"て", "で"});
   // A conjunction opening with だ is barred from the same slot for the mirror
@@ -82,9 +82,23 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
   // (確認+だ+から+こそ), and only a clause boundary in front of the conjunction
   // makes the listed reading available.
   const bool copula_initial_conjunction = utf8::startsWith(next.surface, "だ");
+  // Same reasoning at the other end: every listed と-final conjunction spells a
+  // predicate plus the conditional と (すると, そうすると, さもないと), so
+  // directly after a noun that と is the particle on the noun's own predicate
+  // (しばらく+する+と, not しばらく+すると). The bar is deliberately shaped on the
+  // conjunction rather than on the host being an unknown hiragana noun: a
+  // coordinating conjunction joins two nominals with no clause boundary
+  // anywhere, and barring it there shatters an all-hiragana coordination
+  // (りんご+または+みかん).
+  const bool conditional_to_conjunction = grammar::isPureHiragana(next.surface) && utf8::endsWith(next.surface, "と");
+  // The conditional と reaches one host class further than the other two: an
+  // adverb in that slot modifies the very predicate the conjunction spells
+  // (もしか+する+と), so it is no more a clause boundary than a bare noun is.
+  const bool conjunction_host_slot =
+      prev.pos == core::PartOfSpeech::Noun || (prev.pos == core::PartOfSpeech::Adverb && conditional_to_conjunction);
   const bool barred_conjunction_host =
-      next.pos == core::PartOfSpeech::Conjunction && prev.pos == core::PartOfSpeech::Noun &&
-      (unknown_hiragana_conjunction_host || te_form_conjunction || copula_initial_conjunction);
+      next.pos == core::PartOfSpeech::Conjunction && conjunction_host_slot &&
+      (te_form_conjunction || copula_initial_conjunction || conditional_to_conjunction);
   // A focus particle marks a phrase the analyzer has already identified. An
   // unknown hiragana noun is the fallback for material it could not, so the
   // pairing means the boundary landed inside a word rather than after one

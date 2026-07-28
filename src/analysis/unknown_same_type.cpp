@@ -611,14 +611,25 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
     // A multi-char L1 particle (ながら, まで, から, だけ, …) beginning at a position is a
     // real right boundary: terminate the run there rather than swallowing its head into
     // the noun (…およぎ|ながら, never およぎな|がら where ながら's が is mistaken for a bracket).
-    auto multi_char_particle_at = [&](size_t pos) -> bool {
+    // A coordinating conjunction brackets the run the same way (りんご|または|みかん);
+    // without it the run runs on past the conjunction's head and the whole
+    // all-hiragana coordination shatters into closed-class fragments. It needs one
+    // more mora than a particle because the two-mora conjunctions share their kana
+    // with word-internal sequences (あまた, したがって).
+    auto multi_char_function_word_at = [&](size_t pos) -> bool {
       if (dict_manager_ == nullptr || pos >= codepoints.size()) {
         return false;
       }
       size_t win_end = pos + 4 < codepoints.size() ? pos + 4 : codepoints.size();
       std::string window = extractSubstring(codepoints, pos, win_end);
       for (const auto& res : dict_manager_->lookup(window, 0)) {
-        if (res.entry != nullptr && res.entry->pos == core::PartOfSpeech::Particle && res.length >= 2) {
+        if (res.entry == nullptr) {
+          continue;
+        }
+        if (res.entry->pos == core::PartOfSpeech::Particle && res.length >= 2) {
+          return true;
+        }
+        if (res.entry->pos == core::PartOfSpeech::Conjunction && res.length >= 3) {
           return true;
         }
       }
@@ -689,7 +700,7 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
       // A multi-character particle immediately after the first mora can be
       // part of a native hiragana noun (こども).  Require a substantive
       // preceding run before treating it as an internal word boundary.
-      if (scan - start_pos >= 2 && multi_char_particle_at(scan)) {
+      if (scan - start_pos >= 2 && multi_char_function_word_at(scan)) {
         if (lies_inside_formal_noun_negative_predicate(scan)) {
           crossed_verified_predicate = true;
         } else {
@@ -722,7 +733,7 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
     const bool right_genitive_after_substantive_run =
         scan < codepoints.size() && codepoints[scan] == U'の' && scan - start_pos >= 3;
     bool right_particle = (scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan])) ||
-                          multi_char_particle_at(scan) || right_genitive_after_internal_particle ||
+                          multi_char_function_word_at(scan) || right_genitive_after_internal_particle ||
                           right_genitive_after_substantive_run;
     bool right_clause =
         (scan == codepoints.size()) || (scan < codepoints.size() && char_types[scan] == normalize::CharType::Symbol);
