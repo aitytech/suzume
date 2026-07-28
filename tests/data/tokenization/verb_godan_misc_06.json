@@ -139,6 +139,151 @@
       ],
       "id": "mcdonald'stoh&mni_ku",
       "input": "McDonald'sとH&Mに行く"
+    },
+    {
+      "description": "Godan continuative plus the literary perfect ぬ without a dictionary base verb",
+      "expected": [
+        {
+          "lemma": "花",
+          "pos": "Noun",
+          "surface": "花"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "摘む",
+          "pos": "Verb",
+          "surface": "摘み"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "wo_minu",
+      "input": "花を摘みぬ"
+    },
+    {
+      "description": "A-row irrealis plus the literary conjectural む without a dictionary base verb",
+      "expected": [
+        {
+          "lemma": "わが",
+          "pos": "Determiner",
+          "surface": "わが"
+        },
+        {
+          "lemma": "願い",
+          "pos": "Noun",
+          "surface": "願い"
+        },
+        {
+          "lemma": "ぞ",
+          "pos": "Particle",
+          "surface": "ぞ"
+        },
+        {
+          "lemma": "成る",
+          "pos": "Verb",
+          "surface": "成ら"
+        },
+        {
+          "lemma": "む",
+          "pos": "Auxiliary",
+          "surface": "む"
+        }
+      ],
+      "id": "waga_izo_ramu",
+      "input": "わが願いぞ成らむ"
+    },
+    {
+      "description": "Sibling of the literary perfect after a continuative with no dictionary base",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "汲む",
+          "pos": "Verb",
+          "surface": "汲み"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "wo_minu_2",
+      "input": "水を汲みぬ"
+    },
+    {
+      "description": "Positive control: the same shape with a dictionary base verb",
+      "expected": [
+        {
+          "lemma": "荷",
+          "pos": "Noun",
+          "surface": "荷"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "積む",
+          "pos": "Verb",
+          "surface": "積み"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "wo_minu_3",
+      "input": "荷を積みぬ"
+    },
+    {
+      "description": "Ripple cell: the classical past connective on the same continuative",
+      "expected": [
+        {
+          "lemma": "花",
+          "pos": "Noun",
+          "surface": "花"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "摘む",
+          "pos": "Verb",
+          "surface": "摘み"
+        },
+        {
+          "lemma": "き",
+          "pos": "Auxiliary",
+          "surface": "し"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        }
+      ],
+      "id": "wo_mishi",
+      "input": "花を摘みし人"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

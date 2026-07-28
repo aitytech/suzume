@@ -63,13 +63,25 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kVeryStrongBonus + (prev.lemmaVerified() ? cost::kStrongBonus : cost::kNeutral);
   }
 
-  // A multi-mora continuative predicate can be topicalized before an
-  // auxiliary predicate (減り+は+しない). One-mora verb homographs remain
-  // available for closed particles such as しも.
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::ParticleTopic &&
-      grammar::isIRowCodepoint(utf8::decodeLastChar(prev.surface)) &&
-      prev.surface.size() >= core::kTwoJapaneseCharBytes) {
-    bonus += cost::kModerateBonus;
+  // A Godan continuative — identified by the i-row mora that ends it — keeps its
+  // boundary before a closed morpheme that selects a predicate. A multi-mora one
+  // can be topicalized before an auxiliary predicate (減り+は+しない), while
+  // one-mora verb homographs stay available for closed particles such as しも.
+  // Before ぬ the reading can only be the literary perfect: the negative ぬ
+  // selects the irrealis, and for a Godan verb the two cells are distinct (摘ま
+  // vs 摘み). That boundary needs a decisive weight because the registered
+  // siblings win it only through their dictionary edge (積み+ぬ), which an
+  // unregistered base verb has no access to. Ichidan stems are outside both
+  // rules — their irrealis and continuative are syncretic, so 消え+ぬ is either
+  // reading — as is the e-row passive れ, which must still split (行か+れ+ぬ).
+  const bool godan_continuative = prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+                                  grammar::isIRowCodepoint(utf8::decodeLastChar(prev.surface));
+  const bool topicalized_continuative = godan_continuative && next.extended_pos == core::ExtendedPOS::ParticleTopic &&
+                                        prev.surface.size() >= core::kTwoJapaneseCharBytes;
+  const bool literary_perfect = godan_continuative && next.extended_pos == core::ExtendedPOS::AuxNegativeNu;
+  if (topicalized_continuative || literary_perfect) {
+    bonus += (topicalized_continuative ? cost::kModerateBonus : cost::kNeutral) +
+             (literary_perfect ? cost::kVeryStrongBonus : cost::kNeutral);
   }
 
   // A continuative can form a productive compound predicate with the

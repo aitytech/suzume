@@ -163,6 +163,48 @@ bool embedsAuxiliaryOnOnbinStem(const std::vector<char32_t>& codepoints, size_t 
   return false;
 }
 
+bool auxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                        size_t pos, bool (*accept)(core::ExtendedPOS)) {
+  if (dict_manager == nullptr || pos >= codepoints.size()) {
+    return false;
+  }
+  constexpr size_t kAuxiliaryProbe = 3;
+  const size_t max_end = std::min(codepoints.size(), pos + kAuxiliaryProbe);
+  for (size_t aux_end = pos + 1; aux_end <= max_end; ++aux_end) {
+    const auto* entry =
+        dict_manager->lookupExact(extractSubstring(codepoints, pos, aux_end), core::PartOfSpeech::Auxiliary);
+    if (entry != nullptr && accept(entry->extended_pos)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool classicalAuxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manager,
+                                 const std::vector<char32_t>& codepoints, size_t pos) {
+  if (dict_manager == nullptr || pos >= codepoints.size()) {
+    return false;
+  }
+  constexpr size_t kAuxiliaryProbe = 3;
+  const size_t max_end = std::min(codepoints.size(), pos + kAuxiliaryProbe);
+  for (size_t aux_end = pos + 1; aux_end <= max_end; ++aux_end) {
+    const std::string span = extractSubstring(codepoints, pos, aux_end);
+    const auto* entry = dict_manager->lookupExact(span, core::PartOfSpeech::Auxiliary);
+    if (entry == nullptr || !core::isClassicalAuxiliaryType(entry->extended_pos)) {
+      continue;
+    }
+    // A final particle closes a clause after any word class, so a spelling that
+    // can be one says nothing about what precedes it: the 已然形 ね of ぬ and the
+    // 終助詞 ね are the same mora, and only the latter stands after a noun.
+    const auto* particle = dict_manager->lookupExact(span, core::PartOfSpeech::Particle);
+    if (particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleFinal) {
+      continue;
+    }
+    return true;
+  }
+  return false;
+}
+
 bool predicateAuxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manager,
                                  const std::vector<char32_t>& codepoints, size_t pos) {
   if (dict_manager == nullptr || pos >= codepoints.size()) {

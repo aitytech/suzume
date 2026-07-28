@@ -365,6 +365,27 @@ inline bool isAuxiliaryType(ExtendedPOS epos) {
 }
 
 /**
+ * @brief Check if ExtendedPOS is a literary (文語) auxiliary
+ *
+ * These auxiliaries stand on an inflected verb cell as free morphemes with their
+ * own connection rules, and none of them is ever produced by the inflection
+ * analyzer as part of a modern paradigm. Their presence in a run is therefore
+ * boundary evidence in both directions: it licenses the continuative or irrealis
+ * reading of the material in front of them, and it forbids a fabricated verb
+ * from spanning them.
+ *
+ * AuxVolitional is included because its modern members う / よう follow the o-row
+ * irrealis, so at a continuative or a-row irrealis position only the literary む
+ * family can match.
+ */
+inline bool isClassicalAuxiliaryType(ExtendedPOS epos) {
+  return epos == ExtendedPOS::AuxNegativeNu || epos == ExtendedPOS::AuxVolitional ||
+         epos == ExtendedPOS::AuxClassicalNari || epos == ExtendedPOS::AuxClassicalKeri ||
+         epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalPerfect ||
+         epos == ExtendedPOS::AuxClassicalBeshi || epos == ExtendedPOS::AuxClassicalKi;
+}
+
+/**
  * @brief Check if ExtendedPOS is a particle type
  */
 inline bool isParticleType(ExtendedPOS epos) {

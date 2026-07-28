@@ -358,6 +358,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // unit instead of fragmenting it into a final particle plus ん.
       {EPOS::ParticleFinal, EPOS::AuxNegativeNu, cost::kAlmostNever},
 
+      // Nor the conjectural auxiliary, for the same reason: the particle has
+      // already closed the clause, so a following む belongs to a predicate that
+      // starts inside the run in front of it (花咲か+む, not 花咲+か+む).
+      {EPOS::ParticleFinal, EPOS::AuxVolitional, cost::kAlmostNever},
+
       // ParticleFinal → VerbOnbinkei (な+いん) - prohibit
       // (prevents ないんだ → な+いん+だ over ない+ん+だ)
       {EPOS::ParticleFinal, EPOS::VerbOnbinkei, cost::kAlmostNever},

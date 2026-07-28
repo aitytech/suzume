@@ -44,7 +44,10 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
 
       // VerbRenyokei → AuxNegativeNu (消え+ぬ classical negative)
       // Ichidan verbs have same form for mizen and renyokei (e.g., 消え from 消える)
-      // This helps 消えぬ炎 → 消え+ぬ+炎 over 消えぬ+炎
+      // This helps 消えぬ炎 → 消え+ぬ+炎 over 消えぬ+炎. The Godan continuative
+      // reading of the same pair is the literary perfect and needs a decisive
+      // weight, but only there — see the i-row rule in
+      // scorer_connection_rules_renyokei.cpp.
       {EPOS::VerbRenyokei, EPOS::AuxNegativeNu, cost::kModerateBonus},
 
       // A finite i-adjective also cannot take that negative auxiliary. The

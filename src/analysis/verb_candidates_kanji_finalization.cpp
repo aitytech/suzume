@@ -143,9 +143,13 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
     // Renyokei み competes with auxiliary みたい — without dict verification,
     // 猫みたい (noun+aux) cannot be distinguished from 読みたい (verb+aux).
     // Requires all single-kanji GODAN_MA verbs to be enumerated in L2 dict.
+    // A literary auxiliary standing on the み supplies the missing evidence by
+    // itself: みたい is one auxiliary, so it can never be followed by a second
+    // one that selects a continuative (花を摘み+ぬ, 花を摘み+けり).
     if (best.verb_type == grammar::VerbType::GodanMa && hiragana_part == "み" && kanji_end - start_pos <= 3) {
       std::string base_form = extractSubstring(codepoints, start_pos, kanji_end) + "む";
-      if (!vh::isVerbInDictionary(dict_manager, base_form)) {
+      if (!vh::isVerbInDictionary(dict_manager, base_form) &&
+          !vh::classicalAuxiliaryFollowsAt(dict_manager, codepoints, end_pos)) {
         return;
       }
     }

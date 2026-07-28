@@ -389,6 +389,29 @@ bool embedsAuxiliaryOnOnbinStem(const std::vector<char32_t>& codepoints, size_t 
                                 const dictionary::DictionaryManager* dict_manager);
 
 /**
+ * @brief True when a dictionary auxiliary accepted by @p accept starts at @p pos.
+ *
+ * Callers select the grammatical class they need rather than a spelling, so the
+ * probe stays a category decision (see the ExtendedPOS predicates in types.h).
+ */
+bool auxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                        size_t pos, bool (*accept)(core::ExtendedPOS));
+
+/**
+ * @brief True when a literary (文語) auxiliary starts at @p pos.
+ *
+ * Narrower than predicateAuxiliaryFollowsAt: only the auxiliaries the inflection
+ * analyzer never emits as part of a modern paradigm qualify (see
+ * core::isClassicalAuxiliaryType). Candidate generators that normally demand a
+ * dictionary base form use this as the missing lexical evidence — a continuative
+ * or irrealis stem is the only thing these auxiliaries can stand on, so the
+ * ambiguity the dictionary gate was protecting against (連用形 み against the
+ * auxiliary みたい) cannot arise in front of one.
+ */
+bool classicalAuxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manager,
+                                 const std::vector<char32_t>& codepoints, size_t pos);
+
+/**
  * @brief True when a dictionary auxiliary that selects a predicate starts at
  *        @p pos.
  *

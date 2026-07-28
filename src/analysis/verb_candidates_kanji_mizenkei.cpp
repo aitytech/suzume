@@ -403,6 +403,25 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
         if (next_char == U'ぬ') {
           is_nu_pattern = true;
         }
+        // The literary conjectural む selects the irrealis just as ぬ does
+        // (成ら+む, 咲か+む). Its modern siblings う / よう take the o-row
+        // irrealis instead, so at this a-row position an AuxVolitional entry
+        // can only be the literary one — the dictionary category decides,
+        // not the spelling. Without the boundary the run reads as one
+        // fabricated Godan-ma verb whose lemma is its own surface (成らむ).
+        // Restricted to a stem whose whole kanji run is one character, for the
+        // same reason GodanSa is above: a longer run is the nominal host that
+        // the complete auxiliaries らむ / けむ take (確認+らむ), and there the
+        // a-row mora is their onset rather than okurigana. Requiring the run to
+        // be complete — not merely one character measured from an interior
+        // position — is what separates 成+らむ from 確認+らむ, whose second
+        // kanji looks identical on its own.
+        const bool stem_is_lone_kanji =
+            kanji_end - start_pos == 1 && (start_pos == 0 || !normalize::isKanjiCodepoint(codepoints[start_pos - 1]));
+        const bool is_classical_conjecture_pattern =
+            stem_is_lone_kanji &&
+            vh::auxiliaryFollowsAt(dict_manager, codepoints, mizenkei_end,
+                                   [](core::ExtendedPOS epos) { return epos == core::ExtendedPOS::AuxVolitional; });
         // Check for colloquial contracted negative ん pattern
         // E.g., 行かん → 行か (mizenkei) + ん (contracted negative AUX)
         //       言わん → 言わ (mizenkei) + ん
@@ -482,7 +501,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
           }
         }
         if (is_beki_pattern || is_nu_pattern || is_n_pattern || is_nai_pattern || is_nakatt_pattern ||
-            is_naku_pattern || is_passive_pattern || is_causative_pattern) {
+            is_naku_pattern || is_passive_pattern || is_causative_pattern || is_classical_conjecture_pattern) {
           // Derive VerbType from the A-row ending (e.g., か → GodanKa)
           grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(first_hira);
           if (verb_type != grammar::VerbType::Unknown) {
@@ -602,26 +621,29 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                   } else if (is_passive_pattern) {
                     cost = -0.5F;
                   }
-                  const char* debug_pattern = is_nu_pattern        ? "nu"
-                                              : is_n_pattern       ? "n"
-                                              : is_nai_pattern     ? "nai"
-                                              : is_passive_pattern ? "passive"
-                                                                   : "beki";
+                  const char* debug_pattern = is_nu_pattern                     ? "nu"
+                                              : is_n_pattern                    ? "n"
+                                              : is_nai_pattern                  ? "nai"
+                                              : is_passive_pattern              ? "passive"
+                                              : is_classical_conjecture_pattern ? "mu"
+                                                                                : "beki";
                   SUZUME_DEBUG_VERBOSE_BLOCK {
                     SUZUME_DEBUG_STREAM << "[VERB_CAND] " << surface << " godan_mizenkei lemma=" << base_form
                                         << " cost=" << cost << " pattern=" << debug_pattern << "\n";
                   }
-                  const char* info_pattern = is_nu_pattern        ? "godan_mizenkei_nu"
-                                             : is_n_pattern       ? "godan_mizenkei_n"
-                                             : is_nai_pattern     ? "godan_mizenkei_nai"
-                                             : is_nakatt_pattern  ? "godan_mizenkei_nakatt"
-                                             : is_passive_pattern ? "godan_mizenkei_passive"
-                                                                  : "godan_mizenkei";
+                  const char* info_pattern = is_nu_pattern                     ? "godan_mizenkei_nu"
+                                             : is_n_pattern                    ? "godan_mizenkei_n"
+                                             : is_nai_pattern                  ? "godan_mizenkei_nai"
+                                             : is_nakatt_pattern               ? "godan_mizenkei_nakatt"
+                                             : is_passive_pattern              ? "godan_mizenkei_passive"
+                                             : is_classical_conjecture_pattern ? "godan_mizenkei_mu"
+                                                                               : "godan_mizenkei";
                   // Use explicit VerbMizenkei EPOS for negative/passive patterns to enable bigram connection
-                  core::ExtendedPOS epos = (is_nu_pattern || is_n_pattern || is_nai_pattern || is_nakatt_pattern ||
-                                            is_passive_pattern || is_causative_pattern)
-                                               ? core::ExtendedPOS::VerbMizenkei
-                                               : core::ExtendedPOS::Unknown;
+                  core::ExtendedPOS epos =
+                      (is_nu_pattern || is_n_pattern || is_nai_pattern || is_nakatt_pattern || is_passive_pattern ||
+                       is_causative_pattern || is_classical_conjecture_pattern)
+                          ? core::ExtendedPOS::VerbMizenkei
+                          : core::ExtendedPOS::Unknown;
                   candidates.push_back(makeVerbCandidate(surface, start_pos, mizenkei_end, cost, base_form,
                                                          grammar::verbTypeToConjType(verb_type), true,
                                                          CandidateOrigin::VerbKanji, 0.9F, info_pattern, epos));
