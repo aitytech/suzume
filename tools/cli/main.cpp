@@ -12,14 +12,14 @@ int main(int argc, char* argv[]) {
     // Parse arguments
     auto args = parseArgs(argc, argv);
 
-    if (args.version) {
-      printVersion();
-      return 0;
-    }
-
     if (!args.parse_error.empty()) {
       printError(args.parse_error);
       return 2;
+    }
+
+    if (args.version) {
+      printVersion();
+      return 0;
     }
 
     // Handle help and version
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 
     // Unknown command
     printError("Unknown command: " + args.command);
-    printHelp();
+    printHelp(std::cerr);
     return 1;
   } catch (const std::exception& error) {
     printError("Unexpected error: " + std::string(error.what()));

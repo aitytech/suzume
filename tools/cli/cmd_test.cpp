@@ -24,6 +24,46 @@ struct TestCase {
   size_t line_number{};
 };
 
+SuzumeOptions analyzerOptions(const CommandArgs& args) {
+  SuzumeOptions options;
+  if (args.mode == "search") {
+    options.mode = core::AnalysisMode::Search;
+  } else if (args.mode == "split") {
+    options.mode = core::AnalysisMode::Split;
+  }
+  options.normalize_options.preserve_vu = !args.normalize_vu;
+  options.normalize_options.preserve_case = !args.lowercase;
+  options.remove_symbols = !args.preserve_symbols;
+  options.skip_user_dictionary = args.no_user_dict;
+  options.skip_core_dictionary = args.no_core_dict;
+  options.skip_env_config = args.skip_env_config;
+  options.lemmatize = !args.no_lemmatize;
+  options.merge_compounds = args.merge_compounds;
+  options.report_scorer_config = args.verbose;
+  return options;
+}
+
+postprocess::TagGeneratorOptions tagOptions(const CommandArgs& args) {
+  postprocess::TagGeneratorOptions options;
+  options.exclude_particles = !args.tag_include_particles;
+  options.exclude_auxiliaries = !args.tag_include_auxiliaries;
+  options.exclude_formal_nouns = !args.tag_include_formal_nouns;
+  options.exclude_low_info = !args.tag_include_low_info;
+  options.remove_duplicates = !args.tag_keep_duplicates;
+  options.use_lemma = !args.tag_use_surface;
+  options.min_tag_length = args.tag_min_length;
+  options.max_tags = args.tag_max_tags;
+  options.pos_filter = args.tag_pos_filter;
+  options.exclude_basic = args.tag_exclude_basic;
+  return options;
+}
+
+void stripTrailingCarriageReturn(std::string* line) {
+  if (line != nullptr && !line->empty() && line->back() == '\r') {
+    line->pop_back();
+  }
+}
+
 std::vector<std::string> split(const std::string& str, char delim) {
   std::vector<std::string> result;
   std::stringstream sstr(str);
@@ -61,8 +101,9 @@ size_t peakResidentSetBytes() {
 #endif
 }
 
-bool runSingleTest(Suzume& analyzer, const std::string& input, const std::set<std::string>& expected, bool verbose) {
-  auto tags = analyzer.generateTags(input);
+bool runSingleTest(Suzume& analyzer, const std::string& input, const std::set<std::string>& expected,
+                   const postprocess::TagGeneratorOptions& tag_options, bool verbose) {
+  auto tags = analyzer.generateTags(input, tag_options);
   std::set<std::string> actual;
   for (const auto& t : tags) {
     actual.insert(t.tag);
@@ -117,18 +158,25 @@ bool runSingleTest(Suzume& analyzer, const std::string& input, const std::set<st
   return passed;
 }
 
-int cmdTestSingle(const std::vector<std::string>& args, bool verbose, const std::vector<std::string>& dict_paths) {
+int cmdTestSingle(const std::vector<std::string>& args, const CommandArgs& command_args) {
   std::string input;
   std::string expect_str;
 
   // Find --expect
   for (size_t idx = 0; idx < args.size(); ++idx) {
-    if (args[idx] == "--expect" && idx + 1 < args.size()) {
+    if (args[idx] == "--expect") {
+      if (idx + 1 >= args.size()) {
+        printError("Missing value for --expect");
+        return 1;
+      }
       expect_str = args[idx + 1];
       ++idx;
     } else if (args[idx].substr(0, 9) == "--expect=") {
       expect_str = args[idx].substr(9);
-    } else if (args[idx][0] != '-') {
+    } else if (!args[idx].empty() && args[idx][0] == '-') {
+      printError("Unknown test option: " + args[idx]);
+      return 1;
+    } else {
       input = args[idx];
     }
   }
@@ -148,10 +196,10 @@ int cmdTestSingle(const std::vector<std::string>& args, bool verbose, const std:
   std::set<std::string> expected(expected_list.begin(), expected_list.end());
 
   // Create analyzer
-  SuzumeOptions options;
+  SuzumeOptions options = analyzerOptions(command_args);
   Suzume analyzer(options);
 
-  for (const auto& path : dict_paths) {
+  for (const auto& path : command_args.dict_paths) {
     auto load_result = loadUserDictionaryPath(&analyzer, path);
     if (!load_result.hasValue()) {
       printError("Failed to load dictionary: " + path + ": " + load_result.error().message);
@@ -159,17 +207,21 @@ int cmdTestSingle(const std::vector<std::string>& args, bool verbose, const std:
     }
   }
 
-  bool passed = runSingleTest(analyzer, input, expected, verbose);
+  bool passed = runSingleTest(analyzer, input, expected, tagOptions(command_args), command_args.verbose);
   return passed ? 0 : 1;
 }
 
-int cmdTestFile(const std::vector<std::string>& args, bool verbose, const std::vector<std::string>& dict_paths) {
+int cmdTestFile(const std::vector<std::string>& args, const CommandArgs& command_args) {
   std::string test_file;
 
   for (size_t idx = 0; idx < args.size(); ++idx) {
     if ((args[idx] == "-f" || args[idx] == "--file") && idx + 1 < args.size()) {
-      test_file = args[idx + 1];
-      break;
+      test_file = args[++idx];
+    } else if (args[idx].rfind("--file=", 0) == 0) {
+      test_file = args[idx].substr(7);
+    } else {
+      printError("Unknown test file option: " + args[idx]);
+      return 1;
     }
   }
 
@@ -191,6 +243,7 @@ int cmdTestFile(const std::vector<std::string>& args, bool verbose, const std::v
 
   while (std::getline(file, line)) {
     ++line_num;
+    stripTrailingCarriageReturn(&line);
     if (line_num == 1) {
       stripUtf8Bom(&line);
     }
@@ -218,10 +271,10 @@ int cmdTestFile(const std::vector<std::string>& args, bool verbose, const std::v
   }
 
   // Create analyzer
-  SuzumeOptions options;
+  SuzumeOptions options = analyzerOptions(command_args);
   Suzume analyzer(options);
 
-  for (const auto& path : dict_paths) {
+  for (const auto& path : command_args.dict_paths) {
     auto load_result = loadUserDictionaryPath(&analyzer, path);
     if (!load_result.hasValue()) {
       printError("Failed to load dictionary: " + path + ": " + load_result.error().message);
@@ -234,7 +287,7 @@ int cmdTestFile(const std::vector<std::string>& args, bool verbose, const std::v
   size_t failed = 0;
 
   for (const auto& test : tests) {
-    if (runSingleTest(analyzer, test.input, test.expected_tags, verbose)) {
+    if (runSingleTest(analyzer, test.input, test.expected_tags, tagOptions(command_args), command_args.verbose)) {
       ++passed;
     } else {
       ++failed;
@@ -247,8 +300,7 @@ int cmdTestFile(const std::vector<std::string>& args, bool verbose, const std::v
   return failed > 0 ? 1 : 0;
 }
 
-int cmdTestBenchmark(const std::vector<std::string>& args, bool /* verbose */,
-                     const std::vector<std::string>& dict_paths) {
+int cmdTestBenchmark(const std::vector<std::string>& args, const CommandArgs& command_args) {
   size_t iterations = 1000;
   size_t samples = 5;
   size_t warmup_iterations = 1;
@@ -271,7 +323,12 @@ int cmdTestBenchmark(const std::vector<std::string>& args, bool /* verbose */,
         return 1;
       }
     } else if ((args[idx] == "-f" || args[idx] == "--file") && idx + 1 < args.size()) {
-      corpus_file = args[idx + 1];
+      corpus_file = args[++idx];
+    } else if (args[idx].rfind("--file=", 0) == 0) {
+      corpus_file = args[idx].substr(7);
+    } else {
+      printError("Unknown benchmark option: " + args[idx]);
+      return 1;
     }
   }
 
@@ -285,6 +342,7 @@ int cmdTestBenchmark(const std::vector<std::string>& args, bool /* verbose */,
     }
     std::string line;
     while (std::getline(file, line)) {
+      stripTrailingCarriageReturn(&line);
       if (!line.empty()) {
         texts.push_back(line);
       }
@@ -316,12 +374,13 @@ int cmdTestBenchmark(const std::vector<std::string>& args, bool /* verbose */,
   std::vector<double> first_analysis_ms;
   std::vector<double> steady_ms;
   size_t analyzed_morphemes = 0;
+  size_t steady_morphemes_per_sample = 0;
 
   for (size_t sample = 0; sample < samples; ++sample) {
-    SuzumeOptions options;
+    SuzumeOptions options = analyzerOptions(command_args);
     const auto initialization_start = std::chrono::steady_clock::now();
     Suzume analyzer(options);
-    for (const auto& path : dict_paths) {
+    for (const auto& path : command_args.dict_paths) {
       auto load_result = loadUserDictionaryPath(&analyzer, path);
       if (!load_result.hasValue()) {
         printError("Failed to load dictionary: " + path + ": " + load_result.error().message);
@@ -346,11 +405,15 @@ int cmdTestBenchmark(const std::vector<std::string>& args, bool /* verbose */,
     }
 
     const auto steady_start = std::chrono::steady_clock::now();
+    size_t sample_morphemes = 0;
     for (size_t iter = 0; iter < iterations; ++iter) {
       for (const auto& text : texts) {
-        analyzed_morphemes += analyzer.analyze(text).size();
+        const size_t morpheme_count = analyzer.analyze(text).size();
+        analyzed_morphemes += morpheme_count;
+        sample_morphemes += morpheme_count;
       }
     }
+    steady_morphemes_per_sample = sample_morphemes;
     const auto steady_end = std::chrono::steady_clock::now();
     steady_ms.push_back(std::chrono::duration<double, std::milli>(steady_end - steady_start).count());
   }
@@ -359,10 +422,13 @@ int cmdTestBenchmark(const std::vector<std::string>& args, bool /* verbose */,
   const double first_analysis_median = medianMilliseconds(first_analysis_ms);
   const double steady_median = medianMilliseconds(steady_ms);
   const double chars_per_second = (static_cast<double>(total_chars) * iterations) / (steady_median / 1000.0);
+  const double tokens_per_second = static_cast<double>(steady_morphemes_per_sample) / (steady_median / 1000.0);
 
   std::cout << "Initialize median: " << initialization_median << " ms\n";
   std::cout << "First analysis median: " << first_analysis_median << " ms\n";
   std::cout << "Steady median: " << steady_median << " ms\n";
+  std::cout << "Steady token throughput: " << std::fixed << std::setprecision(3) << tokens_per_second << " tokens/sec\n"
+            << std::defaultfloat;
   std::cout << "Steady throughput: " << static_cast<size_t>(chars_per_second) << " bytes/sec\n";
   std::cout << "Steady per text: " << (steady_median / (iterations * texts.size())) << " ms\n";
   std::cout << "Peak RSS: " << peakResidentSetBytes() << " bytes\n";
@@ -382,7 +448,7 @@ int cmdTest(const CommandArgs& args) {
   }
 
   if (args.args.empty()) {
-    printTestHelp();
+    printTestHelp(std::cerr);
     return 1;
   }
 
@@ -390,7 +456,7 @@ int cmdTest(const CommandArgs& args) {
   std::vector<std::string> subargs(args.args.begin() + 1, args.args.end());
 
   if (subcommand == "benchmark") {
-    return cmdTestBenchmark(subargs, args.verbose, args.dict_paths);
+    return cmdTestBenchmark(subargs, args);
   }
   if (subcommand == "regression" || subcommand == "coverage") {
     printError("test " + subcommand + " is not implemented in this build");
@@ -400,18 +466,18 @@ int cmdTest(const CommandArgs& args) {
   // Check for -f flag (file test)
   bool has_file_flag = false;
   for (const auto& arg : args.args) {
-    if (arg == "-f" || arg == "--file") {
+    if (arg == "-f" || arg == "--file" || arg.rfind("--file=", 0) == 0) {
       has_file_flag = true;
       break;
     }
   }
 
   if (has_file_flag) {
-    return cmdTestFile(args.args, args.verbose, args.dict_paths);
+    return cmdTestFile(args.args, args);
   }
 
   // Single test with --expect
-  return cmdTestSingle(args.args, args.verbose, args.dict_paths);
+  return cmdTestSingle(args.args, args);
 }
 
 }  // namespace suzume::cli

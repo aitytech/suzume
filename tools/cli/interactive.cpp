@@ -2,11 +2,13 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <utility>
 
 #include "cli_common.h"
 #include "dictionary/core_dict.h"
 #include "interactive_utils.h"
+#include "suzume.h"
 
 namespace suzume::cli {
 
@@ -15,6 +17,8 @@ namespace suzume::cli {
 // =============================================================================
 
 InteractiveSession::InteractiveSession(std::string tsv_path) : tsv_path_(std::move(tsv_path)) {}
+
+InteractiveSession::~InteractiveSession() = default;
 
 int InteractiveSession::run() {
   // Load Layer 1 cache (hardcoded entries)
@@ -42,9 +46,20 @@ int InteractiveSession::run() {
 
     std::string line;
     if (!std::getline(std::cin, line)) {
-      // EOF
       std::cout << "\n";
-      break;
+      if (modified_) {
+        if (!isTerminal()) {
+          if (!saveEntries()) {
+            printError("Failed to save changes at EOF: " + last_error_);
+            return 1;
+          }
+          std::cerr << "Saved unsaved changes at EOF.\n";
+        } else if (!confirmDiscard()) {
+          printError("Unsaved changes were not discarded");
+          return 1;
+        }
+      }
+      return 0;
     }
 
     line = trim(line);
@@ -61,7 +76,12 @@ int InteractiveSession::run() {
 }
 
 bool InteractiveSession::processCommand(std::string_view line) {
-  auto args = parseCommandLine(line);
+  bool unterminated_quote = false;
+  auto args = parseCommandLine(line, &unterminated_quote);
+  if (unterminated_quote) {
+    printError("Unterminated quoted argument");
+    return true;
+  }
   if (args.empty()) {
     return true;
   }
@@ -132,39 +152,42 @@ std::string InteractiveSession::getPrompt() const {
   return prompt;
 }
 
-std::vector<std::string> InteractiveSession::parseCommandLine(std::string_view line) {
+std::vector<std::string> InteractiveSession::parseCommandLine(std::string_view line, bool* unterminated_quote) {
   std::vector<std::string> args;
   std::string current;
   bool in_quotes = false;
+  bool token_started = false;
   char quote_char = 0;
 
   for (char chr : line) {
     if (in_quotes) {
       if (chr == quote_char) {
         in_quotes = false;
-        if (!current.empty()) {
-          args.push_back(current);
-          current.clear();
-        }
       } else {
         current += chr;
       }
     } else {
       if (chr == '"' || chr == '\'') {
         in_quotes = true;
+        token_started = true;
         quote_char = chr;
-      } else if (std::isspace(chr) != 0) {
-        if (!current.empty()) {
+      } else if (std::isspace(static_cast<unsigned char>(chr)) != 0) {
+        if (token_started) {
           args.push_back(current);
           current.clear();
+          token_started = false;
         }
       } else {
         current += chr;
+        token_started = true;
       }
     }
   }
 
-  if (!current.empty()) {
+  if (unterminated_quote != nullptr) {
+    *unterminated_quote = in_quotes;
+  }
+  if (!in_quotes && token_started) {
     args.push_back(current);
   }
 
@@ -184,6 +207,7 @@ bool InteractiveSession::loadEntries() {
   }
   entries_ = std::move(result.value());
   modified_ = false;
+  analyzer_dirty_ = true;
   return true;
 }
 
@@ -195,6 +219,42 @@ bool InteractiveSession::saveEntries() {
   }
   modified_ = false;
   return true;
+}
+
+bool InteractiveSession::rebuildAnalyzer() {
+  auto analyzer = std::make_unique<::suzume::Suzume>();
+  if (!entries_.empty()) {
+    std::ostringstream source;
+    for (const auto& entry : entries_) {
+      source << entry.surface << "\t" << core::posToString(entry.pos);
+      if (entry.conj_type != dictionary::ConjugationType::None || !entry.lemma.empty()) {
+        source << "\t";
+        if (entry.conj_type != dictionary::ConjugationType::Interjection) {
+          source << dictionary::conjTypeToCanonicalString(entry.conj_type);
+        }
+      }
+      if (!entry.lemma.empty()) {
+        source << "\t" << entry.lemma;
+      }
+      source << "\n";
+    }
+    const std::string data = source.str();
+    auto loaded = analyzer->loadUserDictionaryFromMemoryResult(data.data(), data.size());
+    if (!loaded.hasValue()) {
+      last_error_ = loaded.error().message;
+      return false;
+    }
+  }
+  analyzer_ = std::move(analyzer);
+  analyzer_dirty_ = false;
+  return true;
+}
+
+::suzume::Suzume* InteractiveSession::currentAnalyzer() {
+  if ((analyzer_ == nullptr || analyzer_dirty_) && !rebuildAnalyzer()) {
+    return nullptr;
+  }
+  return analyzer_.get();
 }
 
 // =============================================================================
@@ -214,7 +274,10 @@ bool InteractiveSession::confirmDiscard() const {
     return true;
   }
 
-  std::cout << "You have unsaved changes. Discard? (y/n) " << std::flush;
+  if (!isTerminal()) {
+    return false;
+  }
+  std::cerr << "You have unsaved changes. Discard? (y/n) " << std::flush;
   std::string response;
   if (!std::getline(std::cin, response)) {
     return false;

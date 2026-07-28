@@ -19,6 +19,10 @@ bool InteractiveSession::cmdAdd(const std::vector<std::string>& args) {
 
   TsvEntry entry;
   entry.surface = args[0];
+  if (entry.surface.empty()) {
+    printError("Surface must not be empty");
+    return true;
+  }
 
   // Parse POS
   std::string pos_str = toUpper(args[1]);
@@ -26,7 +30,8 @@ bool InteractiveSession::cmdAdd(const std::vector<std::string>& args) {
   if (!pos_opt.has_value()) {
     printError("Invalid POS: " + args[1]);
     std::cout << "Valid: NOUN, PROPN, VERB, ADJECTIVE, ADVERB, PARTICLE, "
-                 "AUXILIARY, SYMBOL, OTHER\n";
+                 "AUXILIARY, CONJUNCTION, DETERMINER, PRONOUN, PREFIX, SUFFIX, "
+                 "INTERJECTION, SYMBOL, OTHER\n";
     return true;
   }
   entry.pos = pos_opt.value();
@@ -39,10 +44,15 @@ bool InteractiveSession::cmdAdd(const std::vector<std::string>& args) {
       printError("Invalid conjugation type: " + args[2]);
       std::cout << "Valid: ICHIDAN, GODAN_KA, GODAN_GA, GODAN_SA, GODAN_TA, "
                    "GODAN_NA, GODAN_BA, GODAN_MA, GODAN_RA, GODAN_WA, SURU, "
-                   "KURU, I_ADJ, NA_ADJ\n";
+                   "KURU, I_ADJ, NA_ADJ, FAMILY, GIVEN\n";
       return true;
     }
     entry.conj_type = conj_opt.value();
+  }
+  if ((entry.pos == core::PartOfSpeech::Verb || entry.pos == core::PartOfSpeech::Adjective) &&
+      entry.conj_type == dictionary::ConjugationType::None) {
+    printError("Missing conjugation type: " + entry.surface);
+    return true;
   }
 
   // Check for existing entry with same surface and POS in current file
@@ -64,8 +74,12 @@ bool InteractiveSession::cmdAdd(const std::vector<std::string>& args) {
 
   // Check if the word is already analyzed correctly without adding to dictionary
   // This prevents redundant entries for words handled by grammar logic
-  Suzume analyzer;
-  auto morphemes = analyzer.analyze(entry.surface);
+  ::suzume::Suzume* analyzer = currentAnalyzer();
+  if (analyzer == nullptr) {
+    printError("Failed to rebuild session analyzer: " + last_error_);
+    return true;
+  }
+  auto morphemes = analyzer->analyze(entry.surface);
 
   if (morphemes.size() == 1 && morphemes[0].surface == entry.surface) {
     // Already recognized as single token with correct surface
@@ -88,20 +102,23 @@ bool InteractiveSession::cmdAdd(const std::vector<std::string>& args) {
       }
     }
 
-    std::cout << "Skip registration? (y/n) " << std::flush;
-    std::string response;
-    if (!std::getline(std::cin, response)) {
-      return true;
-    }
-    response = trim(response);
-    if (!response.empty() && (response[0] == 'y' || response[0] == 'Y')) {
-      std::cout << "Skipped.\n";
-      return true;
+    if (isTerminal()) {
+      std::cerr << "Skip registration? (y/n) " << std::flush;
+      std::string response;
+      if (!std::getline(std::cin, response)) {
+        return true;
+      }
+      response = trim(response);
+      if (!response.empty() && (response[0] == 'y' || response[0] == 'Y')) {
+        std::cout << "Skipped.\n";
+        return true;
+      }
     }
   }
 
   entries_.push_back(entry);
   modified_ = true;
+  analyzer_dirty_ = true;
   std::cout << "Added: " << entry.surface << " (" << core::posToString(entry.pos) << ")\n";
 
   return true;
@@ -138,6 +155,7 @@ bool InteractiveSession::cmdRemove(const std::vector<std::string>& args) {
       iter = entries_.erase(iter);
       ++removed;
       modified_ = true;
+      analyzer_dirty_ = true;
     } else {
       ++iter;
     }
@@ -189,8 +207,14 @@ bool InteractiveSession::cmdUpdate(const std::vector<std::string>& args) {
     }
     found->conj_type = conj_opt.value();
   }
+  if ((found->pos == core::PartOfSpeech::Verb || found->pos == core::PartOfSpeech::Adjective) &&
+      found->conj_type == dictionary::ConjugationType::None) {
+    printError("Missing conjugation type: " + found->surface);
+    return true;
+  }
 
   modified_ = true;
+  analyzer_dirty_ = true;
   std::cout << "Updated: ";
   printEntry(*found);
 
@@ -218,6 +242,9 @@ bool InteractiveSession::cmdList(const std::vector<std::string>& args) {
         printError("Invalid limit: " + arg.substr(8));
         return true;
       }
+    } else {
+      printError("Unknown list option: " + arg);
+      return true;
     }
   }
 
@@ -244,7 +271,7 @@ bool InteractiveSession::cmdList(const std::vector<std::string>& args) {
     printEntry(entry);
     ++count;
 
-    if (count >= limit) {
+    if (limitReached(count, limit)) {
       std::cout << "...(limited to " << limit << " entries)\n";
       break;
     }
@@ -345,11 +372,14 @@ bool InteractiveSession::cmdAnalyze(const std::vector<std::string>& args) {
     text += args[idx];
   }
 
-  // Create temporary analyzer
-  Suzume analyzer;
+  ::suzume::Suzume* analyzer = currentAnalyzer();
+  if (analyzer == nullptr) {
+    printError("Failed to rebuild session analyzer: " + last_error_);
+    return true;
+  }
 
   // Analyze text
-  auto morphemes = analyzer.analyze(text);
+  auto morphemes = analyzer->analyze(text);
 
   for (const auto& morpheme : morphemes) {
     std::cout << morpheme.surface << "\t" << core::posToString(morpheme.pos) << "\t" << morpheme.lemma << "\n";
@@ -372,9 +402,13 @@ bool InteractiveSession::cmdHelp(const std::vector<std::string>& /* args */) {
   std::cout << R"(Commands:
   add <surface> <pos> [conj_type]
       Add a new dictionary entry
-      POS: NOUN, PROPN, VERB, ADJECTIVE, ADVERB, PARTICLE, AUXILIARY, SYMBOL, OTHER
+      POS: NOUN, PROPN, VERB, ADJECTIVE, ADVERB, PARTICLE, AUXILIARY,
+           CONJUNCTION, DETERMINER, PRONOUN, PREFIX, SUFFIX, INTERJECTION,
+           SYMBOL, OTHER
       Conj: ICHIDAN, GODAN_KA, GODAN_GA, GODAN_SA, GODAN_TA, GODAN_NA,
-            GODAN_BA, GODAN_MA, GODAN_RA, GODAN_WA, SURU, KURU, I_ADJ, NA_ADJ
+            GODAN_BA, GODAN_MA, GODAN_RA, GODAN_WA, SURU, KURU, I_ADJ,
+            NA_ADJ, FAMILY, GIVEN
+      VERB and ADJECTIVE require conj_type
 
   remove <surface> [pos]
       Remove entry (all with surface, or specific POS)
@@ -383,7 +417,7 @@ bool InteractiveSession::cmdHelp(const std::vector<std::string>& /* args */) {
       Update existing entry
 
   list [--pos=POS] [--pattern=PATTERN] [--limit=N]
-      List entries (default limit: 50)
+      List entries (default limit: 50; 0 = unlimited)
 
   search <pattern>
       Search entries by pattern (* = wildcard)
@@ -407,7 +441,7 @@ bool InteractiveSession::cmdHelp(const std::vector<std::string>& /* args */) {
       Compile to binary dictionary
 
   analyze <text>
-      Analyze text with current core dictionary
+      Analyze text with the current session dictionary
 
   save
       Save changes to TSV file
@@ -422,6 +456,14 @@ bool InteractiveSession::cmdHelp(const std::vector<std::string>& /* args */) {
 }
 
 bool InteractiveSession::cmdQuit(const std::vector<std::string>& /* args */) {
+  if (modified_ && !isTerminal()) {
+    if (!saveEntries()) {
+      printError("Failed to save before non-interactive exit: " + last_error_);
+      return true;
+    }
+    std::cerr << "Saved unsaved changes before non-interactive exit.\n";
+    return false;
+  }
   return !confirmDiscard();  // Exit REPL
 }
 
@@ -587,6 +629,7 @@ bool InteractiveSession::cmdImport(const std::vector<std::string>& args) {
     entries_.push_back(import_entry);
     ++added;
     modified_ = true;
+    analyzer_dirty_ = true;
   }
 
   std::cout << "\nImport complete:\n";

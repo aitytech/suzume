@@ -6,11 +6,11 @@ namespace suzume::cli {
 
 std::string trim(std::string_view str) {
   size_t start = 0;
-  while (start < str.size() && (std::isspace(str[start]) != 0)) {
+  while (start < str.size() && (std::isspace(static_cast<unsigned char>(str[start])) != 0)) {
     ++start;
   }
   size_t end = str.size();
-  while (end > start && (std::isspace(str[end - 1]) != 0)) {
+  while (end > start && (std::isspace(static_cast<unsigned char>(str[end - 1])) != 0)) {
     --end;
   }
   return std::string(str.substr(start, end - start));
@@ -33,11 +33,9 @@ std::optional<dictionary::ConjugationType> parseConjType(const std::string& str)
   if (!conj_type) {
     return std::nullopt;
   }
-  // The interactive editor accepts only verb/adjective conjugation markers, not
-  // interjection or proper-name markers.
-  if (*conj_type == dictionary::ConjugationType::Interjection ||
-      *conj_type == dictionary::ConjugationType::ProperFamily ||
-      *conj_type == dictionary::ConjugationType::ProperGiven) {
+  // Interjection is represented canonically by the POS column. FAMILY/GIVEN
+  // remain valid markers for proper-name bigram behavior.
+  if (*conj_type == dictionary::ConjugationType::Interjection) {
     return std::nullopt;
   }
   return conj_type;

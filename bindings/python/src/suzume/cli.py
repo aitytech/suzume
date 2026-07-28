@@ -41,6 +41,8 @@ _FLAG_OPTIONS = {
     "--preserve-symbols",
     "--no-lemmatize",
     "--merge-compounds",
+    "--no-core-dict",
+    "--no-user-dict",
     "--tag-exclude-basic",
     "--tag-use-surface",
     "--include-particles",
@@ -101,12 +103,22 @@ def _add_analysis_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--no-lemmatize",
         action="store_true",
-        help="Keep surface forms as base forms",
+        help="Keep source lemmas without post-analysis correction",
     )
     parser.add_argument(
         "--merge-compounds",
         action="store_true",
         help="Merge consecutive noun compounds",
+    )
+    parser.add_argument(
+        "--no-core-dict",
+        action="store_true",
+        help="Disable the bundled core dictionary",
+    )
+    parser.add_argument(
+        "--no-user-dict",
+        action="store_true",
+        help="Disable the bundled user dictionary",
     )
 
     tag_group = parser.add_argument_group("tag output options")
@@ -173,6 +185,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="suzume",
         description="Suzume Japanese tokenizer (Python CLI)",
+        allow_abbrev=False,
     )
     parser.add_argument(
         "-v",
@@ -263,14 +276,22 @@ def _write_json(value: object) -> None:
 
 def _write_tags(tags: Sequence[Tag]) -> None:
     for tag in tags:
-        print(f"{tag.tag}\t{tag.pos}")
+        print(f"{_tab_escape(tag.tag)}\t{tag.pos}")
+
+
+def _tab_escape(value: str) -> str:
+    """Escape backslash and record delimiters in one-line TAB output."""
+    return (
+        value.replace("\\", "\\\\").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n")
+    )
 
 
 def _write_morphemes(morphemes: Sequence[Morpheme], output_format: str) -> None:
     if output_format in {"morpheme", "tsv"}:
         for morpheme in morphemes:
             print(
-                f"{morpheme.surface}\t{morpheme.pos}\t{morpheme.base_form}"
+                f"{_tab_escape(morpheme.surface)}\t{morpheme.pos}"
+                f"\t{_tab_escape(morpheme.base_form)}"
                 f"\t{morpheme.start}\t{morpheme.end}"
             )
         return
@@ -279,7 +300,8 @@ def _write_morphemes(morphemes: Sequence[Morpheme], output_format: str) -> None:
             conj_type = morpheme.conj_type or "*"
             conj_form = morpheme.conj_form or "*"
             print(
-                f"{morpheme.surface}\t*\t{morpheme.base_form}\t{morpheme.pos_ja}"
+                f"{_tab_escape(morpheme.surface)}\t*\t"
+                f"{_tab_escape(morpheme.base_form)}\t{morpheme.pos_ja}"
                 f"\t{conj_type}\t{conj_form}"
             )
         print("EOS")
@@ -298,6 +320,8 @@ def _run_analysis(args: argparse.Namespace, parser: argparse.ArgumentParser) -> 
         preserve_symbols=args.preserve_symbols,
         lemmatize=not args.no_lemmatize,
         merge_compounds=args.merge_compounds,
+        skip_core_dictionary=args.no_core_dict,
+        skip_user_dictionary=args.no_user_dict,
     ) as analyzer:
         for warning in analyzer.dictionary_warnings:
             print(f"warning: {warning}", file=sys.stderr)
@@ -335,7 +359,10 @@ def _run_analysis(args: argparse.Namespace, parser: argparse.ArgumentParser) -> 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the CLI and return a process exit code."""
     parser = _build_parser()
-    args = parser.parse_args(_without_explicit_command(sys.argv[1:] if argv is None else argv))
+    normalized_args = _without_explicit_command(sys.argv[1:] if argv is None else argv)
+    if ("--version" in normalized_args or "-v" in normalized_args) and len(normalized_args) != 1:
+        parser.error("version accepts no other arguments")
+    args = parser.parse_args(normalized_args)
     try:
         return _run_analysis(args, parser)
     except (OSError, UnicodeError, SuzumeError, ValueError) as error:

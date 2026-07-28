@@ -84,6 +84,22 @@ def test_version_aliases(alias: list[str]) -> None:
     assert result.stdout.strip() == f"suzume {suzume.version()}"
 
 
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["version", "extra"],
+        ["version", "--unknown"],
+        ["--version", "extra"],
+        ["-v", "extra"],
+    ],
+)
+def test_version_aliases_reject_every_extra_argument(args: list[str]) -> None:
+    result = _run_cli(*args)
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "version accepts no other arguments" in result.stderr
+
+
 def test_top_level_help_contains_analysis_options() -> None:
     result = _run_cli("--help")
     assert result.returncode == 0
@@ -96,6 +112,8 @@ def test_top_level_help_contains_analysis_options() -> None:
         "--preserve-symbols",
         "--no-lemmatize",
         "--merge-compounds",
+        "--no-core-dict",
+        "--no-user-dict",
         "--tag-pos",
         "--tag-min-length",
         "--tag-max-tags",
@@ -220,6 +238,8 @@ def test_normalization_lemmatize_compound_and_tag_options_are_wired() -> None:
                 "--preserve-symbols",
                 "--no-lemmatize",
                 "--merge-compounds",
+                "--no-core-dict",
+                "--no-user-dict",
                 "--tag-pos",
                 "noun",
                 "--tag-pos",
@@ -245,6 +265,8 @@ def test_normalization_lemmatize_compound_and_tag_options_are_wired() -> None:
     assert args.preserve_symbols
     assert args.no_lemmatize
     assert args.merge_compounds
+    assert args.no_core_dict
+    assert args.no_user_dict
     assert args.tag_pos == ["noun", "verb"]
     assert args.tag_exclude_basic
     assert args.tag_use_surface
@@ -281,7 +303,48 @@ def test_tag_and_chasen_outputs() -> None:
 
     chasen = _run_cli("--format", "chasen", "りんごを食べる")
     assert chasen.returncode == 0
-    assert chasen.stdout.endswith("EOS\n")
+    assert chasen.stdout == (
+        "りんご\t*\tりんご\t名詞\t*\t*\n"
+        "を\t*\tを\t助詞\t*\t*\n"
+        "食べる\t*\t食べる\t動詞\t一段\t終止形\n"
+        "EOS\n"
+    )
+
+
+def test_tab_output_escapes_record_delimiters() -> None:
+    assert cli._tab_escape("a\\b\tc\r\nd") == "a\\\\b\\tc\\r\\nd"
+
+
+@pytest.mark.parametrize("output_format", ["tsv", "chasen"])
+def test_console_tab_outputs_escape_embedded_delimiters(output_format: str) -> None:
+    result = _run_cli("--preserve-symbols", "--format", output_format, "東京\t大阪")
+    assert result.returncode == 0, result.stderr
+    assert "\\t\t" in result.stdout
+    assert "\n\t" not in result.stdout
+
+
+def test_tag_max_tags_zero_is_unlimited() -> None:
+    unlimited = _run_cli(
+        "--format",
+        "tags",
+        "--tag-min-length",
+        "1",
+        "--tag-max-tags",
+        "0",
+        "東京の公園でりんごを食べる",
+    )
+    limited = _run_cli(
+        "--format",
+        "tags",
+        "--tag-min-length",
+        "1",
+        "--tag-max-tags",
+        "1",
+        "東京の公園でりんごを食べる",
+    )
+    assert unlimited.returncode == limited.returncode == 0
+    assert len(unlimited.stdout.splitlines()) > 1
+    assert len(limited.stdout.splitlines()) == 1
 
 
 def test_repeatable_text_dictionaries_affect_analysis(tmp_path: Path) -> None:
@@ -305,6 +368,24 @@ def test_repeatable_text_dictionaries_affect_analysis(tmp_path: Path) -> None:
     assert user_surfaces == {"青空庭園", "東京果樹園"}
 
 
+def test_relative_dictionary_path_and_uppercase_binary_extension(tmp_path: Path) -> None:
+    relative_dictionary = tmp_path / "relative.tsv"
+    relative_dictionary.write_text("青空庭園\tNOUN\n", encoding="utf-8")
+    relative_path = os.path.relpath(relative_dictionary, Path.cwd())
+    relative_result = _run_cli("--dict", relative_path, "--format", "json", "青空庭園")
+    assert relative_result.returncode == 0, relative_result.stderr
+    assert any(
+        morpheme["surface"] == "青空庭園" and morpheme["is_user_dict"]
+        for morpheme in json.loads(relative_result.stdout)["morphemes"]
+    )
+
+    repository_root = Path(__file__).resolve().parents[3]
+    uppercase_binary = tmp_path / "user.DIC"
+    uppercase_binary.write_bytes((repository_root / "data" / "user.dic").read_bytes())
+    uppercase_result = _run_cli("--dict", str(uppercase_binary), "--format", "json", "東京")
+    assert uppercase_result.returncode == 0, uppercase_result.stderr
+
+
 def test_missing_and_invalid_text_dictionaries_fail(tmp_path: Path) -> None:
     missing = _run_cli("--dict", str(tmp_path / "missing.tsv"), "東京")
     assert missing.returncode == 1
@@ -314,7 +395,7 @@ def test_missing_and_invalid_text_dictionaries_fail(tmp_path: Path) -> None:
     invalid.write_text('"東京,NOUN,0.5\n', encoding="utf-8")
     malformed = _run_cli("--dict", str(invalid), "東京")
     assert malformed.returncode == 1
-    assert "Invalid CSV quoting" in malformed.stderr
+    assert "Invalid legacy CSV quoting" in malformed.stderr
 
 
 def test_invalid_binary_dictionary_fails(tmp_path: Path) -> None:
@@ -349,6 +430,13 @@ def test_negative_and_missing_option_values_are_syntax_errors(args: list[str]) -
     assert "error" in result.stderr
 
 
+@pytest.mark.parametrize("abbreviation", ["--for", "--mo", "--tag-max"])
+def test_long_options_do_not_accept_argparse_abbreviations(abbreviation: str) -> None:
+    result = _run_cli(abbreviation, "json", "東京")
+    assert result.returncode == 2
+    assert "unrecognized arguments" in result.stderr
+
+
 def test_missing_input_returns_one_and_uses_stderr() -> None:
     result = _run_cli(input_text="")
     assert result.returncode == 1
@@ -379,6 +467,34 @@ def test_dictionary_warnings_are_written_to_stderr(
     args = parser.parse_args(["東京"])
     assert cli._run_analysis(args, parser) == 0
     assert "warning: dictionary unavailable" in capsys.readouterr().err
+
+
+def test_dictionary_disable_flags_are_passed_to_analyzer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class CapturingAnalyzer:
+        dictionary_warnings: list[str] = []
+
+        def __init__(self, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+        def __enter__(self) -> CapturingAnalyzer:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def analyze(self, text: str) -> list[suzume.Morpheme]:
+            return []
+
+    monkeypatch.setattr(cli, "Suzume", CapturingAnalyzer)
+    parser = cli._build_parser()
+    args = parser.parse_args(["--no-core-dict", "--no-user-dict", "東京"])
+    assert cli._run_analysis(args, parser) == 0
+    assert captured["skip_core_dictionary"] is True
+    assert captured["skip_user_dictionary"] is True
 
 
 def test_invalid_utf8_stdin_fails_cleanly() -> None:

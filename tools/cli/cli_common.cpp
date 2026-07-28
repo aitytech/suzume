@@ -123,6 +123,10 @@ bool parseSizeOption(std::string_view value, size_t* out) {
   }
 }
 
+bool limitReached(size_t count, size_t limit) {
+  return limit > 0 && count >= limit;
+}
+
 std::string jsonEscape(std::string_view value) {
   std::ostringstream out;
   out << std::hex << std::setfill('0');
@@ -217,6 +221,31 @@ std::string jsonEscape(std::string_view value) {
   return out.str();
 }
 
+std::string tabEscape(std::string_view value) {
+  std::string escaped;
+  escaped.reserve(value.size());
+  for (const char chr : value) {
+    switch (chr) {
+      case '\\':
+        escaped += "\\\\";
+        break;
+      case '\t':
+        escaped += "\\t";
+        break;
+      case '\r':
+        escaped += "\\r";
+        break;
+      case '\n':
+        escaped += "\\n";
+        break;
+      default:
+        escaped += chr;
+        break;
+    }
+  }
+  return escaped;
+}
+
 void stripUtf8Bom(std::string* value) {
   if (value != nullptr && value->size() >= 3 && static_cast<unsigned char>((*value)[0]) == 0xEF &&
       static_cast<unsigned char>((*value)[1]) == 0xBB && static_cast<unsigned char>((*value)[2]) == 0xBF) {
@@ -254,7 +283,18 @@ core::Expected<size_t, core::Error> loadUserDictionaryPath(Suzume* analyzer, con
 }
 
 bool hasExtension(std::string_view path, std::string_view ext) {
-  return path.size() >= ext.size() && path.substr(path.size() - ext.size()) == ext;
+  if (path.size() < ext.size()) {
+    return false;
+  }
+  const std::string_view suffix = path.substr(path.size() - ext.size());
+  for (size_t idx = 0; idx < ext.size(); ++idx) {
+    const auto suffix_chr = static_cast<unsigned char>(suffix[idx]);
+    const auto expected_chr = static_cast<unsigned char>(ext[idx]);
+    if (std::tolower(suffix_chr) != std::tolower(expected_chr)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 std::string swapOrAppendExtension(std::string_view path, std::string_view from_ext, std::string_view to_ext) {
@@ -373,25 +413,19 @@ CommandArgs parseArgs(int argc, char* argv[]) {
       continue;
     }
 
-    // Dict and test own their remaining option grammar. Keep their flags and
-    // values intact, except for the common test dictionary option.
-    if (args.command == "dict" || args.command == "test") {
-      if (args.command == "test" && (arg == "-d" || arg == "--dict")) {
-        std::string value;
-        if (!takeOptionValue(argc, argv, &idx, arg, &value, &args.parse_error)) {
-          return args;
-        }
-        args.dict_paths.push_back(std::move(value));
-      } else if (args.command == "test" && arg.rfind("--dict=", 0) == 0) {
-        std::string value = arg.substr(std::strlen("--dict="));
-        if (value.empty()) {
-          args.parse_error = "Missing value for --dict";
-          return args;
-        }
-        args.dict_paths.push_back(std::move(value));
-      } else {
-        args.args.push_back(arg);
-      }
+    // Dict owns its complete option grammar. Test owns only its expectation,
+    // input-file, and benchmark options; shared analysis options continue
+    // through the regular parser below.
+    if (args.command == "dict") {
+      args.args.push_back(arg);
+      ++idx;
+      continue;
+    }
+    if (args.command == "test" &&
+        (arg == "--expect" || arg.rfind("--expect=", 0) == 0 || arg == "-f" || arg == "--file" ||
+         arg.rfind("--file=", 0) == 0 || arg.rfind("--iterations=", 0) == 0 || arg.rfind("--samples=", 0) == 0 ||
+         arg.rfind("--warmup=", 0) == 0)) {
+      args.args.push_back(arg);
       ++idx;
       continue;
     }
@@ -489,6 +523,12 @@ CommandArgs parseArgs(int argc, char* argv[]) {
 
     if (arg == "--no-core-dict") {
       args.no_core_dict = true;
+      ++idx;
+      continue;
+    }
+
+    if (arg == "--skip-env-config") {
+      args.skip_env_config = true;
       ++idx;
       continue;
     }
@@ -637,6 +677,11 @@ CommandArgs parseArgs(int argc, char* argv[]) {
       continue;
     }
 
+    if (args.command == "test") {
+      args.args.push_back(arg);
+      ++idx;
+      continue;
+    }
     if (args.command.empty()) {
       args.command = "analyze";
     }
@@ -652,8 +697,8 @@ CommandArgs parseArgs(int argc, char* argv[]) {
   return args;
 }
 
-void printHelp() {
-  std::cout << R"(suzume-cli - Japanese morphological analyzer
+void printHelp(std::ostream& output) {
+  output << R"(suzume-cli - Japanese morphological analyzer
 
 Usage:
   suzume-cli [command] [options] [arguments]
@@ -671,13 +716,15 @@ Global Options:
   -f, --format FMT       Output format: morpheme, tags, json, tsv, chasen
   -V, --verbose          Verbose output
   -VV, --very-verbose    Very verbose output (includes lattice dump)
+  --debug                Enable basic debug logging (same as SUZUME_DEBUG=1)
   --no-user-dict         Disable user dictionary
   --no-core-dict         Disable auto-loaded core.dic
+  --skip-env-config      Ignore scorer configuration environment variables
   --compare              Compare with/without user dictionary
   --normalize-vu         Normalize ヴ to ビ etc. (default: preserve)
   --lowercase            Convert ASCII to lowercase (default: preserve)
   --preserve-symbols     Keep symbols/emoji in output (default: remove)
-  --no-lemmatize         Keep surface forms as lemmas
+  --no-lemmatize         Keep source lemmas without post-analysis correction
   --merge-compounds      Merge consecutive noun compounds
   --include-particles    Include particles in tag output
   --include-auxiliaries  Include auxiliaries in tag output
@@ -692,6 +739,13 @@ Global Options:
   -h, --help             Show help
   -v, --version          Show version
 
+Environment:
+  SUZUME_DEBUG           Debug level: 1=basic, 2=detailed, 3=trace
+  SUZUME_SCORER_CONFIG   Path to a scorer-options JSON file
+  SUZUME_SCORER_{SECTION}_{KEY}
+                         Override one scorer option; sections are JOIN, SPLIT,
+                         UNARY, OPTLEN, BIGRAM, VERB, and INFL
+
 Examples:
   suzume-cli "text"                  Analyze text
   suzume-cli analyze -f json "text"  Analyze with JSON output
@@ -702,8 +756,8 @@ Use 'suzume-cli [command] --help' for command-specific help.
 )";
 }
 
-void printAnalyzeHelp() {
-  std::cout << R"(suzume-cli analyze - Morphological analysis
+void printAnalyzeHelp(std::ostream& output) {
+  output << R"(suzume-cli analyze - Morphological analysis
 
 Usage:
   suzume-cli analyze [options] [text]
@@ -715,13 +769,15 @@ Options:
   -f, --format FMT       Output format: morpheme, tags, json, tsv, chasen
   -V, --verbose          Verbose output
   -VV, --very-verbose    Very verbose output (includes lattice dump)
+  --debug                Enable basic debug logging (same as SUZUME_DEBUG=1)
   --no-user-dict         Disable user dictionary
   --no-core-dict         Disable auto-loaded core.dic
+  --skip-env-config      Ignore scorer configuration environment variables
   --compare              Compare with/without user dictionary
   --normalize-vu         Normalize ヴ to ビ etc. (default: preserve)
   --lowercase            Convert ASCII to lowercase (default: preserve)
   --preserve-symbols     Keep symbols/emoji in output (default: remove)
-  --no-lemmatize         Keep surface forms as lemmas
+  --no-lemmatize         Keep source lemmas without post-analysis correction
   --merge-compounds      Merge consecutive noun compounds
   --include-particles    Include particles in tag output
   --include-auxiliaries  Include auxiliaries in tag output
@@ -741,6 +797,7 @@ Output Formats:
   json                   JSON format
   tsv                    Alias of morpheme
   chasen                 ChaSen-like format (Japanese POS, conjugation info)
+  TAB formats escape backslash, TAB, CR, and LF as \\, \t, \r, and \n
 
 Examples:
   suzume-cli "text"
@@ -754,11 +811,16 @@ Examples:
 
 Environment:
   SUZUME_DATA_DIR        Data root containing core.dic/user.dic and core/*.tsv
+  SUZUME_DEBUG           Debug level: 1=basic, 2=detailed, 3=trace
+  SUZUME_SCORER_CONFIG   Path to a scorer-options JSON file
+  SUZUME_SCORER_{SECTION}_{KEY}
+                         Override one scorer option; sections are JOIN, SPLIT,
+                         UNARY, OPTLEN, BIGRAM, VERB, and INFL
 )";
 }
 
-void printDictHelp() {
-  std::cout << R"(suzume-cli dict - Dictionary management
+void printDictHelp(std::ostream& output) {
+  output << R"(suzume-cli dict - Dictionary management
 
 Usage:
   suzume-cli dict [subcommand] [options] [arguments]
@@ -774,6 +836,9 @@ Subcommands:
   validate [file]        Validate dictionary
   compile <in.tsv> [out.dic]
                          Compile to binary format (default: in.dic)
+  compile <in1.tsv> <in2.tsv>... <out.dic>
+                         Compile multiple inputs or glob matches into one file
+      --filter-trivial   Omit 3+ character pure-kanji/katakana entries and report the count
   decompile <in.dic> [out.tsv]
                          Dump expanded entries to TSV (default: in.tsv).
                          A dump is for inspection, not compiler input.
@@ -784,13 +849,14 @@ Environment:
   SUZUME_DATA_DIR        Data root; source lookup reads core/*.tsv below it
 
 POS Values:
-  NOUN, PROPN, VERB, ADJECTIVE, ADVERB, PARTICLE,
-  AUXILIARY, SYMBOL, OTHER
+  NOUN, PROPN, VERB, ADJECTIVE, ADVERB, PARTICLE, AUXILIARY,
+  CONJUNCTION, DETERMINER, PRONOUN, PREFIX, SUFFIX, INTERJECTION,
+  SYMBOL, OTHER
 
-Conjugation Types (for VERB/ADJECTIVE):
+Conjugation Types / Name Roles:
   ICHIDAN, GODAN_KA, GODAN_GA, GODAN_SA, GODAN_TA,
   GODAN_NA, GODAN_BA, GODAN_MA, GODAN_RA, GODAN_WA,
-  SURU, KURU, I_ADJ, NA_ADJ
+  SURU, KURU, I_ADJ, NA_ADJ, FAMILY, GIVEN
 
 Examples:
   suzume-cli dict lookup すぎる
@@ -801,8 +867,8 @@ Examples:
 )";
 }
 
-void printTestHelp() {
-  std::cout << R"(suzume-cli test - Verification and testing
+void printTestHelp(std::ostream& output) {
+  output << R"(suzume-cli test - Verification and testing
 
 Usage:
   suzume-cli test [subcommand] [options] [arguments]
@@ -816,6 +882,7 @@ Subcommands:
                          Report median initialize, first-analysis, and steady-analysis timing
 Options:
   -d, --dict PATH        Load user dictionary
+  Analysis, normalization, dictionary, and --tag-* options match `analyze`
   -h, --help             Show this help
 
 Test File Format (TSV):

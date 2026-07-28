@@ -161,6 +161,7 @@ TEST_F(DictCompilerTest, KuruExpansionGeneratesSafeKanjiAndKanaSurfaces) {
   EXPECT_FALSE(has_surface("こ"));
   EXPECT_FALSE(has_surface("こられる"));
   EXPECT_FALSE(has_surface("これる"));
+  EXPECT_FALSE(has_surface("こさせる"));
   EXPECT_FALSE(has_surface("来くる"));
   EXPECT_FALSE(has_surface("来き"));
   EXPECT_FALSE(has_surface("来こ"));

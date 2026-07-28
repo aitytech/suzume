@@ -9,6 +9,10 @@
 
 #include "tsv_parser.h"
 
+namespace suzume {
+class Suzume;
+}
+
 namespace suzume::cli {
 
 /**
@@ -49,6 +53,7 @@ class InteractiveSession {
    * @param tsv_path Path to TSV dictionary file (created if not exists)
    */
   explicit InteractiveSession(std::string tsv_path);
+  ~InteractiveSession();
 
   /**
    * @brief Run interactive REPL loop
@@ -77,6 +82,7 @@ class InteractiveSession {
   std::string tsv_path_;
   std::vector<TsvEntry> entries_;
   bool modified_ = false;
+  bool analyzer_dirty_ = true;
   std::string last_error_;
   DictLayer current_layer_ = DictLayer::Layer2;
 
@@ -84,6 +90,7 @@ class InteractiveSession {
   std::vector<LayeredEntry> layer1_cache_;  // Hardcoded entries
   std::vector<LayeredEntry> layer2_cache_;  // Core.dic entries (optional)
   std::vector<LayeredEntry> layer3_cache_;  // User.dic entries (optional)
+  std::unique_ptr<::suzume::Suzume> analyzer_;
 
   // Command handlers
   bool cmdAdd(const std::vector<std::string>& args);
@@ -93,7 +100,7 @@ class InteractiveSession {
   bool cmdSearch(const std::vector<std::string>& args);
   bool cmdValidate(const std::vector<std::string>& args);
   bool cmdCompile(const std::vector<std::string>& args);
-  static bool cmdAnalyze(const std::vector<std::string>& args);
+  bool cmdAnalyze(const std::vector<std::string>& args);
   bool cmdSave(const std::vector<std::string>& args);
   static bool cmdHelp(const std::vector<std::string>& args);
   bool cmdQuit(const std::vector<std::string>& args);
@@ -107,8 +114,10 @@ class InteractiveSession {
   // Helper methods
   bool loadEntries();
   bool saveEntries();
+  bool rebuildAnalyzer();
+  ::suzume::Suzume* currentAnalyzer();
   void loadLayer1Cache();
-  static std::vector<std::string> parseCommandLine(std::string_view line);
+  static std::vector<std::string> parseCommandLine(std::string_view line, bool* unterminated_quote);
   static void printEntry(const TsvEntry& entry);
   static void printLayeredEntry(const LayeredEntry& entry);
   bool confirmDiscard() const;

@@ -21,6 +21,7 @@ include(GoogleTest)
 set(TEST_COMMON_SOURCES
   common/test_helpers.cpp
   common/test_case.cpp
+  common/json_loader_test.cpp
 )
 
 # CLI source files needed for CLI tests
@@ -28,6 +29,7 @@ set(CLI_SOURCES_FOR_TESTS
   ${CMAKE_SOURCE_DIR}/tools/cli/dict_compiler.cpp
   ${CMAKE_SOURCE_DIR}/tools/cli/tsv_parser.cpp
   ${CMAKE_SOURCE_DIR}/tools/cli/cli_common.cpp
+  ${CMAKE_SOURCE_DIR}/tools/cli/interactive_utils.cpp
 )
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -48,6 +50,7 @@ set(TEST_SOURCES
   ${CLI_SOURCES_FOR_TESTS}
   cli/cli_common_test.cpp
   cli/dict_compiler_test.cpp
+  cli/interactive_utils_test.cpp
   cli/tsv_parser_test.cpp
   core/types_test.cpp
   core/types_extended_test.cpp
@@ -82,6 +85,7 @@ set(TEST_SOURCES
   pretokenizer/pretokenizer_text_test.cpp
   analysis/scorer_options_loader_test.cpp
   analysis/bigram_table_test.cpp
+  analysis/candidate_generation_efficiency_test.cpp
   analysis/contracted_completive_boundary_test.cpp
   analysis/dependent_grammar_roles_test.cpp
   analysis/destination_suffix_test.cpp

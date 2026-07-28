@@ -27,12 +27,24 @@ TEST(CliCommonTest, WildcardValidationRejectsExcessiveStars) {
   EXPECT_NE(result.error().message.find("too many '*'"), std::string::npos);
 }
 
+TEST(CliCommonTest, DictionaryExtensionsAreCaseInsensitive) {
+  EXPECT_TRUE(hasExtension("user.dic", ".dic"));
+  EXPECT_TRUE(hasExtension("user.DIC", ".dic"));
+  EXPECT_TRUE(hasExtension("user.TsV", ".tsv"));
+  EXPECT_FALSE(hasExtension("user.dic.tmp", ".dic"));
+  EXPECT_EQ(swapOrAppendExtension("user.TSV", ".tsv", ".dic"), "user.dic");
+}
+
 TEST(CliCommonTest, JsonEscapeEscapesControlCharacters) {
   std::string input;
   input.push_back('\x01');
   input += "ok";
 
   EXPECT_EQ(jsonEscape(input), "\\u0001ok");
+}
+
+TEST(CliCommonTest, TabEscapeKeepsEveryRecordOnOneLine) {
+  EXPECT_EQ(tabEscape("a\\b\tc\r\nd"), "a\\\\b\\tc\\r\\nd");
 }
 
 TEST(CliCommonTest, JsonEscapeRejectsInvalidUnicodeScalars) {
@@ -57,6 +69,13 @@ TEST(CliCommonTest, ParseSizeOptionAcceptsSize) {
 
   EXPECT_TRUE(parseSizeOption("42", &value));
   EXPECT_EQ(value, 42u);
+}
+
+TEST(CliCommonTest, LimitZeroMeansUnlimited) {
+  EXPECT_FALSE(limitReached(0, 0));
+  EXPECT_FALSE(limitReached(100, 0));
+  EXPECT_FALSE(limitReached(2, 3));
+  EXPECT_TRUE(limitReached(3, 3));
 }
 
 TEST(CliCommonTest, ParseArgsAcceptsTagOptions) {
@@ -114,13 +133,15 @@ TEST(CliCommonTest, ParseArgsAcceptsLeadingDashTextAfterOptionTerminator) {
 }
 
 TEST(CliCommonTest, ParseArgsConnectsAdvancedAnalyzeOptions) {
-  const char* argv[] = {"suzume-cli", "-VV", "--no-core-dict", "--no-lemmatize", "--merge-compounds", "テスト"};
+  const char* argv[] = {"suzume-cli",        "-VV",   "--no-core-dict", "--skip-env-config", "--no-lemmatize",
+                        "--merge-compounds", "テスト"};
   auto args = parseArgs(static_cast<int>(sizeof(argv) / sizeof(argv[0])), const_cast<char**>(argv));
 
   EXPECT_TRUE(args.verbose);
   EXPECT_TRUE(args.very_verbose);
   EXPECT_TRUE(args.debug);
   EXPECT_TRUE(args.no_core_dict);
+  EXPECT_TRUE(args.skip_env_config);
   EXPECT_TRUE(args.no_lemmatize);
   EXPECT_TRUE(args.merge_compounds);
 }

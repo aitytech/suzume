@@ -45,10 +45,20 @@ void printInfo(std::string_view message);
  */
 bool parseSizeOption(std::string_view value, size_t* out);
 
+/** @brief Whether a 0-as-unlimited result cap has been reached. */
+bool limitReached(size_t count, size_t limit);
+
 /**
  * @brief Escape a string for JSON output.
  */
 std::string jsonEscape(std::string_view value);
+
+/**
+ * @brief Escape a string for one-line TAB-separated output.
+ *
+ * Backslash, TAB, CR, and LF become \\ , \t, \r, and \n respectively.
+ */
+std::string tabEscape(std::string_view value);
 
 /**
  * @brief Remove a UTF-8 byte order mark at the start of a string, if present.
@@ -122,6 +132,7 @@ struct CommandArgs {
   bool version = false;
   bool no_user_dict = false;
   bool no_core_dict = false;
+  bool skip_env_config = false;
   bool compare = false;
   std::string parse_error;
 
@@ -158,22 +169,22 @@ CommandArgs parseArgs(int argc, char* argv[]);
 /**
  * @brief Print main help message
  */
-void printHelp();
+void printHelp(std::ostream& output = std::cout);
 
 /**
  * @brief Print help for analyze command
  */
-void printAnalyzeHelp();
+void printAnalyzeHelp(std::ostream& output = std::cout);
 
 /**
  * @brief Print help for dict command
  */
-void printDictHelp();
+void printDictHelp(std::ostream& output = std::cout);
 
 /**
  * @brief Print help for test command
  */
-void printTestHelp();
+void printTestHelp(std::ostream& output = std::cout);
 
 }  // namespace suzume::cli
 

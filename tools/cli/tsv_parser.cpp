@@ -1,14 +1,37 @@
 #include "tsv_parser.h"
 
+#include <filesystem>
 #include <fstream>
 #include <set>
 #include <sstream>
 
 namespace suzume::cli {
 
+namespace {
+
+constexpr uintmax_t kMaxDictionarySourceBytes = 64U * 1024U * 1024U;
+
+}  // namespace
+
 TsvParser::TsvParser() = default;
 
 core::Expected<std::vector<TsvEntry>, core::Error> TsvParser::parseFile(const std::string& path) {
+  std::error_code filesystem_error;
+  const std::filesystem::path source_path(path);
+  if (!std::filesystem::is_regular_file(source_path, filesystem_error)) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::InvalidInput, "Dictionary source is not a regular file: " + path));
+  }
+  const uintmax_t source_size = std::filesystem::file_size(source_path, filesystem_error);
+  if (filesystem_error) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::InvalidInput, "Failed to inspect dictionary source: " + path));
+  }
+  if (source_size > kMaxDictionarySourceBytes) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::InvalidInput, "Dictionary source exceeds 64 MiB limit: " + path));
+  }
+
   std::ifstream file(path);
   if (!file) {
     return core::makeUnexpected(core::Error(core::ErrorCode::FileNotFound, "Failed to open TSV file: " + path));
@@ -16,6 +39,9 @@ core::Expected<std::vector<TsvEntry>, core::Error> TsvParser::parseFile(const st
 
   std::stringstream buffer;
   buffer << file.rdbuf();
+  if (file.bad() || buffer.bad()) {
+    return core::makeUnexpected(core::Error(core::ErrorCode::InternalError, "Failed to read TSV file: " + path));
+  }
   return parseString(buffer.str());
 }
 
@@ -46,24 +72,31 @@ size_t TsvParser::validate(const std::vector<TsvEntry>& entries, std::vector<std
   size_t issue_count = 0;
 
   for (const auto& entry : entries) {
+    const std::string line_suffix =
+        entry.line_number == 0 ? std::string() : " at line " + std::to_string(entry.line_number);
     auto key = std::make_pair(entry.surface, entry.pos);
     if (seen.count(key) > 0) {
       ++issue_count;
       if (issues != nullptr) {
         std::string pos_str(core::posToString(entry.pos));
-        issues->push_back("Duplicate entry at line " + std::to_string(entry.line_number) + ": " + entry.surface + " (" +
-                          pos_str + ")");
+        issues->push_back("Duplicate entry" + line_suffix + ": " + entry.surface + " (" + pos_str + ")");
       }
     }
     seen.insert(key);
+
+    if (entry.ignored_empty_padding_columns) {
+      ++issue_count;
+      if (issues != nullptr) {
+        issues->push_back("Unexpected empty padding columns" + line_suffix + ": " + entry.surface);
+      }
+    }
 
     // Check conjugation type for verbs/adjectives
     if (entry.pos == core::PartOfSpeech::Verb || entry.pos == core::PartOfSpeech::Adjective) {
       if (entry.conj_type == dictionary::ConjugationType::None) {
         ++issue_count;
         if (issues != nullptr) {
-          issues->push_back("Missing conjugation type at line " + std::to_string(entry.line_number) + ": " +
-                            entry.surface);
+          issues->push_back("Missing conjugation type" + line_suffix + ": " + entry.surface);
         }
       }
     }
@@ -73,9 +106,12 @@ size_t TsvParser::validate(const std::vector<TsvEntry>& entries, std::vector<std
 }
 
 core::Expected<size_t, core::Error> writeTsvFile(const std::string& path, const std::vector<TsvEntry>& entries) {
-  std::ofstream file(path);
+  const std::filesystem::path output_path(path);
+  const std::filesystem::path temporary_path = output_path.string() + ".tmp";
+  std::ofstream file(temporary_path);
   if (!file) {
-    return core::makeUnexpected(core::Error(core::ErrorCode::InternalError, "Failed to create file: " + path));
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::InternalError, "Failed to create temporary file: " + temporary_path.string()));
   }
 
   // Write header comment
@@ -99,6 +135,22 @@ core::Expected<size_t, core::Error> writeTsvFile(const std::string& path, const 
     }
 
     file << "\n";
+  }
+
+  file.close();
+  if (!file) {
+    std::error_code remove_error;
+    std::filesystem::remove(temporary_path, remove_error);
+    return core::makeUnexpected(core::Error(core::ErrorCode::InternalError, "Failed to write file: " + path));
+  }
+
+  std::error_code rename_error;
+  std::filesystem::rename(temporary_path, output_path, rename_error);
+  if (rename_error) {
+    std::error_code remove_error;
+    std::filesystem::remove(temporary_path, remove_error);
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::InternalError, "Failed to replace file: " + path + ": " + rename_error.message()));
   }
 
   return entries.size();

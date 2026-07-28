@@ -129,7 +129,7 @@ core::Expected<size_t, core::Error> DictCompiler::compileEntries(const std::vect
         filtered_entries.push_back(entry);
       }
     }
-    if (verbose_ && trivial_count > 0) {
+    if (trivial_count > 0) {
       printInfo("Filtered " + std::to_string(trivial_count) + " trivial entries (kept " +
                 std::to_string(filtered_entries.size()) + ")");
     }
@@ -142,7 +142,9 @@ core::Expected<size_t, core::Error> DictCompiler::compileEntries(const std::vect
   }
 
   dictionary::BinaryDictWriter writer;
-  auto expanded = grammar::expandDictionarySourceEntries(*active_entries);
+  grammar::DictionaryExpansionOptions expansion_options;
+  expansion_options.preserve_surface_homographs = false;
+  auto expanded = grammar::expandDictionarySourceEntries(*active_entries, expansion_options);
   for (const auto& entry : expanded.entries) {
     writer.addEntry(entry);
   }
@@ -153,8 +155,9 @@ core::Expected<size_t, core::Error> DictCompiler::compileEntries(const std::vect
     printInfo("Expanded " + std::to_string(conj_expanded_) + " conjugated forms");
   }
 
-  if (verbose_ && expanded.duplicates_skipped > 0) {
-    printInfo("Skipped " + std::to_string(expanded.duplicates_skipped) + " duplicate entries");
+  if (expanded.duplicates_skipped > 0) {
+    printWarning("Skipped " + std::to_string(expanded.duplicates_skipped) +
+                 " expanded entries whose surfaces cannot coexist in the binary dictionary");
   }
 
   auto write_result = writer.writeToFile(dic_path);

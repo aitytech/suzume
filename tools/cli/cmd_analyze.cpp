@@ -1,5 +1,6 @@
 #include "cmd_analyze.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
@@ -17,14 +18,14 @@ namespace {
 
 void outputMorphemes(const std::vector<core::Morpheme>& morphemes) {
   for (const auto& morpheme : morphemes) {
-    std::cout << morpheme.surface << "\t" << core::posToString(morpheme.pos) << "\t" << morpheme.lemma << "\t"
-              << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
+    std::cout << tabEscape(morpheme.surface) << "\t" << core::posToString(morpheme.pos) << "\t"
+              << tabEscape(morpheme.lemma) << "\t" << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
   }
 }
 
 void outputTags(const std::vector<postprocess::TagEntry>& tags) {
   for (const auto& tag : tags) {
-    std::cout << tag.tag << "\t" << core::posToString(tag.pos) << "\n";
+    std::cout << tabEscape(tag.tag) << "\t" << core::posToString(tag.pos) << "\n";
   }
 }
 
@@ -62,13 +63,13 @@ void outputJson(const std::string& input, const std::vector<core::Morpheme>& mor
 void outputChasen(const std::vector<core::Morpheme>& morphemes) {
   for (const auto& mor : morphemes) {
     // Surface form
-    std::cout << mor.surface << "\t";
+    std::cout << tabEscape(mor.surface) << "\t";
 
     // Reading column placeholder (Suzume does not generate readings)
     std::cout << "*\t";
 
     // Lemma (base form)
-    std::cout << mor.getLemma() << "\t";
+    std::cout << tabEscape(mor.getLemma()) << "\t";
 
     // Part of speech (Japanese)
     std::cout << core::posToJapanese(mor.pos) << "\t";
@@ -76,8 +77,10 @@ void outputChasen(const std::vector<core::Morpheme>& morphemes) {
     // Conjugation type and form (for verbs and adjectives)
     if (mor.pos == core::PartOfSpeech::Verb || mor.pos == core::PartOfSpeech::Adjective) {
       auto verb_type = grammar::conjTypeToVerbType(mor.conj_type);
-      std::cout << grammar::verbTypeToJapanese(verb_type) << "\t";
-      std::cout << grammar::conjFormToJapanese(mor.conj_form);
+      const std::string conjugation_type(grammar::verbTypeToJapanese(verb_type));
+      const std::string conjugation_form(grammar::conjFormToJapanese(mor.conj_form));
+      std::cout << (conjugation_type.empty() ? "*" : conjugation_type) << "\t";
+      std::cout << (conjugation_form.empty() ? "*" : conjugation_form);
     } else {
       std::cout << "*\t*";
     }
@@ -94,6 +97,16 @@ core::AnalysisMode parseMode(const std::string& mode_str) {
     return core::AnalysisMode::Split;
   }
   return core::AnalysisMode::Normal;
+}
+
+bool sameStructure(const core::Morpheme& left, const core::Morpheme& right) {
+  return left.surface == right.surface && left.pos == right.pos && left.lemma == right.lemma &&
+         left.start_pos == right.start_pos && left.end_pos == right.end_pos;
+}
+
+void outputDiffMorpheme(std::string_view marker, size_t index, const core::Morpheme& morpheme) {
+  std::cout << marker << index << ": " << tabEscape(morpheme.surface) << "\t" << core::posToString(morpheme.pos) << "\t"
+            << tabEscape(morpheme.lemma) << "\t" << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
 }
 
 }  // namespace
@@ -141,7 +154,7 @@ int cmdAnalyze(const CommandArgs& args) {
 
   if (text.empty()) {
     printError("No input text provided");
-    printAnalyzeHelp();
+    printAnalyzeHelp(std::cerr);
     return 1;
   }
 
@@ -164,6 +177,7 @@ int cmdAnalyze(const CommandArgs& args) {
   options.remove_symbols = !args.preserve_symbols;
   options.skip_user_dictionary = args.no_user_dict;
   options.skip_core_dictionary = args.no_core_dict;
+  options.skip_env_config = args.skip_env_config;
   options.lemmatize = !args.no_lemmatize;
   options.merge_compounds = args.merge_compounds;
   options.report_scorer_config = args.verbose;
@@ -206,11 +220,24 @@ int cmdAnalyze(const CommandArgs& args) {
     outputMorphemes(morphemes);
     std::cout << "\n";
 
-    // Show diff (simplified)
+    // Compare the public structural tuple rather than only the token count.
     std::cout << "[Diff]\n";
-    if (base_morphemes.size() != morphemes.size()) {
-      std::cout << "Morpheme count: " << base_morphemes.size() << " -> " << morphemes.size() << "\n";
-    } else {
+    bool has_difference = base_morphemes.size() != morphemes.size();
+    const size_t shared_count = std::min(base_morphemes.size(), morphemes.size());
+    for (size_t index = 0; index < shared_count; ++index) {
+      if (!sameStructure(base_morphemes[index], morphemes[index])) {
+        has_difference = true;
+        outputDiffMorpheme("- ", index, base_morphemes[index]);
+        outputDiffMorpheme("+ ", index, morphemes[index]);
+      }
+    }
+    for (size_t index = shared_count; index < base_morphemes.size(); ++index) {
+      outputDiffMorpheme("- ", index, base_morphemes[index]);
+    }
+    for (size_t index = shared_count; index < morphemes.size(); ++index) {
+      outputDiffMorpheme("+ ", index, morphemes[index]);
+    }
+    if (!has_difference) {
       std::cout << "No structural difference\n";
     }
 

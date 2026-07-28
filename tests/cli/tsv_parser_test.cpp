@@ -60,6 +60,44 @@ TEST(TsvParserTest, WritePreservesCanonicalMarkerAndLemma) {
   EXPECT_EQ(parsed.value()[1].lemma, "なるほど");
 }
 
+TEST(TsvParserTest, ValidateReportsSpreadsheetPaddingColumns) {
+  TsvParser parser;
+  auto parsed = parser.parseString("東京\tPROPER_NOUN\tFAMILY\t\t\n");
+  ASSERT_TRUE(parsed.hasValue()) << parsed.error().message;
+
+  std::vector<std::string> issues;
+  EXPECT_EQ(TsvParser::validate(parsed.value(), &issues), 1);
+  ASSERT_EQ(issues.size(), 1);
+  EXPECT_NE(issues[0].find("padding columns"), std::string::npos);
+}
+
+TEST(TsvParserTest, ValidateOmitsSyntheticLineZero) {
+  const std::vector<TsvEntry> entries = {
+      {"検査する", core::PartOfSpeech::Verb, dictionary::ConjugationType::None, "", 0},
+  };
+  std::vector<std::string> issues;
+  EXPECT_EQ(TsvParser::validate(entries, &issues), 1);
+  ASSERT_EQ(issues.size(), 1);
+  EXPECT_EQ(issues[0], "Missing conjugation type: 検査する");
+}
+
+TEST(TsvParserTest, WriteFailurePreservesDestinationAndRemovesTemporaryFile) {
+  const std::filesystem::path output =
+      std::filesystem::temp_directory_path() / "suzume_tsv_parser_directory_destination";
+  std::filesystem::remove_all(output);
+  ASSERT_TRUE(std::filesystem::create_directory(output));
+
+  const std::vector<TsvEntry> entries = {
+      {"東京", core::PartOfSpeech::Noun, dictionary::ConjugationType::None, "", 1},
+  };
+  const auto write_result = writeTsvFile(output.string(), entries);
+
+  EXPECT_FALSE(write_result.hasValue());
+  EXPECT_TRUE(std::filesystem::is_directory(output));
+  EXPECT_FALSE(std::filesystem::exists(output.string() + ".tmp"));
+  std::filesystem::remove_all(output);
+}
+
 }  // namespace
 }  // namespace cli
 }  // namespace suzume
