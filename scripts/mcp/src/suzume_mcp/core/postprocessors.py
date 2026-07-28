@@ -1695,6 +1695,32 @@ def postprocess_classical_perfect_aux(tokens: list[dict]) -> bool:
 
 
 @reports_mutation
+def postprocess_classical_past_shi(tokens: list[dict]) -> bool:
+    """Retag the adnominal し between a continuative and a nominal as 過去の助動詞 き.
+
+    The reference analyzer reads every bare し as the する continuative, but する
+    attaches to a verbal noun, never to another verb's continuative. Standing
+    between a verb and the nominal it modifies, the mora is the 連体形 of the
+    classical past き (摘みし人, 見しこと).
+
+    The modified nominal is promoted out of the suffix class for the same reason:
+    an adnominal takes a head noun, so 人 there is the head rather than the bound
+    counter it is elsewhere (三人).
+    """
+    for idx, token in enumerate(tokens):
+        if idx == 0 or idx + 1 >= len(tokens):
+            continue
+        if token.get("surface") != "し" or token.get("pos") != "Verb":
+            continue
+        following = tokens[idx + 1]
+        if tokens[idx - 1].get("pos") != "Verb" or following.get("pos") not in ("Noun", "Suffix"):
+            continue
+        token["pos"] = "Auxiliary"
+        token["lemma"] = "き"
+        following["pos"] = "Noun"
+
+
+@reports_mutation
 def postprocess_ka_suru_noun(tokens: list[dict]) -> bool:
     """Keep 化-derived suru-verb nouns out of the na-adjective class."""
     for idx, token in enumerate(tokens[:-1]):

@@ -22,6 +22,7 @@ from .postprocessors import (
     postprocess_classical_focus_namu,
     postprocess_classical_honorific_aux,
     postprocess_classical_kere_aux,
+    postprocess_classical_past_shi,
     postprocess_classical_perfect_aux,
     postprocess_classical_ramu_boundary,
     postprocess_closed_function_words,
@@ -388,6 +389,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "classical-kere-aux"
     if postprocess_classical_perfect_aux(tokens) and applied_rule is None:
         applied_rule = "classical-perfect-aux"
+    if postprocess_classical_past_shi(tokens) and applied_rule is None:
+        applied_rule = "classical-past-shi"
     if postprocess_prolonged_sound_noun(tokens) and applied_rule is None:
         applied_rule = "prolonged-sound-noun"
     if postprocess_yoshi_formal_noun(tokens) and applied_rule is None:
