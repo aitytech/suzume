@@ -188,6 +188,33 @@
       ],
       "id": "sono_de_suru",
       "input": "その上で確認する"
+    },
+    {
+      "description": "並立助詞の連鎖末尾の名付け引用連体詞",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "とか",
+          "pos": "Particle",
+          "surface": "とか"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "とかいう",
+          "pos": "Determiner",
+          "surface": "とかいう"
+        }
+      ],
+      "id": "toka_tokaiu",
+      "input": "本とか水とかいう"
     }
   ],
   "description": "determiner tests",

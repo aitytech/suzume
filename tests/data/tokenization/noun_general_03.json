@@ -1063,6 +1063,28 @@
       ],
       "id": "ganakattta",
       "input": "時間がなかった"
+    },
+    {
+      "description": "並立助詞とか＋いうの名付け引用連体詞",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "とかいう",
+          "pos": "Determiner",
+          "surface": "とかいう"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "tokaiu",
+      "input": "確認とかいう話"
     }
   ],
   "description": "General nouns (part 3/3)",

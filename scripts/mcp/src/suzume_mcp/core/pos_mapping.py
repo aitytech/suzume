@@ -274,7 +274,7 @@ def map_mecab_pos(token: dict | str) -> str:
 
     # Fixed quotative determiners: IPADIC files these closed adnominal units
     # under particles even though they modify the following nominal.
-    if surface in ("という", "といった") and pos == "助詞":
+    if surface in ("という", "といった", "とかいう") and pos == "助詞":
         return "Determiner"
 
     # Default: map from Japanese POS

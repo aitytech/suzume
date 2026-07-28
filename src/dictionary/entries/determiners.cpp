@@ -47,6 +47,10 @@ EntrySpecRange getDeterminerEntries() {
       quotative_det("という", ""),
       quotative_det("といった", ""),
       quotative_det("っていう", ""),  // colloquial
+      // Naming quotative built on the 並立助詞 とか (確認とかいう話). It heads the
+      // same attributive slot as という, so without the entry the shared trailing
+      // い is read as adjective okurigana on the noun to its left.
+      quotative_det("とかいう", ""),
 
       // Quotative verb forms are compositional particle/adverb + verb + particle units.
 
