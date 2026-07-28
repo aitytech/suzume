@@ -19,6 +19,7 @@
 #include "auxiliaries.h"
 #include "conjugation.h"
 #include "connection.h"
+#include "inflection_scorer.h"
 
 namespace suzume::grammar {
 
@@ -46,7 +47,7 @@ struct InflectionCandidate {
  */
 class Inflection {
  public:
-  Inflection() = default;
+  explicit Inflection(const InflectionScorerOptions& scorer_options = {}) : scorer_options_(scorer_options) {}
 
   /**
    * @brief Analyze surface form and infer base form
@@ -97,6 +98,7 @@ class Inflection {
   // chunk every result handed out stays alive.
   // Note: single-threaded only. Add synchronization if multi-threading is needed.
   mutable std::unordered_map<std::string, std::vector<InflectionCandidate>> cache_;
+  InflectionScorerOptions scorer_options_;
 };
 
 }  // namespace suzume::grammar

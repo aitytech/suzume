@@ -43,8 +43,10 @@ struct Options {
   bool merge_compounds = false;
   bool skip_user_dictionary = false;
   bool skip_core_dictionary = false;
+  bool skip_env_config = false;
   bool report_scorer_config = false;
   std::string scorer_options_json;
+  std::string data_directory;
 };
 
 /** @brief A single analyzed morpheme with owning strings. */
@@ -100,9 +102,8 @@ inline std::string conjugationTypeLabel(std::uint8_t code) {
 }
 
 inline std::string conjugationFormLabel(std::uint8_t code) {
-  static constexpr std::array<const char*, 7> labels = {"終止形", "未然形", "連用形", "連用形",
-                                                        "仮定形", "命令形", "意志形"};
-  return code < labels.size() ? labels[code] : "";
+  const char* label = suzume_conjugation_form_label(code);
+  return label != nullptr ? std::string(label) : std::string();
 }
 
 }  // namespace detail
@@ -128,8 +129,10 @@ class Tokenizer {
     copts.merge_compounds = options.merge_compounds ? 1 : 0;
     copts.skip_user_dictionary = options.skip_user_dictionary ? 1 : 0;
     copts.skip_core_dictionary = options.skip_core_dictionary ? 1 : 0;
+    copts.skip_env_config = options.skip_env_config ? 1 : 0;
     copts.report_scorer_config = options.report_scorer_config ? 1 : 0;
     copts.scorer_options_json = options.scorer_options_json.empty() ? nullptr : options.scorer_options_json.c_str();
+    copts.data_directory = options.data_directory.empty() ? nullptr : options.data_directory.c_str();
     handle_ = suzume_create_with_extended_options(&copts);
   }
 
@@ -155,6 +158,8 @@ class Tokenizer {
 
   /**
    * @brief Analyze text into morphemes.
+   * @note const does not make concurrent calls on one Tokenizer safe; the
+   * underlying analyzer maintains mutable caches.
    * @return Morphemes, or an empty vector on failure (see lastError()).
    */
   std::vector<Morpheme> analyze(std::string_view text) const { return analyzeWithNormalizedText(text).morphemes; }
@@ -175,9 +180,9 @@ class Tokenizer {
     for (std::size_t idx = 0; idx < owned_result->count; ++idx) {
       const suzume_morpheme_t& src = owned_result->morphemes[idx];
       Morpheme morph;
-      morph.surface = cstr(src.surface);
+      morph.surface.assign(src.surface, src.surface_size);
       morph.pos = posLabel(src.pos, false);
-      morph.lemma = cstr(src.base_form);
+      morph.lemma.assign(src.base_form, src.base_form_size);
       morph.pos_ja = posLabel(src.pos, true);
       const bool conjugates = (src.flags & SUZUME_MORPHEME_CONJUGATABLE) != 0;
       morph.conj_type = conjugates ? detail::conjugationTypeLabel(src.conjugation_type) : std::string();
@@ -229,28 +234,36 @@ class Tokenizer {
    * @brief Load additional user-dictionary entries from TSV bytes.
    * @return True on success; see lastError() on failure.
    */
-  bool loadUserDictionary(std::string_view tsv) const {
+  bool loadUserDictionary(std::string_view tsv) { return loadUserDictionaryCount(tsv) > 0; }
+
+  /**
+   * @brief Load additional user-dictionary entries and return the installed count.
+   */
+  std::size_t loadUserDictionaryCount(std::string_view tsv) {
     if (handle_ == nullptr) {
-      return false;
+      return 0;
     }
-    return suzume_load_user_dict(handle_, tsv.data(), tsv.size()) != 0;
+    return suzume_load_user_dict_count(handle_, tsv.data(), tsv.size());
   }
 
   /**
    * @brief Load a compiled binary dictionary from memory.
    * @return True on success; see lastError() on failure.
    */
-  bool loadBinaryDictionary(const std::uint8_t* data, std::size_t size) const {
+  bool loadBinaryDictionary(const std::uint8_t* data, std::size_t size) {
     if (handle_ == nullptr) {
       return false;
     }
     return suzume_load_binary_dict(handle_, data, size) != 0;
   }
 
-  /** @brief Remove all user dictionaries loaded by this tokenizer. */
-  bool clearUserDictionaries() const { return handle_ != nullptr && suzume_clear_user_dictionaries(handle_) != 0; }
+  /** @brief Remove caller-loaded dictionaries while retaining the bundled user dictionary. */
+  bool clearUserDictionaries() { return handle_ != nullptr && suzume_clear_user_dictionaries(handle_) != 0; }
 
-  /** @brief Warnings produced while auto-loading dictionaries. */
+  /** @brief Whether the L2 core binary dictionary is loaded. */
+  bool hasCoreDictionary() const { return handle_ != nullptr && suzume_has_core_dictionary(handle_) != 0; }
+
+  /** @brief Dictionary-loading, parsing, and scorer-configuration diagnostics. */
   std::vector<std::string> dictionaryWarnings() const {
     if (handle_ == nullptr) {
       return {};
@@ -293,90 +306,8 @@ class Tokenizer {
   }
 
   static std::string extendedPosLabel(std::uint8_t code) {
-    static constexpr std::array<const char*, 83> labels = {"UNKNOWN",
-                                                           "VERB_終止",
-                                                           "VERB_連用",
-                                                           "VERB_未然",
-                                                           "VERB_音便",
-                                                           "VERB_て形",
-                                                           "VERB_仮定",
-                                                           "VERB_命令",
-                                                           "VERB_連体",
-                                                           "VERB_た形",
-                                                           "VERB_たら形",
-                                                           "ADJ_終止",
-                                                           "ADJ_連用",
-                                                           "ADJ_語幹",
-                                                           "ADJ_かっ",
-                                                           "ADJ_け形",
-                                                           "ADJ_NA",
-                                                           "AUX_過去",
-                                                           "AUX_丁寧",
-                                                           "AUX_否定",
-                                                           "AUX_否定古",
-                                                           "AUX_願望",
-                                                           "AUX_意志",
-                                                           "AUX_受身",
-                                                           "AUX_使役",
-                                                           "AUX_可能",
-                                                           "AUX_継続",
-                                                           "AUX_完了",
-                                                           "AUX_準備",
-                                                           "AUX_試行",
-                                                           "AUX_進行",
-                                                           "AUX_接近",
-                                                           "AUX_開始",
-                                                           "AUX_様態",
-                                                           "AUX_推定",
-                                                           "AUX_みたい",
-                                                           "AUX_断定",
-                                                           "AUX_丁寧断定",
-                                                           "AUX_尊敬",
-                                                           "AUX_丁重",
-                                                           "AUX_過度",
-                                                           "AUX_ガル",
-                                                           "PART_格",
-                                                           "PART_係",
-                                                           "PART_終",
-                                                           "PART_接続",
-                                                           "PART_引用",
-                                                           "PART_副",
-                                                           "PART_準体",
-                                                           "PART_係結",
-                                                           "NOUN",
-                                                           "NOUN_形式",
-                                                           "NOUN_転成",
-                                                           "NOUN_固有",
-                                                           "NOUN_姓",
-                                                           "NOUN_名",
-                                                           "NOUN_数",
-                                                           "PRON",
-                                                           "PRON_疑問",
-                                                           "ADV",
-                                                           "ADV_引用",
-                                                           "CONJ",
-                                                           "DET",
-                                                           "PREFIX",
-                                                           "SUFFIX",
-                                                           "SYMBOL",
-                                                           "INTJ",
-                                                           "OTHER",
-                                                           "ADJ_未然",
-                                                           "AUX_打消推量",
-                                                           "AUX_文語断定",
-                                                           "AUX_文語過去",
-                                                           "AUX_文語断定連体",
-                                                           "AUX_文語完了",
-                                                           "AUX_文語当為",
-                                                           "AUX_不可能",
-                                                           "AUX_授受",
-                                                           "SUFFIX_直後",
-                                                           "SUFFIX_傾向",
-                                                           "DET_引用",
-                                                           "AUX_よう",
-                                                           "AUX_KURUWA_POLITE",
-                                                           "AUX_文語過去キ"};
-    return code < labels.size() ? labels[code] : labels[0];
+    const char* label = suzume_extended_pos_label(code);
+    return label != nullptr ? std::string(label) : "UNKNOWN";
   }
 
   static std::vector<Tag> collectTags(suzume_tags_t* tags) {

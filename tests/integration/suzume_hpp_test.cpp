@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,7 @@ TEST(SuzumeHppTest, AnalyzeExposesNormalizedTextAndPreservesEmbeddedNull) {
 }
 
 TEST(SuzumeHppTest, ConjugationLabelsCoverTheSerializedBoundary) {
+  EXPECT_TRUE(suzume::detail::conjugationTypeLabel(0).empty());
   EXPECT_EQ(suzume::detail::conjugationTypeLabel(14), "ナ形容詞");
   EXPECT_EQ(suzume::detail::conjugationTypeLabel(15), "感動詞");
   EXPECT_EQ(suzume::detail::conjugationTypeLabel(16), "固有名詞・姓");
@@ -66,8 +68,33 @@ TEST(SuzumeHppTest, DictionaryWarningsAndClearAreExposed) {
   suzume::Tokenizer tokenizer;
   ASSERT_TRUE(tokenizer.valid()) << suzume::Tokenizer::lastError();
   EXPECT_TRUE(tokenizer.dictionaryWarnings().empty());
+  EXPECT_TRUE(tokenizer.hasCoreDictionary());
+  const auto bundled_before = tokenizer.analyze("コーヒー豆");
+  ASSERT_EQ(bundled_before.size(), 1u);
+  EXPECT_TRUE(bundled_before[0].is_user_dict);
+  EXPECT_GT(tokenizer.loadUserDictionaryCount("検査する\tVERB\tSURU\n"), 1u);
   EXPECT_TRUE(tokenizer.clearUserDictionaries());
   EXPECT_EQ(suzume::Tokenizer::lastErrorCode(), SUZUME_ERROR_SUCCESS);
+  const auto bundled_after = tokenizer.analyze("コーヒー豆");
+  ASSERT_EQ(bundled_after.size(), 1u);
+  EXPECT_TRUE(bundled_after[0].is_user_dict);
+}
+
+TEST(SuzumeHppTest, EnvironmentScorerConfigCanBeDisabled) {
+#ifndef __EMSCRIPTEN__
+  setenv("SUZUME_SCORER_INFL_confidence_ceiling", "0", 1);
+  suzume::Options options;
+  options.skip_user_dictionary = true;
+  options.skip_core_dictionary = true;
+  options.skip_env_config = true;
+  suzume::Tokenizer tokenizer(options);
+  unsetenv("SUZUME_SCORER_INFL_confidence_ceiling");
+  ASSERT_TRUE(tokenizer.valid()) << suzume::Tokenizer::lastError();
+
+  const auto morphemes = tokenizer.analyze("歩いています");
+  ASSERT_FALSE(morphemes.empty());
+  EXPECT_EQ(morphemes.front().surface, "歩い");
+#endif
 }
 
 }  // namespace

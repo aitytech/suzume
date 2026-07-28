@@ -25,8 +25,10 @@ struct SuzumeOptions {
   bool remove_symbols = true;         // Remove symbol-only morphemes (default: true)
   bool skip_user_dictionary = false;  // Skip auto-loading user.dic (for testing)
   bool skip_core_dictionary = false;  // Skip auto-loading core.dic (for testing)
-  bool report_scorer_config = false;  // Print scorer config status/warnings
-  std::string scorer_options_json;    // Direct JSON scorer overrides (available on every target)
+  bool skip_env_config = false;       // Ignore SUZUME_SCORER_CONFIG and SUZUME_SCORER_* variables
+  bool report_scorer_config = false;  // Add scorer config status/warnings to dictionaryWarnings()
+  std::string scorer_options_json;    // Final-priority JSON overrides (available on every target)
+  std::string data_directory;         // Exclusive directory for core.dic and user.dic
   postprocess::TagGeneratorOptions tag_options;
   normalize::NormalizeOptions normalize_options;
   analysis::ScorerOptions scorer_options;  // Scoring parameters (tunable at runtime)
@@ -37,6 +39,10 @@ struct SuzumeOptions {
  *
  * Provides a simple interface for Japanese morphological analysis
  * and tag generation.
+ *
+ * Instances are not safe for concurrent calls, including const analysis
+ * methods, because analysis maintains mutable caches. Use one instance per
+ * thread or externally serialize access to a shared instance.
  */
 class Suzume {
  public:
@@ -114,14 +120,20 @@ class Suzume {
   /**
    * @brief Remove every source and binary user dictionary loaded at runtime
    *
-   * Auto-loaded and built-in core dictionaries are retained.
+   * Auto-loaded/bundled user dictionaries and built-in core dictionaries are
+   * retained.
    */
   void clearUserDictionaries();
 
   /**
-   * @brief Warnings produced while auto-loading dictionaries at construction.
+   * @brief Dictionary-loading, parsing, and scorer-configuration diagnostics.
    */
   const std::vector<std::string>& dictionaryWarnings() const;
+
+  /**
+   * @brief Whether the analyzer has a loaded L2 core binary dictionary.
+   */
+  bool hasCoreDictionary() const;
 
   /**
    * @brief Analyze text into morphemes, lenient form
@@ -129,6 +141,8 @@ class Suzume {
    * Collapses failure into an empty vector, which is indistinguishable from a
    * legitimately empty result (empty input, or input that normalizes away).
    * Use analyzeResult() when the caller has to tell the two apart.
+   * The const qualifier does not imply that concurrent calls on one instance
+   * are safe; see the class-level thread-safety note.
    *
    * @param text UTF-8 encoded Japanese text
    * @return Vector of morphemes, or empty vector if text is empty or invalid UTF-8

@@ -142,15 +142,6 @@ void Analyzer::addUserDictionary(std::shared_ptr<dictionary::UserDictionary> dic
   tokenizer_ = std::make_unique<Tokenizer>(dict_manager_, scorer_, unknown_gen_, options_.mode);
 }
 
-bool Analyzer::tryAutoLoadCoreDictionary() {
-  bool loaded = dict_manager_.tryAutoLoadCoreDictionary();
-  if (loaded) {
-    // Rebuild tokenizer with new dictionary
-    tokenizer_ = std::make_unique<Tokenizer>(dict_manager_, scorer_, unknown_gen_, options_.mode);
-  }
-  return loaded;
-}
-
 bool Analyzer::hasCoreBinaryDictionary() const {
   return dict_manager_.hasCoreBinaryDictionary();
 }
@@ -329,18 +320,6 @@ std::vector<core::Morpheme> Analyzer::analyzeChunk(std::string_view text, size_t
   // Build lattice
   core::Lattice lattice = tokenizer_->buildLattice(text, codepoints, char_types);
 
-  // Check if lattice is valid
-  if (!lattice.isValid()) {
-    core::Morpheme morpheme;
-    morpheme.surface = std::string(text);
-    morpheme.pos = core::PartOfSpeech::Noun;
-    morpheme.start_pos = char_offset;
-    morpheme.end_pos = char_offset + codepoints.size();
-    morpheme.start = char_offset;
-    morpheme.end = char_offset + codepoints.size();
-    return {morpheme};
-  }
-
   // Run Viterbi
   core::ViterbiResult vresult = viterbi_.solve(lattice, scorer_);
 
@@ -374,7 +353,7 @@ std::vector<core::Morpheme> Analyzer::pathToMorphemes(const core::ViterbiResult&
     morpheme.features.is_dictionary = edge.fromDictionary();
     morpheme.features.is_user_dict = edge.fromUserDict();
     morpheme.features.is_formal_noun = edge.isFormalNoun();
-    morpheme.features.is_low_info = edge.isLowInfo() || core::isLowInformation(edge.extended_pos);
+    morpheme.features.is_low_info = core::isLowInformation(edge.extended_pos);
     morpheme.features.score = edge.cost;
     morpheme.is_from_dictionary = edge.fromDictionary();
     morpheme.is_unknown = edge.isUnknown();
@@ -387,65 +366,40 @@ std::vector<core::Morpheme> Analyzer::pathToMorphemes(const core::ViterbiResult&
 }
 
 std::vector<core::Morpheme> Analyzer::analyzeDebug(std::string_view text, core::Lattice* out_lattice) const {
-  if (text.empty()) {
+  auto analyzed = analyzeWithNormalizedText(text);
+  if (!analyzed.hasValue()) {
+    SUZUME_DEBUG_LOG("[ANALYZER] analyzeDebug failed: " << analyzed.error().message << "\n");
     return {};
   }
 
-  // Normalize text
-  auto norm_result = normalizer_.normalize(text);
-  if (!core::isSuccess(norm_result)) {
-    // Log normalization failure (likely invalid UTF-8 input)
-    SUZUME_DEBUG_BLOCK {
-      auto& error = std::get<core::Error>(norm_result);
-      SUZUME_DEBUG_STREAM << "[ANALYZER] Normalization failed in analyzeDebug: " << error.message
-                          << " (code=" << static_cast<int>(error.code) << ")\n";
-    }
-    return {};  // Return empty vector for invalid input
-  }
-  std::string normalized = std::get<std::string>(norm_result);
-  if (normalized.empty()) {
-    return {};
-  }
-
-  // Decode to codepoints
-  std::vector<char32_t> codepoints = normalize::utf8::decode(normalized);
-  if (codepoints.empty()) {
-    SUZUME_DEBUG_LOG("[ANALYZER] UTF-8 decode failed in analyzeDebug\n");
-    return {};  // Return empty vector for decode failure
-  }
-
-  // Get character types
-  std::vector<normalize::CharType> char_types;
-  char_types.reserve(codepoints.size());
-  for (char32_t code : codepoints) {
-    char_types.push_back(normalize::classifyChar(code));
-  }
-
-  // Build lattice
-  core::Lattice lattice = tokenizer_->buildLattice(normalized, codepoints, char_types);
-
-  // Check if lattice is valid
-  if (!lattice.isValid()) {
-    core::Morpheme morpheme;
-    morpheme.surface = std::string(text);
-    morpheme.pos = core::PartOfSpeech::Noun;
-    morpheme.start_pos = 0;
-    morpheme.end_pos = codepoints.size();
-    return {morpheme};
-  }
-
-  // Run Viterbi
-  core::ViterbiResult vresult = viterbi_.solve(lattice, scorer_);
-
-  // Convert to morphemes
-  auto morphemes = pathToMorphemes(vresult, lattice);
-
-  // Move lattice to output if requested (after analysis is done)
   if (out_lattice != nullptr) {
-    *out_lattice = std::move(lattice);
+    *out_lattice = core::Lattice(0);
+    const std::string& normalized = analyzed.value().normalized_text;
+    if (!normalized.empty() && normalized.size() <= kMaxChunkBytes) {
+      const auto pretokenized = pretokenizer_.process(normalized);
+      std::string_view debug_span = normalized;
+      if (!pretokenized.tokens.empty()) {
+        debug_span = {};
+        for (const auto& span : pretokenized.spans) {
+          const std::string_view candidate = std::string_view(normalized).substr(span.start, span.end - span.start);
+          if (candidate.size() > debug_span.size()) {
+            debug_span = candidate;
+          }
+        }
+      }
+      if (!debug_span.empty()) {
+        const std::vector<char32_t> codepoints = normalize::utf8::decode(debug_span);
+        std::vector<normalize::CharType> char_types;
+        char_types.reserve(codepoints.size());
+        for (const char32_t codepoint : codepoints) {
+          char_types.push_back(normalize::classifyChar(codepoint));
+        }
+        *out_lattice = tokenizer_->buildLattice(debug_span, codepoints, char_types);
+      }
+    }
   }
 
-  return morphemes;
+  return std::move(analyzed.value().morphemes);
 }
 
 }  // namespace suzume::analysis

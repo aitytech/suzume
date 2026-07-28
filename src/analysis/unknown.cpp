@@ -120,9 +120,13 @@ bool endsInsideVerifiedCompoundVerb(const suzume::analysis::UnknownCandidate& ca
 
 bool containsInternalPunctuation(const suzume::analysis::UnknownCandidate& candidate,
                                  const std::vector<char32_t>& codepoints) {
+  if (candidate.pos == suzume::core::PartOfSpeech::Symbol) {
+    return false;
+  }
   for (size_t pos = candidate.start + 1; pos < candidate.end; ++pos) {
     if (suzume::normalize::classifyChar(codepoints[pos]) == suzume::normalize::CharType::Symbol &&
-        codepoints[pos] != U'_') {
+        codepoints[pos] != U'_' && !suzume::normalize::isVariationSelector(codepoints[pos]) &&
+        !suzume::normalize::isTransparentFormatControl(codepoints[pos])) {
       return true;
     }
   }
@@ -489,7 +493,7 @@ UnknownCandidate makeCandidate(const std::string& surface, size_t start, size_t 
 
 UnknownWordGenerator::UnknownWordGenerator(const UnknownOptions& options,
                                            const dictionary::DictionaryManager* dict_manager)
-    : options_(options), dict_manager_(dict_manager) {}
+    : options_(options), dict_manager_(dict_manager), inflection_(options.inflection_scorer_options) {}
 
 size_t UnknownWordGenerator::getMaxLength(normalize::CharType ctype) const {
   switch (ctype) {
@@ -804,7 +808,7 @@ void UnknownWordGenerator::generateAlphanumeric(std::string_view /*text*/, const
   // Generate candidate if mixed alphanumeric OR identifier with underscore
   // Pure alpha/digit sequences are handled by generateBySameType
   bool is_mixed = has_alpha && has_digit;
-  bool is_identifier = has_alpha && has_underscore;
+  bool is_identifier = has_underscore && (has_alpha || has_digit);
   if ((is_mixed || is_identifier) && end_pos > start_pos + 1) {
     std::string surface = extractSubstring(codepoints, start_pos, end_pos);
     if (!surface.empty()) {

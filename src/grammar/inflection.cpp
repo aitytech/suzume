@@ -294,7 +294,7 @@ std::vector<InflectionCandidate> Inflection::matchVerbStem(std::string_view rema
       candidate.suffix = suffix_str;
       candidate.verb_type = actual_verb_type;  // Use remapped type for 来→Kuru
       candidate.confidence = calculateConfidence(actual_verb_type, stem, aux_total_len, aux_chain.size(), required_conn,
-                                                 suffix_str.size(), first_aux_starts_with_te_de);
+                                                 suffix_str.size(), first_aux_starts_with_te_de, &scorer_options_);
 
       // Ichidan verbs use て/た for te/ta-form, NOT で/だ
       // で/だ are only used for 撥音便 Godan verbs (読む→読んで/読んだ, 遊ぶ→遊んで/遊んだ)

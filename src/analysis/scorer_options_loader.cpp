@@ -775,16 +775,22 @@ bool ScorerOptionsLoader::loadFromJsonString(const std::string& json, ScorerOpti
 namespace env_override_internal {
 
 // Helper to try parsing float from environment variable
-bool tryGetEnvFloat(const char* name, float& out, bool report_warnings) {
+bool tryGetEnvFloat(const char* name, float& out, bool report_warnings,
+                    std::vector<std::string>* collected_warnings = nullptr) {
   const char* value = std::getenv(name);
   if (!value)
     return false;
 
   char* end = nullptr;
   float parsed = std::strtof(value, &end);
-  if (end == value || *end != '\0') {
+  if (end == value || *end != '\0' || !std::isfinite(parsed)) {
     if (report_warnings) {
-      std::cerr << "warning: Invalid value for " << name << ": " << value << "\n";
+      const std::string warning = "Invalid value for " + std::string(name) + ": " + value;
+      if (collected_warnings != nullptr) {
+        collected_warnings->push_back(warning);
+      } else {
+        std::cerr << "warning: " << warning << "\n";
+      }
     }
     return false;
   }
@@ -793,15 +799,40 @@ bool tryGetEnvFloat(const char* name, float& out, bool report_warnings) {
 }
 
 int applySpecs(const char* section, ScorerOptions& options, size_t base, const OptionSpec* specs, size_t count,
-               bool report_warnings) {
+               bool report_warnings, std::vector<std::string>* collected_warnings = nullptr) {
   int applied = 0;
   for (size_t index = 0; index < count; ++index) {
     const std::string variable_name = std::string("SUZUME_SCORER_") + section + "_" + std::string(specs[index].name);
-    if (tryGetEnvFloat(variable_name.c_str(), optionAt(options, base + specs[index].offset), report_warnings)) {
+    if (tryGetEnvFloat(variable_name.c_str(), optionAt(options, base + specs[index].offset), report_warnings,
+                       collected_warnings)) {
       ++applied;
     }
   }
   return applied;
+}
+
+int applyAllEnvOverrides(ScorerOptions& options, bool report_warnings,
+                         std::vector<std::string>* collected_warnings = nullptr) {
+  int count = 0;
+  count += applySpecs("JOIN", options, kJoinBase, kJoinOptionSpecs.data(), kJoinOptionSpecs.size(), report_warnings,
+                      collected_warnings);
+  count += applySpecs("SPLIT", options, kSplitBase, kSplitOptionSpecs.data(), kSplitOptionSpecs.size(), report_warnings,
+                      collected_warnings);
+  count += applySpecs("UNARY", options, kUnaryBase, kUnaryOptionSpecs.data(), kUnaryOptionSpecs.size(), report_warnings,
+                      collected_warnings);
+
+  for (const BigramOverrideSpec& spec : kBigramOverrideSpecs) {
+    const std::string variable_name = std::string("SUZUME_SCORER_BIGRAM_") + spec.name;
+    if (tryGetEnvFloat(variable_name.c_str(), options.bigram.*(spec.value), report_warnings, collected_warnings)) {
+      ++count;
+    }
+  }
+
+  count += applySpecs("VERB", options, kVerbBase, kVerbOptionSpecs.data(), kVerbOptionSpecs.size(), report_warnings,
+                      collected_warnings);
+  count += applySpecs("INFL", options, kInflectionBase, kInflectionOptionSpecs.data(), kInflectionOptionSpecs.size(),
+                      report_warnings, collected_warnings);
+  return count;
 }
 
 }  // namespace env_override_internal
@@ -812,27 +843,7 @@ int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options) {
 
 int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options, bool report_warnings) {
   using namespace env_override_internal;
-  int count = 0;
-
-  count += applySpecs("JOIN", options, kJoinBase, kJoinOptionSpecs.data(), kJoinOptionSpecs.size(), report_warnings);
-  count +=
-      applySpecs("SPLIT", options, kSplitBase, kSplitOptionSpecs.data(), kSplitOptionSpecs.size(), report_warnings);
-  count +=
-      applySpecs("UNARY", options, kUnaryBase, kUnaryOptionSpecs.data(), kUnaryOptionSpecs.size(), report_warnings);
-
-  // Bigram options (SUZUME_SCORER_BIGRAM_*)
-  for (const BigramOverrideSpec& spec : kBigramOverrideSpecs) {
-    const std::string variable_name = std::string("SUZUME_SCORER_BIGRAM_") + spec.name;
-    if (tryGetEnvFloat(variable_name.c_str(), options.bigram.*(spec.value), report_warnings)) {
-      ++count;
-    }
-  }
-
-  count += applySpecs("VERB", options, kVerbBase, kVerbOptionSpecs.data(), kVerbOptionSpecs.size(), report_warnings);
-  count += applySpecs("INFL", options, kInflectionBase, kInflectionOptionSpecs.data(), kInflectionOptionSpecs.size(),
-                      report_warnings);
-
-  return count;
+  return applyAllEnvOverrides(options, report_warnings);
 }
 
 ScorerLoadResult ScorerOptionsLoader::loadFromEnv(ScorerOptions& options) {
@@ -850,13 +861,13 @@ ScorerLoadResult ScorerOptionsLoader::loadFromEnv(ScorerOptions& options, bool r
       result.config_path = config_path;
     } else {
       if (report_warnings) {
-        std::cerr << "warning: Failed to load scorer config from SUZUME_SCORER_CONFIG: " << error_msg << "\n";
+        result.warnings.push_back("Failed to load scorer config from SUZUME_SCORER_CONFIG: " + error_msg);
       }
     }
   }
 
   // Apply individual environment variable overrides (highest priority)
-  result.env_override_count = applyEnvOverrides(options, report_warnings);
+  result.env_override_count = env_override_internal::applyAllEnvOverrides(options, report_warnings, &result.warnings);
 
   return result;
 }

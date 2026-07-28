@@ -144,6 +144,8 @@ typedef struct {
   suzume_conjugation_type_t conjugation_type; /**< Conjugation type code; 0 means none */
   suzume_conjugation_form_t conjugation_form; /**< Conjugation form code */
   uint8_t flags;                              /**< Bitwise SUZUME_MORPHEME_* flags */
+  size_t surface_size;                        /**< Byte length; surface may contain U+0000 */
+  size_t base_form_size;                      /**< Byte length; base form may contain U+0000 */
 } suzume_morpheme_t;
 
 /**
@@ -180,8 +182,10 @@ typedef struct {
   uint8_t merge_compounds;         /**< Merge consecutive noun compounds */
   uint8_t skip_user_dictionary;    /**< Skip automatic loading of the bundled user dictionary */
   uint8_t skip_core_dictionary;    /**< Skip automatic loading of the bundled core dictionary */
-  uint8_t report_scorer_config;    /**< Report scorer configuration diagnostics */
+  uint8_t report_scorer_config;    /**< Add scorer configuration diagnostics to dictionary warnings */
+  uint8_t skip_env_config;         /**< Ignore native scorer configuration environment variables */
   const char* scorer_options_json; /**< UTF-8 JSON scorer overrides, or NULL for defaults */
+  const char* data_directory;      /**< Exclusive dictionary directory, or NULL for search defaults */
 } suzume_extended_options_t;
 
 // --- Lifecycle functions ---
@@ -205,8 +209,9 @@ SUZUME_EXPORT void suzume_init_extended_options(suzume_extended_options_t* optio
  * @brief Create a new Suzume instance with extended options
  * @param options Pointer to extended options structure
  * @return Handle to Suzume instance, or NULL on failure
- * @note Passing NULL selects all defaults. scorer_options_json is borrowed only
- *       for the duration of this call and may be NULL.
+ * @note Passing NULL selects all defaults. String pointers are borrowed only
+ *       for the duration of this call and may be NULL. Program JSON overrides
+ *       native environment configuration unless skip_env_config disables it.
  */
 SUZUME_EXPORT suzume_t suzume_create_with_extended_options(const suzume_extended_options_t* options);
 
@@ -325,14 +330,21 @@ SUZUME_EXPORT void suzume_tags_free(suzume_tags_t* tags);
 /**
  * @brief Add user-dictionary entries from UTF-8 source text
  * @param handle Suzume handle
- * @param data Current TSV or legacy 3-column CSV source bytes. TSV columns may
- *             carry lemma/conjugation metadata; the legacy CSV cost column is
- *             accepted but ignored.
+ * @param data Current TSV or legacy 3-column CSV source bytes. TSV rows use
+ *             surface<TAB>POS[<TAB>conj_type][<TAB>lemma]. The legacy CSV cost
+ *             column is accepted but ignored.
  * @param size Data size in bytes
  * @return 1 on success, 0 on failure
  * @note Loads are additive until suzume_clear_user_dictionaries() is called.
  */
 SUZUME_EXPORT int suzume_load_user_dict(suzume_t handle, const char* data, size_t size);
+
+/**
+ * @brief Add user-dictionary entries and return the installed entry count
+ * @return Number of installed entries, or 0 on failure. Inspect
+ *         suzume_last_error_code() to distinguish failure.
+ */
+SUZUME_EXPORT size_t suzume_load_user_dict_count(suzume_t handle, const char* data, size_t size);
 
 /**
  * @brief Load binary dictionary from memory (as user dictionary)
@@ -345,10 +357,18 @@ SUZUME_EXPORT int suzume_load_user_dict(suzume_t handle, const char* data, size_
 SUZUME_EXPORT int suzume_load_binary_dict(suzume_t handle, const uint8_t* data, size_t size);
 
 /**
- * @brief Remove all source and binary user dictionaries loaded by this handle
+ * @brief Remove user dictionaries explicitly loaded through this handle
+ *
+ * The automatically loaded bundled user dictionary remains installed.
  * @return 1 on success, 0 on invalid handle
  */
 SUZUME_EXPORT int suzume_clear_user_dictionaries(suzume_t handle);
+
+/**
+ * @brief Check whether the handle has a loaded L2 core binary dictionary
+ * @return 1 when loaded, 0 when absent or the handle is invalid
+ */
+SUZUME_EXPORT int suzume_has_core_dictionary(suzume_t handle);
 
 // --- Utility functions ---
 
@@ -373,9 +393,21 @@ SUZUME_EXPORT suzume_error_code_t suzume_last_error_code(void);
 
 /**
  * @brief Get the Japanese label for a serialized conjugation type
- * @return Static string, or NULL when code is out of range
+ * @return Static string, or NULL when code is none/out of range
  */
 SUZUME_EXPORT const char* suzume_conjugation_type_label(suzume_conjugation_type_t code);
+
+/**
+ * @brief Get the stable label for a serialized extended POS code
+ * @return Static string, or NULL when code is out of range
+ */
+SUZUME_EXPORT const char* suzume_extended_pos_label(suzume_extended_pos_t code);
+
+/**
+ * @brief Get the Japanese label for a serialized conjugation form code
+ * @return Static string, or NULL when code is out of range
+ */
+SUZUME_EXPORT const char* suzume_conjugation_form_label(suzume_conjugation_form_t code);
 
 /**
  * @brief Get the stable English label for a serialized POS code
@@ -437,7 +469,8 @@ SUZUME_EXPORT size_t suzume_offsetof_result(uint32_t field);
  * @brief Get byte offset of field in suzume_morpheme_t
  * @param field 0=surface, 1=base_form, 2=start, 3=end, 4=score,
  *              5=pos, 6=extended_pos, 7=conjugation_type,
- *              8=conjugation_form, 9=flags
+ *              8=conjugation_form, 9=flags, 10=surface_size,
+ *              11=base_form_size
  */
 SUZUME_EXPORT size_t suzume_offsetof_morpheme(uint32_t field);
 
@@ -461,23 +494,10 @@ SUZUME_EXPORT size_t suzume_offsetof_tag_options(uint32_t field);
  * @param field 0=preserve_vu, 1=preserve_case, 2=preserve_symbols,
  *              3=mode, 4=lemmatize, 5=merge_compounds,
  *              6=skip_user_dictionary, 7=skip_core_dictionary,
- *              8=report_scorer_config, 9=scorer_options_json
+ *              8=report_scorer_config, 9=skip_env_config,
+ *              10=scorer_options_json, 11=data_directory
  */
 SUZUME_EXPORT size_t suzume_offsetof_extended_options(uint32_t field);
-
-/**
- * @brief Allocate C-ABI-compatible memory
- * @param size Size in bytes
- * @return Pointer to allocated memory
- */
-SUZUME_EXPORT void* suzume_malloc(size_t size);
-
-/**
- * @brief Free memory returned by suzume_malloc
- * @param ptr Pointer to free
- * @note Passing NULL is allowed and has no effect.
- */
-SUZUME_EXPORT void suzume_free(void* ptr);
 
 #ifdef __cplusplus
 }

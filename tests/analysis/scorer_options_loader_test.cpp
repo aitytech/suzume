@@ -399,6 +399,19 @@ TEST_F(EnvOverrideTest, InvalidValueWithSuffix) {
   EXPECT_FLOAT_EQ(opts.candidates.join.compound_verb_bonus, original);
 }
 
+TEST_F(EnvOverrideTest, NonFiniteValuesAreRejected) {
+  for (const char* value : {"nan", "inf", "-inf"}) {
+    ScopedEnv env("SUZUME_SCORER_UNARY_noun_prior", value);
+    ScorerOptions opts;
+    const float original = opts.noun_prior;
+
+    const int count = ScorerOptionsLoader::applyEnvOverrides(opts, false);
+
+    EXPECT_EQ(count, 0) << value;
+    EXPECT_FLOAT_EQ(opts.noun_prior, original) << value;
+  }
+}
+
 TEST_F(EnvOverrideTest, NegativeValue) {
   ScopedEnv env("SUZUME_SCORER_JOIN_verified_v1_bonus", "-2.5");
 
@@ -544,6 +557,18 @@ TEST_F(LoadFromEnvTest, InvalidConfigFile) {
   // Invalid file should not be recorded
   EXPECT_FALSE(result.hasConfig());
   EXPECT_TRUE(result.config_path.empty());
+}
+
+TEST_F(LoadFromEnvTest, ReportedWarningsAreReturnedToTheCaller) {
+  ScopedEnv env("SUZUME_SCORER_UNARY_noun_prior", "nan");
+
+  ScorerOptions opts;
+  const auto result = ScorerOptionsLoader::loadFromEnv(opts, true);
+
+  EXPECT_EQ(result.env_override_count, 0);
+  ASSERT_EQ(result.warnings.size(), 1u);
+  EXPECT_NE(result.warnings.front().find("Invalid value"), std::string::npos);
+  EXPECT_NE(result.warnings.front().find("nan"), std::string::npos);
 }
 
 #endif  // __EMSCRIPTEN__

@@ -40,6 +40,7 @@ struct UnknownOptions {
 
   // Verb candidate generation options
   VerbCandidateOptions verb_candidate_options;
+  grammar::InflectionScorerOptions inflection_scorer_options;
 };
 
 /**
@@ -54,7 +55,11 @@ struct UnknownCandidate {
   float cost{0.0F};
   bool has_suffix{false};
   bool lemma_verified{false};  // Lemma (base form) attested as a dictionary verb at generation time
-  std::string lemma;           // Base form (for verbs/adjectives)
+  bool bracketed_noun_rescue{false};
+  bool requires_left_content_edge{false};
+  bool requires_left_attributive_edge{false};
+  bool rejects_preceding_content_edge{false};
+  std::string lemma;  // Base form (for verbs/adjectives)
   dictionary::ConjugationType conj_type{dictionary::ConjugationType::None};
   // Retained outside debug builds because connection scoring uses selected
   // generated-candidate origins.

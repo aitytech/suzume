@@ -160,11 +160,20 @@ if(BUILD_SHARED AND NOT BUILD_WASM)
     set_target_properties(suzume PROPERTIES OUTPUT_NAME suzume_static)
   endif()
   if(APPLE)
-    # Relocatable dylib so the wheel can bundle it next to the Python package.
-    set_target_properties(suzume_shared PROPERTIES
-      INSTALL_NAME_DIR "@loader_path"
-      BUILD_WITH_INSTALL_NAME_DIR ON
-    )
+    if(SUZUME_LIB_SOVERSION)
+      # System/package installs are found through the consuming target's rpath.
+      # @loader_path would incorrectly require the dylib beside every executable.
+      set_target_properties(suzume_shared PROPERTIES
+        INSTALL_NAME_DIR "@rpath"
+        BUILD_WITH_INSTALL_NAME_DIR ON
+      )
+    else()
+      # The flat Python wheel bundles the unversioned dylib beside the package.
+      set_target_properties(suzume_shared PROPERTIES
+        INSTALL_NAME_DIR "@loader_path"
+        BUILD_WITH_INSTALL_NAME_DIR ON
+      )
+    endif()
     target_link_options(suzume_shared PRIVATE "LINKER:-dead_strip")
   elseif(UNIX)
     target_link_options(suzume_shared PRIVATE "LINKER:--gc-sections")

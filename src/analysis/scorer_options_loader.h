@@ -11,11 +11,15 @@
 //   SECTION: JOIN, SPLIT, UNARY, BIGRAM, VERB, INFL
 //   KEY: Field name (e.g., compound_verb_bonus)
 //
-// Priority: Default < JSON file < Environment variables
+// Within the environment layer:
+//   Default < SUZUME_SCORER_CONFIG file < SUZUME_SCORER_* variables
+// Suzume applies this environment layer before scorer_options_json, so an
+// explicit program JSON always has final priority.
 // =============================================================================
 
 #include <cstddef>
 #include <string>
+#include <vector>
 
 #include "candidate_options.h"
 #include "scorer.h"
@@ -27,6 +31,7 @@ namespace suzume::analysis {
 struct ScorerLoadResult {
   std::string config_path;    // Path to JSON config file (if loaded)
   int env_override_count{0};  // Number of individual env overrides applied
+  std::vector<std::string> warnings;
 
   bool hasConfig() const { return !config_path.empty() || env_override_count > 0; }
 };

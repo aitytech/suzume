@@ -87,6 +87,94 @@ TEST_F(SuzumeApiTest, SplitModeDisablesMixedScriptJoinCandidates) {
   EXPECT_GT(split_results.size(), normal_results.size());
 }
 
+TEST_F(SuzumeApiTest, VerbCandidateScorerJsonChangesAnalysis) {
+  SuzumeOptions default_options = makeTestOptions();
+  default_options.skip_core_dictionary = true;
+  Suzume default_instance(default_options);
+
+  SuzumeOptions tuned_options = default_options;
+  tuned_options.scorer_options_json = R"({"verb_candidates":{"confidence_ichidan_dict":100}})";
+  Suzume tuned_instance(tuned_options);
+
+  const auto default_results = default_instance.analyze("食べました");
+  const auto tuned_results = tuned_instance.analyze("食べました");
+
+  ASSERT_EQ(default_results.size(), 3u);
+  EXPECT_EQ(default_results[0].surface, "食べ");
+  ASSERT_FALSE(tuned_results.empty());
+  EXPECT_NE(tuned_results[0].surface, default_results[0].surface);
+}
+
+TEST_F(SuzumeApiTest, InflectionScorerJsonChangesAnalysis) {
+  SuzumeOptions default_options = makeTestOptions();
+  default_options.skip_core_dictionary = true;
+  Suzume default_instance(default_options);
+
+  SuzumeOptions tuned_options = default_options;
+  tuned_options.scorer_options_json = R"({"inflection":{"confidence_ceiling":0}})";
+  Suzume tuned_instance(tuned_options);
+
+  const auto default_results = default_instance.analyze("歩いています");
+  const auto tuned_results = tuned_instance.analyze("歩いています");
+
+  ASSERT_EQ(default_results.size(), 4u);
+  EXPECT_EQ(default_results[0].surface, "歩い");
+  ASSERT_FALSE(tuned_results.empty());
+  EXPECT_EQ(tuned_results[0].surface, "歩");
+}
+
+TEST_F(SuzumeApiTest, ProgramScorerJsonOverridesEnvironment) {
+#ifndef __EMSCRIPTEN__
+  setenv("SUZUME_SCORER_INFL_confidence_ceiling", "0", 1);
+  SuzumeOptions options = makeTestOptions();
+  options.skip_core_dictionary = true;
+  options.scorer_options_json = R"({"inflection":{"confidence_ceiling":0.95}})";
+  Suzume instance(options);
+  unsetenv("SUZUME_SCORER_INFL_confidence_ceiling");
+
+  const auto results = instance.analyze("歩いています");
+  ASSERT_FALSE(results.empty());
+  EXPECT_EQ(results.front().surface, "歩い");
+#endif
+}
+
+TEST_F(SuzumeApiTest, EnvironmentScorerConfigCanBeDisabled) {
+#ifndef __EMSCRIPTEN__
+  setenv("SUZUME_SCORER_INFL_confidence_ceiling", "0", 1);
+  SuzumeOptions options = makeTestOptions();
+  options.skip_core_dictionary = true;
+  options.skip_env_config = true;
+  Suzume instance(options);
+  unsetenv("SUZUME_SCORER_INFL_confidence_ceiling");
+
+  const auto results = instance.analyze("歩いています");
+  ASSERT_FALSE(results.empty());
+  EXPECT_EQ(results.front().surface, "歩い");
+#endif
+}
+
+TEST_F(SuzumeApiTest, InvalidDirectScorerJsonIsReportedThroughWarnings) {
+  SuzumeOptions options = makeTestOptions();
+  options.scorer_options_json = "{";
+  Suzume instance(options);
+
+  const auto& warnings = instance.dictionaryWarnings();
+  ASSERT_FALSE(warnings.empty());
+  EXPECT_NE(warnings.front().find("Failed to load direct scorer config"), std::string::npos);
+}
+
+TEST_F(SuzumeApiTest, ActiveScorerConfigStatusIsReportedThroughWarnings) {
+  SuzumeOptions options = makeTestOptions();
+  options.report_scorer_config = true;
+  options.scorer_options_json = R"({"unary":{"noun_prior":0.25}})";
+  Suzume instance(options);
+
+  const auto& warnings = instance.dictionaryWarnings();
+  ASSERT_FALSE(warnings.empty());
+  EXPECT_NE(warnings.front().find("Scorer configuration active"), std::string::npos);
+  EXPECT_NE(warnings.front().find("program_json=active"), std::string::npos);
+}
+
 TEST_F(SuzumeApiTest, SetModeUpdatesTokenizerAndPostprocessor) {
   Suzume instance(makeTestOptions());
 
@@ -116,6 +204,88 @@ TEST_F(SuzumeApiTest, SuruVerbSplitsWithoutCoreDictionary) {
   EXPECT_EQ(results[1].surface, "する");
   EXPECT_EQ(results[1].pos, core::PartOfSpeech::Verb);
   EXPECT_EQ(results[2].surface, "会社");
+}
+
+TEST_F(SuzumeApiTest, DifficultySuffixPastFormKeepsItsAdjectiveBoundary) {
+  Suzume instance(makeTestOptions());
+
+  const auto results = instance.analyze("読みやすかった");
+  ASSERT_EQ(results.size(), 3u);
+  EXPECT_EQ(results[0].surface, "読み");
+  EXPECT_EQ(results[1].surface, "やすかっ");
+  EXPECT_EQ(results[1].pos, core::PartOfSpeech::Adjective);
+  EXPECT_EQ(results[1].lemma, "やすい");
+  EXPECT_EQ(results[1].extended_pos, core::ExtendedPOS::AdjKatt);
+  EXPECT_EQ(results[2].surface, "た");
+}
+
+TEST_F(SuzumeApiTest, KyotoHonorificYasuRequiresItsHonorificHost) {
+  Suzume instance(makeTestOptions());
+
+  const auto prefixed_verb = instance.analyze("お見やす");
+  ASSERT_EQ(prefixed_verb.size(), 3u);
+  EXPECT_EQ(prefixed_verb[0].extended_pos, core::ExtendedPOS::Prefix);
+  EXPECT_EQ(prefixed_verb[1].extended_pos, core::ExtendedPOS::VerbRenyokei);
+  EXPECT_EQ(prefixed_verb[2].surface, "やす");
+  EXPECT_EQ(prefixed_verb[2].extended_pos, core::ExtendedPOS::AuxHonorific);
+
+  const auto benefactive_request = instance.analyze("読んでおくれやす");
+  ASSERT_EQ(benefactive_request.size(), 4u);
+  EXPECT_EQ(benefactive_request[2].extended_pos, core::ExtendedPOS::AuxBenefactive);
+  EXPECT_EQ(benefactive_request[3].surface, "やす");
+  EXPECT_EQ(benefactive_request[3].extended_pos, core::ExtendedPOS::AuxHonorific);
+}
+
+TEST_F(SuzumeApiTest, KuruKanaMizenkeiRequiresItsSelectingAuxiliary) {
+  Suzume instance(makeTestOptions());
+
+  const auto passive = instance.analyze("彼がこられる");
+  ASSERT_EQ(passive.size(), 4u);
+  EXPECT_EQ(passive[2].surface, "こ");
+  EXPECT_EQ(passive[2].lemma, "くる");
+  EXPECT_EQ(passive[2].extended_pos, core::ExtendedPOS::VerbMizenkei);
+  EXPECT_EQ(passive[3].extended_pos, core::ExtendedPOS::AuxPassive);
+
+  const auto causative = instance.analyze("彼をこさせる");
+  ASSERT_EQ(causative.size(), 4u);
+  EXPECT_EQ(causative[2].surface, "こ");
+  EXPECT_EQ(causative[2].lemma, "くる");
+  EXPECT_EQ(causative[2].extended_pos, core::ExtendedPOS::VerbMizenkei);
+  EXPECT_EQ(causative[3].extended_pos, core::ExtendedPOS::AuxCausative);
+
+  const auto ra_nuki_potential = instance.analyze("もうすぐこれる");
+  ASSERT_EQ(ra_nuki_potential.size(), 3u);
+  EXPECT_EQ(ra_nuki_potential[0].extended_pos, core::ExtendedPOS::Adverb);
+  EXPECT_EQ(ra_nuki_potential[1].extended_pos, core::ExtendedPOS::Adverb);
+  EXPECT_EQ(ra_nuki_potential[2].surface, "これる");
+  EXPECT_EQ(ra_nuki_potential[2].pos, core::PartOfSpeech::Verb);
+}
+
+TEST_F(SuzumeApiTest, DictionaryHomographsPreserveProductiveNominalBoundaries) {
+  Suzume instance(makeTestOptions());
+
+  for (const std::string_view text : {"重要なお知らせ", "大切なお願い", "簡単なお仕事", "静かなお庭"}) {
+    SCOPED_TRACE(text);
+    const auto results = instance.analyze(text);
+    ASSERT_EQ(results.size(), 4u);
+    EXPECT_EQ(results[0].extended_pos, core::ExtendedPOS::AdjNaAdj);
+    EXPECT_EQ(results[1].surface, "な");
+    EXPECT_EQ(results[1].extended_pos, core::ExtendedPOS::AuxCopulaDa);
+    EXPECT_EQ(results[2].surface, "お");
+    EXPECT_EQ(results[2].extended_pos, core::ExtendedPOS::Prefix);
+    EXPECT_EQ(results[3].pos, core::PartOfSpeech::Noun);
+  }
+
+  const auto coordinated = instance.analyze("行為やら経過やら確認する");
+  ASSERT_EQ(coordinated.size(), 6u);
+  EXPECT_EQ(coordinated[0].surface, "行為");
+  EXPECT_EQ(coordinated[1].extended_pos, core::ExtendedPOS::ParticleAdverbial);
+  EXPECT_EQ(coordinated[2].surface, "経過");
+
+  const auto temporal = instance.analyze("当時やらの話");
+  ASSERT_EQ(temporal.size(), 4u);
+  EXPECT_EQ(temporal[0].surface, "当時");
+  EXPECT_EQ(temporal[1].extended_pos, core::ExtendedPOS::ParticleAdverbial);
 }
 
 TEST_F(SuzumeApiTest, AnalyzeSimpleText) {
@@ -275,6 +445,74 @@ TEST_F(SuzumeApiTest, DefaultOptionsPreserveUnicodeLettersAndUnclassifiedText) {
   }
 }
 
+TEST_F(SuzumeApiTest, ControlCharactersAreRemovableSymbolBoundaries) {
+  Suzume instance(makeTestOptions());
+  const auto results = instance.analyze("東京\tみかん\r大阪\u00A0りんご");
+
+  ASSERT_FALSE(results.empty());
+  for (const auto& morpheme : results) {
+    EXPECT_NE(morpheme.pos, core::PartOfSpeech::Symbol);
+    EXPECT_EQ(morpheme.surface.find_first_of("\t\r"), std::string::npos);
+  }
+  const auto citrus =
+      std::find_if(results.begin(), results.end(), [](const auto& morpheme) { return morpheme.surface == "みかん"; });
+  ASSERT_NE(citrus, results.end());
+  EXPECT_EQ(citrus->pos, core::PartOfSpeech::Noun);
+}
+
+TEST_F(SuzumeApiTest, PreservedNonWordCodepointsFormOneMaximalRun) {
+  SuzumeOptions options = makeTestOptions();
+  options.remove_symbols = false;
+  Suzume instance(options);
+
+  const auto results = instance.analyze("○×（￣▽￣）");
+  ASSERT_EQ(results.size(), 1u);
+  EXPECT_EQ(results.front().surface, "○×（￣▽￣）");
+  EXPECT_EQ(results.front().pos, core::PartOfSpeech::Symbol);
+}
+
+TEST_F(SuzumeApiTest, IdeographicVariationSelectorStaysWithItsWord) {
+  Suzume instance(makeTestOptions());
+
+  const auto results = instance.analyze("葛󠄀城市");
+  ASSERT_EQ(results.size(), 1u);
+  EXPECT_EQ(results.front().surface, "葛󠄀城市");
+  EXPECT_EQ(results.front().pos, core::PartOfSpeech::Noun);
+}
+
+TEST_F(SuzumeApiTest, ZeroWidthSpaceStaysInsideItsWord) {
+  Suzume instance(makeTestOptions());
+
+  const auto results = instance.analyze("東京\u200B都");
+  ASSERT_EQ(results.size(), 1u);
+  EXPECT_EQ(results.front().surface, "東京\u200B都");
+  EXPECT_EQ(results.front().pos, core::PartOfSpeech::Noun);
+}
+
+TEST_F(SuzumeApiTest, ProlongedMarkWidthProducesIdenticalAnalysis) {
+  Suzume instance(makeTestOptions());
+
+  const auto fullwidth = instance.analyze("長いーー音");
+  const auto halfwidth = instance.analyze("長いｰｰ音");
+  ASSERT_EQ(fullwidth.size(), halfwidth.size());
+  for (size_t idx = 0; idx < fullwidth.size(); ++idx) {
+    EXPECT_EQ(fullwidth[idx].surface, halfwidth[idx].surface);
+    EXPECT_EQ(fullwidth[idx].lemma, halfwidth[idx].lemma);
+    EXPECT_EQ(fullwidth[idx].pos, halfwidth[idx].pos);
+    EXPECT_EQ(fullwidth[idx].start_pos, halfwidth[idx].start_pos);
+    EXPECT_EQ(fullwidth[idx].end_pos, halfwidth[idx].end_pos);
+  }
+}
+
+TEST_F(SuzumeApiTest, NumericSnakeCaseIdentifierStaysWhole) {
+  Suzume instance(makeTestOptions());
+
+  const auto results = instance.analyze("2024_01");
+  ASSERT_EQ(results.size(), 1u);
+  EXPECT_EQ(results.front().surface, "2024_01");
+  EXPECT_EQ(results.front().pos, core::PartOfSpeech::Noun);
+}
+
 TEST_F(SuzumeApiTest, PretokenizedMorphemesHaveExtendedPos) {
   Suzume instance(makeTestOptions());
   auto results = instance.analyze("https://example.com");
@@ -431,6 +669,47 @@ TEST_F(SuzumeApiTest, DemonstrativeIdentificationEndsInNoun) {
   EXPECT_EQ(hurry.lemma, "急ぐ");
 }
 
+TEST_F(SuzumeApiTest, PreservingSymbolsDoesNotChangeNeighboringRoles) {
+  SuzumeOptions filtered_options = makeTestOptions();
+  filtered_options.remove_symbols = true;
+  Suzume filtered(filtered_options);
+
+  SuzumeOptions preserved_options = makeTestOptions();
+  preserved_options.remove_symbols = false;
+  Suzume preserved(preserved_options);
+
+  const auto filtered_results = filtered.analyze("「本ソフト」を使う");
+  const auto preserved_results = preserved.analyze("「本ソフト」を使う");
+  const auto find_hon = [](const std::vector<core::Morpheme>& morphemes) {
+    return std::find_if(morphemes.begin(), morphemes.end(),
+                        [](const core::Morpheme& morpheme) { return morpheme.surface == "本"; });
+  };
+  const auto filtered_hon = find_hon(filtered_results);
+  const auto preserved_hon = find_hon(preserved_results);
+  ASSERT_NE(filtered_hon, filtered_results.end());
+  ASSERT_NE(preserved_hon, preserved_results.end());
+  EXPECT_EQ(preserved_hon->pos, filtered_hon->pos);
+  EXPECT_EQ(preserved_hon->extended_pos, filtered_hon->extended_pos);
+}
+
+TEST_F(SuzumeApiTest, DebugAnalysisUsesTheProductionPretokenizerPipeline) {
+  Suzume instance(makeTestOptions());
+  const std::string text = "2024年12月23日にhttps://example.com/abcを見た。価格は1,000円。";
+  const auto production = instance.analyze(text);
+  core::Lattice lattice(0);
+  const auto debug = instance.analyzeDebug(text, &lattice);
+
+  ASSERT_EQ(debug.size(), production.size());
+  for (size_t index = 0; index < production.size(); ++index) {
+    EXPECT_EQ(debug[index].surface, production[index].surface);
+    EXPECT_EQ(debug[index].pos, production[index].pos);
+    EXPECT_EQ(debug[index].lemma, production[index].lemma);
+    EXPECT_EQ(debug[index].start_pos, production[index].start_pos);
+    EXPECT_EQ(debug[index].end_pos, production[index].end_pos);
+  }
+  EXPECT_LT(lattice.textLength(), production.back().end_pos);
+}
+
 TEST_F(SuzumeApiTest, GenerateTagsReturnsResults) {
   Suzume instance(makeTestOptions());
   // "Tokyo is beautiful"
@@ -480,22 +759,39 @@ TEST_F(SuzumeApiTest, MoveAssign) {
 }
 
 TEST_F(SuzumeApiTest, AnalyzeWithLemmatizeOption) {
-  SuzumeOptions opts = makeTestOptions();
-  opts.lemmatize = true;
-  Suzume instance(opts);
+  SuzumeOptions lemmatized_options = makeTestOptions();
+  lemmatized_options.lemmatize = true;
+  Suzume lemmatized(lemmatized_options);
+  SuzumeOptions source_lemma_options = makeTestOptions();
+  source_lemma_options.lemmatize = false;
+  Suzume source_lemma(source_lemma_options);
 
-  // "ate" (tabeta) - past tense of taberu
-  auto results = instance.analyze("\xe9\xa3\x9f\xe3\x81\xb9\xe3\x81\x9f");
-  EXPECT_FALSE(results.empty());
+  const auto corrected = lemmatized.analyze("歩きます");
+  const auto original = source_lemma.analyze("歩きます");
+  ASSERT_EQ(corrected.size(), 2u);
+  ASSERT_EQ(original.size(), corrected.size());
+  EXPECT_EQ(corrected[0].surface, "歩き");
+  EXPECT_EQ(corrected[0].lemma, "歩く");
+  EXPECT_EQ(original[0].lemma, "歩き");
 }
 
 TEST_F(SuzumeApiTest, AnalyzeWithMergeCompoundsOption) {
-  SuzumeOptions opts = makeTestOptions();
-  opts.merge_compounds = true;
-  Suzume instance(opts);
+  SuzumeOptions split_options = makeTestOptions();
+  split_options.merge_compounds = false;
+  Suzume split(split_options);
+  SuzumeOptions merged_options = makeTestOptions();
+  merged_options.merge_compounds = true;
+  Suzume merged(merged_options);
 
-  auto results = instance.analyze("\xe6\x9d\xb1\xe4\xba\xac\xe3\x81\xaf\xe7\xbe\x8e\xe3\x81\x97\xe3\x81\x84");
-  EXPECT_FALSE(results.empty());
+  const auto separate = split.analyze("東京2024");
+  const auto combined = merged.analyze("東京2024");
+  ASSERT_EQ(separate.size(), 2u);
+  EXPECT_EQ(separate[0].surface, "東京");
+  EXPECT_EQ(separate[1].surface, "2024");
+  ASSERT_EQ(combined.size(), 1u);
+  EXPECT_EQ(combined[0].surface, "東京2024");
+  EXPECT_EQ(combined[0].start_pos, separate.front().start_pos);
+  EXPECT_EQ(combined[0].end_pos, separate.back().end_pos);
 }
 
 TEST_F(SuzumeApiTest, LoadUserDictionaryFromInvalidPath) {
@@ -535,6 +831,20 @@ TEST_F(SuzumeApiTest, LoadUserDictionaryFromMemoryResultReportsEntryCount) {
   auto result = instance.loadUserDictionaryFromMemoryResult(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 2u);
+}
+
+TEST_F(SuzumeApiTest, SourceDictionaryReportsExpandedInstallCountAndSkippedLines) {
+  Suzume instance(makeTestOptions());
+  const char* source =
+      "missing-pos\n"
+      "検査する\tVERB\tSURU\n";
+
+  auto result = instance.loadUserDictionaryFromMemoryResult(source, std::strlen(source));
+
+  ASSERT_TRUE(result.hasValue());
+  EXPECT_GT(result.value(), 1u);
+  ASSERT_FALSE(instance.dictionaryWarnings().empty());
+  EXPECT_NE(instance.dictionaryWarnings().back().find("line 1"), std::string::npos);
 }
 
 TEST_F(SuzumeApiTest, LoadBinaryDictionaryFromInvalidMemory) {
@@ -602,6 +912,47 @@ TEST_F(SuzumeApiTest, AutoDictionaryLoadWarningsAreRecorded) {
 #endif
 }
 
+TEST_F(SuzumeApiTest, MissingAutomaticCoreDictionaryIsReported) {
+#ifndef __EMSCRIPTEN__
+  namespace fs = std::filesystem;
+  const fs::path old_working_directory = fs::current_path();
+  const char* old_data_dir = std::getenv("SUZUME_DATA_DIR");
+  const char* old_home = std::getenv("HOME");
+  const std::string old_data_value = old_data_dir != nullptr ? old_data_dir : "";
+  const std::string old_home_value = old_home != nullptr ? old_home : "";
+  const fs::path empty_dir = fs::temp_directory_path() / "suzume_missing_dict_test";
+  fs::remove_all(empty_dir);
+  fs::create_directories(empty_dir);
+
+  setenv("SUZUME_DATA_DIR", empty_dir.string().c_str(), 1);
+  setenv("HOME", empty_dir.string().c_str(), 1);
+  fs::current_path(empty_dir);
+  SuzumeOptions opts = makeTestOptions();
+  Suzume instance(opts);
+  fs::current_path(old_working_directory);
+  if (old_data_dir != nullptr) {
+    setenv("SUZUME_DATA_DIR", old_data_value.c_str(), 1);
+  } else {
+    unsetenv("SUZUME_DATA_DIR");
+  }
+  if (old_home != nullptr) {
+    setenv("HOME", old_home_value.c_str(), 1);
+  } else {
+    unsetenv("HOME");
+  }
+  fs::remove_all(empty_dir);
+
+  EXPECT_FALSE(instance.hasCoreDictionary());
+  const auto& warnings = instance.dictionaryWarnings();
+  ASSERT_FALSE(warnings.empty());
+  EXPECT_NE(warnings.front().find("Dictionary not found"), std::string::npos);
+  EXPECT_NE(warnings.front().find("core.dic"), std::string::npos);
+  EXPECT_TRUE(std::any_of(warnings.begin(), warnings.end(), [](const std::string& warning) {
+    return warning.find("Using external dictionary directory") != std::string::npos;
+  }));
+#endif
+}
+
 TEST_F(SuzumeApiTest, ScorerEnvWarningsAreSilentByDefault) {
 #ifndef __EMSCRIPTEN__
   setenv("SUZUME_SCORER_UNARY_noun_prior", "not-a-number", 1);
@@ -618,15 +969,16 @@ TEST_F(SuzumeApiTest, ScorerEnvWarningsCanBeReported) {
 #ifndef __EMSCRIPTEN__
   setenv("SUZUME_SCORER_UNARY_noun_prior", "not-a-number", 1);
   testing::internal::CaptureStderr();
-  {
-    SuzumeOptions opts = makeTestOptions();
-    opts.report_scorer_config = true;
-    Suzume instance(opts);
-  }
-  std::string stderr_output = testing::internal::GetCapturedStderr();
+  SuzumeOptions opts = makeTestOptions();
+  opts.report_scorer_config = true;
+  Suzume instance(opts);
+  const std::string stderr_output = testing::internal::GetCapturedStderr();
   unsetenv("SUZUME_SCORER_UNARY_noun_prior");
 
-  EXPECT_NE(stderr_output.find("Invalid value"), std::string::npos);
+  EXPECT_TRUE(stderr_output.empty());
+  const auto& warnings = instance.dictionaryWarnings();
+  ASSERT_FALSE(warnings.empty());
+  EXPECT_NE(warnings.front().find("Invalid value"), std::string::npos);
 #endif
 }
 

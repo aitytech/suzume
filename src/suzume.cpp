@@ -1,9 +1,9 @@
 #include "suzume.h"
 
 #include <cstdlib>
+#include <iterator>
 #ifndef __EMSCRIPTEN__
 #include <fstream>
-#include <iterator>
 #endif
 #include <utility>
 #include <vector>
@@ -38,7 +38,8 @@ namespace {
 
 struct LoadedSourceDictionary {
   std::shared_ptr<dictionary::UserDictionary> dictionary;
-  size_t source_entry_count;
+  size_t installed_entry_count;
+  std::vector<std::string> warnings;
 };
 
 void refreshLowInformationFlags(std::vector<core::Morpheme>& morphemes) {
@@ -58,13 +59,31 @@ core::Expected<LoadedSourceDictionary, core::Error> loadSourceDictionaryFromMemo
   if (!parsed.hasValue()) {
     return core::makeUnexpected(parsed.error());
   }
+  if (parsed.value().entries.empty()) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::ParseError, "Dictionary source contains no loadable entries"));
+  }
 
   auto expanded = grammar::expandDictionarySourceEntries(parsed.value().entries);
   auto user_dictionary = std::make_shared<dictionary::UserDictionary>();
+  size_t installed_entry_count = 0;
   for (const auto& entry : expanded.entries) {
-    user_dictionary->addEntry(entry);
+    installed_entry_count += user_dictionary->addEntry(entry) ? 1U : 0U;
   }
-  return LoadedSourceDictionary{std::move(user_dictionary), parsed.value().entries.size()};
+  if (installed_entry_count == 0) {
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::ParseError, "Dictionary source contains no valid UTF-8 entries"));
+  }
+  std::vector<std::string> warnings = std::move(parsed.value().warnings);
+  if (installed_entry_count < expanded.entries.size()) {
+    warnings.push_back("Skipped " + std::to_string(expanded.entries.size() - installed_entry_count) +
+                       " invalid dictionary entries");
+  }
+  if (expanded.duplicates_skipped > 0) {
+    warnings.push_back("Skipped " + std::to_string(expanded.duplicates_skipped) +
+                       " duplicate expanded dictionary entries");
+  }
+  return LoadedSourceDictionary{std::move(user_dictionary), installed_entry_count, std::move(warnings)};
 }
 
 #ifndef SUZUME_USE_EMBEDDED_DICT
@@ -73,16 +92,19 @@ namespace fs = std::filesystem;
 /**
  * @brief Get dictionary search paths in priority order
  */
-std::vector<fs::path> getDictSearchPaths() {
+std::vector<fs::path> getDictSearchPaths(const std::string& data_directory) {
   std::vector<fs::path> paths;
 
-  // 1. Environment variable $SUZUME_DATA_DIR
+  // 1. Program-selected directory (bindings use this for bundled data).
+  if (!data_directory.empty()) {
+    paths.emplace_back(data_directory);
+    return paths;
+  }
+
+  // 2. Environment variable $SUZUME_DATA_DIR
   if (const char* env_path = std::getenv("SUZUME_DATA_DIR")) {
     paths.emplace_back(env_path);
   }
-
-  // 2. Current directory ./data/
-  paths.emplace_back("./data");
 
   // 3. Per-user directory.
 #ifdef _WIN32
@@ -108,6 +130,10 @@ std::vector<fs::path> getDictSearchPaths() {
   paths.emplace_back("/usr/share/suzume");
 #endif
 
+  // 5. Source-checkout fallback. Installed locations take precedence so a
+  // writable service working directory cannot shadow shipped dictionaries.
+  paths.emplace_back("./data");
+
   return paths;
 }
 
@@ -116,8 +142,8 @@ std::vector<fs::path> getDictSearchPaths() {
  * @param filename Dictionary filename (e.g., "core.dic")
  * @return Full path if found, empty string otherwise
  */
-std::string findDictionary(const std::string& filename) {
-  for (const auto& dir : getDictSearchPaths()) {
+std::string findDictionary(const std::string& filename, const std::string& data_directory) {
+  for (const auto& dir : getDictSearchPaths(data_directory)) {
     fs::path dict_path = dir / filename;
     if (fs::exists(dict_path) && fs::is_regular_file(dict_path)) {
       return dict_path.string();
@@ -136,37 +162,55 @@ struct Suzume::Impl {
   std::shared_ptr<dictionary::UserDictionary> custom_dict;
   std::vector<std::string> dictionary_warnings;
 
-  static analysis::ScorerOptions loadScorerConfig(const SuzumeOptions& opts) {
-    analysis::ScorerOptions scorer_opts = opts.scorer_options;
-    if (!opts.scorer_options_json.empty()) {
-      std::string error_message;
-      if (!analysis::ScorerOptionsLoader::loadFromJsonString(opts.scorer_options_json, scorer_opts, &error_message) &&
-          opts.report_scorer_config) {
-#ifndef SUZUME_USE_EMBEDDED_DICT
-        std::cerr << "warning: Failed to load direct scorer config: " << error_message << "\n";
-#endif
-      }
-    }
-#ifndef SUZUME_USE_EMBEDDED_DICT
-    // Load from environment variables (SUZUME_SCORER_CONFIG and SUZUME_SCORER_*)
-    auto result = analysis::ScorerOptionsLoader::loadFromEnv(scorer_opts, opts.report_scorer_config);
+  struct LoadedAnalyzerConfig {
+    analysis::AnalyzerOptions analyzer_options;
+    std::vector<std::string> diagnostics;
+  };
 
-    // Output status message when config is active (debug feature)
-    if (opts.report_scorer_config && result.hasConfig()) {
-      std::cerr << "[scorer-config] ";
+  static LoadedAnalyzerConfig loadAnalyzerConfig(const SuzumeOptions& opts) {
+    analysis::ScorerOptions scorer_opts = opts.scorer_options;
+    std::vector<std::string> diagnostics;
+    std::string config_status;
+
+#ifndef __EMSCRIPTEN__
+    if (!opts.skip_env_config) {
+      auto result = analysis::ScorerOptionsLoader::loadFromEnv(scorer_opts, opts.report_scorer_config);
+      diagnostics.insert(diagnostics.end(), std::make_move_iterator(result.warnings.begin()),
+                         std::make_move_iterator(result.warnings.end()));
       if (!result.config_path.empty()) {
-        std::cerr << "json=" << result.config_path;
-        if (result.env_override_count > 0) {
-          std::cerr << ", ";
-        }
+        config_status = "json=" + result.config_path;
       }
       if (result.env_override_count > 0) {
-        std::cerr << "env_overrides=" << result.env_override_count;
+        if (!config_status.empty()) {
+          config_status += ", ";
+        }
+        config_status += "env_overrides=" + std::to_string(result.env_override_count);
       }
-      std::cerr << "\n";
     }
 #endif
-    return scorer_opts;
+
+    if (!opts.scorer_options_json.empty()) {
+      std::string error_message;
+      if (!analysis::ScorerOptionsLoader::loadFromJsonString(opts.scorer_options_json, scorer_opts, &error_message)) {
+        diagnostics.push_back("Failed to load direct scorer config: " + error_message);
+      } else {
+        if (!config_status.empty()) {
+          config_status += ", ";
+        }
+        config_status += "program_json=active";
+      }
+    }
+
+    if (opts.report_scorer_config && !config_status.empty()) {
+      diagnostics.push_back("Scorer configuration active: " + config_status);
+    }
+
+    analysis::UnknownOptions unknown_options;
+    unknown_options.verb_candidate_options = scorer_opts.candidates.verb;
+    unknown_options.inflection_scorer_options = scorer_opts.inflection;
+    return LoadedAnalyzerConfig{analysis::AnalyzerOptions{opts.mode, std::move(scorer_opts), std::move(unknown_options),
+                                                          opts.normalize_options},
+                                std::move(diagnostics)};
   }
 
   static postprocess::PostprocessOptions postprocessOptionsFor(const SuzumeOptions& opts) {
@@ -187,10 +231,28 @@ struct Suzume::Impl {
 #endif
   }
 
-  Impl(const SuzumeOptions& opts)
+  void warnDictionaryMissing(const std::string& filename) {
+    const std::string message = "Dictionary not found in automatic search paths: " + filename;
+    dictionary_warnings.push_back(message);
+#ifndef SUZUME_USE_EMBEDDED_DICT
+    if (options.report_scorer_config) {
+      std::cerr << "[dictionary] " << message << "\n";
+    }
+#endif
+  }
+
+  void appendDictionaryWarnings(std::vector<std::string> warnings) {
+    dictionary_warnings.insert(dictionary_warnings.end(), std::make_move_iterator(warnings.begin()),
+                               std::make_move_iterator(warnings.end()));
+  }
+
+  explicit Impl(const SuzumeOptions& opts) : Impl(opts, loadAnalyzerConfig(opts)) {}
+
+  Impl(const SuzumeOptions& opts, LoadedAnalyzerConfig loaded_config)
       : options(opts),
-        analyzer(analysis::AnalyzerOptions{opts.mode, loadScorerConfig(opts), {}, opts.normalize_options}),
-        postprocessor(&analyzer.dictionaryManager(), postprocessOptionsFor(opts)) {
+        analyzer(loaded_config.analyzer_options),
+        postprocessor(&analyzer.dictionaryManager(), postprocessOptionsFor(opts)),
+        dictionary_warnings(std::move(loaded_config.diagnostics)) {
     // Auto-load core.dic if found (binary format)
     if (!opts.skip_core_dictionary) {
 #ifdef SUZUME_USE_EMBEDDED_DICT
@@ -200,12 +262,14 @@ struct Suzume::Impl {
         warnDictionaryLoad("embedded core.dic", result.error());
       }
 #else
-      std::string core_path = findDictionary("core.dic");
+      std::string core_path = findDictionary("core.dic", opts.data_directory);
       if (!core_path.empty()) {
         auto result = analyzer.dictionaryManager().loadCoreDictionaryResult(core_path);
         if (!result.hasValue()) {
           warnDictionaryLoad(core_path, result.error());
         }
+      } else {
+        warnDictionaryMissing("core.dic");
       }
 #endif
     }
@@ -214,21 +278,31 @@ struct Suzume::Impl {
     // Note: user.dic is also loaded as core binary dictionary for now
     if (!opts.skip_user_dictionary) {
 #ifdef SUZUME_USE_EMBEDDED_DICT
-      auto result = analyzer.dictionaryManager().loadUserBinaryDictionaryFromMemoryResult(
+      auto result = analyzer.dictionaryManager().loadBundledUserBinaryDictionaryFromMemoryResult(
           embedded::kUserDictionary, embedded::kUserDictionarySize);
       if (!result.hasValue()) {
         warnDictionaryLoad("embedded user.dic", result.error());
       }
 #else
-      std::string user_path = findDictionary("user.dic");
+      std::string user_path = findDictionary("user.dic", opts.data_directory);
       if (!user_path.empty()) {
-        auto result = analyzer.dictionaryManager().loadUserBinaryDictionaryResult(user_path);
+        auto result = analyzer.dictionaryManager().loadBundledUserBinaryDictionaryResult(user_path);
         if (!result.hasValue()) {
           warnDictionaryLoad(user_path, result.error());
         }
+      } else {
+        warnDictionaryMissing("user.dic");
       }
 #endif
     }
+#ifndef SUZUME_USE_EMBEDDED_DICT
+    if (opts.data_directory.empty()) {
+      if (const char* env_path = std::getenv("SUZUME_DATA_DIR")) {
+        dictionary_warnings.push_back("Using external dictionary directory from SUZUME_DATA_DIR: " +
+                                      std::string(env_path));
+      }
+    }
+#endif
   }
 
   void setMode(core::AnalysisMode mode) {
@@ -281,7 +355,8 @@ core::Expected<size_t, core::Error> Suzume::loadUserDictionaryResult(const std::
   }
   impl_->custom_dict = loaded.value().dictionary;
   impl_->analyzer.addUserDictionary(loaded.value().dictionary);
-  return loaded.value().source_entry_count;
+  impl_->appendDictionaryWarnings(std::move(loaded.value().warnings));
+  return loaded.value().installed_entry_count;
 #endif
 }
 
@@ -296,7 +371,8 @@ core::Expected<size_t, core::Error> Suzume::loadUserDictionaryFromMemoryResult(c
   }
   impl_->custom_dict = loaded.value().dictionary;
   impl_->analyzer.addUserDictionary(loaded.value().dictionary);
-  return loaded.value().source_entry_count;
+  impl_->appendDictionaryWarnings(std::move(loaded.value().warnings));
+  return loaded.value().installed_entry_count;
 }
 
 bool Suzume::loadBinaryDictionary(const uint8_t* data, size_t size) {
@@ -318,6 +394,10 @@ void Suzume::clearUserDictionaries() {
 
 const std::vector<std::string>& Suzume::dictionaryWarnings() const {
   return impl_->dictionary_warnings;
+}
+
+bool Suzume::hasCoreDictionary() const {
+  return impl_->analyzer.hasCoreBinaryDictionary();
 }
 
 std::vector<core::Morpheme> Suzume::analyze(std::string_view text) const {

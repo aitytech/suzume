@@ -50,12 +50,6 @@ class Analyzer {
   void addUserDictionary(std::shared_ptr<dictionary::UserDictionary> dict);
 
   /**
-   * @brief Try to auto-load core dictionary from standard paths
-   * @return true if loaded successfully
-   */
-  bool tryAutoLoadCoreDictionary();
-
-  /**
    * @brief Check if core binary dictionary is loaded
    */
   bool hasCoreBinaryDictionary() const;
