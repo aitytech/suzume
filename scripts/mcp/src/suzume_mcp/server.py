@@ -8,7 +8,7 @@ mcp = FastMCP("suzume")
 
 # Import tool modules to register them with the MCP server.
 # These must be imported after `mcp` is defined since they reference it.
-from .tools import dict_tools, test_tools, thread_tools  # noqa: E402, F401
+from .tools import defect_tools, dict_tools, test_tools, thread_tools  # noqa: E402, F401
 
 
 def main():

@@ -1,10 +1,14 @@
-"""Thread check tools ported from thread_check.pl - MCP tool registration."""
+"""Thread corpus scanning tools - MCP tool registration.
+
+Defect records themselves live in the shared store: see ``defect_tools`` for
+listing, rechecking, and closing what a scan files here.
+"""
 
 import contextlib
-import json
 import re
 from pathlib import Path
 
+from ..core import bug_store
 from ..core.diff_utils import classify_surface_diff, normalize_width
 from ..core.json_utils import json_result as _json_result
 from ..core.suzume_cli import get_expected_tokens_subprocess, get_suzume_surfaces
@@ -12,24 +16,10 @@ from ..server import PROJECT_ROOT, mcp
 
 SKILL_DIR = PROJECT_ROOT / ".claude" / "skills" / "thread-quality-check"
 PROGRESS_FILE = SKILL_DIR / ".thread_check_progress"
-BUGS_DIR = SKILL_DIR / "bugs"
 DEFAULT_FILE = SKILL_DIR / "thread_names.txt"
 
-_BUGS_DIRS = {
-    "thread": PROJECT_ROOT / ".claude" / "skills" / "thread-quality-check" / "bugs",
-    "literary": PROJECT_ROOT / ".claude" / "skills" / "literary-quality-check" / "bugs",
-    # defect-sweep has no "-quality-check" suffix, so it needs an explicit mapping
-    # (the fallback below would otherwise resolve to "defect-sweep-quality-check").
-    "defect": PROJECT_ROOT / ".claude" / "skills" / "defect-sweep" / "bugs",
-}
-
-
-def _bugs_dir(source: str = "thread") -> Path:
-    """Get bugs directory for given source skill."""
-    if source in _BUGS_DIRS:
-        return _BUGS_DIRS[source]
-    # Fallback: assume skill name pattern
-    return PROJECT_ROOT / ".claude" / "skills" / f"{source}-quality-check" / "bugs"
+# Store that auto-detected scan issues are filed into.
+SCAN_SOURCE = "thread"
 
 
 # ============================================================================
@@ -107,7 +97,7 @@ def _save_progress(progress: dict) -> None:
 def _compare_surfaces(text: str) -> dict:
     """Compare suzume CLI output vs expected surfaces."""
     # Thread checking runs WITH user.dic (skip_user_dict=False) so that entries
-    # added via dict_add are reflected and thread_bugs_sweep can auto-resolve them.
+    # added via dict_add are reflected and defect_recheck can close the record.
     suzume_surfaces = get_suzume_surfaces(text, skip_user_dict=False)
     tokens, _, _ = get_expected_tokens_subprocess(text)
     expected_surfaces = [t["surface"] for t in tokens]
@@ -133,27 +123,17 @@ def _is_japanese(line: str) -> bool:
 
 
 def _append_issue(line_num: int, text: str, result: dict) -> None:
-    """Write issue as a JSON file in bugs/ directory (auto-detected during scan)."""
-    BUGS_DIR.mkdir(parents=True, exist_ok=True)
-    diff_type = result.get("diff_type", "unknown")
-    bug_id = _next_bug_id(BUGS_DIR)
-    filename = f"{bug_id:03d}_{diff_type}.json"
-
-    data = {
-        "id": bug_id,
-        "text": text,
-        "expected": result["expected"],
-        "suzume": result["suzume"],
-        "diff_type": diff_type,
-        "source": "auto-scan",
-    }
-    if line_num > 0:
-        data["line_num"] = line_num
-
-    filepath = BUGS_DIR / filename
-    filepath.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
+    """File an auto-detected scan issue into the thread store."""
+    if bug_store.find_by_text(SCAN_SOURCE, text) is not None:
+        return
+    bug_store.create(
+        SCAN_SOURCE,
+        text=text,
+        expected=result["expected"],
+        suzume=result["suzume"],
+        diff_type=result.get("diff_type", ""),
+        pattern="auto-scan",
+        line_num=line_num,
     )
 
 
@@ -437,240 +417,3 @@ async def thread_reset_progress() -> str:
     if PROGRESS_FILE.exists():
         PROGRESS_FILE.unlink()
     return _json_result({"status": "ok", "message": "Progress reset"})
-
-
-# ============================================================================
-# Bug reporting tools (JSON per-case in bugs/ directory)
-# ============================================================================
-
-
-def _next_bug_id(bugs_dir: Path) -> int:
-    """Get next sequential bug ID."""
-    if not bugs_dir.exists():
-        return 1
-    existing = sorted(bugs_dir.glob("*.json"))
-    if not existing:
-        return 1
-    # Extract numeric prefix from filename
-    for f in reversed(existing):
-        m = re.match(r"^(\d+)", f.stem)
-        if m:
-            return int(m.group(1)) + 1
-    return 1
-
-
-def _list_bugs(bugs_dir: Path) -> list[dict]:
-    """Load all bug JSON files, sorted by ID."""
-    if not bugs_dir.exists():
-        return []
-    bugs = []
-    for f in sorted(bugs_dir.glob("*.json")):
-        try:
-            data = json.loads(f.read_text(encoding="utf-8"))
-            data["_file"] = f.name
-            bugs.append(data)
-        except (json.JSONDecodeError, OSError):
-            continue
-    return bugs
-
-
-@mcp.tool()
-async def thread_report_bug(
-    text: str,
-    expected: str,
-    suzume: str,
-    description: str = "",
-    line_num: int = 0,
-    diff_type: str = "",
-    pattern: str = "",
-    source: str = "thread",
-) -> str:
-    """Report a grammar bug found during thread scanning.
-
-    Creates a JSON file in bugs/ directory. Delete the file to mark as resolved.
-
-    Args:
-        text: Original input text.
-        expected: Expected tokenization (space-separated).
-        suzume: Suzume's actual tokenization (space-separated).
-        description: Optional description of the bug.
-        line_num: Optional line number in thread_names.txt.
-        diff_type: Optional diff type (over-split, under-split, boundary).
-        pattern: Optional pattern label for grouping (e.g. sokuonbin, compound-verb).
-        source: Bug storage source - "thread", "literary", or "defect" (default: "thread").
-    """
-    bd = _bugs_dir(source)
-    bd.mkdir(parents=True, exist_ok=True)
-
-    if not diff_type:
-        diff_type = classify_diff(expected, suzume)
-
-    bug_id = _next_bug_id(bd)
-    filename = f"{bug_id:03d}_{diff_type}.json"
-
-    data = {
-        "id": bug_id,
-        "text": text,
-        "expected": expected,
-        "suzume": suzume,
-        "diff_type": diff_type,
-    }
-    if description:
-        data["description"] = description
-    if line_num > 0:
-        data["line_num"] = line_num
-    if pattern:
-        data["pattern"] = pattern
-
-    filepath = bd / filename
-    filepath.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-
-    count = len(list(bd.glob("*.json")))
-
-    result = {
-        "status": "ok",
-        "bug_id": bug_id,
-        "filename": filename,
-        "diff_type": diff_type,
-        "total_bugs": count,
-    }
-
-    return _json_result(result)
-
-
-@mcp.tool()
-async def thread_bugs_list(limit: int = 50, diff_type: str = "", pattern: str = "", source: str = "thread") -> str:
-    """List reported grammar bugs.
-
-    Args:
-        limit: Max number of bugs to show.
-        diff_type: Filter by diff type (e.g. "over-split"). Empty shows all.
-        pattern: Filter by pattern label (e.g. "sokuonbin"). Empty shows all.
-        source: Bug storage source - "thread", "literary", or "defect" (default: "thread").
-    """
-    bugs = _list_bugs(_bugs_dir(source))
-    if not bugs:
-        return _json_result({"total": 0, "diff_types": {}, "patterns": {}, "bugs": []})
-
-    # Summary by diff type and pattern (always over all bugs for context)
-    type_counts: dict[str, int] = {}
-    pattern_counts: dict[str, int] = {}
-    for bug in bugs:
-        dt = bug.get("diff_type", "unknown")
-        type_counts[dt] = type_counts.get(dt, 0) + 1
-        pat = bug.get("pattern", "")
-        if pat:
-            pattern_counts[pat] = pattern_counts.get(pat, 0) + 1
-
-    # Apply filters
-    filtered = bugs
-    if diff_type:
-        filtered = [b for b in filtered if b.get("diff_type", "unknown") == diff_type]
-    if pattern:
-        filtered = [b for b in filtered if b.get("pattern", "") == pattern]
-
-    filtered_total = len(filtered)
-    shown = filtered[-limit:]
-    bug_entries = []
-    for bug in shown:
-        entry = {
-            "file": bug.get("_file", "?"),
-            "diff_type": bug.get("diff_type", "unknown"),
-            "text": bug["text"],
-            "expected": bug.get("expected", "?"),
-            "suzume": bug.get("suzume", "?"),
-        }
-        if "description" in bug:
-            entry["description"] = bug["description"]
-        if "pattern" in bug:
-            entry["pattern"] = bug["pattern"]
-        bug_entries.append(entry)
-
-    result: dict = {
-        "total": len(bugs),
-        "diff_types": type_counts,
-        "patterns": pattern_counts,
-        "bugs": bug_entries,
-    }
-
-    # Add filtered count when filters are active
-    if diff_type or pattern:
-        result["filtered"] = filtered_total
-
-    return _json_result(result)
-
-
-@mcp.tool()
-async def thread_bugs_clear(source: str = "thread") -> str:
-    """Clear all reported bugs (delete bugs/ directory).
-
-    Args:
-        source: Bug storage source - "thread", "literary", or "defect" (default: "thread").
-    """
-    bd = _bugs_dir(source)
-    if bd.exists():
-        import shutil
-
-        shutil.rmtree(bd)
-    return _json_result({"status": "ok", "message": "Bugs directory cleared"})
-
-
-@mcp.tool()
-async def thread_bugs_sweep(source: str = "thread") -> str:
-    """Re-test all bugs and auto-resolve those that are now fixed.
-
-    Runs _compare_surfaces on each bug's text. If suzume output now matches
-    expected, the bug file is deleted automatically.
-
-    Args:
-        source: Bug storage source - "thread", "literary", or "defect" (default: "thread").
-    """
-    bd = _bugs_dir(source)
-    if not bd.exists():
-        return _json_result({"status": "ok", "resolved_count": 0, "remaining": 0, "message": "No bugs directory"})
-
-    bug_files = sorted(bd.glob("*.json"))
-    if not bug_files:
-        return _json_result({"status": "ok", "resolved_count": 0, "remaining": 0, "message": "No bugs found"})
-
-    resolved: list[str] = []
-    still_open: list[dict] = []
-    errors: list[dict] = []
-
-    for filepath in bug_files:
-        try:
-            data = json.loads(filepath.read_text(encoding="utf-8"))
-            text = data.get("text", "")
-            if not text:
-                errors.append({"file": filepath.name, "error": "missing text field"})
-                continue
-
-            result = _compare_surfaces(text)
-            if result["match"]:
-                resolved.append(filepath.name)
-                filepath.unlink()
-            else:
-                still_open.append(
-                    {
-                        "file": filepath.name,
-                        "text": text,
-                        "diff_type": result.get("diff_type", "unknown"),
-                    }
-                )
-        except Exception as e:
-            errors.append({"file": filepath.name, "error": str(e)})
-
-    result_data: dict = {
-        "status": "ok",
-        "resolved_count": len(resolved),
-        "resolved": resolved,
-        "remaining": len(still_open),
-        "still_open": still_open,
-    }
-    if errors:
-        result_data["errors"] = errors
-
-    return _json_result(result_data)
