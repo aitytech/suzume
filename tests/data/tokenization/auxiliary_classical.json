@@ -679,6 +679,92 @@
       ],
       "id": "tsu",
       "input": "見つ"
+    },
+    {
+      "description": "Suru-noun host keeps the inflection boundary before the conjunctive particle",
+      "expected": [
+        {
+          "lemma": "用心",
+          "pos": "Noun",
+          "surface": "用心"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "歩む",
+          "pos": "Verb",
+          "surface": "歩む"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べし"
+        }
+      ],
+      "id": "shite_mubeshi",
+      "input": "用心して歩むべし"
+    },
+    {
+      "description": "Classical conjectural mu after an irrealis stem",
+      "expected": [
+        {
+          "lemma": "われ",
+          "pos": "Pronoun",
+          "surface": "われ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "む",
+          "pos": "Auxiliary",
+          "surface": "む"
+        }
+      ],
+      "id": "wareha_kamu",
+      "input": "われは行かむ"
+    },
+    {
+      "description": "Same auxiliary where the dictionary offers no entry to land on",
+      "expected": [
+        {
+          "lemma": "君",
+          "pos": "Pronoun",
+          "surface": "君"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待た"
+        },
+        {
+          "lemma": "む",
+          "pos": "Auxiliary",
+          "surface": "む"
+        }
+      ],
+      "id": "wo_tamu",
+      "input": "君を待たむ"
     }
   ],
   "description": "auxiliary_classical tests",

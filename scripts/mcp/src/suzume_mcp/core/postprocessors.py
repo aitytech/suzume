@@ -38,6 +38,50 @@ def reports_mutation(processor: Callable[[list[dict]], object]) -> Callable[[lis
     return wrapped
 
 
+def _raw_analysis(text: str) -> tuple[int, dict[int, dict]]:
+    """Analyze the untouched text, returning its token count and start index."""
+    index: dict[int, dict] = {}
+    offset = 0
+    count = 0
+    for token in mecab_analyze(text):
+        index[offset] = token
+        offset += len(token.get("surface", ""))
+        count += 1
+    return count, index
+
+
+def _accept_slang_match(
+    text: str, raw: tuple[int, dict[int, dict]], start: int, stem: str, standard: str, native_pos: str
+) -> bool:
+    """Decide whether a slang stem spelled at `start` is a real occurrence.
+
+    A stem written in kana is also a substring of ordinary words (ださ inside
+    ください, いた inside 聞いた, えも across 答え+も), so the surface match alone
+    cannot carry the decision. The untouched analysis settles it structurally,
+    on two counts:
+
+    - The stem starts where a token starts, and the analysis stops there rather
+      than reading on. A token that runs past the stem is already a word in its
+      own right — やばい, 痛い and 甚く spelled in kana — and is left as it stands.
+    - Otherwise the stem starts inside a token, which is where a kana spelling is
+      most often a coincidence. Only a genuine occurrence was holding the rest of
+      the sentence apart, so substituting it both reads cleanly in its own right
+      and reunites neighbouring fragments into strictly fewer tokens (質/問う/ざい
+      becomes 質問/赤い). A coincidental match fails one of the two: it either
+      buries the substitute in an unknown blob (聞い/た becomes 聞赤) or breaks the
+      word it was hiding in without repairing anything (ください becomes く/赤い).
+    """
+    raw_count, index = raw
+    token = index.get(start)
+    if token is not None:
+        return len(token["surface"]) <= len(stem)
+
+    probe = text[:start] + standard + text[start + len(stem) :]
+    probe_count, probe_index = _raw_analysis(probe)
+    landed = probe_index.get(start)
+    return landed is not None and landed["pos"] == native_pos and probe_count < raw_count
+
+
 def preprocess_for_mecab(text: str) -> tuple[str, dict[tuple[int, str], dict]]:
     """Replace slang stems with standard ones before MeCab analysis.
 
@@ -49,23 +93,26 @@ def preprocess_for_mecab(text: str) -> tuple[str, dict[tuple[int, str], dict]]:
     """
     replacements: dict[tuple[int, str], dict] = {}
 
-    # Slang adjectives
-    for slang, standard in SLANG_ADJ_STEMS.items():
-        for m in regex.finditer(regex.escape(slang) + r"[いかくけさ]", text):
-            replacements[(m.start(), "slang_adj")] = {
-                "original": slang,
-                "replacement": standard,
-                "length": len(slang),
-            }
+    # Analyzed on first use: only a text that actually spells a slang stem pays
+    # for the extra pass over the untouched string.
+    raw: tuple[int, dict[int, dict]] | None = None
 
-    # Slang verbs
-    for slang, standard in SLANG_VERB_STEMS.items():
-        for m in regex.finditer(regex.escape(slang) + r"[らりるれろっ]", text):
-            replacements[(m.start(), "slang_verb")] = {
-                "original": slang,
-                "replacement": standard,
-                "length": len(slang),
-            }
+    slang_categories = (
+        ("slang_adj", SLANG_ADJ_STEMS, r"[いかくけさ]", "形容詞"),
+        ("slang_verb", SLANG_VERB_STEMS, r"[らりるれろっ]", "動詞"),
+    )
+    for category, stems, ending, native_pos in slang_categories:
+        for slang, standard in stems.items():
+            for m in regex.finditer(regex.escape(slang) + ending, text):
+                if raw is None:
+                    raw = _raw_analysis(text)
+                if not _accept_slang_match(text, raw, m.start(), slang, standard, native_pos):
+                    continue
+                replacements[(m.start(), category)] = {
+                    "original": slang,
+                    "replacement": standard,
+                    "length": len(slang),
+                }
 
     # Unusual names
     for name, standard in UNUSUAL_NAMES.items():
@@ -178,6 +225,59 @@ def postprocess_mecab_tokens(
             pos += len(t.get("surface", ""))
 
     return tokens
+
+
+def split_transparent_suru_te_adverb(tokens: list[dict]) -> None:
+    """Split a lexical adverb that is transparently 名詞 + し + て.
+
+    The reference dictionary files 心して as one adverb while the identically
+    built 用心して and 安心して stay 名詞+し+て, which puts a lexical boundary across
+    an inflecting stem and its conjunctive particle. Two of the dictionary's own
+    marks decide which it is, and the fossilized adverbs fail one or the other:
+
+    - The entry is still filed as taking particles (助詞類接続) rather than as a
+      plain adverb, which already separates 心して from 概して, 決して and 大して.
+    - Its reading is the noun's own reading followed by シテ. 決して reads ケッシテ
+      rather than ケツ+シテ and 大して reads タイシテ rather than ダイ+シテ, while a
+      kana stem (どうして, まして) never enters the rule at all.
+    """
+    for index in range(len(tokens) - 1, -1, -1):
+        token = tokens[index]
+        surface = token.get("surface", "")
+        reading = token.get("reading", "")
+        if token.get("pos") != "副詞" or token.get("pos_sub1") != "助詞類接続":
+            continue
+        if not surface.endswith("して") or len(surface) <= 2:
+            continue
+        stem = surface[:-2]
+        if not regex.fullmatch(r"\p{Han}+", stem) or not reading.endswith("シテ"):
+            continue
+        analyzed = mecab_analyze(stem)
+        if len(analyzed) != 1 or analyzed[0].get("pos") != "名詞":
+            continue
+        if analyzed[0].get("reading", "") != reading[:-2]:
+            continue
+        tokens[index : index + 1] = [
+            analyzed[0],
+            {
+                "surface": "し",
+                "pos": "動詞",
+                "pos_sub1": "自立",
+                "conj_type": "サ変・スル",
+                "conj_form": "連用形",
+                "lemma": "する",
+                "reading": "シ",
+            },
+            {
+                "surface": "て",
+                "pos": "助詞",
+                "pos_sub1": "接続助詞",
+                "conj_type": "",
+                "conj_form": "",
+                "lemma": "て",
+                "reading": "テ",
+            },
+        ]
 
 
 # The ない-family cells a predicate can spell: ない / なく(て) / なかっ(た) /

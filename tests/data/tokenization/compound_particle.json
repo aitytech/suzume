@@ -392,6 +392,119 @@
       ],
       "id": "literary_izure_ni_shite_mo_split",
       "input": "いずれにしても確認する"
+    },
+    {
+      "description": "Compound case particle stays one unit before a predicate",
+      "expected": [
+        {
+          "lemma": "論文",
+          "pos": "Noun",
+          "surface": "論文"
+        },
+        {
+          "lemma": "について",
+          "pos": "Particle",
+          "surface": "について"
+        },
+        {
+          "lemma": "述べる",
+          "pos": "Verb",
+          "surface": "述べる"
+        }
+      ],
+      "id": "nitsuite_beru",
+      "input": "論文について述べる。"
+    },
+    {
+      "description": "Lexical adverb ending in te is not split before the existential verb",
+      "expected": [
+        {
+          "lemma": "課題",
+          "pos": "Noun",
+          "surface": "課題"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "全て",
+          "pos": "Noun",
+          "surface": "全て"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "ha_tearu",
+      "input": "課題は全てある"
+    },
+    {
+      "description": "Resultative te-aru keeps the te-particle boundary",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "並べる",
+          "pos": "Verb",
+          "surface": "並べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "ga_betearu",
+      "input": "本が並べてある"
+    },
+    {
+      "description": "Lexical adverb ending in te survives the past existential too",
+      "expected": [
+        {
+          "lemma": "答え",
+          "pos": "Noun",
+          "surface": "答え"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "全て",
+          "pos": "Noun",
+          "surface": "全て"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "eha_teattta",
+      "input": "答えは全てあった"
     }
   ],
   "description": "compound_particle tests",

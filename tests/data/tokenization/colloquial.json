@@ -43,6 +43,148 @@
       ],
       "id": "douiu_koto_dai",
       "input": "どういうことだい"
+    },
+    {
+      "description": "Slang adjective written in kana resolves as one adjective",
+      "expected": [
+        {
+          "lemma": "音声",
+          "pos": "Noun",
+          "surface": "音声"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "うざい",
+          "pos": "Adjective",
+          "surface": "うざい"
+        }
+      ],
+      "id": "gauzai",
+      "input": "音声がうざい"
+    },
+    {
+      "description": "Kana-spelled slang adjective before a noun host",
+      "expected": [
+        {
+          "lemma": "きもい",
+          "pos": "Adjective",
+          "surface": "きもい"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kimoi_da",
+      "input": "きもい話だ"
+    },
+    {
+      "description": "Kana slang adjective whose stem also opens a verb reading",
+      "expected": [
+        {
+          "lemma": "ださい",
+          "pos": "Adjective",
+          "surface": "ださい"
+        },
+        {
+          "lemma": "服",
+          "pos": "Noun",
+          "surface": "服"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "dasai_da",
+      "input": "ださい服だ"
+    },
+    {
+      "description": "Slang stem buried inside an ordinary word stays untouched",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "くださる",
+          "pos": "Verb",
+          "surface": "ください"
+        }
+      ],
+      "id": "wokudasai",
+      "input": "本をください"
+    },
+    {
+      "description": "Slang stem straddling a verb and its past auxiliary stays untouched",
+      "expected": [
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "wo_itaka",
+      "input": "話を聞いたか"
+    },
+    {
+      "description": "Slang stem straddling a noun and a focus particle stays untouched",
+      "expected": [
+        {
+          "lemma": "答え",
+          "pos": "Noun",
+          "surface": "答え"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "かっこいい",
+          "pos": "Adjective",
+          "surface": "かっこいい"
+        }
+      ],
+      "id": "emokattkoii",
+      "input": "答えもかっこいい"
     }
   ],
   "description": "colloquial tests",

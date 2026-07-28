@@ -73,19 +73,33 @@ def _postprocess_totomoni(result: list[dict], applied_rule: str | None) -> tuple
 
 
 def _postprocess_noni(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
-    """Merge の+に -> のに after past tense."""
+    """Merge の+に -> のに after a host that admits only the concessive reading.
+
+    Concessive のに attaches to an attributive form, so the host decides whether
+    the two morae are one particle or the nominalizer plus a goal marker. After
+    an auxiliary — 学生な, 静かな, 読んだ — only the concessive reading survives,
+    and an i-adjective closes the same cell (東京が寒いのに). A verb host is left
+    split because both readings stay open there: 読むのに覚えられない is concessive
+    but 読むのに時間がかかる is the goal, and nothing in the form separates them.
+    """
     merged = []
     skip_next = False
     for j, curr in enumerate(result):
         if skip_next:
             skip_next = False
             continue
+        host = result[j - 1] if j >= 1 else {}
+        host_is_attributive = (
+            host.get("surface", "") in ("た", "っ", "だ")
+            or host.get("pos") == "助動詞"
+            or (host.get("pos") == "形容詞" and host.get("surface", "").endswith("い"))
+        )
         if (
             j >= 1
             and j < len(result) - 1
             and curr.get("surface") == "の"
             and result[j + 1].get("surface") == "に"
-            and (result[j - 1].get("surface", "") in ("た", "っ", "だ") or result[j - 1].get("pos") == "助動詞")
+            and host_is_attributive
         ):
             merged.append({"surface": "のに", "pos": "助詞", "lemma": "のに"})
             skip_next = True
@@ -560,6 +574,77 @@ def _postprocess_classical_mu(result: list[dict], applied_rule: str | None) -> t
             if applied_rule is None:
                 applied_rule = "classical-mu-boundary"
             continue
+        # The boundary already stands, but with no auxiliary entry to land on the
+        # dictionary files the bare mora as an interjection (成ら+む, 待た+む).  An
+        # interjection cannot follow an irrealis stem, so the position settles the
+        # POS and the auxiliary keeps one reading across every context.
+        if (
+            previous is not None
+            and previous.get("pos") == "動詞"
+            and previous.get("surface", "")[-1:] in _A_ROW_TO_U_ROW
+            and surface == _CLASSICAL_IRREALIS_AUX
+            and token.get("pos") != "助動詞"
+        ):
+            merged.append({"surface": surface, "pos": "助動詞", "lemma": surface})
+            idx += 1
+            if applied_rule is None:
+                applied_rule = "classical-mu-boundary"
+            continue
+        merged.append(token)
+        idx += 1
+    return merged, applied_rule
+
+
+_KU_NOMINALIZER = "く"
+
+
+def _postprocess_ku_nominalization(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Rebuild the classical ク語法 nominalization as one noun.
+
+    ク語法 turns a predicate into a noun by attaching く to the 未然形 (言わ+く,
+    思わ+く).  The reference dictionary lists the fossilized members it happens to
+    carry as whole nouns — 曰く, 老いらく — and fragments the rest, so the same
+    formation is one search unit under one spelling and two or three tokens under
+    another.  Both fragmentations are repaired here: the irrealis kana handed to a
+    following verb (言 + わく, the shape 書 + かむ already takes), and the bare
+    nominalizer left standing after the stem (思わ + く).
+    """
+    merged: list[dict] = []
+    idx = 0
+    while idx < len(result):
+        token = result[idx]
+        surface = token.get("surface", "")
+        previous = merged[-1] if merged else None
+        # 言 + わく: the irrealis kana went to whatever followed the stem, which
+        # the dictionary reads as a verb or a noun depending on the sentence.
+        if (
+            previous is not None
+            and token.get("pos") in ("動詞", "名詞")
+            and len(surface) == 2
+            and surface[0] in _A_ROW_TO_U_ROW
+            and surface[1] == _KU_NOMINALIZER
+        ):
+            stem = previous.get("surface", "")
+            if stem and _is_single_verb(stem + _A_ROW_TO_U_ROW[surface[0]]):
+                combined = stem + surface
+                merged[-1] = {"surface": combined, "pos": "名詞", "lemma": combined}
+                idx += 1
+                if applied_rule is None:
+                    applied_rule = "ku-nominalization"
+                continue
+        # 思わ + く: the stem is already whole and く stands on its own.
+        if (
+            previous is not None
+            and previous.get("pos") == "動詞"
+            and previous.get("surface", "")[-1:] in _A_ROW_TO_U_ROW
+            and surface == _KU_NOMINALIZER
+        ):
+            combined = previous.get("surface", "") + surface
+            merged[-1] = {"surface": combined, "pos": "名詞", "lemma": combined}
+            idx += 1
+            if applied_rule is None:
+                applied_rule = "ku-nominalization"
+            continue
         merged.append(token)
         idx += 1
     return merged, applied_rule
@@ -809,33 +894,32 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
     splits compound words (e.g., 微+笑み → 微笑み).
     """
     merged = []
-    for index, curr in enumerate(result):
+    for curr in result:
         surface = curr.get("surface", "")
         # Suzume design: tokenizer use case prefers X+suffix as a single search
         # unit. These suffixes are not treated as token boundaries; X+SUFFIX
         # merges via kanji-merge.
-        #   家/力/化/法/論/員/式/感/的 — productive but one search unit
+        #   家/力/化/法/論/員/式/感/的/安 — productive but one search unit
         # 様/氏 keep splitting (honorific separates from name).
-        is_merge_allowed_suffix = surface in ("家", "力", "化", "法", "論", "員", "式", "感", "的", "風")
+        is_merge_allowed_suffix = surface in ("家", "力", "化", "法", "論", "員", "式", "感", "的", "風", "安")
         # Suzume design: 御 is a productive prefix that always splits off
         # (御 + 尽力, 御 + 挨拶, 御 + 協力). Skip kanji-merge after 御 prefix tokens.
         prev_is_go_prefix = merged and merged[-1].get("surface", "") == "御" and merged[-1].get("pos", "") == "接頭詞"
-        # A non-independent noun followed by an attributive na-adjective is a
-        # grammatical boundary (時 + 不思議 + な), not a kanji compound. MeCab
-        # tags the adjective stem as a noun, so the generic kanji merge would
-        # otherwise erase that boundary before POS normalization.
-        next_is_attributive_na = (
-            index + 1 < len(result)
-            and result[index + 1].get("surface", "") == "な"
-            and result[index + 1].get("pos", "") == "助動詞"
-        )
-        formal_noun_na_adjective_boundary = (
+        # A na-adjective stem heads a predicate, so a bound modifier in front of
+        # it stays outside: 時|不思議|な, 激|簡単|だ, 鬼|簡単|だ.  Such a modifier
+        # does bond with a plain noun into one search unit (激安, 超高速), but it
+        # stops at a predicate head — the same boundary it already keeps before an
+        # i-adjective (激|冷たい).  Only the modifier side is held back: a full
+        # noun preceding the stem still compounds (再利用可能), which is why this
+        # is restricted to a non-independent noun or a single kanji.  MeCab tags
+        # the stem as a noun, so the generic kanji merge would otherwise erase
+        # that boundary before POS normalization.
+        na_adjective_stem_boundary = (
             merged
-            and merged[-1].get("pos", "") == "名詞"
-            and merged[-1].get("pos_sub1", "") == "非自立"
             and curr.get("pos", "") == "名詞"
             and curr.get("pos_sub1", "") == "形容動詞語幹"
-            and next_is_attributive_na
+            and merged[-1].get("pos", "") == "名詞"
+            and (merged[-1].get("pos_sub1", "") == "非自立" or len(merged[-1].get("surface", "")) == 1)
         )
         if merged and (
             (
@@ -855,7 +939,7 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
                 # must not fold into a preceding noun/prefix (徒歩|五分, 約|二時間).
                 and curr.get("pos_sub1", "") != "数"
                 and not prev_is_go_prefix
-                and not formal_noun_na_adjective_boundary
+                and not na_adjective_stem_boundary
             )
             or (surface == "々" and _IDEOGRAPHIC_SEQUENCE.fullmatch(merged[-1].get("surface", "")))
             or (

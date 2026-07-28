@@ -885,6 +885,144 @@
       ],
       "id": "kunode_tsu",
       "input": "行くので待つ"
+    },
+    {
+      "description": "Concessive noni stays one particle after an i-adjective host",
+      "expected": [
+        {
+          "lemma": "東京",
+          "pos": "Noun",
+          "surface": "東京"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "寒い",
+          "pos": "Adjective",
+          "surface": "寒い"
+        },
+        {
+          "lemma": "のに",
+          "pos": "Particle",
+          "surface": "のに"
+        },
+        {
+          "lemma": "外出",
+          "pos": "Noun",
+          "surface": "外出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ga_inoni_suru",
+      "input": "東京が寒いのに外出する"
+    },
+    {
+      "description": "Same i-adjective host with a bare verb predicate",
+      "expected": [
+        {
+          "lemma": "値段",
+          "pos": "Noun",
+          "surface": "値段"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "のに",
+          "pos": "Particle",
+          "surface": "のに"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "ga_inoni_u",
+      "input": "値段が高いのに買う"
+    },
+    {
+      "description": "Na-adjective host keeps the merged concessive particle",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "のに",
+          "pos": "Particle",
+          "surface": "のに"
+        },
+        {
+          "lemma": "慣れる",
+          "pos": "Verb",
+          "surface": "慣れる"
+        }
+      ],
+      "id": "kananoni_reru",
+      "input": "静かなのに慣れる"
+    },
+    {
+      "description": "Verb host stays split: the goal reading is still open there",
+      "expected": [
+        {
+          "lemma": "毎日",
+          "pos": "Noun",
+          "surface": "毎日"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "覚える",
+          "pos": "Verb",
+          "surface": "覚え"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "munoni_erarenai",
+      "input": "毎日読むのに覚えられない"
     }
   ],
   "description": "particle_conjunctive tests",

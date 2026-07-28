@@ -19,6 +19,7 @@ from .constants import (
     NAI_ADJECTIVES,
     TARI_ADVERB_STEMS,
 )
+from .mecab import mecab_analyze
 from .merge_postprocessors import (
     _postprocess_adj_bungo,
     _postprocess_adj_kari,
@@ -39,6 +40,7 @@ from .merge_postprocessors import (
     _postprocess_izenkei_concessive,
     _postprocess_kamo,
     _postprocess_kanji_merge,
+    _postprocess_ku_nominalization,
     _postprocess_kuruwa,
     _postprocess_nde_split,
     _postprocess_nickname_merge,
@@ -53,6 +55,15 @@ from .merge_postprocessors import (
     _postprocess_totomoni,
 )
 from .split_rules import base_from_renyokei, bases_from_renyokei
+
+
+def _reads_as_one_verb(lemma: str) -> bool:
+    """Whether the reference dictionary reads `lemma` as a single verb."""
+    if not lemma:
+        return False
+    tokens = mecab_analyze(lemma)
+    return len(tokens) == 1 and tokens[0].get("pos") == "動詞"
+
 
 # Numeric-approximation/aggregation prefixes that modify a whole quantity and split
 # off the following number+counter (約|二時間, 計|五名), unlike ordinal 第 which binds
@@ -421,7 +432,11 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
             and i + 1 < len(tokens)
         ):
             nxt = tokens[i + 1]
-            if nxt.get("pos") == "名詞":
+            # A na-adjective stem heads a predicate rather than joining a
+            # compound, so the prefix stays a separate modifier there (超|簡単,
+            # 超|重要) while a plain noun host still yields one search unit
+            # (超高速, 超大型).
+            if nxt.get("pos") == "名詞" and nxt.get("pos_sub1") != "形容動詞語幹":
                 combined = t.get("surface", "") + nxt.get("surface", "")
                 if regex.match(r"^[\p{Han}]+$", combined):
                     result.append({"surface": combined, "pos": "名詞", "lemma": combined})
@@ -1030,6 +1045,13 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # 11c. Resultative 〜てある retains the te-particle boundary.  MeCab
         # may emit an ichidan te-form as one token (並べて), while Suzume keeps
         # the productive verb stem + て + ある chain for its grammar model.
+        #
+        # Ending in て is not on its own evidence of a te-form: compound case
+        # particles and lexical adverbs end the same way (について, 全て).  The
+        # split is therefore only taken when the stem it would leave behind
+        # actually names a verb, which is what a te-form always decomposes into.
+        # Without that check the lemma is fabricated by appending る to whatever
+        # precedes the て (についる, 全る).
         if (
             not merged
             and t.get("surface", "").endswith("て")
@@ -1041,12 +1063,13 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
             lemma = t.get("lemma") or stem
             if lemma == t["surface"]:
                 lemma = stem + "る"
-            result.append({"surface": stem, "pos": "動詞", "lemma": lemma})
-            result.append({"surface": "て", "pos": "助詞", "lemma": "て"})
-            i += 1
-            merged = True
-            if applied_rule is None:
-                applied_rule = "te-aru-split"
+            if _reads_as_one_verb(lemma):
+                result.append({"surface": stem, "pos": "動詞", "lemma": lemma})
+                result.append({"surface": "て", "pos": "助詞", "lemma": "て"})
+                i += 1
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "te-aru-split"
 
         # No merge: pass through
         if not merged:
@@ -1082,6 +1105,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_adj_kari(result, applied_rule)
     result, applied_rule = _postprocess_ha_row_godan(result, applied_rule)
     result, applied_rule = _postprocess_classical_mu(result, applied_rule)
+    result, applied_rule = _postprocess_ku_nominalization(result, applied_rule)
     result, applied_rule = _postprocess_classical_shimu(result, applied_rule)
     result, applied_rule = _postprocess_izenkei_concessive(result, applied_rule)
     result, applied_rule = _postprocess_tomo_particle(result, applied_rule)

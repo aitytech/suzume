@@ -1307,6 +1307,99 @@
       ],
       "id": "go_kudasaimashita",
       "input": "ご理解くださいました"
+    },
+    {
+      "description": "Intensifying prefix stops at a na-adjective predicate head",
+      "expected": [
+        {
+          "lemma": "激",
+          "pos": "Noun",
+          "surface": "激"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "da_3",
+      "input": "激簡単だ"
+    },
+    {
+      "description": "Same boundary for a second intensifying prefix",
+      "expected": [
+        {
+          "lemma": "鬼",
+          "pos": "Noun",
+          "surface": "鬼"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "da_4",
+      "input": "鬼簡単だ"
+    },
+    {
+      "description": "Intensifying prefix plus a plain noun stays one search unit",
+      "expected": [
+        {
+          "lemma": "激安",
+          "pos": "Noun",
+          "surface": "激安"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "no_da",
+      "input": "激安の水だ"
+    },
+    {
+      "description": "Noun host keeps the prefix compound intact",
+      "expected": [
+        {
+          "lemma": "超高速",
+          "pos": "Noun",
+          "surface": "超高速"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "処理",
+          "pos": "Noun",
+          "surface": "処理"
+        }
+      ],
+      "id": "no_8",
+      "input": "超高速の処理"
     }
   ],
   "description": "Prefixes (お、ご、不、無)",

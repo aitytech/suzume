@@ -89,6 +89,7 @@ from .postprocessors import (
     postprocess_you_noun,
     preprocess_for_mecab,
     repair_kko_nominalizer,
+    split_transparent_suru_te_adverb,
 )
 from .split_rules import apply_suzume_split
 
@@ -216,6 +217,9 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
 
     # Fix MeCab POS errors (before POS mapping)
     correct_mecab_pos(raw_tokens)
+    # Restore inflection boundaries the dictionary lexicalized away.  Runs here
+    # because the decision needs the reading, which the merge pass drops.
+    split_transparent_suru_te_adverb(raw_tokens)
 
     # Apply Suzume merge rules
     merged, merge_rule = apply_suzume_merge(raw_tokens, normalized_text)
@@ -509,8 +513,6 @@ def get_suzume_rule(text: str) -> str:
     for stem in SLANG_ADJ_STEMS:
         if regex.search(regex.escape(stem) + r"[いかくけさ]", text):
             return "slang-adjective"
-    if regex.search(r"やばい|やばかっ|やばく", text):
-        return "slang-adjective"
 
     if regex.search(r"\p{Han}+然と", text):
         return "tari-adverb"
