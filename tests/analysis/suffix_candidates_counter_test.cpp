@@ -4,6 +4,8 @@
 #include <vector>
 
 #include "analysis/suffix_candidates.h"
+#include "analysis/suffix_candidates_counter_internal.h"
+#include "dictionary/dictionary.h"
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 #include "suzume.h"
@@ -38,6 +40,15 @@ TEST(SuffixCandidatesCounterTest, DoesNotTreatPureNumeralRepetitionAsDistributiv
   const auto char_types = classify(codepoints);
 
   EXPECT_EQ(repeatedNumeralNounUnitEndAt(codepoints, char_types, 0), 0u);
+}
+
+TEST(SuffixCandidatesCounterTest, TemporalCandidatesAcceptNonQuantityAtSentenceStart) {
+  const auto codepoints = normalize::toCodepoints("ありがとう");
+  const auto char_types = classify(codepoints);
+  dictionary::DictionaryManager dictionary_manager;
+  std::vector<UnknownCandidate> candidates;
+
+  counter_detail::appendTemporalCounterCandidates(codepoints, 0, char_types, &dictionary_manager, candidates);
 }
 
 TEST(SuffixCandidatesCounterTest, KeepsRepeatedQuantityTogetherBeforeSuruPredicate) {

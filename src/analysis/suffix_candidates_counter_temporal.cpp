@@ -213,8 +213,8 @@ void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, si
     // the whole fraction as one quantity unit, so the duration split must not
     // undercut it — with kanji numerals it never competes, which is why only
     // the digit spelling was breaking.
-    const bool opens_fraction_denominator = codepoints[scan - 1] == U'分' && scan + 1 < codepoints.size() &&
-                                            codepoints[scan] == U'の' &&
+    const bool opens_fraction_denominator = scan > unit_start && codepoints[scan - 1] == U'分' &&
+                                            scan + 1 < codepoints.size() && codepoints[scan] == U'の' &&
                                             normalize::isNumeralCodepoint(codepoints[scan + 1]);
     if (has_quantity && scan > unit_start && !opens_fraction_denominator &&
         (followed_by_hiragana || followed_by_quantity_particle)) {
