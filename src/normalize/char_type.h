@@ -326,6 +326,19 @@ bool isTemporalSpanSuffixKanji(char32_t code_point);
 bool isDerivationalNounSuffixKanji(char32_t code_point);
 
 /**
+ * @brief Check if a kanji closes a number+counter phrase
+ *
+ * These kanji only attach to a quantity expression on their left (三年+間,
+ * 三年+半, 三人+目), so they never head a lexical noun of their own. A kanji
+ * run that ends in one therefore belongs to the quantity phrase before it and
+ * must not be split off as an independent compound.
+ *
+ * @param code_point Unicode codepoint
+ * @return true if codepoint closes a quantity phrase
+ */
+bool isQuantityPhraseSuffixKanji(char32_t code_point);
+
+/**
  * @brief Check if a 2-kanji pair forms an adverbial (副詞可能) temporal noun.
  *
  * These nouns (現在, 昨日, 今年…) detach from a following kanji noun rather than

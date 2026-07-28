@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "description": "Ordinal suffix stays with the counter phrase instead of stranding the duration suffix",
+      "expected": [
+        {
+          "lemma": "1週間目",
+          "pos": "Noun",
+          "surface": "1週間目"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "記録",
+          "pos": "Noun",
+          "surface": "記録"
+        }
+      ],
+      "id": "1_no",
+      "input": "1週間目の記録"
+    },
+    {
+      "description": "A trailing pair ending in ordinary kanji still splits off the counter phrase",
+      "expected": [
+        {
+          "lemma": "5分",
+          "pos": "Noun",
+          "surface": "5分"
+        },
+        {
+          "lemma": "間隔",
+          "pos": "Noun",
+          "surface": "間隔"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "5_de_suru_2",
+      "input": "5分間隔で確認する"
+    }
+  ],
+  "description": "noun_counter tests",
+  "version": "1.0"
+}

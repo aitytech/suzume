@@ -26,6 +26,15 @@ bool isNumericExpression(const std::string& surface) {
   return isDigitChar(first_ch);
 }
 
+// Check if a one-character surface closes a number+counter phrase (3時+間, 3人+目)
+bool isQuantityPhraseSuffixSurface(const std::string& surface) {
+  if (surface.size() != core::kJapaneseCharBytes) {
+    return false;
+  }
+  size_t pos = 0;
+  return suzume::normalize::isQuantityPhraseSuffixKanji(suzume::normalize::decodeUtf8(surface, pos));
+}
+
 // Check if surface ends with a digit
 bool endsWithDigit(const std::string& surface) {
   if (surface.empty())
@@ -180,7 +189,7 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<c
     if (current.pos == core::PartOfSpeech::Noun && isNumericExpression(current.surface) && idx + 1 < morphemes.size()) {
       const auto& next = morphemes[idx + 1];
       // Check for common time/counter suffixes that get split
-      if (next.pos == core::PartOfSpeech::Noun && utf8::equalsAny(next.surface, {"間", "半", "目"})) {
+      if (next.pos == core::PartOfSpeech::Noun && isQuantityPhraseSuffixSurface(next.surface)) {
         core::Morpheme merged = current;
         resolver::mergeInto(merged, next);
         merged.lemma = merged.surface;

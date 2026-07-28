@@ -330,7 +330,14 @@ void appendStructuralCounterCandidates(const std::vector<char32_t>& codepoints, 
           trailing_two_kanji && (normalize::isNumeralCodepoint(codepoints[counter_end]) ||
                                  normalize::isQuantityPrefixKanji(codepoints[counter_end]));
       const bool repeated_predicate_unit = isRepeatedNumeralNounPredicateUnitAt(codepoints, char_types, start_pos);
-      if (trailing_two_kanji && run_ends_after_pair && !trailing_is_reduplication && !repeated_predicate_unit) {
+      // A pair that ends in a quantity-phrase suffix is not a lexical noun: the
+      // suffix binds to the counter phrase on its left, so splitting here strands
+      // it (1週+間目, 3年+間半). Pairs headed by a counter but ending in ordinary
+      // kanji are still lexical and keep the split (5分+間隔).
+      bool trailing_closes_quantity =
+          trailing_two_kanji && normalize::isQuantityPhraseSuffixKanji(codepoints[counter_end + 1]);
+      if (trailing_two_kanji && run_ends_after_pair && !trailing_is_reduplication && !repeated_predicate_unit &&
+          !trailing_closes_quantity) {
         std::string surface = extractSubstring(codepoints, start_pos, counter_end);
         if (!surface.empty()) {
           auto cand = makeCandidate(surface, start_pos, counter_end, core::PartOfSpeech::Noun,
