@@ -40,17 +40,60 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
   const bool is_ichidan = request.is_ichidan;
   const bool has_kanji_v2_after_bare_ichidan = request.has_kanji_v2_after_bare_ichidan;
   const bool dict_compound_v1 = request.dict_compound_v1;
+  const bool hiragana_v1 = request.hiragana_v1;
+  const bool allow_closed_onbin_v1 = request.allow_closed_onbin_v1;
   const std::string_view dict_compound_v1_lemma = request.dict_compound_v1_lemma;
   const auto& dict_manager = request.dict_manager;
   const auto& inflection = request.inflection;
 
   CompoundV1Verification result;
-  std::string& v1_base = result.base_form;
+  std::string v1_base;
   bool& v1_verified = result.verified;
   bool& v1_dict_verified = result.dict_verified;
   bool& v1_embedded_verified = result.embedded_verified;
   bool& v1_ichidan_inflection = result.ichidan_inflection;
   bool& v1_godan_inflection = result.godan_inflection;
+
+  if (hiragana_v1) {
+    const std::string_view v1_surface = text.substr(start_byte, v2_start_byte - start_byte);
+    if (grammar::isSuruRenyokeiSurface(v1_surface)) {
+      v1_base = "する";
+    } else if (!is_ichidan) {
+      v1_base = std::string(v1_surface.substr(0, v1_surface.size() - core::kJapaneseCharBytes));
+      v1_base += normalize::encodeUtf8(base_ending);
+    } else {
+      v1_base = std::string(v1_surface) + "る";
+    }
+
+    const auto* verb_entry = dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb);
+    v1_verified = verb_entry != nullptr || grammar::isSuruRenyokeiSurface(v1_surface);
+    v1_dict_verified = v1_verified;
+
+    const auto* auxiliary_entry = dict_manager.lookupExact(v1_base, core::PartOfSpeech::Auxiliary);
+    if (auxiliary_entry != nullptr && auxiliary_entry->extended_pos == core::ExtendedPOS::AuxHonorific) {
+      return {};
+    }
+
+    if (!v1_verified) {
+      const float min_confidence =
+          allow_closed_onbin_v1
+              ? candidate::verb_cost::kClosedOnbinCompoundV1MinConfidence
+              : (is_ichidan && v2_start < codepoints.size() && normalize::isKanjiCodepoint(codepoints[v2_start])
+                     ? candidate::verb_cost::kCompoundVerbIchidanMinConfidence
+                     : candidate::verb_cost::kConstructedVerbMinConfidence);
+      if (!verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, v1_surface)) {
+        for (const auto& candidate : inflection.analyze(v1_surface)) {
+          if (candidate.base_form == v1_base && candidate.confidence >= min_confidence) {
+            v1_verified = true;
+            v1_ichidan_inflection = is_ichidan;
+            v1_godan_inflection = !is_ichidan;
+            break;
+          }
+        }
+      }
+    }
+    return result;
+  }
 
   // Build the V1 base form for verification.
   const size_t v1_end_byte = is_ichidan ? v2_start_byte : byteOffsetAt(byte_offsets, kanji_end);
@@ -76,7 +119,6 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
           v1_verified = true;
           v1_dict_verified = true;
           v1_base = candidate;
-          base_ending = ending;
           break;
         }
       }
@@ -124,7 +166,6 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
         std::string candidate = v1_base + normalize::encodeUtf8(ending);
         if (dict_manager.lookupExact(candidate) != nullptr) {
           v1_base = candidate;
-          base_ending = ending;
           break;
         }
       }
@@ -258,7 +299,6 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
             if (infl_result.base_form == candidate) {
               v1_verified = true;
               v1_base = candidate;
-              base_ending = ending;
               break;
             }
           }

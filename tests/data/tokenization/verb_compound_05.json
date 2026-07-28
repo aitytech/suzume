@@ -435,6 +435,38 @@
       ],
       "id": "yarinaosaseru",
       "input": "やりなおさせる"
+    },
+    {
+      "description": "五段複合動詞の終止形を引用連体詞の前でも一語に保つ",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "取り組む",
+          "pos": "Verb",
+          "surface": "取り組む"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "姿勢",
+          "pos": "Noun",
+          "surface": "姿勢"
+        }
+      ],
+      "id": "godan_compound_terminal_before_quotative",
+      "input": "問題に取り組むという姿勢"
     }
   ],
   "description": "Compound verbs (part 5/5)",

@@ -63,16 +63,52 @@ bool isCompoundVerbOrNominalizationAttested(const dictionary::DictionaryManager&
 
 }  // namespace
 
-CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector<char32_t>& codepoints,
-                                        const ByteOffsets& byte_offsets, size_t start_pos,
-                                        const std::vector<normalize::CharType>& char_types, size_t kanji_end,
-                                        size_t v2_start, char32_t base_ending, bool is_sokuonbin, bool is_ichidan,
-                                        bool has_kanji_v2_after_bare_ichidan, bool dict_compound_v1,
-                                        std::string_view dict_compound_v1_lemma,
-                                        const dictionary::DictionaryManager& dict_manager,
-                                        const grammar::Inflection& inflection) {
+CompoundVerbMatch findCompoundVerbMatch(
+    std::string_view text, const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets, size_t start_pos,
+    const std::vector<normalize::CharType>& char_types, size_t kanji_end, size_t v2_start, char32_t base_ending,
+    bool is_sokuonbin, bool is_ichidan, bool has_kanji_v2_after_bare_ichidan, bool dict_compound_v1,
+    std::string_view dict_compound_v1_lemma, const dictionary::DictionaryManager& dict_manager,
+    const grammar::Inflection& inflection, bool hiragana_v1, bool allow_closed_onbin_v1) {
   if (v2_start >= codepoints.size()) {
     return {};
+  }
+
+  const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
+  const size_t v2_start_byte = byteOffsetAt(byte_offsets, v2_start);
+  const std::string_view v1_surface = text.substr(start_byte, v2_start_byte - start_byte);
+  bool hiragana_v1_in_dictionary = false;
+  bool hiragana_v1_has_strong_inflection = false;
+  if (hiragana_v1) {
+    std::string v1_base;
+    if (grammar::isSuruRenyokeiSurface(v1_surface)) {
+      v1_base = "する";
+    } else if (is_ichidan) {
+      v1_base = std::string(v1_surface) + "る";
+    } else {
+      v1_base = std::string(v1_surface.substr(0, v1_surface.size() - core::kJapaneseCharBytes));
+      v1_base += normalize::encodeUtf8(base_ending);
+    }
+    hiragana_v1_in_dictionary = dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr;
+    if (!hiragana_v1_in_dictionary) {
+      for (const auto& candidate : inflection.analyze(v1_surface)) {
+        if (candidate.base_form == v1_base &&
+            candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) {
+          hiragana_v1_has_strong_inflection = true;
+          break;
+        }
+      }
+    }
+    if (!hiragana_v1_in_dictionary && !hiragana_v1_has_strong_inflection && !allow_closed_onbin_v1) {
+      for (size_t pos = start_pos; pos < v2_start; ++pos) {
+        const auto* particle =
+            dict_manager.lookupExact(extractSubstring(codepoints, pos, pos + 1), core::PartOfSpeech::Particle);
+        if (particle != nullptr && particle->extended_pos != core::ExtendedPOS::ParticleFinal) {
+          SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND] rejected particle inside hiragana V1: "
+                                   << extractSubstring(codepoints, pos, pos + 1) << "\n");
+          return {};
+        }
+      }
+    }
   }
 
   // A compound verb joins two verbal components directly. If a closed-class
@@ -91,7 +127,9 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
       if (closes_preceding_clause && match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Particle &&
           normalize::utf8Length(match.entry->surface) > 1 &&
           particle_start + normalize::utf8Length(match.entry->surface) <= v2_start) {
-        return {};
+        if (!hiragana_v1_in_dictionary) {
+          return {};
+        }
       }
     }
 
@@ -100,13 +138,11 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // continuative ending such as し remains eligible for lexical compounds.
     const auto* particle = dict_manager.lookupExact(particle_probe, core::PartOfSpeech::Particle);
     if (particle != nullptr && particle_start > start_pos && kana::isURowCodepoint(codepoints[particle_start - 1])) {
-      return {};
+      if (!hiragana_v1_in_dictionary) {
+        return {};
+      }
     }
   }
-
-  // Get byte positions
-  size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
-  size_t v2_start_byte = byteOffsetAt(byte_offsets, v2_start);
 
   // Inflection analyzer for V2 detection (shared instance from Tokenizer)
 
@@ -125,6 +161,9 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     }
     std::string_view v2_surface(v2_verb.surface);
     std::string_view v2_reading(v2_verb.joins_reading && v2_verb.reading ? v2_verb.reading : "");
+    if (grammar::isSuruRenyokeiSurface(v1_surface) && !v2_verb.joins_suru) {
+      continue;
+    }
 
     // The hiragana reading of compound V2 入る overlaps with the aspect
     // auxiliary いる.  A preceding て/で is a grammatical boundary
@@ -173,7 +212,10 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
     // candidate over the productive auxiliary sequence (食べとった).
     if (!matched_kanji && char_types[v2_start] == CharType::Hiragana &&
         (v2_reading == "とる" || v2_reading == "どる")) {
-      continue;
+      const std::string full_compound = std::string(v1_surface) + std::string(v2_reading);
+      if (dict_manager.lookupExact(full_compound, core::PartOfSpeech::Verb) == nullptr) {
+        continue;
+      }
     }
 
     // Hiragana そう before conditional/copular な is the appearance
@@ -313,15 +355,17 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
             text.substr(v2_start_byte + stem.size(), core::kJapaneseCharBytes) != "う") {
           return;
         }
-        const size_t volitional_end = v2_start + normalize::utf8Length(stem) + 1;
-        for (size_t split_pos = v2_start + 1; split_pos < volitional_end; ++split_pos) {
-          const auto* left_auxiliary = dict_manager.lookupExact(extractSubstring(codepoints, v2_start, split_pos),
-                                                                core::PartOfSpeech::Auxiliary);
-          const auto* right_auxiliary = dict_manager.lookupExact(
-              extractSubstring(codepoints, split_pos, volitional_end), core::PartOfSpeech::Auxiliary);
-          if (left_auxiliary != nullptr && right_auxiliary != nullptr &&
-              right_auxiliary->extended_pos == core::ExtendedPOS::AuxAppearanceSou) {
-            return;
+        if (!hiragana_v1) {
+          const size_t volitional_end = v2_start + normalize::utf8Length(stem) + 1;
+          for (size_t split_pos = v2_start + 1; split_pos < volitional_end; ++split_pos) {
+            const auto* left_auxiliary = dict_manager.lookupExact(extractSubstring(codepoints, v2_start, split_pos),
+                                                                  core::PartOfSpeech::Auxiliary);
+            const auto* right_auxiliary = dict_manager.lookupExact(
+                extractSubstring(codepoints, split_pos, volitional_end), core::PartOfSpeech::Auxiliary);
+            if (left_auxiliary != nullptr && right_auxiliary != nullptr &&
+                right_auxiliary->extended_pos == core::ExtendedPOS::AuxAppearanceSou) {
+              return;
+            }
           }
         }
         matched_volitional = true;
@@ -500,6 +544,8 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
         is_ichidan,
         has_kanji_v2_after_bare_ichidan,
         dict_compound_v1,
+        hiragana_v1,
+        allow_closed_onbin_v1,
         dict_compound_v1_lemma,
         dict_manager,
         inflection,
@@ -709,7 +755,7 @@ CompoundVerbMatch findCompoundVerbMatch(std::string_view text, const std::vector
   // arbitrary lexical tails from the existing dictionary (for example an
   // n-onbin Godan-ma form) without copying open-class verbs into the closed
   // compound-V2 table.
-  if (best_match.v2_verb != nullptr && best_match.matched_via_reading && best_match.matched_len > 0) {
+  if (!hiragana_v1 && best_match.v2_verb != nullptr && best_match.matched_via_reading && best_match.matched_len > 0) {
     const size_t matched_chars = normalize::utf8Length(text.substr(v2_start_byte, best_match.matched_len));
     const std::string_view matched_v2_base =
         best_match.v2_verb->reading != nullptr ? best_match.v2_verb->reading : best_match.v2_verb->surface;

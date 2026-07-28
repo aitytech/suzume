@@ -48,6 +48,8 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
   const CompoundVerbMatch& best_match = match;
   const size_t start_byte = byteOffsetAt(byte_offsets, start_pos);
   const size_t v2_start_byte = byteOffsetAt(byte_offsets, v2_start);
+  SUZUME_DEBUG_LOG("[COMPOUND_EMIT] matched_len=" << best_match.matched_len << " start=" << start_pos
+                                                  << " v2_start=" << v2_start << "\n");
   // After checking all V2 entries, use the best match if found
   if (best_match.matched_len > 0) {
     if (verb_helpers::startsInsideKanjiRunBeforeShi(codepoints, start_pos) &&
@@ -69,9 +71,12 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     size_t compound_end_pos = advanceCharsToBytePos(codepoints, v2_start, v2_start_byte, compound_end_byte);
 
     const std::string v2_surface = extractSubstring(codepoints, v2_start, compound_end_pos);
+    SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND_EMIT] span=" << extractSubstring(codepoints, start_pos, compound_end_pos)
+                                                     << " v2=" << v2_surface << "\n");
     const auto* closed_auxiliary = dict_manager.lookupExact(v2_surface, core::PartOfSpeech::Auxiliary);
     const bool v2_is_closed_particle = dict_manager.lookupExact(v2_surface, core::PartOfSpeech::Particle) != nullptr;
     if (closed_auxiliary != nullptr && closed_auxiliary->extended_pos == core::ExtendedPOS::AuxAppearanceSou) {
+      SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND_EMIT] rejected appearance auxiliary\n");
       return;
     }
 
@@ -82,6 +87,7 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     // A V2 such as 出す must not consume only the initial す and leave れ+ば
     // behind (提出+すれ+ば, not 提出す+れ+ば).
     if (consumesSahenConditional(codepoints, start_pos, compound_end_pos, dict_manager)) {
+      SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND_EMIT] rejected sahen conditional\n");
       return;
     }
 
@@ -90,6 +96,7 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     // permissive V2 matcher could otherwise reinterpret させる as a lexical
     // continuation and erase the voice boundary.
     if (verb_helpers::containsPassiveCausativeAuxPattern(compound_surface)) {
+      SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND_EMIT] rejected passive-causative chain\n");
       return;
     }
 
@@ -97,6 +104,7 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     // compositional (見+て+あげる), not a lexical V1+V2 compound. The helper
     // preserves ordinary compounds such as 取り上げる, which have no te-form.
     if (verb_helpers::embedsTeFormAuxiliary(compound_surface)) {
+      SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND_EMIT] rejected embedded te auxiliary\n");
       return;
     }
 
