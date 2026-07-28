@@ -130,8 +130,12 @@ EntrySpecRange getParticleEntries() {
       particle("だって", EPOS::ParticleAdverbial),
       particle("だに", EPOS::ParticleAdverbial),    // 文語的な最小限定・強調
       particle("おろか", EPOS::ParticleAdverbial),  // 強調・追加: 基本はおろか応用も
-      particle("しも", EPOS::ParticleAdverbial),    // 強調・限定: 誰しも、必ずしも
-      particle("きり", EPOS::ParticleAdverbial),    // 限定: 一度きり、これきり
+      // 対比・強調: 確認どころか. It always attaches to the phrase on its left,
+      // so it is a binding particle, not a clause-opening conjunction —
+      // それどころか is the lexicalized conjunction built on top of it.
+      particle("どころか", EPOS::ParticleAdverbial),
+      particle("しも", EPOS::ParticleAdverbial),  // 強調・限定: 誰しも、必ずしも
+      particle("きり", EPOS::ParticleAdverbial),  // 限定: 一度きり、これきり
       particle("ずつ", EPOS::ParticleAdverbial),  // distributive 副助詞 - prevent ず(打消)+つ split after a quantity
       particle("ってば", EPOS::ParticleFinal),
       particle("ったら", EPOS::ParticleFinal),

@@ -711,6 +711,97 @@
       ],
       "id": "lexical_kuru_after_adverbial_particle_control",
       "input": "これだけ来た"
+    },
+    {
+      "description": "Contrastive dokoroka binds to the phrase on its left as an adverbial particle",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "どころか",
+          "pos": "Particle",
+          "surface": "どころか"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "dokoroka_da",
+      "input": "確認どころか問題だ"
+    },
+    {
+      "description": "Multi-mora verb host keeps dokoroka whole after the finite form",
+      "expected": [
+        {
+          "lemma": "手伝う",
+          "pos": "Verb",
+          "surface": "手伝う"
+        },
+        {
+          "lemma": "どころか",
+          "pos": "Particle",
+          "surface": "どころか"
+        },
+        {
+          "lemma": "邪魔",
+          "pos": "Noun",
+          "surface": "邪魔"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "udokoroka_wosuru",
+      "input": "手伝うどころか邪魔をする"
+    },
+    {
+      "description": "The bare formal noun dokoro stays split from the copular negative",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "どころ",
+          "pos": "Noun",
+          "surface": "どころ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "dokorodehanai",
+      "input": "確認どころではない"
     }
   ],
   "description": "particle_adverbial tests",
