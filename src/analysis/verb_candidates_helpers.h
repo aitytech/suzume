@@ -182,6 +182,9 @@ bool startsInsideKanjiRunBeforeShi(const std::vector<char32_t>& codepoints, size
 //                and で + auxiliary-chain checks in the onbin paths — see the
 //                per-site comments there for why each set differs from the
 //                helper's pattern list (ている/ておく are deliberately absent).
+//                Also embedsCaseParticle (格助詞 strictly inside the run), which
+//                is what the adjective paths need: a case particle marks an
+//                argument boundary, so 水 + を + くみ cannot be one word.
 //   - Head  (H): a leading 副助詞 ‖ 係助詞 opens the hiragana portion of an
 //                adjective. Helper: startsWithFocusParticleHead, used by both
 //                the plain and the compound kanji adjective path.
@@ -237,6 +240,19 @@ bool endsWithFocusParticleTail(const dictionary::DictionaryManager* dict_manager
  */
 bool startsWithFocusParticleHead(const dictionary::DictionaryManager* dict_manager,
                                  const std::vector<char32_t>& codepoints, size_t hiragana_start, size_t end_pos);
+
+/**
+ * @brief Check if a candidate span swallows a case particle
+ *
+ * True when a dictionary case particle (格助詞) sits strictly inside
+ * [start_pos, end_pos), with a non-empty prefix and suffix around it. A case
+ * particle marks an argument boundary, so no single lexical word can span one:
+ * a candidate that does was assembled out of [noun] + particle + [predicate]
+ * (さきに食べとく read as one adjective, 水をく as the stem of the non-word 水をくい).
+ * @see fabricated closed-class absorption guards (top of this header)
+ */
+bool embedsCaseParticle(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                        size_t start_pos, size_t end_pos);
 
 // True when a fabricated verb candidate starts with an exact auxiliary entry
 // and absorbs that auxiliary's negative inflection (過ぎない → 過ぎ + ない).

@@ -25,6 +25,7 @@
 namespace suzume::analysis {
 
 using verb_helpers::addEmphaticVariants;
+using verb_helpers::embedsCaseParticle;
 using verb_helpers::findCharRegionEnd;
 using verb_helpers::isAdjectiveInDictionary;
 using verb_helpers::isEmphaticChar;
@@ -182,6 +183,13 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
   }
   const size_t hiragana_end = findCharRegionEnd(char_types, kanji_end, 5, normalize::CharType::Hiragana);
   for (size_t end_pos = hiragana_end; end_pos > kanji_end; --end_pos) {
+    // A case particle inside the run marks an argument boundary, so the kana
+    // prefix is a preceding phrase rather than part of one compound adjective
+    // (さきに + 食べとく, not the non-word さきに食べとい).
+    // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+    if (embedsCaseParticle(dict_manager, codepoints, start_pos, end_pos)) {
+      continue;
+    }
     const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
     const std::string tail_observed_surface = extractSubstring(codepoints, prefix_end, end_pos);
     // Recover both the adverbial -く form and a complete attributive form

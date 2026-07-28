@@ -55,6 +55,33 @@
       ],
       "id": "hanashi_reru",
       "input": "話しゃれる"
+    },
+    {
+      "description": "Case particle keeps the te-oku contraction out of a compound adjective",
+      "expected": [
+        {
+          "lemma": "先",
+          "pos": "Noun",
+          "surface": "先"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "とく",
+          "pos": "Auxiliary",
+          "surface": "とく"
+        }
+      ],
+      "id": "ni_betoku",
+      "input": "先に食べとく"
     }
   ],
   "description": "colloquial_contracted tests",

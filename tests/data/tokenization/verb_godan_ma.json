@@ -380,6 +380,60 @@
       ],
       "id": "nasal_onbin_past_nonfinal",
       "input": "読んだために困る、飲んだために困る、遊んだ際に進む、選んだ際に進む、読んだらしい、飲んだらしい、読んだので進む、飲んだという話"
+    },
+    {
+      "description": "Adjective stem scan stops at the case particle instead of crossing it",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "くむ",
+          "pos": "Verb",
+          "surface": "くみ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "wokumimasu",
+      "input": "水をくみます"
+    },
+    {
+      "description": "Same boundary with an unregistered kana continuative",
+      "expected": [
+        {
+          "lemma": "花",
+          "pos": "Noun",
+          "surface": "花"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "つむ",
+          "pos": "Verb",
+          "surface": "つみ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "wotsumimasu",
+      "input": "花をつみます"
     }
   ],
   "description": "Godan Ma-row verbs (五段マ行動詞) - verbs ending in む",

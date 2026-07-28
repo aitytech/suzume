@@ -251,6 +251,34 @@ bool startsWithFocusParticleHead(const dictionary::DictionaryManager* dict_manag
   return false;
 }
 
+bool embedsCaseParticle(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                        size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos < start_pos + 3 || end_pos > codepoints.size()) {
+    return false;
+  }
+  // Longest case particle in the closed class is three codepoints (からの/より).
+  constexpr size_t kMaxParticleLen = 3;
+  for (size_t particle_start = start_pos + 1; particle_start + 1 < end_pos; ++particle_start) {
+    // が opens the productive derivational suffixes がまし〜 / がる / がたい, which
+    // attach straight to a nominal or a continuative and so put the same mora
+    // inside a single derived word (未練がましい, 恩着せがましさ, 欲しがる). Its
+    // ambiguity is lexical rather than structural, so it is left to the
+    // confidence model instead of being rejected outright here.
+    if (codepoints[particle_start] == U'が') {
+      continue;
+    }
+    const size_t max_len = std::min(kMaxParticleLen, end_pos - particle_start - 1);
+    for (size_t particle_len = 1; particle_len <= max_len; ++particle_len) {
+      const auto* entry =
+          dict_manager->lookupExact(extractSubstring(codepoints, particle_start, particle_start + particle_len));
+      if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleCase) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool hasAuxiliaryNegativeBoundary(const dictionary::DictionaryManager* dict_manager,
                                   const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
   if (dict_manager == nullptr || end_pos <= start_pos + 2 || end_pos > codepoints.size()) {

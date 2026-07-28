@@ -538,6 +538,13 @@ void generateAdjectiveStemCandidates(const std::vector<char32_t>& codepoints, si
             size_t okurigana_chars = byte_pos / 3;
             size_t stem_end = kanji_end + okurigana_chars;
 
+            // The okurigana scan runs past a case particle and reaches the next
+            // word's kana (水 + を + くみ read as the stem of the non-word 水をくい).
+            // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+            if (verb_helpers::embedsCaseParticle(dict_manager, codepoints, start_pos, stem_end)) {
+              continue;
+            }
+
             float cost = candidate::kAdjStemExtCost;
             SUZUME_DEBUG_LOG("[ADJ_STEM]   ✓ ext_garu candidate stem=\""
                              << stem << "\" base=\"" << base_form << "\" pattern=\"" << pattern << "\" cost=" << cost
