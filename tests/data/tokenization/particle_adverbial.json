@@ -802,6 +802,60 @@
       ],
       "id": "dokorodehanai",
       "input": "確認どころではない"
+    },
+    {
+      "description": "終止形が導入する副助詞（形式名詞＋終助詞の分解に勝つ）",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "どころか",
+          "pos": "Particle",
+          "surface": "どころか"
+        },
+        {
+          "lemma": "開く",
+          "pos": "Verb",
+          "surface": "開か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "mudokoroka_kanai",
+      "input": "読むどころか開かない"
+    },
+    {
+      "description": "終止形＋副助詞の負例",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "berudake_beta",
+      "input": "食べるだけ食べた"
     }
   ],
   "description": "particle_adverbial tests",

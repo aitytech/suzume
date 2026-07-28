@@ -216,7 +216,7 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       {EPOS::VerbShuushikei, EPOS::ParticleNo, cost::kVeryStrongBonus},
 
       // Verb → ParticleAdverbial (できる+だけ, 食べる+だけ, 行く+だけ) - minor bonus
-      {EPOS::VerbShuushikei, EPOS::ParticleAdverbial, cost::kMinorBonus},
+      {EPOS::VerbShuushikei, EPOS::ParticleAdverbial, cost::kStrongBonus},
       {EPOS::VerbRenyokei, EPOS::ParticleAdverbial, cost::kMinorBonus},
 
       // VerbShuushikei → ParticleQuote (食べる+と言う) - neutral
