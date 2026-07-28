@@ -81,6 +81,10 @@ jobs:
         run: |
           curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" RYE_NO_AUTO_INSTALL=0 bash
           echo "$HOME/.rye/shims" >> "$GITHUB_PATH"
+      # The oracle tests shell out to the native CLI for the Suzume side of every
+      # comparison, so it must exist before pytest, not only for the sync check.
+      - name: Build the native CLI and dictionaries
+        run: make dict
       - name: Run MCP server and oracle tests
         working-directory: scripts/mcp
         run: |
