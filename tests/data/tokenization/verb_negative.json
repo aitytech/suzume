@@ -266,6 +266,79 @@
       ],
       "id": "formal_noun_modern_negative_control",
       "input": "わけわからない"
+    },
+    {
+      "description": "Registered ichidan verb keeps mizenkei plus the negative auxiliary",
+      "expected": [
+        {
+          "lemma": "降りる",
+          "pos": "Verb",
+          "surface": "降り"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "rinai",
+      "input": "降りない"
+    },
+    {
+      "description": "Deverbal noun plus the independent negative adjective",
+      "expected": [
+        {
+          "lemma": "頼り",
+          "pos": "Noun",
+          "surface": "頼り"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "返事",
+          "pos": "Noun",
+          "surface": "返事"
+        }
+      ],
+      "id": "rinai_2",
+      "input": "頼りない返事"
+    },
+    {
+      "description": "Godan irrealis plus the negative auxiliary",
+      "expected": [
+        {
+          "lemma": "間に合う",
+          "pos": "Verb",
+          "surface": "間に合わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ni_wanai_2",
+      "input": "間に合わない"
+    },
+    {
+      "description": "Lexical nai-adjective survives the verb-plus-negative skip rule",
+      "expected": [
+        {
+          "lemma": "少ない",
+          "pos": "Adjective",
+          "surface": "少ない"
+        },
+        {
+          "lemma": "量",
+          "pos": "Noun",
+          "surface": "量"
+        }
+      ],
+      "id": "nai_2",
+      "input": "少ない量"
     }
   ],
   "description": "verb_negative tests",

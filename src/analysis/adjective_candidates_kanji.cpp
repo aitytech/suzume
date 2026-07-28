@@ -599,6 +599,35 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
             continue;  // Skip - compound verb, not adjective
           }
         }
+        // Skip a verb plus the negative auxiliary ない misread as one adjective.
+        // The negative ends in い, so inflection hypothesizes an adjective base
+        // spelled exactly like the surface (借りない, 足りない, 錆びない) and that
+        // fabrication outscores the 未然形 + ない split for any verb the
+        // dictionary does not carry — which makes the reading depend on lexical
+        // coverage rather than on form. Lexical ない-adjectives are dictionary
+        // entries (少ない, 情けない, もったいない) and keep their reading; so does a
+        // registered adjective's own negative, whose base is the adjective.
+        if (surface.size() > 2 * core::kJapaneseCharBytes && utf8::endsWith(surface, "ない") &&
+            !isAdjectiveInDictionary(dict_manager, cand.base_form)) {
+          const std::string negated = surface.substr(0, surface.size() - 2 * core::kJapaneseCharBytes);
+          bool negated_is_verb = verb_helpers::hasDictionaryEntry(dict_manager, negated, core::PartOfSpeech::Verb);
+          if (!negated_is_verb) {
+            for (const auto& negated_res : inflection.analyze(negated)) {
+              if (negated_res.verb_type == grammar::VerbType::IAdjective) {
+                continue;
+              }
+              if (isVerbInDictionary(dict_manager, negated_res.base_form) ||
+                  negated_res.confidence >= candidate::kV1PrefixMinConfidence) {
+                negated_is_verb = true;
+                break;
+              }
+            }
+          }
+          if (negated_is_verb) {
+            SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" is verb + negative ない\n");
+            continue;
+          }
+        }
         // Skip さそう endings (adj nominalization + appearance auxiliary)
         // E.g., 気持ちよさそうに → 気持ちよ + さ + そう + に
         //        なさそう → な + さ + そう (handled separately in hiragana adj)
