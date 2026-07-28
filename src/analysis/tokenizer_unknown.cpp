@@ -716,6 +716,19 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       continue;
     }
 
+    if (candidate.pos == core::PartOfSpeech::Adjective && utf8::endsWith(candidate.lemma, "がましい")) {
+      const bool has_longer_host =
+          std::any_of(lattice.edgeIdsEndingAt(candidate.end).begin(), lattice.edgeIdsEndingAt(candidate.end).end(),
+                      [&](const uint32_t edge_id) {
+                        const auto& edge = lattice.getEdge(edge_id);
+                        return edge.start < candidate.start && edge.pos == core::PartOfSpeech::Adjective &&
+                               utf8::endsWith(edge.lemma, "がましい");
+                      });
+      if (has_longer_host) {
+        continue;
+      }
+    }
+
     if (verb_helpers::startsInsideGaMashiiSuffix(codepoints, candidate.start)) {
       continue;
     }

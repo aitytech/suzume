@@ -37,6 +37,19 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
                                  std::vector<UnknownCandidate>& candidates);
 
 /**
+ * @brief Extend a generated nominal host with the closed adjective suffix
+ *        がまし〜.
+ *
+ * Mixed-script hosts such as 言い訳 and 差し出 are not visible to the ordinary
+ * leading-kanji adjective scan. This pass runs after nominal candidates exist,
+ * and therefore reuses the tokenizer's structural evidence for the whole host.
+ */
+void generateGaMashiiHostAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                             const std::vector<normalize::CharType>& char_types,
+                                             const grammar::Inflection& inflection,
+                                             std::vector<UnknownCandidate>& candidates);
+
+/**
  * @brief Generate na-adjective candidates (〜的 patterns)
  *
  * Detects kanji compounds ending with 的 (teki) which form

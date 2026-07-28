@@ -42,6 +42,7 @@ constexpr const char* kNegativeAdjectiveBase = "ない";
 /// (未練がましい, 恩着せがましさ); its cells differ only past this point.
 constexpr const char* kGaMashiiStem = "がまし";
 constexpr size_t kGaMashiiStemLength = 3;
+constexpr size_t kMaxGaMashiiInflectionLength = 8;
 
 // =============================================================================
 // Pattern Skip Helpers for I-Adjective Candidate Generation
@@ -629,6 +630,51 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
   verb_helpers::sortCandidatesByCost(candidates, candidate_start);
 
   return;
+}
+
+void generateGaMashiiHostAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                             const std::vector<normalize::CharType>& char_types,
+                                             const grammar::Inflection& inflection,
+                                             std::vector<UnknownCandidate>& candidates) {
+  const size_t noun_candidate_count = candidates.size();
+  for (size_t candidate_idx = 0; candidate_idx < noun_candidate_count; ++candidate_idx) {
+    const auto& host = candidates[candidate_idx];
+    if (host.start != start_pos || host.pos != core::PartOfSpeech::Noun ||
+        host.end + kGaMashiiStemLength >= codepoints.size() ||
+        extractSubstring(codepoints, host.end, host.end + kGaMashiiStemLength) != kGaMashiiStem) {
+      continue;
+    }
+
+    const size_t hiragana_end =
+        findCharRegionEnd(char_types, host.end, kMaxGaMashiiInflectionLength, normalize::CharType::Hiragana);
+    for (size_t end_pos = hiragana_end; end_pos > host.end + kGaMashiiStemLength; --end_pos) {
+      const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+      const auto& inflection_candidates = inflection.analyze(surface);
+      const auto inflection_candidate =
+          std::find_if(inflection_candidates.begin(), inflection_candidates.end(), [](const auto& candidate) {
+            return candidate.verb_type == grammar::VerbType::IAdjective &&
+                   candidate.confidence >= candidate::kDerivedSuffixAdjectiveConfidence &&
+                   utf8::endsWith(candidate.base_form, "がましい");
+          });
+      if (inflection_candidate == inflection_candidates.end()) {
+        continue;
+      }
+
+      const bool already_generated =
+          std::any_of(candidates.begin(), candidates.end(), [&](const UnknownCandidate& candidate) {
+            return candidate.start == start_pos && candidate.end == end_pos &&
+                   candidate.pos == core::PartOfSpeech::Adjective && candidate.lemma == inflection_candidate->base_form;
+          });
+      if (!already_generated) {
+        auto adjective = makeIAdjCandidate(surface, start_pos, end_pos, inflection_candidate->base_form,
+                                           candidate::kDerivedSuffixAdjectiveCost, CandidateOrigin::AdjectiveI,
+                                           inflection_candidate->confidence, "ga_mashii_nominal_host");
+        adjective.has_suffix = true;
+        candidates.push_back(std::move(adjective));
+      }
+      break;
+    }
+  }
 }
 
 }  // namespace suzume::analysis

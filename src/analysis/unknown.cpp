@@ -701,6 +701,10 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
   // Generate by same type
   generateBySameType(text, codepoints, start_pos, char_types, candidates);
 
+  // The closed adjective suffix がまし〜 can follow a mixed-script nominal host
+  // that the ordinary leading-kanji adjective scan cannot cross.
+  generateGaMashiiHostAdjectiveCandidates(codepoints, start_pos, char_types, inflection_, candidates);
+
   // Generate only the noun head selected by a verified genitive, determiner,
   // or attributive i-adjective and closed by a nominal particle.
   generateSelectedNominalHeadCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_, candidates);
