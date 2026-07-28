@@ -1,18 +1,32 @@
-# Suzume C / C++ examples
+# Suzume examples
 
-Minimal programs showing how to consume Suzume from native code.
+These programs are compiled or type-checked by the repository build.
 
-| File | Language | API |
-|------|----------|-----|
-| [`hello.c`](hello.c) | C | C ABI (`suzume/suzume_c.h`) |
-| [`hello.cpp`](hello.cpp) | C++ | header-only wrapper (`suzume/suzume.hpp`) |
+| File | API | Purpose |
+|------|-----|---------|
+| [`hello.c`](hello.c) | C ABI | Minimal native consumer |
+| [`hello.cpp`](hello.cpp) | C++ wrapper | Minimal native consumer |
+| [`cpp/basic.cpp`](cpp/basic.cpp) | C++ core API | Morphological analysis |
+| [`cpp/search_indexer.cpp`](cpp/search_indexer.cpp) | C++ core API | Inverted search index |
+| [`cpp/tags.cpp`](cpp/tags.cpp) | C++ core API | Search-tag generation |
+| [`cpp/user_dictionary.cpp`](cpp/user_dictionary.cpp) | C++ core API | Runtime user dictionary |
+| [`ts/basic.ts`](ts/basic.ts) | WASM/TypeScript | Morphological analysis |
+| [`ts/search_indexer.ts`](ts/search_indexer.ts) | WASM/TypeScript | Inverted search index |
+| [`ts/tags.ts`](ts/tags.ts) | WASM/TypeScript | Search-tag generation |
+| [`ts/user_dictionary.ts`](ts/user_dictionary.ts) | WASM/TypeScript | Runtime user dictionary |
+| [`python/basic.py`](python/basic.py) | Python package | Morphological analysis and normalized offsets |
 
-## Build in-tree
+## Build and check in-tree
 
 ```bash
-make examples
+make examples   # all C/C++ examples
+make wasm-test  # builds/tests the package and executes all TypeScript examples
+make python-test # tests the package and executes the Python example
 ./build/bin/suzume_example_cpp "東京に行きました"
 ```
+
+The C++ examples link the single in-tree `suzume` target. A downstream project
+should use `find_package(suzume CONFIG REQUIRED)` as shown below.
 
 ## Build against an installed package (find_package)
 

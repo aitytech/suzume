@@ -1,11 +1,8 @@
 /**
  * Basic morphological analysis example
  *
- * Build (from project root):
- *   cmake -B build && cmake --build build --parallel
- *   g++ -std=c++17 -Isrc -Lbuild/lib -o basic examples/cpp/basic.cpp \
- *     -lsuzume -lsuzume_analysis -lsuzume_postprocess -lsuzume_grammar \
- *     -lsuzume_dictionary -lsuzume_core -lsuzume_normalize -lsuzume_pretokenizer
+ * Build from the project root with `make examples`; the CMake target links the
+ * complete `suzume` library.
  */
 #include <iostream>
 
@@ -17,10 +14,14 @@ int main() {
 
   // Analyze Japanese text
   auto morphemes = analyzer.analyze("すもももももももものうち");
+  if (morphemes.empty()) {
+    std::cerr << "analysis returned no morphemes\n";
+    return 1;
+  }
 
   for (const auto& m : morphemes) {
     std::cout << m.surface << "\t" << suzume::core::posToString(m.pos) << "\t" << m.getLemma() << "\n";
   }
 
-  return 0;
+  return morphemes.empty() ? 1 : 0;
 }

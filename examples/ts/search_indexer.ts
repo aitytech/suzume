@@ -26,17 +26,19 @@ const index = new Map<string, Set<number>>();
 
 for (const doc of docs) {
   const tags = suzume.generateTags(doc.text, {
-    pos: ['noun', 'verb'],
+    posFilter: ['noun', 'verb'],
     excludeBasic: true,
     useLemma: true,
     minLength: 2,
   });
+  if (tags.length === 0) {
+    throw new Error(`tag generation returned no tags for document ${doc.id}`);
+  }
 
   for (const tag of tags) {
-    if (!index.has(tag.tag)) {
-      index.set(tag.tag, new Set());
-    }
-    index.get(tag.tag)!.add(doc.id);
+    const docIds = index.get(tag.tag) ?? new Set<number>();
+    docIds.add(doc.id);
+    index.set(tag.tag, docIds);
   }
 }
 
@@ -49,7 +51,7 @@ for (const [tag, docIds] of index) {
 // Search
 function search(query: string): number[] {
   const queryTags = suzume.generateTags(query, {
-    pos: ['noun', 'verb'],
+    posFilter: ['noun', 'verb'],
     useLemma: true,
   });
 
@@ -68,3 +70,6 @@ function search(query: string): number[] {
 
 console.log('\nSearch "渋谷 カフェ":', search('渋谷 カフェ'));
 console.log('Search "図書館 読む":', search('図書館 読む'));
+if (index.size === 0) {
+  throw new Error('search index is empty');
+}

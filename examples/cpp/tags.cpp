@@ -1,11 +1,8 @@
 /**
  * Tag generation example - extract content word tags for indexing/search
  *
- * Build (from project root):
- *   cmake -B build && cmake --build build --parallel
- *   g++ -std=c++17 -Isrc -Lbuild/lib -o tags examples/cpp/tags.cpp \
- *     -lsuzume -lsuzume_analysis -lsuzume_postprocess -lsuzume_grammar \
- *     -lsuzume_dictionary -lsuzume_core -lsuzume_normalize -lsuzume_pretokenizer
+ * Build from the project root with `make examples`; the CMake target links the
+ * complete `suzume` library.
  */
 #include <iostream>
 
@@ -17,6 +14,10 @@ int main() {
 
   // Generate tags (content words suitable for search indexing)
   auto tags = analyzer.generateTags("東京都渋谷区で開催されたイベントに参加しました");
+  if (tags.empty()) {
+    std::cerr << "tag generation returned no tags\n";
+    return 1;
+  }
 
   std::cout << "Tags:\n";
   for (const auto& tag : tags) {
@@ -29,6 +30,10 @@ int main() {
   opts.exclude_basic = true;
 
   auto noun_tags = analyzer.generateTags("東京都渋谷区で開催されたイベントに参加しました", opts);
+  if (noun_tags.empty()) {
+    std::cerr << "noun tag generation returned no tags\n";
+    return 1;
+  }
 
   std::cout << "\nNoun tags (excluding basic):\n";
   for (const auto& tag : noun_tags) {

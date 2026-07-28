@@ -12,6 +12,9 @@ const suzume = await Suzume.create();
 
 // Analyze Japanese text
 const morphemes = suzume.analyze('すもももももももものうち');
+if (morphemes.length === 0) {
+  throw new Error('analysis returned no morphemes');
+}
 
 for (const m of morphemes) {
   console.log(`${m.surface}\t${m.pos}\t${m.baseForm}`);

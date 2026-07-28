@@ -40,6 +40,10 @@ int main() {
 
   for (const auto& doc : docs) {
     auto tags = analyzer.generateTags(doc.text, tag_opts);
+    if (tags.empty()) {
+      std::cerr << "tag generation returned no tags for document " << doc.id << "\n";
+      return 1;
+    }
     for (const auto& tag : tags) {
       index[tag.tag].push_back(doc.id);
     }
@@ -57,5 +61,5 @@ int main() {
     std::cout << "]\n";
   }
 
-  return 0;
+  return index.empty() ? 1 : 0;
 }

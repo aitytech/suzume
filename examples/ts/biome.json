@@ -1,0 +1,13 @@
+{
+  "extends": ["../../bindings/wasm/biome.json"],
+  "files": {
+    "includes": ["**/*.ts"]
+  },
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noConsole": "off"
+      }
+    }
+  }
+}

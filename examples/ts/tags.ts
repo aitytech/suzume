@@ -14,6 +14,9 @@ const text = '東京都渋谷区で開催されたイベントに参加しまし
 
 // Generate all content word tags
 const tags = suzume.generateTags(text);
+if (tags.length === 0) {
+  throw new Error('tag generation returned no tags');
+}
 console.log('All tags:');
 for (const t of tags) {
   console.log(`  ${t.tag} (${t.pos})`);
@@ -21,9 +24,12 @@ for (const t of tags) {
 
 // Nouns only, exclude basic words
 const nounTags = suzume.generateTags(text, {
-  pos: ['noun'],
+  posFilter: ['noun'],
   excludeBasic: true,
 });
+if (nounTags.length === 0) {
+  throw new Error('noun tag generation returned no tags');
+}
 console.log('\nNoun tags (excluding basic):');
 for (const t of nounTags) {
   console.log(`  ${t.tag}`);
@@ -31,7 +37,7 @@ for (const t of nounTags) {
 
 // Verbs and adjectives with lemma
 const verbAdjTags = suzume.generateTags(text, {
-  pos: ['verb', 'adjective'],
+  posFilter: ['verb', 'adjective'],
   useLemma: true,
 });
 console.log('\nVerb/Adjective tags (lemma):');
