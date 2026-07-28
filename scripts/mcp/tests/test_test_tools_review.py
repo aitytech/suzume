@@ -8,6 +8,7 @@ from suzume_mcp.tools import test_tools as _test_tools  # noqa: F401
 
 review = importlib.import_module("suzume_mcp.tools._test_tools_review")
 read_tools = importlib.import_module("suzume_mcp.tools._test_tools_read")
+mutation_tools = importlib.import_module("suzume_mcp.tools._test_tools_mutation")
 
 
 def run(coro):
@@ -137,3 +138,56 @@ def test_partial_oracle_sync_updates_only_selected_id(tmp_path, monkeypatch):
     stored = json.loads(test_file.read_text(encoding="utf-8"))["cases"]
     assert stored[0]["expected"] == [token("正解")]
     assert stored[1]["expected"] == [token("新値")]
+
+
+def test_pos_mutations_reject_aliases_that_cpp_test_loader_would_treat_as_unknown():
+    replace = parse(run(mutation_tools.test_replace_pos(old_pos="Noun", new_pos="NOUN")))
+    mapped = parse(run(mutation_tools.test_map_pos(surface="東京", old_pos="Noun", new_pos="VERB")))
+
+    assert replace["status"] == "error"
+    assert "Invalid new_pos" in replace["message"]
+    assert mapped["status"] == "error"
+    assert "Invalid new_pos" in mapped["message"]
+
+
+def test_diff_mecab_uses_one_raw_batch_and_reports_item_errors(tmp_path, monkeypatch):
+    cases = [make_case("first", "一つ"), make_case("second", "二つ")]
+    write_suite(tmp_path, "sample", cases)
+    test_file = tmp_path / "tests/data/tokenization/sample.json"
+    monkeypatch.setattr(read_tools, "_get_test_files_filtered", lambda _file: [test_file])
+    calls = []
+
+    def fake_mecab_batch(texts):
+        calls.append(texts)
+        return [
+            ([token("生")], "MeCab", "intentional-rule"),
+            ([], "error", "failed for second"),
+        ]
+
+    monkeypatch.setattr(read_tools, "get_mecab_tokens_batch_subprocess", fake_mecab_batch)
+
+    data = parse(run(read_tools.test_diff_mecab()))
+
+    assert calls == [["一つ", "二つ"]]
+    assert data["summary"]["processed"] == 1
+    assert data["summary"]["errors"] == 1
+    assert data["categories"]["intentional"][0]["rule"] == "intentional-rule"
+    assert data["errors"][0]["id"] == "sample/second"
+
+
+def test_oracle_sync_skips_only_the_failed_batch_item(tmp_path, monkeypatch):
+    cases = [make_case("first", "一つ"), make_case("second", "二つ")]
+    write_suite(tmp_path, "sample", cases)
+    test_file = tmp_path / "tests/data/tokenization/sample.json"
+    monkeypatch.setattr(read_tools, "_get_test_files_filtered", lambda _file: [test_file])
+    monkeypatch.setattr(
+        read_tools,
+        "get_expected_tokens_batch_subprocess",
+        lambda _texts: [([token("新値")], "MeCab", ""), ([], "error", "second failed")],
+    )
+
+    data = parse(run(read_tools.test_needs_suzume_update(apply=False)))
+
+    assert data["total"] == 1
+    assert data["needs_update"][0]["id"] == "sample/first"
+    assert data["errors"][0]["id"] == "sample/second"

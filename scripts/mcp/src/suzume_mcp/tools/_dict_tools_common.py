@@ -1,10 +1,10 @@
 """Dictionary tools ported from dict_tool.pl - MCP tool registration."""
 
-from collections.abc import Iterator
+from collections.abc import Awaitable, Callable, Iterator
 from pathlib import Path
 
 from ..core.file_utils import append_lines_atomic as _append_lines_atomic  # noqa: F401
-from ..core.file_utils import atomic_write_text as _atomic_write_text  # noqa: F401
+from ..core.file_utils import atomic_write_text as _atomic_write_text
 from ..core.json_utils import json_result as _json_result  # noqa: F401
 from ..core.suzume_cli import get_cli_path, recompile_dic
 from ..server import PROJECT_ROOT
@@ -27,23 +27,57 @@ USER_CATEGORIES = [
     "common",
 ]
 
-# POS → dictionary file mapping
-POS_TO_FILE = {
-    "ADJECTIVE": "data/core/adjectives.tsv",
-    "ADVERB": "data/core/adverbs.tsv",
+# ASCII spellings accepted by core::stringToPosStrict(), mapped to the
+# canonical short label returned by core::posToString(). This is the Python
+# mirror of the C++ parser table; VALID_POS and POS_TO_FILE are derived from it
+# so suggestions cannot produce a spelling that dict_add rejects.
+POS_ALIASES: dict[str, str] = {
+    "NOUN": "NOUN",
+    "PROPN": "NOUN",
+    "PROPER_NOUN": "NOUN",
+    "VERB": "VERB",
+    "ADJ": "ADJ",
+    "ADJECTIVE": "ADJ",
+    "ADV": "ADV",
+    "ADVERB": "ADV",
+    "PARTICLE": "PARTICLE",
+    "AUX": "AUX",
+    "AUXILIARY": "AUX",
+    "CONJ": "CONJ",
+    "CONJUNCTION": "CONJ",
+    "DET": "DET",
+    "DETERMINER": "DET",
+    "ADNOMINAL": "DET",
+    "PRON": "PRON",
+    "PRONOUN": "PRON",
+    "PREFIX": "PREFIX",
+    "SUFFIX": "SUFFIX",
+    "INTJ": "INTJ",
+    "INTERJECTION": "INTJ",
+    "SYMBOL": "SYMBOL",
+    "SYM": "SYMBOL",
+    "OTHER": "OTHER",
+    "PHRASE": "OTHER",
+}
+
+_CANONICAL_POS_TO_FILE = {
+    "ADJ": "data/core/adjectives.tsv",
+    "ADV": "data/core/adverbs.tsv",
     "VERB": "data/core/verbs.tsv",
     "NOUN": "data/core/nouns.tsv",
-    "PROPER_NOUN": "data/core/nouns.tsv",
-    "PRONOUN": "data/core/expressions.tsv",
-    "INTERJECTION": "data/core/expressions.tsv",
-    "CONJUNCTION": "data/core/expressions.tsv",
+    "PRON": "data/core/expressions.tsv",
+    "INTJ": "data/core/expressions.tsv",
+    "CONJ": "data/core/expressions.tsv",
+    "DET": "data/core/expressions.tsv",
     "PARTICLE": "data/core/expressions.tsv",
+    "AUX": "data/core/expressions.tsv",
+    "OTHER": "data/core/expressions.tsv",
+    "SYMBOL": "data/core/expressions.tsv",
     "SUFFIX": "data/core/suffixes.tsv",
     "PREFIX": "data/core/suffixes.tsv",
-    "OTHER": "data/core/expressions.tsv",
-    "PHRASE": "data/core/expressions.tsv",
-    "AUX": "data/core/expressions.tsv",
 }
+
+POS_TO_FILE = {alias: _CANONICAL_POS_TO_FILE[canonical] for alias, canonical in POS_ALIASES.items()}
 
 ALL_DICT_FILES = [
     "data/core/adjectives.tsv",
@@ -54,22 +88,7 @@ ALL_DICT_FILES = [
     "data/core/suffixes.tsv",
 ]
 
-VALID_POS = [
-    "ADJECTIVE",
-    "ADVERB",
-    "VERB",
-    "NOUN",
-    "PROPER_NOUN",
-    "PRONOUN",
-    "PREFIX",
-    "SUFFIX",
-    "INTERJECTION",
-    "ADNOMINAL",
-    "CONJUNCTION",
-    "PARTICLE",
-    "AUX",
-    "OTHER",
-]
+VALID_POS = tuple(POS_ALIASES)
 
 VALID_CONJ = [
     "ICHIDAN",
@@ -112,18 +131,19 @@ _DICT_POS_MAP = {
     "Suffix": "SUFFIX",
     "Pronoun": "PRONOUN",
     "Interjection": "INTERJECTION",
-    "Adnominal": "ADNOMINAL",
+    "Adnominal": "DET",
     "Conjunction": "CONJUNCTION",
     "Particle": "PARTICLE",
-    "Auxiliary": "AUXILIARY",
+    "Auxiliary": "AUX",
     "Symbol": "SYMBOL",
-    "Filler": "FILLER",
+    "Filler": "OTHER",
     "Other": "OTHER",
 }
 
 
 def _to_dict_pos(pos: str) -> str:
-    return _DICT_POS_MAP.get(pos, pos.upper())
+    candidate = _DICT_POS_MAP.get(pos, pos.upper())
+    return candidate if candidate in POS_ALIASES else ""
 
 
 def _map_conj_type(token: dict) -> str:
@@ -270,3 +290,38 @@ async def _recompile_user_dic() -> str:
         return "failed"
     finally:
         tmp_output_path.unlink(missing_ok=True)
+
+
+async def _write_files_and_recompile(
+    updates: dict[Path, str],
+    recompile: Callable[[], Awaitable[str]],
+) -> tuple[str, str | None]:
+    """Atomically write source files and restore all of them if compilation fails."""
+    snapshots = {path: (path.exists(), path.read_text(encoding="utf-8") if path.exists() else "") for path in updates}
+
+    try:
+        for path, content in updates.items():
+            _atomic_write_text(path, content)
+        try:
+            recompile_status = await recompile()
+        except Exception as exc:
+            recompile_status = f"exception: {type(exc).__name__}: {exc}"
+        if recompile_status == "ok":
+            return recompile_status, None
+    except Exception as exc:
+        recompile_status = f"exception: {type(exc).__name__}: {exc}"
+
+    rollback_errors = []
+    for path, (existed, content) in snapshots.items():
+        try:
+            if existed:
+                _atomic_write_text(path, content)
+            else:
+                path.unlink(missing_ok=True)
+        except Exception as exc:
+            rollback_errors.append(f"{path}: {type(exc).__name__}: {exc}")
+
+    message = f"Dictionary recompile failed ({recompile_status}); source changes were rolled back."
+    if rollback_errors:
+        message += " Rollback errors: " + "; ".join(rollback_errors)
+    return recompile_status, message

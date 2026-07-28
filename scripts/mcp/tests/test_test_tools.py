@@ -1,12 +1,15 @@
 """Tests for test tools (MCP tool functions)."""
 
 import asyncio
+import importlib
 import json
 import shutil
 
 import pytest
 
 from suzume_mcp.tools import test_tools as _tt
+
+mutation_tools = importlib.import_module("suzume_mcp.tools._test_tools_mutation")
 
 pytestmark = pytest.mark.skipif(
     shutil.which("mecab") is None,
@@ -170,6 +173,56 @@ class TestUseSuzumeIsRefused:
         data = parse(run(_tt.test_batch_add(file="", inputs=["テスト"], apply=True, use_suzume=True)))
         assert data["status"] == "error"
         assert "use_suzume is disabled by design" in data["message"]
+
+
+class TestTestDelete:
+    @staticmethod
+    def write_suite(tmp_path):
+        target = tmp_path / "tests/data/tokenization/sample.json"
+        target.parent.mkdir(parents=True)
+        target.write_text(
+            json.dumps(
+                {
+                    "version": "1.0",
+                    "cases": [
+                        {
+                            "id": "keep",
+                            "input": "東京",
+                            "expected": [{"surface": "東京", "pos": "Noun"}],
+                        },
+                        {
+                            "id": "remove",
+                            "input": "りんご",
+                            "expected": [{"surface": "りんご", "pos": "Noun"}],
+                        },
+                    ],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        return target
+
+    def test_delete_by_stable_id_applies_real_write(self, tmp_path, monkeypatch):
+        target = self.write_suite(tmp_path)
+        monkeypatch.setattr(mutation_tools, "PROJECT_ROOT", tmp_path)
+
+        result = parse(run(_tt.test_delete(test_id="sample/remove")))
+        assert result["status"] == "ok"
+        assert result["id"] == "remove"
+        remaining = json.loads(target.read_text(encoding="utf-8"))["cases"]
+        assert [case["id"] for case in remaining] == ["keep"]
+
+    def test_delete_reports_missing_selector_and_unknown_case(self, tmp_path, monkeypatch):
+        self.write_suite(tmp_path)
+        monkeypatch.setattr(mutation_tools, "PROJECT_ROOT", tmp_path)
+
+        missing_selector = parse(run(_tt.test_delete()))
+        assert missing_selector["status"] == "error"
+        assert "required" in missing_selector["message"]
+        missing_case = parse(run(_tt.test_delete(test_id="sample/missing")))
+        assert missing_case["status"] == "error"
+        assert "not found" in missing_case["message"].lower()
 
 
 class TestTestResetSuzume:

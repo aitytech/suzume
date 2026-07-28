@@ -1,8 +1,6 @@
 """Dictionary lookup and single-entry mutation MCP tools."""
 
 import re
-from collections.abc import Awaitable, Callable
-from pathlib import Path
 
 from ..core.mecab import mecab_analyze
 from ..core.pos_mapping import map_mecab_pos
@@ -13,8 +11,6 @@ from ._dict_tools_common import (
     USER_CATEGORIES,
     VALID_CONJ,
     VALID_POS,
-    _append_lines_atomic,
-    _atomic_write_text,
     _find_word_in_files,
     _json_result,
     _load_all_entries,
@@ -25,32 +21,16 @@ from ._dict_tools_common import (
     _to_dict_pos,
     _token_to_dict,
     _validate_surface,
+    _write_files_and_recompile,
 )
 
 
-async def _append_entry_and_recompile(
-    target_file: Path,
-    entry_line: str,
-    recompile: Callable[[], Awaitable[str]],
-) -> tuple[str, str | None]:
+async def _append_entry_and_recompile(target_file, entry_line, recompile) -> tuple[str, str | None]:
     """Append one entry, restoring the source file if compilation fails."""
-    existed = target_file.exists()
-    previous_content = target_file.read_text(encoding="utf-8") if existed else ""
-    _append_lines_atomic(target_file, [entry_line])
-
-    try:
-        recompile_status = await recompile()
-    except Exception as exc:
-        recompile_status = f"exception: {type(exc).__name__}: {exc}"
-
-    if recompile_status == "ok":
-        return recompile_status, None
-
-    if existed:
-        _atomic_write_text(target_file, previous_content)
-    else:
-        target_file.unlink(missing_ok=True)
-    return recompile_status, f"Dictionary recompile failed ({recompile_status}); appended entry was rolled back."
+    previous_content = target_file.read_text(encoding="utf-8") if target_file.exists() else ""
+    separator = "" if not previous_content or previous_content.endswith("\n") else "\n"
+    updated_content = previous_content + separator + entry_line + "\n"
+    return await _write_files_and_recompile({target_file: updated_content}, recompile)
 
 
 @mcp.tool()
@@ -333,8 +313,23 @@ async def dict_remove(word: str, user: str = "", dry_run: bool = False) -> str:
     if dry_run:
         return _json_result({"status": "ok", "word": word, "removed_entry": removed, "file": file_rel, "dry_run": True})
 
-    _atomic_write_text(filepath, "\n".join(new_lines) + ("\n" if new_lines else ""))
-    recompile_status = await (_recompile_user_dic() if user else _recompile_core_dic())
+    updated_content = "\n".join(new_lines) + ("\n" if new_lines else "")
+    recompile_status, error = await _write_files_and_recompile(
+        {filepath: updated_content},
+        _recompile_user_dic if user else _recompile_core_dic,
+    )
+    if error:
+        return _json_result(
+            {
+                "status": "error",
+                "message": error,
+                "word": word,
+                "removed_entry": removed,
+                "file": file_rel,
+                "recompile": recompile_status,
+                "rolled_back": True,
+            }
+        )
     return _json_result(
         {"status": "ok", "word": word, "removed_entry": removed, "file": file_rel, "recompile": recompile_status}
     )
@@ -370,8 +365,18 @@ async def dict_disable(word: str, dry_run: bool = False) -> str:
     if not found:
         return _json_result({"status": "error", "message": f"Word not found: {word}"})
 
-    _atomic_write_text(filepath, "\n".join(lines) + "\n")
-    recompile_status = await _recompile_core_dic()
+    recompile_status, error = await _write_files_and_recompile({filepath: "\n".join(lines) + "\n"}, _recompile_core_dic)
+    if error:
+        return _json_result(
+            {
+                "status": "error",
+                "message": error,
+                "word": word,
+                "file": file_rel,
+                "recompile": recompile_status,
+                "rolled_back": True,
+            }
+        )
     return _json_result({"status": "ok", "word": word, "file": file_rel, "recompile": recompile_status})
 
 
@@ -405,8 +410,18 @@ async def dict_enable(word: str, dry_run: bool = False) -> str:
     if not found:
         return _json_result({"status": "error", "message": f"Disabled word not found: {word}"})
 
-    _atomic_write_text(filepath, "\n".join(lines) + "\n")
-    recompile_status = await _recompile_core_dic()
+    recompile_status, error = await _write_files_and_recompile({filepath: "\n".join(lines) + "\n"}, _recompile_core_dic)
+    if error:
+        return _json_result(
+            {
+                "status": "error",
+                "message": error,
+                "word": word,
+                "file": file_rel,
+                "recompile": recompile_status,
+                "rolled_back": True,
+            }
+        )
     return _json_result({"status": "ok", "word": word, "file": file_rel, "recompile": recompile_status})
 
 
@@ -481,17 +496,23 @@ async def dict_validate(fix: bool = False) -> str:
             for entry in dup["entries"][1:]:
                 lines_to_remove.add((entry["file"], entry["line_num"]))
 
+        updates = {}
         for file_rel in set(f for f, _ in lines_to_remove):
             filepath = PROJECT_ROOT / file_rel
             file_lines = filepath.read_text(encoding="utf-8").splitlines()
             remove_nums = {ln for f, ln in lines_to_remove if f == file_rel}
             new_lines = [line for idx, line in enumerate(file_lines, 1) if idx not in remove_nums]
-            _atomic_write_text(filepath, "\n".join(new_lines) + "\n")
+            updates[filepath] = "\n".join(new_lines) + "\n"
 
-        recompile_status = await _recompile_core_dic()
-        result["fixed"] = True
-        result["removed_count"] = len(lines_to_remove)
+        recompile_status, error = await _write_files_and_recompile(updates, _recompile_core_dic)
+        result["fixed"] = error is None
         result["recompile"] = recompile_status
+        if error:
+            result["status"] = "error"
+            result["message"] = error
+            result["rolled_back"] = True
+        else:
+            result["removed_count"] = len(lines_to_remove)
 
     return _json_result(result)
 

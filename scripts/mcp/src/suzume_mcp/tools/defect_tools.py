@@ -71,6 +71,9 @@ async def _recheck_records(records: list[dict]) -> dict[int, dict]:
     outputs = await _current_outputs(texts)
     results: dict[int, dict] = {}
     for record, tokens, output in zip(records, oracle, outputs, strict=True):
+        if tokens[1] == "error":
+            results[record["id"]] = {"state": "error", "error": tokens[2]}
+            continue
         if isinstance(output, BaseException):
             results[record["id"]] = {"state": "error", "error": str(output)}
             continue
@@ -141,6 +144,9 @@ async def _screen(texts: list[str], source: str) -> list[dict]:
 
     rows: list[dict] = []
     for text, tokens, output in zip(texts, oracle, outputs, strict=True):
+        if tokens[1] == "error":
+            rows.append({"text": text, "state": "error", "error": tokens[2]})
+            continue
         if isinstance(output, BaseException):
             rows.append({"text": text, "state": "error", "error": str(output)})
             continue
@@ -278,7 +284,9 @@ async def defect_dismiss(
                 }
             )
         if not expected:
-            tokens, _, _ = get_expected_tokens_batch_subprocess([text])[0]
+            tokens, oracle_source, rule = get_expected_tokens_batch_subprocess([text])[0]
+            if oracle_source == "error":
+                raise RuntimeError(rule)
             expected = bug_store.join_tokens([tok["surface"] for tok in tokens])
         if not suzume:
             surfaces = await get_suzume_surfaces_async(text, skip_user_dict=False)
@@ -399,7 +407,9 @@ async def defect_add(
             )
 
         if not expected:
-            tokens, _, _ = get_expected_tokens_batch_subprocess([text])[0]
+            tokens, oracle_source, rule = get_expected_tokens_batch_subprocess([text])[0]
+            if oracle_source == "error":
+                raise RuntimeError(rule)
             expected = bug_store.join_tokens([tok["surface"] for tok in tokens])
         if not suzume:
             surfaces = await get_suzume_surfaces_async(text, skip_user_dict=False)

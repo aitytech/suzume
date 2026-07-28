@@ -11,6 +11,7 @@ from ..core.suzume_cli import (
 )
 from ..core.suzume_cli import (
     get_expected_tokens_batch_subprocess,
+    get_mecab_tokens_batch_subprocess,
     get_suzume_debug_info,
 )
 from ..core.suzume_cli import (
@@ -441,6 +442,9 @@ async def test_diff_mecab(file: str = "") -> str:
     }
     total_cases = 0
     mecab_compatible = 0
+    errors: list[dict] = []
+    case_metadata: list[dict] = []
+    inputs: list[str] = []
 
     for path in files:
         try:
@@ -454,42 +458,54 @@ async def test_diff_mecab(file: str = "") -> str:
             if not inp:
                 continue
             total_cases += 1
-            expected = case.get("expected") or []
-            mecab, _source, rule = get_expected_tokens(inp)
+            case_metadata.append({"basename": basename, "index": idx, "case": case, "input": inp})
+            inputs.append(inp)
 
-            if tokens_match(expected, mecab):
-                mecab_compatible += 1
-                continue
+    mecab_results = get_mecab_tokens_batch_subprocess(inputs)
+    for meta, (mecab, source, rule) in zip(case_metadata, mecab_results, strict=True):
+        case = meta["case"]
+        inp = meta["input"]
+        idx = meta["index"]
+        basename = meta["basename"]
+        case_id = case.get("id", str(idx))
+        if source == "error":
+            errors.append({"id": f"{basename}/{case_id}", "input": inp, "error": rule})
+            continue
+        expected = case.get("expected") or []
 
-            case_id = case.get("id", str(idx))
-            exp_str = "|".join(t.get("surface", "") for t in expected)
-            mec_str = "|".join(t["surface"] for t in mecab)
+        if tokens_match(expected, mecab):
+            mecab_compatible += 1
+            continue
 
-            entry = {"id": f"{basename}/{case_id}", "input": inp, "expected": exp_str, "mecab": mec_str, "rule": rule}
+        exp_str = "|".join(t.get("surface", "") for t in expected)
+        mec_str = "|".join(t["surface"] for t in mecab)
 
-            if exp_str == mec_str:
-                exp_pos = "|".join(t.get("pos", "") for t in expected)
-                mec_pos = "|".join(t.get("pos", "") for t in mecab)
-                if exp_pos == mec_pos:
-                    entry["expected_full"] = "|".join(
-                        f"{t.get('surface', '')}/{t.get('pos', '')}/{t.get('lemma', t.get('surface', ''))}"
-                        for t in expected
-                    )
-                    entry["mecab_full"] = "|".join(
-                        f"{t['surface']}/{t.get('pos', '')}/{t.get('lemma', t['surface'])}" for t in mecab
-                    )
-                    categories["intentional" if rule else "lemma_only"].append(entry)
-                else:
-                    entry["expected_pos"] = exp_pos
-                    entry["mecab_pos"] = mec_pos
-                    categories["intentional" if rule else "pos_only"].append(entry)
+        entry = {"id": f"{basename}/{case_id}", "input": inp, "expected": exp_str, "mecab": mec_str, "rule": rule}
+
+        if exp_str == mec_str:
+            exp_pos = "|".join(t.get("pos", "") for t in expected)
+            mec_pos = "|".join(t.get("pos", "") for t in mecab)
+            if exp_pos == mec_pos:
+                entry["expected_full"] = "|".join(
+                    f"{t.get('surface', '')}/{t.get('pos', '')}/{t.get('lemma', t.get('surface', ''))}"
+                    for t in expected
+                )
+                entry["mecab_full"] = "|".join(
+                    f"{t['surface']}/{t.get('pos', '')}/{t.get('lemma', t['surface'])}" for t in mecab
+                )
+                categories["intentional" if rule else "lemma_only"].append(entry)
             else:
-                categories["intentional" if rule else "segmentation"].append(entry)
+                entry["expected_pos"] = exp_pos
+                entry["mecab_pos"] = mec_pos
+                categories["intentional" if rule else "pos_only"].append(entry)
+        else:
+            categories["intentional" if rule else "segmentation"].append(entry)
 
     if total_cases == 0:
         return _json_error("No test cases found")
 
-    incompatible = total_cases - mecab_compatible
+    processed = total_cases - len(errors)
+    incompatible = processed - mecab_compatible
 
     # Limit each category to 20 items in output
     cat_out: dict[str, list[dict]] = {}
@@ -499,10 +515,13 @@ async def test_diff_mecab(file: str = "") -> str:
     return _json_result(
         {
             "categories": cat_out,
+            "errors": errors[:20],
             "summary": {
                 "total_cases": total_cases,
+                "processed": processed,
+                "errors": len(errors),
                 "mecab_compatible": mecab_compatible,
-                "mecab_compatible_pct": round(100.0 * mecab_compatible / total_cases, 1) if total_cases else 0,
+                "mecab_compatible_pct": round(100.0 * mecab_compatible / processed, 1) if processed else 0,
                 "incompatible": incompatible,
                 "intentional": len(categories["intentional"]),
                 "segmentation": len(categories["segmentation"]),
@@ -536,6 +555,7 @@ async def test_needs_suzume_update(
 
     needs_update = []
     by_rule: dict[str, list[dict]] = {}
+    normalization_errors: list[dict] = []
 
     # Collect all cases with their metadata for batch processing
     all_cases_meta: list[dict] = []
@@ -583,7 +603,11 @@ async def test_needs_suzume_update(
     else:
         batch_results = []
 
-    for meta, (correct, _source, rule) in zip(all_cases_meta, batch_results, strict=True):
+    for meta, (correct, source, rule) in zip(all_cases_meta, batch_results, strict=True):
+        if source == "error":
+            case_id = meta["case"].get("id", str(meta["idx"]))
+            normalization_errors.append({"id": f"{meta['basename']}/{case_id}", "input": meta["input"], "error": rule})
+            continue
         expected = meta["case"].get("expected") or []
         rule = rule or ""
 
@@ -620,6 +644,7 @@ async def test_needs_suzume_update(
                 "needs_update": [],
                 "by_rule": {},
                 "total": 0,
+                "errors": normalization_errors,
                 "applied": False,
             }
         )
@@ -648,6 +673,7 @@ async def test_needs_suzume_update(
                 "needs_update": output_entries,
                 "by_rule": by_rule_out,
                 "total": len(needs_update),
+                "errors": normalization_errors,
                 "applied": False,
             }
         )
@@ -670,6 +696,7 @@ async def test_needs_suzume_update(
             "needs_update": output_entries,
             "by_rule": by_rule_out,
             "total": len(needs_update),
+            "errors": normalization_errors,
             "applied": True,
         }
     )

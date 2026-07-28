@@ -1,5 +1,6 @@
 """Test corpus mutation MCP tools."""
 
+from ..core.constants import VALID_POS
 from ..core.suzume_cli import (
     get_expected_tokens_batch_subprocess,
 )
@@ -290,6 +291,9 @@ async def test_batch_add(
 
     for batch_idx, (_orig_idx, inp) in enumerate(new_inputs):
         tokens, source, rule = batch_results[batch_idx]
+        if source == "error":
+            skipped.append({"input": inp, "reason": rule})
+            continue
         try:
             expected = _format_expected_checked(tokens, source)
         except RuntimeError as exc:
@@ -391,6 +395,9 @@ async def test_replace_pos(
         file: Optional test file filter (without .json), or empty for all.
         apply: If True, apply changes. Default is dry-run.
     """
+    if new_pos not in VALID_POS:
+        return _json_error(f"Invalid new_pos: {new_pos}. Valid values: {', '.join(sorted(VALID_POS))}")
+
     files = _get_test_files_filtered(file or "all")
     if not files:
         return _json_error("No test files found")
@@ -455,6 +462,9 @@ async def test_map_pos(
         file: Optional test file filter.
         apply: If True, apply changes.
     """
+    if new_pos not in VALID_POS:
+        return _json_error(f"Invalid new_pos: {new_pos}. Valid values: {', '.join(sorted(VALID_POS))}")
+
     files = _get_test_files_filtered(file or "all")
     if not files:
         return _json_error("No test files found")

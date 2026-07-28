@@ -6,14 +6,14 @@ from ..server import PROJECT_ROOT, mcp
 from ._dict_tools_common import (
     POS_TO_FILE,
     USER_CATEGORIES,
+    VALID_CONJ,
     VALID_POS,
-    _append_lines_atomic,
-    _atomic_write_text,
     _json_result,
     _load_all_entries,
     _recompile_core_dic,
     _recompile_user_dic,
     _validate_surface,
+    _write_files_and_recompile,
 )
 
 
@@ -21,6 +21,7 @@ from ._dict_tools_common import (
 async def dict_bulk_add(
     words: str,
     pos: str = "NOUN",
+    conj_type: str = "",
     user: str = "",
     force: bool = False,
     dry_run: bool = False,
@@ -30,12 +31,19 @@ async def dict_bulk_add(
     Args:
         words: Newline-separated list of words to add.
         pos: POS value for all words (default: NOUN).
+        conj_type: Conjugation type required by VERB and ADJECTIVE entries.
         user: User dictionary category.
         force: Allow adding even if MeCab splits words.
         dry_run: Preview only.
     """
     if pos not in VALID_POS:
         return _json_result({"status": "error", "message": f"Invalid POS: {pos}. Valid values: {', '.join(VALID_POS)}"})
+    if conj_type and conj_type not in VALID_CONJ:
+        return _json_result(
+            {"status": "error", "message": f"Invalid conj_type: {conj_type}. Valid values: {', '.join(VALID_CONJ)}"}
+        )
+    if pos in ("VERB", "ADJECTIVE") and not conj_type:
+        return _json_result({"status": "error", "message": f"conj_type is required for {pos} entries."})
     if user and user not in USER_CATEGORIES:
         return _json_result(
             {
@@ -88,6 +96,8 @@ async def dict_bulk_add(
                 continue
 
         entry_line = f"{word}\t{pos}"
+        if conj_type:
+            entry_line += f"\t{conj_type}"
         lines_to_append.append(entry_line)
         added.append({"word": word, "entry": entry_line})
         # Track as added so subsequent duplicates within the batch are caught
@@ -124,11 +134,27 @@ async def dict_bulk_add(
         target_rel = POS_TO_FILE.get(pos, "data/core/nouns.tsv")
         target_file = PROJECT_ROOT / target_rel
 
-    # Append all entries at once
-    _append_lines_atomic(target_file, lines_to_append)
-
-    # Recompile once
-    recompile_status = await (_recompile_user_dic() if user else _recompile_core_dic())
+    previous_content = target_file.read_text(encoding="utf-8") if target_file.exists() else ""
+    separator = "" if not previous_content or previous_content.endswith("\n") else "\n"
+    updated_content = previous_content + separator + "\n".join(lines_to_append) + "\n"
+    recompile_status, error = await _write_files_and_recompile(
+        {target_file: updated_content},
+        _recompile_user_dic if user else _recompile_core_dic,
+    )
+    if error:
+        return _json_result(
+            {
+                "status": "error",
+                "message": error,
+                "added": added,
+                "skipped": skipped,
+                "total_added": 0,
+                "total_skipped": len(skipped),
+                "file": target_rel,
+                "recompile": recompile_status,
+                "rolled_back": True,
+            }
+        )
 
     return _json_result(
         {
@@ -238,14 +264,28 @@ async def dict_bulk_move(
             }
         )
 
-    # Write updated source file
-    _atomic_write_text(source_file, "\n".join(remaining_lines) + ("\n" if remaining_lines else ""))
-
-    # Append to destination file
-    _append_lines_atomic(dest_file, matched_entries)
-
-    # Recompile once
-    recompile_status = await _recompile_user_dic()
+    source_content = "\n".join(remaining_lines) + ("\n" if remaining_lines else "")
+    destination_content = dest_file.read_text(encoding="utf-8") if dest_file.exists() else ""
+    separator = "" if not destination_content or destination_content.endswith("\n") else "\n"
+    destination_content += separator + "\n".join(matched_entries) + "\n"
+    recompile_status, error = await _write_files_and_recompile(
+        {source_file: source_content, dest_file: destination_content},
+        _recompile_user_dic,
+    )
+    if error:
+        return _json_result(
+            {
+                "status": "error",
+                "message": error,
+                "moved": moved,
+                "not_found": not_found,
+                "total_moved": 0,
+                "from": source_rel,
+                "to": dest_rel,
+                "recompile": recompile_status,
+                "rolled_back": True,
+            }
+        )
 
     return _json_result(
         {

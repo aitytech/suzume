@@ -18,6 +18,7 @@ from ._dict_tools_common import (
     _json_result,
     _recompile_core_dic,
     _recompile_user_dic,
+    _write_files_and_recompile,
 )
 
 
@@ -101,16 +102,17 @@ async def dict_sort(
     # Parse entries (skip inline comments and disabled entries)
     entries = []
     disabled_entries = []
-    inline_comments = []  # non-header comments interspersed with data
+    pending_comments = []
     for line in raw_lines[data_start:]:
         if not line.strip():
             continue
         if line.startswith("#DISABLED# "):
-            disabled_entries.append(line)
+            disabled_entries.append({"raw": line, "comments": pending_comments})
+            pending_comments = []
             continue
         if line.startswith("#"):
-            # Inline section comments — we'll regenerate them
-            inline_comments.append(line)
+            if not (line.startswith("# --- ") and line.endswith(" ---")):
+                pending_comments.append(line)
             continue
         fields = line.split("\t")
         entries.append(
@@ -119,8 +121,11 @@ async def dict_sort(
                 "pos": fields[1] if len(fields) > 1 else "",
                 "conj_type": fields[2] if len(fields) > 2 else "",
                 "raw": line,
+                "comments": pending_comments,
             }
         )
+        pending_comments = []
+    trailing_comments = pending_comments
 
     if not entries:
         return _json_result({"status": "error", "message": f"No entries found in {target_rel}"})
@@ -204,15 +209,17 @@ async def dict_sort(
         "PHRASE": "Phrases (フレーズ)",
     }
 
-    # Deduplicate entries (keep first occurrence per surface)
-    seen_surfaces: set[str] = set()
-    dedup_count = 0
+    # Deduplicate exact grammatical entries while preserving legitimate
+    # homographs that differ by POS or conjugation type.
+    seen_keys: set[tuple[str, str, str]] = set()
+    duplicates_removed = []
     deduped_entries = []
     for ent in entries:
-        if ent["surface"] in seen_surfaces:
-            dedup_count += 1
+        key = (ent["surface"], ent["pos"], ent["conj_type"])
+        if key in seen_keys:
+            duplicates_removed.append({"surface": ent["surface"], "pos": ent["pos"], "conj_type": ent["conj_type"]})
             continue
-        seen_surfaces.add(ent["surface"])
+        seen_keys.add(key)
         deduped_entries.append(ent)
     entries = deduped_entries
 
@@ -243,20 +250,24 @@ async def dict_sort(
             group_stats.append({"name": label, "count": len(group_entries)})
 
         for ent in group_entries:
+            output_lines.extend(ent["comments"])
             output_lines.append(ent["raw"])
 
     # Append disabled entries at the end
     if disabled_entries:
         output_lines.append("\n# --- Disabled entries ---")
-        for dis in disabled_entries:
-            output_lines.append(dis)
+        for disabled in disabled_entries:
+            output_lines.extend(disabled["comments"])
+            output_lines.append(disabled["raw"])
+    output_lines.extend(trailing_comments)
 
     sorted_content = "\n".join(output_lines) + "\n"
 
     result: dict = {
         "file": target_rel,
         "total_entries": len(entries),
-        "duplicates_removed": dedup_count,
+        "duplicates_removed": len(duplicates_removed),
+        "duplicate_entries": duplicates_removed,
         "groups": group_stats,
         "disabled": len(disabled_entries),
         "applied": False,
@@ -272,9 +283,21 @@ async def dict_sort(
         result["preview"] = preview
         return _json_result(result)
 
-    _atomic_write_text(filepath, sorted_content)
     is_user = target_rel.startswith("data/user/")
-    recompile_status = await (_recompile_user_dic() if is_user else _recompile_core_dic())
+    recompile_status, error = await _write_files_and_recompile(
+        {filepath: sorted_content},
+        _recompile_user_dic if is_user else _recompile_core_dic,
+    )
+    if error:
+        result.update(
+            {
+                "status": "error",
+                "message": error,
+                "recompile": recompile_status,
+                "rolled_back": True,
+            }
+        )
+        return _json_result(result)
     result["applied"] = True
     result["recompile"] = recompile_status
     return _json_result(result)
@@ -354,6 +377,7 @@ async def dict_remove_matching(
     for match in matches:
         by_file.setdefault(match["file"], set()).add(match["surface"])
 
+    updates = {}
     for file_rel, surfaces_to_remove in by_file.items():
         filepath = PROJECT_ROOT / file_rel
         file_lines = filepath.read_text(encoding="utf-8").splitlines()
@@ -364,9 +388,22 @@ async def dict_remove_matching(
                 if surface in surfaces_to_remove:
                     continue
             new_lines.append(line)
-        _atomic_write_text(filepath, "\n".join(new_lines) + "\n")
+        updates[filepath] = "\n".join(new_lines) + "\n"
 
-    recompile_status = await (_recompile_user_dic() if user else _recompile_core_dic())
+    recompile_status, error = await _write_files_and_recompile(
+        updates,
+        _recompile_user_dic if user else _recompile_core_dic,
+    )
+    if error:
+        result.update(
+            {
+                "status": "error",
+                "message": error,
+                "recompile": recompile_status,
+                "rolled_back": True,
+            }
+        )
+        return _json_result(result)
     result["applied"] = True
     result["recompile"] = recompile_status
     return _json_result(result)
@@ -402,19 +439,20 @@ async def dict_cleanup(
         return bool(regex.search(r"[\p{Han}][\p{Hiragana}][\p{Han}\p{Hiragana}\p{Katakana}]", surface))
 
     def is_split_by_suzume(surface: str) -> bool:
-        try:
-            # --no-user-dict: judge whether suzume splits the word on its OWN merits,
-            # not because of the very user-dict entry we are evaluating for removal.
-            result = subprocess.run(
-                [str(cli), "--no-user-dict", surface],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            lines = [line for line in result.stdout.strip().split("\n") if line and line != "EOS"]
-            return len(lines) > 1
-        except Exception:
-            return True
+        # --no-user-dict: judge whether suzume splits the word on its OWN merits,
+        # not because of the very user-dict entry we are evaluating for removal.
+        result = subprocess.run(
+            [str(cli), "--no-user-dict", surface],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=PROJECT_ROOT,
+        )
+        if result.returncode != 0:
+            detail = result.stderr.strip() or result.stdout.strip() or "no diagnostic output"
+            raise RuntimeError(f"suzume-cli exited with {result.returncode}: {detail}")
+        lines = [line for line in result.stdout.strip().split("\n") if line and line != "EOS"]
+        return len(lines) > 1
 
     keep_lines = []
     noise_lines = []
@@ -422,46 +460,50 @@ async def dict_cleanup(
     kept = 0
     details = []
 
-    for line in filepath.read_text(encoding="utf-8").splitlines():
-        if line.startswith("#") or not line.strip():
-            keep_lines.append(line)
-            continue
+    try:
+        input_lines = filepath.read_text(encoding="utf-8").splitlines()
+        for line in input_lines:
+            if line.startswith("#") or not line.strip():
+                keep_lines.append(line)
+                continue
 
-        fields = line.split("\t")
-        if len(fields) < 2:
-            keep_lines.append(line)
-            continue
+            fields = line.split("\t")
+            if len(fields) < 2:
+                keep_lines.append(line)
+                continue
 
-        surface = fields[0]
-        total += 1
+            surface = fields[0]
+            total += 1
 
-        # Determine if entry is needed
-        reason = ""
-        keep = True
+            # Determine if entry is needed
+            reason = ""
+            keep = True
 
-        if len(surface) <= 2:
-            keep = False
-            reason = "too_short"
-        elif not is_split_by_suzume(surface):
-            keep = False
-            reason = "handled_by_suzume"
-        elif is_fixed_expression(surface):
-            reason = "fixed_expression"
-        elif len(get_char_types(surface)) > 1:
-            reason = "mixed_chartype_compound"
-        elif get_char_types(surface) and get_char_types(surface)[0] == "kanji" and len(surface) >= 4:
-            reason = "kanji_compound"
-        else:
-            reason = "split_other"
+            if len(surface) <= 2:
+                keep = False
+                reason = "too_short"
+            elif not is_split_by_suzume(surface):
+                keep = False
+                reason = "handled_by_suzume"
+            elif is_fixed_expression(surface):
+                reason = "fixed_expression"
+            elif len(get_char_types(surface)) > 1:
+                reason = "mixed_chartype_compound"
+            elif get_char_types(surface) and get_char_types(surface)[0] == "kanji" and len(surface) >= 4:
+                reason = "kanji_compound"
+            else:
+                reason = "split_other"
 
-        action = "KEEP" if keep else "DROP"
-        details.append({"surface": surface, "action": action, "reason": reason})
+            action = "KEEP" if keep else "DROP"
+            details.append({"surface": surface, "action": action, "reason": reason})
 
-        if keep:
-            keep_lines.append(line)
-            kept += 1
-        else:
-            noise_lines.append(f"{line}\t# {reason}")
+            if keep:
+                keep_lines.append(line)
+                kept += 1
+            else:
+                noise_lines.append(f"{line}\t# {reason}")
+    except (OSError, subprocess.SubprocessError, RuntimeError) as exc:
+        return _json_result({"status": "error", "message": f"Cleanup analysis failed: {exc}"})
 
     result: dict = {
         "file": input_file,
