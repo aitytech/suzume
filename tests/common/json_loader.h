@@ -176,6 +176,25 @@ inline TestCase JsonLoader::parseTestCase() {
     skipWhitespace();
   }
   expect('}');
+  if (tc.id.empty()) {
+    throw std::runtime_error("Test case id must not be empty");
+  }
+  if (tc.input.empty()) {
+    throw std::runtime_error("Test case input must not be empty: " + tc.id);
+  }
+  if (tc.expected.empty()) {
+    throw std::runtime_error("Test case expected must not be empty: " + tc.id);
+  }
+  for (const auto& expected : tc.expected) {
+    if (expected.surface.empty()) {
+      throw std::runtime_error("Expected surface must not be empty: " + tc.id);
+    }
+    try {
+      static_cast<void>(expected.posEnum());
+    } catch (const std::invalid_argument& error) {
+      throw std::runtime_error("Invalid expected POS in " + tc.id + ": " + error.what());
+    }
+  }
   return tc;
 }
 
@@ -294,22 +313,57 @@ inline std::string JsonLoader::parseString() {
           result += '\\';
           break;
         case 'u': {
-          // Unicode escape \uXXXX
-          if (pos_ + 4 < json_.size()) {
-            std::string hex = json_.substr(pos_ + 1, 4);
-            uint32_t codepoint = std::stoul(hex, nullptr, 16);
-            // Convert to UTF-8
-            if (codepoint < 0x80) {
-              result += static_cast<char>(codepoint);
-            } else if (codepoint < 0x800) {
-              result += static_cast<char>(0xC0 | (codepoint >> 6));
-              result += static_cast<char>(0x80 | (codepoint & 0x3F));
-            } else {
-              result += static_cast<char>(0xE0 | (codepoint >> 12));
-              result += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
-              result += static_cast<char>(0x80 | (codepoint & 0x3F));
+          const auto parse_hex_code_unit = [this](size_t start) {
+            if (start + 4 > json_.size()) {
+              throw std::runtime_error("Incomplete Unicode escape");
+            }
+            uint32_t value = 0;
+            for (size_t offset = 0; offset < 4; ++offset) {
+              const char digit = json_[start + offset];
+              value <<= 4;
+              if (digit >= '0' && digit <= '9') {
+                value += static_cast<uint32_t>(digit - '0');
+              } else if (digit >= 'a' && digit <= 'f') {
+                value += static_cast<uint32_t>(digit - 'a' + 10);
+              } else if (digit >= 'A' && digit <= 'F') {
+                value += static_cast<uint32_t>(digit - 'A' + 10);
+              } else {
+                throw std::runtime_error("Invalid Unicode escape");
+              }
+            }
+            return value;
+          };
+          uint32_t codepoint = parse_hex_code_unit(pos_ + 1);
+          if (codepoint >= 0xD800 && codepoint <= 0xDBFF) {
+            if (pos_ + 10 >= json_.size() || json_[pos_ + 5] != '\\' || json_[pos_ + 6] != 'u') {
+              throw std::runtime_error("High surrogate without low surrogate");
+            }
+            const uint32_t low_surrogate = parse_hex_code_unit(pos_ + 7);
+            if (low_surrogate < 0xDC00 || low_surrogate > 0xDFFF) {
+              throw std::runtime_error("High surrogate followed by invalid low surrogate");
+            }
+            codepoint = 0x10000 + ((codepoint - 0xD800) << 10) + (low_surrogate - 0xDC00);
+            pos_ += 10;
+          } else {
+            if (codepoint >= 0xDC00 && codepoint <= 0xDFFF) {
+              throw std::runtime_error("Low surrogate without high surrogate");
             }
             pos_ += 4;
+          }
+          if (codepoint < 0x80) {
+            result += static_cast<char>(codepoint);
+          } else if (codepoint < 0x800) {
+            result += static_cast<char>(0xC0 | (codepoint >> 6));
+            result += static_cast<char>(0x80 | (codepoint & 0x3F));
+          } else if (codepoint < 0x10000) {
+            result += static_cast<char>(0xE0 | (codepoint >> 12));
+            result += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+            result += static_cast<char>(0x80 | (codepoint & 0x3F));
+          } else {
+            result += static_cast<char>(0xF0 | (codepoint >> 18));
+            result += static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F));
+            result += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+            result += static_cast<char>(0x80 | (codepoint & 0x3F));
           }
           break;
         }
