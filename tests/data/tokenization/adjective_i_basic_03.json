@@ -166,6 +166,40 @@
       ],
       "id": "chi_tttokusaine",
       "input": "ちょっとくさいね"
+    },
+    {
+      "description": "かわいければ - auto-generated",
+      "expected": [
+        {
+          "lemma": "かわいい",
+          "pos": "Adjective",
+          "surface": "かわいけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "kawaikereba",
+      "input": "かわいければ"
+    },
+    {
+      "description": "すごければ - auto-generated",
+      "expected": [
+        {
+          "lemma": "すごい",
+          "pos": "Adjective",
+          "surface": "すごけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "sugokereba",
+      "input": "すごければ"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 3/3)",

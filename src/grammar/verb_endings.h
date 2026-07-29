@@ -6,6 +6,7 @@
 #ifndef SUZUME_GRAMMAR_VERB_ENDINGS_H_
 #define SUZUME_GRAMMAR_VERB_ENDINGS_H_
 
+#include <array>
 #include <cstddef>
 #include <string>
 
@@ -13,6 +14,38 @@
 #include "connection.h"
 
 namespace suzume::grammar {
+
+// This is the canonical closed verb-paradigm order.  Consumers that need the
+// complete paradigm iterate this table instead of open-coding connection-ID
+// ranges, whose intervening IDs include non-ConjForm categories.
+constexpr std::array<ConjForm, static_cast<size_t>(ConjForm::Count_)> kAllVerbConjForms = {
+    ConjForm::Base,     ConjForm::Mizenkei,  ConjForm::Renyokei, ConjForm::Onbinkei,
+    ConjForm::Kateikei, ConjForm::Meireikei, ConjForm::Ishikei,
+};
+
+constexpr bool hasEveryVerbConjFormExactlyOnce() {
+  std::array<bool, static_cast<size_t>(ConjForm::Count_)> seen{};
+  for (ConjForm form : kAllVerbConjForms) {
+    const size_t index = static_cast<size_t>(form);
+    if (index >= seen.size() || seen[index]) {
+      return false;
+    }
+    seen[index] = true;
+  }
+  for (bool is_seen : seen) {
+    if (!is_seen) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static_assert(hasEveryVerbConjFormExactlyOnce(), "Every ConjForm must have exactly one canonical table cell");
+
+constexpr std::array<uint16_t, static_cast<size_t>(ConjForm::Count_)> kVerbConjFormConnections = {
+    conn::kVerbBase,  conn::kVerbMizenkei,  conn::kVerbRenyokei,   conn::kVerbOnbinkei,
+    conn::kVerbKatei, conn::kVerbMeireikei, conn::kVerbVolitional,
+};
 
 /**
  * @brief Verb ending pattern for reverse lookup
@@ -48,6 +81,9 @@ class VerbEndingRange {
  * Avoids scanning all ~120 endings when only a specific connection type is needed.
  */
 VerbEndingRange getVerbEndingsByConn(uint16_t provides_conn);
+
+/** @brief Get all reverse endings for a canonical conjugation-form cell. */
+VerbEndingRange getVerbEndingsByForm(ConjForm form);
 
 }  // namespace suzume::grammar
 

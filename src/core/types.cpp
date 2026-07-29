@@ -510,7 +510,8 @@ ExtendedPOS posToExtendedPos(PartOfSpeech pos) {
 // This detector assigns ExtendedPOS while candidates are built. Postprocessing
 // treats that selected ExtendedPOS as authoritative when exposing ConjForm;
 // its surface heuristics are only a fallback for legacy morphemes without one.
-ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix, bool godan_imperative_hint) {
+ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix, bool godan_imperative_hint,
+                           bool godan_i_onbin_hint) {
   // Empty surface defaults to shuushi
   if (surface.empty()) {
     return ExtendedPOS::VerbShuushikei;
@@ -553,24 +554,15 @@ ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix, bo
   if (utf8::endsWithAny(surface, {"っ", "ん"})) {
     return ExtendedPOS::VerbOnbinkei;
   }
-  // Also check for い-onbin (書い from 書く)
-  // Need to distinguish from renyokei ending in い
-  // い-onbin is specifically kanji + い (書い, 泳い) for godan verbs
-  // All-hiragana surfaces ending in い are ichidan renyokei (食べ, につい, etc.)
+  // Also check for い-onbin (書い from 書く).  The surface alone cannot
+  // distinguish it from an ichidan continuative such as 老い/率い/用い, so
+  // only candidate generation with known ka/ga-row conjugation may select it.
   if (utf8::endsWithAny(surface, {"い"})) {
-    // Check if surface contains kanji - only then classify as onbinkei
-    bool has_kanji = false;
-    size_t byte_pos = 0;
-    while (byte_pos < surface.size()) {
-      if (suzume::normalize::isKanjiCodepoint(suzume::normalize::decodeUtf8(surface, byte_pos))) {
-        has_kanji = true;
-        break;
-      }
-    }
-    if (has_kanji) {
+    if (godan_i_onbin_hint) {
       return ExtendedPOS::VerbOnbinkei;
     }
-    // All-hiragana い-ending verbs are renyokei (ichidan stems)
+    // Without conjugation evidence, preserve the conservative continuative
+    // reading rather than fabricating an onbin edge from kanji spelling.
     return ExtendedPOS::VerbRenyokei;
   }
 

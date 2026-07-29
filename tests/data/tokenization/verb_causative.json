@@ -302,9 +302,14 @@
       "description": "遊ばせれば - auto-generated",
       "expected": [
         {
-          "lemma": "遊ばせる",
+          "lemma": "遊ぶ",
           "pos": "Verb",
-          "surface": "遊ばせれ"
+          "surface": "遊ば"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せれ"
         },
         {
           "lemma": "ば",
@@ -478,6 +483,170 @@
       ],
       "id": "mizenkei_sa_causative_homograph_control",
       "input": "読まされる"
+    },
+    {
+      "description": "読ませれば - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "masereba",
+      "input": "読ませれば"
+    },
+    {
+      "description": "確認させれば - auto-generated",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "sasereba",
+      "input": "確認させれば"
+    },
+    {
+      "description": "実行されれば - auto-generated",
+      "expected": [
+        {
+          "lemma": "実行",
+          "pos": "Noun",
+          "surface": "実行"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "sarereba",
+      "input": "実行されれば"
+    },
+    {
+      "description": "書かせよう - auto-generated",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        }
+      ],
+      "id": "kaseyou",
+      "input": "書かせよう"
+    },
+    {
+      "description": "聞かせよう - auto-generated",
+      "expected": [
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞か"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        }
+      ],
+      "id": "kaseyou_2",
+      "input": "聞かせよう"
+    },
+    {
+      "description": "泳がせよう - auto-generated",
+      "expected": [
+        {
+          "lemma": "泳ぐ",
+          "pos": "Verb",
+          "surface": "泳が"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        }
+      ],
+      "id": "gaseyou",
+      "input": "泳がせよう"
+    },
+    {
+      "description": "読ませよう - auto-generated",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Auxiliary",
+          "surface": "よう"
+        }
+      ],
+      "id": "maseyou",
+      "input": "読ませよう"
     }
   ],
   "description": "verb_causative tests",

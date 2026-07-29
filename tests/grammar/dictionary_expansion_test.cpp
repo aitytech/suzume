@@ -68,6 +68,40 @@ TEST(DictionaryExpansionTest, IAdjectiveExpansionKeepsBareMorphemeBoundaries) {
   EXPECT_EQ(findSurface(expanded, "高そう"), nullptr);
 }
 
+TEST(DictionaryExpansionTest, ExpandsRegularIAdjectiveEndingInIi) {
+  const dictionary::SourceEntry source{"かわいい", core::PartOfSpeech::Adjective,
+                                       dictionary::ConjugationType::IAdjective, "", 1};
+
+  const auto expanded = expandDictionarySourceEntry(source);
+
+  ASSERT_NE(findSurface(expanded, "かわいけれ"), nullptr);
+  ASSERT_NE(findSurface(expanded, "かわいかっ"), nullptr);
+}
+
+TEST(DictionaryExpansionTest, UsesRegisteredYoiSiblingForSuppletiveIiAdjective) {
+  const dictionary::SourceEntry colloquial{"かっこいい", core::PartOfSpeech::Adjective,
+                                           dictionary::ConjugationType::IAdjective, "", 1};
+  const dictionary::SourceEntry regular{"かっこよい", core::PartOfSpeech::Adjective,
+                                        dictionary::ConjugationType::IAdjective, "", 2};
+
+  const auto expanded = expandDictionarySourceEntries({colloquial, regular});
+
+  ASSERT_NE(findSurface(expanded.entries, "かっこよけれ"), nullptr);
+  EXPECT_EQ(findSurface(expanded.entries, "かっこいけれ"), nullptr);
+  ASSERT_NE(findSurface(expanded.entries, "かっこいい"), nullptr);
+}
+
+TEST(DictionaryExpansionTest, InvalidConjugationTypeKeepsLiteralSurface) {
+  const dictionary::SourceEntry source{"テスト", core::PartOfSpeech::Verb, dictionary::ConjugationType::Suru, "", 1};
+
+  EXPECT_NE(dictionaryConjugationTypeIssue(source).find("ending in する"), std::string::npos);
+  const auto expanded = expandDictionarySourceEntry(source);
+
+  ASSERT_EQ(expanded.size(), 1U);
+  EXPECT_EQ(expanded[0].surface, "テスト");
+  EXPECT_EQ(findSurface(expanded, "テする"), nullptr);
+}
+
 TEST(DictionaryExpansionTest, ReusesKuruKanjiAndKanaForms) {
   const dictionary::SourceEntry source{"来る", core::PartOfSpeech::Verb, dictionary::ConjugationType::Kuru, "", 1};
 
@@ -82,6 +116,25 @@ TEST(DictionaryExpansionTest, ReusesKuruKanjiAndKanaForms) {
   EXPECT_EQ(kanji->extended_pos, core::ExtendedPOS::VerbKateikei);
   EXPECT_EQ(kana->extended_pos, core::ExtendedPOS::VerbKateikei);
   EXPECT_EQ(findSurface(expanded.entries, "き"), nullptr);
+}
+
+TEST(DictionaryExpansionTest, KuruExpansionPreservesCompoundPrefix) {
+  const dictionary::SourceEntry source{"持って来る", core::PartOfSpeech::Verb, dictionary::ConjugationType::Kuru, "",
+                                       1};
+
+  EXPECT_TRUE(dictionaryConjugationTypeIssue(source).empty());
+  const auto expanded = expandDictionarySourceEntry(source);
+
+  const auto* base = findSurface(expanded, "持って来る");
+  const auto* conditional = findSurface(expanded, "持って来れ");
+  const auto* kana_base = findSurface(expanded, "持ってくる");
+  ASSERT_NE(base, nullptr);
+  ASSERT_NE(conditional, nullptr);
+  ASSERT_NE(kana_base, nullptr);
+  EXPECT_EQ(base->lemma, "持って来る");
+  EXPECT_EQ(conditional->lemma, "持って来る");
+  EXPECT_EQ(kana_base->lemma, "持ってくる");
+  EXPECT_EQ(findSurface(expanded, "来る"), nullptr);
 }
 
 TEST(DictionaryExpansionTest, ConsumesCanonicalKuruStemForms) {

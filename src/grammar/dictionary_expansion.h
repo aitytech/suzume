@@ -29,6 +29,16 @@ struct DictionaryExpansionOptions {
 };
 
 /**
+ * @brief Describe an explicit conjugation marker that cannot inflect surface.
+ *
+ * An empty result means that the marker and surface agree.  The check is kept
+ * beside expansion so every source-dictionary path can preserve an invalid
+ * surface literally instead of deriving words from an arbitrary truncated
+ * stem.  CLI validation presents this diagnostic to dictionary authors.
+ */
+std::string dictionaryConjugationTypeIssue(const dictionary::SourceEntry& source_entry);
+
+/**
  * @brief Expand explicitly typed dictionary source bases into lexical forms.
  *
  * Entries without an explicit verb or i-adjective conjugation marker are kept

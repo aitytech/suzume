@@ -264,7 +264,7 @@ bool isListingParticleTariSurface(std::string_view surface) {
 }
 
 bool isHypotheticalSelectingConjunctiveParticle(std::string_view surface) {
-  return utf8::equalsAny(surface, {"ば", "ど", "ども"});
+  return utf8::equalsAny(surface, {"ば", "ど", "ども", "り"});
 }
 
 bool spellsHypotheticalAuxiliaryCell(std::string_view surface) {

@@ -55,6 +55,7 @@ GodanOnbinRange Conjugation::getGodanTypesByOnbin(std::string_view onbin) {
   static constexpr std::array<GodanOnbinEntry, 3> kHatsuonbin = {
       {{VerbType::GodanMa, "む"}, {VerbType::GodanBa, "ぶ"}, {VerbType::GodanNa, "ぬ"}}};
   static constexpr std::array<GodanOnbinEntry, 1> kSaOnbin = {{{VerbType::GodanSa, "す"}}};
+  static constexpr std::array<GodanOnbinEntry, 1> kUOnbin = {{{VerbType::GodanWa, "う"}}};
   if (onbin == "い") {
     return {kIOnbin.data(), kIOnbin.size()};
   }
@@ -66,6 +67,9 @@ GodanOnbinRange Conjugation::getGodanTypesByOnbin(std::string_view onbin) {
   }
   if (onbin.empty()) {
     return {kSaOnbin.data(), kSaOnbin.size()};
+  }
+  if (onbin == "う") {
+    return {kUOnbin.data(), kUOnbin.size()};
   }
   return {kIOnbin.data(), 0};
 }
@@ -125,6 +129,21 @@ bool isIkuStem(std::string_view stem) {
   return stem == "行" || stem == "い";
 }
 
+bool isUOnbinStem(std::string_view stem) {
+  // 五段ワ行のう音便は生産規則ではなく、閉じた語彙的サブクラスである。
+  // This list is the same kind of lexical irregularity as 行く's 促音便;
+  // callers must not infer it from the final vowel alone.
+  static constexpr std::array<std::string_view, 7> kUOnbinStems = {
+      "問", "請", "乞", "厭", "慕", "添", "訪",
+  };
+  for (const std::string_view candidate : kUOnbinStems) {
+    if (stem == candidate) {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::string onbinFormOf(const Conjugation::GodanRow& row) {
   // サ行 has no real onbin; its 連用形 (い段) doubles as the onbinkei form
   // (話し + た). Every other row has an explicit onbin surface (い/っ/ん).
@@ -134,6 +153,9 @@ std::string onbinFormOf(const Conjugation::GodanRow& row) {
 std::string godanOnbinForm(VerbType type, std::string_view stem) {
   if (type == VerbType::GodanKa && isIkuStem(stem)) {
     return "っ";
+  }
+  if (type == VerbType::GodanWa && isUOnbinStem(stem)) {
+    return "う";
   }
   const Conjugation::GodanRow* row = Conjugation::getGodanRow(type);
   return row == nullptr ? "" : onbinFormOf(*row);

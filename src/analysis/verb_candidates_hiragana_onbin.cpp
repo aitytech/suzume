@@ -36,10 +36,11 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
   for (size_t onbin_pos = start_pos + 1; onbin_pos < hiragana_end; ++onbin_pos) {
     char32_t onbin_char = codepoints[onbin_pos];
 
-    // Check for sokuonbin (っ) or hatsuonbin (ん)
+    // Check for sokuonbin (っ), hatsuonbin (ん), or i-onbin (い).
     bool is_sokuonbin = (onbin_char == U'っ');
     bool is_hatsuonbin = (onbin_char == U'ん');
-    if (!is_sokuonbin && !is_hatsuonbin) {
+    bool is_ikuon = (onbin_char == U'い');
+    if (!is_sokuonbin && !is_hatsuonbin && !is_ikuon) {
       continue;
     }
 
@@ -57,12 +58,16 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
       // っ + た/て (past/te-form for GodanWa/Ra/Ta)
       // E.g., かった → かっ + た (from かう), やった → やっ + た (from やる)
       is_tense_pattern = (next_char == U'た' || next_char == U'て');
-    } else {
+    } else if (is_hatsuonbin) {
       // ん + ど (どく/どいた/どいて) or じ (じゃう/じゃった/じゃって) or で (でる/でた/でて)
       is_contraction_pattern = (next_char == U'ど' || next_char == U'じ' || next_char == U'で');
       // ん + だ/で (past/te-form for GodanMa/Ba/Na)
       // E.g., 読んだ → 読ん + だ (from 読む), 飛んだ → 飛ん + だ (from 飛ぶ)
       is_tense_pattern = (next_char == U'だ' || next_char == U'で');
+    } else {
+      // い + た/て/だ/で is the closed i-onbin tense cell for the
+      // GodanKa/GodanGa rows (つまずい+て, ささやい+た).
+      is_tense_pattern = (next_char == U'た' || next_char == U'て' || next_char == U'だ' || next_char == U'で');
     }
 
     if (!is_contraction_pattern && !is_tense_pattern) {
@@ -89,7 +94,7 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
     }
 
     // Try different verb types based on onbin type
-    const auto& candidates_to_try = vh::getGodanTypesByOnbin(is_sokuonbin ? "っ" : "ん");
+    const auto& candidates_to_try = vh::getGodanTypesByOnbin(is_sokuonbin ? "っ" : (is_hatsuonbin ? "ん" : "い"));
 
     // Try each verb type and check dictionary or inflection analysis
     for (const auto& [verb_type, base_suffix] : candidates_to_try) {
@@ -141,6 +146,22 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
         }
       }
 
+      // An i-onbin followed by a tense marker is a productive Ka/Ga-row
+      // inflection.  Unlike hatsuonbin, the following consonant resolves the
+      // otherwise ambiguous row directly: い+た/て is ka, い+だ/で is ga.
+      // This lets an ordinary open-class verb such as すく participate without
+      // a dictionary exception, while never fabricating the other row.
+      const bool is_resolved_i_onbin =
+          is_ikuon && is_tense_pattern &&
+          ((verb_type == grammar::VerbType::GodanKa && (next_char == U'た' || next_char == U'て')) ||
+           (verb_type == grammar::VerbType::GodanGa && (next_char == U'だ' || next_char == U'で')));
+      const bool i_onbin_has_predicate_boundary =
+          start_pos == 0 || normalize::isExtendedParticle(codepoints[start_pos - 1]) ||
+          normalize::classifyChar(codepoints[start_pos - 1]) == normalize::CharType::Symbol;
+      if (!is_valid_verb && is_resolved_i_onbin && i_onbin_has_predicate_boundary) {
+        is_valid_verb = true;
+      }
+
       // A long pure-hiragana stem followed by the closed ん+だ/で tail is a
       // constructed hatsuonbin predicate even when its open-class lemma is
       // absent from L2. The ma/ba/na rows are surface-identical here; use the
@@ -180,14 +201,16 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
       }
       // For tense patterns, use higher cost to avoid false positives for short stems
       // Contraction patterns (っとく, っちゃう) are more reliable, use lower cost
-      const float cost =
-          is_contraction_pattern ? candidate::verb_cost::kContractedOnbinBonus : candidate::verb_cost::kMinorPenalty;
+      const float cost = is_contraction_pattern ? candidate::verb_cost::kContractedOnbinBonus
+                         : is_resolved_i_onbin  ? candidate::verb_cost::kStrongBonus
+                                                : candidate::verb_cost::kMinorPenalty;
       SUZUME_DEBUG_VERBOSE_BLOCK {
         SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface
                             << (is_tense_pattern ? " hiragana_onbin_tense" : " hiragana_onbin_contraction")
                             << " lemma=" << base_form << " cost=" << cost << "\n";
       }
-      const char* pattern = is_sokuonbin ? "hiragana_sokuonbin" : "hiragana_hatsuonbin";
+      const char* pattern =
+          is_sokuonbin ? "hiragana_sokuonbin" : (is_hatsuonbin ? "hiragana_hatsuonbin" : "hiragana_ikuon");
       auto onbin_cand = makeVerbCandidate(onbin_surface, start_pos, onbin_pos + 1, cost, base_form,
                                           grammar::verbTypeToConjType(verb_type), true, CandidateOrigin::VerbHiragana,
                                           0.9F, pattern, core::ExtendedPOS::VerbOnbinkei);

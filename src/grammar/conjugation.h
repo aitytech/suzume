@@ -130,6 +130,7 @@ class Conjugation {
    * - "っ" (sokuon) -> GodanKa (行く irregular), GodanRa, GodanTa, GodanWa
    * - "ん" (hatsuonbin) -> GodanMa, GodanBa, GodanNa
    * - "" (none) -> GodanSa
+   * - "う" (u-onbin) -> lexical GodanWa subclass (問う, 請う, ...)
    *
    * @param onbin Onbin pattern to match ("い", "っ", "ん", or "")
    * @return Non-owning range of (VerbType, base suffix) pairs in deterministic preference order.
@@ -238,6 +239,15 @@ bool isIkuBaseForm(std::string_view base_form);
  * @brief Whether a Godan-Ka stem is the irregular 促音便 stem 行/い.
  */
 bool isIkuStem(std::string_view stem);
+
+/**
+ * @brief Whether a GodanWa stem has the lexical う音便 (問うた), not 促音便.
+ *
+ * Most ワ行五段 verbs use 促音便 (買った).  A small closed lexical subclass
+ * instead retains う before た/て; keep that distinction in the shared
+ * conjugation layer so generation and reverse analysis agree.
+ */
+bool isUOnbinStem(std::string_view stem);
 
 /**
  * @brief Encode a Godan row's vowel codepoints into UTF-8 strings.

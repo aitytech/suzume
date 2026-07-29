@@ -58,7 +58,9 @@ size_t Lattice::addEdge(std::string_view surface, uint32_t start, uint32_t end, 
     edge.extended_pos = extended_pos;
   } else if (pos == PartOfSpeech::Verb) {
     // Auto-detect verb form from surface
-    edge.extended_pos = detectVerbForm(stored_surface, {});
+    const bool godan_i_onbin_hint =
+        conj_type == dictionary::ConjugationType::GodanKa || conj_type == dictionary::ConjugationType::GodanGa;
+    edge.extended_pos = detectVerbForm(stored_surface, {}, false, godan_i_onbin_hint);
 #ifdef SUZUME_DEBUG_INFO
     auto_epos_source = "lattice_auto_verb";
 #endif

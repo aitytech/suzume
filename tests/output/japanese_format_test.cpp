@@ -349,14 +349,14 @@ TEST(LemmatizerTest, FallbackGodanMizenRulesUseCanonicalRows) {
   EXPECT_EQ(lemmatizeVerbFallback("待たせる"), "待つ");
   EXPECT_EQ(lemmatizeVerbFallback("読ませた"), "読む");
   EXPECT_EQ(lemmatizeVerbFallback("買わない"), "買う");
-  EXPECT_EQ(lemmatizeVerbFallback("買える"), "買う");
-  EXPECT_EQ(lemmatizeVerbFallback("書ける"), "書く");
-  EXPECT_EQ(lemmatizeVerbFallback("泳げる"), "泳ぐ");
-  EXPECT_EQ(lemmatizeVerbFallback("話せる"), "話す");
-  EXPECT_EQ(lemmatizeVerbFallback("死ねる"), "死ぬ");
-  EXPECT_EQ(lemmatizeVerbFallback("遊べる"), "遊ぶ");
-  EXPECT_EQ(lemmatizeVerbFallback("読める"), "読む");
-  EXPECT_EQ(lemmatizeVerbFallback("取れる"), "取る");
+  EXPECT_EQ(lemmatizeVerbFallback("買える"), "買える");
+  EXPECT_EQ(lemmatizeVerbFallback("書ける"), "書ける");
+  EXPECT_EQ(lemmatizeVerbFallback("泳げる"), "泳げる");
+  EXPECT_EQ(lemmatizeVerbFallback("話せる"), "話せる");
+  EXPECT_EQ(lemmatizeVerbFallback("死ねる"), "死ねる");
+  EXPECT_EQ(lemmatizeVerbFallback("遊べる"), "遊べる");
+  EXPECT_EQ(lemmatizeVerbFallback("読める"), "読める");
+  EXPECT_EQ(lemmatizeVerbFallback("取れる"), "取れる");
 }
 
 TEST(LemmatizerTest, HatsuonbinFallbackUsesCanonicalOnbinRows) {

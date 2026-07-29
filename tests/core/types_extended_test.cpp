@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "core/kana_constants.h"
 #include "core/types.h"
 
 namespace suzume {
@@ -479,8 +480,16 @@ TEST(TypesExtendedTest, DetectVerbFormSurfaceOnbin) {
 }
 
 TEST(TypesExtendedTest, DetectVerbFormSurfaceKanjiIOnbin) {
-  // Kanji + い is onbinkei (godan i-onbin like 書い from 書く)
-  EXPECT_EQ(detectVerbForm("書い"), ExtendedPOS::VerbOnbinkei);
+  // Only known ka/ga-row verbs use the い-onbin analysis.
+  EXPECT_EQ(detectVerbForm("書い", {}, false, true), ExtendedPOS::VerbOnbinkei);
+  EXPECT_EQ(detectVerbForm("老い"), ExtendedPOS::VerbRenyokei);
+  EXPECT_EQ(detectVerbForm("率い"), ExtendedPOS::VerbRenyokei);
+}
+
+TEST(TypesExtendedTest, SmallKanaIncludesHistoricalAndSmallKaKe) {
+  for (const char32_t codepoint : {U'ゎ', U'ゕ', U'ゖ', U'ヮ', U'ヵ', U'ヶ'}) {
+    EXPECT_TRUE(kana::isSmallKanaCodepoint(codepoint));
+  }
 }
 
 TEST(TypesExtendedTest, DetectVerbFormSurfaceHiraganaIEnding) {

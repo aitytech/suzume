@@ -34,7 +34,7 @@ class ConjugatorTest : public ::testing::Test {
 
 TEST_F(ConjugatorTest, IchidanStems) {
   auto forms = conjugator_.generateStems("食べる", VerbType::Ichidan);
-  ASSERT_EQ(forms.size(), 4u);
+  ASSERT_EQ(forms.size(), 7u);
 
   // Base form
   auto* base = findByRightId(forms, conn::kVerbBase);
@@ -57,11 +57,15 @@ TEST_F(ConjugatorTest, IchidanStems) {
   auto* onbinkei = findByRightId(forms, conn::kVerbOnbinkei);
   ASSERT_NE(onbinkei, nullptr);
   EXPECT_EQ(onbinkei->surface, "食べ");
+
+  EXPECT_EQ(findByRightId(forms, conn::kVerbKatei)->surface, "食べれ");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbMeireikei)->surface, "食べろ");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbVolitional)->surface, "食べよ");
 }
 
 TEST_F(ConjugatorTest, IchidanShortVerb) {
   auto forms = conjugator_.generateStems("見る", VerbType::Ichidan);
-  ASSERT_EQ(forms.size(), 4u);
+  ASSERT_EQ(forms.size(), 7u);
 
   auto* base = findByRightId(forms, conn::kVerbBase);
   ASSERT_NE(base, nullptr);
@@ -265,13 +269,26 @@ TEST_F(ConjugatorTest, GodanWaStems) {
   EXPECT_EQ(onbinkei->surface, "買っ");
 }
 
+TEST_F(ConjugatorTest, GodanWaUOnbinUsesTheClosedLexicalSubclass) {
+  for (const auto& [base_form, expected] : std::array<std::pair<const char*, const char*>, 3>{{
+           {"問う", "問う"},
+           {"乞う", "乞う"},
+           {"請う", "請う"},
+       }}) {
+    const auto forms = conjugator_.generateStems(base_form, VerbType::GodanWa);
+    const auto* onbinkei = findByRightId(forms, conn::kVerbOnbinkei);
+    ASSERT_NE(onbinkei, nullptr);
+    EXPECT_EQ(onbinkei->surface, expected);
+  }
+}
+
 // ============================================================================
 // Suru verb tests
 // ============================================================================
 
 TEST_F(ConjugatorTest, SuruStems) {
   auto forms = conjugator_.generateStems("する", VerbType::Suru);
-  ASSERT_EQ(forms.size(), 4u);
+  ASSERT_EQ(forms.size(), 13u);
 
   auto* base = findByRightId(forms, conn::kVerbBase);
   ASSERT_NE(base, nullptr);
@@ -288,12 +305,18 @@ TEST_F(ConjugatorTest, SuruStems) {
 
   auto* mizenkei = findByRightId(forms, conn::kVerbMizenkei);
   ASSERT_NE(mizenkei, nullptr);
-  EXPECT_EQ(mizenkei->surface, "さ");
+  EXPECT_TRUE(std::any_of(forms.begin(), forms.end(), [](const StemForm& form) {
+    return form.right_id == conn::kVerbMizenkei && form.surface == "さ";
+  }));
+
+  EXPECT_EQ(findByRightId(forms, conn::kVerbKatei)->surface, "すれ");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbMeireikei)->surface, "しろ");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbVolitional)->surface, "しよ");
 }
 
 TEST_F(ConjugatorTest, SuruWithPrefix) {
   auto forms = conjugator_.generateStems("勉強する", VerbType::Suru);
-  ASSERT_EQ(forms.size(), 4u);
+  ASSERT_EQ(forms.size(), 13u);
 
   auto* base = findByRightId(forms, conn::kVerbBase);
   ASSERT_NE(base, nullptr);
@@ -305,7 +328,9 @@ TEST_F(ConjugatorTest, SuruWithPrefix) {
 
   auto* mizenkei = findByRightId(forms, conn::kVerbMizenkei);
   ASSERT_NE(mizenkei, nullptr);
-  EXPECT_EQ(mizenkei->surface, "勉強さ");
+  EXPECT_TRUE(std::any_of(forms.begin(), forms.end(), [](const StemForm& form) {
+    return form.right_id == conn::kVerbMizenkei && form.surface == "勉強さ";
+  }));
 }
 
 // ============================================================================
@@ -314,7 +339,7 @@ TEST_F(ConjugatorTest, SuruWithPrefix) {
 
 TEST_F(ConjugatorTest, KuruStems) {
   auto forms = conjugator_.generateStems("くる", VerbType::Kuru);
-  ASSERT_EQ(forms.size(), 5u);
+  ASSERT_EQ(forms.size(), 7u);
 
   auto* base = findByRightId(forms, conn::kVerbBase);
   ASSERT_NE(base, nullptr);
@@ -336,11 +361,13 @@ TEST_F(ConjugatorTest, KuruStems) {
   auto* meireikei = findByRightId(forms, conn::kVerbMeireikei);
   ASSERT_NE(meireikei, nullptr);
   EXPECT_EQ(meireikei->surface, "こい");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbKatei)->surface, "くれ");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbVolitional)->surface, "こよ");
 }
 
 TEST_F(ConjugatorTest, KuruKanjiBaseSuffixUsesDisplayBase) {
   auto forms = conjugator_.generateStems("来る", VerbType::Kuru);
-  ASSERT_EQ(forms.size(), 5u);
+  ASSERT_EQ(forms.size(), 7u);
 
   for (const auto& form : forms) {
     EXPECT_EQ(form.base_suffix, "来る");
@@ -358,6 +385,8 @@ TEST_F(ConjugatorTest, KuruKanjiBaseSuffixUsesDisplayBase) {
   EXPECT_EQ(onbinkei->surface, "来");
   EXPECT_EQ(mizenkei->surface, "来");
   EXPECT_EQ(meireikei->surface, "来い");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbKatei)->surface, "来れ");
+  EXPECT_EQ(findByRightId(forms, conn::kVerbVolitional)->surface, "来よ");
 }
 
 // ============================================================================

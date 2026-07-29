@@ -1264,6 +1264,57 @@
       ],
       "id": "go_wookakesuru",
       "input": "ご迷惑をおかけする"
+    },
+    {
+      "description": "見ろよ - auto-generated",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見ろ"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "royo",
+      "input": "見ろよ"
+    },
+    {
+      "description": "寝ろよ - auto-generated",
+      "expected": [
+        {
+          "lemma": "寝る",
+          "pos": "Verb",
+          "surface": "寝ろ"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "royo_2",
+      "input": "寝ろよ"
+    },
+    {
+      "description": "出ろよ - auto-generated",
+      "expected": [
+        {
+          "lemma": "出る",
+          "pos": "Verb",
+          "surface": "出ろ"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "royo_3",
+      "input": "出ろよ"
     }
   ],
   "description": "Ichidan verbs (一段動詞) (part 2/2)",

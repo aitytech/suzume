@@ -65,6 +65,12 @@ std::vector<TaggedVerbEnding> generateGodanEndings() {
     if (type == VerbType::GodanKa) {
       endings.push_back({{godanOnbinForm(type, "い"), base, type, true}, conn::kVerbOnbinkei});
     }
+    // A closed GodanWa subclass uses う音便 (問うた) instead of the row's
+    // regular 促音便.  Include the surface in reverse lookup; dictionary
+    // verification at the consumer selects only attested base forms.
+    if (type == VerbType::GodanWa) {
+      endings.push_back({{"う", base, type, true}, conn::kVerbOnbinkei});
+    }
 
     // Renyokei (連用形)
     endings.push_back({{i_row, base, type, false}, conn::kVerbRenyokei});
@@ -196,6 +202,15 @@ VerbEndingRange getVerbEndingsByConn(uint16_t provides_conn) {
   }
   const auto& group = table.groups[provides_conn - conn::kVerbBase];
   return {table.endings.data() + group.offset, group.size};
+}
+
+VerbEndingRange getVerbEndingsByForm(ConjForm form) {
+  const size_t index = static_cast<size_t>(form);
+  if (index >= kVerbConjFormConnections.size()) {
+    const auto& table = verbEndingTable();
+    return {table.endings.data(), 0};
+  }
+  return getVerbEndingsByConn(kVerbConjFormConnections[index]);
 }
 
 }  // namespace suzume::grammar

@@ -116,16 +116,18 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
   // - kanji + い + (と/ち): GodanKa/GodanGa verbs (書いとく, 泳いちゃう)
   if (kanji_end < hiragana_end) {
     char32_t first_hira = codepoints[kanji_end];
-    // Check for hatsuonbin (ん) or ikuon (い) patterns
+    // Check for hatsuonbin (ん), ikuon (い), or the lexical GodanWa
+    // u-onbin (問うた) pattern.
     bool is_hatsuonbin = (first_hira == U'ん');
     bool is_ikuon = (first_hira == U'い');
-    if ((is_hatsuonbin || is_ikuon) && kanji_end + 1 < hiragana_end) {
+    bool is_uonbin = (first_hira == U'う');
+    if ((is_hatsuonbin || is_ikuon || is_uonbin) && kanji_end + 1 < hiragana_end) {
       char32_t next_char = codepoints[kanji_end + 1];
       bool is_contraction_pattern = false;
       if (is_hatsuonbin) {
         // ん + ど (どく/どいた) or じ (じゃう/じゃった) or で (でる/でた/でて)
         is_contraction_pattern = (next_char == U'ど' || next_char == U'じ' || next_char == U'で');
-      } else {
+      } else if (is_ikuon) {
         // い + と (とく/といた) or ち (ちゃう/ちゃった). The exact
         // two-kana い+た/だ run is also a closed past form. In that case the
         // full-form inflection analysis supplies the Godan-ka/ga class even
@@ -134,11 +136,16 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
         // lattice (続い+た).
         const bool is_exact_past_run = kanji_end + 2 == hiragana_end && (next_char == U'た' || next_char == U'だ');
         is_contraction_pattern = (next_char == U'と' || next_char == U'ち' || is_exact_past_run);
+      } else {
+        // う音便 is a closed lexical GodanWa subclass, so it occurs only in
+        // the simple past/te cells and only for an attested subclass stem.
+        const std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
+        is_contraction_pattern = grammar::isUOnbinStem(kanji_stem) && (next_char == U'た' || next_char == U'て');
       }
       if (is_contraction_pattern) {
         // Determine candidate verb types based on onbin type
         // Uses centralized GodanRow data instead of manual enumeration
-        std::string_view onbin_str = is_hatsuonbin ? "ん" : "い";
+        std::string_view onbin_str = is_hatsuonbin ? "ん" : (is_ikuon ? "い" : "う");
         const auto& candidates_to_try = vh::getGodanTypesByOnbin(onbin_str);
         // Get the kanji stem
         std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
@@ -168,10 +175,13 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
                                 << " kanji_onbin_contraction lemma=" << matched_base_form << " cost=" << kOnbinCost
                                 << "\n";
           }
-          const char* pattern = is_hatsuonbin ? "kanji_hatsuonbin" : "kanji_ikuon";
-          candidates.push_back(makeVerbCandidate(onbin_surface, start_pos, kanji_end + 1, kOnbinCost, matched_base_form,
-                                                 grammar::verbTypeToConjType(matched_verb_type), true,
-                                                 CandidateOrigin::VerbKanji, 0.9F, pattern));
+          const char* pattern = is_hatsuonbin ? "kanji_hatsuonbin" : (is_ikuon ? "kanji_ikuon" : "kanji_uonbin");
+          auto candidate =
+              makeVerbCandidate(onbin_surface, start_pos, kanji_end + 1, kOnbinCost, matched_base_form,
+                                grammar::verbTypeToConjType(matched_verb_type), true, CandidateOrigin::VerbKanji, 0.9F,
+                                pattern, core::ExtendedPOS::VerbOnbinkei);
+          candidate.lemma_verified = onbin_match.matched;
+          candidates.push_back(std::move(candidate));
         }
       }
     }

@@ -402,14 +402,33 @@ inline bool isParticleType(ExtendedPOS epos) {
  * @brief Check if ExtendedPOS is a noun type
  */
 inline bool isNounType(ExtendedPOS epos) {
-  return epos >= ExtendedPOS::Noun && epos <= ExtendedPOS::NounNumber;
+  // Keep this explicit: ExtendedPOS is serialized, so later nominal categories
+  // are appended after the original contiguous noun block.
+  switch (epos) {
+    case ExtendedPOS::Noun:
+    case ExtendedPOS::NounFormal:
+    case ExtendedPOS::NounVerbal:
+    case ExtendedPOS::NounProper:
+    case ExtendedPOS::NounProperFamily:
+    case ExtendedPOS::NounProperGiven:
+    case ExtendedPOS::NounNumber:
+      return true;
+    default:
+      return false;
+  }
 }
 
 /**
  * @brief Check if ExtendedPOS is a pronoun type
  */
 inline bool isPronounType(ExtendedPOS epos) {
-  return epos >= ExtendedPOS::Pronoun && epos <= ExtendedPOS::PronounInterrogative;
+  switch (epos) {
+    case ExtendedPOS::Pronoun:
+    case ExtendedPOS::PronounInterrogative:
+      return true;
+    default:
+      return false;
+  }
 }
 
 /**
@@ -430,7 +449,8 @@ inline bool isPronounType(ExtendedPOS epos) {
  * @param suffix The suffix chain (from inflection analysis, may be empty)
  * @return The detected ExtendedPOS verb form
  */
-ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix = {}, bool godan_imperative_hint = false);
+ExtendedPOS detectVerbForm(std::string_view surface, std::string_view suffix = {}, bool godan_imperative_hint = false,
+                           bool godan_i_onbin_hint = false);
 
 /**
  * @brief Detect adjective conjugation form from surface

@@ -5,6 +5,8 @@
 
 #include "conjugator.h"
 
+#include "verb_endings.h"
+
 namespace suzume::grammar {
 
 Conjugator::Conjugator() = default;
@@ -84,18 +86,16 @@ std::vector<StemForm> Conjugator::generateGodanStems(const std::string& stem, co
 }
 
 std::vector<StemForm> Conjugator::generateIchidanStems(const std::string& stem, const std::string& base_form) const {
+  static_cast<void>(base_form);
   std::vector<StemForm> forms;
-  VerbType type = VerbType::Ichidan;
-
-  // 一段動詞: 語幹 = 食べ (食べる - る)
-  // 終止形
-  forms.push_back({base_form, type, "る", conn::kVerbBase});
-
-  // 未然形・連用形・音便形はすべて語幹と同じ
-  forms.push_back({stem, type, "る", conn::kVerbMizenkei});
-  forms.push_back({stem, type, "る", conn::kVerbRenyokei});
-  forms.push_back({stem, type, "る", conn::kVerbOnbinkei});
-
+  for (ConjForm form : kAllVerbConjForms) {
+    const uint16_t conn_id = kVerbConjFormConnections[static_cast<size_t>(form)];
+    for (const auto& ending : getVerbEndingsByForm(form)) {
+      if (ending.verb_type == VerbType::Ichidan) {
+        forms.push_back({stem + ending.suffix, VerbType::Ichidan, ending.base_suffix, conn_id});
+      }
+    }
+  }
   return forms;
 }
 
@@ -109,17 +109,16 @@ std::vector<StemForm> Conjugator::generateIAdjectiveStems(const std::string& ste
 }
 
 std::vector<StemForm> Conjugator::generateSuruStems(const std::string& stem, const std::string& base_form) const {
+  static_cast<void>(base_form);
   std::vector<StemForm> forms;
-  VerbType type = VerbType::Suru;
-
-  // する stems produced here: base form, し (連用形・音便形), さ (未然形).
-  // The し/せ mizenkei variants (しない, せず) are supplied by the Conjugation
-  // analyzer on the tokenizer path; this generator feeds dictionary inspection.
-  forms.push_back({base_form, type, "する", conn::kVerbBase});
-  forms.push_back({stem + "し", type, "する", conn::kVerbRenyokei});
-  forms.push_back({stem + "し", type, "する", conn::kVerbOnbinkei});
-  forms.push_back({stem + "さ", type, "する", conn::kVerbMizenkei});
-
+  for (ConjForm form : kAllVerbConjForms) {
+    const uint16_t conn_id = kVerbConjFormConnections[static_cast<size_t>(form)];
+    for (const auto& ending : getVerbEndingsByForm(form)) {
+      if (ending.verb_type == VerbType::Suru) {
+        forms.push_back({stem + ending.suffix, VerbType::Suru, ending.base_suffix, conn_id});
+      }
+    }
+  }
   return forms;
 }
 
@@ -132,6 +131,8 @@ std::vector<StemForm> Conjugator::generateKuruStems(const std::string& base_form
   forms.push_back({kuru.renyokei, type, base_form, conn::kVerbRenyokei});
   forms.push_back({kuru.onbinkei, type, base_form, conn::kVerbOnbinkei});
   forms.push_back({kuru.mizenkei, type, base_form, conn::kVerbMizenkei});
+  forms.push_back({kuru.kateikei, type, base_form, conn::kVerbKatei});
+  forms.push_back({kuru.ishikei, type, base_form, conn::kVerbVolitional});
   forms.push_back({kuru.meireikei, type, base_form, conn::kVerbMeireikei});
 
   return forms;

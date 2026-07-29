@@ -1,0 +1,98 @@
+{
+  "cases": [
+    {
+      "description": "書けよ - auto-generated",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書け"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "keyo",
+      "input": "書けよ"
+    },
+    {
+      "description": "早く書け - auto-generated",
+      "expected": [
+        {
+          "lemma": "早い",
+          "pos": "Adjective",
+          "surface": "早く"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書け"
+        }
+      ],
+      "id": "ku_ke",
+      "input": "早く書け"
+    },
+    {
+      "description": "少し待て - auto-generated",
+      "expected": [
+        {
+          "lemma": "少し",
+          "pos": "Adverb",
+          "surface": "少し"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待て"
+        }
+      ],
+      "id": "shi_te",
+      "input": "少し待て"
+    },
+    {
+      "description": "強く打て - auto-generated",
+      "expected": [
+        {
+          "lemma": "強い",
+          "pos": "Adjective",
+          "surface": "強く"
+        },
+        {
+          "lemma": "打つ",
+          "pos": "Verb",
+          "surface": "打て"
+        }
+      ],
+      "id": "ku_te",
+      "input": "強く打て"
+    },
+    {
+      "description": "待て - auto-generated",
+      "expected": [
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待て"
+        }
+      ],
+      "id": "te",
+      "input": "待て"
+    },
+    {
+      "description": "頑張れ - auto-generated",
+      "expected": [
+        {
+          "lemma": "頑張る",
+          "pos": "Verb",
+          "surface": "頑張れ"
+        }
+      ],
+      "id": "re",
+      "input": "頑張れ"
+    }
+  ],
+  "description": "verb_imperative tests",
+  "version": "1.0"
+}

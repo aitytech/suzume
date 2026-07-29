@@ -340,8 +340,8 @@ std::string fixSuruClassical(std::string_view lemma, dictionary::ConjugationType
 //
 // Caveat: the multi-char `stem + "す"` branch is UNVERIFIED against the dictionary,
 // so a stem that shadows a GODAN_WA verb yields a non-word (あらしる→あらす where the
-// real verb is 洗う) — the same surface-indistinguishable ambiguity as the s88
-// あらって→あらる case. Kept as the best available default; adding a dict check here
+// real verb is 洗う) — the same surface-indistinguishable ambiguity as an
+// あらって→あらる misanalysis. Kept as the best available default; adding a dict check here
 // is an open question, not a bug to silently "fix".
 std::string fixShiru(std::string_view lemma) {
   if (!utf8::endsWith(lemma, "しる")) {
@@ -519,21 +519,41 @@ std::string lemmatizeGodanEnding(std::string_view surface, const VerbEnding& end
 }
 
 std::string lemmatizeVerbFallback(std::string_view surface) {
+  // The table intentionally contains overlapping productive endings (れる /
+  // られる, せる / させる).  Choose the longest matching rule rather than
+  // depending on declaration order: that makes a shorter row unable to hide
+  // a more specific paradigm cell when the table is extended.
+  const VerbEnding* best_ending = nullptr;
   for (const auto& ending : kVerbEndings) {
-    if (!utf8::endsWith(surface, ending.suffix)) {
-      continue;
+    if (utf8::endsWith(surface, ending.suffix) &&
+        (best_ending == nullptr || ending.suffix.size() > best_ending->suffix.size())) {
+      best_ending = &ending;
     }
-    if (ending.base.empty()) {
-      if (std::string result = lemmatizeGodanEnding(surface, ending); !result.empty()) {
-        return result;
-      }
-      continue;
-    }
-    std::string result(surface.substr(0, surface.size() - ending.suffix.size()));
-    result += ending.base;
-    return result;
   }
-  return std::string(surface);
+  if (best_ending == nullptr) {
+    return std::string(surface);
+  }
+  if (best_ending->base.empty()) {
+    if (best_ending->suffix == "る") {
+      // The bare る rule reverses Godan potential.  Applying it to an
+      // Ichidan terminal (食べる) constructs a non-word such as 食ぶ.  An
+      // e-row terminal is structurally ambiguous with Godan potential, and
+      // this dictionary-free fallback must prefer preserving a possible word
+      // over inventing a lemma. Dictionary-backed paths retain the precise
+      // Godan analysis before they reach this last-resort rule.
+      const std::string_view stem = utf8::dropLastChar(surface);
+      if (grammar::isERowCodepoint(utf8::decodeFirstChar(utf8::lastChar(stem)))) {
+        return std::string(surface);
+      }
+    }
+    if (std::string result = lemmatizeGodanEnding(surface, *best_ending); !result.empty()) {
+      return result;
+    }
+    return std::string(surface);
+  }
+  std::string result(surface.substr(0, surface.size() - best_ending->suffix.size()));
+  result += best_ending->base;
+  return result;
 }
 
 }  // namespace lemmatizer_detail
@@ -545,7 +565,7 @@ std::string Lemmatizer::lemmatizeVerb(std::string_view surface) {
 }
 
 std::string Lemmatizer::lemmatizeAdjective(std::string_view surface) {
-  // B45: Special handling for ない adjective + さ + そう pattern
+  // Preserve the ない lemma in the adjective + さ + そう pattern.
   // なさそう = ない + さ + そう (looks like there isn't)
   // Without this, lemmatizer would incorrectly return なさい (from そう → い rule)
   // This pattern also covers: なさそうな, なさそうに, なさそうだ, etc.

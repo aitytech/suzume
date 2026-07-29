@@ -216,6 +216,40 @@ TEST_F(DictCompilerTest, KuruExpansionGeneratesSafeKanjiAndKanaSurfaces) {
   EXPECT_FALSE(has_surface("来こ"));
 }
 
+TEST_F(DictCompilerTest, CompileRejectsConjugationTypeSurfaceMismatch) {
+  auto input = writeFile("invalid_suru.tsv", "テスト\tVERB\tSURU\n");
+  auto output = temp_dir_ / "invalid_suru.dic";
+
+  DictCompiler compiler;
+  const auto result = compiler.compile(input.string(), output.string());
+
+  ASSERT_FALSE(result.hasValue());
+  EXPECT_NE(result.error().message.find("Validation failed"), std::string::npos);
+  EXPECT_FALSE(std::filesystem::exists(output));
+}
+
+TEST_F(DictCompilerTest, KuruCompoundExpansionRetainsPrefixAndLemma) {
+  auto input = writeFile("compound_kuru.tsv", "持って来る\tVERB\tKURU\n");
+  auto output = temp_dir_ / "compound_kuru.dic";
+
+  DictCompiler compiler;
+  const auto compile_result = compiler.compile(input.string(), output.string());
+  ASSERT_TRUE(compile_result.hasValue()) << compile_result.error().message;
+
+  dictionary::BinaryDictionary dict;
+  ASSERT_TRUE(dict.loadFromFile(output.string()).hasValue());
+  const auto* base = dict.lookupExact("持って来る", core::PartOfSpeech::Verb);
+  const auto* conditional = dict.lookupExact("持って来れ", core::PartOfSpeech::Verb);
+  const auto* kana_base = dict.lookupExact("持ってくる", core::PartOfSpeech::Verb);
+  ASSERT_NE(base, nullptr);
+  ASSERT_NE(conditional, nullptr);
+  ASSERT_NE(kana_base, nullptr);
+  EXPECT_EQ(base->lemma, "持って来る");
+  EXPECT_EQ(conditional->lemma, "持って来る");
+  EXPECT_EQ(kana_base->lemma, "持ってくる");
+  EXPECT_EQ(dict.lookupExact("来る", core::PartOfSpeech::Verb), nullptr);
+}
+
 TEST_F(DictCompilerTest, IkuExpansionUsesSokuonbinWithoutShadowingGodanWaRenyokei) {
   auto input = writeFile("iku.tsv",
                          "行く\tVERB\tGODAN_KA\n行う\tVERB\tGODAN_WA\n"

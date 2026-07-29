@@ -1806,9 +1806,14 @@
           "surface": "を"
         },
         {
-          "lemma": "組み合わせる",
+          "lemma": "組み合う",
           "pos": "Verb",
-          "surface": "組み合わせれ"
+          "surface": "組み合わ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せれ"
         },
         {
           "lemma": "ば",

@@ -330,6 +330,23 @@
       ],
       "id": "shi_2",
       "input": "山高し"
+    },
+    {
+      "description": "かっこよければ - auto-generated",
+      "expected": [
+        {
+          "lemma": "かっこよい",
+          "pos": "Adjective",
+          "surface": "かっこよけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "kattkoyokereba",
+      "input": "かっこよければ"
     }
   ],
   "description": "I-adjectives past forms (過去形) - katta forms, past negative, past with desu",

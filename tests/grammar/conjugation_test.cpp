@@ -3,7 +3,10 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
 #include <string_view>
+
+#include "grammar/verb_endings.h"
 
 namespace suzume {
 namespace grammar {
@@ -161,6 +164,24 @@ TEST_F(ConjugationTest, DictionarySuffixesPreserveRegularAndIkuOnbin) {
   }
 }
 
+TEST_F(ConjugationTest, GodanWaUOnbinUsesTheClosedLexicalSubclass) {
+  const auto has_onbin = [](const std::vector<Conjugation::DictionarySuffix>& suffixes, std::string_view expected) {
+    return std::any_of(suffixes.begin(), suffixes.end(), [expected](const auto& suffix) {
+      return suffix.extended_pos == core::ExtendedPOS::VerbOnbinkei && suffix.suffix == expected;
+    });
+  };
+
+  for (const std::string_view base_form : {"問う", "乞う", "請う"}) {
+    const auto suffixes = conjugator_.getDictionarySuffixes(VerbType::GodanWa, base_form);
+    EXPECT_TRUE(has_onbin(suffixes, "う")) << base_form;
+    EXPECT_FALSE(has_onbin(suffixes, "っ")) << base_form;
+  }
+
+  const auto regular = conjugator_.getDictionarySuffixes(VerbType::GodanWa, "買う");
+  EXPECT_TRUE(has_onbin(regular, "っ"));
+  EXPECT_FALSE(has_onbin(regular, "う"));
+}
+
 // ============================================================================
 // verbTypeToString tests
 // ============================================================================
@@ -231,6 +252,23 @@ TEST(ConjFormJapaneseTest, AllForms) {
   EXPECT_EQ(conjFormToJapanese(ConjForm::Meireikei), "命令形");
   EXPECT_EQ(conjFormToJapanese(ConjForm::Ishikei), "意志形");
   EXPECT_EQ(conjFormToJapanese(ConjForm::Count_), "");
+}
+
+TEST(ConjFormTableTest, EveryConjFormHasOneCanonicalConnectionCell) {
+  ASSERT_EQ(kAllVerbConjForms.size(), static_cast<size_t>(ConjForm::Count_));
+  ASSERT_EQ(kVerbConjFormConnections.size(), static_cast<size_t>(ConjForm::Count_));
+
+  std::array<bool, static_cast<size_t>(ConjForm::Count_)> seen{};
+  for (ConjForm form : kAllVerbConjForms) {
+    const size_t index = static_cast<size_t>(form);
+    ASSERT_LT(index, seen.size());
+    EXPECT_FALSE(seen[index]);
+    seen[index] = true;
+    EXPECT_FALSE(getVerbEndingsByForm(form).empty());
+  }
+  for (bool is_seen : seen) {
+    EXPECT_TRUE(is_seen);
+  }
 }
 
 }  // namespace
