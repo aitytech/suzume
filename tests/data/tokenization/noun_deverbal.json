@@ -70,6 +70,148 @@
       ],
       "id": "deverbal_noun_before_independent_naku",
       "input": "休みなく働く"
+    },
+    {
+      "description": "deverbal compound noun before the light verb",
+      "expected": [
+        {
+          "lemma": "手書き",
+          "pos": "Noun",
+          "surface": "手書き"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kishita",
+      "input": "手書きした。"
+    },
+    {
+      "description": "deverbal compound noun before the polite copula",
+      "expected": [
+        {
+          "lemma": "手書き",
+          "pos": "Noun",
+          "surface": "手書き"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "kidesu",
+      "input": "手書きです。"
+    },
+    {
+      "description": "deverbal compound noun with a godan ra continuative",
+      "expected": [
+        {
+          "lemma": "手作り",
+          "pos": "Noun",
+          "surface": "手作り"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "rishita",
+      "input": "手作りした。"
+    },
+    {
+      "description": "deverbal compound noun built on an ichidan continuative",
+      "expected": [
+        {
+          "lemma": "手入れ",
+          "pos": "Noun",
+          "surface": "手入れ"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "reshita",
+      "input": "手入れした。"
+    },
+    {
+      "description": "the same compound before a case particle stays one unit",
+      "expected": [
+        {
+          "lemma": "手書き",
+          "pos": "Noun",
+          "surface": "手書き"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "文字",
+          "pos": "Noun",
+          "surface": "文字"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "kino_wo_mu",
+      "input": "手書きの文字を読む。"
+    },
+    {
+      "description": "a continuative-selecting auxiliary keeps the verb boundary",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "降りる",
+          "pos": "Verb",
+          "surface": "降り"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "rimashita",
+      "input": "雨降りました。"
     }
   ],
   "description": "noun_deverbal tests",

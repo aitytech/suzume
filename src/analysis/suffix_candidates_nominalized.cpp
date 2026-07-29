@@ -46,6 +46,68 @@ bool isGenitiveClauseFinalNominal(const std::vector<char32_t>& codepoints,
           (end_pos < char_types.size() && char_types[end_pos] == normalize::CharType::Symbol));
 }
 
+// Whether the kanji immediately before @p okurigana_pos, taken together with
+// the single okurigana there, spells the continuative of a verb the dictionary
+// knows. Both live paradigms are inverted by rule rather than listed: a godan
+// continuative replaces the dictionary form's u-row mora with the i-row one
+// (書き → 書く), and an ichidan continuative is the dictionary form without its
+// る (上げ → 上げる, 落ち → 落ちる). Trying both is what lets the same test cover
+// an e-row okurigana, which only an ichidan verb can end on.
+bool namesDictionaryVerbContinuative(const dictionary::DictionaryManager* dict_manager,
+                                     const std::vector<char32_t>& codepoints, size_t okurigana_pos) {
+  if (dict_manager == nullptr || okurigana_pos == 0 || okurigana_pos >= codepoints.size()) {
+    return false;
+  }
+  const std::string stem = extractSubstring(codepoints, okurigana_pos - 1, okurigana_pos);
+  const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(codepoints[okurigana_pos]);
+  if (!godan_ending.empty() && verb_helpers::isVerbInDictionary(dict_manager, stem + std::string(godan_ending))) {
+    return true;
+  }
+  return verb_helpers::isVerbInDictionary(dict_manager, stem + normalize::encodeUtf8(codepoints[okurigana_pos]) +
+                                                            normalize::encodeUtf8(core::hiragana::kRu));
+}
+
+// The light verb opens either on its continuative し before an auxiliary of its
+// own paradigm, or on its dictionary form. Both cells take a nominal host.
+bool startsLightVerb(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos + 1 >= codepoints.size()) {
+    return false;
+  }
+  if (grammar::isSuruRenyokeiSurface(normalize::encodeUtf8(codepoints[pos]))) {
+    return verb_helpers::isSuruAuxiliaryStarter(codepoints[pos + 1]);
+  }
+  return grammar::isSuruBaseForm(extractSubstring(codepoints, pos, pos + 2));
+}
+
+// A deverbal noun and the continuative of the verb it is built on are spelled
+// alike, so what stands to the right decides which one the span is. The two
+// sets of selectors are disjoint closed classes: a case particle, the copula
+// and the light verb する all require a nominal, while the auxiliaries that
+// take a continuative (ます, たい, ながら) never follow one. Anything that is
+// not hiragana — kanji, katakana, punctuation, end of text — is a nominal
+// position as well, since no auxiliary can begin there.
+bool selectsNominalHost(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                        const std::vector<normalize::CharType>& char_types, size_t pos) {
+  if (pos >= char_types.size() || char_types[pos] != normalize::CharType::Hiragana) {
+    return true;
+  }
+  if (normalize::isParticleCodepoint(codepoints[pos])) {
+    return true;
+  }
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  // Read the copula's cells out of its own paradigm instead of listing them.
+  const size_t probe_end = std::min(codepoints.size(), pos + 3);
+  for (const auto& result : dict_manager->lookup(extractSubstring(codepoints, pos, probe_end), 0)) {
+    if (result.entry != nullptr && (result.entry->extended_pos == core::ExtendedPOS::AuxCopulaDa ||
+                                    result.entry->extended_pos == core::ExtendedPOS::AuxCopulaDesu)) {
+      return true;
+    }
+  }
+  return startsLightVerb(codepoints, pos);
+}
+
 // A closed suffix beginning inside a mixed kanji+hiragana span is a stronger
 // morpheme boundary than the generic one-hiragana nominalization candidate.
 // The host is deliberately unrestricted: audience and derivational suffixes
@@ -317,32 +379,25 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
           has_temporal_nominal_continuation) {
         nom1_cost += candidate::kNominalizedNounParticleBonus;
       }
-      // Deverbal compound noun bonus (連用形転成名詞の複合):
-      // [N kanji]+[V kanji]+[godan renyokei hiragana] where the trailing
-      // kanji + base ending is a dictionary verb (丸出し→出す, 恩返し→返す,
-      // 山登り→登る). These N+V-renyokei compounds are productive nominal
-      // units, so prefer them over splitting off the renyokei verb.
-      // Restricted to exactly 2 kanji: longer runs usually contain a real
-      // word boundary inside the kanji sequence (翌月+払い, not 翌月払い).
-      // Apply only in nominal context — followed by a particle, copula だ,
-      // a non-hiragana character, or end of text — so verbal continuations
-      // (ながら, ます, たい...) keep the verb reading.
-      if (kanji_count == 2 && dict_manager != nullptr) {
-        std::string_view base_ending = grammar::godanBaseSuffixFromIRow(first_hiragana);
-        if (!base_ending.empty()) {
-          bool nominal_context = true;
-          size_t after_pos = kanji_end + 1;
-          if (after_pos < char_types.size() && char_types[after_pos] == normalize::CharType::Hiragana) {
-            char32_t after_char = codepoints[after_pos];
-            nominal_context = normalize::isParticleCodepoint(after_char) || after_char == U'だ';
-          }
-          if (nominal_context) {
-            std::string verb_base = normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending);
-            if (verb_helpers::isVerbInDictionary(dict_manager, verb_base)) {
-              nom1_cost -= 0.6F;
-            }
-          }
-        }
+      // Deverbal compound noun (連用形転成名詞の複合):
+      // [N kanji]+[V kanji]+[renyokei okurigana] where the trailing kanji plus
+      // that okurigana names a dictionary verb (丸出し→出す, 恩返し→返す,
+      // 手書き→書く, 値上げ→上げる). The run has no verb reading of its own —
+      // 手書く is not a word — so its continuative belongs to a nominal
+      // compound rather than to a predicate, and the compound is the search
+      // unit. Restricted to exactly 2 kanji: longer runs usually contain a
+      // real word boundary inside the kanji sequence (翌月+払い, not 翌月払い).
+      const bool is_deverbal_compound =
+          kanji_count == 2 && namesDictionaryVerbContinuative(dict_manager, codepoints, kanji_end);
+      // The compound and the [noun] + [continuative] split of the same run are
+      // told apart by what selects them, so the reading holds wherever a
+      // nominal is selected — before a particle, the copula, or the light verb
+      // (手書きの / 手書きだ / 手書きした) — and yields to a continuation that
+      // requires a continuative (ながら, ます, たい).
+      const bool nominal_compound =
+          is_deverbal_compound && selectsNominalHost(dict_manager, codepoints, char_types, kanji_end + 1);
+      if (nominal_compound) {
+        nom1_cost += candidate::kDeverbalCompoundNounBonus;
       }
       // A one-kanji i-adjective may use the classical terminal -し form at
       // the end of a predicate. Keep that attested terminal form as one
@@ -374,8 +429,14 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
                                   dict_manager, extractSubstring(codepoints, kanji_end - 1, kanji_end + 1));
       const bool crosses_closed_suffix = hasClosedSuffixBoundary(codepoints, start_pos, kanji_end + 1, dict_manager);
       if (!skip_nom_single_kanji_shi && !crosses_closed_suffix && !ends_on_dictionary_adjective) {
+        // The verified compound is a construction the grammar recognizes, not
+        // an opaque run, so it is exempt from the dictionary-length penalty the
+        // same way the particle-selected nominalization is. Without the
+        // exemption a compound whose first kanji happens to be a registered
+        // noun loses to its own split while an unregistered one does not
+        // (手書き against 下書き).
         auto cand = makeCandidate(surface, start_pos, kanji_end + 1, core::PartOfSpeech::Noun, nom1_cost,
-                                  has_particle_continuation, CandidateOrigin::NominalizedNoun);
+                                  has_particle_continuation || nominal_compound, CandidateOrigin::NominalizedNoun);
 #ifdef SUZUME_DEBUG_INFO
         cand.confidence = kNominalizedNounReportedConfidence;
         cand.pattern = "nominalized_1hira";

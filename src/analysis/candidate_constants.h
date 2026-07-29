@@ -650,6 +650,13 @@ constexpr float kAdjModeratePenalty = 1.5F;
 // context (答えは, 決まりを), not a finite verbal continuation.
 constexpr float kNominalizedNounParticleBonus = -1.5F;
 
+// A noun followed by a continuative whose verb the dictionary knows is a
+// productive compound noun (手書き, 恩返し, 山登り) wherever a nominal is
+// selected. Its evidence is the compound's own shape rather than an explicit
+// marker to its right, which is what the standard candidate bonus is worth;
+// the particle-selected bonus above is larger because it has that marker.
+constexpr float kDeverbalCompoundNounBonus = verb_cost::kStandardBonus;
+
 // Base candidate cost for a verified verb continuative used as a deverbal
 // noun before a case particle (鳴らしを、書きを).
 constexpr float kVerifiedRenyokeiNominalCandidateCost = 0.8F;
