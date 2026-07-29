@@ -61,12 +61,16 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   // Single-char particles: が, を, に, へ, と, で, から, etc.
   // Only penalize very short verbs (2 chars or less) to avoid affecting なくし, etc.
   // Exception: "い" (いる renyokei) has specific bonus rule below for PART_格→い pattern
-  // Generated ichidan stems are emitted only after a following inflection has
+  // Generated stems are emitted only after a following inflection has
   // validated the reconstruction. They are therefore not the short
   // unconstrained stems this guard targets (混雑を+さけ+ない/て/た), even
-  // though their surfaces are two morae.
-  const bool is_validated_ichidan_inflection = (next.origin == core::CandidateOrigin::VerbHiraganaNegativeRenyokei &&
-                                                next.extended_pos == core::ExtendedPOS::VerbMizenkei) ||
+  // though their surfaces are two morae. An irrealis is that condition in its
+  // own right: the cell has no independent use, so a candidate carrying it was
+  // built because the auxiliary that selects it stands right after (資料を+しら
+  // +ない). Naming the ichidan generator alone left its godan sibling out, and
+  // the missing exemption pushed the parse into any reading that avoids this
+  // edge — a fabricated verb opening on the case particle itself (にしら).
+  const bool is_validated_ichidan_inflection = next.extended_pos == core::ExtendedPOS::VerbMizenkei ||
                                                (next.origin == core::CandidateOrigin::VerbHiraganaInflectedRenyokei &&
                                                 next.extended_pos == core::ExtendedPOS::VerbRenyokei);
   const bool is_resolved_i_onbin = next.extended_pos == core::ExtendedPOS::VerbOnbinkei &&

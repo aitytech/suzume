@@ -47,10 +47,10 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
 void appendMizenkeiNCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                const dictionary::DictionaryManager* dict_manager,
                                std::vector<UnknownCandidate>& candidates);
-void appendMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
-                                 const grammar::Inflection& inflection,
-                                 const dictionary::DictionaryManager* dict_manager,
-                                 std::vector<UnknownCandidate>& candidates);
+void appendMizenkeiNegativeCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
+                                      const grammar::Inflection& inflection,
+                                      const dictionary::DictionaryManager* dict_manager,
+                                      std::vector<UnknownCandidate>& candidates);
 void appendMizenkeiNakyaCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                    const grammar::Inflection& inflection,
                                    const dictionary::DictionaryManager* dict_manager,

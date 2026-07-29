@@ -304,6 +304,26 @@ bool embedsCaseParticle(const dictionary::DictionaryManager* dict_manager, const
                         size_t start_pos, size_t end_pos);
 
 /**
+ * @brief Length of a multi-mora negative auxiliary written at a position
+ *
+ * Returns the codepoint length of the longest dictionary auxiliary starting at
+ * @p pos whose extended POS is one of the negative classes, and 0 when none is
+ * there. The irrealis of a godan verb has no use of its own — it exists because
+ * a negative auxiliary selects it — so the auxiliary is what tells a generator
+ * where the cell ends. Reading the paradigm out of the dictionary keeps every
+ * one of its cells (ない, なかっ, なけれ, ざり, ざる) on a single rule instead of a
+ * list that grows one cell at a time and leaves the rest of the paradigm to
+ * fabricated readings.
+ *
+ * One-mora members (ぬ, ず, ん, ね, じ) are excluded on the same ground the rest
+ * of this family excludes one-mora particles: after an a-row mora they are
+ * indistinguishable from an ordinary word ending (数 read as か + ず), so they
+ * need the extra conditions their own generators carry.
+ */
+size_t negativeAuxiliaryLengthAt(const dictionary::DictionaryManager* dict_manager,
+                                 const std::vector<char32_t>& codepoints, size_t pos);
+
+/**
  * @brief Check if a candidate span opens on the tail of an earlier closed-class word
  *
  * True when a dictionary auxiliary or particle begins before @p start_pos and

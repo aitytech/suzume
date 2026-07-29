@@ -339,6 +339,163 @@
       ],
       "id": "nai_2",
       "input": "少ない量"
+    },
+    {
+      "description": "Case particle keeps the irrealis of a hiragana godan verb from being swallowed",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "しる",
+          "pos": "Verb",
+          "surface": "しら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "woshiranai",
+      "input": "資料をしらない"
+    },
+    {
+      "description": "Same irrealis after a non-accusative case particle",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "しる",
+          "pos": "Verb",
+          "surface": "しら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "nishiranai",
+      "input": "資料にしらない"
+    },
+    {
+      "description": "Past cell of the negative auxiliary after a hiragana godan irrealis",
+      "expected": [
+        {
+          "lemma": "わかる",
+          "pos": "Verb",
+          "surface": "わから"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wakaranakattta",
+      "input": "わからなかった"
+    },
+    {
+      "description": "Conditional cell of the negative auxiliary after the same irrealis",
+      "expected": [
+        {
+          "lemma": "わかる",
+          "pos": "Verb",
+          "surface": "わから"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "wakaranakereba_ru",
+      "input": "わからなければ困る"
+    },
+    {
+      "description": "Negative control: okurigana spelling a case particle stays inside the verb",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "落とす",
+          "pos": "Verb",
+          "surface": "落とさ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_tosanai",
+      "input": "荷物を落とさない"
+    },
+    {
+      "description": "Negative control: a case particle before the irrealis stays a boundary",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "くむ",
+          "pos": "Verb",
+          "surface": "くま"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wokumanai",
+      "input": "水をくまない"
     }
   ],
   "description": "verb_negative tests",

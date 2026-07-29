@@ -3535,6 +3535,38 @@
       ],
       "id": "nakunai",
       "input": "危なくない"
+    },
+    {
+      "description": "Classical negative continuative after a hiragana godan irrealis",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "しる",
+          "pos": "Verb",
+          "surface": "しら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざり"
+        },
+        {
+          "lemma": "き",
+          "pos": "Auxiliary",
+          "surface": "き"
+        }
+      ],
+      "id": "woshirazariki",
+      "input": "資料をしらざりき"
     }
   ],
   "description": "literary_classics tests",

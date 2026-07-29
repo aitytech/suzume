@@ -140,18 +140,20 @@ void appendMizenkeiNCandidates(const std::vector<char32_t>& codepoints, size_t s
   }
 }
 
-// Godan mizenkei + negative auxiliary ない (わからない → わから + ない).
+// Godan mizenkei + a negative auxiliary (わからない → わから + ない,
+// わからなかった → わから + なかっ + た, しらざりき → しら + ざり + き).
 // Loop includes end_pos == start_pos + 2 for 2-char stems like いか (いく).
-void appendMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
-                                 const grammar::Inflection& inflection,
-                                 const dictionary::DictionaryManager* dict_manager,
-                                 std::vector<UnknownCandidate>& candidates) {
-  // Pattern: A-row hiragana (mizenkei ending) + ない
+void appendMizenkeiNegativeCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
+                                      const grammar::Inflection& inflection,
+                                      const dictionary::DictionaryManager* dict_manager,
+                                      std::vector<UnknownCandidate>& candidates) {
+  // Pattern: A-row hiragana (mizenkei ending) + a negative auxiliary. The whole
+  // paradigm of that auxiliary licenses the cell equally — the terminal ない is
+  // one of its forms, not the condition — so the trigger reads the closed class
+  // out of the dictionary rather than naming a single form.
   for (size_t end_pos = hiragana_end; end_pos >= start_pos + 2; --end_pos) {
-    // Check if the string ends with ない at this position
-    if (end_pos + 2 > codepoints.size())
-      continue;
-    if (codepoints[end_pos] != U'な' || codepoints[end_pos + 1] != U'い') {
+    const size_t aux_len = vh::negativeAuxiliaryLengthAt(dict_manager, codepoints, end_pos);
+    if (aux_len == 0) {
       continue;
     }
 
@@ -169,8 +171,8 @@ void appendMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t
     const std::string& stem = forms.stem;
     const std::string& base_form = forms.base_form;
 
-    // Validate: analyze the full form (including ない) to check if it's a valid verb
-    std::string full_form = mizenkei_surface + "ない";
+    // Validate: analyze the full form (including the auxiliary) to check if it's a valid verb
+    std::string full_form = mizenkei_surface + extractSubstring(codepoints, end_pos, end_pos + aux_len);
     const auto& analysis = inflection.analyze(full_form);
     bool is_valid_verb = false;
     for (const auto& cand : analysis) {
@@ -209,30 +211,30 @@ void appendMizenkeiNaiCandidates(const std::vector<char32_t>& codepoints, size_t
     // Dict-verified verbs get standard bonus; unverified get weaker cost
     // to prevent false hiragana verb candidates (e.g., はいか from はいく)
     // from beating particle+verb splits (は+いか)
-    float cost_nai = candidate::verb_cost::kStandardBonus;  // -0.5
-    if (!is_in_dict && mizenkei_surface.size() >= 6) {      // 2+ char stems
-      cost_nai = 0.5F;                                      // Positive cost for unverified candidates
+    float cost_negative = candidate::verb_cost::kStandardBonus;  // -0.5
+    if (!is_in_dict && mizenkei_surface.size() >= 6) {           // 2+ char stems
+      cost_negative = 0.5F;                                      // Positive cost for unverified candidates
     }
     // Unverified stems starting with a formal noun are noun + verb sequences
     // (わけわから+ない should split as わけ + わから + ない)
     if (!is_in_dict && hasFormalNounPrefixBoundary(dict_manager, codepoints, start_pos, mizenkei_end)) {
-      cost_nai += bigram_cost::kStrong;
+      cost_negative += bigram_cost::kStrong;
     }
     if (!is_in_dict &&
         hasLeadingParticleVerbBoundary(dict_manager, codepoints, start_pos, mizenkei_end, forms.base_suffix)) {
-      cost_nai += bigram_cost::kStrong;
+      cost_negative += bigram_cost::kStrong;
     }
     if (!is_in_dict &&
         vh::hasInternalVerbChainBoundary(codepoints, start_pos, mizenkei_end, inflection, dict_manager)) {
       continue;
     }
     SUZUME_DEBUG_VERBOSE_BLOCK {
-      SUZUME_DEBUG_STREAM << "[VERB_CAND] " << mizenkei_surface << " hiragana_mizenkei_nai lemma=" << lemma
-                          << " cost=" << cost_nai << "\n";
+      SUZUME_DEBUG_STREAM << "[VERB_CAND] " << mizenkei_surface << " hiragana_mizenkei_negative lemma=" << lemma
+                          << " cost=" << cost_negative << "\n";
     }
-    candidates.push_back(makeVerbCandidate(mizenkei_surface, start_pos, mizenkei_end, cost_nai, lemma,
+    candidates.push_back(makeVerbCandidate(mizenkei_surface, start_pos, mizenkei_end, cost_negative, lemma,
                                            grammar::verbTypeToConjType(verb_type), true, CandidateOrigin::VerbHiragana,
-                                           0.9F, "hiragana_mizenkei_nai", core::ExtendedPOS::VerbMizenkei));
+                                           0.9F, "hiragana_mizenkei_negative", core::ExtendedPOS::VerbMizenkei));
     break;  // Only generate one candidate per position
   }
 }

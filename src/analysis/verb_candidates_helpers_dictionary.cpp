@@ -321,6 +321,26 @@ bool embedsCaseParticle(const dictionary::DictionaryManager* dict_manager, const
   return false;
 }
 
+size_t negativeAuxiliaryLengthAt(const dictionary::DictionaryManager* dict_manager,
+                                 const std::vector<char32_t>& codepoints, size_t pos) {
+  if (dict_manager == nullptr || pos >= codepoints.size()) {
+    return 0;
+  }
+  // Longest negative auxiliary in the closed class is four codepoints (なけりゃ).
+  constexpr size_t kMaxAuxLen = 4;
+  constexpr size_t kMinAuxLen = 2;
+  const size_t max_len = std::min(kMaxAuxLen, codepoints.size() - pos);
+  for (size_t aux_len = max_len; aux_len >= kMinAuxLen; --aux_len) {
+    const auto* entry =
+        dict_manager->lookupExact(extractSubstring(codepoints, pos, pos + aux_len), core::PartOfSpeech::Auxiliary);
+    if (entry != nullptr && (entry->extended_pos == core::ExtendedPOS::AuxNegativeNai ||
+                             entry->extended_pos == core::ExtendedPOS::AuxNegativeNu)) {
+      return aux_len;
+    }
+  }
+  return 0;
+}
+
 bool opensOnClosedClassWordTail(const dictionary::DictionaryManager* dict_manager,
                                 const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
   if (dict_manager == nullptr || start_pos == 0 || end_pos < start_pos + 2 || end_pos > codepoints.size()) {

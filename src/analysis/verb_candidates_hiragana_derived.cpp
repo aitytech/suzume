@@ -76,7 +76,7 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
 
   // Generate Godan mizenkei stem candidates for negative auxiliary ない pattern
   // E.g., わからない → わから (mizenkei of わかる) + ない (negative auxiliary)
-  appendMizenkeiNaiCandidates(codepoints, start_pos, hiragana_end, inflection, dict_manager, candidates);
+  appendMizenkeiNegativeCandidates(codepoints, start_pos, hiragana_end, inflection, dict_manager, candidates);
 
   // Generate Godan mizenkei stem candidates before なきゃ/なければ contraction
   // E.g., やらなきゃ → やら (mizenkei of やる) + なきゃ (contraction of なければ)

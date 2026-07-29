@@ -707,6 +707,18 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                 vh::embedsTeFormAuxiliary(surface)) {
               continue;
             }
+            // The scan for the irrealis mora starts inside the okurigana and
+            // runs to the end of the kana region, so it reaches past the word
+            // and into the next phrase. A case particle in between marks an
+            // argument boundary, which no single predicate spans: 資料 + を +
+            // しら is read as the irrealis of the non-word 料をしる. Okurigana
+            // that merely spells a case particle stays exempt, because the
+            // irrealis mora closes the span immediately after it and the guard
+            // requires kana on both sides of the particle (落と+さ+ない).
+            // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+            if (vh::embedsCaseParticle(dict_manager, codepoints, start_pos, multi_miz_end)) {
+              continue;
+            }
             // Verify this is a valid verb
             bool is_valid_verb = vh::isVerifiedVerbBase(dict_manager, inflection, base_form,
                                                         candidate::verb_cost::kConstructedVerbMinConfidence, true);
