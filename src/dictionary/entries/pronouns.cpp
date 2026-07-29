@@ -26,7 +26,7 @@ EntrySpecRange getPronounEntries() {
       pronoun("君", ""),
       // Second person - hiragana/mixed only
       pronoun("あなた", ""),
-      // B39: お前 needs low cost to beat PREFIX(お)+NOUN(前) split (connection bonus -1.5)
+      // Prefer お前 over the PREFIX(お)+NOUN(前) split (connection bonus -1.5).
       // PREFIX→NOUN path has cost ~-1.2, so お前 needs cost < -1.2 to win
       pronoun("お前", ""),
       pronoun("おまえ", ""),

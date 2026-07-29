@@ -224,7 +224,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
     // - Shimo-ichidan (下一段): え-row (抜け from 抜ける, 食べ from 食べる)
     // - Kami-ichidan (上一段): い-row (落ち from 落ちる, 起き from 起きる)
     // - Suru-variant: じ/ぢ (演じ from 演じる, 感じ from 感じる)
-    // B63: We need to skip this hiragana when looking for V2
+    // This hiragana belongs to V1, so V2 begins after it.
     char32_t hira = codepoints[kanji_end];
     bool is_e_row_stem = grammar::isERowCodepoint(hira);
     // Note: I-row includes some chars that are also Godan renyokei endings

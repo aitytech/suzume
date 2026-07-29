@@ -67,7 +67,7 @@ EntrySpecRange getFormalNounEntries() {
       formal_noun("当たり", ""),
       // Hiragana-only forms
       formal_noun("よう", ""),
-      formal_noun("ほう", ""),  // B49: lowered cost
+      formal_noun("ほう", ""),  // Must compete with ordinary-noun candidates.
       // Formal noun for conditions and prerequisites (読むうえで, 読んだうえで).
       formal_noun("うえ", ""),
       // Formal noun for comparison and degree (読むわりに, 食べるわりだ).
@@ -148,7 +148,7 @@ EntrySpecRange getFormalNounEntries() {
       // Exclusivity suffix attached to a nominal predicate (地域+ならでは+の).
       suffix("ならでは", "ならでは"),
       // NOTE: 〜がち forms are split as V連用形 + がち (suffix) by the split path, not merged.
-      // B35: Idiom component (eaves bracket - used in うだつが上がらない)
+      // Bound noun used as the fixed component of うだつが上がらない.
       formal_noun("うだつ", "うだつ"),
   };
   return makeEntrySpecRange(kEntries);

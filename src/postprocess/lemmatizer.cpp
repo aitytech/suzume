@@ -81,7 +81,7 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
       return potential;
     }
 
-    // B45: Special fix for ない adjective + さ + そう pattern
+    // Preserve the ない lemma in the adjective + さ + そう pattern.
     // なさそう = ない + さ + そう (looks like there isn't)
     // The inflection analyzer incorrectly derives lemma なさい (from なさ + そう)
     // but the correct lemma is ない (from な + さそう)
@@ -232,7 +232,7 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
         return rule_result;
       }
     }
-    // B45: Special fix for ない adjective + さ + そう pattern
+    // Preserve the ない lemma in the adjective + さ + そう pattern.
     // Grammar incorrectly returns なさい, but correct lemma is ない
     // The surface なさそう with grammar result なさい should return ない
     if (grammar_result == "なさい" && morpheme.surface.find("なさそう") != std::string::npos) {

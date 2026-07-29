@@ -54,7 +54,7 @@ EntrySpecRange getDeterminerEntries() {
 
       // Quotative verb forms are compositional particle/adverb + verb + particle units.
 
-      // Determiners with kanji - B51: lowered cost to prioritize over NOUN unknown
+      // Kanji determiners must win over unknown-noun candidates.
       det("大きな", ""),
       det("小さな", ""),
       det("おっきな", ""),  // colloquial variant of 大きな
