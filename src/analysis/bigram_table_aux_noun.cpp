@@ -572,13 +572,10 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::DeterminerQuotative, EPOS::NounProper, kDeterminerNounBonus},
       {EPOS::DeterminerQuotative, EPOS::ParticleNo, kDeterminerNounBonus},
 
-      // A quotative determiner must modify a nominal. Before a case particle
-      // or a lexical renyokei, preserve the compositional quotation instead
-      // (と+いう+より), rather than fusing という as an attributive unit.
-      {EPOS::DeterminerQuotative, EPOS::ParticleCase, cost::kAlmostNever},
-      {EPOS::DeterminerQuotative, EPOS::VerbRenyokei, cost::kAlmostNever},
-      {EPOS::DeterminerQuotative, EPOS::AdjStem, cost::kAlmostNever},
-      {EPOS::DeterminerQuotative, EPOS::ParticleFinal, cost::kAlmostNever},
+      // The complementary requirement — that a quotative determiner is followed
+      // by a nominal head at all — is a condition on the whole right-hand
+      // category rather than on four of them, so it lives with the connection
+      // rules (computeParticleDeterminerBonus) instead of being enumerated here.
 
       // Determiner → Adjective (その+薄暗い+部屋, この+大きい+建物)
       // Determiners modify adjective+noun combinations in Japanese

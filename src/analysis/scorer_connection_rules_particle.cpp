@@ -129,12 +129,27 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
     bonus += cost::kAlmostNever;
   }
 
-  // The quotative determiner cannot introduce the comparative particle. When
-  // the particle is also emitted as an unknown fallback, keep the productive
-  // quotation sequence と+いう+より available.
-  if (prev.extended_pos == core::ExtendedPOS::DeterminerQuotative && next.surface == "より" &&
-      next.pos == core::PartOfSpeech::Other) {
-    bonus += cost::kAlmostNever;
+  // A quotative determiner is licensed by the nominal it modifies, and that
+  // nominal stands to its right. The bonuses that attach it to a preceding
+  // predicate read only the left side, so without this condition the determiner
+  // absorbs と+いう in front of anything at all (行く+という+なら+止め+ない).
+  // Every continuation that cannot head a noun phrase is the compositional
+  // quotation instead: quotative と, the verb いう, and its own continuation
+  // (と+いう+なら, と+いう+より). The heads named here are the ones an
+  // attributive can select — a nominal, the pro-form の, a further determiner or
+  // prefix stacked in front of the noun, and the two adjective forms that are
+  // attributive; a continuative or a stem is not a word in this position.
+  const bool quotative_determiner_head =
+      core::isNounType(next.extended_pos) || core::isPronounType(next.extended_pos) ||
+      next.extended_pos == core::ExtendedPOS::ParticleNo || next.pos == core::PartOfSpeech::Determiner ||
+      next.pos == core::PartOfSpeech::Prefix || next.extended_pos == core::ExtendedPOS::AdjBasic ||
+      next.extended_pos == core::ExtendedPOS::AdjNaAdj;
+  // An attributive with nothing to modify is not a possible reading rather than
+  // an unlikely one, and the penalty also has to outweigh the closed-class
+  // bonus the determiner's own lexical cost already received on the assumption
+  // that a head follows it.
+  if (prev.extended_pos == core::ExtendedPOS::DeterminerQuotative && !quotative_determiner_head) {
+    bonus += cost::kProhibitive;
   }
 
   // Penalty for DET → non-dict single-kanji NOUN

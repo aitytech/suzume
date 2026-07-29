@@ -472,6 +472,223 @@
       ],
       "id": "predicate_quotative_colloquial_ichidan",
       "input": "食べるっていう"
+    },
+    {
+      "description": "Quotative determiner yields to と+いう when the conditional なら follows",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        },
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "どう",
+          "pos": "Adverb",
+          "surface": "どう"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "datttatoiunara_hadouka",
+      "input": "本だったというなら結果はどうか"
+    },
+    {
+      "description": "Same after a past auxiliary with no following noun phrase",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        }
+      ],
+      "id": "ndatoiunara",
+      "input": "読んだというなら"
+    },
+    {
+      "description": "Positive control: same sequence after the plain copula",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "なら",
+          "pos": "Particle",
+          "surface": "なら"
+        }
+      ],
+      "id": "datoiunara",
+      "input": "本だというなら"
+    },
+    {
+      "description": "Negative control: the attributive merge is kept before a nominal head",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        }
+      ],
+      "id": "datttatoiukotoha",
+      "input": "本だったということは"
+    },
+    {
+      "description": "Comparative particle after the quotation, previously a per-surface exception",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "走る",
+          "pos": "Verb",
+          "surface": "走る"
+        }
+      ],
+      "id": "kutoiuyori_ru",
+      "input": "行くというより走る"
+    },
+    {
+      "description": "Negative control: a determiner stacked in front of the noun still counts as the head",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "大きな",
+          "pos": "Determiner",
+          "surface": "大きな"
+        },
+        {
+          "lemma": "決断",
+          "pos": "Noun",
+          "surface": "決断"
+        }
+      ],
+      "id": "kutoiu_kina",
+      "input": "行くという大きな決断"
     }
   ],
   "description": "Quotative patterns (という, といって, etc.)",
