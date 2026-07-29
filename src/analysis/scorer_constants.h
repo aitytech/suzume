@@ -61,8 +61,13 @@ namespace scale = bigram_cost;
 // These constants are used for word-cost adjustments based on surface properties.
 
 // Bonus for compound particles from dictionary (について, によって, として, etc.)
-// Multi-char particles that should not be split into verb+て patterns
+// Multi-char particles that should not be split into verb+て patterns.
+// The bonus grows with length for the same reason the dictionary adverb's does:
+// the longer the registered unit, the less likely its span is a coincidence of
+// shorter readings. Without the growth an adverb ending in the particle's head
+// mora outbids it and strands the tail as a predicate (ことに + 関して).
 constexpr float kBonusCompoundParticle = -3.2F;
+constexpr float kBonusCompoundParticlePerChar = 0.85F;
 
 // Bonus for みたい (conjecture auxiliary) from dictionary
 constexpr float kBonusMitaiDict = -1.0F;

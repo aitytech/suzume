@@ -423,13 +423,22 @@ float computeFixedExpressionDictBonus(const core::LatticeEdge& edge) {
     const size_t char_len = suzume::normalize::utf8Length(edge.surface);
     const bool is_particle = edge.pos == core::PartOfSpeech::Particle;
     const bool is_compound_particle = is_particle && char_len >= 3;
+    // Only the case-marking members grow with length. They are the ones whose
+    // head mora is contested by a longer reading of the material before them —
+    // a registered adverb ending in that mora otherwise outbids them and leaves
+    // the tail to a predicate that has lost its obligatory complement
+    // (ことに + 関して). The other multi-mora particles are contested from
+    // inside their own span, which the flat bonus already settles.
+    const size_t growth_min_len = edge.extended_pos == core::ExtendedPOS::ParticleCase ? 2 : 3;
     const bool is_two_mora_adverbial =
         is_particle && char_len == 2 && edge.extended_pos == core::ExtendedPOS::ParticleAdverbial;
     const bool is_closed_interjection = edge.pos == core::PartOfSpeech::Interjection && char_len >= 3;
-    const float closed_expression_bonus = is_compound_particle     ? sc::kBonusCompoundParticle
-                                          : is_two_mora_adverbial  ? sc::kBonusTwoMoraAdverbialParticle
-                                          : is_closed_interjection ? sc::kBonusClosedInterjection
-                                                                   : sc::scale::kNeutral;
+    const float closed_expression_bonus =
+        is_compound_particle
+            ? lengthScaledBonus(sc::kBonusCompoundParticle, char_len, growth_min_len, sc::kBonusCompoundParticlePerChar)
+        : is_two_mora_adverbial  ? sc::kBonusTwoMoraAdverbialParticle
+        : is_closed_interjection ? sc::kBonusClosedInterjection
+                                 : sc::scale::kNeutral;
     bonus += closed_expression_bonus;
   }
 

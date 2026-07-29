@@ -52,9 +52,12 @@ float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::Latti
 
   // The comparative case particle follows an adverbial reference point
   // (かねて+より, 以前+より). Keep this relation ahead of its homographic
-  // continuative verb without changing other adverb-to-case boundaries.
-  if (prev.pos == core::PartOfSpeech::Adverb && next.extended_pos == core::ExtendedPOS::ParticleCase &&
-      utf8::equalsAny(next.surface, {"より"})) {
+  // continuative verb without changing other adverb-to-case boundaries. An
+  // adverb built on the case particle に is already case-marked and cannot host
+  // a second one, so the reference point is the noun inside it instead
+  // (ことに+より is こと+により).
+  if (prev.pos == core::PartOfSpeech::Adverb && !utf8::endsWith(prev.surface, "に") &&
+      next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"より"})) {
     bonus += cost::kStrongBonus;
   }
 

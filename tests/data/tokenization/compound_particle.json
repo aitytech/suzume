@@ -505,6 +505,198 @@
       ],
       "id": "eha_teattta",
       "input": "答えは全てあった"
+    },
+    {
+      "description": "ことに関してする議論がある。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "に関して",
+          "pos": "Particle",
+          "surface": "に関して"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "議論",
+          "pos": "Noun",
+          "surface": "議論"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "kotoni_shitesuru_gaaru",
+      "input": "ことに関してする議論がある。"
+    },
+    {
+      "description": "ことについて話す。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "について",
+          "pos": "Particle",
+          "surface": "について"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話す"
+        }
+      ],
+      "id": "kotonitsuite_su",
+      "input": "ことについて話す。"
+    },
+    {
+      "description": "ことにより解決した。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "により",
+          "pos": "Particle",
+          "surface": "により"
+        },
+        {
+          "lemma": "解決",
+          "pos": "Noun",
+          "surface": "解決"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kotoniyori_shita",
+      "input": "ことにより解決した。"
+    },
+    {
+      "description": "そのことに関して確認する。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "に関して",
+          "pos": "Particle",
+          "surface": "に関して"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sonokotoni_shite_suru",
+      "input": "そのことに関して確認する。"
+    },
+    {
+      "description": "目についた。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "目",
+          "pos": "Noun",
+          "surface": "目"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "つく",
+          "pos": "Verb",
+          "surface": "つい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nitsuita",
+      "input": "目についた。"
+    },
+    {
+      "description": "かねてより準備していた。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "かねて",
+          "pos": "Adverb",
+          "surface": "かねて"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "準備",
+          "pos": "Noun",
+          "surface": "準備"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kaneteyori_shiteita",
+      "input": "かねてより準備していた。"
     }
   ],
   "description": "compound_particle tests",
