@@ -2432,6 +2432,50 @@
       ],
       "id": "kimashi_uka",
       "input": "行きましょうか。"
+    },
+    {
+      "description": "1️⃣です - regression test",
+      "expected": [
+        {
+          "lemma": "1️⃣",
+          "pos": "Noun",
+          "surface": "1️⃣"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "1_desu",
+      "input": "1️⃣です"
+    },
+    {
+      "description": "Appearance and copular role resolution preserve the expected token sequence.",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "そう",
+          "pos": "Auxiliary",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        }
+      ],
+      "id": "besouna",
+      "input": "食べそうな人"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

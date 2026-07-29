@@ -134,7 +134,16 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
                                             utf8::endsWithAny(prev.surface, {"て", "で"}) &&
                                             ((next.pos == core::PartOfSpeech::Verb && next.lemma == "いる") ||
                                              next.extended_pos == core::ExtendedPOS::AuxAspectIru);
-  if (conjunction_before_hiragana_de || conjunction_shite_before_iru) {
+  // A closed conjunction/adverb ending in a te-form cannot directly govern
+  // the directional subsidiary いく/くる. This would otherwise prefer the
+  // lexical entries もって and かえって over the productive V-て + subsidiary
+  // analysis. The gate is grammatical rather than surface-specific, so real
+  // conjunctions before ordinary lexical verbs remain available.
+  const bool closed_te_form_before_directional_aux =
+      (prev.pos == core::PartOfSpeech::Conjunction || prev.pos == core::PartOfSpeech::Adverb) &&
+      grammar::isPureHiragana(prev.surface) && utf8::endsWithAny(prev.surface, {"て", "で"}) &&
+      utf8::equalsAny(next.surface, {"いく", "くる"});
+  if (conjunction_before_hiragana_de || conjunction_shite_before_iru || closed_te_form_before_directional_aux) {
     bonus += cost::kAlmostNever;
   }
 

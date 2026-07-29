@@ -333,7 +333,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // nominal stems remain available for bound temporal/spatial forms such as
   // 年度+末 and 期間+内.
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::NounFormal &&
-      prev.surface.size() == core::kJapaneseCharBytes && next.surface.size() == core::kJapaneseCharBytes &&
+      normalize::utf8Length(prev.surface) == 1 && normalize::utf8Length(next.surface) == 1 &&
       grammar::isAllKanji(prev.surface) && grammar::isAllKanji(next.surface)) {
     bonus += cost::kStrong;
   }
@@ -341,8 +341,8 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // A multi-kanji lexical stem followed by an all-kanji formal noun is normally
   // one compound search unit (不祥事, 出来事). Temporal endpoint suffixes retain
   // their productive boundary (年度+末, 学期+末).
-  if (next.extended_pos == core::ExtendedPOS::NounFormal && prev.surface.size() >= 2 * core::kJapaneseCharBytes &&
-      next.surface.size() == core::kJapaneseCharBytes && grammar::isAllKanji(prev.surface) &&
+  if (next.extended_pos == core::ExtendedPOS::NounFormal && normalize::utf8Length(prev.surface) >= 2 &&
+      normalize::utf8Length(next.surface) == 1 && grammar::isAllKanji(prev.surface) &&
       grammar::isAllKanji(next.surface) && !normalize::isTemporalSpanSuffixKanji(utf8::decodeFirstChar(next.surface))) {
     bonus += cost::kStrong;
   }
@@ -474,7 +474,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // a lexical compound (時間, 期間), not a productive formal-noun boundary.
   // Leave kana suffixes and multi-character forms unaffected.
   if (prev.extended_pos == core::ExtendedPOS::NounFormal && next.pos == core::PartOfSpeech::Suffix &&
-      prev.surface.size() == core::kJapaneseCharBytes && next.surface.size() == core::kJapaneseCharBytes &&
+      normalize::utf8Length(prev.surface) == 1 && normalize::utf8Length(next.surface) == 1 &&
       grammar::isAllKanji(prev.surface) && grammar::isAllKanji(next.surface)) {
     bonus += cost::kStrong;
   }
@@ -545,7 +545,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   const bool one_kanji_suffix_before_noun = prev.pos == core::PartOfSpeech::Suffix &&
                                             next.pos == core::PartOfSpeech::Noun && grammar::isAllKanji(prev.surface) &&
                                             grammar::isAllKanji(next.surface);
-  if (prev.surface.size() == core::kJapaneseCharBytes && next.surface.size() == core::kJapaneseCharBytes &&
+  if (normalize::utf8Length(prev.surface) == 1 && normalize::utf8Length(next.surface) == 1 &&
       (one_kanji_noun_before_suffix || one_kanji_suffix_before_noun)) {
     // The split collects the -0.8 bigram bonus here and the SUFFIX→PART_格
     // bonus on the next edge (最+中+に), so a penalty that only offsets the
@@ -558,8 +558,8 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // NOUN+degree/frequency-suffix split. Without this, the NOUN→SUFFIX bigram
   // bonus (-0.8) makes 今年|度 cheaper than the whole 今年度.
   if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix &&
-      prev.surface.size() >= 2 * core::kJapaneseCharBytes && grammar::isAllKanji(prev.surface) &&
-      next.surface.size() == core::kJapaneseCharBytes && grammar::isAllKanji(next.surface)) {
+      normalize::utf8Length(prev.surface) >= 2 && grammar::isAllKanji(prev.surface) &&
+      normalize::utf8Length(next.surface) == 1 && grammar::isAllKanji(next.surface)) {
     if (normalize::isFiscalYearBindingPair(utf8::decodeLastChar(prev.surface), utf8::decodeFirstChar(next.surface))) {
       bonus += cost::kRare;  // +1.0 to neutralize -0.8 bigram bonus
     }
@@ -574,7 +574,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // A stem that already ends in a bound derivational suffix (利用者, 安全性) is a
   // derived noun, not the left half of a two-compound run, so it keeps the bonus.
   if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix && !prev.fromDictionary() &&
-      prev.surface.size() >= 3 * core::kJapaneseCharBytes && next.surface.size() == core::kJapaneseCharBytes &&
+      normalize::utf8Length(prev.surface) >= 3 && normalize::utf8Length(next.surface) == 1 &&
       grammar::isAllKanji(prev.surface) && grammar::isAllKanji(next.surface) &&
       !normalize::isDerivationalNounSuffixKanji(utf8::decodeLastChar(prev.surface))) {
     bonus += cost::kRare;  // +1.0 to neutralize -0.8 bigram bonus

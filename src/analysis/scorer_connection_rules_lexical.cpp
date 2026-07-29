@@ -135,7 +135,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // 考+えて).  Preserve the complete kanji-verb candidate; genuine verb
   // boundaries in this position begin with a content kanji or an attested
   // lexical form, rather than this unverified tail.
-  if (prev.pos == core::PartOfSpeech::Noun && prev.surface.size() == core::kJapaneseCharBytes &&
+  if (prev.pos == core::PartOfSpeech::Noun && normalize::utf8Length(prev.surface) == 1 &&
       next.origin == core::CandidateOrigin::VerbHiragana && !next.fromDictionary() &&
       next.extended_pos == core::ExtendedPOS::VerbTeForm && next.surface.size() >= core::kTwoJapaneseCharBytes) {
     return cost::kAlmostNever;
@@ -149,15 +149,6 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSuruRenyokeiSurface(prev.surface) &&
       next.pos == core::PartOfSpeech::Adverb) {
     return cost::kAlmostNever;
-  }
-
-  // The one-mora て dictionary homograph cannot itself be a terminal
-  // progressive before a nominalizer.  The AuxAspectIru → の rule is for a
-  // complete いる/てる predicate; without this guard it fabricates paths such
-  // as すべ + て + の in front of a noun.
-  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && prev.surface == "て" &&
-      next.extended_pos == core::ExtendedPOS::ParticleNo) {
-    bonus += cost::kAlmostNever;
   }
 
   // A generated renyokei ending in ず is a fused classical-negative path.
@@ -291,7 +282,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // past auxiliary: 静か+だっ+たら. The homographic conjunctive particle
   // cannot attach directly to the copula's だっ form.
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && utf8::endsWith(prev.surface, "っ") &&
-      next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"たら"})) {
+      next.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(next.surface, {"たら"})) {
     bonus += cost::kVeryStrongBonus;
   }
 
@@ -321,6 +312,16 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
       next.pos == core::PartOfSpeech::Verb && next.fromDictionary() &&
       next.extended_pos != core::ExtendedPOS::VerbMizenkei) {
     bonus += cost::kVeryStrongBonus;
+  }
+
+  // The indefinite-particle rescue above cannot introduce the empty-stem
+  // サ変 imperative.  A causative volitional supplies the same spelling as
+  // ...か+せよ+う, but its か is a Godan irrealis and the following せ is the
+  // causative auxiliary; the standalone せよ reading is licensed only at a
+  // clause boundary or after its nominal host.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::VerbMeireikei &&
+      grammar::isSuruImperativeSurface(next.surface)) {
+    bonus += cost::kAlmostNever;
   }
 
   // Penalty for pure-hiragana Conjunction → bare single-hiragana non-particle

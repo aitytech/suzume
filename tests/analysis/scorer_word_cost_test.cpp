@@ -53,6 +53,18 @@ TEST(ScorerWordCostTest, HiraganaVerbEndingPenaltiesAreTableDriven) {
   }
 }
 
+TEST(ScorerWordCostTest, SingleSupplementaryKanjiAdjectiveGetsKanjiIBonus) {
+  core::LatticeEdge bmp = makeBoundaryEdge(core::ExtendedPOS::AdjBasic, "暑い");
+  bmp.pos = core::PartOfSpeech::Adjective;
+  bmp.origin = core::CandidateOrigin::Dictionary;
+  core::LatticeEdge supplementary = makeBoundaryEdge(core::ExtendedPOS::AdjBasic, "𠀀い");
+  supplementary.pos = core::PartOfSpeech::Adjective;
+  supplementary.origin = core::CandidateOrigin::Dictionary;
+
+  const Scorer scorer;
+  EXPECT_FLOAT_EQ(scorer.wordCost(supplementary), scorer.wordCost(bmp));
+}
+
 TEST(ScorerBoundaryCostTest, FixedBosAndEosAdjustmentsComeFromOneExtendedPosTable) {
   struct BoundaryCostCase {
     core::ExtendedPOS extended_pos;
@@ -107,6 +119,12 @@ TEST(ScorerBoundaryCostTest, AppliesSurfaceGatesAfterExtendedPosLookup) {
   EXPECT_FLOAT_EQ(scorer.eosCost(makeBoundaryEdge(core::ExtendedPOS::ParticleConj, "たり")),
                   scorer::kEosListingParticlePenalty);
   EXPECT_FLOAT_EQ(scorer.eosCost(makeBoundaryEdge(core::ExtendedPOS::ParticleConj, "ので")), bigram_cost::kNeutral);
+
+  core::LatticeEdge registered_determiner = makeBoundaryEdge(core::ExtendedPOS::Determiner, "こういう");
+  registered_determiner.flags = core::EdgeFlags::FromDictionary;
+  EXPECT_FLOAT_EQ(scorer.eosCost(registered_determiner), bigram_cost::kNeutral);
+  EXPECT_FLOAT_EQ(scorer.eosCost(makeBoundaryEdge(core::ExtendedPOS::Determiner, "とんだ")),
+                  scorer::kEosDeterminerPenalty);
 }
 
 TEST(ScorerBoundaryCostTest, BoundaryOnlyRulesDoNotLeakIntoWordCost) {

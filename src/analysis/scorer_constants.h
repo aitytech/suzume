@@ -80,7 +80,6 @@ constexpr float kBonusTwoMoraAdverbialParticle = -2.0F;
 // A multi-mora interjection is a closed fixed expression and must outrank the
 // homographic predicate-plus-final-particle path (いいえ vs いい+え).
 constexpr float kBonusClosedInterjection = -2.0F;
-
 // Length-scaled bonus for long mixed nouns (4+ chars, e.g. お兄ちゃん, お父さん)
 // Split paths accumulate PREFIX→NOUN→SUFFIX connection bonuses (~-1.7 advantage)
 constexpr float kBonusLongMixedNounBase = -1.8F;
@@ -182,8 +181,8 @@ constexpr std::string_view kTeFormAuxPenaltyPatterns[] = {
 // Used in: verb_candidates_helpers.cpp (containsCausativeAuxPattern)
 // Pattern: verb mizenkei + せ/させ + auxiliary (ない/て/た/ず/る/ろ/よ/なく)
 constexpr std::string_view kCausativeAuxPenaltyPatterns[] = {
-    "せない",   "せなく",   "せなかっ", "せて",   "せた",   "せず",   "せる",   "せろ",   "せよ",
-    "させない", "させなく", "させて",   "させた", "させず", "させる", "させろ", "させよ",
+    "せない",   "せなく",   "せなかっ", "せて",   "せた",   "せず",   "せる",   "せろ",   "せよ",   "せれ",
+    "させない", "させなく", "させて",   "させた", "させず", "させる", "させろ", "させよ", "させれ",
 };
 
 // I-adjective conjugation suffixes (standalone, not verb candidates)
@@ -405,6 +404,7 @@ enum class EosBoundaryGate {
   Always,
   SingleCodepoint,
   ListingParticle,
+  NonDictionary,
 };
 
 struct BoundaryCost {
@@ -455,6 +455,7 @@ constexpr std::array<BoundaryCost, static_cast<size_t>(core::ExtendedPOS::Count_
   table[static_cast<size_t>(core::ExtendedPOS::ParticleBinding)].eos = kEosBindingParticleBonus;
   table[static_cast<size_t>(core::ExtendedPOS::Prefix)].eos = kEosPrefixPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::Determiner)].eos = kEosDeterminerPenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::Determiner)].eos_gate = EosBoundaryGate::NonDictionary;
   table[static_cast<size_t>(core::ExtendedPOS::VerbRenyokei)].eos = kEosShortRenyokeiPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::VerbRenyokei)].eos_gate = EosBoundaryGate::SingleCodepoint;
 

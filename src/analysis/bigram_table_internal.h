@@ -44,13 +44,7 @@ constexpr uint8_t encodeCost(float value) {
       return static_cast<uint8_t>(index);
     }
   }
-#if defined(__clang__) || defined(__GNUC__)
-  // BigramRule tables are constexpr. Reaching this branch therefore makes an
-  // unregistered cost a compile error instead of silently encoding kNeutral.
-  __builtin_unreachable();
-#else
   return kUnsetCost;
-#endif
 }
 
 inline float decodeCost(uint8_t index) {
@@ -70,7 +64,10 @@ struct BigramRule {
 };
 static_assert(sizeof(BigramRule) == 3);
 
-void applyRules(BigramMatrix& table, const BigramRule* rules, size_t rule_count);
+// Returns false for an invalid rule set rather than terminating the embedding
+// process during static table construction. Rule tables are verified by unit
+// tests and their constexpr encoded costs are constrained by kCostPalette.
+bool applyRules(BigramMatrix& table, const BigramRule* rules, size_t rule_count);
 void inheritRuleProfile(BigramMatrix& table, core::ExtendedPOS source, core::ExtendedPOS target);
 
 void setVerbAndAdjectiveCosts(BigramMatrix& table);

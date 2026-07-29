@@ -142,9 +142,15 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // after its contracted て/で form (食べ+て+ん+の, 読ん+で+ん+の). This is
   // distinct from an independent progressive auxiliary such as いる or い,
   // whose nominalization must not absorb a following clause boundary.
-  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && grammar::isTeDeSurface(prev.surface) &&
-      next.extended_pos == core::ExtendedPOS::ParticleNo) {
-    bonus += cost::kDoubleVeryStrongBonus;
+  // A bare one-mora て dictionary homograph is not a complete progressive
+  // predicate. Keep this exception beside the positive progressive→の rule so
+  // the two alternatives remain one coherent scoring decision.
+  const bool progressive_nominalizer = prev.extended_pos == core::ExtendedPOS::AuxAspectIru &&
+                                       grammar::isTeDeSurface(prev.surface) &&
+                                       next.extended_pos == core::ExtendedPOS::ParticleNo;
+  if (progressive_nominalizer) {
+    const bool bare_te_homograph = grammar::isSingleHiragana(prev.surface, U'て');
+    bonus += cost::kDoubleVeryStrongBonus + (bare_te_homograph ? cost::kAlmostNever : cost::kNeutral);
   }
 
   // The ん in a contracted progressive (〜てんだ) is the nominalizer の, not

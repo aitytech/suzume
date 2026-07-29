@@ -24,6 +24,15 @@ namespace sc = suzume::analysis::scorer;
 
 namespace suzume::analysis::connection_rules {
 
+namespace {
+
+char32_t firstCodepoint(std::string_view surface) {
+  size_t byte_pos = 0;
+  return normalize::decodeUtf8(surface, byte_pos);
+}
+
+}  // namespace
+
 // Surface-based connection rules, extracted from connectionCost for readability.
 // Each helper accumulates the `surface_bonus +=` contributions of a thematically
 // related group of rules and returns their sum. Helpers are self-contained: they
@@ -60,13 +69,16 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
                                                 next.extended_pos == core::ExtendedPOS::VerbMizenkei) ||
                                                (next.origin == core::CandidateOrigin::VerbHiraganaInflectedRenyokei &&
                                                 next.extended_pos == core::ExtendedPOS::VerbRenyokei);
+  const bool is_resolved_i_onbin = next.extended_pos == core::ExtendedPOS::VerbOnbinkei &&
+                                   next.origin == core::CandidateOrigin::VerbHiragana &&
+                                   utf8::endsWith(next.surface, "い");
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase &&
       prev.surface.size() <= core::kJapaneseCharBytes &&  // Single hiragana char (3 bytes in UTF-8)
       next.pos == core::PartOfSpeech::Verb && !next.fromDictionary() && grammar::isPureHiragana(next.surface) &&
       next.surface.size() <= 6 &&  // 2 chars or less (6 bytes in UTF-8)
       next.extended_pos != core::ExtendedPOS::VerbShuushikei &&
       next.surface != "い" &&  // Exclude い - has specific rule
-      !is_validated_ichidan_inflection) {
+      !is_validated_ichidan_inflection && !is_resolved_i_onbin) {
     bonus += cost::kAlmostNever;
   }
 
@@ -304,7 +316,7 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
   // and closing brackets are clause boundaries and may legitimately be
   // followed by a particle, so they must not receive this penalty.
   if (prev.pos == core::PartOfSpeech::Symbol && next.pos == core::PartOfSpeech::Particle &&
-      normalize::isOpeningBracket(utf8::decodeFirstChar(prev.surface))) {
+      normalize::isOpeningBracket(firstCodepoint(prev.surface))) {
     bonus += cost::kAlmostNever;
   }
 
@@ -321,7 +333,7 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
   // boundary that still license a following copula: 天気😀です, 犬🐕でした,
   // 本(重要)です, 評価◎です must keep です/でした whole rather than splitting で|す.
   if (prev.pos == core::PartOfSpeech::Symbol && next.pos == core::PartOfSpeech::Auxiliary &&
-      normalize::isOpeningBracket(utf8::decodeFirstChar(prev.surface))) {
+      normalize::isOpeningBracket(firstCodepoint(prev.surface))) {
     bonus += cost::kVeryRare;
   }
 

@@ -75,6 +75,7 @@ EntrySpecRange getAuxiliaryEntries() {
 
       // Classical assertion/past なり/けり (文語断定・過去)
       aux("なり", "なり", EPOS::AuxClassicalNari),  // 終止/連体形 断定 (春なり)
+      aux("なら", "なり", EPOS::AuxClassicalNari),  // 未然形 (静かならず)
       // 連体形 なる (壮大なる, 静かなる): kept distinct from the verb なる (成る) by the higher
       // AuxClassicalNari category cost, winning only via the AdjNaAdj/Noun→なる→Noun bigram bonus.
       aux("なる", "なり", EPOS::AuxClassicalNari),

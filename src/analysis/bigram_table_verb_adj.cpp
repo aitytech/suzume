@@ -209,6 +209,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbShuushikei → ParticleFinal (食べる+ね) - minor bonus
       {EPOS::VerbShuushikei, EPOS::ParticleFinal, cost::kMinorBonus},
 
+      // An imperative also closes naturally with a final particle (見ろ+よ,
+      // 待て+よ). This productive boundary must outrank an unknown
+      // kanji-hiragana noun that spans the entire command.
+      {EPOS::VerbMeireikei, EPOS::ParticleFinal, cost::kExtraStrongBonus},
+
       // VerbShuushikei → ParticleNo (食べる+の+だ for のだ/んだ).
       // The nominalizer after a finite verb opens a productive chain with any
       // following case particle (読むのが, 読むのを, 読むのに), so it has to beat

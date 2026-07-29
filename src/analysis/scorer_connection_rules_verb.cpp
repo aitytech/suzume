@@ -42,13 +42,22 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   // token boundary: the following て/た validates its inflectional shape while
   // the left context keeps a sentence-initial compound from being split into a
   // fabricated lemma plus the past auxiliary.
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::equalsAny(next.surface, {"た", "たら"}) &&
+  const bool lexical_renyokei_past =
+      prev.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::equalsAny(next.surface, {"た", "たら"}) &&
       next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
       (grammar::containsKanji(prev.surface) || prev.lemmaVerified() ||
-       (prev.start > 0 && prev.origin == core::CandidateOrigin::VerbHiraganaInflectedRenyokei))) {
+       (prev.start > 0 && prev.origin == core::CandidateOrigin::VerbHiraganaInflectedRenyokei));
+  const bool hiragana_onbin_past =
+      prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && prev.origin == core::CandidateOrigin::VerbHiragana &&
+      utf8::endsWith(prev.surface, "い") && next.extended_pos == core::ExtendedPOS::AuxTenseTa;
+  if (lexical_renyokei_past || hiragana_onbin_past) {
     bonus += cost::kVeryStrongBonus;
   }
 
+  // The i-onbin cell has the same closed past boundary as a dictionary
+  // continuative: い+た/て resolves the ka row and い+だ/で the ga row.  Its
+  // candidate is intentionally dictionary-free, so grant the boundary bonus
+  // from the inflectional shape rather than lexical presence.
   // Except for s-row godan verbs (話し+た), a godan continuative form cannot
   // take the past auxiliary directly: the past attaches to its euphonic form
   // (取り→取っ+た, 書き→書い+た).  Rejecting that impossible shortcut also

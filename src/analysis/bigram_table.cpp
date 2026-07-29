@@ -1,19 +1,18 @@
-#include <cstdlib>
-
 #include "bigram_table_internal.h"
 
 namespace suzume::analysis {
 
 namespace bigram_rules {
 
-void applyRules(BigramMatrix& table, const BigramRule* rules, size_t rule_count) {
+bool applyRules(BigramMatrix& table, const BigramRule* rules, size_t rule_count) {
   for (size_t rule_index = 0; rule_index < rule_count; ++rule_index) {
     const BigramRule& rule = rules[rule_index];
-    if (table[rule.prev][rule.next] != kUnsetCost) {
-      std::abort();
+    if (rule.cost == kUnsetCost || table[rule.prev][rule.next] != kUnsetCost) {
+      return false;
     }
     table[rule.prev][rule.next] = rule.cost;
   }
+  return true;
 }
 
 void inheritRuleProfile(BigramMatrix& table, core::ExtendedPOS source, core::ExtendedPOS target) {

@@ -60,7 +60,9 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
       grammar::isSingleHiragana(next.surface, U'て') && grammar::isPureHiragana(prev.surface) &&
       prev.surface.size() >= sc::kLongPureHiraganaOnbinMinChars * core::kJapaneseCharBytes) {
-    bonus += cost::kVeryStrongBonus + (prev.lemmaVerified() ? cost::kStrongBonus : cost::kNeutral);
+    const bool begins_with_particle_homograph = normalize::isNeverVerbStemAtStart(utf8::decodeFirstChar(prev.surface));
+    bonus += cost::kVeryStrongBonus + (begins_with_particle_homograph ? cost::kVeryStrongBonus : cost::kNeutral) +
+             (prev.lemmaVerified() ? cost::kStrongBonus : cost::kNeutral);
   }
 
   // A Godan continuative — identified by the i-row mora that ends it — keeps its
@@ -131,15 +133,24 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // Adverbs can modify a negative predicate directly (何とも+思わ+ない,
   // 全く+分から+ない). This is the same productive relation as the existing
   // adverb-to-finite-verb connections.
-  if (prev.pos == core::PartOfSpeech::Adverb && next.extended_pos == core::ExtendedPOS::VerbMizenkei) {
-    bonus += cost::kModerateBonus;
-  }
-
   // Adverbs also directly modify continuative predicates before their
   // inflectional continuation (ちゃっかり+得+し+た). This keeps the verbal
   // reading ahead of a homographic nominal candidate.
-  if (prev.pos == core::PartOfSpeech::Adverb && next.extended_pos == core::ExtendedPOS::VerbRenyokei) {
-    bonus += cost::kMinorBonus;
+  // Adverbs and adjective continuatives directly modify an imperative or
+  // conditional predicate as well. Give those finite e-row forms enough
+  // support to beat a fabricated Ichidan continuative with the same surface
+  // (少し待て, 強く打て).
+  const bool adverb_to_mizenkei =
+      prev.pos == core::PartOfSpeech::Adverb && next.extended_pos == core::ExtendedPOS::VerbMizenkei;
+  const bool adverb_to_renyokei =
+      prev.pos == core::PartOfSpeech::Adverb && next.extended_pos == core::ExtendedPOS::VerbRenyokei;
+  const bool modifier_to_finite_e_row =
+      (prev.pos == core::PartOfSpeech::Adverb || prev.extended_pos == core::ExtendedPOS::AdjRenyokei) &&
+      (next.extended_pos == core::ExtendedPOS::VerbMeireikei || next.extended_pos == core::ExtendedPOS::VerbKateikei);
+  if (adverb_to_mizenkei || adverb_to_renyokei || modifier_to_finite_e_row) {
+    bonus += (adverb_to_mizenkei ? cost::kModerateBonus : cost::kNeutral) +
+             (adverb_to_renyokei ? cost::kMinorBonus : cost::kNeutral) +
+             (modifier_to_finite_e_row ? cost::kStrongBonus : cost::kNeutral);
   }
 
   // A one-mora euphonic verb after an adverb is generally a fabricated split

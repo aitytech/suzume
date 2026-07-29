@@ -26,6 +26,8 @@ float Scorer::eosCost(const core::LatticeEdge& edge) const {
       return edge.end - edge.start == 1 ? boundary_cost.eos : sc::scale::kNeutral;
     case sc::EosBoundaryGate::ListingParticle:
       return grammar::isListingParticleTariSurface(edge.surface) ? boundary_cost.eos : sc::scale::kNeutral;
+    case sc::EosBoundaryGate::NonDictionary:
+      return edge.fromDictionary() ? sc::scale::kNeutral : boundary_cost.eos;
   }
 
   return sc::scale::kNeutral;

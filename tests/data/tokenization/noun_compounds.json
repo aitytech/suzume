@@ -1,0 +1,30 @@
+{
+  "cases": [
+    {
+      "description": "A verb continuative plus formal noun merges into a noun search unit.",
+      "expected": [
+        {
+          "lemma": "飲みもの",
+          "pos": "Noun",
+          "surface": "飲みもの"
+        }
+      ],
+      "id": "mimono",
+      "input": "飲みもの"
+    },
+    {
+      "description": "Another continuative plus formal noun keeps the compound search unit.",
+      "expected": [
+        {
+          "lemma": "編みもの",
+          "pos": "Noun",
+          "surface": "編みもの"
+        }
+      ],
+      "id": "mimono_2",
+      "input": "編みもの"
+    }
+  ],
+  "description": "noun_compounds tests",
+  "version": "1.0"
+}

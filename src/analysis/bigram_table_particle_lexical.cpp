@@ -633,6 +633,8 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // fallback penalty that makes the whole thing collapse into one unsplit
       // kanji_hira_compound NOUN token (e.g. 春 with no dictionary entry of its own).
       {EPOS::AuxClassicalNari, EPOS::AuxClassicalKeri, cost::kExtremeBonus},
+      // The irrealis なら takes the classical negative (静か+なら+ず).
+      {EPOS::AuxClassicalNari, EPOS::AuxNegativeNu, cost::kStrongBonus},
 
       // The classical copula attaches to a nominal predicate before the past
       // auxiliary (春+なり+けり). This preserves the closed auxiliary chain

@@ -89,14 +89,16 @@ inline bool isOnbinCodepoint(char32_t cp) {
 inline bool isSmallKanaCodepoint(char32_t cp) {
   // Hiragana small kana
   if (cp == U'ゃ' || cp == U'ゅ' || cp == U'ょ' || cp == U'ぁ' || cp == U'ぃ' || cp == U'ぅ' || cp == U'ぇ' ||
-      cp == U'ぉ' || cp == U'っ') {
+      cp == U'ぉ' || cp == U'っ' || cp == U'ゎ' || cp == U'ゕ' || cp == U'ゖ') {
     return true;
   }
   // Katakana small kana
   if (cp == U'ャ' || cp == U'ュ' || cp == U'ョ' || cp == U'ァ' || cp == U'ィ' || cp == U'ゥ' || cp == U'ェ' ||
-      cp == U'ォ' || cp == U'ッ') {
+      cp == U'ォ' || cp == U'ッ' || cp == U'ヮ' || cp == U'ヵ' || cp == U'ヶ') {
     return true;
   }
+  // ヵ/ヶ can also act as counters, but their small-kana codepoint identity is
+  // still needed when they occur at the start of an otherwise impossible word.
   return false;
 }
 

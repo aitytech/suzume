@@ -86,10 +86,9 @@ float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
   // Prevents misanalysis as godan-wa verb (e.g., 暑い → 暑い(VERB wa-row renyokei))
   // Kanji i-adjectives are common (暑い, 寒い, 熱い, 高い, 安い, etc.)
   // The godan-wa verb candidate often beats the adjective due to connection bonuses
-  // Surface pattern: 1 kanji + い (2 chars total)
-  if (isCompleteDictionaryAdjective(edge) &&
-      edge.surface.size() == core::kTwoJapaneseCharBytes &&  // 2 chars (1 kanji + い) = 6 bytes
-      utf8::endsWith(edge.surface, "い") && grammar::isAllKanji(edge.surface.substr(0, 3))) {  // First char is kanji
+  // Surface pattern: 1 kanji + い (2 codepoints total)
+  if (isCompleteDictionaryAdjective(edge) && normalize::utf8Length(edge.surface) == 2 &&
+      utf8::endsWith(edge.surface, "い") && normalize::isKanjiCodepoint(utf8::decodeFirstChar(edge.surface))) {
     bonus += cost::kModerateBonus;  // -0.5 to beat godan-wa verb candidate
   }
 

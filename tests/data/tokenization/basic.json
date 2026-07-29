@@ -845,6 +845,99 @@
       ],
       "id": "na_adjective_scan_kanji_boundary",
       "input": "とても穏やか"
+    },
+    {
+      "description": "こういう - regression test",
+      "expected": [
+        {
+          "lemma": "こういう",
+          "pos": "Determiner",
+          "surface": "こういう"
+        }
+      ],
+      "id": "kouiu",
+      "input": "こういう"
+    },
+    {
+      "description": "会場にいくよ - auto-generated",
+      "expected": [
+        {
+          "lemma": "会場",
+          "pos": "Noun",
+          "surface": "会場"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Verb",
+          "surface": "いく"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        }
+      ],
+      "id": "niikuyo",
+      "input": "会場にいくよ"
+    },
+    {
+      "description": "それはないわ - auto-generated",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "わ",
+          "pos": "Particle",
+          "surface": "わ"
+        }
+      ],
+      "id": "sorehanaiwa",
+      "input": "それはないわ"
+    },
+    {
+      "description": "それは無いわ - auto-generated",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "無い",
+          "pos": "Adjective",
+          "surface": "無い"
+        },
+        {
+          "lemma": "わ",
+          "pos": "Particle",
+          "surface": "わ"
+        }
+      ],
+      "id": "soreha_iwa",
+      "input": "それは無いわ"
     }
   ],
   "description": "Basic tokenization tests",

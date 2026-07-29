@@ -123,6 +123,10 @@ TEST(BigramTableTest, PureExtendedPosRulesKeepTheirConnectionCosts) {
 TEST(BigramTableTest, EveryNominalHeadHasTheCommonContinuationRules) {
   using EPOS = core::ExtendedPOS;
   constexpr std::array<EPOS, 1> kExplicitExclusions = {EPOS::NounFormal};
+  constexpr std::array<EPOS, 9> kNominalHeads = {
+      EPOS::Noun,       EPOS::NounVerbal, EPOS::NounProper,           EPOS::NounProperFamily, EPOS::NounProperGiven,
+      EPOS::NounNumber, EPOS::Pronoun,    EPOS::PronounInterrogative, EPOS::NounFormal,
+  };
   struct ContinuationCost {
     EPOS next;
     float expected_cost;
@@ -133,17 +137,15 @@ TEST(BigramTableTest, EveryNominalHeadHasTheCommonContinuationRules) {
       {EPOS::AuxCopulaDa, bigram_cost::kExtraStrongBonus},
   }};
 
-  for (size_t idx = 0; idx < static_cast<size_t>(EPOS::Count_); ++idx) {
-    const EPOS head = static_cast<EPOS>(idx);
-    const core::PartOfSpeech pos = core::extendedPosToPos(head);
+  for (const EPOS head : kNominalHeads) {
     bool is_explicitly_excluded = false;
     for (const EPOS exclusion : kExplicitExclusions) {
       is_explicitly_excluded = is_explicitly_excluded || head == exclusion;
     }
-    if ((pos != core::PartOfSpeech::Noun && pos != core::PartOfSpeech::Pronoun) || is_explicitly_excluded) {
+    if (is_explicitly_excluded) {
       continue;
     }
-    SCOPED_TRACE(idx);
+    SCOPED_TRACE(static_cast<size_t>(head));
     const bool is_pronoun = core::isPronounType(head);
     const float case_cost = head == EPOS::Pronoun ? bigram_cost::kModerateBonus : bigram_cost::kNeutral;
     const float adverbial_cost = is_pronoun ? bigram_cost::kExtraStrongBonus : bigram_cost::kStrongBonus;
@@ -159,8 +161,7 @@ TEST(BigramTableTest, EveryNominalHeadHasTheCommonContinuationRules) {
   }
 
   for (const EPOS exclusion : kExplicitExclusions) {
-    const core::PartOfSpeech pos = core::extendedPosToPos(exclusion);
-    EXPECT_TRUE(pos == core::PartOfSpeech::Noun || pos == core::PartOfSpeech::Pronoun);
+    EXPECT_TRUE(core::isNounType(exclusion) || core::isPronounType(exclusion));
   }
 }
 
@@ -187,16 +188,33 @@ TEST(BigramTableTest, QuotativeAdverbInheritsTheGeneralAdverbConnectionProfile) 
   }
 }
 
-TEST(BigramTableTest, DuplicateRuleAssignmentIsRejectedInEveryBuild) {
+TEST(BigramTableTest, DuplicateRuleAssignmentIsRejectedWithoutTerminatingTheProcess) {
   using EPOS = core::ExtendedPOS;
   bigram_rules::BigramMatrix table{};
   for (auto& row : table) {
     row.fill(bigram_rules::kUnsetCost);
   }
   const bigram_rules::BigramRule rule{EPOS::ParticleFinal, EPOS::Noun, bigram_cost::kProhibitive};
-  bigram_rules::applyRules(table, &rule, 1);
+  EXPECT_TRUE(bigram_rules::applyRules(table, &rule, 1));
 
-  EXPECT_DEATH(bigram_rules::applyRules(table, &rule, 1), "");
+  EXPECT_FALSE(bigram_rules::applyRules(table, &rule, 1));
+}
+
+TEST(BigramTableTest, SokuonbinCopulaSelectsPastAuxiliaryNotConjunctiveParticle) {
+  const Scorer scorer;
+  core::LatticeEdge copula = makeEdge(core::PartOfSpeech::Auxiliary);
+  copula.surface = "だっ";
+  copula.extended_pos = core::ExtendedPOS::AuxCopulaDa;
+
+  core::LatticeEdge particle = makeEdge(core::PartOfSpeech::Particle);
+  particle.surface = "たら";
+  particle.extended_pos = core::ExtendedPOS::ParticleConj;
+
+  core::LatticeEdge past = makeEdge(core::PartOfSpeech::Auxiliary);
+  past.surface = "たら";
+  past.extended_pos = core::ExtendedPOS::AuxTenseTa;
+
+  EXPECT_LT(scorer.connectionCost(copula, past), scorer.connectionCost(copula, particle));
 }
 
 }  // namespace

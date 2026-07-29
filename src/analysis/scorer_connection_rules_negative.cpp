@@ -114,10 +114,15 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // Exclude で (ambiguous: 出る VERB vs だ copula AUX → でない misanalysis)
   // Exclude godan mizenkei (a-dan ending): 走ら, 書か are mislabeled as VERB_連用
   // but are actually 未然形 — bonus would incorrectly boost 走ら+ない split
-  if (prev.pos == core::PartOfSpeech::Verb && prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+  const bool dictionary_renyokei_negative =
+      prev.pos == core::PartOfSpeech::Verb && prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       prev.fromDictionary() && prev.surface != "で" && !grammar::endsWithARow(prev.surface) &&
       (next.pos == core::PartOfSpeech::Adjective || next.pos == core::PartOfSpeech::Auxiliary) &&
-      utf8::equalsAny(next.surface, {"なく", "ない", "なかっ", "なけれ"})) {
+      utf8::equalsAny(next.surface, {"なく", "ない", "なかっ", "なけれ"});
+  const bool adjective_conditional_negative = prev.extended_pos == core::ExtendedPOS::AdjRenyokei &&
+                                              next.extended_pos == core::ExtendedPOS::AuxNegativeNai &&
+                                              utf8::equalsAny(next.surface, {"なけれ"});
+  if (dictionary_renyokei_negative || adjective_conditional_negative) {
     // The ExtendedPOS bigram already provides the primary grammatical
     // preference.  Keep this lexical tie-break modest: a full strong bonus
     // lets a verbal homograph erase an equally attested formal-noun reading.
@@ -272,7 +277,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // own kanji stem (三枚重+ね for 三枚+重ね). A genuine one-mora ichidan stem writes
   // that mora in kanji after kanji material (毎日+寝+て), so nothing legitimate has
   // this shape. Longer hiragana continuatives keep the exemption (外出+でき+ない).
-  const bool bare_kanji_host = prev.surface.size() == core::kJapaneseCharBytes ||
+  const bool bare_kanji_host = normalize::utf8Length(prev.surface) == 1 ||
                                (grammar::isAllKanji(prev.surface) && isSingleHiraganaVerbRenyokei(next));
   if (prev.extended_pos == core::ExtendedPOS::Noun && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       !grammar::isSuruRenyokeiSurface(next.surface) && next.surface != "せ" && next.surface.size() <= 6 &&
