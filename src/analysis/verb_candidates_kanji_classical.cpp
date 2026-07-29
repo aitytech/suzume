@@ -1,6 +1,6 @@
 /**
  * @file verb_candidates_kanji_classical.cpp
- * @brief Classical ハ行四段 (historical kana) verb candidates
+ * @brief Classical kanji-stem candidates: the ハ行四段 paradigm and ク語法
  */
 
 #include <algorithm>
@@ -10,6 +10,7 @@
 #include "analysis/verb_candidates_kanji_internal.h"
 #include "core/debug.h"
 #include "grammar/conjugation.h"
+#include "grammar/verb_endings.h"
 #include "tokenizer_utils.h"
 #include "unknown.h"
 #include "verb_candidates.h"
@@ -24,6 +25,9 @@ constexpr size_t kClassicalTailProbeChars = 3;
 // Longest okurigana run allowed between the kanji stem and the row kana
 // (移ろ+ひ, 恥ぢら+ひ).
 constexpr size_t kOkuriganaProbeChars = 2;
+
+// The classical nominalizer that turns an irrealis cell into a noun (言わ+く).
+constexpr char32_t kKuNominalizer = U'く';
 
 /**
  * @brief Paradigm cell named by a ha-row tail kana.
@@ -198,6 +202,45 @@ void appendClassicalHaRowCandidates(const std::vector<char32_t>& codepoints, siz
     candidates.push_back(std::move(candidate));
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << surface << " classical_ha_row lemma=" << lemma << "\n");
   }
+}
+
+size_t appendKuNominalizationCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                        size_t hiragana_end, const dictionary::DictionaryManager* dict_manager,
+                                        std::vector<UnknownCandidate>& candidates) {
+  if (dict_manager == nullptr || kanji_end == start_pos || kanji_end + 1 >= hiragana_end ||
+      codepoints[kanji_end + 1] != kKuNominalizer) {
+    return start_pos;
+  }
+  // ク語法 names a predicate by attaching く to its 未然形, so the reading stands
+  // or falls with the verb that cell belongs to. Reverse the cell through the
+  // canonical paradigm table rather than a kana map of its own, and admit the
+  // span only when the dictionary carries the base form it reconstructs: 言わ
+  // reaches 言う and licenses 言わく, while the adjective stems that share the
+  // shape (危な, 少な) reach no verb at all. The nominalizer takes no okurigana
+  // in front of it for the same reason the 未然形 cell above does not — a longer
+  // kana run belongs to a word that is already complete.
+  const std::string stem = extractSubstring(codepoints, start_pos, kanji_end);
+  const std::string cell_kana = extractSubstring(codepoints, kanji_end, kanji_end + 1);
+  for (const grammar::VerbEnding& ending : grammar::getVerbEndingsByForm(grammar::ConjForm::Mizenkei)) {
+    if (ending.suffix != cell_kana || ending.base_suffix.empty()) {
+      continue;
+    }
+    if (dict_manager->lookupExact(stem + ending.base_suffix, core::PartOfSpeech::Verb) == nullptr) {
+      continue;
+    }
+    const size_t end_pos = kanji_end + 2;
+    const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+    // The span carries the nominalizing suffix, which is what keeps it out of
+    // the over-long-unknown penalty: its length comes from a derivation the
+    // dictionary licenses, not from a run of characters nothing accounts for.
+    candidates.push_back(makeNounCandidate(surface, start_pos, end_pos, candidate::verb_cost::kKuNominalizationCost,
+                                           true, CandidateOrigin::NominalizedNoun, core::ExtendedPOS::Noun,
+                                           "ku_nominalization"));
+    SUZUME_DEBUG_LOG_VERBOSE("[NOUN_CAND] " << surface << " ku_nominalization base=" << stem + ending.base_suffix
+                                            << "\n");
+    return end_pos;
+  }
+  return start_pos;
 }
 
 }  // namespace suzume::analysis::kanji_verb_detail

@@ -435,6 +435,12 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
   // that gate has no way to see.
   appendClassicalHaRowCandidates(codepoints, start_pos, kanji_end, hiragana_end, dict_manager, candidates);
 
+  // ク語法 nominalizes the same kind of stem (言わく, 思わく). Its irrealis kana
+  // is also an a-row cell the gate below rejects outright, so the generator runs
+  // ahead of it and brings its own dictionary evidence.
+  const size_t ku_nominalization_end =
+      appendKuNominalizationCandidates(codepoints, start_pos, kanji_end, hiragana_end, dict_manager, candidates);
+
   if (normalize::isNeverVerbStemAfterKanji(first_hiragana) && !is_yasu_godan_shape && !has_excessive_renyokei_tail &&
       !has_following_renyokei_auxiliary && !has_complete_particle_initial_verb) {
     // Exception 1: A-row hiragana followed by れべき may be mizenkei pattern
@@ -775,6 +781,21 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
                    vh::hasNonVerbDictionaryEntry(dict_manager, cand.surface);
           }),
       candidates.end());
+
+  // Once the dictionary licenses a ク語法 reading of a span, an unverified verb
+  // hypothesis over the same characters is a fabrication: it has to invent a
+  // paradigm whose terminal is the nominalizer (思わく as a godan-ka 終止形).
+  // Left standing it collects the continuative bonuses a real predicate earns —
+  // 終止形 before a formal noun is worth more than the nominal boundary — and
+  // wins on connections it has no claim to.
+  if (ku_nominalization_end > start_pos) {
+    candidates.erase(std::remove_if(candidates.begin() + static_cast<std::ptrdiff_t>(candidate_start), candidates.end(),
+                                    [&](const UnknownCandidate& cand) {
+                                      return cand.pos == core::PartOfSpeech::Verb && !cand.lemma_verified &&
+                                             cand.start == start_pos && cand.end == ku_nominalization_end;
+                                    }),
+                     candidates.end());
+  }
 
   // A case-marked argument or quantified focus phrase followed by a bare
   // continuative and comma is strong clause-level evidence. Candidate

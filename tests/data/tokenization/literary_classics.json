@@ -3462,6 +3462,79 @@
       ],
       "id": "ha_no_sani_dukazaruwo_nakattta",
       "input": "彼は問題の大きさに気づかざるを得なかった"
+    },
+    {
+      "description": "言わく善し - auto-generated",
+      "expected": [
+        {
+          "lemma": "言わく",
+          "pos": "Noun",
+          "surface": "言わく"
+        },
+        {
+          "lemma": "善い",
+          "pos": "Adjective",
+          "surface": "善し"
+        }
+      ],
+      "id": "waku_shi",
+      "input": "言わく善し"
+    },
+    {
+      "description": "思わく通り - auto-generated",
+      "expected": [
+        {
+          "lemma": "思わく",
+          "pos": "Noun",
+          "surface": "思わく"
+        },
+        {
+          "lemma": "通り",
+          "pos": "Noun",
+          "surface": "通り"
+        }
+      ],
+      "id": "waku_ri",
+      "input": "思わく通り"
+    },
+    {
+      "description": "言わくがある - auto-generated",
+      "expected": [
+        {
+          "lemma": "言わく",
+          "pos": "Noun",
+          "surface": "言わく"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "wakugaaru",
+      "input": "言わくがある"
+    },
+    {
+      "description": "危なくない - auto-generated",
+      "expected": [
+        {
+          "lemma": "危ない",
+          "pos": "Adjective",
+          "surface": "危なく"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "nakunai",
+      "input": "危なくない"
     }
   ],
   "description": "literary_classics tests",

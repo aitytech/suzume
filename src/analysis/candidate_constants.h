@@ -639,6 +639,12 @@ constexpr float kClassicalHaRowCost = 0.0F;
 // 思へ+ど). The auxiliary or conjunction is positive evidence for the paradigm,
 // so the cell outranks a fabricated Ichidan reading of the same span.
 constexpr float kClassicalHaRowLicensedCost = kStandardBonus;
+// Cost of the classical ク語法 nominalization (言わく, 思わく). The span is
+// admitted only where the dictionary confirms the verb its irrealis cell comes
+// from, so every competing reading of the same characters has to fabricate a
+// stem — an i-adjective 言わい or a godan 言わく — and the candidate carries the
+// same bonus as a paradigm cell named by its own closed-class tail.
+constexpr float kKuNominalizationCost = kStandardBonus;
 }  // namespace verb_cost
 
 // =============================================================================
