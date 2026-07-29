@@ -271,6 +271,16 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
       matches_type = true;
     }
 
+    // A keycap emoji is an ASCII digit, #, or * followed by an optional emoji
+    // variation selector and U+20E3.  Its base has a text character type, so
+    // preserve this grapheme cluster instead of splitting the enclosing keycap
+    // off as a standalone emoji.
+    const bool keycap_base = (codepoints[start_pos] >= U'0' && codepoints[start_pos] <= U'9') ||
+                             codepoints[start_pos] == U'#' || codepoints[start_pos] == U'*';
+    if (!matches_type && keycap_base && curr_char == 0x20E3) {
+      matches_type = true;
+    }
+
     // Special handling for prolonged sound mark (ー) in hiragana sequences
     // Colloquial expressions like すごーい, やばーい, かわいー use ー in hiragana
     // Also handle consecutive prolonged marks: すごーーい, やばーーーい
@@ -362,28 +372,11 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
     ++end_pos;
   }
 
-  const size_t bounded_end_pos = end_pos;
-  const bool supports_long_run =
-      start_type == normalize::CharType::Kanji || start_type == normalize::CharType::Katakana ||
-      start_type == normalize::CharType::Alphabet || start_type == normalize::CharType::Digit;
-  const bool starts_same_type_run = start_pos == 0 || char_types[start_pos - 1] != start_type;
-  if (supports_long_run && starts_same_type_run && end_pos - start_pos == max_len) {
-    while (end_pos < char_types.size() &&
-           (char_types[end_pos] == start_type || normalize::isVariationSelector(codepoints[end_pos]) ||
-            normalize::isTransparentFormatControl(codepoints[end_pos]))) {
-      ++end_pos;
-    }
-  }
-
   // Generate candidates for different lengths
   const bool has_formal_noun_na_adjective_boundary =
-      hasFormalNounNaAdjectiveBoundary(codepoints, start_pos, bounded_end_pos, start_type);
+      hasFormalNounNaAdjectiveBoundary(codepoints, start_pos, end_pos, start_type);
   const size_t first_candidate_length = starts_non_word_run ? end_pos - start_pos : 1;
   for (size_t len = first_candidate_length; len <= end_pos - start_pos; ++len) {
-    const size_t bounded_length = bounded_end_pos - start_pos;
-    if (len > bounded_length && len != end_pos - start_pos) {
-      continue;
-    }
     size_t candidate_end = start_pos + len;
     std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
 
@@ -392,10 +385,6 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
       // Use NOUN POS instead of OTHER to avoid exceeds_dict_length penalty
       core::PartOfSpeech pos = started_with_particle ? core::PartOfSpeech::Noun : getPosForType(start_type);
       float cost = getCostForType(start_type, len);
-      if (len > max_len) {
-        cost += candidate::kLongSameTypeRunPenaltyPerExtraChar * static_cast<float>(len - max_len);
-      }
-
       if (has_formal_noun_na_adjective_boundary && len >= 2) {
         cost += candidate::kFormalNounNaAdjectiveBoundaryPenalty;
       }
@@ -864,9 +853,26 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
           }
         }
       }
+      // A case particle can complete a formal noun whose first mora was
+      // accidentally absorbed by this rescue candidate (くる+こと, おく+こと).
+      // The right formal noun is closed-class evidence, so it wins over an
+      // otherwise unverified hiragana noun hypothesis.
+      bool steals_formal_noun_head = false;
+      if (dict_manager_ != nullptr && right_particle && scan > start_pos) {
+        const size_t formal_start = scan - 1;
+        const size_t formal_probe_end = std::min(codepoints.size(), scan + static_cast<size_t>(3));
+        const std::string formal_probe = extractSubstring(codepoints, formal_start, formal_probe_end);
+        for (const auto& match : dict_manager_->lookup(formal_probe, 0)) {
+          if (match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Noun &&
+              match.entry->extended_pos == core::ExtendedPOS::NounFormal && match.length > 1) {
+            steals_formal_noun_head = true;
+            break;
+          }
+        }
+      }
       if ((len >= min_len || short_bos_preparatory_homograph) && (right_particle || right_clause || right_auxiliary) &&
           !crossed_verified_predicate && !cuts_into_predicate && !has_inflected_predicate_reading &&
-          !spells_contracted_hypothetical &&
+          !spells_contracted_hypothetical && !steals_formal_noun_head &&
           !hasAuxiliaryParticleDecomposition(codepoints, start_pos, scan, dict_manager_) &&
           !hasFunctionWordChainDecomposition(codepoints, start_pos, scan, dict_manager_)) {
         float noun_cost = getCostForType(start_type, len) + candidate::kPostParticleNounPenalty;

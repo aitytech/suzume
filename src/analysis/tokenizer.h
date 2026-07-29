@@ -43,7 +43,8 @@ class Tokenizer {
    * @brief Add dictionary candidates at position
    */
   void addDictionaryCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
-                               const ByteOffsets& byte_offsets, size_t start_pos) const;
+                               const ByteOffsets& byte_offsets, size_t start_pos,
+                               std::vector<dictionary::LookupResult>& lookup_results) const;
 
   /**
    * @brief Add unknown word candidates at position

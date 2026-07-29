@@ -269,30 +269,42 @@ void UnknownWordGenerator::generateOnomatopoeiaCandidates(const std::vector<char
 
   // Helper to check if a character is small kana (part of previous mora)
   auto isSmallKanaAt = [&](size_t pos) -> bool {
-    if (pos >= codepoints.size())
-      return false;
-    std::string ch = normalize::encodeRange(codepoints, pos, pos + 1);
-    return grammar::isSmallKana(ch);
+    return pos < codepoints.size() && kana::isSmallKanaCodepoint(codepoints[pos]);
   };
 
-  // Find the extent of same-script sequence (including ー)
+  // Find the bounded extent of a same-script mimetic (including ー).  Do not
+  // scan an entire unsegmented kana run at every lattice position: mimetics
+  // are prosodically bounded, and a small kana only modifies its preceding
+  // mora.  The codepoint ceiling also advances through malformed small-kana
+  // runs that would otherwise contain no countable mora.
   size_t seq_end = start_pos;
-  while (seq_end < codepoints.size() && isSameScriptOrModifier(seq_end)) {
+  size_t seq_morae = 0;
+  while (seq_end < codepoints.size() && seq_end - start_pos < candidate::kMaxMimeticCodepoints &&
+         seq_morae < candidate::kMaxMimeticMorae && isSameScriptOrModifier(seq_end)) {
+    if (!isSmallKanaAt(seq_end)) {
+      ++seq_morae;
+    }
     ++seq_end;
   }
 
   size_t seq_len = seq_end - start_pos;
 
+  // The quotative marker is only meaningful at the end of the complete
+  // same-script run.  A bounded prefix ending in と must not be mistaken for
+  // that construction.
+  const bool sequence_is_complete = seq_end == codepoints.size() || !isSameScriptOrModifier(seq_end);
+
   // A quotative と commonly follows a mimetic adverb (ぷうぷうと、ちくたくと).
   // It is hiragana too, so exclude it from the shape check while leaving the
   // particle available as a separate morpheme.
-  const bool has_trailing_quotative = seq_len > 4 && codepoints[seq_end - 1] == U'と';
+  const bool has_trailing_quotative = sequence_is_complete && seq_len > 4 && codepoints[seq_end - 1] == U'と';
   const size_t mimetic_end = has_trailing_quotative ? seq_end - 1 : seq_end;
   const size_t mimetic_len = mimetic_end - start_pos;
+  const size_t mimetic_morae = seq_morae - (has_trailing_quotative ? 1 : 0);
 
   // Try AA pattern: first half equals second half (ニャーニャー, ワンワン)
   // Sequence must have even length and be at least 4 chars
-  if (mimetic_len >= 4 && mimetic_len % 2 == 0) {
+  if (mimetic_morae <= candidate::kMaxMimeticMorae && mimetic_len >= 4 && mimetic_len % 2 == 0) {
     size_t half_len = mimetic_len / 2;
     bool is_aa = true;
 
@@ -362,45 +374,46 @@ void UnknownWordGenerator::generateOnomatopoeiaCandidates(const std::vector<char
   // productive mimetic shape (ちくたくと).  The particle gate prevents a
   // generic four-hiragana run from becoming an adverb without syntactic
   // evidence, while the earlier AA/ABAB branches retain their stronger costs.
-  bool heterogeneous_has_small_kana = false;
-  for (size_t offset = 0; offset < mimetic_len; ++offset) {
-    heterogeneous_has_small_kana = heterogeneous_has_small_kana || isSmallKanaAt(start_pos + offset);
-  }
   if (has_trailing_quotative && seq_end < codepoints.size() && mimetic_len == 4 &&
-      start_type == normalize::CharType::Hiragana && !normalize::isParticleCodepoint(codepoints[start_pos]) &&
-      !heterogeneous_has_small_kana) {
-    std::string surface = extractSubstring(codepoints, start_pos, mimetic_end);
-    bool decomposes_as_predicate_particle = false;
-    if (dict_manager_ != nullptr) {
-      // The particle only has to begin at the split, not fill the rest of the
-      // run: a mimetic never opens with a predicate, so whatever follows that
-      // particle belongs to the next word (だっ|た+と+なる|と reads the past
-      // auxiliary, the quotative and なる as one fabricated adverb たとなる).
-      for (size_t split = start_pos + 1; split < mimetic_end && !decomposes_as_predicate_particle; ++split) {
-        const std::string left = extractSubstring(codepoints, start_pos, split);
-        constexpr PartOfSpeechMask kPredicateMask = partOfSpeechMask(core::PartOfSpeech::Verb) |
-                                                    partOfSpeechMask(core::PartOfSpeech::Adjective) |
-                                                    partOfSpeechMask(core::PartOfSpeech::Auxiliary);
-        if (!hasExactPartOfSpeech(*dict_manager_, left, kPredicateMask)) {
-          continue;
-        }
-        for (size_t particle_end = split + 1; particle_end <= mimetic_end; ++particle_end) {
-          if (dict_manager_->lookupExact(extractSubstring(codepoints, split, particle_end),
-                                         core::PartOfSpeech::Particle) != nullptr) {
-            decomposes_as_predicate_particle = true;
-            break;
+      start_type == normalize::CharType::Hiragana && !normalize::isParticleCodepoint(codepoints[start_pos])) {
+    bool heterogeneous_has_small_kana = false;
+    for (size_t offset = 0; offset < mimetic_len; ++offset) {
+      heterogeneous_has_small_kana = heterogeneous_has_small_kana || isSmallKanaAt(start_pos + offset);
+    }
+    if (!heterogeneous_has_small_kana) {
+      std::string surface = extractSubstring(codepoints, start_pos, mimetic_end);
+      bool decomposes_as_predicate_particle = false;
+      if (dict_manager_ != nullptr) {
+        // The particle only has to begin at the split, not fill the rest of the
+        // run: a mimetic never opens with a predicate, so whatever follows that
+        // particle belongs to the next word (だっ|た+と+なる|と reads the past
+        // auxiliary, the quotative and なる as one fabricated adverb たとなる).
+        for (size_t split = start_pos + 1; split < mimetic_end && !decomposes_as_predicate_particle; ++split) {
+          const std::string left = extractSubstring(codepoints, start_pos, split);
+          constexpr PartOfSpeechMask kPredicateMask = partOfSpeechMask(core::PartOfSpeech::Verb) |
+                                                      partOfSpeechMask(core::PartOfSpeech::Adjective) |
+                                                      partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+          if (!hasExactPartOfSpeech(*dict_manager_, left, kPredicateMask)) {
+            continue;
+          }
+          for (size_t particle_end = split + 1; particle_end <= mimetic_end; ++particle_end) {
+            if (dict_manager_->lookupExact(extractSubstring(codepoints, split, particle_end),
+                                           core::PartOfSpeech::Particle) != nullptr) {
+              decomposes_as_predicate_particle = true;
+              break;
+            }
           }
         }
       }
-    }
-    if (!surface.empty() && !decomposes_as_predicate_particle) {
-      auto cand = makeCandidate(surface, start_pos, mimetic_end, core::PartOfSpeech::Adverb,
-                                candidate::kMimeticHeterogeneousAdverbCost, true, CandidateOrigin::Onomatopoeia);
+      if (!surface.empty() && !decomposes_as_predicate_particle) {
+        auto cand = makeCandidate(surface, start_pos, mimetic_end, core::PartOfSpeech::Adverb,
+                                  candidate::kMimeticHeterogeneousAdverbCost, true, CandidateOrigin::Onomatopoeia);
 #ifdef SUZUME_DEBUG_INFO
-      cand.confidence = candidate::kHighOriginConfidence;
-      cand.pattern = "heterogeneous_four_mora_quotative";
+        cand.confidence = candidate::kHighOriginConfidence;
+        cand.pattern = "heterogeneous_four_mora_quotative";
 #endif
-      candidates.push_back(cand);
+        candidates.push_back(cand);
+      }
     }
   }
 

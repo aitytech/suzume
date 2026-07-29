@@ -11,6 +11,7 @@
 #ifndef SUZUME_GRAMMAR_INFLECTION_H_
 #define SUZUME_GRAMMAR_INFLECTION_H_
 
+#include <cstddef>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -53,20 +54,28 @@ class Inflection {
    * @brief Analyze surface form and infer base form
    * @param surface Surface form: 住んでいます
    * @return Candidates with possible base forms
-   * @note The reference stays valid until the next rollCache() call. Candidate
-   *       generators routinely hold a result while analysing a related surface,
-   *       so analyze() itself never discards an entry.
+   * @note The reference survives later inserts and one cache-generation
+   *       rollover. Candidate generators routinely hold a result while
+   *       analysing a related surface; its generation is not discarded until a
+   *       second subsequent rollover.
    */
   const std::vector<InflectionCandidate>& analyze(std::string_view surface) const;
 
   /**
-   * @brief Discard the analysis cache when it has grown past its bound
+   * @brief Advance a full analysis-cache generation
    *
-   * Call only where no analyze() result is still referenced — the analyzer does
-   * so once per chunk, before candidate generation starts. Rolling over inside
-   * analyze() instead would invalidate references its own callers still hold.
+   * The active generation is retained as the previous generation so references
+   * returned before this call remain valid. The generation retained before that
+   * is discarded. analyze() also advances the cache before adding an entry past
+   * the active-generation bound.
    */
   void rollCache() const;
+
+  /// Number of entries in the active cache generation.
+  size_t activeCacheSize() const { return cache_.size(); }
+
+  /// Number of entries retained from the immediately preceding generation.
+  size_t previousCacheSize() const { return previous_.size(); }
 
   /**
    * @brief Check if surface looks like a conjugated form
@@ -81,6 +90,8 @@ class Inflection {
  private:
   static constexpr size_t kMaxCacheEntries = 4096;
 
+  void rollCacheIfFull() const;
+
   // Try matching auxiliary at end of surface
   std::vector<std::pair<const AuxiliaryEntry*, size_t>> matchAuxiliaries(std::string_view surface) const;
 
@@ -93,11 +104,13 @@ class Inflection {
                                                  uint16_t required_conn) const;
 
   // Cache for analyze() results (mutable for const methods)
-  // Bounded for long-lived browser analyzers, but only at rollCache() points:
-  // node-based storage keeps references stable across inserts, so within one
-  // chunk every result handed out stays alive.
+  // Two bounded cache generations. node-based storage keeps references stable
+  // across inserts, and moving an active generation to previous_ preserves
+  // references through its first rollover. Together they cap retained entries
+  // at twice kMaxCacheEntries rather than growing with a chunk's probes.
   // Note: single-threaded only. Add synchronization if multi-threading is needed.
   mutable std::unordered_map<std::string, std::vector<InflectionCandidate>> cache_;
+  mutable std::unordered_map<std::string, std::vector<InflectionCandidate>> previous_;
   InflectionScorerOptions scorer_options_;
 };
 

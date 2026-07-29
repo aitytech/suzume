@@ -316,6 +316,17 @@ bool conflictsWithVerifiedCompoundBoundary(const core::Lattice& lattice,
   if (!is_grammatical_candidate) {
     return false;
   }
+  // A verified compound's inflected whole-span candidate must not hide a
+  // productive verb-to-auxiliary boundary.  In particular, the irrealis is
+  // the required host for negative, causative, and passive auxiliaries; the
+  // auxiliary remains grammatical even when a longer compound candidate also
+  // crosses the same position.
+  if (candidate_pos == core::PartOfSpeech::Auxiliary &&
+      (hasPrecedingExtendedPOS(lattice, candidate_start, core::ExtendedPOS::VerbMizenkei) ||
+       hasPrecedingExtendedPOS(lattice, candidate_start, core::ExtendedPOS::VerbRenyokei) ||
+       hasPrecedingExtendedPOS(lattice, candidate_start, core::ExtendedPOS::VerbOnbinkei))) {
+    return false;
+  }
   const size_t compound_end = verifiedCompoundEndCovering(lattice, candidate_start);
   if (compound_end != 0 && candidate_end <= compound_end &&
       !isLicensedCompletiveAuxiliaryBoundary(lattice, dict_manager, text, byte_offsets, candidate_start, candidate_end,
@@ -562,16 +573,65 @@ bool hasPrecedingQuantityEdge(const core::Lattice& lattice, size_t end_pos) {
   return false;
 }
 
+// A closed determiner may happen to share a whole surface with a dictionary
+// Godan onbin + past form.  At a sentence boundary the finite predicate owns
+// that construction: the determiner requires a following nominal, whereas
+// the attested verb stem and its matching past allomorph form a complete
+// clause.  Resolve this from the conjugation table and lexical base evidence,
+// never from a particular homographic surface.
+bool isDictionaryOnbinPast(const dictionary::DictionaryManager& dict_manager, std::string_view surface) {
+  const std::string_view past = utf8::lastChar(surface);
+  if (past != "た" && past != "だ") {
+    return false;
+  }
+  const std::string_view onbin_stem = utf8::dropLastChar(surface);
+  const std::string_view onbin = utf8::lastChar(onbin_stem);
+  const std::string_view lexical_stem = utf8::dropLastChar(onbin_stem);
+  if (lexical_stem.empty()) {
+    return false;
+  }
+  const auto match = verb_helpers::firstGodanOnbinDictBase(&dict_manager, lexical_stem, onbin);
+  if (!match.matched) {
+    return false;
+  }
+  const auto* row = grammar::Conjugation::getGodanRow(match.verb_type);
+  return row != nullptr && (row->voiced_ta ? past == "だ" : past == "た");
+}
+
+bool isDictionaryOnbinTeForm(const dictionary::DictionaryManager& dict_manager, std::string_view surface) {
+  const std::string_view connective = utf8::lastChar(surface);
+  if (connective != "て" && connective != "で") {
+    return false;
+  }
+  const std::string_view onbin_stem = utf8::dropLastChar(surface);
+  const std::string_view onbin = utf8::lastChar(onbin_stem);
+  const std::string_view lexical_stem = utf8::dropLastChar(onbin_stem);
+  if (lexical_stem.empty()) {
+    return false;
+  }
+  const auto match = verb_helpers::firstGodanOnbinDictBase(&dict_manager, lexical_stem, onbin);
+  if (!match.matched) {
+    return false;
+  }
+  const auto* row = grammar::Conjugation::getGodanRow(match.verb_type);
+  return row != nullptr && (row->voiced_ta ? connective == "で" : connective == "て");
+}
+
+bool startsKuruConditional(const std::vector<char32_t>& codepoints, size_t start_pos) {
+  return start_pos + 2 < codepoints.size() && codepoints[start_pos] == U'く' && codepoints[start_pos + 1] == U'れ' &&
+         codepoints[start_pos + 2] == U'ば';
+}
+
 }  // namespace
 
 void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view text,
                                         const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
-                                        size_t start_pos) const {
+                                        size_t start_pos, std::vector<dictionary::LookupResult>& lookup_results) const {
   // Convert to byte position for dictionary lookup
   size_t byte_pos = byteOffsetAt(byte_offsets, start_pos);
 
   // Lookup in dictionary
-  auto results = dict_manager_.lookup(text, byte_pos);
+  dict_manager_.lookupInto(text, byte_pos, lookup_results);
   const bool suppress_prefixed_noun_interior =
       startsHonorificPrefixedNounWithVerbTail(dict_manager_, text, codepoints, byte_offsets, start_pos);
 
@@ -671,7 +731,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
   size_t longest_adverb = 0;
   size_t longest_noun = 0;
   size_t longest_potential_benefactive = 0;
-  for (const auto& result : results) {
+  for (const auto& result : lookup_results) {
     if (result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Conjunction) {
       longest_conjunction = std::max(longest_conjunction, result.length);
     }
@@ -695,7 +755,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     }
   }
 
-  for (const auto& result : results) {
+  for (const auto& result : lookup_results) {
     if (result.entry == nullptr) {
       continue;
     }
@@ -719,6 +779,16 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // Calculate end position in characters before context-sensitive candidate
     // guards below inspect the following lexical head.
     size_t end_pos = start_pos + result.length;
+
+    // なら is the irrealis of the classical copula なり only before the
+    // classical negative (静か+なら+ず). In every other context this surface
+    // is the modern conditional particle, so do not let the homograph replace
+    // its stable POS/lemma analysis.
+    if (result.entry->extended_pos == core::ExtendedPOS::AuxClassicalNari &&
+        utf8::equalsAny(result.entry->surface, {"なら"}) &&
+        (end_pos >= codepoints.size() || codepoints[end_pos] != U'ず')) {
+      continue;
+    }
 
     // A one-kanji formal-noun homograph cannot claim the tail of an ongoing
     // kanji compound immediately before an adverbial particle
@@ -806,10 +876,14 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // constraint, independent of the individual determiner or particle.
     const bool ends_at_sentence_boundary =
         end_pos >= codepoints.size() || normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Symbol;
+    if (result.entry->pos == core::PartOfSpeech::Determiner && ends_at_sentence_boundary &&
+        isDictionaryOnbinPast(dict_manager_, result.entry->surface)) {
+      continue;
+    }
     if (result.entry->pos == core::PartOfSpeech::Determiner && ends_at_sentence_boundary) {
       constexpr PartOfSpeechMask kPredicateMask =
           partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Adjective);
-      const bool has_same_span_predicate = lookupResultsHavePartOfSpeech(results, kPredicateMask, result.length);
+      const bool has_same_span_predicate = lookupResultsHavePartOfSpeech(lookup_results, kPredicateMask, result.length);
       if (has_same_span_predicate) {
         continue;
       }
@@ -835,7 +909,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // the adverb when it directly modifies a predicate (一切+確認しない).
     if (result.entry->pos == core::PartOfSpeech::Adverb && end_pos < codepoints.size()) {
       const bool has_same_span_noun =
-          lookupResultsHavePartOfSpeech(results, partOfSpeechMask(core::PartOfSpeech::Noun), result.length);
+          lookupResultsHavePartOfSpeech(lookup_results, partOfSpeechMask(core::PartOfSpeech::Noun), result.length);
       const auto following_results = dict_manager_.lookup(text, byteOffsetAt(byte_offsets, end_pos));
       const bool followed_by_nominal_particle =
           std::any_of(following_results.begin(), following_results.end(), [](const auto& following) {
@@ -859,7 +933,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       const bool followed_by_no = lookupResultsHaveExtendedPOS(following_results, core::ExtendedPOS::ParticleNo);
       if (followed_by_no) {
         bool has_interrogative_particle_split = false;
-        for (const auto& prefix : results) {
+        for (const auto& prefix : lookup_results) {
           if (prefix.entry == nullptr || prefix.length >= result.length ||
               prefix.entry->extended_pos != core::ExtendedPOS::PronounInterrogative) {
             continue;
@@ -886,7 +960,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // its two constructional environments rather than by lexical surface.
     if (result.entry->extended_pos == core::ExtendedPOS::NounFormal && end_pos < codepoints.size()) {
       const bool has_same_span_adverb =
-          lookupResultsHavePartOfSpeech(results, partOfSpeechMask(core::PartOfSpeech::Adverb), result.length);
+          lookupResultsHavePartOfSpeech(lookup_results, partOfSpeechMask(core::PartOfSpeech::Adverb), result.length);
       const bool follows_genitive = hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::ParticleNo);
       const bool follows_non_genitive_nominal_particle =
           hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::ParticleCase) ||
@@ -932,7 +1006,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     if (result.entry->pos == core::PartOfSpeech::Verb &&
         hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::NounNumber)) {
       const bool has_same_span_suffix =
-          lookupResultsHavePartOfSpeech(results, partOfSpeechMask(core::PartOfSpeech::Suffix), result.length);
+          lookupResultsHavePartOfSpeech(lookup_results, partOfSpeechMask(core::PartOfSpeech::Suffix), result.length);
       bool has_nominal_right_context = end_pos >= codepoints.size();
       if (!has_nominal_right_context && normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Symbol) {
         has_nominal_right_context = true;
@@ -968,7 +1042,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // homograph. Noun-only words remain untouched.
     if (result.entry->pos == core::PartOfSpeech::Noun && end_pos < codepoints.size()) {
       const bool has_same_surface_na_adjective =
-          lookupResultsHaveExtendedPOS(results, core::ExtendedPOS::AdjNaAdj, result.length);
+          lookupResultsHaveExtendedPOS(lookup_results, core::ExtendedPOS::AdjNaAdj, result.length);
       const bool na_adjective_continuation =
           codepoints[end_pos] == U'に' ||
           (codepoints[end_pos] == U'な' && (end_pos + 1 >= codepoints.size() || codepoints[end_pos + 1] != U'ら')) ||
@@ -983,7 +1057,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // adjectives before the same copula.
     if (result.entry->extended_pos == core::ExtendedPOS::AdjNaAdj && end_pos < codepoints.size()) {
       const bool has_same_surface_noun =
-          lookupResultsHavePartOfSpeech(results, partOfSpeechMask(core::PartOfSpeech::Noun), result.length);
+          lookupResultsHavePartOfSpeech(lookup_results, partOfSpeechMask(core::PartOfSpeech::Noun), result.length);
       if (has_same_surface_noun && grammar::startsPredicativeCopula(text.substr(byteOffsetAt(byte_offsets, end_pos)))) {
         continue;
       }
@@ -992,12 +1066,13 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // A shorter adverb prefix cannot split a longer dictionary na-adjective
     // immediately before attributive な (めちゃくちゃな, もっともな).
     if (result.entry->pos == core::PartOfSpeech::Adverb) {
-      const bool longer_attributive_na_adjective = std::any_of(results.begin(), results.end(), [&](const auto& other) {
-        const size_t other_end = start_pos + other.length;
-        return other.entry != nullptr && other.length > result.length &&
-               other.entry->extended_pos == core::ExtendedPOS::AdjNaAdj && other_end < codepoints.size() &&
-               codepoints[other_end] == U'な';
-      });
+      const bool longer_attributive_na_adjective =
+          std::any_of(lookup_results.begin(), lookup_results.end(), [&](const auto& other) {
+            const size_t other_end = start_pos + other.length;
+            return other.entry != nullptr && other.length > result.length &&
+                   other.entry->extended_pos == core::ExtendedPOS::AdjNaAdj && other_end < codepoints.size() &&
+                   codepoints[other_end] == U'な';
+          });
       if (longer_attributive_na_adjective) {
         continue;
       }
@@ -1017,14 +1092,15 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       if (follows_volitional && result.entry->extended_pos == core::ExtendedPOS::ParticleCase && result.length > 1) {
         continue;
       }
-      const bool has_longer_same_class = std::any_of(results.begin(), results.end(), [&](const auto& other) {
-        return other.entry != nullptr && other.entry->pos == core::PartOfSpeech::Particle &&
-               other.entry->extended_pos == result.entry->extended_pos && other.length > result.length;
-      });
+      const bool has_longer_same_class =
+          std::any_of(lookup_results.begin(), lookup_results.end(), [&](const auto& other) {
+            return other.entry != nullptr && other.entry->pos == core::PartOfSpeech::Particle &&
+                   other.entry->extended_pos == result.entry->extended_pos && other.length > result.length;
+          });
       const bool keep_interrogative_quotative =
           result.entry->extended_pos == core::ExtendedPOS::ParticleCase && result.length == 1 &&
           grammar::isSingleHiragana(result.entry->surface, core::hiragana::kTo) &&
-          std::any_of(results.begin(), results.end(),
+          std::any_of(lookup_results.begin(), lookup_results.end(),
                       [&](const auto& other) {
                         const size_t other_end = start_pos + other.length;
                         return other.entry != nullptr && other.entry->extended_pos == core::ExtendedPOS::ParticleCase &&
@@ -1091,6 +1167,15 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
           normalize::classifyChar(codepoints[start_pos - 1]) != normalize::CharType::Symbol) {
         continue;
       }
+    }
+
+    // A conjunction must not absorb a dictionary-verified te-form immediately
+    // before the conditional directional 来る. The latter is a productive
+    // predicate chain (持っ+て+くれ+ば), while the conjunction cannot govern
+    // that auxiliary inflection.
+    if (result.entry->pos == core::PartOfSpeech::Conjunction &&
+        isDictionaryOnbinTeForm(dict_manager_, result.entry->surface) && startsKuruConditional(codepoints, end_pos)) {
+      continue;
     }
 
     if (result.length > 1 && startsParticleBeforeReduplicatedMimetic(codepoints, start_pos) &&

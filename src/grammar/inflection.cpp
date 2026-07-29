@@ -409,15 +409,21 @@ const std::vector<InflectionCandidate>& Inflection::analyze(std::string_view sur
                                              << " candidates)\n");
     return cache_iter->second;
   }
+  auto previous_iter = previous_.find(key);
+  if (previous_iter != previous_.end()) {
+    SUZUME_DEBUG_LOG_TRACE("[INFLECTION] \"" << surface << "\" (previous generation, " << previous_iter->second.size()
+                                             << " candidates)\n");
+    return previous_iter->second;
+  }
 
   SUZUME_DEBUG_LOG_VERBOSE("[INFLECTION] Analyzing \"" << surface << "\"\n");
 
   std::vector<InflectionCandidate> candidates;
-  candidates.reserve(32);  // Typical max candidates
 
   // Early return for very short strings (less than 2 Japanese characters)
   // A conjugated verb needs at least stem + ending
   if (surface.size() < core::kTwoJapaneseCharBytes) {  // 2 Japanese chars = 6 bytes in UTF-8
+    rollCacheIfFull();
     auto [iter, inserted] = cache_.emplace(std::move(key), std::move(candidates));
     return iter->second;
   }
@@ -523,17 +529,22 @@ const std::vector<InflectionCandidate>& Inflection::analyze(std::string_view sur
   }
 
   // Cache the result. Return a reference to the cached entry — safe because
-  // unordered_map references survive later inserts. Growth is bounded at
-  // rollCache() points instead of here: callers commonly hold an earlier result
-  // while analysing a related surface, and evicting mid-analysis would leave
-  // them with a dangling reference.
+  // unordered_map references survive later inserts. Before an active generation
+  // grows past its bound, move it to previous_; its references remain valid
+  // while the next generation starts accumulating entries.
+  rollCacheIfFull();
   auto [iter, inserted] = cache_.emplace(std::move(key), std::move(candidates));
   return iter->second;
 }
 
 void Inflection::rollCache() const {
+  rollCacheIfFull();
+}
+
+void Inflection::rollCacheIfFull() const {
   if (cache_.size() >= kMaxCacheEntries) {
-    cache_.clear();
+    previous_.clear();
+    previous_.swap(cache_);
   }
 }
 

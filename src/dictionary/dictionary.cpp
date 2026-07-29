@@ -115,31 +115,35 @@ void DictionaryManager::clearUserDictionaries() {
 
 std::vector<LookupResult> DictionaryManager::lookup(std::string_view text, size_t start_pos) const {
   std::vector<LookupResult> results;
+  lookupInto(text, start_pos, results);
+  return results;
+}
+
+void DictionaryManager::lookupInto(std::string_view text, size_t start_pos, std::vector<LookupResult>& out) const {
+  out.clear();
 
   // Lookup in core dictionary (Layer 1: hardcoded)
-  appendLookupResults(results, core_dict_->lookup(text, start_pos));
+  appendLookupResults(out, core_dict_->lookup(text, start_pos));
 
   // Lookup in core binary dictionary (Layer 2: core.dic)
   if (core_binary_dict_ && core_binary_dict_->isLoaded()) {
-    appendLookupResults(results, core_binary_dict_->lookup(text, start_pos));
+    appendLookupResults(out, core_binary_dict_->lookup(text, start_pos));
   }
 
   // Lookup in the automatically loaded bundled user dictionary (Layer 3)
   for (const auto& user_binary_dict : bundled_user_binary_dicts_) {
-    appendLookupResults(results, user_binary_dict->lookup(text, start_pos), true);
+    appendLookupResults(out, user_binary_dict->lookup(text, start_pos), true);
   }
 
   // Lookup in caller-loaded binary user dictionaries (Layer 4)
   for (const auto& user_binary_dict : user_binary_dicts_) {
-    appendLookupResults(results, user_binary_dict->lookup(text, start_pos), true);
+    appendLookupResults(out, user_binary_dict->lookup(text, start_pos), true);
   }
 
   // Lookup in caller-loaded source user dictionaries (Layer 5: CSV/TSV files)
   for (const auto& user_dict : user_dicts_) {
-    appendLookupResults(results, user_dict->lookup(text, start_pos), true);
+    appendLookupResults(out, user_dict->lookup(text, start_pos), true);
   }
-
-  return results;
 }
 
 const DictionaryEntry* DictionaryManager::lookupExact(std::string_view surface, core::PartOfSpeech pos) const {

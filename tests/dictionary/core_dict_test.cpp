@@ -9,6 +9,7 @@
 #include <tuple>
 #include <vector>
 
+#include "dictionary/dictionary.h"
 #include "dictionary/entries/auxiliaries.h"
 #include "dictionary/entries/compound_particles.h"
 #include "dictionary/entries/conjunctions.h"
@@ -35,6 +36,41 @@ TEST(CoreDictionaryTest, ExactLookupPreservesDuplicateSurfaceOrderAndFiltersPos)
   EXPECT_EQ(dict.lookupExact("あれ", core::PartOfSpeech::Symbol), nullptr);
   EXPECT_EQ(dict.lookupExact("あ"), nullptr);
   EXPECT_EQ(dict.lookupExact(""), nullptr);
+}
+
+TEST(CoreDictionaryTest, LookupIncludesEveryHomographAtTheMatchedSurface) {
+  CoreDictionary dict;
+
+  const auto all_matches = dict.lookup("ない", 0);
+  std::vector<LookupResult> matches;
+  for (const auto& match : all_matches) {
+    if (match.length == 2) {
+      matches.push_back(match);
+    }
+  }
+  ASSERT_EQ(matches.size(), 2U);
+  EXPECT_EQ(matches[0].entry->pos, core::PartOfSpeech::Auxiliary);
+  EXPECT_EQ(matches[0].entry->extended_pos, core::ExtendedPOS::AuxNegativeNai);
+  EXPECT_EQ(matches[1].entry->pos, core::PartOfSpeech::Adjective);
+  EXPECT_EQ(matches[1].entry->extended_pos, core::ExtendedPOS::AdjBasic);
+}
+
+TEST(CoreDictionaryTest, LookupIntoReusesCallerStorageAndMatchesValueLookup) {
+  DictionaryManager dict;
+  std::vector<LookupResult> reusable;
+  reusable.reserve(16);
+  const size_t initial_capacity = reusable.capacity();
+
+  dict.lookupInto("ない", 0, reusable);
+  const auto expected = dict.lookup("ない", 0);
+
+  ASSERT_EQ(reusable.size(), expected.size());
+  EXPECT_EQ(reusable.capacity(), initial_capacity);
+  for (size_t idx = 0; idx < expected.size(); ++idx) {
+    EXPECT_EQ(reusable[idx].entry, expected[idx].entry);
+    EXPECT_EQ(reusable[idx].length, expected[idx].length);
+    EXPECT_EQ(reusable[idx].from_user_dict, expected[idx].from_user_dict);
+  }
 }
 
 TEST(CoreDictionaryTest, MaterializesEveryStaticEntryWithStableMetadata) {

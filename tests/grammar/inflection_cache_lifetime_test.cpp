@@ -3,13 +3,14 @@
  * @brief References from Inflection::analyze() survive later analyze() calls.
  *
  * Candidate generators routinely bind a result and keep reading it while
- * analysing a related surface. Discarding the cache from inside analyze() —
- * as a size-triggered rollover once did — leaves those callers with a dangling
- * reference, which surfaces as garbled lemmas on long inputs. The cache may
- * only be dropped at an explicit rollCache() point.
+ * analysing a related surface. Clearing the active cache from inside analyze()
+ * when it reaches its bound leaves those callers with a dangling reference,
+ * which surfaces as garbled lemmas on long inputs. A full active generation is
+ * instead retained as the previous generation before a new one begins.
  *
- * A failure here means the rollover moved back inside analyze(); run this file
- * under AddressSanitizer to see the use-after-free directly.
+ * A failure here means a cache generation was cleared instead of being retained
+ * across its first rollover; run this file under AddressSanitizer to see the
+ * use-after-free directly.
  */
 
 #include <gtest/gtest.h>
@@ -22,9 +23,10 @@
 namespace suzume::grammar {
 namespace {
 
-/// Comfortably above Inflection::kMaxCacheEntries so any size-triggered
-/// rollover inside analyze() is guaranteed to fire.
+/// Comfortably above the 4,096-entry cache-generation bound, so a rollover
+/// during analyze() is guaranteed to fire.
 constexpr int kSurfacesForcingRollover = 6000;
+constexpr size_t kMaxGenerationEntries = 4096;
 
 std::vector<InflectionCandidate> snapshot(const std::vector<InflectionCandidate>& candidates) {
   return candidates;
@@ -66,6 +68,21 @@ TEST(InflectionCacheLifetimeTest, RollCacheKeepsResultsCorrect) {
   for (size_t index = 0; index < before.size(); ++index) {
     EXPECT_EQ(after[index].base_form, before[index].base_form);
   }
+}
+
+TEST(InflectionCacheLifetimeTest, CacheGenerationsStayBoundedWithinOneChunk) {
+  Inflection inflection;
+
+  // One long analyzer chunk can issue far more distinct inflection probes than
+  // the per-generation bound. Repeated rollover must retain at most the active
+  // and immediately previous generations, instead of retaining every probe.
+  for (int index = 0; index < kSurfacesForcingRollover * 4; ++index) {
+    inflection.analyze("食べ" + std::to_string(index) + "ました");
+    EXPECT_LE(inflection.activeCacheSize(), kMaxGenerationEntries);
+    EXPECT_LE(inflection.previousCacheSize(), kMaxGenerationEntries);
+  }
+
+  EXPECT_LE(inflection.activeCacheSize() + inflection.previousCacheSize(), kMaxGenerationEntries * 2);
 }
 
 }  // namespace

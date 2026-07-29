@@ -54,11 +54,12 @@ core::Lattice Tokenizer::buildLattice(std::string_view text, const std::vector<c
                                       const std::vector<normalize::CharType>& char_types) const {
   core::Lattice lattice(codepoints.size());
   const ByteOffsets byte_offsets = buildByteOffsets(codepoints);
+  std::vector<dictionary::LookupResult> dictionary_lookup_results;
 
   // Process each position
   for (size_t pos = 0; pos < codepoints.size(); ++pos) {
     // These run at every position
-    addDictionaryCandidates(lattice, text, codepoints, byte_offsets, pos);
+    addDictionaryCandidates(lattice, text, codepoints, byte_offsets, pos, dictionary_lookup_results);
     addUnknownCandidates(lattice, text, codepoints, byte_offsets, pos, char_types);
     if (mode_ != core::AnalysisMode::Split) {
       addPronounPluralJoinCandidates(lattice, text, codepoints, byte_offsets, pos);
@@ -113,31 +114,38 @@ core::Lattice Tokenizer::buildLattice(std::string_view text, const std::vector<c
 }
 
 void Tokenizer::clampHeuristicBonusesInUserDictSpans(core::Lattice& lattice) {
-  // Collect the registered spans first; most texts contain none and then this
-  // pass is a single scan with no allocation.
-  std::vector<std::pair<uint32_t, uint32_t>> user_spans;
+  // Keep, for each start position, the furthest user-dictionary span ending
+  // there. A prefix maximum below answers containment in O(1) per lattice
+  // edge rather than scanning every registered span for every candidate.
+  std::vector<uint32_t> furthest_end_at_start;
+  bool has_user_span = false;
   for (size_t pos = 0; pos <= lattice.textLength(); ++pos) {
     for (uint32_t edge_id : lattice.edgeIdsAt(pos)) {
       const core::LatticeEdge& edge = lattice.getEdge(edge_id);
       if (edge.fromUserDict()) {
-        user_spans.emplace_back(edge.start, edge.end);
+        if (!has_user_span) {
+          furthest_end_at_start.assign(lattice.textLength() + 1, 0);
+        }
+        furthest_end_at_start[edge.start] = std::max(furthest_end_at_start[edge.start], edge.end);
+        has_user_span = true;
       }
     }
   }
-  if (user_spans.empty()) {
+  if (!has_user_span) {
     return;
   }
 
-  auto isInsideRegistration = [&user_spans](const core::LatticeEdge& edge) {
-    return std::any_of(user_spans.begin(), user_spans.end(), [&edge](const std::pair<uint32_t, uint32_t>& span) {
-      return edge.start >= span.first && edge.end <= span.second;
-    });
-  };
+  uint32_t furthest_covering_end = 0;
+  for (uint32_t& end : furthest_end_at_start) {
+    furthest_covering_end = std::max(furthest_covering_end, end);
+    end = furthest_covering_end;
+  }
 
   for (size_t pos = 0; pos <= lattice.textLength(); ++pos) {
     for (uint32_t edge_id : lattice.edgeIdsAt(pos)) {
       const core::LatticeEdge& edge = lattice.getEdge(edge_id);
-      if (!isShapeDerivedOrigin(edge.origin) || edge.fromDictionary() || !isInsideRegistration(edge)) {
+      const bool is_inside_registration = furthest_end_at_start[edge.start] >= edge.end;
+      if (!isShapeDerivedOrigin(edge.origin) || edge.fromDictionary() || !is_inside_registration) {
         continue;
       }
       // Back to the plain category cost: the shape bonus is dropped, no penalty

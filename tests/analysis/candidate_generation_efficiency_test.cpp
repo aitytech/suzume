@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "analysis/analyzer.h"
 #include "analysis/scorer.h"
 #include "analysis/split_candidates.h"
 #include "analysis/tokenizer_utils.h"
@@ -78,7 +80,7 @@ TEST(CandidateGenerationEfficiencyTest, EmitsOneDictionaryBackedCompoundSplitEdg
   EXPECT_EQ(matching_edges, 1u);
 }
 
-TEST(CandidateGenerationEfficiencyTest, KeepsBoundedAndFullAlternativesForLongSameTypeRun) {
+TEST(CandidateGenerationEfficiencyTest, BoundsSameTypeCandidatesForLongRun) {
   UnknownOptions options;
   options.max_kanji_length = 4;
   dictionary::DictionaryManager dictionary_manager;
@@ -96,10 +98,57 @@ TEST(CandidateGenerationEfficiencyTest, KeepsBoundedAndFullAlternativesForLongSa
   };
 
   EXPECT_TRUE(has_same_type_end(options.max_kanji_length));
-  EXPECT_TRUE(has_same_type_end(codepoints.size()));
-  for (size_t end = options.max_kanji_length + 1; end < codepoints.size(); ++end) {
+  for (size_t end = options.max_kanji_length + 1; end <= codepoints.size(); ++end) {
     EXPECT_FALSE(has_same_type_end(end));
   }
+}
+
+TEST(CandidateGenerationEfficiencyTest, SameScriptRunsScaleLinearly) {
+  using Clock = std::chrono::steady_clock;
+
+  const auto measure = [](std::string_view unit, size_t count) {
+    std::string text;
+    text.reserve(unit.size() * count);
+    for (size_t idx = 0; idx < count; ++idx) {
+      text += unit;
+    }
+
+    Analyzer analyzer;
+    const auto started = Clock::now();
+    const auto result = analyzer.analyze(text);
+    const auto elapsed = Clock::now() - started;
+    EXPECT_TRUE(result.hasValue());
+    return elapsed;
+  };
+
+  const auto hiragana_2k = measure("あ", 2000);
+  const auto hiragana_4k = measure("あ", 4000);
+  const auto hiragana_8k = measure("あ", 8000);
+  const auto hiragana_16k = measure("あ", 16000);
+  const auto katakana_8k = measure("ア", 8000);
+
+  // A threefold allowance absorbs shared-CI variance while rejecting the
+  // quadratic candidate/lattice growth that this guard protects against.
+  constexpr auto kTimingSlack = std::chrono::milliseconds(100);
+  EXPECT_LT(hiragana_4k, hiragana_2k * 3 + kTimingSlack);
+  EXPECT_LT(hiragana_8k, hiragana_4k * 3 + kTimingSlack);
+  EXPECT_LT(hiragana_16k, hiragana_8k * 3 + kTimingSlack);
+  EXPECT_LT(katakana_8k, hiragana_8k * 3 + kTimingSlack);
+}
+
+TEST(CandidateGenerationEfficiencyTest, KeepsAsciiKeycapEmojiInOneSameTypeCandidate) {
+  dictionary::DictionaryManager dictionary_manager;
+  const UnknownWordGenerator generator({}, &dictionary_manager);
+  const std::string text = "1️⃣です";
+  const auto codepoints = normalize::toCodepoints(text);
+  const auto char_types = classify(codepoints);
+
+  const auto candidates = generator.generate(text, codepoints, 0, char_types);
+  const bool has_keycap = std::any_of(candidates.begin(), candidates.end(), [](const UnknownCandidate& candidate) {
+    return candidate.origin == core::CandidateOrigin::SameType && candidate.surface == "1️⃣" && candidate.start == 0 &&
+           candidate.end == 3;
+  });
+  EXPECT_TRUE(has_keycap);
 }
 
 }  // namespace

@@ -140,7 +140,8 @@ bool spansAdverbAdjectiveBoundary(const suzume::analysis::UnknownCandidate& cand
                                   const std::vector<char32_t>& codepoints,
                                   const suzume::dictionary::DictionaryManager* dict_manager) {
   if (dict_manager == nullptr || candidate.pos != suzume::core::PartOfSpeech::Noun ||
-      candidate.end <= candidate.start + 1) {
+      candidate.end <= candidate.start + 1 ||
+      candidate.end - candidate.start > suzume::analysis::candidate::kMaxAdverbAdjectiveBoundaryChars) {
     return false;
   }
   for (size_t split = candidate.start + 1; split < candidate.end; ++split) {
@@ -420,8 +421,11 @@ UnknownCandidate makeVerbCandidate(const std::string& surface, size_t start, siz
   candidate.start = start;
   candidate.end = end;
   candidate.pos = core::PartOfSpeech::Verb;
-  candidate.extended_pos =
-      extended_pos != core::ExtendedPOS::Unknown ? extended_pos : core::detectVerbForm(surface, {});
+  const bool godan_i_onbin_hint =
+      conj_type == dictionary::ConjugationType::GodanKa || conj_type == dictionary::ConjugationType::GodanGa;
+  candidate.extended_pos = extended_pos != core::ExtendedPOS::Unknown
+                               ? extended_pos
+                               : core::detectVerbForm(surface, {}, false, godan_i_onbin_hint);
   candidate.cost = cost;
   candidate.lemma = lemma;
   candidate.conj_type = conj_type;

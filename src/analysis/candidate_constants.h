@@ -102,10 +102,6 @@ constexpr float kProductiveSuffixVerbCost = -0.2F;
 constexpr size_t kEmphaticMinRepeatedVowels = 2;
 constexpr float kEmphaticRepeatedVowelBonus = -0.5F;
 constexpr float kEmphaticRepeatedVowelLengthPenalty = 0.05F;
-// Preserve a complete over-limit same-script run as a Viterbi alternative
-// without making arbitrarily long unknown words free.  Use the same per-unit
-// length pressure as emphatic vowel runs while keeping a semantic name here.
-constexpr float kLongSameTypeRunPenaltyPerExtraChar = kEmphaticRepeatedVowelLengthPenalty;
 constexpr float kEmphaticCharacterPenalty = 0.3F;
 
 // High origin-confidence for a rule-derived candidate whose surface context makes
@@ -390,6 +386,24 @@ constexpr float kAdverbExplanatoryCopulaBonus = -0.5F;
 // productive mimetic shape that otherwise degrades into an unknown noun plus
 // the quotative particle.
 constexpr float kMimeticNtoAdverbBonus = -0.8F;
+
+// Productive mimetic patterns are prosodic words, not arbitrary same-script
+// spans.  Twelve morae covers emphatic and repeated sound-symbolic forms
+// while keeping candidate generation bounded for unsegmented input.  A valid
+// kana mora can have one small-kana modifier, hence the corresponding
+// codepoint ceiling also bounds malformed runs made only of small kana.
+constexpr size_t kMaxMimeticMorae = 12;
+constexpr size_t kMaxMimeticCodepoints = kMaxMimeticMorae * 2;
+
+// Dictionary-confirmed adverb + adjective phrases are short grammatical
+// units.  Unknown candidates longer than this cannot be validated as one
+// such phrase, so do not repeatedly materialize their every split.
+constexpr size_t kMaxAdverbAdjectiveBoundaryChars = 16;
+
+// Pure-hiragana onbin recognition only needs to inspect a lexical verb host
+// and its two-character te/past ending.  Longer runs are compositional and
+// are handled by bounded local candidates instead.
+constexpr size_t kMaxHiraganaOnbinProbeChars = 12;
 
 // Four-mora mimetic adverbs followed by the quotative particle (ちくたくと).
 constexpr float kMimeticHeterogeneousAdverbCost = -0.5F;

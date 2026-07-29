@@ -137,6 +137,14 @@ class DictionaryManager {
   std::vector<LookupResult> lookup(std::string_view text, size_t start_pos) const;
 
   /**
+   * @brief Lookup entries into reusable caller-owned storage.
+   *
+   * Clears @p out before appending matches from every dictionary layer. Hot
+   * lattice builders can retain the vector's capacity across text positions.
+   */
+  void lookupInto(std::string_view text, size_t start_pos, std::vector<LookupResult>& out) const;
+
+  /**
    * @brief Look up an exact-surface entry, optionally constrained by POS
    *
    * Checks each dictionary layer in lookup priority order and returns the first
