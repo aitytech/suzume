@@ -773,6 +773,33 @@
       ],
       "id": "uta_3",
       "input": "請うた"
+    },
+    {
+      "description": "BOS hiragana noun before a case particle",
+      "expected": [
+        {
+          "lemma": "となり",
+          "pos": "Noun",
+          "surface": "となり"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tonariniita",
+      "input": "となりにいた"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

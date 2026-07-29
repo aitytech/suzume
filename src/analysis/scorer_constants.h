@@ -373,7 +373,12 @@ constexpr float kBosFinalParticlePenalty = 2.0F;             // Sentence-final p
 constexpr float kBosTopicParticlePenalty = 1.0F;             // 係助詞 は/も cannot lead a sentence
 constexpr float kBosConjunctiveParticlePenalty = 1.0F;       // 接続助詞 joins clauses, so it rarely leads one
 constexpr float kBosBindingParticlePenalty = scale::kRare;   // 係結び has no host at sentence start
-constexpr float kBosHonorificAuxPenalty = 0.3F;              // Honorific auxiliary needs a preceding renyokei
+// A 格助詞 marks the case of the nominal in front of it, so it is bound leftward
+// exactly as the topic and binding particles are. At sentence start there is no
+// such nominal, and without the penalty the particle reading of a noun's first
+// mora costs nothing at all (となり read as と + なり).
+constexpr float kBosCaseParticlePenalty = scale::kMinor;
+constexpr float kBosHonorificAuxPenalty = 0.3F;  // Honorific auxiliary needs a preceding renyokei
 // A classical perfect り / negative ん attaches to a preceding 連用形 or 未然形,
 // so neither can lead a sentence. Without this the two auxiliaries chain into a
 // cheap closed-class fragment run that outscores an unregistered hiragana noun
@@ -445,6 +450,7 @@ constexpr std::array<BoundaryCost, static_cast<size_t>(core::ExtendedPOS::Count_
   table[static_cast<size_t>(core::ExtendedPOS::ParticleTopic)].bos = kBosTopicParticlePenalty;
   table[static_cast<size_t>(core::ExtendedPOS::ParticleConj)].bos = kBosConjunctiveParticlePenalty;
   table[static_cast<size_t>(core::ExtendedPOS::ParticleBinding)].bos = kBosBindingParticlePenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::ParticleCase)].bos = kBosCaseParticlePenalty;
 
   table[static_cast<size_t>(core::ExtendedPOS::AuxAspectKuru)].eos = kEosAspectKuruPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxAspectKuru)].eos_gate = EosBoundaryGate::SingleCodepoint;

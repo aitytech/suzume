@@ -177,11 +177,21 @@ bool startsWithParticleBeforeRegisteredPredicate(const suzume::analysis::Unknown
   const std::string predicate = suzume::analysis::extractSubstring(codepoints, candidate.start + 1, candidate.end);
   const size_t predicate_length = candidate.end - candidate.start - 1;
   for (const auto& result : dict_manager->lookup(predicate, 0)) {
-    if (result.entry != nullptr && result.length == predicate_length &&
-        (result.entry->pos == suzume::core::PartOfSpeech::Verb ||
-         result.entry->pos == suzume::core::PartOfSpeech::Adjective)) {
-      return true;
+    if (result.entry == nullptr || result.length != predicate_length ||
+        (result.entry->pos != suzume::core::PartOfSpeech::Verb &&
+         result.entry->pos != suzume::core::PartOfSpeech::Adjective)) {
+      continue;
     }
+    // The predicate has to be complete, so the span must be the predicate's own
+    // dictionary form. A bound inflectional cell does not close the clause it is
+    // claimed to close, and a renyokei is spelled like the tail of any number of
+    // nouns: となり matches the continuative of なる, and reading it that way
+    // rewrites the noun as a particle plus half a verb — the analysis the
+    // bracketed-noun rescue exists to outrank.
+    if (!result.entry->lemma.empty() && result.entry->lemma != result.entry->surface) {
+      continue;
+    }
+    return true;
   }
 
   // A leading closed particle may be followed by one complete content word

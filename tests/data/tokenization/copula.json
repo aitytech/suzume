@@ -2067,6 +2067,92 @@
       ],
       "id": "korehahimoda",
       "input": "これはひもだ"
+    },
+    {
+      "description": "BOS hiragana noun before the past copula",
+      "expected": [
+        {
+          "lemma": "となり",
+          "pos": "Noun",
+          "surface": "となり"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tonaridattta",
+      "input": "となりだった"
+    },
+    {
+      "description": "Hiragana noun whose head kana reads as a case particle",
+      "expected": [
+        {
+          "lemma": "そこ",
+          "pos": "Pronoun",
+          "surface": "そこ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "となり",
+          "pos": "Noun",
+          "surface": "となり"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "sokohatonaridattta",
+      "input": "そこはとなりだった"
+    },
+    {
+      "description": "Genitive-bracketed hiragana noun before the past copula",
+      "expected": [
+        {
+          "lemma": "駅",
+          "pos": "Noun",
+          "surface": "駅"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "となり",
+          "pos": "Noun",
+          "surface": "となり"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "notonaridattta",
+      "input": "駅のとなりだった"
     }
   ],
   "description": "Copula patterns (だ、です、である)",
