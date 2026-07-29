@@ -3,6 +3,8 @@
 
 #include <cstddef>
 
+#include "analysis/bigram_table.h"
+
 // =============================================================================
 // Candidate Generation Constants
 // =============================================================================
@@ -590,6 +592,13 @@ constexpr float kWeakPenalty = 0.1F;
 // Minor penalty for a tense candidate with less evidence than a contracted
 // auxiliary boundary.
 constexpr float kMinorPenalty = 0.2F;
+// An unattested onbin span whose tail is a complete auxiliary cell is reading
+// that auxiliary's own onbin as its stem ending (くつだった as a form of くつだる
+// rather than くつ + だっ + た). Both readings are structurally available — a
+// godan stem may genuinely end in だ — so the reconstruction is discouraged
+// rather than removed, and a lexical head that leaves nothing for the copula to
+// predicate over still wins (坂 + を + くだっ + た).
+constexpr float kSwallowedAuxiliaryCellPenalty = bigram_cost::kRare;
 // Bonus for a kanji dict-verb imperative/kateikei standing sentence-final (書け, 読め, 止まれ).
 // A bare え-row form terminating a clause is the imperative (命令形) of the base verb (読め→読む);
 // the potential-verb reading (読める) is a distinct word that needs the full surface or a

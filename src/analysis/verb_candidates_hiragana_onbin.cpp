@@ -199,11 +199,32 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
         SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << onbin_surface << "\" registered auxiliary cell\n");
         continue;
       }
+      // The same paradigm can also be only the span's tail, and the
+      // reconstructed base then explains the auxiliary's own onbin as its
+      // ending, swallowing whatever nominal stands in front of it (くつだった
+      // read as a form of くつだる rather than くつ + だっ + た). Unlike the
+      // whole-span case this is not decidable here — a godan stem may genuinely
+      // end in だ — so it is priced rather than rejected. Two morae is the
+      // floor: a one-mora auxiliary is spelled like the onbin mora itself, so
+      // every hatsuonbin span would end in the negative ん. A non-empty head
+      // must remain, since covering the whole span is the check above.
+      auto swallows_auxiliary_cell = [&]() {
+        for (size_t tail_length = 2; tail_length + start_pos < onbin_pos + 1; ++tail_length) {
+          const std::string tail = extractSubstring(codepoints, onbin_pos + 1 - tail_length, onbin_pos + 1);
+          if (vh::hasDictionaryEntry(dict_manager, tail, core::PartOfSpeech::Auxiliary)) {
+            return true;
+          }
+        }
+        return false;
+      };
       // For tense patterns, use higher cost to avoid false positives for short stems
       // Contraction patterns (っとく, っちゃう) are more reliable, use lower cost
-      const float cost = is_contraction_pattern ? candidate::verb_cost::kContractedOnbinBonus
-                         : is_resolved_i_onbin  ? candidate::verb_cost::kStrongBonus
-                                                : candidate::verb_cost::kMinorPenalty;
+      float cost = is_contraction_pattern ? candidate::verb_cost::kContractedOnbinBonus
+                   : is_resolved_i_onbin  ? candidate::verb_cost::kStrongBonus
+                                          : candidate::verb_cost::kMinorPenalty;
+      if (!lemma_dict_verified && swallows_auxiliary_cell()) {
+        cost += candidate::verb_cost::kSwallowedAuxiliaryCellPenalty;
+      }
       SUZUME_DEBUG_VERBOSE_BLOCK {
         SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface
                             << (is_tense_pattern ? " hiragana_onbin_tense" : " hiragana_onbin_contraction")

@@ -872,15 +872,22 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
       // isolated hiragana — usually adverbs/particles (もう, すぐ, ため) — are not promoted.
       // A copula that heads its own predicate is the same kind of right bracket: it
       // selects a nominal, so what stands in front of it is a noun however short it is
-      // (きのう|は|あめ|だっ|た). Any other auxiliary only makes the candidate available,
-      // because its own kana could equally be the run's last mora.
+      // (きのう|は|あめ|だっ|た). That selection does not depend on what stands to the
+      // left, so the copula licenses the short run at a clause boundary as well
+      // (くつ|だっ|た) — but only for a run the dictionary does not already read,
+      // because at two morae the words standing there are overwhelmingly closed or
+      // adverbial (から|だ|を, まじ|で, そう|じゃろう) and the rescue exists for the
+      // nouns that have no reading at all. After a particle the left bracket
+      // supplies that evidence itself. Any other auxiliary only makes the candidate
+      // available, because its own kana could equally be the run's last mora.
       const BoundAuxiliary right_bound = boundAuxiliaryAt(codepoints, scan, dict_manager_, left_particle_bracket);
       const bool right_copula = right_bound.length > 0 && right_bound.is_copula;
-      const bool fully_particle_bracketed = left_particle_bracket && (right_particle || right_copula);
-      size_t min_len = fully_particle_bracketed ? 2 : 3;
       const std::string promoted_surface = extractSubstring(codepoints, start_pos, scan);
       const auto* promoted_dictionary_reading =
           dict_manager_ != nullptr ? dict_manager_->lookupExact(promoted_surface) : nullptr;
+      const bool short_run_bracketed = (left_particle_bracket && (right_particle || right_copula)) ||
+                                       (right_copula && left_clause_bracket && promoted_dictionary_reading == nullptr);
+      size_t min_len = short_run_bracketed ? 2 : 3;
       const bool short_bos_preparatory_homograph =
           start_pos == 0 && len == 2 && right_particle && promoted_dictionary_reading != nullptr &&
           promoted_dictionary_reading->extended_pos == core::ExtendedPOS::AuxAspectOku;
@@ -981,6 +988,15 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
         }
         if (right_genitive_after_internal_particle) {
           noun_cost += scorer::scale::kStrongBonus;
+        }
+        // A bound copula selects a nominal, so it is evidence for the run being
+        // a noun and not only a bracket that makes the candidate available. It
+        // is weaker evidence than the selecting case particle above, which comes
+        // with a left bracket of its own, so the preference is correspondingly
+        // small — enough to settle a run the fabricated-verb reading also covers
+        // (くつ|だっ|た, where くつ is equally a godan dictionary form).
+        if (right_copula && !exact_reading_owns_context && !selected_nominal) {
+          noun_cost += scorer::scale::kMinorBonus;
         }
         auto noun_cand = makeCandidate(promoted_surface, start_pos, scan, core::PartOfSpeech::Noun, noun_cost,
                                        /*has_suffix=*/true, CandidateOrigin::SameType);

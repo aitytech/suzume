@@ -1492,6 +1492,32 @@ def postprocess_adverb_nominal_context(tokens: list[dict]) -> bool:
     return changed
 
 
+def postprocess_interjection_before_copula(tokens: list[dict]) -> bool:
+    """Read an interjection homograph nominally when the copula predicates over it.
+
+    An interjection is a complete utterance on its own, so the plain assertive
+    copula cannot predicate over it and its presence identifies the nominal
+    reading of a homograph (そらだった is そら the noun, not the exclamation).
+    The polite copula is excluded because it also attaches to a fixed formulaic
+    interjection as a politeness marker rather than as a predicate
+    (すみませんでした, お疲れ様です), and so are で and な, which are equally
+    spelled like particles an interjection may precede.
+    """
+    assertive_copula = ("だ", "だっ")
+    changed = False
+    for idx in range(len(tokens) - 1):
+        token = tokens[idx]
+        following = tokens[idx + 1]
+        if token.get("pos") != "Interjection" or following.get("pos") != "Auxiliary":
+            continue
+        if following.get("surface") not in assertive_copula:
+            continue
+        token["pos"] = "Noun"
+        token["lemma"] = token.get("surface", "")
+        changed = True
+    return changed
+
+
 def postprocess_temporal_nao(tokens: list[dict]) -> bool:
     """Use adverbial なお after a temporal adverb (いまなお)."""
     changed = False

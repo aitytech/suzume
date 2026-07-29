@@ -800,6 +800,33 @@
       ],
       "id": "tonariniita",
       "input": "となりにいた"
+    },
+    {
+      "description": "Godan verb whose onbin tail is spelled like the copula onbin",
+      "expected": [
+        {
+          "lemma": "坂",
+          "pos": "Noun",
+          "surface": "坂"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "くだる",
+          "pos": "Verb",
+          "surface": "くだっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wokudattta",
+      "input": "坂をくだった"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

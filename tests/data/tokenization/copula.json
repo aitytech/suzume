@@ -2153,6 +2153,72 @@
       ],
       "id": "notonaridattta",
       "input": "駅のとなりだった"
+    },
+    {
+      "description": "Two-mora hiragana noun at a clause boundary before the past copula",
+      "expected": [
+        {
+          "lemma": "くつ",
+          "pos": "Noun",
+          "surface": "くつ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kutsudattta",
+      "input": "くつだった"
+    },
+    {
+      "description": "Two-mora hiragana noun at a clause boundary before the past copula",
+      "expected": [
+        {
+          "lemma": "そら",
+          "pos": "Noun",
+          "surface": "そら"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "soradattta",
+      "input": "そらだった"
+    },
+    {
+      "description": "Noun ending in the copula mora at a clause boundary",
+      "expected": [
+        {
+          "lemma": "からだ",
+          "pos": "Noun",
+          "surface": "からだ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "karadadattta",
+      "input": "からだだった"
     }
   ],
   "description": "Copula patterns (だ、です、である)",

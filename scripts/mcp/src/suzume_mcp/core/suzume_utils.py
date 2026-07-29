@@ -51,6 +51,7 @@ from .postprocessors import (
     postprocess_ii,
     postprocess_ikaga,
     postprocess_indefinite_ka,
+    postprocess_interjection_before_copula,
     postprocess_iru_aux,
     postprocess_itadakeru_aux,
     postprocess_ka_suru_noun,
@@ -382,6 +383,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "attributive-mamonaku"
     if postprocess_adverb_nominal_context(tokens) and applied_rule is None:
         applied_rule = "adverb-nominal-context"
+    if postprocess_interjection_before_copula(tokens) and applied_rule is None:
+        applied_rule = "interjection-before-copula"
     if postprocess_temporal_nao(tokens) and applied_rule is None:
         applied_rule = "temporal-nao-adverb"
     if postprocess_tsuke_noun(tokens) and applied_rule is None:
