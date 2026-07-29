@@ -8,6 +8,7 @@ from .constants import (
     COMPOUND_VERB_V2_ICHIDAN,
     COMPOUND_VERB_V2_NOT_AFTER_SURU,
     COMPOUND_VERB_V2_SURU_ONLY,
+    DERIVED_ADJECTIVE_SUFFIX_LEMMAS,
     DERIVED_VERB_SUFFIX_FORMS,
     FAMILY_TERMS,
     FIXED_FUNCTION_LEMMAS,
@@ -545,6 +546,33 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     merged = True
                     if applied_rule is None:
                         applied_rule = "vowel-repeat"
+
+        # 4d-2. Nominal host + productive adjective suffix
+        # くさい derives an adjective from its host instead of predicating over
+        # a separate preceding word, so the two form one search unit. Only a
+        # free nominal can be a host: after a particle, an adverb or a
+        # determiner the adjective is the predicate and keeps its own token
+        # (この魚は|くさい, ちょっと|くさい, その|くさい匂い).
+        if (
+            not merged
+            and t.get("pos") == "名詞"
+            and t.get("pos_sub1") not in ("非自立", "代名詞")
+            and i + 1 < len(tokens)
+        ):
+            nxt = tokens[i + 1]
+            if nxt.get("pos") == "形容詞" and nxt.get("lemma") in DERIVED_ADJECTIVE_SUFFIX_LEMMAS:
+                host = t.get("surface", "")
+                result.append(
+                    {
+                        "surface": host + nxt.get("surface", ""),
+                        "pos": "形容詞",
+                        "lemma": host + (nxt.get("lemma") or ""),
+                    }
+                )
+                i += 2
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "nominal+derived-adjective"
 
         # 4e. Prolonged sound mark (ー) merge
         # Merge ー with preceding token, consecutive ーs reduce to one
