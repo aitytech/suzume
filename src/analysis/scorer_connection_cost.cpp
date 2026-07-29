@@ -198,7 +198,15 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
 }  // namespace
 
 float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeEdge& next) const {
-  float base_cost = bigramCost(prev.pos, next.pos);
+  // The colloquial contraction of the hypothetical has absorbed the conjunctive
+  // particle into its inflection, so it attaches rightward the way that
+  // particle does: what follows opens a main clause (やりゃ + できる). Charging
+  // it the verb-to-verb boundary cost instead would keep the following
+  // predicate from starting, and its ExtendedPOS row already inherits the
+  // particle's continuations.
+  const core::PartOfSpeech left_pos =
+      prev.extended_pos == core::ExtendedPOS::VerbContractedKateikei ? core::PartOfSpeech::Particle : prev.pos;
+  float base_cost = bigramCost(left_pos, next.pos);
 
   // ExtendedPOS bigram cost (replaces all check functions)
   float extended_cost = BigramTable::getCost(prev.extended_pos, next.extended_pos);

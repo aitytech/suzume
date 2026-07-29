@@ -722,6 +722,14 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
     generateCharacterSpeechCandidates(text, codepoints, start_pos, char_types, candidates);
   }
 
+  // Generate the colloquial contraction of the hypothetical (行きゃ, 食べりゃ).
+  // Script-independent: the fused mora is kana whatever the stem's script is.
+  // Runs last because it stands down on any span another generator already
+  // claimed — a subsidiary auxiliary reads the same contraction with context
+  // this reconstruction cannot see (読んで + みりゃ).
+  analysis::generateContractedConditionalCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
+                                                    candidates);
+
   candidates.erase(
       std::remove_if(
           candidates.begin(), candidates.end(),

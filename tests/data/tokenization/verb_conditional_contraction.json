@@ -1,0 +1,184 @@
+{
+  "cases": [
+    {
+      "description": "本が読めりゃいい。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "読める",
+          "pos": "Verb",
+          "surface": "読めりゃ"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "ga_meri_ii",
+      "input": "本が読めりゃいい。"
+    },
+    {
+      "description": "行きゃいい。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行きゃ"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "ki_ii",
+      "input": "行きゃいい。"
+    },
+    {
+      "description": "すりゃできる。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すりゃ"
+        },
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        }
+      ],
+      "id": "suri_dekiru",
+      "input": "すりゃできる。"
+    },
+    {
+      "description": "早けりゃ買う。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "早い",
+          "pos": "Adjective",
+          "surface": "早けりゃ"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "keri_u",
+      "input": "早けりゃ買う。"
+    },
+    {
+      "description": "来りゃいい。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来りゃ"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "ri_ii",
+      "input": "来りゃいい。"
+    },
+    {
+      "description": "食べりゃいい。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べりゃ"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "beri_ii",
+      "input": "食べりゃいい。"
+    },
+    {
+      "description": "死にゃしない。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "死ぬ",
+          "pos": "Verb",
+          "surface": "死にゃ"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ni_shinai",
+      "input": "死にゃしない。"
+    },
+    {
+      "description": "話しゃいい。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話しゃ"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "shi_ii",
+      "input": "話しゃいい。"
+    },
+    {
+      "description": "行かなきゃいけない。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なきゃ"
+        },
+        {
+          "lemma": "いける",
+          "pos": "Auxiliary",
+          "surface": "いけ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "kanaki_ikenai_2",
+      "input": "行かなきゃいけない。"
+    }
+  ],
+  "description": "verb_conditional_contraction tests",
+  "version": "1.0"
+}

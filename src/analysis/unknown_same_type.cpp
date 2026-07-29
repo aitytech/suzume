@@ -841,6 +841,13 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
                         return !inflection_candidate.suffix.empty() &&
                                inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence;
                       });
+      // The colloquial contraction of the hypothetical is a predicate reading
+      // of the whole run even though the contracted surface itself does not
+      // analyze as a conjugation, because the conjunctive particle has fused
+      // into the inflection (やりゃ = やれば). The rescue exists for runs with
+      // no predicate reading, so it stands down here whatever brackets the run.
+      const bool spells_contracted_hypothetical =
+          spellsContractedHypothetical(codepoints, start_pos, scan, inflection_, dict_manager_);
       // The rescue may not stop part-way through a registered predicate that
       // begins inside the run. ゆえあ|って cuts the onbin stem あっ in half, and
       // what is left of the te-form then looks like the quotative particle that
@@ -859,6 +866,7 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
       }
       if ((len >= min_len || short_bos_preparatory_homograph) && (right_particle || right_clause || right_auxiliary) &&
           !crossed_verified_predicate && !cuts_into_predicate && !has_inflected_predicate_reading &&
+          !spells_contracted_hypothetical &&
           !hasAuxiliaryParticleDecomposition(codepoints, start_pos, scan, dict_manager_) &&
           !hasFunctionWordChainDecomposition(codepoints, start_pos, scan, dict_manager_)) {
         float noun_cost = getCostForType(start_type, len) + candidate::kPostParticleNounPenalty;

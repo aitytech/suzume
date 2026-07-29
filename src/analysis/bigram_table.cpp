@@ -52,6 +52,16 @@ BigramTable::EncodedTable BigramTable::initTable() {
   // cost remains distinct, while their syntactic continuations stay complete
   // as the general adverb profile evolves.
   bigram_rules::inheritRuleProfile(table, core::ExtendedPOS::Adverb, core::ExtendedPOS::AdverbQuotative);
+  // The colloquial contraction of the hypothetical is a single word that closes
+  // a conditional clause. What may follow it is therefore what may follow the
+  // conjunctive particle it absorbed, while what may precede it is what may
+  // precede any finite verb. Inheriting each half from its own source keeps the
+  // form complete as either profile evolves.
+  bigram_rules::inheritRuleProfile(table, core::ExtendedPOS::ParticleConj, core::ExtendedPOS::VerbContractedKateikei);
+  for (size_t idx = 0; idx < BigramTable::kSize; ++idx) {
+    table[idx][static_cast<size_t>(core::ExtendedPOS::VerbContractedKateikei)] =
+        table[idx][static_cast<size_t>(core::ExtendedPOS::VerbShuushikei)];
+  }
   // A quotative demonstrative cannot directly complete an adjective stem.
   // Keep appearance そう on its auxiliary path (高+そう, キモ+そう).
   table[static_cast<size_t>(core::ExtendedPOS::AdjStem)][static_cast<size_t>(core::ExtendedPOS::AdverbQuotative)] =

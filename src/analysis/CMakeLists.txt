@@ -58,6 +58,7 @@ add_library(suzume_analysis OBJECT
   unknown_same_type.cpp
   unknown_speech.cpp
   verb_candidates.cpp
+  verb_candidates_contracted_conditional.cpp
   verb_candidates_helpers.cpp
   verb_candidates_helpers_dictionary.cpp
   verb_candidates_helpers_emphatic.cpp

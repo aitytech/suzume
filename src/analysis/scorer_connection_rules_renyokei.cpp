@@ -319,7 +319,14 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // part of speech.
   const bool fills_hypothetical_slot =
       prev.extended_pos == core::ExtendedPOS::VerbKateikei || prev.extended_pos == core::ExtendedPOS::AdjKeForm;
-  if (fills_hypothetical_slot && next.extended_pos == core::ExtendedPOS::ParticleConj &&
+  // The colloquial contraction fills the same slot but has already absorbed
+  // its particle into the inflection (行きゃ, 早けりゃ), so it closes the
+  // conditional clause instead of opening a place for one. Left alone it keeps
+  // the slot's pull on a conjunctive particle and takes the leading mora of the
+  // following predicate with it (やりゃ|で|きる for やりゃ|できる).
+  const bool absorbed_conjunctive_particle = utf8::endsWith(prev.surface, "ゃ");
+  if (fills_hypothetical_slot && !absorbed_conjunctive_particle &&
+      next.extended_pos == core::ExtendedPOS::ParticleConj &&
       grammar::isHypotheticalSelectingConjunctiveParticle(next.surface)) {
     bonus += cost::kVeryStrongBonus;
   }
