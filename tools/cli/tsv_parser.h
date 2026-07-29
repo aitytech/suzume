@@ -85,6 +85,11 @@ class TsvParser {
  */
 core::Expected<size_t, core::Error> writeTsvFile(const std::string& path, const std::vector<TsvEntry>& entries);
 
+/**
+ * @brief Return why a surface or lemma cannot be represented by the plain TSV writer.
+ */
+std::string tsvWriteFieldIssue(std::string_view value, std::string_view field_name);
+
 }  // namespace suzume::cli
 
 #endif  // SUZUME_CLI_TSV_PARSER_H_

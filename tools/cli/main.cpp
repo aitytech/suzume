@@ -19,42 +19,43 @@ int main(int argc, char* argv[]) {
 
     if (args.version) {
       printVersion();
+      std::cout.flush();
+      if (!std::cout) {
+        printError("Failed to write output");
+        return 1;
+      }
       return 0;
     }
+
+    int exit_code = 0;
 
     // Handle help and version
     if (args.help && args.command.empty()) {
       printHelp();
-      return 0;
-    }
-
-    if (args.command == "help") {
+    } else if (args.command == "help") {
       printHelp();
-      return 0;
-    }
-
-    if (args.command == "version") {
+    } else if (args.command == "version") {
       printVersion();
-      return 0;
+    } else if (args.command == "analyze") {
+      exit_code = cmdAnalyze(args);
+    } else if (args.command == "dict") {
+      exit_code = cmdDict(args);
+    } else if (args.command == "test") {
+      exit_code = cmdTest(args);
+    } else {
+      printError("Unknown command: " + args.command);
+      printHelp(std::cerr);
+      exit_code = 1;
     }
 
-    // Route to command handlers
-    if (args.command == "analyze") {
-      return cmdAnalyze(args);
+    // iostream buffers can defer failures such as a full output filesystem.
+    // Do not report success after writing only a truncated response.
+    std::cout.flush();
+    if (!std::cout) {
+      printError("Failed to write output");
+      return 1;
     }
-
-    if (args.command == "dict") {
-      return cmdDict(args);
-    }
-
-    if (args.command == "test") {
-      return cmdTest(args);
-    }
-
-    // Unknown command
-    printError("Unknown command: " + args.command);
-    printHelp(std::cerr);
-    return 1;
+    return exit_code;
   } catch (const std::exception& error) {
     printError("Unexpected error: " + std::string(error.what()));
     return 1;

@@ -43,6 +43,7 @@ _FLAG_OPTIONS = {
     "--merge-compounds",
     "--no-core-dict",
     "--no-user-dict",
+    "--skip-env-config",
     "--tag-exclude-basic",
     "--tag-use-surface",
     "--include-particles",
@@ -120,6 +121,11 @@ def _add_analysis_arguments(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Disable the bundled user dictionary",
     )
+    parser.add_argument(
+        "--skip-env-config",
+        action="store_true",
+        help="Ignore scorer configuration environment variables",
+    )
 
     tag_group = parser.add_argument_group("tag output options")
     tag_group.add_argument(
@@ -185,6 +191,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="suzume",
         description="Suzume Japanese tokenizer (Python CLI)",
+        epilog=(
+            "Morpheme start/end offsets refer to normalized text; "
+            "JSON includes it as normalized_text."
+        ),
         allow_abbrev=False,
     )
     parser.add_argument(
@@ -222,6 +232,25 @@ def _without_explicit_command(argv: Sequence[str]) -> list[str]:
     return args
 
 
+def _has_standalone_version_option(argv: Sequence[str]) -> bool:
+    """Return whether a version flag occurs as an option, not text or a value."""
+    index = 0
+    while index < len(argv):
+        argument = argv[index]
+        if argument == "--":
+            return False
+        if argument in _OPTIONS_WITH_VALUES:
+            index += 2
+            continue
+        if argument.startswith(_OPTIONS_WITH_ATTACHED_VALUES):
+            index += 1
+            continue
+        if argument in {"--version", "-v"}:
+            return True
+        index += 1
+    return False
+
+
 def _read_text(parts: Sequence[str], stream: TextIO) -> str:
     if parts:
         text = " ".join(parts)
@@ -240,10 +269,6 @@ def _read_text(parts: Sequence[str], stream: TextIO) -> str:
 
 
 def _load_dictionaries(analyzer: Suzume, paths: Sequence[str]) -> None:
-    binary_paths = [path for path in paths if Path(path).suffix.lower() == ".dic"]
-    if len(binary_paths) > 1:
-        raise ValueError("at most one binary .dic dictionary may be loaded")
-
     for raw_path in paths:
         path = Path(raw_path)
         if path.suffix.lower() == ".dic":
@@ -322,6 +347,7 @@ def _run_analysis(args: argparse.Namespace, parser: argparse.ArgumentParser) -> 
         merge_compounds=args.merge_compounds,
         skip_core_dictionary=args.no_core_dict,
         skip_user_dictionary=args.no_user_dict,
+        skip_env_config=args.skip_env_config,
     ) as analyzer:
         for warning in analyzer.dictionary_warnings:
             print(f"warning: {warning}", file=sys.stderr)
@@ -343,11 +369,13 @@ def _run_analysis(args: argparse.Namespace, parser: argparse.ArgumentParser) -> 
             _write_tags(tags)
             return 0
 
-        morphemes = analyzer.analyze(text)
+        analysis = analyzer.analyze_with_normalized_text(text)
+        morphemes = analysis.morphemes
         if args.format == "json":
             _write_json(
                 {
                     "input": text,
+                    "normalized_text": analysis.normalized_text,
                     "morphemes": [_morpheme_dict(morpheme) for morpheme in morphemes],
                 }
             )
@@ -360,7 +388,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run the CLI and return a process exit code."""
     parser = _build_parser()
     normalized_args = _without_explicit_command(sys.argv[1:] if argv is None else argv)
-    if ("--version" in normalized_args or "-v" in normalized_args) and len(normalized_args) != 1:
+    if _has_standalone_version_option(normalized_args) and len(normalized_args) != 1:
         parser.error("version accepts no other arguments")
     args = parser.parse_args(normalized_args)
     try:

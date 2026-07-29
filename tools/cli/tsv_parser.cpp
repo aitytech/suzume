@@ -5,6 +5,8 @@
 #include <set>
 #include <sstream>
 
+#include "grammar/dictionary_expansion.h"
+
 namespace suzume::cli {
 
 namespace {
@@ -12,6 +14,16 @@ namespace {
 constexpr uintmax_t kMaxDictionarySourceBytes = 64U * 1024U * 1024U;
 
 }  // namespace
+
+std::string tsvWriteFieldIssue(std::string_view value, std::string_view field_name) {
+  if (!value.empty() && value.front() == '#') {
+    return std::string(field_name) + " cannot begin with # because the TSV writer would serialize it as a comment";
+  }
+  if (value.find_first_of("\t\r\n") != std::string_view::npos) {
+    return std::string(field_name) + " cannot contain a tab, carriage return, or newline";
+  }
+  return {};
+}
 
 TsvParser::TsvParser() = default;
 
@@ -100,12 +112,30 @@ size_t TsvParser::validate(const std::vector<TsvEntry>& entries, std::vector<std
         }
       }
     }
+
+    const std::string conjugation_issue = grammar::dictionaryConjugationTypeIssue(entry);
+    if (!conjugation_issue.empty()) {
+      ++issue_count;
+      if (issues != nullptr) {
+        issues->push_back("Invalid conjugation surface" + line_suffix + ": " + entry.surface + " (" +
+                          conjugation_issue + ")");
+      }
+    }
   }
 
   return issue_count;
 }
 
 core::Expected<size_t, core::Error> writeTsvFile(const std::string& path, const std::vector<TsvEntry>& entries) {
+  for (const auto& entry : entries) {
+    if (const std::string issue = tsvWriteFieldIssue(entry.surface, "Surface"); !issue.empty()) {
+      return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, issue));
+    }
+    if (const std::string issue = tsvWriteFieldIssue(entry.lemma, "Lemma"); !issue.empty()) {
+      return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, issue));
+    }
+  }
+
   const std::filesystem::path output_path(path);
   const std::filesystem::path temporary_path = output_path.string() + ".tmp";
   std::ofstream file(temporary_path);

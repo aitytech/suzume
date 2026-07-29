@@ -48,16 +48,11 @@ int InteractiveSession::run() {
     if (!std::getline(std::cin, line)) {
       std::cout << "\n";
       if (modified_) {
-        if (!isTerminal()) {
-          if (!saveEntries()) {
-            printError("Failed to save changes at EOF: " + last_error_);
-            return 1;
-          }
-          std::cerr << "Saved unsaved changes at EOF.\n";
-        } else if (!confirmDiscard()) {
-          printError("Unsaved changes were not discarded");
+        if (!saveEntries()) {
+          printError("Failed to save changes at EOF: " + last_error_);
           return 1;
         }
+        std::cerr << "Saved unsaved changes at EOF.\n";
       }
       return 0;
     }

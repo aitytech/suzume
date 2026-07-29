@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <optional>
@@ -21,6 +22,10 @@ bool InteractiveSession::cmdAdd(const std::vector<std::string>& args) {
   entry.surface = args[0];
   if (entry.surface.empty()) {
     printError("Surface must not be empty");
+    return true;
+  }
+  if (const std::string issue = tsvWriteFieldIssue(entry.surface, "Surface"); !issue.empty()) {
+    printError(issue);
     return true;
   }
 
@@ -345,6 +350,27 @@ bool InteractiveSession::cmdCompile(const std::vector<std::string>& args) {
   }
 
   const std::string& output_path = args[0];
+  if (!hasExtension(output_path, ".dic")) {
+    printError("Output file must have .dic extension: " + output_path);
+    return true;
+  }
+
+  namespace fs = std::filesystem;
+  std::error_code error;
+  const fs::path input_canonical = fs::weakly_canonical(tsv_path_, error);
+  if (error) {
+    printError("Cannot resolve dictionary source path: " + error.message());
+    return true;
+  }
+  const fs::path output_canonical = fs::weakly_canonical(output_path, error);
+  if (error) {
+    printError("Cannot resolve dictionary output path: " + error.message());
+    return true;
+  }
+  if (input_canonical == output_canonical) {
+    printError("Refusing to overwrite dictionary source: " + output_path);
+    return true;
+  }
 
   DictCompiler compiler;
   auto result = compiler.compile(tsv_path_, output_path);
@@ -450,7 +476,7 @@ bool InteractiveSession::cmdHelp(const std::vector<std::string>& /* args */) {
       Show this help
 
   quit
-      Exit (prompts to save if modified)
+      Exit; saves modified entries non-interactively, or confirms before discarding them in a terminal
 )";
   return true;
 }
@@ -578,6 +604,9 @@ bool InteractiveSession::cmdImport(const std::vector<std::string>& args) {
   for (size_t idx = 1; idx < args.size(); ++idx) {
     if (args[idx] == "--skip-duplicates") {
       skip_duplicates = true;
+    } else {
+      printError("Unknown import option: " + args[idx]);
+      return true;
     }
   }
 

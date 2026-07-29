@@ -33,6 +33,7 @@ _JSON_MORPHEME_KEYS = [
 
 class _JsonPayload(TypedDict):
     input: str
+    normalized_text: str
     morphemes: list[dict[str, object]]
 
 
@@ -148,8 +149,9 @@ def test_json_output_matches_native_schema_exactly() -> None:
     result = _run_cli("analyze", "--format", "json", "東京の公園")
     assert result.returncode == 0
     payload = json.loads(result.stdout)
-    assert list(payload) == ["input", "morphemes"]
+    assert list(payload) == ["input", "normalized_text", "morphemes"]
     assert payload["input"] == "東京の公園"
+    assert payload["normalized_text"] == "東京の公園"
     assert payload["morphemes"]
     assert list(payload["morphemes"][0]) == _JSON_MORPHEME_KEYS
     assert "\\u6771" not in result.stdout
@@ -288,6 +290,20 @@ def test_normalization_and_symbol_options_change_analysis() -> None:
     assert any(morpheme["surface"] == "。" for morpheme in preserved["morphemes"])
 
 
+@pytest.mark.parametrize(
+    ("input_text", "expected_normalized"),
+    [("ﾊﾞｽに乗る", "バスに乗る"), ("ＡＢＣ１２３", "ABC123")],
+)
+def test_json_offsets_slice_normalized_text(input_text: str, expected_normalized: str) -> None:
+    payload = _json_result(input_text)
+    assert payload["input"] == input_text
+    assert payload["normalized_text"] == expected_normalized
+    for morpheme in payload["morphemes"]:
+        start = cast(int, morpheme["start"])
+        end = cast(int, morpheme["end"])
+        assert payload["normalized_text"][start:end] == morpheme["surface"]
+
+
 def test_tag_and_chasen_outputs() -> None:
     tags = _run_cli(
         "--format",
@@ -406,12 +422,21 @@ def test_invalid_binary_dictionary_fails(tmp_path: Path) -> None:
     assert "Dictionary file too small" in result.stderr
 
 
-def test_more_than_one_binary_dictionary_is_rejected(tmp_path: Path) -> None:
+def test_multiple_binary_dictionaries_load_additively(tmp_path: Path) -> None:
+    repository_root = Path(__file__).resolve().parents[3]
+    source_dictionary = repository_root / "data" / "user.dic"
     first = tmp_path / "first.dic"
     second = tmp_path / "second.dic"
+    first.write_bytes(source_dictionary.read_bytes())
+    second.write_bytes(source_dictionary.read_bytes())
     result = _run_cli("--dict", str(first), "--dict", str(second), "東京")
-    assert result.returncode == 1
-    assert "at most one binary .dic dictionary" in result.stderr
+    assert result.returncode == 0, result.stderr
+
+
+def test_version_marker_after_double_dash_is_analyzed_as_text() -> None:
+    result = _run_cli("--", "-v")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout
 
 
 @pytest.mark.parametrize(
@@ -459,8 +484,8 @@ def test_dictionary_warnings_are_written_to_stderr(
         def __exit__(self, *args: object) -> None:
             pass
 
-        def analyze(self, text: str) -> list[suzume.Morpheme]:
-            return []
+        def analyze_with_normalized_text(self, text: str) -> suzume.AnalysisResult:
+            return suzume.AnalysisResult(normalized_text=text, morphemes=[])
 
     monkeypatch.setattr(cli, "Suzume", WarningAnalyzer)
     parser = cli._build_parser()
@@ -486,15 +511,16 @@ def test_dictionary_disable_flags_are_passed_to_analyzer(
         def __exit__(self, *args: object) -> None:
             pass
 
-        def analyze(self, text: str) -> list[suzume.Morpheme]:
-            return []
+        def analyze_with_normalized_text(self, text: str) -> suzume.AnalysisResult:
+            return suzume.AnalysisResult(normalized_text=text, morphemes=[])
 
     monkeypatch.setattr(cli, "Suzume", CapturingAnalyzer)
     parser = cli._build_parser()
-    args = parser.parse_args(["--no-core-dict", "--no-user-dict", "東京"])
+    args = parser.parse_args(["--no-core-dict", "--no-user-dict", "--skip-env-config", "東京"])
     assert cli._run_analysis(args, parser) == 0
     assert captured["skip_core_dictionary"] is True
     assert captured["skip_user_dictionary"] is True
+    assert captured["skip_env_config"] is True
 
 
 def test_invalid_utf8_stdin_fails_cleanly() -> None:

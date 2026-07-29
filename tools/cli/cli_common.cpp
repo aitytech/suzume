@@ -26,6 +26,19 @@ bool isKnownCommand(std::string_view value) {
   return value == "analyze" || value == "dict" || value == "test" || value == "version" || value == "help";
 }
 
+bool isKnownOption(std::string_view value) {
+  return value == "--" || value == "-h" || value == "--help" || value == "-v" || value == "--version" ||
+         value == "-V" || value == "--verbose" || value == "-VV" || value == "--very-verbose" || value == "--debug" ||
+         value == "-d" || value == "--dict" || value == "-m" || value == "--mode" || value == "-f" ||
+         value == "--format" || value == "--no-user-dict" || value == "--no-core-dict" ||
+         value == "--skip-env-config" || value == "--compare" || value == "--normalize-vu" || value == "--lowercase" ||
+         value == "--preserve-symbols" || value == "--no-lemmatize" || value == "--merge-compounds" ||
+         value == "--include-particles" || value == "--include-auxiliaries" || value == "--include-formal-nouns" ||
+         value == "--include-low-info" || value == "--tag-keep-duplicates" || value == "--tag-use-surface" ||
+         value == "--tag-pos" || value == "--tag-exclude-basic" || value == "--tag-min-length" ||
+         value == "--tag-max-tags" || value == "--expect" || value == "--file";
+}
+
 bool isValidMode(std::string_view value) {
   return value == "normal" || value == "search" || value == "split";
 }
@@ -52,7 +65,7 @@ bool tryParseOutputFormat(std::string_view value, OutputFormat* output) {
 
 bool takeOptionValue(int argc, char* argv[], int* index, std::string_view option, std::string* value,
                      std::string* error) {
-  if (*index + 1 >= argc || argv[*index + 1][0] == '-') {
+  if (*index + 1 >= argc || isKnownOption(argv[*index + 1])) {
     *error = "Missing value for " + std::string(option);
     return false;
   }
@@ -70,6 +83,10 @@ bool parseTagPos(std::string_view value, uint8_t* filter) {
     bit = postprocess::kTagPosAdjective;
   } else if (value == "adverb") {
     bit = postprocess::kTagPosAdverb;
+  } else if (value == "particle") {
+    bit = postprocess::kTagPosParticle;
+  } else if (value == "auxiliary") {
+    bit = postprocess::kTagPosAuxiliary;
   } else {
     return false;
   }
@@ -611,7 +628,8 @@ CommandArgs parseArgs(int argc, char* argv[]) {
         return args;
       }
       if (!parseTagPos(value, &args.tag_pos_filter)) {
-        args.parse_error = "Invalid --tag-pos value: " + value + " (expected noun, verb, adjective, or adverb)";
+        args.parse_error =
+            "Invalid --tag-pos value: " + value + " (expected noun, verb, adjective, adverb, particle, or auxiliary)";
         return args;
       }
       ++idx;
@@ -620,7 +638,8 @@ CommandArgs parseArgs(int argc, char* argv[]) {
     if (arg.rfind("--tag-pos=", 0) == 0) {
       std::string value = arg.substr(std::strlen("--tag-pos="));
       if (!parseTagPos(value, &args.tag_pos_filter)) {
-        args.parse_error = "Invalid --tag-pos value: " + value + " (expected noun, verb, adjective, or adverb)";
+        args.parse_error =
+            "Invalid --tag-pos value: " + value + " (expected noun, verb, adjective, adverb, particle, or auxiliary)";
         return args;
       }
       ++idx;
@@ -716,11 +735,11 @@ Global Options:
   -f, --format FMT       Output format: morpheme, tags, json, tsv, chasen
   -V, --verbose          Verbose output
   -VV, --very-verbose    Very verbose output (includes lattice dump)
-  --debug                Enable basic debug logging (same as SUZUME_DEBUG=1)
+  --debug                Write lattice diagnostics to stderr; preserves the selected output format
   --no-user-dict         Disable user dictionary
   --no-core-dict         Disable auto-loaded core.dic
   --skip-env-config      Ignore scorer configuration environment variables
-  --compare              Compare with/without user dictionary
+  --compare              Write user-dictionary comparison diagnostics to stderr; preserves output format
   --normalize-vu         Normalize ヴ to ビ etc. (default: preserve)
   --lowercase            Convert ASCII to lowercase (default: preserve)
   --preserve-symbols     Keep symbols/emoji in output (default: remove)
@@ -732,12 +751,14 @@ Global Options:
   --include-low-info     Include low-information words in tag output
   --tag-keep-duplicates  Keep duplicate tags
   --tag-use-surface      Use surface instead of lemma for tags
-  --tag-pos POS          Include noun, verb, adjective, or adverb (repeatable)
+  --tag-pos POS          Include noun, verb, adjective, adverb, particle, or auxiliary (repeatable)
   --tag-exclude-basic    Exclude hiragana-only basic words
   --tag-min-length N     Minimum tag length (default: 2)
   --tag-max-tags N       Maximum tags (default: 0, unlimited)
   -h, --help             Show help
   -v, --version          Show version
+
+Long options that take a value also accept --option=value.
 
 Environment:
   SUZUME_DEBUG           Debug level: 1=basic, 2=detailed, 3=trace
@@ -769,11 +790,11 @@ Options:
   -f, --format FMT       Output format: morpheme, tags, json, tsv, chasen
   -V, --verbose          Verbose output
   -VV, --very-verbose    Very verbose output (includes lattice dump)
-  --debug                Enable basic debug logging (same as SUZUME_DEBUG=1)
+  --debug                Write lattice diagnostics to stderr; preserves the selected output format
   --no-user-dict         Disable user dictionary
   --no-core-dict         Disable auto-loaded core.dic
   --skip-env-config      Ignore scorer configuration environment variables
-  --compare              Compare with/without user dictionary
+  --compare              Write user-dictionary comparison diagnostics to stderr; preserves output format
   --normalize-vu         Normalize ヴ to ビ etc. (default: preserve)
   --lowercase            Convert ASCII to lowercase (default: preserve)
   --preserve-symbols     Keep symbols/emoji in output (default: remove)
@@ -785,11 +806,13 @@ Options:
   --include-low-info     Include low-information words in tag output
   --tag-keep-duplicates  Keep duplicate tags
   --tag-use-surface      Use surface instead of lemma for tags
-  --tag-pos POS          Include noun, verb, adjective, or adverb (repeatable)
+  --tag-pos POS          Include noun, verb, adjective, adverb, particle, or auxiliary (repeatable)
   --tag-exclude-basic    Exclude hiragana-only basic words
   --tag-min-length N     Minimum tag length (default: 2)
   --tag-max-tags N       Maximum tags (default: 0, unlimited)
   -h, --help             Show this help
+
+Long options that take a value also accept --option=value.
 
 Output Formats:
   morpheme               surface TAB pos TAB lemma TAB start TAB end (default)
@@ -798,6 +821,7 @@ Output Formats:
   tsv                    Alias of morpheme
   chasen                 ChaSen-like format (Japanese POS, conjugation info)
   TAB formats escape backslash, TAB, CR, and LF as \\, \t, \r, and \n
+  Morpheme start/end offsets refer to normalized text; JSON includes it as normalized_text
 
 Examples:
   suzume-cli "text"
@@ -830,10 +854,10 @@ Subcommands:
                          List entries in TSV or binary dictionary
   search <file> <pattern>
                          Search entries by pattern in file
-  lookup <word>          Look up word in built-in L1 and source L2 TSV files
+  lookup <word> [file...] Look up word in L1, core/user sources, and optional dictionaries
   new <file.tsv>         Create new dictionary file
-  info [file]            Show dictionary information
-  validate [file]        Validate dictionary
+  info <file>            Show dictionary information
+  validate <file>        Validate dictionary
   compile <in.tsv> [out.dic]
                          Compile to binary format (default: in.dic)
   compile <in1.tsv> <in2.tsv>... <out.dic>
@@ -846,7 +870,7 @@ Subcommands:
                          Interactive mode
 
 Environment:
-  SUZUME_DATA_DIR        Data root; source lookup reads core/*.tsv below it
+  SUZUME_DATA_DIR        Data root; source lookup reads core/*.tsv and user/*.tsv below it
 
 POS Values:
   NOUN, PROPN, VERB, ADJECTIVE, ADVERB, PARTICLE, AUXILIARY,

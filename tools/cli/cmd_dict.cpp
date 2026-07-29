@@ -37,6 +37,8 @@ std::string formNameFromConnId(uint16_t conn_id) {
       return "音便形";
     case kVerbPotential:
       return "可能形";
+    case kIAdjStem:
+      return "語幹";
     case kVerbVolitional:
       return "意志形";
     case kVerbKatei:
@@ -107,6 +109,17 @@ int cmdDictNew(const std::vector<std::string>& args, bool /* verbose */) {
           "I_ADJ, NA_ADJ,\n";
   file << "#   FAMILY, GIVEN\n";
   file << "\n";
+
+  file.flush();
+  if (!file) {
+    printError("Failed to write file: " + path);
+    return 1;
+  }
+  file.close();
+  if (!file) {
+    printError("Failed to finalize file: " + path);
+    return 1;
+  }
 
   std::cout << "Created: " << path << "\n";
   return 0;
@@ -294,6 +307,11 @@ int cmdDictCompile(const std::vector<std::string>& args, bool verbose) {
     auto& expanded = expanded_result.value();
     if (expanded.size() == 1 && expanded[0] == tsv_path) {
       // No glob expansion, single file compile
+      if (std::filesystem::exists(dic_path)) {
+        printError("Refusing to overwrite inferred dictionary output: " + dic_path +
+                   " (specify an explicit output .dic path)");
+        return 1;
+      }
       auto result = compiler.compile(tsv_path, dic_path);
       if (!result.hasValue()) {
         printError("Compile error: " + result.error().message);
@@ -304,16 +322,26 @@ int cmdDictCompile(const std::vector<std::string>& args, bool verbose) {
       return 0;
     }
 
-    // Glob expanded to multiple files - need an output path
-    // Use the directory name as base: data/core/*.tsv -> data/core.dic
+    // Only a directory-wide *.tsv glob has an unambiguous aggregate output.
+    // A subset glob such as adj*.tsv must never be allowed to silently replace
+    // the directory's full .dic file.
     namespace fs = std::filesystem;
     fs::path p(tsv_path);
     fs::path dir = p.parent_path();
-    if (dir.empty()) {
-      printError("A glob without a directory requires an explicit output .dic path");
+    if (dir.empty() || p.filename() != "*.tsv") {
+      printError("A subset glob requires an explicit output .dic path");
       return 1;
     }
     dic_path = dir.string() + ".dic";
+
+    // This output was inferred rather than explicitly named.  Refuse to
+    // replace an existing dictionary, which may contain shards outside the
+    // glob match set.
+    if (fs::exists(dic_path)) {
+      printError("Refusing to overwrite inferred dictionary output: " + dic_path +
+                 " (specify an explicit output .dic path)");
+      return 1;
+    }
 
     auto result = compiler.compileMultiple(expanded, dic_path);
     if (!result.hasValue()) {
@@ -471,8 +499,8 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
         continue;
       }
 
-      std::cout << entry->surface << "\t" << core::posToString(entry->pos) << "\t" << entry->lemma << "\t"
-                << 0.0F /* v0.8: cost removed */ << "\n";
+      std::cout << tabEscape(entry->surface) << "\t" << core::posToString(entry->pos) << "\t" << tabEscape(entry->lemma)
+                << "\n";
 
       ++count;
       if (limitReached(count, limit)) {
@@ -499,7 +527,8 @@ int cmdDictList(const std::vector<std::string>& args, bool /* verbose */) {
         continue;
       }
 
-      std::cout << entry.surface << "\t" << core::posToString(entry.pos) << "\n";
+      std::cout << tabEscape(entry.surface) << "\t" << core::posToString(entry.pos) << "\t"
+                << tabEscape(entry.lemma.empty() ? entry.surface : entry.lemma) << "\n";
 
       ++count;
       if (limitReached(count, limit)) {
@@ -564,7 +593,7 @@ int cmdDictSearch(const std::vector<std::string>& args, bool /* verbose */) {
 
 int cmdDictLookup(const std::vector<std::string>& args, bool /* verbose */) {
   if (args.empty()) {
-    printError("Usage: suzume-cli dict lookup <word>");
+    printError("Usage: suzume-cli dict lookup <word> [dictionary ...]");
     return 1;
   }
 
@@ -597,43 +626,94 @@ int cmdDictLookup(const std::vector<std::string>& args, bool /* verbose */) {
     std::cout << "(" << l1_count << " entries)\n";
   }
 
-  // Search L2 (TSV dictionary)
+  // Search editable L2 and user dictionary sources.  SUZUME_DATA_DIR names
+  // the data root, so both directories are relative to it.
   std::cout << "\n=== L2 (core/*.tsv source) ===\n";
-
-  // SUZUME_DATA_DIR always names the data root: compiled core.dic lives at
-  // its root and editable source files live in its core/ child.
-  std::string tsv_dir;
+  std::filesystem::path data_root = "data";
   const char* data_dir = std::getenv("SUZUME_DATA_DIR");
   if (data_dir != nullptr) {
-    tsv_dir = (std::filesystem::path(data_dir) / "core").string();
-  } else {
-    tsv_dir = "data/core";
+    data_root = data_dir;
   }
 
-  TsvParser parser;
-  size_t l2_count = 0;
-  bool tsv_found = false;
-
   namespace fs = std::filesystem;
-  if (fs::exists(tsv_dir) && fs::is_directory(tsv_dir)) {
-    for (const auto& entry : fs::directory_iterator(tsv_dir)) {
-      if (entry.path().extension() == ".tsv") {
-        auto result = parser.parseFile(entry.path().string());
+  size_t source_count = 0;
+  auto search_tsv_directory = [&](const fs::path& tsv_dir) {
+    bool tsv_found = false;
+    if (fs::exists(tsv_dir) && fs::is_directory(tsv_dir)) {
+      for (const auto& entry : fs::directory_iterator(tsv_dir)) {
+        if (entry.path().extension() == ".tsv") {
+          TsvParser parser;
+          auto result = parser.parseFile(entry.path().string());
+          if (!result.hasValue()) {
+            printWarning("Failed to parse source TSV " + entry.path().string() + ": " + result.error().message);
+            continue;
+          }
+          tsv_found = true;
+          for (const auto& e : result.value()) {
+            if (e.surface == word) {
+              std::cout << e.surface << "\t" << core::posToString(e.pos);
+              if (e.conj_type != dictionary::ConjugationType::None) {
+                std::cout << "\t(" << conjTypeToString(e.conj_type) << ")";
+              }
+              std::cout << " [" << entry.path().filename().string() << "]\n";
+              if (e.conj_type != dictionary::ConjugationType::None) {
+                printConjugationStems(e.surface, e.conj_type);
+              }
+              ++source_count;
+              found = true;
+            }
+          }
+        }
+      }
+    }
+    return tsv_found;
+  };
+
+  const fs::path core_dir = data_root / "core";
+  const bool core_sources_found = search_tsv_directory(core_dir);
+  if (!core_sources_found) {
+    printWarning("No TSV files found in: " + core_dir.string());
+  }
+
+  std::cout << "\n=== User (user/*.tsv source) ===\n";
+  const fs::path user_dir = data_root / "user";
+  const bool user_sources_found = search_tsv_directory(user_dir);
+  if (!user_sources_found) {
+    printWarning("No TSV files found in: " + user_dir.string());
+  }
+
+  if (args.size() > 1) {
+    std::cout << "\n=== Additional dictionaries ===\n";
+    for (size_t index = 1; index < args.size(); ++index) {
+      const fs::path path(args[index]);
+      if (path.extension() == ".dic") {
+        dictionary::BinaryDictionary dictionary;
+        auto result = dictionary.loadFromFile(path.string());
         if (!result.hasValue()) {
+          printWarning("Failed to load dictionary " + path.string() + ": " + result.error().message);
           continue;
         }
-        tsv_found = true;
-        for (const auto& e : result.value()) {
-          if (e.surface == word) {
-            std::cout << e.surface << "\t" << core::posToString(e.pos);
-            if (e.conj_type != dictionary::ConjugationType::None) {
-              std::cout << "\t(" << conjTypeToString(e.conj_type) << ")";
-            }
-            std::cout << " [" << entry.path().filename().string() << "]\n";
-            if (e.conj_type != dictionary::ConjugationType::None) {
-              printConjugationStems(e.surface, e.conj_type);
-            }
-            ++l2_count;
+        for (size_t entry_index = 0; entry_index < dictionary.size(); ++entry_index) {
+          const auto* entry = dictionary.getEntry(static_cast<uint32_t>(entry_index));
+          if (entry != nullptr && entry->surface == word) {
+            std::cout << entry->surface << "\t" << core::posToString(entry->pos) << " [" << path.filename().string()
+                      << "]\n";
+            ++source_count;
+            found = true;
+          }
+        }
+      } else {
+        TsvParser parser;
+        auto result = parser.parseFile(path.string());
+        if (!result.hasValue()) {
+          printWarning("Failed to parse dictionary " + path.string() + ": " + result.error().message);
+          continue;
+        }
+        for (const auto& entry : result.value()) {
+          if (entry.surface == word) {
+            std::cout << entry.surface << "\t" << core::posToString(entry.pos) << " [" << path.filename().string()
+                      << "]\n";
+            ++source_count;
             found = true;
           }
         }
@@ -641,14 +721,10 @@ int cmdDictLookup(const std::vector<std::string>& args, bool /* verbose */) {
     }
   }
 
-  if (!tsv_found) {
-    printWarning("No TSV files found in: " + tsv_dir);
-  }
-
-  if (l2_count == 0 && tsv_found) {
+  if (source_count == 0) {
     std::cout << "(not found)\n";
-  } else if (l2_count > 0) {
-    std::cout << "(" << l2_count << " entries)\n";
+  } else {
+    std::cout << "(" << source_count << " source entries)\n";
   }
 
   return found ? 0 : 1;

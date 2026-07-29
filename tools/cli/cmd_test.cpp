@@ -216,7 +216,11 @@ int cmdTestFile(const std::vector<std::string>& args, const CommandArgs& command
   std::string test_file;
 
   for (size_t idx = 0; idx < args.size(); ++idx) {
-    if ((args[idx] == "-f" || args[idx] == "--file") && idx + 1 < args.size()) {
+    if (args[idx] == "-f" || args[idx] == "--file") {
+      if (idx + 1 >= args.size()) {
+        printError("Missing value for " + args[idx]);
+        return 1;
+      }
       test_file = args[++idx];
     } else if (args[idx].rfind("--file=", 0) == 0) {
       test_file = args[idx].substr(7);

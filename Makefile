@@ -310,7 +310,10 @@ python-build:
 	@echo "Shared library built: build-shared/lib/"
 
 # Run the Python binding test suite in the rye-managed venv
-python-dict: dict
+python-dict: build
+	@echo "Building dictionaries for the Python test package (git-tracked user entries only)..."
+	$(BUILD_DIR)/bin/suzume-cli dict compile data/core/*.tsv data/core.dic
+	$(BUILD_DIR)/bin/suzume-cli dict compile $$(git ls-files 'data/user/*.tsv') data/user.dic
 	cmake -E copy_if_different data/core.dic bindings/python/src/suzume/core.dic
 	cmake -E copy_if_different data/user.dic bindings/python/src/suzume/user.dic
 

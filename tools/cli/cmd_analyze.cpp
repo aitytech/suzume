@@ -11,15 +11,16 @@
 #include "grammar/conjugation.h"
 #include "normalize/utf8.h"
 #include "suzume.h"
+#include "suzume/suzume_c.h"
 
 namespace suzume::cli {
 
 namespace {
 
-void outputMorphemes(const std::vector<core::Morpheme>& morphemes) {
+void outputMorphemes(std::ostream& output, const std::vector<core::Morpheme>& morphemes) {
   for (const auto& morpheme : morphemes) {
-    std::cout << tabEscape(morpheme.surface) << "\t" << core::posToString(morpheme.pos) << "\t"
-              << tabEscape(morpheme.lemma) << "\t" << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
+    output << tabEscape(morpheme.surface) << "\t" << core::posToString(morpheme.pos) << "\t"
+           << tabEscape(morpheme.lemma) << "\t" << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
   }
 }
 
@@ -29,9 +30,11 @@ void outputTags(const std::vector<postprocess::TagEntry>& tags) {
   }
 }
 
-void outputJson(const std::string& input, const std::vector<core::Morpheme>& morphemes) {
+void outputJson(const std::string& input, const std::string& normalized_text,
+                const std::vector<core::Morpheme>& morphemes) {
   std::cout << "{\n";
   std::cout << R"(  "input": ")" << jsonEscape(input) << "\",\n";
+  std::cout << R"(  "normalized_text": ")" << jsonEscape(normalized_text) << "\",\n";
   std::cout << "  \"morphemes\": [\n";
 
   for (size_t idx = 0; idx < morphemes.size(); ++idx) {
@@ -74,10 +77,11 @@ void outputChasen(const std::vector<core::Morpheme>& morphemes) {
     // Part of speech (Japanese)
     std::cout << core::posToJapanese(mor.pos) << "\t";
 
-    // Conjugation type and form (for verbs and adjectives)
-    if (mor.pos == core::PartOfSpeech::Verb || mor.pos == core::PartOfSpeech::Adjective) {
-      auto verb_type = grammar::conjTypeToVerbType(mor.conj_type);
-      const std::string conjugation_type(grammar::verbTypeToJapanese(verb_type));
+    // Conjugation type and form (for verbs, adjectives, and auxiliaries).
+    if (mor.pos == core::PartOfSpeech::Verb || mor.pos == core::PartOfSpeech::Adjective ||
+        mor.pos == core::PartOfSpeech::Auxiliary) {
+      const char* canonical_type = suzume_conjugation_type_label(static_cast<suzume_conjugation_type_t>(mor.conj_type));
+      const std::string conjugation_type = canonical_type != nullptr ? canonical_type : "";
       const std::string conjugation_form(grammar::conjFormToJapanese(mor.conj_form));
       std::cout << (conjugation_type.empty() ? "*" : conjugation_type) << "\t";
       std::cout << (conjugation_form.empty() ? "*" : conjugation_form);
@@ -104,9 +108,9 @@ bool sameStructure(const core::Morpheme& left, const core::Morpheme& right) {
          left.start_pos == right.start_pos && left.end_pos == right.end_pos;
 }
 
-void outputDiffMorpheme(std::string_view marker, size_t index, const core::Morpheme& morpheme) {
-  std::cout << marker << index << ": " << tabEscape(morpheme.surface) << "\t" << core::posToString(morpheme.pos) << "\t"
-            << tabEscape(morpheme.lemma) << "\t" << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
+void outputDiffMorpheme(std::ostream& output, std::string_view marker, size_t index, const core::Morpheme& morpheme) {
+  output << marker << index << ": " << tabEscape(morpheme.surface) << "\t" << core::posToString(morpheme.pos) << "\t"
+         << tabEscape(morpheme.lemma) << "\t" << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
 }
 
 }  // namespace
@@ -133,6 +137,10 @@ int cmdAnalyze(const CommandArgs& args) {
     // Read stdin byte-for-byte so embedded newlines are preserved.
     std::ostringstream oss;
     oss << std::cin.rdbuf();
+    if (std::cin.bad()) {
+      printError("Failed to read input");
+      return 1;
+    }
     text = oss.str();
   }
   stripUtf8Bom(&text);
@@ -207,117 +215,131 @@ int cmdAnalyze(const CommandArgs& args) {
     for (const auto& warning : base_analyzer.dictionaryWarnings()) {
       printWarning(warning);
     }
-    auto base_morphemes = base_analyzer.analyze(text);
+    auto base_analysis = base_analyzer.analyzeWithNormalizedTextResult(text);
+    if (!base_analysis.hasValue()) {
+      printError("Analysis failed: " + base_analysis.error().message);
+      return 1;
+    }
+    auto base_morphemes = std::move(base_analysis.value().morphemes);
 
-    std::cout << "[Without user dictionary]\n";
-    outputMorphemes(base_morphemes);
-    std::cout << "\n";
+    std::cerr << "[Without user dictionary]\n";
+    outputMorphemes(std::cerr, base_morphemes);
+    std::cerr << "\n";
 
     // Analyze with user dictionary
-    auto morphemes = analyzer.analyze(text);
+    auto analysis = analyzer.analyzeWithNormalizedTextResult(text);
+    if (!analysis.hasValue()) {
+      printError("Analysis failed: " + analysis.error().message);
+      return 1;
+    }
+    auto morphemes = std::move(analysis.value().morphemes);
 
-    std::cout << "[With user dictionary]\n";
-    outputMorphemes(morphemes);
-    std::cout << "\n";
+    std::cerr << "[With user dictionary]\n";
+    outputMorphemes(std::cerr, morphemes);
+    std::cerr << "\n";
 
     // Compare the public structural tuple rather than only the token count.
-    std::cout << "[Diff]\n";
+    std::cerr << "[Diff]\n";
     bool has_difference = base_morphemes.size() != morphemes.size();
     const size_t shared_count = std::min(base_morphemes.size(), morphemes.size());
     for (size_t index = 0; index < shared_count; ++index) {
       if (!sameStructure(base_morphemes[index], morphemes[index])) {
         has_difference = true;
-        outputDiffMorpheme("- ", index, base_morphemes[index]);
-        outputDiffMorpheme("+ ", index, morphemes[index]);
+        outputDiffMorpheme(std::cerr, "- ", index, base_morphemes[index]);
+        outputDiffMorpheme(std::cerr, "+ ", index, morphemes[index]);
       }
     }
     for (size_t index = shared_count; index < base_morphemes.size(); ++index) {
-      outputDiffMorpheme("- ", index, base_morphemes[index]);
+      outputDiffMorpheme(std::cerr, "- ", index, base_morphemes[index]);
     }
     for (size_t index = shared_count; index < morphemes.size(); ++index) {
-      outputDiffMorpheme("+ ", index, morphemes[index]);
+      outputDiffMorpheme(std::cerr, "+ ", index, morphemes[index]);
     }
     if (!has_difference) {
-      std::cout << "No structural difference\n";
+      std::cerr << "No structural difference\n";
     }
-
-    return 0;
   }
 
   // Debug mode - show lattice candidates
   if (args.debug) {
-    std::cout << "=== Debug Mode ===\n";
-    std::cout << "Input: \"" << text << "\"\n\n";
+    auto analysis = analyzer.analyzeWithNormalizedTextResult(text);
+    if (!analysis.hasValue()) {
+      printError("Analysis failed: " + analysis.error().message);
+      return 1;
+    }
+    std::cerr << "=== Debug Mode ===\n";
+    std::cerr << "Input: \"" << text << "\"\n\n";
+    std::cerr << "Normalized text: \"" << analysis.value().normalized_text << "\"\n\n";
 
     core::Lattice lattice(0);
     auto morphemes = analyzer.analyzeDebug(text, &lattice);
 
-    std::cout << "\n=== Lattice Candidates ===\n";
+    std::cerr << "\n=== Lattice Candidates ===\n";
     for (size_t pos = 0; pos < lattice.textLength(); ++pos) {
       const auto& edges = lattice.edgesAt(pos);
       if (!edges.empty()) {
-        std::cout << "Position " << pos << ":\n";
+        std::cerr << "Position " << pos << ":\n";
         for (const auto& edge : edges) {
-          std::cout << "  [" << edge.start << "-" << edge.end << "] " << edge.surface << " ("
+          std::cerr << "  [" << edge.start << "-" << edge.end << "] " << edge.surface << " ("
                     << core::posToString(edge.pos) << ") cost=" << edge.cost;
           if (!edge.lemma.empty()) {
-            std::cout << " lemma=" << edge.lemma;
+            std::cerr << " lemma=" << edge.lemma;
           }
           // Show source info
           if (edge.fromDictionary()) {
-            std::cout << " [dict";
+            std::cerr << " [dict";
             if (edge.fromUserDict()) {
-              std::cout << ":user";
+              std::cerr << ":user";
             }
-            std::cout << "]";
+            std::cerr << "]";
           }
           if (edge.isUnknown()) {
-            std::cout << " [unk]";
+            std::cerr << " [unk]";
           }
-          std::cout << " id=" << edge.id;
-          std::cout << "\n";
+          std::cerr << " id=" << edge.id;
+          std::cerr << "\n";
         }
       }
     }
 
-    std::cout << "\n=== Result ===\n";
-    outputMorphemes(morphemes);
+    std::cerr << "\n=== Result ===\n";
+    outputMorphemes(std::cerr, morphemes);
+  }
+
+  if (args.format == OutputFormat::Tags) {
+    postprocess::TagGeneratorOptions tag_options;
+    tag_options.exclude_particles = !args.tag_include_particles;
+    tag_options.exclude_auxiliaries = !args.tag_include_auxiliaries;
+    tag_options.exclude_formal_nouns = !args.tag_include_formal_nouns;
+    tag_options.exclude_low_info = !args.tag_include_low_info;
+    tag_options.remove_duplicates = !args.tag_keep_duplicates;
+    tag_options.use_lemma = !args.tag_use_surface;
+    tag_options.min_tag_length = args.tag_min_length;
+    tag_options.max_tags = args.tag_max_tags;
+    tag_options.pos_filter = args.tag_pos_filter;
+    tag_options.exclude_basic = args.tag_exclude_basic;
+    outputTags(analyzer.generateTags(text, tag_options));
     return 0;
   }
 
-  // Normal analysis
+  auto analysis = analyzer.analyzeWithNormalizedTextResult(text);
+  if (!analysis.hasValue()) {
+    printError("Analysis failed: " + analysis.error().message);
+    return 1;
+  }
+  const auto& output = analysis.value();
   switch (args.format) {
-    case OutputFormat::Morpheme: {
-      auto morphemes = analyzer.analyze(text);
-      outputMorphemes(morphemes);
+    case OutputFormat::Morpheme:
+      outputMorphemes(std::cout, output.morphemes);
       break;
-    }
-    case OutputFormat::Tags: {
-      postprocess::TagGeneratorOptions tag_options;
-      tag_options.exclude_particles = !args.tag_include_particles;
-      tag_options.exclude_auxiliaries = !args.tag_include_auxiliaries;
-      tag_options.exclude_formal_nouns = !args.tag_include_formal_nouns;
-      tag_options.exclude_low_info = !args.tag_include_low_info;
-      tag_options.remove_duplicates = !args.tag_keep_duplicates;
-      tag_options.use_lemma = !args.tag_use_surface;
-      tag_options.min_tag_length = args.tag_min_length;
-      tag_options.max_tags = args.tag_max_tags;
-      tag_options.pos_filter = args.tag_pos_filter;
-      tag_options.exclude_basic = args.tag_exclude_basic;
-      auto tags = analyzer.generateTags(text, tag_options);
-      outputTags(tags);
+    case OutputFormat::Json:
+      outputJson(text, output.normalized_text, output.morphemes);
       break;
-    }
-    case OutputFormat::Json: {
-      auto morphemes = analyzer.analyze(text);
-      outputJson(text, morphemes);
+    case OutputFormat::Chasen:
+      outputChasen(output.morphemes);
       break;
-    }
-    case OutputFormat::Chasen: {
-      auto morphemes = analyzer.analyze(text);
-      outputChasen(morphemes);
+    case OutputFormat::Tags:
       break;
-    }
   }
 
   return 0;

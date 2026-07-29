@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+import pty
 import re
+import select
 import subprocess
 import sys
 import tempfile
@@ -49,11 +51,47 @@ def run_cli(
     return result
 
 
+def read_pty_until(master: int, needle: bytes) -> bytes:
+    output = bytearray()
+    while needle not in output:
+        readable, _, _ = select.select([master], [], [], 5)
+        if not readable:
+            raise AssertionError(f"PTY did not produce {needle!r}; got {bytes(output)!r}")
+        try:
+            chunk = os.read(master, 4096)
+        except OSError as exc:
+            raise AssertionError(f"PTY closed before producing {needle!r}: {bytes(output)!r}") from exc
+        if not chunk:
+            raise AssertionError(f"PTY closed before producing {needle!r}: {bytes(output)!r}")
+        output.extend(chunk)
+    return bytes(output)
+
+
+def assert_terminal_eof_saves_edits(cli: Path, source: Path) -> None:
+    master, slave = pty.openpty()
+    process = subprocess.Popen([str(cli), "dict", "-i", str(source)], stdin=slave, stdout=slave, stderr=slave)
+    os.close(slave)
+    try:
+        os.write(master, "add 青空りんご園 NOUN\n".encode("utf-8"))
+        read_pty_until(master, b"suzume*> ")
+        os.write(master, b"\x04")
+        output = read_pty_until(master, b"Saved unsaved changes at EOF.")
+        assert process.wait(timeout=5) == 0, output.decode("utf-8", errors="replace")
+    finally:
+        if process.poll() is None:
+            process.terminate()
+            process.wait(timeout=5)
+        os.close(master)
+
+    assert "青空りんご園\tNOUN" in source.read_text(encoding="utf-8")
+
+
 def assert_invalid_arguments(cli: Path) -> None:
     invalid_commands = (
         ("analyze", "--mode", "wide", "東京"),
         ("analyze", "--format", "yaml", "東京"),
         ("analyze", "--dict"),
+        ("analyze", "--dict", "--format", "json", "東京"),
         ("analyze", "--tag-pos", "other", "東京"),
         ("analyze", "--tag-min-length"),
         ("analyze", "--unknown-analysis-flag", "東京"),
@@ -91,11 +129,16 @@ def assert_help_contract(cli: Path) -> None:
     assert "SUZUME_DEBUG" in top_level.stdout
     assert "SUZUME_SCORER_{SECTION}_{KEY}" in analyze.stdout
     assert "tsv                    Alias of morpheme" in analyze.stdout
+    assert "offsets refer to normalized text" in analyze.stdout
     assert "compile <in1.tsv> <in2.tsv>... <out.dic>" in dictionary.stdout
     assert "--filter-trivial" in dictionary.stdout
     for value in ("CONJUNCTION", "DETERMINER", "PRONOUN", "PREFIX", "SUFFIX", "INTERJECTION"):
         assert value in dictionary.stdout
     assert "FAMILY, GIVEN" in dictionary.stdout
+    assert "info <file>" in dictionary.stdout
+    assert "validate <file>" in dictionary.stdout
+    assert "Long options that take a value also accept --option=value." in top_level.stdout
+    assert "Long options that take a value also accept --option=value." in analyze.stdout
 
     morpheme = run_cli(cli, "analyze", "--format", "morpheme", "東京")
     tsv = run_cli(cli, "analyze", "--format", "tsv", "東京")
@@ -139,7 +182,8 @@ def assert_invalid_utf8_rejected(cli: Path) -> None:
 def assert_json_schema(cli: Path) -> None:
     result = run_cli(cli, "analyze", "--format", "json", "東京へ行く")
     payload = json.loads(result.stdout)
-    assert set(payload) == {"input", "morphemes"}
+    assert set(payload) == {"input", "normalized_text", "morphemes"}
+    assert payload["input"] == payload["normalized_text"] == "東京へ行く"
     assert payload["morphemes"]
     assert set(payload["morphemes"][0]) == {
         "surface",
@@ -155,6 +199,16 @@ def assert_json_schema(cli: Path) -> None:
         "is_from_dictionary",
         "score",
     }
+
+
+def assert_offsets_slice_normalized_text(cli: Path) -> None:
+    for input_text, expected_normalized in (("ﾊﾞｽに乗る", "バスに乗る"), ("ＡＢＣ１２３", "ABC123")):
+        result = run_cli(cli, "analyze", "--format", "json", input_text)
+        payload = json.loads(result.stdout)
+        assert payload["input"] == input_text
+        assert payload["normalized_text"] == expected_normalized
+        for morpheme in payload["morphemes"]:
+            assert payload["normalized_text"][morpheme["start"] : morpheme["end"]] == morpheme["surface"]
 
 
 def assert_control_characters_do_not_corrupt_tsv(cli: Path) -> None:
@@ -245,14 +299,21 @@ def assert_chasen_contract(cli: Path) -> None:
         "EOS\n"
     )
 
+    na_adjective = run_cli(cli, "analyze", "--format", "chasen", "論理的な説明")
+    assert "論理的\t*\t論理的\t形容詞\tナ形容詞\t終止形\n" in na_adjective.stdout
 
-def assert_debug_uses_production_pipeline(cli: Path) -> None:
+    auxiliary = run_cli(cli, "analyze", "--format", "chasen", "書かなかった")
+    assert "なかっ\t*\tない\t助動詞\t*\t終止形\n" in auxiliary.stdout
+
+
+def assert_debug_and_compare_preserve_output_formats(cli: Path) -> None:
     text = "2024年12月23日にhttps://example.com/abcを見た。価格は1,000円。"
-    production = run_cli(cli, "analyze", "--format", "tsv", text)
-    debug = run_cli(cli, "analyze", "--debug", text)
-    marker = "=== Result ===\n"
-    assert marker in debug.stdout
-    assert debug.stdout.split(marker, 1)[1] == production.stdout
+    for output_format in ("tsv", "json", "chasen", "tags"):
+        production = run_cli(cli, "analyze", "--format", output_format, text)
+        debug = run_cli(cli, "analyze", "--debug", "--format", output_format, text)
+        assert debug.stdout == production.stdout
+        assert "=== Debug Mode ===" in debug.stderr
+        assert "=== Lattice Candidates ===" in debug.stderr
 
 
 def assert_single_test_contract(cli: Path) -> None:
@@ -297,15 +358,19 @@ def assert_cli_failure_and_structural_diff_contract(cli: Path) -> None:
         expect_success=False,
     )
     assert "Unknown benchmark option" in unknown_benchmark.stderr
+    missing_test_file = run_cli(cli, "test", "-f", expect_success=False)
+    assert "Missing value for -f" in missing_test_file.stderr
 
     with tempfile.TemporaryDirectory(prefix="suzume-cli-contract-") as temp_name:
         temp_dir = Path(temp_name)
         dictionary = temp_dir / "lemma.tsv"
         dictionary.write_text("東京\tNOUN\t\tとうきょう\n", encoding="utf-8")
-        compared = run_cli(cli, "analyze", "--compare", "--dict", str(dictionary), "東京")
-        assert "No structural difference" not in compared.stdout
-        assert "- 0:" in compared.stdout
-        assert "+ 0:" in compared.stdout
+        production = run_cli(cli, "analyze", "--dict", str(dictionary), "--format", "json", "東京")
+        compared = run_cli(cli, "analyze", "--compare", "--dict", str(dictionary), "--format", "json", "東京")
+        assert compared.stdout == production.stdout
+        assert "[Diff]" in compared.stderr
+        assert "- 0:" in compared.stderr
+        assert "+ 0:" in compared.stderr
 
         crlf_tests = temp_dir / "tests.tsv"
         crlf_tests.write_bytes("東京へ\t東京\r\n".encode())
@@ -326,6 +391,33 @@ def assert_cli_failure_and_structural_diff_contract(cli: Path) -> None:
             expect_success=False,
         )
         assert "requires an explicit output" in bare_glob.stderr
+
+        shard_dir = temp_dir / "shards"
+        shard_dir.mkdir()
+        (shard_dir / "alpha.tsv").write_text("青空庭園\tNOUN\n", encoding="utf-8")
+        (shard_dir / "beta.tsv").write_text("東京果樹園\tNOUN\n", encoding="utf-8")
+        inferred_output = temp_dir / "shards.dic"
+        inferred_output.write_bytes(b"must remain untouched")
+        subset_glob = run_cli(
+            cli,
+            "dict",
+            "compile",
+            str(shard_dir / "alpha*.tsv"),
+            expect_success=False,
+        )
+        assert "subset glob requires an explicit output" in subset_glob.stderr
+        assert inferred_output.read_bytes() == b"must remain untouched"
+        explicit_subset_output = temp_dir / "subset.dic"
+        run_cli(cli, "dict", "compile", str(shard_dir / "alpha*.tsv"), str(explicit_subset_output))
+        assert explicit_subset_output.is_file()
+        inferred_output.unlink()
+        run_cli(cli, "dict", "compile", str(shard_dir / "*.tsv"))
+        assert inferred_output.is_file()
+        inferred_single_output = shard_dir / "alpha.dic"
+        inferred_single_output.write_bytes(b"must remain untouched")
+        single_source = run_cli(cli, "dict", "compile", str(shard_dir / "alpha.tsv"), expect_success=False)
+        assert "Refusing to overwrite inferred dictionary output" in single_source.stderr
+        assert inferred_single_output.read_bytes() == b"must remain untouched"
 
 
 def assert_bundled_user_dictionary_contract(cli: Path) -> None:
@@ -348,6 +440,15 @@ def assert_bundled_user_dictionary_contract(cli: Path) -> None:
 
 
 def assert_dictionary_contract(cli: Path) -> None:
+    for word, required_forms in (
+        ("あきらめる", ("あきらめよ- (意志形)", "あきらめれ- (仮定形)", "あきらめろ- (命令形)")),
+        ("する", ("しよ- (意志形)", "すれ- (仮定形)", "しろ- (命令形)", "せよ- (命令形)")),
+        ("来る", ("来よ- (意志形)", "来れ- (仮定形)", "来い- (命令形)")),
+    ):
+        lookup = run_cli(cli, "dict", "lookup", word)
+        for form in required_forms:
+            assert form in lookup.stdout
+
     with tempfile.TemporaryDirectory(prefix="suzume-native-cli-") as temp_name:
         temp_dir = Path(temp_name)
         source = temp_dir / "compiled.tsv"
@@ -384,6 +485,10 @@ def assert_dictionary_contract(cli: Path) -> None:
 
         run_cli(cli, "dict", "compile", str(source), str(compiled))
         assert compiled.is_file()
+        for listed in (run_cli(cli, "dict", "list", str(source)), run_cli(cli, "dict", "list", str(compiled))):
+            rows = [line for line in listed.stdout.splitlines() if not line.startswith("(")]
+            assert rows
+            assert all(len(row.split("\t")) == 3 for row in rows), listed.stdout
         binary_search = run_cli(cli, "dict", "search", str(compiled), "東京*")
         assert "東京テスト\tNOUN" in binary_search.stdout
         assert "(1 matches)" in binary_search.stdout
@@ -520,6 +625,57 @@ def assert_dictionary_contract(cli: Path) -> None:
         }
         run_cli(cli, "dict", "compile", str(round_trip_source), str(temp_dir / "names.dic"))
 
+        tsv_list = run_cli(cli, "dict", "list", str(round_trip_source))
+        binary_list = run_cli(cli, "dict", "list", str(temp_dir / "names.dic"))
+        assert all(len(line.split("\t")) == 3 for line in tsv_list.stdout.splitlines() if "\t" in line)
+        assert all(len(line.split("\t")) == 3 for line in binary_list.stdout.splitlines() if "\t" in line)
+
+        interactive_help = run_cli(
+            cli,
+            "dict",
+            "-i",
+            str(round_trip_source),
+            input_text="help\nquit\n",
+        )
+        assert "saves modified entries non-interactively" in interactive_help.stdout
+        assert "confirms before discarding them in a terminal" in interactive_help.stdout
+
+        rejected_import = run_cli(
+            cli,
+            "dict",
+            "-i",
+            str(round_trip_source),
+            input_text=(
+                f"import {round_trip_source} --skip-duplicate\n"
+                f"import {round_trip_source} extra.tsv\n"
+                "quit\n"
+            ),
+        )
+        assert "Unknown import option: --skip-duplicate" in rejected_import.stderr
+        assert "Unknown import option: extra.tsv" in rejected_import.stderr
+
+        protected_source = temp_dir / "protected.dic"
+        protected_content = "東京\tNOUN\n"
+        protected_source.write_text(protected_content, encoding="utf-8")
+        protected = run_cli(
+            cli,
+            "dict",
+            "-i",
+            str(protected_source),
+            input_text=f"compile {protected_source}\nquit\n",
+        )
+        assert "Refusing to overwrite dictionary source" in protected.stderr
+        assert protected_source.read_text(encoding="utf-8") == protected_content
+
+        wrong_extension = run_cli(
+            cli,
+            "dict",
+            "-i",
+            str(protected_source),
+            input_text=f"compile {temp_dir / 'protected.tsv'}\nquit\n",
+        )
+        assert "Output file must have .dic extension" in wrong_extension.stderr
+
         session_source = temp_dir / "session.tsv"
         session = run_cli(
             cli,
@@ -552,6 +708,9 @@ def assert_dictionary_contract(cli: Path) -> None:
         )
         assert "Saved unsaved changes at EOF" in eof.stderr
         assert "東京公園\tNOUN" in eof_source.read_text(encoding="utf-8")
+
+        terminal_eof_source = temp_dir / "terminal-eof.tsv"
+        assert_terminal_eof_saves_edits(cli, terminal_eof_source)
 
         quoted_source = temp_dir / "quoted.tsv"
         quoted = run_cli(
@@ -608,6 +767,12 @@ def assert_dictionary_contract(cli: Path) -> None:
         source_dir.mkdir(parents=True)
         source_lookup = source_dir / "lookup.tsv"
         source_lookup.write_text("東京テスト公園\tNOUN\n", encoding="utf-8")
+        user_dir = data_root / "user"
+        user_dir.mkdir()
+        user_lookup = user_dir / "lookup.tsv"
+        user_lookup.write_text("東京果樹園\tNOUN\n", encoding="utf-8")
+        malformed_lookup = source_dir / "malformed.tsv"
+        malformed_lookup.write_text("不正\tNOT_A_POS\n", encoding="utf-8")
         lookup_env = os.environ.copy()
         lookup_env["SUZUME_DATA_DIR"] = str(data_root)
         source_result = run_cli(
@@ -618,6 +783,33 @@ def assert_dictionary_contract(cli: Path) -> None:
             env=lookup_env,
         )
         assert "東京テスト公園\tNOUN" in source_result.stdout
+        assert "Failed to parse source TSV" in source_result.stderr
+        assert malformed_lookup.name in source_result.stderr
+
+        user_result = run_cli(cli, "dict", "lookup", "東京果樹園", env=lookup_env)
+        assert "東京果樹園\tNOUN" in user_result.stdout
+        binary_result = run_cli(cli, "dict", "lookup", "東京テスト", str(compiled), env=lookup_env)
+        assert f"東京テスト\tNOUN [{compiled.name}]" in binary_result.stdout
+
+        dash_named_source = temp_dir / "-dictionary.tsv"
+        dash_named_source.write_text("東京辞書\tNOUN\n", encoding="utf-8")
+        dash_named_result = run_cli(
+            cli,
+            "analyze",
+            "--no-user-dict",
+            "--no-core-dict",
+            "--dict",
+            dash_named_source.name,
+            "--format",
+            "json",
+            "東京辞書",
+            cwd=temp_dir,
+        )
+        dash_named_morphemes = json.loads(dash_named_result.stdout)["morphemes"]
+        assert any(
+            morpheme["surface"] == "東京辞書" and morpheme["is_user_dict"]
+            for morpheme in dash_named_morphemes
+        )
 
 
 def main() -> int:
@@ -635,11 +827,12 @@ def main() -> int:
     assert_stdin_contract(cli)
     assert_invalid_utf8_rejected(cli)
     assert_json_schema(cli)
+    assert_offsets_slice_normalized_text(cli)
     assert_control_characters_do_not_corrupt_tsv(cli)
     assert_score_precision(cli)
     assert_tag_filters(cli)
     assert_chasen_contract(cli)
-    assert_debug_uses_production_pipeline(cli)
+    assert_debug_and_compare_preserve_output_formats(cli)
     assert_single_test_contract(cli)
     assert_cli_failure_and_structural_diff_contract(cli)
     assert_bundled_user_dictionary_contract(cli)

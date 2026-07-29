@@ -91,6 +91,9 @@ TEST(CliCommonTest, ParseArgsAcceptsTagOptions) {
                         "--tag-pos",
                         "noun",
                         "--tag-pos=verb",
+                        "--tag-pos",
+                        "particle",
+                        "--tag-pos=auxiliary",
                         "--tag-exclude-basic",
                         "--tag-min-length",
                         "1",
@@ -106,7 +109,7 @@ TEST(CliCommonTest, ParseArgsAcceptsTagOptions) {
   EXPECT_TRUE(args.tag_include_low_info);
   EXPECT_TRUE(args.tag_keep_duplicates);
   EXPECT_TRUE(args.tag_use_surface);
-  EXPECT_EQ(args.tag_pos_filter, 3u);
+  EXPECT_EQ(args.tag_pos_filter, 51u);
   EXPECT_TRUE(args.tag_exclude_basic);
   EXPECT_EQ(args.tag_min_length, 1u);
   EXPECT_EQ(args.tag_max_tags, 3u);

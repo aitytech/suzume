@@ -98,6 +98,27 @@ TEST(TsvParserTest, WriteFailurePreservesDestinationAndRemovesTemporaryFile) {
   std::filesystem::remove_all(output);
 }
 
+TEST(TsvParserTest, WriterRejectsFieldsThatWouldNotRoundTrip) {
+  const std::filesystem::path output = std::filesystem::temp_directory_path() / "suzume_tsv_parser_invalid.tsv";
+  std::filesystem::remove(output);
+
+  const std::vector<TsvEntry> invalid_surface = {
+      {"#見出し", core::PartOfSpeech::Noun, dictionary::ConjugationType::None, "", 1},
+  };
+  const auto surface_result = writeTsvFile(output.string(), invalid_surface);
+  ASSERT_FALSE(surface_result.hasValue());
+  EXPECT_NE(surface_result.error().message.find("cannot begin with #"), std::string::npos);
+  EXPECT_FALSE(std::filesystem::exists(output));
+
+  const std::vector<TsvEntry> invalid_lemma = {
+      {"見出し", core::PartOfSpeech::Noun, dictionary::ConjugationType::None, "別\t表記", 1},
+  };
+  const auto lemma_result = writeTsvFile(output.string(), invalid_lemma);
+  ASSERT_FALSE(lemma_result.hasValue());
+  EXPECT_NE(lemma_result.error().message.find("cannot contain a tab"), std::string::npos);
+  EXPECT_FALSE(std::filesystem::exists(output));
+}
+
 }  // namespace
 }  // namespace cli
 }  // namespace suzume
