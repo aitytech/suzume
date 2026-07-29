@@ -842,6 +842,33 @@
       ],
       "id": "kade_su",
       "input": "何かで試す"
+    },
+    {
+      "description": "人気のある店 - auto-generated",
+      "expected": [
+        {
+          "lemma": "人気",
+          "pos": "Noun",
+          "surface": "人気"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "店",
+          "pos": "Noun",
+          "surface": "店"
+        }
+      ],
+      "id": "noaru",
+      "input": "人気のある店"
     }
   ],
   "description": "Case particles (が、を、に、で)",

@@ -361,9 +361,19 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       }
       const std::string probe = extractSubstring(codepoints, start_pos, probe_end);
       for (const auto& candidate : inflection.analyze(probe)) {
-        if (candidate.verb_type != grammar::VerbType::Unknown && candidate.verb_type != grammar::VerbType::IAdjective &&
-            candidate.base_form != probe && !candidate.suffix.empty() &&
-            candidate.confidence >= verb_opts.confidence_ichidan_dict) {
+        if (candidate.verb_type == grammar::VerbType::Unknown || candidate.verb_type == grammar::VerbType::IAdjective ||
+            candidate.suffix.empty()) {
+          continue;
+        }
+        // A span spelled like its own base form is the one cell the paradigm
+        // cannot distinguish from an arbitrary run: every hiragana sequence
+        // ending in a う-row kana reconstructs some dictionary form. It is
+        // therefore held to the standard acceptance confidence rather than the
+        // low bar the inflected cells get, which is the difference between a
+        // full stem (のぼる, のこる) and a single leading mora (のる).
+        const float threshold =
+            candidate.base_form == probe ? verb_opts.confidence_standard : verb_opts.confidence_ichidan_dict;
+        if (candidate.confidence >= threshold) {
           has_verified_initial_inflection = true;
           break;
         }

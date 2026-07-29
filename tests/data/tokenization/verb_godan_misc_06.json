@@ -827,6 +827,50 @@
       ],
       "id": "wokudattta",
       "input": "坂をくだった"
+    },
+    {
+      "description": "山にのぼる - auto-generated",
+      "expected": [
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "のぼる",
+          "pos": "Verb",
+          "surface": "のぼる"
+        }
+      ],
+      "id": "ninoboru",
+      "input": "山にのぼる"
+    },
+    {
+      "description": "記憶にのこる - auto-generated",
+      "expected": [
+        {
+          "lemma": "記憶",
+          "pos": "Noun",
+          "surface": "記憶"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "のこる",
+          "pos": "Verb",
+          "surface": "のこる"
+        }
+      ],
+      "id": "ninokoru",
+      "input": "記憶にのこる"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",
