@@ -99,10 +99,15 @@ bool isInternalParticleChar(char32_t code_point) {
 // further auxiliary behind it removes that ambiguity: the auxiliary carries its
 // own continuation, so it heads a predicate rather than closing a noun
 // (りんご + だっ + た, りんご + だ + と).
-size_t boundAuxiliaryLengthAt(const std::vector<char32_t>& codepoints, size_t pos,
-                              const dictionary::DictionaryManager* dict_manager, bool clause_final_counts) {
+struct BoundAuxiliary {
+  size_t length{0};
+  bool is_copula{false};
+};
+
+BoundAuxiliary boundAuxiliaryAt(const std::vector<char32_t>& codepoints, size_t pos,
+                                const dictionary::DictionaryManager* dict_manager, bool clause_final_counts) {
   if (dict_manager == nullptr || pos >= codepoints.size()) {
-    return 0;
+    return {};
   }
   // Widest window an auxiliary and its continuation can occupy in this scan
   // (だっ + た, でしょ + う). The lookup matches inflected forms, so the copula's
@@ -134,15 +139,15 @@ size_t boundAuxiliaryLengthAt(const std::vector<char32_t>& codepoints, size_t po
       // selects a predicate cell, and its kana are indistinguishable from a
       // noun's last mora at that position (まばたき, たたずむ).
       if (clause_final_counts && is_copula) {
-        return length;
+        return {length, is_copula};
       }
       continue;
     }
     if (isRightBoundaryParticle(codepoints[after]) || !auxiliaries_at(after).empty()) {
-      return length;
+      return {length, is_copula};
     }
   }
-  return 0;
+  return {};
 }
 
 // True when [start_pos, end_pos) is itself a listed content word. Function
@@ -865,7 +870,13 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
       // Whole-run candidate is safe at length 2 only when both sides are real particles
       // (私は|はし|を). A run leaning on any clause boundary needs length >= 3, so short
       // isolated hiragana — usually adverbs/particles (もう, すぐ, ため) — are not promoted.
-      const bool fully_particle_bracketed = left_particle_bracket && right_particle;
+      // A copula that heads its own predicate is the same kind of right bracket: it
+      // selects a nominal, so what stands in front of it is a noun however short it is
+      // (きのう|は|あめ|だっ|た). Any other auxiliary only makes the candidate available,
+      // because its own kana could equally be the run's last mora.
+      const BoundAuxiliary right_bound = boundAuxiliaryAt(codepoints, scan, dict_manager_, left_particle_bracket);
+      const bool right_copula = right_bound.length > 0 && right_bound.is_copula;
+      const bool fully_particle_bracketed = left_particle_bracket && (right_particle || right_copula);
       size_t min_len = fully_particle_bracketed ? 2 : 3;
       const std::string promoted_surface = extractSubstring(codepoints, start_pos, scan);
       const auto* promoted_dictionary_reading =
@@ -1003,7 +1014,7 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
     // だ|と against みかん|だ|と), and stopping there would hide the run the
     // copula actually brackets.
     for (size_t trimmed = start_pos + 1; trimmed < scan; ++trimmed) {
-      if (boundAuxiliaryLengthAt(codepoints, trimmed, dict_manager_, left_particle_bracket) > 0) {
+      if (boundAuxiliaryAt(codepoints, trimmed, dict_manager_, left_particle_bracket).length > 0) {
         emit_promoted_run(trimmed);
       }
     }

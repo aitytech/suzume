@@ -1890,6 +1890,129 @@
       ],
       "id": "hatatazumu",
       "input": "私はたたずむ"
+    },
+    {
+      "description": "Two-mora hiragana noun bracketed by a particle and the past copula",
+      "expected": [
+        {
+          "lemma": "きのう",
+          "pos": "Noun",
+          "surface": "きのう"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "あめ",
+          "pos": "Noun",
+          "surface": "あめ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kinouhaamedattta",
+      "input": "きのうはあめだった"
+    },
+    {
+      "description": "Two-mora hiragana noun before a clause-final copula",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ひま",
+          "pos": "Noun",
+          "surface": "ひま"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "korehahimada",
+      "input": "これはひまだ"
+    },
+    {
+      "description": "A short adverb before the predicate is not absorbed by the rescue",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "もう",
+          "pos": "Adverb",
+          "surface": "もう"
+        },
+        {
+          "lemma": "だめ",
+          "pos": "Adjective",
+          "surface": "だめ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "korehamoudameda",
+      "input": "これはもうだめだ"
+    },
+    {
+      "description": "A two-mora formal noun keeps its dictionary reading under the rescue",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ため",
+          "pos": "Noun",
+          "surface": "ため"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "sorehatameninaru",
+      "input": "それはためになる"
     }
   ],
   "description": "Copula patterns (だ、です、である)",
