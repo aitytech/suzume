@@ -1738,6 +1738,158 @@
       ],
       "id": "ha_da_3",
       "input": "結果は最悪だ"
+    },
+    {
+      "description": "Unregistered hiragana noun before the past copula",
+      "expected": [
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ringodattta",
+      "input": "りんごだった"
+    },
+    {
+      "description": "Pronoun bracket, clause-final copula after an unregistered hiragana noun",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "koreharingoda",
+      "input": "これはりんごだ"
+    },
+    {
+      "description": "Pronoun left bracket with the past copula",
+      "expected": [
+        {
+          "lemma": "そこ",
+          "pos": "Pronoun",
+          "surface": "そこ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "sokoharingodattta",
+      "input": "そこはりんごだった"
+    },
+    {
+      "description": "Word-internal one-mora auxiliary before the real copula break",
+      "expected": [
+        {
+          "lemma": "みかん",
+          "pos": "Noun",
+          "surface": "みかん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "mikandattta",
+      "input": "みかんだった"
+    },
+    {
+      "description": "Lexical noun whose last mora spells the copula stays whole",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "からだ",
+          "pos": "Noun",
+          "surface": "からだ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "korehakaradada",
+      "input": "これはからだだ"
+    },
+    {
+      "description": "Clause-final non-copula auxiliary is no nominal bracket",
+      "expected": [
+        {
+          "lemma": "私",
+          "pos": "Pronoun",
+          "surface": "私"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "たたずむ",
+          "pos": "Verb",
+          "surface": "たたずむ"
+        }
+      ],
+      "id": "hatatazumu",
+      "input": "私はたたずむ"
     }
   ],
   "description": "Copula patterns (だ、です、である)",

@@ -91,6 +91,60 @@ bool isInternalParticleChar(char32_t code_point) {
   }
 }
 
+// Length of a dictionary auxiliary starting at @p pos that is itself bound on
+// its right, and 0 when there is none. An auxiliary is bound leftward, so it
+// always brackets the kana in front of it; what it does not always show is that
+// those kana ended a word, because a clause-final auxiliary is spelled exactly
+// like the last mora of a noun (からだ, ありがち + だ). A boundary particle or a
+// further auxiliary behind it removes that ambiguity: the auxiliary carries its
+// own continuation, so it heads a predicate rather than closing a noun
+// (りんご + だっ + た, りんご + だ + と).
+size_t boundAuxiliaryLengthAt(const std::vector<char32_t>& codepoints, size_t pos,
+                              const dictionary::DictionaryManager* dict_manager, bool clause_final_counts) {
+  if (dict_manager == nullptr || pos >= codepoints.size()) {
+    return 0;
+  }
+  // Widest window an auxiliary and its continuation can occupy in this scan
+  // (だっ + た, でしょ + う). The lookup matches inflected forms, so the copula's
+  // onbin cell is found under its own length rather than its headword's.
+  constexpr size_t kAuxiliaryWindow = 4;
+  auto auxiliaries_at = [&](size_t at) {
+    const size_t window_end = std::min(codepoints.size(), at + kAuxiliaryWindow);
+    std::vector<std::pair<size_t, bool>> found;
+    for (const auto& match : dict_manager->lookup(extractSubstring(codepoints, at, window_end), 0)) {
+      if (match.entry != nullptr && match.entry->pos == core::PartOfSpeech::Auxiliary) {
+        const bool is_copula = match.entry->extended_pos == core::ExtendedPOS::AuxCopulaDa ||
+                               match.entry->extended_pos == core::ExtendedPOS::AuxCopulaDesu;
+        found.emplace_back(match.length, is_copula);
+      }
+    }
+    return found;
+  };
+  // Every cell of the auxiliary is considered, not just the longest: the past
+  // copula matches both as one form reaching the clause end (だった) and as the
+  // onbin cell that selects た (だっ). Only the latter shows a continuation, and
+  // taking the longest match alone would hide it.
+  for (const auto& [length, is_copula] : auxiliaries_at(pos)) {
+    const size_t after = pos + length;
+    if (after >= codepoints.size()) {
+      // At the clause end only the copula is evidence, and only where a
+      // particle already brackets the run on the left. The copula is the one
+      // auxiliary that selects a nominal, so its presence says the kana in
+      // front of it closed a noun (これ|は|りんご|だ). Every other auxiliary
+      // selects a predicate cell, and its kana are indistinguishable from a
+      // noun's last mora at that position (まばたき, たたずむ).
+      if (clause_final_counts && is_copula) {
+        return length;
+      }
+      continue;
+    }
+    if (isRightBoundaryParticle(codepoints[after]) || !auxiliaries_at(after).empty()) {
+      return length;
+    }
+  }
+  return 0;
+}
+
 // True when [start_pos, end_pos) is itself a listed content word. Function
 // words are excluded: a run that has so far spelled only a particle or an
 // auxiliary has not ended a word, which is exactly the position where a
@@ -934,18 +988,23 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
     // maximal one, so the copula after an unregistered hiragana noun has
     // something to attach to (りんご|だ|と instead of りんごだ|と, which the scan
     // cannot reach because it only breaks at particle-shaped boundaries). The
-    // auxiliary has to be followed by a particle to count: a clause-final one is
+    // auxiliary has to carry its own continuation to count: a clause-final one is
     // indistinguishable from word-final kana (たたずむ, まばたき, ありがち), while
-    // a particle behind it shows the auxiliary heading its own predicate.
-    // Offering both rather than moving the break is what keeps a noun that
-    // merely spans those kana intact (からだ, たなばた).
-    if (dict_manager_ != nullptr && scan < codepoints.size() && isRightBoundaryParticle(codepoints[scan])) {
-      for (size_t trimmed = start_pos + 1; trimmed < scan; ++trimmed) {
-        if (dict_manager_->lookupExact(extractSubstring(codepoints, trimmed, scan), core::PartOfSpeech::Auxiliary) !=
-            nullptr) {
-          emit_promoted_run(trimmed);
-          break;
-        }
+    // anything bound behind it shows the auxiliary heading its own predicate.
+    // The continuation is a boundary particle or a further auxiliary, because an
+    // inflected auxiliary selects the next one and the pair is then the whole
+    // predicate (りんご + だっ + た). Requiring the auxiliary to end where the run
+    // ends would miss exactly that case, since the scan stops at its length limit
+    // in the middle of the auxiliary. Offering both runs rather than moving the
+    // break is what keeps a noun that merely spans those kana intact (からだ,
+    // たなばた).
+    // Every such position is offered rather than only the first: a one-mora
+    // auxiliary can also sit word-internally in front of the real break (みか|ん|
+    // だ|と against みかん|だ|と), and stopping there would hide the run the
+    // copula actually brackets.
+    for (size_t trimmed = start_pos + 1; trimmed < scan; ++trimmed) {
+      if (boundAuxiliaryLengthAt(codepoints, trimmed, dict_manager_, left_particle_bracket) > 0) {
+        emit_promoted_run(trimmed);
       }
     }
   }

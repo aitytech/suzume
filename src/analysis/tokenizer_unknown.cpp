@@ -98,6 +98,22 @@ bool hasContentEdgeEndingAt(const core::Lattice& lattice, size_t boundary) {
   return false;
 }
 
+// The left bracket of a post-particle noun rescue is whatever can fill the
+// argument slot the particle marks. That is wider than the taggable content
+// words: a pronoun heads a phrase exactly as a noun does (これ|は|りんご), and it
+// is outside isContentWord only because tagging does not emit a pronoun tag.
+// Widening isContentWord itself would change tagging, so the nominal-head
+// notion stays local to this bracket test.
+bool hasNominalHeadEdgeEndingAt(const core::Lattice& lattice, size_t boundary) {
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(boundary)) {
+    const core::PartOfSpeech pos = lattice.getEdge(edge_id).pos;
+    if (core::isContentWord(pos) || pos == core::PartOfSpeech::Pronoun) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool hasAttributiveEdgeEndingAt(const core::Lattice& lattice, size_t boundary) {
   for (const uint32_t edge_id : lattice.edgeIdsEndingAt(boundary)) {
     const auto& edge = lattice.getEdge(edge_id);
@@ -561,7 +577,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
 
   for (const auto& candidate : candidates) {
     if (candidate.requires_left_content_edge &&
-        (candidate.start == 0 || !hasContentEdgeEndingAt(lattice, candidate.start - 1))) {
+        (candidate.start == 0 || !hasNominalHeadEdgeEndingAt(lattice, candidate.start - 1))) {
       continue;
     }
     if (candidate.requires_left_attributive_edge && !hasAttributiveEdgeEndingAt(lattice, candidate.start)) {
@@ -574,11 +590,21 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
     // not another rescue: the generator offers both the maximal run and the run
     // that stops in front of a trailing auxiliary, and those two are meant to
     // compete in the lattice (りんご + だ against りんごだ) rather than one
-    // silencing the other before scoring sees them.
+    // silencing the other before scoring sees them. A predicate whose base form
+    // is attested nowhere carries no more evidence than the rescue does, so it
+    // does not supersede it either: the irrealis-shaped reconstruction りんごだる
+    // would otherwise decide りんごだった before scoring weighed the copula
+    // reading. Predicates that kept their dictionary base form still win here,
+    // which is what a lexical reading spanning the run is for.
+    const auto is_unattested_predicate = [](const UnknownCandidate& alternative) {
+      return !alternative.lemma_verified &&
+             (alternative.pos == core::PartOfSpeech::Verb || alternative.pos == core::PartOfSpeech::Adjective);
+    };
     if (candidate.bracketed_noun_rescue &&
         std::any_of(candidates.begin(), candidates.end(), [&](const UnknownCandidate& alternative) {
           return alternative.start == candidate.start && alternative.end > candidate.end &&
-                 !alternative.bracketed_noun_rescue && core::isContentWord(alternative.pos);
+                 !alternative.bracketed_noun_rescue && core::isContentWord(alternative.pos) &&
+                 !is_unattested_predicate(alternative);
         })) {
       continue;
     }
