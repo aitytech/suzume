@@ -35,7 +35,9 @@ bool beginsMizenkeiAuxiliary(std::string_view text, size_t start_byte, std::stri
   }
   const std::string_view suffix = text.substr(start_byte + mizenkei.size());
   size_t following_pos = start_byte + mizenkei.size();
-  if (isMizenkeiAuxiliaryStarter(normalize::decodeUtf8(text, following_pos))) {
+  const char32_t starter = normalize::decodeUtf8(text, following_pos);
+  const char32_t after_starter = following_pos < text.size() ? normalize::decodeUtf8(text, following_pos) : U'\0';
+  if (isMizenkeiAuxiliaryStarter(starter, after_starter)) {
     return true;
   }
 

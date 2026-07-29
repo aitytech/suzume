@@ -453,7 +453,8 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
         // 話し合わ|なけれ|ば).
         if (stem_end_pos < codepoints.size()) {
           char32_t next_char = codepoints[stem_end_pos];
-          if (!isMizenkeiAuxiliaryStarter(next_char))
+          const char32_t after_next = stem_end_pos + 1 < codepoints.size() ? codepoints[stem_end_pos + 1] : U'\0';
+          if (!isMizenkeiAuxiliaryStarter(next_char, after_next))
             return false;
         }
 

@@ -125,10 +125,20 @@ inline SubsidiaryVerbRange subsidiaryVerbs() {
 }
 
 // Closed auxiliary classes that attach to a verb mizenkei. Keep matcher and
-// emitter on one predicate so classical negative variants cannot drift.
-inline bool isMizenkeiAuxiliaryStarter(char32_t codepoint) {
+// emitter on one predicate so classical negative variants cannot drift. The
+// classical conjectural む/ん and its negative じ select the same cell as the
+// negatives do, so a compound stem keeps its boundary in front of them too
+// (見送ら|む, not 見|送ら|む). `following` is the codepoint after the starter, or
+// zero at the end of the input.
+inline bool isMizenkeiAuxiliaryStarter(char32_t codepoint, char32_t following) {
+  // ん is also the hatsuonbin of the ma/ba/na rows, and there it carries the
+  // tense marker that no negative takes: 折りたたん+で is the te-form of
+  // 折りたたむ, not its irrealis before a contracted negative.
+  if (codepoint == U'ん') {
+    return following != U'で' && following != U'だ';
+  }
   return codepoint == U'れ' || codepoint == U'せ' || codepoint == U'な' || codepoint == U'ず' || codepoint == U'ぬ' ||
-         codepoint == U'ね';
+         codepoint == U'ね' || codepoint == U'む' || codepoint == U'じ';
 }
 
 // Emits the verified passive-continuative tail (れ続ける and its inflections)

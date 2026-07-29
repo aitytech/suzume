@@ -819,6 +819,50 @@
       ],
       "id": "wokasazu",
       "input": "手をかさず"
+    },
+    {
+      "description": "見送らむ - auto-generated",
+      "expected": [
+        {
+          "lemma": "見送る",
+          "pos": "Verb",
+          "surface": "見送ら"
+        },
+        {
+          "lemma": "む",
+          "pos": "Auxiliary",
+          "surface": "む"
+        }
+      ],
+      "id": "ramu_2",
+      "input": "見送らむ"
+    },
+    {
+      "description": "友を送り込まん - auto-generated",
+      "expected": [
+        {
+          "lemma": "友",
+          "pos": "Noun",
+          "surface": "友"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "送り込む",
+          "pos": "Verb",
+          "surface": "送り込ま"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        }
+      ],
+      "id": "wo_ri_man",
+      "input": "友を送り込まん"
     }
   ],
   "description": "auxiliary_classical tests",
