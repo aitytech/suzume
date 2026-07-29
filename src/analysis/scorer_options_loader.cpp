@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #ifndef __EMSCRIPTEN__
 #include <fstream>
 #include <iostream>
@@ -13,6 +14,14 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+
+#ifndef __EMSCRIPTEN__
+#ifdef _WIN32
+extern char** _environ;
+#else
+extern char** environ;
+#endif
+#endif
 
 namespace suzume::analysis {
 
@@ -835,6 +844,50 @@ int applyAllEnvOverrides(ScorerOptions& options, bool report_warnings,
   return count;
 }
 
+bool isKnownScorerEnvironmentVariable(std::string_view name) {
+  if (name == "SUZUME_SCORER_CONFIG") {
+    return true;
+  }
+  const auto matches_specs = [name](std::string_view section, const OptionSpec* specs, size_t count) {
+    for (size_t index = 0; index < count; ++index) {
+      if (name == "SUZUME_SCORER_" + std::string(section) + "_" + std::string(specs[index].name)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  if (matches_specs("JOIN", kJoinOptionSpecs.data(), kJoinOptionSpecs.size()) ||
+      matches_specs("SPLIT", kSplitOptionSpecs.data(), kSplitOptionSpecs.size()) ||
+      matches_specs("UNARY", kUnaryOptionSpecs.data(), kUnaryOptionSpecs.size()) ||
+      matches_specs("VERB", kVerbOptionSpecs.data(), kVerbOptionSpecs.size()) ||
+      matches_specs("INFL", kInflectionOptionSpecs.data(), kInflectionOptionSpecs.size())) {
+    return true;
+  }
+  for (const BigramOverrideSpec& spec : kBigramOverrideSpecs) {
+    if (name == "SUZUME_SCORER_BIGRAM_" + std::string(spec.name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void collectUnknownScorerEnvironmentWarnings(std::vector<std::string>& warnings) {
+#ifdef _WIN32
+  char** environment = ::_environ;
+#else
+  char** environment = ::environ;
+#endif
+  constexpr std::string_view kPrefix = "SUZUME_SCORER_";
+  for (char** entry = environment; entry != nullptr && *entry != nullptr; ++entry) {
+    const std::string_view assignment(*entry);
+    const size_t separator = assignment.find('=');
+    const std::string_view name = assignment.substr(0, separator);
+    if (name.substr(0, kPrefix.size()) == kPrefix && !isKnownScorerEnvironmentVariable(name)) {
+      warnings.push_back("Unknown scorer environment variable: " + std::string(name));
+    }
+  }
+}
+
 }  // namespace env_override_internal
 
 int ScorerOptionsLoader::applyEnvOverrides(ScorerOptions& options) {
@@ -868,6 +921,9 @@ ScorerLoadResult ScorerOptionsLoader::loadFromEnv(ScorerOptions& options, bool r
 
   // Apply individual environment variable overrides (highest priority)
   result.env_override_count = env_override_internal::applyAllEnvOverrides(options, report_warnings, &result.warnings);
+  if (report_warnings) {
+    env_override_internal::collectUnknownScorerEnvironmentWarnings(result.warnings);
+  }
 
   return result;
 }

@@ -571,6 +571,17 @@ TEST_F(LoadFromEnvTest, ReportedWarningsAreReturnedToTheCaller) {
   EXPECT_NE(result.warnings.front().find("nan"), std::string::npos);
 }
 
+TEST_F(LoadFromEnvTest, UnknownScorerEnvironmentVariableIsReported) {
+  ScopedEnv env("SUZUME_SCORER_JOIN_compund_verb_bonus", "-1.0");
+
+  ScorerOptions opts;
+  const auto result = ScorerOptionsLoader::loadFromEnv(opts, true);
+
+  EXPECT_EQ(result.env_override_count, 0);
+  ASSERT_EQ(result.warnings.size(), 1u);
+  EXPECT_EQ(result.warnings.front(), "Unknown scorer environment variable: SUZUME_SCORER_JOIN_compund_verb_bonus");
+}
+
 #endif  // __EMSCRIPTEN__
 
 // =============================================================================
