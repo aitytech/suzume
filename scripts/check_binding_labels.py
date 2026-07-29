@@ -27,6 +27,64 @@ C_HEADER = "include/suzume/suzume_c.h"
 WASM_INDEX = "bindings/wasm/js/index.ts"
 PYTHON_API = "bindings/python/src/suzume/__init__.py"
 
+DEFAULT_FIELDS = {
+    "extended": (
+        "preserve_vu",
+        "preserve_case",
+        "preserve_symbols",
+        "mode",
+        "lemmatize",
+        "merge_compounds",
+        "skip_user_dictionary",
+        "skip_core_dictionary",
+        "report_scorer_config",
+        "skip_env_config",
+        "scorer_options_json",
+        "data_directory",
+    ),
+    "tag": (
+        "pos_filter",
+        "exclude_basic",
+        "use_lemma",
+        "min_length",
+        "max_tags",
+        "exclude_particles",
+        "exclude_auxiliaries",
+        "exclude_formal_nouns",
+        "exclude_low_info",
+        "remove_duplicates",
+    ),
+}
+
+WASM_DEFAULT_NAMES = {
+    "extended": {
+        "preserve_vu": "preserveVu",
+        "preserve_case": "preserveCase",
+        "preserve_symbols": "preserveSymbols",
+        "mode": "mode",
+        "lemmatize": "lemmatize",
+        "merge_compounds": "mergeCompounds",
+        "skip_user_dictionary": "skipUserDictionary",
+        "skip_core_dictionary": "skipCoreDictionary",
+        "report_scorer_config": "reportScorerConfig",
+        "skip_env_config": "skipEnvConfig",
+        "scorer_options_json": "scorerOptions",
+        "data_directory": "dataDirectory",
+    },
+    "tag": {
+        "pos_filter": "posFilter",
+        "exclude_basic": "excludeBasic",
+        "use_lemma": "useLemma",
+        "min_length": "minLength",
+        "max_tags": "maxTags",
+        "exclude_particles": "excludeParticles",
+        "exclude_auxiliaries": "excludeAuxiliaries",
+        "exclude_formal_nouns": "excludeFormalNouns",
+        "exclude_low_info": "excludeLowInfo",
+        "remove_duplicates": "removeDuplicates",
+    },
+}
+
 
 @dataclass(frozen=True)
 class EnumSpec:
@@ -190,12 +248,12 @@ def named_table(
     return literal_values(body, quote_pattern, nulls)
 
 
-def cpp_local_table(function: str, table: str) -> list[str | None]:
-    body = function_body(CPP_WRAPPER, function)
+def cpp_local_table(path: str, function: str, table: str) -> list[str | None]:
+    body = function_body(path, function)
     match = re.search(rf"\b{table}\b\s*=\s*\{{", body)
     if match is None:
-        raise SystemExit(f"❌ {CPP_WRAPPER}: `{function}` has no table `{table}`")
-    values = enclosed(body, match.end() - 1, "{", "}", CPP_WRAPPER)
+        raise SystemExit(f"❌ {path}: `{function}` has no table `{table}`")
+    values = enclosed(body, match.end() - 1, "{", "}", path)
     return literal_values(values, r'"(?:\\.|[^"\\])*"', ("nullptr",))
 
 
@@ -237,6 +295,154 @@ def c_numeric_constants(prefix: str) -> dict[str, int]:
         elif literal:
             values[normalized_name(name)] = int(literal.group(1))
     return values
+
+
+def parse_default_literal(expression: str, source: str) -> bool | int | None:
+    expression = expression.strip()
+    if expression == "nullptr" or expression == "null":
+        return None
+    if expression == "true":
+        return True
+    if expression == "false":
+        return False
+    if expression == "Mode::Normal" or expression == "'normal'":
+        return 0
+    if re.fullmatch(r"\d+", expression):
+        return int(expression)
+    raise SystemExit(f"❌ {source}: unsupported default expression `{expression}`")
+
+
+def c_initializer_defaults(function: str, fields: tuple[str, ...]) -> dict[str, bool | int | None]:
+    body = function_body("src/suzume_c.cpp", function)
+    defaults = {
+        field: parse_default_literal(expression, "src/suzume_c.cpp")
+        for field, expression in re.findall(r"options->(\w+)\s*=\s*([^;]+);", body)
+    }
+    if set(defaults) != set(fields):
+        raise SystemExit(f"❌ src/suzume_c.cpp: `{function}` does not initialize exactly {fields}")
+    return defaults
+
+
+def cpp_struct_defaults(name: str, fields: tuple[str, ...]) -> dict[str, bool | int | None]:
+    text = Path(CPP_WRAPPER).read_text()
+    match = re.search(rf"struct {name}\s*\{{", text)
+    if match is None:
+        raise SystemExit(f"❌ {CPP_WRAPPER}: cannot find `struct {name}`")
+    body = strip_comments(enclosed(text, match.end() - 1, "{", "}", CPP_WRAPPER))
+    defaults: dict[str, bool | int | None] = {}
+    for statement in body.split(";"):
+        match = re.search(r"\b(\w+)\s*(?:=\s*([^;]+))?$", statement.strip())
+        if match is None:
+            continue
+        field, expression = match.groups()
+        if field not in fields:
+            continue
+        defaults[field] = None if expression is None else parse_default_literal(expression, CPP_WRAPPER)
+    if set(defaults) != set(fields):
+        raise SystemExit(f"❌ {CPP_WRAPPER}: `{name}` does not declare defaults for exactly {fields}")
+    return defaults
+
+
+def ts_default_object(name: str) -> dict[str, bool | int | None]:
+    text = Path(WASM_INDEX).read_text()
+    match = re.search(rf"\b{name}\b\s*=\s*\{{", text)
+    if match is None:
+        raise SystemExit(f"❌ {WASM_INDEX}: cannot find `{name}`")
+    body = enclosed(text, match.end() - 1, "{", "}", WASM_INDEX)
+    return {
+        field: parse_default_literal(expression.rstrip(","), WASM_INDEX)
+        for field, expression in re.findall(r"\b(\w+)\s*:\s*([^,\n]+)", body)
+    }
+
+
+def python_default_value(node: ast.expr) -> bool | int | None:
+    if isinstance(node, ast.Constant) and (node.value is None or isinstance(node.value, (bool, int))):
+        return node.value
+    if (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "Mode"
+        and node.attr == "NORMAL"
+    ):
+        return 0
+    raise SystemExit(f"❌ {PYTHON_API}: unsupported Python default `{ast.unparse(node)}`")
+
+
+def python_method_defaults(class_name: str, method: str) -> dict[str, bool | int | None]:
+    tree = ast.parse(Path(PYTHON_API).read_text())
+    for class_node in tree.body:
+        if isinstance(class_node, ast.ClassDef) and class_node.name == class_name:
+            for node in class_node.body:
+                if isinstance(node, ast.FunctionDef) and node.name == method:
+                    args = [*node.args.posonlyargs, *node.args.args]
+                    defaults = [None] * (len(args) - len(node.args.defaults)) + list(node.args.defaults)
+                    args.extend(node.args.kwonlyargs)
+                    defaults.extend(node.args.kw_defaults)
+                    return {
+                        argument.arg: python_default_value(default)
+                        for argument, default in zip(args, defaults, strict=True)
+                        if default is not None and argument.arg != "self"
+                    }
+    raise SystemExit(f"❌ {PYTHON_API}: cannot find `{class_name}.{method}`")
+
+
+def check_default_contracts() -> bool:
+    canonical = {
+        "extended": c_initializer_defaults("suzume_init_extended_options", DEFAULT_FIELDS["extended"]),
+        "tag": c_initializer_defaults("suzume_init_tag_options", DEFAULT_FIELDS["tag"]),
+    }
+    cpp = {
+        "extended": cpp_struct_defaults("Options", DEFAULT_FIELDS["extended"]),
+        "tag": cpp_struct_defaults("TagOptions", DEFAULT_FIELDS["tag"]),
+    }
+    wasm_raw = {
+        "extended": ts_default_object("EXTENDED_OPTION_DEFAULTS"),
+        "tag": ts_default_object("TAG_OPTION_DEFAULTS"),
+    }
+    wasm = {
+        kind: {field: wasm_raw[kind][name] for field, name in names.items()}
+        for kind, names in WASM_DEFAULT_NAMES.items()
+    }
+    python_extended = python_method_defaults("Suzume", "__init__")
+    python_tag = python_method_defaults("Suzume", "generate_tags")
+    python = {
+        "extended": {
+            field: python_extended[field]
+            for field in DEFAULT_FIELDS["extended"]
+            if field not in {"scorer_options_json", "data_directory"}
+        },
+        "tag": {field: python_tag[field] for field in DEFAULT_FIELDS["tag"]},
+    }
+
+    failed = False
+    for kind, expected in canonical.items():
+        mirrors = {
+            "C++": cpp[kind],
+            "WASM": wasm[kind],
+            "Python": python[kind],
+        }
+        for surface, actual in mirrors.items():
+            comparable = (
+                expected
+                if surface != "Python" or kind != "extended"
+                else {
+                    field: value
+                    for field, value in expected.items()
+                    if field not in {"scorer_options_json", "data_directory"}
+                }
+            )
+            if actual != comparable:
+                print(f"❌ {surface} {kind} option defaults drift: expected {comparable}, got {actual}")
+                failed = True
+
+    # Python's package-local data directory is intentionally resolved at runtime
+    # so wheels find their bundled dictionaries. Its no-bundle fallback must
+    # remain the C ABI's nullptr default rather than another static mirror.
+    python_text = Path(PYTHON_API).read_text()
+    if not re.search(r"data_directory\s*=\s*os\.fsencode\(_BUNDLED_DATA_DIR\).*?else None", python_text):
+        print("❌ Python data_directory must retain a None fallback to the C ABI default")
+        failed = True
+    return failed
 
 
 def check_numeric_contracts() -> bool:
@@ -294,17 +500,20 @@ def check_numeric_contracts() -> bool:
         else {}
     )
 
+    canonical_modes = c_numeric_constants("SUZUME_MODE_")
+    canonical_modes.pop("invalid", None)
+
     wrapper = Path(CPP_WRAPPER).read_text()
     mode_match = re.search(r"enum class Mode[^{]*\{(?P<body>.*?)\}", wrapper, re.DOTALL)
-    canonical_modes = (
+    wrapper_modes = (
         {
-            normalized_name(name): int(value)
-            for name, value in re.findall(r"\b(\w+)\s*=\s*(\d+)", mode_match.group("body"))
+            normalized_name(name): canonical_modes.get(normalized_name(c_constant), -1)
+            for name, c_constant in re.findall(r"\b(\w+)\s*=\s*SUZUME_MODE_(\w+)", mode_match.group("body"))
         }
         if mode_match
         else {}
     )
-    wasm_mode_match = re.search(r"const modeMap[^=]*=\s*\{(?P<body>.*?)\}", wasm, re.DOTALL)
+    wasm_mode_match = re.search(r"const ANALYSIS_MODE_CODES[^=]*=\s*\{(?P<body>.*?)\}", wasm, re.DOTALL)
     wasm_modes = (
         {
             normalized_name(name): int(value)
@@ -321,7 +530,7 @@ def check_numeric_contracts() -> bool:
         ("error codes", canonical_errors, (wasm_errors, python_errors)),
         ("morpheme flags", canonical_flags, (wasm_flags, python_flags)),
         ("tag POS bits", canonical_tags, (wasm_tags, python_tags)),
-        ("analysis modes", canonical_modes, (wasm_modes, python_modes)),
+        ("analysis modes", canonical_modes, (wrapper_modes, wasm_modes, python_modes)),
     ):
         for mirror in mirrors:
             if mirror != canonical:
@@ -358,7 +567,14 @@ def main() -> int:
             "posLabel::japanese_labels",
             members["PartOfSpeech"],
             expected["pos_ja"],
-            cpp_local_table("posLabel", "japanese_labels"),
+            cpp_local_table(CPP_WRAPPER, "posLabel", "japanese_labels"),
+        ),
+        (
+            "src/suzume_c.cpp",
+            "suzume_conjugation_type_label::labels",
+            members["ConjugationType"],
+            expected["conj_type"],
+            cpp_local_table("src/suzume_c.cpp", "suzume_conjugation_type_label", "labels"),
         ),
         (
             WASM_LABELS,
@@ -391,7 +607,7 @@ def main() -> int:
     ]
 
     results = [compare(*check) for check in checks]
-    failed = any(results) or check_numeric_contracts()
+    failed = any(results) or check_numeric_contracts() or check_default_contracts()
     if failed:
         print()
         print("A mislabeled numeric code changes public output. Update every mirror above in enum order.")

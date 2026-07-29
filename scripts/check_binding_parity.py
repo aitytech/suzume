@@ -1,22 +1,33 @@
 #!/usr/bin/env python3
-"""Compare native, Python, and WASM analysis at the public API boundary."""
+"""Compare native C ABI, Python, and WASM at their public API boundaries."""
 
 from __future__ import annotations
 
+import ctypes
 import json
 import subprocess
 from pathlib import Path
-from typing import TypedDict, cast
+from typing import Any, TypedDict, cast
 
 from suzume import Suzume
+from suzume._ffi import (
+    SuzumeExtendedOptions,
+    SuzumeTagOptions,
+    load_library,
+)
 
 
 class MorphemeRecord(TypedDict):
     surface: str
     pos: str
     lemma: str
+    conj_type: str | None
+    conj_form: str | None
+    extended_pos: str
     start: int
     end: int
+    flags: dict[str, bool]
+    score: float
 
 
 class AnalysisRecord(TypedDict):
@@ -24,35 +35,110 @@ class AnalysisRecord(TypedDict):
     morphemes: list[MorphemeRecord]
 
 
+class TagRecord(TypedDict):
+    tag: str
+    pos: str
+
+
+class AnalysisCase(TypedDict):
+    name: str
+    text: str
+    options: dict[str, Any]
+
+
+class TagCase(TypedDict):
+    name: str
+    text: str
+    options: dict[str, Any]
+
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 NATIVE_CLI = REPOSITORY_ROOT / "build" / "bin" / "suzume-cli"
 WASM_RUNNER = REPOSITORY_ROOT / "scripts" / "binding_parity.mjs"
-CASES = [
-    "東京でりんごを食べる",
-    "ｶﾀｶﾅとＡＢＣ１２３",
-    "か\u3099く",
-    "家族👨‍👩‍👧と東京",
-    "長いｰｰ音",
-    "葛\U000e0100城市",
-    "HTTPs://example.com/a_(b)",
+
+# Each non-default analysis option has a dedicated case. The tag case varies
+# every generator option at once, which also covers the POS-filter bit mapping.
+ANALYSIS_CASES: list[AnalysisCase] = [
+    {"name": "default-unicode", "text": "ｶﾀｶﾅとＡＢＣ１２３家族👨‍👩‍👧", "options": {}},
+    {"name": "mode-search", "text": "東京駅前", "options": {"mode": "search"}},
+    {"name": "mode-split", "text": "東京駅前", "options": {"mode": "split"}},
+    {"name": "normalize-vu", "text": "ヴァイオリン", "options": {"preserve_vu": False}},
+    {"name": "normalize-case", "text": "ＡＢＣ東京", "options": {"preserve_case": False}},
+    {"name": "preserve-symbols", "text": "東京👨‍👩‍👧", "options": {"preserve_symbols": True}},
+    {"name": "source-lemma", "text": "食べました", "options": {"lemmatize": False}},
+    {"name": "merge-compounds", "text": "東京駅前", "options": {"merge_compounds": True}},
+]
+TAG_CASES: list[TagCase] = [
+    {
+        "name": "all-non-default-tag-options",
+        "text": "りんごを食べるりんごを食べる",
+        "options": {
+            "pos_filter": ["noun", "verb"],
+            "exclude_basic": True,
+            "use_lemma": False,
+            "min_length": 1,
+            "max_tags": 3,
+            "exclude_particles": False,
+            "exclude_auxiliaries": False,
+            "exclude_formal_nouns": False,
+            "exclude_low_info": False,
+            "remove_duplicates": False,
+        },
+    }
 ]
 
+_POS_FILTER_BITS = {"noun": 1, "verb": 2, "adjective": 4, "adverb": 8}
+_MODE_CODES = {"normal": 0, "search": 1, "split": 2}
+_lib = load_library()
 
-def _morpheme_record(surface: str, pos: str, lemma: str, start: int, end: int) -> MorphemeRecord:
+
+def _decode(value: bytes | None) -> str:
+    return value.decode("utf-8") if value else ""
+
+
+def _flags(value: int) -> dict[str, bool]:
+    return {
+        "user_dict": bool(value & (1 << 0)),
+        "formal_noun": bool(value & (1 << 1)),
+        "low_info": bool(value & (1 << 2)),
+        "unknown": bool(value & (1 << 3)),
+        "from_dictionary": bool(value & (1 << 4)),
+        "conjugatable": bool(value & (1 << 5)),
+    }
+
+
+def _morpheme_record(
+    surface: str,
+    pos: str,
+    lemma: str,
+    conj_type: str | None,
+    conj_form: str | None,
+    extended_pos: str,
+    start: int,
+    end: int,
+    flags: dict[str, bool],
+    score: float,
+) -> MorphemeRecord:
     return {
         "surface": surface,
         "pos": pos,
         "lemma": lemma,
+        "conj_type": conj_type,
+        "conj_form": conj_form,
+        "extended_pos": extended_pos,
         "start": start,
         "end": end,
+        "flags": flags,
+        "score": score,
     }
 
 
-def _native_records() -> list[list[MorphemeRecord]]:
-    records: list[list[MorphemeRecord]] = []
-    for text in CASES:
+def _native_cli_records() -> list[list[dict[str, object]]]:
+    """Keep the shipped CLI JSON contract in the parity gate unchanged."""
+    records: list[list[dict[str, object]]] = []
+    for case in ANALYSIS_CASES[:1]:
         completed = subprocess.run(
-            [str(NATIVE_CLI), "--format", "json", text],
+            [str(NATIVE_CLI), "--format", "json", case["text"]],
             cwd=REPOSITORY_ROOT,
             check=True,
             capture_output=True,
@@ -60,53 +146,166 @@ def _native_records() -> list[list[MorphemeRecord]]:
         )
         payload = json.loads(completed.stdout)
         records.append(
-            [
-                _morpheme_record(
-                    item["surface"],
-                    item["pos"],
-                    item["lemma"],
-                    item["start"],
-                    item["end"],
-                )
-                for item in payload["morphemes"]
-            ]
+            [{key: item[key] for key in ("surface", "pos", "lemma", "start", "end")} for item in payload["morphemes"]]
         )
     return records
 
 
-def _python_records() -> list[AnalysisRecord]:
+def _native_options(options: dict[str, Any]) -> SuzumeExtendedOptions:
+    native = SuzumeExtendedOptions()
+    _lib.suzume_init_extended_options(ctypes.byref(native))
+    for field in (
+        "preserve_vu",
+        "preserve_case",
+        "preserve_symbols",
+        "lemmatize",
+        "merge_compounds",
+    ):
+        if field in options:
+            setattr(native, field, int(options[field]))
+    if "mode" in options:
+        native.mode = _MODE_CODES[options["mode"]]
+    return native
+
+
+def _native_analysis_records() -> list[AnalysisRecord]:
     records: list[AnalysisRecord] = []
-    with Suzume() as analyzer:
-        for text in CASES:
-            result = analyzer.analyze_with_normalized_text(text)
+    for case in ANALYSIS_CASES:
+        options = _native_options(case["options"])
+        handle = _lib.suzume_create_with_extended_options(ctypes.byref(options))
+        if not handle:
+            raise RuntimeError(_decode(_lib.suzume_last_error()))
+        payload = case["text"].encode("utf-8")
+        result = _lib.suzume_analyze_n(handle, payload, len(payload))
+        if not result:
+            _lib.suzume_destroy(handle)
+            raise RuntimeError(_decode(_lib.suzume_last_error()))
+        try:
+            raw = result.contents
+            morphemes: list[MorphemeRecord] = []
+            for index in range(raw.count):
+                morpheme = raw.morphemes[index]
+                flags = _flags(int(morpheme.flags))
+                morphemes.append(
+                    _morpheme_record(
+                        ctypes.string_at(morpheme.surface, morpheme.surface_size).decode("utf-8"),
+                        _decode(_lib.suzume_pos_label(morpheme.pos)) or "OTHER",
+                        ctypes.string_at(morpheme.base_form, morpheme.base_form_size).decode("utf-8"),
+                        _decode(_lib.suzume_conjugation_type_label(morpheme.conjugation_type)) or None
+                        if flags["conjugatable"]
+                        else None,
+                        _decode(_lib.suzume_conjugation_form_label(morpheme.conjugation_form)) or None
+                        if flags["conjugatable"]
+                        else None,
+                        _decode(_lib.suzume_extended_pos_label(morpheme.extended_pos)) or "UNKNOWN",
+                        int(morpheme.start),
+                        int(morpheme.end),
+                        flags,
+                        float(morpheme.score),
+                    )
+                )
             records.append(
                 {
-                    "normalized_text": result.normalized_text,
-                    "morphemes": [
-                        _morpheme_record(
-                            item.surface,
-                            item.pos,
-                            item.base_form,
-                            item.start,
-                            item.end,
-                        )
-                        for item in result.morphemes
-                    ],
+                    "normalized_text": ctypes.string_at(raw.normalized_text, raw.normalized_text_size).decode("utf-8"),
+                    "morphemes": morphemes,
                 }
+            )
+        finally:
+            _lib.suzume_result_free(result)
+            _lib.suzume_destroy(handle)
+    return records
+
+
+def _native_tag_records() -> list[list[TagRecord]]:
+    records: list[list[TagRecord]] = []
+    for case in TAG_CASES:
+        options = SuzumeTagOptions()
+        _lib.suzume_init_tag_options(ctypes.byref(options))
+        for field, value in case["options"].items():
+            if field == "pos_filter":
+                options.pos_filter = sum(_POS_FILTER_BITS[name] for name in value)
+            else:
+                setattr(options, field, int(value))
+        handle = _lib.suzume_create()
+        if not handle:
+            raise RuntimeError(_decode(_lib.suzume_last_error()))
+        payload = case["text"].encode("utf-8")
+        result = _lib.suzume_generate_tags_with_options_n(handle, payload, len(payload), ctypes.byref(options))
+        if not result:
+            _lib.suzume_destroy(handle)
+            raise RuntimeError(_decode(_lib.suzume_last_error()))
+        try:
+            raw = result.contents
+            records.append(
+                [
+                    {
+                        "tag": _decode(raw.tags[index]),
+                        "pos": _decode(_lib.suzume_pos_label(raw.pos[index])),
+                    }
+                    for index in range(raw.count)
+                ]
+            )
+        finally:
+            _lib.suzume_tags_free(result)
+            _lib.suzume_destroy(handle)
+    return records
+
+
+def _python_analysis_records() -> list[AnalysisRecord]:
+    records: list[AnalysisRecord] = []
+    for case in ANALYSIS_CASES:
+        with Suzume(**case["options"]) as analyzer:
+            result = analyzer.analyze_with_normalized_text(case["text"])
+        records.append(
+            {
+                "normalized_text": result.normalized_text,
+                "morphemes": [
+                    _morpheme_record(
+                        item.surface,
+                        item.pos,
+                        item.base_form,
+                        item.conj_type,
+                        item.conj_form,
+                        item.extended_pos,
+                        item.start,
+                        item.end,
+                        {
+                            "user_dict": item.is_user_dict,
+                            "formal_noun": item.is_formal_noun,
+                            "low_info": item.is_low_info,
+                            "unknown": item.is_unknown,
+                            "from_dictionary": item.is_from_dictionary,
+                            "conjugatable": item.conj_form is not None,
+                        },
+                        item.score,
+                    )
+                    for item in result.morphemes
+                ],
+            }
+        )
+    return records
+
+
+def _python_tag_records() -> list[list[TagRecord]]:
+    records: list[list[TagRecord]] = []
+    for case in TAG_CASES:
+        with Suzume() as analyzer:
+            records.append(
+                [{"tag": item.tag, "pos": item.pos} for item in analyzer.generate_tags(case["text"], **case["options"])]
             )
     return records
 
 
-def _wasm_records() -> list[AnalysisRecord]:
+def _wasm_records() -> dict[str, list[Any]]:
     completed = subprocess.run(
         ["node", str(WASM_RUNNER)],
         cwd=REPOSITORY_ROOT,
-        check=True,
-        input=json.dumps(CASES, ensure_ascii=False),
+        input=json.dumps({"analysis": ANALYSIS_CASES, "tags": TAG_CASES}, ensure_ascii=False),
         capture_output=True,
+        check=True,
         text=True,
     )
-    return cast(list[AnalysisRecord], json.loads(completed.stdout))
+    return cast(dict[str, list[Any]], json.loads(completed.stdout))
 
 
 def _validate_surface_ranges(record: AnalysisRecord, text: str, surface: str) -> None:
@@ -118,25 +317,43 @@ def _validate_surface_ranges(record: AnalysisRecord, text: str, surface: str) ->
 
 
 def main() -> None:
-    native = _native_records()
-    python = _python_records()
+    native_cli = _native_cli_records()
+    native = _native_analysis_records()
+    native_tags = _native_tag_records()
+    python = _python_analysis_records()
+    python_tags = _python_tag_records()
     wasm = _wasm_records()
-    for index, text in enumerate(CASES):
-        if python[index] != wasm[index]:
+
+    for index, case in enumerate(ANALYSIS_CASES):
+        text = case["text"]
+        if native[index] != python[index] or native[index] != wasm["analysis"][index]:
             raise AssertionError(
-                f"Python/WASM mismatch for {text!r}:\n"
-                f"{json.dumps(python[index], ensure_ascii=False, indent=2)}\n"
-                f"{json.dumps(wasm[index], ensure_ascii=False, indent=2)}"
+                f"analysis mismatch for {case['name']!r}:\n"
+                f"native={json.dumps(native[index], ensure_ascii=False, indent=2)}\n"
+                f"python={json.dumps(python[index], ensure_ascii=False, indent=2)}\n"
+                f"wasm={json.dumps(wasm['analysis'][index], ensure_ascii=False, indent=2)}"
             )
-        if native[index] != python[index]["morphemes"]:
-            raise AssertionError(
-                f"native/Python mismatch for {text!r}:\n"
-                f"{json.dumps(native[index], ensure_ascii=False, indent=2)}\n"
-                f"{json.dumps(python[index]['morphemes'], ensure_ascii=False, indent=2)}"
-            )
+        _validate_surface_ranges(native[index], text, "C ABI")
         _validate_surface_ranges(python[index], text, "Python")
-        _validate_surface_ranges(wasm[index], text, "WASM")
-    print(f"Binding parity passed: {len(CASES)} Unicode cases across native, Python, and WASM")
+        _validate_surface_ranges(cast(AnalysisRecord, wasm["analysis"][index]), text, "WASM")
+
+    for index, case in enumerate(TAG_CASES):
+        if native_tags[index] != python_tags[index] or native_tags[index] != wasm["tags"][index]:
+            raise AssertionError(
+                f"tag mismatch for {case['name']!r}: native={native_tags[index]!r}, "
+                f"python={python_tags[index]!r}, wasm={wasm['tags'][index]!r}"
+            )
+
+    cli_default = [
+        {key: morpheme[key] for key in ("surface", "pos", "lemma", "start", "end")}
+        for morpheme in native[0]["morphemes"]
+    ]
+    if native_cli[0] != cli_default:
+        raise AssertionError(f"native CLI/C ABI mismatch: {native_cli[0]!r} != {cli_default!r}")
+    print(
+        f"Binding parity passed: {len(ANALYSIS_CASES)} analysis-option cases and "
+        f"{len(TAG_CASES)} tag-option cases across CLI, C ABI, Python, and WASM"
+    )
 
 
 if __name__ == "__main__":
