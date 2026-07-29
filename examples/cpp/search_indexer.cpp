@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "suzume.h"
+#include "suzume/suzume.hpp"
 
 struct Document {
   int id;
@@ -17,10 +17,11 @@ struct Document {
 };
 
 int main() {
-  suzume::SuzumeOptions opts;
-  opts.lemmatize = true;
-
-  suzume::Suzume analyzer(opts);
+  suzume::Tokenizer analyzer;
+  if (!analyzer) {
+    std::cerr << "failed to create tokenizer: " << suzume::Tokenizer::lastError() << "\n";
+    return 1;
+  }
 
   // Sample documents
   std::vector<Document> docs = {
@@ -32,11 +33,11 @@ int main() {
   // Build inverted index: tag -> [doc_ids]
   std::unordered_map<std::string, std::vector<int>> index;
 
-  suzume::postprocess::TagGeneratorOptions tag_opts;
-  tag_opts.pos_filter = suzume::postprocess::kTagPosNoun | suzume::postprocess::kTagPosVerb;
+  suzume::TagOptions tag_opts;
+  tag_opts.pos_filter = static_cast<std::uint8_t>(SUZUME_TAG_POS_NOUN | SUZUME_TAG_POS_VERB);
   tag_opts.exclude_basic = true;
   tag_opts.use_lemma = true;
-  tag_opts.min_tag_length = 2;
+  tag_opts.min_length = 2;
 
   for (const auto& doc : docs) {
     auto tags = analyzer.generateTags(doc.text, tag_opts);
@@ -54,8 +55,9 @@ int main() {
   for (const auto& [tag, doc_ids] : index) {
     std::cout << "  " << tag << " -> [";
     for (size_t i = 0; i < doc_ids.size(); ++i) {
-      if (i > 0)
+      if (i > 0) {
         std::cout << ", ";
+      }
       std::cout << doc_ids[i];
     }
     std::cout << "]\n";

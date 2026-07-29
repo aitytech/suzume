@@ -25,9 +25,19 @@ set_target_properties(hello_c PROPERTIES LINKER_LANGUAGE CXX)
 
 add_executable(hello_cpp ../hello.cpp)
 target_link_libraries(hello_cpp PRIVATE ${SUZUME_LINK_TARGET})
+target_compile_features(hello_cpp PRIVATE cxx_std_17)
+
+foreach(example_name basic search_indexer tags user_dictionary)
+  add_executable(cpp_${example_name} ../cpp/${example_name}.cpp)
+  target_link_libraries(cpp_${example_name} PRIVATE ${SUZUME_LINK_TARGET})
+  target_compile_features(cpp_${example_name} PRIVATE cxx_std_17)
+endforeach()
 
 # Run both as tests so `ctest` exercises them cross-platform (handles the
 # multi-config exe path on MSVC automatically).
 enable_testing()
 add_test(NAME hello_c COMMAND hello_c)
 add_test(NAME hello_cpp COMMAND hello_cpp)
+foreach(example_name basic search_indexer tags user_dictionary)
+  add_test(NAME cpp_${example_name} COMMAND cpp_${example_name})
+endforeach()

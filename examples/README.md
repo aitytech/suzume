@@ -6,10 +6,10 @@ These programs are compiled or type-checked by the repository build.
 |------|-----|---------|
 | [`hello.c`](hello.c) | C ABI | Minimal native consumer |
 | [`hello.cpp`](hello.cpp) | C++ wrapper | Minimal native consumer |
-| [`cpp/basic.cpp`](cpp/basic.cpp) | C++ core API | Morphological analysis |
-| [`cpp/search_indexer.cpp`](cpp/search_indexer.cpp) | C++ core API | Inverted search index |
-| [`cpp/tags.cpp`](cpp/tags.cpp) | C++ core API | Search-tag generation |
-| [`cpp/user_dictionary.cpp`](cpp/user_dictionary.cpp) | C++ core API | Runtime user dictionary |
+| [`cpp/basic.cpp`](cpp/basic.cpp) | C++ public wrapper | Morphological analysis |
+| [`cpp/search_indexer.cpp`](cpp/search_indexer.cpp) | C++ public wrapper | Inverted search index |
+| [`cpp/tags.cpp`](cpp/tags.cpp) | C++ public wrapper | Search-tag generation |
+| [`cpp/user_dictionary.cpp`](cpp/user_dictionary.cpp) | C++ public wrapper | Runtime user dictionary |
 | [`ts/basic.ts`](ts/basic.ts) | WASM/TypeScript | Morphological analysis |
 | [`ts/search_indexer.ts`](ts/search_indexer.ts) | WASM/TypeScript | Inverted search index |
 | [`ts/tags.ts`](ts/tags.ts) | WASM/TypeScript | Search-tag generation |

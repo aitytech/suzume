@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   const std::vector<suzume::Morpheme> morphemes = tokenizer.analyze(text);
   std::printf("suzume %s: %zu morpheme(s)\n", suzume::Tokenizer::version().c_str(), morphemes.size());
   for (const suzume::Morpheme& morph : morphemes) {
-    std::printf("  %s\t%s\t%s\n", morph.surface.c_str(), morph.pos.c_str(), morph.lemma.c_str());
+    std::printf("  %s\t%s\t%s\n", morph.surface.c_str(), morph.pos.c_str(), morph.base_form.c_str());
   }
 
   const std::vector<suzume::Tag> tags = tokenizer.generateTags(text);

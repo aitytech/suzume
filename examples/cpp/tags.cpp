@@ -1,16 +1,19 @@
 /**
  * Tag generation example - extract content word tags for indexing/search
  *
- * Build from the project root with `make examples`; the CMake target links the
- * complete `suzume` library.
+ * Build from the project root with `make examples`, or as an installed
+ * consumer through `examples/consumer`.
  */
 #include <iostream>
 
-#include "core/types.h"
-#include "suzume.h"
+#include "suzume/suzume.hpp"
 
 int main() {
-  suzume::Suzume analyzer;
+  suzume::Tokenizer analyzer;
+  if (!analyzer) {
+    std::cerr << "failed to create tokenizer: " << suzume::Tokenizer::lastError() << "\n";
+    return 1;
+  }
 
   // Generate tags (content words suitable for search indexing)
   auto tags = analyzer.generateTags("東京都渋谷区で開催されたイベントに参加しました");
@@ -21,12 +24,12 @@ int main() {
 
   std::cout << "Tags:\n";
   for (const auto& tag : tags) {
-    std::cout << "  " << tag.tag << " (" << suzume::core::posToString(tag.pos) << ")\n";
+    std::cout << "  " << tag.tag << " (" << tag.pos << ")\n";
   }
 
   // With custom options: nouns only, exclude basic words
-  suzume::postprocess::TagGeneratorOptions opts;
-  opts.pos_filter = suzume::postprocess::kTagPosNoun;
+  suzume::TagOptions opts;
+  opts.pos_filter = SUZUME_TAG_POS_NOUN;
   opts.exclude_basic = true;
 
   auto noun_tags = analyzer.generateTags("東京都渋谷区で開催されたイベントに参加しました", opts);
