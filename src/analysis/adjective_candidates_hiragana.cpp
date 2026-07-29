@@ -499,8 +499,7 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
           // 〜たくなかった/〜くなかった split as aux (たく|なかっ|た), so a な directly before
           // かっ must still break — the rare ない-family adjective (少なかった) is left to the
           // pre-existing split rather than mis-scored as one token.
-          bool is_katt_past = curr_char == U'か' && hiragana_end + 1 < codepoints.size() &&
-                              codepoints[hiragana_end + 1] == U'っ' && codepoints[hiragana_end - 1] != U'な';
+          bool is_katt_past = adj_detail::opensAdjectivePastConnective(codepoints, hiragana_end);
           if (!is_katt_past && (normalize::isExtendedParticle(curr_char) || curr_char == U'や')) {
             break;  // Stop before the particle
           }
@@ -621,9 +620,13 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
       continue;
     }
     const size_t after_sa = stem_end + 1;
+    // The past connective is not the question particle, so a さ before かっ is
+    // still inside the adjective's own paradigm rather than the nominalizer
+    // closing it (うそくさかった, not うそく + さ + かっ + た).
     const bool bounded_nominalizer =
-        after_sa >= codepoints.size() || normalize::isExtendedParticle(codepoints[after_sa]) ||
-        (after_sa < char_types.size() && char_types[after_sa] == normalize::CharType::Symbol);
+        !adj_detail::opensAdjectivePastConnective(codepoints, after_sa) &&
+        (after_sa >= codepoints.size() || normalize::isExtendedParticle(codepoints[after_sa]) ||
+         (after_sa < char_types.size() && char_types[after_sa] == normalize::CharType::Symbol));
     if (!bounded_nominalizer) {
       continue;
     }

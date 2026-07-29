@@ -1705,6 +1705,38 @@
       ],
       "id": "no_wo_keru",
       "input": "佐藤先生の授業を受ける"
+    },
+    {
+      "description": "hiragana host + productive adjective suffix",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "処理",
+          "pos": "Noun",
+          "surface": "処理"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "めんどくさい",
+          "pos": "Adjective",
+          "surface": "めんどくさい"
+        }
+      ],
+      "id": "no_gamendokusai",
+      "input": "紙の処理がめんどくさい"
     }
   ],
   "description": "General nouns (part 3/3)",

@@ -11,11 +11,30 @@
 #include "analysis/candidate_constants.h"
 #include "core/utf8_constants.h"
 #include "normalize/utf8.h"
+#include "tokenizer_utils.h"
 #include "verb_candidates_helpers.h"
 
 namespace suzume::analysis::adj_detail {
 
 namespace {
+
+// Productive second elements of compound adjectives: they attach to a nominal
+// or a verb continuative to derive a new adjective rather than predicating over
+// a separate preceding word.
+constexpr std::array<std::string_view, 15> kCompoundFormingAdjectives = {
+    "苦しい", "深い", "強い",   "臭い",   "くさい", "難い",   "にくい", "易い",
+    "やすい", "辛い", "づらい", "がたい", "ぽい",   "っぽい", "らしい"};
+
+// A one-mora host is indistinguishable from an inflectional ending that the
+// analyzer folded into the reconstructed base, so a derivation needs two.
+constexpr size_t kMinDerivedAdjectiveHostLength = 2;
+
+// Particle classes that bind a nominal phrase and therefore close it. A
+// 接続助詞 or 終助詞 attaches to a predicate instead, so it cannot mark the end
+// of a host (めんど ends in the concessive ど without being a phrase).
+constexpr std::array<core::ExtendedPOS, 5> kNominalPhraseParticles = {
+    core::ExtendedPOS::ParticleCase, core::ExtendedPOS::ParticleTopic, core::ExtendedPOS::ParticleAdverbial,
+    core::ExtendedPOS::ParticleNo, core::ExtendedPOS::ParticleBinding};
 
 core::ExtendedPOS detectIAdjEpos(const std::string& surface) {
   if (utf8::endsWith(surface, "かっ")) {
@@ -34,6 +53,59 @@ core::ExtendedPOS detectIAdjEpos(const std::string& surface) {
 }
 
 }  // namespace
+
+bool opensAdjectivePastConnective(const std::vector<char32_t>& codepoints, size_t pos) {
+  return pos + 1 < codepoints.size() && codepoints[pos] == U'か' && codepoints[pos + 1] == U'っ' &&
+         (pos == 0 || codepoints[pos - 1] != U'な');
+}
+
+bool isCompoundFormingAdjective(const std::string& base_form) {
+  return std::find(kCompoundFormingAdjectives.begin(), kCompoundFormingAdjectives.end(), base_form) !=
+         kCompoundFormingAdjectives.end();
+}
+
+bool derivesFromCompoundFormingAdjective(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                         const std::string& base_form,
+                                         const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  // Longest match: ぽい and っぽい share a tail, and the shorter one would
+  // leave the promoted っ at the end of the host.
+  size_t suffix_length = 0;
+  for (const std::string_view suffix : kCompoundFormingAdjectives) {
+    if (utf8::endsWith(base_form, suffix)) {
+      suffix_length = std::max(suffix_length, normalize::utf8Length(suffix));
+    }
+  }
+  if (suffix_length == 0) {
+    return false;
+  }
+  const size_t base_length = normalize::utf8Length(base_form);
+  if (base_length < suffix_length + kMinDerivedAdjectiveHostLength) {
+    return false;
+  }
+  const size_t host_end = start_pos + base_length - suffix_length;
+  if (host_end > codepoints.size()) {
+    return false;
+  }
+  constexpr PartOfSpeechMask kFunctionWordMask =
+      partOfSpeechMask(core::PartOfSpeech::Particle) | partOfSpeechMask(core::PartOfSpeech::Auxiliary) |
+      partOfSpeechMask(core::PartOfSpeech::Determiner) | partOfSpeechMask(core::PartOfSpeech::Conjunction) |
+      partOfSpeechMask(core::PartOfSpeech::Adverb) | partOfSpeechMask(core::PartOfSpeech::Prefix);
+  if (hasExactPartOfSpeech(*dict_manager, extractSubstring(codepoints, start_pos, host_end), kFunctionWordMask)) {
+    return false;
+  }
+  for (size_t particle_start = start_pos + 1; particle_start < host_end; ++particle_start) {
+    const auto* particle =
+        dict_manager->lookupExact(extractSubstring(codepoints, particle_start, host_end), core::PartOfSpeech::Particle);
+    if (particle != nullptr && std::find(kNominalPhraseParticles.begin(), kNominalPhraseParticles.end(),
+                                         particle->extended_pos) != kNominalPhraseParticles.end()) {
+      return false;
+    }
+  }
+  return true;
+}
 
 const std::array<std::string_view, 14> kIAdjStemAuxPatterns = {
     "しそう", "しそうだ", "しそうな", "しそうに", "しすぎ", "しすぎる", "しすぎた",

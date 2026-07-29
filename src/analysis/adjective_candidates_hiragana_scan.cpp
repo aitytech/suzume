@@ -206,8 +206,14 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
                                       end_pos < codepoints.size() &&
                                       (normalize::isKanjiCodepoint(codepoints[end_pos]) ||
                                        normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Katakana);
+    // A derived adjective's continuative is recovered the same way: the
+    // reconstructed base carries the productive second element, so the -く is
+    // its inflection rather than a free adverbial (めんどくさく感じる).
+    const bool derived_ku_continuative =
+        !adjective_ku_lemma.empty() &&
+        adj_detail::derivesFromCompoundFormingAdjective(codepoints, start_pos, adjective_ku_lemma, dict_manager);
     if (utf8::endsWith(surface, "く") && !utf8::endsWith(surface, "くない") && !utf8::endsWith(surface, "なく") &&
-        !utf8::endsWith(surface, "しく") && !bounded_long_ku_form) {
+        !utf8::endsWith(surface, "しく") && !bounded_long_ku_form && !derived_ku_continuative) {
       continue;
     }
 
@@ -265,7 +271,14 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
       // This admits regular long forms such as まばゆい without weakening the
       // highly ambiguous three-character hiragana pattern.
       const bool has_long_dictionary_form = utf8::endsWith(surface, "い") && end_pos - start_pos >= 4;
-      float confidence_threshold = has_prolonged ? candidate::kHiraAdjConfProlonged
+      // A run built from a nominal host plus a productive second element is
+      // adjectival by derivation, so the length-based confidence score — which
+      // measures how ordinary the stem looks — carries no evidence against it
+      // (めんどくさい, うそくさかった). Use the compound floor instead.
+      const bool derives_from_suffix =
+          adj_detail::derivesFromCompoundFormingAdjective(codepoints, start_pos, cand.base_form, dict_manager);
+      float confidence_threshold = has_prolonged         ? candidate::kHiraAdjConfProlonged
+                                   : derives_from_suffix ? candidate::kCompoundAdjConfMin
                                    : starts_with_particle || has_long_dictionary_form || bounded_long_ku_form
                                        ? candidate::kHiraAdjConfParticle
                                        : candidate::kHiraAdjConfMin;

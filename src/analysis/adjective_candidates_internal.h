@@ -169,6 +169,45 @@ void appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& codepoints, 
                                        std::vector<UnknownCandidate>& candidates, size_t candidate_start);
 
 /**
+ * @brief Check whether か at @p pos opens the i-adjective past connective かっ.
+ *
+ * The question particle and the past connective are spelled with the same mora,
+ * and only the conjugation is followed by っ. A scanner that stops at every か
+ * truncates the past form and leaves the stem to a fabricated godan verb
+ * (うれし+かった read as a form of うれしかう). The negative auxiliary's own past
+ * is excluded: 〜くなかった splits as く + なかっ + た, so a な directly before
+ * かっ is a boundary after all.
+ */
+bool opensAdjectivePastConnective(const std::vector<char32_t>& codepoints, size_t pos);
+
+/**
+ * @brief Check whether an adjective productively forms compounds as a second element.
+ *
+ * These adjectives attach to a noun or a verb continuative to derive a new
+ * adjective (息苦しい, 用心深い, 我慢強い, 読みにくい). Their compounds are built by
+ * rule rather than listed, so a candidate spanning one is a derivation and not a
+ * fabrication. Every other adjective is a complete word on its own, and material
+ * in front of it belongs to a separate token.
+ */
+bool isCompoundFormingAdjective(const std::string& base_form);
+
+/**
+ * @brief Check whether a base form is a nominal host plus a productive second element.
+ *
+ * A derivation is its own evidence: the second element cannot take a host and
+ * still be read as a separate word, so the whole span is one adjective however
+ * unlikely the stem looks to the length-based confidence score (めんどくさい,
+ * うそくさかった). The host must be a nominal — a run that is itself a function
+ * word, or that ends in a particle binding a nominal phrase, is a phrase
+ * boundary and the adjective after it is a predicate instead (ちょっと|くさい,
+ * この魚は|くさい, その|くさい匂い). @p start_pos anchors the host in the
+ * observed run, whose head the inflection analyzer leaves untouched.
+ */
+bool derivesFromCompoundFormingAdjective(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                         const std::string& base_form,
+                                         const dictionary::DictionaryManager* dict_manager);
+
+/**
  * @brief Append surface-qualified pure-hiragana i-adjective candidates.
  */
 void appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,

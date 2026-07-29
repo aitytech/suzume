@@ -313,8 +313,13 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   // 已然形 the same paradigm slot spells (飲め+ど, 読め+ども). Other conjunctive
   // particles cannot complete this inflection, so they must not receive the
   // bonus: without it the continuative of a homographic potential verb
-  // (飲める) takes the span and the lemma with it.
-  if (prev.extended_pos == core::ExtendedPOS::VerbKateikei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
+  // (飲める) takes the span and the lemma with it. The i-adjective's け形 fills
+  // the same paradigm slot and selects the same particles (寒けれ+ば,
+  // めんどくさけれ+ば), so the preference belongs to the slot rather than to the
+  // part of speech.
+  const bool fills_hypothetical_slot =
+      prev.extended_pos == core::ExtendedPOS::VerbKateikei || prev.extended_pos == core::ExtendedPOS::AdjKeForm;
+  if (fills_hypothetical_slot && next.extended_pos == core::ExtendedPOS::ParticleConj &&
       grammar::isHypotheticalSelectingConjunctiveParticle(next.surface)) {
     bonus += cost::kVeryStrongBonus;
   }

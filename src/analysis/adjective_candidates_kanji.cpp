@@ -29,6 +29,7 @@ using verb_helpers::findCharRegionEnd;
 using verb_helpers::isAdjectiveInDictionary;
 using verb_helpers::isVerbInDictionary;
 
+using adj_detail::isCompoundFormingAdjective;
 using adj_detail::makeIAdjCandidate;
 using adj_detail::makeNaAdjCandidate;
 
@@ -43,20 +44,6 @@ constexpr const char* kNegativeAdjectiveBase = "ない";
 constexpr const char* kGaMashiiStem = "がまし";
 constexpr size_t kGaMashiiStemLength = 3;
 constexpr size_t kMaxGaMashiiInflectionLength = 8;
-
-/**
- * @brief Check whether an adjective productively forms compounds as a second element.
- *
- * These adjectives attach to a noun or a verb continuative to derive a new
- * adjective (息苦しい, 用心深い, 我慢強い, 読みにくい). Their compounds are built by
- * rule rather than listed, so a candidate spanning one is a derivation and not a
- * fabrication. Every other adjective is a complete word on its own, and material
- * in front of it belongs to a separate token.
- */
-bool isCompoundFormingAdjective(const std::string& base_form) {
-  return utf8::equalsAny(base_form, {"苦しい", "深い", "強い", "臭い", "くさい", "難い", "にくい", "易い", "やすい",
-                                     "辛い", "づらい", "がたい", "ぽい", "っぽい", "らしい"});
-}
 
 // =============================================================================
 // Pattern Skip Helpers for I-Adjective Candidate Generation

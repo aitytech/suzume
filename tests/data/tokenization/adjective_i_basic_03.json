@@ -46,6 +46,126 @@
       ],
       "id": "hasono_i_ni_ttta",
       "input": "彼はその薄暗い部屋に入った"
+    },
+    {
+      "description": "derived adjective past cell on a hiragana host",
+      "expected": [
+        {
+          "lemma": "うそくさい",
+          "pos": "Adjective",
+          "surface": "うそくさかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "usokusakattta_da",
+      "input": "うそくさかった話だ"
+    },
+    {
+      "description": "derived adjective hypothetical cell before the conditional particle",
+      "expected": [
+        {
+          "lemma": "めんどくさい",
+          "pos": "Adjective",
+          "surface": "めんどくさけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "やめる",
+          "pos": "Verb",
+          "surface": "やめる"
+        }
+      ],
+      "id": "mendokusakerebayameru",
+      "input": "めんどくさければやめる"
+    },
+    {
+      "description": "positive control: kanji host keeps the derived adjective whole",
+      "expected": [
+        {
+          "lemma": "面倒くさい",
+          "pos": "Adjective",
+          "surface": "面倒くさい"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kusai_da",
+      "input": "面倒くさい作業だ"
+    },
+    {
+      "description": "negative control: a particle closes the phrase so くさい predicates",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "魚",
+          "pos": "Noun",
+          "surface": "魚"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "くさい",
+          "pos": "Adjective",
+          "surface": "くさい"
+        }
+      ],
+      "id": "kono_hakusai",
+      "input": "この魚はくさい"
+    },
+    {
+      "description": "negative control: an adverb host does not license the derivation",
+      "expected": [
+        {
+          "lemma": "ちょっと",
+          "pos": "Adverb",
+          "surface": "ちょっと"
+        },
+        {
+          "lemma": "くさい",
+          "pos": "Adjective",
+          "surface": "くさい"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "chi_tttokusaine",
+      "input": "ちょっとくさいね"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 3/3)",
