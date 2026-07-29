@@ -4,6 +4,7 @@ import regex
 
 from .constants import (
     COMPOUND_VERB_V2_ICHIDAN,
+    COPULAR_PREDICATE_HEADS,
     FIXED_FUNCTION_SEARCH_UNITS,
     FIXED_LEADING_SEARCH_UNITS,
     LITERARY_VOLITIONAL_PARTICLE_COMPOUNDS,
@@ -433,6 +434,31 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             result.append({"surface": "て", "pos": "助詞", "lemma": "て"})
             if applied_rule is None:
                 applied_rule = "quotative-suru-te-split"
+            continue
+
+        # The exemplification particle でも is the copula's continuative で plus
+        # the binding particle も, and the reference dictionary carries only the
+        # fused spelling — では has no entry and is therefore always emitted in
+        # its parts. That lexicalization decides the boundary for hosts that
+        # cannot take exemplification at all: after a formal noun or the
+        # nominalizer の, in front of the copula's own supporting verb, ではない
+        # comes back decomposed while でもない does not (ほか+で+は+ない against
+        # ほか+でも+ない). The same reference splits はず+で+も+ない, so the
+        # fused reading is an artifact of the entry rather than a reading of the
+        # construction. A referential host keeps the fusion (学生でもない), which
+        # is why the host set stays closed here.
+        if (
+            surface == "でも"
+            and t.get("pos") == "助詞"
+            and token_index > 0
+            and tokens[token_index - 1].get("surface") in COPULAR_PREDICATE_HEADS
+            and token_index + 1 < len(tokens)
+            and tokens[token_index + 1].get("lemma") in ("ある", "ない")
+        ):
+            result.append({"surface": "で", "pos": "助動詞", "lemma": "だ"})
+            result.append({"surface": "も", "pos": "助詞", "pos_sub1": "係助詞", "lemma": "も"})
+            if applied_rule is None:
+                applied_rule = "copular-head-demo-split"
             continue
 
         # 8. Copula negation: じゃない -> じゃ|ない
