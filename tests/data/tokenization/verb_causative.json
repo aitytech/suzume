@@ -647,6 +647,43 @@
       ],
       "id": "maseyou",
       "input": "読ませよう"
+    },
+    {
+      "description": "こどもに本を読ませる - auto-generated",
+      "expected": [
+        {
+          "lemma": "こども",
+          "pos": "Noun",
+          "surface": "こども"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "kodomoni_wo_maseru",
+      "input": "こどもに本を読ませる"
     }
   ],
   "description": "verb_causative tests",

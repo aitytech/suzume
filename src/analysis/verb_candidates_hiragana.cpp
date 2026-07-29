@@ -157,6 +157,13 @@ bool hasLongGodanWaNegativeEvidence(const std::vector<char32_t>& codepoints, siz
 // table, rather than treating those morae as unconditional particle breaks.
 // Returns the predicate stem end (the terminal る or onbin っ), or zero when
 // the remaining run has no complete Godan-ra shape.
+//
+// The row is fixed to ra rather than taken from the row table, because the
+// homograph identifies no row on its own: the sokuonbin っ is shared with
+// ka/ta/wa, and the terminal of every other row closes an ordinary nominative
+// clause as if it were one verb (ぼくがいく, とりがとぶ). What this rule fails
+// to reach — ながす, ころがす, のがす — is held back by the prefix guard below,
+// not by the row.
 size_t godanRaContinuationStemEnd(const std::vector<char32_t>& codepoints, size_t start_pos, size_t current_pos,
                                   const std::vector<normalize::CharType>& char_types,
                                   const dictionary::DictionaryManager* dict_manager) {

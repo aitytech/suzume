@@ -1315,6 +1315,28 @@
       ],
       "id": "royo_3",
       "input": "出ろよ"
+    },
+    {
+      "description": "荷物をのせる - auto-generated",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "のせる",
+          "pos": "Verb",
+          "surface": "のせる"
+        }
+      ],
+      "id": "wonoseru",
+      "input": "荷物をのせる"
     }
   ],
   "description": "Ichidan verbs (一段動詞) (part 2/2)",

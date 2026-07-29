@@ -121,12 +121,27 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
           dict_manager->lookupExact(verb_surface, core::PartOfSpeech::Verb) != nullptr) {
         return true;
       }
-      if (dict_manager->lookupExact(verb_surface, core::PartOfSpeech::Auxiliary) != nullptr) {
-        SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << particle_surface << "+" << verb_surface
-                                                  << " particle_then_auxiliary\n");
-        return true;
+      if (const auto* auxiliary = dict_manager->lookupExact(verb_surface, core::PartOfSpeech::Auxiliary);
+          auxiliary != nullptr) {
+        // A particle followed by an auxiliary is a boundary only when the
+        // particle can actually host that auxiliary. The causative and passive
+        // select a verb's irrealis form, so の+せる is not a competing reading
+        // of のせる and must not remove it — the same reasoning that already
+        // exempts a sentence-final particle above, read off the connection
+        // table instead of restated per particle class.
+        if (BigramTable::getCost(particle_entry->extended_pos, auxiliary->extended_pos) < bigram_cost::kAlmostNever) {
+          SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << particle_surface << "+" << verb_surface
+                                                    << " particle_then_auxiliary\n");
+          return true;
+        }
+        continue;
       }
       for (const auto& candidate : inflection.analyze(verb_surface)) {
+        // The host test applied to the bare auxiliary above is deliberately not
+        // repeated here. An auxiliary reached through an inflection is the only
+        // thing suppressing a fabricated verb over an unrelated particle run
+        // (と|り|も|ど|せ|ない), and exempting it costs more than the passive of
+        // のせる it would recover.
         bool is_verified_verb =
             vh::isVerbInDictionary(dict_manager, candidate.base_form) ||
             vh::hasDictionaryEntry(dict_manager, candidate.base_form, core::PartOfSpeech::Auxiliary);

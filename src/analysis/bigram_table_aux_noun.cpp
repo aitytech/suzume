@@ -805,6 +805,18 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::Noun, EPOS::SuffixRecentCompletion, cost::kStrongBonus},
   };
   applyRules(table, kLexicalNominalRules, sizeof(kLexicalNominalRules) / sizeof(kLexicalNominalRules[0]));
+
+  // The causative and passive auxiliaries select a verb's irrealis form and
+  // nothing else, so no particle of any role can host one. Stating that over
+  // the particle range keeps the rule from being rediscovered one particle at
+  // a time — it was previously written for 接続助詞 alone, which left の+せる
+  // free to outscore the kana verb のせる that spans it.
+  constexpr uint8_t kNoParticleHost = encodeCost(cost::kAlmostNever);
+  for (size_t epos = static_cast<size_t>(EPOS::ParticleCase); epos <= static_cast<size_t>(EPOS::ParticleBinding);
+       ++epos) {
+    table[epos][static_cast<size_t>(EPOS::AuxCausative)] = kNoParticleHost;
+    table[epos][static_cast<size_t>(EPOS::AuxPassive)] = kNoParticleHost;
+  }
 }  // namespace suzume::analysis::bigram_rules
 
 }  // namespace suzume::analysis::bigram_rules
