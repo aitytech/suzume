@@ -2013,6 +2013,60 @@
       ],
       "id": "sorehatameninaru",
       "input": "それはためになる"
+    },
+    {
+      "description": "Two-mora noun whose second mora spells a particle",
+      "expected": [
+        {
+          "lemma": "あれ",
+          "pos": "Pronoun",
+          "surface": "あれ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "くも",
+          "pos": "Noun",
+          "surface": "くも"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "arehakumoda",
+      "input": "あれはくもだ"
+    },
+    {
+      "description": "Same shape with a different one-mora particle tail",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ひも",
+          "pos": "Noun",
+          "surface": "ひも"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "korehahimoda",
+      "input": "これはひもだ"
     }
   ],
   "description": "Copula patterns (だ、です、である)",

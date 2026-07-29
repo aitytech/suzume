@@ -189,7 +189,14 @@ void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoin
 bool hasAuxiliaryChainDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                     const dictionary::DictionaryManager* dict_manager);
 
-/** Return true when a span is exactly a closed auxiliary+particle chain. */
+/**
+ * @brief Return true when a span is exactly a closed auxiliary+particle chain
+ *
+ * Three morae is the floor, for the reason its auxiliary+auxiliary sibling above
+ * states: two morae are spelled by too many one-mora closed-class forms to be
+ * evidence of anything, and an ordinary noun splits that way by accident
+ * (く+も, ひ+も, か+も).
+ */
 bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                        const dictionary::DictionaryManager* dict_manager);
 

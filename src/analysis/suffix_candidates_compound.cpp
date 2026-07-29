@@ -322,7 +322,11 @@ bool isSelectedNominalHeadShape(const std::vector<normalize::CharType>& char_typ
 
 bool hasAuxiliaryParticleDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                        const dictionary::DictionaryManager* dict_manager) {
-  if (dict_manager == nullptr || end_pos <= start_pos + 1) {
+  // Same floor as hasAuxiliaryChainDecomposition below, for the same reason: at
+  // two morae the decomposition is an accident of how many one-mora auxiliaries
+  // and particles exist (く+も for くも, ひ+も for ひも), not evidence that the
+  // span spells no word.
+  if (dict_manager == nullptr || end_pos < start_pos + 3) {
     return false;
   }
   const std::string whole = extractSubstring(codepoints, start_pos, end_pos);
