@@ -1274,6 +1274,216 @@
       ],
       "id": "shi_ttte_meru",
       "input": "話し合って決める"
+    },
+    {
+      "description": "Sokuon te-form before the light verb keeps its sokuon (もっ+て+し+た)",
+      "expected": [
+        {
+          "lemma": "事柄",
+          "pos": "Noun",
+          "surface": "事柄"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "もつ",
+          "pos": "Verb",
+          "surface": "もっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "womottteshitakotoda",
+      "input": "事柄をもってしたことだ。"
+    },
+    {
+      "description": "Light verb after te-form stays split before the concessive も",
+      "expected": [
+        {
+          "lemma": "力",
+          "pos": "Noun",
+          "surface": "力"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "もつ",
+          "pos": "Verb",
+          "surface": "もっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "無理",
+          "pos": "Adjective",
+          "surface": "無理"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "womottteshitemo_da",
+      "input": "力をもってしても無理だ。"
+    },
+    {
+      "description": "Hiragana sokuon te-form is not fused when the light verb follows",
+      "expected": [
+        {
+          "lemma": "手",
+          "pos": "Noun",
+          "surface": "手"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "ふる",
+          "pos": "Verb",
+          "surface": "ふっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "合図",
+          "pos": "Noun",
+          "surface": "合図"
+        }
+      ],
+      "id": "wofuttteshita",
+      "input": "手をふってした合図。"
+    },
+    {
+      "description": "Positive control: te-form before a kanji predicate is unaffected",
+      "expected": [
+        {
+          "lemma": "書面",
+          "pos": "Noun",
+          "surface": "書面"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "もつ",
+          "pos": "Verb",
+          "surface": "もっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "通知",
+          "pos": "Noun",
+          "surface": "通知"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "womottte_suru_2",
+      "input": "書面をもって通知する。"
+    },
+    {
+      "description": "Negative control: the completion auxiliary still wins over で+し+まう",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "しまう"
+        }
+      ],
+      "id": "wo_ndeshimau",
+      "input": "本を読んでしまう。"
     }
   ],
   "description": "Te-form and ta-form patterns",

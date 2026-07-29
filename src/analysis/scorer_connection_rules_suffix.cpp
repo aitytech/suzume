@@ -649,13 +649,17 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     bonus += cost::kAlmostNever;                                        // Strongly discourage
   }
 
-  // Penalty for て/で (ParticleConj) → a single-character lexical verb stem.
+  // Penalty for a conjunctive particle → a single-character lexical verb stem.
   // Subsidiary verbs after a te-form must use their aspect-specific ExtendedPOS
   // (い→AuxAspectIru, み→AuxAspectMiru), not a fabricated lexical verb.
-  // Exception: たり/だり → し is valid (食べたり+し+てる)
+  // The light verb する is the one continuative this cannot reach: it stands for
+  // a predicate rather than modifying one, so it has no aspect category to be
+  // written with and follows any conjunctive particle (書面をもっ+て+し+た,
+  // 食べたり+し+てる). Naming that continuative covers both particles at once,
+  // where excepting たり/だり by surface left the same sequence banned after て.
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       next.surface.size() <= 3 &&  // Single hiragana (3 bytes)
-      grammar::isPureHiragana(next.surface) && prev.surface != "たり" && prev.surface != "だり") {
+      grammar::isPureHiragana(next.surface) && !grammar::isSuruRenyokeiSurface(next.surface)) {
     bonus += cost::kAlmostNever;  // Strongly discourage
   }
 
