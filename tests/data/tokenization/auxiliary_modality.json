@@ -2289,6 +2289,149 @@
       ],
       "id": "koreha_da_5",
       "input": "これは最善だ"
+    },
+    {
+      "description": "polite copula plus volitional after an i-adjective terminal",
+      "expected": [
+        {
+          "lemma": "費用",
+          "pos": "Noun",
+          "surface": "費用"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "でしょ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        }
+      ],
+      "id": "ga_ideshi_ukara",
+      "input": "費用が高いでしょうから。"
+    },
+    {
+      "description": "the same chain before a contrastive particle",
+      "expected": [
+        {
+          "lemma": "費用",
+          "pos": "Noun",
+          "surface": "費用"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        }
+      ],
+      "id": "ga_idarouga",
+      "input": "費用が高いだろうが。"
+    },
+    {
+      "description": "verb host control for the same chain",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来る"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "ga_rudarounine",
+      "input": "彼が来るだろうにね。"
+    },
+    {
+      "description": "polite volitional keeps its own boundary",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行き"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ましょ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "kimashi_uka",
+      "input": "行きましょうか。"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

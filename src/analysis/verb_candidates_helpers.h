@@ -254,6 +254,21 @@ bool startsWithFocusParticleHead(const dictionary::DictionaryManager* dict_manag
 bool embedsCaseParticle(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
                         size_t start_pos, size_t end_pos);
 
+/**
+ * @brief Check if a candidate span opens on the tail of an earlier closed-class word
+ *
+ * True when a dictionary auxiliary or particle begins before @p start_pos and
+ * ends strictly inside [start_pos, end_pos). The candidate has then taken that
+ * word's tail and joined it to what follows: しょう in 高いでしょうから is the
+ * last two morae of the polite copula でしょ plus the volitional う, read as the
+ * dictionary form of the non-word しょう. Unlike the head shape above, the
+ * closed-class element is not contained in the candidate at all — only its end
+ * is — which is why it cannot be found by scanning the candidate's own span.
+ * @see fabricated closed-class absorption guards (top of this header)
+ */
+bool opensOnClosedClassWordTail(const dictionary::DictionaryManager* dict_manager,
+                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);
+
 // True when a fabricated verb candidate starts with an exact auxiliary entry
 // and absorbs that auxiliary's negative inflection (過ぎない → 過ぎ + ない).
 // The check is POS-based: lexical verbs with the same surface are unaffected.

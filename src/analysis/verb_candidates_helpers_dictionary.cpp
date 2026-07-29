@@ -321,6 +321,28 @@ bool embedsCaseParticle(const dictionary::DictionaryManager* dict_manager, const
   return false;
 }
 
+bool opensOnClosedClassWordTail(const dictionary::DictionaryManager* dict_manager,
+                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || start_pos == 0 || end_pos < start_pos + 2 || end_pos > codepoints.size()) {
+    return false;
+  }
+  // The closed class holds nothing longer than a handful of morae, so the scan
+  // back is bounded rather than running to the start of the sentence.
+  constexpr size_t kMaxClosedClassLen = 5;
+  const size_t scan_start = start_pos - std::min(start_pos, kMaxClosedClassLen - 1);
+  for (size_t word_start = scan_start; word_start < start_pos; ++word_start) {
+    const size_t max_end = std::min(end_pos - 1, word_start + kMaxClosedClassLen);
+    for (size_t word_end = start_pos + 1; word_end <= max_end; ++word_end) {
+      const std::string word = extractSubstring(codepoints, word_start, word_end);
+      if (dict_manager->lookupExact(word, core::PartOfSpeech::Auxiliary) != nullptr ||
+          dict_manager->lookupExact(word, core::PartOfSpeech::Particle) != nullptr) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool hasAuxiliaryNegativeBoundary(const dictionary::DictionaryManager* dict_manager,
                                   const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
   if (dict_manager == nullptr || end_pos <= start_pos + 2 || end_pos > codepoints.size()) {

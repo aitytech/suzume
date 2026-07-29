@@ -483,9 +483,17 @@ void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoin
     }
     // A chain of registered function words is never a nominal head, however
     // strong the left selector is (という+ほど+で), so that check is not gated on
-    // the selector the way the auxiliary+particle one is.
+    // the selector the way the auxiliary+particle one is. A run spelled by
+    // auxiliaries alone is the same case: だろう is the copula's irrealis plus
+    // the volitional, and an attributive predicate to its left is what puts it
+    // there rather than evidence that it heads a phrase. The generic unknown-
+    // noun rescue deliberately does not take this guard — it has no selector
+    // asserting a phrase head, so for it a run that merely decomposes into
+    // one-mora classical fragments (くるま as くる + ま) is still a noun.
+    // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
     if (has_exact_noun || has_blocking_exact_reading ||
         hasFunctionWordChainDecomposition(codepoints, start_pos, head_end, dict_manager) ||
+        hasAuxiliaryChainDecomposition(codepoints, start_pos, head_end, dict_manager) ||
         (!has_attributive_selector &&
          hasAuxiliaryParticleDecomposition(codepoints, start_pos, head_end, dict_manager))) {
       continue;

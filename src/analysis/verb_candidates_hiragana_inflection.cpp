@@ -296,6 +296,17 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       continue;
     }
 
+    // Nor may it open on the tail of a closed-class word that started before it:
+    // しょう in 高いでしょうから is the last two morae of the polite copula でしょ
+    // plus the volitional う, and the tables read that as the dictionary form of
+    // the non-word しょう. The chain test above cannot see it, because the
+    // auxiliary boundary lies outside the fabricated span.
+    // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+    if (!is_dictionary_verb && vh::opensOnClosedClassWordTail(dict_manager, codepoints, start_pos, end_pos)) {
+      SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << surface << "\" opens on a closed-class word tail\n");
+      continue;
+    }
+
     // Nor may a two-mora hypothesis — the shortest base the tables endorse, and
     // the one carrying the least evidence — start one mora inside a registered
     // verb that ends where it does (か+かる for かかる). Every two-mora verb of

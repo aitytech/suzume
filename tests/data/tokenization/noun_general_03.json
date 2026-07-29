@@ -1737,6 +1737,48 @@
       ],
       "id": "no_gamendokusai",
       "input": "紙の処理がめんどくさい"
+    },
+    {
+      "description": "copula irrealis plus volitional after an i-adjective terminal",
+      "expected": [
+        {
+          "lemma": "費用",
+          "pos": "Noun",
+          "surface": "費用"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "ga_idarounine",
+      "input": "費用が高いだろうにね。"
     }
   ],
   "description": "General nouns (part 3/3)",
