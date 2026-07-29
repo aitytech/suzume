@@ -166,8 +166,12 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
     if (dict_manager->lookupExact(prefix_surface, core::PartOfSpeech::Prefix) != nullptr) {
       return;
     }
-    constexpr PartOfSpeechMask kFunctionWordMask =
-        partOfSpeechMask(core::PartOfSpeech::Particle) | partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+    // A determiner joins the mask for the same reason: it modifies a noun
+    // phrase from outside and never binds as an adjectival prefix, so a span
+    // opening with one is a phrase boundary (その|薄暗い, この|小汚い).
+    constexpr PartOfSpeechMask kFunctionWordMask = partOfSpeechMask(core::PartOfSpeech::Particle) |
+                                                   partOfSpeechMask(core::PartOfSpeech::Auxiliary) |
+                                                   partOfSpeechMask(core::PartOfSpeech::Determiner);
     const bool is_closed_particle_or_auxiliary = hasExactPartOfSpeech(*dict_manager, prefix_surface, kFunctionWordMask);
     const bool is_adjectival_prefix =
         std::find(kParticleHomographicAdjectivalPrefixes.begin(), kParticleHomographicAdjectivalPrefixes.end(),

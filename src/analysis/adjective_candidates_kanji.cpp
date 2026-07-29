@@ -44,6 +44,20 @@ constexpr const char* kGaMashiiStem = "がまし";
 constexpr size_t kGaMashiiStemLength = 3;
 constexpr size_t kMaxGaMashiiInflectionLength = 8;
 
+/**
+ * @brief Check whether an adjective productively forms compounds as a second element.
+ *
+ * These adjectives attach to a noun or a verb continuative to derive a new
+ * adjective (息苦しい, 用心深い, 我慢強い, 読みにくい). Their compounds are built by
+ * rule rather than listed, so a candidate spanning one is a derivation and not a
+ * fabrication. Every other adjective is a complete word on its own, and material
+ * in front of it belongs to a separate token.
+ */
+bool isCompoundFormingAdjective(const std::string& base_form) {
+  return utf8::equalsAny(base_form, {"苦しい", "深い", "強い", "臭い", "くさい", "難い", "にくい", "易い", "やすい",
+                                     "辛い", "づらい", "がたい", "ぽい", "っぽい", "らしい"});
+}
+
 // =============================================================================
 // Pattern Skip Helpers for I-Adjective Candidate Generation
 // =============================================================================
@@ -558,6 +572,33 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
           if (isVerbInDictionary(dict_manager, sokuonbin_surface)) {
             SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface
                                                      << "\" has dictionary sokuonbin verb, skipping fake adjective\n");
+            continue;
+          }
+        }
+        // Skip a span that merely prefixes a complete dictionary adjective.
+        // A whole-span candidate over [modifier][dictionary adjective] fabricates
+        // a lemma for a compound nobody wrote (超難しい, 激冷たい) and destroys the
+        // adjective as a search unit; the material before it is its own word.
+        // Lexicalized compounds are dictionary entries themselves (力強い, 心細い)
+        // and are exempt, as is the case where the adjective spans everything.
+        // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+        if (!isAdjectiveInDictionary(dict_manager, cand.base_form)) {
+          bool prefixes_dictionary_adjective = false;
+          for (size_t tail_start = start_pos + 1; tail_start < end_pos; ++tail_start) {
+            for (const auto& tail_res : inflection.analyze(extractSubstring(codepoints, tail_start, end_pos))) {
+              if (tail_res.verb_type == grammar::VerbType::IAdjective &&
+                  isAdjectiveInDictionary(dict_manager, tail_res.base_form) &&
+                  !isCompoundFormingAdjective(tail_res.base_form)) {
+                prefixes_dictionary_adjective = true;
+                break;
+              }
+            }
+            if (prefixes_dictionary_adjective) {
+              break;
+            }
+          }
+          if (prefixes_dictionary_adjective) {
+            SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" ends on a dictionary adjective\n");
             continue;
           }
         }

@@ -2377,8 +2377,138 @@
       ],
       "id": "na_wo_su",
       "input": "有効な方法を探す"
+    },
+    {
+      "description": "Intensifier does not fuse with a dictionary i-adjective",
+      "expected": [
+        {
+          "lemma": "超",
+          "pos": "Noun",
+          "surface": "超"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        },
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shii_da_2",
+      "input": "超難しい作業だ"
+    },
+    {
+      "description": "Zero-particle noun plus adjective predicate keeps its boundary",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "重い",
+          "pos": "Adjective",
+          "surface": "重い"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "kono_ine",
+      "input": "この本重いね"
+    },
+    {
+      "description": "Lexicalized compound adjective stays one unit",
+      "expected": [
+        {
+          "lemma": "力強い",
+          "pos": "Adjective",
+          "surface": "力強い"
+        },
+        {
+          "lemma": "言葉",
+          "pos": "Noun",
+          "surface": "言葉"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "響く",
+          "pos": "Verb",
+          "surface": "響く"
+        }
+      ],
+      "id": "i_ga_ku",
+      "input": "力強い言葉が響く"
+    },
+    {
+      "description": "Productive compound-forming adjective keeps its derivation",
+      "expected": [
+        {
+          "lemma": "息苦しい",
+          "pos": "Adjective",
+          "surface": "息苦しい"
+        },
+        {
+          "lemma": "部屋",
+          "pos": "Noun",
+          "surface": "部屋"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shii_dattta",
+      "input": "息苦しい部屋だった"
+    },
+    {
+      "description": "Slang adjective after a bare noun keeps the noun boundary",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "質問",
+          "pos": "Noun",
+          "surface": "質問"
+        },
+        {
+          "lemma": "うざい",
+          "pos": "Adjective",
+          "surface": "うざい"
+        }
+      ],
+      "id": "sono_uzai",
+      "input": "その質問うざい"
     }
   ],
-  "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/2)",
+  "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 2/3)",
   "version": "1.0"
 }

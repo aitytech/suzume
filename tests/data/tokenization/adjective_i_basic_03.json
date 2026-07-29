@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "description": "Determiner is not absorbed into a kana-prefixed adjective",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "薄暗い",
+          "pos": "Adjective",
+          "surface": "薄暗い"
+        },
+        {
+          "lemma": "部屋",
+          "pos": "Noun",
+          "surface": "部屋"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "入る",
+          "pos": "Verb",
+          "surface": "入っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "hasono_i_ni_ttta",
+      "input": "彼はその薄暗い部屋に入った"
+    }
+  ],
+  "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 3/3)",
+  "version": "1.0"
+}

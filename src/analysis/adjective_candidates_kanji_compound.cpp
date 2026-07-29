@@ -137,6 +137,29 @@ void adj_detail::appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& 
                 continue;
               }
             }
+            // The same holds for an adjectival tail: when the final kanji plus
+            // the hiragana is itself a complete dictionary i-adjective, the
+            // sequence is a noun and the adjective predicating over it (本 重い,
+            // 紙 薄い) — the default reading, which needs no compound invented
+            // for it. A lexicalized compound (力強い, 薄暗い) is a lexical fact
+            // rather than a derivable one, so the dictionary carries it.
+            // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
+            if (dict_manager != nullptr && kanji_end > start_pos) {
+              const std::string adjective_tail = extractSubstring(codepoints, kanji_end - 1, end_pos);
+              bool tail_is_dictionary_adjective = false;
+              for (const auto& tail_res : inflection.analyze(adjective_tail)) {
+                if (tail_res.verb_type == grammar::VerbType::IAdjective &&
+                    verb_helpers::isAdjectiveInDictionary(dict_manager, tail_res.base_form)) {
+                  tail_is_dictionary_adjective = true;
+                  break;
+                }
+              }
+              if (tail_is_dictionary_adjective) {
+                SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" tail \"" << adjective_tail
+                                                         << "\" is a dictionary adjective\n");
+                continue;
+              }
+            }
             const auto& all_cands = inflection.analyze(surface);
             for (const auto& ic : all_cands) {
               if (ic.confidence >= candidate::kCompoundAdjConfMin && ic.verb_type == grammar::VerbType::IAdjective) {

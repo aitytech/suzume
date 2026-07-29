@@ -364,8 +364,16 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
           skip_nom_single_kanji_shi = true;
         }
       }
+      // A nominalization ends on a verb's continuative, so a run whose last
+      // kanji plus this okurigana is a dictionary i-adjective ends on a
+      // predicate instead: the kanji before it is a separate noun (本|重い,
+      // 頭|痛い). One-kanji runs are exempt — the adjective itself is the whole
+      // span there, and the classical terminal handled above needs its candidate.
+      const bool ends_on_dictionary_adjective =
+          kanji_count >= 2 && verb_helpers::isAdjectiveInDictionary(
+                                  dict_manager, extractSubstring(codepoints, kanji_end - 1, kanji_end + 1));
       const bool crosses_closed_suffix = hasClosedSuffixBoundary(codepoints, start_pos, kanji_end + 1, dict_manager);
-      if (!skip_nom_single_kanji_shi && !crosses_closed_suffix) {
+      if (!skip_nom_single_kanji_shi && !crosses_closed_suffix && !ends_on_dictionary_adjective) {
         auto cand = makeCandidate(surface, start_pos, kanji_end + 1, core::PartOfSpeech::Noun, nom1_cost,
                                   has_particle_continuation, CandidateOrigin::NominalizedNoun);
 #ifdef SUZUME_DEBUG_INFO
