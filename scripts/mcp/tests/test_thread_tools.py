@@ -266,6 +266,25 @@ class TestThreadNext:
 
 
 class TestThreadScan:
+    def test_batch_scan_reuses_one_store_index_for_every_new_issue(self, tmp_path, monkeypatch):
+        test_file = tmp_path / "thread_names.txt"
+        test_file.write_text("テスト文一\nテスト文二\n", encoding="utf-8")
+        monkeypatch.setattr("suzume_mcp.tools.thread_tools.PROGRESS_FILE", tmp_path / ".progress")
+        monkeypatch.setitem(bug_store._SOURCE_DIRS, "thread", tmp_path / "bugs")
+        monkeypatch.setattr(
+            "suzume_mcp.tools.thread_tools._compare_surfaces",
+            lambda text: {"match": False, "expected": f"{text} A", "suzume": text, "diff_type": "under-split"},
+        )
+        monkeypatch.setattr(
+            "suzume_mcp.tools.thread_tools.bug_store.find_by_text",
+            lambda *_args, **_kwargs: pytest.fail("batch scan performed a per-issue store scan"),
+        )
+
+        result = parse_json(run(thread_scan(count=10, input_file=str(test_file))))
+
+        assert result["problems"] == 2
+        assert [record["id"] for record in bug_store.load_open("thread")] == [1, 2]
+
     def test_file_not_found(self):
         result = parse_json(run(thread_scan(input_file="/nonexistent/file.txt")))
         assert result["status"] == "error"

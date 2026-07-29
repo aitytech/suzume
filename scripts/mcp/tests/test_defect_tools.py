@@ -207,6 +207,27 @@ class TestDefectUpdate:
         file_record(text="a", expected="a b", suzume="ab")
         assert parse_json(run(defect_update(id=1)))["status"] == "error"
 
+    def test_kind_can_be_corrected_after_triage(self, store, engine):
+        file_record(text="a", expected="a b", suzume="ab", kind="tokenizer")
+
+        result = parse_json(run(defect_update(id=1, kind="oracle")))
+
+        assert result["record"]["kind"] == "oracle"
+        assert bug_store.load_open("defect")[0]["kind"] == "oracle"
+
+    def test_an_unknown_kind_is_rejected(self, store, engine):
+        file_record(text="a", expected="a b", suzume="ab")
+        assert parse_json(run(defect_update(id=1, kind="unknown")))["status"] == "error"
+
+    def test_expected_change_recomputes_derived_fields_unless_forced(self, store, engine):
+        file_record(text="a", expected="a b", suzume="ab")
+
+        result = parse_json(run(defect_update(id=1, expected="ab")))
+
+        assert result["record"]["diff_type"] == "match"
+        assert result["record"]["check"] == "manual"
+        assert (store / "0001_match.json").is_file()
+
 
 # ============================================================================
 # defect_recheck
@@ -273,6 +294,17 @@ class TestDefectRecheck:
         file_record(text="b", expected="c d", suzume="cd")
         result = parse_json(run(defect_recheck(ids="2")))
         assert result["checked"] == 1
+
+    def test_unknown_and_resolved_ids_are_reported_as_missing(self, store, engine):
+        file_record(text="open", expected="o pen", suzume="open")
+        file_record(text="closed", expected="cl osed", suzume="closed")
+        closed = bug_store.load_one("defect", 2)
+        bug_store.resolve("defect", closed, note="fixed", output="cl osed")
+
+        result = parse_json(run(defect_recheck(ids="1,2,9")))
+
+        assert result["checked"] == 1
+        assert result["missing"] == [2, 9]
 
     def test_a_bulk_shorthand_is_rejected(self, store, engine):
         file_record(text="a", expected="a b", suzume="ab")
@@ -359,12 +391,33 @@ class TestDefectReport:
 
     def test_it_writes_to_the_requested_path(self, store, engine, tmp_path):
         file_record(text="a", expected="a b", suzume="ab")
-        target = tmp_path / "reports" / "defect.md"
-
-        result = parse_json(run(defect_report(out=str(target))))
+        target = tmp_path / "backup" / "reports" / "defect.md"
+        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch.setattr("suzume_mcp.tools.defect_tools.PROJECT_ROOT", tmp_path)
+        try:
+            result = parse_json(run(defect_report(out="backup/reports/defect.md")))
+        finally:
+            monkeypatch.undo()
 
         assert result["written"] == str(target)
         assert "Defect store report" in target.read_text(encoding="utf-8")
+
+    @pytest.mark.parametrize("out", ["../outside.md", "data/core/unsafe.md", "/tmp/unsafe.md"])
+    def test_it_refuses_report_paths_outside_backup(self, store, engine, out):
+        file_record(text="a", expected="a b", suzume="ab")
+
+        result = parse_json(run(defect_report(out=out)))
+
+        assert result["status"] == "error"
+
+    def test_a_corrupt_record_is_reported_instead_of_being_hidden(self, store, engine):
+        (store / "0001_broken.json").parent.mkdir(parents=True, exist_ok=True)
+        (store / "0001_broken.json").write_text("{broken", encoding="utf-8")
+
+        result = parse_json(run(defect_report()))
+
+        assert result["status"] == "error"
+        assert "0001_broken.json" in result["message"]
 
     def test_resolved_history_is_opt_in(self, store, engine):
         record = file_record(text="a", expected="a b", suzume="ab")
@@ -585,6 +638,15 @@ class TestDefectYield:
         assert result["families"] == {}
         assert result["totals"]["hit_rate"] == 0.0
 
+    def test_a_matching_probe_updates_its_family_last_probed_time(self, store, engine):
+        file_record(text="a", expected="a b", suzume="ab", pattern="particle-chain")
+
+        result = parse_json(run(defect_probe(texts=["no-diff"], pattern="particle-chain")))
+        families = parse_json(run(defect_yield()))["families"]
+
+        assert result["counts"] == {"match": 1}
+        assert "T" in families["particle-chain"]["last_probed"]
+
 
 # ============================================================================
 # kind
@@ -627,6 +689,14 @@ class TestListStatus:
         assert parse_json(run(defect_list()))["matched"] == 1
         assert parse_json(run(defect_list(status="resolved")))["matched"] == 1
         assert parse_json(run(defect_list(status="all")))["matched"] == 2
+
+    def test_all_status_is_id_ordered_and_compact_rows_identify_status(self, store, engine):
+        closed = file_record(text="a", expected="a b", suzume="ab")
+        bug_store.resolve("defect", closed, note="fixed", output="a b")
+        file_record(text="b", expected="c d", suzume="cd")
+
+        records = parse_json(run(defect_list(status="all")))["records"]
+        assert [(record["id"], record["status"]) for record in records] == [(1, "resolved"), (2, "open")]
 
     def test_filtering_by_resolution_implies_the_closed_set(self, store, engine):
         run(

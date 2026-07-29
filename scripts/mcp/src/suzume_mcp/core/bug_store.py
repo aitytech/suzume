@@ -17,10 +17,13 @@ from pathlib import Path
 
 from ..config import PROJECT_ROOT
 from .diff_utils import classify_surface_diff
+from .file_utils import atomic_write_text
 
 DEFAULT_SOURCE = "defect"
 RESOLVED_DIRNAME = "resolved"
 ARCHIVE_DIRNAME = "_archive"
+METADATA_DIRNAME = "_metadata"
+PROBE_HISTORY_FILENAME = "probe_history.json"
 
 # Explicit per-source mapping. "defect" has no "-quality-check" suffix, so the
 # name-pattern fallback below would resolve it to the wrong directory.
@@ -93,11 +96,9 @@ class BugStoreError(Exception):
 
 def store_dir(source: str = DEFAULT_SOURCE) -> Path:
     """Resolve the open-record directory for a source."""
-    if source in _SOURCE_DIRS:
-        return _SOURCE_DIRS[source]
-    if not re.fullmatch(r"[a-z0-9-]+", source or ""):
-        raise BugStoreError(f"Invalid source name: {source!r}")
-    return PROJECT_ROOT / ".claude" / "skills" / f"{source}-quality-check" / "bugs"
+    if source not in _SOURCE_DIRS:
+        raise BugStoreError(f"Unknown source: {source!r}. Valid sources: {', '.join(KNOWN_SOURCES)}")
+    return _SOURCE_DIRS[source]
 
 
 def resolved_dir(source: str = DEFAULT_SOURCE) -> Path:
@@ -179,17 +180,17 @@ def _apply_defaults(data: dict, path: Path, status: str) -> dict:
     return record
 
 
-def _read_record(path: Path, status: str) -> dict | None:
+def _read_record(path: Path, status: str) -> dict:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return None
+    except (json.JSONDecodeError, OSError) as exc:
+        raise BugStoreError(f"Unreadable record: {path}") from exc
     if not isinstance(data, dict):
-        return None
+        raise BugStoreError(f"Unreadable record: {path} (root must be an object)")
     try:
         return _apply_defaults(data, path, status)
-    except BugStoreError:
-        return None
+    except BugStoreError as exc:
+        raise BugStoreError(f"Unreadable record: {path} ({exc})") from exc
 
 
 def _scan(directory: Path, status: str) -> list[dict]:
@@ -197,12 +198,16 @@ def _scan(directory: Path, status: str) -> list[dict]:
     if not directory.is_dir():
         return []
     records = []
+    unreadable: list[str] = []
     for path in directory.glob("*.json"):
         if not path.is_file():
             continue
-        record = _read_record(path, status)
-        if record is not None:
-            records.append(record)
+        try:
+            records.append(_read_record(path, status))
+        except BugStoreError as exc:
+            unreadable.append(str(exc))
+    if unreadable:
+        raise BugStoreError("; ".join(unreadable))
     records.sort(key=lambda rec: rec["id"])
     return records
 
@@ -301,7 +306,7 @@ def write_record(source: str, record: dict, directory: Path | None = None) -> Pa
     target_dir.mkdir(parents=True, exist_ok=True)
     path = target_dir / record_filename(record)
     stale = target_dir / record.get("_file", "")
-    path.write_text(_serialize(record), encoding="utf-8")
+    atomic_write_text(path, _serialize(record))
     if record.get("_file") and stale.is_file() and stale != path:
         stale.unlink()
     return path
@@ -353,9 +358,12 @@ def create(
     pattern: str = "",
     description: str = "",
     line_num: int = 0,
+    record_id: int | None = None,
 ) -> dict:
     """Build and persist a new open record, assigning its id."""
     record = _build(source, text, expected, suzume, diff_type, check, kind, priority, pattern, description, line_num)
+    if record_id is not None:
+        record["id"] = record_id
     record["status"] = "open"
     path = write_record(source, record)
     record["_file"] = path.name
@@ -402,6 +410,15 @@ def update(source: str, record: dict, changes: dict) -> dict:
     """Apply field changes to an existing record and rewrite it."""
     updated = dict(record)
     updated.update({key: value for key, value in changes.items() if value is not None})
+    if changes.get("expected") is not None or changes.get("suzume") is not None:
+        expected = canonical_tokens(updated["expected"])
+        suzume = canonical_tokens(updated["suzume"])
+        updated["expected"] = expected
+        updated["suzume"] = suzume
+        if changes.get("diff_type") is None:
+            updated["diff_type"] = classify_surface_diff(normalize_tokens(expected), normalize_tokens(suzume))
+        if changes.get("check") is None:
+            updated["check"] = detect_check(expected, suzume)
     path = write_record(source, updated, Path(record["_path"]).parent)
     updated["_file"] = path.name
     updated["_path"] = str(path)
@@ -450,11 +467,49 @@ def archive(source: str, stamp: str) -> tuple[Path, int]:
 
 
 # ---------------------------------------------------------------------------
+# Probe history
+# ---------------------------------------------------------------------------
+
+
+def _probe_history_path(source: str) -> Path:
+    """Return the metadata path that records completed family probes."""
+    return store_dir(source) / METADATA_DIRNAME / PROBE_HISTORY_FILENAME
+
+
+def _load_probe_history(source: str) -> dict[str, str]:
+    """Read per-family probe timestamps, rejecting malformed scheduler state."""
+    path = _probe_history_path(source)
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        raise BugStoreError(f"Unreadable probe history: {path}") from exc
+    if not isinstance(data, dict) or not all(
+        isinstance(key, str) and isinstance(value, str) for key, value in data.items()
+    ):
+        raise BugStoreError(f"Unreadable probe history: {path}")
+    return data
+
+
+def record_probe(source: str, pattern: str, timestamp: str | None = None) -> None:
+    """Persist the time a labelled probe family was checked, even when it matched."""
+    label = (pattern or "").strip()
+    if not label:
+        return
+    history = _load_probe_history(source)
+    history[label] = timestamp or datetime.datetime.now().astimezone().isoformat(timespec="seconds")
+    atomic_write_text(
+        _probe_history_path(source), json.dumps(history, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Summaries and report rendering
 # ---------------------------------------------------------------------------
 
 
-def yield_by_pattern(open_records: list[dict], resolved_records: list[dict]) -> dict:
+def yield_by_pattern(open_records: list[dict], resolved_records: list[dict], source: str | None = None) -> dict:
     """Report the per-family hit rate that drives the next round's allocation.
 
     Both halves of a judgment land in the store — a defect as an open record, a
@@ -498,6 +553,11 @@ def yield_by_pattern(open_records: list[dict], resolved_records: list[dict]) -> 
         else:
             entry["dismissed"] += 1
         entry["last_probed"] = max(entry["last_probed"], record.get("created", ""))
+
+    if source is not None:
+        for pattern, timestamp in _load_probe_history(source).items():
+            if pattern in families:
+                families[pattern]["last_probed"] = max(families[pattern]["last_probed"], timestamp)
 
     for entry in families.values():
         entry["hit_rate"] = round(entry["filed"] / entry["judged"], 3) if entry["judged"] else 0.0

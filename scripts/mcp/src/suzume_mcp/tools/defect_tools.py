@@ -11,6 +11,7 @@ import datetime
 from pathlib import Path
 
 from ..core import bug_store
+from ..core.file_utils import atomic_write_text
 from ..core.json_utils import json_error
 from ..core.json_utils import json_result as _json_result
 from ..core.suzume_cli import get_expected_tokens_batch_subprocess, get_suzume_surfaces_async
@@ -106,6 +107,7 @@ def _entry(record: dict, compact: bool = True) -> dict:
         "diff_type": record.get("diff_type", ""),
         "kind": record.get("kind", bug_store.KIND_TOKENIZER),
         "check": record.get("check", ""),
+        "status": record.get("status", "open"),
     }
     for key in ("priority", "pattern"):
         if record.get(key):
@@ -221,6 +223,10 @@ async def defect_probe(
         return json_error(str(exc))
 
     if pattern:
+        try:
+            bug_store.record_probe(source, pattern)
+        except bug_store.BugStoreError as exc:
+            return json_error(str(exc))
         for row in rows:
             row["pattern"] = pattern
     counts: dict[str, int] = {}
@@ -327,15 +333,16 @@ async def defect_yield(source: str = "defect", min_judged: int = 0) -> str:
 
     Allocate the next round from this: most of it to the families with the
     highest `hit_rate` that are not already saturated with open records, and a
-    standing minority to the oldest `last_probed` and the families with no rows
-    at all, because a mined-out family's rate falls on its own.
+    standing minority to the families whose latest stored record is oldest and
+    the families with no rows at all, because a mined-out family's rate falls
+    on its own.
 
     Args:
         source: Store to read.
         min_judged: Hide families with fewer than this many judged sentences.
     """
     try:
-        families = bug_store.yield_by_pattern(bug_store.load_open(source), bug_store.load_resolved(source))
+        families = bug_store.yield_by_pattern(bug_store.load_open(source), bug_store.load_resolved(source), source)
     except Exception as exc:
         return json_error(str(exc))
 
@@ -489,7 +496,7 @@ async def defect_list(
     if status == "resolved":
         records = closed_records
     elif status == "all":
-        records = open_records + closed_records
+        records = sorted(open_records + closed_records, key=lambda record: record["id"])
     else:
         records = open_records
 
@@ -567,6 +574,7 @@ async def defect_update(
     pattern: str = "",
     description: str = "",
     priority: str = "",
+    kind: str = "",
     check: str = "",
     expected: str = "",
 ) -> str:
@@ -578,6 +586,7 @@ async def defect_update(
         pattern: New grammar-family label.
         description: New description (replaces the previous one).
         priority: high / medium / low.
+        kind: tokenizer / oracle / both.
         check: "surface" or "manual" — force the resolution mode.
         expected: Corrected expected tokenization.
     """
@@ -586,6 +595,8 @@ async def defect_update(
         return json_error(f"No open record #{id} in {source}")
     if priority and priority.lower() not in bug_store.PRIORITIES:
         return json_error(f"priority must be one of {bug_store.PRIORITIES}")
+    if kind and kind not in bug_store.KINDS:
+        return json_error(f"kind must be one of {bug_store.KINDS}")
     if check and check not in (bug_store.CHECK_SURFACE, bug_store.CHECK_MANUAL):
         return json_error('check must be "surface" or "manual"')
 
@@ -593,6 +604,7 @@ async def defect_update(
         "pattern": pattern or None,
         "description": description or None,
         "priority": priority.lower() if priority else None,
+        "kind": kind or None,
         "check": check or None,
         "expected": bug_store.canonical_tokens(expected) if expected else None,
     }
@@ -619,9 +631,12 @@ async def defect_recheck(ids: str = "", source: str = "defect", apply: bool = Fa
     """
     try:
         records = bug_store.load_open(source)
+        missing: list[int] = []
         if ids:
-            wanted = set(_parse_ids(ids))
-            records = [rec for rec in records if rec["id"] in wanted]
+            wanted = _parse_ids(ids)
+            by_id = {record["id"]: record for record in records}
+            missing = [bug_id for bug_id in wanted if bug_id not in by_id]
+            records = [by_id[bug_id] for bug_id in wanted if bug_id in by_id]
     except (ValueError, bug_store.BugStoreError) as exc:
         return json_error(str(exc))
 
@@ -665,6 +680,8 @@ async def defect_recheck(ids: str = "", source: str = "defect", apply: bool = Fa
     if not apply and buckets.get("resolved"):
         ready = ",".join(str(row["id"]) for row in buckets["resolved"])
         result["hint"] = f'Close them with defect_resolve(ids="{ready}", source="{source}", note="…")'
+    if missing:
+        result["missing"] = missing
     return _json_result(result)
 
 
@@ -778,7 +795,8 @@ async def defect_report(source: str = "defect", out: str = "", include_resolved:
 
     Args:
         source: Store to report on.
-        out: Path to write to, relative to the project root. Empty returns the text only.
+        out: Path below ``backup/`` to write to. Absolute paths and ``..`` are rejected.
+            Empty returns the text only.
         include_resolved: Append the retired records as a closed-history section.
     """
     try:
@@ -815,11 +833,16 @@ async def defect_report(source: str = "defect", out: str = "", include_resolved:
         },
     }
     if out:
-        path = Path(out)
-        if not path.is_absolute():
-            path = PROJECT_ROOT / path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+        requested = Path(out)
+        backup_root = (PROJECT_ROOT / "backup").resolve()
+        if requested.is_absolute() or ".." in requested.parts:
+            return json_error("out must be a relative path below backup/ without '..'")
+        path = (PROJECT_ROOT / requested).resolve()
+        try:
+            path.relative_to(backup_root)
+        except ValueError:
+            return json_error("out must be a relative path below backup/")
+        atomic_write_text(path, text)
         result["written"] = str(path)
     else:
         result["report"] = text

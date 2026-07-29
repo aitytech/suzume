@@ -1,7 +1,6 @@
 """Dictionary search, sorting, and cleanup MCP tools."""
 
 import re
-from pathlib import Path
 
 from ..core.mecab import mecab_analyze
 from ..core.suzume_cli import get_cli_path
@@ -31,6 +30,10 @@ async def dict_grep(pattern: str, user: str = "", search_all: bool = False) -> s
         user: Search specific user category dict. Empty for core dict.
         search_all: Search both core and all user dicts.
     """
+    if user and user not in USER_CATEGORIES:
+        return _json_result(
+            {"status": "error", "message": f"Invalid user category: {user}. Valid: {', '.join(USER_CATEGORIES)}"}
+        )
     try:
         rx = re.compile(pattern)
     except re.error as exc:
@@ -341,6 +344,10 @@ async def dict_remove_matching(
         user: User dictionary category (empty for core dict).
         dry_run: If True (default), preview without removing. Set False to apply.
     """
+    if user and user not in USER_CATEGORIES:
+        return _json_result(
+            {"status": "error", "message": f"Invalid user category: {user}. Valid: {', '.join(USER_CATEGORIES)}"}
+        )
     try:
         rx = re.compile(pattern)
     except re.error as exc:
@@ -425,8 +432,11 @@ async def dict_cleanup(
     """
     import subprocess
 
-    filepath = PROJECT_ROOT / input_file
-    if not filepath.exists():
+    filepath = (PROJECT_ROOT / input_file).resolve()
+    data_dir = (PROJECT_ROOT / "data").resolve()
+    if not filepath.is_relative_to(data_dir):
+        return _json_result({"status": "error", "message": "input_file must be inside data/"})
+    if not filepath.exists() or not filepath.is_file():
         return _json_result({"status": "error", "message": f"File not found: {input_file}"})
 
     cli = get_cli_path()
@@ -518,9 +528,10 @@ async def dict_cleanup(
         result["dry_run"] = True
         return _json_result(result)
 
-    base = str(filepath).rsplit(".", 1)[0]
-    keep_path = Path(f"{base}_keep.tsv")
-    noise_path = Path(f"{base}_noise.tsv")
+    output_dir = PROJECT_ROOT / "backup" / "dict-cleanup"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    keep_path = output_dir / f"{filepath.stem}_keep.tsv"
+    noise_path = output_dir / f"{filepath.stem}_noise.tsv"
 
     _atomic_write_text(keep_path, "\n".join(keep_lines) + "\n")
     _atomic_write_text(noise_path, "\n".join(noise_lines) + "\n")

@@ -59,6 +59,7 @@ from .postprocessors import (
     postprocess_kuru_causative,
     postprocess_mecab_tokens,
     postprocess_miru_aux,
+    postprocess_modifier_godan_imperative,
     postprocess_monono_conjunction,
     postprocess_n_kuruwa,
     postprocess_na_adj_noun,
@@ -101,14 +102,19 @@ def _oracle_text(text: str) -> str:
     compact = "".join(char for char in text if not char.isspace())
     normalized = []
     for char in compact:
+        # Keep this coordinate space aligned with Normalizer::normalize(): a
+        # zero-width space is formatting noise, not a token boundary or a
+        # surface character available to the oracle.
+        if char == "\u200b":
+            continue
         char = char.translate(_FULLWIDTH_TABLE)
         if "\uff66" <= char <= "\uff9d":
             # Mirror Normalizer::halfwidthKatakanaToFullwidth. The two
             # half-width voiced marks (FF9E/FF9F) deliberately remain outside
             # this range because the native table does not map them.
             char = unicodedata.normalize("NFKC", char)
-        if char in ("\u309b", "\u309c") and normalized:
-            combining = "\u3099" if char == "\u309b" else "\u309a"
+        if char in ("\u309b", "\u309c", "\uff9e", "\uff9f") and normalized:
+            combining = "\u3099" if char in ("\u309b", "\uff9e") else "\u309a"
             combined = unicodedata.normalize("NFC", normalized[-1] + combining)
             if len(combined) == 1:
                 normalized[-1] = combined
@@ -144,7 +150,7 @@ def _is_deliberately_removed_symbol(surface: str) -> bool:
 def get_mecab_tokens(text: str) -> list[dict]:
     """Get MeCab tokens with slang handling and POS mapping."""
     normalized_text = _oracle_text(text)
-    processed_text, replacements = preprocess_for_mecab(normalized_text)
+    processed_text, replacements, _ = preprocess_for_mecab(normalized_text)
     raw_tokens = mecab_analyze(processed_text)
 
     tokens = []
@@ -191,10 +197,12 @@ def _reject_surface_mismatch(
     """Fail when normalization duplicates or loses an unexplained surface."""
     reconstructed = "".join(token.get("surface", "") for token in tokens)
     expected = "".join(char for char in text if not char.isspace())
-    if surface_rule == "prolonged-sound-merge":
-        # This pre-existing oracle rule deliberately canonicalizes a run of
-        # long-vowel marks. Every other merge/split rule must preserve input.
-        expected = regex.sub(r"ー+", "ー", expected)
+    canonical_prolonged = regex.sub(r"ー+", "ー", expected)
+    if reconstructed == canonical_prolonged:
+        # The long-vowel rule may fire after another merge rule.  Its public
+        # label records only the first rule, so use the reconstructed surface
+        # itself—not that lossy label—to recognize this one declared change.
+        expected = canonical_prolonged
     if normalize_fullwidth:
         expected = expected.translate(_FULLWIDTH_TABLE)
     if reconstructed != expected:
@@ -212,7 +220,7 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     """
     # Get raw MeCab tokens
     normalized_text = _oracle_text(text)
-    processed_text, replacements = preprocess_for_mecab(normalized_text)
+    processed_text, replacements, preprocess_rules = preprocess_for_mecab(normalized_text)
     raw_tokens = mecab_analyze(processed_text)
     postprocess_mecab_tokens(raw_tokens, normalized_text, replacements)
     repair_kko_nominalizer(raw_tokens)
@@ -234,6 +242,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     applied_rule = merge_rule or split_rule
     if merge_rule and split_rule:
         applied_rule = f"{merge_rule}+{split_rule}"
+    if preprocess_rules:
+        applied_rule = "+".join((*preprocess_rules, *(rule for rule in (applied_rule,) if rule)))
 
     # Map POS and filter symbols
     tokens = []
@@ -300,6 +310,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "adjective-nominalizer"
     if postprocess_shortened_causative_passive(tokens) and applied_rule is None:
         applied_rule = "shortened-causative-passive"
+    if postprocess_modifier_godan_imperative(tokens) and applied_rule is None:
+        applied_rule = "modifier-godan-imperative"
     if postprocess_shimau_aux(tokens) and applied_rule is None:
         applied_rule = "contracted-shimau-aux"
     if postprocess_quantity_bound_suffix(tokens) and applied_rule is None:
@@ -444,12 +456,7 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     )
 
     if applied_rule:
-        return tokens, "MeCab+SuzumeRules", applied_rule or ""
-
-    # Check for slang adjective rule
-    for slang in SLANG_ADJ_STEMS:
-        if regex.search(regex.escape(slang) + r"[いかくけさ]", text):
-            return tokens, "MeCab", "slang-adjective"
+        return tokens, "MeCab+SuzumeRules", applied_rule
 
     return tokens, "MeCab", ""
 
@@ -535,8 +542,10 @@ def get_suzume_rule(text: str) -> str:
     return ""
 
 
-# Full-width to half-width translation table
+# Full-width ASCII to ASCII translation table. This intentionally includes
+# punctuation as well as digits and letters: Normalizer::fullwidthToHalfwidth
+# is the sole width-folding boundary before pre-tokenization.
 _FULLWIDTH_TABLE = str.maketrans(
-    "０１２３４５６７８９ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ",
-    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+    "".join(chr(codepoint) for codepoint in range(0xFF01, 0xFF5F)),
+    "".join(chr(codepoint) for codepoint in range(0x21, 0x7F)),
 )

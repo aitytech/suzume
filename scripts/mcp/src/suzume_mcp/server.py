@@ -1,14 +1,22 @@
 """MCP server for Suzume Japanese morphological analysis tools."""
 
+from importlib import import_module
+from pathlib import Path
+
 from mcp.server.fastmcp import FastMCP
 
 from .config import PROJECT_ROOT  # noqa: F401 — re-exported for tools
 
 mcp = FastMCP("suzume")
 
-# Import tool modules to register them with the MCP server.
-# These must be imported after `mcp` is defined since they reference it.
-from .tools import defect_tools, dict_tools, test_tools, thread_tools  # noqa: E402, F401
+# Import every tool module to register its decorated functions. Keeping this
+# discovery next to the server eliminates a second, manually maintained list:
+# an import error intentionally aborts startup rather than making only part of
+# the MCP API silently disappear.
+_TOOLS_PACKAGE = f"{__package__}.tools"
+for _tool_file in sorted(Path(__file__).with_name("tools").glob("*.py")):
+    if _tool_file.stem != "__init__":
+        import_module(f"{_TOOLS_PACKAGE}.{_tool_file.stem}")
 
 
 def main():

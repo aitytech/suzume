@@ -113,9 +113,16 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
     """
     result: list[dict] = []
     applied_rule: str | None = None
+    causative_volitional_u_pending = False
 
     for token_index, t in enumerate(tokens):
         surface = t.get("surface", "")
+
+        if causative_volitional_u_pending:
+            causative_volitional_u_pending = False
+            if surface == "う":
+                result.append({"surface": "よう", "pos": "助動詞", "lemma": "よう"})
+                continue
 
         # IPADIC lexicalizes this entire interrogative nominal phrase as an
         # adverb. Suzume keeps its productive pronoun/particle/noun boundaries;
@@ -181,6 +188,41 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             if applied_rule is None:
                 applied_rule = "lexicalized-particle-predicate-boundary"
             continue
+
+        # The productive Godan causative volitional is mizenkei + せ + よう.
+        # A reference dictionary can split its tail as the unrelated サ変
+        # imperative せよ + う, or lexicalize the whole causative stem.  Both
+        # spellings preserve the same auxiliary boundary once the preceding
+        # a-row stem reconstructs to a Godan base.
+        has_following_volitional_u = token_index + 1 < len(tokens) and tokens[token_index + 1].get("surface") == "う"
+        lexicalized_causative_stem = surface[:-2] if surface.endswith("せよ") else ""
+        lexicalized_base = base_from_mizenkei(lexicalized_causative_stem)
+        previous_surface = tokens[token_index - 1].get("surface", "") if token_index > 0 else ""
+        standalone_causative_tail = (
+            surface == "せよ" and t.get("pos") == "動詞" and base_from_mizenkei(previous_surface) is not None
+        )
+        if has_following_volitional_u and (lexicalized_base is not None or standalone_causative_tail):
+            if lexicalized_base is not None:
+                result.append({"surface": lexicalized_causative_stem, "pos": "動詞", "lemma": lexicalized_base})
+            result.append({"surface": "せ", "pos": "助動詞", "lemma": "せる"})
+            causative_volitional_u_pending = True
+            if applied_rule is None:
+                applied_rule = "productive-causative-volitional-boundary"
+            continue
+
+        # A causative conditional is the host's Godan mizenkei followed by the
+        # auxiliary せる in katei-kei.  Reference dictionaries may lexicalize
+        # the pair as one verb (遊ばせれ), but its internal boundary remains
+        # productive for every derivable a-row stem.
+        if t.get("pos") == "動詞" and surface.endswith("せれ") and len(surface) > 2:
+            causative_stem = surface[:-2]
+            base = base_from_mizenkei(causative_stem)
+            if base is not None:
+                result.append({"surface": causative_stem, "pos": "動詞", "lemma": base})
+                result.append({"surface": "せれ", "pos": "助動詞", "lemma": "せる"})
+                if applied_rule is None:
+                    applied_rule = "productive-causative-conditional-boundary"
+                continue
 
         # Productive negative auxiliaries keep their boundary even when a
         # reference dictionary lexicalizes the entire compound.  Restrict the

@@ -7,12 +7,12 @@ from ..core.pos_mapping import map_mecab_pos
 from ..core.suzume_utils import get_suzume_rule
 from ..server import PROJECT_ROOT, mcp
 from ._dict_tools_common import (
+    ALL_DICT_FILES,
     POS_TO_FILE,
     USER_CATEGORIES,
     VALID_CONJ,
     VALID_POS,
     _canonical_pos,
-    _find_word_in_files,
     _has_pos_entry,
     _json_result,
     _load_all_entries,
@@ -360,25 +360,66 @@ async def dict_remove(word: str, pos: str = "", user: str = "", dry_run: bool = 
     )
 
 
+def _select_toggle_entry(word: str, pos: str, user: str, *, disabled: bool) -> tuple[dict | None, str | None]:
+    """Select exactly one active or disabled entry for a state toggle."""
+    if pos and pos not in VALID_POS:
+        return None, f"Invalid POS: {pos}. Valid values: {', '.join(VALID_POS)}"
+    if user and user not in USER_CATEGORIES:
+        return None, f"Invalid user category: {user}. Valid values: {', '.join(USER_CATEGORIES)}"
+
+    files = [f"data/user/{user}.tsv"] if user else list(ALL_DICT_FILES)
+    matches = []
+    for file_rel in files:
+        filepath = PROJECT_ROOT / file_rel
+        if not filepath.exists():
+            continue
+        for line_num, line in enumerate(filepath.read_text(encoding="utf-8").splitlines(), 1):
+            is_disabled = line.startswith("#DISABLED# ")
+            if is_disabled != disabled:
+                continue
+            entry = line[len("#DISABLED# ") :] if is_disabled else line
+            if not entry.strip() or entry.startswith("#"):
+                continue
+            fields = entry.split("\t")
+            if fields[0] != word:
+                continue
+            if pos and _canonical_pos(fields[1] if len(fields) > 1 else "") != _canonical_pos(pos):
+                continue
+            matches.append(
+                {"file": file_rel, "line_num": line_num, "raw": entry, "pos": fields[1] if len(fields) > 1 else ""}
+            )
+
+    if not matches:
+        suffix = f" with POS {_canonical_pos(pos)}" if pos else ""
+        return None, f"Word not found in dictionary: {word}{suffix}"
+    if len(matches) > 1:
+        entries = [f"{entry['file']}: {word}\t{entry['pos']}" for entry in matches]
+        return None, f"AMBIGUOUS: '{word}' has multiple entries; specify pos ({'; '.join(entries)})"
+    return matches[0], None
+
+
 @mcp.tool()
-async def dict_disable(word: str, dry_run: bool = False) -> str:
+async def dict_disable(word: str, pos: str = "", user: str = "", dry_run: bool = False) -> str:
     """Disable a dictionary entry by commenting it out (keeps in file but inactive).
 
     Args:
         word: Word to disable.
+        pos: POS of the entry to disable. Required when the surface has multiple POS entries.
+        user: User dictionary category (empty for core dict).
         dry_run: Preview only.
     """
-    file_rel = _find_word_in_files(word)
-    if not file_rel:
-        return _json_result({"status": "error", "message": f"Word not found in dictionary: {word}"})
+    selected, error = _select_toggle_entry(word, pos, user, disabled=False)
+    if error:
+        return _json_result({"status": "error", "message": error})
 
+    file_rel = selected["file"]
     filepath = PROJECT_ROOT / file_rel
     lines = filepath.read_text(encoding="utf-8").splitlines()
     found = False
     for idx, line in enumerate(lines):
         if not line.startswith("#") and line.strip():
             surface = line.split("\t")[0]
-            if surface == word:
+            if idx + 1 == selected["line_num"] and surface == word:
                 found = True
                 if dry_run:
                     return _json_result(
@@ -390,7 +431,8 @@ async def dict_disable(word: str, dry_run: bool = False) -> str:
     if not found:
         return _json_result({"status": "error", "message": f"Word not found: {word}"})
 
-    recompile_status, error = await _write_files_and_recompile({filepath: "\n".join(lines) + "\n"}, _recompile_core_dic)
+    recompile = _recompile_user_dic if user else _recompile_core_dic
+    recompile_status, error = await _write_files_and_recompile({filepath: "\n".join(lines) + "\n"}, recompile)
     if error:
         return _json_result(
             {
@@ -406,24 +448,27 @@ async def dict_disable(word: str, dry_run: bool = False) -> str:
 
 
 @mcp.tool()
-async def dict_enable(word: str, dry_run: bool = False) -> str:
+async def dict_enable(word: str, pos: str = "", user: str = "", dry_run: bool = False) -> str:
     """Re-enable a disabled dictionary entry.
 
     Args:
         word: Word to enable.
+        pos: POS of the entry to enable. Required when the surface has multiple POS entries.
+        user: User dictionary category (empty for core dict).
         dry_run: Preview only.
     """
-    file_rel = _find_word_in_files(word)
-    if not file_rel:
-        return _json_result({"status": "error", "message": f"Disabled word not found: {word}"})
+    selected, error = _select_toggle_entry(word, pos, user, disabled=True)
+    if error:
+        return _json_result({"status": "error", "message": error})
 
+    file_rel = selected["file"]
     filepath = PROJECT_ROOT / file_rel
     lines = filepath.read_text(encoding="utf-8").splitlines()
     found = False
     for idx, line in enumerate(lines):
         if line.startswith("#DISABLED# "):
             disabled_surface = line[len("#DISABLED# ") :].split("\t")[0]
-            if disabled_surface == word:
+            if idx + 1 == selected["line_num"] and disabled_surface == word:
                 found = True
                 if dry_run:
                     return _json_result(
@@ -435,7 +480,8 @@ async def dict_enable(word: str, dry_run: bool = False) -> str:
     if not found:
         return _json_result({"status": "error", "message": f"Disabled word not found: {word}"})
 
-    recompile_status, error = await _write_files_and_recompile({filepath: "\n".join(lines) + "\n"}, _recompile_core_dic)
+    recompile = _recompile_user_dic if user else _recompile_core_dic
+    recompile_status, error = await _write_files_and_recompile({filepath: "\n".join(lines) + "\n"}, recompile)
     if error:
         return _json_result(
             {

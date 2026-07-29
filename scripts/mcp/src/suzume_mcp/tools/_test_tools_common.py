@@ -15,6 +15,7 @@ from ..core.suzume_cli import get_cli_path
 from ..core.test_file_utils import (
     get_test_data_dir,
     get_test_files,
+    normalize_test_file_name,
 )
 from ..server import PROJECT_ROOT
 
@@ -79,7 +80,13 @@ def _format_expected_checked(tokens: list[dict], source: str) -> list[dict]:
 def _get_test_files_filtered(file_filter: str = "") -> list[Path]:
     """Get test files, optionally filtered by name."""
     if file_filter and file_filter != "all":
-        path = get_test_data_dir(PROJECT_ROOT) / f"{file_filter}.json"
+        try:
+            file_name = normalize_test_file_name(file_filter)
+        except ValueError:
+            # Callers report an empty result as a rejected filter. Crucially,
+            # never turn an invalid filter into a path outside the corpus.
+            return []
+        path = get_test_data_dir(PROJECT_ROOT) / f"{file_name}.json"
         return [path] if path.exists() else []
     return get_test_files(PROJECT_ROOT)
 

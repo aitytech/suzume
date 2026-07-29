@@ -310,6 +310,18 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
             t["pos"] = "副詞"
             continue
 
+        # A one-kanji Ichidan imperative plus the final particle よ is a
+        # productive command (見ろよ, 出ろよ), even when the reference lexicon
+        # lacks the verb and returns the two-mora span as an unknown noun.
+        if (
+            pos == "名詞"
+            and regex.fullmatch(r"\p{Han}ろ", surface) is not None
+            and idx + 1 < len(tokens)
+            and tokens[idx + 1].get("surface") == "よ"
+        ):
+            t.update({"pos": "動詞", "pos_sub1": "自立", "lemma": surface[:-1] + "る"})
+            continue
+
         # んじゃ is the nominalizer plus the contracted copula wherever a
         # predicate precedes it (読む+ん+じゃ+ない). Opening a fragment, the
         # nominalizer has no host and the analyzer falls back to the dialectal

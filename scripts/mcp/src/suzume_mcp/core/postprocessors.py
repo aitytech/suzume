@@ -26,6 +26,17 @@ from .pos_mapping import _is_katakana_onomatopoeia
 from .split_rules import base_from_mizenkei, base_from_renyokei
 
 _PRODUCTIVE_COMPOUND_V2 = frozenset(COMPOUND_VERB_V2_GODAN + COMPOUND_VERB_V2_ICHIDAN)
+_GODAN_ERO_TO_BASE = {
+    "え": "う",
+    "け": "く",
+    "げ": "ぐ",
+    "せ": "す",
+    "て": "つ",
+    "ね": "ぬ",
+    "べ": "ぶ",
+    "め": "む",
+    "れ": "る",
+}
 
 
 def reports_mutation(processor: Callable[[list[dict]], object]) -> Callable[[list[dict]], bool]:
@@ -84,14 +95,30 @@ def _accept_slang_match(
     return landed is not None and landed["pos"] == native_pos and probe_count < raw_count
 
 
-def preprocess_for_mecab(text: str) -> tuple[str, dict[tuple[int, str], dict]]:
+def _non_overlapping_replacements(candidates: dict[tuple[int, str], dict]) -> dict[tuple[int, str], dict]:
+    """Keep leftmost, longest pre-analysis replacements with disjoint spans."""
+    selected: dict[tuple[int, str], dict] = {}
+    covered_until = 0
+    for key, replacement in sorted(candidates.items(), key=lambda item: (item[0][0], -item[1]["length"], item[0][1])):
+        start = key[0]
+        if start < covered_until:
+            continue
+        selected[key] = replacement
+        covered_until = start + replacement["length"]
+    return selected
+
+
+def preprocess_for_mecab(text: str) -> tuple[str, dict[tuple[int, str], dict], tuple[str, ...]]:
     """Replace slang stems with standard ones before MeCab analysis.
 
     Returns:
-        Tuple of (processed text, replacements dict keyed by (start position,
-        category)). Keying on the category as well as the start position keeps
-        replacements from different categories that happen to match at the same
-        offset from silently overwriting one another.
+        Tuple of (processed text, replacements dict, applied rule names).
+        The replacements dict is keyed by (start position, category); keying on
+        the category as well as the start position keeps replacements from
+        different categories that happen to match at the same offset from
+        silently overwriting one another. The rule names report only categories
+        that actually replaced text, so callers do not mislabel altered MeCab
+        output as a raw MeCab result.
     """
     replacements: dict[tuple[int, str], dict] = {}
 
@@ -143,6 +170,11 @@ def preprocess_for_mecab(text: str) -> tuple[str, dict[tuple[int, str], dict]]:
                 "length": len(pattern),
             }
 
+    # Multiple rule families can recognize overlapping text. Select a single,
+    # leftmost longest match before either mutation or offset accounting so the
+    # two passes always describe the same disjoint spans.
+    replacements = _non_overlapping_replacements(replacements)
+
     # Apply replacements in reverse position order
     for key in sorted(replacements, key=lambda k: k[0], reverse=True):
         pos = key[0]
@@ -159,7 +191,15 @@ def preprocess_for_mecab(text: str) -> tuple[str, dict[tuple[int, str], dict]]:
         replacement["processed_length"] = len(replacement["replacement"])
         offset_delta += replacement["processed_length"] - replacement["length"]
 
-    return text, replacements
+    rule_names = {
+        "slang_adj": "slang-adjective",
+        "slang_verb": "slang-verb",
+        "unusual_name": "unusual-name",
+        "word_exception": "word-exception",
+        "emphatic_sokuon": "emphatic-sokuon",
+    }
+    rules = tuple(dict.fromkeys(rule_names[category] for _, category in replacements))
+    return text, replacements, rules
 
 
 def postprocess_mecab_tokens(
@@ -1896,6 +1936,40 @@ def postprocess_shortened_causative_passive(tokens: list[dict]) -> bool:
         token["pos"] = "Auxiliary"
         token["lemma"] = "す"
         changed = True
+    return changed
+
+
+def postprocess_modifier_godan_imperative(tokens: list[dict]) -> bool:
+    """Restore a Godan imperative misread as an Ichidan stem after a modifier."""
+    changed = False
+    for idx in range(1, len(tokens)):
+        previous, token = tokens[idx - 1], tokens[idx]
+        following = tokens[idx + 1] if idx + 1 < len(tokens) else None
+        surface = token.get("surface", "")
+        base_suffix = _GODAN_ERO_TO_BASE.get(surface[-1:])
+        # A connective particle (て, ば, etc.) continues the predicate and
+        # cannot license an imperative reading.  Only sentence-final particles
+        # retain that interpretation (e.g. 待てよ).
+        final_particle = following is not None and following.get("surface") in {
+            "よ",
+            "ね",
+            "ぞ",
+            "ぜ",
+            "か",
+            "な",
+            "わ",
+            "さ",
+        }
+        clause_final = following is None or following.get("pos") == "Symbol" or final_particle
+        if (
+            previous.get("pos") in ("Adverb", "Adjective")
+            and token.get("pos") == "Verb"
+            and base_suffix is not None
+            and token.get("lemma") == surface + "る"
+            and clause_final
+        ):
+            token["lemma"] = surface[:-1] + base_suffix
+            changed = True
     return changed
 
 

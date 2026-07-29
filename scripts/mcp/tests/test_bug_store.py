@@ -132,10 +132,11 @@ class TestLoad:
 
         assert [rec["id"] for rec in bug_store.load_open("defect")] == [1]
 
-    def test_a_corrupt_file_is_skipped_rather_than_failing_the_listing(self, store):
+    def test_a_corrupt_file_blocks_the_listing_and_names_the_file(self, store):
         make(text="a", expected="a b", suzume="ab")
         (store / "0002_broken.json").write_text("{not json", encoding="utf-8")
-        assert len(bug_store.load_open("defect")) == 1
+        with pytest.raises(bug_store.BugStoreError, match=r"0002_broken\.json"):
+            bug_store.load_open("defect")
 
     def test_lookup_by_text_covers_resolved_records(self, store):
         record = make(text="同じ文", expected="同じ 文", suzume="同じ文")
@@ -168,6 +169,16 @@ class TestCreate:
         record["id"] = 1234
         path = bug_store.write_record("defect", record)
         assert path.name == "1234_under-split.json"
+
+    def test_record_writes_do_not_use_path_write_text(self, store, monkeypatch):
+        record = make(text="a", expected="a b", suzume="ab")
+
+        def fail(*_args, **_kwargs):
+            raise AssertionError("non-atomic Path.write_text used")
+
+        monkeypatch.setattr(type(store), "write_text", fail)
+        bug_store.write_record("defect", record)
+        assert (store / record["_file"]).read_text(encoding="utf-8")
 
 
 class TestUpdate:
@@ -310,8 +321,9 @@ class TestStoreDir:
         assert bug_store.store_dir("defect").name == "bugs"
         assert bug_store.store_dir("defect").parent.name == "defect-sweep"
 
-    def test_an_unknown_source_follows_the_skill_name_pattern(self):
-        assert bug_store.store_dir("custom").parent.name == "custom-quality-check"
+    def test_an_unknown_source_is_rejected(self):
+        with pytest.raises(bug_store.BugStoreError, match="Unknown source"):
+            bug_store.store_dir("custom")
 
     def test_a_path_like_source_is_rejected(self):
         with pytest.raises(bug_store.BugStoreError):
@@ -460,6 +472,14 @@ class TestYieldByPattern:
         make(text="a", expected="a b", suzume="ab", pattern="literary", kind=bug_store.KIND_ORACLE)
         families = bug_store.yield_by_pattern(bug_store.load_open("defect"), [])
         assert families["literary"]["kinds"] == {"oracle": 1}
+
+    def test_a_completed_probe_refreshes_the_family_scheduler_timestamp(self, store):
+        make(text="a", expected="a b", suzume="ab", pattern="particles")
+        bug_store.record_probe("defect", "particles", timestamp="2026-07-29T12:00:00+09:00")
+
+        families = bug_store.yield_by_pattern(bug_store.load_open("defect"), [], source="defect")
+
+        assert families["particles"]["last_probed"] == "2026-07-29T12:00:00+09:00"
 
 
 class TestReportKind:

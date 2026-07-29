@@ -80,6 +80,9 @@ _KANA_NUMBER_COUNTERS = tuple(
 )
 _FIXED_FUNCTION_SEARCH_UNITS = tuple(sorted(FIXED_FUNCTION_SEARCH_UNITS, key=len, reverse=True))
 _FIXED_INFLECTED_FUNCTION_UNITS = tuple(sorted(FIXED_INFLECTED_FUNCTION_UNITS, key=len, reverse=True))
+_KEYCAP_EMOJI = regex.compile(r"[0-9#*]\uFE0F?\u20E3")
+_PRETOKENIZED_QUANTITY = regex.compile(r"(?:\d{1,3}(?:,\d{3})+|\d+)円")
+_PRETOKENIZED_EMAIL = regex.compile(r"[A-Za-z0-9][A-Za-z0-9._+\-]*@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+")
 
 
 def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str | None]:
@@ -99,6 +102,32 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # Calculate position in text
         pos_in_text = sum(len(tokens[k].get("surface", "")) for k in range(i))
         remaining = text[pos_in_text:] if pos_in_text < len(text) else ""
+
+        # Native pre-tokenization sees the normalized ASCII punctuation before
+        # analysis. Recover its open-pattern quantity and email units when
+        # MeCab emitted their punctuation as separate records.
+        if not merged:
+            pretokenized_match = _KEYCAP_EMOJI.match(remaining)
+            pretokenized_rule = "keycap-emoji"
+            if pretokenized_match is None:
+                pretokenized_match = _PRETOKENIZED_QUANTITY.match(remaining)
+                pretokenized_rule = "number+unit"
+            if pretokenized_match is None:
+                pretokenized_match = _PRETOKENIZED_EMAIL.match(remaining)
+                pretokenized_rule = "email"
+            if pretokenized_match is not None:
+                unit = pretokenized_match.group(0)
+                consumed = ""
+                j = i
+                while j < len(tokens) and len(consumed) < len(unit):
+                    consumed += tokens[j].get("surface", "")
+                    j += 1
+                if consumed == unit:
+                    result.append({"surface": unit, "pos": "名詞", "lemma": unit})
+                    i = j
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = pretokenized_rule
 
         # A closed subsidiary inflection may be split into arbitrary pieces
         # by the reference dictionary (い+た+だけ+ませ).  Consume the exact

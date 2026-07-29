@@ -150,6 +150,16 @@ def test_pos_mutations_reject_aliases_that_cpp_test_loader_would_treat_as_unknow
     assert "Invalid new_pos" in mapped["message"]
 
 
+def test_pos_mutations_refuse_case_level_oracle_overrides():
+    replace = parse(run(mutation_tools.test_replace_pos(old_pos="Noun", new_pos="Verb", apply=True)))
+    mapped = parse(run(mutation_tools.test_map_pos(surface="東京", old_pos="Noun", new_pos="Verb", apply=True)))
+
+    assert replace["status"] == "error"
+    assert mapped["status"] == "error"
+    assert "oracle-owned" in replace["message"]
+    assert "test_needs_suzume_update" in mapped["message"]
+
+
 def test_diff_mecab_uses_one_raw_batch_and_reports_item_errors(tmp_path, monkeypatch):
     cases = [make_case("first", "一つ"), make_case("second", "二つ")]
     write_suite(tmp_path, "sample", cases)

@@ -387,16 +387,22 @@ async def test_replace_pos(
     file: str = "",
     apply: bool = False,
 ) -> str:
-    """Replace POS in all test files (dry-run by default).
+    """Preview POS occurrences in test expectations.
 
     Args:
         old_pos: POS value to replace.
         new_pos: New POS value.
         file: Optional test file filter (without .json), or empty for all.
-        apply: If True, apply changes. Default is dry-run.
+        apply: Reserved for compatibility. POS expectations are oracle-owned
+            and can never be changed by this tool.
     """
     if new_pos not in VALID_POS:
         return _json_error(f"Invalid new_pos: {new_pos}. Valid values: {', '.join(sorted(VALID_POS))}")
+    if apply:
+        return _json_error(
+            "POS expectations are oracle-owned and cannot be edited case-by-case. "
+            "Update the normalization pipeline, then run test_needs_suzume_update(apply=True)."
+        )
 
     files = _get_test_files_filtered(file or "all")
     if not files:
@@ -416,12 +422,7 @@ async def test_replace_pos(
             for token in case.get("expected") or []:
                 if token.get("pos") == old_pos:
                     changes.append({"file": path.stem, "case_id": case.get("id", ""), "surface": token["surface"]})
-                    if apply:
-                        token["pos"] = new_pos
                     file_changes += 1
-
-        if apply and file_changes > 0:
-            save_json(path, data)
 
     if not changes:
         return _json_result(
@@ -453,17 +454,23 @@ async def test_map_pos(
     file: str = "",
     apply: bool = False,
 ) -> str:
-    """Replace POS only for a specific surface (dry-run by default).
+    """Preview POS occurrences for a specific surface.
 
     Args:
         surface: Token surface to match.
         old_pos: Current POS value to replace.
         new_pos: New POS value.
         file: Optional test file filter.
-        apply: If True, apply changes.
+        apply: Reserved for compatibility. POS expectations are oracle-owned
+            and can never be changed by this tool.
     """
     if new_pos not in VALID_POS:
         return _json_error(f"Invalid new_pos: {new_pos}. Valid values: {', '.join(sorted(VALID_POS))}")
+    if apply:
+        return _json_error(
+            "POS expectations are oracle-owned and cannot be edited case-by-case. "
+            "Update the normalization pipeline, then run test_needs_suzume_update(apply=True)."
+        )
 
     files = _get_test_files_filtered(file or "all")
     if not files:
@@ -483,12 +490,7 @@ async def test_map_pos(
             for token in case.get("expected") or []:
                 if token.get("surface") == surface and token.get("pos") == old_pos:
                     changes.append({"file": path.stem, "case_id": case.get("id", ""), "surface": surface})
-                    if apply:
-                        token["pos"] = new_pos
                     file_changes += 1
-
-        if apply and file_changes > 0:
-            save_json(path, data)
 
     if not changes:
         return _json_result(

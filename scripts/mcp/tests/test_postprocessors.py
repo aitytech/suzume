@@ -1,6 +1,7 @@
 """Tests for postprocessor functions."""
 
 from suzume_mcp.core.postprocessors import (
+    _non_overlapping_replacements,
     postprocess_adjective_garu,
     postprocess_adjective_nominalizer,
     postprocess_adverb_nominal_context,
@@ -32,6 +33,7 @@ from suzume_mcp.core.postprocessors import (
     postprocess_kadouka_adverb,
     postprocess_mecab_tokens,
     postprocess_miru_aux,
+    postprocess_modifier_godan_imperative,
     postprocess_na_adj_noun,
     postprocess_nai_context,
     postprocess_nara_verb,
@@ -62,28 +64,73 @@ def _tok(surface, pos, **kw):
     return t
 
 
+class TestModifierGodanImperative:
+    def test_clause_final_e_row_after_modifier_is_godan_imperative(self):
+        tokens = [_tok("少し", "Adverb"), _tok("待て", "Verb", lemma="待てる")]
+
+        assert postprocess_modifier_godan_imperative(tokens)
+        assert tokens[1]["lemma"] == "待つ"
+
+    def test_auxiliary_continuation_keeps_ichidan_lemma(self):
+        tokens = [
+            _tok("必ずしも", "Adverb"),
+            _tok("食べ", "Verb", lemma="食べる"),
+            _tok("ない", "Auxiliary"),
+        ]
+
+        assert not postprocess_modifier_godan_imperative(tokens)
+        assert tokens[1]["lemma"] == "食べる"
+
+    def test_connective_particle_keeps_ichidan_lemma(self):
+        tokens = [
+            _tok("すっかり", "Adverb"),
+            _tok("忘れ", "Verb", lemma="忘れる"),
+            _tok("て", "Particle"),
+            _tok("しまっ", "Auxiliary", lemma="しまう"),
+        ]
+
+        assert not postprocess_modifier_godan_imperative(tokens)
+        assert tokens[1]["lemma"] == "忘れる"
+
+
 class TestPreprocessForMecab:
+    def test_overlapping_replacements_choose_the_leftmost_longest_span(self):
+        candidates = {
+            (0, "short"): {"original": "ab", "replacement": "X", "length": 2},
+            (0, "long"): {"original": "abc", "replacement": "Y", "length": 3},
+            (2, "overlap"): {"original": "cd", "replacement": "Z", "length": 2},
+            (3, "next"): {"original": "de", "replacement": "W", "length": 2},
+        }
+
+        selected = _non_overlapping_replacements(candidates)
+
+        assert list(selected) == [(0, "long"), (3, "next")]
+
     def test_slang_adj(self):
-        text, reps = preprocess_for_mecab("エモい")
+        text, reps, rules = preprocess_for_mecab("エモい")
         assert "エモ" not in text
         assert len(reps) > 0
+        assert rules == ("slang-adjective",)
 
     def test_slang_verb(self):
-        text, reps = preprocess_for_mecab("バズった")
+        text, reps, rules = preprocess_for_mecab("バズった")
         assert "バズ" not in text
+        assert rules == ("slang-verb",)
 
     def test_word_exception(self):
-        text, reps = preprocess_for_mecab("小供")
+        text, reps, rules = preprocess_for_mecab("小供")
         assert text == "供給"
+        assert rules == ("word-exception",)
 
     def test_no_change(self):
-        text, reps = preprocess_for_mecab("食べる")
+        text, reps, rules = preprocess_for_mecab("食べる")
         assert text == "食べる"
         assert len(reps) == 0
+        assert rules == ()
 
     def test_word_exception_restores_only_recorded_offset(self):
         original = "確認を再確認する"
-        processed, replacements = preprocess_for_mecab(original)
+        processed, replacements, _ = preprocess_for_mecab(original)
         assert processed == "確認を確認する"
         tokens = [
             _tok("確認", "名詞"),

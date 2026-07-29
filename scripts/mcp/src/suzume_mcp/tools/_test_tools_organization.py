@@ -372,9 +372,8 @@ async def test_split_file(
 ) -> str:
     """Split one test file into balanced, stable numbered parts.
 
-    Every case object is preserved verbatim, including tags and accepted-diff
-    metadata. The source file is removed only after all destination files have
-    been written successfully.
+    Every valid case object and its supported metadata is preserved. The source
+    file is removed only after all destination files have been written successfully.
 
     Args:
         file: Source test file basename, without .json.

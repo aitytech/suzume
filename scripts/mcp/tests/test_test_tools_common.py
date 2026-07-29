@@ -21,3 +21,14 @@ def test_get_suzume_tokens_uses_explicit_analyze_command_and_option_separator(mo
 
     assert common._get_suzume_tokens("-x") == [{"surface": "-x", "pos": "Noun", "lemma": "-x"}]
     assert observed == [str(cli), "analyze", "--no-user-dict", "--", "-x"]
+
+
+def test_filtered_test_files_reject_path_like_names(monkeypatch, tmp_path: Path):
+    corpus = tmp_path / "tests/data/tokenization"
+    corpus.mkdir(parents=True)
+    outside = tmp_path / "outside.json"
+    outside.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(common, "PROJECT_ROOT", tmp_path)
+
+    assert common._get_test_files_filtered("../outside") == []
+    assert common._get_test_files_filtered(str(outside)) == []

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from suzume_mcp.core.suzume_utils import format_expected, get_expected_tokens, tokens_match
+from suzume_mcp.core.suzume_utils import _oracle_text, format_expected, get_expected_tokens, tokens_match
 
 pytestmark = pytest.mark.skipif(
     shutil.which("mecab") is None,
@@ -38,6 +38,21 @@ class TestGetExpectedTokens:
         tokens, source, rule = get_expected_tokens("エモい")
         surfaces = [t["surface"] for t in tokens]
         assert "エモい" in surfaces or "エモ" in surfaces
+        assert source == "MeCab+SuzumeRules"
+        assert rule == "slang-adjective"
+
+    @pytest.mark.parametrize(
+        ("text", "expected_rule"),
+        [
+            ("バズった", "slang-verb"),
+            ("打ち合わせをする", "word-exception"),
+            ("ですっ", "word-exception"),
+        ],
+    )
+    def test_preprocessed_mecab_input_reports_its_actual_rule(self, text, expected_rule):
+        _tokens, source, rule = get_expected_tokens(text)
+        assert source == "MeCab+SuzumeRules"
+        assert expected_rule in rule.split("+")
 
     def test_janai_split(self):
         tokens, source, rule = get_expected_tokens("嫌じゃない")
@@ -68,6 +83,23 @@ class TestGetExpectedTokens:
         for t in tokens:
             s = t["surface"]
             assert "１" not in s  # Should be half-width
+
+    @pytest.mark.parametrize(
+        ("text", "surface", "rule"),
+        [
+            ("１，２３４円", "1,234円", "number+unit"),
+            ("ｔｅｓｔ＠ｅｘａｍｐｌｅ．ｊｐ", "test@example.jp", "email"),
+        ],
+    )
+    def test_fullwidth_pretokenizer_units_share_core_normalization(self, text, surface, rule):
+        tokens, _, applied_rule = get_expected_tokens(text)
+        assert [token["surface"] for token in tokens] == [surface]
+        assert applied_rule == rule
+
+    def test_keycap_emoji_stays_one_search_unit(self):
+        tokens, _, rule = get_expected_tokens("1️⃣です")
+        assert [token["surface"] for token in tokens] == ["1️⃣", "です"]
+        assert rule == "keycap-emoji"
 
     def test_word_exception_restoration_is_offset_scoped(self):
         tokens, _, _ = get_expected_tokens("確認を再確認する")
@@ -103,6 +135,31 @@ class TestSurfaceIsNeverLost:
         tokens, _, rule = get_expected_tokens("長いーー音を入力する")
         assert "".join(token["surface"] for token in tokens) == "長いー音を入力する"
         assert rule == "prolonged-sound-merge"
+
+    @pytest.mark.parametrize("text", ["3枚あのーー", "そうそうあのーー"])
+    def test_prolonged_sound_normalization_does_not_depend_on_the_first_rule(self, text):
+        tokens, _, _ = get_expected_tokens(text)
+        assert "".join(token["surface"] for token in tokens).endswith("あのー")
+
+    @pytest.mark.parametrize(
+        ("source", "normalized"),
+        [("ﾀﾞｻい服", "ダサい服"), ("ﾊﾞｽに乗る", "バスに乗る")],
+    )
+    def test_halfwidth_voiced_marks_share_the_core_coordinate_space(self, source, normalized):
+        assert _oracle_text(source) == normalized
+
+    @pytest.mark.parametrize(
+        ("source", "normalized"),
+        [
+            ("１，２３４円", "1,234円"),
+            ("ｔｅｓｔ＠ｅｘａｍｐｌｅ．ｊｐ", "test@example.jp"),
+            ("ｖ１．２．３", "v1.2.3"),
+            ("テ\u200bスト", "テスト"),
+            ("1️⃣です", "1️⃣です"),
+        ],
+    )
+    def test_oracle_text_matches_core_width_and_symbol_coordinates(self, source, normalized):
+        assert _oracle_text(source) == normalized
 
     def test_unicode_text_is_reclassified_instead_of_lost(self):
         tokens, _, _ = get_expected_tokens("테스트を見る")

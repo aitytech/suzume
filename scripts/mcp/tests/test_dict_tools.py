@@ -342,6 +342,31 @@ class TestSingleEntryMutations:
         assert "最悪\tNOUN" in nouns.read_text(encoding="utf-8")
         assert "最悪\tADJECTIVE" not in adjectives.read_text(encoding="utf-8")
 
+    def test_disable_requires_pos_and_handles_a_user_dictionary(self, tmp_path, monkeypatch):
+        nouns = self.prepare_core(tmp_path, monkeypatch, "同形\tNOUN\n")
+        adjectives = tmp_path / "data/core/adjectives.tsv"
+        adjectives.write_text("同形\tADJECTIVE\tNA_ADJ\n", encoding="utf-8")
+        user = tmp_path / "data/user/common.tsv"
+        user.parent.mkdir(parents=True)
+        user.write_text("利用語\tNOUN\n", encoding="utf-8")
+
+        async def recompile_user():
+            return "ok"
+
+        monkeypatch.setattr(operation_tools, "_recompile_user_dic", recompile_user)
+
+        ambiguous = parse(run(dict_disable("同形")))
+        assert ambiguous["status"] == "error"
+        assert "AMBIGUOUS" in ambiguous["message"]
+        assert parse(run(dict_disable("同形", pos="ADJECTIVE")))["status"] == "ok"
+        assert "同形\tNOUN" in nouns.read_text(encoding="utf-8")
+        assert "#DISABLED# 同形\tADJECTIVE" in adjectives.read_text(encoding="utf-8")
+
+        assert parse(run(dict_disable("利用語", user="common")))["status"] == "ok"
+        assert "#DISABLED# 利用語\tNOUN" in user.read_text(encoding="utf-8")
+        assert parse(run(dict_enable("利用語", user="common")))["status"] == "ok"
+        assert "#DISABLED#" not in user.read_text(encoding="utf-8")
+
 
 class TestDictValidateMutation:
     def test_fix_removes_duplicate_and_recompiles(self, tmp_path, monkeypatch):
@@ -389,6 +414,17 @@ class TestDictRemoveMatching:
         assert target.read_text(encoding="utf-8") == "りんご\tNOUN\n"
         assert parse(run(dict_remove_matching("[")))["status"] == "error"
 
+    def test_invalid_user_category_is_rejected_before_any_dictionary_access(self, tmp_path, monkeypatch):
+        core = tmp_path / "data/core/nouns.tsv"
+        core.parent.mkdir(parents=True)
+        core.write_text("東京\tNOUN\n", encoding="utf-8")
+        monkeypatch.setattr(maintenance_tools, "PROJECT_ROOT", tmp_path)
+
+        result = parse(run(dict_remove_matching("東京", user="../core/nouns", dry_run=False)))
+
+        assert result["status"] == "error"
+        assert core.read_text(encoding="utf-8") == "東京\tNOUN\n"
+
 
 class TestDictCleanup:
     def test_cleanup_dry_run(self):
@@ -397,12 +433,13 @@ class TestDictCleanup:
         assert result.get("dry_run") is True
 
     def test_cleanup_not_found(self):
-        result = parse(run(dict_cleanup(input_file="nonexistent.tsv")))
+        result = parse(run(dict_cleanup(input_file="data/core/nonexistent.tsv")))
         assert result["status"] == "error"
         assert "not found" in result["message"]
 
     def test_cleanup_runs_cli_from_project_root(self, tmp_path, monkeypatch):
-        target = tmp_path / "sample.tsv"
+        target = tmp_path / "data/core/sample.tsv"
+        target.parent.mkdir(parents=True)
         target.write_text("東京公園\tNOUN\n", encoding="utf-8")
         cli = tmp_path / "suzume-cli"
         cli.touch()
@@ -416,12 +453,13 @@ class TestDictCleanup:
         monkeypatch.setattr(maintenance_tools, "get_cli_path", lambda: cli)
         monkeypatch.setattr(subprocess, "run", fake_run)
 
-        result = parse(run(dict_cleanup(input_file="sample.tsv")))
+        result = parse(run(dict_cleanup(input_file="data/core/sample.tsv")))
         assert result["dry_run"] is True
         assert observed["cwd"] == tmp_path
 
     def test_cleanup_reports_nonzero_cli_exit(self, tmp_path, monkeypatch):
-        target = tmp_path / "sample.tsv"
+        target = tmp_path / "data/core/sample.tsv"
+        target.parent.mkdir(parents=True)
         target.write_text("東京公園\tNOUN\n", encoding="utf-8")
         cli = tmp_path / "suzume-cli"
         cli.touch()
@@ -433,9 +471,39 @@ class TestDictCleanup:
         monkeypatch.setattr(maintenance_tools, "get_cli_path", lambda: cli)
         monkeypatch.setattr(subprocess, "run", fake_run)
 
-        result = parse(run(dict_cleanup(input_file="sample.tsv")))
+        result = parse(run(dict_cleanup(input_file="data/core/sample.tsv")))
         assert result["status"] == "error"
         assert "exited with 2" in result["message"]
+
+    def test_cleanup_rejects_paths_outside_dictionary_data(self, tmp_path, monkeypatch):
+        target = tmp_path / "sample.tsv"
+        target.write_text("東京公園\tNOUN\n", encoding="utf-8")
+        monkeypatch.setattr(maintenance_tools, "PROJECT_ROOT", tmp_path)
+
+        result = parse(run(dict_cleanup(input_file="sample.tsv")))
+        assert result["status"] == "error"
+        assert "inside data" in result["message"]
+
+    def test_cleanup_writes_artifacts_outside_the_compiler_glob(self, tmp_path, monkeypatch):
+        target = tmp_path / "data/core/sample.tsv"
+        target.parent.mkdir(parents=True)
+        target.write_text("東京公園\tNOUN\n", encoding="utf-8")
+        cli = tmp_path / "suzume-cli"
+        cli.touch()
+
+        def fake_run(args, **kwargs):
+            return subprocess.CompletedProcess(args, 0, "東京\tNOUN\n公園\tNOUN\nEOS\n", "")
+
+        monkeypatch.setattr(maintenance_tools, "PROJECT_ROOT", tmp_path)
+        monkeypatch.setattr(maintenance_tools, "get_cli_path", lambda: cli)
+        monkeypatch.setattr(subprocess, "run", fake_run)
+
+        result = parse(run(dict_cleanup(input_file="data/core/sample.tsv", dry_run=False)))
+
+        assert result["applied"] is True
+        assert result["keep_file"] == "backup/dict-cleanup/sample_keep.tsv"
+        assert result["noise_file"] == "backup/dict-cleanup/sample_noise.tsv"
+        assert sorted(path.name for path in target.parent.glob("*.tsv")) == ["sample.tsv"]
 
 
 def test_multi_file_mutation_rolls_back_all_sources(tmp_path):
@@ -468,3 +536,7 @@ class TestDictGrep:
         result = parse(run(dict_grep("^zzzznonexistent")))
         assert result["total"] == 0
         assert result["matches"] == []
+
+    def test_grep_rejects_a_path_like_user_category(self):
+        result = parse(run(dict_grep(".", user="../core/nouns")))
+        assert result["status"] == "error"

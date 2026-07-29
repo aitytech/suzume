@@ -199,6 +199,53 @@ class TestProductiveCompletiveTsukusuSplit:
         assert rule is None
 
 
+class TestProductiveCausativeConditionalSplit:
+    def test_lexicalized_godan_causative_keeps_auxiliary_boundary(self):
+        result, rule = apply_suzume_split([_tok("遊ばせれ", pos="動詞", lemma="遊ばせる")])
+
+        assert result == [
+            {"surface": "遊ば", "pos": "動詞", "lemma": "遊ぶ"},
+            {"surface": "せれ", "pos": "助動詞", "lemma": "せる"},
+        ]
+        assert rule == "productive-causative-conditional-boundary"
+
+    def test_non_godan_lexeme_ending_in_seru_is_not_reconstructed(self):
+        result, rule = apply_suzume_split([_tok("見せれ", pos="動詞", lemma="見せる")])
+
+        assert result == [_tok("見せれ", pos="動詞", lemma="見せる")]
+        assert rule is None
+
+
+class TestProductiveCausativeVolitionalSplit:
+    def test_splits_reference_suru_imperative_tail(self):
+        tokens = [
+            _tok("書か", pos="動詞", lemma="書く"),
+            _tok("せよ", pos="動詞", lemma="する"),
+            _tok("う", pos="助動詞"),
+        ]
+
+        result, rule = apply_suzume_split(tokens)
+
+        assert result == [
+            _tok("書か", pos="動詞", lemma="書く"),
+            {"surface": "せ", "pos": "助動詞", "lemma": "せる"},
+            {"surface": "よう", "pos": "助動詞", "lemma": "よう"},
+        ]
+        assert rule == "productive-causative-volitional-boundary"
+
+    def test_splits_lexicalized_causative_stem(self):
+        tokens = [_tok("泳がせよ", pos="動詞", lemma="泳がせる"), _tok("う", pos="助動詞")]
+
+        result, rule = apply_suzume_split(tokens)
+
+        assert result == [
+            {"surface": "泳が", "pos": "動詞", "lemma": "泳ぐ"},
+            {"surface": "せ", "pos": "助動詞", "lemma": "せる"},
+            {"surface": "よう", "pos": "助動詞", "lemma": "よう"},
+        ]
+        assert rule == "productive-causative-volitional-boundary"
+
+
 class TestZuNiWaNegativeAuxiliarySplit:
     def test_lexicalized_negative_is_split_by_closed_frame(self):
         tokens = [

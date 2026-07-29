@@ -122,9 +122,18 @@ def _is_japanese(line: str) -> bool:
     return bool(re.search(r"[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]", line))
 
 
-def _append_issue(line_num: int, text: str, result: dict) -> None:
+def _append_issue(
+    line_num: int,
+    text: str,
+    result: dict,
+    filed_texts: set[str] | None = None,
+    next_record_id: list[int] | None = None,
+) -> None:
     """File an auto-detected scan issue into the thread store."""
-    if bug_store.find_by_text(SCAN_SOURCE, text) is not None:
+    if filed_texts is None:
+        if bug_store.find_by_text(SCAN_SOURCE, text) is not None:
+            return
+    elif text in filed_texts:
         return
     bug_store.create(
         SCAN_SOURCE,
@@ -134,7 +143,12 @@ def _append_issue(line_num: int, text: str, result: dict) -> None:
         diff_type=result.get("diff_type", ""),
         pattern="auto-scan",
         line_num=line_num,
+        record_id=next_record_id[0] if next_record_id is not None else None,
     )
+    if filed_texts is not None:
+        filed_texts.add(text)
+    if next_record_id is not None:
+        next_record_id[0] += 1
 
 
 def _process_lines(
@@ -144,6 +158,8 @@ def _process_lines(
     progress: dict,
     verbose: bool = False,
     record_issues: bool = True,
+    filed_texts: set[str] | None = None,
+    next_record_id: list[int] | None = None,
 ) -> tuple[list[dict], int, int, int, int]:
     """Process a range of lines and return results.
 
@@ -207,7 +223,7 @@ def _process_lines(
             }
             issues.append(issue)
             if record_issues:
-                _append_issue(current_line, line, result)
+                _append_issue(current_line, line, result, filed_texts, next_record_id)
 
     return issues, processed, problems, skipped, max_line
 
@@ -222,7 +238,8 @@ async def thread_status(input_file: str = "") -> str:
     """Show thread check progress stats.
 
     Args:
-        input_file: Path to thread names file. Defaults to backup/thread_names.txt.
+        input_file: Path to thread names file. Defaults to the repository's
+            thread-quality-check corpus.
     """
     filepath = Path(input_file) if input_file else DEFAULT_FILE
     if not filepath.exists():
@@ -257,7 +274,8 @@ async def thread_scan(
     Args:
         count: Number of lines to process.
         from_line: Start from specific line number (0 = continue from last).
-        input_file: Path to thread names file. Defaults to backup/thread_names.txt.
+        input_file: Path to thread names file. Defaults to the repository's
+            thread-quality-check corpus.
         dry_run: Inspect lines without writing issue JSON or updating progress.
     """
     filepath = Path(input_file) if input_file else DEFAULT_FILE
@@ -270,6 +288,12 @@ async def thread_scan(
     start = from_line if from_line > 0 else progress["last_checked"] + 1
 
     all_lines = filepath.read_text(encoding="utf-8").splitlines()
+    filed_texts = None
+    next_record_id = None
+    if not dry_run:
+        known = bug_store.load_open(SCAN_SOURCE) + bug_store.load_resolved(SCAN_SOURCE)
+        filed_texts = {(record.get("text") or "").strip() for record in known}
+        next_record_id = [bug_store.next_id(SCAN_SOURCE)]
     issues, processed, problems, skipped, max_line = _process_lines(
         all_lines,
         start,
@@ -277,6 +301,8 @@ async def thread_scan(
         progress,
         verbose=False,
         record_issues=not dry_run,
+        filed_texts=filed_texts,
+        next_record_id=next_record_id,
     )
 
     # Build issue list for JSON (only problems)
@@ -335,7 +361,8 @@ async def thread_next(
     Args:
         count: Number of lines to process.
         from_line: Start from specific line number (0 = continue from last).
-        input_file: Path to thread names file. Defaults to backup/thread_names.txt.
+        input_file: Path to thread names file. Defaults to the repository's
+            thread-quality-check corpus.
         dry_run: Inspect lines without writing issue JSON or updating progress.
     """
     filepath = Path(input_file) if input_file else DEFAULT_FILE
@@ -348,6 +375,12 @@ async def thread_next(
     start = from_line if from_line > 0 else progress["last_checked"] + 1
 
     all_lines = filepath.read_text(encoding="utf-8").splitlines()
+    filed_texts = None
+    next_record_id = None
+    if not dry_run:
+        known = bug_store.load_open(SCAN_SOURCE) + bug_store.load_resolved(SCAN_SOURCE)
+        filed_texts = {(record.get("text") or "").strip() for record in known}
+        next_record_id = [bug_store.next_id(SCAN_SOURCE)]
     issues, processed, problems, skipped, max_line = _process_lines(
         all_lines,
         start,
@@ -355,6 +388,8 @@ async def thread_next(
         progress,
         verbose=True,
         record_issues=not dry_run,
+        filed_texts=filed_texts,
+        next_record_id=next_record_id,
     )
 
     # Build results list for JSON (all entries including matches)
