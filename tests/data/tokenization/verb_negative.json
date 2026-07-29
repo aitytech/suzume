@@ -496,6 +496,60 @@
       ],
       "id": "wokumanai",
       "input": "水をくまない"
+    },
+    {
+      "description": "Particle-initial kana run before a negative auxiliary",
+      "expected": [
+        {
+          "lemma": "のる",
+          "pos": "Verb",
+          "surface": "のら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "noranakattta",
+      "input": "のらなかった"
+    },
+    {
+      "description": "Same run after a case particle",
+      "expected": [
+        {
+          "lemma": "電車",
+          "pos": "Noun",
+          "surface": "電車"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "のる",
+          "pos": "Verb",
+          "surface": "のら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ninoranakattta",
+      "input": "電車にのらなかった"
     }
   ],
   "description": "verb_negative tests",

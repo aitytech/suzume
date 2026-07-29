@@ -752,6 +752,15 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       if (!matching_sokuon && !matching_hatsuon) {
         continue;
       }
+      // The onbin has to be the verb's own cell. The analysis reports where the
+      // stem ends, and when that is further left the mora belongs to an
+      // auxiliary inside the chain rather than to the verb: のらなかった analyses
+      // as a form of のる, whose stem is の and whose onbin is のっ, so the っ
+      // here is the negative なかっ. Rebuilding a stem up to it would invent a
+      // predicate that swallows the negative auxiliary whole.
+      if (start_pos + normalize::utf8Length(inflection_candidate.stem) != onbin_pos) {
+        continue;
+      }
       const std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_pos + 1);
       candidates.push_back(makeVerbCandidate(
           onbin_surface, start_pos, onbin_pos + 1, candidate::verb_cost::kStandardBonus, inflection_candidate.base_form,
@@ -772,7 +781,17 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
           verb_candidate.extended_pos == core::ExtendedPOS::VerbOnbinkei && verb_candidate.end < codepoints.size() &&
           (codepoints[verb_candidate.end] == U'た' || codepoints[verb_candidate.end] == U'て' ||
            codepoints[verb_candidate.end] == U'だ');
-      if (ends_before_tense) {
+      // What this bonus is meant to outrank is a particle reading of the run's
+      // head. A negative auxiliary closing the span is a different competitor:
+      // the shorter path there is a verb plus that auxiliary, which is the
+      // correct analysis and needs no defending against (のら + なかっ + た, not
+      // a form of the non-word のらなかる).
+      bool closes_on_negative_auxiliary = false;
+      for (size_t pos = start_pos + 1; pos < verb_candidate.end && !closes_on_negative_auxiliary; ++pos) {
+        closes_on_negative_auxiliary =
+            vh::negativeAuxiliaryLengthAt(dict_manager, codepoints, pos) == verb_candidate.end - pos;
+      }
+      if (ends_before_tense && !closes_on_negative_auxiliary) {
         verb_candidate.cost += bigram_cost::kDoubleVeryStrongBonus + bigram_cost::kExtraStrongBonus;
       }
     }

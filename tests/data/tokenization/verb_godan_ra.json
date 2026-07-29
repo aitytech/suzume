@@ -2331,6 +2331,33 @@
       ],
       "id": "contracted_negative_past",
       "input": "子供が走らんかった"
+    },
+    {
+      "description": "Particle-initial kana run whose sokuonbin stem still wins",
+      "expected": [
+        {
+          "lemma": "頭",
+          "pos": "Noun",
+          "surface": "頭"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "よぎる",
+          "pos": "Verb",
+          "surface": "よぎっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "woyogittta",
+      "input": "頭をよぎった"
     }
   ],
   "description": "Godan Ra-row verbs (五段ラ行動詞) - verbs ending in る",
