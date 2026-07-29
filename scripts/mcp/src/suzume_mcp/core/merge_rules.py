@@ -18,6 +18,8 @@ from .constants import (
     KANA_NUMBER_STEMS,
     NAI_ADJECTIVES,
     TARI_ADVERB_STEMS,
+    TEMPORAL_COMPOUND_UNITS,
+    TEMPORAL_PREFIX_KANJI,
 )
 from .mecab import mecab_analyze
 from .merge_postprocessors import (
@@ -438,7 +440,14 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
             # (超高速, 超大型).
             if nxt.get("pos") == "名詞" and nxt.get("pos_sub1") != "形容動詞語幹":
                 combined = t.get("surface", "") + nxt.get("surface", "")
-                if regex.match(r"^[\p{Han}]+$", combined):
+                # A temporal prefix heads a temporal noun, so only a temporal unit
+                # continues it (今週, 今度, 毎時). Before an ordinary noun the prefix
+                # is the adverbial 今 and the noun is its own word (今|紙, 今|水).
+                temporal_break = (
+                    t.get("surface", "") in TEMPORAL_PREFIX_KANJI
+                    and nxt.get("surface", "")[:1] not in TEMPORAL_COMPOUND_UNITS
+                )
+                if not temporal_break and regex.match(r"^[\p{Han}]+$", combined):
                     result.append({"surface": combined, "pos": "名詞", "lemma": combined})
                     i += 2
                     merged = True

@@ -672,6 +672,37 @@ FIXED_LEADING_SEARCH_UNITS: dict[str, str] = {
     "わが": "連体詞",
 }
 
+# Temporal prefixes and the right-hand elements that continue a temporal noun.
+# The prefix heads a temporal compound (今週, 今回, 毎時, 今夏), never an arbitrary
+# one, so an ordinary noun after it starts a new word: 今紙, 今水, 今大会.
+TEMPORAL_PREFIX_KANJI: frozenset[str] = frozenset({"今", "来", "先", "昨", "翌", "毎"})
+TEMPORAL_COMPOUND_UNITS: frozenset[str] = frozenset(
+    {
+        "日",
+        "週",
+        "月",
+        "年",
+        "回",
+        "朝",
+        "晩",
+        "夜",
+        "度",
+        "期",
+        "時",
+        "分",
+        "秒",
+        "春",
+        "夏",
+        "秋",
+        "冬",
+        "宵",
+        "前",
+        "後",
+        "中",
+        "末",
+    }
+)
+
 # Search-unit compounds: kanji+okurigana words MeCab splits but Suzume keeps as one token
 SEARCH_UNIT_COMPOUNDS: dict[str, str] = {}
 

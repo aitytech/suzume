@@ -16,6 +16,8 @@ from .constants import (
     QUANTITY_BOUND_SUFFIXES,
     SLANG_ADJ_STEMS,
     SLANG_VERB_STEMS,
+    TEMPORAL_COMPOUND_UNITS,
+    TEMPORAL_PREFIX_KANJI,
     UNUSUAL_NAMES,
     WORD_EXCEPTIONS,
 )
@@ -1691,6 +1693,34 @@ def postprocess_classical_perfect_aux(tokens: list[dict]) -> bool:
                 token["pos"] = "Auxiliary"
                 token["lemma"] = "り"
                 changed = True
+    return changed
+
+
+@reports_mutation
+def postprocess_adverbial_temporal_prefix(tokens: list[dict]) -> bool:
+    """Restore the adverbial temporal noun standing before an ordinary noun.
+
+    A temporal prefix heads a temporal noun (今週, 今度, 毎時) and nothing else,
+    so before an ordinary noun it is the free adverbial noun itself: 今|紙, 今|水.
+    The reference analyzer instead reads the pair as a compound and marks its
+    parts accordingly — the prefix as 接頭詞 and the following noun as the bound
+    element of a compound — which neither part is here.
+    """
+    changed = False
+    for idx, token in enumerate(tokens):
+        if idx + 1 >= len(tokens):
+            continue
+        if token.get("surface") not in TEMPORAL_PREFIX_KANJI:
+            continue
+        following = tokens[idx + 1]
+        if following.get("surface", "")[:1] in TEMPORAL_COMPOUND_UNITS:
+            continue
+        if token.get("pos") == "Prefix":
+            token["pos"] = "Noun"
+            changed = True
+        if following.get("pos") == "Suffix":
+            following["pos"] = "Noun"
+            changed = True
     return changed
 
 

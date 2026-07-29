@@ -13,6 +13,7 @@ from .postprocessors import (
     postprocess_adjective_nominalizer,
     postprocess_adverb_nominal_context,
     postprocess_adverbial_na_adjective,
+    postprocess_adverbial_temporal_prefix,
     postprocess_attributive_mamonaku,
     postprocess_binding_negative_aux,
     postprocess_bound_derived_adjective,
@@ -391,6 +392,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "classical-perfect-aux"
     if postprocess_classical_past_shi(tokens) and applied_rule is None:
         applied_rule = "classical-past-shi"
+    if postprocess_adverbial_temporal_prefix(tokens) and applied_rule is None:
+        applied_rule = "adverbial-temporal-prefix"
     if postprocess_prolonged_sound_noun(tokens) and applied_rule is None:
         applied_rule = "prolonged-sound-noun"
     if postprocess_yoshi_formal_noun(tokens) and applied_rule is None:
