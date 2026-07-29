@@ -1524,6 +1524,62 @@
       ],
       "id": "konomama_tsu",
       "input": "このまま待つ"
+    },
+    {
+      "description": "Fossilized ku-form adverb in kanji stays an adverb before a predicate",
+      "expected": [
+        {
+          "lemma": "恐らく",
+          "pos": "Adverb",
+          "surface": "恐らく"
+        },
+        {
+          "lemma": "違う",
+          "pos": "Verb",
+          "surface": "違う"
+        }
+      ],
+      "id": "raku_u",
+      "input": "恐らく違う"
+    },
+    {
+      "description": "Same adverb before a nominal predicate",
+      "expected": [
+        {
+          "lemma": "恐らく",
+          "pos": "Adverb",
+          "surface": "恐らく"
+        },
+        {
+          "lemma": "間違い",
+          "pos": "Noun",
+          "surface": "間違い"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "raku_ida",
+      "input": "恐らく間違いだ"
+    },
+    {
+      "description": "Positive control: a continuative whose adjective is a word still converts",
+      "expected": [
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しく"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        }
+      ],
+      "id": "shiku_ku_2",
+      "input": "正しく書く"
     }
   ],
   "description": "adverb_fixed tests",

@@ -37,6 +37,18 @@ async def mecab_analyze_async(text: str) -> list[dict]:
     return _parse_mecab_output(output)
 
 
+def is_single_token_of_pos(surface: str, pos: str) -> bool:
+    """Whether the reference dictionary reads a surface as exactly one token of a POS.
+
+    A rule that reconstructs a base form has to know whether the form it built
+    is a word. Asking the dictionary for the whole surface answers that: a
+    headword comes back as one token of the expected class, while anything the
+    analyzer has to assemble comes back split or under another class.
+    """
+    tokens = mecab_analyze(surface)
+    return len(tokens) == 1 and tokens[0].get("pos") == pos and tokens[0].get("surface") == surface
+
+
 def _parse_mecab_output(output: str) -> list[dict]:
     """Parse MeCab tab-separated output into token dicts.
 

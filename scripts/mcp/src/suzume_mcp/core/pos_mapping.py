@@ -22,6 +22,7 @@ from .constants import (
     VERB_NOT_AUX_LEMMAS,
     is_all_kanji,
 )
+from .mecab import is_single_token_of_pos
 
 
 def _is_katakana_onomatopoeia(surface: str) -> bool:
@@ -385,14 +386,25 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
             continue
 
         # Fix adjective 連用形 (〜く): always 形容詞, not 副詞
-        # Only when lemma ends in い, or surface contains kanji (正しく etc.)
         # Excludes pure hiragana adverbs: わくわく, せっかく, とにかく, etc.
         if surface.endswith("く") and pos == "副詞" and surface not in ADVERB_OVERRIDES:
             lemma = t.get("lemma", "")
             if lemma.endswith("い"):
+                # The analyzer already resolved the continuative to its adjective.
                 t["pos"] = "形容詞"
-            elif lemma == surface and regex.search(r"[\u4E00-\u9FFF]", surface):
-                # Kanji-containing surface with lemma==surface: adj 連用形
+            elif (
+                lemma == surface
+                and regex.search(r"[\u4E00-\u9FFF]", surface)
+                and is_single_token_of_pos(surface[:-1] + "\u3044", "\u5f62\u5bb9\u8a5e")
+            ):
+                # The lemma still spells the continuative, so the adjective it
+                # belongs to has to be reconstructed. The kanji spelling says the
+                # writer chose the adjective over a lexicalized adverb written in
+                # kana (よろしく, いたく), but it does not say the adjective exists:
+                # a fossilized ク語法 adverb is written the same way and reaches
+                # nothing (恐らく would become 恐らい). Ask the dictionary for the
+                # form before adopting it, so an adverb the analyzer already
+                # tagged correctly is not overwritten with a non-word.
                 t["pos"] = "形容詞"
                 t["lemma"] = surface[:-1] + "い"
 
