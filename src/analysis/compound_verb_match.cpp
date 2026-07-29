@@ -658,15 +658,32 @@ CompoundVerbMatch findCompoundVerbMatch(
     const bool best_compound_attested =
         best_match.v2_verb != nullptr &&
         isCompoundVerbOrNominalizationAttested(dict_manager, best_match.compound_base, best_match.v2_verb->verb_type);
+    const size_t matched_end_pos =
+        advanceCharsToBytePos(codepoints, v2_start, v2_start_byte, v2_start_byte + matched_len);
+    const bool matched_causative_conditional =
+        matched_mizenkei && matched_end_pos + 2 < codepoints.size() && codepoints[matched_end_pos] == U'せ' &&
+        codepoints[matched_end_pos + 1] == U'れ' && codepoints[matched_end_pos + 2] == U'ば';
+    const size_t best_mizenkei_end_pos =
+        advanceCharsToBytePos(codepoints, v2_start, v2_start_byte, v2_start_byte + best_match.matched_len);
+    const bool best_mizenkei_has_causative_conditional =
+        best_match.is_mizenkei && best_mizenkei_end_pos + 2 < codepoints.size() &&
+        codepoints[best_mizenkei_end_pos] == U'せ' && codepoints[best_mizenkei_end_pos + 1] == U'れ' &&
+        codepoints[best_mizenkei_end_pos + 2] == U'ば';
     bool should_update = false;
     if (best_match.matched_len == 0) {
       // First valid match
+      should_update = true;
+    } else if (matched_causative_conditional && !best_match.is_mizenkei) {
+      // A Godan compound mizenkei followed by the closed causative
+      // conditional (V1+V2あ+せれ+ば) retains the auxiliary boundary.
+      // The longer Ichidan compound overlap is available for its own
+      // conditional, but it cannot erase this productive voice sequence.
       should_update = true;
     } else if (matched_volitional && !best_match.is_volitional) {
       should_update = true;
     } else if (best_match.is_volitional && !matched_volitional) {
       should_update = false;
-    } else if (current_compound_attested && !best_compound_attested) {
+    } else if (current_compound_attested && !best_compound_attested && !best_mizenkei_has_causative_conditional) {
       // An attested full compound (降りしきる) must not lose to a shorter
       // overlapping V2 continuative (敷く → しき). Both readings are
       // grammatically possible locally, but only the full compound has
@@ -693,8 +710,9 @@ CompoundVerbMatch findCompoundVerbMatch(
       const bool followed_by_ichidan_conditional =
           v2_verb.verb_type == V2VerbType::Ichidan && renyokei_end_pos + 1 < codepoints.size() &&
           codepoints[renyokei_end_pos] == U'れ' && codepoints[renyokei_end_pos + 1] == U'ば';
-      if (followed_by_deverbal_suffix || followed_by_nominal_particle ||
-          (followed_by_ichidan_conditional && current_compound_attested)) {
+      if (!best_mizenkei_has_causative_conditional &&
+          (followed_by_deverbal_suffix || followed_by_nominal_particle ||
+           (followed_by_ichidan_conditional && current_compound_attested))) {
         should_update = true;
       }
     } else if (is_renyokei_entry && (matched_kanji || matched_reading) && best_match.includes_aux &&

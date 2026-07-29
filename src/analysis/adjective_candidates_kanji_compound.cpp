@@ -119,7 +119,10 @@ void adj_detail::appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& 
             // A focus particle is not an adjective conjugation: noun + しか(…ない)
             // shares its kana with the しい-adjective paradigm.
             // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
-            if (verb_helpers::startsWithFocusParticleHead(dict_manager, codepoints, kanji_end, end_pos)) {
+            if (!verb_helpers::isAdjectiveInDictionary(dict_manager, surface) &&
+                verb_helpers::guardIsWired(verb_helpers::GuardMember::FocusParticleHead,
+                                           verb_helpers::GuardOrigin::KanjiCompoundAdjective) &&
+                verb_helpers::startsWithFocusParticleHead(dict_manager, codepoints, kanji_end, end_pos)) {
               SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" hiragana head is a focus particle\n");
               continue;
             }

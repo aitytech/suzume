@@ -467,6 +467,109 @@
       ],
       "id": "godan_compound_terminal_before_quotative",
       "input": "問題に取り組むという姿勢"
+    },
+    {
+      "description": "やってみればわかる - regression test",
+      "expected": [
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "みる",
+          "pos": "Auxiliary",
+          "surface": "みれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "わかる",
+          "pos": "Verb",
+          "surface": "わかる"
+        }
+      ],
+      "id": "yatttemirebawakaru",
+      "input": "やってみればわかる"
+    },
+    {
+      "description": "もっていく - regression test",
+      "expected": [
+        {
+          "lemma": "もつ",
+          "pos": "Verb",
+          "surface": "もっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Auxiliary",
+          "surface": "いく"
+        }
+      ],
+      "id": "mottteiku",
+      "input": "もっていく"
+    },
+    {
+      "description": "かえっていく - regression test",
+      "expected": [
+        {
+          "lemma": "かえる",
+          "pos": "Verb",
+          "surface": "かえっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いく",
+          "pos": "Auxiliary",
+          "surface": "いく"
+        }
+      ],
+      "id": "kaettteiku",
+      "input": "かえっていく"
+    },
+    {
+      "description": "もってくれば - regression test",
+      "expected": [
+        {
+          "lemma": "もつ",
+          "pos": "Verb",
+          "surface": "もっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Auxiliary",
+          "surface": "くれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "motttekureba",
+      "input": "もってくれば"
     }
   ],
   "description": "Compound verbs (part 5/5)",

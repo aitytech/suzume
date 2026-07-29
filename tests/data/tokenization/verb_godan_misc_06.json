@@ -558,6 +558,221 @@
       ],
       "id": "hatajitajitonattta",
       "input": "彼はたじたじとなった"
+    },
+    {
+      "description": "名詞＋格助詞ででレマタイザがPOSを動詞へ反転しない",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "笑い",
+          "pos": "Noun",
+          "surface": "笑い"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "応える",
+          "pos": "Verb",
+          "surface": "応え"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ha_ide_eta",
+      "input": "彼は笑いで応えた"
+    },
+    {
+      "description": "名詞＋格助詞でで非語レンマを生成しない",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "戦い",
+          "pos": "Noun",
+          "surface": "戦い"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "勝つ",
+          "pos": "Verb",
+          "surface": "勝っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "sono_ide_ttta",
+      "input": "その戦いで勝った"
+    },
+    {
+      "description": "老いられる - regression test",
+      "expected": [
+        {
+          "lemma": "老いる",
+          "pos": "Verb",
+          "surface": "老い"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "irareru",
+      "input": "老いられる"
+    },
+    {
+      "description": "まがった - regression test",
+      "expected": [
+        {
+          "lemma": "まがる",
+          "pos": "Verb",
+          "surface": "まがっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "magattta",
+      "input": "まがった"
+    },
+    {
+      "description": "こわがっている - regression test",
+      "expected": [
+        {
+          "lemma": "こわがる",
+          "pos": "Verb",
+          "surface": "こわがっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "kowagattteiru",
+      "input": "こわがっている"
+    },
+    {
+      "description": "ふさがる穴 - regression test",
+      "expected": [
+        {
+          "lemma": "ふさがる",
+          "pos": "Verb",
+          "surface": "ふさがる"
+        },
+        {
+          "lemma": "穴",
+          "pos": "Noun",
+          "surface": "穴"
+        }
+      ],
+      "id": "fusagaru",
+      "input": "ふさがる穴"
+    },
+    {
+      "description": "はやった歌 - regression test",
+      "expected": [
+        {
+          "lemma": "はやる",
+          "pos": "Verb",
+          "surface": "はやっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "歌",
+          "pos": "Noun",
+          "surface": "歌"
+        }
+      ],
+      "id": "hayattta",
+      "input": "はやった歌"
+    },
+    {
+      "description": "問うた - auto-generated",
+      "expected": [
+        {
+          "lemma": "問う",
+          "pos": "Verb",
+          "surface": "問う"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "uta",
+      "input": "問うた"
+    },
+    {
+      "description": "乞うた - auto-generated",
+      "expected": [
+        {
+          "lemma": "乞う",
+          "pos": "Verb",
+          "surface": "乞う"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "uta_2",
+      "input": "乞うた"
+    },
+    {
+      "description": "請うた - auto-generated",
+      "expected": [
+        {
+          "lemma": "請う",
+          "pos": "Verb",
+          "surface": "請う"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "uta_3",
+      "input": "請うた"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

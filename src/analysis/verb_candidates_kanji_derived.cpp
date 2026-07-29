@@ -252,11 +252,14 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
     std::string base_form = causative_stem + "る";
     float confidence =
         getIchidanConfidence(inflection.analyze(surface), candidate::verb_cost::kIchidanKateikeiMinConfidence);
-    if (confidence >= candidate::verb_cost::kIchidanKateikeiMinConfidence) {
-      candidates.push_back(makeVerbCandidate(surface, start_pos, kateikei_end, candidate::verb_cost::kStrongBonus,
-                                             base_form, dictionary::ConjugationType::Ichidan, true,
-                                             CandidateOrigin::VerbKanji, confidence, "causative_kateikei",
-                                             core::ExtendedPOS::VerbKateikei));
+    if (confidence >= candidate::verb_cost::kIchidanKateikeiMinConfidence &&
+        vh::isVerbInDictionary(dict_manager, base_form)) {
+      auto candidate =
+          makeVerbCandidate(surface, start_pos, kateikei_end, candidate::verb_cost::kStrongBonus, base_form,
+                            dictionary::ConjugationType::Ichidan, true, CandidateOrigin::VerbKanji, confidence,
+                            "causative_kateikei", core::ExtendedPOS::VerbKateikei);
+      candidate.lemma_verified = true;
+      candidates.push_back(std::move(candidate));
     }
   }
 
@@ -327,6 +330,16 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
       // Ichidan verbs form both the volitional stem (食べよ+う) and
       // the literary imperative (食べよ) from renyokei + よ.
       if (renyokei_end < codepoints.size() && codepoints[renyokei_end] == U'よ') {
+        // A dictionary-backed Godan e-row stem before final よ is an
+        // imperative (書け+よ), not the mizenkei of an invented Ichidan
+        // potential (書ける).  The e-row-to-base mapping is a closed
+        // conjugation table, and dictionary verification keeps this from
+        // guessing at open-class spellings.
+        const std::string_view godan_base_suffix = grammar::godanBaseSuffixFromERow(codepoints[renyokei_end - 1]);
+        const bool has_verified_godan_imperative =
+            !godan_base_suffix.empty() && dict_manager != nullptr &&
+            vh::isVerbInDictionary(dict_manager, extractSubstring(codepoints, start_pos, renyokei_end - 1) +
+                                                     std::string(godan_base_suffix));
         const bool is_volitional = renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end + 1] == U'う';
         const size_t you_end = renyokei_end + 2;
         bool has_formal_method_continuation = false;
@@ -368,7 +381,11 @@ void appendIchidanKateikeiVolitionalCandidates(const std::vector<char32_t>& code
           is_suru_pattern = has_kanji_before;
         }
 
-        if (!is_suru_pattern && !has_formal_method_continuation) {
+        // The Godan reading wins for a bare e-row + よ imperative (書けよ),
+        // but a following う closes the distinct Ichidan volitional pattern
+        // (書けよ+う).  Do not let the imperative guard hide that productive
+        // volitional candidate.
+        if ((!has_verified_godan_imperative || is_volitional) && !is_suru_pattern && !has_formal_method_continuation) {
           // E.g., 食べ + よ + う → 食べよ is volitional stem;
           //       食べ + よ → 食べよ is the literary imperative.
           size_t volitional_end = renyokei_end + 1;  // renyokei + よ

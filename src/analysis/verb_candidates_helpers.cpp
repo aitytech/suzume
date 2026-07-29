@@ -132,6 +132,9 @@ bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
 }
 
 bool crossesKkoNominalizer(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (start_pos >= end_pos || end_pos > codepoints.size()) {
+    return false;
+  }
   for (size_t pos = start_pos + 1; pos < end_pos; ++pos) {
     if (codepoints[pos] == U'っ' && pos + 1 < codepoints.size() && codepoints[pos + 1] == U'こ' &&
         naiNegativeFollowsAt(codepoints, pos + 2)) {
@@ -411,17 +414,12 @@ bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType ver
   // 勉強される candidate hides that grammatical chain.
   if (verb_type == grammar::VerbType::Suru) {
     const auto codepoints = normalize::utf8::decode(surface);
-    for (size_t index = 1; index + 1 < codepoints.size(); ++index) {
-      if (codepoints[index - 1] == U'さ' && codepoints[index] == U'れ') {
-        const size_t negative_length = naiNegativeFormLengthAt(codepoints, index + 1);
-        if (negative_length != 0 && index + 1 + negative_length == codepoints.size()) {
-          return true;
-        }
+    for (size_t index = 1; index < codepoints.size(); ++index) {
+      if (codepoints[index - 1] == U'さ' && isCompletePassiveAuxiliaryAt(codepoints, index)) {
+        return true;
       }
     }
-    return utf8::endsWith(surface, "される") || utf8::endsWith(surface, "された") ||
-           utf8::endsWith(surface, "されて") || utf8::endsWith(surface, "されます") ||
-           utf8::endsWith(surface, "されたい") || utf8::endsWith(surface, "されたく");
+    return false;
   }
 
   // Only apply remaining checks to Godan verbs
@@ -430,18 +428,12 @@ bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType ver
   }
 
   const auto codepoints = normalize::utf8::decode(surface);
-  for (size_t index = 1; index + 1 < codepoints.size(); ++index) {
-    if (grammar::isARowCodepoint(codepoints[index - 1]) && codepoints[index] == U'れ') {
-      const size_t negative_length = naiNegativeFormLengthAt(codepoints, index + 1);
-      if (negative_length != 0 && index + 1 + negative_length == codepoints.size()) {
-        return true;
-      }
+  for (size_t index = 1; index < codepoints.size(); ++index) {
+    if (grammar::isARowCodepoint(codepoints[index - 1]) && isCompletePassiveAuxiliaryAt(codepoints, index)) {
+      return true;
     }
   }
-
-  // Passive forms outside the ない family; desiderative forms stay explicit.
-  return utf8::endsWith(surface, "れる") || utf8::endsWith(surface, "れた") || utf8::endsWith(surface, "れて") ||
-         utf8::endsWith(surface, "れます") || utf8::endsWith(surface, "れたい") || utf8::endsWith(surface, "れたく");
+  return false;
 }
 
 bool isPassiveAuxContinuation(const std::vector<char32_t>& codepoints, size_t pos_after_re, bool strict_masu) {
@@ -465,7 +457,54 @@ bool isPassiveAuxContinuation(const std::vector<char32_t>& codepoints, size_t po
     return pos_after_re + 1 < codepoints.size() &&
            (codepoints[pos_after_re + 1] == U'す' || codepoints[pos_after_re + 1] == U'せ');
   }
+  // れ + ば is the passive auxiliary's conditional cell.
+  if (after_re == U'れ') {
+    return pos_after_re + 1 < codepoints.size() && codepoints[pos_after_re + 1] == U'ば';
+  }
   return false;
+}
+
+bool isPassiveAuxConditionalAt(const std::vector<char32_t>& codepoints, size_t passive_re_pos) {
+  return passive_re_pos + 2 < codepoints.size() && codepoints[passive_re_pos] == U'れ' &&
+         codepoints[passive_re_pos + 1] == U'れ' && codepoints[passive_re_pos + 2] == U'ば';
+}
+
+bool isCompletePassiveAuxiliaryAt(const std::vector<char32_t>& codepoints, size_t passive_re_pos) {
+  if (passive_re_pos >= codepoints.size() || codepoints[passive_re_pos] != U'れ') {
+    return false;
+  }
+  const size_t pos_after_re = passive_re_pos + 1;
+  if (!isPassiveAuxContinuation(codepoints, pos_after_re, true)) {
+    return false;
+  }
+  if (pos_after_re >= codepoints.size()) {
+    return false;
+  }
+  const char32_t after_re = codepoints[pos_after_re];
+  if (after_re == U'る' || after_re == U'た' || after_re == U'て') {
+    return pos_after_re + 1 == codepoints.size();
+  }
+  if (after_re == U'ま') {
+    return pos_after_re + 2 == codepoints.size();
+  }
+  if (after_re == U'れ') {
+    return pos_after_re + 2 == codepoints.size();
+  }
+  const size_t negative_length = naiNegativeFormLengthAt(codepoints, pos_after_re);
+  return negative_length != 0 && pos_after_re + negative_length == codepoints.size();
+}
+
+bool isCompleteCausativeAuxiliaryAt(const std::vector<char32_t>& codepoints, size_t causative_se_pos) {
+  if (causative_se_pos >= codepoints.size() || codepoints[causative_se_pos] != U'せ' ||
+      causative_se_pos + 1 >= codepoints.size()) {
+    return false;
+  }
+  const char32_t after_se = codepoints[causative_se_pos + 1];
+  if (after_se == U'る' || after_se == U'た' || after_se == U'て') {
+    return causative_se_pos + 2 == codepoints.size();
+  }
+  return after_se == U'れ' && causative_se_pos + 2 < codepoints.size() && codepoints[causative_se_pos + 2] == U'ば' &&
+         causative_se_pos + 3 == codepoints.size();
 }
 
 bool shouldSkipCausativeAuxPattern(std::string_view surface, grammar::VerbType verb_type) {
@@ -474,9 +513,16 @@ bool shouldSkipCausativeAuxPattern(std::string_view surface, grammar::VerbType v
     return false;
   }
 
-  // Godan causative: せる, せた, せて
+  // Godan causative: derive every closed auxiliary cell through the shared
+  // continuation helper instead of a surface-form list.
   if (grammar::isGodanVerbType(verb_type)) {
-    return utf8::endsWith(surface, "せる") || utf8::endsWith(surface, "せた") || utf8::endsWith(surface, "せて");
+    const auto codepoints = normalize::utf8::decode(surface);
+    for (size_t index = 1; index < codepoints.size(); ++index) {
+      if (grammar::isARowCodepoint(codepoints[index - 1]) && isCompleteCausativeAuxiliaryAt(codepoints, index)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // An unverified Ichidan candidate ending in A-row + せ is the stem of a

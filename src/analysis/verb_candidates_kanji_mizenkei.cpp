@@ -703,7 +703,8 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
             // grammatical boundary, not the irrealis of one lexical verb
             // (描いていかない → 描い + て + いか + ない).
             // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
-            if (vh::embedsTeFormAuxiliary(surface)) {
+            if (vh::guardIsWired(vh::GuardMember::EmbedTeAuxiliary, vh::GuardOrigin::KanjiMizenkei) &&
+                vh::embedsTeFormAuxiliary(surface)) {
               continue;
             }
             // Verify this is a valid verb

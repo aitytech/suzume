@@ -10,6 +10,7 @@
 #ifndef SUZUME_ANALYSIS_VERB_CANDIDATES_HELPERS_H_
 #define SUZUME_ANALYSIS_VERB_CANDIDATES_HELPERS_H_
 
+#include <array>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -160,10 +161,57 @@ bool startsInsideKanjiRunBeforeShi(const std::vector<char32_t>& codepoints, size
 // =============================================================================
 // Fabricated closed-class absorption guards
 // =============================================================================
+// The table below is executable documentation: each guarded candidate origin
+// names the guard it applies before calling the corresponding helper. The
+// integration test asserts every listed origin, so a new generator cannot
+// silently inherit an incomplete copy of this family.
+enum class GuardMember {
+  EmbedTeAuxiliary,
+  EmbedTeMiruAuxiliary,
+  FocusParticleHead,
+};
+
+enum class GuardOrigin {
+  HiraganaInflection,
+  HiraganaDerived,
+  KanjiFinalization,
+  KanjiMizenkei,
+  CompoundVerbEmit,
+  KanjiAdjective,
+  KanjiCompoundAdjective,
+};
+
+struct GuardWiring {
+  GuardMember member;
+  GuardOrigin origin;
+  std::string_view origin_name;
+};
+
+inline constexpr std::array<GuardWiring, 9> kGuardWiring = {{
+    {GuardMember::EmbedTeAuxiliary, GuardOrigin::HiraganaInflection, "hiragana_inflection"},
+    {GuardMember::EmbedTeAuxiliary, GuardOrigin::KanjiFinalization, "kanji_finalization"},
+    {GuardMember::EmbedTeAuxiliary, GuardOrigin::KanjiMizenkei, "kanji_mizenkei"},
+    {GuardMember::EmbedTeAuxiliary, GuardOrigin::CompoundVerbEmit, "compound_verb_emit"},
+    {GuardMember::EmbedTeMiruAuxiliary, GuardOrigin::HiraganaInflection, "hiragana_inflection"},
+    {GuardMember::EmbedTeMiruAuxiliary, GuardOrigin::HiraganaDerived, "hiragana_derived"},
+    {GuardMember::EmbedTeMiruAuxiliary, GuardOrigin::KanjiFinalization, "kanji_finalization"},
+    {GuardMember::FocusParticleHead, GuardOrigin::KanjiAdjective, "kanji_adjective"},
+    {GuardMember::FocusParticleHead, GuardOrigin::KanjiCompoundAdjective, "kanji_compound_adjective"},
+}};
+
+constexpr bool guardIsWired(GuardMember member, GuardOrigin origin) {
+  for (const GuardWiring& wiring : kGuardWiring) {
+    if (wiring.member == member && wiring.origin == origin) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // A recurring defect this family defends against: a verb/adjective candidate
 // generator builds a NON-dictionary conjugation whose surface swallows an
 // adjacent closed-class morpheme, because that morpheme's kana coincide with an
-// inflectional ending. The 副助詞 しか / 係助詞 さえ・すら end in an a-row か/え
+// inflectional ending. The 係助詞 しか・さえ・すら end in an a-row か/え
 // that matches a godan mizenkei; a て/で-form + 補助動詞 みる has an internal
 // てみ/でみ that matches an ichidan stem. Unchecked, these fabricated tokens
 // (水しく for 水しか, 金さう for 金さえ, やってみる for やっ+て+み) outscore the
@@ -189,11 +237,12 @@ bool startsInsideKanjiRunBeforeShi(const std::vector<char32_t>& codepoints, size
 //                adjective. Helper: startsWithFocusParticleHead, used by both
 //                the plain and the compound kanji adjective path.
 //
-// Shared invariant: a real verb/adjective that genuinely embeds these kana
-// (押さえる, 起こす) is protected by its own dictionary base form, so every guard
-// is gated on the candidate NOT being a dictionary word (`in_dict` / an
-// exact-surface lookup) before it fires. Helper call sites and the T3 definition
-// carry an @see back-reference to this note.
+// A real verb/adjective that genuinely embeds these kana (押さえる, 起こす) is
+// protected by its dictionary base form where such a lexical candidate exists.
+// The candidate generators that can emit an exact dictionary surface apply an
+// explicit `!in_dict` exemption; purely rule-derived origins have no such
+// surface candidate to exempt. `kGuardWiring` is the authoritative list of
+// those origins and is asserted by verb_guard_family_test.
 // =============================================================================
 
 /**
@@ -545,14 +594,28 @@ bool shouldSkipPassiveAuxPattern(std::string_view surface, grammar::VerbType ver
  *
  * Matches the passive/potential continuation set after れ (or られ):
  * る/た/て immediately, the closed ない-family paradigm via
- * naiNegativeFollowsAt(), and ま (れます, れました). With @p strict_masu the ま branch additionally
- * requires a following す or せ (れます/れません), excluding bare ま.
+ * naiNegativeFollowsAt(), ま (れます, れました), and the conditional
+ * れ+ば. With @p strict_masu the ま branch additionally requires a following
+ * す or せ (れます/れません), excluding bare ま.
  *
  * @param codepoints Full input codepoints
  * @param pos_after_re Index of the codepoint immediately after れ
  * @param strict_masu Require す/せ after ま
  */
 bool isPassiveAuxContinuation(const std::vector<char32_t>& codepoints, size_t pos_after_re, bool strict_masu);
+
+/**
+ * @brief Whether れ begins the passive auxiliary's conditional cell れれ+ば.
+ *
+ * The first れ is the passive auxiliary stem; the second is its 仮定形.
+ */
+bool isPassiveAuxConditionalAt(const std::vector<char32_t>& codepoints, size_t passive_re_pos);
+
+/** @brief Whether the passive auxiliary starting at @p passive_re_pos consumes the surface remainder. */
+bool isCompletePassiveAuxiliaryAt(const std::vector<char32_t>& codepoints, size_t passive_re_pos);
+
+/** @brief Whether the causative auxiliary starting at @p causative_se_pos consumes the surface remainder. */
+bool isCompleteCausativeAuxiliaryAt(const std::vector<char32_t>& codepoints, size_t causative_se_pos);
 
 /**
  * @brief Check if surface contains causative auxiliary patterns

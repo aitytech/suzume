@@ -13,8 +13,10 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "analysis/join_compound_verb_internal.h"
@@ -33,6 +35,42 @@ using core::ExtendedPOS;
 
 std::vector<char32_t> cps(std::string_view text) {
   return normalize::toCodepoints(text);
+}
+
+TEST(VerbGuardFamilyBounds, KkoNominalizerRejectsInvalidEndPosition) {
+  const auto codepoints = cps("打ったこと");
+
+  EXPECT_FALSE(verb_helpers::crossesKkoNominalizer(codepoints, 0, codepoints.size() + 1));
+  EXPECT_FALSE(verb_helpers::crossesKkoNominalizer(codepoints, 3, 2));
+}
+
+TEST(VerbGuardFamilyBounds, FormalNounDoesNotLoseItsHeadToHiraganaNounRescue) {
+  SuzumeOptions options;
+  options.skip_user_dictionary = true;
+  Suzume analyzer(options);
+
+  for (const std::string_view text : {"くること", "おくこと"}) {
+    const auto result = analyzer.analyze(text);
+    ASSERT_EQ(result.size(), 2U) << text;
+    EXPECT_EQ(result[0].pos, core::PartOfSpeech::Verb) << text;
+    EXPECT_EQ(result[1].surface, "こと") << text;
+    EXPECT_EQ(result[1].extended_pos, core::ExtendedPOS::NounFormal) << text;
+  }
+}
+
+TEST(VerbGuardFamilyBounds, ClassicalCopulaIrrealisWinsBeforeClassicalNegative) {
+  SuzumeOptions options;
+  options.skip_user_dictionary = true;
+  Suzume analyzer(options);
+
+  for (const std::string_view text : {"静かならず", "平和ならず", "元気ならず", "有名ならず"}) {
+    const auto result = analyzer.analyze(text);
+    ASSERT_EQ(result.size(), 3U) << text;
+    EXPECT_EQ(result[1].surface, "なら") << text;
+    EXPECT_EQ(result[1].extended_pos, core::ExtendedPOS::AuxClassicalNari) << text;
+    EXPECT_EQ(result[1].lemma, "なり") << text;
+    EXPECT_EQ(result[2].extended_pos, core::ExtendedPOS::AuxNegativeNu) << text;
+  }
 }
 
 // =============================================================================
@@ -130,6 +168,54 @@ TEST(VerbGuardFamilyEmbed, TeFormAuxiliaryPatterns) {
   // te-ending stem (慌て+ている), and the plain split already wins there.
   EXPECT_FALSE(verb_helpers::embedsTeFormAuxiliary("食べている"));
   EXPECT_FALSE(verb_helpers::embedsTeFormAuxiliary("置いておく"));
+}
+
+TEST(VerbGuardFamilyWiring, EveryGuardedOriginIsDeclared) {
+  using verb_helpers::GuardMember;
+  using verb_helpers::GuardOrigin;
+
+  constexpr std::array<std::pair<GuardMember, GuardOrigin>, 9> expected = {{
+      {GuardMember::EmbedTeAuxiliary, GuardOrigin::HiraganaInflection},
+      {GuardMember::EmbedTeAuxiliary, GuardOrigin::KanjiFinalization},
+      {GuardMember::EmbedTeAuxiliary, GuardOrigin::KanjiMizenkei},
+      {GuardMember::EmbedTeAuxiliary, GuardOrigin::CompoundVerbEmit},
+      {GuardMember::EmbedTeMiruAuxiliary, GuardOrigin::HiraganaInflection},
+      {GuardMember::EmbedTeMiruAuxiliary, GuardOrigin::HiraganaDerived},
+      {GuardMember::EmbedTeMiruAuxiliary, GuardOrigin::KanjiFinalization},
+      {GuardMember::FocusParticleHead, GuardOrigin::KanjiAdjective},
+      {GuardMember::FocusParticleHead, GuardOrigin::KanjiCompoundAdjective},
+  }};
+
+  EXPECT_EQ(verb_helpers::kGuardWiring.size(), expected.size());
+  for (const auto& [member, origin] : expected) {
+    EXPECT_TRUE(verb_helpers::guardIsWired(member, origin));
+  }
+}
+
+TEST(VerbGuardFamilyWiring, HiraganaOriginsKeepClosedClassBoundaries) {
+  SuzumeOptions options;
+  options.skip_user_dictionary = true;
+  Suzume analyzer(options);
+  const auto surfaces = [&](std::string_view input) {
+    std::vector<std::string> result;
+    for (const auto& token : analyzer.analyze(std::string(input))) {
+      result.push_back(token.surface);
+    }
+    return result;
+  };
+
+  // H-1: a Godan-ra form remains available without lexical dictionary help
+  // when が/や would otherwise be read as a particle.
+  EXPECT_EQ(surfaces("まがった"), (std::vector<std::string>{"まがっ", "た"}));
+  EXPECT_EQ(surfaces("こわがっている"), (std::vector<std::string>{"こわがっ", "て", "いる"}));
+  EXPECT_EQ(surfaces("ふさがる穴"), (std::vector<std::string>{"ふさがる", "穴"}));
+  EXPECT_EQ(surfaces("はやった歌"), (std::vector<std::string>{"はやっ", "た", "歌"}));
+
+  // H-3/M-1: both the condition fast path and ていく helper preserve the
+  // independently searchable auxiliary boundary.
+  EXPECT_EQ(surfaces("やってみればわかる"), (std::vector<std::string>{"やっ", "て", "みれ", "ば", "わかる"}));
+  EXPECT_EQ(surfaces("もっていく"), (std::vector<std::string>{"もっ", "て", "いく"}));
+  EXPECT_EQ(surfaces("もってくれば"), (std::vector<std::string>{"もっ", "て", "くれ", "ば"}));
 }
 
 TEST(VerbGuardFamilyEmbed, PassiveNegativeParadigmIsGuarded) {

@@ -265,12 +265,14 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
     // starts the next word (水とか + いう read as the non-word 水とかい).
     // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
     if (!isAdjectiveInDictionary(dict_manager, surface) &&
+        verb_helpers::guardIsWired(verb_helpers::GuardMember::FocusParticleHead,
+                                   verb_helpers::GuardOrigin::KanjiAdjective) &&
         verb_helpers::startsWithFocusParticleHead(dict_manager, codepoints, kanji_end, end_pos)) {
       SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" hiragana head is a focus particle\n");
       continue;
     }
 
-    // B57: For single kanji + ければ patterns (叩ければ, 引ければ, etc.),
+    // For single kanji + ければ patterns (叩ければ, 引ければ, etc.),
     // check if the kanji + く is a verb. If so, this is likely verb potential + conditional,
     // not an adjective pattern.
     // 叩ければ → 叩く (verb exists) → skip adjective (叩い is not a real adjective)

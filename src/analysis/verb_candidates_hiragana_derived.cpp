@@ -266,7 +266,8 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     // われ + て + み), never a single ichidan verb やってみる. This also
     // suppresses the kateikei variant below (やってみれ from やってみれば).
     // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
-    if (!is_dict_verb && vh::embedsTeFormMiruAuxiliary(codepoints, start_pos, end_pos)) {
+    if (!is_dict_verb && vh::guardIsWired(vh::GuardMember::EmbedTeMiruAuxiliary, vh::GuardOrigin::HiraganaDerived) &&
+        vh::embedsTeFormMiruAuxiliary(codepoints, start_pos, end_pos)) {
       continue;
     }
 
@@ -364,9 +365,8 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
   // Generate dictionary-verified Godan っ/ん onbin candidates before their
   // respective te/past continuations.  The general onbin generator owns all
   // unregistered-stem fallbacks, so this path emits only a verified lemma.
-  const size_t remaining_chars = char_types.size() - start_pos;
-  const size_t hira_extent_end =
-      vh::findCharRegionEnd(char_types, start_pos, remaining_chars, normalize::CharType::Hiragana);
+  const size_t hira_extent_end = vh::findCharRegionEnd(char_types, start_pos, candidate::kMaxHiraganaOnbinProbeChars,
+                                                       normalize::CharType::Hiragana);
   if (hira_extent_end - start_pos >= 3) {
     const char32_t onbin_char = codepoints[hira_extent_end - 2];
     const char32_t continuation = codepoints[hira_extent_end - 1];

@@ -103,7 +103,9 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
     // An internal te-form followed by a benefactive or request auxiliary is
     // compositional (見+て+あげる), not a lexical V1+V2 compound. The helper
     // preserves ordinary compounds such as 取り上げる, which have no te-form.
-    if (verb_helpers::embedsTeFormAuxiliary(compound_surface)) {
+    if (verb_helpers::guardIsWired(verb_helpers::GuardMember::EmbedTeAuxiliary,
+                                   verb_helpers::GuardOrigin::CompoundVerbEmit) &&
+        verb_helpers::embedsTeFormAuxiliary(compound_surface)) {
       SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND_EMIT] rejected embedded te auxiliary\n");
       return;
     }

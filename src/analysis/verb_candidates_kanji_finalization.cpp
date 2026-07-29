@@ -187,7 +187,8 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
     // ていく, ている, てお, ...): these split as verb te-form + auxiliary
     // (助けてもらう → 助け+て+もらう, 食べていく → 食べ+て+いく).
     // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
-    if (vh::embedsTeFormAuxiliary(surface)) {
+    if (vh::guardIsWired(vh::GuardMember::EmbedTeAuxiliary, vh::GuardOrigin::KanjiFinalization) &&
+        vh::embedsTeFormAuxiliary(surface)) {
       return;  // Skip - let the split (verb te-form + subsidiary verb) win
     }
 
@@ -366,7 +367,8 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
     // verb みる: an internal て/で followed by み is always [verb te-form] +
     // みる (食べてみれば = 食べ + て + みれ + ば), never one conjugated verb.
     // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
-    if (!in_dict && vh::embedsTeFormMiruAuxiliary(codepoints, start_pos, end_pos)) {
+    if (!in_dict && vh::guardIsWired(vh::GuardMember::EmbedTeMiruAuxiliary, vh::GuardOrigin::KanjiFinalization) &&
+        vh::embedsTeFormMiruAuxiliary(codepoints, start_pos, end_pos)) {
       SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" fabricated verb spanning te-form + みる\n");
       return;
     }

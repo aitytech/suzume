@@ -35,7 +35,8 @@ bool immediatelyFollowsParticleHost(const std::vector<char32_t>& codepoints, siz
   }
   constexpr size_t kMaxHostChars = 12;
   const size_t min_host_start = (start_pos > kMaxHostChars) ? start_pos - kMaxHostChars : 0;
-  for (size_t host_start = start_pos; host_start-- > min_host_start;) {
+  for (size_t host_start = start_pos; host_start > min_host_start;) {
+    --host_start;
     const std::string host_surface = extractSubstring(codepoints, host_start, start_pos);
     if (dict_manager->lookupExact(host_surface, core::PartOfSpeech::Noun) != nullptr ||
         dict_manager->lookupExact(host_surface, core::PartOfSpeech::Pronoun) != nullptr ||
@@ -78,6 +79,13 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
     // would suppress productive open-class verbs such as さける and かける.
     if (particle_entry->extended_pos == core::ExtendedPOS::ParticleFinal) {
       continue;
+    }
+    // A case particle immediately after a recognized independent host is an
+    // unambiguous boundary even when the following open-class predicate is
+    // not in the dictionary. Without this, そちら+で+やる can be swallowed by
+    // the unknown-verb scanner as the fabricated predicate でやる.
+    if (follows_particle_host && particle_entry->extended_pos == core::ExtendedPOS::ParticleCase) {
+      return true;
     }
     // A particle homograph can itself be the complete stem of a productive
     // open-class inflection (さえ+ない -> さえる). Preserve that lexical
@@ -457,8 +465,8 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
     // E.g., していく → し+て+いく (not a single verb)
     //       していった → し+て+いっ+た, していって → し+て+いっ+て
     if (end_pos - start_pos >= 4) {
-      if (surface.find("ていく") != std::string::npos || surface.find("ていっ") != std::string::npos ||
-          surface.find("ていけ") != std::string::npos || surface.find("ていか") != std::string::npos) {
+      if (vh::guardIsWired(vh::GuardMember::EmbedTeAuxiliary, vh::GuardOrigin::HiraganaInflection) &&
+          vh::embedsTeFormAuxiliary(surface)) {
         SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << surface << "\" skip te_iku_pattern\n");
         continue;  // Skip - let te + iku split win
       }
@@ -587,7 +595,10 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       // This prevents false verbs like "になる" + conjugation from being recognized
       // Apply to 4+ char forms; remainder check ensures genuine verbs are preserved
       size_t len_check = end_pos - start_pos;
-      if (len_check >= 4 && normalize::isCommonParticle(first_char)) {
+      const bool verified_initial_no_inflection =
+          first_char == U'の' && best.verb_type != grammar::VerbType::IAdjective && !best.suffix.empty() &&
+          best.confidence >= verb_opts.confidence_ichidan_dict;
+      if (len_check >= 4 && normalize::isCommonParticle(first_char) && !verified_initial_no_inflection) {
         // Extract remainder (surface without first character)
         std::string remainder = surface.substr(core::kJapaneseCharBytes);
         const auto& remainder_cands = inflection.analyze(remainder);
@@ -788,6 +799,19 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
         base_cost += bigram_cost::kStrong;
       }
 
+      // The conditional and classical-negative fast paths below must not
+      // bypass the closed-class guards used by the ordinary candidate path.
+      // In particular, やってみれば is やっ + て + みれ + ば, not a Godan
+      // conditional whose stem happens to include てみ.
+      const bool embeds_te_miru =
+          vh::guardIsWired(vh::GuardMember::EmbedTeMiruAuxiliary, vh::GuardOrigin::HiraganaInflection) &&
+          vh::embedsTeFormMiruAuxiliary(codepoints, start_pos, end_pos);
+      const bool ends_with_focus_particle = vh::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, end_pos);
+      const bool is_exact_dictionary_verb = vh::hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Verb);
+      if (!is_exact_dictionary_verb && (embeds_te_miru || ends_with_focus_particle)) {
+        continue;
+      }
+
       // A confident Godan analysis of e-row + ば identifies the productive
       // conditional boundary even when the pure-hiragana open-class lemma is
       // absent from L2 (くぐれ+ば). Keep the connective particle separate;
@@ -826,6 +850,10 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       const core::ExtendedPOS explicit_form = (looks_like_short_godan_base || is_godan_dictionary_form)
                                                   ? core::ExtendedPOS::VerbShuushikei
                                                   : core::ExtendedPOS::Unknown;
+      // Keep the ordinary candidate path behind the same closed-class tail
+      // guard as before. The conditional fast path above has an explicit
+      // dictionary exemption; dropping this guard here lets a case particle
+      // start a fabricated predicate such as でやる.
       if (!is_dictionary_verb &&
           verb_helpers::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, end_pos)) {
         continue;
