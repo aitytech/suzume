@@ -638,6 +638,33 @@
       ],
       "id": "kide",
       "input": "条件付きで許可"
+    },
+    {
+      "description": "おおきさをはかる - auto-generated",
+      "expected": [
+        {
+          "lemma": "おおきい",
+          "pos": "Adjective",
+          "surface": "おおき"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "はかる",
+          "pos": "Verb",
+          "surface": "はかる"
+        }
+      ],
+      "id": "ookisawohakaru",
+      "input": "おおきさをはかる"
     }
   ],
   "description": "suffix_general tests",

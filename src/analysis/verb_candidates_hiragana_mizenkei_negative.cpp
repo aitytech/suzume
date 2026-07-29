@@ -187,9 +187,8 @@ void appendMizenkeiNegativeCandidates(const std::vector<char32_t>& codepoints, s
     if (!is_valid_verb) {
       is_valid_verb = is_in_dict;
     }
-    if (verb_type == grammar::VerbType::GodanSa && !is_in_dict && grammar::isPureHiragana(stem)) {
-      continue;
-    }
+    const bool unattested_sa_irrealis =
+        verb_type == grammar::VerbType::GodanSa && !is_in_dict && grammar::isPureHiragana(stem);
     // Reject a fabricated mizenkei that merely absorbs a trailing adverbial
     // particle (みるしか / やるしか = verb + しか, never the 未然形 of a non-word).
     if (!is_in_dict && endsWithParticleAfterVerb(dict_manager, inflection, codepoints, start_pos, mizenkei_end)) {
@@ -214,6 +213,9 @@ void appendMizenkeiNegativeCandidates(const std::vector<char32_t>& codepoints, s
     float cost_negative = candidate::verb_cost::kStandardBonus;  // -0.5
     if (!is_in_dict && mizenkei_surface.size() >= 6) {           // 2+ char stems
       cost_negative = 0.5F;                                      // Positive cost for unverified candidates
+    }
+    if (unattested_sa_irrealis) {
+      cost_negative += candidate::verb_cost::kPureHiraganaSaIrrealisPenalty;
     }
     // Unverified stems starting with a formal noun are noun + verb sequences
     // (わけわから+ない should split as わけ + わから + ない)
@@ -287,11 +289,8 @@ void appendMizenkeiNakyaCandidates(const std::vector<char32_t>& codepoints, size
     if (!is_valid_verb) {
       is_valid_verb = is_in_dict;
     }
-    // GodanSa mizenkei on pure hiragana is almost always spurious (さ is the
-    // causative marker or さん honorific), require dictionary confirmation.
-    if (verb_type == grammar::VerbType::GodanSa && !is_in_dict && grammar::isPureHiragana(stem)) {
-      continue;
-    }
+    const bool unattested_sa_irrealis =
+        verb_type == grammar::VerbType::GodanSa && !is_in_dict && grammar::isPureHiragana(stem);
     if (!is_valid_verb) {
       continue;
     }
@@ -302,6 +301,9 @@ void appendMizenkeiNakyaCandidates(const std::vector<char32_t>& codepoints, size
     // The なきゃ/なければ contraction is an unambiguous mizenkei signal, so give a
     // bonus (verified verbs stronger) to beat the particle split や + らなきゃ.
     float cost = is_in_dict ? candidate::verb_cost::kStrongBonus : candidate::verb_cost::kStandardBonus;
+    if (unattested_sa_irrealis) {
+      cost += candidate::verb_cost::kPureHiraganaSaIrrealisPenalty;
+    }
     // Unverified stems starting with a formal noun are noun + verb sequences
     // (わけわから+なきゃ should split as わけ + わから + なきゃ)
     if (!is_in_dict && hasFormalNounPrefixBoundary(dict_manager, codepoints, start_pos, mizenkei_end)) {

@@ -185,6 +185,60 @@
       ],
       "id": "shortened_causative_passive_sentence",
       "input": "文章を書かされた"
+    },
+    {
+      "description": "荷物をおろさない - auto-generated",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "おろす",
+          "pos": "Verb",
+          "surface": "おろさ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "woorosanai",
+      "input": "荷物をおろさない"
+    },
+    {
+      "description": "手紙をかえさなきゃ - auto-generated",
+      "expected": [
+        {
+          "lemma": "手紙",
+          "pos": "Noun",
+          "surface": "手紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "かえす",
+          "pos": "Verb",
+          "surface": "かえさ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なきゃ"
+        }
+      ],
+      "id": "wokaesanaki",
+      "input": "手紙をかえさなきゃ"
     }
   ],
   "description": "Godan Sa-row verbs (五段サ行動詞) - verbs ending in す",
