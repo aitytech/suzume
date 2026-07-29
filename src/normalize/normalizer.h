@@ -17,6 +17,11 @@ struct NormalizeOptions {
 
   // Preserve case (don't convert to lowercase)
   bool preserve_case = true;
+
+  // Collapse repeated long-vowel marks only at a kanji boundary. This is a
+  // lossy cleanup for noisy text; disable it when normalized_text must retain
+  // every input codepoint.
+  bool collapse_repeated_prolonged_marks = true;
 };
 
 /**
@@ -28,6 +33,7 @@ struct NormalizeOptions {
  * - Combining dakuten normalization
  * - Case normalization (lowercase) - controllable via options
  * - Vu-series normalization (ヴ→ブ) - controllable via options
+ * - Repeated long-vowel cleanup before kanji - controllable via options
  */
 class Normalizer {
  public:

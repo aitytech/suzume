@@ -111,6 +111,7 @@ src/core/kana_constants.h	0	0	0
 src/core/lattice.h	0	4	0
 src/core/morpheme.h	0	1	0
 src/core/types.h	0	0	0
+src/core/text_boundaries.h	0	0	0
 src/core/utf8_constants.h	0	0	0
 src/core/viterbi.h	1	6	0
 src/grammar/auxiliaries.cpp	0	0	0

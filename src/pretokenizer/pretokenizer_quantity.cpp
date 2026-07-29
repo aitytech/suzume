@@ -305,18 +305,12 @@ bool PreTokenizer::tryMatchPercentage(std::string_view text, size_t pos, PreToke
     return false;
   }
 
-  // Check for % (ASCII) or ％ (full-width)
+  // The normalizer has already folded full-width punctuation.
   char chr = text[idx];
   if (chr == '%') {
     ++idx;
   } else {
-    size_t byte_pos = idx;
-    char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
-    if (codepoint == U'％') {
-      idx = byte_pos;
-    } else {
-      return false;
-    }
+    return false;
   }
 
   setTokenFromRange(token, text, pos, idx, PreTokenType::Percentage, core::PartOfSpeech::Noun);
@@ -367,8 +361,6 @@ bool PreTokenizer::tryMatchTime(std::string_view text, size_t pos, PreToken& tok
     if (isAsciiDigit(prev)) {
       return false;
     }
-    // Also check for full-width digits before this position
-    // This requires looking back at UTF-8 boundary
   }
 
   const IntegerScan hour = scanInteger(text, pos);

@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "core/debug.h"
+#include "core/text_boundaries.h"
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 
@@ -12,36 +13,16 @@ namespace suzume::analysis {
 namespace {
 
 // Maximum chunk size in bytes (~10K Japanese characters).
-// Keeps Viterbi memory under ~3MB per chunk.
+// This is an input-size boundary, not a memory budget: peak lattice memory
+// depends on candidate density, so embeddings must be sized from their workload.
 constexpr size_t kMaxChunkBytes = 32768;
 
 // Check if byte position is a sentence boundary character.
 // Returns the number of bytes to include (0 if not a boundary).
 inline size_t sentenceBoundaryLen(std::string_view text, size_t pos) {
-  auto c = static_cast<unsigned char>(text[pos]);
-  // ASCII: \n, !, ?
-  if (c == '\n' || c == '!' || c == '?') {
-    return 1;
-  }
-  // 3-byte UTF-8 sequences
-  if (pos + 2 < text.size() && c == 0xE3) {
-    auto c1 = static_cast<unsigned char>(text[pos + 1]);
-    auto c2 = static_cast<unsigned char>(text[pos + 2]);
-    // 。(U+3002) = E3 80 82
-    if (c1 == 0x80 && c2 == 0x82)
-      return 3;
-  }
-  if (pos + 2 < text.size() && c == 0xEF) {
-    auto c1 = static_cast<unsigned char>(text[pos + 1]);
-    auto c2 = static_cast<unsigned char>(text[pos + 2]);
-    // ！(U+FF01) = EF BC 81
-    if (c1 == 0xBC && c2 == 0x81)
-      return 3;
-    // ？(U+FF1F) = EF BC 9F
-    if (c1 == 0xBC && c2 == 0x9F)
-      return 3;
-  }
-  return 0;
+  size_t end = pos;
+  const char32_t codepoint = normalize::decodeUtf8(text, end);
+  return core::isSentenceBoundaryCodepoint(codepoint) ? end - pos : 0;
 }
 
 // Find the last UTF-8 character boundary at or before pos.
@@ -300,7 +281,7 @@ std::vector<core::Morpheme> Analyzer::analyzeChunk(std::string_view text, size_t
   }
 
   // Chunk boundary: no inflection result from the previous chunk is referenced
-  // any more, so this is the one point where the cache may be discarded.
+  // any more, so an older retained cache generation may be discarded here.
   unknown_gen_.inflection().rollCache();
 
   // Text is already normalized by analyze(); decode directly to codepoints.

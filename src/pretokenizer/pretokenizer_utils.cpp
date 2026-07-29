@@ -71,11 +71,6 @@ bool isAsciiAlnum(char chr) {
   return isAsciiDigit(chr) || isAsciiAlpha(chr);
 }
 
-// Check if this is a full-width digit (０-９)
-bool isFullwidthDigit(char32_t codepoint) {
-  return codepoint >= 0xFF10 && codepoint <= 0xFF19;
-}
-
 // Scan integer digits without allocating. Value is retained for the first two
 // digits, which is sufficient for the bounded time fields below.
 IntegerScan scanInteger(std::string_view text, size_t pos) {
@@ -89,14 +84,7 @@ IntegerScan scanInteger(std::string_view text, size_t pos) {
       digit = chr - '0';
       ++idx;
     } else {
-      size_t byte_pos = idx;
-      char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
-      if (isFullwidthDigit(codepoint)) {
-        digit = static_cast<int>(codepoint - 0xFF10);
-        idx = byte_pos;
-      } else {
-        break;
-      }
+      break;
     }
     if (digit_count < 2) {
       value = value * 10 + digit;
@@ -152,15 +140,7 @@ size_t scanDigits(std::string_view text, size_t pos) {
         break;
       }
     } else {
-      // Check for full-width digits
-      size_t byte_pos = idx;
-      char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
-      if (isFullwidthDigit(codepoint)) {
-        idx = byte_pos;
-        ++digits_since_comma;
-      } else {
-        break;
-      }
+      break;
     }
   }
   return idx;

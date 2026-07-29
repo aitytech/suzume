@@ -78,7 +78,7 @@ class PreTokenizer {
 
   /**
    * @brief Process text and extract pre-tokens
-   * @param text Input text
+   * @param text Normalized input text
    * @return Result containing confirmed tokens and spans needing analysis
    */
   PreTokenResult process(std::string_view text) const;

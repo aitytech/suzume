@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include "normalize/normalizer.h"
 #include "pretokenizer/pretokenizer.h"
 
 namespace suzume::pretokenizer {
@@ -62,6 +63,13 @@ TEST_F(PreTokenizerTextTest, SentenceBoundary_Mixed) {
   EXPECT_GE(boundary_count, 3);
 }
 
+TEST_F(PreTokenizerTextTest, SentenceBoundary_Nakaguro) {
+  const auto result = pretokenizer_.process("カタカナ・カタカナ");
+  ASSERT_EQ(result.tokens.size(), 1U);
+  EXPECT_EQ(result.tokens[0].type, PreTokenType::Boundary);
+  EXPECT_EQ(result.tokens[0].surface, "・");
+}
+
 // ===== Hashtag Tests =====
 
 TEST_F(PreTokenizerTextTest, MatchHashtag_English) {
@@ -100,17 +108,21 @@ TEST_F(PreTokenizerTextTest, MatchHashtag_WithUnderscore) {
 }
 
 TEST_F(PreTokenizerTextTest, MatchHashtag_FullWidth) {
-  auto result = pretokenizer_.process("＃タグ");
+  const auto normalized = normalize::Normalizer().normalize("＃タグ");
+  ASSERT_TRUE(core::isSuccess(normalized));
+  auto result = pretokenizer_.process(std::get<std::string>(normalized));
   ASSERT_EQ(result.tokens.size(), 1);
-  EXPECT_EQ(result.tokens[0].surface, "＃タグ");
+  EXPECT_EQ(result.tokens[0].surface, "#タグ");
   EXPECT_EQ(result.tokens[0].type, PreTokenType::Hashtag);
 }
 
 TEST_F(PreTokenizerTextTest, FullWidthHashStartsANewHashtag) {
-  const auto result = pretokenizer_.process("＃東京＃テスト");
+  const auto normalized = normalize::Normalizer().normalize("＃東京＃テスト");
+  ASSERT_TRUE(core::isSuccess(normalized));
+  const auto result = pretokenizer_.process(std::get<std::string>(normalized));
   ASSERT_EQ(result.tokens.size(), 2U);
-  EXPECT_EQ(result.tokens[0].surface, "＃東京");
-  EXPECT_EQ(result.tokens[1].surface, "＃テスト");
+  EXPECT_EQ(result.tokens[0].surface, "#東京");
+  EXPECT_EQ(result.tokens[1].surface, "#テスト");
 }
 
 TEST_F(PreTokenizerTextTest, MatchHashtag_SupplementaryKanji) {

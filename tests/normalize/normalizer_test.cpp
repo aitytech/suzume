@@ -38,6 +38,18 @@ TEST_F(NormalizerTest, FullwidthLowercaseToHalfwidth) {
   EXPECT_EQ(std::get<std::string>(result), "abcdef");
 }
 
+TEST_F(NormalizerTest, FullwidthAsciiPunctuationToHalfwidth) {
+  auto result = normalizer_.normalize("１，２３４円 ｔｅｓｔ＠ｅｘａｍｐｌｅ．ｊｐ ｖ１．２．３");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "1,234円 test@example.jp v1.2.3");
+}
+
+TEST_F(NormalizerTest, TransparentFormatControlsAreRemoved) {
+  auto result = normalizer_.normalize("テ\u200Bスト これ\u200Bは \u200Bテスト");
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "テスト これは テスト");
+}
+
 TEST_F(NormalizerTest, HalfwidthUppercaseToLowercase) {
   auto result = normalizer_.normalize("HELLO");
   ASSERT_TRUE(core::isSuccess(result));
@@ -179,6 +191,15 @@ TEST_F(NormalizerTest, HalfwidthKatakana_LongVowel) {
   EXPECT_EQ(std::get<std::string>(result), "コーヒー");
 }
 
+TEST_F(NormalizerTest, CombiningSoundMarksNormalizeLikeSpacingMarks) {
+  auto voiced = normalizer_.normalize("ア\xE3\x82\x99");
+  auto semi_voiced = normalizer_.normalize("ハ\xE3\x82\x9A");
+  ASSERT_TRUE(core::isSuccess(voiced));
+  ASSERT_TRUE(core::isSuccess(semi_voiced));
+  EXPECT_EQ(std::get<std::string>(voiced), "ア゛");
+  EXPECT_EQ(std::get<std::string>(semi_voiced), "パ");
+}
+
 TEST_F(NormalizerTest, RepeatedProlongedMarksCollapseIndependentOfWidth) {
   auto fullwidth = normalizer_.normalize("長いーー音");
   auto halfwidth = normalizer_.normalize("長いｰｰ音");
@@ -188,19 +209,30 @@ TEST_F(NormalizerTest, RepeatedProlongedMarksCollapseIndependentOfWidth) {
   EXPECT_EQ(std::get<std::string>(halfwidth), "長いー音");
 }
 
+TEST(NormalizerOptionsTest, PreserveRepeatedProlongedMarks) {
+  NormalizeOptions options;
+  options.collapse_repeated_prolonged_marks = false;
+  Normalizer normalizer(options);
+
+  const auto result = normalizer.normalize("長いーー音");
+
+  ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "長いーー音");
+}
+
 // ===== Long Vowel Mark Tests (長音記号) =====
 
 TEST_F(NormalizerTest, LongVowel_FullwidthTilde) {
-  // ～ handling
   auto result = normalizer_.normalize("ラーメン～");
   ASSERT_TRUE(core::isSuccess(result));
-  // Should preserve or convert consistently
+  EXPECT_EQ(std::get<std::string>(result), "ラーメン~");
 }
 
 TEST_F(NormalizerTest, LongVowel_WaveDash) {
   // 〜 (wave dash U+301C)
   auto result = normalizer_.normalize("東京〜大阪");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "東京〜大阪");
 }
 
 // ===== Iteration Mark Tests (繰り返し記号) =====
@@ -217,24 +249,28 @@ TEST_F(NormalizerTest, IterationMark_Hiragana) {
   // ゝ iteration mark for hiragana
   auto result = normalizer_.normalize("あゝ");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "あゝ");
 }
 
 TEST_F(NormalizerTest, IterationMark_HiraganaVoiced) {
   // ゞ voiced iteration mark for hiragana
   auto result = normalizer_.normalize("みすゞ");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "みすゞ");
 }
 
 TEST_F(NormalizerTest, IterationMark_Katakana) {
   // ヽ iteration mark for katakana
   auto result = normalizer_.normalize("アヽ");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "アヽ");
 }
 
 TEST_F(NormalizerTest, IterationMark_KatakanaVoiced) {
   // ヾ voiced iteration mark for katakana
   auto result = normalizer_.normalize("カヾ");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "カヾ");
 }
 
 // ===== Punctuation Normalization Tests =====
@@ -255,16 +291,19 @@ TEST_F(NormalizerTest, Punctuation_FullwidthPeriod) {
 TEST_F(NormalizerTest, Punctuation_FullwidthQuestionMark) {
   auto result = normalizer_.normalize("本当？");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "本当?");
 }
 
 TEST_F(NormalizerTest, Punctuation_FullwidthExclamation) {
   auto result = normalizer_.normalize("すごい！");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "すごい!");
 }
 
 TEST_F(NormalizerTest, Punctuation_MixedMarks) {
   auto result = normalizer_.normalize("えっ！？");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "えっ!?");
 }
 
 // ===== Bracket Normalization Tests =====
@@ -280,18 +319,21 @@ TEST_F(NormalizerTest, Bracket_DoubleQuotes) {
   // 『』 Double Japanese quotation marks
   auto result = normalizer_.normalize("『本のタイトル』");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "『本のタイトル』");
 }
 
 TEST_F(NormalizerTest, Bracket_Parentheses) {
   // （） Full-width parentheses
   auto result = normalizer_.normalize("（注）");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "(注)");
 }
 
 TEST_F(NormalizerTest, Bracket_CornerBrackets) {
   // 【】 Lenticular brackets
   auto result = normalizer_.normalize("【重要】");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "【重要】");
 }
 
 // ===== Symbol Normalization Tests =====
@@ -300,11 +342,13 @@ TEST_F(NormalizerTest, Symbol_JapaneseYen) {
   // ￥ Full-width yen sign
   auto result = normalizer_.normalize("￥1000");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "￥1000");
 }
 
 TEST_F(NormalizerTest, Symbol_FullwidthColon) {
   auto result = normalizer_.normalize("時間：10分");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "時間:10分");
 }
 
 TEST_F(NormalizerTest, Symbol_MiddleDot) {
@@ -439,11 +483,11 @@ TEST_F(NormalizerTest, SpacingMark_InvalidBaseUnchanged) {
   EXPECT_EQ(std::get<std::string>(result), "あ\u309B");
 }
 
-TEST_F(NormalizerTest, CombiningChar_InvalidBaseUnchanged) {
-  // あ cannot take combining dakuten: sequence passes through unchanged
+TEST_F(NormalizerTest, CombiningChar_InvalidBaseUsesSpacingMark) {
+  // A stray combining dakuten uses the same standalone spelling as U+309B.
   auto result = normalizer_.normalize("あ\u3099");
   ASSERT_TRUE(core::isSuccess(result));
-  EXPECT_EQ(std::get<std::string>(result), "あ\u3099");
+  EXPECT_EQ(std::get<std::string>(result), "あ\u309B");
 }
 
 TEST_F(NormalizerTest, CombiningChar_PrecomposedUnchanged) {
@@ -473,11 +517,13 @@ TEST_F(NormalizerTest, Whitespace_FullwidthSpace) {
   // Full-width space U+3000
   auto result = normalizer_.normalize("東京　大阪");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "東京　大阪");
 }
 
 TEST_F(NormalizerTest, Whitespace_MultipleSpaces) {
   auto result = normalizer_.normalize("東京  大阪");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "東京  大阪");
 }
 
 // ===== needsNormalization Additional Tests =====
@@ -515,12 +561,14 @@ TEST_F(NormalizerTest, ExtendedChar_CircledNumbers) {
   // ① ② ③ Circled numbers
   auto result = normalizer_.normalize("①②③");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "①②③");
 }
 
 TEST_F(NormalizerTest, ExtendedChar_RomanNumerals) {
   // Ⅰ Ⅱ Ⅲ Roman numerals
   auto result = normalizer_.normalize("ⅠⅡⅢ");
   ASSERT_TRUE(core::isSuccess(result));
+  EXPECT_EQ(std::get<std::string>(result), "ⅠⅡⅢ");
 }
 
 // ===== Normalization Options Tests =====

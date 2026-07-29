@@ -31,6 +31,47 @@
       ],
       "id": "nagai_choon_on_wo_nyuuryoku_suru",
       "input": "長いーー音を入力する"
+    },
+    {
+      "description": "A zero-width space is removed from the normalized token coordinate space.",
+      "expected": [
+        {
+          "lemma": "テスト",
+          "pos": "Noun",
+          "surface": "テスト"
+        }
+      ],
+      "id": "unnamed_22",
+      "input": "テ​スト"
+    },
+    {
+      "description": "A zero-width space does not create a token-offset gap.",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        }
+      ],
+      "id": "kore_ha",
+      "input": "これ​は"
+    },
+    {
+      "description": "A leading zero-width space is removed before analysis.",
+      "expected": [
+        {
+          "lemma": "テスト",
+          "pos": "Noun",
+          "surface": "テスト"
+        }
+      ],
+      "id": "unnamed_23",
+      "input": "​テスト"
     }
   ],
   "description": "normalization tests",

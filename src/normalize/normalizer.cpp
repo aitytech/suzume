@@ -10,9 +10,18 @@ namespace {
 
 // Full-width ASCII to half-width (with case preservation option)
 char32_t fullwidthToHalfwidth(char32_t codepoint, bool preserve_case) {
+  // The full-width ASCII compatibility block maps one-to-one onto ASCII.
+  // Keep width folding here, before pre-tokenization, so all matchers share
+  // the same punctuation contract as letters and digits.
+  if (codepoint >= 0xFF01 && codepoint <= 0xFF0F) {
+    return codepoint - 0xFF01 + '!';
+  }
   // Full-width digits (０-９) -> half-width (0-9)
   if (codepoint >= 0xFF10 && codepoint <= 0xFF19) {
     return codepoint - 0xFF10 + '0';
+  }
+  if (codepoint >= 0xFF1A && codepoint <= 0xFF20) {
+    return codepoint - 0xFF1A + ':';
   }
   // Full-width uppercase (Ａ-Ｚ)
   if (codepoint >= 0xFF21 && codepoint <= 0xFF3A) {
@@ -21,9 +30,15 @@ char32_t fullwidthToHalfwidth(char32_t codepoint, bool preserve_case) {
     }
     return codepoint - 0xFF21 + 'a';  // Convert to lowercase
   }
+  if (codepoint >= 0xFF3B && codepoint <= 0xFF40) {
+    return codepoint - 0xFF3B + '[';
+  }
   // Full-width lowercase (ａ-ｚ) -> half-width lowercase (a-z)
   if (codepoint >= 0xFF41 && codepoint <= 0xFF5A) {
     return codepoint - 0xFF41 + 'a';
+  }
+  if (codepoint >= 0xFF5B && codepoint <= 0xFF5E) {
+    return codepoint - 0xFF5B + '{';
   }
   // Half-width uppercase (A-Z)
   if (codepoint >= 'A' && codepoint <= 'Z') {
@@ -209,6 +224,13 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
   while (pos < text.size()) {
     char32_t codepoint = decodeUtf8(text, pos);
 
+    // U+200B is a formatting artifact, not text that belongs to an analysis
+    // token. Removing it here gives all later stages one normalized coordinate
+    // system and prevents it from leaking into surfaces or lemmas.
+    if (isTransparentFormatControl(codepoint)) {
+      continue;
+    }
+
     // Apply normalization with options
     char32_t normalized_cp = normalizeWidthAndKana(codepoint, options_.preserve_case);
 
@@ -216,9 +238,9 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
     // preceding kana (combinable ones are consumed in the look-ahead below).
     // Map such a stray mark to its full-width standalone form so that both
     // encodings classify and segment identically (e.g. ｱﾞ matches ア゛).
-    if (normalized_cp == kHalfwidthDakuten) {
+    if (normalized_cp == kHalfwidthDakuten || normalized_cp == kCombiningDakuten) {
       normalized_cp = kDakuten;
-    } else if (normalized_cp == kHalfwidthHandakuten) {
+    } else if (normalized_cp == kHalfwidthHandakuten || normalized_cp == kCombiningHandakuten) {
       normalized_cp = kHandakuten;
     }
 
@@ -253,7 +275,7 @@ core::Result<std::string> Normalizer::normalize(std::string_view text) const {
     // elongation, not the in-word emphasis used in すごーーい. Retain one
     // mark for the preceding token and collapse only the redundant marks in
     // this boundary context (長いーー音 → 長いー音).
-    if (codepoint == 0x30FC) {
+    if (options_.collapse_repeated_prolonged_marks && codepoint == 0x30FC) {
       size_t repeated_end = pos;
       while (repeated_end < text.size()) {
         size_t mark_pos = repeated_end;

@@ -3,6 +3,7 @@
  * @brief Pre-tokenizer matcher orchestration
  */
 
+#include "core/text_boundaries.h"
 #include "normalize/utf8.h"
 #include "pretokenizer/pretokenizer_internal.h"
 
@@ -11,8 +12,7 @@ namespace suzume::pretokenizer {
 using namespace pretokenizer_detail;
 
 bool PreTokenizer::isSentenceBoundary(char32_t codepoint) const {
-  return codepoint == U'。' || codepoint == U'！' || codepoint == U'？' || codepoint == U'!' || codepoint == U'?' ||
-         codepoint == U'\n' || codepoint == U'・';  // Nakaguro: token boundary (splits カタカナ・カタカナ)
+  return core::isSentenceBoundaryCodepoint(codepoint);
 }
 
 PreTokenResult PreTokenizer::process(std::string_view text) const {
@@ -30,7 +30,7 @@ PreTokenResult PreTokenizer::process(std::string_view text) const {
     PreToken token;
     size_t next_pos = pos;
     const char32_t codepoint = normalize::decodeUtf8(text, next_pos);
-    const bool current_is_digit = (codepoint >= U'0' && codepoint <= U'9') || isFullwidthDigit(codepoint);
+    const bool current_is_digit = codepoint >= U'0' && codepoint <= U'9';
     // Numeric matchers scan the complete digit run. Once the first position
     // has failed, retrying every suffix of the same run is quadratic and can
     // only manufacture a token that starts in the middle of a number.

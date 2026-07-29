@@ -467,7 +467,7 @@ TEST_F(SuzumeApiTest, PreservedNonWordCodepointsFormOneMaximalRun) {
 
   const auto results = instance.analyze("○×（￣▽￣）");
   ASSERT_EQ(results.size(), 1u);
-  EXPECT_EQ(results.front().surface, "○×（￣▽￣）");
+  EXPECT_EQ(results.front().surface, "○×(￣▽￣)");
   EXPECT_EQ(results.front().pos, core::PartOfSpeech::Symbol);
 }
 
@@ -480,12 +480,12 @@ TEST_F(SuzumeApiTest, IdeographicVariationSelectorStaysWithItsWord) {
   EXPECT_EQ(results.front().pos, core::PartOfSpeech::Noun);
 }
 
-TEST_F(SuzumeApiTest, ZeroWidthSpaceStaysInsideItsWord) {
+TEST_F(SuzumeApiTest, ZeroWidthSpaceIsRemovedBeforeAnalysis) {
   Suzume instance(makeTestOptions());
 
   const auto results = instance.analyze("東京\u200B都");
   ASSERT_EQ(results.size(), 1u);
-  EXPECT_EQ(results.front().surface, "東京\u200B都");
+  EXPECT_EQ(results.front().surface, "東京都");
   EXPECT_EQ(results.front().pos, core::PartOfSpeech::Noun);
 }
 
@@ -737,6 +737,44 @@ TEST_F(SuzumeApiTest, GenerateTagsEmptyText) {
   Suzume instance(makeTestOptions());
   auto tags = instance.generateTags("");
   EXPECT_TRUE(tags.empty());
+}
+
+TEST_F(SuzumeApiTest, GenerateTagsResultPreservesMalformedInputErrors) {
+  Suzume instance(makeTestOptions());
+  const std::string invalid_utf8("\xE3\x81", 2);
+
+  const auto default_result = instance.generateTagsResult(invalid_utf8);
+  ASSERT_FALSE(default_result.hasValue());
+  EXPECT_EQ(default_result.error().code, core::ErrorCode::InvalidUtf8);
+  EXPECT_TRUE(instance.generateTags(invalid_utf8).empty());
+
+  postprocess::TagGeneratorOptions options;
+  options.min_tag_length = 1;
+  const auto custom_result = instance.generateTagsResult(invalid_utf8, options);
+  ASSERT_FALSE(custom_result.hasValue());
+  EXPECT_EQ(custom_result.error().code, core::ErrorCode::InvalidUtf8);
+  EXPECT_TRUE(instance.generateTags(invalid_utf8, options).empty());
+}
+
+TEST_F(SuzumeApiTest, ClearUserDictionariesDiscardsOnlyRuntimeWarnings) {
+  SuzumeOptions options = makeTestOptions();
+  options.skip_core_dictionary = true;
+  Suzume instance(options);
+  const auto construction_warnings = instance.dictionaryWarnings();
+  const std::string source = "ignored-record\n検査語\tNOUN\n";
+
+  ASSERT_EQ(instance.loadUserDictionaryFromMemoryResult(source.data(), source.size()).value(), 1u);
+  const auto after_load = instance.dictionaryWarnings();
+  ASSERT_EQ(after_load.size(), construction_warnings.size() + 1u);
+  EXPECT_NE(after_load.back().find("line 1"), std::string::npos);
+
+  instance.clearUserDictionaries();
+  EXPECT_EQ(instance.dictionaryWarnings(), construction_warnings);
+
+  ASSERT_EQ(instance.loadUserDictionaryFromMemoryResult(source.data(), source.size()).value(), 1u);
+  EXPECT_EQ(instance.dictionaryWarnings().size(), construction_warnings.size() + 1u);
+  instance.clearUserDictionaries();
+  EXPECT_EQ(instance.dictionaryWarnings(), construction_warnings);
 }
 
 TEST_F(SuzumeApiTest, MoveConstruct) {

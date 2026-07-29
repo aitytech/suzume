@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "description": "Full-width ASCII version punctuation normalizes before version matching.",
+      "expected": [
+        {
+          "lemma": "v1.2.3",
+          "pos": "Noun",
+          "surface": "v1.2.3"
+        }
+      ],
+      "id": "unnamed_21",
+      "input": "ｖ１．２．３"
+    },
+    {
+      "description": "Full-width thousands punctuation normalizes before quantity matching.",
+      "expected": [
+        {
+          "lemma": "1,234円",
+          "pos": "Noun",
+          "surface": "1,234円"
+        }
+      ],
+      "id": "unnamed_24",
+      "input": "１，２３４円"
+    },
+    {
+      "description": "Full-width email punctuation normalizes before email matching.",
+      "expected": [
+        {
+          "lemma": "test@example.jp",
+          "pos": "Noun",
+          "surface": "test@example.jp"
+        }
+      ],
+      "id": "unnamed_25",
+      "input": "ｔｅｓｔ＠ｅｘａｍｐｌｅ．ｊｐ"
+    }
+  ],
+  "description": "pretokenizer tests",
+  "version": "1.0"
+}

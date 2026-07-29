@@ -195,12 +195,12 @@ bool PreTokenizer::tryMatchHashtag(std::string_view text, size_t pos, PreToken& 
     return false;
   }
 
-  // Check for # (ASCII) or ＃ (full-width)
+  // The normalizer has already folded full-width punctuation.
   size_t idx = pos;
   size_t byte_pos = pos;
   char32_t codepoint = normalize::decodeUtf8(text, byte_pos);
 
-  if (codepoint != '#' && codepoint != U'＃') {
+  if (codepoint != '#') {
     return false;
   }
   idx = byte_pos;

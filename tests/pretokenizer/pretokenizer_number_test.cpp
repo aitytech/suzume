@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include "normalize/normalizer.h"
 #include "pretokenizer/pretokenizer.h"
 
 namespace suzume::pretokenizer {
@@ -123,15 +124,18 @@ TEST_F(PreTokenizerNumberTest, MatchDate_DoesNotAcceptDecimalYear) {
   }
 }
 
-TEST_F(PreTokenizerNumberTest, MatchAddressNumberSurfaceMatchesRawRange) {
+TEST_F(PreTokenizerNumberTest, MatchAddressNumberSurfaceMatchesNormalizedRange) {
   constexpr std::string_view kAddresses[] = {"1-2-3", "１-２-３", "1-２-3"};
   for (std::string_view address : kAddresses) {
-    auto result = pretokenizer_.process(address);
+    const auto normalized = normalize::Normalizer().normalize(address);
+    ASSERT_TRUE(core::isSuccess(normalized)) << address;
+    const auto& text = std::get<std::string>(normalized);
+    auto result = pretokenizer_.process(text);
     ASSERT_EQ(result.tokens.size(), 1) << address;
     const auto& token = result.tokens.front();
     EXPECT_EQ(token.type, PreTokenType::Number) << address;
-    EXPECT_EQ(token.surface, address) << address;
-    EXPECT_EQ(token.surface, address.substr(token.start, token.end - token.start)) << address;
+    EXPECT_EQ(token.surface, "1-2-3") << address;
+    EXPECT_EQ(token.surface, text.substr(token.start, token.end - token.start)) << address;
   }
 }
 
