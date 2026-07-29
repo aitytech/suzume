@@ -871,6 +871,28 @@
       ],
       "id": "ninokoru",
       "input": "記憶にのこる"
+    },
+    {
+      "description": "手足をのばす - auto-generated",
+      "expected": [
+        {
+          "lemma": "手足",
+          "pos": "Noun",
+          "surface": "手足"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "のばす",
+          "pos": "Verb",
+          "surface": "のばす"
+        }
+      ],
+      "id": "wonobasu",
+      "input": "手足をのばす"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

@@ -378,6 +378,11 @@ constexpr float kBosBindingParticlePenalty = scale::kRare;   // 係結び has no
 // such nominal, and without the penalty the particle reading of a noun's first
 // mora costs nothing at all (となり read as と + なり).
 constexpr float kBosCaseParticlePenalty = scale::kMinor;
+// の binds leftward on both of its readings: the genitive selects the nominal it
+// modifies with, and the nominalizer selects the clause it turns into one. Either
+// way there is nothing to its left at sentence start, and the first mora of a
+// kana verb otherwise reads as the particle for free (のばす as の + ば + す).
+constexpr float kBosNominalizerParticlePenalty = scale::kMinor;
 constexpr float kBosHonorificAuxPenalty = 0.3F;  // Honorific auxiliary needs a preceding renyokei
 // A classical perfect り / negative ん attaches to a preceding 連用形 or 未然形,
 // so neither can lead a sentence. Without this the two auxiliaries chain into a
@@ -451,6 +456,7 @@ constexpr std::array<BoundaryCost, static_cast<size_t>(core::ExtendedPOS::Count_
   table[static_cast<size_t>(core::ExtendedPOS::ParticleConj)].bos = kBosConjunctiveParticlePenalty;
   table[static_cast<size_t>(core::ExtendedPOS::ParticleBinding)].bos = kBosBindingParticlePenalty;
   table[static_cast<size_t>(core::ExtendedPOS::ParticleCase)].bos = kBosCaseParticlePenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::ParticleNo)].bos = kBosNominalizerParticlePenalty;
 
   table[static_cast<size_t>(core::ExtendedPOS::AuxAspectKuru)].eos = kEosAspectKuruPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxAspectKuru)].eos_gate = EosBoundaryGate::SingleCodepoint;
