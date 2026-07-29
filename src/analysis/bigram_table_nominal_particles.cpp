@@ -102,7 +102,12 @@ void setNominalParticleCosts(BigramMatrix& table) {
       {EPOS::NounFormal, EPOS::AuxCopulaDesu, cost::kStrongBonus},
       {EPOS::NounFormal, EPOS::AuxNegativeNai, cost::kModerateBonus},
       {EPOS::NounFormal, EPOS::AdjBasic, cost::kDoubleVeryStrongBonus},
-      {EPOS::NounFormal, EPOS::ParticleAdverbial, cost::kDoubleVeryStrongBonus},
+      // The adverbial and the binding particles are the two halves of one focus
+      // class, so a formal noun takes them at the same rate. Pricing the
+      // adverbial particle above its sibling made the formal noun outbid a whole
+      // lexicalized span that happens to spell out as a determiner plus that
+      // noun, and only for the particles on this side of the class.
+      {EPOS::NounFormal, EPOS::ParticleAdverbial, cost::kVeryStrongBonus},
       {EPOS::ParticleNo, EPOS::NounFormal, cost::kStrongBonus},
       {EPOS::AuxAspectIru, EPOS::NounFormal, cost::kVeryStrongBonus},
       {EPOS::ParticleQuote, EPOS::NounFormal, cost::kVeryStrongBonus},

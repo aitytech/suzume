@@ -1108,6 +1108,38 @@
       ],
       "id": "shita_demonai",
       "input": "大した問題でもない"
+    },
+    {
+      "description": "ものだけ持って行く - auto-generated",
+      "expected": [
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "持つ",
+          "pos": "Verb",
+          "surface": "持っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Auxiliary",
+          "surface": "行く"
+        }
+      ],
+      "id": "monodake_ttte_ku",
+      "input": "ものだけ持って行く"
     }
   ],
   "description": "particle_adverbial tests",

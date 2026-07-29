@@ -55,7 +55,13 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
 
       // An adverb can be followed by a focus particle (そう+かも, もっとも+でも).
       // Prefer that grammatical boundary over a homographic short verb.
-      {EPOS::Adverb, EPOS::ParticleAdverbial, cost::kStrongBonus},
+      // The binding particles are the other half of that class and scope over an
+      // adverb just as readily (ゆっくり+こそ, ちょっと+さえ); without the row an
+      // adverb spelled like a determiner plus a formal noun loses its own span,
+      // because the formal noun collects a binding-particle bonus the adverb has
+      // no counterpart for (そのまま+こそ misread as その+まま+こそ).
+      {EPOS::Adverb, EPOS::ParticleAdverbial, cost::kVeryStrongBonus},
+      {EPOS::Adverb, EPOS::ParticleBinding, cost::kVeryStrongBonus},
 
       // The regional polite auxiliary follows an invitation formal noun
       // (おいで+なんし).

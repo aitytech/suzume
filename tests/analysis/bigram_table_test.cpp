@@ -171,7 +171,15 @@ TEST(BigramTableTest, FormalNounUsesItsExplicitContinuationProfile) {
   EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleTopic), bigram_cost::kModerateBonus);
   EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleBinding), bigram_cost::kVeryStrongBonus);
   EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::AuxCopulaDa), bigram_cost::kVeryStrongBonus);
-  EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleAdverbial), bigram_cost::kDoubleVeryStrongBonus);
+  EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleAdverbial), bigram_cost::kVeryStrongBonus);
+}
+
+TEST(BigramTableTest, AdverbTakesBothHalvesOfTheFocusParticleClassAlike) {
+  using EPOS = core::ExtendedPOS;
+  EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::Adverb, EPOS::ParticleAdverbial),
+                  BigramTable::getCost(EPOS::Adverb, EPOS::ParticleBinding));
+  EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleAdverbial),
+                  BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleBinding));
 }
 
 TEST(BigramTableTest, QuotativeAdverbInheritsTheGeneralAdverbConnectionProfile) {

@@ -1392,6 +1392,138 @@
       ],
       "id": "taisou_da",
       "input": "たいそう美しい"
+    },
+    {
+      "description": "そのままこそ良い - auto-generated",
+      "expected": [
+        {
+          "lemma": "そのまま",
+          "pos": "Adverb",
+          "surface": "そのまま"
+        },
+        {
+          "lemma": "こそ",
+          "pos": "Particle",
+          "surface": "こそ"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        }
+      ],
+      "id": "sonomamakoso_i",
+      "input": "そのままこそ良い"
+    },
+    {
+      "description": "そのままさえ良い - auto-generated",
+      "expected": [
+        {
+          "lemma": "そのまま",
+          "pos": "Adverb",
+          "surface": "そのまま"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        }
+      ],
+      "id": "sonomamasae_i",
+      "input": "そのままさえ良い"
+    },
+    {
+      "description": "そのままだけ良い - auto-generated",
+      "expected": [
+        {
+          "lemma": "そのまま",
+          "pos": "Adverb",
+          "surface": "そのまま"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        }
+      ],
+      "id": "sonomamadake_i",
+      "input": "そのままだけ良い"
+    },
+    {
+      "description": "そのままは良い - auto-generated",
+      "expected": [
+        {
+          "lemma": "そのまま",
+          "pos": "Adverb",
+          "surface": "そのまま"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        }
+      ],
+      "id": "sonomamaha_i",
+      "input": "そのままは良い"
+    },
+    {
+      "description": "ありのままこそ良い - auto-generated",
+      "expected": [
+        {
+          "lemma": "ありのまま",
+          "pos": "Adverb",
+          "surface": "ありのまま"
+        },
+        {
+          "lemma": "こそ",
+          "pos": "Particle",
+          "surface": "こそ"
+        },
+        {
+          "lemma": "良い",
+          "pos": "Adjective",
+          "surface": "良い"
+        }
+      ],
+      "id": "arinomamakoso_i",
+      "input": "ありのままこそ良い"
+    },
+    {
+      "description": "このまま待つ - auto-generated",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "まま",
+          "pos": "Noun",
+          "surface": "まま"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "konomama_tsu",
+      "input": "このまま待つ"
     }
   ],
   "description": "adverb_fixed tests",
