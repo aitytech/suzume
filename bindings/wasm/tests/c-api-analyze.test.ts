@@ -91,6 +91,21 @@ describe('C API: analyze', () => {
     resultFree(resultPtr);
   });
 
+  it('should expose conjugation fields for auxiliaries', () => {
+    const textPtr = allocString(module, '書かなかった');
+    const resultPtr = analyze(handle, textPtr);
+    module._free(textPtr);
+
+    const morphemes = parseMorphemes(module, resultPtr);
+    const negative = morphemes.find((morpheme) => morpheme.surface === 'なかっ');
+    expect(negative).toBeDefined();
+    expect(negative?.pos).toBe('AUX');
+    expect(negative?.conjType).toBeNull();
+    expect(negative?.conjForm).toBe('終止形');
+
+    resultFree(resultPtr);
+  });
+
   it('should return null conj fields for non-conjugating words', () => {
     const textPtr = allocString(module, '東京');
     const resultPtr = analyze(handle, textPtr);

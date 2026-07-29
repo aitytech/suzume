@@ -28,9 +28,9 @@ namespace suzume {
 
 /** @brief Analysis mode; mirrors the C ABI mode codes. */
 enum class Mode : std::uint8_t {
-  Normal = 0,
-  Search = 1,
-  Split = 2,
+  Normal = SUZUME_MODE_NORMAL,
+  Search = SUZUME_MODE_SEARCH,
+  Split = SUZUME_MODE_SPLIT,
 };
 
 /** @brief Tokenizer construction options (see suzume_extended_options_t). */
@@ -53,7 +53,8 @@ struct Options {
 struct Morpheme {
   std::string surface;       ///< Surface form (UTF-8).
   std::string pos;           ///< Part of speech (English).
-  std::string lemma;         ///< Base/dictionary form.
+  std::string base_form;     ///< Base/dictionary form.
+  std::string lemma;         ///< @deprecated Use base_form; retained for source compatibility through the next release.
   std::string pos_ja;        ///< Part of speech (Japanese).
   std::string conj_type;     ///< Conjugation type (Japanese); empty when N/A.
   std::string conj_form;     ///< Conjugation form (Japanese); empty when N/A.
@@ -76,7 +77,7 @@ struct AnalysisResult {
 
 /** @brief Tag-generation options (see suzume_tag_options_t). */
 struct TagOptions {
-  std::uint8_t pos_filter = 0;  ///< POS bitmask: 1=noun,2=verb,4=adj,8=adverb (0=all).
+  std::uint8_t pos_filter = 0;  ///< POS bitmask; 0 includes all filterable POS.
   bool exclude_basic = false;
   bool use_lemma = true;
   std::size_t min_length = 2;
@@ -156,6 +157,17 @@ class Tokenizer {
   bool valid() const noexcept { return handle_ != nullptr; }
   explicit operator bool() const noexcept { return valid(); }
 
+  /** @brief Get the current analysis mode. Returns Mode::Normal for an invalid tokenizer. */
+  Mode mode() const {
+    if (handle_ == nullptr) {
+      return Mode::Normal;
+    }
+    return static_cast<Mode>(suzume_mode(handle_));
+  }
+
+  /** @brief Change analysis mode without reloading dictionaries. */
+  bool setMode(Mode mode) { return handle_ != nullptr && suzume_set_mode(handle_, static_cast<uint8_t>(mode)) != 0; }
+
   /**
    * @brief Analyze text into morphemes.
    * @note const does not make concurrent calls on one Tokenizer safe; the
@@ -182,7 +194,8 @@ class Tokenizer {
       Morpheme morph;
       morph.surface.assign(src.surface, src.surface_size);
       morph.pos = posLabel(src.pos, false);
-      morph.lemma.assign(src.base_form, src.base_form_size);
+      morph.base_form.assign(src.base_form, src.base_form_size);
+      morph.lemma = morph.base_form;
       morph.pos_ja = posLabel(src.pos, true);
       const bool conjugates = (src.flags & SUZUME_MORPHEME_CONJUGATABLE) != 0;
       morph.conj_type = conjugates ? detail::conjugationTypeLabel(src.conjugation_type) : std::string();
@@ -201,7 +214,7 @@ class Tokenizer {
     return out;
   }
 
-  /** @brief Generate search tags with default options. */
+  /** @brief Generate search tags with default options. Returns empty on failure; see lastError(). */
   std::vector<Tag> generateTags(std::string_view text) const {
     if (handle_ == nullptr) {
       return {};
@@ -209,7 +222,7 @@ class Tokenizer {
     return collectTags(suzume_generate_tags_n(handle_, text.empty() ? "" : text.data(), text.size()));
   }
 
-  /** @brief Generate search tags with explicit options. */
+  /** @brief Generate search tags with explicit options. Returns empty on failure; see lastError(). */
   std::vector<Tag> generateTags(std::string_view text, const TagOptions& options) const {
     if (handle_ == nullptr) {
       return {};
@@ -243,7 +256,7 @@ class Tokenizer {
     if (handle_ == nullptr) {
       return 0;
     }
-    return suzume_load_user_dict_count(handle_, tsv.data(), tsv.size());
+    return suzume_load_user_dict_count(handle_, tsv.empty() ? "" : tsv.data(), tsv.size());
   }
 
   /**

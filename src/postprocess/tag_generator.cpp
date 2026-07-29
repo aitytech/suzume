@@ -62,11 +62,11 @@ bool TagGenerator::shouldInclude(const core::Morpheme& morpheme) const {
       pos_bit = kTagPosAdverb;
       break;
     case core::PartOfSpeech::Particle:
+      pos_bit = kTagPosParticle;
+      break;
     case core::PartOfSpeech::Auxiliary:
-      if (options_.pos_filter == 0) {
-        break;
-      }
-      return false;
+      pos_bit = kTagPosAuxiliary;
+      break;
     default:
       return false;
   }

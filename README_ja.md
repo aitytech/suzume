@@ -65,6 +65,8 @@ with Suzume() as sz:
     tags = sz.generate_tags("東京の公園に行きました")
 ```
 
+Python では同じ `Suzume` インスタンスへの呼び出しを直列化しているため、スレッド間で安全に共有できます。ネイティブ解析を並列に実行したい場合は、ワーカーごとに別のインスタンスを作成してください。
+
 ```go
 s, err := suzume.New()
 if err != nil {

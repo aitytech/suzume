@@ -51,7 +51,8 @@ describe('JS API: struct layout compatibility', () => {
     expect(text(0)).toBe('UNKNOWN');
     expect(text(32)).toBe('AUX_開始');
     expect(text(82)).toBe('AUX_文語過去キ');
-    expect(text(83)).toBeNull();
+    expect(text(83)).toBe('VERB_仮定縮約');
+    expect(text(84)).toBeNull();
   });
 
   it('labels every serialized conjugation code and rejects the next value', () => {
@@ -78,6 +79,7 @@ describe('JS API: struct layout compatibility', () => {
       '_suzume_create',
       '_suzume_create_with_extended_options',
       '_suzume_destroy',
+      '_suzume_mode',
       '_suzume_dictionary_warning',
       '_suzume_dictionary_warning_count',
       '_suzume_generate_tags',
@@ -94,6 +96,7 @@ describe('JS API: struct layout compatibility', () => {
       '_suzume_load_user_dict',
       '_suzume_load_user_dict_count',
       '_suzume_result_free',
+      '_suzume_set_mode',
       '_suzume_sizeof_extended_options',
       '_suzume_sizeof_morpheme',
       '_suzume_sizeof_result',
@@ -442,6 +445,19 @@ describe('JS API: error reporting', () => {
     }
   });
 
+  it('changes analysis mode on an existing instance', async () => {
+    const suzume = await Suzume.create();
+    try {
+      const normal = suzume.analyze('API開発');
+      expect(suzume.mode).toBe('normal');
+      suzume.mode = 'split';
+      expect(suzume.mode).toBe('split');
+      expect(suzume.analyze('API開発').length).toBeGreaterThan(normal.length);
+    } finally {
+      suzume.destroy();
+    }
+  });
+
   it('lemmatize and mergeCompounds change analysis output', async () => {
     const lemmatized = await Suzume.create({ lemmatize: true, skipUserDictionary: true });
     const sourceLemma = await Suzume.create({ lemmatize: false, skipUserDictionary: true });
@@ -666,6 +682,8 @@ describe('JS API: error reporting', () => {
         texts({ ...inclusive, removeDuplicates: false }).filter((tag) => tag === 'りんご'),
       ).toHaveLength(2);
       expect(texts({ ...inclusive, posFilter: ['noun'] })).not.toContain('歩く');
+      expect(texts({ ...inclusive, posFilter: ['particle'] })).toEqual(['が']);
+      expect(texts({ ...inclusive, posFilter: ['auxiliary'] })).toEqual(['ます']);
       expect(texts({ ...inclusive, excludeBasic: true })).not.toContain('りんご');
       expect(texts({ ...inclusive, excludeParticles: true })).not.toContain('が');
       expect(texts({ ...inclusive, excludeAuxiliaries: true })).not.toContain('ます');
@@ -695,7 +713,9 @@ describe('JS API: error reporting', () => {
         suzume.generateTags('東京', {
           posFilter: ['bogus'] as never,
         }),
-      ).toThrow('unknown POS filter name: "bogus" (expected one of adjective, adverb, noun, verb)');
+      ).toThrow(
+        'unknown POS filter name: "bogus" (expected one of adjective, adverb, auxiliary, noun, particle, verb)',
+      );
     } finally {
       suzume.destroy();
     }

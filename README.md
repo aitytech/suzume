@@ -81,6 +81,9 @@ with Suzume() as sz:
     tags = sz.generate_tags("東京の公園に行きました")
 ```
 
+Python calls on one `Suzume` instance are serialized for thread safety. Use
+separate instances when workers should analyze concurrently.
+
 ```go
 s, err := suzume.New()
 if err != nil {

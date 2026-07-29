@@ -159,8 +159,9 @@ struct Suzume::Impl {
   SuzumeOptions options;
   analysis::Analyzer analyzer;
   postprocess::Postprocessor postprocessor;
-  std::shared_ptr<dictionary::UserDictionary> custom_dict;
   std::vector<std::string> dictionary_warnings;
+  std::vector<std::string> runtime_dictionary_warnings;
+  mutable std::vector<std::string> dictionary_warning_view;
 
   struct LoadedAnalyzerConfig {
     analysis::AnalyzerOptions analyzer_options;
@@ -242,8 +243,15 @@ struct Suzume::Impl {
   }
 
   void appendDictionaryWarnings(std::vector<std::string> warnings) {
-    dictionary_warnings.insert(dictionary_warnings.end(), std::make_move_iterator(warnings.begin()),
-                               std::make_move_iterator(warnings.end()));
+    runtime_dictionary_warnings.insert(runtime_dictionary_warnings.end(), std::make_move_iterator(warnings.begin()),
+                                       std::make_move_iterator(warnings.end()));
+  }
+
+  const std::vector<std::string>& dictionaryWarnings() const {
+    dictionary_warning_view = dictionary_warnings;
+    dictionary_warning_view.insert(dictionary_warning_view.end(), runtime_dictionary_warnings.begin(),
+                                   runtime_dictionary_warnings.end());
+    return dictionary_warning_view;
   }
 
   explicit Impl(const SuzumeOptions& opts) : Impl(opts, loadAnalyzerConfig(opts)) {}
@@ -311,16 +319,25 @@ struct Suzume::Impl {
     postprocessor.setOptions(postprocessOptionsFor(options));
   }
 
-  std::vector<postprocess::TagEntry> generateTags(std::string_view text,
-                                                  const postprocess::TagGeneratorOptions& tag_options) const {
-    auto result = analyzer.analyze(text);
+  core::Expected<core::AnalysisOutput, core::Error> analyzeAndPostprocess(std::string_view text) const {
+    auto result = analyzer.analyzeWithNormalizedText(text);
     if (!result.hasValue()) {
-      return {};
+      return core::makeUnexpected(result.error());
     }
-    auto processed = postprocessor.process(std::move(result.value()));
-    refreshLowInformationFlags(processed);
+    core::AnalysisOutput output = std::move(result.value());
+    output.morphemes = postprocessor.process(std::move(output.morphemes));
+    refreshLowInformationFlags(output.morphemes);
+    return output;
+  }
+
+  core::Expected<std::vector<postprocess::TagEntry>, core::Error> generateTagsResult(
+      std::string_view text, const postprocess::TagGeneratorOptions& tag_options) const {
+    auto analyzed = analyzeAndPostprocess(text);
+    if (!analyzed.hasValue()) {
+      return core::makeUnexpected(analyzed.error());
+    }
     postprocess::TagGenerator generator(tag_options);
-    return generator.generate(processed);
+    return generator.generate(analyzed.value().morphemes);
   }
 };
 
@@ -353,7 +370,6 @@ core::Expected<size_t, core::Error> Suzume::loadUserDictionaryResult(const std::
   if (!loaded.hasValue()) {
     return core::makeUnexpected(loaded.error());
   }
-  impl_->custom_dict = loaded.value().dictionary;
   impl_->analyzer.addUserDictionary(loaded.value().dictionary);
   impl_->appendDictionaryWarnings(std::move(loaded.value().warnings));
   return loaded.value().installed_entry_count;
@@ -369,7 +385,6 @@ core::Expected<size_t, core::Error> Suzume::loadUserDictionaryFromMemoryResult(c
   if (!loaded.hasValue()) {
     return core::makeUnexpected(loaded.error());
   }
-  impl_->custom_dict = loaded.value().dictionary;
   impl_->analyzer.addUserDictionary(loaded.value().dictionary);
   impl_->appendDictionaryWarnings(std::move(loaded.value().warnings));
   return loaded.value().installed_entry_count;
@@ -389,11 +404,11 @@ core::Expected<size_t, core::Error> Suzume::loadBinaryDictionaryResult(const uin
 
 void Suzume::clearUserDictionaries() {
   impl_->analyzer.dictionaryManager().clearUserDictionaries();
-  impl_->custom_dict.reset();
+  impl_->runtime_dictionary_warnings.clear();
 }
 
 const std::vector<std::string>& Suzume::dictionaryWarnings() const {
-  return impl_->dictionary_warnings;
+  return impl_->dictionaryWarnings();
 }
 
 bool Suzume::hasCoreDictionary() const {
@@ -417,14 +432,7 @@ core::Expected<std::vector<core::Morpheme>, core::Error> Suzume::analyzeResult(s
 }
 
 core::Expected<core::AnalysisOutput, core::Error> Suzume::analyzeWithNormalizedTextResult(std::string_view text) const {
-  auto result = impl_->analyzer.analyzeWithNormalizedText(text);
-  if (!result.hasValue()) {
-    return core::makeUnexpected(result.error());
-  }
-  core::AnalysisOutput output = std::move(result.value());
-  output.morphemes = impl_->postprocessor.process(std::move(output.morphemes));
-  refreshLowInformationFlags(output.morphemes);
-  return output;
+  return impl_->analyzeAndPostprocess(text);
 }
 
 std::vector<core::Morpheme> Suzume::analyzeDebug(std::string_view text, core::Lattice* out_lattice) const {
@@ -435,12 +443,24 @@ std::vector<core::Morpheme> Suzume::analyzeDebug(std::string_view text, core::La
 }
 
 std::vector<postprocess::TagEntry> Suzume::generateTags(std::string_view text) const {
-  return impl_->generateTags(text, impl_->options.tag_options);
+  auto result = generateTagsResult(text);
+  return result.hasValue() ? std::move(result).value() : std::vector<postprocess::TagEntry>{};
 }
 
 std::vector<postprocess::TagEntry> Suzume::generateTags(std::string_view text,
                                                         const postprocess::TagGeneratorOptions& options) const {
-  return impl_->generateTags(text, options);
+  auto result = generateTagsResult(text, options);
+  return result.hasValue() ? std::move(result).value() : std::vector<postprocess::TagEntry>{};
+}
+
+core::Expected<std::vector<postprocess::TagEntry>, core::Error> Suzume::generateTagsResult(
+    std::string_view text) const {
+  return generateTagsResult(text, impl_->options.tag_options);
+}
+
+core::Expected<std::vector<postprocess::TagEntry>, core::Error> Suzume::generateTagsResult(
+    std::string_view text, const postprocess::TagGeneratorOptions& options) const {
+  return impl_->generateTagsResult(text, options);
 }
 
 core::AnalysisMode Suzume::mode() const {

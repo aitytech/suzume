@@ -157,6 +157,12 @@ def _configure_signatures(lib: ctypes.CDLL) -> None:
     lib.suzume_destroy.restype = None
     lib.suzume_destroy.argtypes = [handle]
 
+    lib.suzume_set_mode.restype = ctypes.c_int
+    lib.suzume_set_mode.argtypes = [handle, ctypes.c_uint8]
+
+    lib.suzume_mode.restype = ctypes.c_uint8
+    lib.suzume_mode.argtypes = [handle]
+
     lib.suzume_analyze.restype = ctypes.POINTER(SuzumeResult)
     lib.suzume_analyze.argtypes = [handle, ctypes.c_char_p]
 

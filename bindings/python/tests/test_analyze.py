@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 
 import suzume
@@ -14,7 +16,8 @@ def test_extended_pos_labels_match_the_serialized_range() -> None:
     lib = load_library()
     assert lib.suzume_extended_pos_label(32).decode() == "AUX_開始"
     assert lib.suzume_extended_pos_label(82).decode() == "AUX_文語過去キ"
-    assert lib.suzume_extended_pos_label(83) is None
+    assert lib.suzume_extended_pos_label(83).decode() == "VERB_仮定縮約"
+    assert lib.suzume_extended_pos_label(84) is None
 
 
 def test_conjugation_labels_match_the_serialized_range() -> None:
@@ -60,15 +63,30 @@ def test_analyze_returns_morphemes() -> None:
     assert any(m.surface == "に" and m.pos == "PARTICLE" for m in result)
 
 
-def test_offsets_are_ordered_and_within_text() -> None:
-    text = "東京都に住む"
+@pytest.mark.parametrize(
+    "text", ["ﾊﾞｽに乗る", "ＡＢＣ１２３", "か\u3099", "東京、大阪", "👨\u200d👩\u200d👧"]
+)
+def test_offsets_slice_normalized_text(text: str) -> None:
+    with Suzume(preserve_symbols=True) as sz:
+        result = sz.analyze_with_normalized_text(text)
+    for morpheme in result.morphemes:
+        assert 0 <= morpheme.start < morpheme.end <= len(result.normalized_text)
+        assert result.normalized_text[morpheme.start : morpheme.end] == morpheme.surface
+    for previous, current in zip(result.morphemes, result.morphemes[1:], strict=False):
+        assert current.start == previous.end
+
+
+def test_offsets_can_have_gaps_when_symbols_are_not_preserved() -> None:
     with Suzume() as sz:
-        result = sz.analyze(text)
-    for m in result:
-        assert 0 <= m.start < m.end <= len(text)
-        assert text[m.start : m.end] == m.surface
-    for prev, cur in zip(result, result[1:], strict=False):
-        assert cur.start == prev.end
+        result = sz.analyze_with_normalized_text("東京、大阪")
+    assert all(
+        result.normalized_text[morpheme.start : morpheme.end] == morpheme.surface
+        for morpheme in result.morphemes
+    )
+    assert any(
+        current.start > previous.end
+        for previous, current in zip(result.morphemes, result.morphemes[1:], strict=False)
+    )
 
 
 def test_conjugation_fields_are_none_for_non_conjugating_words() -> None:
@@ -84,6 +102,15 @@ def test_conjugation_fields_are_none_for_non_conjugating_words() -> None:
     verb = next(m for m in result if m.surface == "住む")
     assert verb.conj_type == "五段・マ行"
     assert verb.conj_form == "終止形"
+
+
+def test_auxiliary_conjugation_form_is_exposed() -> None:
+    with Suzume() as sz:
+        result = sz.analyze("書かなかった")
+    negative = next(m for m in result if m.surface == "なかっ")
+    assert negative.pos == "AUX"
+    assert negative.conj_type is None
+    assert negative.conj_form == "終止形"
 
 
 def test_empty_string_yields_no_morphemes() -> None:
@@ -201,6 +228,15 @@ def test_string_mode_alias() -> None:
         assert sz.analyze("東京都に住む")
 
 
+def test_mode_property_switches_an_existing_handle() -> None:
+    with Suzume() as sz:
+        normal = sz.analyze("API開発")
+        assert sz.mode is Mode.NORMAL
+        sz.mode = "split"
+        assert sz.mode is Mode.SPLIT
+        assert len(sz.analyze("API開発")) > len(normal)
+
+
 def test_use_after_close_raises() -> None:
     sz = Suzume()
     sz.close()
@@ -216,3 +252,12 @@ def test_close_is_idempotent() -> None:
     sz = Suzume()
     sz.close()
     sz.close()
+
+
+def test_one_instance_serializes_concurrent_native_calls() -> None:
+    with Suzume() as sz, ThreadPoolExecutor(max_workers=8) as executor:
+        results = list(executor.map(sz.analyze, ["東京でテストする"] * 64))
+
+    assert all(
+        "".join(morpheme.surface for morpheme in result) == "東京でテストする" for result in results
+    )

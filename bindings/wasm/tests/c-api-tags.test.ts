@@ -214,6 +214,25 @@ describe('C API: generate_tags', () => {
 
       tagsFree(tagsPtr);
     });
+
+    it('should select particles and auxiliaries with explicit POS bits', () => {
+      const textPtr = allocString(module, 'りんごが歩きます');
+      const optionsPtr = allocOptions(module, {
+        minLength: 1,
+        posFilter: 16 | 32,
+        excludeParticles: false,
+        excludeAuxiliaries: false,
+      });
+      const tagsPtr = generateTagsWithOptions(handle, textPtr, optionsPtr);
+      module._free(textPtr);
+      module._free(optionsPtr);
+
+      expect(parseTags(module, tagsPtr)).toEqual([
+        { tag: 'が', pos: 'PARTICLE' },
+        { tag: 'ます', pos: 'AUX' },
+      ]);
+      tagsFree(tagsPtr);
+    });
   });
 
   describe('init_tag_options', () => {

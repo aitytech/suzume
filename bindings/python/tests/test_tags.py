@@ -52,3 +52,15 @@ def test_pos_filter_rejects_unknown_name() -> None:
             pass
         else:  # pragma: no cover
             raise AssertionError("expected ValueError for unknown POS name")
+
+
+def test_pos_filter_can_select_particles_and_auxiliaries() -> None:
+    with Suzume() as sz:
+        particles = sz.generate_tags(
+            "りんごについて", pos_filter=["particle"], exclude_particles=False, min_length=1
+        )
+        auxiliaries = sz.generate_tags(
+            "歩きます", pos_filter=["auxiliary"], exclude_auxiliaries=False, min_length=1
+        )
+    assert [(tag.tag, tag.pos) for tag in particles] == [("について", "PARTICLE")]
+    assert [(tag.tag, tag.pos) for tag in auxiliaries] == [("ます", "AUX")]

@@ -2,14 +2,14 @@
  * Type declarations for the Emscripten-generated WASM module
  */
 
-interface EmscriptenModuleOptions {
+export interface EmscriptenModuleOptions {
   locateFile?: (path: string, prefix: string) => string;
   onRuntimeInitialized?: () => void;
   print?: (text: string) => void;
   printErr?: (text: string) => void;
 }
 
-interface EmscriptenModule {
+export interface EmscriptenModule {
   UTF8ToString: (ptr: number, maxBytesToRead?: number) => string;
   stringToUTF8: (str: string, outPtr: number, maxBytesToWrite: number) => void;
   lengthBytesUTF8: (str: string) => number;
@@ -20,6 +20,8 @@ interface EmscriptenModule {
   _suzume_init_extended_options: (optionsPtr: number) => void;
   _suzume_create_with_extended_options: (optionsPtr: number) => number;
   _suzume_destroy: (handle: number) => void;
+  _suzume_set_mode: (handle: number, mode: number) => number;
+  _suzume_mode: (handle: number) => number;
   _suzume_analyze: (handle: number, textPtr: number) => number;
   _suzume_analyze_n: (handle: number, textPtr: number, size: number) => number;
   _suzume_result_free: (resultPtr: number) => void;

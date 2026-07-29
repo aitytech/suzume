@@ -79,6 +79,30 @@ TEST(SuzumeCApiTest, CreateWithExtendedOptionsAcceptsModeAndPostprocessOptions) 
   suzume_destroy(handle);
 }
 
+TEST(SuzumeCApiTest, RuntimeModeSwitchChangesAnalysisWithoutReplacingTheHandle) {
+  suzume_t handle = suzume_create();
+  ASSERT_NE(handle, nullptr);
+  EXPECT_EQ(suzume_mode(handle), SUZUME_MODE_NORMAL);
+
+  suzume_result_t* normal = suzume_analyze(handle, "API開発");
+  ASSERT_NE(normal, nullptr);
+  const size_t normal_count = normal->count;
+  suzume_result_free(normal);
+
+  ASSERT_EQ(suzume_set_mode(handle, SUZUME_MODE_SPLIT), 1);
+  EXPECT_EQ(suzume_mode(handle), SUZUME_MODE_SPLIT);
+  suzume_result_t* split = suzume_analyze(handle, "API開発");
+  ASSERT_NE(split, nullptr);
+  EXPECT_GT(split->count, normal_count);
+  suzume_result_free(split);
+
+  EXPECT_EQ(suzume_set_mode(handle, 99), 0);
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_INVALID_INPUT);
+  EXPECT_EQ(suzume_mode(nullptr), SUZUME_MODE_INVALID);
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_INVALID_INPUT);
+  suzume_destroy(handle);
+}
+
 TEST(SuzumeCApiTest, InitExtendedOptionsPreservesDefaultTrueFields) {
   suzume_extended_options_t options{};
   suzume_init_extended_options(&options);
@@ -177,6 +201,44 @@ TEST(SuzumeCApiTest, ConjugationMetadataUsesCompactCodes) {
   EXPECT_EQ(suzume_conjugation_type_label(18), nullptr);
   EXPECT_STREQ(suzume_pos_label(SUZUME_POS_VERB), "VERB");
   EXPECT_EQ(suzume_pos_label(15), nullptr);
+
+  suzume_result_free(result);
+  suzume_destroy(handle);
+}
+
+TEST(SuzumeCApiTest, AuxiliaryConjugationMetadataIsExposed) {
+  suzume_t handle = suzume_create();
+  ASSERT_NE(handle, nullptr);
+
+  suzume_result_t* result = suzume_analyze(handle, "書かなかった");
+  ASSERT_NE(result, nullptr);
+  const auto negative =
+      std::find_if(result->morphemes, result->morphemes + result->count,
+                   [](const suzume_morpheme_t& morpheme) { return std::strcmp(morpheme.surface, "なかっ") == 0; });
+  ASSERT_NE(negative, result->morphemes + result->count);
+  EXPECT_EQ(negative->pos, SUZUME_POS_AUXILIARY);
+  EXPECT_NE(negative->flags & SUZUME_MORPHEME_CONJUGATABLE, 0U);
+  EXPECT_EQ(negative->conjugation_type, 0U);
+  EXPECT_STREQ(suzume_conjugation_form_label(negative->conjugation_form), "終止形");
+
+  suzume_result_free(result);
+  suzume_destroy(handle);
+}
+
+TEST(SuzumeCApiTest, NominalizedMorphemesClearConjugationMetadata) {
+  suzume_t handle = suzume_create();
+  ASSERT_NE(handle, nullptr);
+
+  suzume_result_t* result = suzume_analyze(handle, "お読みですか");
+  ASSERT_NE(result, nullptr);
+  const auto reading =
+      std::find_if(result->morphemes, result->morphemes + result->count,
+                   [](const suzume_morpheme_t& morpheme) { return std::strcmp(morpheme.surface, "読み") == 0; });
+  ASSERT_NE(reading, result->morphemes + result->count);
+  EXPECT_EQ(reading->pos, SUZUME_POS_NOUN);
+  EXPECT_EQ(reading->conjugation_type, 0U);
+  EXPECT_EQ(reading->conjugation_form, 0U);
+  EXPECT_EQ(reading->flags & SUZUME_MORPHEME_CONJUGATABLE, 0U);
 
   suzume_result_free(result);
   suzume_destroy(handle);
@@ -459,6 +521,18 @@ TEST(SuzumeCApiTest, TagOptionsExposeAllGeneratorFilters) {
   EXPECT_FALSE(contains(noun_tags, "歩く"));
   EXPECT_FALSE(contains(noun_tags, "が"));
 
+  auto particles = inclusive;
+  particles.pos_filter = SUZUME_TAG_POS_PARTICLE;
+  const auto particle_tags = generate(particles);
+  EXPECT_TRUE(contains(particle_tags, "が"));
+  EXPECT_FALSE(contains(particle_tags, "歩く"));
+
+  auto auxiliaries = inclusive;
+  auxiliaries.pos_filter = SUZUME_TAG_POS_AUXILIARY;
+  const auto auxiliary_tags = generate(auxiliaries);
+  EXPECT_TRUE(contains(auxiliary_tags, "ます"));
+  EXPECT_FALSE(contains(auxiliary_tags, "りんご"));
+
   auto non_basic = inclusive;
   non_basic.exclude_basic = 1;
   const auto non_basic_tags = generate(non_basic);
@@ -493,6 +567,28 @@ TEST(SuzumeCApiTest, DictionaryWarningAccessorsHandleEmptyAndInvalidIndex) {
   std::string error = suzume_last_error();
   EXPECT_NE(error.find("index out of range"), std::string::npos);
   EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_INVALID_INPUT);
+
+  suzume_destroy(handle);
+}
+
+TEST(SuzumeCApiTest, DictionaryReadAccessorsPreserveExistingErrorDiagnostics) {
+  suzume_t handle = suzume_create();
+  ASSERT_NE(handle, nullptr);
+  const std::string dictionary = "missing-pos\n検査語\tNOUN\n";
+  ASSERT_EQ(suzume_load_user_dict_count(handle, dictionary.data(), dictionary.size()), 1u);
+  ASSERT_GT(suzume_dictionary_warning_count(handle), 0u);
+
+  const char invalid_utf8[] = {static_cast<char>(0xE3), static_cast<char>(0x81)};
+  EXPECT_EQ(suzume_analyze_n(handle, invalid_utf8, sizeof(invalid_utf8)), nullptr);
+  ASSERT_EQ(suzume_last_error_code(), SUZUME_ERROR_INVALID_UTF8);
+  const std::string expected_error = suzume_last_error();
+
+  (void)suzume_has_core_dictionary(handle);
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_INVALID_UTF8);
+  EXPECT_EQ(suzume_last_error(), expected_error);
+  ASSERT_NE(suzume_dictionary_warning(handle, 0), nullptr);
+  EXPECT_EQ(suzume_last_error_code(), SUZUME_ERROR_INVALID_UTF8);
+  EXPECT_EQ(suzume_last_error(), expected_error);
 
   suzume_destroy(handle);
 }

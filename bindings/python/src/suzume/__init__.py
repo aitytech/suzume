@@ -13,13 +13,16 @@ Example:
 from __future__ import annotations
 
 import ctypes
+import functools
 import json
 import os
-from collections.abc import Iterable
+import threading
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 from pathlib import Path
 from types import TracebackType
+from typing import Concatenate, ParamSpec, TypeVar
 
 from ._ffi import (
     SuzumeExtendedOptions,
@@ -51,17 +54,32 @@ __all__ = [
 _lib = load_library()
 _BUNDLED_DATA_DIR = _bundled_data_dir(Path(__file__).parent)
 
+# Native label tables are immutable for the lifetime of the loaded library.
+# Cache their UTF-8 conversion by numeric ABI code instead of crossing ctypes
+# for every morpheme in an analysis result.
+_POS_LABELS: dict[int, str | None] = {}
+_CONJUGATION_TYPE_LABELS: dict[int, str | None] = {}
+_CONJUGATION_FORM_LABELS: dict[int, str | None] = {}
+_EXTENDED_POS_LABELS: dict[int, str | None] = {}
+
 # POS names accepted by ``generate_tags(pos_filter=...)``, mapped to their
 # bitmask value. Names and casing mirror the WASM binding's TagOptions.pos.
-_POS_FILTER_BITS = {"noun": 1, "verb": 2, "adjective": 4, "adverb": 8}
+_POS_FILTER_BITS = {
+    "noun": 1,
+    "verb": 2,
+    "adjective": 4,
+    "adverb": 8,
+    "particle": 16,
+    "auxiliary": 32,
+}
 
 
 def _resolve_pos_filter(pos_filter: int | Iterable[str]) -> int:
     """Resolve a ``pos_filter`` argument to a native bitmask.
 
     Accepts a raw bitmask ``int`` (passed through unchanged) or an iterable of
-    POS names (``"noun"``, ``"verb"``, ``"adjective"``, ``"adverb"``) whose bits
-    are OR-ed together.
+    POS names (``"noun"``, ``"verb"``, ``"adjective"``, ``"adverb"``,
+    ``"particle"``, ``"auxiliary"``) whose bits are OR-ed together.
     """
     if isinstance(pos_filter, int):
         return pos_filter
@@ -154,6 +172,17 @@ def _decode_sized(value: ctypes._Pointer[ctypes.c_char], size: int) -> str:
     return ctypes.string_at(value, size).decode("utf-8")
 
 
+def _cached_native_label(
+    cache: dict[int, str | None],
+    function: Callable[[int], bytes | None],
+    code: int,
+    fallback: str | None,
+) -> str | None:
+    if code not in cache:
+        cache[code] = _decode(function(code)) or fallback
+    return cache[code]
+
+
 def version() -> str:
     """Return the native library version string."""
     return _decode(_lib.suzume_version())
@@ -166,11 +195,32 @@ def _native_error(fallback: str) -> SuzumeError:
     )
 
 
+_MethodParams = ParamSpec("_MethodParams")
+_MethodResult = TypeVar("_MethodResult")
+
+
+def _locked(
+    method: Callable[Concatenate[Suzume, _MethodParams], _MethodResult],
+) -> Callable[Concatenate[Suzume, _MethodParams], _MethodResult]:
+    """Serialize native-handle access for one ``Suzume`` instance."""
+
+    @functools.wraps(method)
+    def wrapper(
+        self: Suzume, /, *args: _MethodParams.args, **kwargs: _MethodParams.kwargs
+    ) -> _MethodResult:
+        with self._lock:
+            return method(self, *args, **kwargs)
+
+    return wrapper
+
+
 class Suzume:
     """A reusable analyzer instance.
 
     Instances hold a native handle; use as a context manager or call
-    :meth:`close` when done. Not thread-safe — use one instance per thread.
+    :meth:`close` when done. Calls on one instance are serialized, so it is
+    safe to share an instance between threads; use separate instances for
+    parallel native analysis.
     """
 
     def __init__(
@@ -188,6 +238,7 @@ class Suzume:
         report_scorer_config: bool = False,
         scorer_options: str | dict[str, object] | None = None,
     ) -> None:
+        self._lock = threading.RLock()
         mode = Mode(mode)
         opts = SuzumeExtendedOptions()
         _lib.suzume_init_extended_options(ctypes.byref(opts))
@@ -220,6 +271,7 @@ class Suzume:
 
     # --- lifecycle ---
 
+    @_locked
     def close(self) -> None:
         """Release the native handle. Idempotent."""
         if getattr(self, "_handle", None) is not None:
@@ -245,12 +297,32 @@ class Suzume:
             raise SuzumeError("Suzume instance has been closed")
         return self._handle
 
+    @property
+    @_locked
+    def mode(self) -> Mode:
+        """Current analysis mode for this handle."""
+        code = int(_lib.suzume_mode(self._require_handle()))
+        try:
+            return Mode(("normal", "search", "split")[code])
+        except IndexError as error:  # pragma: no cover - native ABI invariant
+            raise _native_error("failed to read analysis mode") from error
+
+    @mode.setter
+    @_locked
+    def mode(self, value: Mode | str) -> None:
+        """Change analysis mode without reloading dictionaries."""
+        mode = Mode(value)
+        if not _lib.suzume_set_mode(self._require_handle(), mode._code):
+            raise _native_error("failed to set analysis mode")
+
     # --- analysis ---
 
+    @_locked
     def analyze(self, text: str) -> list[Morpheme]:
         """Analyze ``text`` into a list of :class:`Morpheme`."""
         return self.analyze_with_normalized_text(text).morphemes
 
+    @_locked
     def analyze_with_normalized_text(self, text: str) -> AnalysisResult:
         """Analyze text and return the exact normalized text used for offsets.
 
@@ -276,20 +348,36 @@ class Suzume:
                 out.append(
                     Morpheme(
                         surface=_decode_sized(m.surface, m.surface_size),
-                        pos=_decode(_lib.suzume_pos_label(m.pos)) or "OTHER",
+                        pos=_cached_native_label(_POS_LABELS, _lib.suzume_pos_label, m.pos, "OTHER")
+                        or "OTHER",
                         base_form=_decode_sized(m.base_form, m.base_form_size),
                         pos_ja=pos_japanese(m.pos),
                         conj_type=(
-                            _decode(_lib.suzume_conjugation_type_label(m.conjugation_type)) or None
+                            _cached_native_label(
+                                _CONJUGATION_TYPE_LABELS,
+                                _lib.suzume_conjugation_type_label,
+                                m.conjugation_type,
+                                None,
+                            )
                             if conjugates
                             else None
                         ),
                         conj_form=(
-                            _decode(_lib.suzume_conjugation_form_label(m.conjugation_form))
+                            _cached_native_label(
+                                _CONJUGATION_FORM_LABELS,
+                                _lib.suzume_conjugation_form_label,
+                                m.conjugation_form,
+                                None,
+                            )
                             if conjugates
                             else None
                         ),
-                        extended_pos=_decode(_lib.suzume_extended_pos_label(m.extended_pos))
+                        extended_pos=_cached_native_label(
+                            _EXTENDED_POS_LABELS,
+                            _lib.suzume_extended_pos_label,
+                            m.extended_pos,
+                            "UNKNOWN",
+                        )
                         or "UNKNOWN",
                         start=int(m.start),
                         end=int(m.end),
@@ -310,6 +398,7 @@ class Suzume:
         finally:
             _lib.suzume_result_free(result)
 
+    @_locked
     def generate_tags(
         self,
         text: str,
@@ -328,7 +417,8 @@ class Suzume:
         """Generate keyword tags from ``text``.
 
         ``pos_filter`` selects which parts of speech to keep. Pass either a raw
-        bitmask ``int`` (1=noun, 2=verb, 4=adjective, 8=adverb; 0=all) or an
+        bitmask ``int`` (1=noun, 2=verb, 4=adjective, 8=adverb, 16=particle,
+        32=auxiliary; 0=all) or an
         iterable of POS names, e.g. ``["noun", "verb"]``, whose bits are OR-ed
         together. All other flags map directly to the native tag options.
         """
@@ -370,6 +460,7 @@ class Suzume:
 
     # --- dictionaries ---
 
+    @_locked
     def load_user_dict(self, data: str) -> int:
         """Load current TSV (or legacy CSV) and return the installed expanded-entry count."""
         handle = self._require_handle()
@@ -379,6 +470,7 @@ class Suzume:
             raise _native_error("failed to load user dictionary")
         return count
 
+    @_locked
     def load_binary_dict(self, data: bytes) -> None:
         """Load a compiled binary (.dic) dictionary from memory."""
         handle = self._require_handle()
@@ -386,6 +478,7 @@ class Suzume:
         if not _lib.suzume_load_binary_dict(handle, buf, len(data)):
             raise _native_error("failed to load binary dictionary")
 
+    @_locked
     def clear_user_dictionaries(self) -> None:
         """Remove caller-loaded dictionaries while retaining the bundled user dictionary."""
         handle = self._require_handle()
@@ -393,6 +486,7 @@ class Suzume:
             raise _native_error("failed to clear user dictionaries")
 
     @property
+    @_locked
     def dictionary_warnings(self) -> list[str]:
         """Return dictionary-loading, parsing, and scorer-configuration diagnostics."""
         handle = self._require_handle()
@@ -400,6 +494,7 @@ class Suzume:
         return [_decode(_lib.suzume_dictionary_warning(handle, idx)) for idx in range(count)]
 
     @property
+    @_locked
     def has_core_dictionary(self) -> bool:
         """Whether the L2 core binary dictionary is loaded."""
         return bool(_lib.suzume_has_core_dictionary(self._require_handle()))

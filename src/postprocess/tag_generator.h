@@ -15,6 +15,8 @@ static constexpr uint8_t kTagPosNoun = 1 << 0;       // NOLINT(readability-magic
 static constexpr uint8_t kTagPosVerb = 1 << 1;       // NOLINT(readability-magic-numbers): bit flag
 static constexpr uint8_t kTagPosAdjective = 1 << 2;  // NOLINT(readability-magic-numbers): bit flag
 static constexpr uint8_t kTagPosAdverb = 1 << 3;     // NOLINT(readability-magic-numbers): bit flag
+static constexpr uint8_t kTagPosParticle = 1 << 4;   // NOLINT(readability-magic-numbers): bit flag
+static constexpr uint8_t kTagPosAuxiliary = 1 << 5;  // NOLINT(readability-magic-numbers): bit flag
 
 /**
  * @brief Tag generation options
@@ -29,8 +31,8 @@ struct TagGeneratorOptions {
   size_t min_tag_length = 2;         // Minimum tag length (characters)
   size_t max_tags = 0;               // Maximum number of tags (0 = unlimited)
 
-  // POS filter (if any bit is set, only include matching POS)
-  uint8_t pos_filter = 0;      // 0 = include all content words
+  // POS filter (if any bit is set, only include matching filterable POS)
+  uint8_t pos_filter = 0;      // 0 = include all filterable POS
   bool exclude_basic = false;  // Exclude basic words (hiragana-only lemma)
 };
 

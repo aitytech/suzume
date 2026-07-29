@@ -407,11 +407,9 @@ TEST(TagGeneratorTest, PosFilterZeroDoesNotIncludeUnfilterableCategories) {
   EXPECT_EQ(tags[0].tag, "東京");
 }
 
-TEST(TagGeneratorTest, PosFilterExcludesParticlesAndAuxiliaries) {
+TEST(TagGeneratorTest, PosFilterIncludesExplicitParticleAndAuxiliaryBits) {
   TagGeneratorOptions options;
-  options.pos_filter = kTagPosNoun;
-  // POS filter should exclude non-filterable categories even if
-  // exclude_particles/auxiliaries are false
+  options.pos_filter = kTagPosParticle | kTagPosAuxiliary;  // NOLINT(hicpp-signed-bitwise): bit flag operation
   options.exclude_particles = false;
   options.exclude_auxiliaries = false;
   options.min_tag_length = 1;
@@ -423,8 +421,9 @@ TEST(TagGeneratorTest, PosFilterExcludesParticlesAndAuxiliaries) {
   morphemes.push_back(makeMorpheme("た", core::PartOfSpeech::Auxiliary));
 
   auto tags = generator.generate(morphemes);
-  ASSERT_EQ(tags.size(), 1);
-  EXPECT_EQ(tags[0].tag, "東京");
+  ASSERT_EQ(tags.size(), 2);
+  EXPECT_EQ(tags[0].tag, "に");
+  EXPECT_EQ(tags[1].tag, "た");
 }
 
 TEST(TagGeneratorTest, PosFilterIncludesPronounAsNoun) {

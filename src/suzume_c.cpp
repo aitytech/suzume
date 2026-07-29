@@ -153,12 +153,21 @@ static_assert(SUZUME_POS_OTHER == static_cast<uint8_t>(suzume::core::PartOfSpeec
 static_assert(static_cast<uint8_t>(suzume::core::AnalysisMode::Normal) == 0);
 static_assert(static_cast<uint8_t>(suzume::core::AnalysisMode::Search) == 1);
 static_assert(static_cast<uint8_t>(suzume::core::AnalysisMode::Split) == 2);
+static_assert(SUZUME_MODE_NORMAL == static_cast<uint8_t>(suzume::core::AnalysisMode::Normal));
+static_assert(SUZUME_MODE_SEARCH == static_cast<uint8_t>(suzume::core::AnalysisMode::Search));
+static_assert(SUZUME_MODE_SPLIT == static_cast<uint8_t>(suzume::core::AnalysisMode::Split));
 static_assert(SUZUME_MORPHEME_USER_DICT == (1U << 0U));
 static_assert(SUZUME_MORPHEME_FORMAL_NOUN == (1U << 1U));
 static_assert(SUZUME_MORPHEME_LOW_INFO == (1U << 2U));
 static_assert(SUZUME_MORPHEME_UNKNOWN == (1U << 3U));
 static_assert(SUZUME_MORPHEME_FROM_DICTIONARY == (1U << 4U));
 static_assert(SUZUME_MORPHEME_CONJUGATABLE == (1U << 5U));
+static_assert(SUZUME_TAG_POS_NOUN == suzume::postprocess::kTagPosNoun);
+static_assert(SUZUME_TAG_POS_VERB == suzume::postprocess::kTagPosVerb);
+static_assert(SUZUME_TAG_POS_ADJECTIVE == suzume::postprocess::kTagPosAdjective);
+static_assert(SUZUME_TAG_POS_ADVERB == suzume::postprocess::kTagPosAdverb);
+static_assert(SUZUME_TAG_POS_PARTICLE == suzume::postprocess::kTagPosParticle);
+static_assert(SUZUME_TAG_POS_AUXILIARY == suzume::postprocess::kTagPosAuxiliary);
 static_assert(SUZUME_ERROR_SUCCESS == static_cast<uint8_t>(suzume::core::ErrorCode::Success));
 static_assert(SUZUME_ERROR_INVALID_UTF8 == static_cast<uint8_t>(suzume::core::ErrorCode::InvalidUtf8));
 static_assert(SUZUME_ERROR_DICTIONARY_LOAD_FAILED ==
@@ -306,8 +315,9 @@ suzume_result_t* analyzeBytes(SuzumeHandle* handle, std::string_view text) {
     result->morphemes[idx].extended_pos = static_cast<suzume_extended_pos_t>(morph.extended_pos);
     result->morphemes[idx].conjugation_type = static_cast<suzume_conjugation_type_t>(morph.conj_type);
     result->morphemes[idx].conjugation_form = static_cast<suzume_conjugation_form_t>(morph.conj_form);
-    const bool conjugatable =
-        morph.pos == suzume::core::PartOfSpeech::Verb || morph.pos == suzume::core::PartOfSpeech::Adjective;
+    const bool conjugatable = morph.pos == suzume::core::PartOfSpeech::Verb ||
+                              morph.pos == suzume::core::PartOfSpeech::Adjective ||
+                              morph.pos == suzume::core::PartOfSpeech::Auxiliary;
     result->morphemes[idx].flags =
         static_cast<uint8_t>((morph.features.is_user_dict ? SUZUME_MORPHEME_USER_DICT : 0U) |
                              (morph.features.is_formal_noun ? SUZUME_MORPHEME_FORMAL_NOUN : 0U) |
@@ -322,12 +332,13 @@ suzume_result_t* analyzeBytes(SuzumeHandle* handle, std::string_view text) {
 }
 
 suzume_tags_t* generateTagsBytes(SuzumeHandle* handle, std::string_view text, const suzume_tag_options_t* options) {
-  if (!suzume::normalize::isValidUtf8(text)) {
-    setLastError("suzume_generate_tags: invalid UTF-8 input", SUZUME_ERROR_INVALID_UTF8);
-    return nullptr;
-  }
   if (options == nullptr) {
-    return makeTagsResult(handle->instance.generateTags(text));
+    auto result = handle->instance.generateTagsResult(text);
+    if (!result.hasValue()) {
+      setLastError(result.error());
+      return nullptr;
+    }
+    return makeTagsResult(result.value());
   }
 
   suzume::postprocess::TagGeneratorOptions tag_opts;
@@ -341,7 +352,12 @@ suzume_tags_t* generateTagsBytes(SuzumeHandle* handle, std::string_view text, co
   tag_opts.exclude_formal_nouns = (options->exclude_formal_nouns != 0);
   tag_opts.exclude_low_info = (options->exclude_low_info != 0);
   tag_opts.remove_duplicates = (options->remove_duplicates != 0);
-  return makeTagsResult(handle->instance.generateTags(text, tag_opts));
+  auto result = handle->instance.generateTagsResult(text, tag_opts);
+  if (!result.hasValue()) {
+    setLastError(result.error());
+    return nullptr;
+  }
+  return makeTagsResult(result.value());
 }
 
 }  // namespace
@@ -431,6 +447,35 @@ SUZUME_EXPORT suzume_t suzume_create_with_extended_options(const suzume_extended
 
 SUZUME_EXPORT void suzume_destroy(suzume_t handle) {
   delete handle;
+}
+
+SUZUME_EXPORT int suzume_set_mode(suzume_t handle, uint8_t mode) {
+  if (handle == nullptr) {
+    setLastError("suzume_set_mode: null handle", SUZUME_ERROR_INVALID_INPUT);
+    return 0;
+  }
+  const auto parsed_mode = parseAnalysisMode(mode);
+  if (!parsed_mode.has_value()) {
+    setLastError("suzume_set_mode: invalid mode", SUZUME_ERROR_INVALID_INPUT);
+    return 0;
+  }
+
+  clearLastError();
+  SUZUME_C_TRY {
+    handle->instance.setMode(*parsed_mode);
+    return 1;
+  }
+  SUZUME_C_CATCH(return 0)
+}
+
+SUZUME_EXPORT uint8_t suzume_mode(suzume_t handle) {
+  if (handle == nullptr) {
+    setLastError("suzume_mode: null handle", SUZUME_ERROR_INVALID_INPUT);
+    return SUZUME_MODE_INVALID;
+  }
+
+  clearLastError();
+  return static_cast<uint8_t>(handle->instance.mode());
 }
 
 SUZUME_EXPORT suzume_result_t* suzume_analyze(suzume_t handle, const char* text) {
@@ -557,7 +602,6 @@ SUZUME_EXPORT int suzume_has_core_dictionary(suzume_t handle) {
     setLastError("suzume_has_core_dictionary: null handle", SUZUME_ERROR_INVALID_INPUT);
     return 0;
   }
-  clearLastError();
   return handle->instance.hasCoreDictionary() ? 1 : 0;
 }
 
@@ -619,7 +663,6 @@ SUZUME_EXPORT const char* suzume_dictionary_warning(suzume_t handle, size_t inde
     setLastError("suzume_dictionary_warning: index out of range", SUZUME_ERROR_INVALID_INPUT);
     return nullptr;
   }
-  clearLastError();
   thread_local std::string warning;
   warning = warnings[index];
   return warning.c_str();

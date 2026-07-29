@@ -119,6 +119,7 @@ enum {
   SUZUME_MORPHEME_LOW_INFO = 1U << 2U,
   SUZUME_MORPHEME_UNKNOWN = 1U << 3U,
   SUZUME_MORPHEME_FROM_DICTIONARY = 1U << 4U,
+  /** Verb, adjective, or auxiliary; conjugation fields are meaningful. */
   SUZUME_MORPHEME_CONJUGATABLE = 1U << 5U,
 };
 
@@ -128,6 +129,16 @@ enum {
   SUZUME_TAG_POS_VERB = 1U << 1U,
   SUZUME_TAG_POS_ADJECTIVE = 1U << 2U,
   SUZUME_TAG_POS_ADVERB = 1U << 3U,
+  SUZUME_TAG_POS_PARTICLE = 1U << 4U,
+  SUZUME_TAG_POS_AUXILIARY = 1U << 5U,
+};
+
+/** Stable analysis-mode codes used by extended options and mode accessors. */
+enum {
+  SUZUME_MODE_NORMAL = 0,
+  SUZUME_MODE_SEARCH = 1,
+  SUZUME_MODE_SPLIT = 2,
+  SUZUME_MODE_INVALID = 255,
 };
 
 /**
@@ -141,8 +152,8 @@ typedef struct {
   float score;                                /**< Candidate score/cost */
   suzume_pos_t pos;                           /**< Part-of-speech code */
   suzume_extended_pos_t extended_pos;         /**< ExtendedPOS code */
-  suzume_conjugation_type_t conjugation_type; /**< Conjugation type code; 0 means none */
-  suzume_conjugation_form_t conjugation_form; /**< Conjugation form code */
+  suzume_conjugation_type_t conjugation_type; /**< Conjugation type code; may be None for a conjugatable morpheme */
+  suzume_conjugation_form_t conjugation_form; /**< Conjugation form code; meaningful when CONJUGATABLE is set */
   uint8_t flags;                              /**< Bitwise SUZUME_MORPHEME_* flags */
   size_t surface_size;                        /**< Byte length; surface may contain U+0000 */
   size_t base_form_size;                      /**< Byte length; base form may contain U+0000 */
@@ -222,6 +233,21 @@ SUZUME_EXPORT suzume_t suzume_create_with_extended_options(const suzume_extended
  */
 SUZUME_EXPORT void suzume_destroy(suzume_t handle);
 
+/**
+ * @brief Change an existing handle's analysis mode without reloading dictionaries.
+ * @param handle Suzume handle
+ * @param mode One of SUZUME_MODE_NORMAL, SUZUME_MODE_SEARCH, or SUZUME_MODE_SPLIT
+ * @return 1 on success, 0 for an invalid handle or mode (see suzume_last_error).
+ */
+SUZUME_EXPORT int suzume_set_mode(suzume_t handle, uint8_t mode);
+
+/**
+ * @brief Get an existing handle's analysis mode.
+ * @param handle Suzume handle
+ * @return A SUZUME_MODE_* value, or SUZUME_MODE_INVALID for an invalid handle.
+ */
+SUZUME_EXPORT uint8_t suzume_mode(suzume_t handle);
+
 // --- Analysis functions ---
 
 /**
@@ -281,7 +307,7 @@ SUZUME_EXPORT suzume_tags_t* suzume_generate_tags_n(suzume_t handle, const char*
  * overriding individual fields.
  */
 typedef struct {
-  uint8_t pos_filter;           /**< Bitwise SUZUME_TAG_POS_* values; 0 includes all content POS */
+  uint8_t pos_filter;           /**< Bitwise SUZUME_TAG_POS_* values; 0 includes all filterable POS */
   uint8_t exclude_basic;        /**< Exclude basic words (hiragana-only lemma) */
   uint8_t use_lemma;            /**< Use lemma instead of surface (default: 1) */
   size_t min_length;            /**< Minimum tag length in characters (default: 2) */

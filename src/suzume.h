@@ -185,6 +185,13 @@ class Suzume {
   std::vector<postprocess::TagEntry> generateTags(std::string_view text) const;
 
   /**
+   * @brief Generate tags from text while preserving analysis failures
+   * @param text UTF-8 encoded Japanese text
+   * @return Tag entries on success, or the underlying analysis error
+   */
+  core::Expected<std::vector<postprocess::TagEntry>, core::Error> generateTagsResult(std::string_view text) const;
+
+  /**
    * @brief Generate tags from text with custom options
    * @param text UTF-8 encoded Japanese text
    * @param options Tag generation options (POS filter, exclude_basic, etc.)
@@ -192,6 +199,15 @@ class Suzume {
    */
   std::vector<postprocess::TagEntry> generateTags(std::string_view text,
                                                   const postprocess::TagGeneratorOptions& options) const;
+
+  /**
+   * @brief Generate tags with custom options while preserving analysis failures
+   * @param text UTF-8 encoded Japanese text
+   * @param options Tag generation options (POS filter, exclude_basic, etc.)
+   * @return Tag entries on success, or the underlying analysis error
+   */
+  core::Expected<std::vector<postprocess::TagEntry>, core::Error> generateTagsResult(
+      std::string_view text, const postprocess::TagGeneratorOptions& options) const;
 
   /**
    * @brief Get analysis mode

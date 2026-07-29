@@ -37,6 +37,12 @@ with Suzume() as sz:
     tags = sz.generate_tags("東京の公園に行きました")
 ```
 
+## Threads
+
+Calls on one `Suzume` instance are serialized, so it can safely be shared
+between Python threads. Create one instance per worker when native analysis
+should run in parallel.
+
 Installing the wheel also provides the `suzume` command:
 
 ```bash
