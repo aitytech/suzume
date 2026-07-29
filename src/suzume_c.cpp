@@ -30,7 +30,7 @@ struct SuzumeHandle {
 
 namespace {
 
-constexpr std::array<suzume::core::ExtendedPOS, 83> kSerializedExtendedPos = {
+constexpr std::array<suzume::core::ExtendedPOS, 84> kSerializedExtendedPos = {
     suzume::core::ExtendedPOS::Unknown,
     suzume::core::ExtendedPOS::VerbShuushikei,
     suzume::core::ExtendedPOS::VerbRenyokei,
@@ -114,6 +114,7 @@ constexpr std::array<suzume::core::ExtendedPOS, 83> kSerializedExtendedPos = {
     suzume::core::ExtendedPOS::AuxSimilitudeYou,
     suzume::core::ExtendedPOS::AuxKuruwaPolite,
     suzume::core::ExtendedPOS::AuxClassicalKi,
+    suzume::core::ExtendedPOS::VerbContractedKateikei,
 };
 
 constexpr bool serializedExtendedPosValuesAreStable() {
@@ -126,7 +127,7 @@ constexpr bool serializedExtendedPosValuesAreStable() {
 }
 
 static_assert(static_cast<uint8_t>(suzume::core::PartOfSpeech::Count_) == 15);
-static_assert(static_cast<uint8_t>(suzume::core::ExtendedPOS::Count_) == 83);
+static_assert(static_cast<uint8_t>(suzume::core::ExtendedPOS::Count_) == 84);
 static_assert(serializedExtendedPosValuesAreStable());
 static_assert(static_cast<uint8_t>(suzume::dictionary::ConjugationType::ProperGiven) == 17);
 static_assert(sizeof(suzume_pos_t) == 1);

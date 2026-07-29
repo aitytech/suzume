@@ -232,8 +232,8 @@ TEST(SuzumeCApiTest, CanonicalLabelFunctionsCoverSerializedBoundaries) {
   EXPECT_EQ(suzume_conjugation_type_label(18), nullptr);
 
   EXPECT_STREQ(suzume_extended_pos_label(0), "UNKNOWN");
-  EXPECT_STREQ(suzume_extended_pos_label(82), "AUX_文語過去キ");
-  EXPECT_EQ(suzume_extended_pos_label(83), nullptr);
+  EXPECT_STREQ(suzume_extended_pos_label(83), "VERB_仮定縮約");
+  EXPECT_EQ(suzume_extended_pos_label(84), nullptr);
 
   EXPECT_STREQ(suzume_conjugation_form_label(6), "意志形");
   EXPECT_EQ(suzume_conjugation_form_label(7), nullptr);

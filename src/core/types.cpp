@@ -234,6 +234,8 @@ std::string_view extendedPosToString(ExtendedPOS epos) {
       return "VERB_た形";
     case ExtendedPOS::VerbTaraForm:
       return "VERB_たら形";
+    case ExtendedPOS::VerbContractedKateikei:
+      return "VERB_仮定縮約";
 
     // Adjective forms
     case ExtendedPOS::AdjBasic:

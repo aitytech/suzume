@@ -187,6 +187,11 @@ enum class ExtendedPOS : uint8_t {
   AuxKuruwaPolite,         // Regional polite auxiliary: なんし
   AuxClassicalKi,          // 文語過去き連体形: し (読みし人), 已然形: しか
 
+  // 仮定形口語縮約: 行きゃ, 食べりゃ, すりゃ, 早けりゃ. The conjunctive particle
+  // ば has fused into the inflection, so unlike VerbKateikei the form closes a
+  // conditional clause instead of opening a place for the particle.
+  VerbContractedKateikei,
+
   // Count marker (for array sizing)
   Count_  // Total number of categories
 };
@@ -338,7 +343,8 @@ ExtendedPOS posToExtendedPos(PartOfSpeech pos);
  * @brief Check if ExtendedPOS is a verb form
  */
 inline bool isVerbForm(ExtendedPOS epos) {
-  return epos >= ExtendedPOS::VerbShuushikei && epos <= ExtendedPOS::VerbTaraForm;
+  return (epos >= ExtendedPOS::VerbShuushikei && epos <= ExtendedPOS::VerbTaraForm) ||
+         epos == ExtendedPOS::VerbContractedKateikei;
 }
 
 /**
