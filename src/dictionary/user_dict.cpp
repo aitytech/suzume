@@ -11,6 +11,12 @@
 
 namespace suzume::dictionary {
 
+namespace {
+
+constexpr size_t kMaxUserDictionarySurfaceBytes = 255;
+
+}  // namespace
+
 UserDictionary::UserDictionary() = default;
 
 core::Expected<size_t, core::Error> UserDictionary::loadFromFile(const std::string& path) {
@@ -39,7 +45,8 @@ core::Expected<size_t, core::Error> UserDictionary::loadFromMemory(const char* d
 
 bool UserDictionary::addEntry(const DictionaryEntry& entry) {
   if (entry.surface.empty() || !core::isValidPartOfSpeech(entry.pos) || !core::isValidExtendedPos(entry.extended_pos) ||
-      !normalize::isValidUtf8(entry.surface) || (!entry.lemma.empty() && !normalize::isValidUtf8(entry.lemma))) {
+      entry.surface.size() > kMaxUserDictionarySurfaceBytes || !normalize::isValidUtf8(entry.surface) ||
+      (!entry.lemma.empty() && !normalize::isValidUtf8(entry.lemma))) {
     return false;
   }
 
@@ -103,7 +110,13 @@ core::Expected<size_t, core::Error> UserDictionary::parseSource(std::string_view
   }
   parsed_entries.reserve(parsed.value().entries.size());
   for (const auto& source_entry : parsed.value().entries) {
-    parsed_entries.push_back(sourceToDictionaryEntry(source_entry));
+    auto entry = sourceToDictionaryEntry(source_entry);
+    if (entry.surface.size() > kMaxUserDictionarySurfaceBytes) {
+      return core::makeUnexpected(
+          core::Error(core::ErrorCode::InvalidInput,
+                      "Dictionary surface exceeds " + std::to_string(kMaxUserDictionarySurfaceBytes) + " bytes"));
+    }
+    parsed_entries.push_back(std::move(entry));
   }
 
   size_t installed_count = 0;

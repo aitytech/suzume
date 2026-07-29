@@ -72,6 +72,16 @@ TEST(SourceParserTest, EmptySpreadsheetPaddingCannotChangeTheCurrentLayout) {
   EXPECT_NE(result.value().warnings[0].find("padding"), std::string::npos);
 }
 
+TEST(SourceParserTest, WarnsWhenAnOpenDictionaryRegistersAClosedClass) {
+  auto result = parseDictionarySource("ずら\tAUXILIARY\nべさ\tPARTICLE\n");
+
+  ASSERT_TRUE(result.hasValue()) << result.error().message;
+  ASSERT_EQ(result.value().warnings.size(), 2);
+  EXPECT_NE(result.value().warnings[0].find("closed-class POS AUX"), std::string::npos);
+  EXPECT_NE(result.value().warnings[0].find("L1"), std::string::npos);
+  EXPECT_NE(result.value().warnings[1].find("closed-class POS PARTICLE"), std::string::npos);
+}
+
 TEST(SourceParserTest, RejectsNonEmptyColumnsOutsideTheSelectedLayout) {
   auto current = parseDictionarySource("東京\tPROPER_NOUN\tFAMILY\t\tunexpected\n");
   auto legacy = parseDictionarySource("読む\tVERB\tヨム\t0.5\tGODAN_MA\t読む\tunexpected\n");

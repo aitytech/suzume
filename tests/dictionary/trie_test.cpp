@@ -57,6 +57,15 @@ TEST(TrieTest, Clear) {
   EXPECT_EQ(trie.lookupView("test"), nullptr);
 }
 
+TEST(TrieTest, DestroysADepthFirstChainWithoutUsingTheCallStack) {
+  {
+    Trie trie;
+    trie.insert(std::string(30000, 'a'), 1);
+    EXPECT_EQ(trie.size(), 1u);
+  }
+  SUCCEED();
+}
+
 }  // namespace
 }  // namespace dictionary
 }  // namespace suzume

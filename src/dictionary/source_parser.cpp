@@ -361,6 +361,11 @@ core::Expected<SourceParseResult, core::Error> parseDictionarySource(std::string
       if (entry.value().ignored_empty_padding_columns) {
         result.warnings.push_back("Ignored empty TSV padding columns at line " + std::to_string(record_line));
       }
+      if (entry.value().pos == core::PartOfSpeech::Auxiliary || entry.value().pos == core::PartOfSpeech::Particle) {
+        result.warnings.push_back("Dictionary entry at line " + std::to_string(record_line) +
+                                  " uses closed-class POS " + std::string(core::posToString(entry.value().pos)) +
+                                  "; register grammatical auxiliaries and particles in L1 instead");
+      }
       result.entries.push_back(std::move(entry.value()));
       ++result.stats.entries;
     }

@@ -4,6 +4,29 @@
 
 namespace suzume::dictionary {
 
+TrieNode::~TrieNode() {
+  // A user dictionary can contain an arbitrary-depth single-key chain.  Detach
+  // every child before destroying each node so unique_ptr never recurses down
+  // that chain on the host or the smaller WebAssembly stack.
+  std::vector<TrieNode*> pending;
+  pending.reserve(children.size());
+  for (auto& [codepoint, child] : children) {
+    (void)codepoint;
+    pending.push_back(child.release());
+  }
+  children.clear();
+
+  while (!pending.empty()) {
+    std::unique_ptr<TrieNode> node(pending.back());
+    pending.pop_back();
+    for (auto& [codepoint, child] : node->children) {
+      (void)codepoint;
+      pending.push_back(child.release());
+    }
+    node->children.clear();
+  }
+}
+
 Trie::Trie() : root_(std::make_unique<TrieNode>()) {}
 
 void Trie::insert(std::string_view key, uint32_t entry_id) {

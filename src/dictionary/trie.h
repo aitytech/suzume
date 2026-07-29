@@ -17,7 +17,7 @@ namespace suzume::dictionary {
 class TrieNode {
  public:
   TrieNode() = default;
-  ~TrieNode() = default;
+  ~TrieNode();
 
   // Non-copyable, movable
   TrieNode(const TrieNode&) = delete;

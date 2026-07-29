@@ -48,6 +48,26 @@ TEST(UserDictTest, AddEntryRejectsInvalidEntry) {
   EXPECT_TRUE(dict.lookup("壊れた", 0).empty());
 }
 
+TEST(UserDictTest, RejectsAnOverlongSurfaceBeforeBuildingTheTrie) {
+  UserDictionary dict;
+  DictionaryEntry entry{std::string(256, 'a'), core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, ""};
+
+  EXPECT_FALSE(dict.addEntry(entry));
+  EXPECT_EQ(dict.size(), 0u);
+}
+
+TEST(UserDictTest, LoadFromMemoryRejectsAnOverlongSurfaceWithoutRecursing) {
+  UserDictionary dict;
+  std::string source(30000, 'a');
+  source += "\tNOUN\n";
+
+  auto result = dict.loadFromMemory(source.data(), source.size());
+
+  ASSERT_FALSE(result.hasValue());
+  EXPECT_EQ(result.error().code, core::ErrorCode::InvalidInput);
+  EXPECT_NE(result.error().message.find("exceeds 255 bytes"), std::string::npos);
+}
+
 TEST(UserDictTest, GetEntry) {
   UserDictionary dict;
 
