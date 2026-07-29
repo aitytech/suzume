@@ -2060,6 +2060,129 @@
       ],
       "id": "kato_suru",
       "input": "何かと確認する"
+    },
+    {
+      "description": "勢いとも言える。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "勢い",
+          "pos": "Noun",
+          "surface": "勢い"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "言える",
+          "pos": "Verb",
+          "surface": "言える"
+        }
+      ],
+      "id": "itomo_eru",
+      "input": "勢いとも言える。"
+    },
+    {
+      "description": "いとも簡単に解ける。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "いとも",
+          "pos": "Adverb",
+          "surface": "いとも"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "解ける",
+          "pos": "Verb",
+          "surface": "解ける"
+        }
+      ],
+      "id": "itomo_ni_keru",
+      "input": "いとも簡単に解ける。"
+    },
+    {
+      "description": "勢いと勇気が必要だ。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "勢い",
+          "pos": "Noun",
+          "surface": "勢い"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "勇気",
+          "pos": "Noun",
+          "surface": "勇気"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "必要",
+          "pos": "Adjective",
+          "surface": "必要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ito_ga_da",
+      "input": "勢いと勇気が必要だ。"
+    },
+    {
+      "description": "事実に基づく報告だ。 - auto-generated",
+      "expected": [
+        {
+          "lemma": "事実",
+          "pos": "Noun",
+          "surface": "事実"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "基づく",
+          "pos": "Verb",
+          "surface": "基づく"
+        },
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ni_duku_da",
+      "input": "事実に基づく報告だ。"
     }
   ],
   "description": "General adverbs (part 2/2)",

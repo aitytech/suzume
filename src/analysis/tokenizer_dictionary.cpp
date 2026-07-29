@@ -227,30 +227,33 @@ bool overlapsCompleteIAdjectiveBeforeParticles(const core::Lattice& lattice,
   return false;
 }
 
-// A dictionary adverb ending in に may overlap the second kanji of a
-// two-kanji content word plus an independent case particle (事実+に,
-// 確実+に), even though the same adverb is valid at a real boundary
-// (実に+難しい).  Preserve the longer content edge only when it starts
-// exactly one kanji before the adverb and ends immediately before a case に.
+// A dictionary adverb may open on the last mora of a longer content word and
+// carry an independent particle along with it (事実+に read as 事+実に, 勢い+と
+// as 勢+いと, 勢い+とも as 勢+いとも). The same adverb stays available at a real
+// boundary (実に+難しい, いとも+簡単に), so the guard is not about the entry but
+// about the offset: reject it only when the mora it opens on completes a
+// content edge that starts earlier, and what remains of the adverb after that
+// mora is itself a registered particle. Both halves of the competing reading
+// are then lexically attested, which the adverb's own span is not.
 // This uses lattice structure rather than enumerating open-class words.
-bool overlapsTwoKanjiContentBeforeCaseNi(const core::Lattice& lattice,
-                                         const dictionary::DictionaryManager& dict_manager,
-                                         const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
-  if (start_pos == 0 || end_pos <= start_pos + 1 || end_pos > codepoints.size() || codepoints[end_pos - 1] != U'に' ||
-      !normalize::isKanjiCodepoint(codepoints[start_pos - 1]) || !normalize::isKanjiCodepoint(codepoints[start_pos])) {
+bool opensOnContentWordTailBeforeParticle(const core::Lattice& lattice,
+                                          const dictionary::DictionaryManager& dict_manager,
+                                          const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (start_pos == 0 || end_pos <= start_pos + 1 || end_pos > codepoints.size()) {
     return false;
   }
-  const auto* particle = dict_manager.lookupExact("に", core::PartOfSpeech::Particle);
-  if (particle == nullptr || particle->extended_pos != core::ExtendedPOS::ParticleCase) {
+  if (dict_manager.lookupExact(extractSubstring(codepoints, start_pos + 1, end_pos), core::PartOfSpeech::Particle) ==
+      nullptr) {
     return false;
   }
-  const size_t content_start = start_pos - 1;
-  const size_t content_end = end_pos - 1;
-  for (const uint32_t edge_id : lattice.edgeIdsAt(content_start)) {
-    const auto& edge = lattice.getEdge(edge_id);
-    if (edge.end == content_end &&
-        (edge.pos == core::PartOfSpeech::Noun || edge.pos == core::PartOfSpeech::Adjective)) {
-      return true;
+  const size_t content_end = start_pos + 1;
+  for (size_t content_start = 0; content_start < start_pos; ++content_start) {
+    for (const uint32_t edge_id : lattice.edgeIdsAt(content_start)) {
+      const auto& edge = lattice.getEdge(edge_id);
+      if (edge.end == content_end &&
+          (edge.pos == core::PartOfSpeech::Noun || edge.pos == core::PartOfSpeech::Adjective)) {
+        return true;
+      }
     }
   }
   return false;
@@ -1113,7 +1116,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     }
 
     if (result.entry->pos == core::PartOfSpeech::Adverb &&
-        overlapsTwoKanjiContentBeforeCaseNi(lattice, dict_manager_, codepoints, start_pos, end_pos)) {
+        opensOnContentWordTailBeforeParticle(lattice, dict_manager_, codepoints, start_pos, end_pos)) {
       continue;
     }
 
