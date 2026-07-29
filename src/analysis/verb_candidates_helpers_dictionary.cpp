@@ -328,7 +328,11 @@ size_t negativeAuxiliaryLengthAt(const dictionary::DictionaryManager* dict_manag
   }
   // Longest negative auxiliary in the closed class is four codepoints (なけりゃ).
   constexpr size_t kMaxAuxLen = 4;
-  constexpr size_t kMinAuxLen = 2;
+  // The negative paradigm has one-mora members too (ぬ, ず, ね, ん, じ). They are
+  // reported like the rest; a single mora is weaker evidence than a multi-mora
+  // auxiliary because it is also spelled like the end of an ordinary word, so
+  // callers that build a candidate on this answer price the one-mora case.
+  constexpr size_t kMinAuxLen = 1;
   const size_t max_len = std::min(kMaxAuxLen, codepoints.size() - pos);
   for (size_t aux_len = max_len; aux_len >= kMinAuxLen; --aux_len) {
     const auto* entry =

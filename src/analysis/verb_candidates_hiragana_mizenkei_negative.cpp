@@ -214,9 +214,15 @@ void appendMizenkeiNegativeCandidates(const std::vector<char32_t>& codepoints, s
     if (!is_in_dict && mizenkei_surface.size() >= 6) {           // 2+ char stems
       cost_negative = 0.5F;                                      // Positive cost for unverified candidates
     }
-    if (unattested_sa_irrealis) {
-      cost_negative += candidate::verb_cost::kPureHiraganaSaIrrealisPenalty;
-    }
+    // Both charges describe the same thing — the reading rests on a mora that
+    // is also spelled like something else — so the weaker evidence sets the
+    // price rather than the two compounding into a near-prohibition and taking
+    // the sa-row irrealis before the classical negative with it (手を+かさ+ず).
+    const float sa_row_ambiguity =
+        unattested_sa_irrealis ? candidate::verb_cost::kPureHiraganaSaIrrealisPenalty : bigram_cost::kNeutral;
+    const float auxiliary_ambiguity =
+        aux_len == 1 && !is_in_dict ? candidate::verb_cost::kMonomoraNegativeIrrealisPenalty : bigram_cost::kNeutral;
+    cost_negative += std::max(sa_row_ambiguity, auxiliary_ambiguity);
     // Unverified stems starting with a formal noun are noun + verb sequences
     // (わけわから+ない should split as わけ + わから + ない)
     if (!is_in_dict && hasFormalNounPrefixBoundary(dict_manager, codepoints, start_pos, mizenkei_end)) {

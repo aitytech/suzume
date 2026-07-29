@@ -765,6 +765,60 @@
       ],
       "id": "wo_tamu",
       "input": "君を待たむ"
+    },
+    {
+      "description": "資料をしらぬ - auto-generated",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "しる",
+          "pos": "Verb",
+          "surface": "しら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "woshiranu",
+      "input": "資料をしらぬ"
+    },
+    {
+      "description": "手をかさず - auto-generated",
+      "expected": [
+        {
+          "lemma": "手",
+          "pos": "Noun",
+          "surface": "手"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "かす",
+          "pos": "Verb",
+          "surface": "かさ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "wokasazu",
+      "input": "手をかさず"
     }
   ],
   "description": "auxiliary_classical tests",

@@ -605,6 +605,12 @@ constexpr float kSwallowedAuxiliaryCellPenalty = bigram_cost::kRare;
 // removing it leaves the sa row as the only row missing from the paradigm and
 // its verbs then split at their own ending (おろさ+ない as おろ + さ + ない).
 constexpr float kPureHiraganaSaIrrealisPenalty = bigram_cost::kStrong;
+// A one-mora negative auxiliary (ぬ, ず, ね, ん, じ) after an a-row mora is also
+// spelled like the last two morae of an ordinary word (かず, さくらね, みかん), so
+// an irrealis built on it is weaker evidence than one closed by a multi-mora
+// auxiliary. The reading stays available for the forms nothing else explains
+// (しらぬ, たらぬ).
+constexpr float kMonomoraNegativeIrrealisPenalty = bigram_cost::kStrong;
 // Bonus for a kanji dict-verb imperative/kateikei standing sentence-final (書け, 読め, 止まれ).
 // A bare え-row form terminating a clause is the imperative (命令形) of the base verb (読め→読む);
 // the potential-verb reading (読める) is a distinct word that needs the full surface or a

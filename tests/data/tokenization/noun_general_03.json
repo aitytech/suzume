@@ -1779,6 +1779,28 @@
       ],
       "id": "ga_idarounine",
       "input": "費用が高いだろうにね。"
+    },
+    {
+      "description": "みかんをたべる - auto-generated",
+      "expected": [
+        {
+          "lemma": "みかん",
+          "pos": "Noun",
+          "surface": "みかん"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "たべる",
+          "pos": "Verb",
+          "surface": "たべる"
+        }
+      ],
+      "id": "mikanwotaberu",
+      "input": "みかんをたべる"
     }
   ],
   "description": "General nouns (part 3/3)",
