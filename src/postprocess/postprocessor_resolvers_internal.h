@@ -59,6 +59,7 @@ void resolveProgressiveIru(std::vector<core::Morpheme>& result);
 void resolveDependentVerbHomographs(std::vector<core::Morpheme>& result);
 void resolveClosedInflectionalChains(std::vector<core::Morpheme>& result);
 void resolveSahenRenyokei(std::vector<core::Morpheme>& result);
+void splitFormalNounCopularDemo(std::vector<core::Morpheme>& result);
 void resolveSimilitudeYou(std::vector<core::Morpheme>& result);
 void resolveTearuAuxiliary(std::vector<core::Morpheme>& result);
 void resolveTendencySuffixCopula(std::vector<core::Morpheme>& result);

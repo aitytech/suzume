@@ -42,6 +42,7 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::resolveNominalPredicateNai(result);
   resolver::mergeSplitCopularNegative(result);
   resolver::mergeSplitFormalNounNegativeRenyokei(result);
+  resolver::splitFormalNounCopularDemo(result);
   resolver::resolveInitialNegativeAdjective(result);
   resolver::resolveHonorificVerbInflection(result);
   resolver::resolvePreparatoryVolitional(result);

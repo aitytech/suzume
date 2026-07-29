@@ -1049,6 +1049,65 @@
       ],
       "id": "ni_ganai",
       "input": "別に急がない"
+    },
+    {
+      "description": "形式名詞が項位置にあるときは副助詞 でも を保つ",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "探す",
+          "pos": "Verb",
+          "surface": "探そ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "berumonodemo_sou",
+      "input": "食べるものでも探そう"
+    },
+    {
+      "description": "参照的な名詞は否定の前でも副助詞 でも を保つ",
+      "expected": [
+        {
+          "lemma": "大した",
+          "pos": "Determiner",
+          "surface": "大した"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "shita_demonai",
+      "input": "大した問題でもない"
     }
   ],
   "description": "particle_adverbial tests",

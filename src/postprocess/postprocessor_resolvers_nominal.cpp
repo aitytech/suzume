@@ -98,6 +98,11 @@ void resolveNominalCaseDe(std::vector<core::Morpheme>& result) {
                             predecessor.pos == core::PartOfSpeech::Pronoun ||
                             predecessor.pos == core::PartOfSpeech::Suffix;
     const bool is_na_adjective = predecessor.extended_pos == core::ExtendedPOS::AdjNaAdj;
+    // The binding particle も after で names the copula only when the host
+    // cannot take the exemplification particle でも in its place. A formal noun
+    // heads a copular predicate rather than naming a thing, so it belongs with
+    // the na-adjective stem and the adverb rather than with a referential noun.
+    const bool is_formal_noun = predecessor.extended_pos == core::ExtendedPOS::NounFormal;
     const bool is_contracted_negative =
         predecessor.extended_pos == core::ExtendedPOS::AuxNegativeNu && predecessor.surface == "ん";
     const bool is_tendency_suffix = predecessor.extended_pos == core::ExtendedPOS::SuffixTendency;
@@ -120,9 +125,10 @@ void resolveNominalCaseDe(std::vector<core::Morpheme>& result) {
           (utf8::equalsAny(result[idx + 2].surface, {"ない", "なく", "なかっ", "なかろ"}) ||
            (is_na_adjective && (utf8::equalsAny(result[idx + 2].surface, {"ござい", "ござる"}) ||
                                 result[idx + 2].extended_pos == core::ExtendedPOS::AuxGozaru)))) ||
-         (successor->surface == "も" && ((is_na_adjective && idx + 2 < result.size() &&
-                                          utf8::equalsAny(result[idx + 2].surface, {"ない", "なく", "なかっ"})) ||
-                                         is_adverbial_predicate || is_contracted_negative)));
+         (successor->surface == "も" &&
+          (((is_na_adjective || is_formal_noun || is_nominalized_clause) && idx + 2 < result.size() &&
+            utf8::equalsAny(result[idx + 2].surface, {"ない", "なく", "なかっ"})) ||
+           is_adverbial_predicate || is_contracted_negative)));
     const bool topic_starts_copular_aru =
         successor != nullptr && successor->extended_pos == core::ExtendedPOS::ParticleTopic &&
         idx + 2 < result.size() && utf8::equalsAny(result[idx + 2].surface, {"ある", "あり", "あろ", "あれ"});
@@ -389,6 +395,51 @@ void resolveNominalizedRenyokeiPredicate(std::vector<core::Morpheme>& result) {
     }
 
     retagNounSurface(stem);
+  }
+}
+
+// The exemplification particle でも is the copula's continuative で fused with
+// the binding particle も, and the lattice scores that fusion as one closed
+// token. Only a referential host can take it: a formal noun names no thing, and
+// neither does the nominalizer の — both head a copular predicate — so in front
+// of the copula's own supporting verb (である → でもある, ではない → でもない)
+// the compositional reading is the only one available and the fusion has to be
+// undone.
+//
+// Both halves of that condition carry weight, which is why the repair belongs
+// here rather than in the connection rules. A formal noun still takes the
+// exemplification particle in an argument position (ものでも食べよう,
+// 行ったはずでも探す), and a referential host keeps the fusion in front of the
+// same verb (学生でもない, 大した問題でもない). The deciding window therefore
+// spans three tokens, and the scorer sees an adjacent pair.
+void splitFormalNounCopularDemo(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 1; idx + 1 < result.size(); ++idx) {
+    const auto& host = result[idx - 1];
+    auto& copula = result[idx];
+    const auto& predicate = result[idx + 1];
+    const bool supporting_verb =
+        predicate.pos != core::PartOfSpeech::Determiner && utf8::equalsAny(predicate.getLemma(), {"ある", "ない"});
+    const bool copular_head =
+        host.extended_pos == core::ExtendedPOS::NounFormal || host.extended_pos == core::ExtendedPOS::ParticleNo;
+    if (!copular_head || copula.extended_pos != core::ExtendedPOS::ParticleAdverbial ||
+        !utf8::equalsAny(copula.surface, {"でも"}) || host.end != copula.start || copula.end != predicate.start ||
+        !supporting_verb) {
+      continue;
+    }
+
+    core::Morpheme focus = copula;
+    copula.surface = "で";
+    copula.end = copula.start + 1;
+    retagCopulaDa(copula);
+    copula.syncPositions();
+
+    focus.surface = "も";
+    focus.start = copula.end;
+    retag(focus, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleTopic, "も",
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
+    focus.syncPositions();
+    result.insert(result.begin() + static_cast<std::ptrdiff_t>(idx + 1), focus);
+    ++idx;
   }
 }
 

@@ -918,9 +918,14 @@
           "surface": "わけ"
         },
         {
-          "lemma": "でも",
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "も",
           "pos": "Particle",
-          "surface": "でも"
+          "surface": "も"
         },
         {
           "lemma": "ない",
@@ -984,9 +989,14 @@
           "surface": "ほか"
         },
         {
-          "lemma": "でも",
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "も",
           "pos": "Particle",
-          "surface": "でも"
+          "surface": "も"
         },
         {
           "lemma": "ない",
@@ -1033,9 +1043,14 @@
           "surface": "わけ"
         },
         {
-          "lemma": "でも",
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "も",
           "pos": "Particle",
-          "surface": "でも"
+          "surface": "も"
         },
         {
           "lemma": "ない",
@@ -1711,6 +1726,112 @@
       ],
       "id": "yamuwo_nu",
       "input": "やむを得ぬ事情"
+    },
+    {
+      "description": "形式名詞＋コピュラ で＋係助詞 も＋否定",
+      "expected": [
+        {
+          "lemma": "案",
+          "pos": "Noun",
+          "surface": "案"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "新しい",
+          "pos": "Adjective",
+          "surface": "新しい"
+        },
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "ga_shiiwakedemonai",
+      "input": "案が新しいわけでもない"
+    },
+    {
+      "description": "形式名詞＋コピュラ で＋係助詞 も＋否定",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "mumonodemonai",
+      "input": "読むものでもない"
+    },
+    {
+      "description": "準体助詞＋コピュラ で＋係助詞 も＋否定",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "kunodemonai",
+      "input": "行くのでもない"
     }
   ],
   "description": "Negation auxiliaries (ない、ぬ)",
