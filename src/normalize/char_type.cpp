@@ -595,6 +595,24 @@ bool isTemporalAdverbialNounPair(char32_t first, char32_t second) {
   return false;
 }
 
+bool continuesTemporalNounCompound(char32_t prefix, char32_t next) {
+  if (isTemporalAdverbialNounPair(prefix, next) || isTemporalRelationSuffixKanji(next) ||
+      isTemporalSpanSuffixKanji(next)) {
+    return true;
+  }
+  // Occasion and period units outside the 副詞可能 pair set (今度, 今期, 毎時,
+  // 今夏).  Object counters are deliberately absent: 本 counts cylinders, so
+  // 今本 is the adverbial 今 plus its object, not a compound.
+  static constexpr std::array<char32_t, 10> kTemporalCompoundUnits = {U'度', U'期', U'時', U'分', U'秒',
+                                                                      U'春', U'夏', U'秋', U'冬', U'宵'};
+  for (char32_t unit : kTemporalCompoundUnits) {
+    if (unit == next) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool isNumeralCodepoint(char32_t code_point) {
   // Arabic numerals (half-width and full-width)
   if ((code_point >= U'0' && code_point <= U'9') || (code_point >= U'０' && code_point <= U'９')) {

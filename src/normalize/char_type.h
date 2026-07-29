@@ -361,6 +361,17 @@ bool isQuantityPhraseSuffixKanji(char32_t code_point);
 bool isTemporalAdverbialNounPair(char32_t first, char32_t second);
 
 /**
+ * @brief Check if a kanji continues a temporal compound headed by a temporal prefix.
+ *
+ * A temporal prefix ({今来先昨翌毎}) heads a temporal noun, not an arbitrary
+ * compound: its right-hand element is a temporal unit (今週, 翌朝), a counter
+ * (今回, 今度, 毎時) or a span/relation suffix (今後). An ordinary noun after
+ * the prefix therefore starts a new word (今|紙, 今|大会) instead of gluing
+ * into a two-kanji compound.
+ */
+bool continuesTemporalNounCompound(char32_t prefix, char32_t next);
+
+/**
  * @brief Check if a codepoint is a numeral (Arabic or kanji)
  *
  * Covers half-width and full-width Arabic digits plus the basic kanji

@@ -656,7 +656,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
     // Generate prefix + single kanji compound candidates
     // e.g., 今日, 今週, 本日, 全国 (prefix-like compounds)
-    generatePrefixCompoundCandidates(codepoints, start_pos, char_types, inflection_, candidates);
+    generatePrefixCompoundCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_, candidates);
 
     // Generate temporal-noun boundary split candidates (現在|担当者, 昨日|会議)
     generateTemporalNounBoundaryCandidates(codepoints, start_pos, char_types, candidates);

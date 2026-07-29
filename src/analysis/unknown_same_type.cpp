@@ -460,6 +460,23 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
         }
       }
 
+      // A temporal prefix that is itself a standalone noun (今) heads a temporal
+      // compound, never an arbitrary one: 今週/今回/今後 continue it, an ordinary
+      // noun does not (今|紙, 今|本, 今|大会). Without this the generic run cost
+      // (shorter than the sum of its parts) glues the adverbial 今 to whatever
+      // object follows. The sibling prefixes are not standalone nouns — 先 is a
+      // suffix and 来 a verb stem — so 先方/来客 keep their run.
+      if (start_type == normalize::CharType::Kanji && len >= 2 && dict_manager_ != nullptr &&
+          isPrefixLikeKanji(codepoints[start_pos]) &&
+          !normalize::continuesTemporalNounCompound(codepoints[start_pos], codepoints[start_pos + 1]) &&
+          (start_pos == 0 || char_types[start_pos - 1] != normalize::CharType::Kanji)) {
+        const auto* head = dict_manager_->lookupExact(extractSubstring(codepoints, start_pos, start_pos + 1),
+                                                      core::PartOfSpeech::Noun);
+        if (head != nullptr && head->extended_pos == core::ExtendedPOS::Noun) {
+          continue;
+        }
+      }
+
       // Penalize hiragana candidates that include an internal particle
       // character (see scan loop above). The penalty keeps particle splits
       // preferred when the prefix is a plausible word (ここ+で beats ここで),

@@ -1565,6 +1565,146 @@
       ],
       "id": "tanabatano",
       "input": "たなばたの夜"
+    },
+    {
+      "description": "Adverbial 今 does not fuse with a following object noun",
+      "expected": [
+        {
+          "lemma": "今",
+          "pos": "Noun",
+          "surface": "今"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "とく",
+          "pos": "Auxiliary",
+          "surface": "とく"
+        }
+      ],
+      "id": "ni_itoku",
+      "input": "今紙に書いとく。"
+    },
+    {
+      "description": "Adverbial 今 before an object noun",
+      "expected": [
+        {
+          "lemma": "今",
+          "pos": "Noun",
+          "surface": "今"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        }
+      ],
+      "id": "wo_mu_2",
+      "input": "今水を飲む"
+    },
+    {
+      "description": "Temporal unit still continues the prefix compound",
+      "expected": [
+        {
+          "lemma": "今週",
+          "pos": "Noun",
+          "surface": "今週"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "予定",
+          "pos": "Noun",
+          "surface": "予定"
+        }
+      ],
+      "id": "no_9",
+      "input": "今週の予定"
+    },
+    {
+      "description": "Occasion counter continues the prefix compound",
+      "expected": [
+        {
+          "lemma": "今度",
+          "pos": "Noun",
+          "surface": "今度"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        }
+      ],
+      "id": "no_10",
+      "input": "今度の会議"
+    },
+    {
+      "description": "Bound prefix keeps its compound and the boundary before it",
+      "expected": [
+        {
+          "lemma": "佐藤",
+          "pos": "Noun",
+          "surface": "佐藤"
+        },
+        {
+          "lemma": "先生",
+          "pos": "Noun",
+          "surface": "先生"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "授業",
+          "pos": "Noun",
+          "surface": "授業"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "受ける",
+          "pos": "Verb",
+          "surface": "受ける"
+        }
+      ],
+      "id": "no_wo_keru",
+      "input": "佐藤先生の授業を受ける"
     }
   ],
   "description": "General nouns (part 3/3)",

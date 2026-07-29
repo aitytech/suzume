@@ -50,6 +50,7 @@ bool isNominalUsePrefix(char32_t cp) {
 void generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                       const std::vector<normalize::CharType>& char_types,
                                       const grammar::Inflection& inflection,
+                                      const dictionary::DictionaryManager* dict_manager,
                                       std::vector<UnknownCandidate>& candidates) {
   // Need at least 2 kanji characters
   if (start_pos + 1 >= codepoints.size()) {
@@ -102,6 +103,20 @@ void generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints, s
   char32_t second_char = codepoints[start_pos + 1];
   if (isInterrogativeKanji(second_char)) {
     return;  // Don't generate compound, let dictionary anchor win
+  }
+
+  // A prefix that is itself a standalone noun (今) heads a temporal compound and
+  // nothing else, so only a temporal unit or a counter/span suffix continues it
+  // (今週, 今回, 今後). Before an ordinary noun it is the free adverbial 今 and
+  // the noun is its own word (今|紙, 今|水). The sibling prefixes are bound — 先
+  // is a suffix and 来 a verb stem — so their compound stays available and keeps
+  // marking the boundary before it (佐藤|先生).
+  if (dict_manager != nullptr && !normalize::continuesTemporalNounCompound(first_char, second_char)) {
+    const auto* head =
+        dict_manager->lookupExact(extractSubstring(codepoints, start_pos, start_pos + 1), core::PartOfSpeech::Noun);
+    if (head != nullptr && head->extended_pos == core::ExtendedPOS::Noun) {
+      return;
+    }
   }
 
   // Generate 2-character compound (prefix + single kanji) ONLY when:

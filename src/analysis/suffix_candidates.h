@@ -274,7 +274,9 @@ void generateCounterCandidates(const std::vector<char32_t>& codepoints, size_t s
  */
 void generatePrefixCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                       const std::vector<normalize::CharType>& char_types,
-                                      const grammar::Inflection& inflection, std::vector<UnknownCandidate>& candidates);
+                                      const grammar::Inflection& inflection,
+                                      const dictionary::DictionaryManager* dict_manager,
+                                      std::vector<UnknownCandidate>& candidates);
 
 /**
  * @brief Generate a temporal-noun boundary split candidate
