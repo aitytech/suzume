@@ -1,7 +1,7 @@
 #include "postprocess/postprocessor.h"
 
 #include <algorithm>
-#include <cstdlib>
+#include <map>
 #include <string_view>
 #include <utility>
 
@@ -25,9 +25,11 @@ void resolveSemanticRolesPreservingSymbols(std::vector<core::Morpheme>& result,
   std::vector<core::Morpheme> semantic_morphemes;
   std::vector<core::Morpheme> symbols;
   semantic_morphemes.reserve(result.size());
-  symbols.reserve(result.size());
   for (auto& morpheme : result) {
     if (morpheme.pos == core::PartOfSpeech::Symbol) {
+      if (symbols.empty()) {
+        symbols.reserve(result.size());
+      }
       symbols.push_back(std::move(morpheme));
     } else {
       semantic_morphemes.push_back(std::move(morpheme));
@@ -50,9 +52,17 @@ void resolveSemanticRolesPreservingSymbols(std::vector<core::Morpheme>& result,
       result.push_back(std::move(symbol));
       ++symbol_idx;
     } else {
-      // Structural resolver merges must not span punctuation. An overlap here
-      // would make lossless surface reconstruction impossible.
-      std::abort();
+      // Structural resolver merges must not span punctuation. Preserve both
+      // spans deterministically if a future resolver violates that invariant;
+      // library code must not terminate its host process for malformed input.
+      SUZUME_DEBUG_LOG("[POSTPROC] preserving overlapping symbol span\n");
+      if (semantic.start <= symbol.start) {
+        result.push_back(std::move(semantic));
+        ++semantic_idx;
+      } else {
+        result.push_back(std::move(symbol));
+        ++symbol_idx;
+      }
     }
   }
   while (semantic_idx < semantic_morphemes.size()) {
@@ -73,6 +83,12 @@ Postprocessor::Postprocessor(const dictionary::DictionaryManager* dict_manager, 
 
 std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> result) const {
   [[maybe_unused]] size_t before_count = 0;
+  std::map<std::pair<size_t, size_t>, std::string> source_lemmas;
+  if (!options_.lemmatize) {
+    for (const auto& morpheme : result) {
+      source_lemmas.emplace(std::make_pair(morpheme.start, morpheme.end), morpheme.lemma);
+    }
+  }
 
   // NOUN + SUFFIX merging is intentionally NOT applied: tokens stay separate as
   // PREFIX + NOUN + SUFFIX (e.g., お姉さん → お(PREFIX) + 姉(NOUN) + さん(SUFFIX)).
@@ -150,6 +166,19 @@ std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> r
   // Filter unwanted morphemes only after every role has been resolved.
   result = filterMorphemes(std::move(result));
 
+  if (!options_.lemmatize) {
+    // Role resolution must still run to supply POS and conjugation annotations,
+    // but --no-lemmatize promises that surviving input morphemes keep their
+    // lattice lemma. Merged tokens have a new source span and retain their
+    // structural lemma instead.
+    for (auto& morpheme : result) {
+      const auto original = source_lemmas.find(std::make_pair(morpheme.start, morpheme.end));
+      if (original != source_lemmas.end()) {
+        morpheme.lemma = original->second;
+      }
+    }
+  }
+
   return result;
 }
 
@@ -199,7 +228,7 @@ std::vector<core::Morpheme> Postprocessor::mergeNounCompounds(std::vector<core::
         SUZUME_DEBUG_STREAM << " → \"" << merged.surface << "\"\n";
       }
 
-      result.push_back(merged);
+      result.push_back(std::move(merged));
       idx = merge_end;
     } else {
       result.push_back(std::move(morphemes[idx]));
@@ -217,11 +246,6 @@ std::vector<core::Morpheme> Postprocessor::filterMorphemes(std::vector<core::Mor
   for (auto& morpheme : morphemes) {
     // Skip symbols if option is set
     if (options_.remove_symbols && morpheme.pos == core::PartOfSpeech::Symbol) {
-      continue;
-    }
-
-    // Skip short morphemes
-    if (normalize::utf8Length(morpheme.surface) < options_.min_surface_length) {
       continue;
     }
 
@@ -247,12 +271,10 @@ std::vector<core::Morpheme> Postprocessor::mergeVerbRenyokeiMono(std::vector<cor
         morphemes[i + 1].features.is_formal_noun) {
       core::Morpheme merged = morphemes[i];
       resolver::mergeInto(merged, morphemes[i + 1]);
-      merged.pos = core::PartOfSpeech::Noun;
-      merged.extended_pos = core::ExtendedPOS::Noun;
-      merged.lemma = merged.surface;
+      resolver::retagNounSurface(merged);
       SUZUME_DEBUG_LOG("[POSTPROC] Merged verb+もの: \"" << morphemes[i].surface << "\" + \"もの\" → \""
                                                          << merged.surface << "\"\n");
-      result.push_back(merged);
+      result.push_back(std::move(merged));
       ++i;  // skip もの
       continue;
     }
@@ -330,7 +352,7 @@ std::vector<core::Morpheme> Postprocessor::mergeLexicalizedAdverbs(std::vector<c
         merged.conj_form = grammar::ConjForm::Base;
         SUZUME_DEBUG_LOG("[POSTPROC] Merged lexicalized adverb: \"" << cur.surface << "\"+\"" << nxt.surface
                                                                     << "\" → \"" << merged.surface << "\"\n");
-        result.push_back(merged);
+        result.push_back(std::move(merged));
         ++i;  // skip the particle
         continue;
       }
@@ -375,7 +397,7 @@ std::vector<core::Morpheme> Postprocessor::mergeProlongedSoundMark(std::vector<c
 
           SUZUME_DEBUG_LOG("[POSTPROC] Merged prolonged sound mark: \"" << current.surface << "\" + \"ー\" → \""
                                                                         << merged.surface << "\"\n");
-          result.push_back(merged);
+          result.push_back(std::move(merged));
           i = skip - 1;
           continue;
         }

@@ -149,25 +149,32 @@ void resolvePostPrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
     }
   }
 
-  // A compound-verb 連用形 (積み重ね, 組み立て, 話し合い) used as the head of a nominal phrase
-  // is a 連用形転成名詞, not a verb: 努力の積み重ね**が**, 組み立て**が**得意, 経験を積み重ね
-  // (EOS). Retag to NounVerbal with lemma = surface when such a compound-shape VerbRenyokei
-  // is at the end of the sentence or is directly marked by a case/topic particle. Verbal
-  // continuations (た/て/ながら, 連用中止 before 、, a following V2, quotative と) keep VERB.
+  // A continuative used as the head of a nominal phrase is a 連用形転成名詞,
+  // not a verb: 答え**は**, 笑い**で**, 読み**だけ**.  A direct argument or
+  // focus marker is structural evidence for that role, irrespective of whether
+  // the preceding verb is simplex or compound.  The purpose construction
+  // V連用形+に+V is deliberately exempt: its following predicate keeps the
+  // continuative verbal.
   // Runs after lemmatizeAll, so overwriting lemma = surface is final.  A preceding
   // continuative can also be the first item in a parallel deverbal-noun sequence
   // (上がり+下がりを); require the next item to have already been selected as
   // NounVerbal and to be case/topic marked before extending the same retag.
   for (size_t i = 0; i < result.size(); ++i) {
-    const bool direct_nominal_context =
-        i + 1 == result.size() || (i + 1 < result.size() && resolver::isNominalForcingParticle(result[i + 1]));
+    const bool direct_nominal_particle = i + 1 < result.size() && result[i + 1].pos == core::PartOfSpeech::Particle &&
+                                         (resolver::isNominalForcingParticle(result[i + 1]) ||
+                                          result[i + 1].extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+                                          grammar::isSingleHiragana(result[i + 1].surface, U'で'));
+    const bool purpose_construction = direct_nominal_particle &&
+                                      grammar::isSingleHiragana(result[i + 1].surface, U'に') &&
+                                      i + 2 < result.size() && result[i + 2].pos == core::PartOfSpeech::Verb;
+    const bool direct_nominal_context = direct_nominal_particle && !purpose_construction;
+    const bool compound_sentence_final = i + 1 == result.size() && resolver::isCompoundRenyokeiShape(result[i].surface);
     const bool parallel_nominal_context =
         i + 2 < result.size() && result[i + 1].pos == core::PartOfSpeech::Noun &&
         result[i + 1].extended_pos == core::ExtendedPOS::NounVerbal && normalize::utf8Length(result[i].surface) >= 3 &&
         normalize::utf8Length(result[i + 1].surface) >= 3 && resolver::isNominalForcingParticle(result[i + 2]);
     if (result[i].pos == core::PartOfSpeech::Verb && result[i].extended_pos == core::ExtendedPOS::VerbRenyokei &&
-        ((resolver::isCompoundRenyokeiShape(result[i].surface) && direct_nominal_context) ||
-         parallel_nominal_context)) {
+        (direct_nominal_context || compound_sentence_final || parallel_nominal_context)) {
       resolver::retag(result[i], core::PartOfSpeech::Noun, core::ExtendedPOS::NounVerbal, result[i].surface,
                       dictionary::ConjugationType::None, grammar::ConjForm::Base);
     }

@@ -17,7 +17,6 @@ struct PostprocessOptions {
   bool merge_noun_compounds = false;  // Merge consecutive nouns
   bool lemmatize = true;              // Retain corrected lemmas
   bool remove_symbols = true;         // Remove symbol-only morphemes
-  size_t min_surface_length = 1;      // Minimum surface length to keep
 };
 
 /**

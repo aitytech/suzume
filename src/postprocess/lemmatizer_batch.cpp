@@ -95,7 +95,7 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
         morpheme.lemma = std::move(reconstructed);
       }
     }
-    // B45: Special fix for ない adjective + さ + そう pattern
+    // Preserve the ない lemma in the adjective + さ + そう pattern.
     // The adjective candidate generator sets lemma to なさい, but correct is ない
     // なさそう = ない + さそう (looks like there isn't)
     if (morpheme.pos == core::PartOfSpeech::Adjective && morpheme.surface.find("なさそう") != std::string::npos &&
@@ -266,27 +266,40 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
     const bool has_i_onbin_follower =
         utf8::equalsAny(next_surface, {"た", "て", "たり", "たら", "だ", "で", "だり", "だら"}) ||
         contracted_shimau_follows;
-    if (!morpheme.is_from_dictionary && morpheme.pos != core::PartOfSpeech::Verb &&
-        utf8::endsWith(morpheme.surface, "い") && has_i_onbin_follower) {
-      morpheme.pos = core::PartOfSpeech::Verb;
-      morpheme.extended_pos = core::ExtendedPOS::VerbOnbinkei;
-    }
     if (morpheme.pos == core::PartOfSpeech::Verb && utf8::endsWith(morpheme.surface, "い") &&
-        morpheme.surface.size() >= core::kTwoJapaneseCharBytes && has_i_onbin_follower) {
-      // This is onbin form - fix lemma from 〜う to 〜く or 〜ぐ.
+        morpheme.surface.size() >= core::kTwoJapaneseCharBytes && has_i_onbin_follower &&
+        !(morpheme.extended_pos == core::ExtendedPOS::VerbOnbinkei && morpheme.lemma != morpheme.surface &&
+          hasExactVerbEntry(dict_manager_, morpheme.lemma))) {
+      // This is an onbin form - fix its lemma from 〜う to 〜く or 〜ぐ.
+      // Do not infer a verb merely from a noun ending in い before で/だ:
+      // that configuration is also the ordinary noun + case-particle path.
+      // Candidate generation owns POS classification; this pass corrects only
+      // an already-classified verb.
       // The tiebreak here is the following token's voicing (だ/で ⇒ ガ行), which is
       // deterministic and dictionary-free — do NOT route this through the dict-order
       // helper (getGodanTypesByOnbin is Ka-first and dict-gated): voicing correctly
       // handles out-of-dict verbs (凪いだ→凪ぐ) and voiced ties (ついだ→つぐ).
       std::string stem(utf8::dropLastChar(morpheme.surface));
+      const std::string godan_wa_base = stem + "う";
       const std::string godan_ka_base = stem + "く";
       const std::string godan_ga_base = stem + "ぐ";
+      const bool selected_i_onbin_base = morpheme.extended_pos == core::ExtendedPOS::VerbOnbinkei &&
+                                         (morpheme.lemma == godan_ka_base || morpheme.lemma == godan_ga_base);
+      const bool has_godan_wa_entry = hasExactVerbEntry(dict_manager_, godan_wa_base);
       const bool has_godan_ka_entry =
           dict_manager_ != nullptr && dict_manager_->lookupExact(godan_ka_base, core::PartOfSpeech::Verb) != nullptr;
       const bool has_godan_ga_entry =
           dict_manager_ != nullptr && dict_manager_->lookupExact(godan_ga_base, core::PartOfSpeech::Verb) != nullptr;
       // Check if next is voiced (だ/で) → 〜ぐ, otherwise → 〜く
-      if (grammar::inflection::isValidKanjiIStemException(morpheme.surface)) {
+      if (selected_i_onbin_base) {
+        // Candidate generation has already selected an attested or
+        // rule-validated Ka/Ga-row i-onbin. A homographic wa-row continuative
+        // must not overwrite that resolved conjugation type.
+      } else if (has_godan_wa_entry) {
+        // The same exact-entry guard used by lemmatize() distinguishes a
+        // Godan-wa continuative (使い → 使う) from an i-onbin form.
+        morpheme.lemma = godan_wa_base;
+      } else if (grammar::inflection::isValidKanjiIStemException(morpheme.surface)) {
         // Kami-ichidan renyokei (率い, 老い, ...) - dictionary form is surface + る
         morpheme.lemma = morpheme.surface + "る";
       } else if (has_godan_ga_entry && !has_godan_ka_entry) {

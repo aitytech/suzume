@@ -40,11 +40,48 @@ TEST(PostprocessorTest, ExactDictionaryEvidenceIgnoresShorterVerbPrefix) {
   EXPECT_EQ(Lemmatizer(&manager).lemmatize(morpheme), "歩く");
 }
 
+TEST(LemmatizerTest, NounBeforeCaseDeRemainsNominal) {
+  Lemmatizer lemmatizer;
+  std::vector<core::Morpheme> morphemes{
+      makeMorpheme("笑い", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, 0, 2),
+      makeMorpheme("で", core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleCase, 2, 3),
+  };
+
+  lemmatizer.lemmatizeAll(morphemes);
+
+  EXPECT_EQ(morphemes[0].pos, core::PartOfSpeech::Noun);
+  EXPECT_EQ(morphemes[0].extended_pos, core::ExtendedPOS::Noun);
+  EXPECT_EQ(morphemes[0].lemma, "笑い");
+}
+
+TEST(LemmatizerTest, DictionaryVerifiedGodanWaBeforeDeKeepsWaLemma) {
+  auto dictionary = std::make_shared<dictionary::UserDictionary>();
+  dictionary->addEntry({"使う", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "使う"});
+  dictionary::DictionaryManager manager;
+  manager.addUserDictionary(dictionary);
+  Lemmatizer lemmatizer(&manager);
+  std::vector<core::Morpheme> morphemes{
+      makeMorpheme("使い", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, 0, 2),
+      makeMorpheme("で", core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleConj, 2, 3),
+  };
+
+  lemmatizer.lemmatizeAll(morphemes);
+
+  EXPECT_EQ(morphemes[0].pos, core::PartOfSpeech::Verb);
+  EXPECT_EQ(morphemes[0].lemma, "使う");
+}
+
 TEST(PostprocessorTest, ProductiveMasuAndNaiFallbacksChooseTheConjugationRow) {
   EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("書きます"), "書く");
   EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("食べます"), "食べる");
   EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("書かない"), "書く");
   EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("食べない"), "食べる");
+}
+
+TEST(PostprocessorTest, VerbFallbackPrefersSpecificSuffixesAndNeverFabricatesERowTerminals) {
+  EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("見られる"), "見る");
+  EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("勉強させる"), "勉強する");
+  EXPECT_EQ(lemmatizer_detail::lemmatizeVerbFallback("食べる"), "食べる");
 }
 
 TEST(PostprocessorTest, MergedNounCompoundClearsDictionaryProvenance) {
@@ -70,6 +107,19 @@ TEST(PostprocessorTest, MergedNounCompoundClearsDictionaryProvenance) {
   EXPECT_FALSE(result[0].is_from_dictionary);
 }
 
+TEST(PostprocessorTest, OverlappingSymbolSpanDoesNotTerminateTheProcess) {
+  auto noun = makeMorpheme("東京", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, 0, 2);
+  auto symbol = makeMorpheme("、", core::PartOfSpeech::Symbol, core::ExtendedPOS::Symbol, 1, 2);
+  PostprocessOptions options;
+  options.remove_symbols = false;
+
+  const auto result = Postprocessor(options).process({noun, symbol});
+
+  ASSERT_EQ(result.size(), 2U);
+  EXPECT_EQ(result[0].surface, "東京");
+  EXPECT_EQ(result[1].surface, "、");
+}
+
 TEST(PostprocessorTest, IndefiniteCounterMergeUsesNumericNounCategories) {
   auto interrogative = makeMorpheme("何", core::PartOfSpeech::Pronoun, core::ExtendedPOS::PronounInterrogative, 0, 1);
   auto counter = makeMorpheme("ヶ月", core::PartOfSpeech::Suffix, core::ExtendedPOS::Suffix, 1, 3);
@@ -82,6 +132,50 @@ TEST(PostprocessorTest, IndefiniteCounterMergeUsesNumericNounCategories) {
   EXPECT_EQ(result[0].surface, "何ヶ月");
   EXPECT_EQ(result[0].pos, core::PartOfSpeech::Noun);
   EXPECT_EQ(result[0].extended_pos, core::ExtendedPOS::NounNumber);
+}
+
+TEST(PostprocessorTest, NominalizedVerbsClearConjugationMetadata) {
+  PostprocessOptions options;
+  options.remove_symbols = false;
+
+  auto prefix = makeMorpheme("お", core::PartOfSpeech::Prefix, core::ExtendedPOS::Prefix, 0, 1);
+  auto honorific_stem = makeMorpheme("読み", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, 1, 3);
+  honorific_stem.conj_type = dictionary::ConjugationType::GodanMa;
+  honorific_stem.conj_form = grammar::ConjForm::Renyokei;
+  auto honorific_result = Postprocessor(options).process({prefix, honorific_stem});
+
+  ASSERT_EQ(honorific_result.size(), 2U);
+  EXPECT_EQ(honorific_result[1].pos, core::PartOfSpeech::Noun);
+  EXPECT_EQ(honorific_result[1].conj_type, dictionary::ConjugationType::None);
+  EXPECT_EQ(honorific_result[1].conj_form, grammar::ConjForm::Base);
+
+  auto stem = makeMorpheme("飲み", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, 0, 2);
+  stem.conj_type = dictionary::ConjugationType::GodanMa;
+  stem.conj_form = grammar::ConjForm::Renyokei;
+  auto formal_noun = makeMorpheme("もの", core::PartOfSpeech::Noun, core::ExtendedPOS::NounFormal, 2, 4);
+  formal_noun.features.is_formal_noun = true;
+  auto merged_result = Postprocessor(options).process({stem, formal_noun});
+
+  ASSERT_EQ(merged_result.size(), 1U);
+  EXPECT_EQ(merged_result[0].pos, core::PartOfSpeech::Noun);
+  EXPECT_EQ(merged_result[0].conj_type, dictionary::ConjugationType::None);
+  EXPECT_EQ(merged_result[0].conj_form, grammar::ConjForm::Base);
+}
+
+TEST(PostprocessorTest, DisabledLemmatizationRestoresRoleResolverLemmas) {
+  PostprocessOptions options;
+  options.lemmatize = false;
+  options.remove_symbols = false;
+  auto stem = makeMorpheme("食べ", core::PartOfSpeech::Verb, core::ExtendedPOS::VerbRenyokei, 0, 2);
+  auto sou = makeMorpheme("そう", core::PartOfSpeech::Adverb, core::ExtendedPOS::Adverb, 2, 4);
+  auto na = makeMorpheme("な", core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleFinal, 4, 5);
+  auto noun = makeMorpheme("人", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, 5, 6);
+
+  const auto result = Postprocessor(options).process({stem, sou, na, noun});
+
+  ASSERT_EQ(result.size(), 4U);
+  EXPECT_EQ(result[2].pos, core::PartOfSpeech::Auxiliary);
+  EXPECT_EQ(result[2].lemma, "な");
 }
 
 TEST(PostprocessorResolverTest, TeFormConnectiveRequiresBothRoleAndSurface) {

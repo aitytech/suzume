@@ -770,10 +770,7 @@ void Postprocessor::convertPrefixVerbToNoun(std::vector<core::Morpheme>& morphem
             }
           }
           if (!preserves_verbal_reading) {
-            morpheme.pos = core::PartOfSpeech::Noun;
-            morpheme.extended_pos = core::ExtendedPOS::Noun;
-            // Keep surface as lemma for nominalized form
-            morpheme.lemma = morpheme.surface;
+            resolver::retagNounSurface(morpheme);
             SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Nominalized: " << morpheme.surface << " (VERB → NOUN after "
                                                                 << prefix_surface << ")\n");
           }
