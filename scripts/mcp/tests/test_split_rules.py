@@ -120,6 +120,24 @@ class TestCopulaNegationSplit:
         assert rule == "copula-negation-split"
 
 
+class TestLexicalizedCasePredicateSplit:
+    def test_restores_particle_and_inflection_boundaries(self):
+        cases = [
+            ("気に入る", "気に入る", "入る"),
+            ("気に入ら", "気に入る", "入る"),
+            ("気に入っ", "気に入る", "入る"),
+            ("気にいら", "気にいる", "いる"),
+        ]
+        for surface, lemma, predicate_lemma in cases:
+            result, rule = apply_suzume_split([_tok(surface, pos="動詞", lemma=lemma)])
+            assert result == [
+                {"surface": "気", "pos": "名詞", "lemma": "気"},
+                {"surface": "に", "pos": "助詞", "lemma": "に"},
+                {"surface": surface[2:], "pos": "動詞", "lemma": predicate_lemma},
+            ]
+            assert rule == "lexicalized-case-predicate-boundary"
+
+
 class TestKangoToshiteSplit:
     def test_adverbial_particle_is_not_part_of_the_lemma(self):
         result, rule = apply_suzume_split([_tok("依然として", pos="副詞")])

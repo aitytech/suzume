@@ -56,6 +56,14 @@ _LEXICALIZED_PREDICATE_COMPOUNDS: dict[str, tuple[dict, ...]] = {
         {"surface": "ば", "pos": "助詞", "lemma": "ば"},
     ),
 }
+
+# Reference-dictionary verb headwords that contain a real case-particle and
+# independent predicate boundary.  Configure the dictionary form once; the
+# split below preserves the boundary across every inflectional surface.
+_LEXICALIZED_CASE_PREDICATES: dict[str, tuple[str, str, str]] = {
+    "気に入る": ("気", "に", "入る"),
+    "気にいる": ("気", "に", "いる"),
+}
 _COMPLETIVE_TSUKUSU_FORMS = frozenset({"尽くさ", "尽くし", "尽くす", "尽くせ", "尽くそ"})
 
 
@@ -188,6 +196,23 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             if applied_rule is None:
                 applied_rule = "lexicalized-particle-predicate-boundary"
             continue
+
+        case_predicate = _LEXICALIZED_CASE_PREDICATES.get(t.get("lemma", ""))
+        if case_predicate is not None and t.get("pos") == "動詞":
+            host, particle, predicate_lemma = case_predicate
+            boundary = host + particle
+            predicate_surface = surface[len(boundary) :] if surface.startswith(boundary) else ""
+            if predicate_surface:
+                result.extend(
+                    [
+                        {"surface": host, "pos": "名詞", "lemma": host},
+                        {"surface": particle, "pos": "助詞", "lemma": particle},
+                        {"surface": predicate_surface, "pos": "動詞", "lemma": predicate_lemma},
+                    ]
+                )
+                if applied_rule is None:
+                    applied_rule = "lexicalized-case-predicate-boundary"
+                continue
 
         # The productive Godan causative volitional is mizenkei + せ + よう.
         # A reference dictionary can split its tail as the unrelated サ変
