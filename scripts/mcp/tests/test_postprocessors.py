@@ -11,6 +11,7 @@ from suzume_mcp.core.postprocessors import (
     postprocess_classical_perfect_aux,
     postprocess_closed_function_words,
     postprocess_closed_subsidiary_aux,
+    postprocess_compound_case_particle_aru,
     postprocess_copula_neg,
     postprocess_de_particle,
     postprocess_demo,
@@ -484,6 +485,38 @@ class TestPostprocessTsureteParticle:
     def test_kanji_verb_is_not_compound_particle(self):
         tokens = [_tok("年", "Noun"), _tok("に", "Particle"), _tok("連れ", "Verb"), _tok("て", "Particle")]
         assert not postprocess_renyokei_compound_particle(tokens)
+
+
+class TestPostprocessCompoundCaseParticleAru:
+    def test_pre_nominal_aru_becomes_determiner(self):
+        tokens = [
+            _tok("について", "Particle", pos_sub1="格助詞", pos_sub2="連語"),
+            _tok("ある", "Verb"),
+            _tok("議論", "Noun"),
+        ]
+
+        assert postprocess_compound_case_particle_aru(tokens)
+        assert tokens[1] == _tok("ある", "Determiner")
+
+    def test_nominative_particle_keeps_existence_verb(self):
+        tokens = [
+            _tok("が", "Particle", pos_sub1="格助詞"),
+            _tok("ある", "Verb"),
+            _tok("人", "Noun"),
+        ]
+
+        assert not postprocess_compound_case_particle_aru(tokens)
+        assert tokens[1] == _tok("ある", "Verb")
+
+    def test_topic_before_pre_nominal_aru_does_not_supply_its_subject(self):
+        tokens = [
+            _tok("は", "Particle"),
+            _tok("ある", "Verb"),
+            _tok("人", "Noun"),
+        ]
+
+        assert postprocess_compound_case_particle_aru(tokens)
+        assert tokens[1] == _tok("ある", "Determiner")
 
 
 class TestPostprocessToArebaConditional:

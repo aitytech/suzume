@@ -28,6 +28,7 @@ from .postprocessors import (
     postprocess_classical_ramu_boundary,
     postprocess_closed_function_words,
     postprocess_closed_subsidiary_aux,
+    postprocess_compound_case_particle_aru,
     postprocess_contracted_progressive_aux,
     postprocess_copula_neg,
     postprocess_dai_final_particle,
@@ -67,6 +68,7 @@ from .postprocessors import (
     postprocess_nai_context,
     postprocess_nanka_particle,
     postprocess_nara_verb,
+    postprocess_nominal_conjunction_homograph,
     postprocess_onaji_predicate,
     postprocess_productive_search_unit_boundaries,
     postprocess_productive_verb_suffix_stem,
@@ -262,6 +264,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
             {
                 "surface": t.get("surface", ""),
                 "pos": pos,
+                "pos_sub1": t.get("pos_sub1"),
+                "pos_sub2": t.get("pos_sub2"),
                 "lemma": t["lemma"] if t.get("lemma") and t["lemma"] != "*" else t.get("surface", ""),
             }
         )
@@ -329,6 +333,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "difficulty-adjective-stem"
     if postprocess_renyokei_compound_particle(tokens) and applied_rule is None:
         applied_rule = "renyokei-compound-particle"
+    if postprocess_compound_case_particle_aru(tokens) and applied_rule is None:
+        applied_rule = "compound-case-particle-aru"
     if postprocess_to_areba_conditional(tokens) and applied_rule is None:
         applied_rule = "to-areba-conditional"
     if postprocess_tagaru_aux(tokens) and applied_rule is None:
@@ -383,6 +389,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "attributive-mamonaku"
     if postprocess_adverb_nominal_context(tokens) and applied_rule is None:
         applied_rule = "adverb-nominal-context"
+    if postprocess_nominal_conjunction_homograph(tokens) and applied_rule is None:
+        applied_rule = "nominal-conjunction-homograph"
     if postprocess_interjection_before_copula(tokens) and applied_rule is None:
         applied_rule = "interjection-before-copula"
     if postprocess_temporal_nao(tokens) and applied_rule is None:

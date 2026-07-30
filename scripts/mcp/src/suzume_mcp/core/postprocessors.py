@@ -929,6 +929,29 @@ def postprocess_renyokei_compound_particle(tokens: list[dict]) -> bool:
     return changed
 
 
+def postprocess_compound_case_particle_aru(tokens: list[dict]) -> bool:
+    """Read pre-nominal ある after a non-subject particle as a determiner."""
+    changed = False
+    for index in range(1, len(tokens) - 1):
+        previous = tokens[index - 1]
+        token = tokens[index]
+        following = tokens[index + 1]
+        previous_marks_non_subject = previous.get("surface") == "は" or (
+            previous.get("pos") == "Particle"
+            and previous.get("pos_sub1") == "格助詞"
+            and previous.get("pos_sub2") == "連語"
+        )
+        if (
+            previous_marks_non_subject
+            and token.get("surface") == "ある"
+            and following.get("pos") in ("Noun", "Pronoun")
+        ):
+            token["pos"] = "Determiner"
+            token["lemma"] = "ある"
+            changed = True
+    return changed
+
+
 def postprocess_to_areba_conditional(tokens: list[dict]) -> bool:
     """Preserve the verb inflection and conditional-particle boundary in とあれば."""
     changed = False
@@ -1489,6 +1512,24 @@ def postprocess_adverb_nominal_context(tokens: list[dict]) -> bool:
         token["pos"] = "Noun"
         token["lemma"] = token.get("surface", "")
         changed = True
+    return changed
+
+
+def postprocess_nominal_conjunction_homograph(tokens: list[dict]) -> bool:
+    """Read a conjunction homograph as a noun in a nominally selected slot."""
+    changed = False
+    assertive_copula = {"だ", "だっ"}
+    for idx, token in enumerate(tokens):
+        if token.get("pos") != "Conjunction":
+            continue
+        previous = tokens[idx - 1] if idx > 0 else {}
+        following = tokens[idx + 1] if idx + 1 < len(tokens) else {}
+        selected_by_genitive = previous.get("pos") == "Particle" and previous.get("surface") == "の"
+        selected_by_copula = following.get("pos") == "Auxiliary" and following.get("surface") in assertive_copula
+        if selected_by_genitive or selected_by_copula:
+            token["pos"] = "Noun"
+            token["lemma"] = token.get("surface", "")
+            changed = True
     return changed
 
 
