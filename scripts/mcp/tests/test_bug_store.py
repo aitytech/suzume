@@ -475,11 +475,12 @@ class TestYieldByPattern:
 
     def test_a_completed_probe_refreshes_the_family_scheduler_timestamp(self, store):
         make(text="a", expected="a b", suzume="ab", pattern="particles")
-        bug_store.record_probe("defect", "particles", timestamp="2026-07-29T12:00:00+09:00")
+        timestamp = f"{bug_store.today()}T12:00:00+09:00"
+        bug_store.record_probe("defect", "particles", timestamp=timestamp)
 
         families = bug_store.yield_by_pattern(bug_store.load_open("defect"), [], source="defect")
 
-        assert families["particles"]["last_probed"] == "2026-07-29T12:00:00+09:00"
+        assert families["particles"]["last_probed"] == timestamp
 
 
 class TestReportKind:
