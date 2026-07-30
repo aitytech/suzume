@@ -91,7 +91,7 @@ jobs:
             --user "$(id -u):$(id -g)" \
             --volume "$GITHUB_WORKSPACE:/project" \
             --workdir /project \
-            quay.io/pypa/manylinux2014_x86_64@sha256:0d25b049964b2549b83384036abdff06789a8c0b1e9ff003ec80f0d531f79e50 \
+            "$(cat scripts/manylinux-image.txt)" \
             /bin/bash -euxo pipefail -c '
               /opt/python/cp312-cp312/bin/python -m venv /tmp/suzume-wheel-build
               source /tmp/suzume-wheel-build/bin/activate
