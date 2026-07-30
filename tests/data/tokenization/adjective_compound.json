@@ -550,6 +550,162 @@
       ],
       "id": "compound_adjective_sa_nominalizer_boundary",
       "input": "文章の読みやすさを比べる"
+    },
+    {
+      "description": "productive compound adjective with multi-kanji nominal host",
+      "expected": [
+        {
+          "lemma": "用心深い",
+          "pos": "Adjective",
+          "surface": "用心深い"
+        },
+        {
+          "lemma": "性格",
+          "pos": "Noun",
+          "surface": "性格"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "i_da",
+      "input": "用心深い性格だ"
+    },
+    {
+      "description": "productive compound adjective adverbial form with multi-kanji nominal host",
+      "expected": [
+        {
+          "lemma": "注意深い",
+          "pos": "Adjective",
+          "surface": "注意深く"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "ku_ru_2",
+      "input": "注意深く見る"
+    },
+    {
+      "description": "productive compound adjective with multi-kanji nominal host",
+      "expected": [
+        {
+          "lemma": "我慢強い",
+          "pos": "Adjective",
+          "surface": "我慢強い"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "i_da_2",
+      "input": "我慢強い人だ"
+    },
+    {
+      "description": "verb continuative host plus productive compound adjective",
+      "expected": [
+        {
+          "lemma": "粘り強い",
+          "pos": "Adjective",
+          "surface": "粘り強く"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続ける"
+        }
+      ],
+      "id": "ri_ku_keru",
+      "input": "粘り強く続ける"
+    },
+    {
+      "description": "single-kanji host plus resemblance adjective suffix",
+      "expected": [
+        {
+          "lemma": "安っぽい",
+          "pos": "Adjective",
+          "surface": "安っぽい"
+        },
+        {
+          "lemma": "作り",
+          "pos": "Noun",
+          "surface": "作り"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ttpoi_rida",
+      "input": "安っぽい作りだ"
+    },
+    {
+      "description": "single-kanji nominal host plus resemblance adjective suffix",
+      "expected": [
+        {
+          "lemma": "水っぽい",
+          "pos": "Adjective",
+          "surface": "水っぽい"
+        },
+        {
+          "lemma": "味",
+          "pos": "Noun",
+          "surface": "味"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ttpoi_da",
+      "input": "水っぽい味だ"
+    },
+    {
+      "description": "single-kanji host plus productive kanji adjective control",
+      "expected": [
+        {
+          "lemma": "力強い",
+          "pos": "Adjective",
+          "surface": "力強い"
+        },
+        {
+          "lemma": "言葉",
+          "pos": "Noun",
+          "surface": "言葉"
+        }
+      ],
+      "id": "i_4",
+      "input": "力強い言葉"
+    },
+    {
+      "description": "single-kanji host plus productive kanji adjective control",
+      "expected": [
+        {
+          "lemma": "罪深い",
+          "pos": "Adjective",
+          "surface": "罪深い"
+        },
+        {
+          "lemma": "行い",
+          "pos": "Noun",
+          "surface": "行い"
+        }
+      ],
+      "id": "i_i",
+      "input": "罪深い行い"
     }
   ],
   "description": "Compound adjectives (〜やすい、〜にくい、〜すぎる)",

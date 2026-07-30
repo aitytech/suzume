@@ -212,6 +212,196 @@
       ],
       "id": "rimashita",
       "input": "雨降りました。"
+    },
+    {
+      "description": "転成名詞の連用形読みを接尾辞読みより優先する",
+      "expected": [
+        {
+          "lemma": "年越し",
+          "pos": "Noun",
+          "surface": "年越し"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "shidesu",
+      "input": "年越しです。"
+    },
+    {
+      "description": "連用形転成名詞と軽動詞を分ける",
+      "expected": [
+        {
+          "lemma": "値上げ",
+          "pos": "Noun",
+          "surface": "値上げ"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "geshita",
+      "input": "値上げした"
+    },
+    {
+      "description": "接尾辞と同綴りの連用形転成名詞",
+      "expected": [
+        {
+          "lemma": "引越し",
+          "pos": "Noun",
+          "surface": "引越し"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "shidesu_2",
+      "input": "引越しです"
+    },
+    {
+      "description": "既存の連用形転成名詞を維持する正のコントロール",
+      "expected": [
+        {
+          "lemma": "見通し",
+          "pos": "Noun",
+          "surface": "見通し"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "shigaaru",
+      "input": "見通しがある"
+    },
+    {
+      "description": "最長の検証済み連用形を含む一字名詞宿主の複合転成名詞",
+      "expected": [
+        {
+          "lemma": "顔見知り",
+          "pos": "Noun",
+          "surface": "顔見知り"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "ridesu",
+      "input": "顔見知りです。"
+    },
+    {
+      "description": "同型の一字名詞宿主＋複合動詞連用形",
+      "expected": [
+        {
+          "lemma": "人見知り",
+          "pos": "Noun",
+          "surface": "人見知り"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "risuru",
+      "input": "人見知りする"
+    },
+    {
+      "description": "複数漢字名詞の後で最長の複合動詞連用形境界を保つ",
+      "expected": [
+        {
+          "lemma": "総合",
+          "pos": "Noun",
+          "surface": "総合"
+        },
+        {
+          "lemma": "見直し",
+          "pos": "Noun",
+          "surface": "見直し"
+        }
+      ],
+      "id": "shi_3",
+      "input": "総合見直し"
+    },
+    {
+      "description": "複数漢字名詞の後で一段複合動詞の連用形境界を保つ",
+      "expected": [
+        {
+          "lemma": "長期",
+          "pos": "Noun",
+          "surface": "長期"
+        },
+        {
+          "lemma": "借入れ",
+          "pos": "Noun",
+          "surface": "借入れ"
+        }
+      ],
+      "id": "re_2",
+      "input": "長期借入れ"
+    },
+    {
+      "description": "一字動詞だけが検証できる場合は直前の二字名詞境界を維持",
+      "expected": [
+        {
+          "lemma": "翌月",
+          "pos": "Noun",
+          "surface": "翌月"
+        },
+        {
+          "lemma": "払い",
+          "pos": "Noun",
+          "surface": "払い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "idesu",
+      "input": "翌月払いです。"
+    },
+    {
+      "description": "一字動詞連用形の前の二字名詞境界を維持",
+      "expected": [
+        {
+          "lemma": "月末",
+          "pos": "Noun",
+          "surface": "月末"
+        },
+        {
+          "lemma": "払い",
+          "pos": "Noun",
+          "surface": "払い"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ida_2",
+      "input": "月末払いだ"
     }
   ],
   "description": "noun_deverbal tests",

@@ -2772,6 +2772,92 @@
       ],
       "id": "na_wo_keru_2",
       "input": "最悪な結果を避ける"
+    },
+    {
+      "description": "形容動詞の述語用法をAdjectiveとして解析する",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "丈夫",
+          "pos": "Adjective",
+          "surface": "丈夫"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kono_ha_da_2",
+      "input": "この紙は丈夫だ"
+    },
+    {
+      "description": "形容動詞の連体用法を維持する",
+      "expected": [
+        {
+          "lemma": "丈夫",
+          "pos": "Adjective",
+          "surface": "丈夫"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        }
+      ],
+      "id": "na_6",
+      "input": "丈夫な紙"
+    },
+    {
+      "description": "既存の形容動詞述語を負のコントロールとして維持する",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "道具",
+          "pos": "Noun",
+          "surface": "道具"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "便利",
+          "pos": "Adjective",
+          "surface": "便利"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kono_ha_da_3",
+      "input": "この道具は便利だ"
     }
   ],
   "description": "Na-adjectives (ナ形容詞)",

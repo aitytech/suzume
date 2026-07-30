@@ -85,6 +85,62 @@
       ],
       "id": "sounandesuka",
       "input": "そうなんですか"
+    },
+    {
+      "description": "転成名詞の後に句末終助詞境界を立てる",
+      "expected": [
+        {
+          "lemma": "重み",
+          "pos": "Noun",
+          "surface": "重み"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "mine",
+      "input": "重みね"
+    },
+    {
+      "description": "未登録の転成名詞にも句末終助詞境界を立てる",
+      "expected": [
+        {
+          "lemma": "強み",
+          "pos": "Noun",
+          "surface": "強み"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "mine_2",
+      "input": "強みね"
+    },
+    {
+      "description": "転成名詞と格助詞の既存境界を維持する正のコントロール",
+      "expected": [
+        {
+          "lemma": "重み",
+          "pos": "Noun",
+          "surface": "重み"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "migaaru",
+      "input": "重みがある"
     }
   ],
   "description": "particle_final tests",

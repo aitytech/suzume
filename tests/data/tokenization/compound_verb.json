@@ -515,6 +515,96 @@
       ],
       "id": "yatte_kuru_te_auxiliary_boundary",
       "input": "確認してくる"
+    },
+    {
+      "description": "束縛的動詞接頭辞と一段V2",
+      "expected": [
+        {
+          "lemma": "仕上げる",
+          "pos": "Verb",
+          "surface": "仕上げ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "gemashita",
+      "input": "仕上げました。"
+    },
+    {
+      "description": "束縛的動詞接頭辞と五段V2",
+      "expected": [
+        {
+          "lemma": "仕組む",
+          "pos": "Verb",
+          "surface": "仕組む"
+        }
+      ],
+      "id": "mu_4",
+      "input": "仕組む"
+    },
+    {
+      "description": "束縛的動詞接頭辞と五段V2の別活用行",
+      "expected": [
+        {
+          "lemma": "仕切る",
+          "pos": "Verb",
+          "surface": "仕切る"
+        }
+      ],
+      "id": "ru_5",
+      "input": "仕切る"
+    },
+    {
+      "description": "単漢字一段V1の正のコントロール",
+      "expected": [
+        {
+          "lemma": "見上げる",
+          "pos": "Verb",
+          "surface": "見上げ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "gemashita_2",
+      "input": "見上げました"
+    },
+    {
+      "description": "束縛的動詞接頭辞を普通名詞へ広げない負のコントロール",
+      "expected": [
+        {
+          "lemma": "仕事",
+          "pos": "Noun",
+          "surface": "仕事"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わる"
+        }
+      ],
+      "id": "ga_waru",
+      "input": "仕事が終わる"
     }
   ],
   "description": "compound_verb tests",

@@ -82,6 +82,82 @@
       ],
       "id": "ni_betoku",
       "input": "先に食べとく"
+    },
+    {
+      "description": "文頭2モーラ仮名名詞を格助詞前で昇格する",
+      "expected": [
+        {
+          "lemma": "さき",
+          "pos": "Noun",
+          "surface": "さき"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "とく",
+          "pos": "Auxiliary",
+          "surface": "とく"
+        }
+      ],
+      "id": "sakini_betoku",
+      "input": "さきに食べとく。"
+    },
+    {
+      "description": "別の2モーラ仮名名詞を格助詞前で昇格する",
+      "expected": [
+        {
+          "lemma": "まえ",
+          "pos": "Noun",
+          "surface": "まえ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "とく",
+          "pos": "Auxiliary",
+          "surface": "とく"
+        }
+      ],
+      "id": "maeni_betoku",
+      "input": "まえに食べとく"
+    },
+    {
+      "description": "既存の2モーラ仮名名詞と格助詞を維持する正のコントロール",
+      "expected": [
+        {
+          "lemma": "あと",
+          "pos": "Noun",
+          "surface": "あと"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        }
+      ],
+      "id": "atode_beru",
+      "input": "あとで食べる"
     }
   ],
   "description": "colloquial_contracted tests",

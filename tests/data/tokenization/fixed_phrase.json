@@ -21,6 +21,148 @@
       ],
       "id": "shirankao_wo_suru",
       "input": "知らん顔をする"
+    },
+    {
+      "description": "仮名書きでも格助詞と述語境界を保つ",
+      "expected": [
+        {
+          "lemma": "気",
+          "pos": "Noun",
+          "surface": "気"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "いら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "niiranai",
+      "input": "気にいらない"
+    },
+    {
+      "description": "漢字書きでも格助詞と未然形境界を保つ",
+      "expected": [
+        {
+          "lemma": "気",
+          "pos": "Noun",
+          "surface": "気"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "入る",
+          "pos": "Verb",
+          "surface": "入ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ni_ranai",
+      "input": "気に入らない"
+    },
+    {
+      "description": "漢字書きの音便形でも内部境界を保つ",
+      "expected": [
+        {
+          "lemma": "気",
+          "pos": "Noun",
+          "surface": "気"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "入る",
+          "pos": "Verb",
+          "surface": "入っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ni_ttta_2",
+      "input": "気に入った"
+    },
+    {
+      "description": "生産的な格助詞と動詞の境界を保つ",
+      "expected": [
+        {
+          "lemma": "気",
+          "pos": "Noun",
+          "surface": "気"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "ninaru_2",
+      "input": "気になる"
+    },
+    {
+      "description": "格助詞を独立させる",
+      "expected": [
+        {
+          "lemma": "気",
+          "pos": "Noun",
+          "surface": "気"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "gasuru",
+      "input": "気がする"
+    },
+    {
+      "description": "L2副詞が終端格助詞を吸収しない",
+      "expected": [
+        {
+          "lemma": "何気",
+          "pos": "Noun",
+          "surface": "何気"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        }
+      ],
+      "id": "ni_2",
+      "input": "何気に"
     }
   ],
   "description": "fixed_phrase tests",

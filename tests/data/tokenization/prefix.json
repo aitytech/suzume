@@ -1400,6 +1400,143 @@
       ],
       "id": "no_8",
       "input": "超高速の処理"
+    },
+    {
+      "description": "強調接頭辞を形容動詞の宿主から分離する",
+      "expected": [
+        {
+          "lemma": "超",
+          "pos": "Noun",
+          "surface": "超"
+        },
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "da_5",
+      "input": "超簡単だ"
+    },
+    {
+      "description": "形容動詞宿主を接頭辞複合へ吸収しない",
+      "expected": [
+        {
+          "lemma": "超",
+          "pos": "Noun",
+          "surface": "超"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "da_6",
+      "input": "超重要だ"
+    },
+    {
+      "description": "名詞宿主とは検索単位を形成する",
+      "expected": [
+        {
+          "lemma": "超高速",
+          "pos": "Noun",
+          "surface": "超高速"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "列車",
+          "pos": "Noun",
+          "surface": "列車"
+        }
+      ],
+      "id": "no_11",
+      "input": "超高速の列車"
+    },
+    {
+      "description": "語彙化した名詞単位を維持する",
+      "expected": [
+        {
+          "lemma": "激安",
+          "pos": "Noun",
+          "surface": "激安"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "店",
+          "pos": "Noun",
+          "surface": "店"
+        }
+      ],
+      "id": "no_12",
+      "input": "激安の店"
+    },
+    {
+      "description": "活用する形容詞宿主の境界を維持する",
+      "expected": [
+        {
+          "lemma": "超",
+          "pos": "Noun",
+          "surface": "超"
+        },
+        {
+          "lemma": "冷たい",
+          "pos": "Adjective",
+          "surface": "冷たい"
+        },
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        }
+      ],
+      "id": "tai",
+      "input": "超冷たい水"
+    },
+    {
+      "description": "連体形でも形容動詞宿主の境界を維持する",
+      "expected": [
+        {
+          "lemma": "超",
+          "pos": "Noun",
+          "surface": "超"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "課題",
+          "pos": "Noun",
+          "surface": "課題"
+        }
+      ],
+      "id": "na_5",
+      "input": "超重要な課題"
     }
   ],
   "description": "Prefixes (お、ご、不、無)",

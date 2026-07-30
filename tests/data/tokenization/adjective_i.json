@@ -16,6 +16,116 @@
       ],
       "id": "yamuwo_nakattta",
       "input": "やむを得なかった"
+    },
+    {
+      "description": "未登録ひらがな形容詞の引用位置",
+      "expected": [
+        {
+          "lemma": "くさい",
+          "pos": "Adjective",
+          "surface": "くさい"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "kusaito_u",
+      "input": "くさいと思う"
+    },
+    {
+      "description": "未登録ひらがな形容詞の引用位置",
+      "expected": [
+        {
+          "lemma": "つらい",
+          "pos": "Adjective",
+          "surface": "つらい"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "tsuraito_u",
+      "input": "つらいと思う"
+    },
+    {
+      "description": "未登録ひらがな形容詞の引用位置",
+      "expected": [
+        {
+          "lemma": "きつい",
+          "pos": "Adjective",
+          "surface": "きつい"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "kitsuito_u",
+      "input": "きついと思う"
+    },
+    {
+      "description": "登録済み形容詞の対照",
+      "expected": [
+        {
+          "lemma": "やばい",
+          "pos": "Adjective",
+          "surface": "やばい"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "yabaito_u",
+      "input": "やばいと思う"
+    },
+    {
+      "description": "名詞同形の格助詞位置を維持",
+      "expected": [
+        {
+          "lemma": "おもい",
+          "pos": "Adjective",
+          "surface": "おもい"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "伝わる",
+          "pos": "Verb",
+          "surface": "伝わる"
+        }
+      ],
+      "id": "omoiga_waru",
+      "input": "おもいが伝わる"
     }
   ],
   "description": "adjective_i tests",

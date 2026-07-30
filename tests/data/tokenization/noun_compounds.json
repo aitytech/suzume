@@ -23,6 +23,148 @@
       ],
       "id": "mimono_2",
       "input": "編みもの"
+    },
+    {
+      "description": "助詞同形の語末モーラを孤立させず複合名詞境界を保つ",
+      "expected": [
+        {
+          "lemma": "組み",
+          "pos": "Noun",
+          "surface": "組み"
+        },
+        {
+          "lemma": "ひも",
+          "pos": "Noun",
+          "surface": "ひも"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "mihimowo_u",
+      "input": "組みひもを買う"
+    },
+    {
+      "description": "漢字を含む既存の連用形複合名詞を維持する正のコントロール",
+      "expected": [
+        {
+          "lemma": "編み物",
+          "pos": "Noun",
+          "surface": "編み物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "mi_wosuru",
+      "input": "編み物をする"
+    },
+    {
+      "description": "T20 lexicalized compound boundary and controls",
+      "expected": [
+        {
+          "lemma": "絶え間",
+          "pos": "Noun",
+          "surface": "絶え間"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        },
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続く"
+        }
+      ],
+      "id": "t20_taema_naku_continuative_compound",
+      "input": "絶え間なく続く。"
+    },
+    {
+      "description": "T20 lexicalized compound boundary and controls",
+      "expected": [
+        {
+          "lemma": "絶え間",
+          "pos": "Noun",
+          "surface": "絶え間"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "t20_taema_existential_negative",
+      "input": "絶え間がない"
+    },
+    {
+      "description": "T20 lexicalized compound boundary and controls",
+      "expected": [
+        {
+          "lemma": "合う",
+          "pos": "Verb",
+          "surface": "合い"
+        },
+        {
+          "lemma": "間",
+          "pos": "Suffix",
+          "surface": "間"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "休む",
+          "pos": "Verb",
+          "surface": "休む"
+        }
+      ],
+      "id": "t20_independent_renyokei_control",
+      "input": "合い間に休む"
+    },
+    {
+      "description": "T20 lexicalized compound boundary and controls",
+      "expected": [
+        {
+          "lemma": "この間",
+          "pos": "Noun",
+          "surface": "この間"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "t20_lexical_temporal_noun_control",
+      "input": "この間の話"
     }
   ],
   "description": "noun_compounds tests",

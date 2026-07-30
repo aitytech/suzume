@@ -1580,6 +1580,33 @@
       ],
       "id": "shiku_ku_2",
       "input": "正しく書く"
+    },
+    {
+      "description": "語彙化副詞をあるの仮定形の前でも保つ",
+      "expected": [
+        {
+          "lemma": "初めて",
+          "pos": "Adverb",
+          "surface": "初めて"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かる"
+        }
+      ],
+      "id": "meteareba_karu",
+      "input": "初めてあれば分かる"
     }
   ],
   "description": "adverb_fixed tests",

@@ -689,6 +689,129 @@
       ],
       "id": "kutoiu_kina",
       "input": "行くという大きな決断"
+    },
+    {
+      "description": "T21 preserve the copula boundary before a conjunctive particle",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "本当",
+          "pos": "Noun",
+          "surface": "本当"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "t21_attributive_selected_noun_copula_boundary",
+      "input": "行くという話だが本当か"
+    },
+    {
+      "description": "T21 preserve the copula boundary before a conjunctive particle",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "t21_terminal_copula_control",
+      "input": "行くという話だ"
+    },
+    {
+      "description": "T21 preserve the copula boundary before a conjunctive particle",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "出かける",
+          "pos": "Verb",
+          "surface": "出かける"
+        }
+      ],
+      "id": "t21_plain_noun_copula_conjunctive_control",
+      "input": "雨だが出かける"
+    },
+    {
+      "description": "T21 preserve the copula boundary before a conjunctive particle",
+      "expected": [
+        {
+          "lemma": "学生",
+          "pos": "Noun",
+          "surface": "学生"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "忙しい",
+          "pos": "Adjective",
+          "surface": "忙しい"
+        }
+      ],
+      "id": "t21_registered_noun_copula_conjunctive_control",
+      "input": "学生だが忙しい"
     }
   ],
   "description": "Quotative patterns (という, といって, etc.)",

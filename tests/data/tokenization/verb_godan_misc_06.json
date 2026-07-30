@@ -893,6 +893,94 @@
       ],
       "id": "wonobasu",
       "input": "手足をのばす"
+    },
+    {
+      "description": "noun host followed by complete godan predicate",
+      "expected": [
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "登る",
+          "pos": "Verb",
+          "surface": "登る"
+        },
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        }
+      ],
+      "id": "ru_3",
+      "input": "山登る道"
+    },
+    {
+      "description": "noun plus complete godan predicate control",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "降る",
+          "pos": "Verb",
+          "surface": "降る"
+        },
+        {
+          "lemma": "夜",
+          "pos": "Noun",
+          "surface": "夜"
+        }
+      ],
+      "id": "ru_4",
+      "input": "雨降る夜"
+    },
+    {
+      "description": "noun host followed by complete godan predicate",
+      "expected": [
+        {
+          "lemma": "花",
+          "pos": "Noun",
+          "surface": "花"
+        },
+        {
+          "lemma": "咲く",
+          "pos": "Verb",
+          "surface": "咲く"
+        },
+        {
+          "lemma": "庭",
+          "pos": "Noun",
+          "surface": "庭"
+        }
+      ],
+      "id": "ku_2",
+      "input": "花咲く庭"
+    },
+    {
+      "description": "撥音便後の過去仮定で助動詞境界を保つ",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "たら"
+        }
+      ],
+      "id": "ndatttara",
+      "input": "読んだったら"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

@@ -550,6 +550,40 @@
       ],
       "id": "ninoranakattta",
       "input": "電車にのらなかった"
+    },
+    {
+      "description": "形式名詞同形語幹でも完全な五段サ行未然形を保つ",
+      "expected": [
+        {
+          "lemma": "ためす",
+          "pos": "Verb",
+          "surface": "ためさ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "tamesanai",
+      "input": "ためさない"
+    },
+    {
+      "description": "未登録五段サ行未然形の対照例",
+      "expected": [
+        {
+          "lemma": "おろす",
+          "pos": "Verb",
+          "surface": "おろさ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "orosanai_hiragana",
+      "input": "おろさない"
     }
   ],
   "description": "verb_negative tests",

@@ -26,6 +26,72 @@
       ],
       "id": "jijitsu_ni_motozuku",
       "input": "事実に基づく判断"
+    },
+    {
+      "description": "属格をまたぐ捏造形容詞を抑え両側の名詞境界を保つ",
+      "expected": [
+        {
+          "lemma": "となり",
+          "pos": "Noun",
+          "surface": "となり"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "いえ",
+          "pos": "Noun",
+          "surface": "いえ"
+        }
+      ],
+      "id": "tonarinoie",
+      "input": "となりのいえ"
+    },
+    {
+      "description": "属格前のひらがな名詞を保つ正のコントロール",
+      "expected": [
+        {
+          "lemma": "となり",
+          "pos": "Noun",
+          "surface": "となり"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "家",
+          "pos": "Noun",
+          "surface": "家"
+        }
+      ],
+      "id": "tonarino",
+      "input": "となりの家"
+    },
+    {
+      "description": "別の属格名詞句で両側の名詞境界を保つ正のコントロール",
+      "expected": [
+        {
+          "lemma": "みどり",
+          "pos": "Noun",
+          "surface": "みどり"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "いえ",
+          "pos": "Noun",
+          "surface": "いえ"
+        }
+      ],
+      "id": "midorinoie",
+      "input": "みどりのいえ"
     }
   ],
   "description": "noun_particle tests",

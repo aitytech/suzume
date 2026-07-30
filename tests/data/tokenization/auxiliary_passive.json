@@ -26,6 +26,60 @@
       ],
       "id": "karereba_ru",
       "input": "書かれれば困る"
+    },
+    {
+      "description": "仮名一段動詞の終止形を保つ",
+      "expected": [
+        {
+          "lemma": "荷",
+          "pos": "Noun",
+          "surface": "荷"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "のせる",
+          "pos": "Verb",
+          "surface": "のせる"
+        }
+      ],
+      "id": "wonoseru_2",
+      "input": "荷をのせる"
+    },
+    {
+      "description": "仮名一段語幹を受身助動詞の前で保つ",
+      "expected": [
+        {
+          "lemma": "車",
+          "pos": "Noun",
+          "surface": "車"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "のせる",
+          "pos": "Verb",
+          "surface": "のせ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ninoserareta",
+      "input": "車にのせられた"
     }
   ],
   "description": "auxiliary_passive tests",

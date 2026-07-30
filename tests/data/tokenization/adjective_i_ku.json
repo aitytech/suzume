@@ -868,6 +868,74 @@
       ],
       "id": "hakanaku_ttta",
       "input": "はかなく散った"
+    },
+    {
+      "description": "形容詞を修飾する未登録イ形容詞連用形を程度副詞として保つ",
+      "expected": [
+        {
+          "lemma": "恐ろしく",
+          "pos": "Adverb",
+          "surface": "恐ろしく"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        }
+      ],
+      "id": "roshiku_i",
+      "input": "恐ろしく高い"
+    },
+    {
+      "description": "イ形容詞連用形が動詞を修飾する正のコントロール",
+      "expected": [
+        {
+          "lemma": "詳しい",
+          "pos": "Adjective",
+          "surface": "詳しく"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話す"
+        }
+      ],
+      "id": "shiku_su",
+      "input": "詳しく話す"
+    },
+    {
+      "description": "既知の程度副詞が動詞を修飾する正のコントロール",
+      "expected": [
+        {
+          "lemma": "ひどく",
+          "pos": "Adverb",
+          "surface": "ひどく"
+        },
+        {
+          "lemma": "痛む",
+          "pos": "Verb",
+          "surface": "痛む"
+        }
+      ],
+      "id": "hidoku_mu",
+      "input": "ひどく痛む"
+    },
+    {
+      "description": "複合仮名の程度副詞が形容詞を修飾する正のコントロール",
+      "expected": [
+        {
+          "lemma": "ものすごく",
+          "pos": "Adverb",
+          "surface": "ものすごく"
+        },
+        {
+          "lemma": "速い",
+          "pos": "Adjective",
+          "surface": "速い"
+        }
+      ],
+      "id": "monosugoku_i",
+      "input": "ものすごく速い"
     }
   ],
   "description": "I-adjectives ku-forms (連用形) - adverbial, negative, te-form, ku-naru patterns",

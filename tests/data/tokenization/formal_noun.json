@@ -2314,6 +2314,109 @@
       ],
       "id": "nomamade_meru",
       "input": "今のままで進める"
+    },
+    {
+      "description": "形式名詞のコピュラ連でも終止形あるを動詞として保つ",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "nomonodemoaru",
+      "input": "彼のものでもある"
+    },
+    {
+      "description": "明示名詞の標準的なである連鎖",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "dearu_2",
+      "input": "本である"
+    },
+    {
+      "description": "準体助詞を宿主とするである連鎖",
+      "expected": [
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "nodearu",
+      "input": "のである"
+    },
+    {
+      "description": "融合したでもの後でも終止形あるを動詞として保つ",
+      "expected": [
+        {
+          "lemma": "学生",
+          "pos": "Noun",
+          "surface": "学生"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "demoaru",
+      "input": "学生でもある"
     }
   ],
   "description": "formal_noun tests",

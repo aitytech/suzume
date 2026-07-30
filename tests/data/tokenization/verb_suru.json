@@ -2364,6 +2364,114 @@
       ],
       "id": "sakuradatosureba",
       "input": "さくらだとすれば"
+    },
+    {
+      "description": "単漢字サ変宿主の分解",
+      "expected": [
+        {
+          "lemma": "心",
+          "pos": "Noun",
+          "surface": "心"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞け"
+        }
+      ],
+      "id": "shite_ke",
+      "input": "心して聞け"
+    },
+    {
+      "description": "複漢字サ変宿主の対照",
+      "expected": [
+        {
+          "lemma": "用心",
+          "pos": "Noun",
+          "surface": "用心"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞け"
+        }
+      ],
+      "id": "shite_ke_2",
+      "input": "用心して聞け"
+    },
+    {
+      "description": "複漢字サ変宿主の対照",
+      "expected": [
+        {
+          "lemma": "安心",
+          "pos": "Noun",
+          "surface": "安心"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "帰る",
+          "pos": "Verb",
+          "surface": "帰る"
+        }
+      ],
+      "id": "shite_ru",
+      "input": "安心して帰る"
+    },
+    {
+      "description": "単漢字サ変宿主の汎化",
+      "expected": [
+        {
+          "lemma": "損",
+          "pos": "Noun",
+          "surface": "損"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "帰る",
+          "pos": "Verb",
+          "surface": "帰る"
+        }
+      ],
+      "id": "shite_ru_2",
+      "input": "損して帰る"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

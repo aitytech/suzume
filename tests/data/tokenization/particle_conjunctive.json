@@ -1023,6 +1023,211 @@
       ],
       "id": "munoni_erarenai",
       "input": "毎日読むのに覚えられない"
+    },
+    {
+      "description": "T22 prefer the closed causal conjunctive particle",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "ので",
+          "pos": "Particle",
+          "surface": "ので"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "t22_quotative_before_causal_node",
+      "input": "行くというので待つ"
+    },
+    {
+      "description": "T22 prefer the closed causal conjunctive particle",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "ので",
+          "pos": "Particle",
+          "surface": "ので"
+        },
+        {
+          "lemma": "中止",
+          "pos": "Noun",
+          "surface": "中止"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "t22_copular_quotative_before_causal_node",
+      "input": "雨だというので中止した"
+    },
+    {
+      "description": "T22 prefer the closed causal conjunctive particle",
+      "expected": [
+        {
+          "lemma": "寒い",
+          "pos": "Adjective",
+          "surface": "寒い"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "いう",
+          "pos": "Verb",
+          "surface": "いう"
+        },
+        {
+          "lemma": "ので",
+          "pos": "Particle",
+          "surface": "ので"
+        },
+        {
+          "lemma": "上着",
+          "pos": "Noun",
+          "surface": "上着"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "着る",
+          "pos": "Verb",
+          "surface": "着"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "t22_adjective_quotative_before_causal_node",
+      "input": "寒いというので上着を着た"
+    },
+    {
+      "description": "T22 prefer the closed causal conjunctive particle",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "本当",
+          "pos": "Noun",
+          "surface": "本当"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "t22_nominalizer_topic_control",
+      "input": "行くというのは本当か"
+    },
+    {
+      "description": "T22 prefer the closed causal conjunctive particle",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "ので",
+          "pos": "Particle",
+          "surface": "ので"
+        },
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "t22_plain_causal_node_control",
+      "input": "本を読むので静かにする"
     }
   ],
   "description": "particle_conjunctive tests",

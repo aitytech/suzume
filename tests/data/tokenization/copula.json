@@ -2219,6 +2219,99 @@
       ],
       "id": "karadadattta",
       "input": "からだだった"
+    },
+    {
+      "description": "ゆうがただった - auto-generated",
+      "expected": [
+        {
+          "lemma": "ゆう",
+          "pos": "Verb",
+          "surface": "ゆう"
+        },
+        {
+          "lemma": "がた",
+          "pos": "Noun",
+          "surface": "がた"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "yuugatadattta",
+      "input": "ゆうがただった"
+    },
+    {
+      "description": "いえだった - auto-generated",
+      "expected": [
+        {
+          "lemma": "いえ",
+          "pos": "Noun",
+          "surface": "いえ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "iedattta",
+      "input": "いえだった"
+    },
+    {
+      "description": "名詞述語の過去仮定でコピュラ音便境界を保つ",
+      "expected": [
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "たら"
+        }
+      ],
+      "id": "ringodatttara",
+      "input": "りんごだったら"
+    },
+    {
+      "description": "ひらがな名詞述語の過去仮定でコピュラ音便境界を保つ",
+      "expected": [
+        {
+          "lemma": "みかん",
+          "pos": "Noun",
+          "surface": "みかん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "たら"
+        }
+      ],
+      "id": "mikandatttara",
+      "input": "みかんだったら"
     }
   ],
   "description": "Copula patterns (だ、です、である)",

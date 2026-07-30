@@ -684,6 +684,109 @@
       ],
       "id": "kodomoni_wo_maseru",
       "input": "こどもに本を読ませる"
+    },
+    {
+      "description": "使役構文の分解と宿主非依存性",
+      "expected": [
+        {
+          "lemma": "勉強",
+          "pos": "Noun",
+          "surface": "勉強"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "sasenai",
+      "input": "勉強させない"
+    },
+    {
+      "description": "使役構文の分解と宿主非依存性",
+      "expected": [
+        {
+          "lemma": "準備",
+          "pos": "Noun",
+          "surface": "準備"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "sasenai_2",
+      "input": "準備させない"
+    },
+    {
+      "description": "使役構文の分解と宿主非依存性",
+      "expected": [
+        {
+          "lemma": "電話",
+          "pos": "Noun",
+          "surface": "電話"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "sasenai_3",
+      "input": "電話させない"
+    },
+    {
+      "description": "使役構文の分解と宿主非依存性",
+      "expected": [
+        {
+          "lemma": "掃除",
+          "pos": "Noun",
+          "surface": "掃除"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "saseru",
+      "input": "掃除させる"
     }
   ],
   "description": "verb_causative tests",

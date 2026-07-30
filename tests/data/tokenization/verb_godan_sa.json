@@ -239,6 +239,116 @@
       ],
       "id": "wokaesanaki",
       "input": "手紙をかえさなきゃ"
+    },
+    {
+      "description": "仮名五段サ行の語幹内助詞同形字を保つ",
+      "expected": [
+        {
+          "lemma": "チャンス",
+          "pos": "Noun",
+          "surface": "チャンス"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "のがす",
+          "pos": "Verb",
+          "surface": "のがす"
+        }
+      ],
+      "id": "wonogasu",
+      "input": "チャンスをのがす"
+    },
+    {
+      "description": "仮名五段サ行ながすの語幹を保つ",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "ながす",
+          "pos": "Verb",
+          "surface": "ながす"
+        }
+      ],
+      "id": "wonagasu",
+      "input": "水をながす"
+    },
+    {
+      "description": "仮名五段サ行さがすの語幹を保つ",
+      "expected": [
+        {
+          "lemma": "鍵",
+          "pos": "Noun",
+          "surface": "鍵"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "さがす",
+          "pos": "Verb",
+          "surface": "さがす"
+        }
+      ],
+      "id": "wosagasu",
+      "input": "鍵をさがす"
+    },
+    {
+      "description": "既存の仮名五段ラ行境界を保つ",
+      "expected": [
+        {
+          "lemma": "手",
+          "pos": "Noun",
+          "surface": "手"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "つながる",
+          "pos": "Verb",
+          "surface": "つながる"
+        }
+      ],
+      "id": "gatsunagaru",
+      "input": "手がつながる"
+    },
+    {
+      "description": "辞書で検証された五段サ行の対照",
+      "expected": [
+        {
+          "lemma": "熱す",
+          "pos": "Verb",
+          "surface": "熱し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "shiteiru",
+      "input": "熱している"
     }
   ],
   "description": "Godan Sa-row verbs (五段サ行動詞) - verbs ending in す",

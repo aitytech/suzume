@@ -697,6 +697,161 @@
       ],
       "id": "kaneteyori_shiteita",
       "input": "かねてより準備していた。"
+    },
+    {
+      "description": "複合格助詞をあるの仮定形の前でも保つ",
+      "expected": [
+        {
+          "lemma": "論文",
+          "pos": "Noun",
+          "surface": "論文"
+        },
+        {
+          "lemma": "について",
+          "pos": "Particle",
+          "surface": "について"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "考える",
+          "pos": "Verb",
+          "surface": "考える"
+        }
+      ],
+      "id": "nitsuiteareba_eru",
+      "input": "論文についてあれば考える"
+    },
+    {
+      "description": "複合格助詞の後の連体修飾ある",
+      "expected": [
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        },
+        {
+          "lemma": "について",
+          "pos": "Particle",
+          "surface": "について"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Determiner",
+          "surface": "ある"
+        },
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        }
+      ],
+      "id": "nitsuitearu",
+      "input": "会議についてある資料"
+    },
+    {
+      "description": "複合格助詞の後のあるを連体詞として扱う",
+      "expected": [
+        {
+          "lemma": "論文",
+          "pos": "Noun",
+          "surface": "論文"
+        },
+        {
+          "lemma": "について",
+          "pos": "Particle",
+          "surface": "について"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Determiner",
+          "surface": "ある"
+        },
+        {
+          "lemma": "議論",
+          "pos": "Noun",
+          "surface": "議論"
+        }
+      ],
+      "id": "nitsuitearu_2",
+      "input": "論文についてある議論。"
+    },
+    {
+      "description": "係助詞の後の連体修飾ある",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Determiner",
+          "surface": "ある"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "渡す",
+          "pos": "Verb",
+          "surface": "渡し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "haaru_ni_shita",
+      "input": "本はある人に渡した"
+    },
+    {
+      "description": "主格助詞の後の存在動詞あるを保つ",
+      "expected": [
+        {
+          "lemma": "お金",
+          "pos": "Noun",
+          "surface": "お金"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        }
+      ],
+      "id": "o_gaaru",
+      "input": "お金がある人"
     }
   ],
   "description": "compound_particle tests",

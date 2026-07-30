@@ -710,6 +710,84 @@
       ],
       "id": "verb_godan_ka_iku_sokuonbin_lemma",
       "input": "行ってみたい"
+    },
+    {
+      "description": "仮名混じりカ行五段の終止形",
+      "expected": [
+        {
+          "lemma": "鳥",
+          "pos": "Noun",
+          "surface": "鳥"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "羽ばたく",
+          "pos": "Verb",
+          "surface": "羽ばたく"
+        }
+      ],
+      "id": "ga_bataku",
+      "input": "鳥が羽ばたく"
+    },
+    {
+      "description": "仮名混じりカ行五段のイ音便",
+      "expected": [
+        {
+          "lemma": "羽ばたく",
+          "pos": "Verb",
+          "surface": "羽ばたい"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "bataita",
+      "input": "羽ばたいた"
+    },
+    {
+      "description": "仮名混じりカ行五段の連用形",
+      "expected": [
+        {
+          "lemma": "羽ばたく",
+          "pos": "Verb",
+          "surface": "羽ばたき"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "batakimasu",
+      "input": "羽ばたきます"
+    },
+    {
+      "description": "単漢字カ行五段の正のコントロール",
+      "expected": [
+        {
+          "lemma": "星",
+          "pos": "Noun",
+          "surface": "星"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "輝く",
+          "pos": "Verb",
+          "surface": "輝く"
+        }
+      ],
+      "id": "ga_ku",
+      "input": "星が輝く"
     }
   ],
   "description": "Godan Ka-row verbs (五段カ行動詞) - verbs ending in く",

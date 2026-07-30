@@ -3567,6 +3567,50 @@
       ],
       "id": "woshirazariki",
       "input": "資料をしらざりき"
+    },
+    {
+      "description": "規則で導けないク語法の化石名詞を保つ",
+      "expected": [
+        {
+          "lemma": "老いらく",
+          "pos": "Noun",
+          "surface": "老いらく"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "日々",
+          "pos": "Noun",
+          "surface": "日々"
+        }
+      ],
+      "id": "irakuno",
+      "input": "老いらくの日々"
+    },
+    {
+      "description": "語彙化したク語法複合名詞を一検索単位にする",
+      "expected": [
+        {
+          "lemma": "曰く付き",
+          "pos": "Noun",
+          "surface": "曰く付き"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "品",
+          "pos": "Noun",
+          "surface": "品"
+        }
+      ],
+      "id": "ku_kino",
+      "input": "曰く付きの品"
     }
   ],
   "description": "literary_classics tests",
