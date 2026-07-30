@@ -22,6 +22,7 @@ from .constants import (
     TEMPORAL_COMPOUND_UNITS,
     TEMPORAL_PREFIX_KANJI,
 )
+from .core_lexicon import core_headwords_by_length
 from .mecab import mecab_analyze
 from .merge_postprocessors import (
     _postprocess_adj_bungo,
@@ -113,9 +114,14 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result: list[dict] = []
     i = 0
     applied_rule: str | None = None
+    standalone_noun_indexes: set[int] = set()
 
     while i < len(tokens):
-        t = tokens[i]
+        t = tokens[i].copy()
+        if i in standalone_noun_indexes:
+            t["pos"] = "名詞"
+            t["pos_sub1"] = "一般"
+            t["pos_sub2"] = None
         merged = False
 
         # Calculate position in text
@@ -193,6 +199,48 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     merged = True
                     if applied_rule is None:
                         applied_rule = "fixed-function-search-unit"
+
+        # An L2 noun is lexical evidence that an otherwise ambiguous sequence
+        # is one search unit. Recover only whole adjacent MeCab tokens: a
+        # headword ending inside a token must not consume that token's suffix.
+        if not merged:
+            for noun in core_headwords_by_length("nouns.tsv"):
+                if not remaining.startswith(noun):
+                    continue
+                consumed = ""
+                j = i
+                while j < len(tokens) and len(consumed) < len(noun):
+                    consumed += tokens[j].get("surface", "")
+                    j += 1
+                if consumed != noun or j == i + 1:
+                    continue
+                follows_verb_as_classical_ha_row = (
+                    bool(result)
+                    and result[-1].get("pos") in ("動詞", "Verb")
+                    and j < len(tokens)
+                    and tokens[j].get("surface") in ("ひ", "ふ", "へ")
+                )
+                if follows_verb_as_classical_ha_row:
+                    continue
+                # Use the canonical POS label as a boundary marker. The raw
+                # kanji and classical-stem recovery passes operate on MeCab's
+                # Japanese POS labels and must not absorb a dictionary-backed
+                # search unit into its neighbor.
+                result.append({"surface": noun, "pos": "Noun", "lemma": noun})
+                if j < len(tokens) and tokens[j].get("pos_sub1") == "接尾" and tokens[j].get("pos_sub2") != "助数詞":
+                    follower_surface = tokens[j].get("surface", "")
+                    follower_analysis = mecab_analyze(follower_surface)
+                    if (
+                        len(follower_analysis) == 1
+                        and follower_analysis[0].get("pos") == "名詞"
+                        and follower_analysis[0].get("pos_sub1") != "接尾"
+                    ):
+                        standalone_noun_indexes.add(j)
+                i = j
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "l2-noun"
+                break
 
         # 0. Kana number + counter.  Raw MeCab can split these closed quantity
         # readings at arbitrary syllables (い|ちまい, よ|ん|に|ん), so consume

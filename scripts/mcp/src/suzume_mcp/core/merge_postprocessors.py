@@ -945,6 +945,7 @@ def _postprocess_kanji_merge(result: list[dict], applied_rule: str | None) -> tu
             or (
                 merged[-1].get("surface", "") in KANJI_PREFIX_COMPOUNDS
                 and surface in KANJI_PREFIX_COMPOUNDS[merged[-1]["surface"]]
+                and merged[-1].get("pos") != "Noun"
             )
         ):
             merged[-1]["surface"] += surface

@@ -45,7 +45,34 @@ class TestFixedFunctionSearchUnit:
                 {"surface": "次", "pos": "名詞", "lemma": "次"},
                 {"surface": "に", "pos": "助詞", "lemma": "に"},
             ]
-            assert rule == "adverb-ni-split"
+        assert rule == "adverb-ni-split"
+
+
+class TestDegreeSuffixGe:
+    def test_splits_lexicalized_i_adjective_derivative(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.split_rules.mecab_analyze",
+            lambda text: [_tok(text, pos="形容詞", lemma=text)],
+        )
+
+        result, rule = apply_suzume_split([_tok("寂しげ", pos="名詞", pos_sub1="一般")])
+
+        assert result == [
+            {"surface": "寂し", "pos": "形容詞", "lemma": "寂しい"},
+            {"surface": "げ", "pos": "名詞", "pos_sub1": "接尾", "lemma": "げ"},
+        ]
+        assert rule == "degree-suffix-ge"
+
+    def test_keeps_unverified_noun_ending(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.split_rules.mecab_analyze",
+            lambda text: [_tok(text, pos="名詞")],
+        )
+
+        result, rule = apply_suzume_split([_tok("押しげ", pos="名詞", pos_sub1="一般")])
+
+        assert result == [_tok("押しげ", pos="名詞", pos_sub1="一般")]
+        assert rule is None
 
 
 class TestInterrogativeNominalAdverb:
@@ -127,15 +154,40 @@ class TestLexicalizedCasePredicateSplit:
             ("気に入ら", "気に入る", "入る"),
             ("気に入っ", "気に入る", "入る"),
             ("気にいら", "気にいる", "いる"),
+            ("間に合わ", "間に合う", "合う"),
         ]
         for surface, lemma, predicate_lemma in cases:
             result, rule = apply_suzume_split([_tok(surface, pos="動詞", lemma=lemma)])
-            assert result == [
-                {"surface": "気", "pos": "名詞", "lemma": "気"},
-                {"surface": "に", "pos": "助詞", "lemma": "に"},
-                {"surface": surface[2:], "pos": "動詞", "lemma": predicate_lemma},
+            assert [token["surface"] for token in result] == [
+                lemma.split("に", 1)[0],
+                "に",
+                surface.split("に", 1)[1],
             ]
-            assert rule == "lexicalized-case-predicate-boundary"
+            assert result[-1]["lemma"] == predicate_lemma
+            assert rule == "lexicalized-morpheme-boundary"
+
+    def test_restores_case_particle_before_negative_predicate(self):
+        result, rule = apply_suzume_split([_tok("やむを得ない", pos="形容詞")])
+        assert [token["surface"] for token in result] == ["やむ", "を", "得", "ない"]
+        assert [token["pos"] for token in result] == ["動詞", "助詞", "動詞", "助動詞"]
+        assert rule == "lexicalized-morpheme-boundary"
+
+    def test_restores_genitive_particle_inside_noun_headword(self):
+        result, rule = apply_suzume_split([_tok("年の瀬", pos="名詞")])
+        assert [token["surface"] for token in result] == ["年", "の", "瀬"]
+        assert rule == "lexicalized-morpheme-boundary"
+
+    def test_restores_classical_negative_auxiliary(self):
+        result, rule = apply_suzume_split([_tok("知らず", pos="名詞")])
+        assert [token["surface"] for token in result] == ["知ら", "ず"]
+        assert [token["pos"] for token in result] == ["動詞", "助動詞"]
+        assert rule == "lexicalized-morpheme-boundary"
+
+    def test_keeps_closed_compound_particle(self):
+        tokens = [_tok("について", pos="助詞")]
+        result, rule = apply_suzume_split(tokens)
+        assert result == tokens
+        assert rule is None
 
 
 class TestKangoToshiteSplit:

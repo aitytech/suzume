@@ -14,6 +14,7 @@ from .constants import (
     TTEBA_STEMS,
     USER_DICT_COMPOUNDS,
 )
+from .mecab import mecab_analyze
 
 _GODAN_RENYOKEI_TO_BASE: dict[str, str] = {
     "い": "う",
@@ -57,13 +58,6 @@ _LEXICALIZED_PREDICATE_COMPOUNDS: dict[str, tuple[dict, ...]] = {
     ),
 }
 
-# Reference-dictionary verb headwords that contain a real case-particle and
-# independent predicate boundary.  Configure the dictionary form once; the
-# split below preserves the boundary across every inflectional surface.
-_LEXICALIZED_CASE_PREDICATES: dict[str, tuple[str, str, str]] = {
-    "気に入る": ("気", "に", "入る"),
-    "気にいる": ("気", "に", "いる"),
-}
 _COMPLETIVE_TSUKUSU_FORMS = frozenset({"尽くさ", "尽くし", "尽くす", "尽くせ", "尽くそ"})
 
 
@@ -113,6 +107,128 @@ def base_from_mizenkei(stem: str) -> str | None:
     return stem[:-1] + ending if ending is not None else None
 
 
+def _reanalyze_exact(text: str) -> list[dict] | None:
+    """Analyze one internal span only when the analyzer preserves it exactly."""
+    if not text:
+        return None
+    tokens = mecab_analyze(text)
+    if "".join(token.get("surface", "") for token in tokens) != text:
+        return None
+    return tokens
+
+
+def _is_single_i_adjective(text: str) -> bool:
+    """Whether a reconstructed dictionary form is one i-adjective."""
+    tokens = _reanalyze_exact(text)
+    return bool(tokens and len(tokens) == 1 and tokens[0].get("pos") == "形容詞")
+
+
+def _as_independent_token(token: dict) -> dict:
+    """Drop context-bound subcategories when a span is an independent morpheme."""
+    return {
+        "surface": token.get("surface", ""),
+        "pos": token.get("pos", ""),
+        "lemma": token.get("lemma") or token.get("surface", ""),
+    }
+
+
+def _split_lexicalized_morpheme_boundaries(token: dict) -> list[dict] | None:
+    """Restore productive particle and inflection boundaries hidden by a headword."""
+    surface = token.get("surface", "")
+    pos = token.get("pos", "")
+    lemma = token.get("lemma", surface)
+
+    genitive = regex.fullmatch(r"(.+)(の)(.+)", surface)
+    if genitive is not None:
+        host_surface = genitive.group(1)
+        host_tokens = _reanalyze_exact(host_surface)
+        head_tokens = _reanalyze_exact(genitive.group(3))
+        formal_noun_genitive = host_surface in COPULAR_PREDICATE_HEADS and len(genitive.group(3)) >= 2
+        kanji_genitive = (
+            regex.fullmatch(r"\p{Han}+", host_surface) is not None
+            and regex.fullmatch(r"\p{Han}+", genitive.group(3)) is not None
+        )
+        host_is_noun = formal_noun_genitive or (
+            kanji_genitive and host_tokens is not None and len(host_tokens) == 1 and host_tokens[0].get("pos") == "名詞"
+        )
+        head_is_noun = formal_noun_genitive or (
+            kanji_genitive and head_tokens is not None and len(head_tokens) == 1 and head_tokens[0].get("pos") == "名詞"
+        )
+        if host_is_noun and head_is_noun:
+            host_token = (
+                _as_independent_token(host_tokens[0])
+                if host_tokens is not None and len(host_tokens) == 1
+                else {"surface": host_surface, "pos": "名詞", "lemma": host_surface}
+            )
+            return [
+                host_token,
+                {"surface": "の", "pos": "助詞", "lemma": "の"},
+                (
+                    _as_independent_token(head_tokens[0])
+                    if head_tokens is not None and len(head_tokens) == 1
+                    else {"surface": genitive.group(3), "pos": "名詞", "lemma": genitive.group(3)}
+                ),
+            ]
+
+    if pos in ("名詞", "副詞") and surface.endswith("ず"):
+        isolated = _reanalyze_exact(surface)
+        if (
+            isolated is not None
+            and len(isolated) >= 2
+            and isolated[0].get("pos") == "動詞"
+            and isolated[-1].get("surface") == "ず"
+            and isolated[-1].get("pos") == "助動詞"
+        ):
+            return isolated
+
+    if pos not in ("動詞", "形容詞", "副詞"):
+        return None
+    for match in regex.finditer(r"[にを]", lemma):
+        particle = match.group(0)
+        host = lemma[: match.start()]
+        predicate_lemma = lemma[match.end() :]
+        boundary = host + particle
+        if not host or not predicate_lemma or not surface.startswith(boundary):
+            continue
+
+        host_tokens = _reanalyze_exact(host)
+        if host_tokens is None or len(host_tokens) != 1 or host_tokens[0].get("pos") not in ("名詞", "動詞"):
+            continue
+
+        predicate_surface = surface[len(boundary) :]
+        if pos == "動詞":
+            predicate_tokens = _reanalyze_exact(predicate_lemma)
+            if (
+                predicate_surface
+                and predicate_tokens is not None
+                and len(predicate_tokens) == 1
+                and predicate_tokens[0].get("pos") == "動詞"
+            ):
+                predicate = dict(token)
+                predicate["surface"] = predicate_surface
+                predicate["lemma"] = predicate_lemma
+                return [
+                    _as_independent_token(host_tokens[0]),
+                    {"surface": particle, "pos": "助詞", "lemma": particle},
+                    predicate,
+                ]
+            continue
+
+        predicate_tokens = _reanalyze_exact(predicate_surface)
+        if (
+            predicate_tokens is not None
+            and len(predicate_tokens) >= 2
+            and predicate_tokens[0].get("pos") == "動詞"
+            and all(part.get("pos") in ("助動詞", "助詞") for part in predicate_tokens[1:])
+        ):
+            return [
+                _as_independent_token(host_tokens[0]),
+                {"surface": particle, "pos": "助詞", "lemma": particle},
+                *predicate_tokens,
+            ]
+    return None
+
+
 def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
     """Apply Suzume split rules to MeCab tokens.
 
@@ -131,6 +247,13 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             if surface == "う":
                 result.append({"surface": "よう", "pos": "助動詞", "lemma": "よう"})
                 continue
+
+        lexicalized_parts = _split_lexicalized_morpheme_boundaries(t)
+        if lexicalized_parts is not None:
+            result.extend(lexicalized_parts)
+            if applied_rule is None:
+                applied_rule = "lexicalized-morpheme-boundary"
+            continue
 
         # IPADIC lexicalizes this entire interrogative nominal phrase as an
         # adverb. Suzume keeps its productive pronoun/particle/noun boundaries;
@@ -196,23 +319,6 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             if applied_rule is None:
                 applied_rule = "lexicalized-particle-predicate-boundary"
             continue
-
-        case_predicate = _LEXICALIZED_CASE_PREDICATES.get(t.get("lemma", ""))
-        if case_predicate is not None and t.get("pos") == "動詞":
-            host, particle, predicate_lemma = case_predicate
-            boundary = host + particle
-            predicate_surface = surface[len(boundary) :] if surface.startswith(boundary) else ""
-            if predicate_surface:
-                result.extend(
-                    [
-                        {"surface": host, "pos": "名詞", "lemma": host},
-                        {"surface": particle, "pos": "助詞", "lemma": particle},
-                        {"surface": predicate_surface, "pos": "動詞", "lemma": predicate_lemma},
-                    ]
-                )
-                if applied_rule is None:
-                    applied_rule = "lexicalized-case-predicate-boundary"
-                continue
 
         # The productive Godan causative volitional is mizenkei + せ + よう.
         # A reference dictionary can split its tail as the unrelated サ変
@@ -353,11 +459,14 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
         # (楽し/げ, おぼろ/げ). Lexicalized hosts (誇らしげ, 得意げ) reach us as
         # one 形容動詞語幹 token; the suffix is the same productive one, so the
         # host keeps its own search boundary.
+        adjective_ge = (
+            surface.endswith("しげ") and len(surface) > len("しげ") and _is_single_i_adjective(surface[:-1] + "い")
+        )
         if (
             t.get("pos") == "名詞"
-            and t.get("pos_sub1") == "形容動詞語幹"
             and surface.endswith("げ")
             and len(surface) > 1
+            and (t.get("pos_sub1") == "形容動詞語幹" or adjective_ge)
         ):
             stem = surface[:-1]
             if stem.endswith("し"):

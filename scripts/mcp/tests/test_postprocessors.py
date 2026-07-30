@@ -32,6 +32,7 @@ from suzume_mcp.core.postprocessors import (
     postprocess_iru_aux,
     postprocess_itadakeru_aux,
     postprocess_kadouka_adverb,
+    postprocess_l2_noun_context,
     postprocess_mecab_tokens,
     postprocess_miru_aux,
     postprocess_modifier_godan_imperative,
@@ -498,6 +499,56 @@ class TestPostprocessCompoundCaseParticleAru:
         assert postprocess_compound_case_particle_aru(tokens)
         assert tokens[1] == _tok("ある", "Determiner")
 
+    def test_pre_nominal_aru_after_adverb_becomes_determiner(self):
+        tokens = [
+            _tok("かえって", "Adverb"),
+            _tok("ある", "Verb"),
+            _tok("本", "Noun"),
+        ]
+
+        assert postprocess_compound_case_particle_aru(tokens)
+        assert tokens[1] == _tok("ある", "Determiner")
+
+    def test_inflected_aru_after_compound_particle_becomes_verb(self):
+        tokens = [
+            _tok("について", "Particle", pos_sub1="格助詞", pos_sub2="連語"),
+            _tok("あっ", "Auxiliary", lemma="ある"),
+            _tok("た", "Auxiliary", lemma="た"),
+        ]
+
+        assert postprocess_compound_case_particle_aru(tokens)
+        assert tokens[1] == _tok("あっ", "Verb", lemma="ある")
+
+    def test_productive_te_form_restores_resultative_verb(self):
+        tokens = [
+            _tok("て", "Particle"),
+            _tok("ある", "Determiner"),
+            _tok("本", "Noun"),
+        ]
+
+        assert postprocess_compound_case_particle_aru(tokens)
+        assert tokens[1] == _tok("ある", "Verb")
+
+    def test_inflected_resultative_keeps_auxiliary(self):
+        tokens = [
+            _tok("て", "Particle", pos_sub1="格助詞", pos_sub2="連語"),
+            _tok("あり", "Auxiliary", lemma="ある"),
+            _tok("ます", "Auxiliary", lemma="ます"),
+        ]
+
+        assert not postprocess_compound_case_particle_aru(tokens)
+        assert tokens[1] == _tok("あり", "Auxiliary", lemma="ある")
+
+    def test_topic_in_copula_chain_keeps_auxiliary(self):
+        tokens = [
+            _tok("は", "Particle"),
+            _tok("ある", "Auxiliary", lemma="ある"),
+            _tok("まい", "Auxiliary", lemma="まい"),
+        ]
+
+        assert not postprocess_compound_case_particle_aru(tokens)
+        assert tokens[1] == _tok("ある", "Auxiliary", lemma="ある")
+
     def test_nominative_particle_keeps_existence_verb(self):
         tokens = [
             _tok("が", "Particle", pos_sub1="格助詞"),
@@ -684,6 +735,54 @@ class TestTokenizerSearchUnitNormalizers:
             tokens = [_tok("恥ずかし", "Adjective", lemma="恥ずかしい"), _tok(form, "Auxiliary")]
             assert postprocess_adjective_garu(tokens)
             assert tokens[1] == _tok(form, "Verb", lemma="がる")
+
+    def test_l2_na_adjective_garu_is_split_and_typed(self):
+        tokens = [_tok("嫌がる", "Verb")]
+        assert postprocess_adjective_garu(tokens)
+        assert tokens == [
+            _tok("嫌", "Adjective"),
+            _tok("がる", "Verb", lemma="がる"),
+        ]
+
+    def test_nominalized_adjectival_host_keeps_noun_pos_before_garu(self):
+        tokens = [_tok("不安", "Noun"), _tok("がる", "Auxiliary")]
+        assert postprocess_adjective_garu(tokens)
+        assert tokens == [
+            _tok("不安", "Noun"),
+            _tok("がる", "Verb", lemma="がる"),
+        ]
+
+    def test_unregistered_noun_does_not_license_garu(self):
+        tokens = [_tok("ころ", "Noun"), _tok("がる", "Auxiliary")]
+        assert not postprocess_adjective_garu(tokens)
+
+    def test_lexical_garu_verb_is_not_split_without_adjective_evidence(self):
+        tokens = [_tok("つながる", "Verb")]
+        assert not postprocess_adjective_garu(tokens)
+
+    def test_registered_lexical_garu_verb_beats_adjective_homograph(self):
+        tokens = [_tok("広がる", "Verb")]
+        assert not postprocess_adjective_garu(tokens)
+
+    def test_l2_noun_homograph_before_copula_is_nominal(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.postprocessors.core_headwords",
+            lambda filename: frozenset({"終わり"}),
+        )
+        tokens = [_tok("終わり", "Verb", lemma="終わる"), _tok("だ", "Auxiliary", lemma="だ")]
+
+        assert postprocess_l2_noun_context(tokens)
+        assert tokens[0] == _tok("終わり", "Noun")
+
+    def test_l2_noun_homograph_before_verbal_auxiliary_stays_verb(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.postprocessors.core_headwords",
+            lambda filename: frozenset({"終わり"}),
+        )
+        tokens = [_tok("終わり", "Verb", lemma="終わる"), _tok("ます", "Auxiliary", lemma="ます")]
+
+        assert not postprocess_l2_noun_context(tokens)
+        assert tokens[0] == _tok("終わり", "Verb", lemma="終わる")
 
     def test_past_auxiliary_before_case_particle_is_not_tagaru(self):
         tokens = [_tok("い", "Auxiliary", lemma="いる"), _tok("た", "Auxiliary"), _tok("が", "Particle")]

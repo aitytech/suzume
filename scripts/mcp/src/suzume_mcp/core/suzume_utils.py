@@ -59,6 +59,7 @@ from .postprocessors import (
     postprocess_kadouka_adverb,
     postprocess_kiri_limited_particle,
     postprocess_kuru_causative,
+    postprocess_l2_noun_context,
     postprocess_mecab_tokens,
     postprocess_miru_aux,
     postprocess_modifier_godan_imperative,
@@ -339,6 +340,8 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
         applied_rule = "to-areba-conditional"
     if postprocess_tagaru_aux(tokens) and applied_rule is None:
         applied_rule = "tagaru-search-unit"
+    if postprocess_l2_noun_context(tokens) and applied_rule is None:
+        applied_rule = "l2-noun-context"
     if postprocess_adjective_garu(tokens) and applied_rule is None:
         applied_rule = "adjective-garu-pos"
     if postprocess_fuu_formal_noun(tokens) and applied_rule is None:

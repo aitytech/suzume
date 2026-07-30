@@ -21,6 +21,7 @@ from .constants import (
     UNUSUAL_NAMES,
     WORD_EXCEPTIONS,
 )
+from .core_lexicon import adjective_garu_stems, core_headwords
 from .mecab import mecab_analyze
 from .pos_mapping import _is_katakana_onomatopoeia
 from .split_rules import base_from_mizenkei, base_from_renyokei
@@ -930,25 +931,48 @@ def postprocess_renyokei_compound_particle(tokens: list[dict]) -> bool:
 
 
 def postprocess_compound_case_particle_aru(tokens: list[dict]) -> bool:
-    """Read pre-nominal ある after a non-subject particle as a determiner."""
+    """Classify ある after an adverbial or a non-subject particle.
+
+    A lexical adverb or closed compound case particle ending in て is not the
+    conjunctive particle of a resultative 〜てある construction.  MeCab can
+    nevertheless carry that dependent reading into the following cells of
+    ある.  Restore the independent verb for inflected cells, while keeping the
+    distinct pre-nominal ある reading as a determiner.
+    """
     changed = False
-    for index in range(1, len(tokens) - 1):
+    for index in range(1, len(tokens)):
         previous = tokens[index - 1]
         token = tokens[index]
-        following = tokens[index + 1]
-        previous_marks_non_subject = previous.get("surface") == "は" or (
-            previous.get("pos") == "Particle"
+        following = tokens[index + 1] if index + 1 < len(tokens) else None
+        previous_is_productive_te = previous.get("pos") == "Particle" and previous.get("surface") in ("て", "で")
+        if previous_is_productive_te and token.get("surface") == "ある" and token.get("lemma") == "ある":
+            if token.get("pos") != "Verb":
+                token["pos"] = "Verb"
+                changed = True
+            continue
+        previous_is_adverbial = previous.get("pos") == "Adverb"
+        previous_is_topic = previous.get("surface") == "は"
+        previous_is_compound_case = (
+            len(previous.get("surface", "")) > 1
+            and previous.get("pos") == "Particle"
             and previous.get("pos_sub1") == "格助詞"
             and previous.get("pos_sub2") == "連語"
         )
-        if (
-            previous_marks_non_subject
-            and token.get("surface") == "ある"
-            and following.get("pos") in ("Noun", "Pronoun")
+        if not (previous_is_adverbial or previous_is_topic or previous_is_compound_case):
+            continue
+        if token.get("surface") == "ある" and following is not None and following.get("pos") in ("Noun", "Pronoun"):
+            if token.get("pos") != "Determiner" or token.get("lemma") != "ある":
+                token["pos"] = "Determiner"
+                token["lemma"] = "ある"
+                changed = True
+        elif (
+            (previous_is_adverbial or previous_is_compound_case)
+            and token.get("surface") in ("ある", "あり", "あれ", "あっ")
+            and token.get("lemma") == "ある"
         ):
-            token["pos"] = "Determiner"
-            token["lemma"] = "ある"
-            changed = True
+            if token.get("pos") != "Verb":
+                token["pos"] = "Verb"
+                changed = True
     return changed
 
 
@@ -984,17 +1008,72 @@ def postprocess_tagaru_aux(tokens: list[dict]) -> bool:
 
 
 def postprocess_adjective_garu(tokens: list[dict]) -> bool:
-    """Mirror the core's verb POS for productive adjective-stem + がる."""
+    """Split and type productive L2 adjective/noun-stem + がる forms."""
     garu_forms = frozenset({"がら", "がり", "がる", "がれ", "がろ", "がっ"})
+    adjective_stems = adjective_garu_stems()
+    lexical_verbs = core_headwords("verbs.tsv")
+    lexical_nouns = core_headwords("nouns.tsv")
     changed = False
+    idx = 0
+    while idx < len(tokens):
+        token = tokens[idx]
+        surface = token.get("surface", "")
+        if token.get("pos") == "Verb" and surface not in lexical_verbs and token.get("lemma") not in lexical_verbs:
+            for form in garu_forms:
+                if not surface.endswith(form):
+                    continue
+                stem = surface[: -len(form)]
+                lemma = adjective_stems.get(stem)
+                if lemma is not None:
+                    tokens[idx : idx + 1] = [
+                        {"surface": stem, "pos": "Adjective", "lemma": lemma},
+                        {"surface": form, "pos": "Verb", "lemma": "がる"},
+                    ]
+                    changed = True
+                    idx += 1
+                break
+        idx += 1
+
     for idx in range(1, len(tokens)):
         token = tokens[idx]
-        if tokens[idx - 1].get("pos") != "Adjective" or token.get("surface") not in garu_forms:
+        previous = tokens[idx - 1]
+        if token.get("surface") not in garu_forms:
             continue
+        adjective_lemma = adjective_stems.get(previous.get("surface", ""))
+        noun_host = previous.get("pos") == "Noun" and previous.get("surface") in lexical_nouns
+        if previous.get("pos") != "Adjective" and adjective_lemma is None and not noun_host:
+            continue
+        if adjective_lemma is not None and (
+            previous.get("pos") != "Adjective" or previous.get("lemma") != adjective_lemma
+        ):
+            previous["pos"] = "Adjective"
+            previous["lemma"] = adjective_lemma
+            changed = True
         if token.get("pos") != "Verb" or token.get("lemma") != "がる":
             token["pos"] = "Verb"
             token["lemma"] = "がる"
             changed = True
+    return changed
+
+
+def postprocess_l2_noun_context(tokens: list[dict]) -> bool:
+    """Prefer an L2 noun homograph in contexts that select a nominal."""
+    lexical_nouns = core_headwords("nouns.tsv")
+    nominal_particles = frozenset({"を", "は", "が", "の", "に", "で", "へ", "と", "も"})
+    changed = False
+    for idx, token in enumerate(tokens):
+        if token.get("surface") not in lexical_nouns or token.get("pos") != "Verb":
+            continue
+        following = tokens[idx + 1] if idx + 1 < len(tokens) else None
+        if following is None:
+            continue
+        selected_by_particle = following.get("pos") == "Particle" and following.get("surface") in nominal_particles
+        selected_by_copula = following.get("pos") == "Auxiliary" and following.get("surface") in COPULA_SURFACES
+        if not selected_by_particle and not selected_by_copula:
+            continue
+        token["pos"] = "Noun"
+        token["lemma"] = token["surface"]
+        changed = True
     return changed
 
 

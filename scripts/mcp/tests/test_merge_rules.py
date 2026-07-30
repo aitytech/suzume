@@ -37,6 +37,113 @@ class TestFixedFunctionSearchUnits:
         assert rule is None
 
 
+class TestL2NounMerge:
+    def test_merges_whole_adjacent_reference_tokens(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("うがい",),
+        )
+        tokens = [_token("う", "感動詞"), _token("がい", "名詞"), _token("薬", "名詞")]
+
+        merged, rule = apply_suzume_merge(tokens, "うがい薬")
+
+        assert [token["surface"] for token in merged] == ["うがい", "薬"]
+        assert [(token["pos"], token["lemma"]) for token in merged] == [
+            ("Noun", "うがい"),
+            ("名詞", "薬"),
+        ]
+        assert rule == "l2-noun"
+
+    def test_prefers_longest_matching_headword(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("うがい薬", "うがい"),
+        )
+        tokens = [_token("う", "感動詞"), _token("がい", "名詞"), _token("薬", "名詞")]
+
+        merged, rule = apply_suzume_merge(tokens, "うがい薬")
+
+        assert merged == [{"surface": "うがい薬", "pos": "Noun", "lemma": "うがい薬"}]
+        assert rule == "l2-noun"
+
+    def test_does_not_absorb_a_partial_reference_token(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("うがい",),
+        )
+        tokens = [_token("うがい薬", "名詞")]
+
+        merged, rule = apply_suzume_merge(tokens, "うがい薬")
+
+        assert [token["surface"] for token in merged] == ["うがい薬"]
+        assert rule is None
+
+    def test_restores_standalone_noun_role_after_recovered_l2_noun(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("うがい",),
+        )
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.mecab_analyze",
+            lambda text: [{"surface": text, "pos": "名詞", "pos_sub1": "一般", "lemma": text}],
+        )
+        tokens = [
+            _token("う", "感動詞"),
+            _token("がい", "名詞"),
+            _tok("薬", pos="名詞", pos_sub1="接尾"),
+        ]
+
+        merged, rule = apply_suzume_merge(tokens, "うがい薬")
+
+        assert merged == [
+            {"surface": "うがい", "pos": "Noun", "lemma": "うがい"},
+            {
+                "surface": "薬",
+                "pos": "名詞",
+                "pos_sub1": "一般",
+                "pos_sub2": None,
+                "conj_type": None,
+                "conj_form": None,
+                "lemma": "薬",
+            },
+        ]
+        assert rule == "l2-noun"
+
+    def test_keeps_l2_noun_boundary_before_productive_counter(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("第一",),
+        )
+        tokens = [
+            _tok("第", pos="接頭詞"),
+            _tok("一", pos="名詞", pos_sub1="数"),
+            _tok("回", pos="名詞", pos_sub1="接尾", pos_sub2="助数詞"),
+        ]
+
+        merged, rule = apply_suzume_merge(tokens, "第一回")
+
+        assert [token["surface"] for token in merged] == ["第一", "回"]
+        assert merged[1]["pos_sub1"] == "接尾"
+        assert rule == "l2-noun"
+
+    def test_does_not_merge_classical_ha_row_auxiliary_as_l2_noun(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("たま",),
+        )
+        tokens = [
+            _tok("知らせ", pos="動詞", lemma="知らせる"),
+            _tok("た", pos="助動詞"),
+            _tok("ま", pos="助動詞"),
+            _tok("ふ", pos="動詞", lemma="ふる"),
+        ]
+
+        merged, rule = apply_suzume_merge(tokens, "知らせたまふ")
+
+        assert [token["surface"] for token in merged] == ["知らせ", "た", "ま", "ふ"]
+        assert rule is None
+
+
 class TestFixedInflectedFunctionUnits:
     def test_merges_split_humble_potential_before_polite_auxiliary(self):
         tokens = [
