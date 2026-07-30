@@ -14,6 +14,15 @@ import os
 import platform
 from pathlib import Path
 
+# --- ABI revision --------------------------------------------------------------
+#
+# The revision of include/suzume/suzume_c.h that the mirrors below were written
+# against. ctypes loads whatever libsuzume it discovers, so a library built from
+# a different layout would be read at the wrong offsets rather than failing to
+# link. tests/test_abi_layout.py asserts the loaded library reports this value.
+
+ABI_VERSION = 1
+
 # --- ctypes structure mirrors of include/suzume/suzume_c.h ---------------------
 #
 # Field order and types MUST match the C ABI exactly. tests/test_abi_layout.py
@@ -220,6 +229,9 @@ def _configure_signatures(lib: ctypes.CDLL) -> None:
 
     lib.suzume_version.restype = ctypes.c_char_p
     lib.suzume_version.argtypes = []
+
+    lib.suzume_abi_version.restype = ctypes.c_uint32
+    lib.suzume_abi_version.argtypes = []
 
     lib.suzume_last_error.restype = ctypes.c_char_p
     lib.suzume_last_error.argtypes = []

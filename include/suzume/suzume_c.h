@@ -50,6 +50,31 @@ extern "C" {
 #define SUZUME_EXPORT
 #endif
 
+// --- ABI compatibility ---
+
+/**
+ * @brief Revision of the binary interface described by this header
+ *
+ * A consumer compares this compile-time value against suzume_abi_version(),
+ * which reports the revision the loaded library was built from, and refuses to
+ * run on a mismatch. Nothing else catches that mismatch: removing an exported
+ * symbol fails loudly at link or load time, but growing a public struct does
+ * not, and the consumer then reads the wrong bytes at the wrong offsets.
+ *
+ * Bump this when a public struct changes size or field order, or when an
+ * exported entry point is removed or changes its signature. Adding a new entry
+ * point that leaves the existing ones untouched does not bump it.
+ */
+#define SUZUME_ABI_VERSION 1
+
+/**
+ * @brief Get the ABI revision the library was compiled with
+ * @return The library's SUZUME_ABI_VERSION at build time
+ * @note Compare against the consumer's own SUZUME_ABI_VERSION before calling
+ *       anything else; the struct layouts are only trustworthy when they match.
+ */
+SUZUME_EXPORT uint32_t suzume_abi_version(void);
+
 /**
  * @brief Failure reporting contract
  *

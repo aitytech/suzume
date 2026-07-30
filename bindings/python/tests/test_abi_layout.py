@@ -12,6 +12,7 @@ import ctypes
 
 import suzume
 from suzume._ffi import (
+    ABI_VERSION,
     SuzumeExtendedOptions,
     SuzumeMorpheme,
     SuzumeResult,
@@ -24,6 +25,15 @@ _lib = suzume._lib
 
 def _offsets(struct: type[ctypes.Structure]) -> list[int]:
     return [getattr(struct, name).offset for name, *_ in struct._fields_]
+
+
+def test_loaded_library_reports_the_expected_abi_revision() -> None:
+    assert _lib.suzume_abi_version() == ABI_VERSION, (
+        "The loaded libsuzume was built from a different C ABI revision than the "
+        "ctypes mirrors in suzume._ffi. Rebuild the library (make python-build), or "
+        "if the ABI change was deliberate, update the mirrors and set "
+        "suzume._ffi.ABI_VERSION to the header's SUZUME_ABI_VERSION."
+    )
 
 
 def test_sizeof_matches_native() -> None:

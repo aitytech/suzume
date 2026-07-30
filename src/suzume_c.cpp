@@ -609,6 +609,10 @@ SUZUME_EXPORT const char* suzume_version(void) {
   return SUZUME_VERSION;
 }
 
+SUZUME_EXPORT uint32_t suzume_abi_version(void) {
+  return SUZUME_ABI_VERSION;
+}
+
 SUZUME_EXPORT const char* suzume_last_error(void) {
   return last_error.c_str();
 }

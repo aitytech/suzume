@@ -101,6 +101,7 @@ set(TEST_SOURCES
   postprocess/tag_generator_test.cpp
   postprocess/postprocessor_test.cpp
   integration/suzume_api_test.cpp
+  integration/suzume_abi_contract_test.cpp
   integration/suzume_c_api_test.cpp
   integration/suzume_hpp_test.cpp
   integration/source_dictionary_parity_test.cpp

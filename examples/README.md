@@ -42,6 +42,29 @@ ctest --test-dir build-consumer --output-on-failure
 
 `make consumer-smoke` runs the whole install → find_package → run sequence in one step.
 
+## ABI compatibility
+
+`find_package` and pkg-config pin the header and the library together, so they
+always agree. A consumer that resolves the library separately — a language
+binding that `dlopen`s `libsuzume`, or a build that links a system copy — can
+end up with a header and a library from different revisions. Removing an
+exported symbol fails loudly there, but a public struct that changed size or
+field order does not: the calls succeed and read the wrong bytes.
+
+`suzume_c.h` defines `SUZUME_ABI_VERSION` for exactly that case. Compare it
+against what the loaded library reports before calling anything else:
+
+```c
+if (suzume_abi_version() != SUZUME_ABI_VERSION) {
+  /* Header and library disagree; the struct layouts are not trustworthy. */
+  return -1;
+}
+```
+
+The number changes when a public struct changes size or field order, or when an
+exported entry point is removed or changes signature. Adding an entry point that
+leaves the existing ones untouched does not change it.
+
 ## Embedded (no filesystem)
 
 Bake the dictionaries into the binary so the library needs no data files at
