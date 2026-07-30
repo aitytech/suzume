@@ -85,18 +85,29 @@ std::vector<StemForm> Conjugator::generateGodanStems(const std::string& stem, co
   return forms;
 }
 
-std::vector<StemForm> Conjugator::generateIchidanStems(const std::string& stem, const std::string& base_form) const {
-  static_cast<void>(base_form);
+namespace {
+
+// A verb class whose whole paradigm is spelled out in the ending table needs no
+// row arithmetic: every form is the stem plus the ending registered for that
+// class, taken in table order.
+std::vector<StemForm> generateTabulatedStems(const std::string& stem, VerbType type) {
   std::vector<StemForm> forms;
   for (ConjForm form : kAllVerbConjForms) {
     const uint16_t conn_id = kVerbConjFormConnections[static_cast<size_t>(form)];
     for (const auto& ending : getVerbEndingsByForm(form)) {
-      if (ending.verb_type == VerbType::Ichidan) {
-        forms.push_back({stem + ending.suffix, VerbType::Ichidan, ending.base_suffix, conn_id});
+      if (ending.verb_type == type) {
+        forms.push_back({stem + ending.suffix, type, ending.base_suffix, conn_id});
       }
     }
   }
   return forms;
+}
+
+}  // namespace
+
+std::vector<StemForm> Conjugator::generateIchidanStems(const std::string& stem, const std::string& base_form) const {
+  static_cast<void>(base_form);
+  return generateTabulatedStems(stem, VerbType::Ichidan);
 }
 
 std::vector<StemForm> Conjugator::generateIAdjectiveStems(const std::string& stem, const std::string& base_form) const {
@@ -110,16 +121,7 @@ std::vector<StemForm> Conjugator::generateIAdjectiveStems(const std::string& ste
 
 std::vector<StemForm> Conjugator::generateSuruStems(const std::string& stem, const std::string& base_form) const {
   static_cast<void>(base_form);
-  std::vector<StemForm> forms;
-  for (ConjForm form : kAllVerbConjForms) {
-    const uint16_t conn_id = kVerbConjFormConnections[static_cast<size_t>(form)];
-    for (const auto& ending : getVerbEndingsByForm(form)) {
-      if (ending.verb_type == VerbType::Suru) {
-        forms.push_back({stem + ending.suffix, VerbType::Suru, ending.base_suffix, conn_id});
-      }
-    }
-  }
-  return forms;
+  return generateTabulatedStems(stem, VerbType::Suru);
 }
 
 std::vector<StemForm> Conjugator::generateKuruStems(const std::string& base_form) const {

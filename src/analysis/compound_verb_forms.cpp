@@ -75,7 +75,13 @@ dictionary::ConjugationType compoundConjugationType(V2VerbType verb_type, std::s
   return godan_entry == nullptr ? dictionary::ConjugationType::None : toDictionaryConjugationType(godan_entry->first);
 }
 
-std::string generateRenyokei(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
+namespace {
+
+// Renyokei and mizenkei are the same operation on the V2 base: an Ichidan verb
+// drops its final mora, and a Godan verb moves that mora to another row of the
+// same column. Only the target row differs between the two forms.
+std::string generateGodanRowStem(std::string_view surface, std::string_view reading, V2VerbType verb_type,
+                                 bool use_a_row) {
   std::string_view base = reading.empty() ? surface : reading;
   if (base.empty())
     return "";
@@ -87,32 +93,24 @@ std::string generateRenyokei(std::string_view surface, std::string_view reading,
 
   if (base.size() < core::kJapaneseCharBytes)
     return "";
-  const std::string_view i_row = grammar::godanIRowSuffixFromURow(utf8::decodeLastChar(base));
-  if (i_row.empty())
+  const char32_t final_mora = utf8::decodeLastChar(base);
+  const std::string_view row =
+      use_a_row ? grammar::godanARowSuffixFromURow(final_mora) : grammar::godanIRowSuffixFromURow(final_mora);
+  if (row.empty())
     return "";
   std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
-  result += i_row;
+  result += row;
   return result;
 }
 
+}  // namespace
+
+std::string generateRenyokei(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
+  return generateGodanRowStem(surface, reading, verb_type, false);
+}
+
 std::string generateMizenkei(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
-  std::string_view base = reading.empty() ? surface : reading;
-  if (base.empty())
-    return "";
-
-  if (verb_type == V2VerbType::Ichidan) {
-    return base.size() >= core::kJapaneseCharBytes ? std::string(base.substr(0, base.size() - core::kJapaneseCharBytes))
-                                                   : "";
-  }
-
-  if (base.size() < core::kJapaneseCharBytes)
-    return "";
-  const std::string_view a_row = grammar::godanARowSuffixFromURow(utf8::decodeLastChar(base));
-  if (a_row.empty())
-    return "";
-  std::string result(base.substr(0, base.size() - core::kJapaneseCharBytes));
-  result += a_row;
-  return result;
+  return generateGodanRowStem(surface, reading, verb_type, true);
 }
 
 std::string generateVolitionalStem(std::string_view surface, std::string_view reading, V2VerbType verb_type) {
