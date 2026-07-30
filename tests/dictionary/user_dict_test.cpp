@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <cstring>
+
 namespace suzume {
 namespace dictionary {
 namespace {
@@ -174,7 +176,7 @@ TEST(UserDictTest, LoadFromMemoryCSV) {
       "東京,NOUN,0.5\n"
       "大阪,NOUN,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 2);
   EXPECT_EQ(dict.size(), 2);
@@ -187,7 +189,7 @@ TEST(UserDictTest, LoadFromMemoryTSV) {
       "東京\tNOUN\tトウキョウ\t0.5\n"
       "大阪\tNOUN\tオオサカ\t0.5\n";
 
-  auto result = dict.loadFromMemory(tsv_data, strlen(tsv_data));
+  auto result = dict.loadFromMemory(tsv_data, std::strlen(tsv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 2);
   EXPECT_EQ(dict.size(), 2);
@@ -203,7 +205,7 @@ TEST(UserDictTest, LoadFromMemoryWithComments) {
       "# Another comment\n"
       "大阪,NOUN,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 2);
 }
@@ -216,7 +218,7 @@ TEST(UserDictTest, LoadFromMemorySkipsIndentedComments) {
       "\t# This is a tab-indented comment\n"
       "東京,NOUN,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 1);
   EXPECT_EQ(dict.size(), 1);
@@ -230,7 +232,7 @@ TEST(UserDictTest, LoadFromMemoryWithWhitespace) {
       "  東京  ,  NOUN  ,  0.5  \n"
       "  大阪  ,  NOUN  ,  0.5  \n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 2);
 }
@@ -239,7 +241,7 @@ TEST(UserDictTest, LoadFromMemoryHandlesCrLfAndFinalLineWithoutNewline) {
   UserDictionary dict;
   const char* csv_data = "東京,NOUN,0.5\r\nテスト,NOUN,0.5";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 2);
   EXPECT_NE(dict.lookupExact("東京", core::PartOfSpeech::Noun), nullptr);
@@ -257,7 +259,7 @@ TEST(UserDictTest, LoadFromMemoryAcceptsPosAliases) {
       "ね,INTERJECTION,0.5\n"
       "記号,SYM,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 6);
 
@@ -280,7 +282,7 @@ TEST(UserDictTest, LoadFromMemoryRejectsInvalidPos) {
 
   const char* csv_data = "東京,BADPOS,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   EXPECT_FALSE(result.hasValue());
   EXPECT_NE(result.error().message.find("Invalid POS at line 1: BADPOS"), std::string::npos);
   EXPECT_EQ(dict.size(), 0);
@@ -291,7 +293,7 @@ TEST(UserDictTest, LoadFromMemoryRejectsEmptySurface) {
 
   const char* csv_data = ",NOUN,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   EXPECT_FALSE(result.hasValue());
   EXPECT_NE(result.error().message.find("Empty surface at line 1"), std::string::npos);
   EXPECT_EQ(dict.size(), 0);
@@ -302,7 +304,7 @@ TEST(UserDictTest, LoadFromMemoryRejectsQuotedEmptySurface) {
 
   const char* csv_data = "\"\",NOUN,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   EXPECT_FALSE(result.hasValue());
   EXPECT_NE(result.error().message.find("Empty surface at line 1"), std::string::npos);
   EXPECT_EQ(dict.size(), 0);
@@ -313,7 +315,7 @@ TEST(UserDictTest, LoadFromMemoryRejectsEmptyPos) {
 
   const char* csv_data = "東京,,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   EXPECT_FALSE(result.hasValue());
   EXPECT_NE(result.error().message.find("Empty POS at line 1"), std::string::npos);
   EXPECT_EQ(dict.size(), 0);
@@ -327,7 +329,7 @@ TEST(UserDictTest, LoadFromMemoryInvalidLine) {
       "東京\n"
       "大阪,NOUN,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 1);
 }
@@ -339,7 +341,7 @@ TEST(UserDictTest, LoadFromMemoryVerbWithConjType) {
       "食べる\tVERB\tタベル\t0.5\tICHIDAN\n"
       "書く\tVERB\tカク\t0.5\tGODAN_KA\n";
 
-  auto result = dict.loadFromMemory(tsv_data, strlen(tsv_data));
+  auto result = dict.loadFromMemory(tsv_data, std::strlen(tsv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 2);
 
@@ -370,7 +372,7 @@ TEST(UserDictTest, LoadFromMemoryAllConjTypes) {
       "静か\tADJ\t-\t0.5\tNA_ADJ\n"
       "普通\tNOUN\t-\t0.5\tNONE\n";
 
-  auto result = dict.loadFromMemory(tsv_data, strlen(tsv_data));
+  auto result = dict.loadFromMemory(tsv_data, std::strlen(tsv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 13);
 
@@ -385,7 +387,7 @@ TEST(UserDictTest, LoadFromMemoryWithLemma) {
 
   const char* csv_data = "食べた,VERB,0.5,食べる\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 1);
 
@@ -399,7 +401,7 @@ TEST(UserDictTest, LoadFromMemoryTSVWithRuntimeLemma) {
 
   const char* tsv_data = "食べた\tVERB\t食べる\n";
 
-  auto result = dict.loadFromMemory(tsv_data, strlen(tsv_data));
+  auto result = dict.loadFromMemory(tsv_data, std::strlen(tsv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 1);
 
@@ -413,7 +415,7 @@ TEST(UserDictTest, LoadFromMemoryTSVCompilerConjTypeIsNotMistakenForLemma) {
 
   const char* tsv_data = "食べる\tVERB\tIchidan\n";
 
-  auto result = dict.loadFromMemory(tsv_data, strlen(tsv_data));
+  auto result = dict.loadFromMemory(tsv_data, std::strlen(tsv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 1);
 
@@ -427,7 +429,7 @@ TEST(UserDictTest, LoadFromMemoryCSVQuotedFields) {
 
   const char* csv_data = "\"東京,大阪\",NOUN,0.5,\"東\"\"阪\"\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue());
   EXPECT_EQ(result.value(), 1);
 
@@ -442,7 +444,7 @@ TEST(UserDictTest, LoadFromMemoryRejectsUnterminatedQuotedField) {
 
   const char* csv_data = "\"東京,NOUN,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   EXPECT_FALSE(result.hasValue());
   EXPECT_NE(result.error().message.find("unterminated quoted field"), std::string::npos);
   EXPECT_EQ(dict.size(), 0);
@@ -453,7 +455,7 @@ TEST(UserDictTest, LoadFromMemoryRejectsTextAfterClosingQuote) {
 
   const char* csv_data = "\"東京\"bad,NOUN,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   EXPECT_FALSE(result.hasValue());
   EXPECT_NE(result.error().message.find("unexpected character after closing quote"), std::string::npos);
   EXPECT_EQ(dict.size(), 0);
@@ -464,7 +466,7 @@ TEST(UserDictTest, LoadFromMemoryPreservesQuoteInsideUnquotedField) {
 
   const char* csv_data = "東\"京,NOUN,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   ASSERT_TRUE(result.hasValue()) << result.error().message;
   ASSERT_EQ(dict.size(), 1);
   EXPECT_EQ(dict.getEntry(0)->surface, "東\"京");
@@ -482,7 +484,7 @@ TEST(UserDictTest, LoadFromMemoryFailureDoesNotPartiallyAppendEntries) {
       "東京,NOUN,0.5\n"
       "\"大阪,NOUN,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   EXPECT_FALSE(result.hasValue());
   EXPECT_EQ(dict.size(), 1);
   EXPECT_TRUE(dict.lookup("東京", 0).empty());
@@ -501,7 +503,7 @@ TEST(UserDictTest, LoadFromMemoryInvalidPosDoesNotPartiallyAppendEntries) {
       "東京,NOUN,0.5\n"
       "大阪,BADPOS,0.5\n";
 
-  auto result = dict.loadFromMemory(csv_data, strlen(csv_data));
+  auto result = dict.loadFromMemory(csv_data, std::strlen(csv_data));
   EXPECT_FALSE(result.hasValue());
   EXPECT_EQ(dict.size(), 1);
   EXPECT_TRUE(dict.lookup("東京", 0).empty());
