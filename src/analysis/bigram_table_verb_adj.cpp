@@ -277,6 +277,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // verb (美しく+なる, 読まれなく+なる), not only its renyokei form.
       {EPOS::AdjRenyokei, EPOS::VerbShuushikei, cost::kVeryStrongBonus},
 
+      // An i-adjective continuative can modify a following adjective as a
+      // degree adverbial (恐ろしく+高い, 詳しく+高い). Prefer the productive
+      // continuative over a same-span unknown noun.
+      {EPOS::AdjRenyokei, EPOS::AdjBasic, cost::kStrongBonus},
+
       // AdjRenyokei → VerbOnbinkei (深く+突き刺さっ, 美しく+咲い) - moderate bonus
       // Adverb form of adjective directly modifying verb in onbin (past/te) form
       {EPOS::AdjRenyokei, EPOS::VerbOnbinkei, cost::kModerateBonus},
@@ -307,10 +312,11 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // Helps i-adjective+conjunctive particle beat ADJ_NA+い(verb)+し path
       {EPOS::AdjBasic, EPOS::ParticleConj, cost::kMinorBonus},
 
-      // AdjBasic → Noun (美しい+猫, 大きい+家, 高い+山) - moderate bonus
+      // AdjBasic → Noun (美しい+猫, 大きい+家, 高い+山) - strong bonus
       // i-adjective attributive form + noun is fundamental Japanese grammar
-      // Without this, long unknown NOUN candidates (一番美しい) beat split paths
-      {EPOS::AdjBasic, EPOS::Noun, cost::kModerateBonus},
+      // and must beat the homographic verb-renyokei reading of deverbal nouns
+      // (罪深い+行い), as well as long unknown NOUN candidates (一番美しい).
+      {EPOS::AdjBasic, EPOS::Noun, cost::kStrongBonus},
 
       // An attributive i-adjective can modify a bound nominal suffix
       // (長い+間). Keep that grammatical suffix reading ahead of the

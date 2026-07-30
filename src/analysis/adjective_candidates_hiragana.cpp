@@ -91,6 +91,35 @@ bool isParticleSequenceWithoutLexicalReading(const std::vector<char32_t>& codepo
   return reachable.back();
 }
 
+// A genitive の after a substantive two-mora prefix is a phrase boundary for
+// an i-adjective candidate assembled from unknown hiragana. Keep exact lexical
+// adjectives and early word-internal の (たのしい); only fabricated analyses
+// that cross a plausible nominal host are rejected by the caller.
+bool embedsGenitiveParticle(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                            size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos < start_pos + 3 || end_pos > codepoints.size()) {
+    return false;
+  }
+  for (size_t particle_pos = start_pos + 1; particle_pos + 1 < end_pos; ++particle_pos) {
+    const auto* entry = dict_manager->lookupExact(extractSubstring(codepoints, particle_pos, particle_pos + 1),
+                                                  core::PartOfSpeech::Particle);
+    if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleNo) {
+      if (particle_pos >= start_pos + 2) {
+        return true;
+      }
+      if (start_pos > 0) {
+        const auto* bridged_head = dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, particle_pos));
+        if (bridged_head != nullptr &&
+            (bridged_head->pos == core::PartOfSpeech::Noun || bridged_head->pos == core::PartOfSpeech::Particle ||
+             bridged_head->pos == core::PartOfSpeech::Auxiliary)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 // Emit a whole-word i-adjective candidate for a spelled-out reduplicated 〜しい
 // adjective (バカバカしい, ばかばかしくない). The doubled stem is otherwise pre-empted
 // by an onomatopoeia ADV candidate (aa_doubled / abab_pattern) plus a split-off しい
@@ -511,6 +540,12 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
 
   // Need at least 3 characters after determining hiragana_end
   if (hiragana_end <= start_pos + 2) {
+    return;
+  }
+
+  const std::string bounded_surface = extractSubstring(codepoints, start_pos, hiragana_end);
+  const bool has_exact_adjective = isAdjectiveInDictionary(dict_manager, bounded_surface);
+  if (!has_exact_adjective && embedsGenitiveParticle(dict_manager, codepoints, start_pos, hiragana_end)) {
     return;
   }
 

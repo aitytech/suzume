@@ -490,7 +490,7 @@ constexpr float kV1PrefixMinConfidence = 0.3F;
 // a verb stem and thus suppress the compound (今食べてる → 今|食べ|てる)
 constexpr float kPrefixCompoundVerbStemConf = 0.5F;
 
-// Compound adjective (2-kanji stem: 薄暗い, 物悲しく)
+// Compound adjective (kanji stem: 薄暗い, 用心深い, 物悲しく)
 constexpr float kCompoundAdjConfMin = 0.3F;   // minimum inflection confidence
 constexpr float kCompoundAdjBaseCost = 0.5F;  // base cost for generated candidate
 // A generated attributive selector must remain on an unpenalized adjective
@@ -498,9 +498,10 @@ constexpr float kCompoundAdjBaseCost = 0.5F;  // base cost for generated candida
 // before this gate, while the weakest regular compound adjective still passes.
 constexpr float kAttributiveSelectorMaxCost =
     confidenceScaledCost(kCompoundAdjBaseCost, kCompoundAdjConfMin, kKanjiAdjConfScale);
-// A morphologically complete two-kanji i-adjective is a lexical compound
-// rather than a noun followed by a shorter adjective (物悲しく, 薄暗い).
-constexpr float kCompoundIAdjectiveLexicalBonus = -2.0F;
+// A morphologically complete kanji i-adjective is a lexical compound rather
+// than a nominal host followed by its productive adjectival second element
+// (物悲しく, 用心深い, 我慢強い).
+constexpr float kCompoundIAdjectiveLexicalBonus = -2.2F;
 // A kana-prefixed kanji adjective beginning at a verified post-particle word
 // boundary must beat the accidental particle-chain reading of its prefix
 // (が+も+の+悲しく).

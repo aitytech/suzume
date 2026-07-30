@@ -11,6 +11,7 @@
 #include "normalize/char_type.h"
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
+#include "scorer_constants.h"
 #include "suffix_candidates.h"
 #include "unknown.h"
 #include "verb_candidates_helpers.h"
@@ -21,6 +22,20 @@ using adj_detail::makeNaAdjCandidate;
 using verb_helpers::findCharRegionEnd;
 
 namespace {
+
+bool hasIndependentAdjectiveHost(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                 const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 1) {
+    return false;
+  }
+  for (size_t host_start = start_pos + 1; host_start < end_pos; ++host_start) {
+    const std::string host = extractSubstring(codepoints, host_start, end_pos);
+    if (dict_manager->lookupExact(host, core::PartOfSpeech::Adjective) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
 
 void generateHiraganaNariNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                const std::vector<normalize::CharType>& char_types,
@@ -263,6 +278,14 @@ void generateNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size
   const bool is_unlexicalized_capability_compound =
       kanji_len > 2 && utf8::endsWith(kanji_seq, "可能") &&
       (dict_manager == nullptr || dict_manager->lookupExact(kanji_seq, core::PartOfSpeech::Adjective) == nullptr);
+  // An internal dictionary adjective is the predicate head, so a preceding
+  // productive prefix must not be swallowed by the generic "all kanji before
+  // な" fallback (超|重要な, 最|簡単な). Productive negation compounds are
+  // licensed as new adjective units by their prefix semantics (不十分な), and
+  // keep the existing compound reading.
+  const bool has_independent_adjective_host =
+      hasIndependentAdjectiveHost(codepoints, start_pos, kanji_end, dict_manager);
+  const bool is_productive_negation_compound = scorer::startsWithNegationPrefix(kanji_seq);
   if (is_unlexicalized_capability_compound) {
     auto capability_noun = makeCandidate(kanji_seq, start_pos, kanji_end, core::PartOfSpeech::Noun,
                                          candidate::kNaAdjStemCost, true, CandidateOrigin::SuffixPattern);
@@ -273,7 +296,8 @@ void generateNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size
 #endif
     candidates.push_back(std::move(capability_noun));
   }
-  if ((followed_by_na || followed_by_sou) && !is_unlexicalized_capability_compound) {
+  if ((followed_by_na || followed_by_sou) && !is_unlexicalized_capability_compound &&
+      (!has_independent_adjective_host || is_productive_negation_compound)) {
     // Skip if first character is a formal noun (形式名詞)
     // e.g., 時妙な should be 時+妙な, not 時妙(ADJ)+な
     // Formal nouns (時, 事, 所, etc.) are standalone grammatical words

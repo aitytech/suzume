@@ -194,11 +194,33 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
     return;
   }
 
-  // Find kanji portion (1-2 characters for i-adjectives; no 3-char kanji stems exist).
-  // The only longer stems are fully spelled-out reduplications (馬鹿馬鹿しい), whose
-  // doubled 2-kanji unit + し + inflection onset is detected explicitly so the
-  // 4-kanji stem is not truncated to 馬鹿馬 + 鹿しい.
+  // A productive adjective-forming second element may follow a multi-kanji
+  // nominal host (用心+深い, 我慢+強い). Extend the ordinary two-kanji scan only
+  // when the final kanji plus its okurigana is itself such a second element.
+  // This keeps unrelated noun + predicate sequences (半数+近く, 一人+歩いた)
+  // out of the whole-span adjective path.
+  constexpr size_t kMaxKanjiAdjectiveStemLength = 6;
   size_t kanji_end = findCharRegionEnd(char_types, start_pos, 2, normalize::CharType::Kanji);
+  const size_t extended_kanji_end =
+      findCharRegionEnd(char_types, start_pos, kMaxKanjiAdjectiveStemLength, normalize::CharType::Kanji);
+  if (extended_kanji_end > kanji_end && extended_kanji_end < char_types.size() &&
+      char_types[extended_kanji_end] == normalize::CharType::Hiragana) {
+    const size_t tail_hiragana_end =
+        findCharRegionEnd(char_types, extended_kanji_end, 5, normalize::CharType::Hiragana);
+    for (size_t end_pos = tail_hiragana_end; end_pos > extended_kanji_end; --end_pos) {
+      const std::string tail_surface = extractSubstring(codepoints, extended_kanji_end - 1, end_pos);
+      const auto& tail_analyses = inflection.analyze(tail_surface);
+      const bool has_productive_tail =
+          std::any_of(tail_analyses.begin(), tail_analyses.end(), [](const grammar::InflectionCandidate& candidate) {
+            return candidate.verb_type == grammar::VerbType::IAdjective &&
+                   adj_detail::isCompoundFormingAdjective(candidate.base_form);
+          });
+      if (has_productive_tail) {
+        kanji_end = extended_kanji_end;
+        break;
+      }
+    }
+  }
   if (verb_helpers::isReduplicatedShiiAdjectiveHead(codepoints, start_pos) &&
       findCharRegionEnd(char_types, start_pos, 4, normalize::CharType::Kanji) == start_pos + 4) {
     kanji_end = start_pos + 4;
@@ -719,13 +741,20 @@ void generateGaMashiiHostAdjectiveCandidates(const std::vector<char32_t>& codepo
         continue;
       }
 
+      // The derivational host may be followed by the productive nominalizer
+      // さ. Inflection analysis accepts the full nominalized span as an
+      // i-adjective form, but the tokenizer must keep the adjective stem and
+      // suffix as separate search units.
+      const bool ends_with_nominalizer = grammar::isSingleHiragana(inflection_candidate->suffix, core::hiragana::kSa);
+      const size_t adjective_end = ends_with_nominalizer ? end_pos - 1 : end_pos;
+      const std::string adjective_surface = extractSubstring(codepoints, start_pos, adjective_end);
       const bool already_generated =
           std::any_of(candidates.begin(), candidates.end(), [&](const UnknownCandidate& candidate) {
-            return candidate.start == start_pos && candidate.end == end_pos &&
+            return candidate.start == start_pos && candidate.end == adjective_end &&
                    candidate.pos == core::PartOfSpeech::Adjective && candidate.lemma == inflection_candidate->base_form;
           });
       if (!already_generated) {
-        auto adjective = makeIAdjCandidate(surface, start_pos, end_pos, inflection_candidate->base_form,
+        auto adjective = makeIAdjCandidate(adjective_surface, start_pos, adjective_end, inflection_candidate->base_form,
                                            candidate::kDerivedSuffixAdjectiveCost, CandidateOrigin::AdjectiveI,
                                            inflection_candidate->confidence, "ga_mashii_nominal_host");
         adjective.has_suffix = true;

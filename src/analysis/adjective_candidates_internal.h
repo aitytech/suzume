@@ -161,7 +161,7 @@ void appendKanjiIAdjPostVariants(const std::vector<char32_t>& codepoints, size_t
                                  std::vector<UnknownCandidate>& candidates, size_t candidate_start);
 
 /**
- * @brief Append compound i-adjective candidates for a two-kanji stem.
+ * @brief Append compound i-adjective candidates for a kanji stem.
  */
 void appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                        size_t hiragana_end, const grammar::Inflection& inflection,
