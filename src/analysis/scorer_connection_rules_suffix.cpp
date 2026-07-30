@@ -81,9 +81,9 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // conjunctive particle ので followed by the lexical verb す.  The latter
   // has no grammatical continuation, whereas の + です is productive after
   // any predicate.
-  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::VerbShuushikei &&
-      utf8::equalsAny(prev.surface, {"ので"}) && utf8::equalsAny(next.surface, {"す"})) {
-    bonus += cost::kAlmostNever;
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"ので"}) &&
+      utf8::equalsAny(next.surface, {"す"})) {
+    bonus += cost::kAlmostNever + cost::kProhibitive;
   }
 
   // The closed polite copula です must not be reopened at its internal

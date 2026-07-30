@@ -47,7 +47,31 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
   const bool incomplete_potential_before_symbol = prev.extended_pos == core::ExtendedPOS::AuxPotential &&
                                                   normalize::utf8Length(prev.surface) == 1 &&
                                                   next.extended_pos == core::ExtendedPOS::Symbol;
-  if (invalid_aspect_iru_attachment || invalid_aspect_iku_attachment || incomplete_potential_before_symbol) {
+  // A terminal verb cannot host the nominative case reading of が.  When が
+  // follows a clause it is a connective homograph, while the case particle
+  // requires a nominal on its left.  Penalizing only the case reading prevents
+  // a fabricated sentence-initial verb from opening a second fabricated
+  // predicate through が.
+  const bool terminal_verb_before_nominative_case = prev.extended_pos == core::ExtendedPOS::VerbShuushikei &&
+                                                    next.extended_pos == core::ExtendedPOS::ParticleCase &&
+                                                    grammar::isSingleHiragana(next.surface, U'が');
+  // The assertive copula predicates over a nominal.  A conditional verb form or
+  // a potential auxiliary directly before it is therefore an accidental
+  // homograph chain.  Restrict this to the two nonterminal readings that can
+  // fabricate い|え|だっ and いえ|だっ; terminal/modal predicates have valid
+  // productive copular continuations.
+  const bool nonterminal_predicate_before_assertive_copula =
+      next.extended_pos == core::ExtendedPOS::AuxCopulaDa &&
+      (prev.extended_pos == core::ExtendedPOS::VerbKateikei || prev.extended_pos == core::ExtendedPOS::AuxPotential);
+  // Colloquial emphatic extension may add っ to an adverb at a clause edge, but
+  // not immediately before the past auxiliary.  In that position the sokuon is
+  // the copula's onbin (名詞+だっ+た), not part of the adverb.
+  const bool emphatic_adverb_before_past = prev.pos == core::PartOfSpeech::Adverb &&
+                                           utf8::endsWith(prev.surface, "っ") &&
+                                           next.extended_pos == core::ExtendedPOS::AuxTenseTa;
+  if (invalid_aspect_iru_attachment || invalid_aspect_iku_attachment || incomplete_potential_before_symbol ||
+      terminal_verb_before_nominative_case || nonterminal_predicate_before_assertive_copula ||
+      emphatic_adverb_before_past) {
     bonus += cost::kAlmostNever;
   }
   if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&

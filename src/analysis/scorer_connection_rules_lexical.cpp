@@ -286,13 +286,17 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kVeryStrongBonus;
   }
 
-  // Penalty for AuxCopulaDa(だ/な) → ParticleFinal(ったら) pattern.
+  // Penalty for an unsokuonized だ/な auxiliary → ParticleFinal(ったら)
+  // pattern.
   // The final particle is valid after a noun (あなた+ったら), but after the
   // copula these surfaces belong to a different inflectional boundary:
-  // だっ+たら (copula conditional) or なっ+たら (なる conditional).
-  if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && utf8::equalsAny(prev.surface, {"だ", "な"}) &&
-      next.extended_pos == core::ExtendedPOS::ParticleFinal && utf8::startsWith(next.surface, "った")) {
-    bonus += cost::kStrong;
+  // だっ+たら (copula conditional) or なっ+たら (なる conditional). The
+  // homographic past auxiliary だ follows the same boundary after a voiced
+  // onbin stem (読ん+だっ+たら).
+  if ((prev.extended_pos == core::ExtendedPOS::AuxCopulaDa || prev.extended_pos == core::ExtendedPOS::AuxTenseTa) &&
+      utf8::equalsAny(prev.surface, {"だ", "な"}) && next.extended_pos == core::ExtendedPOS::ParticleFinal &&
+      utf8::startsWith(next.surface, "った")) {
+    bonus += prev.extended_pos == core::ExtendedPOS::AuxTenseTa ? cost::kAlmostNever : cost::kStrong;
   }
 
   // Penalty for ParticleFinal → VerbRenyokei pattern
