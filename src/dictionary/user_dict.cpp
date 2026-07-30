@@ -114,7 +114,7 @@ core::Expected<size_t, core::Error> UserDictionary::parseSource(std::string_view
     if (entry.surface.size() > kMaxUserDictionarySurfaceBytes) {
       return core::makeUnexpected(
           core::Error(core::ErrorCode::InvalidInput,
-                      "Dictionary surface exceeds " + std::to_string(kMaxUserDictionarySurfaceBytes) + " bytes"));
+                      "Dictionary surface exceeds " + core::decimalDigits(kMaxUserDictionarySurfaceBytes) + " bytes"));
     }
     parsed_entries.push_back(std::move(entry));
   }

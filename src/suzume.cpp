@@ -76,11 +76,11 @@ core::Expected<LoadedSourceDictionary, core::Error> loadSourceDictionaryFromMemo
   }
   std::vector<std::string> warnings = std::move(parsed.value().warnings);
   if (installed_entry_count < expanded.entries.size()) {
-    warnings.push_back("Skipped " + std::to_string(expanded.entries.size() - installed_entry_count) +
+    warnings.push_back("Skipped " + core::decimalDigits(expanded.entries.size() - installed_entry_count) +
                        " invalid dictionary entries");
   }
   if (expanded.duplicates_skipped > 0) {
-    warnings.push_back("Skipped " + std::to_string(expanded.duplicates_skipped) +
+    warnings.push_back("Skipped " + core::decimalDigits(expanded.duplicates_skipped) +
                        " duplicate expanded dictionary entries");
   }
   return LoadedSourceDictionary{std::move(user_dictionary), installed_entry_count, std::move(warnings)};
@@ -185,7 +185,7 @@ struct Suzume::Impl {
         if (!config_status.empty()) {
           config_status += ", ";
         }
-        config_status += "env_overrides=" + std::to_string(result.env_override_count);
+        config_status += "env_overrides=" + core::decimalDigits(result.env_override_count);
       }
     }
 #endif

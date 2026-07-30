@@ -1,5 +1,7 @@
 #include "error.h"
 
+#include <algorithm>
+
 namespace suzume::core {
 
 std::string_view errorCodeToString(ErrorCode code) {
@@ -22,6 +24,18 @@ std::string_view errorCodeToString(ErrorCode code) {
     default:
       return "InternalError";
   }
+}
+
+std::string decimalDigits(size_t value) {
+  std::string digits;
+  digits.push_back(static_cast<char>('0' + (value % 10)));
+  value /= 10;
+  while (value != 0) {
+    digits.push_back(static_cast<char>('0' + (value % 10)));
+    value /= 10;
+  }
+  std::reverse(digits.begin(), digits.end());
+  return digits;
 }
 
 }  // namespace suzume::core

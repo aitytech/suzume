@@ -2,6 +2,7 @@
 #define SUZUME_CORE_ERROR_H_
 
 #include <cassert>
+#include <cstddef>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -86,6 +87,15 @@ bool isSuccess(const Result<T>& result) {
  * @brief Convert error code to string
  */
 std::string_view errorCodeToString(ErrorCode code);
+
+/**
+ * @brief Render an unsigned value as decimal digits
+ * @note Diagnostic messages are the only place this library turns a number into
+ *       text, and they only ever report counts and line numbers. Formatting them
+ *       here keeps the standard library's generic integer formatter, which also
+ *       handles signed and wider types, out of the build.
+ */
+std::string decimalDigits(size_t value);
 
 // Error code aliases for consistency
 constexpr ErrorCode kInvalidArgument = ErrorCode::InvalidInput;

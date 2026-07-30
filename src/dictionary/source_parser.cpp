@@ -170,21 +170,21 @@ core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::st
                                                        char delimiter) {
   if (fields.size() < 2) {
     return core::makeUnexpected(
-        core::Error(core::ErrorCode::ParseError, "Missing POS field at line " + std::to_string(line_number)));
+        core::Error(core::ErrorCode::ParseError, "Missing POS field at line " + core::decimalDigits(line_number)));
   }
   if (fields[0].empty()) {
     return core::makeUnexpected(
-        core::Error(core::ErrorCode::ParseError, "Empty surface at line " + std::to_string(line_number)));
+        core::Error(core::ErrorCode::ParseError, "Empty surface at line " + core::decimalDigits(line_number)));
   }
   if (fields[1].empty()) {
     return core::makeUnexpected(
-        core::Error(core::ErrorCode::ParseError, "Empty POS at line " + std::to_string(line_number)));
+        core::Error(core::ErrorCode::ParseError, "Empty POS at line " + core::decimalDigits(line_number)));
   }
 
   auto pos = core::stringToPosStrict(fields[1]);
   if (!pos.has_value()) {
-    return core::makeUnexpected(core::Error(core::ErrorCode::ParseError,
-                                            "Invalid POS at line " + std::to_string(line_number) + ": " + fields[1]));
+    return core::makeUnexpected(core::Error(
+        core::ErrorCode::ParseError, "Invalid POS at line " + core::decimalDigits(line_number) + ": " + fields[1]));
   }
 
   SourceEntry entry;
@@ -206,7 +206,7 @@ core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::st
         if (!conj_type.has_value()) {
           return core::makeUnexpected(
               core::Error(core::ErrorCode::ParseError,
-                          "Line " + std::to_string(line_number) + ": Invalid conjugation type: " + fields[4]));
+                          "Line " + core::decimalDigits(line_number) + ": Invalid conjugation type: " + fields[4]));
         }
         entry.conj_type = *conj_type;
       }
@@ -215,9 +215,10 @@ core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::st
       }
       for (size_t field_idx = 6; field_idx < fields.size(); ++field_idx) {
         if (!fields[field_idx].empty()) {
-          return core::makeUnexpected(core::Error(
-              core::ErrorCode::ParseError, "Unexpected non-empty TSV column at line " + std::to_string(line_number) +
-                                               ": " + std::to_string(field_idx + 1)));
+          return core::makeUnexpected(
+              core::Error(core::ErrorCode::ParseError, "Unexpected non-empty TSV column at line " +
+                                                           core::decimalDigits(line_number) + ": " +
+                                                           core::decimalDigits(field_idx + 1)));
         }
       }
       return entry;
@@ -226,9 +227,10 @@ core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::st
     if (fields.size() > 4) {
       for (size_t field_idx = 4; field_idx < fields.size(); ++field_idx) {
         if (!fields[field_idx].empty()) {
-          return core::makeUnexpected(core::Error(
-              core::ErrorCode::ParseError, "Unexpected non-empty TSV column at line " + std::to_string(line_number) +
-                                               ": " + std::to_string(field_idx + 1)));
+          return core::makeUnexpected(
+              core::Error(core::ErrorCode::ParseError, "Unexpected non-empty TSV column at line " +
+                                                           core::decimalDigits(line_number) + ": " +
+                                                           core::decimalDigits(field_idx + 1)));
         }
       }
       entry.ignored_empty_padding_columns = true;
@@ -244,7 +246,7 @@ core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::st
         if (fields.size() >= 4 && !fields[3].empty()) {
           return core::makeUnexpected(
               core::Error(core::ErrorCode::ParseError,
-                          "Ambiguous non-empty TSV columns 3 and 4 at line " + std::to_string(line_number)));
+                          "Ambiguous non-empty TSV columns 3 and 4 at line " + core::decimalDigits(line_number)));
         }
         entry.lemma = fields[2];
       }
@@ -260,8 +262,9 @@ core::Expected<SourceEntry, core::Error> convertFields(const std::vector<std::st
   }
 
   if (!normalize::isValidUtf8(entry.surface) || (!entry.lemma.empty() && !normalize::isValidUtf8(entry.lemma))) {
-    return core::makeUnexpected(core::Error(
-        core::ErrorCode::ParseError, "Dictionary entry is not valid UTF-8 at line " + std::to_string(line_number)));
+    return core::makeUnexpected(
+        core::Error(core::ErrorCode::ParseError,
+                    "Dictionary entry is not valid UTF-8 at line " + core::decimalDigits(line_number)));
   }
 
   return entry;
@@ -272,7 +275,7 @@ core::Expected<SourceEntry, core::Error> parseRecord(std::string_view record, si
   if (!parsed.error.empty()) {
     return core::makeUnexpected(
         core::Error(core::ErrorCode::ParseError,
-                    "Invalid legacy CSV quoting at line " + std::to_string(line_number) + ": " + parsed.error));
+                    "Invalid legacy CSV quoting at line " + core::decimalDigits(line_number) + ": " + parsed.error));
   }
   return convertFields(parsed.fields, line_number, delimiter);
 }
@@ -337,11 +340,11 @@ core::Expected<SourceParseResult, core::Error> parseDictionarySource(std::string
       if (!parsed_record.error.empty()) {
         return core::makeUnexpected(core::Error(
             core::ErrorCode::ParseError,
-            "Invalid legacy CSV quoting at line " + std::to_string(record_line) + ": " + parsed_record.error));
+            "Invalid legacy CSV quoting at line " + core::decimalDigits(record_line) + ": " + parsed_record.error));
       }
       if (options.skip_single_field_records) {
         if (parsed_record.fields.size() < 2) {
-          result.warnings.push_back("Skipped dictionary record at line " + std::to_string(record_line) +
+          result.warnings.push_back("Skipped dictionary record at line " + core::decimalDigits(record_line) +
                                     ": missing POS field");
           record_start = idx + 1;
           record_line = current_line;
@@ -356,13 +359,13 @@ core::Expected<SourceParseResult, core::Error> parseDictionarySource(std::string
         return core::makeUnexpected(entry.error());
       }
       if (entry.value().used_legacy_tsv_layout) {
-        result.warnings.push_back("Used legacy TSV layout at line " + std::to_string(record_line));
+        result.warnings.push_back("Used legacy TSV layout at line " + core::decimalDigits(record_line));
       }
       if (entry.value().ignored_empty_padding_columns) {
-        result.warnings.push_back("Ignored empty TSV padding columns at line " + std::to_string(record_line));
+        result.warnings.push_back("Ignored empty TSV padding columns at line " + core::decimalDigits(record_line));
       }
       if (entry.value().pos == core::PartOfSpeech::Auxiliary || entry.value().pos == core::PartOfSpeech::Particle) {
-        result.warnings.push_back("Dictionary entry at line " + std::to_string(record_line) +
+        result.warnings.push_back("Dictionary entry at line " + core::decimalDigits(record_line) +
                                   " uses closed-class POS " + std::string(core::posToString(entry.value().pos)) +
                                   "; register grammatical auxiliaries and particles in L1 instead");
       }
@@ -377,7 +380,7 @@ core::Expected<SourceParseResult, core::Error> parseDictionarySource(std::string
   if (in_quotes) {
     return core::makeUnexpected(core::Error(
         core::ErrorCode::ParseError,
-        "Invalid legacy CSV quoting at line " + std::to_string(record_line) + ": unterminated quoted field"));
+        "Invalid legacy CSV quoting at line " + core::decimalDigits(record_line) + ": unterminated quoted field"));
   }
   return result;
 }
