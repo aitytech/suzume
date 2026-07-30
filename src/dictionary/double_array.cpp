@@ -52,13 +52,13 @@ size_t DoubleArray::BuildState::findBase(const std::vector<uint8_t>& children) {
 // DoubleArray implementation
 DoubleArray::DoubleArray() = default;
 
-bool DoubleArray::build(const std::vector<std::string>& keys, const std::vector<int32_t>& values) {
+bool DoubleArray::build(const std::vector<std::string>& keys, const std::vector<uint32_t>& values) {
   if (keys.size() != values.size()) {
     return false;
   }
 
-  for (int32_t value : values) {
-    if (value < 0 || static_cast<uint32_t>(value) > Unit::kPayloadMask) {
+  for (uint32_t value : values) {
+    if (value > Unit::kPayloadMask) {
       return false;
     }
   }
@@ -72,7 +72,7 @@ bool DoubleArray::build(const std::vector<std::string>& keys) {
   return buildInternal(keys, nullptr);
 }
 
-bool DoubleArray::buildInternal(const std::vector<std::string>& keys, const std::vector<int32_t>* values) {
+bool DoubleArray::buildInternal(const std::vector<std::string>& keys, const std::vector<uint32_t>* values) {
   if (keys.empty()) {
     clear();
     return true;
@@ -123,22 +123,8 @@ bool DoubleArray::buildInternal(const std::vector<std::string>& keys, const std:
   return true;
 }
 
-bool DoubleArray::build(const std::vector<std::string>& keys, const std::vector<uint32_t>& values) {
-  if (keys.size() != values.size()) {
-    return false;
-  }
-  std::vector<int32_t> signed_values(values.size());
-  for (size_t idx = 0; idx < values.size(); ++idx) {
-    if (values[idx] > Unit::kPayloadMask) {
-      return false;
-    }
-    signed_values[idx] = static_cast<int32_t>(values[idx]);
-  }
-  return build(keys, signed_values);
-}
-
 void DoubleArray::buildRecursive(BuildState& state, const std::vector<std::string>& keys,
-                                 const std::vector<int32_t>* values, size_t begin, size_t end, size_t depth,
+                                 const std::vector<uint32_t>* values, size_t begin, size_t end, size_t depth,
                                  size_t parent_pos) {
   if (begin >= end || state.failed) {
     return;
@@ -214,7 +200,7 @@ void DoubleArray::buildRecursive(BuildState& state, const std::vector<std::strin
   // Handle leaf children (null terminator)
   if (leaf_end > leaf_begin) {
     size_t leaf_pos = base_val ^ 0;  // XOR with null
-    const int32_t value = values == nullptr ? static_cast<int32_t>(leaf_begin) : (*values)[leaf_begin];
+    const uint32_t value = values == nullptr ? static_cast<uint32_t>(leaf_begin) : (*values)[leaf_begin];
     state.units[parent_pos].setHasLeaf();
     state.units[leaf_pos].setValue(value);
     ++child_idx;

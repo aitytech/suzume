@@ -339,13 +339,13 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
     return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Invalid dictionary surface table"));
   }
   std::vector<std::string> trie_keys;
-  std::vector<int32_t> trie_values;
+  std::vector<uint32_t> trie_values;
   trie_keys.reserve(trie_surfaces.size());
   trie_values.reserve(trie_surfaces.size());
   for (size_t idx = 0; idx < trie_surfaces.size(); ++idx) {
     if (idx == 0 || trie_surfaces[idx] != trie_surfaces[idx - 1]) {
       trie_keys.push_back(trie_surfaces[idx]);
-      trie_values.push_back(static_cast<int32_t>(idx));
+      trie_values.push_back(static_cast<uint32_t>(idx));
     }
   }
   if (!trie.build(trie_keys, trie_values)) {

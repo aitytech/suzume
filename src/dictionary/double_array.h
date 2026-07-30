@@ -41,22 +41,19 @@ class DoubleArray {
   /**
    * @brief Build double-array from sorted key-value pairs
    * @param keys Sorted keys (must be sorted lexicographically)
-   * @param values Values corresponding to each key
+   * @param values Values corresponding to each key, each within Unit::kPayloadMask
    * @return true on success, false on failure
    *
    * @note Keys MUST be sorted. Unsorted keys will cause incorrect results.
+   * @note Values are unsigned entry indices; exactMatch reserves -1 for "absent",
+   *       so the stored payload never carries a sign of its own.
    */
-  bool build(const std::vector<std::string>& keys, const std::vector<int32_t>& values);
+  bool build(const std::vector<std::string>& keys, const std::vector<uint32_t>& values);
 
   /**
    * @brief Build with each key's sorted index as its value
    */
   bool build(const std::vector<std::string>& keys);
-
-  /**
-   * @brief Build with uint32_t values (convenience overload)
-   */
-  bool build(const std::vector<std::string>& keys, const std::vector<uint32_t>& values);
 
   /**
    * @brief Search for exact match
@@ -110,7 +107,7 @@ class DoubleArray {
     void setLabel(uint8_t label_val) { data = (data & 0xFFFFFF00U) | label_val; }
     void setBase(uint32_t base_val) { data = (data & 0x800000FFU) | (base_val << 8U); }
     void setHasLeaf() { data |= 0x80000000U; }
-    void setValue(int32_t val) { data = (static_cast<uint32_t>(val) + 1U) << 8U; }
+    void setValue(uint32_t val) { data = (val + 1U) << 8U; }
   };
 
   std::vector<Unit> units_;
@@ -149,9 +146,9 @@ class DoubleArray {
     size_t findBase(const std::vector<uint8_t>& children);
   };
 
-  void buildRecursive(BuildState& state, const std::vector<std::string>& keys, const std::vector<int32_t>* values,
+  void buildRecursive(BuildState& state, const std::vector<std::string>& keys, const std::vector<uint32_t>* values,
                       size_t begin, size_t end, size_t depth, size_t parent_pos);
-  bool buildInternal(const std::vector<std::string>& keys, const std::vector<int32_t>* values);
+  bool buildInternal(const std::vector<std::string>& keys, const std::vector<uint32_t>* values);
 };
 
 }  // namespace suzume::dictionary

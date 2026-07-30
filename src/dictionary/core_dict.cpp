@@ -134,13 +134,13 @@ void CoreDictionary::buildTrie() {
   // Build unique keys with first occurrence index. Entries are already sorted,
   // so a comparison with the previous item is sufficient.
   std::vector<std::string> keys;
-  std::vector<int32_t> values;
+  std::vector<uint32_t> values;
   keys.reserve(entries_.size());
   values.reserve(entries_.size());
   for (size_t idx = 0; idx < entries_.size(); ++idx) {
     if (idx == 0 || entries_[idx].surface != entries_[idx - 1].surface) {
       keys.push_back(entries_[idx].surface);
-      values.push_back(static_cast<int32_t>(idx));
+      values.push_back(static_cast<uint32_t>(idx));
     }
   }
 

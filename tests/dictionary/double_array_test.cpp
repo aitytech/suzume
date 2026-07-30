@@ -74,15 +74,7 @@ TEST_F(DoubleArrayTest, BuildMismatchedSizeFails) {
   EXPECT_FALSE(trie_.build(keys, values));
 }
 
-TEST_F(DoubleArrayTest, BuildRejectsNegativeSignedValue) {
-  std::vector<std::string> keys = {"a"};
-  std::vector<int32_t> values = {-1};
-
-  EXPECT_FALSE(trie_.build(keys, values));
-  EXPECT_TRUE(trie_.empty());
-}
-
-TEST_F(DoubleArrayTest, BuildRejectsUintValueOutsideSignedResultRange) {
+TEST_F(DoubleArrayTest, BuildRejectsValueOutsideSignedResultRange) {
   std::vector<std::string> keys = {"a"};
   std::vector<uint32_t> values = {static_cast<uint32_t>(INT32_MAX) + 1u};
 
