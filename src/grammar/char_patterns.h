@@ -117,6 +117,14 @@ bool isDemonstrativeUAdverb(std::string_view surface);
  */
 bool isHonorificPrefix(std::string_view surface);
 
+/**
+ * @brief Whether a surface is a bound prefix that forms a lexical verb with V2
+ *
+ * Unlike a verb continuative, this closed-class prefix has no independent
+ * predicate lemma.  A verified following verb supplies the lexical head.
+ */
+bool isBoundVerbPrefix(std::string_view surface);
+
 /** @brief Whether a surface is a one-character kanji honorific title. */
 bool isKanjiHonorificTitle(std::string_view surface);
 

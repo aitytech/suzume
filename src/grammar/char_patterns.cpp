@@ -167,6 +167,11 @@ bool isHonorificPrefix(std::string_view surface) {
   return surface == "お" || surface == "ご";
 }
 
+bool isBoundVerbPrefix(std::string_view surface) {
+  size_t byte_pos = 0;
+  return normalize::decodeUtf8(surface, byte_pos) == U'仕' && byte_pos == surface.size();
+}
+
 bool isKanjiHonorificTitle(std::string_view surface) {
   return surface == "様" || surface == "氏";
 }

@@ -190,9 +190,11 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   // interior of a two-kanji kango (提+出す for 提出する). The same closed set
   // already gates the retry below, which spells this construction the other
   // way round.
+  const bool has_bound_verb_prefix = grammar::isBoundVerbPrefix(extractSubstring(codepoints, start_pos, start_pos + 1));
   const bool has_kanji_v2_after_bare_ichidan =
       kanji_end >= start_pos + 2 && char_types[start_pos + 1] == CharType::Kanji &&
-      godanRenyokeiBaseCp(renyokei_char) == 0 && verb_helpers::isSingleKanjiIchidan(codepoints[start_pos]);
+      godanRenyokeiBaseCp(renyokei_char) == 0 &&
+      (verb_helpers::isSingleKanjiIchidan(codepoints[start_pos]) || has_bound_verb_prefix);
 
   if (addPassiveContinuativeTailCandidates(lattice, codepoints, start_pos, kanji_end, dict_manager)) {
     return;
@@ -377,7 +379,8 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
   // that boundary only after the ordinary analysis has no V2 match and only
   // for the closed set of known single-kanji ichidan verbs.
   if (best_match.v2_verb == nullptr && !dict_compound_v1 && kanji_end >= start_pos + 2 &&
-      char_types[start_pos + 1] == CharType::Kanji && verb_helpers::isSingleKanjiIchidan(codepoints[start_pos])) {
+      char_types[start_pos + 1] == CharType::Kanji &&
+      (verb_helpers::isSingleKanjiIchidan(codepoints[start_pos]) || has_bound_verb_prefix)) {
     CompoundVerbMatch bare_ichidan_match =
         findCompoundVerbMatch(text, codepoints, byte_offsets, start_pos, char_types, kanji_end, start_pos + 1, 0, false,
                               true, true, false, "", dict_manager, inflection);

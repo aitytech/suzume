@@ -34,6 +34,8 @@ TEST(CharPatternsTest, SharedClosedSurfacePredicates) {
   EXPECT_TRUE(isPastMarkerTaDaSurface("た"));
   EXPECT_TRUE(isPastMarkerTaDaSurface("だ"));
   EXPECT_FALSE(isPastMarkerTaDaSurface("て"));
+  EXPECT_TRUE(isBoundVerbPrefix("仕"));
+  EXPECT_FALSE(isBoundVerbPrefix("御"));
 }
 
 // ===== endsWithVerbNegative tests =====

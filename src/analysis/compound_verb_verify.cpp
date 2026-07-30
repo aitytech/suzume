@@ -244,14 +244,17 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
     }
     if (use_inflection_fallback && is_ichidan && kanji_count == 1) {
       const bool bare_ichidan_stem = v2_start == kanji_end;
-      if (bare_ichidan_stem && !verb_helpers::isSingleKanjiIchidan(codepoints[start_pos])) {
+      const bool bound_verb_prefix =
+          bare_ichidan_stem && grammar::isBoundVerbPrefix(extractSubstring(codepoints, start_pos, start_pos + 1));
+      if (bare_ichidan_stem && !verb_helpers::isSingleKanjiIchidan(codepoints[start_pos]) && !bound_verb_prefix) {
         use_inflection_fallback = false;
       } else if (renyokei_char == U'で' || (renyokei_char == U'ん' && v2_start == kanji_end) ||
                  starts_inside_formal_noun) {
         use_inflection_fallback = false;
       } else {
         v1_verified = true;
-        v1_ichidan_inflection = true;
+        v1_embedded_verified = bound_verb_prefix;
+        v1_ichidan_inflection = !bound_verb_prefix;
         use_inflection_fallback = false;
       }
     }
