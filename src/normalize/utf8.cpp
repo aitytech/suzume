@@ -136,63 +136,18 @@ std::string_view utf8Substr(std::string_view str, size_t start, size_t length) {
 }
 
 bool isValidUtf8(std::string_view str) {
+  // decodeUtf8 already rejects truncated sequences, bad continuation bytes,
+  // overlong forms, surrogate halves and code points above U+10FFFF, reporting
+  // each as U+FFFD. The one decoded value that does not imply a rejection is a
+  // literally encoded U+FFFD, so validity is "every replacement character the
+  // decoder reported was actually spelled in the input".
+  static constexpr std::string_view kEncodedReplacementChar = "\xEF\xBF\xBD";
   size_t pos = 0;
   while (pos < str.size()) {
-    auto byte1 = static_cast<unsigned char>(str[pos]);
-
-    if ((byte1 & 0x80) == 0) {
-      ++pos;
-      continue;
+    const size_t sequence_start = pos;
+    if (decodeUtf8(str, pos) == 0xFFFD && str.substr(sequence_start, pos - sequence_start) != kEncodedReplacementChar) {
+      return false;
     }
-
-    if ((byte1 & 0xE0) == 0xC0) {
-      if (pos + 1 >= str.size()) {
-        return false;
-      }
-      auto byte2 = static_cast<unsigned char>(str[pos + 1]);
-      if ((byte2 & 0xC0) != 0x80 || byte1 < 0xC2) {
-        return false;
-      }
-      pos += 2;
-      continue;
-    }
-
-    if ((byte1 & 0xF0) == 0xE0) {
-      if (pos + 2 >= str.size()) {
-        return false;
-      }
-      auto byte2 = static_cast<unsigned char>(str[pos + 1]);
-      auto byte3 = static_cast<unsigned char>(str[pos + 2]);
-      if ((byte2 & 0xC0) != 0x80 || (byte3 & 0xC0) != 0x80) {
-        return false;
-      }
-      // Reject overlong encodings and UTF-16 surrogate halves.
-      if ((byte1 == 0xE0 && byte2 < 0xA0) || (byte1 == 0xED && byte2 >= 0xA0)) {
-        return false;
-      }
-      pos += 3;
-      continue;
-    }
-
-    if ((byte1 & 0xF8) == 0xF0) {
-      if (pos + 3 >= str.size()) {
-        return false;
-      }
-      auto byte2 = static_cast<unsigned char>(str[pos + 1]);
-      auto byte3 = static_cast<unsigned char>(str[pos + 2]);
-      auto byte4 = static_cast<unsigned char>(str[pos + 3]);
-      if ((byte2 & 0xC0) != 0x80 || (byte3 & 0xC0) != 0x80 || (byte4 & 0xC0) != 0x80) {
-        return false;
-      }
-      // Reject overlong encodings and code points above U+10FFFF.
-      if ((byte1 == 0xF0 && byte2 < 0x90) || (byte1 == 0xF4 && byte2 > 0x8F) || byte1 > 0xF4) {
-        return false;
-      }
-      pos += 4;
-      continue;
-    }
-
-    return false;
   }
   return true;
 }
