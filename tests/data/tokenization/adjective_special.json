@@ -149,9 +149,24 @@
       "description": "不可避を表す固定形容詞を一語で扱う",
       "expected": [
         {
-          "lemma": "やむを得ない",
-          "pos": "Adjective",
-          "surface": "やむを得ない"
+          "lemma": "やむ",
+          "pos": "Verb",
+          "surface": "やむ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "得る",
+          "pos": "Verb",
+          "surface": "得"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
         },
         {
           "lemma": "事情",

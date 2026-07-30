@@ -852,6 +852,151 @@
       ],
       "id": "o_gaaru",
       "input": "お金がある人"
+    },
+    {
+      "description": "副詞の後の連体あるを結果相と誤認しない",
+      "expected": [
+        {
+          "lemma": "かえって",
+          "pos": "Adverb",
+          "surface": "かえって"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Determiner",
+          "surface": "ある"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        }
+      ],
+      "id": "kaetttearu",
+      "input": "かえってある本"
+    },
+    {
+      "description": "複合格助詞の後の存在動詞過去形を結果相と誤認しない",
+      "expected": [
+        {
+          "lemma": "論文",
+          "pos": "Noun",
+          "surface": "論文"
+        },
+        {
+          "lemma": "について",
+          "pos": "Particle",
+          "surface": "について"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "議論",
+          "pos": "Noun",
+          "surface": "議論"
+        }
+      ],
+      "id": "nitsuiteattta",
+      "input": "論文についてあった議論。"
+    },
+    {
+      "description": "生産的な結果相の終止あるを動詞として保つ",
+      "expected": [
+        {
+          "lemma": "並べる",
+          "pos": "Verb",
+          "surface": "並べ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        }
+      ],
+      "id": "betearu_2",
+      "input": "並べてある本"
+    },
+    {
+      "description": "固定て副詞の後の連体あるを正規化する",
+      "expected": [
+        {
+          "lemma": "初めて",
+          "pos": "Adverb",
+          "surface": "初めて"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Determiner",
+          "surface": "ある"
+        },
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "会う",
+          "pos": "Verb",
+          "surface": "会う"
+        }
+      ],
+      "id": "metearu_ni_u",
+      "input": "初めてある人に会う"
+    },
+    {
+      "description": "一般副詞の後の連体あるを正規化する",
+      "expected": [
+        {
+          "lemma": "わざと",
+          "pos": "Adverb",
+          "surface": "わざと"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Determiner",
+          "surface": "ある"
+        },
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "選ぶ",
+          "pos": "Verb",
+          "surface": "選ぶ"
+        }
+      ],
+      "id": "wazatoaru_wo_bu",
+      "input": "わざとある本を選ぶ"
     }
   ],
   "description": "compound_particle tests",

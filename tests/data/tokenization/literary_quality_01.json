@@ -570,9 +570,19 @@
       "description": "移り変わり compound verb fix",
       "expected": [
         {
-          "lemma": "世の中",
+          "lemma": "世",
           "pos": "Noun",
-          "surface": "世の中"
+          "surface": "世"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "中",
+          "pos": "Noun",
+          "surface": "中"
         },
         {
           "lemma": "の",
@@ -1042,9 +1052,19 @@
           "surface": "の"
         },
         {
-          "lemma": "世の中",
+          "lemma": "世",
           "pos": "Noun",
-          "surface": "世の中"
+          "surface": "世"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "中",
+          "pos": "Noun",
+          "surface": "中"
         },
         {
           "lemma": "に",

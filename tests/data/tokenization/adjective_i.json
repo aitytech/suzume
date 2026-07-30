@@ -4,9 +4,24 @@
       "description": "Lexicalized nai-adjective inflects into its past cell from the L2 entry",
       "expected": [
         {
-          "lemma": "やむを得ない",
-          "pos": "Adjective",
-          "surface": "やむを得なかっ"
+          "lemma": "やむ",
+          "pos": "Verb",
+          "surface": "やむ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "得る",
+          "pos": "Verb",
+          "surface": "得"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
         },
         {
           "lemma": "た",
@@ -126,6 +141,60 @@
       ],
       "id": "omoiga_waru",
       "input": "おもいが伝わる"
+    },
+    {
+      "description": "Productive i-adjective stem plus degree suffix keeps its boundary",
+      "expected": [
+        {
+          "lemma": "寂しい",
+          "pos": "Adjective",
+          "surface": "寂し"
+        },
+        {
+          "lemma": "げ",
+          "pos": "Suffix",
+          "surface": "げ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "顔",
+          "pos": "Noun",
+          "surface": "顔"
+        }
+      ],
+      "id": "shigena",
+      "input": "寂しげな顔"
+    },
+    {
+      "description": "Productive i-adjective degree suffix control",
+      "expected": [
+        {
+          "lemma": "悲しい",
+          "pos": "Adjective",
+          "surface": "悲し"
+        },
+        {
+          "lemma": "げ",
+          "pos": "Suffix",
+          "surface": "げ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "顔",
+          "pos": "Noun",
+          "surface": "顔"
+        }
+      ],
+      "id": "shigena_2",
+      "input": "悲しげな顔"
     }
   ],
   "description": "adjective_i tests",

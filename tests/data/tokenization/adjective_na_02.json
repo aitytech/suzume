@@ -1,0 +1,580 @@
+{
+  "cases": [
+    {
+      "description": "ここは気楽だ - regression test",
+      "expected": [
+        {
+          "lemma": "ここ",
+          "pos": "Pronoun",
+          "surface": "ここ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "気楽",
+          "pos": "Adjective",
+          "surface": "気楽"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kokoha_da_2",
+      "input": "ここは気楽だ"
+    },
+    {
+      "description": "ここは安全だ - regression test",
+      "expected": [
+        {
+          "lemma": "ここ",
+          "pos": "Pronoun",
+          "surface": "ここ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "安全",
+          "pos": "Adjective",
+          "surface": "安全"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kokoha_da_3",
+      "input": "ここは安全だ"
+    },
+    {
+      "description": "ここは幸せだ - regression test",
+      "expected": [
+        {
+          "lemma": "ここ",
+          "pos": "Pronoun",
+          "surface": "ここ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "幸せ",
+          "pos": "Adjective",
+          "surface": "幸せ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kokoha_seda",
+      "input": "ここは幸せだ"
+    },
+    {
+      "description": "ここは正直だ - regression test",
+      "expected": [
+        {
+          "lemma": "ここ",
+          "pos": "Pronoun",
+          "surface": "ここ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "正直",
+          "pos": "Adjective",
+          "surface": "正直"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kokoha_da_4",
+      "input": "ここは正直だ"
+    },
+    {
+      "description": "態度が真剣だ - regression test",
+      "expected": [
+        {
+          "lemma": "態度",
+          "pos": "Noun",
+          "surface": "態度"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "真剣",
+          "pos": "Adjective",
+          "surface": "真剣"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_da",
+      "input": "態度が真剣だ"
+    },
+    {
+      "description": "活動が盛んだ - regression test",
+      "expected": [
+        {
+          "lemma": "活動",
+          "pos": "Noun",
+          "surface": "活動"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "盛ん",
+          "pos": "Adjective",
+          "surface": "盛ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_nda_3",
+      "input": "活動が盛んだ"
+    },
+    {
+      "description": "返事が素直だ - regression test",
+      "expected": [
+        {
+          "lemma": "返事",
+          "pos": "Noun",
+          "surface": "返事"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "素直",
+          "pos": "Adjective",
+          "surface": "素直"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_da_2",
+      "input": "返事が素直だ"
+    },
+    {
+      "description": "説明が明確だ - regression test",
+      "expected": [
+        {
+          "lemma": "説明",
+          "pos": "Noun",
+          "surface": "説明"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "明確",
+          "pos": "Adjective",
+          "surface": "明確"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_da_3",
+      "input": "説明が明確だ"
+    },
+    {
+      "description": "理由が明白だ - regression test",
+      "expected": [
+        {
+          "lemma": "理由",
+          "pos": "Noun",
+          "surface": "理由"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "明白",
+          "pos": "Adjective",
+          "surface": "明白"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_da_4",
+      "input": "理由が明白だ"
+    },
+    {
+      "description": "選択が自由だ - regression test",
+      "expected": [
+        {
+          "lemma": "選択",
+          "pos": "Noun",
+          "surface": "選択"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "自由",
+          "pos": "Adjective",
+          "surface": "自由"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_da_5",
+      "input": "選択が自由だ"
+    },
+    {
+      "description": "対応が親切だ - regression test",
+      "expected": [
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "親切",
+          "pos": "Adjective",
+          "surface": "親切"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_da_6",
+      "input": "対応が親切だ"
+    },
+    {
+      "description": "作業が得意だ - regression test",
+      "expected": [
+        {
+          "lemma": "作業",
+          "pos": "Noun",
+          "surface": "作業"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "得意",
+          "pos": "Adjective",
+          "surface": "得意"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_da_7",
+      "input": "作業が得意だ"
+    },
+    {
+      "description": "運動が苦手だ - regression test",
+      "expected": [
+        {
+          "lemma": "運動",
+          "pos": "Noun",
+          "surface": "運動"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "苦手",
+          "pos": "Adjective",
+          "surface": "苦手"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_da_8",
+      "input": "運動が苦手だ"
+    },
+    {
+      "description": "結果が残念だ - regression test",
+      "expected": [
+        {
+          "lemma": "結果",
+          "pos": "Noun",
+          "surface": "結果"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "残念",
+          "pos": "Adjective",
+          "surface": "残念"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ga_da_9",
+      "input": "結果が残念だ"
+    },
+    {
+      "description": "便利すぎるのです - regression test",
+      "expected": [
+        {
+          "lemma": "便利",
+          "pos": "Adjective",
+          "surface": "便利"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "sugirunodesu_2",
+      "input": "便利すぎるのです"
+    },
+    {
+      "description": "簡単すぎるのです - regression test",
+      "expected": [
+        {
+          "lemma": "簡単",
+          "pos": "Adjective",
+          "surface": "簡単"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "sugirunodesu_3",
+      "input": "簡単すぎるのです"
+    },
+    {
+      "description": "静かすぎるのです - regression test",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "kasugirunodesu",
+      "input": "静かすぎるのです"
+    },
+    {
+      "description": "重要すぎるのです - regression test",
+      "expected": [
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "sugirunodesu_4",
+      "input": "重要すぎるのです"
+    },
+    {
+      "description": "有名すぎるのです - regression test",
+      "expected": [
+        {
+          "lemma": "有名",
+          "pos": "Adjective",
+          "surface": "有名"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "sugirunodesu_5",
+      "input": "有名すぎるのです"
+    },
+    {
+      "description": "豊かすぎるのです - regression test",
+      "expected": [
+        {
+          "lemma": "豊か",
+          "pos": "Adjective",
+          "surface": "豊か"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "kasugirunodesu_2",
+      "input": "豊かすぎるのです"
+    },
+    {
+      "description": "静かすぎる - regression test",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "kasugiru",
+      "input": "静かすぎる"
+    },
+    {
+      "description": "豊かすぎる - regression test",
+      "expected": [
+        {
+          "lemma": "豊か",
+          "pos": "Adjective",
+          "surface": "豊か"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "kasugiru_2",
+      "input": "豊かすぎる"
+    }
+  ],
+  "description": "Na-adjectives (ナ形容詞) (part 2/2)",
+  "version": "1.0"
+}

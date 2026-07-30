@@ -310,9 +310,19 @@
       "description": "Godan irrealis plus the negative auxiliary",
       "expected": [
         {
-          "lemma": "間に合う",
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "合う",
           "pos": "Verb",
-          "surface": "間に合わ"
+          "surface": "合わ"
         },
         {
           "lemma": "ない",

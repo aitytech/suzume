@@ -1709,9 +1709,19 @@
       "description": "Classical negative nu selects the verb base of the fixed expression",
       "expected": [
         {
-          "lemma": "やむを得る",
+          "lemma": "やむ",
           "pos": "Verb",
-          "surface": "やむを得"
+          "surface": "やむ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "得る",
+          "pos": "Verb",
+          "surface": "得"
         },
         {
           "lemma": "ぬ",

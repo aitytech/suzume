@@ -1801,6 +1801,84 @@
       ],
       "id": "mikanwotaberu",
       "input": "みかんをたべる"
+    },
+    {
+      "description": "ねがいの内容 - regression test",
+      "expected": [
+        {
+          "lemma": "ねがい",
+          "pos": "Noun",
+          "surface": "ねがい"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "内容",
+          "pos": "Noun",
+          "surface": "内容"
+        }
+      ],
+      "id": "negaino",
+      "input": "ねがいの内容"
+    },
+    {
+      "description": "ちがいの理由 - regression test",
+      "expected": [
+        {
+          "lemma": "ちがい",
+          "pos": "Noun",
+          "surface": "ちがい"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "理由",
+          "pos": "Noun",
+          "surface": "理由"
+        }
+      ],
+      "id": "chigaino",
+      "input": "ちがいの理由"
+    },
+    {
+      "description": "もののあわれ - regression test",
+      "expected": [
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "あわれ",
+          "pos": "Noun",
+          "surface": "あわれ"
+        }
+      ],
+      "id": "mononoaware",
+      "input": "もののあわれ"
+    },
+    {
+      "description": "そのもの - regression test",
+      "expected": [
+        {
+          "lemma": "そのもの",
+          "pos": "Noun",
+          "surface": "そのもの"
+        }
+      ],
+      "id": "sonomono",
+      "input": "そのもの"
     }
   ],
   "description": "General nouns (part 3/3)",

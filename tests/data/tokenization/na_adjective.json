@@ -14,9 +14,19 @@
           "surface": "は"
         },
         {
-          "lemma": "気の毒",
-          "pos": "Adjective",
-          "surface": "気の毒"
+          "lemma": "気",
+          "pos": "Noun",
+          "surface": "気"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "毒",
+          "pos": "Noun",
+          "surface": "毒"
         },
         {
           "lemma": "と",

@@ -165,6 +165,189 @@
       ],
       "id": "t20_lexical_temporal_noun_control",
       "input": "この間の話"
+    },
+    {
+      "description": "L2 lexicalized deverbal-noun compound",
+      "expected": [
+        {
+          "lemma": "一人暮らし",
+          "pos": "Noun",
+          "surface": "一人暮らし"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "rashida",
+      "input": "一人暮らしだ"
+    },
+    {
+      "description": "L2 lexicalized deverbal-noun compound",
+      "expected": [
+        {
+          "lemma": "一本釣り",
+          "pos": "Noun",
+          "surface": "一本釣り"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "rida",
+      "input": "一本釣りだ"
+    },
+    {
+      "description": "L2 lexicalized deverbal-noun compound",
+      "expected": [
+        {
+          "lemma": "顔合わせ",
+          "pos": "Noun",
+          "surface": "顔合わせ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "wasewosuru",
+      "input": "顔合わせをする"
+    },
+    {
+      "description": "L2 lexicalized deverbal-noun compound",
+      "expected": [
+        {
+          "lemma": "一本締め",
+          "pos": "Noun",
+          "surface": "一本締め"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "meda",
+      "input": "一本締めだ"
+    },
+    {
+      "description": "L2 lexicalized deverbal-noun compound",
+      "expected": [
+        {
+          "lemma": "一本立ち",
+          "pos": "Noun",
+          "surface": "一本立ち"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "chishita",
+      "input": "一本立ちした"
+    },
+    {
+      "description": "L2 lexicalized deverbal-noun compound",
+      "expected": [
+        {
+          "lemma": "顔見せ",
+          "pos": "Noun",
+          "surface": "顔見せ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sewosuru",
+      "input": "顔見せをする"
+    },
+    {
+      "description": "L2 lexicalized deverbal-noun compound",
+      "expected": [
+        {
+          "lemma": "顔つなぎ",
+          "pos": "Noun",
+          "surface": "顔つなぎ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "tsunagiwosuru",
+      "input": "顔つなぎをする"
+    },
+    {
+      "description": "L2 lexicalized deverbal-noun compound",
+      "expected": [
+        {
+          "lemma": "送り迎え",
+          "pos": "Noun",
+          "surface": "送り迎え"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ri_ewosuru",
+      "input": "送り迎えをする"
+    },
+    {
+      "description": "L2 lexicalized deverbal-noun compound",
+      "expected": [
+        {
+          "lemma": "取り決め",
+          "pos": "Noun",
+          "surface": "取り決め"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ri_mewosuru",
+      "input": "取り決めをする"
     }
   ],
   "description": "noun_compounds tests",

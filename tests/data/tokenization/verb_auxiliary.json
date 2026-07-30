@@ -2554,6 +2554,72 @@
       ],
       "id": "ha_shitagattteiru",
       "input": "対象は確認したがっている"
+    },
+    {
+      "description": "道具でやる - regression test",
+      "expected": [
+        {
+          "lemma": "道具",
+          "pos": "Noun",
+          "surface": "道具"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やる"
+        }
+      ],
+      "id": "deyaru",
+      "input": "道具でやる"
+    },
+    {
+      "description": "読んでやる - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "やる",
+          "pos": "Auxiliary",
+          "surface": "やる"
+        }
+      ],
+      "id": "ndeyaru",
+      "input": "読んでやる"
+    },
+    {
+      "description": "宿題をやる - regression test",
+      "expected": [
+        {
+          "lemma": "宿題",
+          "pos": "Noun",
+          "surface": "宿題"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やる"
+        }
+      ],
+      "id": "woyaru",
+      "input": "宿題をやる"
     }
   ],
   "description": "verb_auxiliary tests",

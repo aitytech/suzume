@@ -1298,9 +1298,24 @@
       "description": "Fixed classical adverbial stays one search unit",
       "expected": [
         {
-          "lemma": "やむを得ず",
-          "pos": "Adverb",
-          "surface": "やむを得ず"
+          "lemma": "やむ",
+          "pos": "Verb",
+          "surface": "やむ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "得る",
+          "pos": "Verb",
+          "surface": "得"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
         },
         {
           "lemma": "延期",

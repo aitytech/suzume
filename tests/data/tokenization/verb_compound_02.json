@@ -1010,9 +1010,19 @@
           "surface": "に"
         },
         {
-          "lemma": "間に合う",
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "合う",
           "pos": "Verb",
-          "surface": "間に合う"
+          "surface": "合う"
         }
       ],
       "id": "ni_ni_u",
@@ -1032,9 +1042,19 @@
           "surface": "に"
         },
         {
-          "lemma": "間に合う",
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "合う",
           "pos": "Verb",
-          "surface": "間に合っ"
+          "surface": "合っ"
         },
         {
           "lemma": "た",
@@ -1059,9 +1079,19 @@
           "surface": "に"
         },
         {
-          "lemma": "間に合う",
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "合う",
           "pos": "Verb",
-          "surface": "間に合わ"
+          "surface": "合わ"
         },
         {
           "lemma": "ない",

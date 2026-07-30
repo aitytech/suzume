@@ -2358,6 +2358,130 @@
       ],
       "id": "woyogittta",
       "input": "頭をよぎった"
+    },
+    {
+      "description": "ボールがころがる - regression test",
+      "expected": [
+        {
+          "lemma": "ボール",
+          "pos": "Noun",
+          "surface": "ボール"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ころがる",
+          "pos": "Verb",
+          "surface": "ころがる"
+        }
+      ],
+      "id": "gakorogaru",
+      "input": "ボールがころがる"
+    },
+    {
+      "description": "石をころがす - regression test",
+      "expected": [
+        {
+          "lemma": "石",
+          "pos": "Noun",
+          "surface": "石"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "ころがす",
+          "pos": "Verb",
+          "surface": "ころがす"
+        }
+      ],
+      "id": "wokorogasu",
+      "input": "石をころがす"
+    },
+    {
+      "description": "寒がる - regression test",
+      "expected": [
+        {
+          "lemma": "寒い",
+          "pos": "Adjective",
+          "surface": "寒"
+        },
+        {
+          "lemma": "がる",
+          "pos": "Verb",
+          "surface": "がる"
+        }
+      ],
+      "id": "garu_2",
+      "input": "寒がる"
+    },
+    {
+      "description": "嫌がる - regression test",
+      "expected": [
+        {
+          "lemma": "嫌",
+          "pos": "Adjective",
+          "surface": "嫌"
+        },
+        {
+          "lemma": "がる",
+          "pos": "Verb",
+          "surface": "がる"
+        }
+      ],
+      "id": "garu_3",
+      "input": "嫌がる"
+    },
+    {
+      "description": "欲しがる - regression test",
+      "expected": [
+        {
+          "lemma": "欲しい",
+          "pos": "Adjective",
+          "surface": "欲し"
+        },
+        {
+          "lemma": "がる",
+          "pos": "Verb",
+          "surface": "がる"
+        }
+      ],
+      "id": "shigaru",
+      "input": "欲しがる"
+    },
+    {
+      "description": "不安がる - regression test",
+      "expected": [
+        {
+          "lemma": "不安",
+          "pos": "Noun",
+          "surface": "不安"
+        },
+        {
+          "lemma": "がる",
+          "pos": "Verb",
+          "surface": "がる"
+        }
+      ],
+      "id": "garu_4",
+      "input": "不安がる"
+    },
+    {
+      "description": "ふさがる - regression test",
+      "expected": [
+        {
+          "lemma": "ふさがる",
+          "pos": "Verb",
+          "surface": "ふさがる"
+        }
+      ],
+      "id": "fusagaru_2",
+      "input": "ふさがる"
     }
   ],
   "description": "Godan Ra-row verbs (五段ラ行動詞) - verbs ending in る",

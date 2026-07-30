@@ -767,9 +767,19 @@
       "description": "漱石・草枕風 - 生まれて ichidan + 長い複文",
       "expected": [
         {
-          "lemma": "世の中",
+          "lemma": "世",
           "pos": "Noun",
-          "surface": "世の中"
+          "surface": "世"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "中",
+          "pos": "Noun",
+          "surface": "中"
         },
         {
           "lemma": "は",

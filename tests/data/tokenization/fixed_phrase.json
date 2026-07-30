@@ -163,6 +163,143 @@
       ],
       "id": "ni_2",
       "input": "何気に"
+    },
+    {
+      "description": "語彙化見出し内の格助詞境界を保つ",
+      "expected": [
+        {
+          "lemma": "年",
+          "pos": "Noun",
+          "surface": "年"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "瀬",
+          "pos": "Noun",
+          "surface": "瀬"
+        }
+      ],
+      "id": "no_13",
+      "input": "年の瀬"
+    },
+    {
+      "description": "語彙化見出し内の文語否定助動詞境界を保つ",
+      "expected": [
+        {
+          "lemma": "世間",
+          "pos": "Noun",
+          "surface": "世間"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "razuda",
+      "input": "世間知らずだ"
+    },
+    {
+      "description": "名詞見出し内の格助詞境界を保つ",
+      "expected": [
+        {
+          "lemma": "女",
+          "pos": "Noun",
+          "surface": "女"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "子",
+          "pos": "Noun",
+          "surface": "子"
+        }
+      ],
+      "id": "no_14",
+      "input": "女の子"
+    },
+    {
+      "description": "名詞見出し内の格助詞境界の変種",
+      "expected": [
+        {
+          "lemma": "男",
+          "pos": "Noun",
+          "surface": "男"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "子",
+          "pos": "Noun",
+          "surface": "子"
+        }
+      ],
+      "id": "no_15",
+      "input": "男の子"
+    },
+    {
+      "description": "名詞見出し内の格助詞境界の変種",
+      "expected": [
+        {
+          "lemma": "世",
+          "pos": "Noun",
+          "surface": "世"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "中",
+          "pos": "Noun",
+          "surface": "中"
+        }
+      ],
+      "id": "no_16",
+      "input": "世の中"
+    },
+    {
+      "description": "形容動詞見出し内の格助詞境界を保つ",
+      "expected": [
+        {
+          "lemma": "気",
+          "pos": "Noun",
+          "surface": "気"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "毒",
+          "pos": "Noun",
+          "surface": "毒"
+        }
+      ],
+      "id": "no_17",
+      "input": "気の毒"
     }
   ],
   "description": "fixed_phrase tests",

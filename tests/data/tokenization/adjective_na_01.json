@@ -2858,8 +2858,133 @@
       ],
       "id": "kono_ha_da_3",
       "input": "この道具は便利だ"
+    },
+    {
+      "description": "暮らしが楽だ - regression test",
+      "expected": [
+        {
+          "lemma": "暮らし",
+          "pos": "Noun",
+          "surface": "暮らし"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "楽",
+          "pos": "Adjective",
+          "surface": "楽"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "rashiga_da",
+      "input": "暮らしが楽だ"
+    },
+    {
+      "description": "複雑すぎるのです - regression test",
+      "expected": [
+        {
+          "lemma": "複雑",
+          "pos": "Adjective",
+          "surface": "複雑"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "sugirunodesu",
+      "input": "複雑すぎるのです"
+    },
+    {
+      "description": "楽な仕事 - regression test",
+      "expected": [
+        {
+          "lemma": "楽",
+          "pos": "Adjective",
+          "surface": "楽"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "仕事",
+          "pos": "Noun",
+          "surface": "仕事"
+        }
+      ],
+      "id": "na_7",
+      "input": "楽な仕事"
+    },
+    {
+      "description": "気楽に構える - regression test",
+      "expected": [
+        {
+          "lemma": "気楽",
+          "pos": "Adjective",
+          "surface": "気楽"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "構える",
+          "pos": "Verb",
+          "surface": "構える"
+        }
+      ],
+      "id": "ni_eru",
+      "input": "気楽に構える"
+    },
+    {
+      "description": "ここは楽だ - regression test",
+      "expected": [
+        {
+          "lemma": "ここ",
+          "pos": "Pronoun",
+          "surface": "ここ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "楽",
+          "pos": "Adjective",
+          "surface": "楽"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kokoha_da",
+      "input": "ここは楽だ"
     }
   ],
-  "description": "Na-adjectives (ナ形容詞)",
+  "description": "Na-adjectives (ナ形容詞) (part 1/2)",
   "version": "1.0"
 }

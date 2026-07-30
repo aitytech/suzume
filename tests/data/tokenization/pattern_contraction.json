@@ -966,6 +966,82 @@
       ],
       "id": "betenno_etenno_betenda_etenda_beteiruno_eteiruno_ndenno_ndenno",
       "input": "食べてんの、考えてんの。食べてんだ、考えてんだ。食べているの、考えているの。読んでんの、飲んでんの。"
+    },
+    {
+      "description": "本を読んだらあかん - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だら"
+        },
+        {
+          "lemma": "あかん",
+          "pos": "Auxiliary",
+          "surface": "あかん"
+        }
+      ],
+      "id": "wo_ndaraakan",
+      "input": "本を読んだらあかん"
+    },
+    {
+      "description": "飛んだら危ない - regression test",
+      "expected": [
+        {
+          "lemma": "飛ぶ",
+          "pos": "Verb",
+          "surface": "飛ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だら"
+        },
+        {
+          "lemma": "危ない",
+          "pos": "Adjective",
+          "surface": "危ない"
+        }
+      ],
+      "id": "ndara_nai",
+      "input": "飛んだら危ない"
+    },
+    {
+      "description": "死んだら困る - regression test",
+      "expected": [
+        {
+          "lemma": "死ぬ",
+          "pos": "Verb",
+          "surface": "死ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だら"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "ndara_ru",
+      "input": "死んだら困る"
     }
   ],
   "description": "Contraction patterns (てる、ちゃう)",

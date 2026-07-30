@@ -402,6 +402,275 @@
       ],
       "id": "ida_2",
       "input": "月末払いだ"
+    },
+    {
+      "description": "正しい行いだ - regression test",
+      "expected": [
+        {
+          "lemma": "正しい",
+          "pos": "Adjective",
+          "surface": "正しい"
+        },
+        {
+          "lemma": "行い",
+          "pos": "Noun",
+          "surface": "行い"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shii_ida",
+      "input": "正しい行いだ"
+    },
+    {
+      "description": "日々の行い - regression test",
+      "expected": [
+        {
+          "lemma": "日々",
+          "pos": "Noun",
+          "surface": "日々"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "行い",
+          "pos": "Noun",
+          "surface": "行い"
+        }
+      ],
+      "id": "no_i_2",
+      "input": "日々の行い"
+    },
+    {
+      "description": "駅へ行きます - regression test",
+      "expected": [
+        {
+          "lemma": "駅",
+          "pos": "Noun",
+          "surface": "駅"
+        },
+        {
+          "lemma": "へ",
+          "pos": "Particle",
+          "surface": "へ"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行き"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "he_kimasu",
+      "input": "駅へ行きます"
+    },
+    {
+      "description": "はなはだしい違い - regression test",
+      "expected": [
+        {
+          "lemma": "はなはだしい",
+          "pos": "Adjective",
+          "surface": "はなはだしい"
+        },
+        {
+          "lemma": "違い",
+          "pos": "Noun",
+          "surface": "違い"
+        }
+      ],
+      "id": "hanahadashii_i",
+      "input": "はなはだしい違い"
+    },
+    {
+      "description": "L2 noun recovered from a function-word homograph sequence",
+      "expected": [
+        {
+          "lemma": "うがい",
+          "pos": "Noun",
+          "surface": "うがい"
+        },
+        {
+          "lemma": "薬",
+          "pos": "Noun",
+          "surface": "薬"
+        }
+      ],
+      "id": "ugai",
+      "input": "うがい薬"
+    },
+    {
+      "description": "L2 noun recovered before a case particle",
+      "expected": [
+        {
+          "lemma": "うがい",
+          "pos": "Noun",
+          "surface": "うがい"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ugaiwosuru",
+      "input": "うがいをする"
+    },
+    {
+      "description": "L2 noun recovered before a genitive particle",
+      "expected": [
+        {
+          "lemma": "うがい",
+          "pos": "Noun",
+          "surface": "うがい"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "薬",
+          "pos": "Noun",
+          "surface": "薬"
+        }
+      ],
+      "id": "ugaino",
+      "input": "うがいの薬"
+    },
+    {
+      "description": "L2 deverbal noun selected by a copula",
+      "expected": [
+        {
+          "lemma": "死ぬ",
+          "pos": "Verb",
+          "surface": "死ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だら"
+        },
+        {
+          "lemma": "終わり",
+          "pos": "Noun",
+          "surface": "終わり"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ndara_warida",
+      "input": "死んだら終わりだ"
+    },
+    {
+      "description": "Verb homograph remains verbal before the polite auxiliary",
+      "expected": [
+        {
+          "lemma": "仕事",
+          "pos": "Noun",
+          "surface": "仕事"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わり"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "ga_warimasu",
+      "input": "仕事が終わります"
+    },
+    {
+      "description": "Period-end noun remains separate from a deverbal noun",
+      "expected": [
+        {
+          "lemma": "月末",
+          "pos": "Noun",
+          "surface": "月末"
+        },
+        {
+          "lemma": "締め",
+          "pos": "Noun",
+          "surface": "締め"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "meda_2",
+      "input": "月末締めだ"
+    },
+    {
+      "description": "Period-end noun boundary generalization",
+      "expected": [
+        {
+          "lemma": "週末",
+          "pos": "Noun",
+          "surface": "週末"
+        },
+        {
+          "lemma": "締め",
+          "pos": "Noun",
+          "surface": "締め"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "meda_3",
+      "input": "週末締めだ"
+    },
+    {
+      "description": "Period-end noun remains separate from an Ichidan continuative",
+      "expected": [
+        {
+          "lemma": "月末",
+          "pos": "Noun",
+          "surface": "月末"
+        },
+        {
+          "lemma": "届け",
+          "pos": "Noun",
+          "surface": "届け"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "keda_2",
+      "input": "月末届けだ"
     }
   ],
   "description": "noun_deverbal tests",

@@ -981,6 +981,257 @@
       ],
       "id": "ndatttara",
       "input": "読んだったら"
+    },
+    {
+      "description": "語彙化副詞を活用形容詞と誤認しない",
+      "expected": [
+        {
+          "lemma": "やむなく",
+          "pos": "Adverb",
+          "surface": "やむなく"
+        },
+        {
+          "lemma": "諦める",
+          "pos": "Verb",
+          "surface": "諦め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "yamunaku_meta",
+      "input": "やむなく諦めた"
+    },
+    {
+      "description": "Lexical Godan-wa verb remains one search unit.",
+      "expected": [
+        {
+          "lemma": "支払う",
+          "pos": "Verb",
+          "surface": "支払う"
+        }
+      ],
+      "id": "u_2",
+      "input": "支払う"
+    },
+    {
+      "description": "Lexical Godan-wa verb remains one unit after an accusative phrase.",
+      "expected": [
+        {
+          "lemma": "料金",
+          "pos": "Noun",
+          "surface": "料金"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "支払う",
+          "pos": "Verb",
+          "surface": "支払う"
+        }
+      ],
+      "id": "wo_u_2",
+      "input": "料金を支払う"
+    },
+    {
+      "description": "Registered lexical verb keeps its continuative boundary before polite auxiliaries.",
+      "expected": [
+        {
+          "lemma": "支払う",
+          "pos": "Verb",
+          "surface": "支払い"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "imashita",
+      "input": "支払いました"
+    },
+    {
+      "description": "Registered lexical verb keeps its full stem through sokuonbin past inflection.",
+      "expected": [
+        {
+          "lemma": "支払う",
+          "pos": "Verb",
+          "surface": "支払っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ttta_4",
+      "input": "支払った"
+    },
+    {
+      "description": "Registered lexical verb keeps its irrealis stem before the negative auxiliary.",
+      "expected": [
+        {
+          "lemma": "支払う",
+          "pos": "Verb",
+          "surface": "支払わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "wanai_2",
+      "input": "支払わない"
+    },
+    {
+      "description": "Productive compound verb remains one search unit.",
+      "expected": [
+        {
+          "lemma": "取り払う",
+          "pos": "Verb",
+          "surface": "取り払う"
+        }
+      ],
+      "id": "ri_u",
+      "input": "取り払う"
+    },
+    {
+      "description": "A noun host and following predicate remain separate despite an attested deverbal noun.",
+      "expected": [
+        {
+          "lemma": "値",
+          "pos": "Noun",
+          "surface": "値"
+        },
+        {
+          "lemma": "上がる",
+          "pos": "Verb",
+          "surface": "上がる"
+        }
+      ],
+      "id": "garu",
+      "input": "値上がる"
+    },
+    {
+      "description": "ねがい事 - regression test",
+      "expected": [
+        {
+          "lemma": "ねがう",
+          "pos": "Verb",
+          "surface": "ねがい"
+        },
+        {
+          "lemma": "事",
+          "pos": "Suffix",
+          "surface": "事"
+        }
+      ],
+      "id": "negai",
+      "input": "ねがい事"
+    },
+    {
+      "description": "ためさなかった - regression test",
+      "expected": [
+        {
+          "lemma": "ためす",
+          "pos": "Verb",
+          "surface": "ためさ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tamesanakattta",
+      "input": "ためさなかった"
+    },
+    {
+      "description": "ためさなければ - regression test",
+      "expected": [
+        {
+          "lemma": "ためす",
+          "pos": "Verb",
+          "surface": "ためさ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "tamesanakereba",
+      "input": "ためさなければ"
+    },
+    {
+      "description": "おろさなかった - regression test",
+      "expected": [
+        {
+          "lemma": "おろす",
+          "pos": "Verb",
+          "surface": "おろさ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "orosanakattta",
+      "input": "おろさなかった"
+    },
+    {
+      "description": "わけわからなかった - regression test",
+      "expected": [
+        {
+          "lemma": "わけ",
+          "pos": "Noun",
+          "surface": "わけ"
+        },
+        {
+          "lemma": "わかる",
+          "pos": "Verb",
+          "surface": "わから"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wakewakaranakattta",
+      "input": "わけわからなかった"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",
