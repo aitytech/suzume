@@ -1,7 +1,8 @@
 #include "grammar/dictionary_expansion.h"
 
+#include <cstdint>
 #include <string>
-#include <tuple>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -20,6 +21,18 @@ struct IAdjectiveSuffix {
   const char* suffix;
   core::ExtendedPOS extended_pos;
 };
+
+// Fixed-width header of the entry-identity key: part of speech, extended part of
+// speech, and the surface length.
+constexpr size_t kIdentityExtendedPOSBytes = 2;
+constexpr size_t kIdentitySurfaceLengthBytes = 4;
+constexpr size_t kIdentityHeaderBytes = 1 + kIdentityExtendedPOSBytes + kIdentitySurfaceLengthBytes;
+
+void appendFixedWidth(std::string& key, uint32_t value, size_t width) {
+  for (size_t byte_index = 0; byte_index < width; ++byte_index) {
+    key.push_back(static_cast<char>((value >> (byte_index * 8U)) & 0xFFU));
+  }
+}
 
 constexpr IAdjectiveSuffix kIAdjectiveSuffixes[] = {
     {"い", core::ExtendedPOS::AdjBasic},      {"く", core::ExtendedPOS::AdjRenyokei},
@@ -100,7 +113,7 @@ std::vector<dictionary::DictionaryEntry> expandVerb(const dictionary::Dictionary
       if (!utf8::endsWith(base_entry.lemma, source_ending)) {
         return base_entry.lemma;
       }
-      return base_entry.lemma.substr(0, base_entry.lemma.size() - source_ending.size()) + std::string(ending);
+      return normalize::concat(base_entry.lemma.substr(0, base_entry.lemma.size() - source_ending.size()), ending);
     };
     const std::string kanji_lemma = lemma_for("来る");
     const std::string kana_lemma = lemma_for("くる");
@@ -201,27 +214,23 @@ std::vector<dictionary::DictionaryEntry> expandDictionarySourceEntry(const dicti
 DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictionary::SourceEntry>& source_entries,
                                                         DictionaryExpansionOptions options) {
   DictionaryExpansionResult result;
-  struct EntryIdentity {
-    std::string surface;
-    core::PartOfSpeech pos;
-    core::ExtendedPOS extended_pos;
-    std::string lemma;
-
-    bool operator==(const EntryIdentity& other) const {
-      return std::tie(surface, pos, extended_pos, lemma) ==
-             std::tie(other.surface, other.pos, other.extended_pos, other.lemma);
-    }
+  // The full-identity index is keyed by a string rather than by a struct so it
+  // shares the string-keyed container below instead of instantiating a second
+  // hash table. The header is fixed width and carries the surface length, so the
+  // surface/lemma boundary is explicit and no byte inside either string can
+  // forge a collision.
+  auto entry_identity_key = [](std::string_view surface, core::PartOfSpeech pos, core::ExtendedPOS extended_pos,
+                               std::string_view lemma) {
+    std::string key;
+    key.reserve(kIdentityHeaderBytes + surface.size() + lemma.size());
+    key.push_back(static_cast<char>(pos));
+    appendFixedWidth(key, static_cast<uint32_t>(extended_pos), kIdentityExtendedPOSBytes);
+    appendFixedWidth(key, static_cast<uint32_t>(surface.size()), kIdentitySurfaceLengthBytes);
+    key.append(surface);
+    key.append(lemma);
+    return key;
   };
-  struct EntryIdentityHash {
-    size_t operator()(const EntryIdentity& identity) const {
-      size_t hash = std::hash<std::string>{}(identity.surface);
-      hash ^= static_cast<size_t>(identity.pos) + 0x9E3779B9U + (hash << 6U) + (hash >> 2U);
-      hash ^= static_cast<size_t>(identity.extended_pos) + 0x9E3779B9U + (hash << 6U) + (hash >> 2U);
-      hash ^= std::hash<std::string>{}(identity.lemma) + 0x9E3779B9U + (hash << 6U) + (hash >> 2U);
-      return hash;
-    }
-  };
-  std::unordered_set<EntryIdentity, EntryIdentityHash> seen_entries;
+  std::unordered_set<std::string> seen_entries;
   std::unordered_set<std::string> suppletive_yoi_variants;
   for (const auto& source_entry : source_entries) {
     if (source_entry.pos == core::PartOfSpeech::Adjective &&
@@ -271,12 +280,12 @@ DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictio
                   entry.lemma.size() > found->second.lemma_length) {
                 const auto& previous = result.entries[found->second.index];
                 seen_entries.erase(
-                    EntryIdentity{previous.surface, previous.pos, previous.extended_pos, previous.lemma});
+                    entry_identity_key(previous.surface, previous.pos, previous.extended_pos, previous.lemma));
                 result.entries[found->second.index] = std::move(entry);
                 const auto& replacement = result.entries[found->second.index];
                 found->second.lemma_length = replacement.lemma.size();
-                seen_entries.insert(
-                    EntryIdentity{replacement.surface, replacement.pos, replacement.extended_pos, replacement.lemma});
+                seen_entries.insert(entry_identity_key(replacement.surface, replacement.pos, replacement.extended_pos,
+                                                       replacement.lemma));
                 if (!options.preserve_same_pos_homographs) {
                   seen_surface_pos.at(surface_pos_key(replacement.surface, replacement.pos)) = found->second;
                 }
@@ -286,15 +295,16 @@ DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictio
             }
             if (!found->second.explicit_surface) {
               const auto& previous = result.entries[found->second.index];
-              seen_entries.erase(EntryIdentity{previous.surface, previous.pos, previous.extended_pos, previous.lemma});
+              seen_entries.erase(
+                  entry_identity_key(previous.surface, previous.pos, previous.extended_pos, previous.lemma));
               if (!options.preserve_same_pos_homographs) {
                 seen_surface_pos.erase(surface_pos_key(previous.surface, previous.pos));
               }
               result.entries[found->second.index] = std::move(entry);
               const auto& replacement = result.entries[found->second.index];
               found->second = {found->second.index, replacement.lemma.size(), replacement.pos, true};
-              seen_entries.insert(
-                  EntryIdentity{replacement.surface, replacement.pos, replacement.extended_pos, replacement.lemma});
+              seen_entries.insert(entry_identity_key(replacement.surface, replacement.pos, replacement.extended_pos,
+                                                     replacement.lemma));
               if (!options.preserve_same_pos_homographs) {
                 seen_surface_pos.emplace(surface_pos_key(replacement.surface, replacement.pos), found->second);
               }
@@ -303,7 +313,7 @@ DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictio
             }
           }
         }
-        EntryIdentity identity{entry.surface, entry.pos, entry.extended_pos, entry.lemma};
+        auto identity = entry_identity_key(entry.surface, entry.pos, entry.extended_pos, entry.lemma);
         if (!seen_entries.insert(std::move(identity)).second) {
           ++result.duplicates_skipped;
           continue;
