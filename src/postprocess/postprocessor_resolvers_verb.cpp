@@ -122,6 +122,12 @@ void resolveAmbiguousInflections(std::vector<core::Morpheme>& result) {
     if (causative.surface != "せ" || negative.extended_pos != core::ExtendedPOS::AuxNegativeNai) {
       continue;
     }
+    // The dictionary-backed する irrealis is already fully identified by its
+    // lemma. The same one-mora surface also spells a Godan-sa A-row ending, but
+    // the generic repair below must not overwrite the irregular paradigm.
+    if (grammar::isSuruBaseForm(stem.lemma)) {
+      continue;
+    }
     const char32_t a_row = utf8::decodeLastChar(stem.surface);
     const std::string_view base_suffix = grammar::godanBaseSuffixFromARow(a_row);
     const grammar::VerbType verb_type = grammar::verbTypeFromARowCodepoint(a_row);
