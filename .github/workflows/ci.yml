@@ -164,11 +164,12 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - name: Build shared C-ABI library
-        run: |
-          cmake -B build-shared -DBUILD_SHARED=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release \
-            -DENABLE_DEBUG_INFO=OFF -DENABLE_DEBUG_LOG=OFF
-          cmake --build build-shared --target suzume_shared --parallel
+      # Go through the Makefile rather than restating its cmake invocation here:
+      # the binding loads the shared library AND reads the dictionaries staged
+      # into the package, and python-dict is what stages them. A hand-copied
+      # build step drifts from python-build and leaves the tests without data.
+      - name: Build the shared C-ABI library and stage the dictionaries
+        run: make python-build python-dict
       - name: Install Python binding
         working-directory: bindings/python
         run: pip install -e ".[dev]"
