@@ -156,19 +156,35 @@ void resolveNominalCaseDe(std::vector<core::Morpheme>& result) {
       retagCopulaDa(de);
       if (topic_starts_copular_aru) {
         auto& aru = result[idx + 2];
-        aru.pos = core::PartOfSpeech::Auxiliary;
-        aru.extended_pos = core::ExtendedPOS::AuxCopulaDa;
-        aru.lemma = "ある";
-        aru.conj_type = dictionary::ConjugationType::GodanRa;
+        const bool followed_by_auxiliary =
+            idx + 3 < result.size() && result[idx + 3].pos == core::PartOfSpeech::Auxiliary;
+        if (aru.conj_form == grammar::ConjForm::Base && !followed_by_auxiliary) {
+          retag(aru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "ある",
+                dictionary::ConjugationType::GodanRa, grammar::ConjForm::Base);
+        } else {
+          aru.pos = core::PartOfSpeech::Auxiliary;
+          aru.extended_pos = core::ExtendedPOS::AuxCopulaDa;
+          aru.lemma = "ある";
+          aru.conj_type = dictionary::ConjugationType::GodanRa;
+        }
       }
-      // である is one copula, so after a nominalized clause its ある half is
-      // the auxiliary rather than the existential verb it spells.
+      // The public token contract keeps the ある half of terminal である as a
+      // lexical verb regardless of whether the nominal host is overt or the
+      // nominalized clause の. Inflected copular cells retain their existing
+      // auxiliary treatment.
       if (is_nominalized_clause && successor != nullptr &&
           utf8::equalsAny(successor->surface, {"ある", "あっ", "あり", "あろ", "あれ"})) {
-        successor->pos = core::PartOfSpeech::Auxiliary;
-        successor->extended_pos = core::ExtendedPOS::AuxCopulaDa;
-        successor->lemma = "ある";
-        successor->conj_type = dictionary::ConjugationType::GodanRa;
+        const bool followed_by_auxiliary =
+            idx + 2 < result.size() && result[idx + 2].pos == core::PartOfSpeech::Auxiliary;
+        if (successor->conj_form == grammar::ConjForm::Base && !followed_by_auxiliary) {
+          retag(*successor, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "ある",
+                dictionary::ConjugationType::GodanRa, grammar::ConjForm::Base);
+        } else {
+          successor->pos = core::PartOfSpeech::Auxiliary;
+          successor->extended_pos = core::ExtendedPOS::AuxCopulaDa;
+          successor->lemma = "ある";
+          successor->conj_type = dictionary::ConjugationType::GodanRa;
+        }
       }
       if (successor != nullptr && successor->surface == "ござる") {
         auto& gozaru = *successor;
@@ -440,6 +456,20 @@ void splitFormalNounCopularDemo(std::vector<core::Morpheme>& result) {
     focus.syncPositions();
     result.insert(result.begin() + static_cast<std::ptrdiff_t>(idx + 1), focus);
     ++idx;
+  }
+
+  // A referential host keeps でも fused as the exemplification particle, but
+  // its following terminal ある has the same lexical-verb role as the
+  // supporting verb in the decomposed で+も+ある chain.
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    const auto& demo = result[idx - 1];
+    auto& aru = result[idx];
+    const bool followed_by_auxiliary = idx + 1 < result.size() && result[idx + 1].pos == core::PartOfSpeech::Auxiliary;
+    if (demo.extended_pos == core::ExtendedPOS::ParticleAdverbial && demo.getLemma() == "でも" &&
+        aru.getLemma() == "ある" && aru.conj_form == grammar::ConjForm::Base && !followed_by_auxiliary) {
+      retag(aru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "ある",
+            dictionary::ConjugationType::GodanRa, grammar::ConjForm::Base);
+    }
   }
 }
 
