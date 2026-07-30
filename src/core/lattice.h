@@ -3,7 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <deque>
+#include <memory>
 #include <string_view>
 #include <vector>
 
@@ -177,16 +177,34 @@ class Lattice {
   void clear();
 
  private:
+  /**
+   * @brief Append-only text storage whose handed-out views stay valid
+   *
+   * Every edge field that is not a view into the input text points here, so a
+   * stored run of bytes may never move afterwards. Filling fixed chunks in
+   * place satisfies that without the per-string allocation and per-element
+   * bookkeeping a node-based container needs.
+   */
+  class TextStorage {
+   public:
+    /** Copy text into the storage and return a view that stays valid until clear(). */
+    std::string_view store(std::string_view text);
+
+    /** Drop every stored run, keeping the first chunk's memory for reuse. */
+    void clear();
+
+   private:
+    static constexpr size_t kChunkBytes = 4096;
+    std::vector<std::unique_ptr<char[]>> chunks_;
+    size_t used_{0};      // Bytes already handed out from the newest chunk
+    size_t capacity_{0};  // Size of the newest chunk
+  };
+
   size_t text_length_{0};
   std::vector<std::vector<uint32_t>> edge_indices_by_start_;  // Edge indices per position
   std::vector<std::vector<uint32_t>> edge_indices_by_end_;    // Edge indices per end position
   std::vector<LatticeEdge> all_edges_;                        // All edges (primary storage)
-  std::deque<std::string> surface_storage_;                   // Storage for surface strings (deque for stable pointers)
-  std::deque<std::string> lemma_storage_;                     // Storage for lemma strings (deque for stable pointers)
-#ifdef SUZUME_DEBUG_INFO
-  std::deque<std::string> origin_detail_storage_;  // Storage for origin detail strings (deque for stable pointers)
-  std::deque<std::string> epos_source_storage_;    // Storage for epos_source strings (deque for stable pointers)
-#endif
+  TextStorage text_storage_;                                  // Backing store for every string an edge holds
 };
 
 }  // namespace suzume::core

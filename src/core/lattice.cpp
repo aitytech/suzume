@@ -1,5 +1,7 @@
 #include "lattice.h"
 
+#include <algorithm>
+#include <cstddef>
 #include <queue>
 
 namespace suzume::core {
@@ -18,28 +20,24 @@ size_t Lattice::addEdge(std::string_view surface, uint32_t start, uint32_t end, 
   }
 
   // Store surface string
-  surface_storage_.emplace_back(surface);
-  std::string_view stored_surface = surface_storage_.back();
+  std::string_view stored_surface = text_storage_.store(surface);
 
   // Store lemma if provided
   std::string_view stored_lemma;
   if (!lemma.empty()) {
-    lemma_storage_.emplace_back(lemma);
-    stored_lemma = lemma_storage_.back();
+    stored_lemma = text_storage_.store(lemma);
   }
 
 #ifdef SUZUME_DEBUG_INFO
   // Store origin_detail if provided (debug only)
   std::string_view stored_origin_detail;
   if (!origin_detail.empty()) {
-    origin_detail_storage_.emplace_back(origin_detail);
-    stored_origin_detail = origin_detail_storage_.back();
+    stored_origin_detail = text_storage_.store(origin_detail);
   }
   // Store epos_source if provided (debug only)
   std::string_view stored_epos_source;
   if (!epos_source.empty()) {
-    epos_source_storage_.emplace_back(epos_source);
-    stored_epos_source = epos_source_storage_.back();
+    stored_epos_source = text_storage_.store(epos_source);
   }
 #endif
 
@@ -177,12 +175,26 @@ void Lattice::clear() {
     indices.clear();
   }
   all_edges_.clear();
-  surface_storage_.clear();
-  lemma_storage_.clear();
-#ifdef SUZUME_DEBUG_INFO
-  origin_detail_storage_.clear();
-  epos_source_storage_.clear();
-#endif
+  text_storage_.clear();
+}
+
+std::string_view Lattice::TextStorage::store(std::string_view text) {
+  if (used_ + text.size() > capacity_) {
+    capacity_ = text.size() > kChunkBytes ? text.size() : kChunkBytes;
+    chunks_.push_back(std::make_unique<char[]>(capacity_));
+    used_ = 0;
+  }
+  // Chunks are never resized, so every run handed out earlier keeps its address.
+  char* destination = chunks_.back().get() + used_;
+  std::copy(text.begin(), text.end(), destination);
+  used_ += text.size();
+  return {destination, text.size()};
+}
+
+void Lattice::TextStorage::clear() {
+  chunks_.clear();
+  used_ = 0;
+  capacity_ = 0;
 }
 
 }  // namespace suzume::core
