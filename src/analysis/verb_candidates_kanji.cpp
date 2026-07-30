@@ -173,6 +173,7 @@ bool hasDictionaryAdjectiveTail(const std::vector<char32_t>& codepoints, size_t 
 // fabricated verb.
 bool hasCompleteParticleInitialVerbEvidence(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                             size_t hiragana_end, const grammar::Inflection& inflection,
+                                            const dictionary::DictionaryManager* dict_manager,
                                             const VerbCandidateOptions& verb_opts) {
   if (hiragana_end <= kanji_end + 1) {
     return false;
@@ -180,7 +181,12 @@ bool hasCompleteParticleInitialVerbEvidence(const std::vector<char32_t>& codepoi
 
   const std::string surface = extractSubstring(codepoints, start_pos, hiragana_end);
   const std::string expected_stem = extractSubstring(codepoints, start_pos, kanji_end + 1);
+  const bool has_conjunctive_initial =
+      vh::hasConjunctiveParticleDictionaryEntry(dict_manager, normalize::encodeUtf8(codepoints[kanji_end]));
   for (const auto& candidate : inflection.analyze(surface)) {
+    const bool has_mixed_godan_ka_stem = has_conjunctive_initial && candidate.verb_type == grammar::VerbType::GodanKa &&
+                                         utf8::startsWith(candidate.stem, expected_stem) &&
+                                         normalize::utf8Length(candidate.stem) > normalize::utf8Length(expected_stem);
     // A complete negative form can prove a longer Godan mizenkei whose first
     // okurigana mora is particle-homographic (懐かしま+なかった). Require the
     // observed suffix to contain the row-correct mizenkei ending followed by
@@ -198,15 +204,22 @@ bool hasCompleteParticleInitialVerbEvidence(const std::vector<char32_t>& codepoi
         return true;
       }
     }
-    if (candidate.verb_type == grammar::VerbType::IAdjective || candidate.stem != expected_stem ||
-        candidate.confidence <= verb_opts.confidence_standard) {
+    const float min_confidence = has_mixed_godan_ka_stem ? (utf8::startsWith(candidate.suffix, "いた") ||
+                                                                    utf8::startsWith(candidate.suffix, "いて")
+                                                                ? verb_opts.confidence_past_te
+                                                                : verb_opts.confidence_low)
+                                                         : verb_opts.confidence_standard;
+    if (candidate.verb_type == grammar::VerbType::IAdjective ||
+        (candidate.stem != expected_stem && !has_mixed_godan_ka_stem) || candidate.confidence <= min_confidence) {
       continue;
     }
     const bool complete_terminal = candidate.base_form == surface;
     bool complete_inflection = false;
     switch (candidate.verb_type) {
       case grammar::VerbType::GodanKa:
-        complete_inflection = utf8::startsWith(candidate.suffix, "いて") || utf8::startsWith(candidate.suffix, "いた");
+        complete_inflection = utf8::startsWith(candidate.suffix, "いて") ||
+                              utf8::startsWith(candidate.suffix, "いた") ||
+                              utf8::startsWith(candidate.suffix, "きます");
         break;
       case grammar::VerbType::GodanGa:
         complete_inflection = utf8::startsWith(candidate.suffix, "いで") || utf8::startsWith(candidate.suffix, "いだ");
@@ -425,8 +438,8 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
   // the inflectional evidence that distinguishes it from the particle.
   const bool is_yasu_godan_shape =
       first_hiragana == U'や' && kanji_end + 1 < codepoints.size() && codepoints[kanji_end + 1] == U'す';
-  const bool has_complete_particle_initial_verb =
-      hasCompleteParticleInitialVerbEvidence(codepoints, start_pos, kanji_end, hiragana_end, inflection, verb_opts);
+  const bool has_complete_particle_initial_verb = hasCompleteParticleInitialVerbEvidence(
+      codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager, verb_opts);
 
   // Historical-kana spelling of the wa-row Godan paradigm (思ふ, 思ひけり,
   // 思へど).  Its row kana は/へ are also the topic and direction particles, so

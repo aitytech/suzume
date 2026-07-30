@@ -52,6 +52,22 @@ bool hasFormalNounPrefixBoundary(const dictionary::DictionaryManager* dict_manag
   return false;
 }
 
+// A formal noun that ends immediately before the final A-row mora is not an
+// independent noun + predicate boundary: the remainder is only the irrealis
+// ending itself. When the following negative auxiliary validates the complete
+// cell, the formal-noun spelling is therefore a stem homograph (ためさ+ない),
+// unlike a substantive remainder that forms its own predicate
+// (わけ+わから+ない).
+bool hasFormalNounStemHomograph(const dictionary::DictionaryManager* dict_manager,
+                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t mizenkei_end) {
+  if (dict_manager == nullptr || mizenkei_end < start_pos + 3) {
+    return false;
+  }
+  const std::string prefix = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
+  const auto* entry = dict_manager->lookupExact(prefix, core::PartOfSpeech::Noun);
+  return entry != nullptr && entry->extended_pos == core::ExtendedPOS::NounFormal;
+}
+
 // An unverified mizenkei may start by absorbing a particle before a real verb
 // (に+行かない, は+ならない, も+ならない).  Preserve that closed-class
 // boundary when the remainder reconstructs to a dictionary verb.
@@ -187,8 +203,10 @@ void appendMizenkeiNegativeCandidates(const std::vector<char32_t>& codepoints, s
     if (!is_valid_verb) {
       is_valid_verb = is_in_dict;
     }
-    const bool unattested_sa_irrealis =
-        verb_type == grammar::VerbType::GodanSa && !is_in_dict && grammar::isPureHiragana(stem);
+    const bool formal_noun_stem_homograph =
+        is_valid_verb && hasFormalNounStemHomograph(dict_manager, codepoints, start_pos, mizenkei_end);
+    const bool unattested_sa_irrealis = verb_type == grammar::VerbType::GodanSa && !is_in_dict &&
+                                        grammar::isPureHiragana(stem) && !formal_noun_stem_homograph;
     // Reject a fabricated mizenkei that merely absorbs a trailing adverbial
     // particle (みるしか / やるしか = verb + しか, never the 未然形 of a non-word).
     if (!is_in_dict && endsWithParticleAfterVerb(dict_manager, inflection, codepoints, start_pos, mizenkei_end)) {
@@ -295,8 +313,10 @@ void appendMizenkeiNakyaCandidates(const std::vector<char32_t>& codepoints, size
     if (!is_valid_verb) {
       is_valid_verb = is_in_dict;
     }
-    const bool unattested_sa_irrealis =
-        verb_type == grammar::VerbType::GodanSa && !is_in_dict && grammar::isPureHiragana(stem);
+    const bool formal_noun_stem_homograph =
+        is_valid_verb && hasFormalNounStemHomograph(dict_manager, codepoints, start_pos, mizenkei_end);
+    const bool unattested_sa_irrealis = verb_type == grammar::VerbType::GodanSa && !is_in_dict &&
+                                        grammar::isPureHiragana(stem) && !formal_noun_stem_homograph;
     if (!is_valid_verb) {
       continue;
     }

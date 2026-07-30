@@ -579,20 +579,19 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
             if (sahen_past_after_ichidan_stem) {
               continue;
             }
-            // Single kanji + 1 hiragana (呈し, 訴え, 課し etc.).
-            // Many one-kanji 漢語サ変動詞 stems exist; the verb candidate must
-            // be available so it can compete with NOUN nominalization. Use
-            // strong non-dict penalty so 悲し (no real 悲す verb) still loses to
-            // NOUN/adjective interpretations, while 呈し (followed by 、/aux)
-            // can win via context.
-            // A connective or past auxiliary provides direct inflectional
-            // evidence, so retain the lexical-verb candidate for forms such
-            // as 押して while keeping the stronger guard before nominal-like
-            // continuations such as 話しそう.
+            // Single kanji + 1 hiragana is lexically ambiguous: 心+し+て is a
+            // productive noun + する chain, while 熱し+て is the continuative
+            // of lexical 熱す. A following connective/past cell proves the
+            // inflectional shape but cannot distinguish those lemmas, so an
+            // unregistered candidate must not use that continuation as lexical
+            // evidence. Open-class Godan-sa verbs are retained through L2.
             const bool inflectional_continuation =
                 renyokei_end < codepoints.size() &&
                 (codepoints[renyokei_end] == U'て' || codepoints[renyokei_end] == U'た');
-            non_dict_penalty = inflectional_continuation ? bigram_cost::kMinor : bigram_cost::kStrong;
+            if (inflectional_continuation) {
+              continue;
+            }
+            non_dict_penalty = bigram_cost::kStrong;
           } else {
             // Block kanji+まし pattern (false godan-sa from verb+ます renyoukei)
             // E.g., 来まし → 来ます (false), 出まし → 出ます (false)

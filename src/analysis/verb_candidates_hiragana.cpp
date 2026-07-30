@@ -152,11 +152,13 @@ bool hasLongGodanWaNegativeEvidence(const std::vector<char32_t>& codepoints, siz
   return false;
 }
 
-// A particle-homographic が/や may occur inside an open-class Godan-ra verb.
+// A particle-homographic が/や may occur inside an open-class Godan verb.
 // Derive the permitted terminal and sokuonbin shapes from the canonical row
 // table, rather than treating those morae as unconditional particle breaks.
-// Returns the predicate stem end (the terminal る or onbin っ), or zero when
-// the remaining run has no complete Godan-ra shape.
+// The Sa-row escape uses the complete inflectional shape because がす has no
+// row-specific marker before its terminal す.
+// Returns the predicate stem end, or zero when the remaining run has no
+// complete inflectional shape.
 //
 // The row is fixed to ra rather than taken from the row table, because the
 // homograph identifies no row on its own: the sokuonbin っ is shared with
@@ -164,25 +166,50 @@ bool hasLongGodanWaNegativeEvidence(const std::vector<char32_t>& codepoints, siz
 // clause as if it were one verb (ぼくがいく, とりがとぶ). What this rule fails
 // to reach — ながす, ころがす, のがす — is held back by the prefix guard below,
 // not by the row.
-size_t godanRaContinuationStemEnd(const std::vector<char32_t>& codepoints, size_t start_pos, size_t current_pos,
-                                  const std::vector<normalize::CharType>& char_types,
-                                  const dictionary::DictionaryManager* dict_manager) {
+size_t godanContinuationStemEnd(const std::vector<char32_t>& codepoints, size_t start_pos, size_t current_pos,
+                                const std::vector<normalize::CharType>& char_types,
+                                const grammar::Inflection& inflection,
+                                const dictionary::DictionaryManager* dict_manager,
+                                const VerbCandidateOptions& verb_opts) {
   if (current_pos >= codepoints.size() || (codepoints[current_pos] != U'が' && codepoints[current_pos] != U'や')) {
     return 0;
   }
+  size_t run_end = current_pos;
+  while (run_end < char_types.size() && run_end - start_pos < 12 &&
+         char_types[run_end] == normalize::CharType::Hiragana) {
+    ++run_end;
+  }
+
   const auto* row = grammar::Conjugation::getGodanRow(grammar::VerbType::GodanRa);
   if (row == nullptr) {
     return 0;
   }
-  // A case/connective particle before the homographic が/や is a completed
-  // grammatical unit, not an open-class predicate stem. This rejects でやる
-  // while retaining productive hosts such as はやった and こわがっている.
+
+  // A complete Sa-row cell is stronger than the lexical status of its prefix:
+  // の/な/さ are all closed-class homographs inside ordinary open-class stems.
+  // A real predicate beginning at が/や still marks the boundary (で+やる).
+  size_t godan_sa_end = 0;
+  const std::string full_run = extractSubstring(codepoints, start_pos, run_end);
+  for (const auto& candidate : inflection.analyze(full_run)) {
+    if (candidate.verb_type == grammar::VerbType::GodanSa && candidate.confidence >= verb_opts.confidence_low) {
+      godan_sa_end = run_end;
+      break;
+    }
+  }
   if (dict_manager != nullptr) {
     const std::string prefix = extractSubstring(codepoints, start_pos, current_pos);
-    // Topic and binding particles can legitimately be the first mora of this
-    // productive pattern (は+やった). A case or connective particle is a
-    // hard boundary, while independent closed-class words such as どう are
-    // not verb stems.
+    const std::string suffix = extractSubstring(codepoints, current_pos, run_end);
+    constexpr PartOfSpeechMask kPredicateMask =
+        partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+    const bool has_long_noun_prefix = prefix.size() >= 6 &&
+                                      dict_manager->lookupExact(prefix, core::PartOfSpeech::Particle) == nullptr &&
+                                      dict_manager->lookupExact(prefix, core::PartOfSpeech::Noun) != nullptr;
+    if (godan_sa_end != 0 && !has_long_noun_prefix && !hasExactPartOfSpeech(*dict_manager, suffix, kPredicateMask)) {
+      return godan_sa_end;
+    }
+
+    // Preserve the established Ra-row prefix guards for shapes where the
+    // particle homograph does not itself identify a conjugation row.
     if (const auto* particle = dict_manager->lookupExact(prefix, core::PartOfSpeech::Particle);
         particle != nullptr && particle->extended_pos != core::ExtendedPOS::ParticleTopic &&
         particle->extended_pos != core::ExtendedPOS::ParticleBinding) {
@@ -201,7 +228,10 @@ size_t godanRaContinuationStemEnd(const std::vector<char32_t>& codepoints, size_
         dict_manager->lookupExact(prefix, core::PartOfSpeech::Noun) != nullptr) {
       return 0;
     }
+  } else if (godan_sa_end != 0) {
+    return godan_sa_end;
   }
+
   const char32_t onbin = utf8::decodeFirstChar(grammar::onbinFormOf(*row));
   for (size_t pos = current_pos + 1; pos < char_types.size() && pos - start_pos < 12; ++pos) {
     if (char_types[pos] != normalize::CharType::Hiragana) {
@@ -215,6 +245,7 @@ size_t godanRaContinuationStemEnd(const std::vector<char32_t>& codepoints, size_
       return pos + 1;
     }
   }
+
   return 0;
 }
 
@@ -516,8 +547,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       // Check for particle-like characters (common particles + も, や)
       const bool has_godan_wa_negative =
           hasLongGodanWaNegativeEvidence(codepoints, start_pos, hiragana_end, char_types);
-      const size_t godan_ra_stem_end =
-          godanRaContinuationStemEnd(codepoints, start_pos, hiragana_end, char_types, dict_manager);
+      const size_t godan_ra_stem_end = godanContinuationStemEnd(codepoints, start_pos, hiragana_end, char_types,
+                                                                inflection, dict_manager, verb_opts);
       if (godan_ra_stem_end != 0) {
         godan_ra_continuation_stem_end = godan_ra_stem_end;
       }
@@ -671,7 +702,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   // emitted for forms such as はやった.
   if (godan_ra_continuation_stem_end == 0) {
     for (size_t probe_pos = start_pos + 1; probe_pos < hiragana_end; ++probe_pos) {
-      const size_t stem_end = godanRaContinuationStemEnd(codepoints, start_pos, probe_pos, char_types, dict_manager);
+      const size_t stem_end =
+          godanContinuationStemEnd(codepoints, start_pos, probe_pos, char_types, inflection, dict_manager, verb_opts);
       if (stem_end != 0) {
         godan_ra_continuation_stem_end = stem_end;
         break;
@@ -724,7 +756,12 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
                           dictionary::ConjugationType::GodanRa, true, CandidateOrigin::VerbHiragana,
                           candidate::kHighOriginConfidence, "hiragana_godan_ra_particle_continuation",
                           is_onbin ? core::ExtendedPOS::VerbOnbinkei : core::ExtendedPOS::VerbShuushikei);
-    candidate.lemma_verified = true;
+    // Crossing a particle-homographic mora verifies only the inflectional
+    // shape.  It does not attest the reconstructed open-class lemma.  Marking
+    // it as lexical evidence lets the candidate hide real dictionary
+    // boundaries inside itself (ゆう|がた|だっ), so leave lemma verification to
+    // an actual dictionary match.
+    candidate.lemma_verified = false;
     candidates.push_back(std::move(candidate));
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << surface << " hiragana_godan_ra_particle_continuation lemma=" << lemma
                                             << " cost=" << candidate::verb_cost::kStrongBonus << "\n");

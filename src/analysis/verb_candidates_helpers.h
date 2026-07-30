@@ -135,6 +135,14 @@ bool hasParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manage
 // noun+case-particle+する guard.
 bool hasCaseParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
 
+// Exact one-token conjunctive-particle lookup. Used when a particle-homographic
+// mora is licensed inside a longer, fully inflected lexical stem.
+bool hasConjunctiveParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager, std::string_view surface);
+
+// True when a complete case-particle entry ends exactly at @p pos.
+bool followsCaseParticle(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                         size_t pos);
+
 // A bare continuative can chain clauses before the literal Japanese comma
 // when a non-quotative case particle or quantified focus phrase licenses a
 // predicate on its left.

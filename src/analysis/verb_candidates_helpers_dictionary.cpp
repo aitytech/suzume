@@ -86,6 +86,31 @@ bool hasCaseParticleDictionaryEntry(const dictionary::DictionaryManager* dict_ma
   return entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleCase;
 }
 
+bool hasConjunctiveParticleDictionaryEntry(const dictionary::DictionaryManager* dict_manager,
+                                           std::string_view surface) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  const auto* entry = dict_manager->lookupExact(surface, core::PartOfSpeech::Particle);
+  return entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleConj;
+}
+
+bool followsCaseParticle(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
+                         size_t pos) {
+  if (dict_manager == nullptr || pos == 0) {
+    return false;
+  }
+  constexpr size_t kMaxParticleChars = 4;
+  const size_t min_particle_start = pos > kMaxParticleChars ? pos - kMaxParticleChars : 0;
+  for (size_t particle_start = pos; particle_start > min_particle_start;) {
+    --particle_start;
+    if (hasCaseParticleDictionaryEntry(dict_manager, extractSubstring(codepoints, particle_start, pos))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool isCommaClauseChainingRenyokei(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                    const dictionary::DictionaryManager* dict_manager) {
   if (dict_manager == nullptr || start_pos == 0 || end_pos >= codepoints.size() || codepoints[end_pos] != U'、') {

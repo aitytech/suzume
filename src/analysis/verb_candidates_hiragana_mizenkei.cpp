@@ -314,6 +314,20 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
       }
     }
 
+    // A complete passive auxiliary supplies stronger evidence for a short
+    // unknown Ichidan stem when the run begins in a predicate slot. This is
+    // what licenses のせ+られた after a case particle, without admitting an
+    // interior fabricated stem such as どせ+ない in とりもどせない.
+    if (!is_valid_ichidan && (start_pos == 0 || vh::followsCaseParticle(dict_manager, codepoints, start_pos))) {
+      for (const auto& inflected : inflection.analyze(base_form)) {
+        if (inflected.verb_type == grammar::VerbType::Ichidan && inflected.base_form == base_form &&
+            inflected.confidence >= candidate::kV1PrefixMinConfidence) {
+          is_valid_ichidan = true;
+          break;
+        }
+      }
+    }
+
     if (!is_valid_ichidan) {
       continue;
     }
@@ -345,9 +359,13 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
     const CandidateOrigin origin = start_pos > 0 && codepoints[start_pos - 1] == U'と'
                                        ? CandidateOrigin::VerbHiraganaPassiveRenyokei
                                        : CandidateOrigin::VerbHiragana;
-    candidates.push_back(makeVerbCandidate(stem, start_pos, stem_end, kCost, lemma,
-                                           dictionary::ConjugationType::Ichidan, true, origin, 0.9F,
-                                           "hiragana_ichidan_rareru"));
+    const bool validated_short_predicate =
+        normalize::utf8Length(stem) == 2 &&
+        (start_pos == 0 || vh::followsCaseParticle(dict_manager, codepoints, start_pos));
+    candidates.push_back(
+        makeVerbCandidate(stem, start_pos, stem_end, kCost, lemma, dictionary::ConjugationType::Ichidan, true, origin,
+                          0.9F, "hiragana_ichidan_rareru",
+                          validated_short_predicate ? core::ExtendedPOS::VerbMizenkei : core::ExtendedPOS::Unknown));
     break;  // Only generate one ichidan rareru candidate per starting position
   }
 }

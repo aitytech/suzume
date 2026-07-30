@@ -356,7 +356,8 @@ bool isCompoundAdjectivePattern(std::string_view surface) {
   if (utf8::containsAny(surface, {
                                      "にくい", "にくく", "にくか", "にくけ", "にくさ",  // difficult to do
                                      "やすい", "やすく", "やすか", "やすけ", "やすさ",  // easy to do
-                                     "がたい", "がたく", "がたか", "がたけ", "がたさ"   // hard to do
+                                     "がたい", "がたく", "がたか", "がたけ", "がたさ",  // hard to do
+                                     "難い",   "難く",   "難か",   "難け",   "難さ"     // kanji spelling
                                  })) {
     return true;
   }

@@ -137,14 +137,24 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
         continue;
       }
       for (const auto& candidate : inflection.analyze(verb_surface)) {
-        // The host test applied to the bare auxiliary above is deliberately not
-        // repeated here. An auxiliary reached through an inflection is the only
-        // thing suppressing a fabricated verb over an unrelated particle run
-        // (と|り|も|ど|せ|ない), and exempting it costs more than the passive of
-        // のせる it would recover.
-        bool is_verified_verb =
-            vh::isVerbInDictionary(dict_manager, candidate.base_form) ||
-            vh::hasDictionaryEntry(dict_manager, candidate.base_form, core::PartOfSpeech::Auxiliary);
+        const bool is_dictionary_verb = vh::isVerbInDictionary(dict_manager, candidate.base_form);
+        const auto* auxiliary = dict_manager->lookupExact(candidate.base_form, core::PartOfSpeech::Auxiliary);
+        if (auxiliary != nullptr) {
+          const bool particle_can_host_auxiliary =
+              BigramTable::getCost(particle_entry->extended_pos, auxiliary->extended_pos) < bigram_cost::kAlmostNever;
+          // At a real predicate boundary (BOS or after a case particle), an
+          // auxiliary reached only through a generated inflection cannot prove
+          // that the apparent leading particle is genuine: のせられた is a
+          // lexical stem plus passive, not の + causative. Inside an unbroken
+          // kana run the same reading still suppresses a shorter fabricated
+          // verb (とりもどせない must not admit どせない).
+          const bool begins_predicate_slot =
+              start_pos == 0 || vh::followsCaseParticle(dict_manager, codepoints, start_pos);
+          if (!particle_can_host_auxiliary && begins_predicate_slot) {
+            continue;
+          }
+        }
+        const bool is_verified_verb = is_dictionary_verb || auxiliary != nullptr;
         // A connective て/で unambiguously ends the preceding predicate. When
         // its remainder inflects to a dictionary verb, do not fabricate a
         // larger hiragana verb across that boundary (嬉しく|て|なら|ない).

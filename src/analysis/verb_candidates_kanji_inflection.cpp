@@ -26,6 +26,46 @@
 namespace suzume::analysis::kanji_verb_detail {
 namespace vh = verb_helpers;
 
+namespace {
+
+bool hasInternalPredicateBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                  size_t end_pos, const grammar::Inflection& inflection) {
+  if (kanji_end <= start_pos + 1) {
+    return false;
+  }
+  for (size_t predicate_start = start_pos + 1; predicate_start < kanji_end; ++predicate_start) {
+    // A bare single-kanji ichidan V1 is a productive compound-verb stem
+    // (見+極める, 見+送る), not a nominal host.  Its compound candidate is
+    // generated independently, but the complete finite edge must remain
+    // available here as well.
+    if (predicate_start == start_pos + 1 && vh::isSingleKanjiIchidan(codepoints[start_pos])) {
+      continue;
+    }
+    const std::string predicate = extractSubstring(codepoints, predicate_start, end_pos);
+    for (const auto& analysis : inflection.analyze(predicate)) {
+      if (analysis.verb_type != grammar::VerbType::IAdjective && analysis.base_form == predicate &&
+          analysis.confidence >= candidate::kIAdjConfMin) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool hasAttestedDeverbalNominalization(const grammar::InflectionCandidate& candidate,
+                                       const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  std::string renyokei = candidate.stem;
+  if (const auto* godan_row = grammar::Conjugation::getGodanRow(candidate.verb_type); godan_row != nullptr) {
+    renyokei += normalize::encodeUtf8(godan_row->i_row);
+  }
+  return dict_manager->lookupExact(renyokei, core::PartOfSpeech::Noun) != nullptr;
+}
+
+}  // namespace
+
 void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
                                        size_t hiragana_end, const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
@@ -37,10 +77,13 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
   // the dictionary threshold.
   const bool follows_reduplicated_noun = start_pos >= 2 && normalize::isIterationMark(codepoints[start_pos - 1]) &&
                                          normalize::isKanjiCodepoint(codepoints[start_pos - 2]);
+  const bool has_conjunctive_initial =
+      vh::hasConjunctiveParticleDictionaryEntry(dict_manager, normalize::encodeUtf8(codepoints[kanji_end]));
 
-  // Try different stem lengths (kanji only, or kanji + 1 hiragana for ichidan)
-  // This handles both godan (kanji stem) and ichidan (kanji + hiragana stem)
-  for (size_t stem_end = kanji_end; stem_end <= kanji_end + 1 && stem_end < hiragana_end; ++stem_end) {
+  // Try different stem lengths. Most verbs use a kanji-only stem, while
+  // ichidan verbs add one hiragana and productive mixed-script k-row stems can
+  // contain a longer okurigana portion (羽ばた+く/いた/きます).
+  for (size_t stem_end = kanji_end; stem_end < hiragana_end; ++stem_end) {
     // Try different ending lengths, starting from longest
     for (size_t end_pos = hiragana_end; end_pos > stem_end; --end_pos) {
       std::string surface = extractSubstring(codepoints, start_pos, end_pos);
@@ -188,13 +231,20 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         // Single-kanji + い patterns (人い) are excluded: almost always NOUN + いる,
         // not a single verb. Valid ichidan stems are multi-char (感じ, 信じ, etc.).
         bool is_i_row_ichidan = cand.verb_type == grammar::VerbType::Ichidan && vh::isValidIRowIchidanStem(cand.stem);
-        float conf_threshold = (is_i_row_ichidan || sokuonbin_stem_verified) ? verb_opts.confidence_ichidan_dict
-                                                                             : verb_opts.confidence_standard;
+        const bool has_mixed_godan_ka_stem =
+            has_conjunctive_initial && stem_end > kanji_end + 1 && cand.verb_type == grammar::VerbType::GodanKa;
+        float conf_threshold = (is_i_row_ichidan || sokuonbin_stem_verified)
+                                   ? verb_opts.confidence_ichidan_dict
+                                   : (has_mixed_godan_ka_stem ? (utf8::startsWith(cand.suffix, "いた") ||
+                                                                         utf8::startsWith(cand.suffix, "いて")
+                                                                     ? verb_opts.confidence_past_te
+                                                                     : verb_opts.confidence_low)
+                                                              : verb_opts.confidence_standard);
         bool is_multi_kanji_godan_wa_renyokei = cand.verb_type == grammar::VerbType::GodanWa &&
                                                 utf8::endsWith(surface, "い") &&
                                                 normalize::utf8Length(cand.stem) >= 2 && end_pos < codepoints.size() &&
                                                 normalize::isKanjiCodepoint(codepoints[end_pos]);
-        if (cand.stem == expected_stem &&
+        if (cand.stem == expected_stem && (stem_end <= kanji_end + 1 || has_mixed_godan_ka_stem) &&
             (cand.confidence > conf_threshold ||
              (follows_reduplicated_noun && cand.confidence >= verb_opts.confidence_ichidan_dict) ||
              (is_multi_kanji_godan_wa_renyokei && cand.confidence >= verb_opts.confidence_ichidan_dict)) &&
@@ -227,6 +277,33 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
       // over a verified embedded verb; treat it as verified for the proceed gate so
       // its bare 終止形/意志形 (conf ~0.45) is not dropped by the standard threshold.
       is_dict_verified = is_dict_verified || sokuonbin_stem_verified;
+
+      // An unregistered whole-span verb must not absorb a nominal host when the
+      // remainder is already a complete predicate (花+咲く, 山+登る). Registered
+      // lexical compounds and verbs attested through a deverbal nominalization
+      // retain their whole-span reading, and the independently generated inner
+      // verb edge supplies the productive noun + predicate path.
+      if (!is_dict_verified && !follows_reduplicated_noun && !hasAttestedDeverbalNominalization(best, dict_manager) &&
+          hasInternalPredicateBoundary(codepoints, start_pos, kanji_end, end_pos, inflection)) {
+        continue;
+      }
+
+      // A mixed-script k-row stem carries its lexical okurigana before the
+      // い-onbin.  The ordinary onbin generator assumes a kanji-only stem, so
+      // emit the same grammatical boundary here from the complete いた/いて
+      // cell (羽ばたい+た/て).
+      const bool has_mixed_godan_ka_stem =
+          has_conjunctive_initial && stem_end > kanji_end + 1 && best.verb_type == grammar::VerbType::GodanKa;
+      if (has_mixed_godan_ka_stem && (best.suffix == "いた" || best.suffix == "いて")) {
+        const size_t onbin_end = end_pos - 1;
+        const std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_end);
+        auto onbin_candidate =
+            makeVerbCandidate(onbin_surface, start_pos, onbin_end, candidate::verb_cost::kStandardBonus, best.base_form,
+                              grammar::verbTypeToConjType(best.verb_type), true, CandidateOrigin::VerbKanji,
+                              best.confidence, "mixed_godan_ka_onbin", core::ExtendedPOS::VerbOnbinkei);
+        onbin_candidate.lemma_verified = true;
+        candidates.push_back(std::move(onbin_candidate));
+      }
 
       appendSelectedKanjiVerbCandidate(codepoints, start_pos, kanji_end, stem_end, end_pos, surface, hiragana_part,
                                        best, is_dict_verified, follows_reduplicated_noun, inflection, dict_manager,

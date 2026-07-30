@@ -48,6 +48,9 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
                                           utf8::endsWith(surface, "い") && normalize::utf8Length(best.stem) >= 2 &&
                                           end_pos < codepoints.size() &&
                                           normalize::isKanjiCodepoint(codepoints[end_pos]);
+  const bool has_mixed_godan_ka_stem =
+      best.verb_type == grammar::VerbType::GodanKa && stem_end > kanji_end + 1 &&
+      vh::hasConjunctiveParticleDictionaryEntry(dict_manager, normalize::encodeUtf8(codepoints[kanji_end]));
 
   // A case particle followed by する in its て/た form is a productive
   // nominal construction. Do not reinterpret a short noun plus that
@@ -83,9 +86,13 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
   }
   // Dictionary-verified candidates use lower threshold (0.3)
   // This allows hiragana verbs like いわれる (conf=0.33) to be recognized
-  float proceed_threshold = (is_dict_verified || proceed_is_i_row_ichidan || is_multi_kanji_godan_wa_renyokei)
-                                ? verb_opts.confidence_ichidan_dict
-                                : verb_opts.confidence_standard;
+  float proceed_threshold =
+      (is_dict_verified || proceed_is_i_row_ichidan || is_multi_kanji_godan_wa_renyokei)
+          ? verb_opts.confidence_ichidan_dict
+          : (has_mixed_godan_ka_stem ? (utf8::startsWith(best.suffix, "いた") || utf8::startsWith(best.suffix, "いて")
+                                            ? verb_opts.confidence_past_te
+                                            : verb_opts.confidence_low)
+                                     : verb_opts.confidence_standard);
   if (best.confidence > proceed_threshold ||
       (follows_reduplicated_noun && best.confidence >= verb_opts.confidence_ichidan_dict) ||
       (is_multi_kanji_godan_wa_renyokei && best.confidence >= proceed_threshold)) {
@@ -708,13 +715,14 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
     // The lemmatizer will use stem-matching logic to pick the correct base form.
     // Exception: sokuonbin compounds carry the lemma built from the embedded verb
     // base, which the surface-based lemmatizer cannot recover past the onbin.
-    const char* forced_lemma = sokuonbin_stem_verified
-                                   ? sokuonbin_lemma.c_str()
-                                   : (is_multi_kanji_godan_wa_renyokei ? best.base_form.c_str() : "");
+    const char* forced_lemma =
+        sokuonbin_stem_verified
+            ? sokuonbin_lemma.c_str()
+            : (is_multi_kanji_godan_wa_renyokei || has_mixed_godan_ka_stem ? best.base_form.c_str() : "");
     auto verb_candidate = makeVerbCandidate(
         surface, start_pos, end_pos, base_cost, forced_lemma, grammar::verbTypeToConjType(best.verb_type), has_suffix,
         CandidateOrigin::VerbKanji, best.confidence, grammar::verbTypeToString(best.verb_type).data(), verb_epos);
-    verb_candidate.lemma_verified = in_dict;
+    verb_candidate.lemma_verified = in_dict || has_mixed_godan_ka_stem;
     candidates.push_back(std::move(verb_candidate));
     // Don't break - try other stem lengths too
   }
