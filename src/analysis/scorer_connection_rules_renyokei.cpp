@@ -385,12 +385,14 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
     bonus += cost::kDoubleVeryStrongBonus;
   }
 
-  // The object marker cannot directly govern a finite predicate. Keep this
+  // The object marker cannot normally follow a finite predicate. Keep this
   // restriction surface-scoped because other ParticleCase homographs also act
   // as valid quotation or conditional particles after a finite verb (〜る+と).
+  // A dictionary-backed verb receives a smaller penalty so a rare
+  // zero-nominalized object clause can retain its lexical predicate reading.
   if (prev.extended_pos == core::ExtendedPOS::VerbShuushikei && next.extended_pos == core::ExtendedPOS::ParticleCase &&
       grammar::isAccusativeParticleWoSurface(next.surface)) {
-    bonus += cost::kStrong;
+    bonus += prev.fromDictionary() ? cost::kRare : cost::kStrong;
   }
 
   // A predicate-final に can introduce a continuative form only when that

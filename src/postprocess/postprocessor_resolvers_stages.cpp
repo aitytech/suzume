@@ -17,7 +17,8 @@ namespace suzume::postprocess {
 // These stages deliberately preserve the resolver order in process().  The
 // second stage follows PREFIX+VERB nominalization because its rules inspect
 // the resulting noun/verb category.
-void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
+void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result,
+                                   const dictionary::DictionaryManager* dict_manager) {
   resolver::resolveDeverbalStemBeforeDependentAuxiliary(result);
   resolver::resolveQuotativeParticleRoles(result);
   resolver::resolveAmbiguousInflections(result);
@@ -46,6 +47,7 @@ void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
   resolver::resolveInitialNegativeAdjective(result);
   resolver::resolveHonorificVerbInflection(result);
   resolver::resolvePreparatoryVolitional(result);
+  resolver::resolveAttributiveDeverbalNoun(result, dict_manager);
   resolver::resolveCopularForms(result);
   resolver::resolveGozaruPoliteAuxiliary(result);
   resolver::resolveNominalCaseDe(result);
@@ -186,7 +188,41 @@ void resolvePostPrefixMorphemeRoles(std::vector<core::Morpheme>& result) {
 // each resolver observes.
 void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictionary::DictionaryManager* dict_manager) {
   resolver::resolveDurationPredicateKakaru(result);
+  resolver::resolveDeverbalNominalSuffix(result);
   resolver::resolveClosedInflectionalChains(result);
+
+  // A dictionary-confirmed na-adjective keeps its adjectival role before a
+  // predicative copula or the productive excessive auxiliary. The lattice can
+  // otherwise prefer a homographic unknown noun/verb when ん+だ resembles an
+  // explanatory chain, or when material after すぎる changes its path
+  // (盛ん+だ, 複雑+すぎる+の+です).
+  for (size_t idx = 0; idx + 1 < result.size(); ++idx) {
+    auto& stem = result[idx];
+    auto& follower = result[idx + 1];
+    const auto* adjective =
+        dict_manager != nullptr ? dict_manager->lookupExact(stem.surface, core::PartOfSpeech::Adjective) : nullptr;
+    if (adjective == nullptr || adjective->extended_pos != core::ExtendedPOS::AdjNaAdj) {
+      continue;
+    }
+    if (stem.pos == core::PartOfSpeech::Verb && utf8::equalsAny(follower.surface, {"だ"})) {
+      resolver::retag(stem, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjNaAdj, stem.surface,
+                      dictionary::ConjugationType::NaAdjective, grammar::ConjForm::Base);
+      resolver::retagCopulaDa(follower);
+      continue;
+    }
+    if (follower.pos == core::PartOfSpeech::Suffix && utf8::equalsAny(follower.surface, {"げ"})) {
+      resolver::retagNounSurface(stem);
+      continue;
+    }
+    if (!utf8::startsWith(follower.surface, "すぎ")) {
+      continue;
+    }
+    resolver::retag(stem, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjNaAdj, stem.surface,
+                    dictionary::ConjugationType::NaAdjective, grammar::ConjForm::Base);
+    follower.pos = core::PartOfSpeech::Verb;
+    follower.extended_pos = core::ExtendedPOS::AuxExcessive;
+    follower.lemma = "すぎる";
+  }
 
   // A pure-hiragana n-onbin V2 can carry inflection evidence that contradicts
   // an overlapping closed V2 reading (折り+たたん, not the fabricated
@@ -257,12 +293,14 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
   }
 
   // Conditional たら/だら is the inflected past auxiliary after a predicate,
-  // even when its homographic particle edge wins before a following noun
-  // clause (泣い+たら+子供が...).
+  // even when its homographic particle or unknown edge wins before a following
+  // clause (泣い+たら+子供が..., 読ん+だら+あかん).
   for (size_t idx = 1; idx < result.size(); ++idx) {
     auto& previous = result[idx - 1];
     auto& current = result[idx];
-    if (previous.pos == core::PartOfSpeech::Verb && current.pos == core::PartOfSpeech::Particle &&
+    const bool unresolved_conditional =
+        current.pos == core::PartOfSpeech::Particle || current.pos == core::PartOfSpeech::Other;
+    if (previous.pos == core::PartOfSpeech::Verb && unresolved_conditional &&
         utf8::equalsAny(current.surface, {"たら", "だら"})) {
       current.pos = core::PartOfSpeech::Auxiliary;
       current.extended_pos = core::ExtendedPOS::AuxTenseTa;

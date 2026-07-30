@@ -201,10 +201,17 @@ size_t godanContinuationStemEnd(const std::vector<char32_t>& codepoints, size_t 
     const std::string suffix = extractSubstring(codepoints, current_pos, run_end);
     constexpr PartOfSpeechMask kPredicateMask =
         partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+    const auto* suffix_entry = dict_manager->lookupExact(suffix);
+    const bool suffix_is_garu = suffix_entry != nullptr && suffix_entry->extended_pos == core::ExtendedPOS::AuxGaru;
+    const auto* noun_prefix = dict_manager->lookupExact(prefix, core::PartOfSpeech::Noun);
+    const bool prefix_can_host_garu = dict_manager->lookupExact(prefix, core::PartOfSpeech::Adjective) != nullptr ||
+                                      (noun_prefix != nullptr && noun_prefix->extended_pos == core::ExtendedPOS::Noun);
+    const bool suffix_is_licensed_predicate =
+        hasExactPartOfSpeech(*dict_manager, suffix, kPredicateMask) && (!suffix_is_garu || prefix_can_host_garu);
     const bool has_long_noun_prefix = prefix.size() >= 6 &&
                                       dict_manager->lookupExact(prefix, core::PartOfSpeech::Particle) == nullptr &&
                                       dict_manager->lookupExact(prefix, core::PartOfSpeech::Noun) != nullptr;
-    if (godan_sa_end != 0 && !has_long_noun_prefix && !hasExactPartOfSpeech(*dict_manager, suffix, kPredicateMask)) {
+    if (godan_sa_end != 0 && !suffix_is_licensed_predicate) {
       return godan_sa_end;
     }
 
@@ -224,8 +231,7 @@ size_t godanContinuationStemEnd(const std::vector<char32_t>& codepoints, size_t 
         return 0;
       }
     }
-    if (dict_manager->lookupExact(prefix, core::PartOfSpeech::Particle) == nullptr && prefix.size() >= 6 &&
-        dict_manager->lookupExact(prefix, core::PartOfSpeech::Noun) != nullptr) {
+    if (has_long_noun_prefix && !(suffix_is_garu && !prefix_can_host_garu)) {
       return 0;
     }
   } else if (godan_sa_end != 0) {

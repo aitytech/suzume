@@ -292,6 +292,14 @@ bool isStateDurationSuffix(std::string_view surface) {
   return surface == "中";
 }
 
+bool isDeverbalNominalSuffix(std::string_view surface) {
+  return utf8::equalsAny(surface, {"事"});
+}
+
+bool isFormalNounConjunctiveParticle(std::string_view surface) {
+  return utf8::equalsAny(surface, {"ものの"});
+}
+
 bool isDurationPredicateKakaru(std::string_view surface) {
   return surface == "かかる";
 }

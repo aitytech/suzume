@@ -296,7 +296,8 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   surface_bonus += connection_rules::computeExistentialAruNominalPredicateBonus(prev, next);
   surface_bonus += connection_rules::computeCompletionAuxiliaryBonus(prev, next);
   surface_bonus += connection_rules::computeAdjectiveTePredicatePenalty(prev, next);
-  surface_bonus += connection_rules::computeClassicalNegativeBoundaryPenalty(prev, next);
+  surface_bonus += connection_rules::computeClassicalNegativeBoundaryPenalty(prev, next) +
+                   connection_rules::computeAdjectiveDerivationHostPenalty(prev, next);
 
   surface_bonus += connection_rules::computeBarePotentialRenyokeiPenalty(prev, next);
 

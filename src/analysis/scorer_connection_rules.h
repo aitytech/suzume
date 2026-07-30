@@ -32,6 +32,7 @@ float computeCompletionAuxiliaryBonus(const core::LatticeEdge& prev, const core:
 float computeBarePotentialRenyokeiPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeAdjectiveTePredicatePenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 float computeClassicalNegativeBoundaryPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
+float computeAdjectiveDerivationHostPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next);
 
 }  // namespace suzume::analysis::connection_rules
 

@@ -163,7 +163,9 @@ void UnknownWordGenerator::generateCharacterSpeechCandidates(std::string_view /*
       // the precise inflectional type and the same coarse Auxiliary POS.
       const auto* precise_auxiliary =
           dict_manager_ != nullptr ? dict_manager_->lookupExact(surface, core::PartOfSpeech::Auxiliary) : nullptr;
-      if (precise_auxiliary != nullptr) {
+      const auto* lexical_verb =
+          dict_manager_ != nullptr ? dict_manager_->lookupExact(surface, core::PartOfSpeech::Verb) : nullptr;
+      if (precise_auxiliary != nullptr || lexical_verb != nullptr) {
         continue;
       }
 

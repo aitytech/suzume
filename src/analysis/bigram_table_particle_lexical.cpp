@@ -377,6 +377,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // (prevents なさそう → な(終助詞)+さ(未然)+そう over な(形容詞)+さ(接尾辞)+そう)
       {EPOS::ParticleFinal, EPOS::VerbMizenkei, cost::kVeryRare},
 
+      // A sentence-final particle cannot govern a hypothetical predicate.
+      // Otherwise ため+さ+なけれ+ば reopens the stem at さ and lets the
+      // fabricated なける conditional collect the strong →ば connection.
+      {EPOS::ParticleFinal, EPOS::VerbKateikei, cost::kAlmostNever},
+
       // The continuative belongs to the same paradigm as the cells above and
       // is barred for the same reason: the particle has already closed the
       // clause, so a predicate that opens a new one cannot follow it

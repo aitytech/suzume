@@ -11,7 +11,8 @@ namespace suzume::postprocess {
 // behavioral contract: the pre-prefix stage establishes grammatical roles,
 // PREFIX+VERB nominalization consumes them, and the post-prefix/final stages
 // observe the resulting token categories.
-void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& morphemes);
+void resolvePrePrefixMorphemeRoles(std::vector<core::Morpheme>& morphemes,
+                                   const dictionary::DictionaryManager* dict_manager);
 void resolvePostPrefixMorphemeRoles(std::vector<core::Morpheme>& morphemes);
 void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& morphemes,
                                const dictionary::DictionaryManager* dict_manager);

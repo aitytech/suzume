@@ -33,6 +33,11 @@ void setParticleAndLexicalPenaltyCosts(BigramMatrix& table) {
       // whose focus-particle reading is productive before a predicate.
       {EPOS::ParticleCase, EPOS::ParticleTopic, cost::kVeryStrongBonus},
 
+      // A suffix cannot take a case particle as its host.  This keeps a
+      // dictionary suffix homograph from winning at the start of the next
+      // phrase (時間+に+間+に, where the second 間 is an independent noun).
+      {EPOS::ParticleCase, EPOS::Suffix, cost::kProhibitive},
+
       // PART_副 → PART_係 (だけ+は, まで+は, ばかり+は) stacks the same way. The
       // adverbial particle is at least two morae, so this cannot re-bond a
       // short conjunctive homograph the way the note below describes.

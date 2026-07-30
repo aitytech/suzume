@@ -22,6 +22,8 @@ void mergeInto(core::Morpheme& head, const core::Morpheme& tail);
 void mergeSplitCopularNegative(std::vector<core::Morpheme>& result);
 void mergeSplitFormalNounNegativeRenyokei(std::vector<core::Morpheme>& result);
 void resolveAdjectiveNominalizerSa(std::vector<core::Morpheme>& result);
+void resolveAttributiveDeverbalNoun(std::vector<core::Morpheme>& result,
+                                    const dictionary::DictionaryManager* dict_manager);
 void resolveAdverbExplanatoryCopula(std::vector<core::Morpheme>& result);
 void resolveAmbiguousInflections(std::vector<core::Morpheme>& result);
 void resolveAppearanceSouPredicate(std::vector<core::Morpheme>& result);
@@ -36,6 +38,7 @@ void resolveCopularForms(std::vector<core::Morpheme>& result);
 void resolveDemonstrativeMiseru(std::vector<core::Morpheme>& result);
 void resolveDemonstrativeQuotativeOnbin(std::vector<core::Morpheme>& result);
 void resolveDurationPredicateKakaru(std::vector<core::Morpheme>& result);
+void resolveDeverbalNominalSuffix(std::vector<core::Morpheme>& result);
 void resolveGozaruPoliteAuxiliary(std::vector<core::Morpheme>& result);
 void resolveHonorificVerbInflection(std::vector<core::Morpheme>& result);
 void resolveIndefiniteCaseDe(std::vector<core::Morpheme>& result);

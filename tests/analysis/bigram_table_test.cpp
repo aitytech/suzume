@@ -174,6 +174,11 @@ TEST(BigramTableTest, FormalNounUsesItsExplicitContinuationProfile) {
   EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::NounFormal, EPOS::ParticleAdverbial), bigram_cost::kVeryStrongBonus);
 }
 
+TEST(BigramTableTest, CaseParticleCannotHostSuffix) {
+  using EPOS = core::ExtendedPOS;
+  EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::ParticleCase, EPOS::Suffix), bigram_cost::kProhibitive);
+}
+
 TEST(BigramTableTest, AdverbTakesBothHalvesOfTheFocusParticleClassAlike) {
   using EPOS = core::ExtendedPOS;
   EXPECT_FLOAT_EQ(BigramTable::getCost(EPOS::Adverb, EPOS::ParticleAdverbial),

@@ -35,6 +35,19 @@ bool isSingleHiraganaVerbRenyokei(const core::LatticeEdge& edge) {
          grammar::isPureHiragana(edge.surface);
 }
 
+float computeAdjectiveDerivationHostPenalty(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
+  // The productive observation suffix がる selects an adjective stem. A
+  // lexical ordinary noun may also carry a nominalized adjectival stem
+  // (不安+がる), while a formal noun or another closed class cannot host it.
+  const bool dictionary_nominal_host = prev.extended_pos == core::ExtendedPOS::Noun && prev.fromDictionary();
+  if (next.extended_pos == core::ExtendedPOS::AuxGaru && prev.extended_pos != core::ExtendedPOS::AdjStem &&
+      prev.extended_pos != core::ExtendedPOS::AdjNaAdj && !dictionary_nominal_host) {
+    return cost::kAlmostNever;
+  }
+
+  return cost::kNeutral;
+}
+
 float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};
 

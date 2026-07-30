@@ -577,18 +577,18 @@ float Scorer::wordCost(const core::LatticeEdge& edge) const {
   // Penalties for spurious verb candidates identified by their inflected endings (そう/てき/まし/てい/te/ta).
   cost += computeVerbEndingPenalty(edge);
 
-  // Bonus for compound adjectives from dictionary (e.g., 男らしい, 女らしい)
-  // These compete with noun+らしい split which has kStrongBonus (-0.8).
-  // Dictionary registration indicates compound adjective should take precedence.
-  // Pattern: kanji stem + hiragana suffix forming an i-adjective
-  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective &&
-      edge.surface.length() >= core::kThreeJapaneseCharBytes && !utf8::endsWith(edge.surface, "ければ")) {
-    // Check if surface contains kanji — compound adjective from dictionary
-    // Covers both base form (い) and inflected forms (く, かっ, けれ, etc.)
-    if (grammar::containsKanji(edge.surface)) {
-      // Longer compounds need stronger bonus to beat noun+adj split paths
-      // Must overcome NOUN→dict_ADJ surface bonus (-0.5) on the split path
-      size_t char_len = suzume::normalize::utf8Length(edge.surface);
+  // A listed compound i-adjective must outrank a path that reopens lexical
+  // material inside it. Kanji compounds compete with noun + adjectival head
+  // (男+らしい); long kana compounds can contain a formal noun and a second
+  // complete adjective (もの+すごい), collecting two dictionary bonuses on the
+  // split path. Length is evidence for the complete listed unit in both scripts.
+  if (edge.fromDictionary() && edge.pos == core::PartOfSpeech::Adjective && !utf8::endsWith(edge.surface, "ければ")) {
+    const size_t char_len = suzume::normalize::utf8Length(edge.surface);
+    const bool has_compound_shape =
+        (grammar::containsKanji(edge.surface) && char_len >= 3) ||
+        (isCompleteDictionaryAdjective(edge) && edge.extended_pos != core::ExtendedPOS::AdjNaAdj &&
+         grammar::isPureHiragana(edge.surface) && char_len >= 5);
+    if (has_compound_shape) {
       cost += lengthScaledBonus(sc::kBonusCompoundAdjBase, char_len, 3, sc::kBonusCompoundAdjPerChar);
     }
   }

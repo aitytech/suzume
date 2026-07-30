@@ -115,7 +115,7 @@ std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> r
   SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] lemmatize: " << (options_.lemmatize ? "applied" : "lemma writes suppressed")
                                                     << "\n");
 
-  resolvePrePrefixMorphemeRoles(result);
+  resolvePrePrefixMorphemeRoles(result, dict_manager_);
   convertPrefixVerbToNoun(result);
   resolvePostPrefixMorphemeRoles(result);
 

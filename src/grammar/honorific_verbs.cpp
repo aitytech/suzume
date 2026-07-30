@@ -24,7 +24,7 @@ constexpr std::string_view kHumbleHonorificRenyokei[] = {"いたし", "致し", 
 constexpr std::string_view kHumbleHonorificLemmas[] = {"いたす", "致す",       "くださる", "いただく", "なさる",
                                                        "はする", "申し上げる", "給ふ",     "候ふ"};
 constexpr std::string_view kBenefactiveRenyokei[] = {"もらい", "あげ"};
-constexpr std::string_view kBenefactiveLemmas[] = {"もらう", "もらえる", "くれる", "あげる"};
+constexpr std::string_view kBenefactiveLemmas[] = {"もらう", "もらえる", "くれる", "あげる", "やる"};
 constexpr std::string_view kPotentialBenefactiveLemmas[] = {"いただける", "もらえる"};
 constexpr std::string_view kModalSubsidiaryRenyokei[] = {"かね"};
 // 続ける is deliberately absent: productive V1+続ける compounds are themselves the

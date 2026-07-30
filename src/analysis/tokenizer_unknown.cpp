@@ -89,6 +89,19 @@ bool isProductiveShiiAdjectiveTerminal(std::string_view surface, const grammar::
   return false;
 }
 
+bool crossesPeriodEndNominalBoundary(const std::vector<char32_t>& codepoints,
+                                     const std::vector<normalize::CharType>& char_types,
+                                     const UnknownCandidate& candidate) {
+  constexpr size_t kMinimumSpanLength = 3;
+  if (candidate.end - candidate.start < kMinimumSpanLength || candidate.end > codepoints.size() ||
+      candidate.end > char_types.size()) {
+    return false;
+  }
+  return candidate.extended_pos == core::ExtendedPOS::VerbRenyokei && codepoints[candidate.end - 3] == U'末' &&
+         char_types[candidate.end - 2] == normalize::CharType::Kanji &&
+         char_types[candidate.end - 1] == normalize::CharType::Hiragana;
+}
+
 bool hasContentEdgeEndingAt(const core::Lattice& lattice, size_t boundary) {
   for (const uint32_t edge_id : lattice.edgeIdsEndingAt(boundary)) {
     if (core::isContentWord(lattice.getEdge(edge_id).pos)) {
@@ -682,6 +695,14 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
          hasCompleteInternalConstituentBoundary(lattice, dict_manager_, text, byte_offsets, candidates, candidate))) {
       continue;
     }
+    // A temporal boundary noun ending in 末 remains complete before a bare
+    // continuative (月末|締め). Suppress the fabricated whole-span verb as well
+    // as the nominalized-noun fallback; an exact L2 noun still has its own
+    // dictionary edge and therefore remains available.
+    if (candidate.pos == core::PartOfSpeech::Verb &&
+        crossesPeriodEndNominalBoundary(codepoints, char_types, candidate)) {
+      continue;
+    }
     if (candidate.pos == core::PartOfSpeech::Verb && !candidate.lemma_verified && candidate.start > 0 &&
         hasCompleteInternalConstituentBoundary(lattice, dict_manager_, text, byte_offsets, candidates, candidate)) {
       if (hasPrecedingExtendedPOS(lattice, candidate.start, core::ExtendedPOS::AuxNegativeMai)) {
@@ -1229,6 +1250,13 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       // retain the ambiguity needed by おもい+が/を.
       const bool follows_predicate_quote =
           nominal_particle && candidate.end < codepoints.size() && codepoints[candidate.end] == core::hiragana::kTo;
+      const auto* following_particle =
+          candidate.end < codepoints.size()
+              ? dict_manager_.lookupExact(extractSubstring(codepoints, candidate.end, candidate.end + 1),
+                                          core::PartOfSpeech::Particle)
+              : nullptr;
+      const bool follows_nominalizer =
+          following_particle != nullptr && following_particle->extended_pos == core::ExtendedPOS::ParticleNo;
       // A finished adjective reading of the same span is a complete inflectional
       // analysis, so a deverbal re-reading built on a fabricated verb must stand
       // down: 高かれ+と is the カリ 命令形 of 高い, not a noun from 高かれる. The
@@ -1238,7 +1266,7 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
           std::any_of(candidates.begin(), candidates.end(), [&](const UnknownCandidate& other) {
             return other.pos == core::PartOfSpeech::Adjective && other.extended_pos == core::ExtendedPOS::AdjBasic &&
                    other.start == candidate.start && other.end == candidate.end &&
-                   (other.lemma != other.surface || follows_predicate_quote);
+                   (other.lemma != other.surface || follows_predicate_quote || follows_nominalizer);
           });
       const bool crosses_complete_internal_boundary =
           hasCompleteInternalConstituentBoundary(lattice, dict_manager_, text, byte_offsets, candidates, candidate);

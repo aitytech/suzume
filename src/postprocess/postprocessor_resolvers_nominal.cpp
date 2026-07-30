@@ -14,6 +14,32 @@
 
 namespace suzume::postprocess::resolver {
 
+namespace {
+
+bool followsAttributiveModifier(const std::vector<core::Morpheme>& result, size_t idx) {
+  if (idx == 0) {
+    return false;
+  }
+  const auto& modifier = result[idx - 1];
+  return modifier.extended_pos == core::ExtendedPOS::AdjBasic || modifier.pos == core::PartOfSpeech::Determiner ||
+         (modifier.extended_pos == core::ExtendedPOS::AuxCopulaDa && grammar::isAttributiveCopulaNa(modifier.surface));
+}
+
+bool hasDictionaryGodanBaseFromIRow(const core::Morpheme& noun, const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || noun.surface.empty()) {
+    return false;
+  }
+  const std::string_view base_suffix =
+      grammar::godanBaseSuffixFromIRow(utf8::decodeFirstChar(utf8::lastChar(noun.surface)));
+  if (base_suffix.empty()) {
+    return false;
+  }
+  const std::string base_form = std::string(utf8::dropLastChar(noun.surface)) + std::string(base_suffix);
+  return dict_manager->lookupExact(base_form, core::PartOfSpeech::Verb) != nullptr;
+}
+
+}  // namespace
+
 // A duration quantity directly followed by かかる requires the predicate
 // reading. The homographic determiner is only available before a noun.
 void resolveDurationPredicateKakaru(std::vector<core::Morpheme>& result) {
@@ -26,6 +52,52 @@ void resolveDurationPredicateKakaru(std::vector<core::Morpheme>& result) {
     }
     retag(kakaru, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbShuushikei, "かかる",
           dictionary::ConjugationType::GodanRa, grammar::ConjForm::Base);
+  }
+}
+
+// An attributive adjective or determiner must select a nominal head. When that
+// head is homographic with a verb continuative, the lattice can retain the
+// verbal reading even though two predicates cannot be adjacent in this frame
+// (正しい+行い, 静かな+違い). Retag the productive continuative as a deverbal
+// noun. A closed formal-noun entry can mask the same ordinary reading; only
+// replace it when its i-row surface reconstructs an independently attested
+// Godan verb, preserving genuine formal nouns such as こと and もの.
+void resolveAttributiveDeverbalNoun(std::vector<core::Morpheme>& result,
+                                    const dictionary::DictionaryManager* dict_manager) {
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    auto& head = result[idx];
+    if (!followsAttributiveModifier(result, idx)) {
+      continue;
+    }
+    const bool deverbal_noun_shape =
+        head.pos == core::PartOfSpeech::Verb &&
+        (head.extended_pos == core::ExtendedPOS::VerbRenyokei || head.extended_pos == core::ExtendedPOS::VerbOnbinkei);
+    if (deverbal_noun_shape) {
+      retagNounSurface(head);
+      continue;
+    }
+    if (head.extended_pos == core::ExtendedPOS::NounFormal && head.lemma != head.surface &&
+        hasDictionaryGodanBaseFromIRow(head, dict_manager)) {
+      retagNounSurface(head);
+    }
+  }
+}
+
+// A kana-spelled, dictionary-verified continuative before a kanji event-noun
+// suffix exposes an explicit orthographic boundary (ねがい+事). The lattice
+// selects the homographic formal noun because both readings have the same
+// surface; repair only its grammatical role after the boundary is fixed.
+void resolveDeverbalNominalSuffix(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    const auto& predecessor = result[idx - 1];
+    auto& suffix = result[idx];
+    if (predecessor.extended_pos != core::ExtendedPOS::VerbRenyokei || !predecessor.is_from_dictionary ||
+        !grammar::isPureHiragana(predecessor.surface) || suffix.extended_pos != core::ExtendedPOS::NounFormal ||
+        !grammar::isDeverbalNominalSuffix(suffix.surface)) {
+      continue;
+    }
+    retag(suffix, core::PartOfSpeech::Suffix, core::ExtendedPOS::Suffix, suffix.surface,
+          dictionary::ConjugationType::None, grammar::ConjForm::Base);
   }
 }
 

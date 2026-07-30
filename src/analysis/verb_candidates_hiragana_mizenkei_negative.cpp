@@ -204,7 +204,7 @@ void appendMizenkeiNegativeCandidates(const std::vector<char32_t>& codepoints, s
       is_valid_verb = is_in_dict;
     }
     const bool formal_noun_stem_homograph =
-        is_valid_verb && hasFormalNounStemHomograph(dict_manager, codepoints, start_pos, mizenkei_end);
+        hasFormalNounStemHomograph(dict_manager, codepoints, start_pos, mizenkei_end);
     const bool unattested_sa_irrealis = verb_type == grammar::VerbType::GodanSa && !is_in_dict &&
                                         grammar::isPureHiragana(stem) && !formal_noun_stem_homograph;
     // Reject a fabricated mizenkei that merely absorbs a trailing adverbial
@@ -314,7 +314,7 @@ void appendMizenkeiNakyaCandidates(const std::vector<char32_t>& codepoints, size
       is_valid_verb = is_in_dict;
     }
     const bool formal_noun_stem_homograph =
-        is_valid_verb && hasFormalNounStemHomograph(dict_manager, codepoints, start_pos, mizenkei_end);
+        hasFormalNounStemHomograph(dict_manager, codepoints, start_pos, mizenkei_end);
     const bool unattested_sa_irrealis = verb_type == grammar::VerbType::GodanSa && !is_in_dict &&
                                         grammar::isPureHiragana(stem) && !formal_noun_stem_homograph;
     if (!is_valid_verb) {

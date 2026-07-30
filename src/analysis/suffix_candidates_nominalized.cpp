@@ -184,6 +184,20 @@ bool hasClosedSuffixBoundary(const std::vector<char32_t>& codepoints, size_t sta
   return false;
 }
 
+bool hasPeriodEndNominalBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                 const dictionary::DictionaryManager* dict_manager) {
+  constexpr size_t kMinimumKanjiCount = 3;
+  if (kanji_end - start_pos < kMinimumKanjiCount || codepoints[kanji_end - 2] != U'末') {
+    return false;
+  }
+  const size_t candidate_end = kanji_end + 1;
+  if (candidate_end > codepoints.size()) {
+    return false;
+  }
+  const std::string whole = extractSubstring(codepoints, start_pos, candidate_end);
+  return dict_manager == nullptr || dict_manager->lookupExact(whole, core::PartOfSpeech::Noun) == nullptr;
+}
+
 }  // namespace
 
 void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -404,6 +418,14 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
     if (dict_manager == nullptr || dict_manager->lookupExact(nominal_surface, core::PartOfSpeech::Noun) == nullptr) {
       skip_single_char = true;
     }
+  }
+
+  // A temporal boundary noun ending in 末 is complete before a following
+  // continuative (月末|締め, 週末|届け). The generic nominalizer otherwise
+  // fabricates one unknown compound over both constituents. Preserve an exact
+  // L2 noun for genuinely lexicalized compounds.
+  if (hasPeriodEndNominalBoundary(codepoints, start_pos, kanji_end, dict_manager)) {
+    skip_single_char = true;
   }
 
   // A long kanji sequence ending in an attested godan stem normally contains a

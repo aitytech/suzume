@@ -357,8 +357,9 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // copular な (必要+ない, 便利+ない).
       {EPOS::AdjNaAdj, EPOS::AdjBasic, cost::kVeryStrongBonus},
 
-      // AdjStem → AuxGaru (怖+がる, 可愛+がる) - moderate bonus
+      // Adjective stems → AuxGaru (怖+がる, 嫌+がる) - moderate bonus
       {EPOS::AdjStem, EPOS::AuxGaru, cost::kModerateBonus},
+      {EPOS::AdjNaAdj, EPOS::AuxGaru, cost::kModerateBonus},
 
       // Suffix → AuxAppearanceSou (さ+そう in なさそう) - moderate bonus
       // This completes the な+さ+そう chain for ない nominalization + appearance

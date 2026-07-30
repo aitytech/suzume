@@ -864,6 +864,15 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       continue;
     }
 
+    // A one-kanji na-adjective entry cannot begin inside a contiguous kanji
+    // run. In that position it is the tail of the surrounding lexical noun
+    // (音楽, 喜怒哀楽), not an independent predicate. At a real adjective
+    // boundary the same entry begins the run (楽だ, 楽な仕事).
+    if (result.entry->extended_pos == core::ExtendedPOS::AdjNaAdj && result.length == 1 && start_pos > 0 &&
+        normalize::isKanjiCodepoint(codepoints[start_pos - 1])) {
+      continue;
+    }
+
     if (conflictsWithVerifiedCompoundBoundary(lattice, dict_manager_, text, byte_offsets, codepoints, start_pos,
                                               end_pos, result.entry->pos, result.entry->extended_pos)) {
       continue;

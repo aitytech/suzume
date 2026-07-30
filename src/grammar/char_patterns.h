@@ -237,6 +237,21 @@ bool isParallelTogetherAdverb(std::string_view surface);
 bool isStateDurationSuffix(std::string_view surface);
 
 /**
+ * @brief Whether a suffix forms a bound event noun after a verb continuative
+ * @param surface Candidate suffix surface
+ * @return True for the closed deverbal nominal-suffix class
+ */
+bool isDeverbalNominalSuffix(std::string_view surface);
+
+/**
+ * @brief Whether a conjunctive particle contains a formal-noun host
+ *
+ * This closed concessive class requires a predicate on its left, unlike a
+ * lexical conjunction that may open a sentence.
+ */
+bool isFormalNounConjunctiveParticle(std::string_view surface);
+
+/**
  * @brief Whether a surface is the duration predicate かかる
  * @param surface Candidate predicate surface
  * @return True when the surface is かかる
